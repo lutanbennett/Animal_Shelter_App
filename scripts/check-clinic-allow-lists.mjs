@@ -83,9 +83,8 @@ begin
             'harness-allow-' || r.who || '-' || r.id || '@example.invalid',
             '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
-  insert into user_roles (user_id, role_id, role)
-  select h.id, rl.id, rl.legacy_role
-    from harness_ids h
+  insert into user_roles (user_id, role_id)
+  select h.id, rl.id from harness_ids h
     join roles rl on rl.key = case when h.who in ('doctor', 'colleague', 'stranger') then 'doctor' else h.who end
    where h.who in ('doctor', 'colleague', 'stranger', 'volunteer', 'admin');
   for r in select * from harness_ids where who in ('doctor', 'colleague', 'stranger') loop

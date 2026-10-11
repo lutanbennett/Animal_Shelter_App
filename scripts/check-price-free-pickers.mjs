@@ -92,15 +92,16 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-pfp-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${REAL.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into roles (key, name, kind, legacy_role, scope_residents, scope_contacts) values
-    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_pfp_${c}', 'Harness ${c}', 'custom', '${d.floor ?? "management"}', 'all', 'full')`).join(",\n    ")};
+  insert into user_roles (user_id, role_id)
+    select u.id, ro.id from (values ${REAL.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
+  insert into roles (key, name, kind, scope_residents, scope_contacts) values
+    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_pfp_${c}', 'Harness ${c}', 'custom', '${d.floor === "volunteer" ? "who_and_where" : "all"}', 'full')`).join(",\n    ")};
   insert into role_permissions (role_id, activity, level)
     select r.id, v.act, v.lvl from roles r join (values
       ${Object.entries(CUSTOM).flatMap(([c, d]) => d.cells.map(([a, l]) => `('harness_pfp_${c}', '${a}', ${l})`)).join(",\n      ")}
     ) as v(rkey, act, lvl) on v.rkey = r.key;
-  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id, role) select ${lit(ID[c])}, id, '${CUSTOM[c].floor ?? "management"}' from roles where key = 'harness_pfp_${c}';`).join("\n  ")}
+  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id)
+  select ${lit(ID[c])}, id from roles where key = 'harness_pfp_${c}';`).join("\n  ")}
   insert into medication (id, name, cost_per_unit) values (${lit(MED)}, 'Harness med', 12.5);
   insert into diet_types (id, name, cost_per_unit, daily_qty_small, daily_qty_medium, daily_qty_large) values (${lit(DIET)}, 'Harness diet', 3.5, 1, 1, 1);
 end $setup$;

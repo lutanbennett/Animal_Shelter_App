@@ -70,7 +70,9 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   values (v_admin, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
           'harness-lifecycle-' || v_admin || '@example.invalid', '{}'::jsonb, '{"full_name":"Harness"}'::jsonb, now(), now());
-  insert into user_roles (user_id, role) values (v_admin, 'admin');
+  insert into user_roles (user_id, role_id)
+  select v.c0, ro.id from (values (v_admin, 'admin')) as v(c0, role_key)
+  join roles ro on ro.key = v.role_key;
 
   -- P3
   select count(*) into v_n from zones where protected;

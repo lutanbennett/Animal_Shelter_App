@@ -45,8 +45,9 @@ insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, ra
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
        'harness-0090-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
   from who where uid is not null;
-insert into user_roles (user_id, role)
-select uid, who::app_role from who where who in ('management', 'admin');
+insert into user_roles (user_id, role_id)
+  select s.c0, ro.id from (select uid as c0, who as role_key from who where who in ('management', 'admin')) s
+  join roles ro on ro.key = s.role_key;
 grant select on who to authenticated, anon;
 
 -- Run a SQL expression returning text as a login (null uid = anon).

@@ -37,7 +37,7 @@ create function pg_temp.as_admin(p text) returns boolean language plpgsql as $f$
 declare v boolean;
 begin
   perform set_config('request.jwt.claims', json_build_object('sub',
-    (select user_id from user_roles where role = 'admin' and archived_at is null limit 1),
+    (select user_id from user_roles where role_id = (select id from roles where key = 'admin') and archived_at is null limit 1),
     'role', 'authenticated')::text, true);
   set local role authenticated;
   v := is_public_drive_file(p);

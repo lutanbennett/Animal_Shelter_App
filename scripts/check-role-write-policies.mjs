@@ -178,7 +178,9 @@ begin
     values (v_uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
             'harness-blood-' || v_who || '-' || v_uid || '@example.invalid',
             '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || v_who), now(), now());
-    insert into user_roles (user_id, role) values (v_uid, v_who::app_role);
+    insert into user_roles (user_id, role_id)
+  select v.c0, ro.id from (values (v_uid, v_who)) as v(c0, role_key)
+  join roles ro on ro.key = v.role_key;
 
     n := pg_temp.try(v_uid, format('insert into blood_tests (resident_id, blood_test_type_id, date, results) values (%L, %L, current_date, ''x'')', v_res, v_type));
     if v_who = 'management' then

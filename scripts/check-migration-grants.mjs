@@ -201,7 +201,6 @@ function checkFile(file) {
 // same set as PUBLIC_FUNCTIONS in check-public-views.mjs, which verifies them
 // against the live project.
 const ANON_FUNCTIONS = new Set([
-  "current_user_role",
   "is_public_drive_file",
   "shelter_date",
   "shelter_time_zone",

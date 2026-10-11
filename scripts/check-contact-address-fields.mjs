@@ -27,6 +27,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import { giveRole } from "./lib/user-role.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -89,7 +90,7 @@ try {
   const { data: u, error: uErr } = await service.auth.admin.createUser({ email, password, email_confirm: true });
   if (uErr) throw uErr;
   madeUsers.push(u.user.id);
-  const { error: roleErr } = await service.from("user_roles").insert({ user_id: u.user.id, role: "management" });
+  const { error: roleErr } = await giveRole(service, u.user.id, "management");
   if (roleErr) throw roleErr;
 
   const { data: rows, error: cErr } = await service.from("contacts").insert([A, B, C, D]).select("id, name");

@@ -46,11 +46,9 @@ const EXPECTED = new Set([
   "second_in_command record_attachment maintenance: Not authorized to add attachments. -> ok",
 ]);
 
-// Still reading the enum (or roles.legacy_role) after 0178, each on purpose: perm-drop-enum's.
-const LEFT = new Set([
-  "public.current_user_role", "public.user_roles_sync_role_id", "private.has_app_access", "public.has_shelter_floor",
-  // 0179 (role-floor-schema): sees_all_residents() and sees_all_contacts() ask the role's own scope now.
-]);
+// Nothing reads the enum any more: 0180 moved the last readers onto the role's own row and 0181 dropped it. The list
+// stays, empty, so a function that starts asking for one fails this check instead of passing for want of a list.
+const LEFT = new Set([]);
 
 async function sql(query) {
   const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {

@@ -80,7 +80,7 @@ begin
     nlogins := nlogins + 1;
     perform set_config('request.jwt.claims', json_build_object('sub', uidt, 'role', 'authenticated')::text, true);
     set local role authenticated;
-    if (select public.is_clinic_login()) = coalesce((select public.current_user_role()) = 'doctor', false) then agree := agree + 1; end if;
+    if (select public.is_clinic_login()) = coalesce((select r.key from user_roles ur join roles r on r.id = ur.role_id where ur.user_id = uidt::uuid and ur.archived_at is null) = 'doctor', false) then agree := agree + 1; end if;
     reset role;
   end loop;
   raise exception 'RESULT probes=% differences=% vet-nonzero-reads=% is_clinic_login-agrees=%/% diffs: %',

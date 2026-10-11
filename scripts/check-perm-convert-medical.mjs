@@ -104,20 +104,23 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-pcm-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${[["admin", "admin"], ["management", "management"], ["volunteer", "volunteer"], ["vet", "doctor"]].map(([p, r]) => `('${r}', ${lit(ID[p])})`).join(",")}) as u(who, id);
+  insert into user_roles (user_id, role_id)
+    select u.id, ro.id from (values ${[["admin", "admin"], ["management", "management"], ["volunteer", "volunteer"], ["vet", "doctor"]].map(([p, r]) => `('${r}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
   -- custom roles borrow the volunteer (the narrowest) as the Heads will
-  insert into roles (key, name, kind, legacy_role, scope_clinical) values
-    ('harness_pcm_read', 'Harness read', 'custom', 'volunteer', 'any'),
-    ('harness_pcm_edit', 'Harness edit', 'custom', 'volunteer', 'any'),
-    ('harness_pcm_scoped', 'Harness scoped', 'custom', 'volunteer', 'own_clinic');
+  insert into roles (key, name, kind, scope_residents, scope_clinical) values
+    ('harness_pcm_read', 'Harness read', 'custom', 'who_and_where', 'any'),
+    ('harness_pcm_edit', 'Harness edit', 'custom', 'who_and_where', 'any'),
+    ('harness_pcm_scoped', 'Harness scoped', 'custom', 'who_and_where', 'own_clinic');
   insert into role_permissions (role_id, activity, level)
     select r.id, a.key, case r.key when 'harness_pcm_read' then 1 else 2 end
       from roles r cross join permission_activities a
      where r.key like 'harness_pcm_%' and a.key like 'medical.%' and a.kind = 'level';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_read)}, id, 'volunteer' from roles where key = 'harness_pcm_read';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_edit)}, id, 'volunteer' from roles where key = 'harness_pcm_edit';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.c_scoped)}, id, 'volunteer' from roles where key = 'harness_pcm_scoped';
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.c_read)}, id from roles where key = 'harness_pcm_read';
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.c_edit)}, id from roles where key = 'harness_pcm_edit';
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.c_scoped)}, id from roles where key = 'harness_pcm_scoped';
 
   -- 0172: vets / vet_doctors / vet_appointments are clinics / doctors + doctor_clinics / clinic_visits
   insert into clinics (id, name) values (${lit(OWN)}, 'Harness own'), (${lit(OTHER)}, 'Harness other');

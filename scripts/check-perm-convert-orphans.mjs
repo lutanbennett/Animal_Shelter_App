@@ -134,21 +134,23 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-pco-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${REAL.map((p) => `('${APP_ROLE[p] ?? p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into roles (key, name, kind, legacy_role, scope_residents) values
-    ${Object.keys(CUSTOM).map((c) => `('harness_pco_${c}', 'Harness ${c}', 'custom', 'management', 'all')`).join(",\n    ")};
+  insert into user_roles (user_id, role_id)
+    select u.id, ro.id from (values ${REAL.map((p) => `('${APP_ROLE[p] ?? p}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
+  insert into roles (key, name, kind, scope_residents) values
+    ${Object.keys(CUSTOM).map((c) => `('harness_pco_${c}', 'Harness ${c}', 'custom', 'all')`).join(",\n    ")};
   insert into role_permissions (role_id, activity, level)
     select r.id, v.act, v.lvl from roles r join (values
       ${Object.entries(CUSTOM).flatMap(([c, cells]) => cells.map(([a, l]) => `('harness_pco_${c}', '${a}', ${l})`)).join(",\n      ")}
     ) as v(rkey, act, lvl) on v.rkey = r.key;
-  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id, role) select ${lit(ID[c])}, id, 'management' from roles where key = 'harness_pco_${c}';`).join("\n  ")}
+  ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id)
+  select ${lit(ID[c])}, id from roles where key = 'harness_pco_${c}';`).join("\n  ")}
   -- staff: the archived Staff role's cells on a custom role (0173), so the login keeps exactly what Staff held
-  insert into roles (key, name, kind, legacy_role, scope_residents) values ('harness_pco_staff', 'Harness staff', 'custom', 'management', 'all');
+  insert into roles (key, name, kind, scope_residents) values ('harness_pco_staff', 'Harness staff', 'custom', 'all');
   insert into role_permissions (role_id, activity, level)
     select (select id from roles where key = 'harness_pco_staff'), rp.activity, rp.level
       from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.staff)}, id, legacy_role from roles where key = 'harness_pco_staff';
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.staff)}, id from roles where key = 'harness_pco_staff';
 
   insert into zones (id, name) values (${lit(Z)}, 'Harness zone'), (${lit(ZD)}, 'Harness empty zone');
   insert into enclosures (id, name, zone_id) values (${lit(E)}, 'Harness enclosure', ${lit(Z)});

@@ -124,19 +124,23 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-sic-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into user_roles (user_id, role)
-    select id, who::app_role from (values ${["admin", "management", "volunteer", "doctor"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.sic)}, id, legacy_role from roles where key = 'second_in_command';
+  insert into user_roles (user_id, role_id)
+    select u.id, ro.id from (values ${["admin", "management", "volunteer", "doctor"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.sic)}, id from roles where key = 'second_in_command';
   -- three roles that each hold ONE of her stock cells, to show the jobs stand alone
-  insert into roles (key, name, kind, opens_app, home_path, legacy_role, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails)
-    values ('harness_po', 'Harness purchasing only', 'custom', true, '/home', 'volunteer', 'all', 'any', 'name_type', 'medical_only', false),
-           ('harness_co', 'Harness count only', 'custom', true, '/home', 'volunteer', 'all', 'any', 'name_type', 'medical_only', false),
-           ('harness_dl', 'Harness delivery only', 'custom', true, '/home', 'volunteer', 'all', 'any', 'name_type', 'medical_only', false);
+  insert into roles (key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails)
+    values ('harness_po', 'Harness purchasing only', 'custom', true, '/home', 'who_and_where', 'any', 'name_type', 'medical_only', false),
+           ('harness_co', 'Harness count only', 'custom', true, '/home', 'who_and_where', 'any', 'name_type', 'medical_only', false),
+           ('harness_dl', 'Harness delivery only', 'custom', true, '/home', 'who_and_where', 'any', 'name_type', 'medical_only', false);
   insert into role_permissions (role_id, activity, level)
     select r.id, c.activity, 2 from roles r join (values ('harness_po', 'stock.purchasing'), ('harness_co', 'stock.count'), ('harness_dl', 'stock.delivery')) as c(k, activity) on c.k = r.key;
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.po)}, id, legacy_role from roles where key = 'harness_po';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.co)}, id, legacy_role from roles where key = 'harness_co';
-  insert into user_roles (user_id, role_id, role) select ${lit(ID.dl)}, id, legacy_role from roles where key = 'harness_dl';
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.po)}, id from roles where key = 'harness_po';
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.co)}, id from roles where key = 'harness_co';
+  insert into user_roles (user_id, role_id)
+  select ${lit(ID.dl)}, id from roles where key = 'harness_dl';
   insert into clinics (id, name) values (${lit(OWN)}, 'Harness own');
   with d as (insert into doctors (name, user_id) values ('Harness doctor', ${lit(ID.doctor)}) returning id) insert into doctor_clinics (clinic_id, doctor_id) select ${lit(OWN)}, id from d;
   insert into zones (id, name) values (${lit(ZONE)}, 'Harness zone');
@@ -174,7 +178,7 @@ begin
 end $cmp$;
 
 do $role$ begin
-  insert into res select 'role', 'row', 0 where exists (select 1 from roles where key = 'second_in_command' and kind = 'custom' and legacy_role = 'volunteer' and opens_app and name_th is not null and archived_at is null);
+  insert into res select 'role', 'row', 0 where exists (select 1 from roles where key = 'second_in_command' and kind = 'custom' and opens_app and name_th is not null and archived_at is null);
   insert into res select 'role', 'cell:' || rp.activity || ':' || rp.level, 0 from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'second_in_command';
   insert into res select 'role', 'diet-forecast-has-no-cost', 0 where not exists (select 1 from pg_proc where proname = 'stock_diet_forecast' and pg_get_function_result(oid) ilike '%cost%');
 end $role$;

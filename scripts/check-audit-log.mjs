@@ -90,8 +90,9 @@ begin
     values (v_uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
             'harness-audit-' || v_uid || '@example.invalid', '{}'::jsonb, '{"full_name":"Harness"}'::jsonb, now(), now());
   end loop;
-  insert into user_roles (user_id, role) values
-    (v_vol, 'volunteer'), (v_mgmt, 'management'), (v_doctor_u, 'doctor'), (v_admin, 'admin');
+  insert into user_roles (user_id, role_id)
+  select v.c0, ro.id from (values (v_vol, 'volunteer'), (v_mgmt, 'management'), (v_doctor_u, 'doctor'), (v_admin, 'admin')) as v(c0, role_key)
+  join roles ro on ro.key = v.role_key;
 
   -- A1/A2: owner-made rows have a null actor
   insert into contacts (id, name, type) values (v_carer, 'Harness carer', 'Carer');

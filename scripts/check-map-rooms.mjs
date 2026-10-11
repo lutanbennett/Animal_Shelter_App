@@ -101,8 +101,8 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-mr-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${REAL.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into user_roles (user_id, role_id, role)
-    select u.id, r.id, r.legacy_role
+  insert into user_roles (user_id, role_id)
+    select u.id, r.id
       from (values ${REAL.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id)
       join roles r on r.key = u.who;
   -- a plan to hang rooms on: dev's own if it has one, else a stand-in overview

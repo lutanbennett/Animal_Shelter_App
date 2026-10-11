@@ -10,12 +10,12 @@
 //     in docs/roles-and-permissions.md's order, Staff not among them, and the configured roles by their Thai
 //     names in Thai;
 //   - creating a login as 2IC, Head of Maintenance and Head of Medical THROUGH THE PAGE writes user_roles with
-//     role_id = that role's row and role = that row's legacy_role: the same shape scripts/check-2ic-role.mjs
-//     builds by hand. A wrong `role` is the silent failure: a login with someone else's powers;
+//     role_id = that role's row and nothing else: user_roles has no enum column since 0181, so the old write that
+//     copied the row's legacy_role is gone, and the page still has to create the login (the path it sat on);
 //   - the users table names the configured role, not the enum it borrows (a 2IC must not read "Volunteer");
-//   - changing a role in the table keeps the pair in step both ways (to Management and back);
+//   - changing a role in the table moves role_id, both ways (to Management and back);
 //   - each new login, signed in for real, is made to choose a password, then passes the access gate:
-//     current_user_role() is the borrowed enum, my_permissions() is exactly its role's cells, it opens its own
+//     it is on the volunteer floor exactly when its role's scope says so, my_permissions() is exactly its role's cells, it opens its own
 //     page and not Settings -> Security.
 // No password is read from .env.local: the admin's is made per run, each new login's is read off the page's
 // one-time notice. Nothing is printed but results. Dev only. Exit 0 all passed, 1 a check failed, 2 could not run.
@@ -26,6 +26,7 @@ import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright-core";
+import { giveRole } from "./lib/user-role.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -141,7 +142,7 @@ async function run() {
     made.push(user.id);
     const row = await roleRow(user.id);
     check(row.role_id === roles[role.key].id, `${role.name}: user_roles.role_id is the ${role.key} row`, JSON.stringify(row));
-    check(row.role === roles[role.key].legacy_role, `${role.name}: user_roles.role is its legacy_role (${roles[role.key].legacy_role})`, JSON.stringify(row));
+    check(!("role" in row), `${role.name}: user_roles has no enum column`, JSON.stringify(row));
     logins.push({ ...role, email, userId: user.id, temporaryPassword });
     await page.reload({ waitUntil: "networkidle" });
   }
@@ -156,13 +157,12 @@ async function run() {
 
   // 4. Changing a role in the table keeps the pair in step, both ways
   const medical = logins.find((l) => l.key === "head_of_medical");
-  // Through Doctor and Admin too: their special cases follow the borrowed enum (the clinic box; 2-step set-up opened).
+  // Through Doctor and Admin too: their special cases follow the role's key (the clinic box; 2-step set-up opened).
   for (const to of ["management", "doctor", "admin", "head_of_medical"]) {
     await page.locator("tr", { hasText: medical.email }).locator("select").first().selectOption(to);
     await page.locator("tr", { hasText: medical.email }).locator("+ tr .text-success").waitFor({ timeout: 30_000 });
     const row = await roleRow(medical.userId);
-    check(row.role_id === roles[to].id && row.role === roles[to].legacy_role,
-      `changed in the table to ${roles[to].name}: role_id and role are ${to} and ${roles[to].legacy_role}`, JSON.stringify(row));
+    check(row.role_id === roles[to].id, `changed in the table to ${roles[to].name}: role_id is the ${to} row`, JSON.stringify(row));
     await page.reload({ waitUntil: "networkidle" });
     if (to === "doctor") {
       const box = await page.locator("tr", { hasText: medical.email }).getByText("Not linked to a doctor").count();
@@ -184,8 +184,8 @@ async function run() {
     check(!error, `${login.name}: signs in with the temporary password the page showed`, error?.message);
     if (error) continue;
 
-    const { data: enumRole } = await ssr.rpc("current_user_role");
-    check(enumRole === roles[login.key].legacy_role, `${login.name}: current_user_role() is ${roles[login.key].legacy_role}`, String(enumRole));
+    const { data: onFloor } = await ssr.rpc("on_volunteer_floor");
+    check(onFloor === (roles[login.key].scope_residents === "who_and_where"), `${login.name}: on_volunteer_floor() follows its scope_residents (${roles[login.key].scope_residents})`, String(onFloor));
     const { data: perms } = await ssr.rpc("my_permissions");
     check(perms?.role?.key === login.key, `${login.name}: my_permissions() names the role ${login.key}`, JSON.stringify(perms?.role));
     const want = await cellsOf(roles[login.key].id);
@@ -226,7 +226,7 @@ async function run() {
 // ---------------------------------------------------------------------------------------------------------
 
 async function rolesByKey() {
-  const { data, error } = await service.from("roles").select("id, key, name, name_th, legacy_role");
+  const { data, error } = await service.from("roles").select("id, key, name, name_th, scope_residents");
   if (error) throw new Error(`reading roles: ${error.message}`);
   return Object.fromEntries(data.map((r) => [r.key, r]));
 }
@@ -240,7 +240,7 @@ async function userByEmail(email) {
 }
 
 async function roleRow(userId) {
-  const { data, error } = await service.from("user_roles").select("role_id, role").eq("user_id", userId).single();
+  const { data, error } = await service.from("user_roles").select("*").eq("user_id", userId).single();
   if (error) throw new Error(`reading user_roles: ${error.message}`);
   return data;
 }
@@ -281,7 +281,7 @@ async function makeAdmin() {
   });
   if (error) throw new Error(`creating the admin login: ${error.message}`);
   made.push(data.user.id);
-  const { error: roleError } = await service.from("user_roles").insert({ user_id: data.user.id, role: "admin" });
+  const { error: roleError } = await giveRole(service, data.user.id, "admin");
   if (roleError) throw new Error(`giving the admin login its role: ${roleError.message}`);
 
   const jar = new Map();

@@ -77,22 +77,24 @@ begin
             'harness-clinics-ro-' || r.who || '-' || r.id || '@example.invalid',
             '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
-  insert into user_roles (user_id, role) select id, 'doctor' from harness_ids where who = 'doctor';
+  insert into user_roles (user_id, role_id)
+  select s.c0, ro.id from (select id as c0, 'doctor' as role_key from harness_ids where who = 'doctor') s
+  join roles ro on ro.key = s.role_key;
   -- 0127/0172: a doctor login's clinics are its linked doctor's active doctor_clinics links.
   insert into doctors (id, name, user_id)
   select (select id from harness_ids where who = 'doctor_row'), 'Harness doctor', id from harness_ids where who = 'doctor';
   insert into doctor_clinics (clinic_id, doctor_id, active)
   values ((select id from harness_ids where who = 'own_clinic'), (select id from harness_ids where who = 'doctor_row'), true);
-  insert into user_roles (user_id, role)
-  select id, case who when 'mgmt' then 'management' else who end::app_role
-  from harness_ids where who in ('mgmt', 'admin', 'volunteer');
+  insert into user_roles (user_id, role_id)
+  select s.c0, ro.id from (select id as c0, case who when 'mgmt' then 'management' else who end as role_key from harness_ids where who in ('mgmt', 'admin', 'volunteer')) s
+  join roles ro on ro.key = s.role_key;
   -- clerk: Staff was this login until 0173 retired it; a custom role carrying its cells reaches the same path
-  insert into roles (key, name, kind, legacy_role) values ('harness_clinics_ro_clerk', 'Harness clerk', 'custom', 'management');
+  insert into roles (key, name, kind) values ('harness_clinics_ro_clerk', 'Harness clerk', 'custom');
   insert into role_permissions (role_id, activity, level)
     select (select id from roles where key = 'harness_clinics_ro_clerk'), rp.activity, rp.level
       from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
-  insert into user_roles (user_id, role_id, role)
-    select (select id from harness_ids where who = 'clerk'), id, legacy_role from roles where key = 'harness_clinics_ro_clerk';
+  insert into user_roles (user_id, role_id)
+  select (select id from harness_ids where who = 'clerk'), id from roles where key = 'harness_clinics_ro_clerk';
 end $setup$;
 
 do $h$

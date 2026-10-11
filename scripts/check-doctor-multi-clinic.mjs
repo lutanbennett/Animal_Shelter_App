@@ -109,16 +109,16 @@ begin
             'harness-multi-' || r.who || '-' || r.id || '@example.invalid',
             '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
-  insert into user_roles (user_id, role) values
-    (pg_temp.hid('multi'), 'doctor'), (pg_temp.hid('single'), 'doctor'), (pg_temp.hid('nolink'), 'doctor'),
-    (pg_temp.hid('admin'), 'admin'), (pg_temp.hid('mgmt'), 'management');
+  insert into user_roles (user_id, role_id)
+  select v.c0, ro.id from (values (pg_temp.hid('multi'), 'doctor'), (pg_temp.hid('single'), 'doctor'), (pg_temp.hid('nolink'), 'doctor'), (pg_temp.hid('admin'), 'admin'), (pg_temp.hid('mgmt'), 'management')) as v(c0, role_key)
+  join roles ro on ro.key = v.role_key;
   -- clerk: Staff was this login until 0173 retired it; a custom role carrying its cells reaches the same path
-  insert into roles (key, name, kind, legacy_role) values ('harness_multi_clerk', 'Harness clerk', 'custom', 'management');
+  insert into roles (key, name, kind) values ('harness_multi_clerk', 'Harness clerk', 'custom');
   insert into role_permissions (role_id, activity, level)
     select (select id from roles where key = 'harness_multi_clerk'), rp.activity, rp.level
       from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
-  insert into user_roles (user_id, role_id, role)
-    select pg_temp.hid('clerk'), id, legacy_role from roles where key = 'harness_multi_clerk';
+  insert into user_roles (user_id, role_id)
+  select pg_temp.hid('clerk'), id from roles where key = 'harness_multi_clerk';
   -- single: a doctor login whose doctor works only at A (owner context, so the login guard lets it through)
   insert into doctors (id, name, user_id) values (pg_temp.hid('ds'), 'Harness single', pg_temp.hid('single'));
   insert into doctor_clinics (clinic_id, doctor_id) values (a, pg_temp.hid('ds'));

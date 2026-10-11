@@ -87,12 +87,15 @@ begin
             'harness-own-writes-' || r.who || '-' || r.id || '@example.invalid',
             '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
-  insert into user_roles (user_id, role) values (pg_temp.hid('doctor'), 'doctor');
+  insert into user_roles (user_id, role_id)
+  select v.c0, ro.id from (values (pg_temp.hid('doctor'), 'doctor')) as v(c0, role_key)
+  join roles ro on ro.key = v.role_key;
   -- 0127: a doctor login's clinics are its linked doctor's (doctor_clinics, 0172)
   with d as (insert into doctors (name, user_id) values ('Harness doctor', pg_temp.hid('doctor')) returning id)
     insert into doctor_clinics (clinic_id, doctor_id) select v_own, id from d;
-  insert into user_roles (user_id, role) values
-    (pg_temp.hid('admin'), 'admin'), (pg_temp.hid('mgmt'), 'management');  -- no staff: 0173 retired it
+  insert into user_roles (user_id, role_id)
+  select v.c0, ro.id from (values (pg_temp.hid('admin'), 'admin'), (pg_temp.hid('mgmt'), 'management')) as v(c0, role_key)
+  join roles ro on ro.key = v.role_key;  -- no staff: 0173 retired it
 
   insert into residents (id, name, species) values (v_res, 'Harness mixed', 'Dog');
   insert into clinic_visits (id, resident_id, clinic_id, appointment_date, status) values

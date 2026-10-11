@@ -41,9 +41,10 @@ begin;
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-web-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
   from (values ${Object.entries(ID).map(([p, id]) => `('${p}', ${lit(id)})`).join(",")}) as u(who, id);
-insert into user_roles (user_id, role)
-  select id, who::app_role from (values ${LEGACY.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-insert into user_roles (user_id, role_id, role) select ${lit(ID.sic)}, id, legacy_role from roles where key = 'second_in_command';
+insert into user_roles (user_id, role_id)
+  select u.id, ro.id from (values ${LEGACY.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
+insert into user_roles (user_id, role_id)
+  select ${lit(ID.sic)}, id from roles where key = 'second_in_command';
 
 create temp table who (who text primary key, uid uuid);
 insert into who values ${Object.entries(ID).map(([p, id]) => `('${p}', ${lit(id)})`).join(",")}, ('anon', null);

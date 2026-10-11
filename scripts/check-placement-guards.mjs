@@ -80,7 +80,9 @@ begin
             'harness-placement-' || v_uid || '@example.invalid', '{}'::jsonb, '{"full_name":"Harness"}'::jsonb, now(), now());
   end loop;
   -- management: Staff was this login until 0173 retired it (a live staff row is refused)
-  insert into user_roles (user_id, role) values (v_vol, 'volunteer'), (v_mgmt, 'management'), (v_admin, 'admin');
+  insert into user_roles (user_id, role_id)
+  select v.c0, ro.id from (values (v_vol, 'volunteer'), (v_mgmt, 'management'), (v_admin, 'admin')) as v(c0, role_key)
+  join roles ro on ro.key = v.role_key;
   insert into zones (id, name) values (v_zone, 'Harness zone');
   insert into enclosures (id, name, zone_id) values (v_e1, 'Harness E1', v_zone), (v_e2, 'Harness E2', v_zone);
   insert into contacts (id, name, type) values (v_carer, 'Harness carer', 'Carer');

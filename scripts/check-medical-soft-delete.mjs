@@ -84,7 +84,9 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   values (v_doctor, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
           'harness-soft-delete-' || v_doctor || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now());
-  insert into user_roles (user_id, role) values (v_doctor, 'doctor');
+  insert into user_roles (user_id, role_id)
+  select v.c0, ro.id from (values (v_doctor, 'doctor')) as v(c0, role_key)
+  join roles ro on ro.key = v.role_key;
   -- 0127: a doctor login's clinic is its linked doctor's (doctor_clinics links it, 0172)
   with d as (insert into doctors (name, user_id) values ('Harness doctor', v_doctor) returning id) insert into doctor_clinics (clinic_id, doctor_id) select v_clinic, id from d;
 end $setup$;

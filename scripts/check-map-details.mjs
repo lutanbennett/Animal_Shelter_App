@@ -17,6 +17,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import { giveRole } from "./lib/user-role.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -77,7 +78,7 @@ try {
     const { data, error } = await service.auth.admin.createUser({ email: `harness-mapdetails-${role}-${tag}@example.invalid`, password, email_confirm: true });
     if (error) throw error;
     users.push(data.user.id);
-    const r = await service.from("user_roles").insert({ user_id: data.user.id, role });
+    const r = await giveRole(service, data.user.id, role);
     if (r.error) throw r.error;
     cookies[role] = await signIn(data.user.email);
   }
