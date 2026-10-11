@@ -48,7 +48,7 @@ export async function GET(request: Request) {
   }
 
   const zoneInternal = new Map(view.zones.map((zone) => [zone.id, zone.internal as boolean | null]));
-  const rows: ExportRow[] = (data ?? []).map((row) =>
+  const rows: ExportRow[] = inListOrder(view, data ?? []).map((row) =>
     limited
       ? {
           ...asListRow(row as WhoAndWhere, zoneInternal.get((row as WhoAndWhere).zone_id ?? "") ?? null),
