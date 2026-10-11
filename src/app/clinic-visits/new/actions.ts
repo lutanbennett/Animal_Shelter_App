@@ -15,7 +15,7 @@ export async function bookClinicVisit(
   formData: FormData,
 ): Promise<ClinicVisitState> {
   const { t } = await getT();
-  if (!can(await loadPermissions(), "medical.visits")) return { error: t.vetVisits.errors.notAuthorized };
+  if (!can(await loadPermissions(), "visit.book")) return { error: t.vetVisits.errors.notAuthorized };
   const residentIds = formData
     .getAll("residentIds")
     .filter((id): id is string => typeof id === "string" && id.length > 0);

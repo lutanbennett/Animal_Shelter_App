@@ -203,7 +203,7 @@ const PINNED = {
     guards: ['requirePermission("medical.diet")'],
     decides: [],
   },
-  "/clinic-visits/new": { guards: ['requirePermission("medical.visits")'], decides: [] },
+  "/clinic-visits/new": { guards: ['requirePermission("visit.book")'], decides: [] },
   "/clinic-visits/[id]/edit": {
     guards: ['requirePermission("medical.visits")'],
     decides: ["resident.microchip"],
@@ -219,11 +219,11 @@ const PINNED = {
   "/maintenance/new": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.jobs"] },
   "/maintenance/[id]/edit": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.jobs"] },
   // Detail pages: they open at the list's own level, and every control that writes asks can().
-  "/maintenance/[id]": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.delete", "maintenance.jobs", "translations.manage"] },
+  "/maintenance/[id]": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.delete", "maintenance.jobs", "maintenance.progress", "translations.manage"] },
   "/clinics/[id]": { guards: ['requirePermission("clinics.list", "read")'], decides: ["clinics.list", "medical.visits:read"] },
   "/contacts/[id]": { guards: ['requirePermission("contacts.browse")'], decides: ["contacts.directory", "friends.manage"] },
   "/enclosures/[id]": { guards: ['requirePermission("facility.enclosures", "read")'], decides: ["facility.enclosures", "maintenance.jobs"] },
-  "/projects/[id]": { guards: ['requirePermission("projects.folders", "read")'], decides: ["projects.folders", "translations.manage"] },
+  "/projects/[id]": { guards: ['requirePermission("projects.folders", "read")'], decides: ["projects.folders", "projects.publish", "translations.manage"] },
   // A donation's own page is the receipt: issuing it is the yes/no activity, and nothing else.
   "/management/donations/[id]": { guards: ['requirePermission("donation.receipt")'], decides: [] },
 
@@ -322,7 +322,7 @@ const EXEMPT = {
   "/home": { why: `The dispatcher every app role lands on: sends each to its configured home, or shows the tiles homeTilesFor(perms) derives from the registry, so every tile is a page E pins. Refuses a role that does not open the app. ${APP}` },
   "/my": {
     why: `A person's own task list; each list in it is loaded only behind can() for its activity, so the page shows nothing a role may not see. ${APP}`,
-    decides: ["maintenance.jobs:read", "maintenance.jobs", "recurring.manage"],
+    decides: ["maintenance.jobs:read", "maintenance.progress", "recurring.manage"],
   },
   "/manual": { why: `The user manual: text for every app role; the body greys the topics that are not the reader's but hides none. ${APP}` },
   "/releases": { why: `What changed in each release, for every app role. The environment line is behind can(system.status). ${APP}`, decides: ["system.status"] },

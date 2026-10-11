@@ -674,11 +674,6 @@ const en = {
           reason:
             "This role can open the contacts book, but sees each contact's name and phone number only. Not the address, notes or history.",
         },
-        notAskedYet: {
-          title: "Nothing uses this box yet",
-          reason:
-            "This box is right today, but nothing asks it yet. Booking a visit follows \"Vet visits\", moving a job on follows \"Maintenance jobs\", and putting a project on the website follows \"Project folders\".",
-        },
         databaseWider: {
           title: "Looser in the database than on screen",
           reason:

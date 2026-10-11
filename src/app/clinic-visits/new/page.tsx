@@ -10,7 +10,7 @@ import { ClinicVisitForm, type ResidentOption, type ClinicOption } from "./Clini
 export default async function NewClinicVisitPage(
   props: PageProps<"/clinic-visits/new">,
 ) {
-  await requirePermission("medical.visits");
+  await requirePermission("visit.book");
   const searchParams = await props.searchParams;
   const { t, locale } = await getT();
 

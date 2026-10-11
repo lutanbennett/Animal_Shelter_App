@@ -44,7 +44,7 @@ export default async function MyPage() {
         ...(perms?.isAdmin ? [loadMyAccessRequestTasks(t)] : []),
         ...(perms?.role.opensApp ? [loadMyRecurringTasks(supabase, userId, perms.role.key, t, today)] : []),
         ...(can(perms, "maintenance.jobs", "read")
-          ? [loadMyMaintenanceTasks(supabase, userId, can(perms, "maintenance.jobs"), t, locale)]
+          ? [loadMyMaintenanceTasks(supabase, userId, can(perms, "maintenance.progress"), t, locale)]
           : []),
       ])
     : [];
@@ -78,7 +78,7 @@ export default async function MyPage() {
         doneToday={done.items}
         today={today}
         canManage={can(perms, "recurring.manage")}
-        canEditMaintenance={can(perms, "maintenance.jobs")}
+        canEditMaintenance={can(perms, "maintenance.progress")}
       />
     </main>
   );

@@ -5,6 +5,8 @@ import { runAction, type ActionResult } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
 import { getT } from "@/lib/i18n/get-t";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import {
   deleteProjectDriveFolder,
   syncProjectFolderMove,
@@ -129,6 +131,8 @@ export async function updateProjectFolderInfo(
       return refuse(t.projects.errors.invalidDate);
     }
 
+    // projects.publish owns the website switch (0182): without it the form leaves is_public as it is.
+    const canPublish = can(await loadPermissions(), "projects.publish");
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("project_folders")
@@ -137,7 +141,7 @@ export async function updateProjectFolderInfo(
         summary: str(formData, "summary"),
         project_date: projectDate,
         location: str(formData, "location"),
-        is_public: formData.get("isPublic") === "on",
+        ...(canPublish ? { is_public: formData.get("isPublic") === "on" } : {}),
       })
       .eq("id", folderId)
       .select("id, parent_folder_id")

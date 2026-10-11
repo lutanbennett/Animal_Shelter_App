@@ -66,6 +66,7 @@ export function FolderView({
   photos,
   allFolders,
   canWrite,
+  canPublish,
   canManageTranslations,
   translations,
 }: {
@@ -75,6 +76,8 @@ export function FolderView({
   photos: ProjectPhoto[];
   allFolders: ProjectFolder[];
   canWrite: boolean;
+  /** projects.publish: the show-on-website switch and checkbox. */
+  canPublish: boolean;
   /** Admin/management: may write and approve the other-language text. */
   canManageTranslations: boolean;
   /** The folder's story row and the photos' caption rows (0056). */
@@ -272,13 +275,13 @@ export function FolderView({
                     {info.location}
                     <input name="location" defaultValue={folder.location ?? ""} maxLength={200} className={inputClass} />
                   </label>
-                  <label className="flex items-start gap-2 text-sm text-foreground">
+                  {canPublish && <label className="flex items-start gap-2 text-sm text-foreground">
                     <input type="checkbox" name="isPublic" defaultChecked={folder.is_public} className="mt-1 h-4 w-4 accent-primary" />
                     <span className="flex flex-col">
                       {info.showOnWebsite}
                       <span className="text-xs text-muted">{info.showOnWebsiteHint}</span>
                     </span>
-                  </label>
+                  </label>}
                   <div className="flex justify-end gap-2">
                     <ActionButton icon={ACTION_ICONS.clear} onClick={() => setMode("view")} disabled={isPending}>
                       {t.common.cancel}
@@ -313,7 +316,7 @@ export function FolderView({
                       canManage
                     />
                   )}
-                  {canWrite && (
+                  {canPublish && (
                     <label className="flex items-center gap-2 border-t border-border pt-3 text-sm text-foreground">
                       <input
                         type="checkbox"
