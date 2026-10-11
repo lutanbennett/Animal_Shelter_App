@@ -4061,6 +4061,11 @@ const en = {
         status: "Status",
         location: "On-site / Off-site",
         noMatches: "No residents match these filters.",
+        sortBy: "Sort by",
+        sortLabel: (column: string, dir: "asc" | "desc") =>
+          `Sort by ${column}${dir === "asc" ? " (now A to Z — press for Z to A)" : " (now Z to A — press for A to Z)"}`,
+        sortHeading: (column: string) => `Sort by ${column}`,
+        sortReverse: "Reverse",
         selectAriaLabel: (name: string) => `Select ${name}`,
         selectAll: (n: number, leftOut: number) =>
           `Select all ${n} ${n === 1 ? "resident" : "residents"} shown${

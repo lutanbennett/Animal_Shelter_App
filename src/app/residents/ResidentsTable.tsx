@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Download, PawPrint, Pencil } from "lucide-react";
+import { ArrowDown, ArrowUp, Download, PawPrint, Pencil } from "lucide-react";
 import { ActionLink } from "@/components/ActionLink";
 import { CopyTagLink } from "@/components/CopyTagLink";
 import { SECTION_ICONS } from "@/components/hub-icons";
@@ -15,6 +15,7 @@ import { statusLabel } from "@/lib/i18n/enum-labels";
 import { residentPlace } from "@/lib/residents/place";
 import { ADOPTED, DECEASED } from "@/lib/residents/status";
 import { residentTagPath } from "@/lib/tags/links";
+import { SORT_KEYS, type ListSort, type SortKey } from "@/lib/residents/sort";
 
 export type ResidentRow = {
   resident_id: string;
@@ -43,6 +44,8 @@ export function ResidentsTable({
   residents,
   tagOrigin,
   limited = false,
+  sort,
+  sortLinks,
   exportHref,
   exportFilename,
 }: {
@@ -51,6 +54,10 @@ export function ResidentsTable({
   limited?: boolean;
   /** Origin for each row's RFID-card link (src/lib/tags/origin.ts). */
   tagOrigin: string | null;
+  /** The order the list is in (?sort= and ?dir=). */
+  sort: ListSort;
+  /** Where a click on each heading goes: that column A to Z, or the same one reversed, every filter kept. */
+  sortLinks: Record<SortKey, string>;
   /** The spreadsheet download for the list as filtered: `/residents/export` with the page's own query string. */
   exportHref: string;
   /** The name that download will save under, so the page can say where it went. */
@@ -135,6 +142,33 @@ export function ResidentsTable({
   function whereLabel(status: string | null) {
     const where = residentPlace(status);
     return where ? t.enclosures.hub[where] : t.common.dash;
+  }
+
+  const columnName: Record<SortKey, string> = {
+    id: t.residents.list.table.id,
+    name: t.residents.list.table.resident,
+    enclosure: t.residents.list.table.enclosure,
+    zone: t.residents.list.table.zone,
+    status: t.residents.list.table.status,
+    location: t.residents.list.table.location,
+  };
+  /** A heading that sorts: a link (it navigates, so a refresh, Back and a shared link keep the order), with the direction in aria-sort as well as the arrow. */
+  function sortHeading(key: SortKey, className: string) {
+    const active = sort.key === key;
+    const label = active
+      ? t.residents.list.table.sortLabel(columnName[key], sort.dir)
+      : t.residents.list.table.sortHeading(columnName[key]);
+    return (
+      <th
+        className={`px-4 py-2 font-medium ${className}`}
+        aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : undefined}
+      >
+        <Link href={sortLinks[key]} title={label} aria-label={label} className="inline-flex items-center gap-1 hover:text-foreground">
+          {columnName[key]}
+          {active && (sort.dir === "asc" ? <ArrowUp aria-hidden="true" className="h-3.5 w-3.5" /> : <ArrowDown aria-hidden="true" className="h-3.5 w-3.5" />)}
+        </Link>
+      </th>
+    );
   }
 
   const bookingHref =
@@ -229,6 +263,29 @@ export function ResidentsTable({
           desktop-only: on a phone
           several residents are picked from the forms themselves, and the
           enclosure browser at /enclosures covers the rest. */}
+      {/* Phones show one column, so the headings are not enough: the same choices as a list. */}
+      <div className="flex items-center gap-2 md:hidden">
+        <label htmlFor="sort-by" className="text-sm font-medium text-muted">
+          {t.residents.list.table.sortBy}
+        </label>
+        <select
+          id="sort-by"
+          value={sort.key}
+          onChange={(event) => router.push(sortLinks[event.target.value as SortKey])}
+          className="min-h-11 rounded border border-border bg-surface px-3 py-2 text-sm text-foreground"
+        >
+          {SORT_KEYS.filter((key) => key !== "id").map((key) => (
+            <option key={key} value={key}>{columnName[key]}</option>
+          ))}
+        </select>
+        <Link
+          href={sortLinks[sort.key]}
+          className="inline-flex min-h-11 items-center gap-1 rounded border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-surface-hover"
+        >
+          {sort.dir === "asc" ? <ArrowUp aria-hidden="true" className="h-4 w-4" /> : <ArrowDown aria-hidden="true" className="h-4 w-4" />}
+          {t.residents.list.table.sortReverse}
+        </Link>
+      </div>
       <div className="overflow-x-auto rounded border border-border">
         <table className="w-full text-left text-sm">
           <thead className="bg-surface text-muted">
@@ -247,24 +304,12 @@ export function ResidentsTable({
                   />
                 </th>
               )}
-              <th className="hidden px-4 py-2 font-medium md:table-cell">
-                {t.residents.list.table.id}
-              </th>
-              <th className="px-4 py-2 font-medium">
-                {t.residents.list.table.resident}
-              </th>
-              <th className="hidden px-4 py-2 font-medium md:table-cell">
-                {t.residents.list.table.enclosure}
-              </th>
-              <th className="hidden px-4 py-2 font-medium md:table-cell">
-                {t.residents.list.table.zone}
-              </th>
-              <th className="hidden px-4 py-2 font-medium md:table-cell">
-                {t.residents.list.table.status}
-              </th>
-              <th className="hidden px-4 py-2 font-medium md:table-cell">
-                {t.residents.list.table.location}
-              </th>
+              {sortHeading("id", "hidden md:table-cell")}
+              {sortHeading("name", "")}
+              {sortHeading("enclosure", "hidden md:table-cell")}
+              {sortHeading("zone", "hidden md:table-cell")}
+              {sortHeading("status", "hidden md:table-cell")}
+              {sortHeading("location", "hidden md:table-cell")}
               {/* Copy link (for the RFID card) and edit. The copy button
                   stays on phones: NFC cards are usually written from one. */}
               {!limited && <th className="w-20 px-2 py-2" />}
