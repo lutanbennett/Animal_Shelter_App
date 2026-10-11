@@ -850,6 +850,21 @@ export const ENTRIES = {
       expect: "The record goes back to its old values. Undo is offered only on the newest change to a record.",
     },
   ],
+  "who-does-what": [
+    {
+      activity: "See what every role can do",
+      device: "desktop",
+      do: "Open Settings → Who does what, find one box with a small number in a circle, and press the number.",
+      expect: "Every activity is listed against every role with Edit, Read, None, Yes or No. Admin is a line above the grid, not a column. The number takes you to the reason under the grid, which says which roles it affects.",
+      notes: { management: "Open it from the Who does what tile on Management: there is no Settings in the menu." },
+    },
+    {
+      activity: "Print the grid, or download it as a spreadsheet",
+      device: "desktop",
+      do: "On Who does what, press Print, then press Download CSV and open the file.",
+      expect: "The printout is the grid alone, sideways, without the menu. The spreadsheet has one row per activity, and a numbered box says \"fixed for now\" with its reason.",
+    },
+  ],
   "two-step": [
     {
       activity: "Set up and use 2-step verification",
