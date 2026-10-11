@@ -973,6 +973,11 @@ const th: Dictionary = {
         volunteer: "อาสาสมัคร",
         public_viewer: "ผู้ชมเว็บไซต์",
       },
+      configuredRoles: {
+        second_in_command: "รองผู้จัดการ",
+        head_of_maintenance: "หัวหน้าฝ่ายซ่อมบำรุง",
+        head_of_medical: "หัวหน้าฝ่ายการแพทย์",
+      },
       table: {
         email: "อีเมล",
         name: "ชื่อ",

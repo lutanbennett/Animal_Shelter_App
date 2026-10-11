@@ -13,7 +13,7 @@ import {
   type RecurrenceRule,
   type TimeOfDay,
 } from "@/lib/recurring-jobs/rule";
-import { ASSIGNABLE_ROLES, canDoJob, needsForLinks } from "@/lib/recurring-jobs/eligibility";
+import { ASSIGNABLE_KEY_FILTER, canDoJob, needsForLinks } from "@/lib/recurring-jobs/eligibility";
 import { loadEligibility } from "@/lib/recurring-jobs/eligibility-load";
 import { appUserLabel, type AppUser } from "@/lib/auth/app-users";
 import {
@@ -147,7 +147,7 @@ async function setAssignees(supabase: Supabase, jobId: string, userIds: string[]
       .from("app_users")
       .select("id")
       .in("id", add)
-      .in("role", [...ASSIGNABLE_ROLES])
+      .not("role_key", "in", ASSIGNABLE_KEY_FILTER)
       .is("archived_at", null)
       .returns<{ id: string }[]>();
     if (error) return error.message;

@@ -496,7 +496,6 @@ const PREDICATES = [
 ];
 // Predicates with no single activity to pair with, and why (stated, not silently absent):
 const UNPAIRED = {
-  hasAppAccess: "'may sign in to the app at all': not an activity (§6 rule 5)",
   canDoJob: "takes the page a job links to and the database's answer; the stock pages are paired above by fixture row, /admin /management /maintenance by check-recurring-job-eligibility.mjs",
   assertPhotoWriteAccess: "photo uploads span photos.* and maintenance.photos; paired when the photo split is built",
 };

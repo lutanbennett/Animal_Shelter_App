@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { getAppEnv } from "@/lib/app-env";
-import { loadCurrentRole } from "@/lib/auth/app-access";
+import { loadSessionRole } from "@/lib/auth/app-access";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { formatDate } from "@/lib/format";
@@ -48,7 +48,7 @@ type ViewNote = { text: string; mine: boolean };
 export default async function ReleasesPage({ searchParams }: PageProps<"/releases">) {
   const [{ view }, role, perms, { t, locale }] = await Promise.all([
     searchParams,
-    createClient().then(loadCurrentRole).then(asManualRole),
+    createClient().then(loadSessionRole).then(asManualRole),
     loadPermissions(),
     getT(),
   ]);

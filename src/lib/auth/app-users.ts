@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { ASSIGNABLE_KEY_FILTER } from "@/lib/recurring-jobs/eligibility";
 
 /** A row of the `app_users` view (0055, 0063): a login that holds a role. */
 export type AppUser = {
@@ -30,7 +31,7 @@ export async function loadAssignableUsers(supabase: SupabaseClient) {
   const { data, error } = await supabase
     .from("app_users")
     .select(APP_USER_COLUMNS)
-    .in("role", ["admin", "management", "volunteer"])
+    .not("role_key", "in", ASSIGNABLE_KEY_FILTER)
     .is("archived_at", null)
     .returns<AppUser[]>();
   const users = (data ?? []).sort((a, b) => appUserLabel(a).localeCompare(appUserLabel(b)));

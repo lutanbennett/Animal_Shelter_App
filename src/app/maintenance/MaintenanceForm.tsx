@@ -18,7 +18,7 @@ import { placeName } from "@/lib/enclosures/names";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
 import { ZoneSelectFrame } from "@/components/ZoneName";
 import { appUserLabel, type AppUser } from "@/lib/auth/app-users";
-import { roleLabel } from "@/lib/i18n/enum-labels";
+import { roleKeyLabel } from "@/lib/i18n/enum-labels";
 import type { MaintenanceJob } from "@/lib/maintenance/queries";
 import {
   MAINTENANCE_STATUSES,
@@ -109,7 +109,7 @@ export function MaintenanceForm({
   const teamOptions = [
     ...assignees.map((user) => ({
       id: user.id,
-      label: `${appUserLabel(user)} — ${roleLabel(t, user.role)}`,
+      label: `${appUserLabel(user)} — ${roleKeyLabel(t, user.role_key)}`,
       archived: false,
     })),
     ...initialTeam

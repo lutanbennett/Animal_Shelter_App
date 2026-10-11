@@ -30,7 +30,7 @@ register(
         return next(spec, ctx);
       }`),
 );
-const { canDoJob, rolesForJob, jobIsRestricted, ASSIGNABLE_ROLES, JOB_NEEDS, needKey } = await import(
+const { canDoJob, rolesForJob, jobIsRestricted, NEVER_ASSIGNABLE, ASSIGNABLE_KEY_FILTER, JOB_NEEDS, needKey } = await import(
   pathToFileURL(join(process.cwd(), "src/lib/recurring-jobs/eligibility.ts")).href
 );
 
@@ -66,7 +66,8 @@ const holds = (role, need) =>
   role === "admin" || cells.some(([r, a, l]) => r === role && a === need.activity && l >= (need.level === "read" ? 1 : 2));
 // Role KEYS, as app_users.role_key gives them (0146): the built-in roles and a configured one, whose enum
 // value is a borrowed 'volunteer'. The check used to ask only the enum names, which is how the bug hid.
-const ROLES = [...ASSIGNABLE_ROLES, CONFIGURED];
+const ALL = ["admin", "management", "staff", "volunteer"];
+const ROLES = [...ALL, CONFIGURED];
 const eligibility = Object.fromEntries(
   JOB_NEEDS.map((need) => [needKey(need), ROLES.filter((role) => holds(role, need))]),
 );
@@ -78,8 +79,7 @@ eq("S1 the maintenance board's work is Edit although the page opens at Read", ne
 
 // Doctors are never given a recurring job (Lutan, 2026-09-27): their work comes
 // from clinic appointments.
-const ALL = ["admin", "management", "staff", "volunteer"];
-eq("assignable roles are the app-access roles but doctor", [...ASSIGNABLE_ROLES], ALL);
+eq("the people a job can be given to are everyone with app access but a doctor (by role key)", [NEVER_ASSIGNABLE, ASSIGNABLE_KEY_FILTER], [["doctor", "public_viewer"], "(doctor,public_viewer)"]);
 const ALLK = [...ALL, CONFIGURED];
 
 // [label, link_path, roles that can do it]

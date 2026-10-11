@@ -1042,6 +1042,13 @@ const en = {
         volunteer: "Volunteer",
         public_viewer: "Public viewer",
       },
+      // The configured roles' names, for pages a non-admin reads: `roles` is Admin-only to read, so these
+      // are the same words in the dictionary (roleKeyLabel). Security's own picker reads `roles`.
+      configuredRoles: {
+        second_in_command: "2IC",
+        head_of_maintenance: "Head of Maintenance",
+        head_of_medical: "Head of Medical",
+      },
       table: {
         email: "Email",
         name: "Name",

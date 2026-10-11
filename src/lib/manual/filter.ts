@@ -1,10 +1,14 @@
-import type { ManualRole } from "./types";
+import type { SessionRole } from "@/lib/auth/app-access";
+import { MANUAL_AUDIENCES, type ManualRole } from "./types";
 
-const MANUAL_ROLES: readonly string[] = ["admin", "management", "doctor", "volunteer"];
-
-/** The signed-in role as the manual names it, or null for anything it doesn't (signed out, public viewer). */
-export function asManualRole(role: string | null | undefined): ManualRole | null {
-  return role && MANUAL_ROLES.includes(role) ? (role as ManualRole) : null;
+/**
+ * The audience the manual reads this login as: a built-in role is its own audience, a configured role (2IC,
+ * Head of Maintenance, Head of Medical) reads as a volunteer, as it did while it borrowed that enum value, and
+ * null — which sees everything — is a session that does not open the app (public viewer) or has no role.
+ */
+export function asManualRole(role: SessionRole | null | undefined): ManualRole | null {
+  if (!role?.opensApp) return null;
+  return (MANUAL_AUDIENCES as readonly string[]).includes(role.key) ? (role.key as ManualRole) : "volunteer";
 }
 
 /**

@@ -7,7 +7,7 @@ import { asManualRole } from "@/lib/manual/filter";
 import { isForTopic } from "@/lib/manual/for-topic";
 import { loadPermissions } from "@/lib/permissions/load";
 import { createClient } from "@/lib/supabase/server";
-import { loadCurrentRole } from "@/lib/auth/app-access";
+import { loadSessionRole } from "@/lib/auth/app-access";
 import screenshotSizes from "@/lib/manual/screenshot-sizes.json";
 import { TocScroller } from "./TocScroller";
 import { UntilFound } from "./UntilFound";
@@ -66,7 +66,7 @@ const CALLOUT_STYLES: Record<
 export default async function ManualPage({ searchParams }: PageProps<"/manual">) {
   const [{ view }, role, perms, { t }] = await Promise.all([
     searchParams,
-    createClient().then(loadCurrentRole).then(asManualRole),
+    createClient().then(loadSessionRole).then(asManualRole),
     loadPermissions(),
     getT(),
   ]);
