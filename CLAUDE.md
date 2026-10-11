@@ -200,6 +200,10 @@ before pushing.
   `src/lib/manual/`, `src/lib/i18n/` or `worker/` with no new line and no
   answer. An empty `unreleased` otherwise looks exactly like "nothing visible
   shipped" (decisions.md, 2026-09-24).
+  **Never tick it while the PR's own decision file or backlog note records a manual step still
+  outstanding** (a deploy, a hand edit on the Pi): the note promises users it works now, and
+  #518's false one reached every admin in `0.25.0`. Write `n/a: <the step>`; the note goes in
+  the PR that closes the step (`docs/decisions/2026-10-11-release-note-truth-rule.md`).
 
 Everything merged up to `f32f2c1` (PRs #51–#54) is the agreed baseline and
 predates the rule.
