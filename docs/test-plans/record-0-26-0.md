@@ -24,7 +24,7 @@
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly. The worktree was created from `origin/main` at `c3862e52` after the release merged, so there was nothing to merge
 - [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — n/a: this PR changes two Markdown files and no code. The gates were run on the cut at `f0c61dc9` and CI runs all three on this PR regardless
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit. Ticked in a follow-up commit once the run is actually green, as the template requires
+- [x] CI green on the PR — **7 passing, 0 failing** on #535, run `38122610160`. Ticked in this follow-up commit once the run was actually green; it was `n/a: not yet` on the commit that opened the PR. `check` 2m16s, `public-views` 1m21s, `test-plan` 7s, the rest under 11s
 
 ## 3. Schema and data — *skip if no migration*
 
