@@ -64,6 +64,9 @@ for (const who of REAL) {
   add(who, "describe", `update map_rooms set description = 'Written by ${who}' where id = ${ROOM}`);
   add(who, "delete", `delete from map_rooms where id = ${ROOM}`);
 }
+add("volunteer", "read_room_thai", `select 1 from translations where table_name = 'map_rooms' and status = 'approved' and row_id = ${ROOM}`);
+add("volunteer", "read_other_translation", `select 1 from translations where table_name <> 'map_rooms' and text = 'harness-other'`);
+add("admin", "admin_other_translation", `select 1 from translations where table_name <> 'map_rooms' and text = 'harness-other'`);
 for (const [name, sql] of [
   ["null_shape", `insert into map_rooms (map_id, name, shape) values (${MAP}, 'x', null)`],
   ["two_points", `insert into map_rooms (map_id, name, shape) values (${MAP}, 'x', '[[1,1],[2,2]]'::jsonb)`],
@@ -110,6 +113,14 @@ begin
     insert into facility_maps (kind, image_path, width, height) values ('overview', 'storage:plans/harness/harness.png', 100, 100);
   end if;
   insert into map_rooms (map_id, name, shape) values (${MAP}, 'Harness probe room', ${SQUARE});
+  -- 0184: an approved Thai description on the room, and an approved translation of another table's row
+  insert into translations (table_name, row_id, column_name, source_lang, target_lang, source_text, status, text)
+    select 'map_rooms', id, 'description', 'en', 'th', 'Harness description', 'approved', 'harness-th'
+      from map_rooms where name = 'Harness probe room'
+    on conflict (table_name, row_id, column_name) do update set status = 'approved', text = excluded.text;
+  insert into translations (table_name, row_id, column_name, source_lang, target_lang, source_text, status, text)
+    select table_name, gen_random_uuid(), column_name, 'en', 'th', 'harness', 'approved', 'harness-other'
+      from translatable_fields where table_name <> 'map_rooms' limit 1;
 end $setup$;
 
 do $run$ begin
@@ -228,6 +239,9 @@ for (const k of ["null_shape", "two_points", "out_of_range", "no_plan", "no_name
 // A blank name is stopped by the app (cleanRoomName); the table only insists on not null. Recorded, not judged.
 if (verbose) console.log(`note  a blank-name insert returns ${get("admin", "blank_name")} (the editor never sends one)`);
 
+eq("admin", "admin_other_translation", 1, "(setup) the other table's approved translation exists");
+eq("volunteer", "read_room_thai", 1, "a volunteer reads a room description's approved Thai (0184)");
+eq("volunteer", "read_other_translation", 0, "and not an approved translation of any other table");
 eq("sweep", "two_added", 2, "two rooms with no kind can both be added");
 eqs("sweep", "typed_kept", "Typed name / ชื่อที่พิมพ์", "a typed name is kept on a new room");
 eqs("sweep", "legacy_typed_kept", "Treatment room", "a typed name is kept on a legacy kinded room");
