@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Settings → Security: you can now give someone the 2IC, Head of Maintenance or Head of Medical role. They are in the role dropdown when you create a user, in the users table and under Access requests, with their Thai names in Thai, and the table shows each person's own role instead of Volunteer.", roles: ["admin"] },
 ];
 
 /** Newest first. */

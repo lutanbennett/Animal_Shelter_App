@@ -89,6 +89,13 @@ in place; `/enclosures/map-prototype` is guarded (`facility.map`) and registered
 - Manual topics `microchip` (question L6) and `appointments-vet`, `my-access-requests`, `security`,
   `two-step`: untagged, for the reasons #336 and #340 gave and, for the three Admin ones, decision 3.
 
+**Note 2026-10-11 (`security-role-picker`):** "left" above means **deferred, not permanent**: Lutan, "can
+we ensure we clean these roles up later after the database updates". The four `*_ROLES` lists the backlog
+counts are `APP_ACCESS_ROLES`, `ASSIGNABLE_ROLES`, `MANUAL_ROLES` and Security's `VALID_ROLES` (which this
+file never named: it was the server check on which roles a login may be given). **`VALID_ROLES` is closed**:
+Security reads live roles from `roles` (`docs/decisions/2026-10-11-security-role-picker.md`). The other
+three, and `hasAppAccess`, are `perm-role-lists`' (batch 2 of *Who does what*).
+
 ## For whoever builds medication-label part (3), "Stocktake in the menu only for the people who do it"
 
 The shape is clearer now: `can(perms, "stock.count")` **and** "has a recurring job that links to
