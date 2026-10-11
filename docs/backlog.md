@@ -756,3 +756,5 @@ These were written as rows in `Left for manual verification` tables and sat ther
 
 
 
+
+- [ ] **Admin, maintenance, projects and intake writers contain no `can()` call (app, small to medium; found 2026-10-11 by `medical-gates-and-tooling`).** A grep of every `actions.ts`/`route.ts` under `src/app` that writes (`.insert/.update/.upsert/.delete`) and contains no `can(` found: `admin/diets` (4 writers), `admin/medications` (4), `admin/security`, `admin/who-does-what`, `maintenance` (5 actions), `projects` (9), `residents/new` (`recordIntake`) and `api/status/alerts/route.ts`. Many may be guarded another way (an admin helper, `requireX`, RLS) and need reading, not assuming: the count is the number with no `can(`, not the number that are open. **Done when** each is read and either gets `can()` at the right key with the existing not-allowed wording, or is noted as guarded elsewhere. Same shape as `docs/decisions/2026-10-11-record-permission-gaps.md`.
