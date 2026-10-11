@@ -10,7 +10,7 @@ list names a 2IC… as "Volunteer"*.
 |---|---|---|
 | `APP_ACCESS_ROLES`, `hasAppAccess()` | `loadSessionRole()` in `src/lib/auth/app-access.ts`: `my_permissions()` → `{ key, opensApp }`; the proxy, sign-in, Google callback, public header, resident card and `/no-access` read `opensApp` | who opens the app |
 | `ASSIGNABLE_ROLES` | `ASSIGNABLE_KEY_FILTER` = `app_users.role_key` not in (`doctor`, `public_viewer`), the `NEVER_ASSIGNABLE` list that already existed in `eligibility.ts`; also used by maintenance's `loadAssignableUsers` | who a job may be given to |
-| `MANUAL_ROLES` | `MANUAL_AUDIENCES` in `src/lib/manual/types.ts` (the manual's four audience tags, which is what `ManualRole` is); `asManualRole(sessionRole)`: not opening the app → null (sees everything), a built-in key → itself, any configured role → `volunteer` | which manual topics are shown |
+| `MANUAL_ROLES` | `asManualRole(sessionRole)` in `src/lib/manual/audience.ts`, against the manual's four audience tags (`ManualRole`): not opening the app → null (sees everything), a built-in key → itself, any configured role → `volunteer` | which manual topics are shown |
 | `requireRole`, `refusedPath`, `refuse` | deleted (no callers); `refuseFor(perms)` sends a role that opens the app to `/no-access`, anyone else to `/` | |
 
 `staff` is gone from every list. `current_user_role()` is no longer called from `src/` for these four; the two other

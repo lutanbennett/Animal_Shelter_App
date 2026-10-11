@@ -2,9 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import type { ActivityKey } from "@/lib/permissions/catalogue";
 
 /** The app_role values, as the manual's "who can do this" badges name them. */
-/** Who the manual is written for: its four audiences. A tag on a topic, not a gate on anything. */
-export const MANUAL_AUDIENCES = ["admin", "management", "doctor", "volunteer"] as const;
-export type ManualRole = (typeof MANUAL_AUDIENCES)[number];
+export type ManualRole = "admin" | "management" | "doctor" | "volunteer";
 
 /**
  * A screenshot under public/manual/. `src` is the path the <img> loads;

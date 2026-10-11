@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AlertTriangle, Info, Lightbulb } from "lucide-react";
 import manual from "@/lib/manual/en";
 import { getT } from "@/lib/i18n/get-t";
-import { asManualRole } from "@/lib/manual/filter";
+import { asManualRole } from "@/lib/manual/audience";
 import { isForTopic } from "@/lib/manual/for-topic";
 import { loadPermissions } from "@/lib/permissions/load";
 import { createClient } from "@/lib/supabase/server";

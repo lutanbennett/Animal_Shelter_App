@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import manual from "@/lib/manual/en";
-import { asManualRole } from "@/lib/manual/filter";
+import { asManualRole } from "@/lib/manual/audience";
 import { renderManualPdf, screenshotSrcs, type ManualImages } from "@/lib/manual/manual-pdf";
 import { createClient } from "@/lib/supabase/server";
 import { loadSessionRole } from "@/lib/auth/app-access";
