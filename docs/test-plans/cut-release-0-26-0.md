@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit. Ticked in a follow-up commit once the run is actually green, as the template requires
+- [x] CI green on the PR — **7 passing, 0 failing** on #534, run `38120280355`. Ticked in this follow-up commit once the run was actually green, as the template requires; it was `n/a: not yet` on the commit that opened the PR. `check` 1m57s, `public-views` 1m24s, `test-plan` 14s (green on the first push, because the CI line was not pre-ticked), the rest under 12s
 
 **Also run, beyond the three gates:**
 
