@@ -146,7 +146,7 @@ export default async function WhoDoesWhatPage() {
         <table className="wdw-grid w-full min-w-[60rem] border-collapse text-sm">
           <thead>
             <tr className="border-b border-border bg-surface">
-              <th scope="col" className="sticky left-0 z-10 w-64 bg-surface px-3 py-2 text-left font-semibold text-foreground">
+              <th scope="col" className="sticky left-0 z-10 w-36 bg-surface px-3 py-2 text-left font-semibold sm:w-64 text-foreground">
                 {w.activityHeading}
               </th>
               {roles.map((r) => (
@@ -166,7 +166,7 @@ export default async function WhoDoesWhatPage() {
               </tr>
               {activities.map((a) => (
                 <tr key={a.key} className="border-b border-border last:border-b-0">
-                  <th scope="row" className="sticky left-0 z-10 bg-surface px-3 py-2 text-left font-normal text-foreground [overflow-wrap:anywhere]">
+                  <th scope="row" className="sticky left-0 z-10 bg-surface px-3 py-2 text-left text-xs font-normal text-foreground [overflow-wrap:anywhere] sm:text-sm">
                     {activityName(a.key)}
                   </th>
                   {roles.map((r) => {
