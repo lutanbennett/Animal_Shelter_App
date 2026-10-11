@@ -11,7 +11,7 @@
 | PR | #524 |
 | Tested by / date | Claude / 2026-10-11 |
 | Carries a migration? | yes — `0178_perm_functions.sql` |
-| Tested at SHA | `a795b1d8` (after sync with `origin/main` `56ec6698`, already up to date) |
+| Tested at SHA | `eaa0bc17` (merge of `origin/main` `472c768e`, which brought in #525 security-role-picker) |
 
 ## 1. Scope and risk
 
@@ -22,7 +22,7 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` `56ec6698`: already up to date, pushed
+- [x] `node scripts/worktree.mjs sync` — first sync: already up to date at `56ec6698`. Second sync before merging: `origin/main` `472c768e` (#525) conflicted in `docs/backlog.md` (each stream added a note to a different item, both kept) and `src/lib/releases.ts` (each added an `unreleased` line, both kept); gates rerun green on the merge
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Its closing lines:
 
 ```
@@ -104,7 +104,7 @@ Configured roles probed too: 2IC (gains the death filing and maintenance photo f
 
 - [x] The pages nearest the change still work — checked at the database, which is where the change is: every function the stocktake, medications, diets, recurring jobs, photos, blood-test and procedure files, microchip, deceased and clinic-doctors pages call answers each login as before except the four agreed changes (§3)
 - [ ] Any shared file touched checked from a second, unrelated page — n/a: no shared app file touched (`releases.ts` gained a data line, covered by the build)
-- [x] Nothing merged from `main` during `sync` was broken by this branch — sync merged nothing (already up to date); gates green after
+- [x] Nothing merged from `main` during `sync` was broken by this branch — #525 changed the Security pages and `user_roles` writes, not any function `0178` touches; gates green on the merge (`typecheck=0 lint=0 build=0`), and `check-perm-functions.mjs --applied` rerun after the sync
 
 ## 7. Documentation
 
