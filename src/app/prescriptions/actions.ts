@@ -181,6 +181,7 @@ export async function createPrescription(
   formData: FormData,
 ): Promise<PrescriptionFormState> {
   const { t } = await getT();
+  if (!can(await loadPermissions(), "medical.prescriptions")) return { error: t.common.notAllowed };
   const residentId = str(formData, "residentId");
   if (!residentId) return { error: t.prescriptions.errors.missingResident };
 
@@ -270,6 +271,7 @@ export async function endPrescriptionToday(
   prescriptionId: string,
 ): Promise<{ error: string } | undefined> {
   const { t } = await getT();
+  if (!can(await loadPermissions(), "medical.prescriptions")) return { error: t.common.notAllowed };
   const today = todayIso();
   const supabase = await createClient();
   const { data, error } = await supabase

@@ -255,7 +255,7 @@ const PINNED = {
   // below), on top of the record. Its writes are per row, on the tab's add/edit pages above.
   "/residents/[id]/[section]": {
     guards: ["requireFullResident(SECTION_READS[section])"],
-    decides: ["medical.archive", "resident.adoption_news", "resident.microchip"],
+    decides: ["medical.archive", "medical.visits", "medical.prescriptions", "medical.diet", "medical.weight", "resident.adoption_news", "resident.microchip"],
     table: {
       name: "SECTION_READS",
       want: {
