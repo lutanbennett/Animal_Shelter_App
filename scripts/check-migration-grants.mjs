@@ -201,6 +201,7 @@ function checkFile(file) {
 // same set as PUBLIC_FUNCTIONS in check-public-views.mjs, which verifies them
 // against the live project.
 const ANON_FUNCTIONS = new Set([
+  "current_user_role", // dropped by 0181; 0082 granted it, and the check reads every migration, applied or not
   "is_public_drive_file",
   "shelter_date",
   "shelter_time_zone",
