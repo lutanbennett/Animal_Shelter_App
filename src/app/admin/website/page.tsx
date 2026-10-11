@@ -96,6 +96,19 @@ export default async function WebsitePage({
         .returns<ImpactBaselineRow[]>(),
     ]);
 
+  // An editor that shows empty lists on a failed read invites the admin to re-enter what is already
+  // there, so any failed read stops the page (docs/decisions/2026-10-11-silent-empty-reads.md).
+  for (const [what, result] of [
+    ["pages", pagesResult],
+    ["gallery photos", photosResult],
+    ["public residents", publicResidentsResult],
+    ["Thai names", thaiNamesResult],
+    ["published projects", publishedResult],
+    ["impact baselines", baselinesResult],
+  ] as const) {
+    if (result.error) throw new Error(`Website admin: could not read ${what}: ${result.error.message}`);
+  }
+
   // In the app's order, not the table's; a page missing from the table
   // (it shouldn't be — 0059 seeds all five) is simply skipped.
   const pageRows = pagesResult.data ?? [];

@@ -125,6 +125,11 @@ export async function resolveListView(supabase: Supabase, searchParams: Params, 
     supabase.from("enclosures").select("id, name, name_th, zone_id, sort_order"),
   ]);
 
+  // A failed read here must not become "no zones": the chips vanish and every ?zone= link is
+  // dropped as stale, so the list quietly shows the wrong residents (docs/decisions/2026-10-11-silent-empty-reads.md).
+  if (zonesResult.error) throw new Error(`Residents list: could not read zones: ${zonesResult.error.message}`);
+  if (enclosuresResult.error) throw new Error(`Residents list: could not read enclosures: ${enclosuresResult.error.message}`);
+
   // Physical zones in the shelter's order (Settings → Zones), the Lifecycle
   // pseudo-zone last, as on /enclosures.
   const zones = [...(zonesResult.data ?? [])]
@@ -174,13 +179,16 @@ export async function resolveListView(supabase: Supabase, searchParams: Params, 
       ? parseStatusChip(searchParams)
       : null;
   const chippedIds = noChip
-    ? ((
-        await supabase
+    ? await (async () => {
+        const chipped = await supabase
           .from("residents")
           .select("id")
           .not("microchip_number", "is", null)
-          .returns<{ id: string }[]>()
-      ).data ?? []).map((row) => row.id)
+          .returns<{ id: string }[]>();
+        // Failing to empty would make "no microchip" match every resident.
+        if (chipped.error) throw new Error(`Residents list: could not read microchips: ${chipped.error.message}`);
+        return (chipped.data ?? []).map((row) => row.id);
+      })()
     : null;
   const sort = parseSort(searchParams);
   // Position in the shelter's own order, for the columns the database cannot rank (sortByPlace).

@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "If a list cannot load (the residents list and its zone filters, the spreadsheet download, an enclosure's residents, the website editor), the page now says something went wrong instead of looking empty or handing you a spreadsheet with blank columns.",
   "Cashflow forecast: vaccinations now count every dose that falls due in the window, not just the next one for each animal, so a 90-day forecast shows more for vaccines given monthly. Clinic visits are also placed in the right month by Thai date. The totals can look higher than before; the old ones were too low.",
   "Residents: tap a heading on the list (ID, Resident, Enclosure, Zone, Status, On-site / Off-site) to sort by it, and tap again to reverse. Zone and Enclosure follow the shelter's own order from Settings, not the alphabet. On a phone there is a Sort by choice above the list. The order stays when you refresh or share the link, and Download spreadsheet comes out in the same order.",
 ];
