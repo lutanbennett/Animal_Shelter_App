@@ -13,7 +13,7 @@ export type HomeRole = { key: string; name: string; nameTh: string | null };
 
 /** Every live role that opens the app, but Admin: Admin's own homes are Settings and the others. */
 export async function listHomeRoles(supabase: SupabaseClient): Promise<HomeRole[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("roles")
     .select("key, name, name_th, kind")
     .is("archived_at", null)
@@ -21,6 +21,8 @@ export async function listHomeRoles(supabase: SupabaseClient): Promise<HomeRole[
     .neq("key", "admin")
     .order("kind")
     .order("name");
+  // No roles would read as "nobody can be previewed", not as a failed read (docs/decisions/2026-10-11-silent-empty-reads.md).
+  if (error) throw new Error(`Home roles: could not read roles: ${error.message}`);
   const roles = (data ?? []).map((r) => ({ key: r.key as string, name: r.name as string, nameTh: (r.name_th as string | null) ?? null }));
   // The shelter's own roles in the order a manager reaches for them: Management first.
   return roles.sort((a, b) => Number(b.key === "management") - Number(a.key === "management"));

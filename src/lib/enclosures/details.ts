@@ -76,6 +76,10 @@ export async function loadEnclosureDetails(supabase: Supabase, id: string): Prom
           .returns<{ resident_id: string }[]>()
       : null,
   ]);
+  // An error is not the "no access" empty above (RLS returns no rows, not an error): a failed read
+  // would show an enclosure with nobody in it. See docs/decisions/2026-10-11-silent-empty-reads.md.
+  if (residentsResult?.error) throw new Error(`Enclosure details: could not read residents: ${residentsResult.error.message}`);
+  if (rxResult?.error) throw new Error(`Enclosure details: could not read prescriptions: ${rxResult.error.message}`);
   const onMedication = new Set((rxResult?.data ?? []).map((r) => r.resident_id));
   const residents: EnclosureResident[] = (residentsResult?.data ?? []).map((resident) => ({
     ...resident,

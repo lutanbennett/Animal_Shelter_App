@@ -83,6 +83,16 @@ async function inChunks<T>(ids: string[], read: (chunk: string[]) => PromiseLike
   return (await Promise.all(chunks.map((chunk) => read(chunk)))).flat();
 }
 
+/**
+ * A failed read must stop the file, not thin it. `data ?? []` on an errored query gives empty
+ * columns, and a spreadsheet with blank weights and diets looks complete: the reader cannot tell
+ * "none recorded" from "could not be read" (docs/decisions/2026-10-11-silent-empty-reads.md).
+ */
+function rowsOf<T>(what: string, result: { data: T[] | null; error: { message: string } | null }): T[] {
+  if (result.error) throw new Error(`Resident export: could not read ${what}: ${result.error.message}`);
+  return result.data ?? [];
+}
+
 async function loadExtras(supabase: Supabase, ids: string[], scope: ExportScope): Promise<Extras> {
   const today = todayIso();
   const extras: Extras = {
@@ -98,13 +108,14 @@ async function loadExtras(supabase: Supabase, ids: string[], scope: ExportScope)
 
   jobs.push(
     inChunks(ids, async (chunk) =>
-      (
+      rowsOf(
+        "details",
         await supabase
           .from("residents")
           .select("id, species, breed, sex, size, estimated_age_years, age_estimated_on, intake_date, colour, microchip_number, ready_for_adoption")
           .in("id", chunk)
           .returns<(Detail & { id: string })[]>()
-      ).data ?? [],
+      ),
     ).then((rows) => {
       for (const row of rows) extras.detail.set(row.id, row);
     }),
@@ -114,7 +125,8 @@ async function loadExtras(supabase: Supabase, ids: string[], scope: ExportScope)
     // Running today by the shelter's date: started, not ended, not archived (the hub's rule).
     jobs.push(
       inChunks(ids, async (chunk) =>
-        (
+        rowsOf(
+          "prescriptions",
           await supabase
             .from("prescriptions")
             .select("resident_id")
@@ -123,7 +135,7 @@ async function loadExtras(supabase: Supabase, ids: string[], scope: ExportScope)
             .lte("start_date", today)
             .or(`end_date.is.null,end_date.gte.${today}`)
             .returns<{ resident_id: string }[]>()
-        ).data ?? [],
+        ),
       ).then((rows) => {
         for (const row of rows) extras.prescriptions.set(row.resident_id, (extras.prescriptions.get(row.resident_id) ?? 0) + 1);
       }),
@@ -134,7 +146,8 @@ async function loadExtras(supabase: Supabase, ids: string[], scope: ExportScope)
     // The next one still to come: scheduled, today or later at the shelter, soonest first.
     jobs.push(
       inChunks(ids, async (chunk) =>
-        (
+        rowsOf(
+          "visits",
           await supabase
             .from("clinic_visits")
             .select("resident_id, appointment_date, clinics(name)")
@@ -144,7 +157,7 @@ async function loadExtras(supabase: Supabase, ids: string[], scope: ExportScope)
             .gte("appointment_date", `${today}T00:00:00+07:00`)
             .order("appointment_date")
             .returns<{ resident_id: string; appointment_date: string; clinics: { name: string } | { name: string }[] | null }[]>()
-        ).data ?? [],
+        ),
       ).then((rows) => {
         for (const row of rows.sort((a, b) => a.appointment_date.localeCompare(b.appointment_date))) {
           if (extras.nextVisit.has(row.resident_id)) continue;
@@ -161,7 +174,8 @@ async function loadExtras(supabase: Supabase, ids: string[], scope: ExportScope)
   if (scope.diet) {
     jobs.push(
       inChunks(ids, async (chunk) =>
-        (
+        rowsOf(
+          "diet",
           await supabase
             .from("resident_diets")
             .select("resident_id, diet_types:picker_diet_types(name)")
@@ -169,7 +183,7 @@ async function loadExtras(supabase: Supabase, ids: string[], scope: ExportScope)
             .lte("start_date", today)
             .or(`end_date.is.null,end_date.gte.${today}`)
             .returns<{ resident_id: string; diet_types: { name: string } | { name: string }[] | null }[]>()
-        ).data ?? [],
+        ),
       ).then((rows) => {
         for (const row of rows) {
           const type = Array.isArray(row.diet_types) ? row.diet_types[0] : row.diet_types;
@@ -188,7 +202,7 @@ async function loadExtras(supabase: Supabase, ids: string[], scope: ExportScope)
       inChunks(ids, async (chunk) => {
         const all: { resident_id: string; date: string; weight_kg: number }[] = [];
         for (let from = 0; ; from += PAGE) {
-          const { data } = await supabase
+          const result = await supabase
             .from("weight")
             .select("resident_id, date, weight_kg")
             .in("resident_id", chunk)
@@ -197,8 +211,9 @@ async function loadExtras(supabase: Supabase, ids: string[], scope: ExportScope)
             .order("created_at", { ascending: false })
             .range(from, from + PAGE - 1)
             .returns<{ resident_id: string; date: string; weight_kg: number }[]>();
-          all.push(...(data ?? []));
-          if ((data?.length ?? 0) < PAGE) break;
+          const data = rowsOf("weight", result);
+          all.push(...data);
+          if (data.length < PAGE) break;
         }
         return all;
       }).then((rows) => {
