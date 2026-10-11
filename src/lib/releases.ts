@@ -75,15 +75,24 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "Vaccines: Management → Medications now has a Vaccines section showing how many doses of each vaccine are due in the next 7 days, 30 days or any dates you pick, beside how many you hold, with a red \"Short by\" where you will need more than you have. Doses already overdue are counted in every window. Enter what is on the shelf for each vaccine on Settings → Immunization types.",
-  "Facility map: if a room's description has been translated into Thai, everyone who can see the room now sees it in Thai on the room's card, not only people who manage translations.",
-  "If a list cannot load (the residents list and its zone filters, the spreadsheet download, an enclosure's residents, the website editor), the page now says something went wrong instead of looking empty or handing you a spreadsheet with blank columns.",
-  "Cashflow forecast: vaccinations now count every dose that falls due in the window, not just the next one for each animal, so a 90-day forecast shows more for vaccines given monthly. Clinic visits are also placed in the right month by Thai date. The totals can look higher than before; the old ones were too low.",
-  "Residents: tap a heading on the list (ID, Resident, Enclosure, Zone, Status, On-site / Off-site) to sort by it, and tap again to reverse. Zone and Enclosure follow the shelter's own order from Settings, not the alphabet. On a phone there is a Sort by choice above the list. The order stays when you refresh or share the link, and Download spreadsheet comes out in the same order.",
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.27.0",
+    date: "2026-10-11",
+    title:
+      "A new Vaccines section shows what you are short of, and the residents list sorts by any heading",
+    major: true,
+    notes: [
+      "Vaccines: Management → Medications now has a Vaccines section showing how many doses of each vaccine are due in the next 7 days, 30 days or any dates you pick, beside how many you hold, with a red \"Short by\" where you will need more than you have. Doses already overdue are counted in every window. Enter what is on the shelf for each vaccine on Settings → Immunization types.",
+      "Residents: tap a heading on the list (ID, Resident, Enclosure, Zone, Status, On-site / Off-site) to sort by it, and tap again to reverse. Zone and Enclosure follow the shelter's own order from Settings, not the alphabet. On a phone there is a Sort by choice above the list. The order stays when you refresh or share the link, and Download spreadsheet comes out in the same order.",
+      "Cashflow forecast: vaccinations now count every dose that falls due in the window, not just the next one for each animal, so a 90-day forecast shows more for vaccines given monthly. Clinic visits are also placed in the right month by Thai date. The totals can look higher than before; the old ones were too low.",
+      "Facility map: if a room's description has been translated into Thai, everyone who can see the room now sees it in Thai on the room's card, not only people who manage translations.",
+      "If a list cannot load (the residents list and its zone filters, the spreadsheet download, an enclosure's residents, the website editor), the page now says something went wrong instead of looking empty or handing you a spreadsheet with blank columns.",
+    ],
+  },
   {
     version: "0.26.0",
     date: "2026-10-11",
