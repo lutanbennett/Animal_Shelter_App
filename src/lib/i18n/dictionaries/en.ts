@@ -889,6 +889,7 @@ const en = {
         notRemembered: (v: { note: string | number }) =>
           `The check couldn't record its result, so nothing was mailed: ${v.note}`,
         callFailed: "Couldn't reach the server. Try again.",
+        onPi: "The two buttons are off on this page: it was drawn by the Pi, which cannot send mail. Alert mail is sent by the Cloudflare Worker, on its 15-minute schedule.",
       },
       tiles: {
         database: {
@@ -948,6 +949,7 @@ const en = {
         },
         origin: {
           title: "Pi origin",
+          drawnByPi: "Working: this page was drawn by the Pi, so pages are being served from it.",
           off: "Not in use yet: every page is served by the Cloudflare Worker, as before the Pi.",
           ok: (v: { host: string | number }) =>
             `Reachable at ${v.host}: pages are rendered on the Pi.`,

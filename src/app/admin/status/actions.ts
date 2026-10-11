@@ -6,6 +6,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { runStatusAlerts, sendTestAlert, type Skipped } from "@/lib/status/alerts";
 import { clearStatusCache } from "@/lib/status/run";
+import { renderedBy } from "@/lib/status/runtime";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 
@@ -49,6 +50,7 @@ export async function runAlertCheckNow(): Promise<AlertActionResult> {
   const { t } = await getT();
   const a = t.admin.status.alerts;
   if (!can(await loadPermissions(), "system.status")) return { ok: false, error: t.admin.security.errors.adminAccessRequired };
+  if (renderedBy() === "pi") return { ok: false, error: a.onPi };
   return runAction<AlertOutcome>("status.runAlertCheckNow", t.common.somethingWentWrong, async () => {
     const r = await runStatusAlerts("manual", await origin());
     clearStatusCache();
@@ -67,6 +69,7 @@ export async function sendTestAlertNow(): Promise<AlertActionResult> {
   const { t } = await getT();
   const a = t.admin.status.alerts;
   if (!can(await loadPermissions(), "system.status")) return { ok: false, error: t.admin.security.errors.adminAccessRequired };
+  if (renderedBy() === "pi") return { ok: false, error: a.onPi };
   return runAction<AlertOutcome>("status.sendTestAlert", t.common.somethingWentWrong, async () => {
     const r = await sendTestAlert(await origin());
     revalidatePath("/admin/status");
