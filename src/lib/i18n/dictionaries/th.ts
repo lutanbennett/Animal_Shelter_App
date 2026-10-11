@@ -820,6 +820,7 @@ const th: Dictionary = {
         notRemembered: (v: { note: string | number }) =>
           `การตรวจสอบบันทึกผลไม่ได้ จึงไม่ได้ส่งอีเมล: ${v.note}`,
         callFailed: "ติดต่อเซิร์ฟเวอร์ไม่ได้ ลองอีกครั้ง",
+        onPi: "ปุ่มทั้งสองปิดอยู่ในหน้านี้: หน้านี้สร้างโดย Pi ซึ่งส่งอีเมลไม่ได้ อีเมลแจ้งเตือนส่งโดย Cloudflare Worker ตามกำหนดทุก 15 นาที",
       },
       tiles: {
         database: {
@@ -879,6 +880,7 @@ const th: Dictionary = {
         },
         origin: {
           title: "เซิร์ฟเวอร์ Pi",
+          drawnByPi: "ทำงานปกติ: หน้านี้สร้างโดย Pi จึงให้บริการจาก Pi อยู่",
           off: "ยังไม่ได้ใช้งาน: ทุกหน้าให้บริการโดย Cloudflare Worker เหมือนก่อนมี Pi",
           ok: (v: { host: string | number }) =>
             `เชื่อมต่อได้ที่ ${v.host}: หน้าต่าง ๆ สร้างบน Pi`,

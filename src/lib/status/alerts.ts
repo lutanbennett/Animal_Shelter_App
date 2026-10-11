@@ -4,6 +4,7 @@ import en from "@/lib/i18n/dictionaries/en";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { type HealthCheckKey, type HealthReport, runHealthChecks } from "./health";
 import { type CheckOutcome, redactSecrets } from "./run";
+import { renderedBy } from "./runtime";
 
 /**
  * "Alert me when a tile goes red": the System status health checks, run on
@@ -80,6 +81,14 @@ function workerEnv(): AlertEnv | null {
     return null;
   }
 }
+
+/**
+ * Why a run on the Pi mails nobody. The Pi serves the pages but holds no mail
+ * binding, so this is where the page was drawn, not a fault in the alert
+ * path: checkAlerts() ignores runs that say it, and the buttons are off there.
+ * Runs recorded before the buttons were off still carry it.
+ */
+export const PI_NO_MAIL_REASON = "alert mail is off here: not running on the Worker, which holds the mail binding";
 
 /** Plain English names for the mail, from the page's own tile titles. */
 const TITLES: Record<HealthCheckKey, string> = {
@@ -188,7 +197,7 @@ async function send(
     return { sent: to, skipped: [], note: "Local dev server: the mail was written to the server log, not sent." };
   }
   const reason = !env
-    ? "alert mail is off here: not running on the Worker, which holds the mail binding"
+    ? PI_NO_MAIL_REASON
     : "alert mail is off here: no STATUS_ALERT_MAIL binding or STATUS_ALERT_FROM (wrangler.jsonc)";
   return { sent: [], skipped: to.map((address) => ({ address, reason })), note: reason };
 }
@@ -362,6 +371,8 @@ export async function runStatusAlerts(trigger: "cron" | "manual", origin: string
  * the tile can say whether it reached anyone.
  */
 export async function sendTestAlert(origin: string): Promise<{ sent: string[]; skipped: Skipped[]; note: string | null }> {
+  // Nothing was tried, so nothing is recorded: a run that cannot mail would become "the last mail".
+  if (renderedBy() === "pi") return { sent: [], skipped: [], note: PI_NO_MAIL_REASON };
   const to = await adminEmails();
   const statusUrl = `${origin}/admin/status`;
   const out = to.length
@@ -406,13 +417,16 @@ export async function checkAlerts(): Promise<CheckOutcome<AlertFacts>> {
       .select("ran_at, trigger, sent, skipped, note")
       .or("mailed.not.is.null,trigger.eq.test")
       .order("ran_at", { ascending: false })
-      .limit(1),
+      .limit(20),
     db.from("status_alert_checks").select("check_key").not("alerted_at", "is", null),
   ]);
   const error = cron.error ?? mail.error ?? open.error;
   if (error) return { state: "fail", error: error.message };
 
-  const m = mail.data?.[0];
+  // A run that only says it was pressed on the Pi proves nothing about the
+  // mail path (the Pi has no binding), and used to stay "the last mail" until
+  // some real alert reached someone.
+  const m = mail.data?.find((r) => (r.sent as string[]).length > 0 || r.note !== PI_NO_MAIL_REASON);
   const facts: AlertFacts = {
     scheduledHere,
     lastCronAt: (cron.data?.[0]?.ran_at as string | undefined) ?? null,

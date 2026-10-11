@@ -1,6 +1,6 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { getAppEnv } from "@/lib/app-env";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { type Runtime, renderedBy } from "./runtime";
 import { type CheckOutcome, type CheckResult, cached, runCheck } from "./run";
 
 /**
@@ -93,23 +93,13 @@ export async function countAssistantRequests(days: number): Promise<CheckOutcome
 }
 
 /** Where the app answering this request runs, which decides where the two values belong. */
-export type VisitorRuntime = "worker" | "pi" | "local";
+export type VisitorRuntime = Runtime;
 
 export type VisitorFacts =
   | { kind: "counts"; pageViews: number; dailyVisitorsSummed: number }
   | { kind: "missing"; missing: string[]; runtime: VisitorRuntime; file: string };
 
 const VISITOR_KEYS = ["CLOUDFLARE_ANALYTICS_TOKEN", "CLOUDFLARE_ZONE_ID"] as const;
-
-function visitorRuntime(): VisitorRuntime {
-  try {
-    getCloudflareContext();
-    return "worker";
-  } catch {
-    // write-env.mjs gives only a Pi a photo cache, so it marks the Pi.
-    return process.env.PHOTO_CACHE_DIR ? "pi" : "local";
-  }
-}
 
 /**
  * Public-site visitors from Cloudflare's own aggregate zone analytics
@@ -141,7 +131,7 @@ export async function countVisitors(days: number): Promise<CheckOutcome<VisitorF
   const zone = process.env.CLOUDFLARE_ZONE_ID;
   if (!token || !zone) {
     const missing = VISITOR_KEYS.filter((k) => !process.env[k]);
-    const runtime = visitorRuntime();
+    const runtime = renderedBy();
     const appEnv = getAppEnv();
     // The file both deploy scripts read for this database (scripts/lib/env.mjs).
     const file = appEnv === "dev" ? ".env.local" : `.env.deploy.${appEnv}`;
