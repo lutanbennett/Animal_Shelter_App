@@ -100,6 +100,9 @@ async function run() {
   const context = await browser.newContext({ viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true });
   await context.addCookies([...adminCookies, { name: "locale", value: "en", url: base }]);
   const page = await context.newPage();
+  const consoleErrors = [];
+  page.on("console", (m) => { if (m.type() === "error") consoleErrors.push(m.text()); });
+  page.on("pageerror", (e) => consoleErrors.push(e.message));
 
   // 1. The picker
   await page.goto(`${base}/admin/security`, { waitUntil: "networkidle" });
@@ -153,14 +156,24 @@ async function run() {
 
   // 4. Changing a role in the table keeps the pair in step, both ways
   const medical = logins.find((l) => l.key === "head_of_medical");
-  for (const to of ["management", "head_of_medical"]) {
-    await page.locator("tr", { hasText: medical.email }).locator("select").selectOption(to);
+  // Through Doctor and Admin too: their special cases follow the borrowed enum (the clinic box; 2-step set-up opened).
+  for (const to of ["management", "doctor", "admin", "head_of_medical"]) {
+    await page.locator("tr", { hasText: medical.email }).locator("select").first().selectOption(to);
     await page.locator("tr", { hasText: medical.email }).locator("+ tr .text-success").waitFor({ timeout: 30_000 });
     const row = await roleRow(medical.userId);
     check(row.role_id === roles[to].id && row.role === roles[to].legacy_role,
       `changed in the table to ${roles[to].name}: role_id and role are ${to} and ${roles[to].legacy_role}`, JSON.stringify(row));
     await page.reload({ waitUntil: "networkidle" });
+    if (to === "doctor") {
+      const box = await page.locator("tr", { hasText: medical.email }).getByText("Not linked to a doctor").count();
+      check(box === 1, "as Doctor, the row shows its Doctor box (not linked yet)");
+    }
+    if (to === "admin") {
+      const { data } = await service.auth.admin.getUserById(medical.userId);
+      check(typeof data.user?.app_metadata?.two_step_setup_until === "string", "made Admin, the login's 2-step set-up is opened");
+    }
   }
+  check(consoleErrors.length === 0, "no browser console errors on Settings -> Security", consoleErrors.slice(0, 3).join(" | "));
   await context.close();
 
   // 5. Each new login, signed in for real
@@ -247,7 +260,7 @@ function cellsFromPerms(perms) {
 }
 
 async function selectedRoleInTable(page, email) {
-  return (await page.locator("tr", { hasText: email }).locator("select option:checked").textContent())?.trim();
+  return (await page.locator("tr", { hasText: email }).locator("select").first().locator("option:checked").textContent())?.trim();
 }
 
 function ssrClient(jar) {
