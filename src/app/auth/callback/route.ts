@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { signedInLandingPath } from "@/lib/auth/app-access";
+import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { PASSWORD_CHANGE_PATH } from "@/lib/auth/password-change";
 import { createClient } from "@/lib/supabase/server";
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=google`);
   }
 
-  const { data: role } = await supabase.rpc("current_user_role");
+  const role = await loadSessionRole(supabase);
   if (!role) {
     await supabase.auth.signOut();
     return NextResponse.redirect(`${origin}/login?error=no_role`);

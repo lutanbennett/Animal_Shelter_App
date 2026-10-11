@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { hasAppAccess, loadCurrentRole } from "@/lib/auth/app-access";
+import { loadSessionRole } from "@/lib/auth/app-access";
 import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/next-path";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
@@ -78,7 +78,7 @@ export async function PublicHeader({
   // Staff get "Open the app". A public viewer (src/lib/auth/app-access.ts)
   // is a visitor here with nothing to open — only a way to sign out. A
   // visitor who isn't signed in sees neither here: Staff login is in the footer and, on a phone, the menu.
-  const staff = user ? hasAppAccess(await loadCurrentRole(supabase)) : false;
+  const staff = user ? (await loadSessionRole(supabase))?.opensApp === true : false;
   const n = t.publicNav;
 
   const link = (key: PublicSection, href: string, label: string): PublicNavLink => ({

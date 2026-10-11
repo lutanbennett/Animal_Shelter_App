@@ -6,7 +6,7 @@ import {
   mustChangePassword,
   signedInWithPassword,
 } from "@/lib/auth/password-change";
-import { hasAppAccess, loadCurrentRole, signedInLandingPath } from "@/lib/auth/app-access";
+import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { isPublicPath as isPublicPathname } from "@/lib/public-paths";
 import { isPublicSiteLocked } from "@/lib/public-site";
@@ -74,7 +74,7 @@ export async function updateSession(request: NextRequest) {
   // "/" is the public home page for everyone — a signed-in staff member
   // sees it as a visitor does, with "Open the app" in its header.
   if (user && request.nextUrl.pathname === "/login") {
-    const role = await loadCurrentRole(supabase);
+    const role = await loadSessionRole(supabase);
     // A session that opens nothing (archived since it signed in, or never
     // given a role) is ended here, so /login offers a fresh sign-in.
     if (!role) {
@@ -123,8 +123,8 @@ export async function updateSession(request: NextRequest) {
     !isPublicPathname(request.nextUrl.pathname) &&
     request.nextUrl.pathname !== PASSWORD_CHANGE_PATH
   ) {
-    const role = await loadCurrentRole(supabase);
-    if (!hasAppAccess(role)) {
+    const role = await loadSessionRole(supabase);
+    if (!role?.opensApp) {
       const url = request.nextUrl.clone();
       url.search = "";
       if (role) {

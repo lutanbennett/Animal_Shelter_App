@@ -8,7 +8,7 @@ import {
   loadRecurringJobs,
   type OccurrenceRow,
 } from "@/lib/recurring-jobs/queries";
-import { ASSIGNABLE_ROLES, canDoJob } from "@/lib/recurring-jobs/eligibility";
+import { ASSIGNABLE_KEY_FILTER, canDoJob } from "@/lib/recurring-jobs/eligibility";
 import { loadEligibility } from "@/lib/recurring-jobs/eligibility-load";
 import { RecurringJobsView, type JobSummary, type PersonOption, type CoveredDate, type RecordEntry } from "./RecurringJobsView";
 import type { TeamMember } from "./RecurringJobForm";
@@ -35,11 +35,11 @@ export default async function RecurringJobsPage() {
 
   const [{ jobs, error }, peopleResult, staffingResult, recordResult] = await Promise.all([
     loadRecurringJobs(supabase),
-    // The enum gates who can be given a job at all; eligibility is asked of each person's role KEY (0146).
+    // The role key gates who can be given a job at all; eligibility is asked of each person's role KEY (0146).
     supabase
       .from("app_users")
       .select("id, email, display_name, role, archived_at, role_key")
-      .in("role", [...ASSIGNABLE_ROLES])
+      .not("role_key", "in", ASSIGNABLE_KEY_FILTER)
       .is("archived_at", null)
       .returns<AppUser[]>(),
     supabase

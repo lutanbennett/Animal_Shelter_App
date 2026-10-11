@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { LogIn } from "lucide-react";
-import { hasAppAccess, loadCurrentRole } from "@/lib/auth/app-access";
+import { loadSessionRole } from "@/lib/auth/app-access";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { canOpen, routeFor } from "@/lib/permissions/routes";
@@ -78,7 +78,7 @@ export default async function ResidentCardPage(props: PageProps<"/r/[code]">) {
   if (!resident) notFound();
   // Never less than a stranger sees: the hub only for a login that can open the record, else the
   // card with what their role adds (docs/decisions/2026-10-07-name-card-taps.md).
-  const appAccess = !!user && hasAppAccess(await loadCurrentRole(supabase));
+  const appAccess = !!user && (await loadSessionRole(supabase))?.opensApp === true;
   const perms = appAccess ? await loadPermissions() : null;
   const readsRecord = can(perms, "resident.record", "read");
   let rowVisible = false;

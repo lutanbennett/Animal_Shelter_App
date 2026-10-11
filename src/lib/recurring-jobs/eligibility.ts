@@ -1,4 +1,3 @@
-import { APP_ACCESS_ROLES } from "@/lib/auth/app-access";
 import type { ActivityKey, Level } from "@/lib/permissions/catalogue";
 import { ROUTES } from "@/lib/permissions/routes";
 
@@ -31,19 +30,13 @@ import { ROUTES } from "@/lib/permissions/routes";
  */
 
 /**
- * The built-in roles that can be given a recurring job: everyone with app
- * access but doctors. 0095 lets any app role be an assignee (and read the
- * rules); this is narrower, and the actions enforce it. It is the ENUM gate
- * for queries over app_users.role, which every configured role also passes
- * (each borrows a legacy value); it is not the list of keys eligibility is
- * asked about. Those are the keys of the people concerned (app_users.role_key,
- * 0146), because a configured role's enum value is not its key
- * (decisions/2026-10-05-rota-eligibility.md).
- */
-export const ASSIGNABLE_ROLES = APP_ACCESS_ROLES.filter((role) => role !== "doctor");
+ * Who can be given a recurring job at all: everyone with app access (app_users lists no one else) but a
+ * doctor. Asked of the login's role KEY (0146), not the enum it borrows (docs/decisions/2026-10-11-perm-role-lists.md).
+ * Keys that are never assignable whatever they hold: a doctor's work comes from clinic visits, and a public viewer is not staff. */
+export const NEVER_ASSIGNABLE = ["doctor", "public_viewer"];
 
-/** Keys that are never assignable whatever they hold: a doctor's work comes from clinic visits, and a public viewer is not staff. */
-const NEVER_ASSIGNABLE = ["doctor", "public_viewer"];
+/** PostgREST `not.in` list over app_users.role_key: everyone with app access but those. */
+export const ASSIGNABLE_KEY_FILTER = `(${NEVER_ASSIGNABLE.join(",")})`;
 
 /** The cell a page asks for: the activity its route registers, at the level that opens it. */
 export type Need = { activity: ActivityKey; level: Level };

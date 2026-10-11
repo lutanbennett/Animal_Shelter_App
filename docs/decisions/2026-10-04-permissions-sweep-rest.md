@@ -70,17 +70,17 @@ registered**: their paths hold an id. `/maintenance/new` and `/maintenance/[id]/
 their "read only" message in place for a volunteer. `/assistant` also still says "you can't use this"
 in place; `/enclosures/map-prototype` is guarded (`facility.map`) and registered.
 
-**5. Left, and why.** None of these is a role list guarding a page.
-- `hasAppAccess` / `APP_ACCESS_ROLES` / `current_user_role()` in the proxy, `refusedPath`, sign-in
+**5. Left, and why.** (**Superseded 2026-10-11 for the role-name lists:** `hasAppAccess`, `APP_ACCESS_ROLES`, `ASSIGNABLE_ROLES` and `MANUAL_ROLES` below are gone, see the note at the end of this section and `2026-10-11-perm-role-lists.md`.) None of these is a role list guarding a page.
+- ~~`hasAppAccess` / `APP_ACCESS_ROLES` / `current_user_role()`~~ *(superseded 2026-10-11: gone; the proxy, sign-in and public header ask `roles.opens_app`)* in the proxy, `refusedPath`, sign-in
   landing and the public header: still "may this person into the app at all". `roles.opens_app` is the
   future answer; no role needs it yet, and nothing in this sweep made it reachable (the menu and My
   tasks now read `perms.role.opensApp`, which is the same seeded value).
 - `/my`'s `role === "vet"` redirect, `signedInLandingPath`'s vet branch and `/no-access`' vet wording:
   where a role lands is `home-screens` (`roles.home_path`, not seeded for any role yet).
-- `ASSIGNABLE_ROLES` (everyone with app access but a vet): Lutan's 2026-09-27 ruling that no vet is
+- ~~`ASSIGNABLE_ROLES`~~ *(superseded 2026-10-11: now `role_key` not doctor/public_viewer)* (everyone with app access but a vet): Lutan's 2026-09-27 ruling that no vet is
   given a recurring job. A role list, but about a person's job, not a page; it wants its own decision
   when a configured role exists.
-- `src/lib/manual/filter.ts`'s `MANUAL_ROLES` and the release notes' role tags: the reader's "who is
+- ~~`src/lib/manual/filter.ts`'s `MANUAL_ROLES`~~ *(superseded 2026-10-11: `asManualRole` reads the role key)* and the release notes' role tags: the reader's "who is
   this for" words, which `activity` now overrides in the manual. Release notes are tagged text, not a
   guard.
 - `assertPhotoWriteAccess()` still guards the blood-test and procedure file routes, as `-medical`
@@ -94,7 +94,7 @@ we ensure we clean these roles up later after the database updates". The four `*
 counts are `APP_ACCESS_ROLES`, `ASSIGNABLE_ROLES`, `MANUAL_ROLES` and Security's `VALID_ROLES` (which this
 file never named: it was the server check on which roles a login may be given). **`VALID_ROLES` is closed**:
 Security reads live roles from `roles` (`docs/decisions/2026-10-11-security-role-picker.md`). The other
-three, and `hasAppAccess`, are `perm-role-lists`' (batch 2 of *Who does what*).
+three, and `hasAppAccess`, were `perm-role-lists`' and are closed (`docs/decisions/2026-10-11-perm-role-lists.md`).
 
 ## For whoever builds medication-label part (3), "Stocktake in the menu only for the people who do it"
 

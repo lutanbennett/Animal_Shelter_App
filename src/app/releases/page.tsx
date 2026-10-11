@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { getAppEnv } from "@/lib/app-env";
-import { loadCurrentRole } from "@/lib/auth/app-access";
+import { loadSessionRole } from "@/lib/auth/app-access";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { formatDate } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
-import { asManualRole, isForRole } from "@/lib/manual/filter";
+import { asManualRole } from "@/lib/manual/audience";
+import { isForRole } from "@/lib/manual/filter";
 import { noteRoles, noteText, releases, unreleased, type ReleaseNote } from "@/lib/releases";
 import { createClient } from "@/lib/supabase/server";
 import { OpenReleaseFromHash } from "./OpenReleaseFromHash";
@@ -48,7 +49,7 @@ type ViewNote = { text: string; mine: boolean };
 export default async function ReleasesPage({ searchParams }: PageProps<"/releases">) {
   const [{ view }, role, perms, { t, locale }] = await Promise.all([
     searchParams,
-    createClient().then(loadCurrentRole).then(asManualRole),
+    createClient().then(loadSessionRole).then(asManualRole),
     loadPermissions(),
     getT(),
   ]);

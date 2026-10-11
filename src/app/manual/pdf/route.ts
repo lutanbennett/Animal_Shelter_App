@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import manual from "@/lib/manual/en";
-import { asManualRole } from "@/lib/manual/filter";
+import { asManualRole } from "@/lib/manual/audience";
 import { renderManualPdf, screenshotSrcs, type ManualImages } from "@/lib/manual/manual-pdf";
 import { createClient } from "@/lib/supabase/server";
-import { loadCurrentRole } from "@/lib/auth/app-access";
+import { loadSessionRole } from "@/lib/auth/app-access";
 import { loadPermissions } from "@/lib/permissions/load";
 
 /**
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return new NextResponse("Sign in to view the manual.", { status: 401 });
 
-  const role = asManualRole(await loadCurrentRole(supabase));
+  const role = asManualRole(await loadSessionRole(supabase));
   const all = asked || !role;
   const perms = await loadPermissions();
 

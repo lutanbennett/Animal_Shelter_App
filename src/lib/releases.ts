@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Maintenance: when you choose who a job is for, a 2IC, Head of Maintenance or Head of Medical now shows under their own role name (in Thai in Thai), not as Volunteer. The same names now show when you give someone a recurring job.",
   "A 2IC can now delete a maintenance job, as Management and Admin can. Deleting a job is now its own box in Settings → Who does what.",
   "The Head of Maintenance can no longer delete a maintenance job, only log, change, assign and complete one. The Head of Maintenance's role showed Edit on maintenance jobs, which reads as including delete, but the system already refused the delete; the Delete button was on the page and pressing it only showed an error. It is now hidden for that role, so nobody taps it by mistake and loses the record of what was repaired.",
   { text: "Settings → Who does what no longer offers the 2IC and the two Heads boxes the system refused: for the 2IC, changing a resident's record, adopter news, moving, hospital, rehoming and recording a death, and changing or adding a contact; for both Heads, moving a resident. These roles see who a resident is and where they live, and the 2IC reads a contact's name and phone. Nothing anyone could do has changed; the grid now says what the system already did.", roles: ["admin", "management"] },

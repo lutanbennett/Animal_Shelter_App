@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { loadCurrentRole, signedInLandingPath } from "@/lib/auth/app-access";
+import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
@@ -35,7 +35,7 @@ export async function login(
   // Google sign-in refuses it (src/app/auth/callback/route.ts): the
   // password was right, but the session would open nothing — and on a
   // locked site it would still get past the lock.
-  const role = await loadCurrentRole(supabase);
+  const role = await loadSessionRole(supabase);
   if (!role) {
     await supabase.auth.signOut();
     const { t } = await getT();
