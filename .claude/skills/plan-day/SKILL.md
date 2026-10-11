@@ -137,9 +137,9 @@ Rules, in order:
    Claude-buildable, unblocked items, plan fewer and say why. Padding
    the list with user-driven items to reach nine is the failure mode to
    avoid — those stay reminders in **Not today**.
-8. **Fold small items into one stream.** Every stream pays a ~110k floor
+8. **Fold small items into one stream.** Every stream pays a ~80k floor
    before any work (see *Token estimates*), so three quick wins as three
-   streams cost ~330k of floor; as one stream, ~110k. Disjointness
+   streams cost ~240k of floor; as one stream, ~80k. Disjointness
    decides what *can* share a stream; this decides what *should*. Worked
    example: batch 73's `stock-pages-finish` folds three items.
 
@@ -204,11 +204,11 @@ setting produces a false finding.
 
 | scale | band | shape |
 |---|---|---|
-| Floor | ~110k | every stream, before any work: tools, memory, skills, CLAUDE.md, brief |
-| Quick win | 110–170k | 1–3 files; screenshots cost far less than first assumed |
-| Schema PR | ~150k single-file · 230–285k with code | measured 4×: `map-rooms-schema` 151,273 · `receipt-issuer-server-side` 143,678 · `role-floor-schema` 231,297 · `perm-functions-schema` 284,248 |
-| Medium | 200–320k | 5–15 files, browser checks, both dictionaries |
-| Large | 350–550k | rebuilt pages, many files |
+| Floor | **~80k** | every stream, before any work: tools, memory, skills, CLAUDE.md, brief. **Corrected 2026-10-11 from ~110k, on one measurement** — `release-note-truth-rule` came in at **103,070** with only 23,881 of messages, so its fixed overhead was **~77k** (System tools 38,782 · MCP 17,001 · Memory 9,695 · Skills 6,377 · System prompt 4,973). **One measurement, not a law: re-check it.** The 30k error was inherited by every band below, which is most of why they read high |
+| Quick win | 110–170k | 1–3 files; screenshots cost far less than first assumed. **Left as written on Lutan's ruling, 2026-10-11** — the planner had been quoting 130–200k while both measured quick wins (129,320 · 135,901) sat *inside* this band. **The band was right and the quoting was high. Do not reopen it** |
+| Schema PR | **~140–155k single-file · 230–285k with code** | measured 6×: `cashflow-forecast-function` 139,791 · `drop-leftovers-schema` 143,030 (three unrelated items in one file) · `receipt-issuer-server-side` 143,678 · `map-rooms-schema` 151,273 · `role-floor-schema` 231,297 · `perm-functions-schema` 284,248 |
+| Medium | **170–290k** | 5–15 files, browser checks, both dictionaries. Measured: `residents-list-sort` 166,843 · `vaccine-stock-forecast` 188,913 · `perm-policy-cleanup` 206,567 · `who-does-what-edit` 210,888 · `place-order-settings` 282,082 |
+| Large | **340–460k** | rebuilt pages, many files, or a whole-system read. Measured: `perm-drop-enum` 352,802 · `medications-diets-split` 361,651 · `fable-architecture-review` 448,294 (**fable-5-1 at `xhigh` — two dials, not comparable**) · `who-does-what-view` 449,014 |
 
 Measured 2026-10-08 (batch 72): `account-menu-min-width` quick 129,320
 (est. 180–280k); `place-order-settings` medium 282,082 (est. 300–450k);
@@ -219,17 +219,26 @@ its figure shows. Reasoning: `docs/decisions/2026-10-08-plan-day-token-estimates
 
 **Estimate by what the stream must find out, not by files touched — and
 give a band, never a figure.** The bands above have been wrong by +50% and
-−39% in consecutive batches. Before estimating, ask **what does this
-stream have to count?** If the answer is anything other than "nothing",
-widen the band and say in the brief that the counting is the deliverable.
-A brief can name every file and still sit on an open-ended measurement:
-`who-does-what-view` was fully briefed and ran +50%, because establishing
-which of 300 permission boxes the system actually obeys *was* the work.
+−39% in consecutive batches. Before estimating, ask **must this stream
+BUILD something to measure with?** If it must, widen the band and say in
+the brief that the counting is the deliverable. A brief can name every
+file and still sit on an open-ended measurement: `who-does-what-view` was
+fully briefed and ran +50%, because establishing which of 300 permission
+boxes the system actually obeys meant writing
+`scripts/check-who-does-what.mjs`, and **that script was the work.**
+
+**Reading a long list of files is NOT that, and the band must not be
+widened for it.** Corrected 2026-10-11: `silent-empty-reads` faced 64
+candidate files, eight named as a stated lower bound, each needing a
+judgement — it was banded ~250–400k on exactly the reasoning above and
+**came in at 133,986, barely over the floor.** The axis is not "must it
+count?" but "must it build the instrument?" Reading is cheap; building
+the instrument is not.
 
 ### Model and effort
 
 **Two dials, and they do not behave the same way.** **Model** changes the
-price per unit of work, not the amount: the ~110k floor is identical
+price per unit of work, not the amount: the ~80k floor is identical
 whichever model runs, so **choosing a cheaper family is the only dial that
 reduces usage without changing the work.** **Effort** changes how much
 thinking happens per turn, so raising it **raises** the figure. It buys
