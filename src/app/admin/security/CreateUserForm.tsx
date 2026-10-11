@@ -7,18 +7,12 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { createUser } from "./actions";
 import { MAX_NAME_LENGTH } from "@/lib/auth/user-name";
 import { TemporaryPasswordNotice } from "@/components/TemporaryPasswordNotice";
+import { roleOptionLabel, type RoleOption } from "./role-options";
 
-export function CreateUserForm() {
+/** `roles`: the live roles a login may be given, read from `roles` by the page (role-options.ts). */
+export function CreateUserForm({ roles }: { roles: RoleOption[] }) {
   const [state, onSubmit, pending] = useKeptForm(createUser, undefined);
-  const { t } = useI18n();
-
-  const ROLES = [
-    { value: "admin", label: t.admin.security.roles.admin },
-    { value: "management", label: t.admin.security.roles.management },
-    { value: "doctor", label: t.admin.security.roles.doctor },
-    { value: "volunteer", label: t.admin.security.roles.volunteer },
-    { value: "public_viewer", label: t.admin.security.roles.public_viewer },
-  ];
+  const { t, locale } = useI18n();
 
   return (
     <form
@@ -60,11 +54,11 @@ export function CreateUserForm() {
           id="role"
           name="role"
           defaultValue="volunteer"
-          className="w-40 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+          className="w-48 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
         >
-          {ROLES.map((r) => (
-            <option key={r.value} value={r.value}>
-              {r.label}
+          {roles.map((r) => (
+            <option key={r.key} value={r.key}>
+              {roleOptionLabel(t, locale, r)}
             </option>
           ))}
         </select>

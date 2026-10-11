@@ -21,14 +21,17 @@ import { TemporaryPasswordNotice } from "@/components/TemporaryPasswordNotice";
 import type { ActionResult } from "@/lib/action-result";
 import { formatDateTime as formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { roleLabel } from "@/lib/i18n/enum-labels";
+import { roleOptionLabel, type RoleOption } from "./role-options";
 
 export type SecurityUser = {
   id: string;
   email: string;
   /** user_metadata.full_name (or Google's name); null when the login has none. */
   name: string | null;
+  /** The role's key (roles.key, through user_roles.role_id); the enum's value for a row without role_id. */
   role: string | null;
+  /** user_roles.role, the enum value the role borrows: what the Admin and Doctor special cases ask. */
+  legacyRole: string | null;
   /** Set when they've left (0063): no access, kept for past work. */
   archivedAt: string | null;
   /** The doctor this login is linked to (0125); its clinics are the login's. */
@@ -43,20 +46,17 @@ export type SecurityUser = {
   twoStepSetupUntil: string | null;
 };
 
-// Staff is retired (0173): never offered. A login that still holds it (an archived one) shows it, unchosen,
-// and its select stays open so it can be given another role before Restore.
-const ROLES = ["admin", "management", "doctor", "volunteer", "public_viewer"];
-const RETIRED_ROLES = ["staff"];
-
 export type ClinicOption = { id: string; label: string };
 
 function UserRow({
   user,
+  roles,
   clinics,
   unlinkedDoctors,
   isSelf,
 }: {
   user: SecurityUser;
+  roles: RoleOption[];
   clinics: ClinicOption[];
   unlinkedDoctors: DoctorOption[];
   isSelf: boolean;
@@ -71,6 +71,14 @@ function UserRow({
   >(null);
   const [isPending, startTransition] = useTransition();
   const archived = !!user.archivedAt;
+  // Live roles are offered. A retired one (Staff, 0173) is never offered; a login that still holds it (an
+  // archived one) shows it, unchosen, and its select stays open so it can be given another role before Restore.
+  const offered = roles.filter((r) => !r.archived && r.legacyRole);
+  const held = roles.find((r) => r.key === role);
+  const holdsRetired = !!held?.archived;
+  // The Admin and Doctor rules follow the enum the role borrows, as the database's do; `role` is the key
+  // until it is saved, so the borrowed value of the role just picked comes from its row.
+  const legacyRole = held?.legacyRole ?? user.legacyRole;
 
   /**
    * Runs one of the row's actions and shows its refusal. The actions
@@ -226,25 +234,26 @@ function UserRow({
           <select
             value={role}
             // An archived login that held a retired role can be given another, so Restore can bring it back.
-            disabled={isPending || isSelf || (archived && !RETIRED_ROLES.includes(role))}
+            disabled={isPending || isSelf || (archived && !holdsRetired)}
             onChange={(e) => handleRoleChange(e.target.value)}
             className="rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary disabled:opacity-50"
           >
             <option value="" disabled>
               {t.admin.security.table.noRole}
             </option>
-            {ROLES.map((r) => (
-              <option key={r} value={r}>
-                {roleLabel(t, r)}
+            {offered.map((r) => (
+              <option key={r.key} value={r.key}>
+                {roleOptionLabel(t, locale, r)}
               </option>
             ))}
-            {RETIRED_ROLES.includes(role) && (
+            {/* Held but not offered: a retired role, or one this list could not load. Named, never chosen. */}
+            {role && !offered.some((r) => r.key === role) && (
               <option value={role} disabled>
-                {roleLabel(t, role)}
+                {roleOptionLabel(t, locale, held ?? { key: role, name: role, nameTh: null })}
               </option>
             )}
           </select>
-          {role === "doctor" && (
+          {legacyRole === "doctor" && (
             <DoctorLoginLink
               user={user}
               clinics={clinics}
@@ -273,7 +282,7 @@ function UserRow({
               {/* An admin with no second factor is the row to notice. */}
               <span
                 className={
-                  user.role === "admin" && !archived
+                  user.legacyRole === "admin" && !archived
                     ? "rounded-full bg-warning/20 px-2 py-0.5 text-xs font-medium text-foreground"
                     : "text-xs text-muted"
                 }
@@ -285,7 +294,7 @@ function UserRow({
                   {t.admin.security.table.twoStepSetupOpenUntil(formatDate(user.twoStepSetupUntil, locale))}
                 </span>
               )}
-              {user.role === "admin" && !isSelf && !archived && (
+              {user.legacyRole === "admin" && !isSelf && !archived && (
                 <ActionButton compact icon={ACTION_ICONS.allowTwoStep} disabled={isPending} onClick={handleAllowTwoStepSetup}>
                   {user.twoStepSetupUntil
                     ? t.admin.security.table.renewTwoStepSetup
@@ -352,11 +361,14 @@ function UserRow({
 
 export function UsersTable({
   users,
+  roles,
   clinics,
   unlinkedDoctors,
   currentUserId,
 }: {
   users: SecurityUser[];
+  /** Every role, retired ones included, in picker order (role-options.ts). */
+  roles: RoleOption[];
   clinics: ClinicOption[];
   unlinkedDoctors: DoctorOption[];
   currentUserId: string;
@@ -397,6 +409,7 @@ export function UsersTable({
             <UserRow
               key={user.id}
               user={user}
+              roles={roles}
               clinics={clinics}
               unlinkedDoctors={unlinkedDoctors}
               isSelf={user.id === currentUserId}

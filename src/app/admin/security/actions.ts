@@ -24,6 +24,7 @@ import { forgetWaitingAccessRequests } from "@/lib/status/access-requests";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { roleOptionLabel } from "./role-options";
 
 /*
  * Every action here returns an ActionResult rather than throwing: a throw
@@ -53,8 +54,8 @@ function revalidateSecurity() {
  * can before then. Best effort — the role is already granted, and Allow
  * set-up does the same later.
  */
-async function openSetupForNewAdmin(userId: string, role: string) {
-  if (role !== "admin") return;
+async function openSetupForNewAdmin(userId: string, role: GivableRole) {
+  if (role.legacyRole !== "admin") return;
   const { error } = await createAdminClient().auth.admin.updateUserById(userId, {
     app_metadata: { [SETUP_OPEN_UNTIL]: setupWindowEnd() },
   });
@@ -95,17 +96,41 @@ export type CreateUserState =
   | ActionResult<{ success: string; temporaryPassword: string; email: string }>
   | undefined;
 
+type GivableRole = { id: string; key: string; name: string; nameTh: string | null; legacyRole: string };
+
 /**
- * The roles a login can be given, plus public_viewer: a login that sees only the public website (0085).
- * Not staff: retired 2026-10-09 (0173), and the database refuses it to a live login.
+ * The role a picker named, if a login may be given it: a live row of `roles` with a legacy_role. Read from the
+ * database, not a list in the code (this replaced VALID_ROLES), so a configured role (2IC, Head of Medical,
+ * Head of Maintenance) can be given the day it exists. Public viewer stays givable although it does not open
+ * the app (0085). Staff is not: retired by 0173, which also makes the database refuse it to a live login.
  */
-const VALID_ROLES = ["admin", "management", "doctor", "volunteer", "public_viewer"] as const;
+async function givableRole(key: string | null): Promise<GivableRole | null> {
+  if (!key) return null;
+  const { data } = await createAdminClient()
+    .from("roles")
+    .select("id, key, name, name_th, legacy_role")
+    .eq("key", key)
+    .is("archived_at", null)
+    .not("legacy_role", "is", null)
+    .maybeSingle();
+  if (!data) return null;
+  return {
+    id: data.id as string,
+    key: data.key as string,
+    name: data.name as string,
+    nameTh: (data.name_th as string | null) ?? null,
+    legacyRole: data.legacy_role as string,
+  };
+}
 
-/** Roles a login may still hold archived, but never be given or restored with. */
-const RETIRED_ROLES: readonly string[] = ["staff"];
-
-const isValidRole = (role: string | null) =>
-  !!role && VALID_ROLES.includes(role as (typeof VALID_ROLES)[number]);
+/**
+ * The user_roles columns for a role. role_id is the role; role is the enum value it borrows, which
+ * current_user_role() and everything else still reading the enum sees. 0132's trigger derives role from
+ * role_id anyway (role_id wins when both are given), so writing both cannot disagree; writing only `role`
+ * would map a configured role back onto its borrowed built-in (a 2IC saved as plain Volunteer).
+ * docs/decisions/2026-10-11-security-role-picker.md; perm-drop-enum removes `role`.
+ */
+const roleColumns = (role: GivableRole) => ({ role_id: role.id, role: role.legacyRole });
 
 /**
  * Creates a login with a generated temporary password and the
@@ -118,18 +143,18 @@ export async function createUser(
   _state: CreateUserState,
   formData: FormData,
 ): Promise<CreateUserState> {
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const e = t.admin.security.errors;
   return runAction("security.createUser", t.common.somethingWentWrong, async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
 
     const email = (formData.get("email") as string | null)?.trim();
-    const role = formData.get("role") as string | null;
     const name = normaliseName(formData.get("name"));
 
     if (!email) return refuse(e.emailRequired);
-    if (!isValidRole(role)) return refuse(e.selectValidRole);
+    const role = await givableRole(formData.get("role") as string | null);
+    if (!role) return refuse(e.selectValidRole);
 
     const temporaryPassword = generateTemporaryPassword();
     const admin = createAdminClient();
@@ -140,7 +165,7 @@ export async function createUser(
       ...(name ? { user_metadata: { full_name: name } } : {}),
       app_metadata: {
         [MUST_CHANGE_PASSWORD]: true,
-        ...(role === "admin" ? { [SETUP_OPEN_UNTIL]: setupWindowEnd() } : {}),
+        ...(role.legacyRole === "admin" ? { [SETUP_OPEN_UNTIL]: setupWindowEnd() } : {}),
       },
     });
 
@@ -154,7 +179,7 @@ export async function createUser(
 
     const { error: roleError } = await admin
       .from("user_roles")
-      .insert({ user_id: data.user.id, role });
+      .insert({ user_id: data.user.id, ...roleColumns(role) });
 
     if (roleError) {
       // Don't leave an orphaned login with no role if this half fails.
@@ -165,7 +190,7 @@ export async function createUser(
     revalidatePath("/admin/security");
     return {
       ok: true,
-      success: t.admin.security.createdUser(email, role!),
+      success: t.admin.security.createdUser(email, roleOptionLabel(t, locale, role)),
       temporaryPassword,
       email,
     };
@@ -208,15 +233,16 @@ export async function setUserName(userId: string, rawName: string): Promise<Acti
  * request queue. Same write as changing a role; kept separate so the
  * queue reads as what it is. The person signs in again and gets through.
  */
-export async function approveAccessRequest(userId: string, role: string): Promise<ActionResult> {
+export async function approveAccessRequest(userId: string, roleKey: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("security.approveAccessRequest", t.common.somethingWentWrong, async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
-    if (!isValidRole(role)) return refuse(t.admin.security.errors.invalidRole);
+    const role = await givableRole(roleKey);
+    if (!role) return refuse(t.admin.security.errors.invalidRole);
 
     const admin = createAdminClient();
-    const { error } = await admin.from("user_roles").upsert({ user_id: userId, role });
+    const { error } = await admin.from("user_roles").upsert({ user_id: userId, ...roleColumns(role) });
     if (error) {
       return unexpectedFailure("security.approveAccessRequest", error, t.common.somethingWentWrong);
     }
@@ -226,16 +252,17 @@ export async function approveAccessRequest(userId: string, role: string): Promis
   });
 }
 
-export async function updateUserRole(userId: string, role: string): Promise<ActionResult> {
+export async function updateUserRole(userId: string, roleKey: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("security.updateUserRole", t.common.somethingWentWrong, async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
-    if (!isValidRole(role)) return refuse(t.admin.security.errors.invalidRole);
+    const role = await givableRole(roleKey);
+    if (!role) return refuse(t.admin.security.errors.invalidRole);
     if (await isCurrentUser(userId)) return refuse(t.admin.security.errors.cantChangeOwnRole);
 
     const admin = createAdminClient();
-    const { error } = await admin.from("user_roles").upsert({ user_id: userId, role });
+    const { error } = await admin.from("user_roles").upsert({ user_id: userId, ...roleColumns(role) });
     if (error) {
       return unexpectedFailure("security.updateUserRole", error, t.common.somethingWentWrong);
     }
@@ -461,8 +488,12 @@ export async function restoreUser(userId: string): Promise<ActionResult> {
     const admin = createAdminClient();
     // A login that held a retired role (Staff, 0173) is given another one first: the database refuses it
     // back otherwise, and this says what to do instead of "something went wrong".
-    const { data: held } = await admin.from("user_roles").select("role").eq("user_id", userId).maybeSingle<{ role: string }>();
-    if (held && RETIRED_ROLES.includes(held.role)) return refuse(t.admin.security.errors.retiredRole);
+    const { data: held } = await admin
+      .from("user_roles")
+      .select("roles(archived_at)")
+      .eq("user_id", userId)
+      .maybeSingle<{ roles: { archived_at: string | null } | null }>();
+    if (held?.roles?.archived_at) return refuse(t.admin.security.errors.retiredRole);
 
     const { error } = await admin
       .from("user_roles")

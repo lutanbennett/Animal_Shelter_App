@@ -8,7 +8,7 @@ import { approveAccessRequest, dismissAccessRequest } from "./actions";
 import type { ActionResult } from "@/lib/action-result";
 import { formatDateTime } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { roleLabel } from "@/lib/i18n/enum-labels";
+import { roleOptionLabel, type RoleOption } from "./role-options";
 
 export type AccessRequest = {
   id: string;
@@ -21,9 +21,7 @@ export type AccessRequest = {
   lastSignInAt: string | null;
 };
 
-const ROLES = ["volunteer", "doctor", "management", "admin", "public_viewer"] as const;
-
-function RequestRow({ request }: { request: AccessRequest }) {
+function RequestRow({ request, roles }: { request: AccessRequest; roles: RoleOption[] }) {
   const { t, locale } = useI18n();
   const confirm = useConfirm();
   const r = t.admin.security.requests;
@@ -83,9 +81,9 @@ function RequestRow({ request }: { request: AccessRequest }) {
             className="rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary disabled:opacity-50"
           >
             <option value="">{r.chooseRole}</option>
-            {ROLES.map((value) => (
-              <option key={value} value={value}>
-                {roleLabel(t, value)}
+            {roles.map((role) => (
+              <option key={role.key} value={role.key}>
+                {roleOptionLabel(t, locale, role)}
               </option>
             ))}
           </select>
@@ -110,7 +108,7 @@ function RequestRow({ request }: { request: AccessRequest }) {
  * Approve assigns the role and they can sign in again; Deny removes the
  * account, and a stranger's Google account is gone with it.
  */
-export function AccessRequests({ requests }: { requests: AccessRequest[] }) {
+export function AccessRequests({ requests, roles }: { requests: AccessRequest[]; roles: RoleOption[] }) {
   const { t } = useI18n();
   const r = t.admin.security.requests;
 
@@ -130,7 +128,7 @@ export function AccessRequests({ requests }: { requests: AccessRequest[] }) {
       {requests.length > 0 ? (
         <ul className="flex flex-col gap-2">
           {requests.map((request) => (
-            <RequestRow key={request.id} request={request} />
+            <RequestRow key={request.id} request={request} roles={roles} />
           ))}
         </ul>
       ) : (
