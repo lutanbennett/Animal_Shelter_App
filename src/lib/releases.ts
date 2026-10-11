@@ -62,6 +62,7 @@ export const noteRoles = (note: ReleaseNote): ReleaseRole[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "When a 2IC records a death, the resident's record is now filed in the Deceased folder on Google Drive, as it is for Management. Until now the filing was refused for a 2IC, and the resident's page kept offering a Retry button that failed the same way.",
 ];
 
 /** Newest first. */
