@@ -1,8 +1,9 @@
 import { Suspense } from "react";
-import { Activity, History } from "lucide-react";
+import { Activity, Grid3x3, History } from "lucide-react";
 import { DriveStatus } from "./DriveStatus";
 import { can } from "@/lib/permissions/can";
 import { canOpen, routeFor } from "@/lib/permissions/routes";
+import { WHO_DOES_WHAT_PATH, opensWhoDoesWhat } from "@/lib/permissions/who-does-what";
 import { requireAnyPageIn } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { listHomeRoles } from "@/lib/home/roles";
@@ -101,6 +102,12 @@ export default async function AdminPage() {
       icon: NAV_ICONS.security,
     },
     {
+      href: WHO_DOES_WHAT_PATH,
+      label: t.nav.whoDoesWhat,
+      description: t.admin.landing.tiles.whoDoesWhat,
+      icon: Grid3x3,
+    },
+    {
       href: "/admin/recent-changes",
       label: t.nav.recentChanges,
       description: t.admin.landing.tiles.recentChanges,
@@ -115,6 +122,7 @@ export default async function AdminPage() {
   ];
   const tiles = allTiles.filter((tile) => {
     if (tile.href === "/admin/security") return perms.isAdmin;
+    if (tile.href === WHO_DOES_WHAT_PATH) return opensWhoDoesWhat(perms);
     const route = routeFor(tile.href);
     return !!route && canOpen(perms, route);
   });

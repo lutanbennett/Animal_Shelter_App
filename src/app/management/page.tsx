@@ -1,5 +1,6 @@
-import { Coins, Globe, HandCoins, HeartHandshake, LayoutDashboard, Languages, Scale, ShoppingCart } from "lucide-react";
+import { Coins, Globe, Grid3x3, HandCoins, HeartHandshake, LayoutDashboard, Languages, Scale, ShoppingCart } from "lucide-react";
 import { canOpen, routeFor } from "@/lib/permissions/routes";
+import { WHO_DOES_WHAT_PATH, opensWhoDoesWhat } from "@/lib/permissions/who-does-what";
 import { requireAnyPageIn } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { SectionTiles, type SectionTile } from "@/components/SectionTiles";
@@ -99,8 +100,16 @@ export default async function ManagementPage() {
       description: t.management.landing.tiles.translations,
       icon: Languages,
     },
+    {
+      href: WHO_DOES_WHAT_PATH,
+      label: t.nav.whoDoesWhat,
+      description: t.management.landing.tiles.whoDoesWhat,
+      icon: Grid3x3,
+    },
   ];
   const tiles = allTiles.filter((tile) => {
+    // Not a registered page: Who does what opens for Admin and Management, not on an activity.
+    if (tile.href === WHO_DOES_WHAT_PATH) return opensWhoDoesWhat(perms);
     const route = routeFor(tile.href);
     return !!route && canOpen(perms, route);
   });
