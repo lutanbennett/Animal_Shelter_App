@@ -19,7 +19,7 @@ batch's worktrees exist at a time.
 
 ## 0. Resume, or plan from scratch?
 
-Look for `C:\Development\Animal_Shelter_App\.plan-day.md`. In a fresh chat,
+Look for `C:/Development/Animal_Shelter_App/.plan-day.md`. In a fresh chat,
 read `docs/planner-handover.md` first.
 
 **If it exists and has a batch not yet set up, this is a resume — do not
@@ -41,18 +41,18 @@ backlog has moved under it. Otherwise resume.
 
 ## 1. Sync `main` (the daily step in CLAUDE.md "The main checkout")
 
-In `C:\Development\Animal_Shelter_App`: it must be on `main` and clean.
+In `C:/Development/Animal_Shelter_App`: it must be on `main` and clean.
 If it is on a `claude/*` branch or dirty, **stop and report** what is
 there — the user decides whether to commit, stash or move it into a
 worktree — then continue once it is clean. Then:
 
 ```
-git -C C:\Development\Animal_Shelter_App checkout main
-git -C C:\Development\Animal_Shelter_App pull
-git -C C:\Development\Animal_Shelter_App merge backlog
-git -C C:\Development\Animal_Shelter_App push
-git -C C:\Development\Animal_Shelter_Backlog merge --ff-only main
-git -C C:\Development\Animal_Shelter_Backlog push
+git -C C:/Development/Animal_Shelter_App checkout main
+git -C C:/Development/Animal_Shelter_App pull
+git -C C:/Development/Animal_Shelter_App merge backlog
+git -C C:/Development/Animal_Shelter_App push
+git -C C:/Development/Animal_Shelter_Backlog merge --ff-only main
+git -C C:/Development/Animal_Shelter_Backlog push
 ```
 
 (The post-merge hook pushes both merges too; the explicit pushes cost
@@ -60,7 +60,7 @@ nothing and do not depend on `core.hooksPath` being set.)
 
 ## 2. What is already in flight
 
-`node C:\Development\Animal_Shelter_App\scripts\worktree.mjs list`.
+`node C:/Development/Animal_Shelter_App/scripts/worktree.mjs list`.
 Live `claude/*` worktrees count toward the cap of three **for the current
 batch**. Flag any that show "nothing beyond main" with no PR open as
 leftovers to `done` — but only if `held` says `free`. A `HELD` worktree
@@ -77,7 +77,7 @@ session closes the figure is gone; if it reports `unavailable`, write
 
 ## 3. Read the backlog
 
-`C:\Development\Animal_Shelter_App\docs\backlog.md`, open items only
+`C:/Development/Animal_Shelter_App/docs/backlog.md`, open items only
 (`- [ ]` above `## Completed`). Section order and item order are the
 user's priority; keep that as the default ordering. For each candidate
 note:
@@ -173,7 +173,7 @@ a question per batch — the whole plan is visible above it.
 
 ## 6. Save the plan
 
-Write `C:\Development\Animal_Shelter_App\.plan-day.md` (gitignored, and
+Write `C:/Development/Animal_Shelter_App/.plan-day.md` (gitignored, and
 it must stay that way — it is local day-scoped state, not a repo
 artifact). Markdown, readable: the user may well open it.
 
@@ -280,8 +280,8 @@ letting it expire.
 For each confirmed stream in that batch, in sequence (each `npm ci`
 takes a minute):
 
-1. `node C:\Development\Animal_Shelter_App\scripts\worktree.mjs new <slug>`
-2. Write `C:\Development\Animal_Shelter_<slug>\.brief.md` (gitignored):
+1. `node C:/Development/Animal_Shelter_App/scripts/worktree.mjs new <slug>`
+2. Write `C:/Development/Animal_Shelter_<slug>/.brief.md` (gitignored):
    the backlog item verbatim as the task, the branch name, the port, and
    for a schema-first item which half this stream is. Keep it to what a
    fresh session needs; CLAUDE.md covers the rest — **except the
