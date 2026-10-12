@@ -237,6 +237,8 @@ be checked, not reasoned about. New this release:
 - **A `-- consumer:` header firing no warning.** `0186` has one and printed nothing, because the file is in the release assumed live. Three releases running the *wording* of these warnings has been the opposite of the situation; this is the first where the useful behaviour is their silence.
 - **`--env dev` rejected.** The dev database is `--env test`.
 - **The note lines in the new entry indented four spaces** where the other 41 use six. Cosmetic, all gates pass, recorded as a defect rather than fixed against a shipped entry.
+- **`ERROR Failed to copy C:…
+ode_modules<pkg>` during the test Worker build**, three of them, mid-`Building server function`. **Non-fatal**: the build continued, uploaded 178 assets and exited 0, and the deployed build answers `0.27.1`. This is the known Windows OpenNext file-lock noise. Before treating it as a failure, check the process is still burning CPU (`Get-Process node`) — it was, 177 CPU seconds, which is what distinguishes this from a genuine stall.
 
 ### 9. Where the time went
 
@@ -253,7 +255,7 @@ figures, not the total.**
 | Production migration apply | not measured — see lesson 5 |
 | Pi build + restart | **under 20 s** off a warm clone. `ActiveEnterTimestamp` is the moment it began serving |
 | Worker deploy, production | ~13 min |
-| Worker deploy, test | over 10 min — background it |
+| Worker deploy, test | **9 min 31 s** — background it anyway; it was 10+ min on `0.27.0` |
 
 ---
 
