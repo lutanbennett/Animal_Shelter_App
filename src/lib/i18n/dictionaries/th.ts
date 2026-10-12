@@ -556,6 +556,7 @@ const th: Dictionary = {
         "maintenance.progress": "อัปเดตสถานะงาน: กำลังทำ ติดขัด เสร็จแล้ว",
         "maintenance.photos": "เพิ่มและลบรูปของงาน",
         "maintenance.delete": "ลบงานซ่อมบำรุงถาวร",
+        "maintenance.bills": "เพิ่มและดูบิลและค่าใช้จ่ายของงานซ่อมบำรุง",
         "projects.folders": "แฟ้มโครงการและเรื่องราว",
         "projects.photos": "เพิ่มและลบรูปโครงการ",
         "projects.publish": "แสดงโครงการบนเว็บไซต์สาธารณะ",

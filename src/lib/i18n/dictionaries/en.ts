@@ -623,6 +623,7 @@ const en = {
         "maintenance.progress": "Move a job on: in progress, blocked, completed",
         "maintenance.photos": "Add and remove a job's photos",
         "maintenance.delete": "Delete a maintenance job for good",
+        "maintenance.bills": "Add and see a maintenance job's bills and costs",
         "projects.folders": "Project folders and their stories",
         "projects.photos": "Add and remove project photos",
         "projects.publish": "Put a project on the public website",
