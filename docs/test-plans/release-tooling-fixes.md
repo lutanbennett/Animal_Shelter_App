@@ -11,7 +11,7 @@
 | PR | opened from this branch after this commit |
 | Tested by / date | Claude, 2026-10-13 |
 | Carries a migration? | no |
-| Tested at SHA | `SHA` |
+| Tested at SHA | `c10d641c` |
 
 ## 1. Scope and risk
 
@@ -27,7 +27,9 @@
 - [ ] CI green on the PR (runs the same three). n/a: not yet — the PR does not exist at this commit
 
 ```
-GATES
+=== gates: build exited 0 after 107s
+
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 ## 3. Schema and data — *skip if no migration*
