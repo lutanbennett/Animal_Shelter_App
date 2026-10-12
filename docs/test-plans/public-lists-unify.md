@@ -11,7 +11,7 @@
 | PR | linked from the PR itself |
 | Tested by / date | Claude, 2026-10-12 |
 | Carries a migration? | no |
-| Tested at SHA | @@SHA@@ |
+| Tested at SHA | `41ce3bdd` |
 
 ## 1. Scope and risk
 
@@ -25,7 +25,9 @@
 - [x] `node scripts/worktree.mjs sync` — origin/main merged in cleanly
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed
 
-@@GATES@@
+```
+gates: typecheck=0 lint=0 build=0
+```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
@@ -87,7 +89,7 @@
 - [x] Non-obvious design choices recorded: `docs/decisions/2026-10-12-r-and-e-not-edge-cached.md`
 - [x] `README.md` cutover paragraph now names `site-hosts.ts` and `httpHostHeader`
 - [x] Commit messages say why, not just what
-- [ ] Release-notes line — n/a: refactor of two lists with identical membership, and /r and /e were not cached before and are not now, so no shelter user would notice
+- [ ] **Release notes.** n/a: refactor of two lists with identical membership, and /r and /e were not cached before and are not now, so no shelter user would notice
 
 ## 8. Pre-production gate
 
