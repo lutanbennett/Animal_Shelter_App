@@ -44,10 +44,15 @@ export function uploadResidentPhoto(
   file: File,
   fields: Record<string, string>,
   onProgress: (percent: number) => void,
+  /** The Head of Medical files through her own route (/api/medical/...); everyone else through the default. */
+  route: "staff" | "medical" = "staff",
 ): Promise<{ error?: string; archiveWarning?: string }> {
   return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", `/api/residents/${residentId}/photos`);
+    xhr.open(
+      "POST",
+      route === "medical" ? `/api/medical/residents/${residentId}/photos` : `/api/residents/${residentId}/photos`,
+    );
 
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));

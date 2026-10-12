@@ -12,7 +12,11 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 /**
  * "Who?" for the Head of Medical's phone jobs: residents as big photo tiles, by zone then
  * enclosure, with a name search that is a plain GET form (no client code). A tile is a link to
- * `${base}?resident=<id>`. The residents come from `resident_who_and_where`, so this shows what
+ * `${base}?resident=<id>`.
+ *
+ * Also the picker for the photo-first page (/photos/add), where the photos are held in the browser and
+ * a page load would lose them: pass `onPick` and a tile is a button, pass `onQueryChange` and the search
+ * is a live field instead of a GET form. Nothing here uses a hook, so it renders in either place. The residents come from `resident_who_and_where`, so this shows what
  * her login may see and nothing else (src/lib/medical/residents.ts).
  */
 export function ResidentPicker({
@@ -22,6 +26,9 @@ export function ResidentPicker({
   residents,
   query,
   error,
+  onPick,
+  onQueryChange,
+  before,
 }: {
   t: Dictionary;
   locale: Locale;
@@ -29,6 +36,12 @@ export function ResidentPicker({
   residents: PickableResident[];
   query: string;
   error: string | null;
+  /** Tiles become buttons that call this instead of links. */
+  onPick?: (r: PickableResident) => void;
+  /** The search becomes a live field (no form, no page load). */
+  onQueryChange?: (q: string) => void;
+  /** Shown under the search, above the list (recent and nearby choices). */
+  before?: React.ReactNode;
 }) {
   const p = t.medicalJobs.picker;
   const shown = residents.filter((r) => matchesQuery(r, query));
@@ -36,9 +49,30 @@ export function ResidentPicker({
   const otherName = (r: PickableResident) =>
     locale === "th" && r.thaiName?.trim() ? r.name : r.thaiName?.trim() || null;
 
+  const face = (r: PickableResident) => (
+    <>
+      <span className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-lg border border-border bg-background">
+        {r.photoFileId ? (
+          <Image src={driveImageUrl(r.photoFileId, 400)} alt={p.photoAlt(nameOf(r))} fill sizes="96px" className="object-cover" />
+        ) : (
+          <PawPrint aria-label={p.noPhoto} role="img" className="h-10 w-10 text-muted" />
+        )}
+      </span>
+      <span className="w-full break-words text-lg font-semibold leading-tight text-foreground">{nameOf(r)}</span>
+      {otherName(r) && <span className="w-full break-words text-xs text-muted">{otherName(r)}</span>}
+      {r.code && <span className="w-full break-words text-xs text-muted">{r.code}</span>}
+    </>
+  );
+
   return (
     <div className="flex flex-col gap-4">
-      <form method="get" action={base} role="search" className="flex flex-col gap-2">
+      <form
+        method="get"
+        action={base}
+        role="search"
+        className="flex flex-col gap-2"
+        onSubmit={onQueryChange ? (e) => e.preventDefault() : undefined}
+      >
         <label htmlFor="resident-search" className="text-base font-semibold text-foreground">
           {p.searchLabel}
         </label>
@@ -47,7 +81,9 @@ export function ResidentPicker({
             id="resident-search"
             name="q"
             type="search"
-            defaultValue={query}
+            {...(onQueryChange
+              ? { value: query, onChange: (e: React.ChangeEvent<HTMLInputElement>) => onQueryChange(e.target.value) }
+              : { defaultValue: query })}
             placeholder={p.searchPlaceholder}
             className="min-h-12 min-w-0 flex-1 rounded-lg border border-border bg-surface px-3 text-lg text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
           />
@@ -59,7 +95,17 @@ export function ResidentPicker({
             <Search aria-hidden className="h-6 w-6" />
           </button>
         </div>
-        {query && (
+        {query && onQueryChange && (
+          <button
+            type="button"
+            onClick={() => onQueryChange("")}
+            className="inline-flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-primary hover:underline"
+          >
+            <ACTION_ICONS.clear aria-hidden="true" className="h-4 w-4 shrink-0" />
+            {p.clear}
+          </button>
+        )}
+        {query && !onQueryChange && (
           <Link
             href={base}
             className="inline-flex min-h-11 items-center gap-1.5 self-start text-sm font-medium text-primary hover:underline"
@@ -69,6 +115,8 @@ export function ResidentPicker({
           </Link>
         )}
       </form>
+
+      {before}
 
       {error && (
         <p role="alert" className="rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">
@@ -100,30 +148,15 @@ export function ResidentPicker({
               <ul className="grid grid-cols-2 gap-2">
                 {e.residents.map((r) => (
                   <li key={r.id}>
-                    <Link
-                      href={`${base}?resident=${r.id}`}
-                      className="flex h-full flex-col items-center gap-2 rounded-lg border border-border bg-surface p-2 text-center"
-                    >
-                      <span className="relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-lg border border-border bg-background">
-                        {r.photoFileId ? (
-                          <Image
-                            src={driveImageUrl(r.photoFileId, 400)}
-                            alt={p.photoAlt(nameOf(r))}
-                            fill
-                            sizes="96px"
-                            className="object-cover"
-                          />
-                        ) : (
-                          <PawPrint aria-label={p.noPhoto} role="img" className="h-10 w-10 text-muted" />
-                        )}
-                      </span>
-                      <span className="w-full break-words text-lg font-semibold leading-tight text-foreground">
-                        {nameOf(r)}
-                      </span>
-                      {otherName(r) && (
-                        <span className="w-full break-words text-xs text-muted">{otherName(r)}</span>
-                      )}
-                    </Link>
+                    {onPick ? (
+                      <button type="button" onClick={() => onPick(r)} className="flex h-full w-full min-h-11 flex-col items-center gap-2 rounded-lg border border-border bg-surface p-2 text-center">
+                        {face(r)}
+                      </button>
+                    ) : (
+                      <Link href={`${base}?resident=${r.id}`} className="flex h-full w-full min-h-11 flex-col items-center gap-2 rounded-lg border border-border bg-surface p-2 text-center">
+                        {face(r)}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

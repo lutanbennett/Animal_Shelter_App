@@ -74,7 +74,9 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "New Add photos button on the home screen: take or choose your photos first, then tap which resident is in each one. Search by name, R-code or enclosure, or use the quick choices for the residents you tagged last and the others in the same enclosure. Five photos of one dog can be filed in one tap, and a photo with two dogs can be tagged to both. The old way, from the resident's Photos tab, still works.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [

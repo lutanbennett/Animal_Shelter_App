@@ -13,7 +13,7 @@
  * rest, and Settings and Management landing pages with their areas.
  */
 
-import { Activity, Camera, ClipboardCheck, HandHeart, Coins, Globe, HandCoins, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
+import { Activity, Camera, ClipboardCheck, HandHeart, Coins, Globe, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
 import { CONTACT_ICONS, ENCLOSURE_ICONS, NAV_ICONS, SECTION_ICONS, CLINIC_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "./can";
@@ -230,6 +230,16 @@ export const ROUTES: readonly RouteEntry[] = [
     menu: false,
     // Reads who-and-where and medical_photo_residents, both for a login that sees every clinic.
     scope: { clinical: "any" },
+  },
+  {
+    // Photo first, then the resident (docs/decisions/2026-10-12-photo-first-tagging.md). Open to anyone
+    // holding the activity; the page picks the folders and the upload route from what the login may use.
+    path: "/photos/add",
+    activity: "photos.resident_add",
+    icon: ImagePlus,
+    label: (t) => t.addPhotos.title,
+    device: "any",
+    menu: false,
   },
   {
     path: "/medical/diets",

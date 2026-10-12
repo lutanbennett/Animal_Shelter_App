@@ -3562,6 +3562,36 @@ const en = {
     },
   },
 
+  /** Add photos: take or choose the photos first, then say who is in each (/photos/add). */
+  addPhotos: {
+    title: "Add photos",
+    intro: "Take or choose the photos first, then tap who is in each one.",
+    take: "Take a photo",
+    choose: "Choose from phone",
+    folderLabel: "Folder",
+    goesIn: (folder: string) => `These go in the ${folder} folder.`,
+    medicalNever: "Medical photos never go on the website.",
+    tagged: (done: number, total: number) => `${done} of ${total} tagged`,
+    allDone: "All photos are tagged and saved.",
+    whoFor: "Who is in the photo you picked?",
+    whoForAll: (n: number) => (n === 1 ? "Who is in this photo?" : `Who is in these ${n} photos? One tap files them all.`),
+    allToOne: "All to the same resident",
+    oneAtATime: "One photo at a time",
+    selected: "Picked",
+    untagged: "Not tagged yet",
+    saving: "Saving…",
+    saved: "Saved",
+    failed: "Not saved",
+    retry: "Try again",
+    recent: "Tagged last",
+    nearby: (place: string) => `Also in ${place}`,
+    another: "In the photo with two dogs? Tap the photo, then tap the second dog.",
+    leave: "Some photos are not tagged yet. If you leave, they will be lost. Leave anyway?",
+    leaveSaving: "Photos are still being saved. If you leave now, some may be lost. Leave anyway?",
+    noPhotos: "No photos yet. Tap a button above.",
+    errors: { notAuthorized: "You can't add photos." },
+  },
+
   /** The Head of Medical's phone jobs (docs/decisions/2026-10-04-medical-jobs-app.md). */
   medicalJobs: {
     picker: {
