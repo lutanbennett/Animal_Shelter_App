@@ -411,5 +411,48 @@ console.log(
 );
 for (const k of known) console.log(`KNOWN ${k}`);
 
+// ---- G ----
+// Every "use server" file under src/app names an activity or an admin check, or is listed here with the
+// reason it needs neither. Found 2026-10-11: a grep for writers with no can() turned up 8 areas, and the
+// reading found all 8 guarded (diets and medications by canEditItemSettings, which the grep did not see), so
+// this reads the helper names too. A file that uses the service-role client has a second test: nothing but
+// code decides there, so the admin check must be in the file itself and the allow-list does not excuse it.
+// docs/decisions/2026-10-12-writers-without-can-read.md
+const GUARD = /\b(?:can|requirePermission|requireAdminUser|assertAdminRole|hasAdminRole|canEditItemSettings|refuseUnlessAdmin)\(/;
+const ADMIN_CHECK = /\b(?:requireAdminUser|assertAdminRole|hasAdminRole|refuseUnlessAdmin)\(/;
+const NO_ACTIVITY = {
+  "account/password/actions.ts": "changes the signed-in user's own password and name; its one service-role call clears their own must-change flag after the password check",
+  "account/theme/actions.ts": "the signed-in user's own display preference, in their own auth metadata",
+  "login/actions.ts": "signed out by definition: the sign-in itself",
+  "login/forgot/actions.ts": "signed out by definition: asks for a reset email",
+  "immunizations/new/actions.ts": "session client and the record_immunizations_fanout RPC, so RLS on immunization_records decides and a refusal is 42501 (databaseFailure)",
+  "maintenance/actions.ts": "session client only: RLS on maintenance and maintenance_assignees (maintenance.jobs, .progress, .delete) decides; a refusal is 42501 or an empty result, both worded",
+  "residents/new/actions.ts": "session client and record_intake (security invoker): residents_insert_perm asks resident.register, and the page is requirePermission('resident.register')",
+  "residents/[id]/hospital/actions.ts": "session client through lib/placements, no service role; RLS on the placement tables decides",
+  "residents/[id]/hospital/return/actions.ts": "session client through lib/placements, no service role; RLS on the placement tables decides",
+  "residents/[id]/move/actions.ts": "session client through lib/placements, no service role; RLS on the placement tables decides",
+  "residents/[id]/rehome/actions.ts": "session client through lib/placements, no service role; RLS on the placement tables decides",
+  "residents/[id]/rehome/return/actions.ts": "session client through lib/placements, no service role; RLS on the placement tables decides",
+  "residents/[id]/microchip/actions.ts": "set_resident_microchip RPC; the function and RLS on residents decide",
+};
+{
+  const read = (f) => stripComments(readFileSync(f, "utf8"));
+  const serverFiles = walk(appDir).filter((f) => /\.tsx?$/.test(f) && /^\s*["']use server["']/m.test(readFileSync(f, "utf8")));
+  const rel = (f) => f.slice(appDir.length + 1).replaceAll("\\", "/");
+  eq(
+    'G every "use server" file under src/app names an activity or an admin check, or is in NO_ACTIVITY',
+    serverFiles.filter((f) => !GUARD.test(read(f)) && !(rel(f) in NO_ACTIVITY)).map(rel),
+    [],
+  );
+  eq("G NO_ACTIVITY has no stale entry", Object.keys(NO_ACTIVITY).filter((p) => !serverFiles.some((f) => rel(f) === p)), []);
+  eq("G every NO_ACTIVITY entry gives a reason", Object.entries(NO_ACTIVITY).filter(([, w]) => w.length < 30).map(([p]) => p), []);
+  eq(
+    "G a service-role writer carries its own admin check",
+    serverFiles.filter((f) => /createAdminClient\(/.test(read(f)) && !ADMIN_CHECK.test(read(f)) && rel(f) !== "account/password/actions.ts").map(rel),
+    [],
+  );
+  console.log(`G ${serverFiles.length} server-action files: ${serverFiles.length - Object.keys(NO_ACTIVITY).length} name a guard, ${Object.keys(NO_ACTIVITY).length} listed with a reason`);
+}
+
 console.log(fails ? `\n${fails} FAILED` : "\nall ok");
 process.exitCode = fails ? 1 : 0;

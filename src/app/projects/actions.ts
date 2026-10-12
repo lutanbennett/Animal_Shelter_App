@@ -81,7 +81,7 @@ export async function createProjectFolder(
       .limit(1)
       .returns<{ id: string }[]>();
 
-    if (error) return refuse(await friendlyDbError(error.message));
+    if (error) return refuse(error.code === "42501" ? t.common.notAllowed : await friendlyDbError(error.message));
     const row = data?.[0];
     // RLS filters rather than rejects: a volunteer's insert returns no row.
     if (!row) return refuse(t.projects.errors.notAuthorized);
@@ -108,7 +108,7 @@ export async function renameProjectFolder(
       .select("id, parent_folder_id")
       .returns<{ id: string; parent_folder_id: string | null }[]>();
 
-    if (error) return refuse(await friendlyDbError(error.message));
+    if (error) return refuse(error.code === "42501" ? t.common.notAllowed : await friendlyDbError(error.message));
     const row = data?.[0];
     if (!row) return refuse(t.projects.errors.notAuthorized);
 
@@ -147,7 +147,7 @@ export async function updateProjectFolderInfo(
       .select("id, parent_folder_id")
       .returns<{ id: string; parent_folder_id: string | null }[]>();
 
-    if (error) return refuse(await friendlyDbError(error.message));
+    if (error) return refuse(error.code === "42501" ? t.common.notAllowed : await friendlyDbError(error.message));
     const row = data?.[0];
     if (!row) return refuse(t.projects.errors.notAuthorized);
 
@@ -170,7 +170,7 @@ export async function setProjectFolderPublic(
       .select("id, parent_folder_id")
       .returns<{ id: string; parent_folder_id: string | null }[]>();
 
-    if (error) return refuse(await friendlyDbError(error.message));
+    if (error) return refuse(error.code === "42501" ? t.common.notAllowed : await friendlyDbError(error.message));
     const row = data?.[0];
     if (!row) return refuse(t.projects.errors.notAuthorized);
 
@@ -203,7 +203,7 @@ export async function moveProjectFolder(
       .select("id")
       .returns<{ id: string }[]>();
 
-    if (error) return refuse(await friendlyDbError(error.message));
+    if (error) return refuse(error.code === "42501" ? t.common.notAllowed : await friendlyDbError(error.message));
     if (!data || data.length === 0) return refuse(t.projects.errors.notAuthorized);
 
     const driveWarning = await syncProjectFolderMove(supabase, folderId);
@@ -249,7 +249,7 @@ export async function deleteProjectFolder(folderId: string): Promise<ActionResul
       .select("id")
       .returns<{ id: string }[]>();
 
-    if (error) return refuse(await friendlyDbError(error.message));
+    if (error) return refuse(error.code === "42501" ? t.common.notAllowed : await friendlyDbError(error.message));
     if (!data || data.length === 0) return refuse(t.projects.errors.notAuthorized);
 
     const driveWarning = await deleteProjectDriveFolder(folder.drive_folder_id);
@@ -285,7 +285,7 @@ export async function setProjectCoverPhoto(
       .select("id, parent_folder_id")
       .returns<{ id: string; parent_folder_id: string | null }[]>();
 
-    if (error) return refuse(await friendlyDbError(error.message));
+    if (error) return refuse(error.code === "42501" ? t.common.notAllowed : await friendlyDbError(error.message));
     const row = data?.[0];
     if (!row) return refuse(t.projects.errors.notAuthorized);
 
@@ -311,7 +311,7 @@ export async function updateProjectPhotoCaption(
       .select("id")
       .returns<{ id: string }[]>();
 
-    if (error) return refuse(error.message);
+    if (error) return refuse(error.code === "42501" ? t.common.notAllowed : error.message);
     if (!data || data.length === 0) return refuse(t.projects.errors.notAuthorized);
 
     revalidatePath(`/projects/${folderId}`);
