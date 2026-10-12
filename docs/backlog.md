@@ -86,6 +86,8 @@ Then re-run `scripts/check-who-does-what.mjs` and remove the `borrowedFloor` / `
 
 ## Security
 
+- [ ] **The app's `x-origin-key` check is in the code but NOT yet active on the Pi — it needs a Pi deploy (found 2026-10-12 while closing review S1).** #551 added the check to `src/proxy.ts` so the Pi refuses a request that reaches `pi.lannacare.org` without the shared secret, rather than trusting the Cloudflare WAF rule alone. `pi-token-off` then copied `ORIGIN_KEY` into the Pi's `.env.deploy.production` on 2026-10-12, so the value is in place. **But the Pi is serving `0.27.0`, which predates #551, so nothing on the Pi checks the header today.** It starts working at the next Pi deploy (`./scripts/pi/deploy-pi.sh`) and not before. **Why this is worth its own item:** the protection reads as shipped — the code is on `main`, the secret is on the Pi, the PR is merged and its test plan is signed — and the only record that it is not yet live is one row of that test plan's manual table, where no planner or release pass would ever see it. Until the deploy happens, an edited, disabled or displaced WAF rule still puts the Pi's `next start` in front of anyone who finds the hostname, which is precisely what #551 was for. **Done when** a Pi deploy carrying #551 has happened and a request to the Pi without the header is confirmed refused (the test clone uses the same key, so it can be checked there first). No code change expected. See `docs/decisions/2026-10-12-pi-checks-origin-key.md` and `docs/test-plans/pi-token-off.md` row 5.
+
 **Moved above Deployment on 2026-09-30 (Lutan): severity governs here, not
 file position.** The review appended this section at the end of the file,
 which by this file's own convention ("ordered by suggested priority") read as
