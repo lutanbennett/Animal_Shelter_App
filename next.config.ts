@@ -1,6 +1,7 @@
 import { execSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import type { NextConfig } from "next";
+import { SITE_ALLOWED_ORIGINS } from "./src/lib/site-hosts";
 import { MAX_UPLOAD_BODY_BYTES } from "./src/lib/uploads/limits";
 
 function gitSha(): string {
@@ -148,7 +149,7 @@ const nextConfig: NextConfig = {
       // These are the hosts in the visitor's address bar, which is what the
       // docs say to list; the apex needs its own entry because `*` matches
       // exactly one label and never the bare name.
-      allowedOrigins: ["lannacare.org", "*.lannacare.org"],
+      allowedOrigins: SITE_ALLOWED_ORIGINS,
     },
     proxyClientMaxBodySize: MAX_UPLOAD_BODY_BYTES,
   },

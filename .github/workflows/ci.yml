@@ -127,6 +127,9 @@ jobs:
       # The Worker and the Pi must build with the same Server Actions key, or a
       # form rendered by one fails on the other (check-actions-key.mjs).
       - run: node scripts/check-actions-key.mjs
+      # Public hostnames (site-hosts.ts) and public pages (public-paths.ts) are each one list.
+      - run: node scripts/check-site-hosts.mjs
+      - run: node scripts/check-public-paths.mjs
 
   # Known-vulnerable production dependencies, reported, not enforced. Red on
   # this job would learn to be ignored: npm audit routinely reports things

@@ -31,17 +31,33 @@
  */
 export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg", "/api/version"];
 
+/**
+ * The public *pages* — the one list. The proxy (isPublicPath), the layout gate
+ * (isPublicPage) and the Worker (worker/index.mjs, which decides what the edge
+ * caches) all derive from it; do not write these prefixes out anywhere else.
+ */
+export const PUBLIC_PAGE_PREFIXES = ["/adopt", "/our-work", "/foster", "/volunteer", "/donate", "/friends", "/privacy", "/r", "/e"];
+
+/** Pages that exist only per item (/r/CODE, /e/ID): the bare "/r" and "/e" are not public paths. */
+const PER_ITEM_PAGE_PREFIXES = ["/r", "/e"];
+
+/**
+ * Public pages the Worker must NOT keep in the edge cache. /r/ and /e/ are
+ * per-resident and per-enclosure pages read live from public_resident_cards
+ * and public_enclosures: a copy kept for ten minutes could show a resident or
+ * enclosure that has since been withdrawn, and a card scan wants the current
+ * state. They are also low traffic, so caching buys almost nothing. Decided
+ * 2026-10-12 (docs/decisions/2026-10-12-r-and-e-not-edge-cached.md); this is
+ * what the Worker's old, separate list already did.
+ */
+export const NOT_EDGE_CACHED_PAGE_PREFIXES = ["/r", "/e"];
+
+/** What the Worker may edge-cache: every public page except the above. */
+export const EDGE_CACHED_PAGE_PREFIXES = PUBLIC_PAGE_PREFIXES.filter((p) => !NOT_EDGE_CACHED_PAGE_PREFIXES.includes(p));
+
 export const PUBLIC_PATH_PREFIXES = [
   "/api/photos/",
-  "/adopt",
-  "/our-work",
-  "/foster",
-  "/volunteer",
-  "/donate",
-  "/friends",
-  "/privacy",
-  "/r/",
-  "/e/",
+  ...PUBLIC_PAGE_PREFIXES.map((p) => (PER_ITEM_PAGE_PREFIXES.includes(p) ? `${p}/` : p)),
 ];
 
 /**
@@ -77,10 +93,10 @@ export function isPublicPath(pathname: string, locked = false): boolean {
 
 /** The public *pages* (not /login or the photo proxy): no app chrome. */
 export function isPublicPage(pathname: string): boolean {
-  return (
-    pathname === "/" ||
-    ["/adopt", "/our-work", "/foster", "/volunteer", "/donate", "/friends", "/privacy", "/r", "/e"].some(
-      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`) ,
-    )
-  );
+  return pathname === "/" || PUBLIC_PAGE_PREFIXES.some((prefix) => underPrefix(pathname, prefix));
+}
+
+/** Whether the Worker may edge-cache this public page. */
+export function isEdgeCachedPage(pathname: string): boolean {
+  return pathname === "/" || EDGE_CACHED_PAGE_PREFIXES.some((prefix) => underPrefix(pathname, prefix));
 }

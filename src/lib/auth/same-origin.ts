@@ -1,17 +1,5 @@
 import { NextResponse } from "next/server";
-
-/**
- * Hosts a browser may legitimately post an upload from — the same list as
- * `experimental.serverActions.allowedOrigins` in next.config.ts, and for the
- * same reason: they are the hosts in the visitor's address bar. `*` stands for
- * exactly one label, so the apex needs its own entry.
- */
-const PUBLIC_HOSTS = ["lannacare.org"];
-const PUBLIC_SUFFIX = ".lannacare.org";
-
-function isPublicHost(hostname: string): boolean {
-  return PUBLIC_HOSTS.includes(hostname) || (hostname.endsWith(PUBLIC_SUFFIX) && !hostname.slice(0, -PUBLIC_SUFFIX.length).includes("."));
-}
+import { isSiteHostname } from "@/lib/site-hosts";
 
 /**
  * Refuses a cross-site browser POST to a cookie-authenticated upload route
@@ -51,7 +39,7 @@ export function refuseCrossSite(request: Request): NextResponse | null {
       return deny();
     }
     const own = request.headers.get("host");
-    if (!isPublicHost(hostname) && host !== own) return deny();
+    if (!isSiteHostname(hostname) && host !== own) return deny();
   } else if (origin === "null") {
     return deny();
   }
