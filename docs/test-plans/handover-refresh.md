@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none — asked for directly by Lutan on 2026-10-13: *"Is everything documented for the handover"*. It was not |
 | Branch / worktree | `claude/handover-refresh` @ `C:\Development\Animal_Shelter_handover-refresh` |
 | Dev server | not started — this PR adds no code and no page |
-| PR | PR_NUMBER |
+| PR | #582 |
 | Tested by / date | Claude (production release manager session) / 2026-10-13 |
 | Carries a migration? | no |
 | Tested at SHA | the tip of this branch, re-run after the plan was filled in |
