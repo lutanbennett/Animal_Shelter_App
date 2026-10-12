@@ -11,7 +11,7 @@
 | PR | not yet opened |
 | Tested by / date | Claude / 2026-10-12 |
 | Carries a migration? | no |
-| Tested at SHA | `64bf0324` |
+| Tested at SHA | `1a089a27` |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,7 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
 
 ```
-=== gates: build exited 0 after 325s
+=== gates: build exited 0 after 41s
 
 gates: typecheck=0 lint=0 build=0
 ```
