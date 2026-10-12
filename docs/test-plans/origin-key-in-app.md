@@ -23,7 +23,13 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` already merged, up to date
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — n/a: filled in below once the run finishes
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. First run caught a type error in `proxy.ts` (fixed); closing lines of the second run:
+
+```
+=== gates: build exited 0 after 52s
+
+gates: typecheck=0 lint=0 build=0
+```
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
