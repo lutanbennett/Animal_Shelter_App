@@ -26,7 +26,9 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
 
 ```
-GATES_PLACEHOLDER
+=== gates: build exited 0 after 360s
+
+gates: typecheck=0 lint=0 build=0
 ```
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
