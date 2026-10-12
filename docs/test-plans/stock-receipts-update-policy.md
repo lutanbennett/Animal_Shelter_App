@@ -11,7 +11,7 @@
 | PR | opened from this branch after this commit |
 | Tested by / date | Claude, 2026-10-12 |
 | Carries a migration? | yes: `0191` |
-| Tested at SHA | `PENDING` |
+| Tested at SHA | `36a33c19` |
 
 ## 1. Scope and risk
 
