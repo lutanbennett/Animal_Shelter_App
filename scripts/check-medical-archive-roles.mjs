@@ -11,10 +11,8 @@
 //   A  management archives and restores a weight, prescription, visit and
 //      immunization (1 row each), and each archive writes ONE audit row
 //      (was staff until 0173 retired it; a live staff login can no longer be made)
-//   B  a doctor is refused (0 rows) on another clinic's visit and on a
-//      prescription on it; on their own clinic's visit the database allows
-//      the archive but not the restore (it drops the visit from their
-//      scope), which is why the app offers doctors no Archive at all
+//   B  a doctor is refused on their own clinic by the 0187 trigger (-1) and on
+//      another clinic by RLS (0 rows); the app offers them no Archive either way
 //   C  a volunteer archives nothing
 //   D  a second archive of an archived row changes nothing (the .is(null) guard)
 //
@@ -33,7 +31,7 @@ begin;
 
 create temp table harness (k text primary key, id uuid);
 
--- Runs the archive UPDATE as a login on one of the four tables; returns rows changed.
+-- Runs the archive UPDATE as a login on one of the four tables; returns rows changed, or -1 when 0187's trigger refuses it.
 create function pg_temp.archive_as(p_uid uuid, p_table text, p_id uuid) returns int language plpgsql as $f$
 declare n int;
 begin
@@ -47,6 +45,10 @@ begin
   reset role;
   perform set_config('request.jwt.claims', '', true);
   return n;
+exception when insufficient_privilege then
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  return -1;
 end $f$;
 
 create function pg_temp.restore_as(p_uid uuid, p_table text, p_id uuid) returns int language plpgsql as $f$
@@ -62,6 +64,10 @@ begin
   reset role;
   perform set_config('request.jwt.claims', '', true);
   return n;
+exception when insufficient_privilege then
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
+  return -1;
 end $f$;
 
 do $setup$
@@ -139,19 +145,14 @@ begin
   if pg_temp.restore_as(v_mgmt, 'clinic_visits', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: management could not restore a visit'; end if;
   v_report := v_report || 'A: management archives all four, restores, one audit row per archive | ';
 
-  -- B: a doctor. The database would let them archive their own clinic's
-  -- visit and a prescription on it, and refuses the other clinic's. The app
-  -- offers them nothing, because the archive is one-way for a doctor: it drops
-  -- the visit from their scope, so they cannot restore it.
-  if pg_temp.archive_as(v_doctor, 'prescriptions', v_rx_own) <> 1 then raise exception 'HARNESS-FAIL B: doctor could not archive a prescription on their own visit'; end if;
-  if pg_temp.restore_as(v_doctor, 'prescriptions', v_rx_own) <> 1 then raise exception 'HARNESS-FAIL B: doctor could not restore a prescription on their own live visit'; end if;
-  if pg_temp.archive_as(v_doctor, 'clinic_visits', v_visit_other) <> 0 then raise exception 'HARNESS-FAIL B: doctor archived ANOTHER clinic''s visit'; end if;
-  if pg_temp.archive_as(v_doctor, 'prescriptions', v_rx_other) <> 0 then raise exception 'HARNESS-FAIL B: doctor archived a prescription on ANOTHER clinic''s visit'; end if;
-  if pg_temp.archive_as(v_doctor, 'clinic_visits', v_visit_own) <> 1 then raise exception 'HARNESS-FAIL B: doctor could not archive their own clinic''s visit'; end if;
-  if pg_temp.restore_as(v_doctor, 'clinic_visits', v_visit_own) <> 0 then
-    raise exception 'HARNESS-FAIL B: a doctor restored their own archived visit, so the decision''s reason (one-way for a doctor) is stale';
-  end if;
-  v_report := v_report || 'B: doctor refused (0 rows) on the other clinic; own-clinic archive is one-way, so not offered | ';
+  -- B: a doctor. RLS lets them reach their own clinic's visit and a prescription on it, but since 0187 the
+  -- trigger refuses the archive (-1) because a doctor holds no medical.archive; the other clinic's rows are 0 rows
+  -- (RLS). The app offers them nothing either way.
+  if pg_temp.archive_as(v_doctor, 'prescriptions', v_rx_own) <> -1 then raise exception 'HARNESS-FAIL B: doctor archived a prescription on their own visit past the trigger'; end if;
+  if pg_temp.archive_as(v_doctor, 'clinic_visits', v_visit_other) = 1 then raise exception 'HARNESS-FAIL B: doctor archived ANOTHER clinic''s visit'; end if;
+  if pg_temp.archive_as(v_doctor, 'prescriptions', v_rx_other) = 1 then raise exception 'HARNESS-FAIL B: doctor archived a prescription on ANOTHER clinic''s visit'; end if;
+  if pg_temp.archive_as(v_doctor, 'clinic_visits', v_visit_own) <> -1 then raise exception 'HARNESS-FAIL B: doctor archived their own clinic''s visit past the trigger'; end if;
+  v_report := v_report || 'B: doctor refused by the 0187 trigger on their own clinic, by RLS on the other | ';
 
   -- C: a volunteer.
   select count(*) into v_n from (values
