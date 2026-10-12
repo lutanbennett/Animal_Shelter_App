@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **The Supabase personal access token is on the Pi by the setup instructions — take it off** (left open, status note added) |
 | Branch / worktree | `claude/pi-token-off` @ `C:\Development\Animal_Shelter_pi-token-off` |
 | Dev server | not started — no UI surface |
-| PR | not yet opened |
+| PR | #558 |
 | Tested by / date | Claude / 2026-10-12 |
 | Carries a migration? | no |
 | Tested at SHA | `1a089a27` |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all 7 checks passing on #558, read from the PR status
 
 ## 3. Schema and data — *skip if no migration*
 
