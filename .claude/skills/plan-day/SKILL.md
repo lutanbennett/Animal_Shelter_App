@@ -284,7 +284,73 @@ takes a minute):
 2. Write `C:\Development\Animal_Shelter_<slug>\.brief.md` (gitignored):
    the backlog item verbatim as the task, the branch name, the port, and
    for a schema-first item which half this stream is. Keep it to what a
-   fresh session needs; CLAUDE.md covers the rest.
+   fresh session needs; CLAUDE.md covers the rest — **except the
+   pre-push test-plan block below, which every brief must carry.**
+
+### Every brief ends with this block, verbatim
+
+**Lutan, 2026-10-12: "the streams seem to be making errors in the test plan
+when they submit the CI. Can we add something into the brief that gets them to
+make sure it's right before they submit the CI rather than us reworking all the
+time."** He is right, and it is the planner's gap, not the streams'. `CLAUDE.md`
+already says to run the checker before pushing; **the briefs did not repeat it,
+and the brief is what a fresh session actually reads first.**
+
+Measured: **six commits across batches 94 and 95** were spent fixing a test plan
+*after* CI went red, every one of them on **format, not content** — `15b5ef9f`
+"fix the CI line so the checker accepts it", `d98c3317` "sign-off line in the
+format the checker reads", `d1175619` "gates and SHA", `be8948e4` "record gates
+in the test plan", `36dce481` "gates result", `7c613d74` "the
+manual-verification tick gets a reason while it is pending". **All six were
+catchable locally in one command.**
+
+Append this to every `.brief.md`, changed only where a stream genuinely differs:
+
+```markdown
+## Before you push: make the test plan pass the checker FIRST
+
+**Do it in this order, and do not push between steps 1 and 4:**
+
+1. Commit the code.
+2. Fill the test plan in **completely** — every box, the header's
+   `Tested at SHA` (`git rev-parse --short HEAD`), the gates, both signature
+   lines, `Result:`.
+3. Run **`node scripts/check-test-plan.mjs`** and **`node scripts/gates.mjs`**.
+   Fix everything they print, then run them again until clean.
+4. *Then* commit the plan, push, and open the PR.
+
+**The four traps, each of which has already cost a commit:**
+
+- **The sign-off line needs TWO OR MORE SPACES before `Date:`.**
+  `Automated checks by: <name>  Date: <yyyy-mm-dd>` — one space fails, and one
+  space looks **identical** on screen to two. Same for `Manual verification by:`.
+- **`Result:` must be exactly one of `pass`, `pass with accepted defects`,
+  `fail`** — no other wording, and `fail` does not merge.
+- **Every box is ticked or marked `n/a: <reason>` with a real reason** (three
+  characters minimum). A bare `n/a` fails, and so does an untouched `- [ ]`.
+- **`n/a:` and `pending:` lines carry NO date; a name does.** Use
+  `pending: <what is outstanding>` when the work is done and a person genuinely
+  needs to look — that is a legitimate state, it reports as *awaiting*, and it is
+  not a failure.
+
+**One follow-up commit IS legitimate, and only one.** The template's CI line
+cannot be true in the commit that creates the PR, so leave it
+`n/a: not yet — the PR does not exist at this commit` on the first push and tick
+it once you have **seen** the run go green. **Do not pre-tick it** — a green you
+have not seen is the exact failure the checklist exists to prevent.
+
+**A red `test-plan` is always someone's mistake to fix.** It is never noise and
+never "nobody has signed yet" — a correct-but-unsigned plan exits 0 by design. So
+if it is red, read what it says rather than pushing again to see.
+```
+
+**Do not water this down to "remember to run the checker".** The four traps are
+the whole value: three of the six commits were the two-space one, which no amount
+of care catches by eye.
+
+**Do not change `scripts/check-test-plan.mjs` to be more forgiving instead.**
+That script's strictness is deliberate and `CLAUDE.md` documents at length why it
+must not be loosened or given `continue-on-error`. The fix belongs in the brief.
 
 **Do not create all nine worktrees.** CLAUDE.md caps live worktrees at
 two or three — more than that and merging becomes the bottleneck — and
