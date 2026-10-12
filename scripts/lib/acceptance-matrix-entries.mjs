@@ -477,6 +477,17 @@ export const ENTRIES = {
     },
   ],
 
+  "add-photos-quick": [
+    {
+      activity: "Add photos, then say who is in each",
+      needs: "photos.resident_add",
+      device: "phone",
+      do: "Tap Add photos on the home screen, take or choose two photos, tap one, then tap the resident in it, and do the same for the other.",
+      expect: "The count reads 2 of 2 tagged, each photo shows a tick, and each appears on its resident's Photos tab.",
+      notes: { doctor: "A doctor has no folder choice: photos go into Medical, and never to the website." },
+    },
+  ],
+
   // ── Enclosures ───────────────────────────────────────────────────────────
   "enclosure-map": [
     {

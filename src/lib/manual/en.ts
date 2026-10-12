@@ -878,7 +878,7 @@ const manual: Manual = {
         {
           id: "add-photos-quick",
           title: "Adding photos: the quick way",
-          roles: ["admin", "management", "doctor", "volunteer"],
+          roles: ["admin", "management", "doctor"],
           activity: "photos.resident_add",
           path: "Home → Add photos",
           intro:
