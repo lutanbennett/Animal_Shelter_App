@@ -15,7 +15,7 @@ release manager and QA sessions live.
 ## 1. Look
 
 ```
-node C:\Development\Animal_Shelter_App\scripts\worktree.mjs list
+node C:/Development/Animal_Shelter_App/scripts/worktree.mjs list
 ```
 
 Do not paste the table back — it is wide and the `held` column carries
@@ -57,7 +57,7 @@ there is one.
   - `CLOSED` (not merged) or **no PR at all** → do not propose. With no
     PR it may be a fresh stream that has not started yet — `/plan-day`
     creates worktrees that sit at `main` until their session begins. Look
-    for `C:\Development\Animal_Shelter_<slug>\.brief.md`; if there is
+    for `C:/Development/Animal_Shelter_<slug>/.brief.md`; if there is
     one, report it as "fresh, not started (brief: <first heading>)". Flag
     it either way and let the user decide.
 - **Commits beyond `main`, `free`:** not a candidate. If `gh` says its PR
@@ -98,7 +98,7 @@ each deletes a `node_modules`, which can take a minute or two — use a
 timeout of 600000 ms):
 
 ```
-node C:\Development\Animal_Shelter_App\scripts\worktree.mjs done <slug>
+node C:/Development/Animal_Shelter_App/scripts/worktree.mjs done <slug>
 ```
 
 It ends with `done — folder removed, …` when all of it happened, or
