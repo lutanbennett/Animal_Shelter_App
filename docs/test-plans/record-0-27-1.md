@@ -25,9 +25,15 @@
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly, bringing the branch from `c6e19730` to `3c7632ca`
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed
 ```
-RECORD_GATES_OUTPUT
+=== gates: typecheck — npm run typecheck
+=== gates: typecheck exited 0 after 91s
+=== gates: lint — npm run lint
+=== gates: lint exited 0 after 259s
+=== gates: build — npm run build
+=== gates: build exited 0 after 353s
+gates: typecheck=0 lint=0 build=0
 ```
-- [ ] CI green on the PR (runs the same three) — RECORD_CI_LINE
+- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
 
