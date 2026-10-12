@@ -68,7 +68,7 @@ verify-cut exit: 0
 verify-outside exit: 0
 ```
 
-- [x] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a: not yet — the PR does not exist at this commit` on the first push and tick it in a follow-up commit once the run is actually green. Every PR hits this; the first push is red on `test-plan` by construction. Do not pre-tick it — a green you have not seen is the exact failure this checklist exists to prevent — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `all 7 jobs `completed success` on run 38295241354 at `9c08cc6e`, the branch tip: test-plan, public-views, check, new-policy-role-names, migration-numbers, script-integrity, audit. Read from `gh run view <id> --json jobs`, not from `gh pr checks`` on the first push and tick it in a follow-up commit once the run is actually green. Every PR hits this; the first push is red on `test-plan` by construction. Do not pre-tick it — a green you have not seen is the exact failure this checklist exists to prevent — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
 
