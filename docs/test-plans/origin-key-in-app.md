@@ -136,7 +136,7 @@ None.
 
 ## Sign-off
 
-Automated checks by: Claude, 2026-10-12 (check script, gates)
+Automated checks by: Claude  Date: 2026-10-12
 Manual verification by: n/a: nothing to look at in a browser; the production check above is left to Lutan
 
 Result: PASS
