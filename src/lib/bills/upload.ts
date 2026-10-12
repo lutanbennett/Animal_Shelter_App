@@ -25,6 +25,7 @@ const ALLOWED_MIME_TYPES = new Set([
 
 /** The same question the database asks (bill_owner_can, 0189), so a refusal comes before Drive is touched. */
 export function mayFileBill(perms: Permissions | null, owner: BillOwnerType): boolean {
+  if (!perms || perms.scopes.clinical === "own_clinic") return false;
   const delivery = can(perms, "stock.delivery");
   const visits = can(perms, "medical.visits", "edit");
   if (owner === "stock_receipt") return delivery;
