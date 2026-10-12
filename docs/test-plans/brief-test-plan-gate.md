@@ -24,7 +24,11 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — output pasted below, unedited
 - [ ] CI green on the PR (runs the same three). `n/a: not yet — the PR does not exist at this commit`
 
-Gates output and tested SHA are pasted into §2 of the PR body as printed.
+```
+gates: typecheck=0 lint=0 build=0
+```
+
+Tested at SHA `61b63fc4` (`git rev-parse --short HEAD` at the time the gates ran).
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -80,22 +84,22 @@ Gates output and tested SHA are pasted into §2 of the PR body as printed.
 
 ### Tested build
 
-- [ ] Tested SHA recorded and is the tip of `main` at deploy time — `deferred: production release manager`
-- [ ] Deployed SHA matches the tested SHA — `deferred: production release manager`
+- [ ] Tested SHA recorded and is the tip of `main` at deploy time — deferred: production release manager
+- [ ] Deployed SHA matches the tested SHA — deferred: production release manager
 
 ### On the deployed build
 
-- [ ] Deployed to test — `deferred: production release manager`
-- [ ] Smoke-tested on `test.lannacare.org` — `deferred: production release manager`
+- [ ] Deployed to test — deferred: production release manager
+- [ ] Smoke-tested on `test.lannacare.org` — deferred: production release manager
 - [ ] Timezone-sensitive behaviour proved — `n/a: no dates, clocks or derived "today" anywhere in this change`
 - [ ] Boundary or banding assertions cover both edges — `n/a: no threshold, band or cutoff in this change`
-- [ ] Evidence pasted is the tool's actual output, unedited — `deferred: production release manager`
-- [ ] Public pages re-checked after a cache purge — `deferred: production release manager`
+- [ ] Evidence pasted is the tool's actual output, unedited — deferred: production release manager
+- [ ] Public pages re-checked after a cache purge — deferred: production release manager
 
 ### Deploy safety
 
-- [ ] Supabase project ref line read and matches production — `deferred: production release manager`
-- [ ] `strip-baked-env` line seen in deploy output — `deferred: production release manager`
+- [ ] Supabase project ref line read and matches production — deferred: production release manager
+- [ ] `strip-baked-env` line seen in deploy output — deferred: production release manager
 - [ ] Any new secret/env var exists in production Cloudflare — `n/a: this PR adds no secret or env var`
 
 ### Migration ordering — *skip if no migration*
