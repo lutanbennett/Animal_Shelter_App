@@ -73,6 +73,16 @@ reason for lesson 2 below. Expect it.
 
 ---
 
+## Two migration files are numbered `0191`
+
+`0191_donation_channels.sql` and `0191_stock_receipts_update_policy.sql` are both on `main`. Nothing is
+broken: each is recorded under its own filename, they touch unrelated objects, and neither will be
+renamed. But "`0191`" alone is ambiguous, so name the full filename in a runbook or release note,
+and expect `--status` to list two files at that number if production is behind. Why the CI check
+cannot catch this: `docs/decisions/2026-10-13-duplicate-0191-cannot-be-caught-by-the-number-check.md`.
+
+---
+
 ## The one thing to read before the next release
 
 **`0.26.0`'s lesson stands unchanged and is still the most valuable thing here:
