@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none — this is Lutan's process decision of 2026-10-13, taken in chat, not a backlog item |
 | Branch / worktree | `claude/release-fewer-merges` @ `C:\Development\Animal_Shelter_release-fewer-merges` |
 | Dev server | not started — this PR adds no code and no page |
-| PR | PR_NUMBER |
+| PR | #581 |
 | Tested by / date | Claude (production release manager session) / 2026-10-13 |
 | Carries a migration? | no |
 | Tested at SHA | the tip of this branch, re-run after the plan was filled in |
