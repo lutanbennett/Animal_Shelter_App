@@ -6,7 +6,7 @@
 | Backlog item | `docs/backlog.md` → none; Lutan asked for this directly in the `/plan-day` chat, 2026-10-12 |
 | Branch / worktree | `claude/brief-test-plan-gate` @ `C:\Development\Animal_Shelter_brief-test-plan-gate` |
 | Dev server | not started — no runtime surface |
-| PR | #553 |
+| PR | #557 |
 | Tested by / date | Claude (Daily Planner session), 2026-10-12 |
 | Carries a migration? | no |
 | Tested at SHA | recorded below in §2 from `git rev-parse --short HEAD` |
