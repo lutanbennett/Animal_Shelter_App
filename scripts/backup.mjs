@@ -74,6 +74,7 @@ import { fileURLToPath } from "node:url";
 import { google } from "googleapis";
 import { ENCRYPTED_SUFFIX, encryptBackup, excludeArgs, parseRecipients } from "./lib/backup-crypto.mjs";
 import { MIN_KEPT, planPrune } from "./lib/backup-prune.mjs";
+import { describeBackupFolder, resolveBackupFolder } from "./lib/backup-folder.mjs";
 import { envFile, loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
 
 const MIN_PG_MAJOR = 17;
@@ -323,8 +324,10 @@ function driveClient() {
 async function ensureBackupsFolder(drive) {
   // BACKUP_DRIVE_FOLDER_ID names the folder the dumps go in, so Backups/ can sit
   // somewhere the app's photo tree does not (shared with the administrator only).
-  if (env.BACKUP_DRIVE_FOLDER_ID) return env.BACKUP_DRIVE_FOLDER_ID;
-  const root = env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  const where = resolveBackupFolder(env);
+  console.log(`Backups folder: ${describeBackupFolder(where)}.`);
+  if (where.source === "explicit") return where.folderId;
+  const root = where.rootId;
   if (!root) fail("Set BACKUP_DRIVE_FOLDER_ID or GOOGLE_DRIVE_ROOT_FOLDER_ID to upload to Drive (use --local to skip the upload).");
   const found = await drive.files.list({
     q: `'${root}' in parents and name = 'Backups' and mimeType = 'application/vnd.google-apps.folder' and trashed = false`,
