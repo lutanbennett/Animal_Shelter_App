@@ -76,6 +76,10 @@ const PUBLIC_VIEWS = [
   // no `set_by`, so anon reads the numbers without reaching impact_baselines
   // or who last edited a figure. Granted at 0156:148.
   "public_impact_figures",
+  // 0191. The ways to give that /donate shows (bank and PromptPay details
+  // included). Owner-run with `where shown`, so a hidden row is never
+  // readable; the donation_channels table itself refuses anon.
+  "public_donation_channels",
 ];
 // No base tables: site_content, site_content_photos and site_pages were
 // readable by anon with select * until 0122, so a new column was public the
