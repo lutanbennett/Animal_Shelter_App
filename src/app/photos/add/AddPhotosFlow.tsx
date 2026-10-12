@@ -70,17 +70,13 @@ export function AddPhotosFlow({
   const [allToOne, setAllToOne] = useState(false);
   const [folder, setFolder] = useState<PhotoCategory>(categories.includes("Shelter") ? "Shelter" : categories[0]);
   const [query, setQuery] = useState("");
-  const [recentIds, setRecentIds] = useState<string[]>([]);
+  const [recentIds, setRecentIds] = useState<string[]>(() => (typeof window === "undefined" ? [] : readRecent()));
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
   // The refs are what the drain loop reads; state is only what is drawn.
   const photosRef = useRef<Photo[]>([]);
   const jobs = useRef<Job[]>([]);
   const running = useRef(false);
-
-  useEffect(() => {
-    setRecentIds(readRecent());
-  }, []);
 
   const commit = useCallback((next: Photo[]) => {
     photosRef.current = next;
@@ -333,7 +329,6 @@ export function AddPhotosFlow({
                       isPicked ? "border-primary ring-2 ring-primary/50" : "border-border"
                     }`}
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.preview} alt={p.file.name} className="h-full w-full object-cover" />
                     {p.tags.length === 0 && (
                       <span className="absolute inset-x-0 bottom-0 bg-black/60 px-1 py-0.5 text-xs font-medium text-white">
