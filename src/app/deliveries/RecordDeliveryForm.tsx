@@ -11,6 +11,9 @@ import { defaultUnit, resolveEntered, type UnitConversion } from "@/lib/units";
 import { packTotal, parseDeliveryQuantity, type DeliveryKind, type DeliveryTiming } from "@/lib/management/stock-receipts";
 import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
 import { recordDelivery } from "./actions";
+import { attachCardToDelivery } from "@/app/bills/actions";
+import { BillPhotoField } from "@/components/BillPhotoField";
+import { useDeferredUploads } from "@/components/DeferredUploads";
 
 export type DeliveryFormItem = {
   id: string;
@@ -37,6 +40,8 @@ export function RecordDeliveryForm({
   items,
   countDays,
   suppliers,
+  fromBill,
+  billCost,
 }: {
   initialKind: DeliveryKind;
   /** The shelter's today, YYYY-MM-DD, from the server. */
@@ -45,6 +50,9 @@ export function RecordDeliveryForm({
   /** Item id → the shelter days it was counted in a stocktake. */
   countDays: Record<DeliveryKind, Record<string, string[]>>;
   suppliers: { id: string; name: string }[];
+  /** A card in the bills inbox this delivery is being recorded from; its photos move onto the delivery. */
+  fromBill?: string | null;
+  billCost?: string;
 }) {
   const { t, locale } = useI18n();
   const d = t.deliveries;
@@ -60,7 +68,9 @@ export function RecordDeliveryForm({
   const [date, setDate] = useState(today);
   const [timing, setTiming] = useState<DeliveryTiming | null>(null);
   const [supplierId, setSupplierId] = useState("");
-  const [cost, setCost] = useState("");
+  const [cost, setCost] = useState(billCost ?? "");
+  const [cardId, setCardId] = useState(fromBill ?? null);
+  const bill = useDeferredUploads();
   const [note, setNote] = useState("");
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
@@ -108,9 +118,22 @@ export function RecordDeliveryForm({
         setMessage({ ok: false, text: result.error });
         return;
       }
+
+      // The bill: a card it was recorded from moves onto the delivery, and photos picked here are filed on it.
+      let billNote = "";
+      if (result.id && cardId) {
+        const moved = await attachCardToDelivery(cardId, result.id);
+        if (!moved.ok) billNote = moved.error;
+        setCardId(null);
+      }
+      if (result.id && bill.queued.length > 0) {
+        const filed = await bill.upload(`/api/bills/stock_receipt/${result.id}`);
+        if (filed.failed) billNote = t.bills.photo.failed;
+      }
+      bill.reset();
       setMessage({
-        ok: true,
-        text: d.saved(saved.name, formatQuantity(Number(saved.quantity)), saved.unit),
+        ok: !billNote,
+        text: d.saved(saved.name, formatQuantity(Number(saved.quantity)), saved.unit) + (billNote ? " " + billNote : ""),
       });
       setItemId("");
       setUnitName("");
@@ -331,6 +354,9 @@ export function RecordDeliveryForm({
             className={`${inputClass} w-36`}
           />
           <span className="text-xs text-muted">{f.costHint}</span>
+        </div>
+        <div className="flex basis-full flex-col gap-1">
+          <BillPhotoField uploads={bill} />
         </div>
         {/* basis-48, not a min-width on the input: the box wraps onto its own
             line when Cost leaves under 12rem (a phone), then takes the row.

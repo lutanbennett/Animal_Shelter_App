@@ -60,6 +60,9 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
   const d = t.deliveries;
   const searchParams = await props.searchParams;
   const initialKind: DeliveryKind = searchParams.tab === "diets" ? "diet" : "medication";
+  // Opened from a card in the Bills inbox ("Record a new delivery from this bill"): its photos move onto the delivery.
+  const fromBill = typeof searchParams.fromBill === "string" && /^[0-9a-f-]{36}$/i.test(searchParams.fromBill) ? searchParams.fromBill : null;
+  const billCost = typeof searchParams.cost === "string" && /^d+(.d{1,2})?$/.test(searchParams.cost) ? searchParams.cost : "";
 
   const [medicationResult, dietResult, countsResult, suppliersResult, receiptsResult, conversionsResult] = await Promise.all([
     supabase.from("stock_medications").select("id, name, name_th, unit:dose_unit, label_drive_file_id").order("name").returns<ItemRow[]>(),
@@ -138,6 +141,8 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
     },
     countDays,
     suppliers: suppliers.filter((s) => s.archived_at == null).map(({ id, name }) => ({ id, name })),
+    fromBill,
+    billCost,
   };
 
   const loadError =
