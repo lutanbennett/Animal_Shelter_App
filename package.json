@@ -1,12 +1,13 @@
 {
   "name": "lanna-animal-care",
-  "version": "0.27.1",
+  "version": "0.28.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint && node scripts/check-runtime-config.mjs && node scripts/check-migration-grants.mjs && node scripts/check-permission-catalogue.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-home-screens.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/acceptance-matrix.mjs --check && node scripts/check-backlog-sections.mjs && node scripts/check-next-og.mjs",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --import ./scripts/test-support/register.mjs --test \"src/**/*.test.mjs\" \"worker/*.test.mjs\"",
     "typecheck": "next typegen && tsc --noEmit -p tsconfig.build.json",
     "opennext:build": "node -r ./scripts/win-junction-symlinks.cjs node_modules/@opennextjs/cloudflare/dist/cli/index.js build",
     "preview": "npm run opennext:build && opennextjs-cloudflare preview",
