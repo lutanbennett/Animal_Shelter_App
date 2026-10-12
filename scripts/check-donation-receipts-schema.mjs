@@ -104,7 +104,7 @@ grant all on r to authenticated, anon;
 do $$
 declare m uuid; s uuid; d uuid; d2 uuid; c0 bigint; n1 text; n2 text; n3 text; rid uuid;
   issue text := 'issue_donation_receipt(%L, %L, current_date, ''{"name":"Forged Org Ltd","addressLines":["1 Fake Street"],"registrationLines":["Tax ID: 000"],"statementLines":["No goods or services were provided"]}''::jsonb, ''{"donorName":"Forged donor","lines":[{"description":"Forged gift","amount":1000000}],"total":1000000,"currency":"THB"}''::jsonb)';
-  cid uuid; cn text; px uuid; pn text;
+  d3 uuid; c1 bigint; cid uuid; cn text; px uuid; pn text;
   th text := ('${want("TH")}'::jsonb)::text;
   us text := ('${want("US")}'::jsonb)::text;
 begin
@@ -161,6 +161,15 @@ begin
   insert into r (label, got, want) values ('counter write closed to authenticated', pg_temp.try(m, 'update receipt_counters set next_value = 1')::text, '-1');
   select id into rid from donation_receipts where number = n1;
   insert into r (label, got, want) values ('audit: issue, sent and void recorded; refused writes left none', (select count(*) from audit_log where table_name = 'donation_receipts' and row_id = rid)::text, '3');
+
+  -- 0186: received_on <= issued_on <= shelter_today(). A backdated receipt is fine; before the donation or in the future is not.
+  insert into donations (received_on, donor_name, method) values (current_date - 7, 'Probe backdate', 'cash') returning id into d3;
+  c1 := (select next_value from receipt_counters where series = 'LCA');
+  insert into r (label, got, want) values ('dated before the donation refused', pg_temp.q(m, format('(issue_donation_receipt(%L, %L, %L::date, null, null)).number', d3, 'TH', current_date - 8)), 'ERR:22023');
+  insert into r (label, got, want) values ('dated in the future refused', pg_temp.q(m, format('(issue_donation_receipt(%L, %L, %L::date, null, null)).number', d3, 'TH', shelter_today() + 1)), 'ERR:22023');
+  insert into r (label, got, want) values ('null date refused', pg_temp.q(m, format('(issue_donation_receipt(%L, %L, null::date, null, null)).number', d3, 'TH')), 'ERR:22023');
+  insert into r (label, got, want) values ('refused dates did not advance the counter', (select next_value from receipt_counters where series = 'LCA')::text, c1::text);
+  insert into r (label, got, want) values ('legitimately backdated receipt accepted', pg_temp.q(m, format('(issue_donation_receipt(%L, %L, %L::date, null, null)).issued_on', d3, 'TH', current_date - 3)), (current_date - 3)::text);
 
   -- receipt_content() mirrors receiptContentFor(), on probe donations, then on issue with forged content.
   select id, name into cid, cn from contacts where name is not null order by created_at limit 1;
