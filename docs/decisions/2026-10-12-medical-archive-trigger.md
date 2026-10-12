@@ -17,9 +17,12 @@ case B now asserts that (the trigger refuses, `-1`) instead of the old "database
 
 **Count.** The backlog item said `medical.archive` appears at four places in `fixed-for-now.ts`; it does (lines 67, 125,
 129, 130), but only three are `databaseWider`'s. Line 67 is the doctor's box in `clinicRule`, which is a different,
-permanent entry and stays. The app half removes the three.
+permanent entry. Once `0187` was live the doctor's box became obeyed (the trigger refuses a doctor), so
+`check-who-does-what.mjs` failed with OVERLISTED on it; the app half therefore removes **all four**, leaving
+`databaseWider` with `stock.delivery` and `reference.add_while_recording` only. Result: UNLISTED 0, STALE 0, OVERLISTED 0.
+The six `medical.archive` lines still printed are INERT (roles without the table's Edit, box off by default).
 
-**Release order.** Nothing in the app reads `0187`, so it may reach production before or after any code. Searched for
+**Release order.** The schema PR alone may reach production at any time, but the app PR's claim (doctor's box obeyed) is only true once `0187` is there, so `0187` goes to production first. Searched for
 anything that archives these rows outside the app: only the check harnesses (`check-audit-undo.mjs`,
 `check-medical-soft-delete.mjs`, `check-medical-archive-roles.mjs`), which run with no login or as a role that holds the
 permission. No script, migration or backfill on production does.
