@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none — a release record closes no backlog item |
 | Branch / worktree | `claude/record-0-27-1` @ `C:\Development\Animal_Shelter_record-0-27-1` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3002` (not started — two documentation files, no rendered surface) |
-| PR | RECORD_PR_NUMBER |
+| PR | #565 |
 | Tested by / date | Claude (production release manager session) / 2026-10-12 |
 | Carries a migration? | no |
 | Tested at SHA | the tip of this branch |
