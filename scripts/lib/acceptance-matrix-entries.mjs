@@ -790,6 +790,29 @@ export const ENTRIES = {
       expect: "One question per screen, each with a Back button that keeps what you typed; the last screen says in words what will be recorded. It appears under Recent deliveries with your name. A delivery dated in the future cannot be chosen.",
     },
   ],
+  bills: [
+    {
+      activity: "Photograph a bill when recording a delivery",
+      needs: "stock.delivery",
+      device: "phone",
+      do: "On Record a delivery, at the extras screen tap Add a photo of the bill, take a photo, type the cost, and record the delivery.",
+      expect: "The delivery saves, and under Recent deliveries a small picture of the bill shows on that delivery. Add another page adds a second one.",
+    },
+    {
+      activity: "Add the day's bills at night, and match them",
+      needs: "stock.delivery",
+      device: "phone",
+      do: "Open Bills from Home, tap Add bills and choose several photos at once. On a card, type the cost and tap a likely delivery or clinic visit.",
+      expect: "Each photo is its own card and the waiting count goes up. After matching, the card disappears, the count goes down, and the delivery or visit shows the bill and its cost.",
+    },
+    {
+      activity: "Turn a bill into a new delivery",
+      needs: "stock.delivery",
+      device: "phone",
+      do: "On a card in Bills, type the cost and tap Record a new delivery from this bill, then record the delivery.",
+      expect: "Record a delivery opens with the cost filled in. When it is saved the bill is on that delivery and the card is gone.",
+    },
+  ],
   "recurring-jobs": [
     {
       activity: "Set up a recurring job for a person or a team",

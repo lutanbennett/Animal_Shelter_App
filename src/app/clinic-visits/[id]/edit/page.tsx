@@ -12,6 +12,8 @@ import type { ClinicOption } from "@/app/clinic-visits/new/ClinicVisitForm";
 import { MicrochipLine } from "@/components/MicrochipForm";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+import { BillPhotosSection } from "@/components/BillPhotosSection";
+import { loadBillPhotos } from "@/lib/bills/photos";
 import { ClinicVisitEditForm, type ClinicVisitInitial } from "./ClinicVisitEditForm";
 
 /** Reached from a row's Edit link on the resident's clinic visits tab. */
@@ -87,6 +89,10 @@ export default async function EditClinicVisitPage(props: PageProps<"/clinic-visi
     name: localLabel(locale, clinic.name, name_th),
   }));
 
+  // The invoice photo(s). A visiting doctor files none: record_attachment() refuses a clinic login a bill (0190).
+  const showBills = scope.kind !== "clinics" && can(perms, "medical.visits", "edit");
+  const billPhotos = showBills ? ((await loadBillPhotos(supabase, "clinic_visit", [visit.id])).get(visit.id) ?? []) : [];
+
   const displayName = resident.thai_name ? `${resident.name} (${resident.thai_name})` : resident.name;
   const tabHref = `/residents/${visit.resident_id}/clinic-visits`;
 
@@ -135,6 +141,14 @@ export default async function EditClinicVisitPage(props: PageProps<"/clinic-visi
         residentDisplayName={displayName}
         cancelHref={tabHref}
       />
+
+      {showBills && (
+        <section className="flex max-w-2xl flex-col gap-2">
+          <h2 className="text-lg font-semibold text-foreground">{t.bills.photo.title}</h2>
+          <p className="text-xs text-muted">{t.bills.photo.hint}</p>
+          <BillPhotosSection kind="clinic_visit" ownerId={visit.id} photos={billPhotos} canAdd />
+        </section>
+      )}
     </main>
   );
 }

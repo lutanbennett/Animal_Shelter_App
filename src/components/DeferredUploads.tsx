@@ -94,9 +94,18 @@ export function useDeferredUploads() {
     [files, patchFile, t],
   );
 
+  /** Forget every file (after a save, ready for the next record). */
+  const reset = useCallback(() => {
+    setFiles((prev) => {
+      prev.forEach((item) => item.previewUrl && URL.revokeObjectURL(item.previewUrl));
+      return [];
+    });
+  }, []);
+
   return {
     files,
     addFiles,
+    reset,
     removeFile,
     upload,
     queued: files.filter((item) => item.status === "queued"),

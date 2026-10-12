@@ -11,6 +11,7 @@
  * ask for an environment file. Exits 1 if any case is wrong.
  */
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { decideGuard, releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
 
 let failures = 0;
@@ -53,5 +54,14 @@ const test = spawnSync(process.execPath, ["scripts/pi/guard-release.mjs", "--env
 check("--env test is not guarded", test.status === 0 && test.stdout.includes("test is not guarded"), test.stdout + test.stderr);
 const noReason = spawnSync(process.execPath, ["scripts/pi/guard-release.mjs", "--env", "production", "--force"], { encoding: "utf8" });
 check("--force without a reason is refused", noReason.status === 2 && noReason.stderr.includes("needs a reason"), noReason.stderr);
+
+// --drift needs a database, so CI cannot run it; this reads the source instead. 0.28.0 shipped a
+// ReferenceError here (the call site read names driftReport() never returned) and lost the verdict line.
+const migrate = readFileSync("scripts/apply-migrations.mjs", "utf8");
+check(
+  "--drift reads the arrays it prints from driftReport()",
+  migrate.includes("return { unapplied, missingFile };") &&
+    migrate.includes("const { unapplied, missingFile } = driftReport();"),
+);
 
 process.exit(failures ? 1 : 0);

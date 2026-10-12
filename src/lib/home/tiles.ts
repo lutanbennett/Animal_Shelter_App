@@ -8,7 +8,8 @@
  * app). A record-scoped page is never here: the registry does not hold one, and that is the
  * contract.
  */
-import { UserPlus, type LucideIcon } from "lucide-react";
+import { Receipt, UserPlus, type LucideIcon } from "lucide-react";
+import { canUseBills } from "@/lib/bills/access";
 import { NAV_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "@/lib/permissions/can";
@@ -20,6 +21,8 @@ export type HomeTile = {
   /** In the person's language: resolved here, since two pages with one word are one tile. */
   label: string;
   icon: LucideIcon;
+  /** A count shown on the tile (bills waiting), when there is one to show. */
+  badge?: string;
 };
 
 /**
@@ -40,7 +43,12 @@ const ORDER: Record<string, readonly string[]> = {
 
 const rank = (r: RouteEntry) => (r.level === "read" ? 1 : 2);
 
-function managementDay(perms: Permissions, t: Dictionary): HomeTile[] {
+function billsTile(perms: Permissions, t: Dictionary, billsWaiting: number | undefined): HomeTile[] {
+  if (!canUseBills(perms)) return [];
+  return [{ href: "/bills", label: t.bills.tile.title, icon: Receipt, ...(billsWaiting ? { badge: t.bills.tile.waiting(billsWaiting) } : {}) }];
+}
+
+function managementDay(perms: Permissions, t: Dictionary, billsWaiting?: number): HomeTile[] {
   const tiles: HomeTile[] = [];
   const recurring = routeFor("/management/recurring-jobs");
   if (recurring && canOpen(perms, recurring)) tiles.push({ href: recurring.path, label: recurring.label(t), icon: recurring.icon });
@@ -58,11 +66,11 @@ function managementDay(perms: Permissions, t: Dictionary): HomeTile[] {
  * Not `roles.home_path`, which names one page and cannot say "these four tiles"; not a job list,
  * which Management's cells are wider than.
  */
-const CURATED_HOME: Record<string, (perms: Permissions, t: Dictionary) => HomeTile[]> = {
+const CURATED_HOME: Record<string, (perms: Permissions, t: Dictionary, billsWaiting?: number) => HomeTile[]> = {
   management: managementDay,
 };
 
-export function homeTilesFor(perms: Permissions, t: Dictionary): HomeTile[] {
+export function homeTilesFor(perms: Permissions, t: Dictionary, billsWaiting?: number): HomeTile[] {
   // A role that is given jobs (src/lib/permissions/jobs.ts) shows its jobs, one tile each, and
   // nothing else: that is what "a home of named jobs" means. A job whose bundle the role's cells
   // do not cover, or whose page it may not open, draws no tile rather than a tile that refuses.
@@ -81,14 +89,14 @@ export function homeTilesFor(perms: Permissions, t: Dictionary): HomeTile[] {
       return route && covered && canOpen(perms, route)
         ? [{ href: route.path, label: job.label(t), icon: route.icon }]
         : [];
-    }), ...extra];
+    }), ...extra, ...billsTile(perms, t, billsWaiting)];
   }
 
   // The Director's daytime screen (the whiteboard's Management column, 2026-10-03): a few big tiles on a
   // phone, not every page Management can open. Clinic visits, medical records and a resident's details are
   // tabs on a resident, so they are reached through the Residents tile and need no tile of their own.
   const curated = CURATED_HOME[perms.role.key];
-  if (curated) return curated(perms, t);
+  if (curated) return curated(perms, t, billsWaiting);
 
   let routes = routesFor(perms).filter((r) => r.device !== "desk");
   // Settings pages are Admin's night home (/admin), not a role's tasks; a role that holds only
@@ -124,5 +132,5 @@ export function homeTilesFor(perms: Permissions, t: Dictionary): HomeTile[] {
   const lead: HomeTile[] = [];
   if (can(perms, "recurring.do_own")) lead.push({ href: "/my", label: t.nav.my, icon: NAV_ICONS.my });
   if (perms.role.opensApp) lead.push({ href: "/residents", label: t.nav.residents, icon: NAV_ICONS.residents });
-  return [...lead, ...fromRegistry.filter((x) => !lead.some((l) => l.label === x.label))];
+  return [...lead, ...fromRegistry.filter((x) => !lead.some((l) => l.label === x.label)), ...billsTile(perms, t, billsWaiting)];
 }
