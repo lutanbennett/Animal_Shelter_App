@@ -125,7 +125,7 @@ export default async function WhoDoesWhatPage() {
       <style>{`@media print {
   header, nav { display: none !important; }
   @page { size: landscape; margin: 10mm; }
-  .wdw-scroll { overflow: visible !important; }
+  .wdw-scroll { overflow: visible !important; max-height: none !important; }
   .wdw-grid { font-size: 8pt; min-width: 0 !important; }
   .wdw-grid th, .wdw-grid td { position: static !important; padding: 2px 4px !important; }
   .wdw-grid tr { break-inside: avoid; }
@@ -170,15 +170,15 @@ export default async function WhoDoesWhatPage() {
         <p className="md:hidden print:hidden">{w.scrollHint}</p>
       </div>
 
-      <div className="wdw-scroll overflow-x-auto rounded-lg border border-border">
+      <div className="wdw-scroll max-h-[calc(100dvh-1rem)] overflow-auto rounded-lg md:max-h-[calc(100dvh-var(--app-header-h)-1rem)] border border-border">
         <table className="wdw-grid w-full min-w-[60rem] border-collapse text-sm">
           <thead>
             <tr className="border-b border-border bg-surface">
-              <th scope="col" className="sticky left-0 z-10 w-36 bg-surface px-3 py-2 text-left font-semibold sm:w-64 text-foreground">
+              <th scope="col" className="sticky left-0 top-0 z-30 w-36 bg-surface px-3 py-2 text-left font-semibold sm:w-64 text-foreground">
                 {w.activityHeading}
               </th>
               {roles.map((r) => (
-                <th key={r.key} scope="col" className="px-2 py-2 text-center align-bottom font-semibold text-foreground">
+                <th key={r.key} scope="col" className="sticky top-0 z-20 bg-surface px-2 py-2 text-center align-bottom font-semibold text-foreground">
                   {names.get(r.key)}
                 </th>
               ))}
@@ -210,7 +210,7 @@ export default async function WhoDoesWhatPage() {
                         }`}
                       >
                         {canEdit && !clinic ? (
-                          <CellSelect roleKey={r.key} activity={a.key} kind={a.kind} level={level} label={`${activityName(a.key)}: ${names.get(r.key)}`} />
+                          <CellSelect roleKey={r.key} activity={a.key} kind={a.kind} level={level} label={`${names.get(r.key)}: ${activityName(a.key)}`} />
                         ) : (
                           word(a.kind, level)
                         )}
