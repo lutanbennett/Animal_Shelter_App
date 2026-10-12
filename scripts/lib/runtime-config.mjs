@@ -38,7 +38,7 @@ export const RUNTIME_CONFIG = [
   { name: "GOOGLE_OAUTH_REFRESH_TOKEN", where: "both", secret: true, scrub: true, required: true, purpose: "Long-lived Drive token for the shelter's Google account." },
   { name: "GOOGLE_DRIVE_ROOT_FOLDER_ID", where: "both", secret: true, scrub: false, required: true, purpose: "Drive folder the app writes into." },
   { name: "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY", where: "both", secret: false, scrub: false, required: true, own: "scripts/lib/actions-key.mjs", purpose: "One Server Actions key per environment, built into both servers so a form one renders the other accepts." },
-  { name: "BACKUP_DRIVE_FOLDER_ID", where: "both", secret: true, scrub: false, required: false, purpose: "Where the Weekly backup tile looks (scripts/backup.mjs), when not Backups/ under the root." },
+  { name: "BACKUP_DRIVE_FOLDER_ID", where: "both", secret: true, scrub: false, required: false, purpose: "Where the Daily backup tile looks (scripts/backup.mjs), when not Backups/ under the root." },
   { name: "ORIGIN_KEY", where: "both", secret: true, scrub: true, required: false, purpose: "The Worker sends it to the Pi; the WAF rule and the Pi's app check it (src/lib/origin-key.ts)." },
   { name: "CLOUDFLARE_ANALYTICS_TOKEN", where: "both", secret: true, scrub: true, required: false, purpose: "Visitor count on Settings → System status; grey until the zone id is set too." },
   { name: "CLOUDFLARE_ZONE_ID", where: "both", secret: true, scrub: false, required: false, purpose: "Zone the visitor count reads." },

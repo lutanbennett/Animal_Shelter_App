@@ -162,9 +162,9 @@ export async function checkReleaseMail(): Promise<CheckOutcome<ReleaseMailFacts>
   return { state: "ok", facts };
 }
 
-/** Sunday's run is a week old by the next Sunday; a day's grace before amber, a second week missed is red. */
-const BACKUP_WARN_DAYS = 8;
-const BACKUP_FAIL_DAYS = 15;
+/** The Pi backs up daily at 03:00: a dump over 2 days old means a night was missed (amber); over 3 days, red. */
+const BACKUP_WARN_DAYS = 2;
+const BACKUP_FAIL_DAYS = 3;
 
 export type BackupFacts = {
   /** The --env name scripts/backup.mjs files this database's dumps under. */
@@ -178,7 +178,7 @@ export type BackupFacts = {
  * Backups/lannacare-<env>-<timestamp>.dump.age (age-encrypted) under the Drive root. The Drive
  * file's own creation time is the record of the run, so nothing new had to
  * be stored. Only production is backed up on a schedule
- * (scripts/backup-schedule.ps1), so elsewhere "none yet" is grey.
+ * (the Pi's cron job, README "Backups"), so elsewhere "none yet" is grey.
  */
 export async function checkBackup(): Promise<CheckOutcome<BackupFacts>> {
   const appEnv = getAppEnv();
@@ -222,7 +222,7 @@ export async function checkBackup(): Promise<CheckOutcome<BackupFacts>> {
   const facts = { env, newest: { name: top.name!, createdAt: top.createdTime!, ageDays }, count: dumps.length };
   if (!scheduled) return { state: "ok", facts };
   if (ageDays > BACKUP_FAIL_DAYS) {
-    return { state: "fail", error: `The newest backup is ${Math.floor(ageDays)} days old; the weekly run has missed at least two Sundays.`, facts };
+    return { state: "fail", error: `The newest backup is ${Math.floor(ageDays)} days old; the daily backup has not run since then.`, facts };
   }
   return { state: ageDays > BACKUP_WARN_DAYS ? "warn" : "ok", facts };
 }

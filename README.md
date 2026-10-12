@@ -213,7 +213,7 @@ deliberately shares the dev database: one developer, throwaway data, and
 what Test is for is exercising a real Workers build of `main` on phones
 before it goes to production. Production holds the shelter's real records.
 Both are free-tier projects, which means **no automatic backups** beyond
-the weekly `scripts/backup.mjs` dump — see "Backups" below. Free projects also pause after seven days with no
+the daily `scripts/backup.mjs` dump — see "Backups" below. Free projects also pause after seven days with no
 requests at all, which the public pages make impossible while the site is
 up.
 
@@ -573,7 +573,7 @@ A lost private
 key means every encrypted backup is unreadable, so keep a second copy of it
 somewhere as safe as the first. To change the key later, install the new
 public key and keep the old private key for as long as any backup made with it
-is kept (twelve weeks by default).
+is kept (fourteen days under the daily job).
 
 ```bash
 node scripts/backup.mjs --env production
@@ -583,20 +583,24 @@ node scripts/backup.mjs --env production
 (round trip with a throwaway key, exclusions, no plaintext, no link); it needs
 no database or key of the shelter's.
 
-`--keep N` changes the retention; `--local <dir>` writes the encrypted dump there
+`--keep-days N` removes dumps older than N days (the daily job uses 14), but
+never the newest five whatever their age, and nothing at all unless that run's
+upload was confirmed; `--keep N` instead keeps the newest N (default 12). Give one,
+not both. `node scripts/check-backup-prune.mjs` is the offline check of those
+rules. `--local <dir>` writes the encrypted dump there
 instead of uploading (for a restore rehearsal); `--local-copy <dir>` uploads
-*and* keeps a copy there, removing local copies beyond the newest `--keep`
+*and* keeps a copy there, removing local copies by the same retention
 after the upload is confirmed and printing each one it removes. The folder
 must be outside the repo; it is created `0700` and each dump `0600`. It
 prints the environment and project ref first, like every other script, and
 exits non-zero if any step fails.
 
-**Where it runs: the Raspberry Pi.** Since 2026-09-30 the weekly run is the
-Pi's cron job (Sundays 03:00 Thailand time), the same box that hosts the site
+**Where it runs: the Raspberry Pi.** Since 2026-09-30 the backup is the
+Pi's cron job (daily at 03:00 Thailand time since 2026-10-12; it was Sundays before), the same box that hosts the site
 (`docs/pi-hosting.md`):
 
 ```bash
-0 3 * * 0 cd $HOME/Animal_Shelter_App && node scripts/backup.mjs --env production --local-copy $HOME/backups/lannacare >> $HOME/backups/backup.log 2>&1
+0 3 * * * cd $HOME/Animal_Shelter_App && node scripts/backup.mjs --env production --keep-days 14 --local-copy $HOME/backups/lannacare >> $HOME/backups/backup.log 2>&1
 ```
 
 Drive stays the off-site copy: the Pi is in the same house as the origin it
@@ -635,7 +639,7 @@ One-time setup on the machine that runs it:
 3. **The administrator's public key** — `BACKUP_AGE_RECIPIENT` in
    `.env.deploy.production` (see above). No `age` program is needed on the
    backup machine: the script encrypts itself (the `age-encryption` package).
-4. **The weekly schedule** — on the Pi, the cron line above, and nowhere
+4. **The daily schedule** — on the Pi, the cron line above, and nowhere
    else. The Windows laptop also ran one until **2026-10-04**, when the Pi's
    first scheduled Sunday run was confirmed (both machines backed up that
    morning, which is why Drive holds two files for it) and the laptop's task
@@ -647,9 +651,9 @@ One-time setup on the machine that runs it:
 
    A scheduled run can still be missed — the Pi can be off, as it was for an
    hour on 2026-10-02. **Settings → System status** makes that visible: its
-   Weekly backup tile
+   Daily backup tile
    reads the newest `lannacare-production-*.dump.age` in `Backups/` and turns
-   amber after 8 days, red after 15. The Drive file's own creation time is
+   amber after 2 days, red after 3. The Drive file's own creation time is
    the record of the run, so nothing else needs storing.
 
 **System status** (`/admin/status`, admins only) runs every health check

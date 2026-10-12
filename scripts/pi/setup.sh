@@ -96,6 +96,14 @@ echo "== 6. Unattended security updates"
 sudo apt-get install -y unattended-upgrades
 sudo dpkg-reconfigure -f noninteractive unattended-upgrades
 
+echo "== 7. Daily database backup (03:00 Bangkok time)"
+# Needs postgresql-client-17 and .env.deploy.production with BACKUP_AGE_RECIPIENT (docs/pi-hosting.md, Backups on this Pi).
+# Removes dumps older than 14 days, never the newest five, and nothing unless the day's upload succeeded.
+mkdir -p "$HOME/backups/lannacare"
+BACKUP_CRON="0 3 * * * cd $HOME/Animal_Shelter_App && node scripts/backup.mjs --env production --keep-days 14 --local-copy $HOME/backups/lannacare >> $HOME/backups/backup.log 2>&1"
+( crontab -l 2>/dev/null | grep -v 'scripts/backup.mjs' ; echo "$BACKUP_CRON" ) | crontab -
+crontab -l | grep 'scripts/backup.mjs'
+
 echo
 echo "Done on the Pi. Now in Cloudflare (docs/pi-hosting.md, 'Cloudflare side'):"
 echo "  - route pi.lannacare.org to tunnel $TUNNEL_ID (cloudflared tunnel route dns $TUNNEL_ID pi.lannacare.org)"

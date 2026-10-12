@@ -939,12 +939,12 @@ const en = {
           fail: "Release mail is misconfigured.",
         },
         backup: {
-          title: "Weekly backup",
+          title: "Daily backup",
           ok: (v: { age: string | number; count: string | number; time: string | number }) =>
             `Newest backup ${v.time} (${v.age}), one of ${v.count} kept in Drive → Backups.`,
           stale: (v: { age: string | number }) =>
-            `The newest backup is ${v.age} — the weekly run may have stopped. Look at Task Scheduler on the backup machine.`,
-          none: "No backups of this database yet. Only production is backed up every week.",
+            `The newest backup is ${v.age} — the daily backup has not run since then. Check the backup job on the Pi (docs/pi-hosting.md, Backups on this Pi).`,
+          none: "No backups of this database yet. Only production is backed up every day.",
           fail: "Couldn't find a recent backup.",
           ageDays: (v: { days: string | number }) =>
             `${v.days} days old`,
