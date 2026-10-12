@@ -11,6 +11,7 @@
 // Against DEV only. Makes one throwaway login per role (deleted at the end, whatever happened) and
 // requests every section of a handful of residents as each: a rich record, a deceased one, an adopted
 // one, a fostered one and one with empty sections, plus ?archived=1 on the tabs that have an archive.
+// --roles a,b limits the logins used.
 // Each probe stores the status, the redirect and the <main> markup. --compare exits 0 only when every
 // probe is identical, and prints each difference.
 import { randomBytes } from "node:crypto";
@@ -26,7 +27,19 @@ const flag = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : nul
 
 const SECTIONS = ["housing", "photos", "adoption-updates", "immunizations", "clinic-visits", "prescriptions", "diet", "weight", "procedures", "blood-tests"];
 const ARCHIVE_TABS = ["immunizations", "clinic-visits", "prescriptions", "weight"];
-const ROLES = ["admin", "management", "head_of_medical", "doctor", "volunteer", "head_of_maintenance", "public_viewer"];
+const ROLES = (flag("--roles")?.split(",")) ?? ["admin", "management", "head_of_medical", "doctor", "volunteer", "head_of_maintenance", "second_in_command", "public_viewer"];
+
+// Each run signs in as fresh throwaway logins, whose addresses are printed in the header, and a dev
+// server's redirect markers carry a stack trace naming its build chunks and line numbers.
+// A refused page (redirect or 404) is compared on status, target and 404-ness only: its body is the app shell,
+// and how much of that has streamed by the time the response ends varies from run to run.
+const norm = (probe) => {
+  const p = JSON.parse(probe ?? "{}");
+  if (p.redirect || p.notFound) p.main = "";
+  return JSON.stringify(p)
+    .replace(/harness-sections-([a-z_]+)-[0-9a-f]+@example.invalid/g, "harness-sections-$1@example.invalid")
+    .replace(/ data-stck=\\".*?\\"(?=><\/template>)/g, "");
+};
 
 if (args.includes("--compare")) {
   const [a, b] = args.slice(args.indexOf("--compare") + 1);
@@ -35,7 +48,7 @@ if (args.includes("--compare")) {
   const keys = new Set([...Object.keys(before.probes), ...Object.keys(after.probes)]);
   let diffs = 0;
   for (const k of keys) {
-    if (before.probes[k] !== after.probes[k]) {
+    if (norm(before.probes[k]) !== norm(after.probes[k])) {
       diffs++;
       console.log(`DIFFERENT ${k}`);
     }
@@ -99,7 +112,9 @@ async function fetchProbe(path, cookie) {
   const html = await res.text();
   const redirect = res.headers.get("location") ?? html.match(/NEXT_REDIRECT;(?:replace|push);([^;]+);/)?.[1] ?? null;
   const notFound = res.status === 404 || html.includes("NEXT_HTTP_ERROR_FALLBACK;404");
-  const main = html.match(/<main[\s\S]*?<\/main>/)?.[0] ?? "";
+  // The tab's rows stream in after a Loading… shell, so <main> alone is only the shell: keep the whole
+  // body, minus the scripts (build ids, nonces and the flight payload differ between runs).
+  const main = (html.match(/<body[\s\S]*$/)?.[0] ?? "").replace(/<script[\s\S]*?<\/script>/g, "");
   return JSON.stringify({ status: res.status, redirect, notFound, main });
 }
 
