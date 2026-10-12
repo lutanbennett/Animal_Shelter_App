@@ -11,7 +11,7 @@
 | PR | PENDING |
 | Tested by / date | Claude / 2026-10-12 |
 | Carries a migration? | yes — `0186_receipt_date_rule.sql` |
-| Tested at SHA | PENDING |
+| Tested at SHA | `f2cbe824` |
 
 ## 1. Scope and risk
 
@@ -22,9 +22,9 @@
 
 ## 2. Automated gates
 
-- [ ] `node scripts/worktree.mjs sync` — PENDING
-- [ ] `node scripts/gates.mjs` — PENDING
-- [ ] CI green on the PR — PENDING
+- [x] `node scripts/worktree.mjs sync` — `origin/main` already merged in (up to date)
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`
+- [ ] CI green on the PR — deferred: read from the PR status before merging
 
 ## 3. Schema and data
 
@@ -72,7 +72,7 @@
 
 - [x] The pages nearest the change still work — the harness issues, voids and re-issues receipts as before; all prior checks held
 - [ ] Any shared file touched checked from a second, unrelated page — n/a: no shared app file touched
-- [ ] Nothing merged from `main` during `sync` was broken by this branch — PENDING
+- [x] Nothing merged from `main` during `sync` was broken by this branch — nothing was merged in
 
 ## 7. Documentation
 
