@@ -33,7 +33,7 @@
 === gates: build exited 0 after 353s
 gates: typecheck=0 lint=0 build=0
 ```
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — all 7 jobs `completed success` on run 38219547436 at `d8614240`, the branch tip. Read from `gh run view`, not `gh pr checks`, for the reason recorded in the release record
 
 ## 3. Schema and data — *skip if no migration*
 
