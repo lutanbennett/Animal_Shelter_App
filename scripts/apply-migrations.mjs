@@ -218,11 +218,12 @@ function driftReport() {
   for (const name of unapplied) console.log(`    ${name}`);
   console.log(`  Applied here, no file on origin/main: ${missingFile.length}`);
   for (const name of missingFile) console.log(`    ${name}`);
-  return missingFile.length + unapplied.length;
+  return { unapplied, missingFile };
 }
 
 if (drift) {
-  const gaps = driftReport();
+  const { unapplied, missingFile } = driftReport();
+  const gaps = unapplied.length + missingFile.length;
   if (unapplied.length && !missingFile.length) {
     console.log(
       "  Expected if a release staged these on purpose (apply-migrations --upto left them waiting for the new app).\n" +
