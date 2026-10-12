@@ -209,8 +209,8 @@ async function through(host, method, extraEnv = {}) {
   const proxy = readFileSync(new URL("../src/proxy.ts", import.meta.url), "utf8");
   check("src/proxy.ts calls originKeyRefuses before updateSession",
     proxy.includes("originKeyRefuses(") && proxy.indexOf("originKeyRefuses(") < proxy.indexOf("return updateSession"));
-  const { PI_OPTIONAL_SECRETS } = await import("./lib/optional-secrets.mjs");
-  check("the Pi's env file carries ORIGIN_KEY", PI_OPTIONAL_SECRETS.includes("ORIGIN_KEY"));
+  const { PI_OPTIONAL } = await import("./lib/runtime-config.mjs");
+  check("the Pi's env file carries ORIGIN_KEY", PI_OPTIONAL.includes("ORIGIN_KEY"));
 }
 
 globalThis.fetch = realFetch;

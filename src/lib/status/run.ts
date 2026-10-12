@@ -11,6 +11,8 @@
  *         database, the Pi before it is live) — not a fault, so an alert
  *         would ignore it
  */
+import { SCRUB_NAMES } from "../../../scripts/lib/runtime-config.mjs";
+
 export type CheckState = "ok" | "warn" | "fail" | "off";
 
 export type CheckResult<F> = {
@@ -69,15 +71,7 @@ export async function runCheck<F>(
  * text comes from Google, Supabase and Cloudflare, and none of them promise
  * not to echo a credential back, so every error is scrubbed on the way out.
  */
-const SECRET_ENV_NAMES = [
-  "SUPABASE_SERVICE_ROLE_KEY",
-  "SUPABASE_ACCESS_TOKEN",
-  "SUPABASE_DB_PASSWORD",
-  "GOOGLE_OAUTH_CLIENT_SECRET",
-  "GOOGLE_OAUTH_REFRESH_TOKEN",
-  "ORIGIN_KEY",
-  "CLOUDFLARE_ANALYTICS_TOKEN",
-];
+const SECRET_ENV_NAMES = SCRUB_NAMES; // scripts/lib/runtime-config.mjs, the `scrub` flag
 
 export function redactSecrets(text: string): string {
   let out = text;
