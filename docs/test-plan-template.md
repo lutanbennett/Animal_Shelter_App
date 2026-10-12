@@ -116,12 +116,12 @@ directly rather than checking whether the nav entry is hidden. That distinction
 is what found the cashflow money bug: the page redirected correctly, and the RPC
 behind it did not.
 
-These are all of them. `app_role` is `('admin', 'staff', 'vet', 'volunteer')`
-from `0001_initial_schema.sql`, plus `'management'` added by
-`0038_management_role.sql`, with `'vet'` renamed `'doctor'` by `0172_clinics_and_doctors.sql`. **There is no `resident` role** — in this app a
-resident is an animal — and do not re-derive this list by grepping for quoted
-strings, which is how `resident` got into this template and `management` got left
-out of it for a day.
+These are all of them. Roles are rows of the `roles` table, not an enum (`app_role`
+was dropped by `0181`). The live ones are admin, management, second_in_command,
+head_of_maintenance, head_of_medical, doctor, volunteer and public_viewer; `staff` is
+retired (`0173`). **There is no `resident` role** — in this app a resident is an
+animal — and do not re-derive this list by grepping for quoted strings; read the
+`roles` table (or `/admin/who-does-what`).
 
 | Role | Can reach | Expected | Result |
 |---|---|---|---|

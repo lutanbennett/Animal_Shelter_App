@@ -29,6 +29,40 @@ const eslintConfig = defineConfig([
     },
   },
   {
+    // The service-role client bypasses RLS. Only these files may import it;
+    // each guards its own callers (permission check, admin check or bearer
+    // key). Allow-list, not a pattern: a new importer is a decision.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "src/app/account/password/actions.ts",
+      "src/app/admin/recent-changes/page.tsx",
+      "src/app/admin/security/actions.ts",
+      "src/app/admin/security/page.tsx",
+      "src/app/admin/security/role-options.ts",
+      "src/app/admin/security/verify/actions.ts",
+      "src/app/admin/who-does-what/page.tsx",
+      "src/lib/facility-map/plan-store.ts",
+      "src/lib/status/access-requests.ts",
+      "src/lib/status/alerts.ts",
+      "src/lib/status/health.ts",
+      "src/lib/status/usage.ts",
+    ],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          paths: [
+            {
+              name: "@/lib/supabase/admin",
+              message:
+                "The service-role client bypasses RLS. Add this file to the allow-list in eslint.config.mjs only if it guards its own callers.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     // CommonJS by definition (Node `-r` preload scripts); `require` is the
     // only import there is. Without this, `npm run lint` — and CI — fail on
     // scripts/win-junction-symlinks.cjs.
