@@ -385,8 +385,17 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    makes `$?` the exit status of `tail`, not of npm, so a failed build reports
    success — redirect to a file and read `$?`, or use `${PIPESTATUS[0]}`. A
    test plan ticked from piped output is ticking something that never passed.
-   `node scripts/gates.mjs` runs all three and prints each exit code, which is
-   why it exists.
+   `node scripts/gates.mjs` runs all four (typecheck, lint, test, build) and
+   prints each exit code, which is why it exists.
+
+   **There is a test runner: `npm test`.** It is Node's built-in `node --test`
+   (no dependency) over the `*.test.mjs` files beside the pure security
+   modules (`public-paths`, `next-path`, `same-origin`, `can`, `password-change`,
+   `worker/origin`, `csp-report`, `translations`). It takes about a second and
+   needs no database or network. `scripts/test-support/` lets the tests import
+   the `.ts` files as written. The 130-odd `scripts/check-*.mjs` are still
+   separate harnesses, several of them database-driven. Why and how:
+   `docs/decisions/2026-10-12-node-test-runner.md`.
 
    **Tracked files are CRLF on disk — preserve the line endings when editing
    one by script.** The repository stores LF, but Git for Windows ships

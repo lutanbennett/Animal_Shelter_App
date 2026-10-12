@@ -18,7 +18,10 @@ export function safeNextPath(next: string | null | undefined): string | null {
   if (!next || !next.startsWith("/") || /[\\\u0000-\u001f\u007f]/.test(next)) return null;
   try {
     const url = new URL(next, "http://x");
-    return url.origin === "http://x" ? url.pathname + url.search : null;
+    // Dot-segments are resolved, so "/a/..//evil.com" parses to the pathname
+    // "//evil.com", which a browser reads as another site: refuse that too.
+    if (url.origin !== "http://x" || url.pathname.startsWith("//")) return null;
+    return url.pathname + url.search;
   } catch {
     return null;
   }
