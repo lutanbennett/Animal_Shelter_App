@@ -26,7 +26,13 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
 
 ```
-GATES_OUTPUT_PLACEHOLDER
+=== gates: typecheck — npm run typecheck
+=== gates: typecheck exited 0 after 41s
+=== gates: lint — npm run lint
+=== gates: lint exited 0 after 126s
+=== gates: build — npm run build
+=== gates: build exited 0 after 169s
+gates: typecheck=0 lint=0 build=0
 ```
 
 The cut itself was verified mechanically rather than read over, which is the one
