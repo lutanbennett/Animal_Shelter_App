@@ -26,7 +26,7 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
 
 ```
-=== gates: build exited 0 after 360s
+=== gates: build exited 0 after 50s
 
 gates: typecheck=0 lint=0 build=0
 ```
