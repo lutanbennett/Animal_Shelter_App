@@ -95,7 +95,7 @@ updates. Re-runnable.
 4. **Check**: `curl -sI https://lannacare.org/login | grep x-lanna` →
    `x-lanna-served-by: pi`. A page in the app (signed in) should also say
    `pi`. `curl -sI https://pi.lannacare.org/` from anywhere else → 403
-   from the WAF.
+   from the WAF. The Pi also refuses (403) any request whose `x-origin-key` is missing or wrong (`src/proxy.ts`, `src/lib/origin-key.ts`), so the rule is no longer the only guard — but it stays: it stops strangers before they reach the tunnel. The Pi needs `ORIGIN_KEY` in its own `.env.deploy.production`, same value; a Pi without it does not check. Any local `curl` at 127.0.0.1:3000 must send the header too.
 5. **Failover drill**: `sudo systemctl stop lanna-care` on the Pi; the
    header flips to `worker` within a second; `start` it again and it flips
    back. Do the same with `cloudflared` (tunnel down → 530 → worker).
@@ -123,8 +123,8 @@ updates. Re-runnable.
   `deploy:prod -- --secrets` also needs the same line in the Pi's copy, then
   `deploy-pi.sh`. The optional ones (`BACKUP_DRIVE_FOLDER_ID`,
   `CLOUDFLARE_ANALYTICS_TOKEN`, `CLOUDFLARE_ZONE_ID`) are one list for both
-  servers, `scripts/lib/optional-secrets.mjs`; `ORIGIN_KEY` is the one the
-  Pi does not take. Until 2026-10-10 the Pi had its own shorter list, and the
+  servers, `scripts/lib/optional-secrets.mjs`; `ORIGIN_KEY` is in the list too: the
+  Pi checks it itself (`src/proxy.ts`). Until 2026-10-10 the Pi had its own shorter list, and the
   visitor count read "Not set up" with both Cloudflare values on the Worker.
   Even after that fix the two lines were only ever in the dev machine's copy,
   so the Pi still had nothing to pass on; the Website visitors tile on

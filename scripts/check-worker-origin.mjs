@@ -192,6 +192,27 @@ async function through(host, method, extraEnv = {}) {
   await down.close();
 }
 
+// ── Part 3: the Pi's own check (src/lib/origin-key.ts) ──────────────────────
+// Fail-open gate: nothing on a screen shows it broken, so it is pinned here.
+{
+  const { originKeyRefuses } = await import("../src/lib/origin-key.ts");
+  const pi = { ORIGIN_KEY: "k", PHOTO_CACHE_DIR: "/home/pi/photo-cache" };
+  check("Pi, right key: let through", originKeyRefuses("k", pi) === false);
+  check("Pi, wrong key: refused", originKeyRefuses("x", pi) === true);
+  check("Pi, no header: refused", originKeyRefuses(null, pi) === true);
+  check("Pi, empty header: refused", originKeyRefuses("", pi) === true);
+  check("Worker (key in process.env, no PHOTO_CACHE_DIR), no header: let through, else the site locks itself out",
+    originKeyRefuses(null, { ORIGIN_KEY: "k" }) === false);
+  check("next dev (neither set): let through", originKeyRefuses(null, {}) === false);
+  check("Pi without ORIGIN_KEY: no check", originKeyRefuses(null, { PHOTO_CACHE_DIR: "/x" }) === false);
+  const { readFileSync } = await import("node:fs");
+  const proxy = readFileSync(new URL("../src/proxy.ts", import.meta.url), "utf8");
+  check("src/proxy.ts calls originKeyRefuses before updateSession",
+    proxy.includes("originKeyRefuses(") && proxy.indexOf("originKeyRefuses(") < proxy.indexOf("return updateSession"));
+  const { PI_OPTIONAL_SECRETS } = await import("./lib/optional-secrets.mjs");
+  check("the Pi's env file carries ORIGIN_KEY", PI_OPTIONAL_SECRETS.includes("ORIGIN_KEY"));
+}
+
 globalThis.fetch = realFetch;
 if (failures) {
   console.error(`${failures} case(s) wrong`);

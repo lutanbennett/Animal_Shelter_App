@@ -69,7 +69,7 @@ sed -e "s|__USER__|$RUN_USER|g" -e "s|__REPO__|$REPO|g" scripts/pi/lanna-care.se
 sudo systemctl daemon-reload
 sudo systemctl enable --now lanna-care
 sleep 3
-curl -fsS -o /dev/null -H "Host: lannacare.org" http://127.0.0.1:3000/ && echo "app answers on :3000"
+curl -fsS -o /dev/null -H "Host: lannacare.org" -H "x-origin-key: $(grep -s "^ORIGIN_KEY=" .env.production.local | cut -d= -f2-)" http://127.0.0.1:3000/ && echo "app answers on :3000"
 
 echo "== 5. cloudflared as a service"
 sudo mkdir -p /etc/cloudflared
