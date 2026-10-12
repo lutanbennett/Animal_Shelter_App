@@ -6,7 +6,7 @@
 | Backlog item | none — the handover rewrite is a standing obligation of `.claude/skills/plan-day/SKILL.md` step 8, not a backlog item |
 | Branch / worktree | `claude/planner-handover-105` @ `C:\Development\Animal_Shelter_planner-handover-105` |
 | Dev server | not started — no runtime surface |
-| PR | PENDING |
+| PR | #575 |
 | Tested by / date | Claude (Daily Planner session), 2026-10-12 |
 | Carries a migration? | no |
 | Tested at SHA | `6fc23f2b` |
