@@ -76,6 +76,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   "On Who does what, the role names now stay in view as you scroll down the list of activities.",
+  "If your role is not allowed to add or change a maintenance job or a project folder, you now get the usual \"not allowed\" message instead of a line of database wording.",
 ];
 
 /** Newest first. */
