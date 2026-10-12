@@ -60,7 +60,6 @@ export default async function BillsPage() {
           .select("id, appointment_date, reason, residents(name, thai_name)")
           .is("cost", null)
           .gte("appointment_date", since)
-          .lte("appointment_date", todayIso())
           .order("appointment_date", { ascending: false })
           .returns<{ id: string; appointment_date: string; reason: string | null; residents: { name: string; thai_name: string | null } | null }[]>()
       : Promise.resolve({ data: [], error: null }),
@@ -113,11 +112,11 @@ export default async function BillsPage() {
         detail: `${Number(r.quantity)}${r.unit ? ` ${r.unit}` : ""}`,
       })),
     ...visits
-      .filter((v) => !withBill.has(v.id))
+      .filter((v) => !withBill.has(v.id) && todayIso(new Date(v.appointment_date).getTime()) <= todayIso())
       .map((v) => ({
         kind: "clinic_visit" as const,
         id: v.id,
-        day: v.appointment_date,
+        day: todayIso(new Date(v.appointment_date).getTime()),
         title: `${b.page.visit}: ${v.residents ? localLabel(locale, v.residents.name, v.residents.thai_name) : "—"}`,
         detail: v.reason ?? "",
       })),
