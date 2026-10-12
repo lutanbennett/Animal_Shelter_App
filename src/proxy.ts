@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
+import { originKeyRefuses } from "@/lib/origin-key";
 
 /**
  * The scheduled alert run (src/app/api/status/alerts/route.ts) has no
@@ -10,6 +11,13 @@ import { updateSession } from "@/lib/supabase/proxy";
 const STATUS_ALERTS_PATH = "/api/status/alerts";
 
 export default async function proxy(request: NextRequest) {
+  // Pi only (see src/lib/origin-key.ts): refuse what did not come through the Worker.
+  if (originKeyRefuses(request.headers.get("x-origin-key"), {
+    ORIGIN_KEY: process.env.ORIGIN_KEY,
+    PHOTO_CACHE_DIR: process.env.PHOTO_CACHE_DIR,
+  })) {
+    return new NextResponse("Forbidden", { status: 403, headers: { "cache-control": "no-store" } });
+  }
   if (request.nextUrl.pathname === STATUS_ALERTS_PATH && request.method === "POST") return NextResponse.next();
   return updateSession(request);
 }

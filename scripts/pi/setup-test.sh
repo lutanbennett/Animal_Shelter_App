@@ -47,7 +47,7 @@ sed -e "s|__USER__|$RUN_USER|g" -e "s|__REPO__|$REPO|g" scripts/pi/lanna-care-te
 sudo systemctl daemon-reload
 sudo systemctl enable --now lanna-care-test
 sleep 3
-curl -fsS -o /dev/null -H "Host: test.lannacare.org" http://127.0.0.1:3001/ && echo "test app answers on :3001"
+curl -fsS -o /dev/null -H "Host: test.lannacare.org" -H "x-origin-key: $(grep -s "^ORIGIN_KEY=" .env.production.local | cut -d= -f2-)" http://127.0.0.1:3001/ && echo "test app answers on :3001"
 
 echo
 echo "Still to do (docs/pi-hosting.md, 'Test on the same Pi'): cloudflared tunnel route dns <tunnel> test-pi.lannacare.org,"
