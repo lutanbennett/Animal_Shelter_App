@@ -27,7 +27,7 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { readFileSync } from "node:fs";
 import { SITE_ORIGINS, loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
-import { OPTIONAL_SECRETS } from "./lib/optional-secrets.mjs";
+import { WORKER_BUILD_VARS, WORKER_OPTIONAL_SECRETS, WORKER_REQUIRED_SECRETS } from "./lib/runtime-config.mjs";
 import { appliedMigrations } from "./lib/deploy-schema.mjs";
 import { releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
 import { strayEnvFiles } from "./lib/env-leak.mjs";
@@ -57,17 +57,12 @@ const EXPECTED_APP_ENV = { test: "dev", uat: "uat", production: "production" };
 // Environments where a deploy is something a customer or the shelter sees.
 const GUARDED = envName === "uat" || envName === "production";
 
-const RUNTIME_SECRETS = [
-  "SUPABASE_SERVICE_ROLE_KEY",
-  "GOOGLE_OAUTH_CLIENT_ID",
-  "GOOGLE_OAUTH_CLIENT_SECRET",
-  "GOOGLE_OAUTH_REFRESH_TOKEN",
-  "GOOGLE_DRIVE_ROOT_FOLDER_ID",
-];
-// OPTIONAL_SECRETS are pushed when set, harmless when not. The list is shared
-// with the Pi's scripts/pi/write-env.mjs; scripts/lib/optional-secrets.mjs says
-// what each one is for.
-const BUILD_VARS = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"];
+// What reaches the Worker, derived from scripts/lib/runtime-config.mjs, which
+// says what each value is for. Required secrets are pushed with --secrets and
+// refused without; optional ones are pushed when set, harmless when not.
+const RUNTIME_SECRETS = WORKER_REQUIRED_SECRETS;
+const BUILD_VARS = WORKER_BUILD_VARS;
+const OPTIONAL_SECRETS = WORKER_OPTIONAL_SECRETS;
 
 function run(cmd, opts = {}) {
   const r = spawnSync(cmd, { stdio: opts.input ? ["pipe", "inherit", "inherit"] : "inherit", shell: true, ...opts });
