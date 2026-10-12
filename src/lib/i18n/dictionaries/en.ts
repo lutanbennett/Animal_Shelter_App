@@ -623,6 +623,7 @@ const en = {
         "maintenance.progress": "Move a job on: in progress, blocked, completed",
         "maintenance.photos": "Add and remove a job's photos",
         "maintenance.delete": "Delete a maintenance job for good",
+        "maintenance.bills": "Add and see a maintenance job's bills and costs",
         "projects.folders": "Project folders and their stories",
         "projects.photos": "Add and remove project photos",
         "projects.publish": "Put a project on the public website",
@@ -938,12 +939,12 @@ const en = {
           fail: "Release mail is misconfigured.",
         },
         backup: {
-          title: "Weekly backup",
+          title: "Daily backup",
           ok: (v: { age: string | number; count: string | number; time: string | number }) =>
             `Newest backup ${v.time} (${v.age}), one of ${v.count} kept in Drive → Backups.`,
           stale: (v: { age: string | number }) =>
-            `The newest backup is ${v.age} — the weekly run may have stopped. Look at Task Scheduler on the backup machine.`,
-          none: "No backups of this database yet. Only production is backed up every week.",
+            `The newest backup is ${v.age} — the daily backup has not run since then. Check the backup job on the Pi (docs/pi-hosting.md, Backups on this Pi).`,
+          none: "No backups of this database yet. Only production is backed up every day.",
           fail: "Couldn't find a recent backup.",
           ageDays: (v: { days: string | number }) =>
             `${v.days} days old`,

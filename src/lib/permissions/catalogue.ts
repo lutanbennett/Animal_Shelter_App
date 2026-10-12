@@ -109,6 +109,7 @@ export const ACTIVITIES = [
   { key: "community.outings", kind: "level", area: "projects", sort: 59, requires: [], probes: [] },
   { key: "donation.receipt", kind: "yesno", area: "management", sort: 60, requires: [], probes: [] },
   { key: "maintenance.delete", kind: "yesno", area: "maintenance", sort: 61, requires: [], probes: [] },
+  { key: "maintenance.bills", kind: "yesno", area: "maintenance", sort: 62, requires: [], probes: [] },
 ] as const satisfies readonly ActivityDef[];
 
 export type Activity = (typeof ACTIVITIES)[number];

@@ -14,6 +14,10 @@
 //   node scripts/backup.mjs --env production      # dump, encrypt, upload, prune
 //   node scripts/backup.mjs                       # the same against dev/test
 //   node scripts/backup.mjs --env production --keep 8
+//   node scripts/backup.mjs --env production --keep-days 14
+//       # the daily run: remove dumps older than 14 days, but never the newest
+//       # five (lib/backup-prune.mjs), and nothing at all unless this run's
+//       # upload was confirmed
 //   node scripts/backup.mjs --env production --age-recipient age1...
 //       # (BACKUP_AGE_RECIPIENT in the env file does the same; several keys
 //       # may be given, comma-separated, and any one of them can decrypt)
@@ -38,8 +42,8 @@
 //      straight into the folder BACKUP_DRIVE_FOLDER_ID names when that is set.
 //      The Drive link is deliberately not printed: the output goes to
 //      backup.log, and a log of live links is its own exposure.
-//   3. Moves older dumps for the same environment beyond the newest --keep
-//      (default 12) to the Drive trash, which empties itself after 30 days.
+//   3. Moves older dumps for the same environment older than --keep-days, or
+//      beyond the newest --keep (default 12), to the Drive trash, which empties itself after 30 days.
 //      Plaintext .dump files from before encryption are neither counted nor
 //      removed; they are named so they can be deleted by hand.
 //   4. With --local-copy only: removes local copies beyond the newest --keep
@@ -69,6 +73,7 @@ import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { google } from "googleapis";
 import { ENCRYPTED_SUFFIX, encryptBackup, excludeArgs, parseRecipients } from "./lib/backup-crypto.mjs";
+import { MIN_KEPT, planPrune } from "./lib/backup-prune.mjs";
 import { envFile, loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
 
 const MIN_PG_MAJOR = 17;
@@ -78,10 +83,17 @@ const { name: envName, rest: args } = parseEnvArg(process.argv.slice(2));
 const env = loadEnv(envName);
 const projectRef = refOf(env);
 
-const keep = intArg("--keep", 12);
+// Retention: --keep-days N removes dumps older than N days (never the newest
+// MIN_KEPT); --keep N keeps the newest N. Give one; with neither, 12 by count.
+const keepDays = args.includes("--keep-days") ? intArg("--keep-days", 0) : undefined;
+const keepArg = args.includes("--keep") ? intArg("--keep", 12) : undefined;
+if (keepDays !== undefined && keepArg !== undefined) fail("--keep (a count) and --keep-days (an age) are alternatives.");
+if (keepDays !== undefined && keepDays < 1) fail("--keep-days must be at least 1.");
+const keep = keepDays === undefined ? (keepArg ?? 12) : undefined;
+const retention = keepDays !== undefined ? `older than ${keepDays} days (never the newest ${MIN_KEPT})` : `beyond the newest ${keep}`;
 const localDir = stringArg("--local");
 const copyDir = stringArg("--local-copy");
-if (keep < 1) fail("--keep must be at least 1.");
+if (keep !== undefined && keep < 1) fail("--keep must be at least 1.");
 if (localDir && copyDir) fail("--local (dump only, no upload) and --local-copy (upload and keep a copy) are alternatives.");
 if (copyDir) {
   // A dump is the whole database; it must not sit anywhere the app could serve.
@@ -172,11 +184,14 @@ const inDrive = (listed.data.files ?? []).filter((f) => f.name.startsWith(prefix
 const dumps = inDrive
   .filter((f) => f.name.endsWith(ENCRYPTED_SUFFIX))
   .sort((a, b) => b.name.localeCompare(a.name)); // timestamps sort newest first
-for (const old of dumps.slice(keep)) {
-  await drive.files.update({ fileId: old.id, requestBody: { trashed: true } });
-  console.log(`Trashed old backup ${old.name}`);
+// Reaching here means the size check above passed: the upload is confirmed.
+const drivePlan = planPrune(dumps.map((f) => f.name), { uploadConfirmed: true, keep, keepDays, now: new Date() });
+for (const name of drivePlan.remove) {
+  await drive.files.update({ fileId: dumps.find((f) => f.name === name).id, requestBody: { trashed: true } });
+  console.log(`Trashed old backup ${name} (${retention})`);
 }
-console.log(`Backups kept for ${envName}: ${Math.min(dumps.length, keep)} (newest ${dumps[0]?.name}).`);
+if (drivePlan.remove.length === 0) console.log(`No Drive backups ${retention}; nothing removed.`);
+console.log(`Backups kept for ${envName}: ${drivePlan.keep.length} (newest ${dumps[0]?.name}).`);
 warnPlaintext("Drive's Backups folder", inDrive.map((f) => f.name));
 
 // --- 4. Prune the local copies (--local-copy) -------------------------------
@@ -186,11 +201,13 @@ warnPlaintext("Drive's Backups folder", inDrive.map((f) => f.name));
 if (copyDir) {
   const names = readdirSync(copyDir).filter((n) => n.startsWith(prefix));
   const local = names.filter((n) => n.endsWith(ENCRYPTED_SUFFIX)).sort((a, b) => b.localeCompare(a));
-  for (const old of local.slice(keep)) {
+  const localPlan = planPrune(local, { uploadConfirmed: true, keep, keepDays, now: new Date() });
+  for (const old of localPlan.remove) {
     unlinkSync(join(copyDir, old));
-    console.log(`Removed old local copy ${old} (keeping the newest ${keep} in ${copyDir})`);
+    console.log(`Removed old local copy ${old} (${retention}, in ${copyDir})`);
   }
-  console.log(`Local copies kept in ${copyDir}: ${Math.min(local.length, keep)} (newest ${local[0]}).`);
+  if (localPlan.remove.length === 0) console.log(`No local copies ${retention}; nothing removed.`);
+  console.log(`Local copies kept in ${copyDir}: ${localPlan.keep.length} (newest ${local[0]}).`);
   warnPlaintext(copyDir, names);
 }
 
