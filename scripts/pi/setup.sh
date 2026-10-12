@@ -6,8 +6,8 @@
 #   git clone https://github.com/lutanbennett/Animal_Shelter_App.git ~/Animal_Shelter_App
 #   cd ~/Animal_Shelter_App && ./scripts/pi/setup.sh <tunnel-id>
 #
-# Before running: copy .env.local and .env.deploy.production into the repo
-# root (never commit them), and have the tunnel's credentials JSON from
+# Before running: copy .env.deploy.production (only that one — NOT .env.local, which
+# holds the Supabase token that must never be on the Pi) into the repo root (never commit it), and have the tunnel's credentials JSON from
 # `cloudflared tunnel create` (or the dashboard) ready for step 4.
 #
 # Idempotent — re-run after a change to the unit or the tunnel config.
@@ -36,9 +36,10 @@ TUNNEL_ID="${1:-}"
 if [[ -z "$TUNNEL_ID" ]]; then
   echo "usage: $0 <tunnel-id>   (from 'cloudflared tunnel create lanna-care' or the Zero Trust dashboard)"; exit 2
 fi
-for f in .env.local .env.deploy.production; do
-  [[ -f "$f" ]] || { echo "setup: $f is missing — copy it from the dev machine first"; exit 2; }
-done
+[[ -f .env.deploy.production ]] || { echo "setup: .env.deploy.production is missing — copy it from the dev machine first"; exit 2; }
+if [[ -f .env.local ]]; then
+  echo "setup: note — .env.local is present. The production Pi does not need it (put the Drive values in .env.deploy.production); delete it unless this is a deliberate exception." >&2
+fi
 
 echo "== 1. Node 22 (NodeSource) and build tools"
 if ! command -v node >/dev/null || [[ "$(node -e 'process.stdout.write(process.versions.node.split(".")[0])')" -lt 22 ]]; then
@@ -47,6 +48,8 @@ if ! command -v node >/dev/null || [[ "$(node -e 'process.stdout.write(process.v
 fi
 sudo apt-get install -y git curl
 node --version && npm --version
+# Node is now here, so the guard can run: refuse before anything is built or started.
+node scripts/pi/check-no-forbidden.mjs
 
 echo "== 2. cloudflared (Cloudflare's apt repo, arm64)"
 if ! command -v cloudflared >/dev/null; then

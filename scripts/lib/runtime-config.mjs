@@ -20,6 +20,8 @@
 //             check it too (src/lib/origin-key.ts). The next one has a home here.
 //   secret    true: uploaded as a Worker secret (`deploy.mjs --secrets`).
 //   scrub     true: stripped from status-tile error text (src/lib/status/run.ts).
+//   neverOnPi true: no env file on a Pi may contain it; write-env.mjs and setup.sh
+//             refuse to run if one does (scripts/pi/check-no-forbidden.mjs).
 //   required  true: deploy / write-env refuse to run without it. false: carried
 //             when present in the environment's values file, harmless when not.
 //   build     true: `next build` inlines it, so deploy.mjs puts it in the build shell.
@@ -41,7 +43,8 @@ export const RUNTIME_CONFIG = [
   { name: "CLOUDFLARE_ANALYTICS_TOKEN", where: "both", secret: true, scrub: true, required: false, purpose: "Visitor count on Settings → System status; grey until the zone id is set too." },
   { name: "CLOUDFLARE_ZONE_ID", where: "both", secret: true, scrub: false, required: false, purpose: "Zone the visitor count reads." },
   { name: "PUBLIC_SITE", where: "pi", secret: false, scrub: false, required: false, source: "wrangler", purpose: "Worker var from wrangler.jsonc, copied so the Pi renders what the Worker would (src/lib/public-site.ts)." },
-  { name: "SUPABASE_ACCESS_TOKEN", where: "tools", secret: false, scrub: true, required: false, purpose: "Management API token for migrations and deploys." },
+  { name: "SUPABASE_ACCESS_TOKEN", where: "tools", secret: false, scrub: true, required: false, neverOnPi: true, purpose: "Management API token for migrations and deploys." },
+  { name: "SUPABASE_DB_URL", where: "tools", secret: false, scrub: true, required: false, purpose: "Session-pooler connection string with the password, for scripts/backup.mjs; set on the Pi so the backup never needs the Management API token." },
   { name: "SUPABASE_DB_PASSWORD", where: "tools", secret: false, scrub: true, required: false, purpose: "Database password for scripts/backup.mjs." },
   { name: "BACKUP_AGE_RECIPIENT", where: "tools", secret: false, scrub: false, required: false, purpose: "The administrator's age public key; backup.mjs refuses to run without it." },
 ];
@@ -63,5 +66,7 @@ export const PI_REQUIRED = names((c) => onPi(c) && c.required && fromEnv(c));
 export const PI_OPTIONAL = names((c) => onPi(c) && !c.required && fromEnv(c));
 /** wrangler.jsonc vars the Pi's file copies. */
 export const PI_WRANGLER_VARS = names((c) => onPi(c) && c.source === "wrangler");
+/** Names no env file on a Pi may hold. */
+export const PI_FORBIDDEN = names((c) => c.neverOnPi);
 /** Names to strip out of status-tile error text. */
 export const SCRUB_NAMES = names((c) => c.scrub);

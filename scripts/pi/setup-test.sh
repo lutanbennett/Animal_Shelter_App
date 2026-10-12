@@ -38,6 +38,7 @@ done
 
 echo "== 1. The app: dependencies, env file, first build (niced)"
 nice -n 10 npm ci --no-audit --no-fund
+node scripts/pi/check-no-forbidden.mjs
 node scripts/pi/write-env.mjs --env test
 nice -n 10 npm run build
 
