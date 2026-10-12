@@ -50,3 +50,18 @@ The first version of the probe captured only `<main>`, which is the "Loading…"
 reported 0 differences on pages that had not been read at all. It now keeps the whole body.
 Worth knowing before reusing it: these tabs stream, so anything that compares only `<main>`
 compares nothing.
+
+## The permission-catalogue check follows the split
+
+`scripts/check-permission-catalogue.mjs` pins which `can(…)` activities this route's body decides
+with, and it read only `page.tsx`. With the buttons' checks now in `sections/`, it failed (it saw
+two of the seven). The pin gained `inDir`: the body is the page plus every file in that folder.
+The guard is still read from `page.tsx` alone, so a permission check scattered into a section file
+would not count as the guard.
+
+## Result of the proof
+
+600 probes (8 roles x 5 residents x 15 URLs), 0 differences. Admin and Management read the real
+tabs (150 probes with content); the other six roles are refused or 404, and those refusals are
+compared on status and target. A deliberate break (the "log immunization" button shown on a
+deceased resident) was caught: 2 differences.

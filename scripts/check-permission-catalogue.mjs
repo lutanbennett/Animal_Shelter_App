@@ -255,6 +255,7 @@ const PINNED = {
   // below), on top of the record. Its writes are per row, on the tab's add/edit pages above.
   "/residents/[id]/[section]": {
     guards: ["requireFullResident(SECTION_READS[section])"],
+    inDir: "src/app/residents/[id]/[section]/sections",
     decides: ["medical.archive", "medical.visits", "medical.prescriptions", "medical.diet", "medical.weight", "resident.adoption_news", "resident.microchip"],
     table: {
       name: "SECTION_READS",
@@ -379,7 +380,14 @@ for (const { file, path } of pages) {
       eq(`F ${path} guards with ${pin.guards.join(" + ")}`, guards, want);
       if (pin.known && sameSet(guards, want)) eq(`F ${path} STALE: fixed, remove its \`known\` entry`, "known entry", "no entry");
     }
-    const body = pin.in ? stripComments(readFileSync(join(root, pin.in), "utf8")) : text;
+    // `inDir`: the page's section renderers live beside it; the guard is still read from the page alone.
+    const dirText = pin.inDir
+      ? readdirSync(join(root, pin.inDir))
+          .filter((n) => /\.tsx?$/.test(n))
+          .map((n) => stripComments(readFileSync(join(root, pin.inDir, n), "utf8")))
+          .join("\n")
+      : "";
+    const body = pin.in ? stripComments(readFileSync(join(root, pin.in), "utf8")) : text + dirText;
     eq(`F ${path} body decides with can(${pin.decides.join(", ") || "nothing"})`, decidesIn(body), [...pin.decides].sort());
     if (pin.table) {
       const block = text.match(new RegExp(`\\b${pin.table.name}\\b[^=]*=\\s*\\{([^}]*)\\}`))?.[1] ?? "";
