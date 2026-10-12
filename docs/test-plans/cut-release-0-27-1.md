@@ -61,7 +61,7 @@ ok   origin/main held 2 unreleased notes — 2
 16 assertions, 0 failed
 ```
 
-- [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a: not yet — the PR does not exist at this commit` on the first push and tick it in a follow-up commit once the run is actually green. Every PR hits this; the first push is red on `test-plan` by construction. Do not pre-tick it — a green you have not seen is the exact failure this checklist exists to prevent — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a: not yet — the PR does not exist at this commit` on the first push and tick it in a follow-up commit once the run is actually green. Every PR hits this; the first push is red on `test-plan` by construction. Do not pre-tick it — a green you have not seen is the exact failure this checklist exists to prevent — all 7 jobs `completed success` on run 38211194333 at `5fb72209`, the branch tip: audit, check, new-policy-role-names, migration-numbers, test-plan, script-integrity, public-views. Read from the run, not from `gh pr checks`, which was still reporting `check` as pending after the run had concluded
 
 ## 3. Schema and data — *skip if no migration*
 
