@@ -6,6 +6,7 @@ import { latestRelease, unreleased } from "@/lib/releases";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { renderedBy } from "./runtime";
 import { type CheckOutcome, type CheckResult, cached, runCheck } from "./run";
+import { describeBackupFolder, resolveBackupFolder } from "../../../scripts/lib/backup-folder.mjs";
 
 /**
  * Settings → System status, the health half: one small function per tile,
@@ -186,9 +187,10 @@ export async function checkBackup(): Promise<CheckOutcome<BackupFacts>> {
   const scheduled = appEnv === "production";
   // BACKUP_DRIVE_FOLDER_ID, when set, is the Backups folder itself
   // (scripts/backup.mjs uploads there), outside the photo tree.
-  const backupFolderId = process.env.BACKUP_DRIVE_FOLDER_ID;
-  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
-  if (!backupFolderId && !rootId) return { state: "fail", error: "GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured." };
+  const where = resolveBackupFolder(process.env);
+  const backupFolderId = where.folderId;
+  const rootId = where.rootId;
+  if (where.source === "none") return { state: "fail", error: "GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured." };
 
   const drive = getDriveClient();
   const folder = backupFolderId
@@ -215,7 +217,7 @@ export async function checkBackup(): Promise<CheckOutcome<BackupFacts>> {
   const top = dumps[0];
   if (!top) {
     return scheduled
-      ? { state: "fail", error: "No backup of this database has been found in Drive's Backups folder.", facts: { env, newest: null, count: 0 } }
+      ? { state: "fail", error: `No backup of this database has been found. This machine looked in ${describeBackupFolder(where)}; if the backups are going somewhere else, BACKUP_DRIVE_FOLDER_ID is missing here.`, facts: { env, newest: null, count: 0 } }
       : { state: "off", facts: { env, newest: null, count: 0 } };
   }
   const ageDays = (Date.now() - Date.parse(top.createdTime!)) / 86_400_000;

@@ -74,7 +74,9 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "The shelter's database is now backed up every night instead of once a week, so if anything ever goes wrong at most a day of work can be lost.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [
