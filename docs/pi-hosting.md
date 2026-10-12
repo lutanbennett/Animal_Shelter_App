@@ -39,7 +39,8 @@ Pi runs. As the normal user:
 sudo apt-get update && sudo apt-get install -y git curl
 git clone https://github.com/lutanbennett/Animal_Shelter_App.git ~/Animal_Shelter_App
 cd ~/Animal_Shelter_App
-# copy .env.local and .env.deploy.production here from the dev machine (scp) — never commit them
+# copy .env.deploy.production here from the dev machine (scp) — never commit it.
+# Do NOT copy .env.local: it holds SUPABASE_ACCESS_TOKEN (see "Keeping the Supabase token off the Pi")
 ```
 
 Create the tunnel from the Pi (the login prints a URL to open in any
@@ -207,7 +208,7 @@ Worker discovers the Pi is down takes about one to two seconds; the rest are fas
 The same box takes the weekly database backup (README "Backups"): a cron job runs
 `scripts/backup.mjs --env production --local-copy ~/backups/lannacare` on Sundays at
 03:00, which uploads to Drive and keeps the newest 12 dumps on the SSD, printing each
-one it removes. Needs `postgresql-client-17` (above) and the same two env files, plus the public key.
+one it removes. Needs `postgresql-client-17` (above) and `.env.deploy.production` with the public key and `SUPABASE_DB_URL` (no token; see below).
 
 Holding a production dump on an internet-reachable render box means the old "no data
 on the Pi" rule no longer holds, so:
@@ -369,3 +370,25 @@ to visitors (staff, being signed in, always bypass). Photos are cached
 separately by the proxy's own headers (a day). To flush early: Cloudflare
 dashboard → Caching → Configuration → **Purge Everything** (free; the
 edge cache and the photo cache both go).
+
+## Keeping the Supabase token off the Pi
+
+`SUPABASE_ACCESS_TOKEN` runs arbitrary SQL against both Supabase projects through the
+Management API. Nothing on the Pi needs it: the running app never reads it, and the weekly
+backup only used it to look up the pooler host, which `SUPABASE_DB_URL` replaces. The app
+and the backup run as the same Pi user, so a token on the Pi is a token a compromised app
+process can read.
+
+- **`.env.local` is never copied to the production Pi.** Everything the Pi needs, the Google
+  Drive set included, goes in the Pi's own `.env.deploy.production` (`.env.deploy.production`
+  is layered over `.env.local` on the dev machine, so copy the Drive lines into it there and
+  scp that one file). The test clone is the one exception and holds the dev `.env.local`,
+  with the token line deleted.
+- **The Pi refuses to carry the token.** `scripts/pi/check-no-forbidden.mjs` runs from
+  `setup.sh`, `setup-test.sh` and `write-env.mjs` (so every `deploy-pi.sh`) and stops, naming
+  the file and the variable but never the value, if any env file in the checkout sets it.
+  The list is the `neverOnPi` flag in `scripts/lib/runtime-config.mjs`.
+- **Order matters when taking it off an existing Pi.** The weekly backup uses the token until
+  `SUPABASE_DB_URL` is set, and a failed Sunday backup writes only to `~/backups/backup.log`.
+  Set `SUPABASE_DB_URL` in `.env.deploy.production`, run the backup by hand, confirm a new
+  dump appeared, and only then delete the token line from every file. Then rotate the token.

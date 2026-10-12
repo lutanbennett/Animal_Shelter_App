@@ -15,6 +15,7 @@ import { join } from "node:path";
 import { loadEnv, parseEnvArg, projectRef } from "../lib/env.mjs";
 import { readWranglerConfig } from "../lib/wrangler.mjs";
 import { ACTIONS_KEY_VAR, actionsKeyProblem } from "../lib/actions-key.mjs";
+import { refuseIfForbidden } from "./check-no-forbidden.mjs";
 import { PI_OPTIONAL, PI_REQUIRED, PI_WRANGLER_VARS } from "../lib/runtime-config.mjs";
 
 // Pi only. On a dev machine this file is read by every `next build`, deploy:test
@@ -25,6 +26,8 @@ if (process.platform !== "linux") {
   console.error(`write-env: this writes .env.production.local for the Pi and refuses to run on ${process.platform}.`);
   process.exit(2);
 }
+
+refuseIfForbidden("write-env");
 
 const { name } = parseEnvArg(process.argv.slice(2));
 const env = loadEnv(name);
