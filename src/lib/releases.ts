@@ -74,13 +74,21 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  "On Who does what, the role names now stay in view as you scroll down the list of activities.",
-  "If your role is not allowed to add or change a maintenance job or a project folder, you now get the usual \"not allowed\" message instead of a line of database wording.",
-];
+export const unreleased: ReleaseNote[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.27.1",
+    date: "2026-10-12",
+    title:
+      "Role names stay in view on Who does what, and a clearer \"not allowed\" message",
+    major: false,
+    notes: [
+    "On Who does what, the role names now stay in view as you scroll down the list of activities.",
+    "If your role is not allowed to add or change a maintenance job or a project folder, you now get the usual \"not allowed\" message instead of a line of database wording.",
+    ],
+  },
   {
     version: "0.27.0",
     date: "2026-10-11",
