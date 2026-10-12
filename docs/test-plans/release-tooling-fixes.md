@@ -24,7 +24,7 @@
 
 - [x] `node scripts/worktree.mjs sync` — branch was cut from current `main` this session; rerun before merge
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
-- [ ] CI green on the PR (runs the same three). n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): all 7 checks passed on #579
 
 ```
 === gates: build exited 0 after 107s
