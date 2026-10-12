@@ -206,7 +206,7 @@ const PINNED = {
   "/clinic-visits/new": { guards: ['requirePermission("visit.book")'], decides: [] },
   "/clinic-visits/[id]/edit": {
     guards: ['requirePermission("medical.visits")'],
-    decides: ["resident.microchip"],
+    decides: ["medical.visits", "resident.microchip"],
   },
   "/outreach/new": { guards: ['requirePermission("community.outings")'], decides: [] },
   "/outreach/[id]/edit": { guards: ['requirePermission("community.outings")'], decides: [] },

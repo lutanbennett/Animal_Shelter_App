@@ -782,7 +782,7 @@ const en = {
       noFields: "—",
       none: "Nothing matches these filters.",
       emptyLog: "Nothing has been recorded yet.",
-      couldntLoad: "Couldn't load the changes",
+    couldntLoad: "Couldn't load the changes",
       showValues: "Show values",
       hideValues: "Hide values",
       history: "All changes to this record",
@@ -1975,6 +1975,7 @@ const en = {
     },
   },
   deliveries: {
+    billsLink: "Bills",
     title: "Deliveries",
     subtitle:
       "Record each medication or food as it arrives, one item at a time, in the item's own unit. Recording a delivery doesn't change the stock count — the next stocktake does — but it lets the shelter work out what was used.",
