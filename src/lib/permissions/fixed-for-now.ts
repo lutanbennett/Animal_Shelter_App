@@ -64,7 +64,6 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
         "medical.immunizations",
         "medical.weight",
         "medical.diet",
-        "medical.archive",
         "photos.resident_add",
         "facility.enclosures",
         "clinics.list",
@@ -113,21 +112,18 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
   {
     // The screens ask these boxes; the database is looser because another box the role holds opens the same
     // thing. perm-policy-cleanup (0182) narrowed contacts, friends, clinics and doctors, and split visit.book,
-    // maintenance.progress and projects.publish out. What is left is not a policy that can be narrowed:
-    // archiving a weight, prescription, vaccination or visit is an UPDATE its own table Edit allows, and a
-    // policy cannot tell the archived_at column from the others (it needs a trigger on four tables);
+    // maintenance.progress and projects.publish out, and 0187 put a trigger on the four medical tables so
+    // archiving needs medical.archive. What is left is not a policy that can be narrowed:
     // stock_receipts is read by the purchasing job by design (0143, check-2ic-role.mjs); and a medication
     // can be added through stock.medications Edit as well as add_while_recording. Not shown: nobody using
     // the app can tell. See docs/decisions/2026-10-11-perm-policy-cleanup.md.
     id: "databaseWider",
     boxes: {
       management: [
-        "medical.archive",
         "stock.delivery",
         "reference.add_while_recording",
       ],
-      second_in_command: ["medical.archive", "stock.delivery"],
-      head_of_medical: ["medical.archive"],
+      second_in_command: ["stock.delivery"],
     },
     shown: false,
     stays: false,
