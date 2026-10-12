@@ -47,13 +47,23 @@ exceptions, both of which should be rare enough to be remarkable:
 
 | Step | Who |
 |---|---|
-| Cut PR, gates, CI, merge | Claude |
-| Production migrations | Claude — `apply-migrations.mjs --env production` from the **main checkout** |
+| Cut PR, gates, CI, **merge** | Claude — **merged as soon as CI is green, without asking** (2026-10-13) |
+| Production migrations | Claude — `apply-migrations.mjs --env production` from the **main checkout**, under a user-settings allow rule added 2026-10-13 |
 | **Worker production deploy** | **Lutan** — the one handover |
 | Worker test deploy | Claude |
 | Pi production build + restart | Claude — SSH works and `systemctl restart lanna-care` is passwordless |
 | Pi test build + restart | Claude — same |
-| Verification, release record | Claude |
+| Verification, release record | Claude — **and the record PR is merged by Claude too, without asking** |
+
+**Two touches, and count them.** A release should cost Lutan exactly two
+interventions: **major versus minor**, and the production Worker deploy. `0.28.0`
+cost him five — those two plus both PR merges and the migration apply — and he
+raised it. **If a release asks him for a third, record it in the release record
+as an avoidable cost**, with what caused it, the same as any other defect.
+
+**The record PR is not a gate.** By the time it exists the release is deployed
+and verified. Merge it and tell him; never say "ready to merge when you say"
+about it, which invents a blocker out of bookkeeping.
 
 **Do not idle.** The Pi production build does not depend on the Worker deploy —
 start it as soon as the cut is merged and let the two run in parallel. `0.15.0`
@@ -82,6 +92,25 @@ git checkout main && git pull
 
 Fold in the backlog branch if it has anything (`git log --oneline main..backlog`),
 then push, then fast-forward `backlog` to `main`.
+
+**Then `npm ci` in the main checkout, before any deploy.** Added after `0.28.0`,
+where it was nearly missed. That checkout had `next@16.3.5` installed while
+`package.json`, the lockfile and both Pi builds had **16.3.8** — a dependency
+bump had merged and `npm ci` had never been re-run there, so the first test
+Worker build was made from something the lockfile does not describe.
+
+**Every guard passed.** `deploy.mjs` verifies the commit, the project ref and the
+env vars, and says nothing about `node_modules`; the release SHA was correct on
+all four builds, so the usual claim that all four came from the release SHA would
+have been true and materially false, with the Worker fallback running a different
+Next from the Pi that serves everyone. The Pi clones run `npm ci` inside
+`deploy-pi.sh`, which is exactly why they were right and the laptop was wrong —
+that asymmetry is the tell, and it recurs every time a dependency bump merges
+between releases.
+
+It was caught by reading the build banner, which is the only place it is visible.
+So: run `npm ci` here, and **read the `Next.js version :` line on the first Worker
+build against `package.json`** anyway.
 
 ## 2. Work out what is in the release
 
