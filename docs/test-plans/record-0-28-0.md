@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none — a release record closes no backlog item |
 | Branch / worktree | `claude/record-0-28-0` @ `C:\Development\Animal_Shelter_record-0-28-0` |
 | Dev server | not started — this PR adds no code and no page |
-| PR | PR_NUMBER |
+| PR | #577 |
 | Tested by / date | Claude (production release manager session) / 2026-10-13 |
 | Carries a migration? | no |
 | Tested at SHA | the tip of this branch, re-run after the plan was filled in |
