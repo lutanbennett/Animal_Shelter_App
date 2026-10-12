@@ -1,10 +1,10 @@
-# Planner handover — written 2026-10-12, after batch 96
+# Planner handover — written 2026-10-12, after nine workstreams
 
-**What this file is.** A snapshot for whoever runs `/plan-day` next in a fresh chat, written at the
-end of eleven workstreams (batches 94, 95 and 96, all planned and merged in one chat on one day, in
-about three and a half hours). It says where the planning loop stands, what is blocked and on whom,
-and what not to re-derive. It is **rewritten every nine workstreams** and is deliberately
-short-lived.
+**What this file is.** A snapshot for whoever runs `/plan-day` next in a fresh chat. Written at the
+end of nine workstreams planned and merged in one chat on one afternoon — the second planning chat
+of 2026-10-12, after the batch-96 handover. It says where the planning loop stands, what is blocked
+and on whom, and what not to re-derive. It is **rewritten every nine workstreams** and is
+deliberately short-lived.
 
 **What this file is not.** The work is `docs/backlog.md`; the plan is
 `C:\Development\Animal_Shelter_App\.plan-day.md`; the rules are `CLAUDE.md` and
@@ -14,15 +14,13 @@ are right and this file is stale — check the date at the top.
 **Read these first, in this order:**
 
 1. `CLAUDE.md` — the workstream rules, start to finish
-2. `.claude/skills/plan-day/SKILL.md` — the loop you are about to run. **It gained a step on
-   2026-10-12: every brief must end with the pre-push test-plan block, quoted verbatim in the
-   skill.** That is not optional and the reason is below
-3. `.plan-day.md` — **the top line and the last few hundred lines only.** It is long; do not read it
-   all. The top line says which batch is live
+2. `.claude/skills/plan-day/SKILL.md` — the loop you are about to run
+3. `.plan-day.md` — **the top line and the last few hundred lines only.** The top line says which
+   batch is live
 4. this file, for what has changed since
 5. **`docs/architecture-review-2026-09-22.md`** — 568 lines, the best single description of the
-   system. Read §1 before planning anything structural. **Its findings are being worked through
-   fast: S1, S3, S5, S6, S7, C2, C3 and N1/N4 all closed on 2026-10-12**
+   system. Read §1 before planning anything structural. **Its findings are nearly worked through:
+   S1, S2, S3, S5, S6, S7, C2, C3, C5, C6 and N1/N4 are all closed. C4 and C7 remain**
 
 ---
 
@@ -30,178 +28,126 @@ are right and this file is stale — check the date at the top.
 
 | | |
 |---|---|
-| `main` when this was written | **`cbad541d`** (#561) |
-| Dev database | **187 applied, 0 pending, no drift** |
+| `main` when this was written | **#574 merged** (`claude/stock-receipts-update-policy`) |
+| Dev database | **192 applied, 0 pending, no drift** |
 | Production database | **not read from this session** — the classifier refuses production reads, and that is correct. See `docs/release-handover.md` |
-| Next free migration number | **`0188`** — and it is genuinely free; see the `search-path-pin` story |
-| Open backlog items | **93**, down from 101 |
-| Open PRs | **none**; #550–#561 are all merged |
-| Last release | **`0.27.0`** (2026-10-11) |
-| **A release cut is DUE** | **`unreleased` carries two lines** — the *Who does what* sticky headers, and readable refusals on maintenance jobs and project folders |
+| Next free migration number | **`0192`** — but read *the `0191` collision* below before using it |
+| Open backlog items | **92**, down from 96 |
+| Open PRs | **none** — but `claude/bills-inbox` is **8 commits ahead and mid-build**; see *Two streams that are not finished* |
+| Last release | **`0.27.1`** (2026-10-12) |
+| `unreleased` | **one line** (the photo-first Add photos button). A cut is NOT yet due |
 | Workstreams since this handover | **0 — the counter restarts here.** `.plan-day.md` carries it |
 
-**Eleven PRs merged in about three and a half hours** (#550–#561), across three `/plan-day` runs in
-one chat. **Batch 94 was planned, built and merged in 25 minutes.** **Do not assume a batch you set
-up is still in flight** — check `gh pr list` before telling the user anything about it. On
-2026-10-12 a whole batch merged *while the planner was waiting on its own unrelated PR's CI.*
+**Nine workstreams in one afternoon, eight of them planned in three batches and merged:** #566–#574.
+**Batch 1 was set up and fully merged inside about 40 minutes.** **Do not assume a batch you set up
+is still in flight** — check `gh pr list` before telling the user anything about it. It happened
+three times in a row today: every single `/plan-day` resume found its batch already merged.
 
 ---
 
 ## The loop, in one paragraph
 
 Each run: sync `main` and fold in `backlog`; check whether the live batch has merged and **capture
-token actuals in that same turn if it has**; check each candidate against the code, *against what
-the user has already ruled out*, and *against whether it is waiting on a decision rather than on
-effort*; present three batch tables with bands **and a model/effort recommendation**; ask once;
-create only the current batch's worktrees and briefs, **each ending with the pre-push block**; save
-the plan and bump the counter.
+token actuals in that same turn if it has**; check each candidate against the code, against the
+live database, *against what the user has already ruled out*, and *against whether it is waiting on
+a decision rather than on effort*; present three batch tables with bands **and a model/effort
+recommendation**; ask once; create only the current batch's worktrees and briefs, **each ending with
+the pre-push test-plan block**; save the plan and bump the counter.
 
 ---
 
-## Six states that look like faults and are not
+## THE BIGGEST MISTAKE OF THE DAY, AND IT WAS THE PLANNER'S
 
-1. **A merged branch showing `ahead`** — the PR was squash-merged, so the branch tip is not in
-   `main`. The work is in. Check the PR's state, not the count.
-2. **`mergeable: UNKNOWN`** on a fresh PR — CI has not finished. Not a conflict. A conflict shows as
-   `CONFLICTING`, and **silent CI on a pushed commit means exactly that** — sync the branch, do not
-   wait.
-3. **`list_sessions` reporting `prState: OPEN` for a merged PR.** Seen again on 2026-10-12.
-   **`gh pr list` is the truth; the session listing caches.**
-4. **A stale session-start `git status`.** The snapshot in the first system message is from session
-   start and can be hours old. **Re-read `git log` rather than quoting it.**
-5. **`HELD` is a snapshot, not a verdict.** A worktree is held while its session lives. **Clear
-   leftovers on a later run, never ask the user to close chats for it.**
-6. **NEW — the user may merge a PR before you get to it.** #560 was merged from the PR bar at 04:43
-   while the planner was still reading its checks, and a later commit of its own made it in anyway.
-   **Read `gh pr view --json state` before announcing a merge, and do not be thrown by `MERGED`.**
+**Two migration files on `main` both numbered `0191`:** `0191_donation_channels.sql` (#572) and
+`0191_stock_receipts_update_policy.sql` (#574). Both merged. Both applied to dev.
 
----
+**How it happened, exactly.** `bills-inbox` was briefed as schema-then-app in one worktree: PR 1 was
+`0190`, which merged. The planner then read "its migration has landed" as "it no longer holds the
+migration slot", and put `donate-channels` — which needed its own table — in the same batch, with
+the words *"You hold the only migration slot in this batch"* written into its brief. **But when
+`bills-inbox` started building its app half, it discovered that matching a bill to a delivery has to
+UPDATE `stock_receipts`, which needed a policy it did not have.** So it correctly opened a second
+schema PR. Two live streams, two free-looking numbers, same number.
 
-## NEW AND IMPORTANT: every brief must carry the pre-push test-plan block
+**The rule this gives, and it is new:**
 
-**Lutan, 2026-10-12: *"the streams seem to be making errors in the test plan when they submit the CI.
-Can we add something into the brief that gets them to make sure it's right before they submit the CI
-rather than us reworking all the time."*** He was right, and **it was the planner's gap, not the
-streams'.**
+> **A schema-then-app stream holds the migration slot until its APP PR merges, not until its schema
+> PR merges.** The app half is exactly where a second migration gets discovered, because that is
+> where the code meets the policies.
 
-Six commits across batches 94 and 95 were spent fixing a test plan *after* CI went red, **every one
-on format rather than content** (`15b5ef9f`, `d98c3317`, `d1175619`, `be8948e4`, `36dce481`,
-`7c613d74`). All six were catchable locally in one command. `CLAUDE.md` already said to run
-`check-test-plan.mjs` before pushing — **but the briefs did not repeat it, and the brief is what a
-fresh session reads first.**
+**`scripts/check-migration-numbers.mjs` cannot catch this, and it is in CI on every PR.** It compares
+a PR's files against its base branch. Each PR separately took a number that was genuinely free at the
+time; the collision exists only in the merge of both. **So do not expect the gate to save you here —
+this one is the planner's job at planning time.**
 
-**#557 put the block in the skill, verbatim, as a required part of step 7.** Copy it; do not
-paraphrase it. **The four named traps are the whole value** — three of the six commits were the same
-invisible one: the sign-off line needs **two or more spaces** before `Date:`
-(`check-test-plan.mjs:361`), and one space looks identical to two on screen.
-
-**Early evidence, honestly stated:** the two batch-95 streams that had the block from the start
-produced **one** test-plan commit each; the one already past it produced two, one a format error.
-Batch 96's three also produced one each. **But one test-plan commit per PR remains and always will**
-— the gates output cannot be pasted before the gates have run. **So the claim is that the block
-removed the *format* rework, not all of it.** If a stream shows two, read which kind they are before
-concluding anything.
-
-**Do not "fix" this by loosening `scripts/check-test-plan.mjs`.** `CLAUDE.md` forbids it at length,
-and the strictness is what makes a red check meaningful.
+**What to do about the two files: nothing, and say so.** Applied files are never edited
+(`CLAUDE.md`), both are recorded in `schema_migrations` under their own filenames, both applied
+cleanly, and they touch unrelated objects so the order between them does not matter. **But the
+production release manager must be told**, because "0191" is now ambiguous in conversation. There is
+a backlog item for the hazard; do not reopen the decision to rename them.
 
 ---
 
-## The lesson that keeps paying — and it needed a THIRD command
+## Two streams that are not finished, and both look finished
 
-**On 2026-10-12 a planned stream was found already done for the fifth time.** `search-path-pin` was
-batch 96's schema stream, holding `0188`, from architecture review S7: *"Pin `search_path` on every
-`security definer` function"*, reporting **about forty** unpinned.
+**`gh pr list` showing a branch MERGED says nothing about whether the stream's work is done**, and
+this bit twice in one afternoon.
 
-**A read-only query against dev found zero.** 57 `security definer` functions, 57 pinned — 40 with
-`search_path=public`, 17 with `search_path=""`, so the per-function choice (not cosmetic: `''`
-forces every name in a body to be schema-qualified, and a body relying on the search path breaks *at
-call time*) had already been made. **And the gate the item asked for already existed**, at
-`check-migration-grants.mjs:261`, inside `npm run lint`, on every PR all along.
+| stream | what merged | what is still missing |
+|---|---|---|
+| `bills-inbox` | #569 (`0190`, three files, no app code) and #574 (its second migration) | **The entire Bills feature** — the Bills page and inbox, Add a photo of the bill on Record a delivery and the clinic visit, the `Bills/<year>/<month>` Drive folder, the unmatched count. **In flight: 8 commits ahead, session live** |
+| `donate-channels` | #572 (`0191`, the table, a checker, the public view) | **The buttons.** No Settings → Website → Donate, no buttons on `/donate`. Its session is idle at 149,808 and warm |
 
-**Where "about forty" came from:** the review grepped the migration *files* — 173 declarations
-against 165 `set search_path` lines across 110 files — but **files are not the live state**, because
-`create or replace` means a later file supersedes an earlier body. 173 declarations resolve to 57
-live functions. **The item predicted this in its own words** (*"later files replace earlier
-bodies"*), which is why it said to verify first.
+**The tell was the token figure, both times.** `bills-inbox` measured **106,428** against a
+~300–400k band for both halves; `donate-channels` **149,808** against ~250–330k. **A stream that
+comes in at a third of its band has usually not done the work, not beaten the estimate.** Read the
+PR's file list before recording an actual as a win: `gh pr view <n> --json files`.
 
-**THE NEW PART, AND WHY THIS SECTION CHANGED.** The previous four phantoms were all caught by
-`ls docs/decisions/ | grep -i <subject>` and `git log -S "<symbol>"`. **This one could not have
-been** — no decision file, no commit, and the code the item named really did exist. **Only querying
-the live database answered it.**
-
-**So the already-done check now has three commands, and the third is new:**
-
-1. `ls docs/decisions/ | grep -i <subject>`
-2. `git log -S "<a distinctive symbol the item names>"`
-3. **For any item whose claim is about database objects — functions, policies, triggers, columns,
-   indexes — query the database, not the migrations.** `pg_proc`, `pg_policies`, `pg_trigger`,
-   `information_schema.columns`. A file grep cannot answer it, and here the answer was `0` against a
-   claimed `40`.
-
-Then the ones already learned: **has an approach been declined?** (prose inside the item, not a
-decision file) · **is it waiting on a decision rather than effort, and has that decision in fact
-been made?** · **an item's count is the count someone happened to run** — brief every stream to
-count for itself and report the real figure · **a gate whose condition is "one release after X"
-needs re-checking every run.**
-
-`search-path-pin` was recorded and ticked in **#560**, and **`0188` was deliberately not taken.**
+**Both can be resumed in their own live sessions rather than re-worktreed** — Lutan chose that for
+`bills-inbox` and it is much cheaper, because the session has already read the schema and the
+decision file and pays the ~77k floor only once. `SendMessage` to the session by its name
+(`ListAgents` lists them) works and was confirmed delivered today.
 
 ---
 
-## Token estimates — twenty-one measured, none over band
+## Token estimates — twenty-eight measured, none over band
 
-### Today's nine, newest first
+### Today's eight
 
 | batch | slug | model / effort | estimated | actual | |
 |---|---|---|---|---|---|
-| 96 | `public-lists-unify` | sonnet-5-5 / low | ~170–250k | **138,752** | **below** |
-| 96 | `pi-token-off` | sonnet-5-5 / low | ~170–260k | **174,607** | inside |
-| 96 | `writers-no-can` | sonnet-5-5 / low | ~170–260k | **150,318** | below |
-| 95 | `runtime-config-manifest` | sonnet-5-5 / low | ~230–320k | **141,507** | **39% under** |
-| 95 | `who-does-what-freeze-header` | sonnet-5-5 / low | ~110–170k | **127,188** | inside |
-| 95 | `medical-archive-trigger` | sonnet-5-5 / low | ~160–230k | **149,696** | below (**two PRs**) |
-| 94 | `arch-quick-wins` | sonnet-5-5 / low | ~130–190k | **122,423** | below |
-| 94 | `origin-key-in-app` | sonnet-5-5 / low | ~110–170k | **125,029** | inside |
-| 94 | `receipt-backdate-rule` | sonnet-5-5 / low | ~140–170k | **119,322** | below |
+| 3 | `test-runner-node-test` | sonnet-5-5 / low | ~170–240k | **169,049** | inside |
+| 3 | `donate-channels` | sonnet-5-5 / low | ~250–330k | **149,808** | **PR 1 only — not a win** |
+| 2 | `migrate-upto` | sonnet-5-5 / low | ~150–210k | **116,883** | 22% under |
+| 2 | `resident-page-split` | sonnet-5-5 / low | ~250–350k | **194,681** | 22% under |
+| 2 | `bills-inbox` | sonnet-5-5 / low | ~300–400k | **106,428** | **PR 1 only — not a win** |
+| 1 | `backup-daily` | sonnet-5-5 / low | ~150–220k | **158,310** | inside |
+| 1 | `photo-first-tagging` | sonnet-5-5 / low | ~200–290k | **218,173** | inside |
+| 1 | `bills-schema` | sonnet-5-5 / low | ~190–260k | **155,018** | 18% under |
 
-**All nine ran `claude-sonnet-5-5` / `low`, confirmed from `get_session`, not assumed.** Two more
-(#557, #560) were built in the planner session and are **unmeasured** — their cost is not separable.
+**All eight confirmed from `get_session` as `claude-sonnet-5-5` / `low`** — read, not assumed.
 
-**BANDS WORK — keep giving bands, never figures. But they are still set high.**
+### THE FLOOR IS ~77k, NOW CONFIRMED SEVEN TIMES
 
-### THE FLOOR IS ~77k, CONFIRMED FOUR TIMES
+Identical to the hundred in every session measured today: System tools 38,776 · MCP 16,902 ·
+Memory 9,820 · Skills 6,383 · System prompt 4,973 = **76,854**. (Two sessions showed System tools at
+39,186 and 39,849 — a kilotoken of drift from extra tools loaded, nothing more.) **This is settled.
+Stop re-deriving it and stop calling it one measurement.**
 
-Identical across every session measured on 2026-10-12: System tools 38,782 · MCP 16,903 · Memory
-9,820 · Skills 6,377 · System prompt 4,973 = **76,855**. The 2026-10-11 correction from ~110k to
-~80k holds and **is no longer one measurement.**
+### Two band corrections earned today
 
-### Trim these two, from the table
-
-- **Schema PR, single file: ~120–155k.** `receipt-backdate-rule` **119,322** beats
-  `cashflow-forecast-function`'s 139,791. **It had nothing to find out** — Lutan had pre-decided the
-  rule — which is the point: the band tracks discovery, not file count.
-- **A schema-then-app stream in ONE worktree costs about one schema band, not two.**
-  `medical-archive-trigger` covered **#553 (schema) and #556 (app)** for **149,696 together**. Much
-  cheaper than splitting across batches, and `CLAUDE.md` allows it. **Repeat this.**
-
-### STOP WIDENING FOR "IT MIGHT HAVE TO BUILD SOMETHING" — twice wrong in one day
-
-This is the most useful correction in this file.
-
-- `runtime-config-manifest` was banded **~230–320k** because it *might* need to build a check
-  proving four lists agreed. **141,507 — 39% under.** Folding four enumerations into one table is
-  reading and rewriting.
-- `public-lists-unify` was banded **~170–250k** for two folded items that *might* need a probe.
-  **138,752.** **It did build one — a 120-probe comparison — and was still cheap.**
-
-**So even "builds a small instrument" does not justify a wide band.** Reserve it for an instrument
-that must establish something **nobody knows**, like `who-does-what-view`'s +50% (449,014) for
-writing `scripts/check-who-does-what.mjs` to find which of 300 permission boxes the system obeys.
-**That script was the work.** A loop over two lists is not.
-
-The 2026-10-11 correction still stands: **reading a long list of files is cheap** —
-`silent-empty-reads` faced 64 files and came in at 133,986.
+- **A schema PR that also adds a permission activity, or writes its own checker script: ~150–175k**,
+  not the 230–285k "schema with code" band. `bills-schema` did two files, four enum values, three
+  tables and views, and a new `maintenance.bills` activity for **155,018**. `donate-channels` did a
+  table, a public view **and** `scripts/check-donation-channels-schema.mjs` for **149,808**. Both
+  well under `role-floor-schema`'s 231,297. **The old "with code" band was measuring something
+  else.**
+- **"Prove the refactor's output is identical" does NOT widen the band.** `resident-page-split` split
+  a 1,465-line file into ten and proved it with probes across several roles and resident states, for
+  **194,681** against ~250–350k. **Third confirmation of the 2026-10-11 rule: reading and rewriting
+  is cheap; only building a measuring instrument is expensive**, and a loop over ten sections is not
+  an instrument. Reserve a wide band for a script that must establish something nobody knows, as
+  `who-does-what-view` did at 449,014.
 
 ### Landmarks
 
@@ -216,16 +162,14 @@ The 2026-10-11 correction still stands: **reading a long list of files is cheap*
 
 ### CAPTURE THE FIGURE WHEN THE PR MERGES, NOT AT THE NEXT `/plan-day`
 
-**Now nineteen consecutive successes and not optional.** The instant a stream's PR has merged, call
-`get_usage` **in that same turn**, before touching the registry. On 2026-10-12 the user announced
-three merges in passing (*"pi token off now merged"*, *"561 is merged"*) — **each was captured in the
-reply to that message**, which is the only reason those figures exist.
+**Now twenty-six consecutive successes and not optional.** The instant a stream's PR has merged, call
+`get_usage` **in that same turn**, before touching the registry. Today all eight were captured
+because every resume checked `gh pr list` first and found the batch already merged.
 
 - **An archived session is as lost as a closed one.**
 - **The condition is a live process, not a session state.** `isRunning: false` has answered fine
-  nineteen times. **Do not infer readability from the listing — try the call.**
-- **It is not a setting to change.** Lutan archives by hand, which is correct. **Do not ask him to
-  stop.**
+  twenty-six times. **Do not infer readability from the listing — try the call.**
+- **It is not a setting to change.** Lutan archives by hand, which is correct.
 
 ---
 
@@ -237,108 +181,89 @@ dial that reduces usage without changing the work.** **Effort** changes how much
 turn, so raising it **raises** the figure. **It is not a usage optimisation and must never be
 presented as one.**
 
-**Never raise effort to fix an overrun.** The cure is a tighter brief or a spin-out. On 2026-10-12
-`pi-token-off` carried a silent-failure hazard — deleting the token before its replacement would have
-killed the Sunday backup into a log nobody reads — and was **still** left at `low`, with the hazard
-written into the brief instead. It came in inside band and got the ordering right.
+**Never raise effort to fix an overrun.** The cure is a tighter brief or a spin-out.
 
-**`claude-sonnet-5-5` / `low` is the default and the evidence is now strong:** twenty consecutive
-streams, none over band, including nine carrying migrations or permissions. **The caveat stands — the
-briefs also keep getting better, so the model cannot take all the credit.**
+**`claude-sonnet-5-5` / `low` is the default and the evidence is now strong:** twenty-eight
+consecutive streams, none over band, including a dozen carrying migrations or permissions. **The
+caveat stands — the briefs also keep getting better, so the model cannot take all the credit.**
 
-**Fable sat at 5% all day with two days left.** The remaining Fable item is *Fable dry run of the
-acceptance checklist*, which still needs Lutan and the Director to agree who tests which role.
-**Check the windows (`get_usage`) at the start of every run:** all-models went **69% → 72%** across
-the eleven PRs.
+**Fable sat at 5% all day and expires 2026-10-14.** The remaining Fable item is *Fable dry run of the
+acceptance checklist*, still blocked on Lutan and the Director agreeing who tests which role. The
+drop-shipment options paper was offered twice as a use for the bucket and not taken up. **Do not
+offer a third time.** All-models went **73% → 76%** across the nine.
 
 ---
 
-## What briefs should do — the 2026-10-12 additions
+## What briefs should do — the additions that paid off today
 
-Everything from the last handover still holds. Three things earned their place today:
+Everything from the last handover still holds. Four things earned their place:
 
-- **Name the expected finding AND license a null answer.** `writers-no-can` was told to expect that
-  most of its eight candidates were already guarded, and that returning "none open" was a result
-  rather than a failure. **It returned exactly that, below band** — all eight guarded by RLS,
-  function guards or admin helpers — plus the catalogue check that stops the next one being missed.
-  Second such brief to pay off, after `silent-empty-reads`. **A brief that asks for green gets green;
-  a brief that licenses a null answer gets the truth, and cheaply.**
-- **Hand the stream the contradiction you found, rather than letting it hit it.**
-  `runtime-config-manifest` had just classified `SUPABASE_ACCESS_TOKEN` as `where: "tools"`, defined
-  as *"dev-machine scripts only"* — **but the weekly production backup runs from the Pi's own
-  crontab.** `pi-token-off`'s brief put that tension in writing and told it to resolve it either way.
-  It did: `docs/decisions/2026-10-12-tools-means-scripts-not-dev-machine.md`.
-- **Force the one answer the refactor would otherwise bury.** `public-lists-unify`'s two lists
-  disagreed about whether `/r` and `/e` were edge-cached, and nothing said which was right. The brief
-  made that answer non-negotiable. Result: a reasoned decision
-  (`docs/decisions/2026-10-12-r-and-e-not-edge-cached.md`) — per-item pages read from views whose
-  membership changes, so a 10-minute-old copy could show a card that should already be gone.
-  **Without that instruction the stream would have unified the lists and left the question unanswered
-  in a new place.**
+- **The pre-push test-plan block works.** Zero format-only test-plan commits across all eight
+  streams, against six in the two batches before it was added. Copy it verbatim from the skill; the
+  four named traps are the whole value.
+- **Name the hazard instead of raising the dials.** `backup-daily` was writing code that deletes the
+  shelter's only copy of its data. Its brief named the floor (never prune without a confirmed upload,
+  always keep the newest few) and asked for proof against fabricated failed runs. It stayed at `low`,
+  came in inside band, and got it right.
+- **Tell a stream to file the outstanding step as a backlog item, not a test-plan row.**
+  `backup-daily`'s brief said so and it did (*"Switch the Pi's backup from Sundays to daily"*). This
+  is the `x-origin-key` lesson applied before it could bite: nothing ever re-reads a merged PR's test
+  plan. **Repeat this in every brief whose work ends on the Pi or a deploy.**
+- **Hand a schema stream the next stream's needs too.** `bills-inbox`'s migration brief said to add
+  **all four** bill owner types to `record_attachment`, including `maintenance_bill`, which its own
+  work did not need. **Verified in the merged file: all four arms are there**, so
+  `maintenance-bills` needs no migration at all. One file instead of two branches.
 
-Also: **tell the stream to prove a refactor's output is identical, not assert it.**
-`public-lists-unify` proved its lists matched on **120 probes, 0 differences**.
-
----
-
-## NEW RULE: a step owed to a DEPLOY is a backlog item, not a test-plan row
-
-**Found on 2026-10-12 and worth more than it looks.**
-
-#551 added an `x-origin-key` check to `src/proxy.ts` so the Pi stops trusting the Cloudflare WAF rule
-alone, and `pi-token-off` put `ORIGIN_KEY` on the Pi. **But the Pi serves `0.27.0`, which predates
-the check, so nothing on the Pi checks the header today.** It starts working at the next Pi deploy
-and not before.
-
-**The only record of that was one row of `docs/test-plans/pi-token-off.md`'s manual table.**
-Everything else read as shipped: merged PR, signed plan, secret in place. **Nothing ever re-reads a
-merged PR's test plan.**
-
-This is the release-note-truth failure in a new costume — not a false note to users, but **a security
-control believed live that is not.** Filed as its own Security item (`c80dd0d3` on `backlog`). **So:
-when a stream's manual table records something outstanding *for a deploy* rather than *for a person*,
-it needs its own backlog item.** The *Left for manual verification* table is for people who will
-look; it is not a place to park work.
+**And one false finding avoided, worth knowing:** `node --test` does **not** appear in
+`scripts/gates.mjs` or in CI as that string. It is wired correctly as `npm test` — `package.json`'s
+`test` script runs `node --test` with `scripts/test-support/register.mjs`. **Grepping for the flag
+makes it look missing when it is present.** Eight `*.test.mjs` files landed in #573.
 
 ---
 
-## A brief can be right when written and wrong when the stream finishes
+## Candidates for the next batch, in order
 
-`pi-token-off`'s brief said **do not tick the item** — the token would still be on the Pi until Lutan
-did steps 1, 2 and 5 himself. **The stream ticked it, and it was correct to:** its manual table
-records all six Pi steps as actually performed on 2026-10-12 (test clone's copy deleted,
-`SUPABASE_DB_URL` set and the backup re-run by hand, token deleted everywhere and the backup re-run
-again, Drive values moved and `.env.local` parked, the token rotated and the old one deleted), and
-its signature uses the sanctioned form — *"Lutan — confirmed in chat; line written by Claude at
-their request"*. **Lutan worked the Pi steps with the session while it ran.**
+**No release cut is due yet** — `unreleased` carries one line. It will be due once the two unfinished
+features land, and both will add one.
 
-**The planner flagged the tick as a defect and was wrong.** Same shape as the 2026-10-11 phantom: a
-correct instruction overtaken by its own stream. **Before calling a tick false, read the test plan's
-manual table and signature — the work may have happened while you were not looking.**
+1. **Finish the two half-done features, and prefer resuming their live sessions.**
+   (a) `bills-inbox`'s Bills page — **already in flight.** (b) `donate-channels`' buttons — **not
+   started**; its session is idle and warm at 149,808.
+2. **`maintenance-bills`** — **Bills on maintenance jobs** (the build). **No migration needed**,
+   verified. Waits on (1a), because it extends the same Bills inbox page.
+3. **`photo-rpc`** — **An internal photo costs seven queries** (review C7). Needs a migration
+   (`can_see_drive_file`, written like `is_public_drive_file` in `0084`). **Deferred twice today for
+   slot reasons only; nothing blocks it.**
+4. **C4** — both dictionaries ship to every phone; load only the active one.
+5. **The `x-origin-key` Pi deploy item** and **the Pi backup crontab item** — both are deploys plus a
+   check, not workstreams. Release-manager work with Lutan.
+6. **The thirteen red check harnesses** — three need a per-role ruling from Lutan.
 
 ---
 
 ## Items whose remaining condition is a person
 
 **These look exactly like stale items and are the opposite. Do not tick them, do not plan them.**
+Carried forward from the batch-96 handover; **none was re-verified today**, so treat the list as a
+pointer and check any one you intend to act on.
 
 - **The maintenance board on a phone** — someone must watch the Head of Maintenance use it at 375 px.
   Put to the Director on the 2026-10-08 answers sheet; **she left it blank.**
 - **The photo lightbox's last two controls at 375 px** — on a real phone.
-- **The Director signing her roles draft.** Lutan said on 2026-10-09 it *"appears to already have been
-  done"* — **unverified**, and production cannot be read from these sessions.
+- **The Director signing her roles draft** — Lutan said on 2026-10-09 it *"appears to already have
+  been done"*; **unverified**, and production cannot be read from these sessions.
 - **The app header's button sizes** — Lutan's call; recommendation already written.
 - **The Staff holders on production** — until that list is answered, **`0173` must not reach
   production**, or those logins fail closed.
-- **The acceptance checklist's pre-run agreements** — Lutan and the Director agreeing who tests which
-  role, the per-role accounts on Test, what counts as a blocker, and where the signed paper copy
-  lives (**it carries real names and this repo is public**). **This also blocks the one remaining
-  Fable item.**
+- **The acceptance checklist's pre-run agreements** — who tests which role, the per-role accounts on
+  Test, what counts as a blocker, and where the signed paper copy lives (**it carries real names and
+  this repo is public**). **This also blocks the one remaining Fable item.**
 - **Who can read what of a contact, checked on production**, as each of six roles.
 - **The role walkthrough re-run** — owed twice; a person runs it.
-- **NEW — `search_path` on production.** The dev answer was 0 unpinned, but production may be behind
-  on migrations and hold an older unpinned body. In #560's test plan as a one-minute release-manager
-  query. **Deliberately not a backlog item, because there is no work unless it comes back dirty.**
+- **`search_path` on production** — dev came back 0 unpinned, but production may be behind on
+  migrations and hold an older unpinned body. A one-minute release-manager query, in #560's test plan.
+- **NEW — the Pi's backup schedule.** `backup-daily`'s code is merged, but **backups are still weekly
+  until the crontab hand step is done on the Pi with Lutan.** Filed as its own backlog item.
 
 ---
 
@@ -347,8 +272,7 @@ manual table and signature — the work may have happened while you were not loo
 - **Lutan:** the two auth decisions · the Pi jobs and failover options paper · the Google secret
   rotation leftovers · the second admin account (Anchalee) · the mobile sweep (**declined five times
   — offer only as a swap**) · the product `.org` name · **whether the purchasing job keeps reading
-  stock receipts through `stock.delivery`** · **three of the thirteen red check harnesses**, which
-  need a per-role ruling.
+  stock receipts through `stock.delivery`** · **three of the thirteen red check harnesses**.
 - **The Director:** signing the roles draft · **the community-dogs baseline number and the date it is
   true up to** · the Thai receipt wording checked by a Thai reader · the online merchandise shop.
 - **Time:** HSTS not before **2026-11-08** · the `sharp` override until `wrangler` and `miniflare`
@@ -359,51 +283,34 @@ manual table and signature — the work may have happened while you were not loo
 1. **The quick-win band stays as written** (2026-10-11, asked four times).
 2. **The test-site visitor tile is NOT wanted.** The grey *Not set up* on `test.lannacare.org` is
    **the intended permanent state.**
-3. **The Director MAY backdate a receipt.** Shipped in `0186`/#550: `received_on <= issued_on <=
-   today`, Bangkok today.
-4. **The token floor is ~80k.**
-5. **NEW — `/r` and `/e` are not edge-cached, on purpose** (2026-10-12). Revisit only with a measured
-   load problem, and then cache the enclosure page before the resident one.
-
----
-
-## Candidates for the next batch, in order
-
-**First, cut the release.** `unreleased` has two lines and a cut is due.
-
-1. **Lutan's three new items from 2026-10-12, which are one theme** — *photo first, then the
-   resident* (a home-screen button to take or pick photos and tag each to a resident) · *photos of
-   receipts for purchases and clinic visits, with the cost, at the time or in a batch at night* ·
-   *bills on maintenance jobs, summing to the job's actual cost*. **These are the newest thing he has
-   asked for and they share a spine: photograph a bill, get the cost onto the right record.** They
-   probably need **one** migration between them, so plan a schema PR then two feature streams.
-2. **The `x-origin-key` Pi deploy item** (`c80dd0d3`) — no code, just a deploy and a check.
-3. **The medical `stock.delivery` tail** — **Lutan's decision first.**
-4. **The thirteen red check harnesses** — three need Lutan.
-5. **The architecture review's remaining items** — C5 (the 1,465-line resident record page), C6 (no
-   test runner; 137 `check-*.mjs` are the tests), C7 (an internal photo costs seven queries).
-6. **S2, back up daily rather than weekly** — ends on the Pi's crontab, and the restore rehearsal is
-   overdue.
+3. **The Director MAY backdate a receipt.** `received_on <= issued_on <= today`, Bangkok today.
+4. **The token floor is ~80k** (measured 76,854, seven times).
+5. **`/r` and `/e` are not edge-cached, on purpose** (2026-10-12).
+6. **NEW — maintenance bills are Management and Admin only** (Lutan, 2026-10-12): *"lets keep it at
+   management for now. The maintenance lead would give all receipts to the manager anyway."* The
+   activity `maintenance.bills` exists and is on the Who does what grid, so it can be widened without
+   a release.
+7. **NEW — backups prune by AGE, not count.** Lutan's words were "remove backups over 2 weeks old",
+   so the architecture review's `--keep 30` was superseded. Both items are ticked.
 
 ---
 
 ## Who does what
 
 Lutan is solo on one machine with several sessions at once, named as roles. He wants Claude to own
-git; commits auto-push; **merge only on his go** — though he may merge from the PR bar himself. Not
-technical in these areas: **plain English, no jargon, options with consequences and a
-recommendation.** Deliverables go to `C:\Users\Leidos\OneDrive\Desktop`. **The repo is public** —
-never commit or attach a file naming real people. **Never give him a command before the moment he
-should run it.**
+git; commits auto-push; **merge only on his go** — though he merges from the PR bar himself, often
+before the planner has read the checks. Not technical in these areas: **plain English, no jargon,
+options with consequences and a recommendation.** Deliverables go to
+`C:\Users\Leidos\OneDrive\Desktop`. **The repo is public** — never commit or attach a file naming
+real people. **Never give him a command before the moment he should run it.**
 
 **He holds a release for a change that breaks quietly**, and names it separately from the count.
 
 **He answers questions put as options with a recommendation, and he answers them fast.** On
-2026-10-12 he took the recommendation three times out of three, and **twice redirected the plan
-mid-flight** — deferring this handover to finish the day's last batch, and asking for
-`search-path-pin`'s outcome to be double-checked *before its session was ever opened*, which is what
-caught the phantom. **When he questions an outcome, check it properly rather than reassuring him; he
-was right both times.**
+2026-10-12 he took the recommendation every time it was offered — six for six across two chats — and
+**chose the cheaper path when it was explained** (resuming a warm session rather than a fresh
+worktree). **A two-line "here is the trade-off, here is what I suggest" gets a decision in seconds;
+a paragraph of options does not.**
 
 **He may start a batch before the planning conversation finishes, may set a different model or effort
 than recommended, may merge a PR himself, and may pull an urgent item in outside the batch.** **Ask
@@ -416,52 +323,57 @@ what he has actually started rather than assuming the plan describes reality.**
 - **`grep -c` exits 1 when it finds nothing**, so never use it as a success check in an `&&` chain.
 - **Do not put long prose inside `node -e` or a `bash` heredoc.** Backticks, apostrophes and quotes
   break parsing in ways the error does not explain, and **a script can report success while writing
-  mangled text**. **Write the file with the file-writing tool** — and for anything structural
-  (ticking an item and moving it to Completed, inserting a backlog item), **write a small `.mjs`
-  script with the file-writing tool and run it**, which worked cleanly twice on 2026-10-12.
+  mangled text**. **Write the file with the file-writing tool.**
 - **Appending by line position needs an anchor that cannot match another item, and a guard.** `§` and
-  other non-ASCII are multibyte — avoid them in anchors. An umbrella item quotes its children's
-  titles, so anchor on `^- \[ \] \*\*<Title>`. **`sed -n "${A}p"` with an empty `$A` prints the ENTIRE
-  FILE** — always `test -n "$A"` first.
+  other non-ASCII are multibyte — avoid them in anchors. **`sed -n "${A}p"` with an empty `$A` prints
+  the ENTIRE FILE** — always `test -n "$A"` first.
+- **A long backlog item is one line.** `sed -n '273p'` can print 4 KB, and `sed -n '1,90p'` on
+  `docs/backlog.md` printed **152 KB** today. **To survey the backlog, extract the bold titles**:
+  `awk '/^## Completed/{exit} /^## /{sec=$0} /^- \[ \]/{print NR"|"sec"|"substr($0,1,150)}'`. Then
+  read only the items you are actually planning. **And the line numbers move** the moment anything is
+  added on the `backlog` branch — re-find by title, never reuse a number from earlier in the chat.
 - **A scanned PDF cannot be read by the usual means on this machine.** Render it with
   `C:\Users\Leidos\.claude\tools\render-pdf.ps1 -Pdf <file> -OutDir <dir> -Width 1500`, then read the
   PNGs. The Director returns her answer sheets as scans.
-- **NEW — to query dev read-only**, copy the `query()` helper from `scripts/apply-migrations.mjs:140`
-  into a scratchpad `.mjs` and load credentials with **`loadEnv("test")`** — *not*
-  `loadEnv("development")`, which demands a `.env.deploy.development` that does not exist and exits 2.
-  This is how the `search-path-pin` phantom was caught, and it will be needed again.
+- **To query dev read-only**, copy the `query()` helper from `scripts/apply-migrations.mjs:140` into a
+  scratchpad `.mjs` and load credentials with **`loadEnv("test")`** — *not* `loadEnv("development")`,
+  which demands a `.env.deploy.development` that does not exist and exits 2. **And import
+  `scripts/lib/env.mjs` as a `file:///C:/Development/...` URL**: a relative path out of the scratchpad
+  resolves against the wrong root and fails with `ERR_MODULE_NOT_FOUND`. This is the third
+  already-done check and it is the one that catches phantoms the file greps cannot.
+- **The planner can apply a migration to dev**, from the main checkout only, and today it was the
+  step that unblocked a stream. `--dry-run` first; the consumer WARNINGs about files "not on
+  origin/main at all" are **correct and expected** when the reader is the next PR.
 
-### Leftovers and one husk
+### Leftovers
 
-**Thirteen `Animal_Shelter_*` folders at writing, twelve of them merged leftovers.** **Every actual
-through batch 96 is captured**, so nothing is at risk if Lutan archives those chats. `/clean-streams`
-clears them.
+**Nine `Animal_Shelter_*` folders at writing, eight of them merged leftovers** — `brief-test-plan-gate`,
+`planner-handover-96`, and today's `bills-schema`, `photo-first-tagging`, `backup-daily`,
+`migrate-upto`, `resident-page-split`, `donate-channels`. **Every actual through today is captured**,
+so nothing is at risk if Lutan archives those chats. **`bills-inbox` is NOT a leftover — it is
+working.** `/clean-streams` does the round.
 
-`Animal_Shelter_planner-handover-81` is a folder git no longer tracks. `done` **refuses it**, because
-it is no longer a git repo and cannot be checked for uncommitted work; only `--force` gets past that,
-and **that is Lutan's call, not a session's.** Raised six times now. **Mention it once if it is still
-there, then leave it.**
+**The `planner-handover-81` husk is gone**, cleared since the last handover. It was raised six times;
+it does not need raising again.
 
 ---
 
 ## Writing the next one
 
 When `.plan-day.md`'s counter reaches nine, `/plan-day` says so. **Rewrite this file first, in the
-chat that still has the context, then start the fresh chat.** Offer it; do not just do it — and if he
-defers it to finish a batch, as he did on 2026-10-12, **record the deferral as its own section in
-`.plan-day.md` listing what the next session must carry**, because the deferring chat is where all of
-it lives.
+chat that still has the context, then start the fresh chat.** Offer it; do not just do it.
 
-**Count the workstreams honestly.** The counter was wrong twice on 2026-10-12 — 13 and then 16 — by
-adding batches at set-up time and double-counting. The true figure was **11**: nine planned streams
-plus two PRs built in the planner session.
+**Count the workstreams honestly.** Today's nine are eight planned streams plus this handover.
+`bills-inbox`'s second migration PR (#574) is **not** a tenth stream — it is the same worktree and the
+same session, and counting PRs instead of streams is how the counter read 13 and then 16 on
+2026-10-12.
 
 It goes through **a branch, a worktree, a test plan and a PR**, exactly as `docs/release-handover.md`
-does. This one is `claude/planner-handover-96`; the previous were **#546** (`planner-handover-93`),
-**#514** (`87`), **#501** (`84`) and **#490** (`81`). Lutan asked on 2026-10-09 whether the PR was
-really needed; **it is.** It is a `docs/` file in the repo, so the only alternatives are committing to
-`main` directly or routing it through the `backlog` branch, and the second is the 2026-10-07 failure
-`CLAUDE.md` documents by name.
+does. This one is `claude/planner-handover-105`; the previous were **#562** (`planner-handover-96`),
+**#546** (`93`), **#514** (`87`), **#501** (`84`) and **#490** (`81`). Lutan asked on 2026-10-09
+whether the PR was really needed; **it is.** It is a `docs/` file in the repo, so the only
+alternatives are committing to `main` directly or routing it through the `backlog` branch, and the
+second is the 2026-10-07 failure `CLAUDE.md` documents by name.
 
 Re-verify every number in the table above against the repo; carry forward only what is still true;
 reset the counter in `.plan-day.md` with today's date.
