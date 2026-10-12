@@ -43,7 +43,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 Four exit codes, all 0: adding the `test` step did not break the gates every stream runs before pushing. `npm test`: 67 tests, 67 pass, about 1.3 s. One test failed against the unfixed code (`safeNextPath("/a/..//evil.com")` returned `//evil.com`); the code was fixed, not the test. See `docs/decisions/2026-10-12-node-test-runner.md`.
 
-- [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a: not yet — the PR does not exist at this commit` on the first push and tick it in a follow-up commit once the run is actually green. Every PR hits this; the first push is red on `test-plan` by construction. Do not pre-tick it — a green you have not seen is the exact failure this checklist exists to prevent — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same four). Seen: all 7 checks passed on the PR before this commit.
 
 ## 3. Schema and data — *skip if no migration*
 
