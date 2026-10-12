@@ -26,8 +26,8 @@ export async function createClient() {
             }
           } catch {
             // Called from a Server Component with no request context to
-            // write to — safe to ignore as long as middleware refreshes
-            // the session (see src/middleware.ts once added).
+            // write to — safe to ignore as long as the proxy refreshes
+            // the session (src/proxy.ts).
           }
         },
       },

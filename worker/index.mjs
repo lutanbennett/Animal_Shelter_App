@@ -68,7 +68,6 @@ import { runTranslations } from "./translations.mjs";
 export { DOQueueHandler, DOShardedTagCache, BucketCachePurge } from "../.open-next/worker.js";
 
 const CACHE_TTL_SECONDS = 600;
-const DEFAULT_ORIGIN_TIMEOUT_MS = 20_000;
 
 // Mirrors isPublicPage() in src/lib/public-paths.ts — the pages a signed-out
 // visitor can see. Not /login (forms), not /api/photos (already edge-cached

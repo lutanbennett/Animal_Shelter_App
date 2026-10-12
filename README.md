@@ -10,7 +10,7 @@ Decisions and open questions: [`docs/decisions/`](docs/decisions/) (one file per
 
 - **Next.js** (App Router) + **Tailwind CSS**
 - **Supabase** (Postgres + Auth + RLS) — see `supabase/migrations/`
-- **Google Drive API** for file/photo storage (not Supabase Storage — see `docs/decisions.md`)
+- **Google Drive API** for file/photo storage (see `docs/decisions.md`), except facility plan images, which live in a private Supabase Storage bucket (`src/lib/facility-map/plan-store.ts`)
 - **@react-pdf/renderer** for resident profile / deceased summary PDFs
 - Hosting: a **Cloudflare Worker** (free tier, via `@opennextjs/cloudflare`)
   fronts the site — edge cache for the public pages, then the **Raspberry
@@ -22,22 +22,11 @@ reasoning and the trade-offs that come with that.
 
 ## Roles
 
-Six `app_role` values, enforced by row-level security
-(`supabase/migrations/0001_initial_schema.sql`, mirrored for management in
-`0039`, vets in `0040`, medications in `0043`/`0044`) and assigned at `/admin/security`:
+A role is a row of the `roles` table (`0132`), not a database enum: `0181` dropped `app_role`, `user_roles.role` and `current_user_role()`. A login holds one role through `user_roles.role_id`, assigned at `/admin/security`, and each role is granted a set of activities in `role_permissions`. Row-level security policies and app pages both ask `has_permission()` (`src/lib/permissions/`) rather than naming a role. The live roles are admin, management, second_in_command, head_of_maintenance, head_of_medical, doctor, volunteer and public_viewer; `staff` was retired on 2026-10-09 (`0173`, `docs/decisions/2026-10-09-staff-role-removed.md`). A doctor belongs to a clinic and sees that clinic's records only (RLS since `0167`/`0178`).
 
-| Role | Access |
-|---|---|
-| **admin** | Everything, including the Settings section (the /admin pages: security, website, zones, enclosures, immunization and procedure types, frequencies) and the Management section. |
-| **management** | Day-to-day work on residents, placements, weights, photos, maintenance and projects, plus the Management section: the reporting dashboard (`/management/dashboard`), contact, vet, medication and diet management, and translations (`/management/translations`): the public text and every label's Thai, including setup lists Management cannot otherwise open. |
-| **staff** | **Retired 2026-10-09** (`0173`, `docs/decisions/2026-10-09-staff-role-removed.md`). The enum value stays, since Postgres cannot drop one, but the `roles` row is archived and the database refuses it to any live login, so `/admin/security` no longer offers it. An archived login that held it keeps it until given another role. |
-| **vet** | Read/write on vet visits, procedures, blood tests, prescriptions and immunizations; read on residents. An outside clinic, so the app shows a vet only My tasks and Residents: Enclosures, Maintenance, Vets, Contacts and Projects are hidden from the menu and refused at the URL (each page asks its own activity, `src/lib/permissions/`: a vet holds none of the five). A vet account belongs to one clinic (`user_roles.vet_id`, 0102, set at `/admin/security`) and records vet visits for that clinic only; with none set, the vet-visit forms refuse it (`src/lib/vets/scope.ts` — the forms' rule, not yet RLS). |
-| **volunteer** | Read everything; write photos and enclosure moves only. |
-| **public_viewer** | No app access (0085, 0086): signs in — which gets it past the UAT lock — and sees only the public website. App pages send it to `/` (`src/lib/auth/app-access.ts`). For testers. |
+What each role can do today is Settings → Who does what (`/admin/who-does-what`, Admin and Management): every activity × every live role, read live from `role_permissions`, with each box the system does not yet obey marked from `src/lib/permissions/fixed-for-now.ts`. That list is measured, not written: `node scripts/check-who-does-what.mjs` (dev) runs every box under each role, as it is and flipped, and fails when the list is wrong or stale; `node scripts/check-who-does-what-page.mjs` checks the page against the database (`docs/decisions/2026-10-11-who-does-what-view.md`). The plain-language version is `docs/roles-and-permissions.md`.
 
-The table above is history. **What each role can do today is Settings → Who does what** (`/admin/who-does-what`, Admin and Management): every activity × every live role, read live from `role_permissions`, with each box the system does not yet obey marked from `src/lib/permissions/fixed-for-now.ts`. That list is measured, not written: `node scripts/check-who-does-what.mjs` (dev) runs every box under each role, as it is and flipped, and fails when the list is wrong or stale; `node scripts/check-who-does-what-page.mjs` checks the page against the database (`docs/decisions/2026-10-11-who-does-what-view.md`).
-
-A person who leaves is **archived** from `/admin/security` rather than deleted (`user_roles.archived_at`, 0063): `current_user_role()` returns null for them, so every policy and page treats them as having no access, while their name stays on the maintenance jobs they did. Restore reverses it. Archived and role-less logins are refused at sign-in, by password or Google, and a session archived after it signed in is signed out at its next app page.
+A person who leaves is **archived** from `/admin/security` rather than deleted (`user_roles.archived_at`, 0063): every permission check answers no for them, so every policy and page treats them as having no access, while their name stays on the maintenance jobs they did. Restore reverses it. Archived and role-less logins are refused at sign-in, by password or Google, and a session archived after it signed in is signed out at its next app page.
 
 **Settings → Security needs 2-step verification** (docs/decisions.md, 2026-09-27). The page and every action behind it require a session that has passed Supabase Auth's authenticator-app (TOTP) factor — `aal2` in the JWT (`src/lib/auth/two-step.ts`). The first visit sets up the app at `/admin/security/verify`; after that it asks for a code once per sign-in. The actions check `aal2` themselves, because they write with the service role, which bypasses the `aal2` RLS policies on `user_roles` (0100). Nothing else in the app asks for it. **A lost phone must not lock the shelter out**, and there are no backup codes, so recovery is:
 
@@ -719,12 +708,7 @@ then `node scripts/apply-migrations.mjs --status --env …` to confirm the
   folder helpers (resident photos / blood tests / procedures, and the
   maintenance job folder that follows a job between status folders, and
   the project folder path that mirrors the project tree).
-- `src/lib/vets/` — the vet hub's statistics: period filtering, monthly
-  buckets and per-resident roll-ups over a vet's appointment rows, shared
-  by the `/vets` list and `/vets/[id]`; which clinic a vet account may book
-  against (`scope.ts`); and each clinic's doctor list (`doctors.ts`: the
-  visit forms' suggestions, and the look-alike spellings
-  `/management/vets/[id]/doctors` offers to merge).
+- `src/lib/clinics/` — clinic scope (which clinic a doctor account belongs to) and each clinic's doctor list.
 - `src/lib/contacts/` — the contacts vocabulary (`contact_type`), the
   one-tap link builders (`tel:`, LINE, Messenger, WhatsApp, `mailto:`, maps) used by the
   `/contacts` list and hub, and the Carer-only loader behind the resident

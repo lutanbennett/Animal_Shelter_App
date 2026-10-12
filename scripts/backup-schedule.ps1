@@ -1,3 +1,6 @@
+# NOT the live schedule: the Pi runs the production backup, and the laptop task was
+# unregistered on 2026-10-04. Kept for re-registering on a machine that needs it.
+#
 # Register (or refresh) the weekly production backup in Windows Task
 # Scheduler on this machine. Run once from the repo root, as the user who
 # is normally signed in:
