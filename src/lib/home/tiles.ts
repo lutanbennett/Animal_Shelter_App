@@ -68,13 +68,20 @@ export function homeTilesFor(perms: Permissions, t: Dictionary): HomeTile[] {
   // do not cover, or whose page it may not open, draws no tile rather than a tile that refuses.
   const jobs = jobsOfRole(perms.role.key);
   if (jobs.length > 0) {
-    return jobs.flatMap((job) => {
+    // Add photos (photo first, then the resident) is not a job of its own: any role with jobs that holds
+    // photos.resident_add gets the tile after its jobs. The Head of Medical has Add Medical Photos already.
+    const addPhotos = routeFor("/photos/add");
+    const extra: HomeTile[] =
+      addPhotos && canOpen(perms, addPhotos) && !jobs.some((j) => j.opens === "/medical/photos")
+        ? [{ href: addPhotos.path, label: addPhotos.label(t), icon: addPhotos.icon }]
+        : [];
+    return [...jobs.flatMap((job) => {
       const route = routeFor(job.opens);
       const covered = job.bundle.every((b) => (b.level ? can(perms, b.activity, b.level) : can(perms, b.activity)));
       return route && covered && canOpen(perms, route)
         ? [{ href: route.path, label: job.label(t), icon: route.icon }]
         : [];
-    });
+    }), ...extra];
   }
 
   // The Director's daytime screen (the whiteboard's Management column, 2026-10-03): a few big tiles on a

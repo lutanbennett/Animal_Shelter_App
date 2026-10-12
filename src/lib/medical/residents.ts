@@ -6,6 +6,7 @@ type Supabase = Awaited<ReturnType<typeof createClient>>;
 /** A row of `resident_who_and_where` (0134): who a resident is and where it lives, nothing more. */
 type WhoRow = {
   id: string;
+  resident_code: string | null;
   name: string;
   thai_name: string | null;
   profile_photo_drive_file_id: string | null;
@@ -20,6 +21,7 @@ type WhoRow = {
 
 export type PickableResident = {
   id: string;
+  code: string | null;
   name: string;
   thaiName: string | null;
   photoFileId: string | null;
@@ -29,11 +31,12 @@ export type PickableResident = {
 };
 
 const COLUMNS =
-  "id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th, zone_colour";
+  "id, resident_code, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th, zone_colour";
 
 function shape(row: WhoRow): PickableResident {
   return {
     id: row.id,
+    code: row.resident_code,
     name: row.name,
     thaiName: row.thai_name,
     photoFileId: row.profile_photo_drive_file_id,
@@ -88,11 +91,13 @@ export async function loadOneResident(
   return { resident: data?.[0] ? shape(data[0]) : null, error: null };
 }
 
-/** Name filter for the picker: either language, ignoring case. */
+/** Search filter for the picker: name in either language, R-code or enclosure, ignoring case. */
 export function matchesQuery(r: PickableResident, q: string): boolean {
   const needle = q.trim().toLowerCase();
   if (!needle) return true;
-  return r.name.toLowerCase().includes(needle) || (r.thaiName ?? "").toLowerCase().includes(needle);
+  return [r.name, r.thaiName, r.code, r.enclosure?.name, r.enclosure?.nameTh].some((v) =>
+    (v ?? "").toLowerCase().includes(needle),
+  );
 }
 
 export type PickerZone = {
