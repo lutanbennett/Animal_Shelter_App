@@ -62,7 +62,10 @@ two or three at once; more than that and merging becomes the bottleneck.
    `node scripts/gates.mjs` (typecheck, lint, build; prints each exit code), then open the PR
    with `gh pr create` (signed in as the user; fall back to GitHub in the
    user's Chrome if `gh` is missing). CI runs the
-   same three checks. Once the user says so, merge it, then
+   same three checks. Once the user says so, merge it — **except for a
+   release's own two PRs, which Claude merges itself the moment CI is
+   green, without asking** (see "Release PRs merge without asking"
+   below). Then
    `node scripts/worktree.mjs done <feature>` from another checkout
    removes the folder and the branch locally and on `origin`, prunes
    git's registry and checks that all of it actually happened. It
@@ -133,6 +136,39 @@ two or three at once; more than that and merging becomes the bottleneck.
    `Animal_Shelter_*` folders git no longer knows — which `done <name>`
    clears. `/clean-streams` does this round in one go: it checks each
    leftover's PR is merged, asks, then `done`s the ones confirmed.
+
+## Release PRs merge without asking
+
+**A release's own two PRs — the cut and the record — are merged by Claude
+as soon as CI is green, with no approval round-trip.** Lutan's decision,
+2026-10-13, after `0.28.0` cost him five interventions where two were
+genuinely his.
+
+What stays his, and is not negotiable by a later session: **major versus
+minor**, because it mails every admin and cannot be undone, and the
+**production Worker deploy**, by his instruction of 2026-10-02. The target
+shape of a release is **two touches — one answer and one command.** If a
+release asks him for a third, that is a fault to write down in the record,
+the way any other avoidable cost is.
+
+Three things about this worth not re-deriving:
+
+- **Nothing about what ships changed.** `gates.mjs`, all seven CI checks
+  and the test plans are exactly as they were. What was removed is Claude
+  *waiting* for a yes on a PR that has already passed every one of them.
+- **The record PR is not a gate and must never be presented as one.** By
+  the time it exists the release is deployed and verified; it describes a
+  release that already shipped. Saying "ready to merge when you say"
+  about it — as `0.28.0` did — invents a blocker out of bookkeeping, and
+  that was the single largest avoidable delay in that release.
+- **This resolves a contradiction, it does not create one.**
+  `docs/release-procedure.md` has listed "Cut PR, gates, CI, merge" as
+  Claude's since it was written, while the merge train above said "once
+  the user says so". A session reading both followed the stricter one and
+  asked. They now agree.
+
+**Everything else still needs his go**: feature PRs are unchanged, and a
+red check is never merged past on any PR, release or not.
 
 ## Testing
 
