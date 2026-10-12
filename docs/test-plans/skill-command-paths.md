@@ -22,8 +22,8 @@
 
 ## 2. Automated gates
 
-- [ ] `node scripts/worktree.mjs sync` — n/a: not yet run at this commit
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — n/a: not yet run at this commit
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
@@ -72,7 +72,7 @@ Not applicable to tooling; no role reaches these files.
 
 - [x] The pages nearest the change: the diff is 16 lines in two skill files, each a path substitution; `git diff -U0` read line by line, nothing else changed
 - [ ] Shared file touched — n/a: no shared file (`NavLinks.tsx`, `manual/en.ts`, libs) touched
-- [ ] Nothing merged from `main` broken — n/a: not yet synced at this commit
+- [x] Nothing merged from `main` during `sync` was broken: gates green after sync
 
 ## 7. Documentation
 
