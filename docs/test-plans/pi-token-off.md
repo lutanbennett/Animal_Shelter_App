@@ -88,7 +88,7 @@ gates: typecheck=0 lint=0 build=0
 - [ ] Backlog item ticked — n/a: deliberately left open; a note says steps 3 and 4 are closed and 0, 1, 2, 5 remain with Lutan
 - [x] Non-obvious design choices added as a new file in `docs/decisions/` — `2026-10-12-tools-means-scripts-not-dev-machine.md`
 - [x] `README.md` still accurate — it does not describe the Pi env files
-- [ ] **Release notes.** — n/a: no user-visible change, and the Pi steps that complete this (SUPABASE_DB_URL, deleting the token, rotating it) are still outstanding with Lutan
+- [ ] **Release notes.** — n/a: no user-visible change; a shelter user would not notice any of this
 - [x] Commit messages say why, not just what
 - [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned** — the backup reading `SUPABASE_DB_URL` was read in `scripts/backup.mjs`; the guard was run
 
@@ -135,11 +135,12 @@ gates: typecheck=0 lint=0 build=0
 
 | # | What to check | Where |
 |---|---|---|
-| 0 | Delete `SUPABASE_ACCESS_TOKEN` from the test clone's `.env.local` | Pi, `~/Animal_Shelter_App_test` |
-| 1 | Set `SUPABASE_DB_URL` in `.env.deploy.production`, run the backup once by hand, confirm a new dump appeared | Pi, `~/Animal_Shelter_App` |
-| 2 | Only after 1: delete the token from every file (otherwise the Sunday backup fails silently) | Pi |
-| 3 | Move the Drive values into `.env.deploy.production` and remove `.env.local` | Pi |
-| 4 | Rotate the token | Supabase |
+| 0 | Test clone's token deleted — done 2026-10-12, grep count 0 | Pi, `~/Animal_Shelter_App_test` |
+| 1 | `SUPABASE_DB_URL` set; backup run by hand, new dump written and uploaded — done 2026-10-12 | Pi, `~/Animal_Shelter_App` |
+| 2 | Token deleted from every real env file; backup re-run without it, passed — done 2026-10-12 | Pi |
+| 3 | Drive values moved into `.env.deploy.production`; `.env.local` parked at `~/parked`; backup re-run, passed — done 2026-10-12 | Pi |
+| 4 | Token replaced on the dev machine; old `CL-Both` token deleted; `apply-migrations --status` passes on the new one — done 2026-10-12 | Supabase |
+| 5 | `ORIGIN_KEY` copied into the Pi's `.env.deploy.production` (Pi is on 0.27.0, which does not check it yet; takes effect at the next Pi deploy) — done 2026-10-12 | Pi |
 
 ## Sign-off
 
@@ -152,9 +153,9 @@ Automated checks by: Claude  Date: 2026-10-12
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: pending, the Pi steps are Lutan's and not yet done
+- [x] The manual list above is empty, or every item in it was checked by a person — Lutan did every Pi step himself, with each result read back in chat
 
-Manual verification by: pending: Lutan's Pi steps 0–4 (SUPABASE_DB_URL and a hand-run backup, then delete the token, then rotate it)
+Manual verification by: Lutan — confirmed in chat; line written by Claude at their request  Date: 2026-10-12
 
 ### Result
 
