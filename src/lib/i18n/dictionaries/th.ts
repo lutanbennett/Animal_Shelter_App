@@ -1876,7 +1876,7 @@ const th: Dictionary = {
       pages: (n: number) => n + " หน้า",
       addPage: "เพิ่มอีกหน้า",
       uploading: (done: number, total: number) => "กำลังอัปโหลด " + done + " จาก " + total + "…",
-      failedSome: "บางรูปอัปโหลดไม่สำเร็จ แสดงด้านล่างพร้อมปุ่มลองใหม่",
+      failedSome: "บางรูปอัปโหลดไม่สำเร็จ ให้เลือกใหม่ด้วยปุ่มเพิ่มบิล",
     },
     tile: {
       title: "บิล",

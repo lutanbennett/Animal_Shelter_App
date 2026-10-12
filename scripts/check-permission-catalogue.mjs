@@ -284,6 +284,7 @@ const PINNED = {
   // Who does what (who-does-what-view): Admin and Management, by the backlog item; no activity exists for
   // it yet and adding one needs a migration. opensWhoDoesWhat() is the one place that says so.
   "/admin/who-does-what": { guards: ["if (!opensWhoDoesWhat(perms)) refuseFor(perms)"], decides: [] },
+  "/bills": { guards: ["if (!canUseBills(perms)) refuseFor(perms)"], decides: ["stock.delivery", "medical.visits"] },
 };
 
 // EXEMPT: no permission guard, and the reason none is needed. `public: true` is also checked

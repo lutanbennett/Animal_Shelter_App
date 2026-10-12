@@ -1959,7 +1959,7 @@ const en = {
       pages: (n: number) => (n === 1 ? "1 page" : n + " pages"),
       addPage: "Add another page",
       uploading: (done: number, total: number) => "Uploading " + done + " of " + total + "…",
-      failedSome: "Some photos did not upload. They are listed below with a Retry button.",
+      failedSome: "Some photos did not upload. Choose them again with Add bills.",
     },
     tile: {
       title: "Bills",
