@@ -195,7 +195,13 @@ the `lannacare.org` routes move from the `production` block of
 (`scripts/deploy.mjs` refuses `--env production` while the block is off
 `lannacare.org` and still locked);
 `SITE_ORIGINS.production` in `scripts/deploy.mjs` and `HOST=` in
-`scripts/pi/deploy-pi.sh` follow. Outside the repo: today's
+`scripts/pi/deploy-pi.sh` follow. **A host move that carries the staff app
+with it** also changes `src/lib/site-hosts.ts` (the one list behind
+`serverActions.allowedOrigins` in `next.config.ts` and the upload routes'
+`same-origin.ts`) and `httpHostHeader` in `scripts/pi/cloudflared-config.yml`;
+miss either and every Server Action or upload is refused on the new host while
+every page still loads. `node scripts/check-site-hosts.mjs` fails if the two
+disagree. Outside the repo: today's
 `.env.deploy.production` becomes `.env.deploy.uat`, a new
 `.env.deploy.production` holds the new project's values, and
 `node scripts/deploy.mjs --env uat --secrets` gives the UAT Worker its

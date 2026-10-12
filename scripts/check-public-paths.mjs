@@ -8,7 +8,7 @@
  *   node scripts/check-public-paths.mjs
  */
 import { readFileSync } from "node:fs";
-import { isPublicPath } from "../src/lib/public-paths.ts";
+import { isPublicPage, isPublicPath, isEdgeCachedPage, PUBLIC_PAGE_PREFIXES } from "../src/lib/public-paths.ts";
 
 const open = [
   "/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg",

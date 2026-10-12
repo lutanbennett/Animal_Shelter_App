@@ -63,19 +63,18 @@ import { originOrLocal } from "./origin.mjs";
 import { handleCspReport } from "./csp-report.mjs";
 import { withSecurityHeaders } from "./security-headers.mjs";
 import { runTranslations } from "./translations.mjs";
+import { isEdgeCachedPage } from "../src/lib/public-paths.ts";
 
 // OpenNext's Durable Object classes must stay exported from the entry module.
 export { DOQueueHandler, DOShardedTagCache, BucketCachePurge } from "../.open-next/worker.js";
 
 const CACHE_TTL_SECONDS = 600;
 
-// Mirrors isPublicPage() in src/lib/public-paths.ts — the pages a signed-out
-// visitor can see. Not /login (forms), not /api/photos (already edge-cached
-// by its own Cache-Control headers, and not HTML).
-const PUBLIC_PAGE_PREFIXES = ["/adopt", "/our-work", "/foster", "/volunteer", "/donate", "/friends", "/privacy"];
-const isPublicPage = (pathname) =>
-  pathname === "/" ||
-  PUBLIC_PAGE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+// What the edge may cache comes from src/lib/public-paths.ts, the one list of
+// public pages. /r/ and /e/ are public but deliberately not cached (the reason
+// is written beside NOT_EDGE_CACHED_PAGE_PREFIXES there). Not /login (forms),
+// not /api/photos (already edge-cached by its own Cache-Control headers).
+const isPublicPage = isEdgeCachedPage;
 
 function cookieValue(request, name) {
   const header = request.headers.get("cookie") ?? "";
