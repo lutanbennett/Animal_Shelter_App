@@ -1496,7 +1496,7 @@ const manual: Manual = {
           title: "Bills: photos of receipts for purchases and clinic visits",
           roles: ["admin", "management"],
           activity: "stock.delivery",
-          path: "Home → Bills, or Operations → Deliveries → Bills",
+          path: "Operations → Deliveries → Bills (also a Home tile for some roles)",
           intro:
             "A bill here is the paper from a shop or a clinic, kept as a photo with what it cost. (Donation receipts are something else: those are the shelter's own receipts to donors.) You can photograph a bill when you record the delivery or finish the visit, or do them all at once at night or at the end of the week.",
           steps: [
@@ -1504,7 +1504,7 @@ const manual: Manual = {
             "Later, in one sitting: open Bills and tap Add bills. Choose many photos at once from the phone's camera roll, or the files from a scanner. Each photo becomes a card.",
             "On each card, type the cost (and the date on the bill if it is not today), then tap what it is for. Under Likely matches are deliveries and clinic visits from the last two weeks that have no bill photo and no cost yet, nearest the day of the photo first. Tap one and the photo and cost move onto it and the card disappears.",
             "If the delivery was never recorded, tap Record a new delivery from this bill. It opens Record a delivery with the cost filled in; when you save, the bill is filed on the new delivery.",
-            "Not sure yet? Leave the card where it is. Save details keeps what you typed, and the card is still there tomorrow. The number of bills waiting shows at the top of the page and on the Home tile. Delete this bill is for a photo taken by mistake.",
+            "Not sure yet? Leave the card where it is. Save details keeps what you typed, and the card is still there tomorrow. The number of bills waiting shows at the top of the page and, for roles that have the tile, on the Home screen. Delete this bill is for a photo taken by mistake.",
           ],
           callouts: [
             {

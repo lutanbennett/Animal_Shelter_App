@@ -31,7 +31,7 @@ removes the photo rows but leaves the files in Drive, as other deletions here do
 
 ## Where it shows
 
-The Home tile (Management's curated day, the 2IC's jobs list and derived homes) with a waiting count; a Bills link on
+The Home tile (the 2IC's jobs list and derived homes) with a waiting count. Management's curated day (the whiteboard's four tiles, held by check-home-screens.mjs) has none: the Director reaches Bills from Deliveries, and a tile there is Lutan's call (backlog); a Bills link on
 Deliveries. `/bills` is not in the route registry because that ties a page to one activity and Bills opens for any of
 three; it is pinned in `check-permission-catalogue.mjs` with its own guard (`canUseBills`).
 

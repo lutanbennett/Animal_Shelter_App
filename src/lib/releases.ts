@@ -75,7 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "New Bills page for photos of receipts. Take a photo of a bill when you record a delivery or finish a clinic visit, and type what it cost. Or take photos of all the day's bills and add them together at night on the Bills page, then tap which delivery or clinic visit each one belongs to. Bills waiting to be matched are counted on the page and on the Home screen.",
+  "New Bills page for photos of receipts. Take a photo of a bill when you record a delivery or finish a clinic visit, and type what it cost. Or take photos of all the day's bills and add them together at night on the Bills page, then tap which delivery or clinic visit each one belongs to. Bills waiting to be matched are counted on the page, and on the Home screen where your role has a Bills tile.",
 ];
 
 /** Newest first. */

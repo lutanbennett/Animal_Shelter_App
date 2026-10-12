@@ -58,7 +58,6 @@ export function BillPhotosSection({
                     <FileText aria-hidden="true" className="h-6 w-6" />
                   </span>
                 ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={ph.url} alt={p.alt} className="h-full w-full object-cover" />
                 )}
               </a>
