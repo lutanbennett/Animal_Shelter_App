@@ -11,6 +11,10 @@
 //       # origin/main, both ways; exits 1 if they disagree (same as
 //       # `--drift --env production`)
 //   node scripts/apply-migrations.mjs --dry-run  # run pending files inside begin…rollback
+//   node scripts/apply-migrations.mjs --upto 0180_x.sql
+//       # apply pending files in order and stop AFTER that one; the rest are
+//       # listed as deliberately left. For a file whose header says to apply it
+//       # only once the new app is live. Refuses a name that is not pending.
 //   node scripts/apply-migrations.mjs --baseline 0027_prescriptions.sql
 //       # mark every file up to and including that one as applied WITHOUT
 //       # running it — for a database that was migrated by hand before this
@@ -75,7 +79,17 @@ if (baselineIndex >= 0 && !baseline) {
   console.error("--baseline needs a migration filename, e.g. --baseline 0027_prescriptions.sql");
   process.exit(2);
 }
+const uptoIndex = args.indexOf("--upto");
+const upto = uptoIndex >= 0 ? args[uptoIndex + 1] : null;
+if (uptoIndex >= 0 && (!upto || upto.startsWith("--"))) {
+  console.error("--upto needs a migration filename, e.g. --upto 0180_something.sql");
+  process.exit(2);
+}
 const readOnly = statusOnly || drift;
+if (upto && (readOnly || baseline)) {
+  console.error("--upto goes with an apply or --dry-run, not --status, --drift or --baseline.");
+  process.exit(2);
+}
 // Environments where a database write is something the shelter lives with.
 const GUARDED = envName === "uat" || envName === "production";
 
@@ -209,6 +223,12 @@ function driftReport() {
 
 if (drift) {
   const gaps = driftReport();
+  if (unapplied.length && !missingFile.length) {
+    console.log(
+      "  Expected if a release staged these on purpose (apply-migrations --upto left them waiting for the new app).\n" +
+        "  A fault only if nobody meant to leave them: check the release record in docs/releases/.",
+    );
+  }
   console.log(gaps ? `Drift: ${envName} and origin/main disagree.` : `No drift: ${envName} matches origin/main.`);
   process.exit(gaps ? 1 : 0);
 }
@@ -233,7 +253,15 @@ if (baseline) {
   }
 }
 
-const pending = files.filter((name) => !applied.has(name));
+const allPending = files.filter((name) => !applied.has(name));
+if (upto && !allPending.includes(upto)) {
+  const why = applied.has(upto) ? "already applied" : files.includes(upto) ? "not pending" : `not in ${MIGRATIONS_DIR}`;
+  console.error(`--upto ${upto}: ${why}. Pending: ${allPending.join(", ") || "none"}. Nothing was applied.`);
+  process.exit(2);
+}
+// Earlier pending files go first: there is no applying out of order.
+const pending = upto ? allPending.filter((name) => name <= upto) : allPending;
+const left = allPending.filter((name) => !pending.includes(name));
 console.log(`This checkout: ${applied.size} applied, ${pending.length} pending.`);
 
 if (statusOnly || pending.length === 0) {
@@ -300,6 +328,8 @@ if (pending.length) {
   }
 }
 
+if (upto) console.log(`--upto ${upto}: ${pending.length} file(s) in order, stopping after it.`);
+const done = [];
 for (const name of pending) {
   const sql = readFileSync(join(MIGRATIONS_DIR, name), "utf8");
   process.stdout.write(`${dryRun ? "dry-run" : "applying"} ${name} … `);
@@ -310,12 +340,38 @@ for (const name of pending) {
       };`,
     );
     console.log("ok");
+    done.push(name);
   } catch (error) {
     console.log("FAILED");
     console.error(error.message);
+    if (dryRun && done.length) {
+      // Each file is tried in its own begin…rollback, so the earlier pending
+      // files are gone by now. Retry with them in the same transaction to tell
+      // a dependent file from a broken one. Diagnosis only; nothing is kept.
+      try {
+        await query(
+          `begin;\n${[...done, name].map((n) => readFileSync(join(MIGRATIONS_DIR, n), "utf8")).join("\n;\n")}\nrollback;`,
+        );
+        console.error(
+          `\nNOT a fault in ${name}: it runs cleanly after ${done.join(", ")}. The dry-run rolls each file back before the next, so it cannot see what they add.` +
+            "\nA real apply commits each file first, so this one is expected to apply.",
+        );
+        done.push(name);
+        continue;
+      } catch (again) {
+        console.error(
+          `\nStill fails with ${done.join(", ")} run first (${again.message.split("\n")[0]}). A new enum value cannot be used in the transaction that adds it, so that case also reads as a failure here; if ${name} uses one, read both files.`,
+        );
+      }
+    }
     console.error(`Stopped at ${name}; nothing from it was kept. Fix the file and re-run.`);
     process.exit(1);
   }
 }
 
+if (left.length) {
+  console.log(`\nDeliberately left pending (--upto ${upto}), ${left.length} file(s):`);
+  for (const name of left) console.log(`  ${name}`);
+  console.log("--status and --drift will list these as pending. That is expected until they are applied.");
+}
 if (dryRun) console.log("Dry run only — nothing was applied.");
