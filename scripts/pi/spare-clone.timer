@@ -1,10 +1,10 @@
-# Sundays 04:00 Bangkok time, an hour after the weekly backup (cron, 03:00), so the
-# clone carries that week's encrypted dump. Persistent: a missed run (Pi was off) fires at boot.
+# Sundays 05:00 Bangkok time, two hours after the daily backup (cron, 03:00; it takes
+# minutes), so the two never overlap and the clone carries that morning's encrypted dump. Persistent: a missed run (Pi was off) fires at boot.
 [Unit]
 Description=Weekly clone of the NVMe onto the spare USB boot drive
 
 [Timer]
-OnCalendar=Sun *-*-* 04:00:00
+OnCalendar=Sun *-*-* 05:00:00
 Persistent=true
 RandomizedDelaySec=300
 

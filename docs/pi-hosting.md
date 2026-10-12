@@ -8,7 +8,7 @@ Raspberry Pi 5 with real CPU, and the Worker stays as the front door and
 the fallback.
 
 **There is one Pi** (a Raspberry Pi 5 in Lutan's home in Suphan Buri) and it does two
-jobs: it renders the site, and it takes the weekly database backup. An earlier plan
+jobs: it renders the site, and it takes the daily database backup. An earlier plan
 assumed two machines; that was wrong (decisions/2026-09-30-one-pi-hosting-and-backup.md).
 
 ```
@@ -27,7 +27,7 @@ tells you which path answered.
 What the Pi's outage costs: the staff app falls back to Worker rendering
 (the old intermittent 1102 on heavy pages); the public site keeps coming
 from the edge cache. The site's data is never on the Pi; the one exception is the
-weekly backup, whose dumps sit on its SSD ("Backups on this Pi" below).
+daily backup, whose dumps sit on its SSD ("Backups on this Pi" below).
 
 ## Pi side (once)
 
@@ -205,10 +205,12 @@ Worker discovers the Pi is down takes about one to two seconds; the rest are fas
 
 ## Backups on this Pi
 
-The same box takes the weekly database backup (README "Backups"): a cron job runs
-`scripts/backup.mjs --env production --local-copy ~/backups/lannacare` on Sundays at
-03:00, which uploads to Drive and keeps the newest 12 dumps on the SSD, printing each
-one it removes. Needs `postgresql-client-17` (above) and `.env.deploy.production` with the public key and `SUPABASE_DB_URL` (no token; see below).
+The same box takes the daily database backup (README "Backups"): a cron job runs
+`scripts/backup.mjs --env production --keep-days 14 --local-copy ~/backups/lannacare` every
+day at 03:00, which uploads to Drive and removes dumps older than 14 days from Drive and
+the SSD, printing each one it removes. It never removes the newest five, and removes
+nothing at all on a run whose upload was not confirmed. `scripts/pi/setup.sh` (step 7)
+installs the cron line. Needs `postgresql-client-17` (above) and `.env.deploy.production` with the public key and `SUPABASE_DB_URL` (no token; see below).
 
 Holding a production dump on an internet-reachable render box means the old "no data
 on the Pi" rule no longer holds, so:
@@ -274,8 +276,8 @@ should restore the database from it when a Drive copy exists.
 
 ### Keeping it current
 
-`spare-clone.timer` runs Sundays 04:00, an hour after the weekly backup, so each clone
-carries that week's encrypted dump (the dumps live in `~/backups`, which `rpi-clone`
+`spare-clone.timer` runs Sundays 05:00, two hours after that morning's daily backup, so each clone
+carries that day's encrypted dump (the dumps live in `~/backups`, which `rpi-clone`
 copies like everything else; there is no separate "copy the dumps to the USB drive" step).
 Missed runs fire at the next boot. It runs `rpi-clone -u`, which **cannot erase**: if the
 layout no longer matches it stops and says so rather than re-initialising.
@@ -374,7 +376,7 @@ edge cache and the photo cache both go).
 ## Keeping the Supabase token off the Pi
 
 `SUPABASE_ACCESS_TOKEN` runs arbitrary SQL against both Supabase projects through the
-Management API. Nothing on the Pi needs it: the running app never reads it, and the weekly
+Management API. Nothing on the Pi needs it: the running app never reads it, and the daily
 backup only used it to look up the pooler host, which `SUPABASE_DB_URL` replaces. The app
 and the backup run as the same Pi user, so a token on the Pi is a token a compromised app
 process can read.
@@ -388,7 +390,7 @@ process can read.
   `setup.sh`, `setup-test.sh` and `write-env.mjs` (so every `deploy-pi.sh`) and stops, naming
   the file and the variable but never the value, if any env file in the checkout sets it.
   The list is the `neverOnPi` flag in `scripts/lib/runtime-config.mjs`.
-- **Order matters when taking it off an existing Pi.** The weekly backup uses the token until
-  `SUPABASE_DB_URL` is set, and a failed Sunday backup writes only to `~/backups/backup.log`.
+- **Order matters when taking it off an existing Pi.** The daily backup uses the token until
+  `SUPABASE_DB_URL` is set, and a failed backup writes only to `~/backups/backup.log`.
   Set `SUPABASE_DB_URL` in `.env.deploy.production`, run the backup by hand, confirm a new
   dump appeared, and only then delete the token line from every file. Then rotate the token.
