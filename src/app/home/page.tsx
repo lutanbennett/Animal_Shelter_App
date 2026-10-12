@@ -7,6 +7,7 @@ import { loadPermissions } from "@/lib/permissions/load";
 import { deviceFrom } from "@/lib/home/device";
 import { listHomeRoles } from "@/lib/home/roles";
 import { homeTilesFor } from "@/lib/home/tiles";
+import { countBillsWaiting } from "@/lib/bills/waiting";
 import { getT } from "@/lib/i18n/get-t";
 import { HomeTiles } from "@/components/HomeTiles";
 
@@ -46,7 +47,7 @@ export default async function HomePage() {
   if (perms.scopes.clinical === "own_clinic") redirect(DOCTOR_HOME_PATH);
 
   const { t } = await getT();
-  const tiles = homeTilesFor(perms, t);
+  const tiles = homeTilesFor(perms, t, await countBillsWaiting(supabase, perms));
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
