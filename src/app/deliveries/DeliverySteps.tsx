@@ -16,6 +16,9 @@ import {
 } from "@/lib/management/stock-receipts";
 import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
 import { recordDelivery } from "./actions";
+import { attachCardToDelivery } from "@/app/bills/actions";
+import { BillPhotoField } from "@/components/BillPhotoField";
+import { useDeferredUploads } from "@/components/DeferredUploads";
 import type { DeliveryFormItem } from "./RecordDeliveryForm";
 
 type Step = "kind" | "item" | "amount" | "when" | "extras" | "confirm" | "done";
@@ -41,12 +44,17 @@ export function DeliverySteps({
   items,
   countDays,
   suppliers,
+  fromBill,
+  billCost,
 }: {
   initialKind: DeliveryKind;
   today: string;
   items: Record<DeliveryKind, DeliveryFormItem[]>;
   countDays: Record<DeliveryKind, Record<string, string[]>>;
   suppliers: { id: string; name: string }[];
+  /** A card in the bills inbox this delivery is being recorded from; its photos move onto the delivery. */
+  fromBill?: string | null;
+  billCost?: string;
 }) {
   const { t, locale } = useI18n();
   const d = t.deliveries;
@@ -65,7 +73,9 @@ export function DeliverySteps({
   const [earlierDate, setEarlierDate] = useState("");
   const [timing, setTiming] = useState<DeliveryTiming | null>(null);
   const [supplierId, setSupplierId] = useState("");
-  const [cost, setCost] = useState("");
+  const [cost, setCost] = useState(billCost ?? "");
+  const [cardId, setCardId] = useState(fromBill ?? null);
+  const bill = useDeferredUploads();
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
@@ -145,7 +155,20 @@ export function DeliverySteps({
         setError(result.error);
         return;
       }
-      setSaved(d.saved(done.name, formatQuantity(Number(done.quantity)), done.unit));
+
+      // The bill: a card it was recorded from moves onto the delivery, and photos picked here are filed on it.
+      let billNote = "";
+      if (result.id && cardId) {
+        const moved = await attachCardToDelivery(cardId, result.id);
+        if (!moved.ok) billNote = moved.error;
+        setCardId(null);
+      }
+      if (result.id && bill.queued.length > 0) {
+        const filed = await bill.upload(`/api/bills/stock_receipt/${result.id}`);
+        if (filed.failed) billNote = t.bills.photo.failed;
+      }
+      bill.reset();
+      setSaved(d.saved(done.name, formatQuantity(Number(done.quantity)), done.unit) + (billNote ? " " + billNote : ""));
       // The next item of the same delivery: day and supplier stay.
       setItemId("");
       setSearch("");
@@ -426,6 +449,7 @@ export function DeliverySteps({
             />
             <span className="text-xs font-normal">{extrasOk ? s.extras.costHint : d.errors.costInvalid}</span>
           </label>
+          <BillPhotoField uploads={bill} />
           <label className="flex flex-col gap-1 text-sm font-medium text-muted">
             {s.extras.note}
             <input

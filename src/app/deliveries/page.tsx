@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Scale } from "lucide-react";
+import { Receipt, Scale } from "lucide-react";
 import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { localLabel } from "@/lib/translations/labels";
@@ -17,6 +17,8 @@ import { CONVERSION_COLUMNS, groupConversions, type ConversionRow, type EnteredL
 import { DeliverySteps } from "./DeliverySteps";
 import { RecordDeliveryForm, type DeliveryFormItem } from "./RecordDeliveryForm";
 import { DeleteDeliveryButton } from "./DeleteDeliveryButton";
+import { BillPhotosSection } from "@/components/BillPhotosSection";
+import { loadBillPhotos } from "@/lib/bills/photos";
 
 /**
  * /deliveries — record a delivery of one medication or food, and see (and
@@ -60,6 +62,9 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
   const d = t.deliveries;
   const searchParams = await props.searchParams;
   const initialKind: DeliveryKind = searchParams.tab === "diets" ? "diet" : "medication";
+  // Opened from a card in the Bills inbox ("Record a new delivery from this bill"): its photos move onto the delivery.
+  const fromBill = typeof searchParams.fromBill === "string" && /^[0-9a-f-]{36}$/i.test(searchParams.fromBill) ? searchParams.fromBill : null;
+  const billCost = typeof searchParams.cost === "string" && /^d+(.d{1,2})?$/.test(searchParams.cost) ? searchParams.cost : "";
 
   const [medicationResult, dietResult, countsResult, suppliersResult, receiptsResult, conversionsResult] = await Promise.all([
     supabase.from("stock_medications").select("id, name, name_th, unit:dose_unit, label_drive_file_id").order("name").returns<ItemRow[]>(),
@@ -124,6 +129,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
   const supplierName = new Map(suppliers.map((s) => [s.id, s.name]));
   const itemName = new Map([...medications, ...diets].map((i) => [i.id, localLabel(locale, i.name, i.name_th)]));
   const receipts = receiptsResult.data ?? [];
+  const billPhotos = await loadBillPhotos(supabase, "stock_receipt", receipts.map((r) => r.id));
   const recorders = await loadAppUsersById(
     supabase,
     receipts.flatMap((r) => (r.recorded_by ? [r.recorded_by] : [])),
@@ -138,6 +144,8 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
     },
     countDays,
     suppliers: suppliers.filter((s) => s.archived_at == null).map(({ id, name }) => ({ id, name })),
+    fromBill,
+    billCost,
   };
 
   const loadError =
@@ -148,6 +156,13 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{d.title}</h1>
         <p className="hidden text-sm text-muted md:block">{d.subtitle}</p>
+        <Link
+          href="/bills"
+          className="mt-2 mr-4 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-primary hover:underline md:min-h-0"
+        >
+          <Receipt aria-hidden="true" className="h-4 w-4" />
+          {d.billsLink}
+        </Link>
         {can(perms, "stock.usage") && (
           <Link
             href="/management/stock-usage"
@@ -234,6 +249,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
                       </span>
                     )}
                     {r.note && <span className="text-xs text-foreground">{r.note}</span>}
+                    <BillPhotosSection kind="stock_receipt" ownerId={r.id} photos={billPhotos.get(r.id) ?? []} canAdd />
                   </div>
                   <DeleteDeliveryButton id={r.id} label={itemName.get(id) ?? ""} />
                 </li>

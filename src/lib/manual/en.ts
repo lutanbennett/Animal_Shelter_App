@@ -1492,6 +1492,32 @@ const manual: Manual = {
           ],
         },
         {
+          id: "bills",
+          title: "Bills: photos of receipts for purchases and clinic visits",
+          roles: ["admin", "management"],
+          activity: "stock.delivery",
+          path: "Operations → Deliveries → Bills (also a Home tile for some roles)",
+          intro:
+            "A bill here is the paper from a shop or a clinic, kept as a photo with what it cost. (Donation receipts are something else: those are the shelter's own receipts to donors.) You can photograph a bill when you record the delivery or finish the visit, or do them all at once at night or at the end of the week.",
+          steps: [
+            "At the time: on Record a delivery, tap Add a photo of the bill beside the cost. On a phone this opens the camera. Add another page for a long bill. The photo is filed with the delivery when you save it. On a clinic visit, open its Edit page and use the Bill photos section under the form; type the cost in the Cost box as before.",
+            "Later, in one sitting: open Bills and tap Add bills. Choose many photos at once from the phone's camera roll, or the files from a scanner. Each photo becomes a card.",
+            "On each card, type the cost (and the date on the bill if it is not today), then tap what it is for. Under Likely matches are deliveries and clinic visits from the last two weeks that have no bill photo and no cost yet, nearest the day of the photo first. Tap one and the photo and cost move onto it and the card disappears.",
+            "If the delivery was never recorded, tap Record a new delivery from this bill. It opens Record a delivery with the cost filled in; when you save, the bill is filed on the new delivery.",
+            "Not sure yet? Leave the card where it is. Save details keeps what you typed, and the card is still there tomorrow. The number of bills waiting shows at the top of the page and, for roles that have the tile, on the Home screen. Delete this bill is for a photo taken by mistake.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "You only see matches for what your role may record: a delivery for someone who records deliveries, a clinic visit for someone who records visits. Bill photos are never shown on the public website.",
+            },
+            {
+              kind: "tip",
+              text: "Reading the cost off the photo automatically is not part of this yet; type it in.",
+            },
+          ],
+        },
+        {
           id: "recurring-jobs",
           title: "Setting up recurring jobs",
           roles: ["admin", "management"],

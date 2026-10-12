@@ -31,7 +31,7 @@ export type DeliveryInput = {
   note: string;
 };
 
-export type DeliveryResult = { ok: true } | { ok: false; error: string };
+export type DeliveryResult = { ok: true; id?: string } | { ok: false; error: string };
 
 function revalidateStockPages() {
   revalidatePath("/deliveries");
@@ -97,7 +97,7 @@ export async function recordDelivery(input: DeliveryInput): Promise<DeliveryResu
   if (!at.ok) return { ok: false, error: e[at.reason] };
 
   const note = input.note.trim();
-  const { error } = await supabase.from("stock_receipts").insert({
+  const { data: inserted, error } = await supabase.from("stock_receipts").insert({
     item_kind: input.kind === "medication" ? "medication" : "diet_type",
     [idColumn]: input.itemId,
     quantity: resolved.base,

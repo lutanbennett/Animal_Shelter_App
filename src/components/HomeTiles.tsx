@@ -9,7 +9,7 @@ import type { HomeTile } from "@/lib/home/tiles";
 export function HomeTiles({ tiles }: { tiles: HomeTile[] }) {
   return (
     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-      {tiles.map(({ href, label, icon: Icon }) => (
+      {tiles.map(({ href, label, icon: Icon, badge }) => (
         <li key={href} className="min-w-0">
           <Link
             href={href}
@@ -19,6 +19,9 @@ export function HomeTiles({ tiles }: { tiles: HomeTile[] }) {
             <span className="min-w-0 text-base font-medium leading-tight text-foreground [overflow-wrap:anywhere]">
               {label}
             </span>
+            {badge ? (
+              <span className="rounded-full bg-primary px-2 py-0.5 text-sm font-medium text-white">{badge}</span>
+            ) : null}
           </Link>
         </li>
       ))}

@@ -1064,3 +1064,18 @@ export async function moveProjectDriveFolder(
     removeParents: parents.join(","),
   });
 }
+
+/** Top-level folder under GOOGLE_DRIVE_ROOT_FOLDER_ID holding every bill photo; never public. */
+const BILLS_FOLDER = "Bills";
+
+/** Bills/<year>/<month>/ for a YYYY-MM-DD day (docs/decisions/2026-10-12-bills-inbox.md). */
+export async function ensureBillsFolder(drive: DriveClient, isoDate: string): Promise<string> {
+  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  if (!rootId) {
+    throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
+  }
+  const [year, month] = isoDate.split("-");
+  const billsId = await findOrCreateFolder(drive, rootId, BILLS_FOLDER);
+  const yearId = await findOrCreateFolder(drive, billsId, year);
+  return findOrCreateFolder(drive, yearId, month);
+}
