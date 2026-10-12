@@ -24,7 +24,7 @@
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` already merged in (up to date)
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`
-- [ ] CI green on the PR — deferred: read from the PR status before merging
+- [ ] CI green on the PR — n/a: read from the PR status at merge, not claimed here
 
 ## 3. Schema and data
 
