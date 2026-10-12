@@ -125,7 +125,7 @@ Automated checks by: Claude  Date: 2026-10-12
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — the list is not empty and no person has looked
 
 Manual verification by: pending: print preview, Thai, and the select's name with the authenticator step done
 
