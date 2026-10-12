@@ -172,7 +172,7 @@ export async function createMaintenanceJob(formData: FormData): Promise<ActionRe
       .limit(1)
       .returns<{ id: string }[]>();
 
-    if (error) return refuse(error.message);
+    if (error) return refuse(error.code === "42501" ? t.common.notAllowed : error.message);
     const row = data?.[0];
     if (!row) return refuse(t.maintenance.errors.saveFailed);
 
@@ -222,7 +222,7 @@ export async function updateMaintenanceJob(formData: FormData): Promise<ActionRe
       .select("id")
       .returns<{ id: string }[]>();
 
-    if (error) return refuse(error.message);
+    if (error) return refuse(error.code === "42501" ? t.common.notAllowed : error.message);
     // RLS filters rather than rejects, so a volunteer (or a stale id) shows
     // up as "nothing updated".
     if (!data || data.length === 0) return refuse(t.maintenance.errors.notAuthorized);
@@ -262,7 +262,7 @@ export async function setMaintenanceStatus(
       .select("id, enclosure_id")
       .returns<{ id: string; enclosure_id: string | null }[]>();
 
-    if (error) return refuse(error.message);
+    if (error) return refuse(error.code === "42501" ? t.common.notAllowed : error.message);
     const row = data?.[0];
     if (!row) return refuse(t.maintenance.errors.notAuthorized);
 
@@ -312,7 +312,7 @@ export async function deleteMaintenanceJob(jobId: string): Promise<ActionResult>
       .eq("id", jobId)
       .select("id")
       .returns<{ id: string }[]>();
-    if (error) return refuse(error.message);
+    if (error) return refuse(error.code === "42501" ? t.common.notAllowed : error.message);
     if (!deleted || deleted.length === 0) return refuse(t.maintenance.errors.notAuthorized);
 
     const { error: filesError } = await supabase
