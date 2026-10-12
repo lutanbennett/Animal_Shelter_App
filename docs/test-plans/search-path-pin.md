@@ -6,7 +6,7 @@
 | Backlog item | `docs/backlog.md` → **Pin `search_path` on every `security definer` function** (review S7), moved to Completed → Security in this PR |
 | Branch / worktree | `claude/search-path-pin` @ `C:\Development\Animal_Shelter_search-path-pin` |
 | Dev server | not started — no runtime surface |
-| PR | recorded below once created |
+| PR | #560 |
 | Tested by / date | Claude (Daily Planner session), 2026-10-12 |
 | Carries a migration? | no — **`0188` is deliberately NOT taken and stays free** |
 | Tested at SHA | `4b2d1a29` |
