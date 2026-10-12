@@ -44,7 +44,7 @@ const probes = [
   ["move a photo onto a delivery", `update attachments set owner_type = 'stock_receipt', owner_id = '${REC}' where id = '${PHOTO}'`, DELIVERY],
   ["move a photo onto a visit", `update attachments set owner_type = 'clinic_visit', owner_id = '${VISIT}' where id = '${PHOTO}'`, MGMT],
   ["set a delivery's cost", `update stock_receipts set cost = 12 where id = '${REC}'`, DELIVERY],
-  ["set a visit's cost", `update clinic_visits set cost = 12 where id = '${VISIT}'`, MGMT],
+  ["set a visit's cost", `update clinic_visits set cost = 12 where id = '${VISIT}'`, { ...MGMT, doctor: 1 }], // the doctor's own clinic's visit: a right it has always had (0110), not a bill
 ];
 
 const lines = [];
