@@ -38,7 +38,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 gates exit: 0
 ```
 
-- [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a` on the first push and tick it in a follow-up commit once the run is actually green — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a` on the first push and tick it in a follow-up commit once the run is actually green — all 7 jobs `success` on run 38359113771 at `3a67f71a`, the branch tip: script-integrity, migration-numbers, audit, test-plan, new-policy-role-names, check, public-views. Read from `gh run view 38359113771 --json jobs`, not from `gh pr checks`
 
 ## 3. Schema and data — *skip if no migration*
 
