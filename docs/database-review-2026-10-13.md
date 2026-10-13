@@ -942,8 +942,7 @@ looked at".
 
 ## Appendix B — the queries
 
-Fifty-one read-only statements, every one listed with its SQL in
-`docs/test-plans/fable-db-review.md` (§3 and the appendix there). By purpose: q01–q07 tables,
+Sixty distinct read-only statements (fifty-one numbered queries; a few re-run for a JSON copy, and three statement-statistics queries first written against the unqualified `pg_stat_statements` name, which failed, then against `extensions.pg_stat_statements`), every one listed with its SQL in `docs/test-plans/fable-db-review.md`. By purpose: q01–q07 tables,
 views, functions, policies, grants, indexes and table statistics; q08 extensions and version;
 q09 foreign keys and foreign keys without an index; q10–q13 columns, constraints, triggers,
 enums; q14–q16 migrations ledger, roles, default privileges; q17–q18 view and function
