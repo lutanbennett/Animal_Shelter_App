@@ -580,7 +580,10 @@ by default `Backups/` under `GOOGLE_DRIVE_ROOT_FOLDER_ID`; set
 `BACKUP_DRIVE_FOLDER_ID` to a folder id and `backup.mjs` uploads straight into
 that folder and the status tile reads it, so `Backups/` can sit outside the
 photo tree, shared with one person (decisions/2026-10-02-backup-encryption-rollout.md).
-A lost private
+The upload prefers its own Google token (`BACKUP_GOOGLE_OAUTH_CLIENT_ID`, `_CLIENT_SECRET`,
+`_REFRESH_TOKEN`); without it `backup.mjs` stops before the dump unless `--shared-drive-token` is
+given, which uses the app's token with a warning. The Pi's cron line carries that flag (set 2026-10-13)
+(docs/pi-hosting.md, "Backups on this Pi"). A lost private
 key means every encrypted backup is unreadable, so keep a second copy of it
 somewhere as safe as the first. To change the key later, install the new
 public key and keep the old private key for as long as any backup made with it
