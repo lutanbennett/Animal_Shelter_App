@@ -53,7 +53,7 @@ export async function loadJobBills(
   const rows = billsResult.data ?? [];
   const photosByBill = new Map<string, BillPhoto[]>();
   if (rows.length > 0) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("attachments")
       .select("id, owner_id, drive_file_id, file_name")
       .eq("owner_type", "maintenance_bill")
@@ -61,8 +61,9 @@ export async function loadJobBills(
         "owner_id",
         rows.map((r) => r.id),
       )
-      .order("created_at", { ascending: true })
+      .order("uploaded_at", { ascending: true })
       .returns<{ id: string; owner_id: string; drive_file_id: string; file_name: string | null }[]>();
+    if (error) throw new Error(`Could not load bill photos: ${error.message}`);
     for (const a of data ?? []) {
       const list = photosByBill.get(a.owner_id) ?? [];
       list.push({

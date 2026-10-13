@@ -90,7 +90,7 @@ export default async function BillsPage() {
           .select("id, owner_id, drive_file_id, file_name")
           .eq("owner_type", "bill_inbox")
           .in("owner_id", cards.map((c) => c.id))
-          .order("created_at", { ascending: true })
+          .order("uploaded_at", { ascending: true })
           .returns<{ id: string; owner_id: string; drive_file_id: string; file_name: string | null }[]>()
       : Promise.resolve({ data: [], error: null }),
     candidateIds.length
@@ -110,6 +110,7 @@ export default async function BillsPage() {
     loadAppUsersById(supabase, cards.map((c) => c.taken_by)),
   ]);
 
+  if (photosResult.error) throw new Error(`Could not load bill photos: ${photosResult.error.message}`);
   const withBill = new Set((heldResult.data ?? []).map((a) => a.owner_id));
   const itemName = new Map([...(medsResult.data ?? []), ...(dietsResult.data ?? [])].map((i) => [i.id, localLabel(locale, i.name, i.name_th)]));
 
