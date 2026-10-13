@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Fable review of the public website: design improvements, navigation and content suggestions, ending in a report.** (Public website; not ticked — the item closes on the walkthrough with Lutan; a status note was added on this branch) |
 | Branch / worktree | `claude/public-site-fable-review` @ `C:\Development\Animal_Shelter_public-site-fable-review` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3001` (the server the review drove; the change itself has no UI) |
-| PR | to be filled when opened |
+| PR | #606 — https://github.com/lutanbennett/Animal_Shelter_App/pull/606 |
 | Tested by / date | Claude (Fable 5.1) / 2026-10-13 |
 | Carries a migration? | no |
 | Tested at SHA | `f23a60f1` |
@@ -32,7 +32,7 @@
 === gates: build exited 0 after 37s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — seen on `db812e44` (the tip after the sync merge): audit, check, migration-numbers, new-policy-role-names, public-views, script-integrity and test-plan all pass
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -99,7 +99,7 @@ marked ✓ were also read by eye in the desktop app's browser pane:
 
 ## 7. Documentation
 
-- [ ] Backlog item ticked in `docs/backlog.md` **on this branch** — n/a: the item's "done when" is the report on `main` *and* Lutan walked through the summary, and the brief says to tick nothing; a status note naming the report was added to the item's line on this branch instead
+- [ ] Backlog item ticked in `docs/backlog.md` **on this branch** — n/a: the walkthrough happened in chat on 2026-10-13 and Lutan then asked for every suggestion to be filed, which was done on the `backlog` branch (29 items); the tick on the review's own line is left for the backlog branch after the daily merge, because that line sits beside the 29 new lines and ticking it here would conflict. A status note naming the report is on the line on this branch
 - [x] Non-obvious design choices added as a new file in `docs/decisions/` — `docs/decisions/2026-10-13-public-site-fable-review.md`
 - [x] `README.md` still accurate — unchanged; it does not describe reviews
 - [ ] **Release notes.** — n/a: a review document that no shelter user sees; nothing under `src/`, `worker/` or the manual changed
@@ -171,7 +171,7 @@ Manual verification by: pending: the walkthrough of the summary with Lutan, and 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — pasted when the PR is opened and ticked in the same follow-up commit as the CI line
+- [x] Checklist pasted into the PR — the PR body carries this plan, refreshed after the production read and the sync merge
 - [ ] Handed to the production release manager — n/a: documents only; nothing to deploy or smoke-test beyond the ordinary pass
 
 Result: pass
