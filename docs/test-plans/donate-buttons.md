@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Donate page: a button for each way to give** (ticked here), and step (a) of **Make `/donate` ask for money and record what arrives** (noted done) |
 | Branch / worktree | `claude/donate-buttons` @ `C:\Development\Animal_Shelter_donate-buttons` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3001` |
-| PR | opened after this commit; the number goes in the follow-up commit |
+| PR | #585 |
 | Tested by / date | Claude / 2026-10-13 |
 | Carries a migration? | no — reads `0191_donation_channels.sql` (#572), already on `main` and applied to dev |
 | Tested at SHA | `f718b719` (after sync with `origin/main`) |
@@ -33,7 +33,7 @@
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: #585, all 7 checks passing (read from the PR status, 2026-10-13)
 
 ## 3. Schema and data — *skip if no migration*
 
