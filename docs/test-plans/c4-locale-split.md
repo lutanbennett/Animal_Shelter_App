@@ -6,7 +6,7 @@
 |---|---|
 | Feature | c4-locale-split: load only the active dictionary |
 | Backlog item | `docs/backlog.md` → Mobile |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/c4-locale-split` @ `C:\Development\Animal_Shelter_c4-locale-split` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3011` |
 | PR | https://github.com/lutanbennett/Animal_Shelter_App/pull/589 |
 | Tested by / date | Claude, 2026-10-13 |
