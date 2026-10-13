@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { SITE_PAGE_SLUGS } from "@/lib/site/pages";
 
-export const WEBSITE_TABS = ["home", "contact", "pages", "gallery", "projects"] as const;
+export const WEBSITE_TABS = ["home", "contact", "pages", "donate", "gallery", "projects"] as const;
 export type WebsiteTab = (typeof WEBSITE_TABS)[number];
 
 function isTab(value: string | null): value is WebsiteTab {

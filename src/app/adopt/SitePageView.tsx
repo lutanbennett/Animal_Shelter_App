@@ -77,11 +77,14 @@ export async function SitePageView({
   slug,
   section,
   hero,
+  after,
 }: {
   slug: SitePageSlug;
   section: PublicSection;
   /** A picture beside the heading, stacked above it on a phone. */
   hero?: ReactNode;
+  /** Under the page text, above the contact card (the Donate page's ways to give). */
+  after?: ReactNode;
 }) {
   const supabase = await createClient();
   const { t, locale } = await getT();
@@ -154,6 +157,8 @@ export async function SitePageView({
         ) : (
           <p className="text-sm text-muted">{t.sitePages.comingSoon}</p>
         )}
+
+        {after}
 
         {channels.length > 0 && (
           <div data-reveal className="mt-4 flex flex-col gap-3 rounded-lg border border-border bg-surface p-6">
