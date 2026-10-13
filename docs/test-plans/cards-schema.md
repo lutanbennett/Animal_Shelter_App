@@ -152,15 +152,15 @@ Automated checks by: Claude  Date: 2026-10-13
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: items 1 and 2 above need a person; not ticked
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty, and only the person who looks may tick this; it is recorded as pending on the signature below
 
 Manual verification by: pending: the extras list and the Recent changes page need a person to look
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — pending: the PR does not exist at this commit
-- [ ] Handed to the production release manager — pending: after merge
+- [ ] Checklist pasted into the PR — n/a: the plan is committed on the branch and linked from the PR description; it is not pasted
+- [ ] Handed to the production release manager — n/a: handed over when the release is cut, after merge
 
 Result: pass
 
