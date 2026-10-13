@@ -58,7 +58,7 @@ releases count: 42 -> 43
 0.28.0 entry byte-identical: true
 ```
 
-- [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a` on the first push and tick it in a follow-up commit once the run is actually green — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a` on the first push and tick it in a follow-up commit once the run is actually green — all 7 jobs `success` on run 38355027571 at `aa45e3b7`, the branch tip: migration-numbers, public-views, script-integrity, check, new-policy-role-names, audit, test-plan. Read from `gh run view 38355027571 --json jobs`, not from `gh pr checks`
 
 ## 3. Schema and data — *skip if no migration*
 
