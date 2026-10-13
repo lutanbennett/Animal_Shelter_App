@@ -539,8 +539,9 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
 
 Free-tier Supabase projects have no automatic backups or point-in-time
 recovery, so production's safety net is `scripts/backup.mjs`: a `pg_dump`
-(custom format) of the `public` and `auth` schemas — every record plus the
-accounts that can sign in — **encrypted with [age](https://age-encryption.org)
+(custom format) of the `public`, `private` and `auth` schemas — every record,
+the views and functions the app keeps in `private`, and the accounts that can
+sign in — **encrypted with [age](https://age-encryption.org)
 before it goes anywhere**, uploaded to a `Backups/` folder under the Drive
 root as `lannacare-<env>-<timestamp>.dump.age`, keeping the newest twelve per
 environment (older ones go to the Drive trash, which empties itself after

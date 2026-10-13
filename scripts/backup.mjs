@@ -28,8 +28,12 @@
 //       # stay and each older one removed is named in the output
 //
 // What it does, in order, printing the target first:
-//   1. `pg_dump -Fc` of the `public` and `auth` schemas — every record the
-//      app owns plus the accounts that can sign in — over the Supabase
+//   1. `pg_dump -Fc` of the `public`, `private` and `auth` schemas — every
+//      record the app owns, the views and functions `private` holds (no rows,
+//      but about fifteen `public` views and their policies are built on them,
+//      so a dump without it restores the data and breaks the app: found by
+//      the restore rehearsal, 2026-10-13), and the accounts that can sign in
+//      — over the Supabase
 //      session pooler (the direct db.<ref>.supabase.co host is IPv6-only,
 //      which this machine's network is not). Live sessions and one-time
 //      tokens (auth.refresh_tokens, sessions, mfa_*, one_time_tokens,
@@ -78,7 +82,7 @@ import { describeBackupFolder, resolveBackupFolder } from "./lib/backup-folder.m
 import { envFile, loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
 
 const MIN_PG_MAJOR = 17;
-const SCHEMAS = ["public", "auth"];
+const SCHEMAS = ["public", "private", "auth"];
 
 const { name: envName, rest: args } = parseEnvArg(process.argv.slice(2));
 const env = loadEnv(envName);
