@@ -234,13 +234,18 @@ on the Pi" rule no longer holds, so:
   laptop) cannot also trash or empty the backups. Without them the script stops before the dump
   with a plain message; it never quietly uses the app's token. `--shared-drive-token` is the
   explicit, warned-about way back to the shared token. **To mint it (Lutan, at a browser):**
-  1. In a Google account the app's token cannot see, create a Desktop-app OAuth client
-     (or reuse one), and make a Drive folder there.
-  2. On the laptop, run `GOOGLE_OAUTH_CLIENT_ID=<id> GOOGLE_OAUTH_CLIENT_SECRET=<secret> node scripts/google-oauth-setup.mjs`,
-     approve as that account, and copy the refresh token it prints.
-  3. On the Pi, add the three `BACKUP_GOOGLE_OAUTH_*` lines and `BACKUP_DRIVE_FOLDER_ID=<that folder>`
-     to `.env.deploy.production`, then run `node scripts/backup.mjs --env production --local-copy ~/backups/lannacare` once by hand.
-  4. Only then remove the dumps the old token left in the app's Drive, and keep the new token off the laptop.
+  **Interim, decided by Lutan 2026-10-13: the Pi's cron line carries `--shared-drive-token`**, so
+  backups keep running on the app's token and the warning shows in `backup.log`. The identities
+  are NOT separate yet: the app's token can still delete backups. The split waits for production's
+  own Google account (backlog: *Give production its own Drive tree*), after which
+  `lannaanimalfoundationbwm` becomes the shelter's spare. **When that happens (guided, one step at a time):**
+  1. **Reuse the existing Desktop client** "Lanna Care Drive Access" in Lanna Care - Dev; do **not**
+     create a new project or client (a new one starts in Testing and its tokens die after 7 days).
+  2. Have a **different** Google account consent to that client with `scripts/google-oauth-setup.mjs`.
+     The consenting account is the separation; a folder inside one account cannot be hidden from that account's own token.
+  3. On the Pi, add `BACKUP_GOOGLE_OAUTH_CLIENT_ID`, `_CLIENT_SECRET`, `_REFRESH_TOKEN` and a
+     `BACKUP_DRIVE_FOLDER_ID` (a folder in the *new* account's Drive) to `.env.deploy.production`.
+  4. Remove `--shared-drive-token` from the cron line, run one backup by hand, check the file lands in the new folder and the warning is gone.
 - The Tunnel is outbound-only and `next start` listens on `127.0.0.1` only, so nothing
   is exposed to the internet directly. The exposure is a compromised app, not an open port.
 - The dump folder is `0700` and each dump `0600`, outside the repo (`backup.mjs` refuses a
