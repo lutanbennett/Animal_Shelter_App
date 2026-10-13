@@ -11,13 +11,15 @@ export async function loadBillPhotos(
 ): Promise<Map<string, BillPhoto[]>> {
   const byOwner = new Map<string, BillPhoto[]>();
   if (ownerIds.length === 0) return byOwner;
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("attachments")
     .select("id, owner_id, drive_file_id, file_name")
     .eq("owner_type", ownerType)
     .in("owner_id", ownerIds)
-    .order("created_at", { ascending: true })
+    .order("uploaded_at", { ascending: true })
     .returns<{ id: string; owner_id: string; drive_file_id: string; file_name: string | null }[]>();
+  // A failed query must not read as "no photos" (a wrong column once hid every bill photo).
+  if (error) throw new Error(`Could not load bill photos: ${error.message}`);
   for (const a of data ?? []) {
     const list = byOwner.get(a.owner_id) ?? [];
     list.push({ id: a.id, url: driveImageUrl(a.drive_file_id), name: a.file_name ?? "", isPdf: /\.pdf$/i.test(a.file_name ?? "") });
