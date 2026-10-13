@@ -1,6 +1,5 @@
-// Rollback harness for 0122_placement_lifecycle_and_site_views.sql and
-// 0123_is_public_drive_file_views.sql against DEV only. One transaction: both
-// files (twice), then each guard exercised, then a deliberate `raise
+// Rollback harness for the DB-9 / DB-10 guards (0122, 0123) against DEV only. It asserts the LIVE
+// schema and does not replay those files. One transaction: each guard exercised, then a deliberate `raise
 // exception` carrying the evidence, so nothing can commit. Safe to run before
 // or after the files are applied.
 //
@@ -23,7 +22,6 @@
 //       answers for a signed-out visitor
 //
 // Exits 0 when every assertion held. Writes nothing even on success.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -33,16 +31,11 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const files = [
-  "supabase/migrations/0122_placement_lifecycle_and_site_views.sql",
-  "supabase/migrations/0123_is_public_drive_file_views.sql",
-].map((f) => readFileSync(join(root, f), "utf8"));
-
 const sql = `
 begin;
-${files.join("\n")}
--- a second run of both files must be harmless
-${files.join("\n")}
+-- No replay of 0122/0123: they define public_* views that later migrations redefined, so replaying
+-- them put the old bodies back and failed with "cannot drop columns from view". This asserts the
+-- LIVE schema (docs/decisions/2026-10-02-replay-or-assert-live.md rules 1 and 2).
 
 -- Run one statement as a role; returns 'ok' or the error text.
 create function pg_temp.run(p_role text, p_uid uuid, p_sql text) returns text language plpgsql as $f$
@@ -162,7 +155,7 @@ begin
   v_r := pg_temp.run('anon', null, 'select is_public_drive_file(''harness-no-such-file'')');
   if v_r <> 'ok' then raise exception 'FAIL A4 anon is_public_drive_file: %', v_r; end if;
 
-  raise exception 'HARNESS-OK files ran twice | R1 Lifecycle zone: rename, delete, unflag refused (owner and admin) | R2 five pseudo-enclosures: rename, move, delete, unflag refused (owner and admin) | P1 ordinary zone and enclosure insert, rename, delete | P2 protected rows keep capacity, notes, name_th, internal editable | P3 exactly 1 zone and 5 enclosures protected | A1 anon reads the three public_site_* views | A2 anon refused the three base tables and clinic_visit_estimate, cannot write the view | A3 a new site_content column does not reach anon | A4 admin still reads the base tables, anon is_public_drive_file works';
+  raise exception 'HARNESS-OK R1 Lifecycle zone: rename, delete, unflag refused (owner and admin) | R2 five pseudo-enclosures: rename, move, delete, unflag refused (owner and admin) | P1 ordinary zone and enclosure insert, rename, delete | P2 protected rows keep capacity, notes, name_th, internal editable | P3 exactly 1 zone and 5 enclosures protected | A1 anon reads the three public_site_* views | A2 anon refused the three base tables and clinic_visit_estimate, cannot write the view | A3 a new site_content column does not reach anon | A4 admin still reads the base tables, anon is_public_drive_file works';
 end
 $h$;
 rollback;
