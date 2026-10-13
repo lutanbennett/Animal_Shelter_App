@@ -120,6 +120,10 @@ try {
   );
 }
 
+// Same rule for the Drive identity: decide it before the dump, so a missing token
+// fails now rather than after the only copy of the data has been made.
+const driveCreds = localDir ? undefined : resolveDriveCredentials();
+
 console.log(`Environment: ${envName}  (Supabase project ${projectRef})`);
 
 // --- 1. pg_dump, then encrypt ---------------------------------------------
@@ -313,16 +317,36 @@ async function connectionDetails() {
   };
 }
 
-function driveClient() {
-  for (const k of [
-    "GOOGLE_OAUTH_CLIENT_ID",
-    "GOOGLE_OAUTH_CLIENT_SECRET",
-    "GOOGLE_OAUTH_REFRESH_TOKEN",
-  ]) {
-    if (!env[k]) fail(`${k} is required to upload to Drive (use --local to skip the upload).`);
+// The backups have their own Drive identity (BACKUP_GOOGLE_OAUTH_*), so the token the app
+// uses for photos cannot also list, trash or empty the backups. The app's token is used
+// only when --shared-drive-token is given, with a warning; never as a silent fallback.
+function resolveDriveCredentials() {
+  const own = ["BACKUP_GOOGLE_OAUTH_CLIENT_ID", "BACKUP_GOOGLE_OAUTH_CLIENT_SECRET", "BACKUP_GOOGLE_OAUTH_REFRESH_TOKEN"];
+  const shared = ["GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_REFRESH_TOKEN"];
+  const missingOwn = own.filter((k) => !env[k]);
+  if (missingOwn.length === 0) {
+    return { clientId: env[own[0]], clientSecret: env[own[1]], refreshToken: env[own[2]] };
   }
-  const auth = new google.auth.OAuth2(env.GOOGLE_OAUTH_CLIENT_ID, env.GOOGLE_OAUTH_CLIENT_SECRET);
-  auth.setCredentials({ refresh_token: env.GOOGLE_OAUTH_REFRESH_TOKEN });
+  if (!args.includes("--shared-drive-token")) {
+    fail(
+      `Backups need their own Google token, and ${missingOwn.join(", ")} ${missingOwn.length === 1 ? "is" : "are"} not set in ${envFile(envName)}.
+` +
+        `The app's GOOGLE_OAUTH_* token is deliberately not used by default. README "Backups" says how to mint one.
+` +
+        `Pass --shared-drive-token to use the app's token anyway (use --local to skip the upload).`,
+    );
+  }
+  const missingShared = shared.filter((k) => !env[k]);
+  if (missingShared.length) fail(`--shared-drive-token needs ${missingShared.join(", ")} (use --local to skip the upload).`);
+  console.warn(
+    "WARNING: --shared-drive-token: uploading with the app's own Google token. Anything that holds that token can also delete these backups.",
+  );
+  return { clientId: env[shared[0]], clientSecret: env[shared[1]], refreshToken: env[shared[2]] };
+}
+
+function driveClient() {
+  const auth = new google.auth.OAuth2(driveCreds.clientId, driveCreds.clientSecret);
+  auth.setCredentials({ refresh_token: driveCreds.refreshToken });
   return google.drive({ version: "v3", auth });
 }
 
