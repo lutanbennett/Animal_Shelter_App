@@ -337,7 +337,7 @@ Admin is shown for completeness; it is never stored (§6).
 | `maintenance.progress` | Move a job on: in progress, blocked, completed | Y/N | Y | Y | Y | – | – | 17 | *Split.* Lets someone finish a job without managing the board |
 | `maintenance.photos` | Add and remove a job's photos | Y/N | Y | Y | Y | – | – | 17 | Finding A4 |
 | `maintenance.delete` | Delete a maintenance job for good | Y/N | Y | Y | – | – | – | – | Added by `0179` (Lutan, 2026-10-11): the 2IC may, the Head of Maintenance may not. It replaces the `has_shelter_floor()` test `0149` used to keep the volunteer floor out of delete, so a role's box now says what the database does. |
-| `maintenance.bills` | Add and see a maintenance job's bills and costs | Y/N | Y | – | – | – | – | Added by `0189` (Lutan, 2026-10-12): Management only ("the maintenance lead would give all receipts to the manager anyway"); widen it in Settings without a release. `maintenance_bills`, `maintenance_job_cost`, and bill photos filed as `maintenance_bill` attachments |
+| `maintenance.bills` | Add and see a maintenance job's bills and costs | Y/N | Y | Y | – | – | – | – | Added by `0189` (Lutan, 2026-10-12): Management only ("the maintenance lead would give all receipts to the manager anyway"); widen it in Settings without a release. `maintenance_bills`, `maintenance_job_cost`, and bill photos filed as `maintenance_bill` attachments |
 | **Projects** | | | | | | | | | |
 | `projects.folders` | Project folders and their stories | E/R | E | E | E | – | – | 18 | Edit includes delete (A8) |
 | `projects.photos` | Add and remove project photos | Y/N | Y | Y | Y | – | – | 18 | |
