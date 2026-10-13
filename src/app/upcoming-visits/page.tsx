@@ -8,7 +8,7 @@ import { loadShelterVisits, shelterTime } from "@/lib/clinics/shelter-visits";
 import { VetVisitsView, type VisitRow } from "./VetVisitsView";
 
 /**
- * /vet-visits — every visit at every clinic, for whoever books them (the Director, Management,
+ * /upcoming-visits — every visit at every clinic, for whoever books them (the Director, Management,
  * Admin): `medical.visits` read at the shelter-wide scope. A clinic login holds the activity at
  * the "own clinic" scope and is refused here; its page is /appointments.
  *

@@ -72,7 +72,7 @@ export const ROUTES: readonly RouteEntry[] = [
   {
     // The shelter-wide view of every booked visit, for whoever books them (the Director). The
     // scope is the opposite of /appointments: that page is for a clinic login, this one refuses it.
-    path: "/vet-visits",
+    path: "/upcoming-visits",
     activity: "medical.visits",
     level: "read",
     icon: NAV_ICONS.appointments,
