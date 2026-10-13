@@ -96,6 +96,8 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
             e.table === "attachments" ||
             e.table === "roles" ||
             e.table === "role_permissions" ||
+            e.table === "role_cards" ||
+            e.table === "role_extras" ||
             e.table === "impact_baselines" ||
             e.table === "donation_channels"
           ? (e.name ?? s.unnamedRecord)
