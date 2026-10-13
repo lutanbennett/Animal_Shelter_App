@@ -23,13 +23,11 @@ ${migration}
 
 do $h$
 declare
-  v_m uuid; v_d uuid; v_got text; v_nn int;
+  v_m uuid; v_d uuid; v_got text;
 begin
-  -- A. nothing back-filled: every existing row has no label
-  select count(label_drive_file_id) into v_nn from medication;
-  if v_nn <> 0 then raise exception 'FAIL A % medication rows carry a label', v_nn; end if;
-  select count(label_drive_file_id) into v_nn from diet_types;
-  if v_nn <> 0 then raise exception 'FAIL A % diet rows carry a label', v_nn; end if;
+  -- A. (dropped) "every existing row has no label" held only on the day 0129 was applied; staff have
+  -- since attached real labels on dev (rule 4 of docs/decisions/2026-10-02-replay-or-assert-live.md).
+  -- B and C prove a new row starts null.
 
   -- B. omitted -> null; an id round-trips; clear -> null (medication)
   insert into medication (name, dose_unit) values ('harness-0129 tablet', 'tablet') returning id into v_m;
@@ -48,15 +46,18 @@ begin
   select label_drive_file_id into v_got from diet_types where id = v_d;
   if v_got is distinct from '1XyZ-0129' then raise exception 'FAIL C diet round-trip %', v_got; end if;
 
-  -- D. no trigger names it, and no view exposes it
+  -- D. no trigger names it, and no view the PUBLIC SITE (anon) can read exposes it. Was "no view at
+  -- all": 0136 and 0161 on purpose put it in two signed-in-only views (medication_list_medications,
+  -- stock_medications) so the label shows in the app. The privacy line is anon, so that is the line.
   if exists (select 1 from pg_trigger t join pg_class c on c.oid = t.tgrelid
               where not t.tgisinternal and c.relname in ('medication', 'diet_types')
                 and pg_get_triggerdef(t.oid) ilike '%label_drive_file_id%') then
     raise exception 'FAIL D a trigger names label_drive_file_id'; end if;
-  if exists (select 1 from pg_views where schemaname = 'public' and definition ilike '%label_drive_file_id%') then
-    raise exception 'FAIL D a view names label_drive_file_id'; end if;
+  if exists (select 1 from pg_views where schemaname = 'public' and definition ilike '%label_drive_file_id%'
+              and has_table_privilege('anon', format('public.%I', viewname), 'select')) then
+    raise exception 'FAIL D a view anon can read names label_drive_file_id'; end if;
 
-  raise exception 'HARNESS-OK existing rows all null | omitted->null, id round-trips, clear->null on medication | id round-trips on diet_types | no trigger or public view names the column | file ran twice';
+  raise exception 'HARNESS-OK omitted->null, id round-trips, clear->null on medication | id round-trips on diet_types | no trigger names the column, and no view anon can read does | file ran twice';
 end $h$;
 `;
 
