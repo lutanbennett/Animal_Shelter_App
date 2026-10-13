@@ -60,10 +60,18 @@ there is one.
     for `C:/Development/Animal_Shelter_<slug>/.brief.md`; if there is
     one, report it as "fresh, not started (brief: <first heading>)". Flag
     it either way and let the user decide.
-- **Commits beyond `main`, `free`:** not a candidate. If `gh` says its PR
-  merged anyway, it was probably squash- or rebase-merged, so `done`
-  will refuse it as unmerged and only `--force` gets past that — flag it
-  and ask; never add `--force` on your own.
+- **Commits beyond `main`, `free`:** read the `state` column. `list` has already
+  checked the branch's own commits against `main`:
+  - `squash-merged (PR #n)` or `merged` → a leftover; propose it. `done` clears it
+    without `--force`.
+  - `UNMERGED WORK: PR … merged but N commit(s) are not in main` → **never a
+    candidate, and never "probably squash-merged".** The PR merged, then more was
+    built on the branch. Report it on its own line, loudly, apart from the safe
+    ones, and say it needs a PR. `done` refuses it even with `--force`.
+  - blank → no proof it is in `main`; do not propose it, whatever `gh` says
+    about a PR. A merged PR is **not** evidence a branch is disposable; the test
+    is whether the branch's own commits are in `main`.
+  Never add `--force` on your own.
 - **`unpushed` > 0 or `dirty` > 0** on anything: call it out by name.
   `done` refuses unpushed commits outright (no flag overrides it) and
   refuses dirty trees without `--force`.
