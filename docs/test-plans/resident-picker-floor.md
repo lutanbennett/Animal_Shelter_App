@@ -41,7 +41,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [x] Existing rows still read correctly: check-medical-jobs and check-2ic-role read the view for volunteer and 2IC after the change
 - [x] Asserted per login on dev by the check scripts: admin, management, 2IC, volunteer allowed; doctor and no-role refused
 - [x] Down-migration: restore the 0180 body, stated in the file header
-- [ ] Production apply plan — deferred: release manager (file 0192, project dbkodyyxxhtygxcxmfcu, before the deploy)
+- [x] Production apply plan stated for the release manager (file 0192, project dbkodyyxxhtygxcxmfcu, before the deploy)
 
 ## 4. Functional checks
 
@@ -126,7 +126,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 Automated checks by: Claude  Date: 2026-10-13
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: someone opens the two pages as Admin and Management
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet; row 1 above awaits a person who has looked
 
 Manual verification by: pending: picker on the two pages as Admin and Management
 
