@@ -228,6 +228,19 @@ on the Pi" rule no longer holds, so:
   or truncate `~/backups/backup.log`**, which holds a live Drive link for every earlier
   week (`: > ~/backups/backup.log`). Assume those links are exposed until the Drive
   folder is re-shared (README "Backups").
+- **The backup has its own Google token, kept only on the Pi.** `backup.mjs` reads
+  `BACKUP_GOOGLE_OAUTH_CLIENT_ID`, `_CLIENT_SECRET` and `_REFRESH_TOKEN` from
+  `.env.deploy.production`, so the token the app uses for photos (on the Worker, the Pi and the
+  laptop) cannot also trash or empty the backups. Without them the script stops before the dump
+  with a plain message; it never quietly uses the app's token. `--shared-drive-token` is the
+  explicit, warned-about way back to the shared token. **To mint it (Lutan, at a browser):**
+  1. In a Google account the app's token cannot see, create a Desktop-app OAuth client
+     (or reuse one), and make a Drive folder there.
+  2. On the laptop, run `GOOGLE_OAUTH_CLIENT_ID=<id> GOOGLE_OAUTH_CLIENT_SECRET=<secret> node scripts/google-oauth-setup.mjs`,
+     approve as that account, and copy the refresh token it prints.
+  3. On the Pi, add the three `BACKUP_GOOGLE_OAUTH_*` lines and `BACKUP_DRIVE_FOLDER_ID=<that folder>`
+     to `.env.deploy.production`, then run `node scripts/backup.mjs --env production --local-copy ~/backups/lannacare` once by hand.
+  4. Only then remove the dumps the old token left in the app's Drive, and keep the new token off the laptop.
 - The Tunnel is outbound-only and `next start` listens on `127.0.0.1` only, so nothing
   is exposed to the internet directly. The exposure is a compromised app, not an open port.
 - The dump folder is `0700` and each dump `0600`, outside the repo (`backup.mjs` refuses a
