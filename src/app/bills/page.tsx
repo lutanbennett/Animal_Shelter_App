@@ -37,9 +37,10 @@ export default async function BillsPage() {
   const b = t.bills;
   const forDeliveries = can(perms, "stock.delivery");
   const forVisits = can(perms, "medical.visits", "edit");
+  const forJobs = can(perms, "maintenance.bills");
   const since = daysAgo(LOOKBACK_DAYS);
 
-  const [cardsResult, receiptsResult, visitsResult] = await Promise.all([
+  const [cardsResult, receiptsResult, visitsResult, jobsResult] = await Promise.all([
     supabase
       .from("bills_inbox")
       .select("id, taken_by, created_at, bill_date, amount, note")
@@ -63,11 +64,22 @@ export default async function BillsPage() {
           .order("appointment_date", { ascending: false })
           .returns<{ id: string; appointment_date: string; reason: string | null; residents: { name: string; thai_name: string | null } | null }[]>()
       : Promise.resolve({ data: [], error: null }),
+    // Jobs still open, or touched in the last two weeks (a finished job still gets its receipts a few days later).
+    forJobs
+      ? supabase
+          .from("maintenance")
+          .select("id, job_code, title, status, updated_at")
+          .or(`status.neq.Completed,updated_at.gte.${since}`)
+          .order("updated_at", { ascending: false })
+          .limit(30)
+          .returns<{ id: string; job_code: string; title: string; status: string; updated_at: string }[]>()
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   const cards = cardsResult.data ?? [];
   const receipts = receiptsResult.data ?? [];
   const visits = visitsResult.data ?? [];
+  const jobs = jobsResult.data ?? [];
 
   // One query for every card's photos and one for which candidates already hold a bill photo.
   const candidateIds = [...receipts.map((r) => r.id), ...visits.map((v) => v.id)];
@@ -120,6 +132,13 @@ export default async function BillsPage() {
         title: `${b.page.visit}: ${v.residents ? localLabel(locale, v.residents.name, v.residents.thai_name) : "—"}`,
         detail: v.reason ?? "",
       })),
+    ...jobs.map((j) => ({
+      kind: "maintenance_job" as const,
+      id: j.id,
+      day: todayIso(new Date(j.updated_at).getTime()),
+      title: `${b.page.job}: ${j.title}`,
+      detail: j.job_code,
+    })),
   ];
 
   const photosByCard = new Map<string, BillCard["photos"]>();
@@ -142,7 +161,7 @@ export default async function BillsPage() {
     };
   });
 
-  const loadError = cardsResult.error ?? receiptsResult.error ?? visitsResult.error ?? photosResult.error;
+  const loadError = cardsResult.error ?? receiptsResult.error ?? visitsResult.error ?? jobsResult.error ?? photosResult.error;
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">

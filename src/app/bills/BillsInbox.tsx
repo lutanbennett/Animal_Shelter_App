@@ -9,7 +9,7 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 import { uploadAttachmentFile } from "@/components/AttachmentUploader";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
-import { deleteCard, matchBill, saveCard, type MatchKind } from "./actions";
+import { deleteCard, matchBill, matchBillToJob, saveCard, type SuggestionKind } from "./actions";
 
 export type BillCard = {
   id: string;
@@ -23,7 +23,7 @@ export type BillCard = {
 };
 
 export type BillSuggestion = {
-  kind: MatchKind;
+  kind: SuggestionKind;
   id: string;
   day: string;
   title: string;
@@ -247,7 +247,15 @@ function CardView({
                   <button
                     type="button"
                     disabled={pending}
-                    onClick={() => run(() => matchBill(card.id, s.kind, s.id, details), b.matchDone)}
+                    onClick={() =>
+                      run(
+                        () =>
+                          s.kind === "maintenance_job"
+                            ? matchBillToJob(card.id, s.id, details)
+                            : matchBill(card.id, s.kind, s.id, details),
+                        b.matchDone,
+                      )
+                    }
                     className="flex min-h-11 w-full flex-col items-start rounded border border-border px-3 py-2 text-left text-sm hover:bg-surface-hover disabled:opacity-50"
                   >
                     <span className="font-medium text-foreground">{s.title}</span>
