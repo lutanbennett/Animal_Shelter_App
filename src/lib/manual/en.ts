@@ -128,6 +128,15 @@ const manual: Manual = {
           ],
         },
         {
+          id: "entering-dates",
+          title: "Typing a date",
+          steps: [
+            "Every date box reads day first: DD/MM/YYYY, for example 13/10/2026 is 13 October. It looks the same on every phone and computer, whatever language the device is set to.",
+            "Type the numbers and the slashes appear on their own, or tap the calendar button beside the box and pick the day. A date that does not exist (such as 31/04/2026) is refused with a message instead of being saved.",
+            "A date and time box takes the time as 24-hour HH:MM, for example 14:30. Years are always the western (Gregorian) year, even when the app is in Thai.",
+          ],
+        },
+        {
           id: "colours",
           title: "Choosing the app's colours",
           steps: [
