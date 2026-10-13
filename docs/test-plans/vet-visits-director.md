@@ -149,7 +149,7 @@ Automated checks by: Claude  Date: 2026-10-13
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the Director to open this on her phone
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet, only the Director can tick this and she has not looked; the signature below is pending
 
 Manual verification by: pending: the Director to open this on her phone
 
