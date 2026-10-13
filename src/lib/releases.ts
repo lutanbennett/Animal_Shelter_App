@@ -74,7 +74,9 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  { text: "New Vet visits page under Shelter Operations: every visit booked at every clinic in one place, with the resident's photo and name, the clinic, the doctor and the time. On a phone it is a list by day, with Today and Tomorrow first and visits that are past but still marked Scheduled in their own Overdue group. Tap Hide overdue to put that group away; the page tells you how many are hidden and your choice is remembered on your phone. On a computer you can also switch to a week or month calendar. Pick one clinic if you only want to see its visits. Completed and cancelled visits are hidden unless you ask for them.", roles: ["admin", "management"] },
+];
 
 /** Newest first. */
 export const releases: Release[] = [
