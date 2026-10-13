@@ -47,7 +47,7 @@ export type UndoKind =
 export function undoKind(e: Pick<AuditEntry, "table" | "op" | "kind">): UndoKind {
   if (e.op === "INSERT") return "added";
   // Before the archive check: a role has archived_at but no Restore button.
-  if (e.table === "roles" || e.table === "role_permissions") return "permissions";
+  if (e.table === "roles" || e.table === "role_permissions" || e.table === "role_cards" || e.table === "role_extras") return "permissions";
   if (e.table === "facility_maps") return "facilityMap";
   if (e.kind === "archived" || e.kind === "restored") return "archive";
   if (e.table === "attachments") return "file";

@@ -152,6 +152,22 @@ const th: Dictionary = {
       addMedicalPhotos: "เพิ่มรูปทางการแพทย์",
       feedSpecialDiets: "ให้อาหารพิเศษ",
     },
+    /** The new cards' titles (src/lib/permissions/cards.ts); the eight jobs are cards too and keep theirs above. */
+    cards: {
+      viewResidents: "ดูสัตว์ในความดูแล",
+      residents: "สัตว์ในความดูแล",
+      medicalRecords: "บันทึกทางการแพทย์",
+      bookClinicVisits: "จองนัดคลินิก",
+      contacts: "รายชื่อติดต่อ",
+      recurringJobs: "งานประจำ",
+      dashboard: "แดชบอร์ด",
+      donationsReceipts: "เงินบริจาคและใบเสร็จ",
+      bills: "บิล",
+      website: "เว็บไซต์",
+      outreachNotes: "บันทึกการออกพื้นที่",
+      assistant: "ผู้ช่วย",
+      enclosures: "คอกและที่อยู่",
+    },
   },
 
   home: {
@@ -701,6 +717,8 @@ const th: Dictionary = {
         facility_maps: "แผนผัง",
         roles: "บทบาท",
         role_permissions: "สิทธิ์",
+        role_cards: "การ์ด",
+        role_extras: "สิทธิ์เพิ่มเติม",
       },
       kinds: {
         added: "เพิ่ม",

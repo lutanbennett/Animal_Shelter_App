@@ -161,6 +161,22 @@ const en = {
       addMedicalPhotos: "Add Medical Photos",
       feedSpecialDiets: "Feed Special Diets",
     },
+    /** The new cards' titles (src/lib/permissions/cards.ts); the eight jobs are cards too and keep theirs above. */
+    cards: {
+      viewResidents: "View residents",
+      residents: "Residents",
+      medicalRecords: "Medical records",
+      bookClinicVisits: "Book clinic visits",
+      contacts: "Contacts",
+      recurringJobs: "Recurring jobs",
+      dashboard: "Dashboard",
+      donationsReceipts: "Donations and receipts",
+      bills: "Bills",
+      website: "Website",
+      outreachNotes: "Outreach notes",
+      assistant: "Assistant",
+      enclosures: "Enclosures",
+    },
   },
 
   home: {
@@ -770,6 +786,8 @@ const en = {
         facility_maps: "Facility plan",
         roles: "Role",
         role_permissions: "Permission",
+        role_cards: "Card",
+        role_extras: "Extra permission",
       },
       kinds: {
         added: "Added",

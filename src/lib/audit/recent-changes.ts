@@ -32,6 +32,9 @@ export const AUDITED_TABLES = [
   "facility_maps",
   "roles",
   "role_permissions",
+  // Which cards a role has, and the single activities it holds beyond them (0194).
+  "role_cards",
+  "role_extras",
 ] as const;
 export type AuditedTable = (typeof AUDITED_TABLES)[number];
 
@@ -192,8 +195,10 @@ function toEntry(raw: RawRow): AuditEntry {
           ? str(image.file_name)
           : table === "impact_baselines" || table === "donation_channels"
             ? str(image.label)
-            : table === "role_permissions"
+            : table === "role_permissions" || table === "role_extras"
               ? str(image.activity)
+            : table === "role_cards"
+              ? str(image.card)
               : null,
     residentId,
   };
