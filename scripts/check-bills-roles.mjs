@@ -25,7 +25,7 @@ const lit = (id) => `'${id}'::uuid`;
 const P = ["admin", "management", "sic", "hm", "doctor", "volunteer"];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const R = randomUUID(), OWN = randomUUID(), JOB = randomUUID(), REC = randomUUID(), VISIT = randomUUID();
-const CARD = randomUUID(), CARD2 = randomUUID(), PHOTO = randomUUID(), BILL = randomUUID();
+const CARD = randomUUID(), CARD2 = randomUUID(), PHOTO = randomUUID(), BILL = randomUUID(), BILL_PHOTO = randomUUID();
 
 const NONE = { admin: 0, management: 0, sic: 0, hm: 0, doctor: 0, volunteer: 0 };
 const MGMT = { ...NONE, admin: 1, management: 1 };
@@ -37,6 +37,11 @@ const probes = [
   ["file on a clinic visit", file("clinic_visit", VISIT), MGMT],
   ["file on an inbox card", file("bill_inbox", CARD), DELIVERY],
   ["file on a maintenance bill", file("maintenance_bill", BILL), MGMT],
+  // maintenance-bills (2026-10-13): the Heads and the 2IC read no bill, no amount and no total.
+  ["read a job's bill (amount)", `select amount from maintenance_bills where id = '${BILL}'`, MGMT],
+  ["read a job's bill total from the cost view", `select bills_total from maintenance_job_cost where maintenance_id = '${JOB}' and bill_count > 0`, MGMT],
+  ["add a bill to a job", `insert into maintenance_bills (maintenance_id, amount) values ('${JOB}', 5)`, MGMT],
+  ["read a bill's photo", `select 1 from attachments where id = '${BILL_PHOTO}'`, MGMT],
   ["add a card", `insert into bills_inbox (taken_by) values ('__UID__')`, DELIVERY],
   ["read a card", `select 1 from bills_inbox where id = '${CARD}'`, DELIVERY],
   ["delete a card", `delete from bills_inbox where id = '${CARD2}'`, DELIVERY],
@@ -91,6 +96,7 @@ begin
   insert into clinic_visits (id, resident_id, clinic_id, appointment_date, status) values (${lit(VISIT)}, ${lit(R)}, ${lit(OWN)}, now() - interval '1 day', 'completed');
   insert into maintenance (id, title, zone_id) values (${lit(JOB)}, 'Harness job', (select id from zones order by id limit 1));
   insert into maintenance_bills (id, maintenance_id, amount, added_by) values (${lit(BILL)}, ${lit(JOB)}, 1, ${lit(ID.management)});
+  insert into attachments (id, owner_type, owner_id, drive_file_id, file_name) values (${lit(BILL_PHOTO)}, 'maintenance_bill', ${lit(BILL)}, 'probe', 'probe.jpg');
   insert into bills_inbox (id, taken_by) values (${lit(CARD)}, ${lit(ID.management)}), (${lit(CARD2)}, ${lit(ID.management)});
   insert into attachments (id, owner_type, owner_id, drive_file_id, file_name) values (${lit(PHOTO)}, 'bill_inbox', ${lit(CARD)}, 'probe', 'probe.jpg');
 end $setup$;

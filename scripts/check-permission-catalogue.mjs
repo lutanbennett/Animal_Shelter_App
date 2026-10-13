@@ -219,7 +219,7 @@ const PINNED = {
   "/maintenance/new": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.jobs"] },
   "/maintenance/[id]/edit": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.jobs"] },
   // Detail pages: they open at the list's own level, and every control that writes asks can().
-  "/maintenance/[id]": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.delete", "maintenance.jobs", "maintenance.progress", "translations.manage"] },
+  "/maintenance/[id]": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.bills", "maintenance.delete", "maintenance.jobs", "maintenance.progress", "translations.manage"] },
   "/clinics/[id]": { guards: ['requirePermission("clinics.list", "read")'], decides: ["clinics.list", "medical.visits:read"] },
   "/contacts/[id]": { guards: ['requirePermission("contacts.browse")'], decides: ["contacts.directory", "friends.manage"] },
   "/enclosures/[id]": { guards: ['requirePermission("facility.enclosures", "read")'], decides: ["facility.enclosures", "maintenance.jobs"] },
@@ -284,7 +284,7 @@ const PINNED = {
   // Who does what (who-does-what-view): Admin and Management, by the backlog item; no activity exists for
   // it yet and adding one needs a migration. opensWhoDoesWhat() is the one place that says so.
   "/admin/who-does-what": { guards: ["if (!opensWhoDoesWhat(perms)) refuseFor(perms)"], decides: [] },
-  "/bills": { guards: ["if (!canUseBills(perms)) refuseFor(perms)"], decides: ["stock.delivery", "medical.visits"] },
+  "/bills": { guards: ["if (!canUseBills(perms)) refuseFor(perms)"], decides: ["stock.delivery", "medical.visits", "maintenance.bills"] },
 };
 
 // EXEMPT: no permission guard, and the reason none is needed. `public: true` is also checked

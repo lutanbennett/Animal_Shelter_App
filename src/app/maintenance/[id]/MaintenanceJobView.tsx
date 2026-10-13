@@ -33,6 +33,8 @@ import {
   type MaintenanceStatus,
 } from "@/lib/maintenance/status";
 import { ZoneDot } from "@/components/ZoneName";
+import type { JobBill, JobCost } from "@/lib/maintenance/bills";
+import { MaintenanceBills } from "./MaintenanceBills";
 import {
   deleteMaintenanceAttachment,
   deleteMaintenanceJob,
@@ -44,6 +46,9 @@ export function MaintenanceJobView({
   canWrite,
   canMove,
   canDelete,
+  canBills,
+  bills,
+  cost,
   canManageTranslations,
   translations,
 }: {
@@ -53,6 +58,10 @@ export function MaintenanceJobView({
   /** maintenance.progress: the status buttons. */
   canMove: boolean;
   canDelete: boolean;
+  /** maintenance.bills: Management and Admin. When false `bills` is empty and `cost` null: no amount was read. */
+  canBills: boolean;
+  bills: JobBill[];
+  cost: JobCost | null;
   /** Admin/management: may write and approve the other-language text. */
   canManageTranslations: boolean;
   /** The job's title and description rows in `translations` (0057). */
@@ -260,6 +269,7 @@ export function MaintenanceJobView({
             disabled={isPending}
             onRemove={removeAttachment}
           />
+          {canBills && <MaintenanceBills jobId={job.id} bills={bills} cost={cost} />}
         </div>
 
         <aside className="flex flex-col gap-4">
@@ -301,7 +311,9 @@ export function MaintenanceJobView({
             <div className="flex flex-col">
               <dt className="text-xs text-muted">{d.actual}</dt>
               <dd className="font-medium text-foreground">
-                {job.actual_cost != null ? formatBaht(job.actual_cost, locale) : d.notSet}
+                {(cost?.actual ?? job.actual_cost) != null
+                  ? formatBaht((cost?.actual ?? job.actual_cost) as number, locale)
+                  : d.notSet}
               </dd>
             </div>
           </dl>

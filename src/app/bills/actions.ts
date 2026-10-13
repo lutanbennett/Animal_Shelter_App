@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { parseBahtAmount } from "@/lib/format";
+import { parseBahtAmount, todayIso } from "@/lib/format";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { canUseBills } from "@/lib/bills/access";
@@ -11,6 +11,7 @@ import type { ActionResult } from "@/lib/action-result";
 
 export type CardDetails = { amount: string; date: string; note: string };
 export type MatchKind = "stock_receipt" | "clinic_visit";
+export type SuggestionKind = MatchKind | "maintenance_job";
 
 function revalidateBills() {
   revalidatePath("/bills");
@@ -72,6 +73,54 @@ export async function matchBill(
   }
 
   return moveCardTo(cardId, kind, targetId);
+}
+
+/**
+ * Matches a card to a maintenance job: the card becomes one of the job's bills (maintenance_bills,
+ * which needs an amount, because the job's cost is the sum of them), and its photos move onto that
+ * bill. The bill is made first and removed again if the photos then fail to move, so a retry starts
+ * clean and the card is never lost. Management's and Admin's only (maintenance.bills).
+ */
+export async function matchBillToJob(cardId: string, jobId: string, input: CardDetails): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.bills.errors;
+  const perms = await loadPermissions();
+  if (!perms || perms.scopes.clinical === "own_clinic" || !can(perms, "maintenance.bills")) {
+    return { ok: false, error: e.notAuthorized };
+  }
+  const amount = parseBahtAmount(input.amount);
+  if (!amount.ok) return { ok: false, error: e.costInvalid };
+  if (amount.value == null) return { ok: false, error: e.amountNeeded };
+
+  const supabase = await createClient();
+  const { data: bill, error } = await supabase
+    .from("maintenance_bills")
+    .insert({
+      maintenance_id: jobId,
+      amount: amount.value,
+      bill_date: input.date || todayIso(),
+      note: input.note.trim() || null,
+    })
+    .select("id")
+    .single<{ id: string }>();
+  if (error || !bill) return { ok: false, error: error?.code === "23503" ? e.targetGone : `${e.failed}: ${error?.message ?? ""}` };
+
+  const { error: moveError } = await supabase
+    .from("attachments")
+    .update({ owner_type: "maintenance_bill", owner_id: bill.id })
+    .eq("owner_type", "bill_inbox")
+    .eq("owner_id", cardId);
+  if (moveError) {
+    await supabase.from("maintenance_bills").delete().eq("id", bill.id);
+    return { ok: false, error: `${e.failed}: ${moveError.message}` };
+  }
+
+  const { error: deleteError } = await supabase.from("bills_inbox").delete().eq("id", cardId);
+  if (deleteError) return { ok: false, error: `${e.failed}: ${deleteError.message}` };
+
+  revalidateBills();
+  revalidatePath(`/maintenance/${jobId}`);
+  return { ok: true };
 }
 
 /** Moves the card's photos onto the record and deletes the card. Used by matchBill and by "record a new delivery from this bill". */
