@@ -6,7 +6,7 @@
 |---|---|
 | Feature | |
 | Backlog item | `docs/backlog.md` → |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/bills-photo-fix` @ `C:\Development\Animal_Shelter_bills-photo-fix` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | |
 | Tested by / date | |
@@ -63,7 +63,7 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — pending: browser look at a bill with photos on test as Admin and Management (script check on dev passed)
+- [ ] Happy path works end to end — n/a: not driven in a browser by this session; Left for manual verification rows 1 and 2
 - [ ] Data persists — reload the page and the change is still there — n/a: read-only fix, nothing is saved, typed or newly shown
 - [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: read-only fix, nothing is saved, typed or newly shown
 - [ ] Empty state renders sensibly (no rows yet) — n/a: read-only fix, nothing is saved, typed or newly shown
@@ -94,7 +94,7 @@ animal — and do not re-derive this list by grepping for quoted strings; read t
 | volunteer | | | |
 | signed out | | | |
 
-- [ ] Every role above tested — pending: Admin and Management on test; access rules are untouched
+- [ ] Every role above tested — n/a: not driven in a browser by this session; access rules untouched, Left for manual verification row 1
 - [ ] A role that should not have access is blocked server-side (hitting the URL directly fails) — n/a: access rules not touched; check-bills-roles.mjs covers them
 
 ## 5. Cross-cutting
@@ -211,11 +211,9 @@ Automated checks by: Claude  Date: 2026-10-13
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
+has looked and explicitly asks in chat; the line then says so.
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
@@ -237,7 +235,7 @@ empty signature quietly passing.
 A red `test-plan` that says what it is waiting for is a red people act on. An
 illegible one is a red people learn to ignore.
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: Lutan to look at the bill photos on test
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty and no person has looked yet (see the signature line)
 
 Manual verification by: pending: bill photos on test as Admin and Management
 
