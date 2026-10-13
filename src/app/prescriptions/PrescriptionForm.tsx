@@ -22,6 +22,7 @@ import type {
 } from "@/lib/prescriptions/options";
 import { OptionalDateInput } from "@/components/OptionalDateInput";
 import { visitDate } from "@/lib/clinics/linkable";
+import { DateInput } from "@/components/DateInput";
 
 export type { FrequencyOption, MedicationOption, ClinicVisitOption };
 
@@ -297,10 +298,9 @@ export function PrescriptionForm({
           <label htmlFor="startDate" className="text-sm font-medium text-muted">
             {t.prescriptions.startDate} <span className="text-danger">*</span>
           </label>
-          <input
+          <DateInput
             id="startDate"
             name="startDate"
-            type="date"
             required
             value={startDate}
             onChange={(e) => {

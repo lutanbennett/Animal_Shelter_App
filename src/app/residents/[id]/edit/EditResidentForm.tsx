@@ -26,6 +26,7 @@ import { MicrochipFields } from "@/components/MicrochipFields";
 import { todayIso } from "@/lib/format";
 import { HOOK_LINE_MAX, IDEAL_HOME_MAX } from "@/lib/residents/adoption-profile";
 import { textareaClass } from "@/components/textareaClass";
+import { DateInput } from "@/components/DateInput";
 
 export type HousingState = {
   /** Current enclosure (physical or Lifecycle pseudo-enclosure), if any. */
@@ -409,10 +410,9 @@ export function EditResidentForm({
                         {t.residents.move.fields.moveDate}{" "}
                         <span className="text-danger">*</span>
                       </label>
-                      <input
+                      <DateInput
                         id="moveDate"
                         name="moveDate"
-                        type="date"
                         required
                         max={todayIso()}
                         defaultValue={todayIso()}

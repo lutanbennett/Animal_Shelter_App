@@ -14,6 +14,7 @@ import type { CarerOption } from "@/lib/contacts/carers";
 import type { RehomeKind } from "@/lib/placements/rehome";
 import { CarerPicker } from "@/components/CarerPicker";
 import { textareaClass } from "@/components/textareaClass";
+import { DateInput } from "@/components/DateInput";
 
 const inputClass =
   "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
@@ -151,10 +152,9 @@ export function RehomeForm({
               {kind === "foster" ? r.fields.dateFoster : r.fields.dateAdopt}{" "}
               <span className="text-danger">*</span>
             </label>
-            <input
+            <DateInput
               id="date"
               name="date"
-              type="date"
               required
               min={current.since ? todayIso(new Date(current.since)) : undefined}
               max={today}

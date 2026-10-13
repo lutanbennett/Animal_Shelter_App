@@ -14,6 +14,7 @@ import { recordDelivery } from "./actions";
 import { attachCardToDelivery } from "@/app/bills/actions";
 import { BillPhotoField } from "@/components/BillPhotoField";
 import { useDeferredUploads } from "@/components/DeferredUploads";
+import { DateInput } from "@/components/DateInput";
 
 export type DeliveryFormItem = {
   id: string;
@@ -284,10 +285,9 @@ export function RecordDeliveryForm({
           <label htmlFor="delivery-date" className="text-sm font-medium text-muted">
             {f.date}
           </label>
-          <input
+          <DateInput
             id="delivery-date"
             required
-            type="date"
             max={today}
             value={date}
             onChange={(e) => {

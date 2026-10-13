@@ -103,6 +103,15 @@ export const ENTRIES = {
       expect: "Every label, button and message changes language; nothing is left in the other language and no Thai text is cut off or overlaps.",
     },
   ],
+  "entering-dates": [
+    {
+      activity: "Type a date day first",
+      device: "both",
+      audience: "all",
+      do: "Open Record death (or any form with a date), clear the date box and type 13092026 using the number pad.",
+      expect: "The box reads 13/09/2026 with the slashes added for you, and after saving the page shows 13 Sep 2026. A date such as 31/04/2026 is refused with a message.",
+    },
+  ],
   colours: [
     {
       activity: "Choose the app's colours",

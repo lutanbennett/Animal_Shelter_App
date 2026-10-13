@@ -8,6 +8,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { todayIso } from "@/lib/format";
 import type { ImpactBaselineRow } from "@/lib/site/impact";
 import { updateImpactBaseline } from "./actions";
+import { DateInput } from "@/components/DateInput";
 
 /**
  * The starting numbers behind the homepage's impact band (0156). The shelter
@@ -91,9 +92,8 @@ function BaselineForm({ row }: { row: ImpactBaselineRow }) {
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium text-muted">
           {i.dateLabel}
-          <input
+          <DateInput
             name="baseline_date"
-            type="date"
             max={todayIso()}
             defaultValue={row.baseline_date ?? ""}
             className="rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"

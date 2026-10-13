@@ -29,6 +29,7 @@ import {
   assistantSendToHospital,
 } from "@/app/assistant/actions";
 import { assistantInputClass as inputClass } from "./AssistantInput";
+import { DateInput } from "@/components/DateInput";
 
 /**
  * The preview cards: one per writing intent, all the same shape.
@@ -242,9 +243,8 @@ function DateField({
       <label htmlFor={id} className="text-sm font-medium text-muted">
         {label} <span className="text-danger">*</span>
       </label>
-      <input
+      <DateInput
         id={id}
-        type="date"
         value={value}
         max={max}
         onChange={(e) => onChange(e.target.value)}
@@ -508,9 +508,8 @@ function ClinicCard({ ctx, draft }: { ctx: CardContext; draft: ClinicVisitDraft 
           <label htmlFor={`clinic-${ctx.turnId}-date`} className="text-sm font-medium text-muted">
             {a.fields.date} <span className="text-danger">*</span>
           </label>
-          <input
+          <DateInput
             id={`clinic-${ctx.turnId}-date`}
-            type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
             className={inputClass}

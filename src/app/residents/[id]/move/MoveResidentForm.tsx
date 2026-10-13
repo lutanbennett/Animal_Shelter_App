@@ -16,6 +16,7 @@ import {
 } from "@/components/EnclosurePicker";
 import { CapacityWarningDialog } from "@/components/CapacityWarningDialog";
 import { textareaClass } from "@/components/textareaClass";
+import { DateInput } from "@/components/DateInput";
 
 export type CurrentLocation = {
   enclosureId: string | null;
@@ -107,10 +108,9 @@ export function MoveResidentForm({
               <label htmlFor="moveDate" className="text-sm font-medium text-muted">
                 {m.fields.moveDate} <span className="text-danger">*</span>
               </label>
-              <input
+              <DateInput
                 id="moveDate"
                 name="moveDate"
-                type="date"
                 required
                 max={todayIso()}
                 defaultValue={todayIso()}

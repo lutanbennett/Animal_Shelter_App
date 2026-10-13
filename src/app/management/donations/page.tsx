@@ -5,6 +5,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { addDaysIso, formatBahtExact, formatDate, todayIso } from "@/lib/format";
 import { requirePermission } from "@/lib/permissions/require";
 import type { DonationMethod } from "@/lib/donations/donations";
+import { DateInput } from "@/components/DateInput";
 
 type ListRow = {
   id: string;
@@ -74,11 +75,11 @@ export default async function DonationsPage(props: PageProps<"/management/donati
       <form className="flex flex-wrap items-end gap-3" action="/management/donations">
         <label className="flex flex-col gap-1 text-sm text-muted">
           {d.from}
-          <input type="date" name="from" defaultValue={from} className={inputClass} />
+          <DateInput name="from" defaultValue={from} className={inputClass} />
         </label>
         <label className="flex flex-col gap-1 text-sm text-muted">
           {d.to}
-          <input type="date" name="to" defaultValue={to} className={inputClass} />
+          <DateInput name="to" defaultValue={to} className={inputClass} />
         </label>
         <button type="submit" className="rounded border border-border px-4 py-2 text-sm text-foreground hover:bg-surface">
           {d.show}

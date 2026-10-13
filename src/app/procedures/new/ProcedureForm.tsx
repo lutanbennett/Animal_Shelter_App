@@ -17,6 +17,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, todayIso } from "@/lib/format";
 import { visitDate } from "@/lib/clinics/linkable";
 import { MicrochipForm } from "@/components/MicrochipForm";
+import { DateInput } from "@/components/DateInput";
 
 /** The 0031 seed type is "Microchipping"; a shelter-added "Microchip implant" counts too. */
 const isMicrochipping = (typeName: string) => /microchip/i.test(typeName);
@@ -228,10 +229,9 @@ export function ProcedureForm({
           <label htmlFor="date" className="text-sm font-medium text-muted">
             {t.procedures.date}
           </label>
-          <input
+          <DateInput
             id="date"
             name="date"
-            type="date"
             required
             value={date}
             max={todayIso()}

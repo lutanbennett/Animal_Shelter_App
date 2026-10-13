@@ -20,6 +20,7 @@ import { attachCardToDelivery } from "@/app/bills/actions";
 import { BillPhotoField } from "@/components/BillPhotoField";
 import { useDeferredUploads } from "@/components/DeferredUploads";
 import type { DeliveryFormItem } from "./RecordDeliveryForm";
+import { DateInput } from "@/components/DateInput";
 
 type Step = "kind" | "item" | "amount" | "when" | "extras" | "confirm" | "done";
 
@@ -392,8 +393,7 @@ export function DeliverySteps({
           {earlier && (
             <label className="flex flex-col gap-1 text-sm font-medium text-muted">
               {s.when.pick}
-              <input
-                type="date"
+              <DateInput
                 max={today}
                 value={earlierDate}
                 onChange={(e) => {

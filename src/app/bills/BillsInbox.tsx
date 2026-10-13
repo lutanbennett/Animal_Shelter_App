@@ -10,6 +10,7 @@ import { uploadAttachmentFile } from "@/components/AttachmentUploader";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
 import { deleteCard, matchBill, matchBillToJob, saveCard, type SuggestionKind } from "./actions";
+import { DateInput } from "@/components/DateInput";
 
 export type BillCard = {
   id: string;
@@ -226,7 +227,7 @@ function CardView({
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium text-muted">
           {b.date}
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={`${inputClass} w-44`} />
+          <DateInput value={date} onChange={(e) => setDate(e.target.value)} className={`${inputClass} w-44`} />
         </label>
         <label className="flex min-w-0 flex-1 basis-48 flex-col gap-1 text-sm font-medium text-muted">
           {b.note}

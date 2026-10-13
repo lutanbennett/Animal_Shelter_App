@@ -20,6 +20,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/permissions/require";
+import { DateInput } from "@/components/DateInput";
 
 type T = Awaited<ReturnType<typeof getT>>["t"];
 
@@ -158,11 +159,11 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
         </label>
         <label className="flex min-w-0 max-w-full flex-col gap-1 text-sm text-muted">
           {s.filters.from}
-          <input type="date" name="from" defaultValue={filters.from ?? ""} className={field} />
+          <DateInput name="from" defaultValue={filters.from ?? ""} className={field} />
         </label>
         <label className="flex min-w-0 max-w-full flex-col gap-1 text-sm text-muted">
           {s.filters.to}
-          <input type="date" name="to" defaultValue={filters.to ?? ""} className={field} />
+          <DateInput name="to" defaultValue={filters.to ?? ""} className={field} />
         </label>
         <button
           type="submit"

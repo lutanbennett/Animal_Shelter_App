@@ -14,6 +14,7 @@ import {
 } from "@/lib/donations/donations";
 import { RECEIPT_COUNTRIES } from "@/lib/donations/issuer";
 import { recordDonation } from "../actions";
+import { DateInput } from "@/components/DateInput";
 
 export type DonorContact = { id: string; name: string; email: string | null; phone: string | null; line_id: string | null };
 
@@ -130,7 +131,7 @@ export function DonationForm({ contacts, residents, residentsFailed = false, tod
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-1">
             <label htmlFor="dn-date" className={labelClass}>{f.receivedOn}</label>
-            <input id="dn-date" type="date" required max={today} value={fields.receivedOn} onChange={(e) => set("receivedOn", e.target.value)} className={inputClass} />
+            <DateInput id="dn-date" required max={today} value={fields.receivedOn} onChange={(e) => set("receivedOn", e.target.value)} className={inputClass} />
           </div>
           <div className="flex flex-col gap-1">
             <label htmlFor="dn-method" className={labelClass}>{f.method}</label>
