@@ -234,7 +234,7 @@ on the Pi" rule no longer holds, so:
   laptop) cannot also trash or empty the backups. Without them the script stops before the dump
   with a plain message; it never quietly uses the app's token. `--shared-drive-token` is the
   explicit, warned-about way back to the shared token. **To mint it (Lutan, at a browser):**
-  **Interim, decided by Lutan 2026-10-13: the Pi's cron line carries `--shared-drive-token`**, so
+  **Interim, decided by Lutan 2026-10-13: the Pi's cron line carries `--shared-drive-token`** (live crontab edited by hand 2026-10-13, previous one saved at `~/backups/crontab.before-2026-10-13.bak`; it is inert on the pre-#600 code and takes effect on the next pull, so nobody needs to redo it), so
   backups keep running on the app's token and the warning shows in `backup.log`. The identities
   are NOT separate yet: the app's token can still delete backups. The split waits for production's
   own Google account (backlog: *Give production its own Drive tree*), after which

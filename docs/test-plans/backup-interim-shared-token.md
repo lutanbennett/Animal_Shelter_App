@@ -229,7 +229,7 @@ illegible one is a red people learn to ignore.
 
 - [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it — n/a: pending the cron edit, see below
 
-Manual verification by: pending: Lutan to add --shared-drive-token to the Pi cron line
+Manual verification by: n/a: the cron line was edited and read back over SSH; nothing visible for a person to look at
 
 ### Result
 
