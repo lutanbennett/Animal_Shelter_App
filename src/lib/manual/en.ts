@@ -732,6 +732,10 @@ const manual: Manual = {
           },
           callouts: [
             {
+              kind: "tip",
+              text: "To see every coming visit at every clinic in one place, open Shelter Operations → Vet visits. It is a list by day (Today, Tomorrow, then each date) with the resident's photo, the clinic, the doctor and the time; on a computer you can switch to a week or month calendar. Visits that are past but still Scheduled sit in an Overdue group at the top. Tap Hide overdue to put that group away — the page says how many are hidden, and your choice is remembered on that device only. Use the clinic list to look at one clinic, and the Show completed and Show cancelled buttons to include those.",
+            },
+            {
               kind: "note",
               text: "A visit whose date has passed but is still Scheduled shows as overdue on the hub and the Clinics pages until its status is updated. That is why the status is a choice and not worked out from the date: Scheduled means nobody has confirmed the visit happened, Completed that it did, and Cancelled that it didn't.",
             },
