@@ -765,6 +765,7 @@ const en = {
         attachments: "File",
         immunization_records: "Vaccination",
         impact_baselines: "Impact figure",
+        donation_channels: "Way to give",
         facility_maps: "Facility plan",
         roles: "Role",
         role_permissions: "Permission",

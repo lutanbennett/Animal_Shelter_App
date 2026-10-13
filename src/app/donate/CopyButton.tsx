@@ -4,6 +4,30 @@ import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
+/** The clipboard API where the browser allows it, the older select-and-copy where it does not. */
+async function writeToClipboard(value: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(value);
+    return true;
+  } catch {
+    // fall through to the older way
+  }
+  const box = document.createElement("textarea");
+  box.value = value;
+  box.setAttribute("readonly", "");
+  box.style.position = "fixed";
+  box.style.opacity = "0";
+  document.body.appendChild(box);
+  box.select();
+  try {
+    return document.execCommand("copy");
+  } catch {
+    return false;
+  } finally {
+    document.body.removeChild(box);
+  }
+}
+
 /**
  * Copies one detail (an account number, a PromptPay ID) to the clipboard.
  * If the browser refuses, it says so and the number is still on screen to
@@ -15,12 +39,7 @@ export function CopyButton({ value, what }: { value: string; what: string }) {
   const [state, setState] = useState<"idle" | "copied" | "failed">("idle");
 
   async function copy() {
-    try {
-      await navigator.clipboard.writeText(value);
-      setState("copied");
-    } catch {
-      setState("failed");
-    }
+    setState((await writeToClipboard(value)) ? "copied" : "failed");
     setTimeout(() => setState("idle"), 3000);
   }
 

@@ -134,6 +134,8 @@ export function proseGroup(table: string): string {
       return "recurring_jobs";
     case "site_pages":
       return "website";
+    case "donation_channels":
+      return "website";
     case "shelter_friends":
       return "friends";
     // A room's description sits with its name, among the places (0175 registers the name there).

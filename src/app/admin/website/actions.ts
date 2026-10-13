@@ -37,7 +37,6 @@ import {
   checkDonationUrl,
   DONATION_DOMAINS,
   isDonationWay,
-  LINKED_WAYS,
   type DonationWay,
 } from "@/lib/links/donation";
 import { driveErrorMessage } from "@/lib/google/drive-errors";

@@ -25,9 +25,6 @@ export function isDonationWay(value: string): value is DonationWay {
   return (DONATION_WAYS as readonly string[]).includes(value);
 }
 
-/** Ways whose link is the whole point: they need one, and it must be the company's own. */
-export const LINKED_WAYS = ["paypal", "donorbox", "wise"] as const;
-
 /** Same patterns as the migration, case-insensitive. */
 const OWN_DOMAIN: Partial<Record<DonationWay, RegExp>> = {
   paypal: /^https:\/\/([a-z0-9-]+\.)*(paypal\.com|paypal\.me)([/?#]|$)/i,

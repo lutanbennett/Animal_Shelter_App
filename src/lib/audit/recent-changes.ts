@@ -27,6 +27,8 @@ export const AUDITED_TABLES = [
   // The settings tables with a record_audit() trigger: 0132, 0156, 0165.
   // Every table with that trigger belongs here, or its rows show unlabelled.
   "impact_baselines",
+  // Ways to give on /donate (0191); the name shown is the way's label.
+  "donation_channels",
   "facility_maps",
   "roles",
   "role_permissions",
@@ -188,7 +190,7 @@ function toEntry(raw: RawRow): AuditEntry {
         ? str(image.name)
         : table === "attachments"
           ? str(image.file_name)
-          : table === "impact_baselines"
+          : table === "impact_baselines" || table === "donation_channels"
             ? str(image.label)
             : table === "role_permissions"
               ? str(image.activity)

@@ -696,6 +696,7 @@ const th: Dictionary = {
         attachments: "ไฟล์",
         immunization_records: "วัคซีน",
         impact_baselines: "ตัวเลขผลงาน",
+        donation_channels: "ช่องทางการบริจาค",
         facility_maps: "แผนผัง",
         roles: "บทบาท",
         role_permissions: "สิทธิ์",
