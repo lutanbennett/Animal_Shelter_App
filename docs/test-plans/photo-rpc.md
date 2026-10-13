@@ -11,7 +11,7 @@
 | PR | pending: number assigned at creation (schema half was #587, merged) |
 | Tested by / date | Claude / 2026-10-13 |
 | Carries a migration? | no — `0193` merged in #587 and is applied to dev; production apply is in §3 |
-| Tested at SHA | SHAHERE |
+| Tested at SHA | `e3c46b67` |
 
 ## 1. Scope and risk
 
@@ -23,7 +23,7 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in, including #587
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. GATESHERE
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Exit codes read from the script's closing line: `gates: typecheck=0 lint=0 test=0 build=0`
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
@@ -152,7 +152,7 @@ Automated checks by: Claude  Date: 2026-10-13
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: one smoke check on the deployed build
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: item 1 needs the deployed build and is pending below
 
 Manual verification by: pending: item 1 above, on the deployed test build
 
