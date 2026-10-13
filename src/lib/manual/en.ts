@@ -1518,6 +1518,28 @@ const manual: Manual = {
           ],
         },
         {
+          id: "maintenance-bills",
+          title: "Maintenance: adding a bill to a job",
+          roles: ["admin", "management"],
+          activity: "maintenance.bills",
+          path: "Operations → Maintenance → open a job → Bills",
+          intro:
+            "A bill here is the receipt for paint, timber or a tradesman, kept against the job it was for. The job's actual cost is the total of its bills, so the cost builds itself as receipts come in. Only Management and Admin see this section and the amounts; the Head of Maintenance and the 2IC see the job as before, with no bills.",
+          steps: [
+            "Open the job (from the board on a computer, or the list on a phone) and find Bills under the photos. Tap Add a bill.",
+            "Type the amount, change the date if the bill is not from today, and add a note such as \"paint, Thai Watsadu\". Tap Take or choose a photo (on a phone this opens the camera), then Save bill. A long bill can have more pages: tap Add another page under the bill.",
+            "Add one bill for each receipt. The total shows above the list and becomes the job's Actual cost on the right.",
+            "If someone typed an Actual cost by hand and the job has bills too, the page shows both and says the bills are used. Delete the bills, and the typed cost counts again.",
+            "At night: photograph the day's receipts on the Bills page, type each amount, then under Likely matches tap the maintenance job it was for. The photo and amount move onto that job as one of its bills. A job match needs the amount typed first.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Bills are kept apart from the job's Before and After photos, so those stay photos of the work. Bill photos are never shown on the public website.",
+            },
+          ],
+        },
+        {
           id: "recurring-jobs",
           title: "Setting up recurring jobs",
           roles: ["admin", "management"],

@@ -77,6 +77,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 export const unreleased: ReleaseNote[] = [
   "The shelter's database is now backed up every night instead of once a week, so if anything ever goes wrong at most a day of work can be lost.",
   "New Bills page for photos of receipts. Take a photo of a bill when you record a delivery or finish a clinic visit, and type what it cost. Or take photos of all the day's bills and add them together at night on the Bills page, then tap which delivery or clinic visit each one belongs to. Bills waiting to be matched are counted on the page, and on the Home screen where your role has a Bills tile.",
+  { text: "Maintenance jobs now take bills. On a job, tap Add a bill, type the amount and a note such as \"paint, Thai Watsadu\", and photograph the receipt; add as many bills as the job has. The job's actual cost becomes the total of its bills, and if someone had typed an actual cost by hand the job shows both and says the bills are the ones used. Receipts waiting on the Bills page can be matched to a job too. Only Management and Admin see bills and their amounts.", roles: ["admin", "management"] },
 ];
 
 /** Newest first. */
