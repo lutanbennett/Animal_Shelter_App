@@ -551,8 +551,9 @@ environment (older ones go to the Drive trash, which empties itself after
 DB-1, 2026-09-30). The machine that runs the backup holds only the
 administrator's *public* key (`BACKUP_AGE_RECIPIENT=age1…` in
 `.env.deploy.production`, or `--age-recipient`), so it can write a backup that
-nobody on that machine can read. The private key lives only in the
-administrator's password manager. `backup.mjs` refuses to run without a
+nobody on that machine can read. The private key is held by the
+administrator in two places only: an encrypted USB drive and their Apple
+Keychain. `backup.mjs` refuses to run without a
 recipient, refuses a private key in that slot, never writes a plaintext dump
 to disk (the dump is encrypted in memory), and leaves out the session tables
 (`auth.refresh_tokens`, `sessions`, `mfa_*`, `one_time_tokens`,
@@ -710,13 +711,19 @@ nothing touches the live site. It takes about ten minutes:
 2. Put the newest backup in it: from Drive's `Backups` folder, download the
    newest `lannacare-production-<timestamp>.dump.age` (or ask Claude to copy
    one from the Pi's `~/backups/lannacare`).
-3. Save the private key into the same folder: open **Notepad**, paste the
-   one line from the password manager that starts `AGE-SECRET-KEY-1`, then
-   **File → Save as**, set **Save as type** to **All files**, and name it
-   `key.txt`. (With the type left on *Text documents*, Notepad saves
-   `key.txt.txt`, which Windows shows as `key.txt`; the script spots this
-   and says so.)
-4. In PowerShell, in the main checkout (`C:\Development\Animal_Shelter_App`):
+3. Get the private key. It is kept in two places: the encrypted USB drive
+   and the Apple Keychain.
+   - **From the USB drive (better):** plug it in and unlock it. If the key is
+     there as a file, use that file's path in step 4 directly. Nothing is
+     copied, so there is nothing to delete afterwards.
+   - **From the Keychain:** copy the one line that starts
+     `AGE-SECRET-KEY-1`, open **Notepad**, paste it, then **File → Save as**
+     into the folder from step 1, set **Save as type** to **All files**, and
+     name it `key.txt`. (With the type left on *Text documents*, Notepad
+     saves `key.txt.txt`, which Windows shows as `key.txt`; the script spots
+     this and says so.)
+4. In PowerShell, in the main checkout (`C:\Development\Animal_Shelter_App`),
+   with the key's path after `--identity`:
 
    ```bash
    node scripts/restore-rehearsal.mjs C:\Temp\lannacare-restore\lannacare-production-<timestamp>.dump.age --identity C:\Temp\lannacare-restore\key.txt
@@ -725,8 +732,9 @@ nothing touches the live site. It takes about ten minutes:
 5. Read the last lines. **`REHEARSAL PASSED`** is the only good result;
    anything else names what did not come back. Each check prints `ok` or
    `FAIL` above it.
-6. **Delete the key file** (it is the master key, unencrypted) and the
-   folder, then empty the Recycle Bin. The script has already deleted its
+6. If the key came from the Keychain, **delete `key.txt`** (it is the
+   master key, unencrypted). Delete the folder, then empty the Recycle Bin.
+   If it came from the USB drive, just lock and unplug the drive. The script has already deleted its
    database; it never writes an unlocked copy of the backup to disk.
 
 The script (`scripts/restore-rehearsal.mjs`) does not trust `pg_restore`'s

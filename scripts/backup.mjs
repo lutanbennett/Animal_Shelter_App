@@ -5,9 +5,10 @@
 // EVERY backup is encrypted with age public-key encryption before it is
 // uploaded or written anywhere, and there is no plaintext mode. The machine
 // running this holds only the recipient's PUBLIC key (BACKUP_AGE_RECIPIENT or
-// --age-recipient, an age1... string); the private key is in the
-// administrator's password manager and is needed only to restore
-// (scripts/decrypt-backup.mjs, or `age -d`). The dump goes from pg_dump
+// --age-recipient, an age1... string); the private key is held by the
+// administrator on an encrypted USB drive and in their Apple Keychain, and is
+// needed only to restore (scripts/decrypt-backup.mjs,
+// scripts/restore-rehearsal.mjs, or `age -d`). The dump goes from pg_dump
 // straight into memory and out as ciphertext, so no plaintext file ever
 // exists on disk.
 //
