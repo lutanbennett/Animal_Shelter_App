@@ -810,3 +810,5 @@ These were written as rows in `Left for manual verification` tables and sat ther
 
 
 
+
+- [ ] **Mint the backup's own Google token and install it on the Pi (hand step, Lutan).** `backup.mjs` already reads `BACKUP_GOOGLE_OAUTH_*` (#600) but the token does not exist. Steps are in `docs/pi-hosting.md` "Backups on this Pi". **Do this before the Pi pulls #600**, or its 03:00 backup fails loudly (or add `--shared-drive-token` to the cron line meanwhile). Closes S4 for real.
