@@ -352,6 +352,60 @@ of care catches by eye.
 That script's strictness is deliberate and `CLAUDE.md` documents at length why it
 must not be loosened or given `continue-on-error`. The fix belongs in the brief.
 
+### Every brief also OPENS with this block, verbatim
+
+**The misses of 2026-10-12 and 2026-10-13 were handoff failures, not thinking
+failures**, and this is the block that closes them. Two streams in two days
+looked finished and were not: one **built an entire feature — 8 commits, 31
+files, 1,414 lines — committed it, pushed it, and ended without opening the
+PR**, which sat unnoticed overnight and was nearly cleared away as a leftover;
+the other merged its schema PR and stopped, leaving the half a user can see
+unbuilt, because its brief drew the line there.
+
+**Lutan asked on 2026-10-13 whether these justified raising model or effort.
+They do not, and the answer is on the record** (`docs/decisions/2026-10-13-the-finish-line-is-an-open-pr.md`):
+both misses happened at a **handoff**, in the gap between the work and the PR,
+and **effort buys care within a turn — it cannot make a session that has
+stopped open a PR**. Raising it would also have raised the figure, with the
+weekly window at 78%. **So the fix is the brief. Do not reach for the dials for
+this class of miss**, and do not let a later run re-argue it.
+
+Put this at the **top** of every `.brief.md`, before the task itself — the
+finish line has to be read before the work, not after it:
+
+```markdown
+## WHERE YOUR FINISH LINE IS: an open PR, not working code
+
+**You are not finished when the feature works. You are finished when the PR is open.** Working code
+on a pushed branch with no PR is **invisible** — `gh pr list` shows nothing, the planner sees
+nothing, and the next person cannot tell it from abandoned scratch.
+
+**This has now happened twice in two days.** On 2026-10-12 a stream built an entire feature — 8
+commits, 31 files, 1,414 lines — committed it, pushed it, and ended without opening the PR; it sat
+unnoticed overnight and was nearly cleared away as a leftover. Another stream merged its schema PR
+and stopped, leaving the half a user can see unbuilt, because its brief drew the line there.
+
+So:
+
+- **Commit and push as you go.** A commit is the only checkpoint that survives a session stopping.
+- **If you must stop before the work is done, stop with words**: say plainly, in your last message,
+  what is built, what is not, and what the next session should do. **Never end a turn with a built
+  branch and no PR.**
+- **If the work is done, open the PR before you report success** — then bind it with the `ccd_pr`
+  tools, and treat the CI monitor as a nudge rather than a guarantee (`CLAUDE.md` says why).
+- **"The code is written" is not a report of completion.** Say where the PR is.
+```
+
+**Add one line for a stream that is two PRs** (a schema half then an app half):
+*this applies **twice**, because merging the schema PR is not finishing.* That
+is the exact trap the second stream fell into.
+
+**And the planner's own half of this, in step 2:** read `worktree.mjs list`'s
+**`ahead`** column against the open PRs every run. **Ahead with no PR is
+unsubmitted work, not a leftover** — `done`ing it destroys a day's build. **Ahead
+with a merged PR is a leftover**, because a squash-merged branch stays ahead for
+ever.
+
 **Do not create all nine worktrees.** CLAUDE.md caps live worktrees at
 two or three — more than that and merging becomes the bottleneck — and
 nine folders would each cost an `npm ci` and go stale before their turn.
