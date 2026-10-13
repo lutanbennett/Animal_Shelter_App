@@ -1,10 +1,11 @@
-// Rollback harness for 0142_facility_maps.sql against DEV only.
+// Rollback harness for the facility map schema against DEV only. Asserts the LIVE schema; it no
+// longer replays 0142, which calls current_user_role(), dropped by the has_permission() conversions
+// (docs/decisions/2026-10-02-replay-or-assert-live.md rule 1).
 //
 //   node scripts/check-facility-maps.mjs     (from the repo root; dev only)
 //
-// One transaction: the migration (twice, so re-runnability is proved), assertions against real
+// One transaction: assertions against real
 // rows, then a deliberate `raise exception` carrying the evidence — nothing can commit.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -14,18 +15,20 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const migration = readFileSync(join(root, "supabase/migrations/0142_facility_maps.sql"), "utf8");
 const sql = `
 begin;
-${migration}
-${migration}
 do $h$
 declare z uuid; e uuid; lz uuid; le uuid; n int := 0;
 begin
-  select id into z from zones where name <> 'Lifecycle' limit 1;
-  select id into e from enclosures where zone_id = z limit 1;
+  -- pick a zone that really has an enclosure: an arbitrary zone may have none, and an update of
+  -- no row raises nothing, which would read as a missed rejection
+  select e2.zone_id, e2.id into z, e from enclosures e2 join zones z2 on z2.id = e2.zone_id where z2.name <> 'Lifecycle' limit 1;
   select id into lz from zones where name = 'Lifecycle';
   select id into le from enclosures where zone_id = lz limit 1;
+  -- dev may already hold plan rows (an overview, zone plans) this script did not create; clear them
+  -- INSIDE this transaction so the one-overview / one-per-zone checks start clean. The rollback
+  -- puts them back; nothing is asserted about them.
+  delete from facility_maps;
   update enclosures set map_shape = '[[10,10],[20,10],[20,20]]' where id = e;
   begin update enclosures set map_shape = '[[10,10],[20,10]]' where id = e; exception when check_violation then n := n + 1; end;
   begin update enclosures set map_shape = '[[10,10],[120,10],[20,20]]' where id = e; exception when check_violation then n := n + 1; end;
@@ -49,4 +52,4 @@ const r = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/quer
 });
 const text = await r.text();
 console.log(text);
-process.exit(text.includes("HARNESS-OK") ? 0 : 1);
+process.exitCode = text.includes("HARNESS-OK") ? 0 : 1;
