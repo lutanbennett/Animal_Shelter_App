@@ -86,7 +86,7 @@ const probes = [
   ["add a job photo", `insert into maintenance_photos (maintenance_id, drive_file_id) values ('${JOB}', 'probe')`, who("sic", ...OLD)], // RE-BASELINED 2026-10-07 (0152): the draft gives her maintenance.photos
   ["set up a recurring task", `insert into recurring_jobs (title, repeat, weekdays) values ('probe', 'weekly', '{1}')`, MANAGERS],
   // what she can do beyond stock: who and where, the board, her own tasks (0141's cells, 0141's policies)
-  ["resident_who_and_where", `select 1 from resident_who_and_where where id = '${R}'`, who("sic", "volunteer", "po", "co", "dl")], // the borrowed volunteer floor
+  ["resident_who_and_where", `select 1 from resident_who_and_where where id = '${R}'`, who("sic", "volunteer", "po", "co", "dl", ...OLD)], // the borrowed volunteer floor
   ["maintenance board", `select 1 from maintenance where id = '${JOB}'`, who("sic", ...OLD)],
   ["create a job", `insert into maintenance (title, zone_id) values ('probe', '${ZONE}')`, who("sic", ...OLD)],
   ["move a job on", `update maintenance set status = 'In Progress' where id = '${JOB}'`, who("sic", ...OLD)],

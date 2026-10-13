@@ -48,7 +48,7 @@ const probes = [
   ["read weight", `select 1 from weight where resident_id = '${R}'`, HOM_UP_DOCTOR],
   ["insert weight", `insert into weight (resident_id, date, weight_kg) values ('${R}', current_date - 500, 5)`, HOM_UP_DOCTOR],
   ["correct a weight", `update weight set weight_kg = 6 where resident_id = '${R}'`, HOM_UP_DOCTOR],
-  ["who and where picker", `select 1 from resident_who_and_where where id = '${R}'`, { ...NONE, hom: 1, volunteer: 1 }],
+  ["who and where picker", `select 1 from resident_who_and_where where id = '${R}'`, { ...STAFF_UP, hom: 1, volunteer: 1 } /* 0192: Admin and Management read it too; doctor and no role still get none */],
   // 2. photos
   ["file a Medical photo", `select 1 from record_attachment('resident', '${R}', 'f-med', 'a.jpg', 'Medical', current_date, null)`, HOM_UP_DOCTOR],
   ["file a ' medical ' photo (case and spaces)", `select 1 from record_attachment('resident', '${R}', 'f-med2', 'a.jpg', ' medical ', current_date, null)`, HOM_UP_DOCTOR],

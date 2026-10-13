@@ -298,7 +298,8 @@ for (const [idx, label] of KEPT) {
 }
 for (const w of ["management"]) {
   const a = allowed(got.get(`1000:${w}`), { kind: "read" });
-  if (a !== false) failures.push(`resident_who_and_where returned rows to ${w}; it is the volunteer's view only`);
+  // 0192: a role that reads the whole record sees the view too (its columns are a subset of residents)
+  if (a !== true) failures.push(`resident_who_and_where returned no rows to ${w}; 0192 opens it to every role that reads all residents`);
 }
 // the view carries exactly the fixed columns
 if (result.cols !== WHO_AND_WHERE_COLUMNS.join(",")) failures.push(`resident_who_and_where columns are ${result.cols}, expected ${WHO_AND_WHERE_COLUMNS.join(",")}`);
