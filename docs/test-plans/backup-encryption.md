@@ -171,9 +171,13 @@ Automated checks by: Claude (backup-encryption session)  Date: 2026-09-30
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: eight items are outstanding; see the pending line below
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: two items are outstanding (4 and 8); see the pending line below
 
-Manual verification by: pending: the eight items in the manual table (key pair, public key on the Pi and laptop, first run, restore rehearsal, plaintext cleanup, Drive re-share, rotation, tile)
+### Status 2026-10-13: items 1, 2, 3, 5, 6 and 7 are done
+
+Lutan confirmed in chat on 2026-10-13, and not for the first time, that the private key is held on an AES hardware-encrypted USB device and in his Apple Keychain passwords (item 1; the 2026-10-02 progress note above already recorded it). Items 2, 3, 5, 6 and 7 are recorded done in that note. The same day the restore rehearsal decrypted the Pi's nightly `.dump.age` with the held key (`claude/restore-rehearsal`, `docs/decisions/2026-10-13-restore-rehearsal-local.md`), which also proves the recipient on the Pi matches it. The backlog item *Backup key custody is not finished* was ticked by `59f8e1a2`. **Still open, and tracked as backlog items rather than here:** item 4's restore into a real Supabase project with a sign-in (*Restore a production backup into a real Supabase project and sign in*, Deployment) and item 8's tile (*BUG: the backup check has reported "no backup"…*, Next up). This line was narrowed so `scripts/verification-queue.mjs` stops listing finished work as outstanding; it is not a signature.
+
+Manual verification by: pending: item 4 (a restore into a real Supabase project, with a sign-in) and item 8 (the backup tile on `/admin/status`); items 1, 2, 3, 5, 6 and 7 are done (see the 2026-10-13 status above)
 
 ### Result
 

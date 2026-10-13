@@ -46,7 +46,7 @@ production security settings from the shelter's own assessment:
 | **Turn off open sign-up, or restrict Google sign-in to the shelter's domain — dev *and* production** (WEB-3) | `signup-bounds-and-mfa` 2026-10-01, repeated in `signup-bounds-two-step` 2026-10-02 | written twice in two days and not done either time |
 | **Turn on leaked-password protection — dev and production** | `code-hardening-batch` 2026-10-01 | — |
 | **Authentication → Sessions → inactivity timeout = 60 days** | `session-inactivity-timeout` 2026-10-01 | — |
-| **Generate the backup key pair on Lutan's own machine, store it in the password manager, delete the file** | `backup-encryption` 2026-09-30 | the feature shipped in `0.14.0`; the custody step is a separate act |
+| **Generate the backup key pair on Lutan's own machine, store it in the password manager, delete the file** | `backup-encryption` 2026-09-30 | **done (2026-10-02; reconfirmed 2026-10-13):** the key is on an AES hardware-encrypted USB device and in Lutan's Apple Keychain; see `docs/test-plans/backup-encryption.md` |
 | **Rotate what was exposed** — password hashes, TOTP secrets, refresh tokens | `backup-encryption` 2026-09-30 | `0.14.0` signed everyone out, which covers sessions; re-enrolment was a separate question |
 | Enrol a real authenticator app and sign in with it; the same step-up after a Google sign-in | `security-2fa` 2026-09-27 | — |
 | Add repository secrets `TEST_SUPABASE_URL`, `TEST_SUPABASE_ANON_KEY`, `TEST_SUPABASE_SERVICE_ROLE_KEY` | `schema-placement-lifecycle` 2026-10-01 | **closable — this one is done.** See below |
