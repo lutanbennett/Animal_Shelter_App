@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Fable review of the database structure, ending in a report.** (Architecture; ticked with a status note — the walkthrough with Lutan is outstanding) |
 | Branch / worktree | `claude/fable-db-review` @ `C:\Development\Animal_Shelter_fable-db-review` |
 | Dev server | not started — no UI surface; the brief says none is needed |
-| PR | opened from this branch after this commit; the number is recorded in the follow-up commit that ticks the CI line |
+| PR | #596 — https://github.com/lutanbennett/Animal_Shelter_App/pull/596 |
 | Tested by / date | Claude (Fable 5.1) / 2026-10-13 |
 | Carries a migration? | no |
 | Tested at SHA | `7746e214` (after sync with `origin/main` `a0f8bc5d`) |
@@ -179,7 +179,7 @@ Manual verification by: pending: the walkthrough of the five-minute summary with
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [x] Checklist pasted into the PR — as a comment on #596 (this plan without its SQL appendix), 2026-10-13
 - [ ] Handed to the production release manager — n/a: nothing to deploy — a review document; the release manager meets it as docs in the next release
 
 Result: pass

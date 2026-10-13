@@ -359,9 +359,11 @@ in two columns.** — *High for the cutover; otherwise medium.*
 `zones.internal`; `0159_enclosure_capacities_th.sql`; `0173`; `0020`;
 `scripts/apply-migrations.mjs`.
 
-*The facts.* Dev was baselined at `0027` and production (`dbkodyyxxhtygxcxmfcu`) was created
-around 2026-09-21, so every database that exists had its early files applied in a different
-way from the later ones, and none has run all 194 in one sequence. The cutover item
+*The facts.* Dev was baselined at `0027`. The current production project
+(`dbkodyyxxhtygxcxmfcu`) was built from zero on 2026-09-21, when there were 63 files, and all
+63 ran clean (README, *Deploying to Cloudflare*) — so the from-zero path has worked once, at a
+third of today's length; the 131 files since have only ever run one at a time on a database
+that already had the earlier state, and no database has run all 194 in one sequence. The cutover item
 (`docs/backlog.md`, Deployment, tentatively Friday 16 October) stands up a new free project
 and applies "every migration from zero". Two columns on dev are not what the files create:
 
