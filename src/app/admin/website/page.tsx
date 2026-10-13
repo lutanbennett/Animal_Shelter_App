@@ -13,6 +13,8 @@ import { GalleryPhotos, type GalleryPhotoRow } from "./GalleryPhotos";
 import { FeaturedResident, type FeaturedResidentOption } from "./FeaturedResident";
 import { ImpactBaselines } from "./ImpactBaselines";
 import type { ImpactBaselineRow } from "@/lib/site/impact";
+import { DonationChannels } from "./DonationChannels";
+import { CHANNEL_COLUMNS, type DonationChannelRow } from "@/lib/site/donation-channels";
 import { WebsiteTabs } from "./WebsiteTabs";
 import { PagesAccordion } from "./PagesAccordion";
 import { PublishedProjects, type PublishedProjectRow } from "./PublishedProjects";
@@ -46,6 +48,7 @@ export default async function WebsitePage({
     thaiNamesResult,
     publishedResult,
     baselinesResult,
+    channelsResult,
   ] = await Promise.all([
       loadSiteContent(supabase),
       // Not part of loadSiteContent: it is an internal figure kept out of
@@ -94,6 +97,13 @@ export default async function WebsitePage({
         .select("key, label, label_th, baseline_count, baseline_date, set_at")
         .order("key")
         .returns<ImpactBaselineRow[]>(),
+      // Every way to give, hidden ones too (website.content reads the table; /donate reads the view).
+      supabase
+        .from("donation_channels")
+        .select(CHANNEL_COLUMNS)
+        .order("sort_order")
+        .order("created_at")
+        .returns<DonationChannelRow[]>(),
     ]);
 
   // An editor that shows empty lists on a failed read invites the admin to re-enter what is already
@@ -105,6 +115,7 @@ export default async function WebsitePage({
     ["Thai names", thaiNamesResult],
     ["published projects", publishedResult],
     ["impact baselines", baselinesResult],
+    ["ways to give", channelsResult],
   ] as const) {
     if (result.error) throw new Error(`Website admin: could not read ${what}: ${result.error.message}`);
   }
@@ -203,6 +214,7 @@ export default async function WebsitePage({
                 />
               </section>
             ),
+            donate: <DonationChannels rows={channelsResult.data ?? []} />,
             gallery: <GalleryPhotos photos={photosResult.data ?? []} />,
             projects: <PublishedProjects projects={publishedResult.data ?? []} />,
           }}

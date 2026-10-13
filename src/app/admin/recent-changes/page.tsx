@@ -96,7 +96,8 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
             e.table === "attachments" ||
             e.table === "roles" ||
             e.table === "role_permissions" ||
-            e.table === "impact_baselines"
+            e.table === "impact_baselines" ||
+            e.table === "donation_channels"
           ? (e.name ?? s.unnamedRecord)
           : null;
     const owner = e.table !== "residents" && e.table !== "contacts" ? residentName : null;
