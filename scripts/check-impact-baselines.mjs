@@ -41,6 +41,11 @@ add("admin", "dup_key", "insert into impact_baselines (key, label) values ('anim
 const harness = `
 begin;
 ${migration}
+-- The figures on dev are real now (set 2026-10-01). "Seeded rows are unset" held only on apply day
+-- (rule 4, docs/decisions/2026-10-02-replay-or-assert-live.md), so put every figure back to unset
+-- INSIDE this transaction; the rollback restores the real values. The probes below then test the
+-- pair rule and the view's "unset figures are not public" against rows that are unset.
+update impact_baselines set baseline_count = null, baseline_date = null;
 create temp table res (who text, probe text, n bigint);
 grant all on res to authenticated, anon;
 create function pg_temp.probe(p_who text, p_uid uuid, p_probe text, p_sql text) returns void language plpgsql as $f$
