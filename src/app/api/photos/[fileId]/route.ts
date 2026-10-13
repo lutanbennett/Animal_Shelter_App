@@ -73,24 +73,15 @@ type Supabase = Awaited<ReturnType<typeof createClient>>;
 /**
  * Whether the caller's session can read a row that holds this file: the
  * non-public half of is_known_drive_file (0076), asked as the caller rather
- * than as the definer. site_content(_photos) are left out because anyone
- * may read them, so is_public_drive_file has already said yes to theirs.
+ * than as the definer, in one call (can_see_drive_file, 0193) where it used
+ * to be seven selects. A new table that carries a Drive id is added to that
+ * function, and nowhere here. site_content(_photos) are left out because
+ * anyone may read them, so is_public_drive_file has already said yes to theirs.
+ * Any error is "no", as it is for is_public_drive_file.
  */
 async function canSeeInternalFile(supabase: Supabase, fileId: string) {
-  const lookups = [
-    supabase.from("attachments").select("id").eq("drive_file_id", fileId).limit(1),
-    supabase.from("project_photos").select("id").eq("drive_file_id", fileId).limit(1),
-    supabase.from("maintenance_photos").select("id").eq("drive_file_id", fileId).limit(1),
-    // Outreach visit photos (0169): only for whoever may read the notes. Never public, even ticked:
-    // is_public_drive_file() does not know this table.
-    supabase.from("community_outing_photos").select("id").eq("drive_file_id", fileId).limit(1),
-    supabase.from("shelter_friends").select("id").eq("logo_drive_file_id", fileId).limit(1),
-    supabase.from("medication").select("id").eq("label_drive_file_id", fileId).limit(1),
-    // The stock screens read a label through this view, never the table (0143: the table carries a price).
-    supabase.from("stock_medications").select("id").eq("label_drive_file_id", fileId).limit(1),
-  ];
-  const results = await Promise.all(lookups);
-  return results.some(({ data }) => (data?.length ?? 0) > 0);
+  const { data, error } = await supabase.rpc("can_see_drive_file", { p_drive_file_id: fileId });
+  return !error && data === true;
 }
 
 /**
