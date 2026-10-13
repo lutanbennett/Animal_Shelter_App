@@ -26,7 +26,16 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
 
 ```
-GATES_PENDING
+=== gates: typecheck — npm run typecheck
+=== gates: typecheck exited 0 after 67s
+=== gates: lint — npm run lint
+=== gates: lint exited 0 after 119s
+=== gates: test — npm test
+=== gates: test exited 0 after 2s
+=== gates: build — npm run build
+=== gates: build exited 0 after 148s
+gates: typecheck=0 lint=0 test=0 build=0
+gates exit: 0
 ```
 
 - [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a` on the first push and tick it in a follow-up commit once the run is actually green — n/a: not yet — the PR does not exist at this commit
