@@ -33,6 +33,13 @@ import {
   getDriveClient,
   uploadImageToFolder,
 } from "@/lib/google/drive";
+import {
+  checkDonationUrl,
+  DONATION_DOMAINS,
+  isDonationWay,
+  LINKED_WAYS,
+  type DonationWay,
+} from "@/lib/links/donation";
 import { driveErrorMessage } from "@/lib/google/drive-errors";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -601,5 +608,227 @@ export async function updateImpactBaseline(
     revalidatePath("/admin/website");
     revalidatePath("/");
     return { ok: true, success: t.common.saved };
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Ways to give (0191 donation_channels): Settings -> Website -> Donate
+// ---------------------------------------------------------------------------
+
+/** Which detail fields each way keeps; the rest are stored as null so nothing stale is shown. */
+const WAY_FIELDS: Record<DonationWay, readonly string[]> = {
+  paypal: ["url"],
+  donorbox: ["url"],
+  wise: ["url"],
+  bank_transfer: ["bank_name", "account_name", "account_number"],
+  promptpay: ["account_name", "promptpay_id"],
+  other: ["url"],
+};
+
+function revalidateDonate() {
+  revalidatePath("/admin/website");
+  revalidatePath("/donate");
+}
+
+/**
+ * Add a way to give (no `id`) or change one (with `id`; its kind cannot be
+ * changed - delete it and add the other kind). Links are checked here with the
+ * same rule the database repeats, so a wrong-company link never reaches it.
+ */
+export async function saveDonationChannel(
+  _state: SiteContentFormState,
+  formData: FormData,
+): Promise<SiteContentFormState> {
+  const { t } = await getT();
+  return runAction("website.saveDonationChannel", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    const d = t.admin.website.donate;
+
+    const text = (name: string) => (formData.get(name) as string | null)?.trim() ?? "";
+    const id = text("id");
+    const way = text("way");
+    if (!isDonationWay(way)) return refuse(d.errors.unknownWay);
+
+    const label = text("label");
+    if (!label) return refuse(d.errors.labelRequired);
+
+    const fields: Record<string, string | null> = {
+      url: null,
+      bank_name: null,
+      account_name: null,
+      account_number: null,
+      promptpay_id: null,
+    };
+    for (const name of WAY_FIELDS[way]) fields[name] = text(name) || null;
+
+    if (WAY_FIELDS[way].includes("url")) {
+      if (fields.url === null) return refuse(d.errors.linkRequired);
+      const check = checkDonationUrl(way, fields.url);
+      if (!check.ok) {
+        const domains = DONATION_DOMAINS[way];
+        return refuse(
+          linkErrorText(t.linkErrors, check, domains ? [domains] : undefined) ?? d.errors.linkRequired,
+        );
+      }
+      fields.url = check.url;
+    }
+    if (way === "bank_transfer" && !fields.account_number) return refuse(d.errors.accountRequired);
+    if (way === "promptpay" && !fields.promptpay_id) return refuse(d.errors.promptpayRequired);
+
+    const row = { way, label, note: text("note") || null, ...fields };
+    const supabase = await createClient();
+
+    if (id) {
+      const { data, error } = await supabase
+        .from("donation_channels")
+        .update(row)
+        .eq("id", id)
+        .eq("way", way)
+        .select("id")
+        .returns<{ id: string }[]>();
+      if (error) return refuse(error.message);
+      if (!data?.length) return refuse(d.errors.notFound);
+    } else {
+      const { data: last, error: readError } = await supabase
+        .from("donation_channels")
+        .select("sort_order")
+        .order("sort_order", { ascending: false })
+        .limit(1)
+        .returns<{ sort_order: number }[]>();
+      if (readError) return refuse(readError.message);
+      const { error } = await supabase
+        .from("donation_channels")
+        .insert({ ...row, sort_order: (last?.[0]?.sort_order ?? 0) + 1 });
+      if (error) return refuse(error.message);
+    }
+
+    revalidateDonate();
+    return { ok: true, success: t.common.saved };
+  });
+}
+
+/** Show or hide a way on /donate. Hiding keeps everything typed. */
+export async function setDonationChannelShown(id: string, shown: boolean): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("website.setDonationChannelShown", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("donation_channels")
+      .update({ shown })
+      .eq("id", id)
+      .select("id")
+      .returns<{ id: string }[]>();
+    if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.donate.errors.notFound);
+    revalidateDonate();
+    return { ok: true };
+  });
+}
+
+/** Move a way one place up or down; the order is renumbered so equal numbers never stick. */
+export async function moveDonationChannel(id: string, direction: "up" | "down"): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("website.moveDonationChannel", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("donation_channels")
+      .select("id, sort_order")
+      .order("sort_order")
+      .order("created_at")
+      .returns<{ id: string; sort_order: number }[]>();
+    if (error) return refuse(error.message);
+    const ids = (data ?? []).map((r) => r.id);
+    const from = ids.indexOf(id);
+    if (from === -1) return refuse(t.admin.website.donate.errors.notFound);
+    const to = direction === "up" ? from - 1 : from + 1;
+    if (to < 0 || to >= ids.length) return { ok: true };
+    [ids[from], ids[to]] = [ids[to], ids[from]];
+    for (const [index, rowId] of ids.entries()) {
+      const { error: updateError } = await supabase
+        .from("donation_channels")
+        .update({ sort_order: index + 1 })
+        .eq("id", rowId);
+      if (updateError) return refuse(updateError.message);
+    }
+    revalidateDonate();
+    return { ok: true };
+  });
+}
+
+export async function deleteDonationChannel(id: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("website.deleteDonationChannel", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    const supabase = await createClient();
+    const { data: current } = await supabase
+      .from("donation_channels")
+      .select("qr_drive_file_id")
+      .eq("id", id)
+      .limit(1)
+      .returns<{ qr_drive_file_id: string | null }[]>();
+    const { error } = await supabase.from("donation_channels").delete().eq("id", id);
+    if (error) return refuse(error.message);
+    const qr = current?.[0]?.qr_drive_file_id;
+    if (qr) await trashInDrive(qr);
+    revalidateDonate();
+    return { ok: true };
+  });
+}
+
+/** The PromptPay QR picture for a PromptPay way. Replaces the old one (to Drive's trash). */
+export async function uploadDonationQr(formData: FormData): Promise<SiteContentFormState> {
+  const { t } = await getT();
+  return runAction("website.uploadDonationQr", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    const id = (formData.get("id") as string | null)?.trim() ?? "";
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) return refuse(t.admin.website.errors.noFile);
+
+    const supabase = await createClient();
+    const { data: current } = await supabase
+      .from("donation_channels")
+      .select("way, qr_drive_file_id")
+      .eq("id", id)
+      .limit(1)
+      .returns<{ way: string; qr_drive_file_id: string | null }[]>();
+    if (!current?.length) return refuse(t.admin.website.donate.errors.notFound);
+    if (current[0].way !== "promptpay") return refuse(t.admin.website.donate.errors.qrPromptpayOnly);
+
+    let driveFileId: string;
+    try {
+      driveFileId = await uploadToWebsiteFolder(file);
+    } catch (err) {
+      return refuse(await driveErrorMessage(err, t.admin.website.errors.uploadFailed));
+    }
+    const { error } = await supabase
+      .from("donation_channels")
+      .update({ qr_drive_file_id: driveFileId })
+      .eq("id", id);
+    if (error) return refuse(error.message);
+    if (current[0].qr_drive_file_id) await trashInDrive(current[0].qr_drive_file_id);
+    revalidateDonate();
+    return { ok: true, success: t.admin.website.donate.qrUpdated };
+  });
+}
+
+export async function removeDonationQr(id: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("website.removeDonationQr", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    const supabase = await createClient();
+    const { data: current } = await supabase
+      .from("donation_channels")
+      .select("qr_drive_file_id")
+      .eq("id", id)
+      .limit(1)
+      .returns<{ qr_drive_file_id: string | null }[]>();
+    const { error } = await supabase.from("donation_channels").update({ qr_drive_file_id: null }).eq("id", id);
+    if (error) return refuse(error.message);
+    const qr = current?.[0]?.qr_drive_file_id;
+    if (qr) await trashInDrive(qr);
+    revalidateDonate();
+    return { ok: true };
   });
 }
