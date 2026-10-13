@@ -24,7 +24,10 @@
 //       once the PR is merged: remove the folder, delete the branch locally
 //       and on origin, prune git's registry, and check all three happened.
 //       Refuses if the branch isn't in origin/main or the tree is dirty
-//       (--force overrides both), if the branch has commits origin does not
+//       (--force overrides both; a squash-merged branch passes without it: its
+//       merged PR's head must be the branch tip and the merge commit in
+//       origin/main; a merged PR plus later commits is refused even with --force),
+//       if the branch has commits origin does not
 //       (never overridden), or if a process holds the folder (--stop-servers
 //       ends the dev servers it can identify there and tries again). Also
 //       clears a husk: a leftover folder of that name git has forgotten.
@@ -83,6 +86,9 @@ function worktrees() {
     if (!dir) continue;
     const branch = block.match(/^branch refs\/heads\/(.+)$/m)?.[1] ?? "(detached)";
     const prunable = /^prunable/m.test(block);
+    // The desktop app keeps spare checkouts under .claude/worktrees/ and reuses or
+    // reaps them itself; they are not streams and must not be listed or cleaned.
+    if (list.length > 0 && /[\/]\.claude[\/]worktrees[\/]/.test(dir)) continue;
     list.push({ dir: path.resolve(dir), branch, main: list.length === 0, prunable });
   }
   return list;
@@ -118,6 +124,40 @@ function folderFor(trees, name) {
 function unpushed(branch) {
   const n = tryGit(["rev-list", "--count", branch, "--not", "--remotes=origin"]);
   return n === null ? null : Number(n);
+}
+
+/**
+ * Is everything on `branch` in origin/main? Two independent proofs, never one:
+ *   merged    - the tip is an ancestor of origin/main.
+ *   squashed  - GitHub says a PR from this branch merged, that PR's head commit IS the
+ *               branch tip (so nothing was added after it), and its merge commit is an
+ *               ancestor of origin/main. PR state alone proves nothing: a branch can keep
+ *               growing after its PR merged (claude/bills-inbox: a schema PR merged, the
+ *               whole feature was then built on the same branch).
+ *   extra     - a PR merged but the tip is not that PR's head: unmerged work.
+ *   unmerged  - no proof; includes gh being unavailable.
+ */
+function mergeProof(branch) {
+  const tip = tryGit(["rev-parse", branch]);
+  if (tip === null) return { kind: "unmerged", why: "branch not found" };
+  if (tryGit(["merge-base", "--is-ancestor", tip, "origin/main"]) !== null) return { kind: "merged" };
+  // WORKTREE_TEST_PRS stands in for GitHub's answer so the proof can be exercised without a real PR.
+  const r = process.env.WORKTREE_TEST_PRS
+    ? { status: 0, stdout: process.env.WORKTREE_TEST_PRS }
+    : spawnSync("gh", ["pr", "list", "--head", branch, "--state", "merged", "--json", "number,headRefOid,mergeCommit"], {
+        cwd: repo, encoding: "utf8", shell: false,
+      });
+  if (r.status !== 0) return { kind: "unmerged", why: "could not ask GitHub whether a PR merged" };
+  let prs;
+  try { prs = JSON.parse(r.stdout || "[]"); } catch { return { kind: "unmerged", why: "unreadable answer from GitHub" }; }
+  const landed = (pr) => pr.mergeCommit?.oid && tryGit(["merge-base", "--is-ancestor", pr.mergeCommit.oid, "origin/main"]) !== null;
+  const hit = prs.find((pr) => pr.headRefOid === tip && landed(pr));
+  if (hit) return { kind: "squashed", pr: hit.number };
+  if (prs.length) {
+    const n = tryGit(["rev-list", "--count", branch, "--not", "origin/main"]);
+    return { kind: "extra", pr: prs.map((p) => "#" + p.number).join(", "), commits: n === null ? "?" : n };
+  }
+  return { kind: "unmerged", why: "no merged PR" };
 }
 
 // ------------------------------------------------------ who holds a folder
@@ -457,6 +497,16 @@ function cmdLaunch(args) {
   writeLaunch(repo, { quiet: args.includes("--quiet") });
 }
 
+/** The 'state' cell for a branch that is ahead of main: finished, or work that would be lost. */
+function proofState(branch, ahead) {
+  if (!branch.startsWith(BRANCH_PREFIX) || ahead === "-" || ahead === "0") return "";
+  const p = mergeProof(branch);
+  if (p.kind === "merged") return "merged - 'done' clears it";
+  if (p.kind === "squashed") return `squash-merged (PR #${p.pr}) - 'done' clears it`;
+  if (p.kind === "extra") return `UNMERGED WORK: PR ${p.pr} merged but ${p.commits} commit(s) are not in main - do NOT done`;
+  return "";
+}
+
 function cmdList() {
   const fetched = tryGit(["fetch", "-q", "--prune", "origin"]) !== null;
   const trees = worktrees();
@@ -502,7 +552,7 @@ function cmdList() {
       behind,
       unpushed: up ?? "-",
       held: h,
-      state: ahead0 ? "nothing beyond main" : "",
+      state: ahead0 ? "nothing beyond main" : proofState(t.branch, ahead),
     };
   });
   if (!fetched) console.log("could not reach origin — ahead/behind/unpushed are as of the last fetch");
@@ -596,9 +646,20 @@ function cmdDone(args) {
   if (tryGit(["fetch", "-q", "--prune", "origin"]) === null) fail("could not fetch origin — cannot tell what is merged or pushed; try again when online");
   const exists = Boolean(git(["branch", "--list", branch]));
   if (exists) {
-    const mergedRefs = git(["branch", "--merged", "origin/main", "--format=%(refname:short)"]).split("\n");
-    if (!mergedRefs.includes(branch) && !force) {
-      fail(`${branch} is not merged into origin/main — merge the PR first, or --force to discard it`);
+    const proof = mergeProof(branch);
+    if (proof.kind === "extra") {
+      // Not overridable: this is the shape that destroys a finished feature.
+      fail(
+        `${branch} has ${proof.commits} commit(s) that are NOT in origin/main, although PR ${proof.pr} merged.
+` +
+          `That PR landed an earlier part of the branch; the rest is unmerged work. Open a PR for it.
+` +
+          `--force does not override this. To discard it knowingly, delete the branch by hand.`,
+      );
+    }
+    if (proof.kind === "squashed") console.log(`${branch} was squash-merged (PR #${proof.pr}): that PR's head is the branch tip and its merge commit is in origin/main`);
+    if (proof.kind === "unmerged" && !force) {
+      fail(`${branch} is not merged into origin/main (${proof.why}) — merge the PR first, or --force to discard it`);
     }
     // Deterministic and unrecoverable if wrong, so no flag gets past it: push
     // the commits (or delete the branch by hand, knowingly) first.

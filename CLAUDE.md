@@ -379,3 +379,19 @@ them closed by work in an unrelated area. One was finished on 2026-09-30 and
 cited by every Security item, yet still read open a week later. Finding a line
 that agrees with an item is not the test; whether the bad outcome can still
 happen is.
+
+## A trap in this shell: `git show <rev>:<path>` lies about dotted paths
+
+Git Bash rewrites any argument containing `:` as a Windows path list, so
+`git show origin/main:.claude/skills/plan-day/SKILL.md` reaches git as
+`origin\main;.claude\skills\plan-day\SKILL.md` and dies with *ambiguous
+argument*. Reproduced 2026-10-13: `package.json` and `docs/backlog.md` work;
+anything starting with a dot (`.claude/`, `.github/`) breaks. Piped, the error
+disappears: `… | grep -c foo` prints `0`, exactly what "the file does not
+contain it" looks like. A session once concluded a merged change had been
+reverted from `main` this way; it had not.
+
+**Never trust an empty or zero result from `git show <rev>:<path>` here.** Use
+`git grep <pattern> <rev> -- <path>` or `git ls-tree -r <rev> --name-only -- <path>`,
+or prefix the command with `MSYS_NO_PATHCONV=1`. (Kept in `CLAUDE.md`, not
+`AGENTS.md`, because `next dev` rewrites that one.)
