@@ -539,8 +539,9 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
 
 Free-tier Supabase projects have no automatic backups or point-in-time
 recovery, so production's safety net is `scripts/backup.mjs`: a `pg_dump`
-(custom format) of the `public` and `auth` schemas — every record plus the
-accounts that can sign in — **encrypted with [age](https://age-encryption.org)
+(custom format) of the `public`, `private` and `auth` schemas — every record,
+the views and functions the app keeps in `private`, and the accounts that can
+sign in — **encrypted with [age](https://age-encryption.org)
 before it goes anywhere**, uploaded to a `Backups/` folder under the Drive
 root as `lannacare-<env>-<timestamp>.dump.age`, keeping the newest twelve per
 environment (older ones go to the Drive trash, which empties itself after
@@ -550,8 +551,9 @@ environment (older ones go to the Drive trash, which empties itself after
 DB-1, 2026-09-30). The machine that runs the backup holds only the
 administrator's *public* key (`BACKUP_AGE_RECIPIENT=age1…` in
 `.env.deploy.production`, or `--age-recipient`), so it can write a backup that
-nobody on that machine can read. The private key lives only in the
-administrator's password manager. `backup.mjs` refuses to run without a
+nobody on that machine can read. The private key is held by the
+administrator in two places only: an encrypted USB drive and their Apple
+Keychain. `backup.mjs` refuses to run without a
 recipient, refuses a private key in that slot, never writes a plaintext dump
 to disk (the dump is encrypted in memory), and leaves out the session tables
 (`auth.refresh_tokens`, `sessions`, `mfa_*`, `one_time_tokens`,
@@ -633,8 +635,11 @@ One-time setup on the machine that runs it:
    <https://www.enterprisedb.com/download-postgresql-binaries> (the
    `winget` installer kept failing with a 403 from EDB's CDN) unpacked so
    that `pg_dump.exe` sits at
-   `%LOCALAPPDATA%\Programs\PostgreSQL\17\bin\pg_dump.exe` — only the
-   zip's `bin` and `lib` folders are needed. The script looks there and
+   `%LOCALAPPDATA%\Programs\PostgreSQL\17\bin\pg_dump.exe` — the zip's
+   `bin` and `lib` folders are enough to back up; the restore rehearsal
+   (below) also runs a throwaway server, which needs the zip's `share`
+   folder beside them (added 2026-10-13, when its absence stopped `initdb`
+   with "postgres.bki does not exist"). The script looks there and
    under `C:\Program Files\PostgreSQL\` (where the installer would put it)
    itself; nothing needs adding to `PATH` (set `PG_DUMP` to point it
    elsewhere).
@@ -695,27 +700,112 @@ To prove the path on a dev server, put `STATUS_ALERT_SIMULATE_FAIL=drive`
 in `.env.development.local` (dev database only) and press *Run the alert
 check now* twice; the mail is printed to the server log.
 
-**Restoring** into a Supabase project (a scratch one, or production after a
-disaster) — the database half is untested until the backlog's restore
-rehearsal is done; the decrypt step was exercised on 2026-09-30
-(`docs/test-plans/backup-encryption.md`). Download the `.dump.age` from Drive
-(or take one from the Pi's `~/backups/lannacare`), then on the administrator's
-own machine, with the private key saved to a file out of the repo:
+**Rehearsing a restore — every quarter** (first done 2026-10-13; next due
+**January 2027**). This proves a backup unlocks, loads, and holds every
+table, row, view, function, access policy and trigger, using a throwaway
+database on the administrator's laptop. Nothing leaves the laptop and
+nothing touches the live site. It takes about ten minutes:
+
+1. Make a folder **outside the repo and outside OneDrive** (OneDrive would
+   upload the key): `C:\Temp\lannacare-restore`.
+2. Put the newest backup in it: from Drive's `Backups` folder, download the
+   newest `lannacare-production-<timestamp>.dump.age` (or ask Claude to copy
+   one from the Pi's `~/backups/lannacare`).
+3. Get the private key. It is kept in two places: the encrypted USB drive
+   and the Apple Keychain.
+   - **From the USB drive (better):** plug it in and unlock it. If the key is
+     there as a file, use that file's path in step 4 directly. Nothing is
+     copied, so there is nothing to delete afterwards.
+   - **From the Keychain:** copy the one line that starts
+     `AGE-SECRET-KEY-1`, open **Notepad**, paste it, then **File → Save as**
+     into the folder from step 1, set **Save as type** to **All files**, and
+     name it `key.txt`. (With the type left on *Text documents*, Notepad
+     saves `key.txt.txt`, which Windows shows as `key.txt`; the script spots
+     this and says so.)
+4. In PowerShell, in the main checkout (`C:\Development\Animal_Shelter_App`),
+   with the key's path after `--identity`:
+
+   ```bash
+   node scripts/restore-rehearsal.mjs C:\Temp\lannacare-restore\lannacare-production-<timestamp>.dump.age --identity C:\Temp\lannacare-restore\key.txt
+   ```
+
+5. Read the last lines. **`REHEARSAL PASSED`** is the only good result;
+   anything else names what did not come back. Each check prints `ok` or
+   `FAIL` above it.
+6. If the key came from the Keychain, **delete `key.txt`** (it is the
+   master key, unencrypted). Delete the folder, then empty the Recycle Bin.
+   If it came from the USB drive, just lock and unplug the drive. The script has already deleted its
+   database; it never writes an unlocked copy of the backup to disk.
+
+The script (`scripts/restore-rehearsal.mjs`) does not trust `pg_restore`'s
+exit status: every restore of these dumps reports two harmless errors
+(`schema "public" already exists`, and `auth.flow_state`, a session table
+the backup leaves out), so it exits 1 even on a good restore, and a dump missing whole
+objects can still exit with the same status. The script instead checks that
+those two are the only errors and compares every count against the archive
+itself. A backup made **before 2026-10-13** lacks the `private` schema and
+fails this rehearsal (see below); that is correct, not a fault in the script.
+
+**What the rehearsal does not prove** is that a *Supabase project* comes
+back. Ownership, grants, Supabase's own `auth` set-up and signing in only
+exist on Supabase, and the roles the rehearsal creates are empty stand-ins.
+That half is still unproved and is its own backlog item
+(`docs/decisions/2026-10-13-restore-rehearsal-local.md`).
+
+**Restoring into a Supabase project** (production after a disaster, or a
+scratch project) — **never yet run against a real Supabase project.** The
+steps below were corrected on 2026-10-13 by running them locally against a
+stand-in for a fresh project; each correction is noted. Run the rehearsal
+above on the chosen backup first, so you know the file itself is good.
+Then, on the administrator's own machine, with the private key saved to a
+file out of the repo:
 
 ```bash
-node scripts/decrypt-backup.mjs lannacare-production-<timestamp>.dump.age --identity path/to/lannacare-backup-key.txt
+node scripts/decrypt-backup.mjs lannacare-production-<timestamp>.dump.age --identity path/to/key.txt
 # (or, with the age program:  age -d -i path/to/key.txt -o x.dump x.dump.age)
-pg_restore --dbname="postgresql://postgres.<ref>:<password>@aws-0-ap-south-1.pooler.supabase.com:5432/postgres" --schema=public --clean --if-exists --no-owner --no-privileges lannacare-production-<timestamp>.dump
 ```
 
-The decrypted `.dump` is plaintext: delete it when the restore is done.
+Then, in this order, with `DB` set to the project's session-pooler
+connection string
+(`postgresql://postgres.<ref>:<password>@aws-0-ap-south-1.pooler.supabase.com:5432/postgres`):
+
+1. **The accounts first**, rows only (the `auth` tables already exist in
+   every Supabase project). Run it with
+   `PGOPTIONS="-c session_replication_role=replica"` set, so a table can
+   load before the one it points to (`identities` comes before `users` in
+   the dump and is otherwise rejected):
+   `pg_restore --dbname="$DB" --schema=auth --data-only --no-owner --no-privileges <file>.dump`
+   *Corrected:* the old recipe ran this step last, so the twenty links from
+   app tables to `auth.users` were created against an empty table and
+   failed, quietly: the rows loaded, and the database was left without
+   those checks. Whether Supabase's `postgres` user may set
+   `session_replication_role` is not yet proved.
+2. **Create the `private` schema**: `create schema if not exists private;`
+   in the SQL editor. *Corrected:* `pg_restore --schema=…` restores the
+   objects in a schema but never the schema itself.
+3. **The app's data and structure**:
+   `pg_restore --dbname="$DB" --schema=public --schema=private --clean --if-exists --no-owner --no-privileges <file>.dump`
+   *Corrected:* the old recipe left out `private`, which holds no rows but
+   is what about fifteen `public` views and their access policies are built
+   on, including `resident_current_state`.
+4. `node scripts/apply-migrations.mjs --status --env …` to confirm
+   `schema_migrations` came across, and to apply anything newer than the
+   backup.
+5. Delete the decrypted `.dump`: it is plaintext.
+
 The dump has no session tables, so nobody is signed in afterwards, and
 authenticator apps are re-enrolled (see above).
 
-then the same with `--schema=auth --data-only` for the accounts (the `auth`
-tables already exist in every project, so only their rows are restored),
-then `node scripts/apply-migrations.mjs --status --env …` to confirm the
-`schema_migrations` table came across.
+**Backups made before 2026-10-13 have no `private` schema** (`backup.mjs`
+dumped only `public` and `auth` until then). Their data is complete, since
+`private` has never held rows, but restored alone they leave those views
+missing. With only such a backup, restore it as above and then recreate `private`'s
+views and functions from the newest migration defining each (`0082` and
+`0086` moved them there; `grep -l "private\." supabase/migrations/*.sql`
+lists the rest) before opening the app. That path has not been tried; with
+any later backup it does not arise. The Pi's nightly backups
+include `private` only from the release after 2026-10-13, since the Pi
+runs the released code.
 
 ## Project structure
 
