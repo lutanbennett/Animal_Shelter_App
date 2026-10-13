@@ -17,6 +17,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { todayIso } from "@/lib/format";
 import { HELP_KINDS, PLACE_KINDS, type CommunityPlace, type HelpKind, type Outing } from "@/lib/outreach/outings";
 import { createOuting, updateOuting } from "./actions";
+import { DateInput } from "@/components/DateInput";
 
 /** Recording walks one thing per screen: where, what, how many (the last one saves). */
 const STEP_IDS = ["where", "what", "count"] as const;
@@ -171,9 +172,8 @@ export function OutingForm({
       <div hidden={hiddenUnlessStep(0)} className="flex flex-col gap-5">
         <label className="flex flex-col gap-1 text-sm font-medium text-muted">
           {o.fields.date}
-          <input
+          <DateInput
             name="outingOn"
-            type="date"
             max={todayIso()}
             defaultValue={initial?.outing_on ?? todayIso()}
             className={inputClass}

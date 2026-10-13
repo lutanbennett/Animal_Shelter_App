@@ -22,6 +22,7 @@ import type { RecurringJob } from "@/lib/recurring-jobs/queries";
 import { canDoJob, jobIsRestricted, rolesForJob, type Eligibility } from "@/lib/recurring-jobs/eligibility";
 import { previewRecurrence, saveRecurringJob } from "./actions";
 import { OptionalDateInput } from "@/components/OptionalDateInput";
+import { DateInput } from "@/components/DateInput";
 
 export type PersonOption = { id: string; name: string; role: string };
 export type TeamMember = { id: string; name: string; archived: boolean; role?: string | null };
@@ -364,8 +365,7 @@ export function RecurringJobForm({
           <div className="grid gap-2 sm:grid-cols-2">
             <label className={labelClass}>
               {f.startsOn}
-              <input
-                type="date"
+              <DateInput
                 className={inputClass}
                 value={startsOn}
                 onChange={(e) => setStartsOn(e.target.value)}

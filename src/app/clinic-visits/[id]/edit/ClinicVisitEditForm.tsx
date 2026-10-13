@@ -10,6 +10,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { ClinicOption } from "@/app/clinic-visits/new/ClinicVisitForm";
 import type { DoctorNamesByClinic } from "@/lib/clinics/doctors";
 import { DoctorNameField } from "../../DoctorNameField";
+import { DateTimeInput } from "@/components/DateInput";
 
 export type ClinicVisitInitial = {
   id: string;
@@ -119,10 +120,9 @@ export function ClinicVisitEditForm({
           <label htmlFor="appointmentDate" className="text-sm font-medium text-muted">
             {v.dateTime}
           </label>
-          <input
+          <DateTimeInput
             id="appointmentDate"
             name="appointmentDate"
-            type="datetime-local"
             required
             defaultValue={toLocalInput(visit.appointment_date)}
             className={inputClass}

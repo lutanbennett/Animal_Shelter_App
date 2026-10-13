@@ -22,6 +22,7 @@ import {
   handOverRecurringJobs,
   setRecurringJobActive,
 } from "./actions";
+import { DateInput } from "@/components/DateInput";
 
 export type { PersonOption };
 
@@ -416,12 +417,11 @@ function HandOver({ people, from, today }: { people: PersonOption[]; from: TeamM
             <>
               <label className="flex flex-col gap-1 font-medium text-foreground">
                 {h.startDate}
-                <input type="date" className={inputClass} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                <DateInput className={inputClass} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
               </label>
               <label className="flex flex-col gap-1 font-medium text-foreground">
                 {h.endDate}
-                <input
-                  type="date"
+                <DateInput
                   className={inputClass}
                   value={endDate}
                   min={startDate}

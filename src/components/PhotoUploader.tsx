@@ -11,6 +11,7 @@ import { PHOTO_CATEGORIES, type PhotoCategory } from "@/lib/google/drive-client"
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { todayIso } from "@/lib/format";
+import { DateInput } from "@/components/DateInput";
 
 type UploadStatus = "queued" | "uploading" | "done" | "error";
 
@@ -189,9 +190,8 @@ export function PhotoUploader({
           <label htmlFor="photo-date-taken" className="text-sm font-medium text-muted">
             {t.photos.uploader.dateTaken}
           </label>
-          <input
+          <DateInput
             id="photo-date-taken"
-            type="date"
             value={dateTaken}
             max={todayIso()}
             onChange={(e) => setDateTaken(e.target.value)}

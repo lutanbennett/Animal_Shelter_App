@@ -10,6 +10,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import { ZoneSelectFrame } from "@/components/ZoneName";
 import { recordImmunizations } from "./actions";
+import { DateInput } from "@/components/DateInput";
 
 export type ResidentOption = {
   id: string;
@@ -251,10 +252,9 @@ export function ImmunizationForm({
             >
               {t.immunizations.dateAdministered}
             </label>
-            <input
+            <DateInput
               id="dateAdministered"
               name="dateAdministered"
-              type="date"
               required
               defaultValue={todayIso()}
               max={todayIso()}

@@ -12,6 +12,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatBahtExact, formatDate } from "@/lib/format";
 import type { JobBill, JobCost } from "@/lib/maintenance/bills";
 import { addJobBill, deleteJobBill } from "../bills-actions";
+import { DateInput } from "@/components/DateInput";
 
 const inputClass =
   "rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
@@ -108,7 +109,7 @@ export function MaintenanceBills({
             </label>
             <label className="flex flex-col gap-1 text-sm font-medium text-muted">
               {b.date}
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={`${inputClass} w-44`} />
+              <DateInput value={date} onChange={(e) => setDate(e.target.value)} className={`${inputClass} w-44`} />
             </label>
             <label className="flex min-w-0 flex-1 basis-48 flex-col gap-1 text-sm font-medium text-muted">
               {b.note}

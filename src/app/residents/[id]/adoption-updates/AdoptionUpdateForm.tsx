@@ -12,6 +12,7 @@ import { uploadResidentPhoto } from "@/components/PhotoUploader";
 import { ADOPTION_UPDATE_CHANNELS } from "@/lib/adoption-updates/options";
 import { saveAdoptionUpdate } from "./actions";
 import { textareaClass } from "@/components/textareaClass";
+import { DateInput } from "@/components/DateInput";
 
 const inputClass =
   "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
@@ -182,9 +183,8 @@ export function AdoptionUpdateForm({
           <label htmlFor="receivedOn" className="text-sm font-medium text-muted">
             {a.form.receivedOn} <span className="text-danger">*</span>
           </label>
-          <input
+          <DateInput
             id="receivedOn"
-            type="date"
             required
             max={today}
             value={receivedOn}

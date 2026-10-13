@@ -9,6 +9,7 @@ import { createWeight, saveWeightEdit } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, formatWeightKg, todayIso, weightUnit } from "@/lib/format";
 import { visitDate, type LinkableVisit } from "@/lib/clinics/linkable";
+import { DateInput } from "@/components/DateInput";
 
 export type ClinicVisitOption = LinkableVisit;
 
@@ -129,10 +130,9 @@ export function WeightForm({
           <label htmlFor="date" className="text-sm font-medium text-muted">
             {t.weight.dateWeighed}
           </label>
-          <input
+          <DateInput
             id="date"
             name="date"
-            type="date"
             required
             value={date}
             max={todayIso()}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ComponentProps } from "react";
+import { DateInput } from "@/components/DateInput";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -11,7 +12,7 @@ type InputProps = Omit<ComponentProps<"input">, "type" | "value" | "defaultValue
  * A date field that may be left blank, with a visible Clear button beside it
  * once it holds a value.
  *
- * A bare `<input type="date">` can only be emptied from inside the browser's
+ * A bare native date box can only be emptied from inside the browser's
  * own picker, and on a phone that picker often has no way back to empty
  * (iOS's "Reset" returns to the value the page loaded with), so touching an
  * optional date by accident made it mandatory. Every optional date in the
@@ -48,12 +49,11 @@ export function OptionalDateInput({
 
   return (
     <div className={`flex items-center gap-2 ${wrapperClassName ?? ""}`}>
-      <input
+      <DateInput
         {...rest}
-        type="date"
         value={current}
         onChange={(e) => change(e.target.value)}
-        className={`min-w-0 flex-1 ${className ?? ""}`}
+        className={className}
       />
       {current !== "" && !rest.disabled && (
         <ActionButton icon={ACTION_ICONS.clear} onClick={() => change("")} aria-label={t.common.clearDateLabel(label)}>

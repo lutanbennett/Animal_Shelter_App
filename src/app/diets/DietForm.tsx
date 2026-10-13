@@ -15,6 +15,7 @@ import {
 } from "@/lib/diets/options";
 import { todayIso } from "@/lib/format";
 import { OptionalDateInput } from "@/components/OptionalDateInput";
+import { DateInput } from "@/components/DateInput";
 
 export type { DietTypeOption };
 
@@ -151,10 +152,9 @@ export function DietForm({
           <label htmlFor="startDate" className="text-sm font-medium text-muted">
             {t.diets.startDate} <span className="text-danger">*</span>
           </label>
-          <input
+          <DateInput
             id="startDate"
             name="startDate"
-            type="date"
             required
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}

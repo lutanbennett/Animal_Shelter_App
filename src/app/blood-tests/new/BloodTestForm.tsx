@@ -15,6 +15,7 @@ import {
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, todayIso } from "@/lib/format";
 import { visitDate } from "@/lib/clinics/linkable";
+import { DateInput } from "@/components/DateInput";
 
 export type BloodTestTypeOption = { id: string; name: string };
 export type ClinicVisitOption = {
@@ -149,10 +150,9 @@ export function BloodTestForm({
           <label htmlFor="date" className="text-sm font-medium text-muted">
             {t.bloodTests.dateOfTest}
           </label>
-          <input
+          <DateInput
             id="date"
             name="date"
-            type="date"
             required
             value={date}
             max={todayIso()}

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { DateInput } from "@/components/DateInput";
 
 const inputClass =
   "rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
@@ -34,13 +35,13 @@ export function ForecastWindowPicker({
         <label htmlFor="forecast-from" className="text-sm font-medium text-muted">
           {w.from}
         </label>
-        <input id="forecast-from" name="from" type="date" required defaultValue={from} className={inputClass} />
+        <DateInput id="forecast-from" name="from" required defaultValue={from} className={inputClass} />
       </div>
       <div className="flex flex-col gap-1">
         <label htmlFor="forecast-to" className="text-sm font-medium text-muted">
           {w.to}
         </label>
-        <input id="forecast-to" name="to" type="date" required defaultValue={to} className={inputClass} />
+        <DateInput id="forecast-to" name="to" required defaultValue={to} className={inputClass} />
       </div>
       <ActionButton type="submit" icon={ACTION_ICONS.filter}>
         {w.show}

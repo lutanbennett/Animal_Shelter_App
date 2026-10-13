@@ -31,6 +31,7 @@ import {
   type ReviewGroup,
 } from "./WizardChrome";
 import { textareaClass } from "@/components/textareaClass";
+import { DateInput } from "@/components/DateInput";
 
 export type DietTypeOption = { id: string; name: string; is_standard: boolean };
 export type OriginOption = { id: string; name: string };
@@ -415,10 +416,9 @@ export function IntakeForm({
                 {t.residents.new.fields.intakeDate}{" "}
                 <span className="text-danger">*</span>
               </label>
-              <input
+              <DateInput
                 id="intakeDate"
                 name="intakeDate"
-                type="date"
                 required
                 max={todayIso()}
                 defaultValue={todayIso()}
