@@ -790,6 +790,23 @@ export const ENTRIES = {
       expect: "One question per screen, each with a Back button that keeps what you typed; the last screen says in words what will be recorded. It appears under Recent deliveries with your name. A delivery dated in the future cannot be chosen.",
     },
   ],
+  "maintenance-bills": [
+    {
+      activity: "Add a bill to a maintenance job",
+      needs: "maintenance.bills",
+      device: "phone",
+      do: "Open a job, tap Add a bill, type the amount and a note such as paint, take a photo of the receipt, and tap Save bill. Add a second bill the same way.",
+      expect: "Both bills show in a list with a small picture each, and the job's Actual cost on the page is the total of the two.",
+      notes: { head_of_maintenance: "Sees no Bills section and no bill amounts on the job.", second_in_command: "Sees no Bills section and no bill amounts on the job." },
+    },
+    {
+      activity: "Match a waiting bill to a maintenance job",
+      needs: "maintenance.bills",
+      device: "phone",
+      do: "On Bills, type the amount on a card, then under Likely matches tap the maintenance job it was for.",
+      expect: "The card disappears, and the job now shows that bill and the new total.",
+    },
+  ],
   bills: [
     {
       activity: "Photograph a bill when recording a delivery",
