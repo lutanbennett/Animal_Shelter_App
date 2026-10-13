@@ -37,10 +37,11 @@ export function DateInput({ value, defaultValue, onChange, className, name, min,
   const iso = dmyToIso(text);
 
   // A controlled value changed from outside (a reset, a default filled in).
-  useEffect(() => {
+  const [seen, setSeen] = useState(value);
+  if (value !== seen) {
+    setSeen(value);
     if (value !== undefined && value !== iso) setText(isoToDmy(value));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }
 
   useEffect(() => {
     const msg = text === "" ? "" : iso === "" ? BAD_DATE : outOfRange(iso, min, max);
@@ -115,13 +116,14 @@ export function DateTimeInput({ value, defaultValue, onChange, className, name, 
   const timeOk = normalizeTime(time);
   const combined = dateIso && timeOk ? `${dateIso}T${timeOk}` : "";
 
-  useEffect(() => {
+  const [seen, setSeen] = useState(value);
+  if (value !== seen) {
+    setSeen(value);
     if (value !== undefined && value !== combined) {
       setDate(isoToDmy(value.slice(0, 10)));
       setTime(value.slice(11, 16));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }
 
   useEffect(() => {
     timeRef.current?.setCustomValidity(time === "" || timeOk ? "" : "Enter a 24-hour time as HH:MM, for example 14:30.");
