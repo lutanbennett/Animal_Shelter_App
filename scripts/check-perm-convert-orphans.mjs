@@ -12,7 +12,7 @@
 //                            vet keeps writing through the parent's own clinic limit
 //   frequency_rounds         read by prescriptions Read (vet too); written by reference.types, which is Admin's
 //   item_unit_conversions    read by the three stock cells (0143); written by stock.diets
-//   stock_receipts           stock.delivery reads, inserts, deletes; NOBODY updates (C8)
+//   stock_receipts           stock.delivery reads, inserts, deletes; updates too since 0191 (C8 said nobody; bills-inbox needed a cost written onto a receipt, docs/decisions/2026-10-12-bills-inbox.md)
 //   stock_counts             read by the stock cells
 //   recurring_* (4 tables)   read by recurring.do_own (a vet by vet_read_*); jobs and assignees written by recurring.manage
 // Then structural sweeps: no policy on these tables names management or staff, and every new policy calls
@@ -82,7 +82,7 @@ const EXPECT = {
   prescription_rounds: { admin: A, management: A, staff: A, vet: A, c_rx: A, c_ref: RO },
   frequency_rounds: { admin: A, management: RO, staff: RO, vet: RO, c_rx: RO, c_ref: "1111" },
   item_unit_conversions: { admin: A, management: A, staff: RO, c_stock: A },
-  stock_receipts: { admin: "1011", management: "1011", staff: "1011", c_stock: "1011" },
+  stock_receipts: { admin: "1111", management: "1111", staff: "1111", c_stock: "1111" },
   stock_counts: { admin: "1", management: "1", staff: "1", c_stock: "1" },
   // RE-BASELINED 2026-10-06 (director-draft-apply): the volunteer holds recurring.do_own (draft row 47, confirmed by Lutan), so reads these
   recurring_jobs: { admin: A, management: A, staff: RO, volunteer: RO, vet: RO, c_recur: A, c_manage_only: "0010" },

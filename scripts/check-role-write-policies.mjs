@@ -6,29 +6,24 @@
 // dry run found it. This finds it first.
 //
 // Against the DEV database, live schema (as check-doctor-own-clinic-writes.mjs
-// does; nothing is committed). Three parts:
+// does; nothing is committed). Two parts:
 //
-//   1  OFFERED — the writes the app puts in front of a role. Each row is a
-//      table, a command and the roles the manual says do it; every one must
-//      have a permissive policy that names the role for that command (a
-//      FOR ALL policy covers every command). Add a row when you add a form.
-//   2  Management mirrors staff — 0039's rule: whatever staff can do on a
-//      table, management can. Checked for every table, so no list to forget.
+//   1  OFFERED — the writes the app puts in front of someone. Each row is a table
+//      and a command; every one must have a permissive policy for that command
+//      (a FOR ALL policy covers every command). Add a row when you add a form.
+//      THIS PART NO LONGER ASKS WHICH ROLES. It once read role names out of the
+//      policy text ('<role>'::app_role), which the has_permission() conversions
+//      removed; the 14 failures on dev were that reading, not a missing policy.
+//      Which role holds which cell is check-permission-parity's job (cells against
+//      the paper); that is where the question now lives. What this part keeps is the
+//      bug it was written for: a form offered and no write policy at all.
+//   2  (retired) "Management mirrors staff", 0039's rule. Staff is an archived role
+//      and holds no cells, so it compared an empty set and could not fail; it has
+//      been vacuous since 0173. Removed with its advisory ("tables only staff can read").
+//      docs/decisions/2026-10-13-red-harnesses.md.
 //   3  Real rows, one rolled-back transaction, each role's own JWT: management
 //      inserts and updates a blood test and files a scan on it; it
 //      cannot delete one; a volunteer can read it and write nothing to it. Proves the policy works, not just exists.
-//
-// And one advisory, never a failure: tables staff can read and nothing else.
-// Most are meant to be (types, clinics, translations); the list is there so that
-// the next one that is not gets seen.
-//
-// Not covered, said plainly: a table the app writes that is not in OFFERED.
-// Finding those mechanically means reading every `.from(t).insert(…)` chain in
-// src/ — and which roles reach each is a property of the page, not the call —
-// so the list is kept by hand, next to the manual. Matching names to roles is
-// by the `'<role>'::app_role` text in each policy's expression, which is how
-// every policy in this schema is written; one that tests the role another way
-// will read as missing and has to be added to this script's reading.
 //
 //   node scripts/check-role-write-policies.mjs     (from the repo root; dev only)
 //
@@ -42,25 +37,15 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-// Part 1. [table, command, roles that the manual says do this]. Doctors are
-// narrowed to their own clinic by 0110 and proved by check-doctor-own-clinic-writes;
-// here they only need to be named.
-const CLINICAL = ["admin", "management", "staff", "doctor"];
+// Part 1. [table, command] for each write the app offers.
 const OFFERED = [
-  ["blood_tests", "INSERT", CLINICAL],
-  ["blood_tests", "UPDATE", CLINICAL],
-  ["procedures", "INSERT", CLINICAL],
-  ["procedures", "UPDATE", CLINICAL],
-  ["prescriptions", "INSERT", CLINICAL],
-  ["prescriptions", "UPDATE", CLINICAL],
-  ["immunization_records", "INSERT", CLINICAL],
-  ["immunization_records", "UPDATE", CLINICAL],
-  ["clinic_visits", "INSERT", CLINICAL],
-  ["clinic_visits", "UPDATE", CLINICAL],
-  ["weight", "INSERT", CLINICAL],
-  ["weight", "UPDATE", CLINICAL],
-  ["resident_diets", "INSERT", ["admin", "management", "staff"]],
-  ["resident_diets", "UPDATE", ["admin", "management", "staff"]],
+  ["blood_tests", "INSERT"], ["blood_tests", "UPDATE"],
+  ["procedures", "INSERT"], ["procedures", "UPDATE"],
+  ["prescriptions", "INSERT"], ["prescriptions", "UPDATE"],
+  ["immunization_records", "INSERT"], ["immunization_records", "UPDATE"],
+  ["clinic_visits", "INSERT"], ["clinic_visits", "UPDATE"],
+  ["weight", "INSERT"], ["weight", "UPDATE"],
+  ["resident_diets", "INSERT"], ["resident_diets", "UPDATE"],
 ];
 
 async function query(sql) {
@@ -75,66 +60,27 @@ async function query(sql) {
   return { status: res.status, body };
 }
 
-// One row per (table, command, role) a permissive policy grants. FOR ALL
-// expands to the four commands.
-const EFFECTIVE = `
-  select p.tablename, c.cmd, r.role
+// One row per (table, command) that a permissive policy covers. FOR ALL expands to the four commands.
+const COVERED = `
+  select distinct p.tablename, c.cmd
   from pg_policies p
   cross join lateral (select unnest(case when p.cmd = 'ALL'
     then array['SELECT','INSERT','UPDATE','DELETE'] else array[p.cmd] end) as cmd) c
-  cross join (values ('staff'),('management'),('doctor'),('volunteer'),('admin')) r(role)
-  where p.schemaname = 'public' and p.permissive = 'PERMISSIVE'
-    and (coalesce(p.qual, '') || ' ' || coalesce(p.with_check, '')) like '%''' || r.role || '''::app_role%'
-  union
-  -- Converted tables (perm-convert-*): a policy that asks has_permission('<activity>')
-  -- grants the role whose seeded cell reaches it (read = 1, anything else = 2); Admin
-  -- always. A policy that also asks sees_all_clinical() grants only a role whose
-  -- scope_clinical is 'any', as the function does. Mirrors the two functions, not the cells' meaning.
-  select p.tablename, c.cmd, r.key as role
-  from pg_policies p
-  cross join lateral (select unnest(case when p.cmd = 'ALL'
-    then array['SELECT','INSERT','UPDATE','DELETE'] else array[p.cmd] end) as cmd) c
-  cross join public.roles r
-  where p.schemaname = 'public' and p.permissive = 'PERMISSIVE'
-    and r.key in ('staff','management','doctor','volunteer','admin') and r.archived_at is null
-    and (coalesce(p.qual, '') || ' ' || coalesce(p.with_check, '')) like '%has\\_permission(%'
-    and (r.key = 'admin' or exists (
-          select 1 from public.role_permissions rp
-           where rp.role_id = r.id
-             and rp.activity = substring(coalesce(p.qual, p.with_check) from 'has_permission\\(''([a-z_.]+)''')
-             and rp.level >= case when c.cmd = 'SELECT' then 1 else 2 end))
-    and ((coalesce(p.qual, '') || coalesce(p.with_check, '')) not like '%sees\\_all\\_clinical()%'
-         or r.scope_clinical = 'any')
-    and ((coalesce(p.qual, '') || coalesce(p.with_check, '')) not like '%sees\\_all\\_residents()%'
-         or r.scope_residents = 'all')`;
+  where p.schemaname = 'public' and p.permissive = 'PERMISSIVE'`;
 
 let failures = 0;
 const fail = (msg) => { failures++; console.log(`FAIL  ${msg}`); };
 
-const eff = await query(`select tablename, cmd, role from (${EFFECTIVE}) e`);
-if (eff.status !== 200 && eff.status !== 201) throw new Error(`policy query failed: ${eff.status} ${JSON.stringify(eff.body)}`);
-if (!Array.isArray(eff.body)) throw new Error(`policy query failed: ${JSON.stringify(eff.body)}`);
-const has = new Set(eff.body.map((r) => `${r.tablename}|${r.cmd}|${r.role}`));
+const cov = await query(COVERED);
+if (cov.status !== 200 && cov.status !== 201) throw new Error(`policy query failed: ${cov.status} ${JSON.stringify(cov.body)}`);
+if (!Array.isArray(cov.body)) throw new Error(`policy query failed: ${JSON.stringify(cov.body)}`);
+const has = new Set(cov.body.map((r) => `${r.tablename}|${r.cmd}`));
 
 // 1
-for (const [table, cmd, roles] of OFFERED) {
-  const missing = roles.filter((r) => !has.has(`${table}|${cmd}|${r}`));
-  if (missing.length) fail(`${table} ${cmd}: the app offers it to ${missing.join(", ")} but no policy lets them`);
+for (const [table, cmd] of OFFERED) {
+  if (!has.has(`${table}|${cmd}`)) fail(`${table} ${cmd}: the app offers it but no policy covers it`);
 }
-console.log(`1  offered writes: ${OFFERED.length} checked`);
-
-// 2
-const tables = [...new Set(eff.body.map((r) => r.tablename))].sort();
-const staffGrants = eff.body.filter((x) => x.role === "staff");
-for (const r of staffGrants) {
-  if (!has.has(`${r.tablename}|${r.cmd}|management`)) fail(`${r.tablename} ${r.cmd}: staff can, management cannot (0039: management mirrors staff)`);
-}
-console.log(`2  management mirrors staff: ${staffGrants.length} staff grants over ${tables.length} tables`);
-
-// advisory
-const readOnly = tables.filter((t) =>
-  has.has(`${t}|SELECT|staff`) && !["INSERT", "UPDATE", "DELETE"].some((c) => has.has(`${t}|${c}|staff`)));
-console.log(`   read-only for staff (advisory): ${readOnly.join(", ")}`);
+console.log(`1  offered writes: ${OFFERED.length} checked (a policy covers each; who holds it is check-permission-parity's)`);
 
 // 3
 const sql = `

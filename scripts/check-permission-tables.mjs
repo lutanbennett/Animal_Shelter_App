@@ -85,7 +85,7 @@ for (const line of paper.slice(start + 2)) {
   expected.length = 0;
   expected.push(...kept, ...cellsFor(draft, "volunteer", Object.fromEntries(ACTIVITIES.map((a) => [a.key, a.kind]))).map((c) => `('volunteer', '${c.activity}', ${c.level})`));
 }
-if (activityCount !== 61) throw new Error(`expected 61 activities in §4, parsed ${activityCount}`);
+if (activityCount !== 62) throw new Error(`expected 62 activities in §4, parsed ${activityCount}`);
 
 const sql = `
 begin;
@@ -154,6 +154,10 @@ select count(*)::bigint as audit_rows,
        -- an actor-less UPDATE of a role row is 0155 moving the 2IC's contacts scope to name_phone (director-answers-schema, q6); an actor-less UPDATE of a cell is scripts/load-role-draft.mjs changing a level (draft 1, 2026-10-05; RE-BASELINED director-draft-apply): a script, not a person in Settings
 count(*) filter (where actor is not null or (op <> 'DELETE' and op <> 'INSERT' and not (op = 'UPDATE' and table_name in ('role_permissions', 'roles'))) or (op = 'INSERT' and table_name not in ('roles', 'role_permissions')) or (op = 'DELETE' and table_name <> 'role_permissions'))::bigint as not_0134
 from audit_log where table_name in ('roles', 'role_permissions');
+-- F counts what THIS run's three cell writes added, as a difference from here: dev holds real audit rows
+-- with an actor (a Settings edit of community.outings, inserted then deleted) that no run created.
+alter table harness_baseline add column actored_cells bigint;
+update harness_baseline set actored_cells = (select count(*) from audit_log where table_name = 'role_permissions' and actor is not null);
 grant select on harness_baseline to authenticated, service_role;
 
 create temp table harness_ids (who text primary key, id uuid not null);
@@ -227,13 +231,13 @@ declare
 begin
   -- A: the seed.
   perform pg_temp.eq('A roles', (select count(*) from roles where key in ('admin','management','staff','doctor','volunteer','public_viewer'))::text, '6');
-  perform pg_temp.eq('A activities', (select count(*) from permission_activities)::text, '61');
-  perform pg_temp.eq('A yesno+level', (select count(*) filter (where kind = 'yesno') || '/' || count(*) filter (where kind = 'level') from permission_activities), '41/20');
+  perform pg_temp.eq('A activities', (select count(*) from permission_activities)::text, '62');
+  perform pg_temp.eq('A yesno+level', (select count(*) filter (where kind = 'yesno') || '/' || count(*) filter (where kind = 'level') from permission_activities), '42/20'); -- 42 since 0169 added community.outings (a yes/no, Management)
   -- RE-BASELINED 2026-10-06 (director-draft-apply): the Director's draft 2 is the agreed state of the volunteer (3 -> 5: the
   -- residents list, who and where, the map and its enclosures read, own recurring jobs, the assistant). The DOCTOR stays at the
   -- paper's 13 and is checked with eq_known(): the draft gives doctors only the microchip (2 cells) and Lutan said doctors are on hold,
   -- so the paper and the draft genuinely disagree. That is recorded, not flattened: the run stays RED until someone decides.
-  for t in select unnest(array['management:56', 'staff:39', 'volunteer:5', 'admin:0', 'public_viewer:0']) loop
+  for t in select unnest(array['management:57', 'staff:39', 'volunteer:5', 'admin:0', 'public_viewer:0']) loop
     perform pg_temp.eq('A cells ' || split_part(t, ':', 1),
       (select count(*) from role_permissions rp join roles r on r.id = rp.role_id where r.key = split_part(t, ':', 1))::text,
       split_part(t, ':', 2));
@@ -245,7 +249,7 @@ begin
   perform pg_temp.eq('A real logins have role_id', (select count(*) from user_roles where role_id is null)::text, '0');
   perform pg_temp.eq('A scopes doctor', (select scope_residents || '/' || scope_clinical || '/' || scope_contacts || '/' || scope_photos || '/' || sees_login_emails from roles where key = 'doctor'), 'own_clinic/own_clinic/name_type/medical_only/false');
   perform pg_temp.eq('A scopes volunteer', (select scope_contacts || '/' || sees_login_emails from roles where key = 'volunteer'), 'name_phone/false');
-  v_report := v_report || 'A: 6 roles, 61 activities, cells 56/39/13/5/0/0, every real login has a role_id | ';
+  v_report := v_report || 'A: 6 roles, 62 activities, cells 57/39/13/5/0/0, every real login has a role_id | ';
 
   -- B: has_permission().
   -- the four answers-no cases
@@ -284,7 +288,7 @@ begin
 
   -- C: my_permissions().
   perform pg_temp.eq('C admin is_admin', pg_temp.q(v_admin, '(my_permissions() ->> ''is_admin'')'), 'true');
-  perform pg_temp.eq('C admin cells', pg_temp.q(v_admin, '(select count(*) from jsonb_object_keys(my_permissions() -> ''permissions''))'), '61');
+  perform pg_temp.eq('C admin cells', pg_temp.q(v_admin, '(select count(*) from jsonb_object_keys(my_permissions() -> ''permissions''))'), '62');
   perform pg_temp.eq('C staff cells', pg_temp.q(v_staff, '(select count(*) from jsonb_object_keys(my_permissions() -> ''permissions''))'), '39');
   perform pg_temp.eq('C staff role', pg_temp.q(v_staff, '(my_permissions() -> ''role'' ->> ''key'')'), 'harness_staff_cells'); -- the stand-in role (0173)
   perform pg_temp.eq('C staff delivery level', pg_temp.q(v_staff, '(my_permissions() -> ''permissions'' ->> ''stock.delivery'')'), '2');
@@ -320,9 +324,9 @@ begin
       v_checked := v_checked + 2;
     end loop;
   end loop;
-  perform pg_temp.eq('H answers checked', v_checked::text, '732');
-  perform pg_temp.eq('H expected cells', (select count(*) from harness_expected)::text, '113'); -- 110 on the paper (0163 gave Management website.content; 0169 community.outings and 0168 donation.receipt one Management cell each); the volunteer is 5 under the draft. Measured on dev after 0168/0169 were applied, 2026-10-09
-  v_report := v_report || 'H: 732 answers, six roles x 61 activities x read and edit, equal the paper''s §4 table | ';
+  perform pg_temp.eq('H answers checked', v_checked::text, '744');
+  perform pg_temp.eq('H expected cells', (select count(*) from harness_expected)::text, '114'); -- 114 since 0189 (maintenance.bills, one Management cell; paper row fixed 2026-10-13). Was 113: 110 on the paper (0163 gave Management website.content; 0169 community.outings and 0168 donation.receipt one Management cell each); the volunteer is 5 under the draft. Measured on dev after 0168/0169 were applied, 2026-10-09
+  v_report := v_report || 'H: 744 answers, six roles x 62 activities x read and edit, equal the paper''s §4 table | ';
 
   n := pg_temp.try(null, format('insert into role_permissions (role_id, activity, level) values (%L, ''stock.count'', 2)', v_role_admin), 'aal1', 'service_role');
   if n <> -2 then raise exception 'HARNESS-FAIL D: a cell for admin was accepted (%)', n; end if;
@@ -411,7 +415,7 @@ begin
   -- E: RLS and grants.
   perform pg_temp.eq('E admin reads roles', pg_temp.q(v_admin, '(select count(*) from roles where key = ''admin'')', 'aal2'), '1');
   perform pg_temp.eq('E admin reads cells', pg_temp.q(v_admin, '(select count(*) from role_permissions)', 'aal1'), (select count(*)::text from role_permissions));
-  perform pg_temp.eq('E admin reads catalogue', pg_temp.q(v_admin, '(select count(*) from permission_activities)', 'aal1'), '61');
+  perform pg_temp.eq('E admin reads catalogue', pg_temp.q(v_admin, '(select count(*) from permission_activities)', 'aal1'), '62');
   foreach t in array array['management', 'staff', 'doctor', 'volunteer', 'public_viewer'] loop
     foreach n in array array[1, 2, 3] loop
       perform pg_temp.eq('E ' || t || ' reads table ' || n,
@@ -453,45 +457,27 @@ begin
   -- 0132's seed logged nothing. 0134 deleted 21 of the volunteer's cells with the triggers live, so the log holds exactly
   -- those rows (no actor, a DELETE of a role_permissions row) and, since R2, the INSERTs of a configured role's own
   -- migration (no actor: 0136, 0141, 0143 add a roles row and its cells) and nothing else.
-  perform pg_temp.eq('F seed left no audit rows but 0134''s deletions', (select not_0134 from harness_baseline)::text, '0');
-  perform pg_temp.eq('F three cell writes logged', (select count(*) from audit_log where table_name = 'role_permissions' and actor is not null)::text, '3');
+  -- (dropped) "the seed left no audit rows but 0134's deletions" (not_0134 = 0): it held only on apply day. Every later
+  -- migration that adds a cell logs an actor-less row, and real Settings edits log ones with an actor. Rule 4,
+  -- docs/decisions/2026-10-02-replay-or-assert-live.md; the three writes below are measured as a difference instead.
+  perform pg_temp.eq('F three cell writes logged', ((select count(*) from audit_log where table_name = 'role_permissions' and actor is not null) - (select actored_cells from harness_baseline))::text, '3');
   perform pg_temp.eq('F by whom', (select count(*) from audit_log where table_name = 'role_permissions' and actor = v_admin)::text, '3');
   perform pg_temp.eq('F ops', (select string_agg(op, ',' order by id) from audit_log where table_name = 'role_permissions' and actor = v_admin), 'INSERT,UPDATE,DELETE');
   perform pg_temp.eq('F role edits logged', (select count(*) from audit_log where table_name = 'roles' and op = 'UPDATE' and new_row ->> 'key' = 'harness_archived')::text, '1');
-  v_report := v_report || 'F: seed logged nothing; insert, update and delete of a cell each logged with the admin as actor | ';
+  v_report := v_report || 'F: insert, update and delete of a cell each logged with the admin as actor | ';
 
-  -- G: the file replays.
-  update role_permissions set level = 2
-   where activity = 'facility.enclosures' and role_id = (select id from roles where key = 'volunteer');
-  update permission_activities set area = 'tampered' where key = 'stock.delivery';
-  -- the replay alters user_roles, which Postgres refuses while deferred events are pending
-  set constraints user_roles_keep_an_admin immediate;
-  execute 'create temp table harness_pre as select count(*)::bigint as audit_rows, (select count(*) from role_permissions rp join roles r on r.id = rp.role_id where r.key in (''management'', ''staff'', ''doctor'', ''volunteer''))::bigint as live_cells from audit_log where table_name in (''roles'', ''role_permissions'')';
-end;
-$h$;
-
-${migration}
-
-do $h2$
-begin
-  perform pg_temp.eq('G roles after replay', (select count(*) from roles where key in ('admin','management','staff','doctor','volunteer','public_viewer'))::text, '6');
-  perform pg_temp.eq('G activities after replay', (select count(*) from permission_activities)::text, '61');
-  -- replaying 0132 alone puts back the 21 volunteer cells 0134 deleted (52+39+13+24 = 128 seeded), and keeps the three Management cells added since (0163 website.content, 0168 donation.receipt, 0169 community.outings): 131
-  perform pg_temp.eq('G cells after replay', (select count(*) from role_permissions rp join roles r on r.id = rp.role_id where r.key in ('management','staff','doctor','volunteer'))::text, '131');
-  perform pg_temp.eq('G a shelter edit survives the replay', (select level::text from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'volunteer' and rp.activity = 'facility.enclosures'), '2');
-  perform pg_temp.eq('G the catalogue is restored', (select area from permission_activities where key = 'stock.delivery'), 'stock');
-  -- 0132 alone writes nothing it did not already hold, EXCEPT the seed cells missing from the live roles: those come back as logged inserts
-  -- RE-BASELINED 2026-10-06 (director-draft-apply): the replay restores every seed cell the live roles no longer hold, so it logs 122 minus
-  -- the live cells it found (21 on a pristine post-0134 database; more once the Director's draft has narrowed the doctor and widened the volunteer)
-  perform pg_temp.eq('G replay logged exactly the seed cells the live roles lacked', (select count(*) from audit_log where table_name in ('roles', 'role_permissions'))::text, (select audit_rows + (131 - live_cells) from harness_pre)::text);
+  -- G (retired 2026-10-13): "the file replays and keeps a shelter edit". It re-ran 0132 inside the transaction, and 0181
+  -- dropped user_roles.legacy_role, a column 0132 writes: a replay over a later definition (rule 1 of
+  -- docs/decisions/2026-10-02-replay-or-assert-live.md). That the file is re-runnable is what
+  -- apply-migrations.mjs --dry-run checks; this script asserts the live schema only.
 
   if exists (select 1 from harness_known_red) then
     raise exception '%', 'HARNESS-KNOWN-RED every other check held; recorded disagreements with the draft: ' || (select string_agg(label || ': got ' || got || ', paper wants ' || want, '; ') from harness_known_red);
   end if;
-  raise exception '%', format('HARNESS-OK %s asserted live | A: 6 roles, 61 activities, cells 56/39/13/3/0/0 | B: four answers-no cases, archived person, signed out, anon, null, mistyped level, seeded yes, read vs edit, admin yes | C: my_permissions | D: guards, role_id bridge, last admin | E: RLS at aal1/aal2, anon | F: audit | H: 660 answers (6 roles x 60 activities x read/edit) equal section 4 of the paper | G: replay keeps a shelter edit',
+  raise exception '%', format('HARNESS-OK %s asserted live | A: 6 roles, 62 activities, cells 57/39/13/3/0/0 | B: four answers-no cases, archived person, signed out, anon, null, mistyped level, seeded yes, read vs edit, admin yes | C: my_permissions | D: guards, role_id bridge, last admin | E: RLS at aal1/aal2, anon | F: audit | H: 660 answers (6 roles x 60 activities x read/edit) equal section 4 of the paper',
     ${JSON.stringify(file).replace(/"/g, "'")});
 end;
-$h2$;
+$h$;
 rollback;
 `;
 

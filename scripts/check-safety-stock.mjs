@@ -23,14 +23,12 @@ ${migration}
 
 do $h$
 declare
-  v_m uuid; v_d uuid; v_got numeric; v_nn int; v_bad boolean;
+  v_m uuid; v_d uuid; v_got numeric; v_bad boolean;
   v_rows int;
 begin
-  -- A. nothing back-filled: every existing row is null = none
-  select count(safety_stock) into v_nn from medication;
-  if v_nn <> 0 then raise exception 'FAIL A % medication rows carry a safety stock', v_nn; end if;
-  select count(safety_stock) into v_nn from diet_types;
-  if v_nn <> 0 then raise exception 'FAIL A % diet rows carry a safety stock', v_nn; end if;
+  -- A. (dropped) "every existing row is null" held only on the day 0128 was applied: staff have
+  -- since set real safety stocks on dev. Rule 4 of docs/decisions/2026-10-02-replay-or-assert-live.md.
+  -- The replay adds a nullable column and back-fills nothing; B below proves a new row starts null.
 
   -- B. omitted -> null; fractional values round-trip at full precision; 0 is not null
   insert into medication (name, dose_unit) values ('harness-0128 fluid', 'ml') returning id into v_m;
@@ -69,7 +67,7 @@ begin
                 and pg_get_triggerdef(t.oid) ilike '%safety_stock%') then
     raise exception 'FAIL D a trigger names safety_stock'; end if;
 
-  raise exception 'HARNESS-OK existing rows all null (nothing back-filled) | omitted->null, 2500.125 and 12.5 round-trip, 0 distinct from null, clear->null | negative rejected on both tables | no trigger names safety_stock | file ran twice';
+  raise exception 'HARNESS-OK omitted->null, 2500.125 and 12.5 round-trip, 0 distinct from null, clear->null | negative rejected on both tables | no trigger names safety_stock | file ran twice';
 end $h$;
 `;
 
