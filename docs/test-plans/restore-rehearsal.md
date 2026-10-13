@@ -5,7 +5,7 @@
 | | |
 |---|---|
 | Feature | Restore rehearsal: a production backup restored locally and checked; the private schema added to backups; README restore recipe corrected; `scripts/restore-rehearsal.mjs` for the quarterly repeat |
-| Backlog item | `docs/backlog.md` → *Rehearse a restore from a production backup* (status note, not ticked: the Supabase half is open) |
+| Backlog item | `docs/backlog.md` → *Rehearse a restore from a production backup* (ticked by Lutan's decision; the Supabase half is its own item) |
 | Branch / worktree | `claude/restore-rehearsal` @ `C:\Development\Animal_Shelter_restore-rehearsal` |
 | Dev server | not used: no app code changed |
 | PR | opened from this branch |
@@ -85,7 +85,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ## 7. Documentation
 
-- [ ] Backlog item ticked in `docs/backlog.md` — n/a: deliberately not ticked; the item asks for a Supabase project and sign-in, which were not done. A dated status note says what was proved, and the Supabase half is its own item on the `backlog` branch
+- [x] Backlog item ticked in `docs/backlog.md` on this branch, by Lutan's decision in chat (2026-10-13), with a note that the Supabase half is its own item on the `backlog` branch
 - [x] Non-obvious design choices added as a new file in `docs/decisions/` (`2026-10-13-restore-rehearsal-local.md`)
 - [x] `README.md` still accurate: "Backups" now describes `private`, the `share` folder, the quarterly rehearsal and the corrected Supabase recipe
 - [ ] **Release notes.** — n/a: internal recovery rehearsal and a README correction — nothing a shelter user would see.
@@ -152,9 +152,9 @@ Automated checks by: Claude  Date: 2026-10-13
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: awaiting Lutan's confirmation in chat
+- [x] The manual list above is empty, or every item in it was checked by a person: Lutan ran `restore-rehearsal.mjs` himself (REHEARSAL PASSED) and confirmed in chat that the steps are clear
 
-Manual verification by: pending: Lutan to confirm he followed the corrected recipe
+Manual verification by: Lutan Bennett — confirmed in chat; line written by Claude at his request  Date: 2026-10-13
 
 ### Result
 
