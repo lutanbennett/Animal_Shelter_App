@@ -89,7 +89,7 @@ export function WebsiteTabs({
             aria-controls={`website-panel-${tab}`}
             tabIndex={active === tab ? 0 : -1}
             onClick={() => choose(tab)}
-            className={`-mb-px whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium ${
+            className={`-mb-px min-h-11 whitespace-nowrap border-b-2 px-4 py-2 text-sm font-medium ${
               active === tab
                 ? "border-primary text-primary"
                 : "border-transparent text-muted hover:text-foreground"
