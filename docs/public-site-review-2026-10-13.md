@@ -23,6 +23,15 @@ site; on production the same buttons are terracotta on cream. And the black circ
 the bottom-left corner of some screenshots is Next.js's own development badge, not part of the
 site.
 
+**Checked against production, the same day.** After the dev pass, Lutan asked for the live site to
+be read as well and signed in to `lannacare.org` in the browser pane himself. Nine pages were read
+there in English and five in Thai (the list is in §1); nothing was changed and no production
+screenshot is committed, because the live pages carry real business names and bank details. Where
+the live content changes a judgement, the text says so under a **Production** label. The biggest
+differences: the Director has already translated the long texts on production (the dev database
+had not caught up), the Donate page has two real ways to give and no placeholders, and the
+adoption list has three animals out of 293 in care.
+
 ---
 
 ## The five-minute version
@@ -43,36 +52,50 @@ control is at least 44 px, every photo has a description for screen readers, and
 labels and buttons are all translated and all fit.** Pages are light (a quarter to half a megabyte
 with photos). That is a better base than most small shelters have.
 
-**What lets it down.** Five things, in the order a visitor would hit them.
+**What lets it down.** Six things, in the order a visitor would hit them. Dev and production
+differ in places; where they do, production is the state that counts.
 
-1. **The Thai site is English where it matters.** Every menu and button is Thai, but every long
-   text is still English: the shelter's story on the home page, how adoption works, Foster,
-   Volunteer, Donate, and each animal's story. On Foster, Volunteer and Donate a Thai note explains
-   this; on the home page and the adoption list there is no note, so the English just looks like a
-   mistake. The fix is mostly the Director's words (six texts, already queued for translation), plus
-   a small code change to show the note in the two places that lack it. Also: a Thai phone lands in
-   English, because the site only remembers a choice, it never asks the phone its language.
+1. **Three animals on the adoption list, out of 293 in care.** On production, "Meet the animals"
+   leads to three cards (one without a photo) and "Happy endings" is empty. The animal page is the
+   best page on the site, and almost no animal has one. This is not code: it is staff marking
+   residents public and giving each a photo and a line or two, a few every week. Nothing else in
+   this report matters as much.
 2. **A shared link to an animal that has since been adopted lands on a bare "404 — This page could
    not be found."** No header, no footer, no way back, in a different font, and the page answers
-   "all is well" (status 200) to anything that checks links. That is the single most common broken
-   moment a shelter site has: people share animals on Facebook and LINE and the animal finds a home.
-   Half a day to fix, no words needed from the shelter.
-3. **The Donate page asks for money in the wrong order and still shows placeholders.** A donor reads
-   the intro, three "what your donation funds" lines, then a "How to give" list that says "(bank
-   name)", "(number)", "(PromptPay id)" and "(Wise / PayPal / other details)", and only then reaches
-   the real DonorBox button under "Ways to give". The placeholder part is already on the backlog
-   (the Director's step, item *Donate page: finish the hand steps*). The order is a small code
-   change: buttons first, reasons after.
-4. **Three promises lead to a page that keeps none of them.** "Give monthly" (home page),
+   "all is well" (status 200) to anything that checks links. People share animals on Facebook and
+   LINE and the animal finds a home; every one of those shares then lands here. Half a day to fix,
+   no words needed from the shelter.
+3. **No phone number and no LINE on the live site, while the words promise both.** Production's
+   contact channels are Messenger and email only. The hours line says "Call us to book an
+   appointment", the Foster and Volunteer pages say "email us or message us on LINE", every
+   animal's page says "Message or call us to book a visit", and its "Book a visit" button sends an
+   email. Either enter a phone number and a LINE id in Settings → Website (two fields), or change
+   the words. On a phone the menu's "Talk to us" panel also sits below the first screen, on dev and
+   production alike.
+4. **The Donate page says the same thing twice and asks in the wrong order.** On production the
+   placeholders are gone, replaced by a block pasted from Facebook: bank details typed in
+   fake-bold letters (𝗗𝗢𝗡𝗔𝗧𝗜𝗢𝗡 𝗢𝗣𝗧𝗜𝗢𝗡𝗦) that screen readers cannot read, search engines cannot
+   index and a donor cannot copy, a DonorBox note inside the text, emoji; and then, under all of
+   it, the real DonorBox and PayPal buttons. Move the bank and Wise details into the ways-to-give
+   cards (which have a copy button and take a QR), delete the pasted block, and put the buttons
+   first. Small code plus ten minutes in Settings.
+5. **Three promises lead to a page that keeps none of them.** "Give monthly" (home page),
    "Sponsor a resident" (menu, home card) and "Give monthly towards their food and care" (every
-   animal's page) all go to the Donate page, which offers neither a monthly gift nor a sponsorship.
-   Sponsorship drives are planned (backlog, *Sponsorship drives for sick residents*); until they
-   exist, the words should promise what the page delivers. Fifteen minutes of wording.
-5. **On a phone, the ways to talk to the shelter are hidden.** The menu's "Talk to us" panel
-   (LINE, Call) sits 93 px below the bottom of a 375 × 812 phone screen, with nothing to say the menu
-   scrolls. The footer, the other place the LINE id lives, is 5.6 screens down the home page. A
-   visitor who wants to ask about an animal will find "Ask on LINE" on the animal's page, but from
-   anywhere else, contact is two taps and a scroll they have no reason to expect. Half a day.
+   animal's page) all go to the Donate page, which offers neither a monthly gift nor a
+   sponsorship. Sponsorship drives are planned (backlog, *Sponsorship drives for sick residents*);
+   until they exist, the words should promise what the page delivers. Fifteen minutes of wording.
+6. **The impact band shows "1 adopted into new homes this year" and "0 living with foster
+   families".** True, and the worst first impression a donor could get beside "293 in our care
+   today". A tile at zero or one should hide itself, or the band should lead with the totals (321
+   rehomed, 1,200 sterilisations, 2,000 outreach dogs), which are the shelter's real story. An hour
+   of code.
+
+**Thai is in better shape than the dev database suggested.** On production the Director has
+translated the story, how adoption works, Foster, Volunteer, Donate, and the animals' hook lines
+and stories, and it reads well. What is still English in Thai mode: the hero's tagline, the
+visiting-hours line, the address, and a Friend's blurb. Two of those are fields in Settings →
+Website; the address has no Thai field yet. And a Thai phone still lands in English, because the
+site remembers a choice but never asks the phone its language.
 
 **What a visitor cannot find at all.** There is no page about the shelter itself: who runs it, how
 long it has existed, its registration as a foundation, where exactly it is and how to get there, and
@@ -89,9 +112,9 @@ page carries no structured data saying "this is an animal shelter at this addres
 hours", the Our work list and five other pages share without a picture, and there is no sitemap.
 (The missing canonical tag is already on the backlog with the Search Console item.)
 
-**What to look at first.** Open the site on your phone, switch to Thai, and read the home page to
-the bottom. Then tap any animal, copy its link, and open it after the animal is marked adopted.
-Those two walks show items 1 and 2 above better than any screenshot.
+**What to look at first.** Open the live site on your phone and tap "Meet the animals". Then tap
+Donate and read down to the buttons. Then copy an animal's link and open it after the animal is
+marked adopted. Those three walks show items 1, 4 and 2 above better than any screenshot.
 
 **The suggestions, ranked by how much they help a visitor for the effort.** Details and
 ready-to-paste backlog items are in §3–§8. "Needs" says whether the work is code, the Director's
@@ -99,28 +122,31 @@ words, photos, or a decision. Sizes: S = under a day, M = one to three days, L =
 
 | # | Suggestion | Who it helps | Needs | Size |
 |---|---|---|---|---|
-| 1 | A kind, branded "not found" page with a way back, and a true 404 where the page can give one (§3.1) | Everyone who follows an old link | Code | S |
-| 2 | Donate page: ways to give first, reasons after; placeholders out; a sentence under each button (§6.1) | Every donor | Code + Director's data (item already filed) | S |
-| 3 | Thai texts for the six long pages, and the "English for now" note on the two places that lack it (§5.1) | Every Thai visitor | Director's words + code | S code, M words |
-| 4 | Phone menu: Talk to us on the first screen (§4.1) | Phone visitors | Code | S |
+| 1 | Publish the animals: residents marked public, each with a photo and a line or two, every week (§5.7) | Adopters, and everyone else | Staff time + photos, ongoing | M, ongoing |
+| 2 | A kind, branded "not found" page with a way back, and a true 404 where the page can give one (§3.1) | Everyone who follows an old link | Code | S |
+| 3 | A phone number and a LINE id in Settings, or words that stop promising them (§5.5) | Everyone who wants to talk to the shelter | Director's data (two fields), else words | S |
+| 4 | Donate page: bank and Wise details as ways-to-give cards, the pasted block out, buttons first (§6.1) | Every donor | Code + ten minutes in Settings | S |
 | 5 | Say what the Donate page actually offers until sponsorship exists (§6.2) | Donors; trust | Words (dictionary) | S |
-| 6 | Tap targets under 44 px on seven kinds of link (§3.2) | Phone visitors | Code | S |
-| 7 | Speak to the visitor on the adoption list, and call the list one thing (§5.2) | Adopters | Words (dictionary) | S |
-| 8 | An About / Visit us page: the people, the place, the hours, how to get there (§5.3) | Donors, adopters, volunteers | Director's words + photos, then code | M |
-| 9 | Trust block: registration number, who we are, where the money goes (§6.3) | Overseas donors | Director's data + code | S–M |
-| 10 | Structured data for the shelter, a default share picture, share tags on Our work (§8.2) | Search, Facebook and LINE shares | Code | S |
-| 11 | First visit in the phone's own language (§4.4) | Thai visitors | Code | S |
-| 12 | Bring the inner pages up to the redesign's scale (§3.3) | Everyone; consistency | Code | M |
-| 13 | A give-link at the end of every story (§6.4) | Donors | Code | S |
-| 14 | One badge for "available for adoption"; friendlier empty photo frames (§3.4) | Adopters | Code (+ photos from the shelter) | S |
-| 15 | Animal page on a laptop: buttons in the column, not a bar across the screen (§3.5) | Laptop visitors | Code | S |
-| 16 | Tagline and story: stop repeating the headline, take the number out of the story (§5.4) | Everyone | Director's words | S |
-| 17 | A LINE QR code and a Thai address line (§5.5) | Thai visitors | Code + one small schema change | S |
-| 18 | "Animals rehomed since <year>": a period on the big numbers (§5.6) | Donors; trust | Code + one date from the Director | S |
-| 19 | Home page title with a descriptor (§8.3) | Search | Code | S |
-| 20 | Thai pages at their own addresses so search engines can find them (§8.1) | Thai search visitors | Decision, then code | L |
-| 21 | What the domain split does to Staff login, Open the app and the card pages (§4.5) | Staff | Note for the split build | — |
-| 22 | Sitemap (§8.4) | Search | Code; fold into the Search Console item | S |
+| 6 | Impact band: hide a tile at zero or one, lead with the totals (§3.7) | Donors; trust | Code | S |
+| 7 | Phone menu: Talk to us on the first screen (§4.1) | Phone visitors | Code | S |
+| 8 | Tap targets under 44 px on seven kinds of link (§3.2) | Phone visitors | Code | S |
+| 9 | Speak to the visitor on the adoption list, and call the list one thing (§5.2) | Adopters | Words (dictionary) | S |
+| 10 | An About / Visit us page: the people, the place, the hours, how to get there (§5.3) | Donors, adopters, volunteers | Director's words + photos, then code | M |
+| 11 | Trust block: registration number, who we are, where the money goes (§6.3) | Overseas donors | Director's data + code | S–M |
+| 12 | Structured data for the shelter, a default share picture, share tags on Our work (§8.2) | Search, Facebook and LINE shares | Code | S |
+| 13 | First visit in the phone's own language (§4.4) | Thai visitors | Code | S |
+| 14 | Thai for the tagline, the hours line and the address, and the "English for now" note where it is missing (§5.1) | Thai visitors | Director's words + a tiny schema change + code | S |
+| 15 | Bring the inner pages up to the redesign's scale (§3.3) | Everyone; consistency | Code | M |
+| 16 | A give-link at the end of every story (§6.4) | Donors | Code | S |
+| 17 | One badge for "available for adoption"; friendlier empty photo frames (§3.4) | Adopters | Code (+ photos from the shelter) | S |
+| 18 | Animal page on a laptop: buttons in the column, not a bar across the screen (§3.5) | Laptop visitors | Code | S |
+| 19 | Tagline and story: stop repeating the headline, take the number out of the story (§5.4) | Everyone | Director's words | S |
+| 20 | A LINE QR code once a LINE id exists (§5.5) | Thai visitors | Code | S |
+| 21 | "Animals rehomed since <year>": a period on the big numbers (§5.6) | Donors; trust | Code + one date from the Director | S |
+| 22 | Home page title with a descriptor (§8.3) | Search | Code | S |
+| 23 | Thai pages at their own addresses so search engines can find them (§8.1) | Thai search visitors | Decision, then code | L |
+| 24 | What the domain split does to Staff login, Open the app and the card pages (§4.5) | Staff | Note for the split build | — |
+| 25 | Sitemap (§8.4) | Search | Code; fold into the Search Console item | S |
 
 ---
 
@@ -176,11 +202,23 @@ Every cell was captured and measured; ✓ means looked at by eye as well.
 | Enclosure tag | `/e/<id>` | ✓ | measured | measured | measured |
 | A wrong link | `/adopt/0000…` | ✓ | measured | ✓ | measured |
 
+### Production, read signed in
+
+At Lutan's request after the dev pass, and with him signed in to `lannacare.org` in the desktop
+app's browser pane (the public site is locked to visitors until go-live), these pages were read as
+text, with a handful of screenshots looked at and not kept: in English `/`, the phone menu,
+`/adopt`, `/adopt/<a cat>`, `/adopt/international`, `/our-work`, `/friends`, `/donate`,
+`/foster`, `/volunteer`; in Thai `/`, `/adopt`, `/adopt/<the same cat>`, `/donate`,
+`/foster`. The pane was about 590 px wide, so this was the phone layout; nothing was measured at
+375 or 1280 px on production, and the measurements in this report are all from dev. The language
+toggle was switched to Thai and back to English in his session; nothing else was touched.
+
 ### What was not looked at
 
-- **Production and the test site.** By the brief. The live data (real photos, the real LINE id and
-  phone, the Director's texts) will change how several pages read; the dev database has two public
-  animals, one story, one test business and one way to give.
+- **Production at the two widths, and the test site.** The dev pass carried the measurements; the
+  production pass read content. Live pages that were not read: `/friends/join`, `/privacy`, a
+  story page, a name card and an enclosure tag (their code is identical and their content is the
+  same dictionary text or the same kind of data).
 - **A real phone.** Chrome's phone emulation and the desktop app's pane at 375 px, not an iPhone or
   an Android handset; the Web Share sheet and LINE's app hand-off were read from the links, not
   tapped.
@@ -224,7 +262,9 @@ These are the things a redesign of the inner pages (§3.3) must not lose.
   individual." The Thai "this page is in English for now" note on Foster, Volunteer and Donate.
 - **The Thai chrome is complete.** Header, menu, footer, buttons, badges, quick-fact labels, the
   contact card, the ways-to-give labels, the privacy notice: all Thai, all fitting, with the right
-  `lang` on the page so screen readers switch voice.
+  `lang` on the page so screen readers switch voice. **Production:** the Director's Thai for the
+  story, how adoption works, Foster, Volunteer, Donate and the animals' hooks and stories is in
+  place and reads naturally.
 - **Ways to give** have a copy button with a fallback, a QR with a caption, and only allow-listed
   company links.
 - **Links in staff-written text are safe** (allow-listed schemes, new-tab announced to screen
@@ -380,6 +420,21 @@ the quick facts, has room for both buttons, where a laptop visitor's eye already
   Source Sans, Noto Sans Thai). Not a problem; if it ever is, dropping Fraunces's `opsz` axis is the
   cheap saving.
 
+### 3.7 The impact band at low numbers
+
+**Production:** the band reads 293 · 1 · 0 · 6 · 321 · 2,000 · 1,200: "dogs and cats in our care
+today", "adopted into new homes this year", "living with foster families", "in treatment right
+now", then the three totals. The first line is the shelter's scale; the second and third, "1" and
+"0", are the two numbers a donor least wants to see beside it, and they are the first thing under
+the hero. They are true, and they will move (it is October; the adoption count resets each year),
+but a band exists to build confidence and these two spend it.
+
+- [ ] **Impact band: hide a live tile whose number is 0 or 1, and lead with the totals.** In
+  `src/lib/site/impact.ts`, drop a `public_shelter_stats` tile when its value is below 2 (the
+  baseline figures always show, they are history), and order the band totals first (rehomed,
+  sterilisations, outreach) then today's counts. On dev that leaves six tiles; on production
+  today, five. **Size:** S (an hour). **Needs:** code. → *Public website*
+
 ---
 
 ## 4. Navigation
@@ -491,7 +546,7 @@ Decided 2026-10-10: the public site moves to `lannacareforanimals.org`, the staf
 
 ## 5. Content
 
-### 5.1 Thai: the chrome is done, the words are not
+### 5.1 Thai: the chrome is done; on production, so are the long texts
 
 Measured on the Thai run (every page, both widths): the untranslated text is exactly the
 staff-written prose, nothing else.
@@ -506,21 +561,30 @@ staff-written prose, nothing else.
 | Shelter Friends | a Friend's blurb and offer | No |
 | Everywhere | the address, "Mae Wang, Chiang Mai, Thailand" | No (there is no Thai column for it) |
 
+That is the dev database. **Production is further on:** the story, how adoption works, Foster,
+Volunteer and Donate are all approved in Thai, and so are the featured cat's hook line and story.
+What is still English on the live Thai pages:
+
+| Where | What is English on production | Where it is fixed |
+|---|---|---|
+| Home, hero | The tagline paragraph | Settings → Website → Tagline (Thai) — a field that exists and is empty |
+| Footer, menu, every animal's "How to meet" | The visiting-hours line ("Call us to book an appointment…") | Settings → Website → Visiting hours (Thai) — exists and is empty |
+| Footer, every animal's "Find us" | "Mae Wang, Chiang Mai, Thailand" | No Thai field yet (§5.5) |
+| Shelter Friends | One Friend's blurb and offer | Management → Shelter Friends, the Thai boxes |
+| Animal pages | Breed ("Maltese/Shih Tzu mix") | The filed Thai-breed schema item |
+
 International adoption and Become a Shelter Friend have Thai starter texts in the dictionary and
-read fully in Thai. The Director's translations for the six `site_pages` texts are queued at
-Management → Translations (F-11 remainder, open since 2026-10-04); Thai breed and colour are a
-filed schema item. What this review adds:
+read fully in Thai. Thai breed and colour are a filed schema item. What this review adds:
 
 - [ ] **Show the "English for now" note on the home page's story and the adoption list's "How
   adoption works" box.** Both read `sitePageText()`, which already reports `bodyIsOriginal`;
   `SitePageView` shows the note and these two call sites do not. Same note, same style, one small
   change each in `src/app/page.tsx` and `src/app/adopt/page.tsx`. **Size:** S (an hour).
   **Needs:** code. → *Public website*
-- [ ] **The Director: Thai for the six public texts** (Our story, How adoption works, Foster,
-  Volunteer, Donate, and the Donate page's ways-to-give notes), at Management → Translations. The
-  "English for now" note disappears by itself on each page once its Thai is approved. **Size:** M
-  for the words; no code. **Needs:** the Director (or a Thai volunteer she trusts). → *Public
-  website*, the F-11 line
+- [ ] **The Director: Thai for the tagline and the visiting-hours line** (Settings → Website, the
+  two Thai boxes beside the English), and the Thai notes for each way to give once they exist.
+  **Size:** S; no code. **Needs:** the Director. → *Public website*, the F-11 line (which can
+  then close)
 
 ### 5.2 The adoption list speaks to staff, not to a visitor
 
@@ -549,14 +613,15 @@ Checked against the brief's list, on dev data:
 |---|---|---|
 | The shelter's story | Partly | Three paragraphs on the home page; English only in Thai mode; no founding year |
 | The people behind it | **No** | Nobody is named anywhere; no photo of the team or the Director |
-| Where it is | Partly | "Mae Wang, Chiang Mai, Thailand" in the footer; the map link field exists and is empty on dev; no "how to get there" |
-| Opening times | Yes | Footer and the How to meet box |
+| Where it is | Partly | "Mae Wang, Chiang Mai, Thailand" in the footer; production has the Google Maps link; no street address, no "how to get there" |
+| Opening times | Partly | Production's hours line is "Call us to book an appointment, we are available 7 days a week": a sentence, not hours, and it names a channel the site does not offer |
 | How adoption works, step by step | Yes | The box on `/adopt`, linked from every animal; English only in Thai |
 | What adoption costs | **No** | The steps mention "a short adoption form and agreement" and nothing about a fee or what is included; Thai adopters ask this first |
 | Success stories | Partly | "Happy endings": name, species and month, no photo of the animal at home and no words; the app's adoption updates (photos and notes from adopters) are never shown to the public |
 | Impact numbers that are trusted | Partly | Live counts plus two baselines ("451 animals rehomed", "300 sterilisations") with **no period**: rehomed since when? |
 | How a gift is spent | Partly | "500 baht feeds a dog for a month / 1,500 sterilises and vaccinates / 5,000 covers an emergency" — seeded on 2026-09-21 as examples and never confirmed by the Director |
-| How to get in touch on LINE | Yes | Footer, menu, contact cards, "Ask on LINE"; no QR code (§5.5) |
+| How to get in touch on LINE | **No, on production** | No LINE id is set on the live site, so no "Ask on LINE", no LINE in the footer or menu — while Foster and Volunteer say "message us on LINE" (§5.5) |
+| A phone number | **No, on production** | None anywhere on the live site, while "Call us" appears in the hours line and on every animal's page (§5.5) |
 | Registration as a foundation | **No** | The mockup had a "Registered foundation no." line; it was left out for want of the number |
 | What a visit is like, whether to book, what to bring | **No** | |
 
@@ -612,20 +677,31 @@ The first, second, fourth and last rows are one page:
   Settings → Website: tagline (both languages) and the Our story page. Appendix A has drafts.
   **Size:** S. **Needs:** the Director; no code. → *Public website*
 
-### 5.5 LINE and the address
+### 5.5 Contact channels: a phone number, LINE, a QR and a Thai address
 
-LINE is the first channel everywhere, which is right for Thailand. Two things Thai visitors expect:
-a **LINE QR code** (most Thai businesses show one; typing an id is unusual), and the **address in
-Thai**. The id is on the site and a QR can be generated from the `line.me` add-friend link with no
-new data; the address has no Thai column (`site_content` has `visiting_hours_th` but no
-`contact_address_th`), so "Mae Wang, Chiang Mai, Thailand" appears on every Thai page.
+**Production:** Settings → Website has Messenger and the email set, and no phone number and no
+LINE id. So the footer, the phone menu's "Talk to us" and every contact card offer Messenger and
+email; an animal's bar reads "Ask on Messenger" and "Book a visit", and "Book a visit" opens an
+email because there is no number to dial. Meanwhile five pieces of text promise the other two
+channels: the hours line ("Call us to book an appointment, we are available 7 days a week"), the
+Foster and Volunteer pages ("email us or message us on LINE"), and every animal's "How to meet"
+box ("Message or call us to book a visit"). Messenger-only may be the Director's choice — many
+Thai pages run on Facebook — but then the words must match it, and LINE is where most Thai
+adopters would expect to find a shelter.
 
-- [ ] **A LINE QR code in the footer and the phone menu, and a Thai address line.** The QR is
-  generated server-side from `lineLink()` (the app already makes QR codes for tags) and shown
-  beside "LINE: @…" in the footer and under Talk to us in the menu. The Thai address is one
-  nullable column `contact_address_th` on `site_content` and its field on Settings → Website,
-  read through `pairedText()` like the hours. **Size:** S code + a tiny schema PR. **Needs:**
-  code; the Director types the Thai address. → *Public website*
+- [ ] **The Director: a phone number and a LINE id for the public site, or the words changed to
+  match Messenger.** Settings → Website: the Phone and LINE fields; the hours line rewritten as
+  hours ("Open every day 9:00–16:00; message us first so someone can show you round", Appendix
+  A.7). If the shelter prefers Messenger only, the Foster and Volunteer texts drop "LINE", the
+  hours line drops "Call us", and the animal page's "Message or call us" becomes "Message us"
+  (one dictionary string). **Size:** S; no code if the fields are filled, one dictionary string
+  if not. **Needs:** the Director's decision and data. → *Public website*
+- [ ] **A LINE QR code in the footer and the phone menu, and a Thai address line.** Once a LINE id
+  exists: the QR is generated server-side from `lineLink()` (the app already makes QR codes for
+  tags) and shown beside "LINE: @…" in the footer and under Talk to us in the menu. The Thai
+  address is one nullable column `contact_address_th` on `site_content` and its field on
+  Settings → Website, read through `pairedText()` like the hours. **Size:** S code + a tiny
+  schema PR. **Needs:** code; the Director types the Thai address. → *Public website*
 
 ### 5.6 A period on the big numbers
 
@@ -638,6 +714,32 @@ the target. Without the year, 451 is just a number; with it, it is a record.
   `counting_since` date) to the row and its Settings form, and render the label as "Animals
   rehomed since 2019" in both languages. **Size:** S code + tiny schema. **Needs:** the year from
   the Director. → *Public website*, beside the outreach-figures item
+
+### 5.7 Publish the animals
+
+**Production:** 293 dogs and cats in care today, **three** on the adoption list: one dog with no
+photo and two cats sharing one photo. "Happy endings" is empty (one adoption this year, not
+public). The featured cat's "story" is the single word "Ginger", which is her colour, typed into
+the bio box. On dev the list is just as short, so this was easy to mistake for test data; it is
+the live site.
+
+Everything the redesign built for an adopter — the hook line, the quick facts, "Gets along with",
+the story, the ideal home, the share preview with a photo — exists for three animals. A visitor who
+arrives from Facebook, taps "Meet the animals" and sees three cards, one blank, concludes the
+shelter has three animals or has stopped updating. No code change moves this; it is the single
+most valuable thing the shelter's own people can do for the site.
+
+- [ ] **Staff: make the adoptable residents public, a few a week, each with a photo and two
+  lines.** For each resident who could be adopted: tick *Show on the public site* and *Ready for
+  adoption* on Edit resident, add one clear photo (a phone is fine; the site resizes), a hook line
+  (one sentence, 120 characters: "A cuddly corgi who will follow you from room to room"), and the
+  bio as two or three sentences about how they are with people and other animals. Correct the bio
+  that holds a colour. A target: 30 animals public within a month, then every new adoptable
+  arrival within a week of intake. The Translations queue picks each text up for Thai. **Size:**
+  M of staff time, ongoing; no code. **Needs:** the Director to choose who does it, and the
+  photos. (The dry-run and manual already cover the screens; the Website settings page could show
+  "N residents in care, M public" so the gap stays visible — a one-line code addition, S.) →
+  *Public website*
 
 ---
 
@@ -656,17 +758,33 @@ looks finished. On dev the Donate page does not look finished.
 
 ![Donate page at 375 px](public-site-review/donate-375-en.jpg)
 
-Reading down on a phone: intro (good), "What your donation funds" (three unconfirmed figures),
-"How to give" with four placeholders in brackets, "Please email us a note with your transfer", and
-then — one full screen down — "Ways to give" with the real DonorBox button and, under it, a note
-that on dev reads "Support-lca-dogs" (the campaign's slug typed as the note). The Director's
-hand-steps item already covers the placeholders and the real ways to give; this review adds the
-order and the labels.
+Reading down on a phone (dev): intro (good), "What your donation funds" (three unconfirmed
+figures), "How to give" with four placeholders in brackets, "Please email us a note with your
+transfer", and then — one full screen down — "Ways to give" with the real DonorBox button and,
+under it, a note that on dev reads "Support-lca-dogs" (the campaign's slug typed as the note).
 
-- [ ] **Donate page: ways to give first.** Render `DonateWays` directly under the page's intro
-  paragraph and move "What your donation funds" and the rest of the text below the buttons
-  (`SitePageView`'s `after` slot becomes a `between` slot, or the Donate page composes its own
-  order). Label each link button by what it does, not only the company: "Give by card or PayPal
+**Production** is different and not better. The placeholders are gone. In their place the page
+text carries a block pasted from the shelter's Facebook page: two lines with emoji ("Please
+message us for US, UK and Australia bank details", "write a note in the description or send us a
+screenshot"), a stray "Lanna Care for Animals Foundation (Powered by Donorbox)", and under "How to
+give" a "DONATION OPTIONS" list typed in **mathematical bold letters** (𝗪𝗜𝗦𝗘, 𝗧𝗛𝗔𝗜 𝗕𝗔𝗡𝗞) —
+the Facebook trick for bold text, which a screen reader spells out letter by letter as "mathematical
+sans-serif bold capital W", a search engine does not index as words, and a phone cannot copy as
+the plain account number. The Wise line is an email address; the Thai bank line is the bank, the
+account name, the number and the SWIFT code as one run of text with no copy button. Then, under
+all of that, "Ways to give" with two real buttons, DonorBox and PayPal. So the page gives a donor
+the same information twice, in two styles, the better one second. The Director's hand-steps item
+covers entering the ways to give; this review adds the order, the labels, and moving the bank and
+Wise details out of the prose into the cards built for them.
+
+- [ ] **Donate page: ways to give first, and the bank details in the cards, not the prose.** Render
+  `DonateWays` directly under the page's intro paragraph and move "What your donation funds" and
+  the rest of the text below the buttons (`SitePageView`'s `after` slot becomes a `between`
+  slot, or the Donate page composes its own order). The Director: in Settings → Website → Donate,
+  add the Thai bank as a *Bank transfer* way (bank, account name, number — the card gets the copy
+  button and the PromptPay QR) and Wise as a *Wise* way, then delete the pasted "DONATION OPTIONS"
+  block and the two emoji lines from the page text, keeping "What your donation funds" and one
+  sentence asking for a note with the transfer. Label each link button by what it does, not only the company: "Give by card or PayPal
   (DonorBox)", "Bank transfer from abroad (Wise)" — the company name stays, the verb comes first
   (dictionary strings keyed by `way`). Treat the note field as a sentence for the donor ("Any
   currency; a receipt is emailed to you") and say so in the Settings form's hint. Where DonorBox
@@ -938,6 +1056,11 @@ nothing goes on the site until she has.
 > PromptPay — Scan the code with any Thai banking app.
 > Bank transfer — [Bank], account name Lanna Care for Animals Foundation. Please message us a note
 > with your transfer so we can thank you and send a receipt.
+
+### A.7 The visiting-hours line (Settings → Website → Visiting hours, both languages)
+
+> Open every day, 9:00–16:00. Please message us first so someone is free to show you round.
+> เปิดทุกวัน 9:00–16:00 กรุณาทักมาก่อนล่วงหน้า เพื่อให้มีเจ้าหน้าที่พาชม
 
 ---
 

@@ -15,10 +15,10 @@
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for — a review-only document of every public page at 375 and 1280 px in English and Thai, opening with a five-minute summary and ranking 22 suggestions as ready-to-paste backlog items grouped design / navigation / content / trust / comparison / search, with screenshots and a PDF copy on the Desktop; the item asked for exactly that and for nothing to be changed
+- [x] Change is described in one sentence, and it matches what the backlog item asked for — a review-only document of every public page at 375 and 1280 px in English and Thai, opening with a five-minute summary and ranking 25 suggestions as ready-to-paste backlog items grouped design / navigation / content / trust / comparison / search, with screenshots and a PDF copy on the Desktop; the item asked for exactly that and for nothing to be changed
 - [x] Files/areas touched listed — `docs/public-site-review-2026-10-13.md` (new), `docs/public-site-review/*.jpg` (19 new), `docs/decisions/2026-10-13-public-site-fable-review.md` (new), `docs/backlog.md` (one status note on the review's own line, and one open item moved from below `## Completed` back into its section, text unchanged — see §2), this plan; a PDF written to `C:\Users\Leidos\OneDrive\Desktop` outside the repo. No `src/`, `worker/`, `scripts/` or `supabase/` file changed
 - [x] Roles affected identified — none; no code, policy, grant or schema changed. The review *describes* what a signed-out visitor sees and changes none of it
-- [x] Anything explicitly **out of scope** written down — production and `test.lannacare.org` were not opened (the brief's rule); a real phone, a screen reader and a native Thai reader were not used (report §1 says so); the signed-in header and card-page states were not reviewed; the review raises no backlog items and ticks none; the walkthrough of the summary with Lutan is the step after this PR
+- [x] Anything explicitly **out of scope** written down — production was read only as text, signed in by Lutan at his request, and not measured at the two widths (report §1); `test.lannacare.org` was not opened; a real phone, a screen reader and a native Thai reader were not used (report §1 says so); the signed-in header and card-page states were not reviewed; the review raises no backlog items and ticks none; the walkthrough of the summary with Lutan is the step after this PR
 
 ## 2. Automated gates
 
@@ -58,6 +58,8 @@ marked ✓ were also read by eye in the desktop app's browser pane:
 `/adopt/<Panda>` ✓ · `/adopt/<Markey>` · `/adopt/international` ✓ · `/our-work` ✓ · `/our-work/<id>` ✓ ·
 `/friends` ✓ · `/friends/join` · `/donate` ✓ · `/foster` · `/volunteer` · `/privacy` · `/r/R-0014` ·
 `/r/R-0395` ✓ · `/e/<id>` ✓ · `/adopt/0000…` (not found) ✓
+
+**Production, read signed in** (Lutan signed in to `lannacare.org` in the browser pane and asked for it; the pane was ~590 px wide, so the phone layout; text read, nothing measured, nothing kept): English `/`, the phone menu, `/adopt`, `/adopt/<a cat>`, `/adopt/international`, `/our-work`, `/friends`, `/donate`, `/foster`, `/volunteer`; Thai `/`, `/adopt`, `/adopt/<the same cat>`, `/donate`, `/foster`. The language toggle was switched to Thai and back to English in his session; nothing else was changed.
 
 - [ ] Happy path works end to end — n/a: review only, no code changed; the pages and widths looked at are the list above
 - [ ] Data persists — n/a: review only; nothing was written
@@ -141,13 +143,13 @@ marked ✓ were also read by eye in the desktop app's browser pane:
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| — | — | none: the review changes no behaviour; what it found about the public pages is in the report as 22 proposed backlog items, none raised here | accepted — Lutan picks after the walkthrough |
+| — | — | none: the review changes no behaviour; what it found about the public pages is in the report as 25 proposed backlog items, none raised here | accepted — Lutan picks after the walkthrough |
 
 ## Left for manual verification
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Walk through the five-minute summary with Lutan: does it read in plain English, and which of the 22 suggestions become backlog items | `docs/public-site-review-2026-10-13.md`, top section, in chat; the PDF on the Desktop is the same text |
+| 1 | Walk through the five-minute summary with Lutan: does it read in plain English, and which of the 25 suggestions become backlog items | `docs/public-site-review-2026-10-13.md`, top section, in chat; the PDF on the Desktop is the same text |
 | 2 | On a real phone on `test.lannacare.org` (signed in, since the site is locked): an animal's "Share" opens the phone's share sheet, and "Ask on LINE" opens LINE with the message started — the review read the links, it did not tap them | `/adopt/<any animal>` on a phone |
 | 3 | A Thai reader skims the Thai home page and menu once for wording — the review judged the Thai as a non-native reader | `/` in Thai, on a phone |
 
