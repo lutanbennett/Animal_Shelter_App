@@ -74,15 +74,23 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  "Admin and Management can now pick a resident on Add Medical Photos and Record Weight. The list was coming up empty for them.",
-  "The shelter's database is now backed up every night instead of once a week, so if anything ever goes wrong at most a day of work can be lost.",
-  "New Bills page for photos of receipts. Take a photo of a bill when you record a delivery or finish a clinic visit, and type what it cost. Or take photos of all the day's bills and add them together at night on the Bills page, then tap which delivery or clinic visit each one belongs to. Bills waiting to be matched are counted on the page, and on the Home screen where your role has a Bills tile.",
-  { text: "Maintenance jobs now take bills. On a job, tap Add a bill, type the amount and a note such as \"paint, Thai Watsadu\", and photograph the receipt; add as many bills as the job has. The job's actual cost becomes the total of its bills, and if someone had typed an actual cost by hand the job shows both and says the bills are the ones used. Receipts waiting on the Bills page can be matched to a job too. Only Management and Admin see bills and their amounts.", roles: ["admin", "management"] },
-];
+export const unreleased: ReleaseNote[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.29.0",
+    date: "2026-10-13",
+    title:
+      "Bills: photograph a receipt, type what it cost, and say what it was for",
+    major: true,
+    notes: [
+      "Admin and Management can now pick a resident on Add Medical Photos and Record Weight. The list was coming up empty for them.",
+      "The shelter's database is now backed up every night instead of once a week, so if anything ever goes wrong at most a day of work can be lost.",
+      "New Bills page for photos of receipts. Take a photo of a bill when you record a delivery or finish a clinic visit, and type what it cost. Or take photos of all the day's bills and add them together at night on the Bills page, then tap which delivery or clinic visit each one belongs to. Bills waiting to be matched are counted on the page, and on the Home screen where your role has a Bills tile.",
+      { text: "Maintenance jobs now take bills. On a job, tap Add a bill, type the amount and a note such as \"paint, Thai Watsadu\", and photograph the receipt; add as many bills as the job has. The job's actual cost becomes the total of its bills, and if someone had typed an actual cost by hand the job shows both and says the bills are the ones used. Receipts waiting on the Bills page can be matched to a job too. Only Management and Admin see bills and their amounts.", roles: ["admin", "management"] },
+    ],
+  },
   {
     version: "0.28.0",
     date: "2026-10-13",
