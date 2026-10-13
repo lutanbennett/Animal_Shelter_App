@@ -39,7 +39,8 @@ const R = randomUUID();
 const probes = [
   ["read frequency_rounds", `select 1 from frequency_rounds limit 1`, { admin: 1, management: 1, doctor: 1, volunteer: 0, norole: 0 }],
   ["read rounds", `select 1 from rounds limit 1`, { admin: 1, management: 1, doctor: 1, volunteer: 1, norole: 1 }],
-  ["write frequency_rounds", `delete from frequency_rounds where frequency_id = (select id from frequency where label = 'Once daily')`, { admin: 1, management: 1, doctor: 0, volunteer: 0, norole: 0 }],
+  // management: 0 since 0145 — a frequency_rounds write asks reference.types Edit, which is Admin-only (paper line 374; "A write is now Admin's, as the frequency list is", docs/decisions/2026-10-05-perm-convert-orphans.md). Was 1 under the old role list.
+  ["write frequency_rounds", `delete from frequency_rounds where frequency_id = (select id from frequency where label = 'Once daily')`, { admin: 1, management: 0, doctor: 0, volunteer: 0, norole: 0 }],
   ["write rounds", `update rounds set name = name where key = 'lunch'`, { admin: 1, management: 0, doctor: 0, volunteer: 0, norole: 0 }],
   ["write prescription_rounds", `delete from prescription_rounds where prescription_id in (select id from prescriptions where resident_id = '${R}')`, { admin: 1, management: 1, doctor: 0, volunteer: 0, norole: 0 }],
 ];
