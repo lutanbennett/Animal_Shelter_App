@@ -310,7 +310,7 @@ to whoever reads the record afterwards:
 
 ```bash
 node scripts/apply-migrations.mjs --drift production
-node scripts/apply-migrations.mjs --drift dev
+node scripts/apply-migrations.mjs --drift test
 ```
 
 Both must end `No drift: <env> matches origin/main`, with `0` in each direction.
