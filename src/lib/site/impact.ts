@@ -31,6 +31,16 @@ export type ImpactStat = {
   label: string;
 };
 
+/**
+ * A live count below this is left off the band. "1 adopted this year" and
+ * "0 with foster families" are true, and in a band meant to show the
+ * shelter's scale they are the two numbers a donor least wants to see
+ * (public site review 2026-10-13, §3.7). The tile comes back on its own
+ * once the count does. Only the live counts: the baseline figures below
+ * are history and always show.
+ */
+export const LIVE_TILE_MIN = 2;
+
 export function impactStats(t: Dictionary, stats: ShelterStats | null): ImpactStat[] {
   if (!stats) return [];
   const s = t.home.stats;
@@ -39,7 +49,7 @@ export function impactStats(t: Dictionary, stats: ShelterStats | null): ImpactSt
     { key: "adopted-this-year", value: stats.adopted_this_year, label: s.adoptedThisYear },
     { key: "in-foster", value: stats.in_foster, label: s.inFoster },
     { key: "in-treatment", value: stats.in_treatment, label: s.inVetCare },
-  ];
+  ].filter((stat) => stat.value >= LIVE_TILE_MIN);
 }
 
 /**
@@ -51,6 +61,10 @@ export function impactStats(t: Dictionary, stats: ShelterStats | null): ImpactSt
  * both counted from the visit notes. With no baseline they show no tile at
  * all, never "0 dogs helped", because the Director's starting number is the
  * larger part of the claim.
+ *
+ * These go first on the band, before today's counts from impactStats: a
+ * lifetime total is the shelter's record, and a visitor should meet it
+ * before this year's count (review §3.7).
  */
 export type ImpactFigure = {
   key: string;

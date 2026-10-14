@@ -8,6 +8,7 @@ import { loadPublicProjects, parseCategoryParam } from "@/lib/projects/public";
 import { PublicHeader } from "../adopt/PublicHeader";
 import { PublicFooter } from "../adopt/PublicFooter";
 import { ProjectCard } from "./ProjectCard";
+import { HelpUsDoMore } from "./HelpUsDoMore";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getT();
@@ -98,6 +99,7 @@ export default async function OurWorkPage(props: PageProps<"/our-work">) {
             <ProjectCard key={project.id} project={project} locale={locale} t={t} />
           ))}
         </div>
+        {!error && shown.length > 0 && <HelpUsDoMore t={t} />}
       </div>
 
       <PublicFooter />

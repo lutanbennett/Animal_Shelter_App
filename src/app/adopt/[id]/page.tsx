@@ -341,14 +341,14 @@ export default async function PublicResidentPage(
             </Link>
           </section>
 
-          {/* No sponsor flow yet: /donate, as the header's "Sponsor a
-              resident" and the homepage card do (docs/decisions.md). */}
-          <section data-reveal aria-labelledby="sponsor-heading" className="flex flex-col gap-1">
-            <h2 id="sponsor-heading" className="font-site! text-lg font-bold text-site-ink">
-              {p.sponsorHeading(resident.name)}
+          {/* A gift, not sponsorship: /donate offers no monthly or per-animal
+              option yet (review §6.2, 2026-10-14). */}
+          <section data-reveal aria-labelledby="care-heading" className="flex flex-col gap-1">
+            <h2 id="care-heading" className="font-site! text-lg font-bold text-site-ink">
+              {p.careHeading}
             </h2>
             <Link href="/donate" className={`${textLink} self-start text-base`}>
-              {p.sponsorLink} &rarr;
+              {p.careLink(resident.name)} &rarr;
             </Link>
           </section>
         </div>

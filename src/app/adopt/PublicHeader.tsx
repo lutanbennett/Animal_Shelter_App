@@ -109,7 +109,7 @@ export async function PublicHeader({
         // No sponsor flow yet — that waits on the /donate item. Until then
         // it's the Donate page, which says how to give; never marked
         // current, because Donate is.
-        { key: "sponsor", href: "/donate", label: n.sponsor, current: false },
+        { key: "care", href: "/donate", label: n.care, current: false },
         // Shelter Friends is listed once there is someone to thank — or
         // while the visitor is on /friends itself, so the page stays marked.
         ...(showFriends || current === "friends"
