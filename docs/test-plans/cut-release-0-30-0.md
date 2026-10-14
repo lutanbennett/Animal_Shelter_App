@@ -90,7 +90,7 @@ Comparing 8 note(s) on origin/main against the new 0.30.0 entry
 All cut checks passed.
 ```
 
-- [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a` on the first push and tick it in a follow-up commit once the run is actually green — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a` on the first push and tick it in a follow-up commit once the run is actually green — all 7 jobs `success` on run 38549509827 at `12cf2e43`, the branch tip: test-plan, script-integrity, audit, new-policy-role-names, check, public-views, migration-numbers. Read from `gh run view 38549509827 --json jobs`, not from `gh pr checks`. `audit` is green this run, which it has not always been — a red there would not have been a blocker either way
 
 ## 3. Schema and data — *skip if no migration*
 
