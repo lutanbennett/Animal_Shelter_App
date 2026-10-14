@@ -134,7 +134,7 @@ try {
 
   for (const k of ["admin", "management"]) {
     console.log(`\nThe grid, as ${k}`);
-    const r = await page("/admin/who-does-what", cookies[k]);
+    const r = await page("/admin/who-does-what/details", cookies[k]);
     expect(r.status === 200, `opens (${r.status}${r.location ? ` → ${r.location}` : ""})`);
     if (r.status !== 200) continue;
     const html = assemble(r.html);

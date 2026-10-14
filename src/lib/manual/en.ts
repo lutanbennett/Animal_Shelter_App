@@ -1692,14 +1692,15 @@ const manual: Manual = {
           roles: ["admin", "management"],
           path: "Settings → Who does what (also on the Management page)",
           intro:
-            "One page that shows what every role can do, for showing people how the app is shared out. Every activity is down the side, grouped by area, and every role is across the top. It is read live from the roles' settings, so it is always today's answer. An Admin can change a box on it; Management can look but not change. It shows; it does not change anything.",
+            "Where Admin shares the app out. You give each role cards. A card puts a tile on the person's home screen and gives them what they need to use it, so a tile can never open a page they cannot use. Admin can give and remove cards; Management can look but not change.",
           steps: [
-            "Each box says Edit (see, add, change and remove), Read (see only) or None. For things that are an act with nothing to look at, such as recording a death, it says Yes or No. Admin is not a column: Admin can do everything, always, and the line above the grid says so.",
-            "A box with a small number in a circle is fixed for now: the system does not yet follow that box exactly. The number leads to the reason under the grid, and the reason says which roles it affects. Read it before telling someone what a marked box means. For example, a doctor's boxes are marked because a doctor works by their clinic, not by these boxes.",
-            "Under the reasons is What nobody can change: the rules no setting touches, such as Admin's powers and Security.",
-            "Admin only: to change a box, pick a new answer in it. After you have verified with your authenticator app (the page asks), every box is a small menu, and the choice is saved at once and listed in Recent changes. The role feels it the next time it opens a page, so check by signing in as that role. A box that needs another box refuses with the reason: correcting a stock figure needs Edit on the medication list or the diet list, and marking anyone's recurring job needs marking your own. A doctor's clinic boxes follow the clinic rule and cannot be set here.",
-            "Download CSV saves the same grid as a spreadsheet, with each fixed-for-now box saying why. Print prints the grid alone, sideways on the page, without the menu.",
-            "On a phone the grid scrolls sideways under the activity names. It is meant for a laptop or a printout.",
+            "Choose a role from the buttons across the top. Under it are that role's cards, in the order they will appear. Each card says in one sentence what it lets someone do, and which other card it includes: Residents includes View residents, so giving Residents also gives everything View residents gives.",
+            "Tap a card to see exactly what it gives: a short list of what the person can do and how much (Edit, Read or Yes). Cards in the Add a card list at the bottom open the same list before you add them, so you can see what you are about to give.",
+            "Admin only: after you have verified with your authenticator app (the page asks), each card has Add this card or Remove, and the cards have Move up and Move down. The change is saved at once and listed in Recent changes. The role feels it the next time it opens a page, so check by signing in as that role. Removing a card takes away only what that card gave: anything another card, or an item under Also allowed, still gives stays.",
+            "Also allowed lists single things a role can do that no card gives, and why. Admin can remove one, or allow one more thing by choosing the activity, how much and the reason. If a card the role holds already gives it, it is not listed.",
+            "The new cards are a first set. Adding a card to the list is a small update to the app; which cards a role has is yours to change here.",
+            "See every activity (Details) opens the full grid, with every activity down the side and every role across the top, read live. It is for checking exactly what a role can do, and for a printout. It is read-only: change a role by changing its cards. Boxes marked with a number in a circle are fixed for now, and the reason is under the grid. Download CSV saves the grid as a spreadsheet; Print prints it sideways.",
+            "Admin is not a card or a column: Admin can do everything, always, and the line at the top says so. What nobody can change is listed at the bottom of the page.",
           ],
         },
         {
