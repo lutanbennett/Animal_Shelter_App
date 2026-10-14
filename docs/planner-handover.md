@@ -126,14 +126,14 @@ browser belongs with building, not with reading.**
 | Production database | **not read from this session.** A peer session read it at Lutan's explicit request — see the backup alarm below |
 | Next free migration number | **`0195`, unclaimed.** Batch 6 carries no migration, deliberately, so the security fold can take it |
 | Open backlog items | **118 on `main`, 119 on `backlog`** (the deploy-guard item below is not yet folded in) |
-| Open PRs | none at the time of writing; batch 6's three are in flight |
+| Open PRs | **none.** Batch 6 merged as #610, #611 and #613 while this file was being written; this handover's own PR (#612) is the last to land |
 | Last release | **`0.29.0`** |
 | `unreleased` | **SIX lines. A release is well worth cutting** — major versus minor is his |
 | Workstreams since this handover | **0 — the counter restarts here.** `.plan-day.md` carries it |
 
 **Batches 4, 5 and 6.** Batch 4: #605 `bills-photo-fix`, #606 `public-site-fable-review`. Batch 5:
 #607 `public-site-findability`, #608 `public-site-trust-copy`, #609 `cards-who-does-what`. Batch 6
-live: `cards-home-screen` (3006), `public-site-phone-polish` (3007), `backup-check-alarm` (3008).
+**merged the same day**: #611 `cards-home-screen`, #613 `public-site-phone-polish`, #610 `backup-check-alarm`.
 
 ---
 
@@ -150,7 +150,41 @@ live: `cards-home-screen` (3006), `public-site-phone-polish` (3007), `backup-che
 | `cards-who-does-what` | sonnet-5-5 / low | ~230–320k | **259,167** | inside |
 | `cards-schema`, `backup-own-token`, `us-date-order` | sonnet-5-5 / low | — | **unmeasured** | **see the capture rule** |
 
-**`claude-sonnet-5-5` / `low` remains the default. The streak is 43.**
+**`claude-sonnet-5-5` / `low` remains the default. The streak is 46** — batch 6's three all ran on it, all inside or under band.
+
+### Batch 6's three — all captured, all on the recommended dials
+
+| slug | model / effort **run** | estimated | actual | |
+|---|---|---|---|---|
+| `cards-home-screen` | sonnet-5-5 / low | ~230–320k | **158,548** | **31% UNDER** |
+| `public-site-phone-polish` | sonnet-5-5 / low | ~150–220k | **201,078** | inside, near the top |
+| `backup-check-alarm` | sonnet-5-5 / low | ~150–220k | **113,538** | **24% under, and barely over the floor** |
+
+### TWO BAND CORRECTIONS EARNED HERE — both about what a brief can remove
+
+**1. A LATER stream in a sequenced feature is much cheaper than the first. Band stream 2 as medium
+and stream 3 nearer a quick win.**
+
+`cards-who-does-what` (stream 2) cost **259,167**. `cards-home-screen` (stream 3) cost **158,548** —
+**a 39% drop for work of comparable visible scope.** Both sonnet/low, both the same feature, same
+week. The difference is that stream 3 inherited a built pattern: `cards.ts`, the card detail, the
+extras list and the recompute all existed, so it was *following* a design rather than settling one.
+
+**So do not band stream N of a sequenced feature off stream 1's figure.** The first stream pays for
+the decisions; the ones after it pay for typing. This is the same axis as the instrument rule —
+stream 2 built the thing, stream 3 used it.
+
+**2. A precisely-diagnosed bug is a QUICK WIN however serious it sounds.**
+
+`backup-check-alarm` came in at **113,538 with only 32,035 of messages** — about 36k of actual work
+over the ~77k floor. It was briefed as a diagnosis, a fix, a legibility change and a regression
+guard, on a fault that had been blind for eleven days, and the planner banded it 150–220k on the
+strength of how serious it was.
+
+**Seriousness is not scale.** Its backlog item already named the cause, the three files and the two
+variables, so nothing had to be *found*. **Band by what the stream must discover, not by what the bug
+would cost if it bit** — and when an item hands over a complete diagnosis, say so in the brief and
+band it as a quick win.
 
 ### THE CAPTURE RULE BIT FOR THE FIRST TIME — three figures are gone for good
 
@@ -242,23 +276,17 @@ Added this round:
 
 ### Leftovers — `/clean-streams` is the next thing to run
 
-**Two are clearable right now** — `free`, 0 ahead, PR merged: **`bills-photo-fix`** (#605) and
-**`public-site-fable-review`** (#606).
+**ALL EIGHT build worktrees are now merged and clearable** — `bills-photo-fix` (#605), `public-site-fable-review` (#606), `public-site-findability` (#607), `public-site-trust-copy` (#608), `cards-who-does-what` (#609), `backup-check-alarm` (#610), `cards-home-screen` (#611) and `public-site-phone-polish` (#613). **Several are still `HELD` by their own sessions** — ask, and close those sessions first; `done` refuses a folder a process has open.
 
-**Three more become clearable the moment their sessions close** — all 0 ahead with merged PRs, but
-`HELD`: **`cards-who-does-what`** (#609), **`public-site-findability`** (#607),
-**`public-site-trust-copy`** (#608). **Ask before tearing any of them down.**
+**Nothing is ahead-with-no-PR any more**, so nothing here is unsubmitted work. That was not true an hour earlier, when three of them were mid-build — **re-read the `ahead` column against the open PRs rather than trusting this paragraph.**
 
-**Three are LIVE WORK and must not be touched:** `backup-check-alarm` (1 ahead),
-`cards-home-screen` (2 ahead), `public-site-phone-polish` (2 ahead, 2 dirty). **Ahead with no merged
-PR is unsubmitted work — `done`ing it destroys a day's build.**
-
-Plus **`planner-handover-138`**, this file's own stream.
+**Plus `planner-handover-138`**, this file's own stream — clearable once #612 is merged and this session closes.
 
 ---
 
 ## The red backup alarm — a live situation, and a trap with it
 
+**UPDATE: #610 `backup-check-alarm` merged on 2026-10-14** — *"Backup tile: an unconfigured folder reads as a settings fault"*. **That is the legibility half: a missing folder id no longer reads as "no backup found".** The one-secret production fix below is still OUTSTANDING and still Lutan's, so **the alarm is still blind on production** until he sets it. Read #610 before touching this area.
 **Production's backup alarm is still red**, read on production by the `Backlog item review` session
 at Lutan's explicit request (14 Oct, about 15:00 Bangkok): `state fail`, **`fail_runs` 315**,
 `alerted_at 2026-10-02`, error **"BACKUP_DRIVE_FOLDER_ID is not set here"**.
