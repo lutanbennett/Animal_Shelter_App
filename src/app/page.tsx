@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { AvailableBadge } from "@/components/AvailableBadge";
+import { EmptyPhoto } from "@/components/EmptyPhoto";
+import { GalleryTile } from "./GalleryTile";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
@@ -418,14 +421,10 @@ export default async function WelcomePage() {
                   className="object-cover object-[center_30%]"
                 />
               ) : (
-                <div className="flex h-full items-center justify-center text-site-ink-muted">
-                  {t.home.featured.noPhoto}
-                </div>
+                <EmptyPhoto label={t.home.featured.noPhoto} />
               )}
               {featured.ready_for_adoption && (
-                <span className="absolute left-4 top-4 rounded-full bg-site-accent px-3 py-1 text-sm font-bold text-site-on-accent">
-                  {t.home.featured.availableForAdoption}
-                </span>
+                <AvailableBadge label={t.adopt.availableForAdoption} className="absolute left-4 top-4" />
               )}
             </div>
             <div className="flex flex-col gap-2.5 p-7">
@@ -456,18 +455,11 @@ export default async function WelcomePage() {
           {gallery.length > 0 && (
             <div data-reveal className="grid grid-cols-3 gap-3">
               {gallery.map((photo) => (
-                <div
+                <GalleryTile
                   key={photo.id}
-                  className="relative aspect-square overflow-hidden rounded-xl bg-site-sand sm:aspect-auto sm:h-[150px]"
-                >
-                  <Image
-                    src={driveImageUrl(photo.drive_file_id, 400)}
-                    alt={localLabel(locale, photo.alt, photo.alt_th)}
-                    fill
-                    sizes="(min-width: 1024px) 16vw, 33vw"
-                    className="object-cover"
-                  />
-                </div>
+                  src={driveImageUrl(photo.drive_file_id, 400)}
+                  alt={localLabel(locale, photo.alt, photo.alt_th)}
+                />
               ))}
             </div>
           )}

@@ -1,5 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { AvailableBadge } from "@/components/AvailableBadge";
+import { EmptyPhoto } from "@/components/EmptyPhoto";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { sizeLabel, speciesLabel } from "@/lib/i18n/enum-labels";
@@ -44,14 +46,10 @@ export function ResidentCard({
             className="object-cover transition group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-muted">
-            {t.adopt.noPhoto}
-          </div>
+          <EmptyPhoto label={t.adopt.noPhoto} />
         )}
         {resident.ready_for_adoption && (
-          <span className="absolute left-2 top-2 rounded bg-success px-2 py-1 text-xs font-semibold text-success-foreground">
-            {t.adopt.availableForAdoption}
-          </span>
+          <AvailableBadge label={t.adopt.availableForAdoption} className="absolute left-2 top-2" />
         )}
       </div>
       <div className="flex flex-col gap-1 p-4">

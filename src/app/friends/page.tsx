@@ -88,7 +88,7 @@ export default async function FriendsPage() {
           <p className="max-w-2xl text-sm text-muted">{f.pageSubtitle}</p>
           <p className="max-w-2xl text-sm text-muted">
             {f.joinLine}{" "}
-            <Link href="/friends/join" className="font-medium text-primary hover:underline">
+            <Link href="/friends/join" className="inline-flex min-h-11 items-center md:min-h-9 font-medium text-primary hover:underline">
               {f.joinLink} &rarr;
             </Link>
           </p>
