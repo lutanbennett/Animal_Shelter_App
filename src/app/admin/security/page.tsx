@@ -23,7 +23,7 @@ export default async function SecurityPage() {
   const [authUsersResult, rolesResult, roleOptionsResult, clinicsResult, doctorsResult] = await Promise.all([
     listAllUsers(admin),
     // roles(key): the role row (0132), so a configured role shows as itself and not as the enum it borrows.
-    admin.from("user_roles").select("user_id, archived_at, roles(key)"),
+    admin.from("user_roles").select("user_id, archived_at, roles(key)").eq("is_main", true),
     // Every role, for the pickers: live ones to choose, retired ones to name on a login still holding one.
     loadRoleOptions(admin),
     admin.from("clinics").select("id, name").order("name"),

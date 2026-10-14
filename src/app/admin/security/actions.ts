@@ -128,6 +128,25 @@ async function givableRole(key: string | null): Promise<GivableRole | null> {
 const roleColumns = (role: GivableRole) => ({ role_id: role.id });
 
 /**
+ * Sets a login's MAIN role: changes the one is_main row, or adds it for a login that has none. user_roles is one row per
+ * (login, role) since 0196, so an upsert on the login would add a second role instead of replacing the first.
+ */
+async function setMainRole(admin: ReturnType<typeof createAdminClient>, userId: string, role: GivableRole) {
+  const { data, error } = await admin
+    .from("user_roles")
+    .update(roleColumns(role))
+    .eq("user_id", userId)
+    .eq("is_main", true)
+    .select("user_id");
+  if (error) return error;
+  if (data && data.length > 0) return null;
+  const { error: insertError } = await admin
+    .from("user_roles")
+    .insert({ user_id: userId, is_main: true, ...roleColumns(role) });
+  return insertError;
+}
+
+/**
  * Creates a login with a generated temporary password and the
  * must-change flag set (src/lib/auth/password-change.ts). The password is
  * returned once, for the admin to pass on; it is never stored in clear or
@@ -237,7 +256,7 @@ export async function approveAccessRequest(userId: string, roleKey: string): Pro
     if (!role) return refuse(t.admin.security.errors.invalidRole);
 
     const admin = createAdminClient();
-    const { error } = await admin.from("user_roles").upsert({ user_id: userId, ...roleColumns(role) });
+    const error = await setMainRole(admin, userId, role);
     if (error) {
       return unexpectedFailure("security.approveAccessRequest", error, t.common.somethingWentWrong);
     }
@@ -257,7 +276,7 @@ export async function updateUserRole(userId: string, roleKey: string): Promise<A
     if (await isCurrentUser(userId)) return refuse(t.admin.security.errors.cantChangeOwnRole);
 
     const admin = createAdminClient();
-    const { error } = await admin.from("user_roles").upsert({ user_id: userId, ...roleColumns(role) });
+    const error = await setMainRole(admin, userId, role);
     if (error) {
       return unexpectedFailure("security.updateUserRole", error, t.common.somethingWentWrong);
     }
