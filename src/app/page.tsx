@@ -194,17 +194,18 @@ export default async function WelcomePage() {
     : [];
 
   // The strip is a nice-to-have: a failed query drops it rather than the page.
+  // Totals first, then today's counts, with a live 0 or 1 left out (impact.ts).
   const stats = [
-    ...impactStats(t, statsResult.data?.[0] ?? null),
     ...impactFigureStats(figuresResult.data, locale === "th" ? "th" : "en"),
+    ...impactStats(t, statsResult.data?.[0] ?? null),
   ];
 
   const h = t.home.howToHelp;
-  // "Sponsor a resident" goes to /donate until the sponsor flow exists, as
-  // it does in the header (docs/decisions.md, part 1).
+  // "Help with their care" → /donate: the card promises only what the page
+  // delivers until sponsorship exists (review §6.2, 2026-10-14).
   const helpCards = [
     { key: "adopt", href: "/adopt", ...h.adopt },
-    { key: "sponsor", href: "/donate", ...h.sponsor },
+    { key: "care", href: "/donate", ...h.care },
     { key: "foster", href: "/foster", ...h.foster },
     { key: "volunteer", href: "/volunteer", ...h.volunteer },
   ];
@@ -244,13 +245,13 @@ export default async function WelcomePage() {
             >
               {t.home.meetAnimals}
             </Link>
-            {/* /donate until the /donate item gives monthly giving a flow of
-                its own (docs/decisions.md, 2026-09-26). */}
+            {/* Straight to the ways to give. "Give monthly" comes back when
+                DonorBox has a monthly link (review §6.2, 2026-10-14). */}
             <Link
-              href="/donate"
+              href="/donate#ways-to-give"
               className="spring-lift flex h-14 items-center rounded-full border-2 border-site-action px-[30px] text-lg font-bold text-site-action hover:border-site-action-hover hover:text-site-action-hover"
             >
-              {t.home.giveMonthly}
+              {t.home.helpFeedThem}
             </Link>
           </div>
         </div>

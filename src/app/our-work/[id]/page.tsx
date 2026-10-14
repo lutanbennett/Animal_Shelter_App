@@ -25,6 +25,7 @@ import { PublicHeader } from "../../adopt/PublicHeader";
 import { PublicFooter } from "../../adopt/PublicFooter";
 import { ProjectCard } from "../ProjectCard";
 import { StoryGallery, type StoryPhoto } from "./StoryGallery";
+import { HelpUsDoMore } from "../HelpUsDoMore";
 
 /**
  * Open Graph tags so a story pasted into Facebook or LINE previews with
@@ -158,6 +159,7 @@ export default async function PublicProjectPage(
             ))}
           </div>
         )}
+        <HelpUsDoMore t={t} />
       </article>
 
       {more.length > 0 && (

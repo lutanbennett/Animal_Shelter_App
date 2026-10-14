@@ -11,6 +11,7 @@ import { loadPublicProjects, parseCategoryParam } from "@/lib/projects/public";
 import { PublicHeader } from "../adopt/PublicHeader";
 import { PublicFooter } from "../adopt/PublicFooter";
 import { ProjectCard } from "./ProjectCard";
+import { HelpUsDoMore } from "./HelpUsDoMore";
 
 /** Share tags like /adopt's — this page had none (public site review 2026-10-13, §8.2). */
 export async function generateMetadata(): Promise<Metadata> {
@@ -125,6 +126,7 @@ export default async function OurWorkPage(props: PageProps<"/our-work">) {
             <ProjectCard key={project.id} project={project} locale={locale} t={t} />
           ))}
         </div>
+        {!error && shown.length > 0 && <HelpUsDoMore t={t} />}
       </div>
 
       <PublicFooter />
