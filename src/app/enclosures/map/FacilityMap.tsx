@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ActionButton } from "@/components/ActionButton";
 import { ActionLink } from "@/components/ActionLink";
@@ -26,8 +27,8 @@ import { PanZoom } from "./PanZoom";
  * Colour is how full a place is (the list's own thresholds); the words in the card and each shape's
  * accessible name say the same, so colour is never the only signal. On a zone plan an enclosure
  * carries only small markers (medication, special diet, maintenance) and a room nothing, so the
- * drawing's own numbers stay readable (2026-10-09). A tap selects and never navigates, so a fat
- * finger never leaves the map by accident.
+ * drawing's own numbers stay readable (2026-10-09). A tap on an enclosure or room selects it; a tap on a
+ * zone opens that zone's plan (or its list when it has no plan yet), so the overview is the way in.
  */
 
 // Static class names, so Tailwind sees them.
@@ -77,6 +78,7 @@ type Item = {
 export function FacilityMap({ data }: { data: FacilityMapData }) {
   const { t, locale } = useI18n();
   const m = t.enclosures.map;
+  const router = useRouter();
 
   const planOf = useMemo(() => new Map(data.plans.filter((p) => p.zone_id).map((p) => [p.zone_id!, p])), [data.plans]);
   const overview = data.plans.find((p) => p.kind === "overview") ?? null;
@@ -206,8 +208,15 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
         })}
       </nav>
 
+      {plan.kind !== "overview" && overview && (
+        <button type="button" onClick={() => goTo(overview)} className="inline-flex min-h-11 items-center self-start rounded-lg px-1 text-sm font-medium text-primary hover:underline">
+          {m.backToOverview}
+        </button>
+      )}
+
       <div className="flex flex-col gap-1">
         <h2 className="text-lg font-semibold text-foreground">{planTitle}</h2>
+        {zone && <OccupancyIndicator count={zone.resident_count} capacity={zone.capacity} />}
         <p className="text-sm text-muted">{drawn.length > 0 ? m.hint : plan.kind === "overview" ? m.emptyOverview : m.emptyZone(planTitle)}</p>
       </div>
 
@@ -221,12 +230,17 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
               item={item}
               plan={plan}
               selected={item.id === pickedId}
-              onPick={() => setPickedId(item.id)}
+              onPick={() => {
+                if (item.kind !== "zone") return setPickedId(item.id);
+                const target = planOf.get(item.id);
+                if (target) goTo(target);
+                else router.push(`/enclosures?zone=${item.id}`);
+              }}
               ariaLabel={
                 item.kind === "room"
                   ? m.roomAria(item.name)
                   : item.kind === "zone"
-                  ? m.zoneAria(item.name, item.count)
+                  ? (planOf.has(item.id) ? m.zoneAria : m.zoneListAria)(item.name, item.count)
                   : m.enclosureAria(item.name, item.count, item.capacity, item.level === "unknown" ? m.noCapacity : t.enclosures.levels[item.level])
               }
             />
@@ -236,7 +250,7 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
 
       <Legend />
 
-      {picked && <PickedCard item={picked} plan={plan} planOf={planOf} onOpenPlan={goTo} onClose={() => setPickedId(null)} cache={detailsCache} />}
+      {picked && <PickedCard item={picked} plan={plan} onClose={() => setPickedId(null)} cache={detailsCache} />}
 
       {unplacedCount > 0 && (
         <section className="flex flex-col gap-2">
@@ -347,7 +361,10 @@ function MapShape({
           strokeWidth={0.9}
           paintOrder="stroke"
         >
-          {item.name}
+          <tspan x={cx}>{item.name}</tspan>
+          <tspan x={cx} dy={3.8} fontSize={2.8}>
+            {item.capacity ? `${item.count}/${item.capacity}` : item.count}
+          </tspan>
         </text>
       ) : marks.length > 0 ? (
         // Only the markers, small and inside the outline: the drawing's own numbers stay visible. The
@@ -418,22 +435,16 @@ function Legend() {
 function PickedCard({
   item,
   plan,
-  planOf,
-  onOpenPlan,
   onClose,
   cache,
 }: {
   item: Item;
   plan: MapPlan;
-  planOf: Map<string, MapPlan>;
-  onOpenPlan: (plan: MapPlan) => void;
   onClose: () => void;
   cache: Map<string, EnclosureDetails>;
 }) {
   const { t } = useI18n();
   const m = t.enclosures.map;
-  const zonePlan = item.kind === "zone" ? planOf.get(item.id) : undefined;
-  const button = "inline-flex min-h-11 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover";
   const ref = useRef<HTMLElement>(null);
 
   // On a phone the card is below the plan, off-screen: without this a tap looks as if it did nothing.
@@ -490,15 +501,7 @@ function PickedCard({
       {item.kind === "room" ? null : item.kind === "enclosure" ? (
         // Keyed, so tapping another enclosure starts its own load rather than showing the last one's.
         <EnclosureDetailsBody key={item.id} id={item.id} cache={cache} />
-      ) : zonePlan ? (
-        <button type="button" onClick={() => onOpenPlan(zonePlan)} className={button}>
-          {m.openPlan}
-        </button>
-      ) : (
-        <Link href={`/enclosures?zone=${item.id}`} className={button}>
-          {m.seeInList}
-        </Link>
-      )}
+      ) : null}
     </section>
   );
 }
