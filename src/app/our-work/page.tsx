@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { getSiteOrigin } from "@/lib/site-origin";
+import { loadSiteContent } from "@/lib/site/content";
+import { defaultShareImage, shareImageMetadata } from "@/lib/site/share";
 import { projectCategoryLabel } from "@/lib/i18n/enum-labels";
 import { PROJECT_CATEGORIES } from "@/lib/projects/queries";
 import { loadPublicProjects, parseCategoryParam } from "@/lib/projects/public";
@@ -10,11 +13,35 @@ import { PublicFooter } from "../adopt/PublicFooter";
 import { ProjectCard } from "./ProjectCard";
 import { HelpUsDoMore } from "./HelpUsDoMore";
 
+/** Share tags like /adopt's — this page had none (public site review 2026-10-13, §8.2). */
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getT();
+  const [supabase, { t, locale }, origin] = await Promise.all([
+    createClient(),
+    getT(),
+    getSiteOrigin(),
+  ]);
+  const content = await loadSiteContent(supabase);
+  const title = `${t.ourWork.pageTitle} · ${t.header.appName}`;
+  const description = t.ourWork.pageSubtitle;
+  const share = shareImageMetadata(
+    defaultShareImage(content, locale, t.header.appName),
+    title,
+    description,
+  );
   return {
-    title: `${t.ourWork.pageTitle} · ${t.header.appName}`,
-    description: t.ourWork.pageSubtitle,
+    title,
+    description,
+    ...(origin ? { metadataBase: origin } : {}),
+    openGraph: {
+      type: "website",
+      title,
+      description,
+      url: "/our-work",
+      siteName: t.header.appName,
+      locale: locale === "th" ? "th_TH" : "en_GB",
+      images: share.images,
+    },
+    twitter: share.twitter,
   };
 }
 

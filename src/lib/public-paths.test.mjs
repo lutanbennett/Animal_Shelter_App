@@ -7,7 +7,7 @@ import { isPublicPath, isPublicPage, isEdgeCachedPage } from "./public-paths.ts"
 
 test("the open site: these are reachable signed out", () => {
   for (const p of [
-    "/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg", "/api/version",
+    "/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/api/version",
     "/adopt", "/adopt/12", "/our-work", "/our-work/abc", "/foster", "/volunteer", "/donate", "/friends", "/privacy",
     "/r/CODE1", "/e/12", "/api/photos/abc",
   ]) assert.equal(isPublicPath(p), true, p);
@@ -28,7 +28,7 @@ test("a trailing slash on a page prefix is still that page", () => {
 });
 
 test("the locked site: only sign-in, the landing page, robots, the logo, version and /privacy", () => {
-  for (const p of ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg", "/api/version", "/privacy", "/privacy/x"]) {
+  for (const p of ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/api/version", "/privacy", "/privacy/x"]) {
     assert.equal(isPublicPath(p, true), true, p);
   }
   for (const p of ["/adopt", "/our-work", "/foster", "/volunteer", "/donate", "/friends", "/r/CODE1", "/e/12", "/api/photos/abc", "/privacy-admin", "/privacyx", "/residents", ""]) {
