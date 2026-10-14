@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → *Search engine optimisation of the public website before go-live, done by a Fable session* |
 | Branch / worktree | `claude/seo-audit-fable` @ `C:\Development\Animal_Shelter_seo-audit-fable` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3008` |
-| PR | opened from the commit after this one; the link is added with the CI tick |
+| PR | https://github.com/lutanbennett/Animal_Shelter_App/pull/624 |
 | Tested by / date | Claude Fable 5.1 (automated and browser-driven checks), 2026-10-14 |
 | Carries a migration? | no |
 | Tested at SHA | `dc6f3e4e` (the last code commit; the commits after it change only `docs/`) |
@@ -29,7 +29,7 @@
 
   gates: typecheck=0 lint=0 test=0 build=0
   ```
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — seen 2026-10-15: 7 of 7 checks passing on #624 at `0dca3856`, mergeable, state CLEAN
 
 ## 3. Schema and data — *skip if no migration*
 
