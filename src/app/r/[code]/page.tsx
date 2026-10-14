@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { LogIn } from "lucide-react";
+import { AvailableBadge } from "@/components/AvailableBadge";
 import { loadSessionRole } from "@/lib/auth/app-access";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -216,9 +217,7 @@ export default async function ResidentCardPage(props: PageProps<"/r/[code]">) {
             <div className="flex flex-col gap-2">
               <div className="flex flex-wrap items-center gap-2">
                 {resident.ready_for_adoption && resident.status === "Resident" && (
-                  <span className="rounded bg-success px-2 py-1 text-xs font-semibold text-success-foreground">
-                    {t.adopt.availableForAdoption}
-                  </span>
+                  <AvailableBadge label={t.adopt.availableForAdoption} />
                 )}
                 <span className="rounded-full bg-surface px-2 py-0.5 text-xs font-medium text-muted">
                   {resident.resident_code}

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
+import { AvailableBadge } from "@/components/AvailableBadge";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { defaultShareImage, shareImageMetadata } from "@/lib/site/share";
@@ -226,9 +227,7 @@ export default async function PublicResidentPage(
           <div className="flex flex-col gap-5 px-5 pt-5 lg:px-0 lg:pt-0">
             <div className="flex flex-col gap-2.5">
               {resident.ready_for_adoption && (
-                <span className="self-start rounded-full bg-site-accent-soft px-3 py-1.5 text-sm font-bold text-site-on-accent-soft">
-                  {t.home.featured.availableForAdoption}
-                </span>
+                <AvailableBadge label={t.adopt.availableForAdoption} className="self-start" />
               )}
               <h1 className="font-display text-[40px] font-bold leading-tight text-site-ink lg:text-5xl">
                 {resident.name}
@@ -250,6 +249,26 @@ export default async function PublicResidentPage(
                 </dl>
               </section>
             )}
+
+            {/* From lg up the two buttons live here, where a laptop visitor is
+                looking, and the sticky band below is hidden. */}
+            <nav aria-label={p.actions(resident.name)} className="hidden gap-2.5 lg:flex">
+              {ask && (
+                <a
+                  href={ask.href}
+                  {...(ask.external ? { target: "_blank", rel: "noreferrer" } : {})}
+                  className="flex h-[52px] flex-1 items-center justify-center rounded-full bg-site-accent px-6 text-base font-bold text-site-on-accent hover:opacity-90"
+                >
+                  {t.contactChannels.ask[ask.channel]}
+                </a>
+              )}
+              <a
+                href={bookHref}
+                className="flex h-[52px] flex-1 items-center justify-center rounded-full bg-site-action px-6 text-base font-bold text-site-on-action hover:bg-site-action-hover"
+              >
+                {p.bookVisit}
+              </a>
+            </nav>
 
             {getsAlong.length > 0 && (
               <section aria-labelledby="gets-along-heading" className="flex flex-col gap-2.5">
@@ -373,7 +392,7 @@ export default async function PublicResidentPage(
 
         <nav
           aria-label={p.actions(resident.name)}
-          className="sticky bottom-0 z-20 mt-auto border-t border-site-line bg-site-paper px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3"
+          className="sticky bottom-0 z-20 mt-auto border-t lg:hidden border-site-line bg-site-paper px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3"
         >
           <div className="mx-auto flex max-w-6xl gap-2.5 sm:justify-end lg:px-4">
             {ask && (
