@@ -21,7 +21,9 @@
  * QR code and works the same way: a visitor sees the enclosure and who
  * lives there (public_enclosures, 0079), a signed-in user is sent on to
  * the enclosure page (src/app/e/[id]/page.tsx). /robots.txt is
- * src/app/robots.ts, which a crawler fetches signed out. /lca-logo.jpg is the
+ * src/app/robots.ts, which a crawler fetches signed out, and /sitemap.xml
+ * (src/app/sitemap.ts) is what it names — an empty list while the site is
+ * locked, so it is reachable in both states like robots.txt. /lca-logo.jpg is the
  * one static file the proxy still sees (its matcher no longer skips image
  * extensions) — the logo on the login page and the public header.
  * /api/version (src/app/api/version/route.ts) is the build's version and
@@ -29,7 +31,7 @@
  * locked environments too. Exact path only. It is not an isPublicPage()
  * page, so the Worker never edge-caches it.
  */
-export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg", "/api/version"];
+export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/api/version"];
 
 /**
  * The public *pages* — the one list. The proxy (isPublicPath), the layout gate
@@ -71,7 +73,7 @@ export const PUBLIC_PATH_PREFIXES = [
  * carry the session cookie. No /r/ or /e/ either: a scanned card or QR
  * code lands on /login with ?next= and goes back there after sign-in.
  */
-export const LOCKED_PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg", "/api/version"];
+export const LOCKED_PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/api/version"];
 
 export const LOCKED_PUBLIC_PATH_PREFIXES = ["/privacy"];
 
