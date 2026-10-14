@@ -5,7 +5,7 @@ import { refuseFor } from "@/lib/auth/require-role";
 import { safeNextPath, DOCTOR_HOME_PATH } from "@/lib/auth/next-path";
 import { loadPermissions } from "@/lib/permissions/load";
 import { deviceFrom } from "@/lib/home/device";
-import { listHomeRoles } from "@/lib/home/roles";
+import { listHomeRoles, loadRoleCards } from "@/lib/home/roles";
 import { homeTilesFor } from "@/lib/home/tiles";
 import { countBillsWaiting } from "@/lib/bills/waiting";
 import { getT } from "@/lib/i18n/get-t";
@@ -47,7 +47,7 @@ export default async function HomePage() {
   if (perms.scopes.clinical === "own_clinic") redirect(DOCTOR_HOME_PATH);
 
   const { t } = await getT();
-  const tiles = homeTilesFor(perms, t, await countBillsWaiting(supabase, perms));
+  const tiles = homeTilesFor(perms, t, await countBillsWaiting(supabase, perms), await loadRoleCards(perms.role.key));
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">

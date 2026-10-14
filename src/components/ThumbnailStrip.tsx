@@ -95,7 +95,7 @@ export function ThumbnailStrip({
   }
 
   const arrowClass =
-    "absolute top-1/2 z-10 hidden h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-surface/90 text-foreground shadow transition hover:bg-surface-hover sm:flex";
+    "absolute top-1/2 z-10 hidden h-11 w-11 md:h-9 md:w-9 -translate-y-1/2 items-center justify-center rounded-full border border-border bg-surface/90 text-foreground shadow transition hover:bg-surface-hover sm:flex";
 
   return (
     <div className="relative">

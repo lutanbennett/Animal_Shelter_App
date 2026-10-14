@@ -123,7 +123,7 @@ export default async function PublicProjectPage(
         <header className="flex flex-col gap-3">
           <Link
             href={`/our-work?category=${encodeURIComponent(project.category)}`}
-            className="w-fit text-sm font-semibold uppercase tracking-wide text-primary hover:underline"
+            className="inline-flex min-h-11 items-center md:min-h-9 w-fit text-sm font-semibold uppercase tracking-wide text-primary hover:underline"
           >
             {projectCategoryLabel(t, project.category)}
           </Link>

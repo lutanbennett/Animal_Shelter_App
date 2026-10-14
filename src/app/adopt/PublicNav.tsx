@@ -273,7 +273,7 @@ export function PublicMobileMenu({
           aria-modal="true"
           aria-label={labels.menu}
           onKeyDown={onKeyDown}
-          className="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-site-paper text-site-ink"
+          className="fixed inset-0 z-50 flex flex-col overflow-hidden bg-site-paper text-site-ink"
         >
           <div className="flex h-[68px] shrink-0 items-center justify-between gap-2 border-b border-site-line px-4">
             {brand}
@@ -298,16 +298,17 @@ export function PublicMobileMenu({
             </div>
           </div>
 
-          <nav aria-label={labels.nav} className="flex flex-col px-5 py-3">
-            {entryLink(home, "flex min-h-14 items-center border-b border-site-sand text-[22px] font-bold")}
+          <div className="min-h-0 flex-1 overflow-y-auto">
+          <nav aria-label={labels.nav} className="flex flex-col px-5 py-2">
+            {entryLink(home, "flex min-h-12 items-center border-b border-site-sand text-[22px] font-bold")}
             {entries.map((entry) =>
               entry.kind === "link" ? (
                 entryLink(
                   entry.link,
-                  "flex min-h-14 items-center border-b border-site-sand text-[22px] font-bold",
+                  "flex min-h-12 items-center border-b border-site-sand text-[22px] font-bold",
                 )
               ) : (
-                <div key={entry.key} className="flex flex-col gap-1 border-b border-site-sand py-3.5">
+                <div key={entry.key} className="flex flex-col gap-1 border-b border-site-sand py-2.5">
                   <span className="pb-1 text-[22px] font-bold">{entry.label}</span>
                   {entry.links.map((link) =>
                     entryLink(link, "flex min-h-11 items-center pl-3.5 text-lg", "text-site-ink-soft"),
@@ -317,14 +318,17 @@ export function PublicMobileMenu({
             )}
           </nav>
 
-          <div className="flex flex-wrap items-center gap-3 px-5 py-2">
-            <span className="text-[15px] text-site-ink-muted">{languageLabel}</span>
-            {language}
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-5 py-2">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-[15px] text-site-ink-muted">{languageLabel}</span>
+              {language}
+            </div>
+            {account}
           </div>
-          {account && <div className="px-5 py-2">{account}</div>}
+          </div>
 
           {(talk.links.length > 0 || talk.follow.length > 0) && (
-            <div className="mt-auto flex flex-col gap-3 bg-site-cream p-5">
+            <div className="flex shrink-0 flex-col gap-2 bg-site-cream px-5 py-3">
               {talk.links.length > 0 && (
                 <>
                   <span className="text-[15px] font-bold text-site-ink-muted">{talk.title}</span>
