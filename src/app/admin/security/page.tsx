@@ -8,8 +8,13 @@ import { getT } from "@/lib/i18n/get-t";
 import { mustChangePassword } from "@/lib/auth/password-change";
 import { AccessRequests, type AccessRequest } from "./AccessRequests";
 import { CreateUserForm } from "./CreateUserForm";
-import { UsersTable, type SecurityUser } from "./UsersTable";
+import { UsersTable, type ExtraRole, type SecurityUser } from "./UsersTable";
+import { CoversEnding, type EndingCover } from "./CoversEnding";
+import { todayIso, addDaysIso } from "@/lib/format";
 import { givableRoles, loadRoleOptions } from "./role-options";
+
+/** How far ahead a cover that is about to end is listed. */
+const COVER_WARNING_DAYS = 7;
 
 export default async function SecurityPage() {
   const currentUser = await requireAdminUser();
@@ -23,7 +28,8 @@ export default async function SecurityPage() {
   const [authUsersResult, rolesResult, roleOptionsResult, clinicsResult, doctorsResult] = await Promise.all([
     listAllUsers(admin),
     // roles(key): the role row (0132), so a configured role shows as itself and not as the enum it borrows.
-    admin.from("user_roles").select("user_id, archived_at, roles(key)").eq("is_main", true),
+    // Every row, not just the main one: a login may also hold additional roles for a while (0196).
+    admin.from("user_roles").select("user_id, archived_at, is_main, starts_on, ends_on, roles(key)"),
     // Every role, for the pickers: live ones to choose, retired ones to name on a login still holding one.
     loadRoleOptions(admin),
     admin.from("clinics").select("id, name").order("name"),
@@ -35,12 +41,31 @@ export default async function SecurityPage() {
       .order("name"),
   ]);
 
+  type RoleRow = {
+    user_id: string;
+    archived_at: string | null;
+    is_main: boolean;
+    starts_on: string | null;
+    ends_on: string | null;
+    roles: { key: string } | null;
+  };
+  const roleRows = (rolesResult.data ?? []) as unknown as RoleRow[];
+  const today = todayIso();
+  // Additional roles still in force or to come; one that has run out is the end of that cover, not a row to show.
+  const extrasByUserId = new Map<string, ExtraRole[]>();
+  for (const r of roleRows) {
+    if (r.is_main || r.archived_at || !r.roles || (r.ends_on && r.ends_on < today)) continue;
+    extrasByUserId.set(r.user_id, [
+      ...(extrasByUserId.get(r.user_id) ?? []),
+      { role: r.roles.key, startsOn: r.starts_on, endsOn: r.ends_on },
+    ]);
+  }
   const roleByUserId = new Map(
-    (rolesResult.data ?? []).map((r) => [
+    roleRows.filter((r) => r.is_main).map((r) => [
       r.user_id,
       {
-        role: (r.roles as unknown as { key: string } | null)?.key ?? null,
-        archivedAt: (r.archived_at as string | null) ?? null,
+        role: r.roles?.key ?? null,
+        archivedAt: r.archived_at ?? null,
       },
     ]),
   );
@@ -108,6 +133,7 @@ export default async function SecurityPage() {
       name: userNameOf(u),
       role: roleByUserId.get(u.id)?.role ?? null,
       archivedAt: roleByUserId.get(u.id)?.archivedAt ?? null,
+      extraRoles: (extrasByUserId.get(u.id) ?? []).sort((a, b) => (a.endsOn ?? "9999").localeCompare(b.endsOn ?? "9999")),
       doctor: doctorByUserId.get(u.id)
         ? { id: doctorByUserId.get(u.id)!.id, name: doctorByUserId.get(u.id)!.name, clinics: doctorByUserId.get(u.id)!.clinics }
         : null,
@@ -122,6 +148,17 @@ export default async function SecurityPage() {
       (a, b) =>
         Number(!!a.archivedAt) - Number(!!b.archivedAt) || a.email.localeCompare(b.email),
     );
+
+  // Covers that run out within the week, so nobody is surprised on the day the second role stops counting.
+  const weekAhead = addDaysIso(today, COVER_WARNING_DAYS);
+  const endingCovers: EndingCover[] = users
+    .filter((u) => !u.archivedAt)
+    .flatMap((u) =>
+      u.extraRoles
+        .filter((x) => x.endsOn && x.endsOn <= weekAhead)
+        .map((x) => ({ userId: u.id, who: u.name ?? u.email, role: x.role, endsOn: x.endsOn as string })),
+    )
+    .sort((a, b) => a.endsOn.localeCompare(b.endsOn) || a.who.localeCompare(b.who));
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -145,6 +182,7 @@ export default async function SecurityPage() {
 
       <AccessRequests requests={requests} roles={givableRoles(roleOptionsResult.roles)} />
       <CreateUserForm roles={givableRoles(roleOptionsResult.roles)} />
+      <CoversEnding covers={endingCovers} roles={roleOptionsResult.roles} />
       <UsersTable
         users={users}
         roles={roleOptionsResult.roles}

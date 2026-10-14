@@ -124,6 +124,33 @@ export function homeTilesFor(perms: Permissions, t: Dictionary, billsWaiting?: n
   return withCounts(homeTilesBase(perms, t, billsWaiting, cards), t, counts);
 }
 
+/**
+ * The home of a login that holds more than one role (a cover, 0196): each role's own home, drawn the way it is drawn for
+ * someone who holds only that role, joined with the main role's first and a tile shown once. `perms` is the database's
+ * union (my_permissions()), so a tile appears only if the union's cells cover it and its page opens: nothing wider than
+ * what the database enforces, and (because each role keeps its own cards, jobs and curated home) nothing narrower either.
+ * A login with one role gets exactly homeTilesFor()'s answer.
+ */
+export function homeTilesForRoles(
+  perms: Permissions,
+  t: Dictionary,
+  billsWaiting: number | undefined,
+  cardsByRole: Readonly<Record<string, readonly CardKey[]>>,
+  counts?: TileCounts,
+): HomeTile[] {
+  const seen = new Set<string>();
+  const tiles: HomeTile[] = [];
+  for (const key of perms.roles.length > 0 ? perms.roles : [perms.role.key]) {
+    const asRole: Permissions = { ...perms, role: { ...perms.role, key } };
+    for (const tile of homeTilesBase(asRole, t, billsWaiting, cardsByRole[key])) {
+      if (seen.has(tile.href)) continue;
+      seen.add(tile.href);
+      tiles.push(tile);
+    }
+  }
+  return withCounts(tiles, t, counts);
+}
+
 function homeTilesBase(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[]): HomeTile[] {
   if (cards && cards.length > 0) return cardTilesFor(cards, perms, t, billsWaiting);
 

@@ -42,7 +42,7 @@ export default async function MyPage() {
   const sections: MyTaskSection[] = userId
     ? await Promise.all([
         ...(perms?.isAdmin ? [loadMyAccessRequestTasks(t)] : []),
-        ...(perms?.role.opensApp ? [loadMyRecurringTasks(supabase, userId, perms.role.key, t, today)] : []),
+        ...(perms?.role.opensApp ? [loadMyRecurringTasks(supabase, userId, perms.roles, t, today)] : []),
         ...(can(perms, "maintenance.jobs", "read")
           ? [loadMyMaintenanceTasks(supabase, userId, can(perms, "maintenance.progress"), t, locale)]
           : []),

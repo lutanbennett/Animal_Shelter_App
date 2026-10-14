@@ -7,7 +7,7 @@ import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { formatDate } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
-import { asManualRole } from "@/lib/manual/audience";
+import { asManualRole, audiencesOf } from "@/lib/manual/audience";
 import { isForRole } from "@/lib/manual/filter";
 import { noteRoles, noteText, releases, unreleased, type ReleaseNote } from "@/lib/releases";
 import { createClient } from "@/lib/supabase/server";
@@ -64,7 +64,7 @@ export default async function ReleasesPage({ searchParams }: PageProps<"/release
   /** The notes this view lists: the reader's, or all of them under Show everything. */
   const shown = (notes: ReleaseNote[]): ViewNote[] =>
     notes
-      .map((note) => ({ text: noteText(note), mine: isForRole(noteRoles(note), role) }))
+      .map((note) => ({ text: noteText(note), mine: isForRole(noteRoles(note), role) || audiencesOf(perms).some((a) => isForRole(noteRoles(note), a)) }))
       .filter((n) => showAll || n.mine);
   const pending = shown(unreleased);
 

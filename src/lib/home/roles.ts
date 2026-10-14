@@ -54,6 +54,12 @@ export async function loadRolePermissions(supabase: SupabaseClient, roleKey: str
   });
 }
 
+/** The cards of each of these roles (a login may hold several, 0196), by role key. */
+export async function loadCardsByRole(roleKeys: readonly string[]): Promise<Record<string, CardKey[]>> {
+  const keys = [...new Set(roleKeys)];
+  return Object.fromEntries(await Promise.all(keys.map(async (key) => [key, await loadRoleCards(key)] as const)));
+}
+
 /**
  * The cards a role has, in the order its home shows them. role_cards is Admin-only to read (0194), but a role's
  * own people need their own home, so this reads it with the service role, for one role key already settled by the
