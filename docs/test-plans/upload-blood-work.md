@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none: requested directly in chat 2026-10-15 |
 | Branch / worktree | `claude/upload-blood-work` @ `C:\Development\Animal_Shelter_upload-blood-work` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3010` (not needed: no app change) |
-| PR | to be added once opened |
+| PR | https://github.com/lutanbennett/Animal_Shelter_App/pull/627 |
 | Tested by / date | Claude, 2026-10-15 |
 | Carries a migration? | no |
 | Tested at SHA | af892b3a |
