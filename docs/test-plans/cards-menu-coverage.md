@@ -131,7 +131,7 @@ Automated checks by: Claude  Date: 2026-10-14
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: Lutan has not looked
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty and no person has looked yet; the signature below is pending
 
 Manual verification by: pending: Lutan reads the orphan list and decides, and looks at the tile count in a browser
 
