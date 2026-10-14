@@ -186,8 +186,8 @@ export async function SitePageView({
                   {...(c.external ? { target: "_blank", rel: "noreferrer" } : {})}
                   className={
                     i === 0
-                      ? "spring-lift rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
-                      : "spring-lift rounded border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-surface-hover"
+                      ? "spring-lift inline-flex min-h-11 items-center rounded bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
+                      : "spring-lift inline-flex min-h-11 items-center rounded border border-border px-5 text-sm font-semibold text-foreground hover:bg-surface-hover"
                   }
                 >
                   {t.contactChannels.us[c.channel](c.value)}
@@ -204,11 +204,11 @@ export async function SitePageView({
             </h2>
             <p className="text-sm text-muted">{t.shelterFriends.donateMention.body}</p>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
-              <Link href="/friends" className="text-sm font-semibold text-primary hover:underline">
+              <Link href="/friends" className="inline-flex min-h-11 items-center md:min-h-9 text-sm font-semibold text-primary hover:underline">
                 {t.shelterFriends.donateMention.link} &rarr;
               </Link>
               {/* A business reading this can be one of them. */}
-              <Link href="/friends/join" className="text-sm font-semibold text-primary hover:underline">
+              <Link href="/friends/join" className="inline-flex min-h-11 items-center md:min-h-9 text-sm font-semibold text-primary hover:underline">
                 {t.shelterFriends.donateMention.join} &rarr;
               </Link>
             </div>
@@ -220,17 +220,17 @@ export async function SitePageView({
             {t.sitePages.alsoSee}{" "}
             {join && (
               <>
-                <Link href="/friends" className="font-medium text-primary hover:underline">
+                <Link href="/friends" className="inline-flex min-h-11 items-center md:min-h-9 font-medium text-primary hover:underline">
                   {t.shelterFriends.navLabel}
                 </Link>
                 {" · "}
               </>
             )}
-            <Link href="/adopt" className="font-medium text-primary hover:underline">
+            <Link href="/adopt" className="inline-flex min-h-11 items-center md:min-h-9 font-medium text-primary hover:underline">
               {t.adopt.adoptNav}
             </Link>
             {" · "}
-            <Link href="/our-work" className="font-medium text-primary hover:underline">
+            <Link href="/our-work" className="inline-flex min-h-11 items-center md:min-h-9 font-medium text-primary hover:underline">
               {t.adopt.ourWorkNav}
             </Link>
           </p>

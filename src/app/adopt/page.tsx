@@ -298,7 +298,7 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
             adoption page says what that involves. */}
         <p data-reveal className="text-sm text-muted">
           {t.adopt.fromAbroad}{" "}
-          <Link href="/adopt/international" className="font-medium text-primary hover:underline">
+          <Link href="/adopt/international" className="inline-flex min-h-11 items-center md:min-h-9 font-medium text-primary hover:underline">
             {t.adopt.fromAbroadLink} &rarr;
           </Link>
         </p>
