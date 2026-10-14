@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none: the handover rewrite is a `plan-day` SKILL.md step, not a backlog item |
 | Branch / worktree | `claude/planner-handover-138` @ `C:\Development\Animal_Shelter_planner-handover-138` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3009` |
-| PR | #610 |
+| PR | #612 |
 | Tested by / date | Claude (Daily Planner)  Date: 2026-10-14 |
 | Carries a migration? | no |
 | Tested at SHA | 0002bc81 |
