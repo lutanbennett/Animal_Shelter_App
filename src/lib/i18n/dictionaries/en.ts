@@ -208,7 +208,6 @@ const en = {
     featured: {
       heading: "Pet of the week",
       noPhoto: "No photo yet",
-      availableForAdoption: "Available for adoption",
       desexed: "Desexed",
       readStory: (name: string) => `Read ${name}'s story`,
     },
@@ -5776,7 +5775,7 @@ const en = {
     couldntLoad: "Couldn't load residents",
     noneListed: "No residents are listed publicly right now — check back soon.",
     noPhoto: "No photo yet",
-    availableForAdoption: "Available for Adoption",
+    availableForAdoption: "Available for adoption",
     detailsComingSoon: "Details coming soon",
     about: (name: string) => `About ${name}`,
     temperament: "Temperament",

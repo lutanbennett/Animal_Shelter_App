@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { PawPrint } from "lucide-react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
@@ -265,8 +266,12 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
                         className="object-cover"
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center text-xs text-muted">
-                        {speciesLabel(t, a.species) || t.adopt.noPhoto}
+                      <div
+                        role="img"
+                        aria-label={speciesLabel(t, a.species) || t.adopt.noPhoto}
+                        className="flex h-full items-center justify-center text-muted"
+                      >
+                        <PawPrint aria-hidden="true" className="h-1/3 w-1/3" />
                       </div>
                     )}
                   </div>
@@ -298,7 +303,7 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
             adoption page says what that involves. */}
         <p data-reveal className="text-sm text-muted">
           {t.adopt.fromAbroad}{" "}
-          <Link href="/adopt/international" className="font-medium text-primary hover:underline">
+          <Link href="/adopt/international" className="inline-flex min-h-11 items-center md:min-h-9 font-medium text-primary hover:underline">
             {t.adopt.fromAbroadLink} &rarr;
           </Link>
         </p>

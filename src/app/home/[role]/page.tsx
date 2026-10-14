@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { refuseFor } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 import { loadPermissions } from "@/lib/permissions/load";
-import { listHomeRoles, loadRolePermissions } from "@/lib/home/roles";
+import { listHomeRoles, loadRoleCards, loadRolePermissions } from "@/lib/home/roles";
 import { homeTilesFor } from "@/lib/home/tiles";
 import { countBillsWaiting } from "@/lib/bills/waiting";
 import { getT } from "@/lib/i18n/get-t";
@@ -44,7 +44,7 @@ export default async function RoleHomePage(props: PageProps<"/home/[role]">) {
   if (!perms || !listed) notFound();
 
   const name = (locale === "th" && listed.nameTh) || listed.name;
-  const tiles = homeTilesFor(perms, t, await countBillsWaiting(supabase, perms));
+  const tiles = homeTilesFor(perms, t, await countBillsWaiting(supabase, perms), await loadRoleCards(roleKey));
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">

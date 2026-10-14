@@ -119,7 +119,7 @@ export default async function EnclosureTagPage(props: PageProps<"/e/[id]">) {
           <p className="flex flex-wrap items-center gap-2 border-t border-border pt-6 text-sm text-muted">
             <LogIn className="h-4 w-4" aria-hidden />
             {t.residentCard.staffHint}
-            <Link href={signInHref} className="font-medium text-foreground underline hover:text-primary">
+            <Link href={signInHref} className="inline-flex min-h-11 items-center md:min-h-9 font-medium text-foreground underline hover:text-primary">
               {c.staffSignIn}
             </Link>
           </p>

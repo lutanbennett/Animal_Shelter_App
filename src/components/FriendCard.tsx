@@ -20,7 +20,7 @@ import {
 } from "@/lib/shelter-friends/friends";
 
 const linkClass =
-  "inline-flex items-center gap-1.5 rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:border-primary hover:text-primary";
+  "inline-flex items-center gap-1.5 min-h-11 rounded border border-border px-3 text-sm md:min-h-9 font-medium text-foreground hover:border-primary hover:text-primary";
 
 /**
  * One Shelter Friend as a visitor sees it. /friends renders it from
@@ -179,7 +179,7 @@ export function FriendCard({
             href={map.href}
             target="_blank"
             rel="noreferrer"
-            className="self-start text-xs font-medium text-primary hover:underline"
+            className="inline-flex min-h-11 items-center md:min-h-9 self-start text-xs font-medium text-primary hover:underline"
           >
             {f.openInMaps}
           </a>
