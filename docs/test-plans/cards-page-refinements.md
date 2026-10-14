@@ -113,7 +113,7 @@ Automated checks by: Claude  Date: 2026-10-14
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: Lutan to check the four items above
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty and nobody has looked yet; it is handed to Lutan on the signature line below
 
 Manual verification by: pending: Lutan, items 1 to 4 above
 
