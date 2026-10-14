@@ -28,7 +28,7 @@ CI is green, without asking (`docs/decisions/2026-10-13-release-prs-merge-withou
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly. **Needed here**: the worktree was created during the cut's CI wait, so it predated `ab59e475` and had to be synced before the record could be written against the merged release
 - [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — n/a: this PR changes two markdown files under `docs/` and adds no code, so the gates have nothing of this PR's to compile or lint. They were run on the cut PR at `0.30.0`'s content and ended `gates: typecheck=0 lint=0 test=0 build=0`; CI runs them again on this branch regardless
-- [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR** — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — all 7 jobs `success` on run 38557243751 at `2101447b`, the branch tip: migration-numbers, check, script-integrity, public-views, audit, new-policy-role-names, test-plan. Read from `gh run view 38557243751 --json jobs`, not from `gh pr checks`
 
 ## 3. Schema and data — *skip if no migration*
 
