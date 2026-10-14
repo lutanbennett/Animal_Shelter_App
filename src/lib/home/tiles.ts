@@ -17,6 +17,9 @@ import { CARDS, includedCards, type CardKey } from "@/lib/permissions/cards";
 import { jobsOfRole } from "@/lib/permissions/jobs";
 import { canOpen, routeFor, routesFor, type RouteEntry } from "@/lib/permissions/routes";
 
+/** Counts shown on tiles (what the left menu's badge showed): due today or overdue. */
+export type TileCounts = { my?: number; maintenance?: number; billsWaiting?: number };
+
 export type HomeTile = {
   href: string;
   /** In the person's language: resolved here, since two pages with one word are one tile. */
@@ -108,7 +111,20 @@ export function cardTilesFor(held: readonly CardKey[], perms: Permissions, t: Di
   });
 }
 
-export function homeTilesFor(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[]): HomeTile[] {
+/** Put the due-today counts on the tiles they belong to: My tasks carries the total, Maintenance its share. */
+function withCounts(tiles: HomeTile[], t: Dictionary, counts?: TileCounts): HomeTile[] {
+  if (!counts) return tiles;
+  return tiles.map((tile) => {
+    const n = tile.href === "/my" ? counts.my : tile.href === "/maintenance" ? counts.maintenance : undefined;
+    return n && n > 0 && !tile.badge ? { ...tile, badge: t.my.navBadge(n) } : tile;
+  });
+}
+
+export function homeTilesFor(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[], counts?: TileCounts): HomeTile[] {
+  return withCounts(homeTilesBase(perms, t, billsWaiting, cards), t, counts);
+}
+
+function homeTilesBase(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[]): HomeTile[] {
   if (cards && cards.length > 0) return cardTilesFor(cards, perms, t, billsWaiting);
 
   // A role that is given jobs (src/lib/permissions/jobs.ts) shows its jobs, one tile each, and
