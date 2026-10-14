@@ -276,7 +276,7 @@ const en = {
      */
     services: "Services",
     /** Adopt → /adopt, the listing, beside International adoption. */
-    meetResidents: "Meet our residents",
+    meetResidents: "Meet the animals",
     /** Get involved → /donate. "Sponsor a resident" until sponsorship exists (review §6.2). */
     care: "Help with their care",
     /** Get involved → /friends/join, for a business that wants to help. */
@@ -5767,9 +5767,9 @@ const en = {
     fromAbroad: "Adopting from abroad?",
     fromAbroadLink: "How international adoption works",
     openApp: "Open the app",
-    pageTitle: "Meet our residents",
+    pageTitle: "Dogs and cats looking for a home",
     pageSubtitle:
-      "You're browsing as a guest — this is a read-only, public view of the residents we've made visible for adoption and outreach. Staff and volunteers see much more after signing in.",
+      "Every animal here is ready to meet you. Tap one to read their story, then message us on LINE or call to arrange a visit.",
     pageSubtitleSignedIn:
       "This is the public view of the residents we’ve made visible for adoption and outreach — what an adopter sees. The full list is under Residents in the app.",
     couldntLoad: "Couldn't load residents",
@@ -5847,6 +5847,12 @@ const en = {
       actions: (name: string) => `Get in touch about ${name}`,
       bookVisit: "Book a visit",
       emailSubject: (name: string) => `Visiting ${name}`,
+    },
+    /** The public site's "not found" page (src/app/adopt/PublicNotFound.tsx). */
+    notFound: {
+      heading: "We couldn't find that page",
+      body: "If it was an animal, they may have found a home.",
+      links: "Where to next",
     },
     happyEndings: {
       heading: "Happy endings",

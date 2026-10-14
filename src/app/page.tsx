@@ -449,6 +449,11 @@ export default async function WelcomePage() {
           <h2 data-reveal className={sectionHeading}>
             {storyText?.title || t.home.ourStoryFallback}
           </h2>
+          {storyText?.bodyIsOriginal && (
+            <p role="note" className="rounded-lg border border-border bg-surface p-4 text-sm text-muted">
+              {t.sitePages.englishOnly}
+            </p>
+          )}
           <div data-reveal>
             <SiteBody body={storyText?.body} size="lg" />
           </div>
