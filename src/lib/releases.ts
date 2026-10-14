@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Admin: on Settings → Who does what the Move up and Move down buttons are readable again in every theme, the cards are smaller so more fit, Also allowed sits under the cards, and on a laptop you can drag a card from Available cards to give it, back to take it away, or onto another to move it. The buttons on each card still do the same, and are all a phone shows.",
   "The Maintenance tile on your home screen now shows how many of your maintenance jobs are due today or overdue, the number the My tasks menu entry already showed.",
 ];
 
