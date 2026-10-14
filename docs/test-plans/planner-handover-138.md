@@ -11,7 +11,7 @@
 | PR | #612 |
 | Tested by / date | Claude (Daily Planner)  Date: 2026-10-14 |
 | Carries a migration? | no |
-| Tested at SHA | 0002bc81 |
+| Tested at SHA | b0912a93 |
 
 ## 1. Scope and risk
 
@@ -26,12 +26,12 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
 
 ```
-=== gates: build exited 0 after 126s
+=== gates: build exited 0 after 85s
 
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three) — seen green at `0002bc81`: 7 checks passing, 0 failing, read from `ccd_pr get_status`. Re-run on `b0912a93` after the measurements commit
 
 ## 3. Schema and data — *skip if no migration*
 
