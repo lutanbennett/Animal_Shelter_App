@@ -220,6 +220,7 @@ const th: Dictionary = {
       },
     },
     shareFallback: "ศูนย์พักพิงช่วยเหลือสุนัขและแมวที่ไม่แสวงหากำไร ในอำเภอแม่วาง จังหวัดเชียงใหม่",
+    metaTitle: "Lanna Care for Animals — ศูนย์ช่วยเหลือสุนัขและแมว แม่วาง เชียงใหม่",
   },
 
   publicFooter: {

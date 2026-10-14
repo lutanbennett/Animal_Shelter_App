@@ -8,6 +8,8 @@ import { getT } from "@/lib/i18n/get-t";
 import { projectCategoryLabel } from "@/lib/i18n/enum-labels";
 import { formatDate } from "@/lib/format";
 import { getSiteOrigin } from "@/lib/site-origin";
+import { loadSiteContent } from "@/lib/site/content";
+import { defaultShareImage, shareImageMetadata } from "@/lib/site/share";
 import {
   loadPublicProject,
   loadPublicProjectPhotos,
@@ -39,15 +41,20 @@ export async function generateMetadata(
     getT(),
     getSiteOrigin(),
   ]);
-  const project = await loadPublicProject(supabase, id);
+  const [project, content] = await Promise.all([
+    loadPublicProject(supabase, id),
+    loadSiteContent(supabase),
+  ]);
   if (!project) return { title: t.ourWork.pageTitle };
 
   const { title, summary } = publicProjectText(project, locale);
   const description = summary ? summaryLead(summary, 200) : t.ourWork.shareFallback;
   const fullTitle = `${title} · ${t.header.appName}`;
+  // The cover; without one, the site's default picture (review §8.2).
   const image = project.cover_drive_file_id
-    ? driveImageUrl(project.cover_drive_file_id, 1200)
-    : undefined;
+    ? { url: driveImageUrl(project.cover_drive_file_id, 1200), alt: title }
+    : defaultShareImage(content, locale, t.header.appName);
+  const share = shareImageMetadata(image, fullTitle, description);
 
   return {
     title: fullTitle,
@@ -60,15 +67,10 @@ export async function generateMetadata(
       url: `/our-work/${project.id}`,
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
-      ...(image ? { images: [{ url: image, alt: title }] } : {}),
+      images: share.images,
       ...(project.project_date ? { publishedTime: project.project_date } : {}),
     },
-    twitter: {
-      card: image ? "summary_large_image" : "summary",
-      title: fullTitle,
-      description,
-      ...(image ? { images: [image] } : {}),
-    },
+    twitter: share.twitter,
   };
 }
 

@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
+import { loadSiteContent } from "@/lib/site/content";
+import { defaultShareImage, shareImageMetadata } from "@/lib/site/share";
 import { friendMaps, loadPublicFriends } from "@/lib/shelter-friends/public";
 import { staffDraftFriends } from "@/lib/shelter-friends/staff-drafts";
 import { FriendCard } from "@/components/FriendCard";
@@ -21,12 +23,19 @@ export async function generateMetadata(): Promise<Metadata> {
     getT(),
     getSiteOrigin(),
   ]);
-  const { friends } = await loadPublicFriends(supabase);
+  const [{ friends }, content] = await Promise.all([
+    loadPublicFriends(supabase),
+    loadSiteContent(supabase),
+  ]);
   const f = t.shelterFriends;
   const title = `${f.pageTitle} · ${t.header.appName}`;
   const description = f.shareFallback;
   const logo = friends.find((friend) => friend.logo_drive_file_id)?.logo_drive_file_id;
-  const image = logo ? driveImageUrl(logo, 1200) : undefined;
+  // A Friend's logo as before; the site's default picture while there is none.
+  const image = logo
+    ? { url: driveImageUrl(logo, 1200), alt: f.pageTitle }
+    : defaultShareImage(content, locale, t.header.appName);
+  const share = shareImageMetadata(image, title, description);
 
   return {
     title,
@@ -39,14 +48,10 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/friends",
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
-      ...(image ? { images: [{ url: image, alt: f.pageTitle }] } : {}),
+      images: share.images,
     },
-    twitter: {
-      card: "summary",
-      title,
-      description,
-      ...(image ? { images: [image] } : {}),
-    },
+    // A logo is a small, square thing: the plain card, as before.
+    twitter: { ...share.twitter, card: "summary" },
   };
 }
 

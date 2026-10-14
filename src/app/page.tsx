@@ -6,6 +6,7 @@ import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
 import { localLabel } from "@/lib/translations/labels";
 import { getSiteOrigin } from "@/lib/site-origin";
+import { animalShelterJsonLd, defaultShareImage, shareImageMetadata } from "@/lib/site/share";
 import { localizedField } from "@/lib/translations/localize";
 import type { PublicTranslations } from "@/lib/translations/types";
 import { sexLabel, speciesLabel } from "@/lib/i18n/enum-labels";
@@ -76,10 +77,12 @@ export async function generateMetadata(): Promise<Metadata> {
   const content = await loadSiteContent(supabase);
   const description =
     pairedText(locale, content?.tagline, content?.tagline_th) || t.home.shareFallback;
-  const image = content?.hero_drive_file_id
-    ? driveImageUrl(content.hero_drive_file_id, 1200)
-    : undefined;
-  const title = t.header.appName;
+  // The hero photo, or the logo while none is set (src/lib/site/share.ts).
+  const image = defaultShareImage(content, locale, t.header.appName);
+  // The window title says what and where, for a search result that would
+  // otherwise show only the name (public site review 2026-10-13, §8.3).
+  const title = t.home.metaTitle;
+  const share = shareImageMetadata(image, title, description);
 
   return {
     title,
@@ -90,16 +93,11 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description,
       url: "/",
-      siteName: title,
+      siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
-      ...(image ? { images: [{ url: image, alt: title }] } : {}),
+      images: share.images,
     },
-    twitter: {
-      card: image ? "summary_large_image" : "summary",
-      title,
-      description,
-      ...(image ? { images: [image] } : {}),
-    },
+    twitter: share.twitter,
   };
 }
 
@@ -129,7 +127,7 @@ async function showsLockedLanding(
 export default async function WelcomePage() {
   const supabase = await createClient();
   if (await showsLockedLanding(supabase)) return <LockedLanding />;
-  const { t, locale } = await getT();
+  const [{ t, locale }, origin] = await Promise.all([getT(), getSiteOrigin()]);
 
   const [content, pages, photosResult, statsResult, figuresResult, friendsResult] = await Promise.all([
     loadSiteContent(supabase),
@@ -211,9 +209,19 @@ export default async function WelcomePage() {
     { key: "volunteer", href: "/volunteer", ...h.volunteer },
   ];
   const sf = t.shelterFriends.homeStrip;
+  // What the site is, for search engines: schema.org AnimalShelter from the
+  // same row the footer shows (public site review 2026-10-13, §8.2).
+  const jsonLd = animalShelterJsonLd(
+    content,
+    origin,
+    locale,
+    t.header.appName,
+    tagline || t.home.shareFallback,
+  );
 
   return (
     <main className="flex flex-1 flex-col font-site text-site-ink">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
       <PublicHeader current="home" />
 
       <section

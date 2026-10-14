@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { getSiteOrigin } from "@/lib/site-origin";
+import { defaultShareImage, shareImageMetadata } from "@/lib/site/share";
 import { bodyLead } from "@/lib/site/body";
 import { preferredChannels } from "@/lib/site/channels";
 import { loadSiteContent } from "@/lib/site/content";
@@ -58,6 +59,13 @@ export async function sitePageMetadata(slug: SitePageSlug): Promise<Metadata> {
   const text = pageText(t, slug, page ? sitePageText(page, locale) : null);
   const title = `${text.title || t.header.appName} · ${t.header.appName}`;
   const description = bodyLead(text.body) || t.home.shareFallback;
+  // The site's default picture: these pages have none of their own.
+  const content = await loadSiteContent(supabase);
+  const share = shareImageMetadata(
+    defaultShareImage(content, locale, t.header.appName),
+    title,
+    description,
+  );
   return {
     title,
     description,
@@ -69,7 +77,9 @@ export async function sitePageMetadata(slug: SitePageSlug): Promise<Metadata> {
       url: SITE_PAGE_PATHS[slug],
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
+      images: share.images,
     },
+    twitter: share.twitter,
   };
 }
 

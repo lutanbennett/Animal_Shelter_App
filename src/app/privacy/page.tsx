@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
+import { defaultShareImage, shareImageMetadata } from "@/lib/site/share";
 import { loadSiteContent } from "@/lib/site/content";
 import { PublicHeader } from "../adopt/PublicHeader";
 import { PublicFooter } from "../adopt/PublicFooter";
@@ -16,8 +17,18 @@ import { PublicFooter } from "../adopt/PublicFooter";
  * the shelter changes it.
  */
 export async function generateMetadata(): Promise<Metadata> {
-  const [{ t, locale }, origin] = await Promise.all([getT(), getSiteOrigin()]);
+  const [supabase, { t, locale }, origin] = await Promise.all([
+    createClient(),
+    getT(),
+    getSiteOrigin(),
+  ]);
+  const content = await loadSiteContent(supabase);
   const title = `${t.privacy.title} · ${t.header.appName}`;
+  const share = shareImageMetadata(
+    defaultShareImage(content, locale, t.header.appName),
+    title,
+    t.privacy.intro,
+  );
   return {
     title,
     description: t.privacy.intro,
@@ -29,7 +40,9 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/privacy",
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
+      images: share.images,
     },
+    twitter: share.twitter,
   };
 }
 

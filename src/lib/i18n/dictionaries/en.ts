@@ -233,6 +233,8 @@ const en = {
     },
     /** Open Graph description when no tagline is set. */
     shareFallback: "A non-profit rescue shelter for dogs and cats in Mae Wang, Chiang Mai.",
+    /** The window title and search-result title: the name, then what and where (review 2026-10-13, §8.3). */
+    metaTitle: "Lanna Care for Animals — dog and cat rescue, Mae Wang, Chiang Mai",
   },
 
   /** The footer on every public page. */
@@ -5690,7 +5692,7 @@ const en = {
     fromAbroad: "Adopting from abroad?",
     fromAbroadLink: "How international adoption works",
     openApp: "Open the app",
-    pageTitle: "Meet Our Residents",
+    pageTitle: "Meet our residents",
     pageSubtitle:
       "You're browsing as a guest — this is a read-only, public view of the residents we've made visible for adoption and outreach. Staff and volunteers see much more after signing in.",
     pageSubtitleSignedIn:
