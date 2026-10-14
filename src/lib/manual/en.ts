@@ -295,7 +295,7 @@ const manual: Manual = {
             "My tasks is the page you land on when you sign in or tap Open the app on the public website; get back to it any time from the top of the menu. Every maintenance job you are on that isn't Completed is listed, grouped as Overdue, Due today, Coming up and No due date — most urgent first.",
             "Each job shows its place, its due date and, when it went to a team, who else is on it. Tap the title to open the job with its photos and details.",
             "Change a job's status with the buttons beside it: Not started, In progress, Blocked or Completed. A job marked Completed leaves the list, with Undo in case you tapped the wrong one.",
-            "The number beside My tasks in the menu is how many of your jobs are due today or overdue. It disappears when there are none.",
+            "The number beside My tasks in the menu is how many of your jobs are due today or overdue. It disappears when there are none. On your home screen the Maintenance tile shows the same kind of number for your maintenance jobs.",
             "Open the board takes you to the maintenance board showing only your jobs.",
             "Done today, at the bottom, lists what you marked done, skipped or completed today. It is still there after you reload the page, and Undo on a row puts the job back. If a job says Waiting for another job, Done asks you to confirm before it goes through.",
           ],
