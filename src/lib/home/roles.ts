@@ -1,5 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { isCardKey, type CardKey } from "@/lib/permissions/cards";
 import { parsePermissions, type Permissions } from "@/lib/permissions/can";
 
 /**
@@ -50,4 +52,18 @@ export async function loadRolePermissions(supabase: SupabaseClient, roleKey: str
     },
     permissions: Object.fromEntries((cells ?? []).map((c) => [c.activity, c.level])),
   });
+}
+
+/**
+ * The cards a role has, in the order its home shows them. role_cards is Admin-only to read (0194), but a role's
+ * own people need their own home, so this reads it with the service role, for one role key already settled by the
+ * caller (the signed-in person's own role, or the role Admin is previewing). Nothing else of the table leaves here.
+ */
+export async function loadRoleCards(roleKey: string): Promise<CardKey[]> {
+  const admin = createAdminClient();
+  const { data: role } = await admin.from("roles").select("id").eq("key", roleKey).maybeSingle();
+  if (!role) return [];
+  const { data, error } = await admin.from("role_cards").select("card").eq("role_id", role.id).order("position");
+  if (error) throw new Error(`Home cards: could not read role_cards: ${error.message}`);
+  return (data ?? []).map((r) => r.card as string).filter(isCardKey);
 }

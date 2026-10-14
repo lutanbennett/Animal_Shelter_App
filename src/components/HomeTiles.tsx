@@ -9,8 +9,8 @@ import type { HomeTile } from "@/lib/home/tiles";
 export function HomeTiles({ tiles }: { tiles: HomeTile[] }) {
   return (
     <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-      {tiles.map(({ href, label, icon: Icon, badge }) => (
-        <li key={href} className="min-w-0">
+      {tiles.map(({ href, label, icon: Icon, badge }, i) => (
+        <li key={`${href}-${i}`} className="min-w-0">
           <Link
             href={href}
             className="flex h-full min-h-28 flex-col items-center justify-center gap-2 rounded-xl border border-border bg-surface p-3 text-center transition hover:bg-surface-hover"

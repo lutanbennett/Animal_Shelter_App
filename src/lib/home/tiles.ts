@@ -8,11 +8,12 @@
  * app). A record-scoped page is never here: the registry does not hold one, and that is the
  * contract.
  */
-import { Receipt, UserPlus, type LucideIcon } from "lucide-react";
+import { Receipt, Sparkles, UserPlus, type LucideIcon } from "lucide-react";
 import { canUseBills } from "@/lib/bills/access";
 import { NAV_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "@/lib/permissions/can";
+import { CARDS, includedCards, type CardKey } from "@/lib/permissions/cards";
 import { jobsOfRole } from "@/lib/permissions/jobs";
 import { canOpen, routeFor, routesFor, type RouteEntry } from "@/lib/permissions/routes";
 
@@ -70,7 +71,46 @@ const CURATED_HOME: Record<string, (perms: Permissions, t: Dictionary, billsWait
   management: managementDay,
 };
 
-export function homeTilesFor(perms: Permissions, t: Dictionary, billsWaiting?: number): HomeTile[] {
+/**
+ * Pages a card opens that are not in the route registry, each with the test its own page uses (the same three
+ * the derived home special-cases above). Everything else a card opens is a registry entry, tested by canOpen().
+ */
+const OUTSIDE_REGISTRY: Record<string, { icon: LucideIcon; open: (p: Permissions) => boolean }> = {
+  "/residents": { icon: NAV_ICONS.residents, open: (p) => p.role.opensApp },
+  "/bills": { icon: Receipt, open: canUseBills },
+  "/assistant": { icon: Sparkles, open: (p) => can(p, "assistant.ask") },
+};
+
+/** Whether a role's tile for this card can be drawn: its page opens for the role AND its cells cover the bundle. */
+export function cardTile(key: CardKey, perms: Permissions, t: Dictionary, billsWaiting?: number): HomeTile | null {
+  const card = CARDS[key];
+  const covered = card.bundle.every((b) => (b.level ? can(perms, b.activity, b.level) : can(perms, b.activity)));
+  if (!covered) return null;
+  const outside = OUTSIDE_REGISTRY[card.opens];
+  const route = routeFor(card.opens);
+  const icon = outside?.icon ?? route?.icon;
+  const opens = outside ? outside.open(perms) : route ? canOpen(perms, route) : false;
+  if (!icon || !opens) return null;
+  const badge = card.opens === "/bills" && billsWaiting ? { badge: t.bills.tile.waiting(billsWaiting) } : {};
+  return { href: card.opens, label: card.label(t), icon, ...badge };
+}
+
+/**
+ * The home of a role that has cards (role_cards, 0194): its cards in the order it keeps them, one tile each. A card
+ * another held card includes and shares its page with (View residents under Residents) is that card's tile, not a
+ * second one. Roles with no cards get the derived home below, as a role a shelter creates always did.
+ */
+export function cardTilesFor(held: readonly CardKey[], perms: Permissions, t: Dictionary, billsWaiting?: number): HomeTile[] {
+  return held.flatMap((key) => {
+    const subsumed = held.some((o) => o !== key && CARDS[o].opens === CARDS[key].opens && includedCards(o).includes(key));
+    const tile = subsumed ? null : cardTile(key, perms, t, billsWaiting);
+    return tile ? [tile] : [];
+  });
+}
+
+export function homeTilesFor(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[]): HomeTile[] {
+  if (cards && cards.length > 0) return cardTilesFor(cards, perms, t, billsWaiting);
+
   // A role that is given jobs (src/lib/permissions/jobs.ts) shows its jobs, one tile each, and
   // nothing else: that is what "a home of named jobs" means. A job whose bundle the role's cells
   // do not cover, or whose page it may not open, draws no tile rather than a tile that refuses.
