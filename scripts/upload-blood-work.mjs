@@ -441,7 +441,13 @@ async function load() {
 
   if (!apply) {
     const [rows] = await query(`begin; ${write(file.id, "")} rollback;`);
-    done({ dryRun: true, wouldWrite: summary, checkedAgainstDatabase: rows ? "the whole write ran and was rolled back" : "no rows" });
+    // The write really ran (every trigger fired) and was rolled back; the
+    // counts say it produced what the summary promises.
+    done({
+      dryRun: true,
+      wouldWrite: summary,
+      rehearsedAndRolledBack: { bloodTests: rows?.blood_test_ids?.length ?? 0, attachments: rows?.attachment_ids?.length ?? 0 },
+    });
     return;
   }
 

@@ -936,6 +936,11 @@ runs the released code.
   anything with real history; dry run by default, `--apply` to write, receipt
   on the Desktop first; see
   `docs/decisions/2026-10-09-resident-corrections-script.md`),
+  `upload-blood-work.mjs` (the `/upload-blood-work` skill's writer: loads lab
+  reports from the Blood Work inbox on Drive as a clinic visit plus one blood
+  test per panel with the report attached; dry run by default, `--apply` to
+  write, test by default and `--env production` when the skill's lessons file
+  says live; see `docs/decisions/2026-10-15-upload-blood-work-skill.md`),
   `audit-contact-map-links.mjs` (lists contacts and Shelter Friends whose map
   link is dead, missing or has words after it, in plain words for whoever
   fixes them — read-only, dev by default, `--env production` when asked; see
