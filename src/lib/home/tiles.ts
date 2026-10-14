@@ -148,7 +148,10 @@ export function homeTilesForRoles(
       tiles.push(tile);
     }
   }
-  return withCounts(tiles, t, counts);
+  // "Add photos" is the extra of a role with jobs and no medical photos job; once ANY held role has that job it is
+  // redundant (the union's cells would otherwise give the maintenance side of a cover the extra too).
+  const shown = perms.roles.length > 1 && tiles.some((x) => x.href === "/medical/photos") ? tiles.filter((x) => x.href !== "/photos/add") : tiles;
+  return withCounts(shown, t, counts);
 }
 
 function homeTilesBase(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[]): HomeTile[] {
