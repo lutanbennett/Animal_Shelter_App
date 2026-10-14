@@ -41,6 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     ...(origin ? { metadataBase: origin } : {}),
+    alternates: { canonical: "/friends" },
     openGraph: {
       type: "website",
       title,

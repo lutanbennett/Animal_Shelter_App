@@ -70,6 +70,7 @@ export async function sitePageMetadata(slug: SitePageSlug): Promise<Metadata> {
     title,
     description,
     ...(origin ? { metadataBase: origin } : {}),
+    alternates: { canonical: SITE_PAGE_PATHS[slug] },
     openGraph: {
       type: "website",
       title,
@@ -162,7 +163,7 @@ export async function SitePageView({
         )}
         {text.body ? (
           <div data-reveal>
-            <SiteBody body={text.body} size="lg" />
+            <SiteBody body={text.body} size="lg" headingLevel="h2" />
           </div>
         ) : (
           <p className="text-sm text-muted">{t.sitePages.comingSoon}</p>

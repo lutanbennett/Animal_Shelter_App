@@ -1,8 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import { AvailableBadge } from "@/components/AvailableBadge";
 import { EmptyPhoto } from "@/components/EmptyPhoto";
-import { driveImageUrl } from "@/lib/google/drive-client";
+import { PublicPhoto } from "@/components/PublicPhoto";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { sizeLabel, speciesLabel } from "@/lib/i18n/enum-labels";
 
@@ -39,10 +38,11 @@ export function ResidentCard({
     >
       <div className="relative aspect-[4/3] w-full bg-background">
         {resident.profile_photo_drive_file_id ? (
-          <Image
-            src={driveImageUrl(resident.profile_photo_drive_file_id, 400)}
+          <PublicPhoto
+            fileId={resident.profile_photo_drive_file_id}
             alt={resident.name}
-            fill
+            fallback={400}
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
             className="object-cover transition group-hover:scale-105"
           />
         ) : (

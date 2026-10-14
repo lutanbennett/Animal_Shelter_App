@@ -9,7 +9,8 @@ import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
 import { localLabel } from "@/lib/translations/labels";
 import { getSiteOrigin } from "@/lib/site-origin";
-import { animalShelterJsonLd, defaultShareImage, shareImageMetadata } from "@/lib/site/share";
+import { animalShelterJsonLd, defaultShareImage, shareImageMetadata, webSiteJsonLd } from "@/lib/site/share";
+import { PublicPhoto } from "@/components/PublicPhoto";
 import { localizedField } from "@/lib/translations/localize";
 import type { PublicTranslations } from "@/lib/translations/types";
 import { sexLabel, speciesLabel } from "@/lib/i18n/enum-labels";
@@ -91,6 +92,9 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     ...(origin ? { metadataBase: origin } : {}),
+    // This page's own address, relative so it follows metadataBase to the
+    // public site's host (docs/seo-audit-2026-10-14.md, T3).
+    alternates: { canonical: "/" },
     openGraph: {
       type: "website",
       title,
@@ -222,10 +226,12 @@ export default async function WelcomePage() {
     t.header.appName,
     tagline || t.home.shareFallback,
   );
+  const webSite = webSiteJsonLd(origin, locale, t.header.appName);
 
   return (
     <main className="flex flex-1 flex-col font-site text-site-ink">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
+      {webSite && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: webSite }} />}
       <PublicHeader current="home" />
 
       <section
@@ -260,11 +266,11 @@ export default async function WelcomePage() {
         </div>
         {content?.hero_drive_file_id && (
           <div className="relative aspect-[4/3] overflow-hidden rounded-[20px] bg-site-sand lg:aspect-auto lg:h-[460px]">
-            <Image
-              src={driveImageUrl(content.hero_drive_file_id, 1200)}
+            <PublicPhoto
+              fileId={content.hero_drive_file_id}
               alt={heroAlt || t.header.appName}
-              fill
               priority
+              fallback={1200}
               sizes="(min-width: 1024px) 50vw, 100vw"
               className="object-cover object-[center_40%]"
             />
@@ -413,10 +419,10 @@ export default async function WelcomePage() {
           >
             <div className="relative aspect-[4/3] w-full bg-site-sand sm:aspect-auto sm:h-[280px]">
               {featured.profile_photo_drive_file_id ? (
-                <Image
-                  src={driveImageUrl(featured.profile_photo_drive_file_id, 1200)}
+                <PublicPhoto
+                  fileId={featured.profile_photo_drive_file_id}
                   alt={featured.name}
-                  fill
+                  fallback={1200}
                   sizes="(min-width: 1024px) 50vw, 100vw"
                   className="object-cover object-[center_30%]"
                 />

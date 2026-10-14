@@ -20,11 +20,15 @@ export function driveImageUrl(fileId: string, width?: PhotoWidth): string {
 
 /**
  * The only widths the photo route will resize to, so the caches can't be
- * flooded with sizes: thumbnails (160), cards (400) and the large view
- * (1200). Anything else is refused. Drive scales the longer side to this
- * many pixels. Public pages ask for a width; staff views stay on the original.
+ * flooded with sizes: thumbnails (160), cards (400), a phone's large view
+ * (800) and the laptop's or a share picture (1200). Anything else is
+ * refused. Drive scales the longer side to this many pixels. Public pages
+ * ask for a width; staff views stay on the original. 400/800/1200 are the
+ * three a PublicPhoto offers in its srcset (src/components/PublicPhoto.tsx):
+ * 800 was added by the SEO audit of 2026-10-14, because a phone at 2× needs
+ * about 750 px for a full-width photo and was being sent 1200.
  */
-export const PHOTO_WIDTHS = [160, 400, 1200] as const;
+export const PHOTO_WIDTHS = [160, 400, 800, 1200] as const;
 export type PhotoWidth = (typeof PHOTO_WIDTHS)[number];
 
 /**

@@ -32,6 +32,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     ...(origin ? { metadataBase: origin } : {}),
+    // The whole list is the page; ?category= is a view of it.
+    alternates: { canonical: "/our-work" },
     openGraph: {
       type: "website",
       title,

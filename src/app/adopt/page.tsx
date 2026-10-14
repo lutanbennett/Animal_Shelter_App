@@ -35,6 +35,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description: t.adopt.metaDescription,
     ...(origin ? { metadataBase: origin } : {}),
+    // The bare list is the page; ?species=, ?size= and ?ready= are views of it.
+    alternates: { canonical: "/adopt" },
     openGraph: {
       type: "website",
       title,
@@ -174,7 +176,7 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
               {anyReady && (
                 <Link
                   href={href({ ready: !readyOnly })}
-                  aria-pressed={readyOnly}
+                  aria-current={readyOnly ? "page" : undefined}
                   className={`${chipClass(readyOnly)} ${speciesPresent.length > 1 ? "sm:ml-auto" : ""}`}
                 >
                   {t.adopt.filters.readyOnly}

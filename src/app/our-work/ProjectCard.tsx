@@ -1,6 +1,5 @@
-import Image from "next/image";
 import Link from "next/link";
-import { driveImageUrl } from "@/lib/google/drive-client";
+import { PublicPhoto } from "@/components/PublicPhoto";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { Locale } from "@/lib/i18n/locales";
 import { projectCategoryLabel } from "@/lib/i18n/enum-labels";
@@ -36,10 +35,11 @@ export function ProjectCard({
     >
       <div className="relative aspect-[4/3] w-full bg-background">
         {project.cover_drive_file_id ? (
-          <Image
-            src={driveImageUrl(project.cover_drive_file_id, 400)}
+          <PublicPhoto
+            fileId={project.cover_drive_file_id}
             alt={title}
-            fill
+            fallback={400}
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
             className="object-cover transition group-hover:scale-105"
           />
         ) : (

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { PublicPhoto } from "@/components/PublicPhoto";
 import { useState } from "react";
 import { ThumbnailStrip } from "@/components/ThumbnailStrip";
 import { driveImageUrl } from "@/lib/google/drive-client";
@@ -35,12 +35,13 @@ export function StoryGallery({
   return (
     <figure className="flex flex-col gap-3">
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg border border-border bg-surface">
-        <Image
+        <PublicPhoto
           key={current.id}
-          src={driveImageUrl(current.drive_file_id, 1200)}
+          fileId={current.drive_file_id}
           alt={current.caption || title}
-          fill
           priority
+          fallback={1200}
+          sizes="(min-width: 1024px) 800px, 100vw"
           className="object-contain"
         />
       </div>

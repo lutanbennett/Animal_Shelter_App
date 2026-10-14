@@ -77,6 +77,7 @@ export async function generateMetadata(
     title,
     description,
     ...(origin ? { metadataBase: origin } : {}),
+    alternates: { canonical: `/adopt/${resident.id}` },
     openGraph: {
       type: "profile",
       title,
