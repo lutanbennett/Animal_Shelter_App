@@ -107,7 +107,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: release manager
 - [ ] **Timezone-sensitive behaviour proved** — deferred: `multi-role-build`. `role_row_live` compares against `shelter_date(now())`, and the harness asserts both edges (ends today counts, ended yesterday does not, starts tomorrow does not) with the dates computed by the same function, so it proves the comparison and not the clock; the 00:00–07:00 Thai window on the deployed build is not checked
 - [ ] **Boundary or banding change** — n/a: the date boundary has all three sides asserted in section 3
-- [ ] **Evidence pasted into this plan is the tool's actual output, unedited** — the gates block is unedited; the harness line is quoted
+- [x] **Evidence pasted into this plan is the tool's actual output, unedited** — the gates block is unedited; the harness line is quoted
 - [ ] Public pages re-checked after a cache purge — n/a: the public site reads none of this
 
 ### Deploy safety
