@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
+import { defaultShareImage, shareImageMetadata } from "@/lib/site/share";
 import { localizedField } from "@/lib/translations/localize";
 import {
   compatibilityLabel,
@@ -54,16 +55,22 @@ export async function generateMetadata(
     getT(),
     getSiteOrigin(),
   ]);
-  const resident = await loadPublicResident(supabase, id);
+  const [resident, content] = await Promise.all([
+    loadPublicResident(supabase, id),
+    loadSiteContent(supabase),
+  ]);
   if (!resident) return { title: t.adopt.pageTitle };
 
   const hook = localizedField(locale, resident.hook_line, resident.translations, "hook_line");
   const bio = localizedField(locale, resident.bio, resident.translations, "bio");
   const description = hook || bioLead(bio) || t.adopt.shareFallback(resident.name);
   const title = `${resident.name} · ${t.header.appName}`;
+  // The resident's photo; without one, the site's default picture rather
+  // than no picture (public site review 2026-10-13, §8.2).
   const image = resident.profile_photo_drive_file_id
-    ? driveImageUrl(resident.profile_photo_drive_file_id, 1200)
-    : undefined;
+    ? { url: driveImageUrl(resident.profile_photo_drive_file_id, 1200), alt: resident.name }
+    : defaultShareImage(content, locale, t.header.appName);
+  const share = shareImageMetadata(image, title, description);
 
   return {
     title,
@@ -76,14 +83,9 @@ export async function generateMetadata(
       url: `/adopt/${resident.id}`,
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
-      ...(image ? { images: [{ url: image, alt: resident.name }] } : {}),
+      images: share.images,
     },
-    twitter: {
-      card: image ? "summary_large_image" : "summary",
-      title,
-      description,
-      ...(image ? { images: [image] } : {}),
-    },
+    twitter: share.twitter,
   };
 }
 
@@ -341,14 +343,14 @@ export default async function PublicResidentPage(
             </Link>
           </section>
 
-          {/* No sponsor flow yet: /donate, as the header's "Sponsor a
-              resident" and the homepage card do (docs/decisions.md). */}
-          <section data-reveal aria-labelledby="sponsor-heading" className="flex flex-col gap-1">
-            <h2 id="sponsor-heading" className="font-site! text-lg font-bold text-site-ink">
-              {p.sponsorHeading(resident.name)}
+          {/* A gift, not sponsorship: /donate offers no monthly or per-animal
+              option yet (review §6.2, 2026-10-14). */}
+          <section data-reveal aria-labelledby="care-heading" className="flex flex-col gap-1">
+            <h2 id="care-heading" className="font-site! text-lg font-bold text-site-ink">
+              {p.careHeading}
             </h2>
             <Link href="/donate" className={`${textLink} self-start text-base`}>
-              {p.sponsorLink} &rarr;
+              {p.careLink(resident.name)} &rarr;
             </Link>
           </section>
         </div>

@@ -187,7 +187,13 @@ const en = {
     heroLead:
       "We rescue, treat and care for dogs and cats at our shelter in Mae Wang — and find loving homes for as many as we can. The rest stay with us, safe and cared for, for life.",
     meetAnimals: "Meet the animals",
-    giveMonthly: "Give monthly",
+    /**
+     * The hero's second button. "Give monthly" until 2026-10-14: there is no
+     * monthly option on /donate yet (public site review §6.2), so the button
+     * promises only what the page delivers. Bring "Give monthly" back when
+     * DonorBox has a monthly link to point at.
+     */
+    helpFeedThem: "Help feed them",
     ourStoryFallback: "Our story",
     seeOurWork: "See our work in the community",
     footerOrgName: "Lanna Care for Animals Foundation",
@@ -215,10 +221,11 @@ const en = {
         body: "Give a rescued dog or cat a forever home. Every animal leaves vaccinated and sterilised.",
         cta: "Meet the animals",
       },
-      sponsor: {
-        title: "Sponsor a resident",
-        body: "Many of our animals will live here for life. A monthly gift helps pay for their food and care.",
-        cta: "Find out how",
+      /** "Sponsor a resident" until sponsorship exists (review §6.2, 2026-10-14). */
+      care: {
+        title: "Help with their care",
+        body: "Many of our animals will live here for life. A gift helps pay for their food and care.",
+        cta: "Ways to give",
       },
       foster: {
         title: "Foster",
@@ -233,6 +240,8 @@ const en = {
     },
     /** Open Graph description when no tagline is set. */
     shareFallback: "A non-profit rescue shelter for dogs and cats in Mae Wang, Chiang Mai.",
+    /** The window title and search-result title: the name, then what and where (review 2026-10-13, §8.3). */
+    metaTitle: "Lanna Care for Animals — dog and cat rescue, Mae Wang, Chiang Mai",
   },
 
   /** The footer on every public page. */
@@ -269,7 +278,8 @@ const en = {
     services: "Services",
     /** Adopt → /adopt, the listing, beside International adoption. */
     meetResidents: "Meet our residents",
-    sponsor: "Sponsor a resident",
+    /** Get involved → /donate. "Sponsor a resident" until sponsorship exists (review §6.2). */
+    care: "Help with their care",
     /** Get involved → /friends/join, for a business that wants to help. */
     becomeFriend: "Become a Shelter Friend",
     about: "About & contact",
@@ -5758,7 +5768,7 @@ const en = {
     fromAbroad: "Adopting from abroad?",
     fromAbroadLink: "How international adoption works",
     openApp: "Open the app",
-    pageTitle: "Meet Our Residents",
+    pageTitle: "Meet our residents",
     pageSubtitle:
       "You're browsing as a guest — this is a read-only, public view of the residents we've made visible for adoption and outreach. Staff and volunteers see much more after signing in.",
     pageSubtitleSignedIn:
@@ -5832,8 +5842,9 @@ const en = {
       findUs: "Find us",
       visitingHours: "Visiting hours",
       howAdoptionWorks: "How adoption works",
-      sponsorHeading: (name: string) => `Can't adopt? You can still help ${name}`,
-      sponsorLink: "Give monthly towards their food and care",
+      /** → /donate. Promised monthly giving until 2026-10-14; /donate has no such option (review §6.2). */
+      careHeading: "Can't adopt?",
+      careLink: (name: string) => `A gift towards ${name}'s food and care helps`,
       actions: (name: string) => `Get in touch about ${name}`,
       bookVisit: "Book a visit",
       emailSubject: (name: string) => `Visiting ${name}`,
@@ -5977,6 +5988,9 @@ const en = {
     gallery: "Photos",
     showPhoto: (index: number, total: number) => `Show photo ${index} of ${total}`,
     moreStories: "More of our work",
+    /** The give line at the end of every story and under the list (review §6.4). */
+    helpMore: "Help us do more of this — a gift pays for the next rescue and the next sterilisation day.",
+    helpMoreLink: "Donate",
     /** Open Graph description when a story has no summary. */
     shareFallback: "A story from Lanna Care for Animals.",
   },

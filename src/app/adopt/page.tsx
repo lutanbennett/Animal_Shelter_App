@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
+import { defaultShareImage, shareImageMetadata } from "@/lib/site/share";
 import { RESIDENT_SIZES, sizeLabel, speciesLabel } from "@/lib/i18n/enum-labels";
 import { CARD_COLUMNS } from "@/lib/residents/public";
 import { loadSiteContent } from "@/lib/site/content";
@@ -24,8 +25,18 @@ type RecentAdoption = {
 };
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [{ t, locale }, origin] = await Promise.all([getT(), getSiteOrigin()]);
+  const [supabase, { t, locale }, origin] = await Promise.all([
+    createClient(),
+    getT(),
+    getSiteOrigin(),
+  ]);
+  const content = await loadSiteContent(supabase);
   const title = `${t.adopt.pageTitle} · ${t.header.appName}`;
+  const share = shareImageMetadata(
+    defaultShareImage(content, locale, t.header.appName),
+    title,
+    t.adopt.metaDescription,
+  );
   return {
     title,
     description: t.adopt.metaDescription,
@@ -37,7 +48,9 @@ export async function generateMetadata(): Promise<Metadata> {
       url: "/adopt",
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
+      images: share.images,
     },
+    twitter: share.twitter,
   };
 }
 
