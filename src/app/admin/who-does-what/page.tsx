@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { refuseFor } from "@/lib/auth/require-role";
 import { loadPermissions } from "@/lib/permissions/load";
 import { ACTIVITIES, type ActivityKey } from "@/lib/permissions/catalogue";
-import { CARDS, CARD_KEYS, includedCards, isCardKey, type CardKey } from "@/lib/permissions/cards";
+import { CARDS, CARD_KEYS, bundleOfCards, includedCards, isCardKey, type CardKey } from "@/lib/permissions/cards";
 import { TWO_STEP_PATH, hasTwoStep } from "@/lib/auth/two-step";
 import { opensWhoDoesWhat, WHO_DOES_WHAT_PATH } from "@/lib/permissions/who-does-what";
 import { getT } from "@/lib/i18n/get-t";
@@ -67,7 +67,15 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
     return `${WHO_DOES_WHAT_PATH}?${q.toString()}`;
   };
 
-  const extras = (extraRows ?? []).map((e) => ({ activity: e.activity as ActivityKey, level: Number(e.level), why: e.why as string }));
+  // "Also allowed" is what no held card gives. An extra a held card already covers stays stored (so removing that
+  // card takes away only what it gave) but is not listed while the card covers it.
+  const given = bundleOfCards(held);
+  const extras = (extraRows ?? [])
+    .map((e) => ({ activity: e.activity as ActivityKey, level: Number(e.level), why: e.why as string }))
+    .filter((e) => {
+      const have = given.get(e.activity);
+      return !(have === "edit" || (have === "read" && e.level === 1));
+    });
   const extraOptions = ACTIVITIES.filter((a) => !extras.some((e) => e.activity === a.key))
     .sort((x, y) => x.sort - y.sort)
     .map((a) => ({ key: a.key as string, label: activityName(a.key as ActivityKey), kind: a.kind }));

@@ -7,7 +7,7 @@ import { hasTwoStep } from "@/lib/auth/two-step";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { ACTIVITIES, isActivityKey } from "@/lib/permissions/catalogue";
-import { bundleJson, bundleOfCards, isCardKey, type CardKey } from "@/lib/permissions/cards";
+import { bundleJson, isCardKey, type CardKey } from "@/lib/permissions/cards";
 import { checkChange } from "@/lib/permissions/prerequisites";
 
 /**
@@ -77,21 +77,10 @@ export async function addCard(roleKey: string, card: string): Promise<ActionResu
     const cards = await currentCards(g.supabase, g.roleId);
     if (!cards) return { ok: false, error: t.common.somethingWentWrong("cards") };
     if (cards.includes(card)) return { ok: false, error: t.admin.whoDoesWhat.cardsView.alreadyHas };
-    const next = [...cards, card];
-    const r = await apply(g.supabase, g.roleId, next, "whoDoesWhat.addCard", t);
-    if (!r.ok) return r;
-
-    // An extra the cards now fully give is redundant: drop it so "Also allowed" lists only what no card gives.
-    // The recompute above already took the higher level of the two, so access does not change.
-    const given = bundleOfCards(next);
-    const { data: extras } = await g.supabase.from("role_extras").select("activity, level").eq("role_id", g.roleId).returns<{ activity: string; level: number }[]>();
-    for (const e of extras ?? []) {
-      const have = given.get(e.activity as never);
-      if (have && (have === "edit" || Number(e.level) === 1)) {
-        await g.supabase.from("role_extras").delete().eq("role_id", g.roleId).eq("activity", e.activity);
-      }
-    }
-    return done();
+    // Extras the new card also gives are kept, not dropped: the page hides them while a card covers them, and they
+    // are still there, so removing the card later takes away only what the card gave, never what was granted singly.
+    const r = await apply(g.supabase, g.roleId, [...cards, card], "whoDoesWhat.addCard", t);
+    return r.ok ? done() : r;
   });
 }
 
