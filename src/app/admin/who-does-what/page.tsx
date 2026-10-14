@@ -10,6 +10,7 @@ import { TWO_STEP_PATH, hasTwoStep } from "@/lib/auth/two-step";
 import { opensWhoDoesWhat, WHO_DOES_WHAT_PATH } from "@/lib/permissions/who-does-what";
 import { getT } from "@/lib/i18n/get-t";
 import { AddExtraForm, CardButton } from "./CardControls";
+import { CardBoard } from "./CardBoard";
 import { loadRoles, roleName } from "./roles";
 
 /**
@@ -55,6 +56,14 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
   const library = CARD_KEYS.filter((k) => !held.includes(k));
   const label = (k: CardKey) => CARDS[k].label(t);
   const describe = (k: CardKey) => c.description[k];
+
+  const tileOf = (k: CardKey) => ({
+    key: k,
+    label: label(k),
+    description: describe(k),
+    includes: CARDS[k].includes.map((x) => label(x)).join(", "),
+    href: href({ card: k }) + "#card-detail",
+  });
 
   const activityName = (key: ActivityKey) => w.activities[key];
   const kindOf = new Map(ACTIVITIES.map((a) => [a.key as string, a.kind]));
@@ -171,35 +180,13 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
       )}
 
       {role && (
-        <section aria-labelledby="cards-h" className="flex flex-col gap-3">
-          <h2 id="cards-h" className="text-lg font-semibold text-foreground">
-            {c.cardsHeading(names.get(role.key) ?? role.key)}
-          </h2>
-          {held.length === 0 ? (
-            <p className="text-sm text-muted">{c.noCards}</p>
-          ) : (
-            <ol className="flex flex-col gap-3">
-              {held.map((k, i) => (
-                <li key={k} className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3">
-                  <Link href={href({ card: k }) + "#card-detail"} className="flex flex-col gap-1">
-                    <span className="text-base font-semibold text-foreground [overflow-wrap:anywhere]">{label(k)}</span>
-                    <span className="text-sm text-muted [overflow-wrap:anywhere]">{describe(k)}</span>
-                    {CARDS[k].includes.length > 0 && (
-                      <span className="text-xs text-muted">{c.includesNote(CARDS[k].includes.map((x) => label(x)).join(", "))}</span>
-                    )}
-                  </Link>
-                  {canEdit && (
-                    <div className="flex flex-wrap gap-2">
-                      {i > 0 && <CardButton op={{ kind: "up", roleKey: role.key, card: k }} label={c.moveUp} ariaLabel={c.moveUpFor(label(k))} />}
-                      {i < held.length - 1 && <CardButton op={{ kind: "down", roleKey: role.key, card: k }} label={c.moveDown} ariaLabel={c.moveDownFor(label(k))} />}
-                      <CardButton op={{ kind: "remove", roleKey: role.key, card: k }} label={c.remove} ariaLabel={c.removeFor(label(k))} danger />
-                    </div>
-                  )}
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
+        <CardBoard
+          roleKey={role.key}
+          roleName={names.get(role.key) ?? role.key}
+          canEdit={canEdit}
+          held={held.map(tileOf)}
+          library={library.map(tileOf)}
+        />
       )}
 
       {role && (
@@ -236,29 +223,6 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
               <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-foreground">{c.extraAddHeading}</summary>
               <AddExtraForm roleKey={role.key} options={extraOptions} />
             </details>
-          )}
-        </section>
-      )}
-
-      {role && (
-        <section aria-labelledby="add-h" className="flex flex-col gap-3">
-          <h2 id="add-h" className="text-lg font-semibold text-foreground">
-            {c.addHeading}
-          </h2>
-          <p className="text-sm text-muted">{c.addIntro}</p>
-          {library.length === 0 ? (
-            <p className="text-sm text-foreground">{c.allHeld}</p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {library.map((k) => (
-                <li key={k}>
-                  <Link href={href({ card: k, lib: "1" }) + "#card-detail"} className="flex min-h-11 flex-col gap-1 rounded-lg border border-dashed border-border bg-surface p-3">
-                    <span className="text-base font-semibold text-foreground [overflow-wrap:anywhere]">{label(k)}</span>
-                    <span className="text-sm text-muted [overflow-wrap:anywhere]">{describe(k)}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
           )}
         </section>
       )}
