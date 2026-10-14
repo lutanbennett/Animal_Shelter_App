@@ -82,7 +82,7 @@ Comparing 5 note(s) on origin/main against the new 0.31.0 entry
 All cut checks passed.
 ```
 
-- [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a` on the first push and tick it in a follow-up commit once the run is actually green — n/a: not yet — the PR does not exist at the commit this plan was written in
+- [x] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a` on the first push and tick it in a follow-up commit once the run is actually green — all 7 jobs `success` on run 38649284366 at `39f736e8`: `migration-numbers`, `script-integrity`, `test-plan`, `new-policy-role-names`, `audit`, `public-views`, `check`. Read from `gh run view 38649284366 --json jobs`, not from `gh pr checks`. `audit` is green this run, which it has not always been — a red there would not have been a blocker either way. The first run on this branch (`6b7c75df`) failed on `test-plan` by construction, because that commit created the PR and this file did not yet exist. **Ticking this line is itself a commit, so a further run follows it, and the merge waits for that one** — the second-run rule the handover names
 
 ## 3. Schema and data — *skip if no migration*
 
