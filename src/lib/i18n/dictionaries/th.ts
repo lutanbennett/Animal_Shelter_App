@@ -190,7 +190,6 @@ const th: Dictionary = {
     featured: {
       heading: "สัตว์ประจำสัปดาห์",
       noPhoto: "ยังไม่มีรูปภาพ",
-      availableForAdoption: "พร้อมรับเลี้ยง",
       desexed: "ทำหมันแล้ว",
       readStory: (name: string) => `อ่านเรื่องราวของ ${name}`,
     },
