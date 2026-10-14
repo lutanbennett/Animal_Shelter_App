@@ -107,16 +107,21 @@ function ruleFor(linkPath: string | null | undefined): Rule | null {
   return best;
 }
 
-/** Can someone whose role KEY is `role` do a job that links to `linkPath`? `eligibility` is the database's answer for that key. */
+/**
+ * Can someone whose role KEY is `role` do a job that links to `linkPath`? `eligibility` is the database's answer for that
+ * key. A person covering a second role holds several keys (held-roles.ts): they can do it when ANY of them can, the same
+ * union the database enforces (0196). A never-assignable key (a doctor) is simply not counted.
+ */
 export function canDoJob(
-  role: string | null | undefined,
+  role: string | readonly (string | null | undefined)[] | null | undefined,
   linkPath: string | null | undefined,
   eligibility: Eligibility,
 ): boolean {
-  if (!role || NEVER_ASSIGNABLE.includes(role)) return false;
+  const keys = (Array.isArray(role) ? role : [role]).filter((k): k is string => !!k && !NEVER_ASSIGNABLE.includes(k));
+  if (keys.length === 0) return false;
   const rule = ruleFor(linkPath);
   if (!rule) return true;
-  return rule.needs.some((need) => eligibility[needKey(need)]?.includes(role) ?? false);
+  return rule.needs.some((need) => keys.some((key) => eligibility[needKey(need)]?.includes(key) ?? false));
 }
 
 /** Which of `roles` (keys) can do it, in the given order — for "only … are listed". */

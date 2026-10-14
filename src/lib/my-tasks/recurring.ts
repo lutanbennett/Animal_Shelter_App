@@ -57,7 +57,8 @@ async function loadMine(
 export async function loadMyRecurringTasks(
   supabase: SupabaseClient,
   userId: string,
-  role: string | null,
+  /** Every role the reader holds today (Permissions.roles): a covering Head of Medical may do the maintenance jobs. */
+  role: string | readonly string[] | null,
   t: Dictionary,
   today: string,
 ): Promise<MyTaskSection> {
@@ -77,7 +78,7 @@ export async function loadMyRecurringTasks(
   // their own jobs link to, not the whole registry.
   const { eligibility, error: eligibilityError } = await loadEligibility(
     supabase,
-    [role],
+    Array.isArray(role) ? role : [role],
     needsForLinks(open.map((o) => o.job.link_path)),
   );
   if (eligibilityError) return { ...section, error: eligibilityError };

@@ -23,6 +23,12 @@ export type Permissions = {
     opensApp: boolean;
     homePath: string | null;
   };
+  /**
+   * Every role key this login holds today, main role first (my_permissions().roles, 0196). One entry for almost
+   * everyone; more while someone is covering. The cells and scopes below are already the union of them, so this
+   * is for the things that are keyed on a role rather than on a cell: a role's cards, its jobs, the manual's audience.
+   */
+  roles: readonly string[];
   /** Admin's column is a rule, not data (§6): true answers yes to every known activity. */
   isAdmin: boolean;
   scopes: {
@@ -88,6 +94,7 @@ export function parsePermissions(raw: unknown): Permissions | null {
       opensApp: role.opens_app === true,
       homePath: typeof role.home_path === "string" ? role.home_path : null,
     },
+    roles: Array.isArray(r.roles) && r.roles.every((k) => typeof k === "string") && r.roles.length > 0 ? (r.roles as string[]) : [role.key],
     isAdmin: r.is_admin === true,
     scopes: {
       residents: String(scopes.residents ?? "all"),

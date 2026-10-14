@@ -5,8 +5,8 @@ import { refuseFor } from "@/lib/auth/require-role";
 import { safeNextPath, DOCTOR_HOME_PATH } from "@/lib/auth/next-path";
 import { loadPermissions } from "@/lib/permissions/load";
 import { deviceFrom } from "@/lib/home/device";
-import { listHomeRoles, loadRoleCards } from "@/lib/home/roles";
-import { homeTilesFor } from "@/lib/home/tiles";
+import { listHomeRoles, loadCardsByRole } from "@/lib/home/roles";
+import { homeTilesForRoles } from "@/lib/home/tiles";
 import { loadUrgentCounts } from "@/lib/my-tasks/urgent";
 import { countBillsWaiting } from "@/lib/bills/waiting";
 import { getT } from "@/lib/i18n/get-t";
@@ -49,7 +49,7 @@ export default async function HomePage() {
 
   const { t } = await getT();
   const urgent = await loadUrgentCounts(supabase, perms, user.id);
-  const tiles = homeTilesFor(perms, t, await countBillsWaiting(supabase, perms), await loadRoleCards(perms.role.key), {
+  const tiles = homeTilesForRoles(perms, t, await countBillsWaiting(supabase, perms), await loadCardsByRole(perms.roles), {
     my: urgent.total,
     maintenance: urgent.maintenance,
   });

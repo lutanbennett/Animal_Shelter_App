@@ -3,14 +3,17 @@
 import { useConfirm } from "@/components/ConfirmProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
+import { OptionalDateInput } from "@/components/OptionalDateInput";
 import { RowActionButton } from "@/components/RowAction";
 import { Fragment, useState, useTransition } from "react";
 import {
+  addExtraRole,
   allowTwoStepSetup,
   archiveUser,
   deleteUser,
   issueTemporaryPassword,
   resetTwoStep,
+  removeExtraRole,
   restoreUser,
   setUserName,
   updateUserRole,
@@ -23,6 +26,9 @@ import { formatDateTime as formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { roleOptionLabel, type RoleOption } from "./role-options";
 
+/** An additional role (a cover, 0196): in force until `endsOn` inclusive; null = no end. */
+export type ExtraRole = { role: string; startsOn: string | null; endsOn: string | null };
+
 export type SecurityUser = {
   id: string;
   email: string;
@@ -32,6 +38,8 @@ export type SecurityUser = {
   role: string | null;
   /** Set when they've left (0063): no access, kept for past work. */
   archivedAt: string | null;
+  /** Roles held besides the main one, soonest end first. */
+  extraRoles: ExtraRole[];
   /** The doctor this login is linked to (0125); its clinics are the login's. */
   doctor: { id: string; name: string; clinics: string[] } | null;
   createdAt: string;
@@ -63,6 +71,9 @@ function UserRow({
   const confirm = useConfirm();
   const [role, setRole] = useState(user.role ?? "");
   const [name, setName] = useState(user.name ?? "");
+  const [adding, setAdding] = useState(false);
+  const [extraKey, setExtraKey] = useState("");
+  const [extraEnds, setExtraEnds] = useState("");
   const [issuedPassword, setIssuedPassword] = useState<string | null>(null);
   const [message, setMessage] = useState<
     { type: "error" | "success"; text: string } | null
@@ -115,6 +126,35 @@ function UserRow({
         setMessage({ type: "success", text: t.admin.security.table.roleUpdated });
       },
       () => setRole(previous),
+    );
+  }
+
+  // A role can be added besides the main one unless Admin or the public viewer (never additional), the one already
+  // held, or one already added. The database refuses Admin whatever this list says.
+  const heldKeys = new Set([role, ...user.extraRoles.map((x) => x.role)]);
+  const addable = offered.filter((r) => r.key !== "admin" && r.key !== "public_viewer" && !heldKeys.has(r.key));
+  const labelOf = (key: string) => roleOptionLabel(t, locale, roles.find((r) => r.key === key) ?? { key, name: key, nameTh: null });
+  const w = t.admin.security.table.cover;
+
+  function handleAddExtra() {
+    run(
+      () => addExtraRole(user.id, extraKey, extraEnds || null),
+      w.failedToAdd,
+      () => {
+        setAdding(false);
+        setExtraKey("");
+        setExtraEnds("");
+        setMessage({ type: "success", text: w.added });
+      },
+    );
+  }
+
+  async function handleRemoveExtra(key: string) {
+    if (!await confirm({ body: w.removeConfirm(labelOf(key), user.email) })) return;
+    run(
+      () => removeExtraRole(user.id, key),
+      w.failedToRemove,
+      () => setMessage({ type: "success", text: w.removed }),
     );
   }
 
@@ -249,6 +289,81 @@ function UserRow({
               </option>
             )}
           </select>
+          {user.extraRoles.length > 0 && (
+            <ul className="mt-2 flex flex-col gap-1">
+              {user.extraRoles.map((x) => (
+                <li key={x.role} className="flex flex-wrap items-center gap-2 text-xs text-foreground">
+                  <span className="rounded-full bg-surface-hover px-2 py-0.5">{labelOf(x.role)}</span>
+                  <span className="text-muted">{x.endsOn ? w.until(formatDate(x.endsOn, locale)) : w.noEnd}</span>
+                  {!archived && (
+                    <RowActionButton
+                      disabled={isPending}
+                      onClick={() => handleRemoveExtra(x.role)}
+                      label={w.remove}
+                      subject={`${user.email} — ${labelOf(x.role)}`}
+                      icon={ACTION_ICONS.delete}
+                      tone="danger"
+                    />
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          {!archived && !isSelf && role && role !== "admin" && addable.length > 0 && (
+            adding ? (
+              <form
+                onSubmit={(ev) => {
+                  ev.preventDefault();
+                  handleAddExtra();
+                }}
+                className="mt-2 flex flex-col gap-2 rounded border border-border p-2"
+              >
+                <label className="flex flex-col gap-1 text-xs text-muted">
+                  {w.roleLabel}
+                  <select
+                    value={extraKey}
+                    onChange={(e) => setExtraKey(e.target.value)}
+                    disabled={isPending}
+                    className="rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary"
+                  >
+                    <option value="" disabled>
+                      {w.pickRole}
+                    </option>
+                    {addable.map((r) => (
+                      <option key={r.key} value={r.key}>
+                        {roleOptionLabel(t, locale, r)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex flex-col gap-1 text-xs text-muted">
+                  {w.endsLabel}
+                  <OptionalDateInput
+                    value={extraEnds}
+                    onValueChange={setExtraEnds}
+                    label={w.endsLabel}
+                    disabled={isPending}
+                    className="rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary"
+                  />
+                  <span>{w.endsHint}</span>
+                </label>
+                <div className="flex gap-2">
+                  <ActionButton compact type="submit" icon={ACTION_ICONS.save} disabled={isPending || !extraKey}>
+                    {w.add}
+                  </ActionButton>
+                  <ActionButton compact type="button" icon={ACTION_ICONS.clear} disabled={isPending} onClick={() => setAdding(false)}>
+                    {t.common.cancel}
+                  </ActionButton>
+                </div>
+              </form>
+            ) : (
+              <div className="mt-2">
+                <ActionButton compact icon={ACTION_ICONS.add} disabled={isPending} onClick={() => setAdding(true)}>
+                  {w.addRole}
+                </ActionButton>
+              </div>
+            )
+          )}
           {role === "doctor" && (
             <DoctorLoginLink
               user={user}

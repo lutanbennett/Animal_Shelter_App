@@ -23,6 +23,7 @@ import { generateTemporaryPassword } from "@/lib/auth/temp-password";
 import { forgetWaitingAccessRequests } from "@/lib/status/access-requests";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { todayIso } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import { roleOptionLabel } from "./role-options";
 
@@ -281,6 +282,85 @@ export async function updateUserRole(userId: string, roleKey: string): Promise<A
       return unexpectedFailure("security.updateUserRole", error, t.common.somethingWentWrong);
     }
     await openSetupForNewAdmin(userId, role);
+    revalidateSecurity();
+    return { ok: true };
+  });
+}
+
+/** A cover's last day, as the date input gives it: a real calendar day, today or later. Empty means no end. */
+function parseCoverEnd(raw: string | null): { ok: true; date: string | null } | { ok: false } {
+  const value = (raw ?? "").trim();
+  if (value === "") return { ok: true, date: null };
+  if (!/^d{4}-d{2}-d{2}$/.test(value)) return { ok: false };
+  const parsed = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) return { ok: false };
+  // The shelter's today, not UTC's: a cover that ends today is still good today (role_row_live, 0196).
+  if (value < todayIso()) return { ok: false };
+  return { ok: true, date: value };
+}
+
+/**
+ * Gives a login a second role for a while: a row in user_roles with is_main = false and an optional last day
+ * (0196, docs/decisions/2026-10-14-multi-role-logins.md). Its rights are then the union of both roles, worked out
+ * by the database; nothing here widens anything. Admin and the public viewer are refused here for a clear message
+ * and by a trigger regardless. Audited like any role change (audit_user_roles); granted_by records who.
+ */
+export async function addExtraRole(userId: string, roleKey: string, endsOn: string | null): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("security.addExtraRole", t.common.somethingWentWrong, async () => {
+    const denied = await refuseUnlessAdmin(t);
+    if (denied) return denied;
+    const role = await givableRole(roleKey);
+    if (!role) return refuse(t.admin.security.errors.invalidRole);
+    if (role.key === "admin" || role.key === "public_viewer") return refuse(t.admin.security.errors.extraRoleNotAdmin);
+    if (await isCurrentUser(userId)) return refuse(t.admin.security.errors.cantChangeOwnRole);
+    const end = parseCoverEnd(endsOn);
+    if (!end.ok) return refuse(t.admin.security.errors.coverEndInvalid);
+
+    const admin = createAdminClient();
+    const { data: rows, error: readError } = await admin
+      .from("user_roles")
+      .select("role_id, is_main, archived_at")
+      .eq("user_id", userId);
+    if (readError) return unexpectedFailure("security.addExtraRole", readError, t.common.somethingWentWrong);
+    const main = (rows ?? []).find((r) => r.is_main);
+    if (!main || main.archived_at) return refuse(t.admin.security.errors.extraRoleNeedsMain);
+    if ((rows ?? []).some((r) => r.role_id === role.id && !r.archived_at)) return refuse(t.admin.security.errors.alreadyHoldsRole);
+
+    const supabase = await createClient();
+    const { data: { user: grantor } } = await supabase.auth.getUser();
+    // upsert on (user_id, role_id): a role removed earlier is a deleted row, so this is normally a plain insert.
+    const { error } = await admin.from("user_roles").upsert(
+      { user_id: userId, role_id: role.id, is_main: false, starts_on: null, ends_on: end.date, granted_by: grantor?.id ?? null, archived_at: null },
+      { onConflict: "user_id,role_id" },
+    );
+    if (error) return unexpectedFailure("security.addExtraRole", error, t.common.somethingWentWrong);
+    revalidateSecurity();
+    return { ok: true };
+  });
+}
+
+/** Ends a cover now: deletes the additional row (the audit log keeps it). The main role is never removed here. */
+export async function removeExtraRole(userId: string, roleKey: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("security.removeExtraRole", t.common.somethingWentWrong, async () => {
+    const denied = await refuseUnlessAdmin(t);
+    if (denied) return denied;
+    const role = await givableRole(roleKey).then((r) => r ?? null);
+    const admin = createAdminClient();
+    // A role retired since it was given can still be taken off, so look the id up without the live filter.
+    const { data: found } = await admin.from("roles").select("id").eq("key", roleKey).maybeSingle();
+    const roleId = role?.id ?? (found?.id as string | undefined);
+    if (!roleId) return refuse(t.admin.security.errors.invalidRole);
+    const { data, error } = await admin
+      .from("user_roles")
+      .delete()
+      .eq("user_id", userId)
+      .eq("role_id", roleId)
+      .eq("is_main", false)
+      .select("user_id");
+    if (error) return unexpectedFailure("security.removeExtraRole", error, t.common.somethingWentWrong);
+    if (!data || data.length === 0) return refuse(t.admin.security.errors.noSuchExtraRole);
     revalidateSecurity();
     return { ok: true };
   });
