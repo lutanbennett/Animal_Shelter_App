@@ -4,6 +4,8 @@
 //   node scripts/deploy.mjs --env uat                 # lannacare.org, from the cutover
 //   node scripts/deploy.mjs --env production          # lannacare.org until the cutover
 //   node scripts/deploy.mjs --env production --secrets
+//       # (uat/production refuse a secret found only in .env.local unless
+//       #  --allow-dev-fallthrough is also given)
 //       # also (re)upload the five runtime secrets for that environment first
 //   ... --skip-build   # reuse the .open-next output of the previous run
 //   ... --no-mail      # deploy without emailing a major release to admins
@@ -26,7 +28,8 @@ import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { readFileSync } from "node:fs";
-import { SITE_ORIGINS, loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
+import { SITE_ORIGINS, envFile, loadEnv, loadLayers, parseEnvArg, projectRef } from "./lib/env.mjs";
+import { ALLOW_FLAG, fallthroughRefusal, sourcesFor } from "./lib/secret-sources.mjs";
 import { WORKER_BUILD_VARS, WORKER_OPTIONAL_SECRETS, WORKER_REQUIRED_SECRETS } from "./lib/runtime-config.mjs";
 import { appliedMigrations } from "./lib/deploy-schema.mjs";
 import { releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
@@ -126,6 +129,22 @@ const env = loadEnv(envName);
 for (const key of [...BUILD_VARS, ...(pushSecrets ? RUNTIME_SECRETS : [])]) {
   if (!env[key]) {
     console.error(`deploy: ${key} is not set for the ${envName} environment.`);
+    process.exit(2);
+  }
+}
+
+// Which of the secrets --secrets will push came only from .env.local (dev)? Refused
+// before the build so a wrong push costs seconds, not a four-minute build.
+let secretNames = [];
+if (pushSecrets) {
+  secretNames = [...RUNTIME_SECRETS, ...OPTIONAL_SECRETS.filter((k) => env[k])];
+  const sources = sourcesFor(secretNames, loadLayers(envName), envFile(envName));
+  console.log("deploy: secrets to push (name <- source):\n" + sources.map((s) => `  ${s.name} <- ${s.source}`).join("\n"));
+  const refusal = GUARDED
+    ? fallthroughRefusal({ envName, sources, overlayName: envFile(envName), allowed: rest.includes(ALLOW_FLAG) })
+    : null;
+  if (refusal) {
+    console.error(`deploy: ${refusal}`);
     process.exit(2);
   }
 }
@@ -255,9 +274,7 @@ if (!skipBuild) {
 }
 
 if (pushSecrets) {
-  const secrets = Object.fromEntries(
-    [...RUNTIME_SECRETS, ...OPTIONAL_SECRETS.filter((k) => env[k])].map((k) => [k, env[k]]),
-  );
+  const secrets = Object.fromEntries(secretNames.map((k) => [k, env[k]]));
   wrangler(["secret", "bulk", "--env", envName], { input: JSON.stringify(secrets) });
 }
 

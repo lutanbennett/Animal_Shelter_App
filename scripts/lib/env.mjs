@@ -65,6 +65,15 @@ function readDotEnv(file) {
   return out;
 }
 
+/** The three layers separately, for saying where each value came from. */
+export function loadLayers(name) {
+  return {
+    base: readDotEnv(".env.local"),
+    overlay: name === "test" ? {} : readDotEnv(envFile(name)),
+    shell: process.env,
+  };
+}
+
 /** The merged variables for an environment: shell > .env.deploy.<env> > .env.local. */
 export function loadEnv(name) {
   const base = readDotEnv(".env.local");
