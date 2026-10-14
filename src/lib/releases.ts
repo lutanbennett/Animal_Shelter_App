@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The public website is friendlier to a visitor who lands in the wrong place or on a Thai phone. A link that goes nowhere now shows a proper page with the header, a kind message, links to the animals, Our work and the home page, and the recent happy endings. A phone set to Thai opens the site in Thai the first time, and the language button still wins afterwards. The adoption list now says ‘Dogs and cats looking for a home’ with a short invitation to message or call, and the menu calls it ‘Meet the animals’. Pages that are still only in English now say so in Thai on the home page story and the ‘How adoption works’ box.",
   "The Maintenance tile on your home screen now shows how many of your maintenance jobs are due today or overdue, the number the My tasks menu entry already showed.",
 ];
 
