@@ -135,7 +135,7 @@ begin
   -- E: the service role, as /admin/security and bootstrap-admin use it.
   n := pg_temp.try(null, null, format('insert into user_roles (user_id, role_id) values (%L, (select id from roles where key = ''admin''))', v_new));
   if n <> 1 then raise exception 'HARNESS-FAIL E: service insert gave %', n; end if;
-  n := pg_temp.try(null, null, format('insert into user_roles (user_id, role_id) values (%L, (select id from roles where key = ''volunteer'')) on conflict (user_id) do update set role_id = excluded.role_id', v_target));
+  n := pg_temp.try(null, null, format('insert into user_roles (user_id, role_id) values (%L, (select id from roles where key = ''volunteer'')) on conflict (user_id) where is_main do update set role_id = excluded.role_id', v_target));
   if n <> 1 then raise exception 'HARNESS-FAIL E: service upsert gave %', n; end if;
   n := pg_temp.try(null, null, format('update user_roles set archived_at = now() where user_id = %L', v_target));
   if n <> 1 then raise exception 'HARNESS-FAIL E: service archive gave %', n; end if;
