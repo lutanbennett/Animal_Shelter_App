@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Say what the site is: an `AnimalShelter` schema on the home page, a default share picture, and share tags on Our work**, **Home page title with a descriptor**, **A sitemap** (ticked here); **Give the Thai site its own addresses** left open with a status note |
 | Branch / worktree | `claude/public-site-findability` @ `C:\Development\Animal_Shelter_public-site-findability` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3004` |
-| PR | opened after this commit; number recorded in the follow-up commit |
+| PR | #607 |
 | Tested by / date | Claude / 2026-10-14 |
 | Carries a migration? | no |
 | Tested at SHA | `882e967f` (after sync with `origin/main`, already up to date) |
@@ -32,7 +32,7 @@
 === gates: build exited 0 after 218s
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR (runs the same three): all 7 checks passed on #607, read from the PR status before merging
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -162,7 +162,7 @@ Manual verification by: pending: the locked-host sitemap and robots.txt on test.
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: pasted when the PR is opened, in the follow-up commit that records the PR number
+- [x] Checklist pasted into the PR: the PR body points at this file on the branch, which is the record git keeps
 - [ ] Handed to the production release manager — n/a: happens at the next release cut, not at PR time
 
 Result: pass with accepted defects
