@@ -1,5 +1,6 @@
 import { can, type Permissions } from "@/lib/permissions/can";
 import type { LevelKey } from "@/lib/permissions/catalogue";
+import { audiencesOf } from "./audience";
 import { isForRole } from "./filter";
 import type { ManualRole, ManualTopic } from "./types";
 
@@ -12,5 +13,5 @@ import type { ManualRole, ManualTopic } from "./types";
  */
 export function isForTopic(topic: ManualTopic, role: ManualRole | null, perms: Permissions | null | undefined): boolean {
   if (topic.activity && perms) return can(perms, topic.activity as LevelKey, topic.activityLevel);
-  return isForRole(topic.roles, role);
+  return isForRole(topic.roles, role) || audiencesOf(perms).some((audience) => isForRole(topic.roles, audience));
 }

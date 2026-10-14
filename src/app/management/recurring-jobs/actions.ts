@@ -14,6 +14,7 @@ import {
   type TimeOfDay,
 } from "@/lib/recurring-jobs/rule";
 import { ASSIGNABLE_KEY_FILTER, canDoJob, needsForLinks } from "@/lib/recurring-jobs/eligibility";
+import { withHeldRoles } from "@/lib/auth/held-roles";
 import { loadEligibility } from "@/lib/recurring-jobs/eligibility-load";
 import { appUserLabel, type AppUser } from "@/lib/auth/app-users";
 import {
@@ -191,15 +192,16 @@ async function whoCannotDo(
     .is("archived_at", null)
     .returns<AppUser[]>();
   if (error) return { names: [], error: error.message };
+  const people = await withHeldRoles(data ?? []);
   const { eligibility, error: eligibilityError } = await loadEligibility(
     supabase,
-    (data ?? []).map((user) => user.role_key),
+    people.flatMap((user) => user.role_keys ?? [user.role_key]),
     needsForLinks([linkPath]),
   );
   if (eligibilityError) return { names: [], error: eligibilityError };
   return {
-    names: (data ?? [])
-      .filter((user) => !canDoJob(user.role_key, linkPath, eligibility))
+    names: people
+      .filter((user) => !canDoJob(user.role_keys ?? user.role_key, linkPath, eligibility))
       .map((user) => appUserLabel(user)),
     error: null,
   };

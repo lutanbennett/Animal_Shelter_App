@@ -8,6 +8,8 @@ export type AppUser = {
   display_name: string | null;
   /** The role's own key (0146): what role_can() and the rota ask about. */
   role_key: string;
+  /** Every role held today, main first (held-roles.ts). Filled in by withHeldRoles(); absent means just role_key. */
+  role_keys?: string[];
   /** Set when the person has left (0063): kept for past work, never offered for new. */
   archived_at: string | null;
 };

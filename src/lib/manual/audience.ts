@@ -13,3 +13,14 @@ export function asManualRole(role: SessionRole | null | undefined): ManualRole |
   if (!role?.opensApp) return null;
   return (MANUAL_AUDIENCES as readonly string[]).includes(role.key) ? (role.key as ManualRole) : "volunteer";
 }
+
+/**
+ * Every audience a login reads as: one per role it holds today (`Permissions.roles`), so someone covering a second
+ * role is also shown that role's tagged topics. Main role's audience first. Empty for a session that does not open
+ * the app, which `isForRole` reads as "sees everything".
+ */
+export function audiencesOf(perms: { role: { opensApp: boolean }; roles: readonly string[] } | null | undefined): ManualRole[] {
+  if (!perms?.role.opensApp) return [];
+  const all = perms.roles.map((key) => ((MANUAL_AUDIENCES as readonly string[]).includes(key) ? (key as ManualRole) : "volunteer"));
+  return [...new Set(all)];
+}

@@ -24,8 +24,9 @@ import { previewRecurrence, saveRecurringJob } from "./actions";
 import { OptionalDateInput } from "@/components/OptionalDateInput";
 import { DateInput } from "@/components/DateInput";
 
-export type PersonOption = { id: string; name: string; role: string };
-export type TeamMember = { id: string; name: string; archived: boolean; role?: string | null };
+/** `roles`: every role held today, main first; a cover adds one (held-roles.ts). */
+export type PersonOption = { id: string; name: string; role: string; roles?: string[] };
+export type TeamMember = { id: string; name: string; archived: boolean; role?: string | null; roles?: string[] };
 
 /** Screens a job is most often done on; anything else goes in "Other page…". */
 const LINK_PRESETS = {
@@ -134,27 +135,27 @@ export function RecurringJobForm({
   // on the job who can't — given it before this filter, or the link has just
   // changed — or who has since left stays listed and flagged, so they can be
   // taken off rather than silently kept. Saving refuses the first kind.
-  const eligible = (role: string | null | undefined) => canDoJob(role, linkPath, eligibility);
+  const eligible = (role: string | readonly string[] | null | undefined) => canDoJob(role, linkPath, eligibility);
   type Option = TeamMember & { cannotDo: boolean };
   const options: Option[] = [
     ...people
-      .filter((p) => eligible(p.role) || assigneeIds.has(p.id))
+      .filter((p) => eligible(p.roles ?? p.role) || assigneeIds.has(p.id))
       .map((p) => ({
         id: p.id,
         name: `${p.name} — ${roleKeyLabel(t, p.role)}`,
         archived: false,
-        cannotDo: !eligible(p.role),
+        cannotDo: !eligible(p.roles ?? p.role),
       })),
     ...team
       .filter((m) => !people.some((p) => p.id === m.id))
       .map((m) => ({
         ...m,
         name: !m.archived && m.role ? `${m.name} — ${roleKeyLabel(t, m.role)}` : m.name,
-        cannotDo: !m.archived && !eligible(m.role),
+        cannotDo: !m.archived && !eligible(m.roles ?? m.role),
       })),
   ];
   // Roles in play, by key: the people offered and anyone already on the job.
-  const roleKeys = [...new Set([...people.map((p) => p.role), ...team.flatMap((m) => (m.role ? [m.role] : []))])];
+  const roleKeys = [...new Set([...people.flatMap((p) => p.roles ?? [p.role]), ...team.flatMap((m) => m.roles ?? (m.role ? [m.role] : []))])];
   const restricted = jobIsRestricted(linkPath, eligibility, roleKeys);
 
   function toggle<T>(set: Set<T>, value: T): Set<T> {
