@@ -38,6 +38,18 @@ const nextConfig: NextConfig = {
   // octet. Ignored in production builds.
   allowedDevOrigins: ["192.168.1.*"],
 
+  // Every page's <title>, description, canonical and share tags go in
+  // <head>, for every reader. Next's default streams them into <body>
+  // after the page for any user agent not on its bot list, and Lighthouse
+  // 12 (PageSpeed Insights) no longer says "Chrome-Lighthouse", so it read
+  // every public page as having no description and scored the site 92
+  // (docs/seo-audit-2026-10-14.md, T1). Googlebot renders the page and
+  // copes either way; link checkers and other raw-HTML readers do not.
+  // The cost is that a response waits for generateMetadata; the public
+  // pages' metadata reads the same rows the page reads, and the staff
+  // pages' is static, so nothing waits longer than it already did.
+  htmlLimitedBots: /.*/,
+
   // The Pet relocation page went live in 0.8.0 and was then taken off the
   // site (relocation is not a shelter service); its row became the
   // International adoption page (0104). Anyone with the old link lands on

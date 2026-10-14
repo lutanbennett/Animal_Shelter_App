@@ -9,7 +9,7 @@ import { projectCategoryLabel } from "@/lib/i18n/enum-labels";
 import { formatDate } from "@/lib/format";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { loadSiteContent } from "@/lib/site/content";
-import { defaultShareImage, shareImageMetadata } from "@/lib/site/share";
+import { articleJsonLd, defaultShareImage, shareImageMetadata } from "@/lib/site/share";
 import {
   loadPublicProject,
   loadPublicProjectPhotos,
@@ -61,6 +61,7 @@ export async function generateMetadata(
     title: fullTitle,
     description,
     ...(origin ? { metadataBase: origin } : {}),
+    alternates: { canonical: `/our-work/${project.id}` },
     openGraph: {
       type: "article",
       title: fullTitle,
@@ -80,17 +81,32 @@ export default async function PublicProjectPage(
 ) {
   const { id } = await props.params;
   const supabase = await createClient();
-  const { t, locale } = await getT();
+  const [{ t, locale }, origin] = await Promise.all([getT(), getSiteOrigin()]);
 
-  const [project, photos, recent] = await Promise.all([
+  const [project, photos, recent, content] = await Promise.all([
     loadPublicProject(supabase, id),
     loadPublicProjectPhotos(supabase, id),
     // Four newest, so three remain once this story is dropped from them.
     loadPublicProjects(supabase, 4),
+    loadSiteContent(supabase),
   ]);
   if (!project) notFound();
 
   const { title, summary } = publicProjectText(project, locale);
+  // The story as a schema.org Article, for a rich result: the same title,
+  // opening line and picture the share tags carry (docs/seo-audit-2026-10-14.md, (b)).
+  const jsonLd = articleJsonLd({
+    origin,
+    path: `/our-work/${project.id}`,
+    title,
+    description: summary ? summaryLead(summary, 200) : t.ourWork.shareFallback,
+    image: project.cover_drive_file_id
+      ? driveImageUrl(project.cover_drive_file_id, 1200)
+      : defaultShareImage(content, locale, t.header.appName).url,
+    datePublished: project.project_date,
+    locale,
+    appName: t.header.appName,
+  });
   const paragraphs = summaryParagraphs(summary);
   const ordered: StoryPhoto[] = photos.map((photo) => ({
     id: photo.id,
@@ -107,6 +123,7 @@ export default async function PublicProjectPage(
 
   return (
     <main className="flex flex-1 flex-col">
+      {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />}
       <PublicHeader
         current="our-work"
         trail={[{ label: t.adopt.ourWorkNav, href: "/our-work" }, { label: title }]}

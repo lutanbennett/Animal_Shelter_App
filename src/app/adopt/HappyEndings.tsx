@@ -1,6 +1,5 @@
-import Image from "next/image";
 import { PawPrint } from "lucide-react";
-import { driveImageUrl } from "@/lib/google/drive-client";
+import { PublicPhoto } from "@/components/PublicPhoto";
 import { speciesLabel } from "@/lib/i18n/enum-labels";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { Locale } from "@/lib/i18n/locales";
@@ -41,10 +40,11 @@ export function HappyEndings({
             <li key={a.id} className="flex flex-col items-center gap-2 text-center">
               <div className="relative aspect-square w-full overflow-hidden rounded-full border border-border bg-surface">
                 {a.profile_photo_drive_file_id ? (
-                  <Image
-                    src={driveImageUrl(a.profile_photo_drive_file_id, 400)}
+                  <PublicPhoto
+                    fileId={a.profile_photo_drive_file_id}
                     alt={a.name}
-                    fill
+                    fallback={400}
+                    sizes="160px"
                     className="object-cover"
                   />
                 ) : (

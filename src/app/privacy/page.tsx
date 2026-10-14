@@ -33,6 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description: t.privacy.intro,
     ...(origin ? { metadataBase: origin } : {}),
+    alternates: { canonical: "/privacy" },
     openGraph: {
       type: "website",
       title,

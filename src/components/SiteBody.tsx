@@ -12,14 +12,24 @@ import { LinkedText } from "./LinkedText";
 export async function SiteBody({
   body,
   size = "base",
+  headingLevel = "h3",
   className = "",
 }: {
   body: string | null | undefined;
   size?: "sm" | "base" | "lg";
+  /**
+   * What a "## " line becomes. A whole page's body sits under the page's h1,
+   * so its sub-headings are h2; a body inside a section (the home page's
+   * story, the adoption list's "How adoption works" box) sits under an h2,
+   * so they are h3. Skipping a level fails the heading-order check
+   * (docs/seo-audit-2026-10-14.md, T4).
+   */
+  headingLevel?: "h2" | "h3";
   className?: string;
 }) {
   const blocks = parseBody(body);
   if (blocks.length === 0) return null;
+  const Heading = headingLevel;
   const { t } = await getT();
   const link = (text: string) => (
     <LinkedText text={text} newTabLabel={t.common.opensInNewTab} />
@@ -38,12 +48,12 @@ export async function SiteBody({
         switch (block.type) {
           case "heading":
             return (
-              <h3
+              <Heading
                 key={index}
                 className="mt-2 text-lg font-semibold text-foreground"
               >
                 {block.text}
-              </h3>
+              </Heading>
             );
           case "list":
             return (
