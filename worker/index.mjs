@@ -64,6 +64,7 @@ import { handleCspReport } from "./csp-report.mjs";
 import { withSecurityHeaders } from "./security-headers.mjs";
 import { runTranslations } from "./translations.mjs";
 import { isEdgeCachedPage } from "../src/lib/public-paths.ts";
+import { localeFromAcceptLanguage } from "../src/lib/i18n/locales.ts";
 
 // OpenNext's Durable Object classes must stay exported from the entry module.
 export { DOQueueHandler, DOShardedTagCache, BucketCachePurge } from "../.open-next/worker.js";
@@ -102,7 +103,7 @@ function isCacheable(request, url) {
 /** One cache entry per URL per language. */
 function cacheKeyFor(request, url) {
   const key = new URL(url);
-  key.searchParams.set("__locale", cookieValue(request, "locale") ?? "en");
+  key.searchParams.set("__locale", cookieValue(request, "locale") ?? localeFromAcceptLanguage(request.headers.get("accept-language")));
   return new Request(key.toString(), { method: "GET" });
 }
 
