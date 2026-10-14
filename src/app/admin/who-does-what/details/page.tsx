@@ -9,7 +9,6 @@ import { FIXED_FOR_NOW, fixedFor, type FixedEntry } from "@/lib/permissions/fixe
 import { unmetFor } from "@/lib/permissions/prerequisites";
 import { opensWhoDoesWhat } from "@/lib/permissions/who-does-what";
 import { getT } from "@/lib/i18n/get-t";
-import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { toCsv } from "@/lib/csv";
 import { CsvDownloadButton } from "@/components/CsvDownloadButton";
 import { PrintButton } from "@/components/PrintButton";
