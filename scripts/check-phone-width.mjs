@@ -152,6 +152,8 @@ const PAGES = [
   "/releases",
   "/account/password",
 ];
+// Signed-out public site, checked by publicPass() below.
+const PUBLIC_PAGES = ["/", "/adopt", "/adopt/international", "/friends", "/donate", "/foster", "/volunteer", "/our-work"];
 const onlyPages = opt("pages");
 
 const env = loadEnv("test");
@@ -453,7 +455,85 @@ async function run(ids, accounts) {
   } finally {
     await browser.close();
   }
-  return report(results);
+  const code = report(results);
+  return (await publicPass()) || code;
+}
+
+/**
+ * The public website, signed out, English and Thai
+ * (docs/decisions/2026-10-14-public-site-phone-polish.md). Unlike the staff
+ * pages above these are plain links and buttons, not shared components, so
+ * every visible link or button inside <main> under 44 px tall is a FAIL here,
+ * and so is the phone menu: it must show the "Talk to us" panel without
+ * scrolling at 375 x 667 (the hard case).
+ */
+
+async function publicPass() {
+  const browser = await launch();
+  let failures = 0;
+  try {
+    for (const locale of locales) {
+      const context = await browser.newContext({ viewport: { width: WIDTH, height: 667 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 });
+      await context.addCookies([{ name: "locale", value: locale, url: base }]);
+      const page = await context.newPage();
+      const targets = [...PUBLIC_PAGES];
+      // A resident and a story, found the way a visitor would.
+      for (const [list, pattern] of [["/adopt", /^\/adopt\/[0-9a-f-]{36}$/], ["/our-work", /^\/our-work\/[0-9a-f-]{36}$/]]) {
+        await page.goto(`${base}${list}`, { waitUntil: "domcontentloaded", timeout: 60_000 }).catch(() => {});
+        await settle(page);
+        const hrefs = await page.evaluate(() => [...document.querySelectorAll("main a")].map((a) => a.getAttribute("href") ?? "")).catch(() => []);
+        const one = hrefs.find((h) => pattern.test(h));
+        if (one) targets.push(one);
+      }
+      for (const target of targets) {
+        try {
+          await page.goto(`${base}${target}`, { waitUntil: "domcontentloaded", timeout: 60_000 });
+        } catch (error) {
+          console.log(`  warning  public ${locale} ${target}  (did not load: ${error.message.split("\n")[0]})`);
+          continue;
+        }
+        await settle(page);
+        const small = await page
+          .evaluate((tap) => {
+            const out = [];
+            for (const el of document.querySelectorAll("main a, main button")) {
+              const r = el.getBoundingClientRect();
+              if (r.width === 0 || r.height === 0) continue;
+              if (r.height < tap - 0.5) out.push(`"${(el.getAttribute("aria-label") || el.textContent || "").replace(/\s+/g, " ").trim().slice(0, 40)}" ${Math.round(r.width)} x ${Math.round(r.height)}`);
+            }
+            return out;
+          }, TAP)
+          .catch(() => []);
+        for (const line of small) {
+          failures += 1;
+          console.log(`\nFAIL  public ${locale} ${target}  ${line} px is under ${TAP} at ${WIDTH} px`);
+        }
+      }
+      // The phone menu: Talk to us must be on screen without scrolling.
+      await page.goto(`${base}/`, { waitUntil: "domcontentloaded", timeout: 60_000 }).catch(() => {});
+      await settle(page);
+      await page.locator("button[aria-controls]").first().click().catch(() => {});
+      await page.waitForTimeout(400);
+      const menu = await page
+        .evaluate(() => {
+          const d = document.querySelector("[role=dialog]");
+          if (!d) return null;
+          const talk = [...d.querySelectorAll("a")].filter((a) => a.closest(".bg-site-cream"));
+          return { bottoms: talk.map((a) => Math.round(a.getBoundingClientRect().bottom)), height: innerHeight };
+        })
+        .catch(() => null);
+      if (!menu) console.log(`  warning  public ${locale} phone menu did not open`);
+      else if (!menu.bottoms.length || menu.bottoms.some((b) => b > menu.height)) {
+        failures += 1;
+        console.log(`\nFAIL  public ${locale} phone menu: Talk to us is not fully on screen at ${WIDTH} x 667 (bottoms ${menu.bottoms.join(", ")}, screen ${menu.height})`);
+      }
+      await context.close();
+    }
+  } finally {
+    await browser.close();
+  }
+  console.log(failures ? `\n${failures} public-page control(s) or menu check(s) failed.` : "\nPublic pages: every link and button in the page is at least 44 px, and the phone menu shows Talk to us.");
+  return failures ? 1 : 0;
 }
 
 function fill(template, ids) {
