@@ -14,10 +14,29 @@ type Op =
   | { kind: "up" | "down"; roleKey: string; card: string }
   | { kind: "removeExtra"; roleKey: string; activity: string };
 
+/** The one place a card change is made, shared by the buttons and a drop: a drop is exactly what the button does. */
+export function runCardOp(op: Op) {
+  return op.kind === "add"
+    ? addCard(op.roleKey, op.card)
+    : op.kind === "remove"
+      ? removeCard(op.roleKey, op.card)
+      : op.kind === "removeExtra"
+        ? removeExtra(op.roleKey, op.activity)
+        : moveCard(op.roleKey, op.card, op.kind);
+}
+
+export type CardOp = Op;
+
 export function CardButton({ op, label, ariaLabel, danger }: { op: Op; label: string; ariaLabel?: string; danger?: boolean }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  // One branch per kind: two conflicting colour utilities on one element are settled by stylesheet order, not string order.
+  const tone = danger
+    ? "border-danger text-danger"
+    : op.kind === "up" || op.kind === "down"
+      ? "border-border bg-surface text-foreground"
+      : "border-primary bg-primary text-primary-foreground";
   return (
     <div className="flex flex-col gap-1">
       <button
@@ -27,21 +46,12 @@ export function CardButton({ op, label, ariaLabel, danger }: { op: Op; label: st
         onClick={() => {
           setError(null);
           startTransition(async () => {
-            const result =
-              op.kind === "add"
-                ? await addCard(op.roleKey, op.card)
-                : op.kind === "remove"
-                  ? await removeCard(op.roleKey, op.card)
-                  : op.kind === "removeExtra"
-                    ? await removeExtra(op.roleKey, op.activity)
-                    : await moveCard(op.roleKey, op.card, op.kind);
+            const result = await runCardOp(op);
             if (!result.ok) setError(result.error);
             router.refresh();
           });
         }}
-        className={`min-h-11 min-w-11 rounded-md border px-3 py-2 text-sm font-medium disabled:opacity-60 ${
-          danger ? "border-danger text-danger" : "border-primary bg-primary text-primary-foreground"
-        } ${op.kind === "up" || op.kind === "down" ? "border-border bg-surface text-foreground" : ""}`}
+        className={`min-h-11 min-w-11 rounded-md border px-3 py-2 text-sm font-medium disabled:opacity-60 ${tone}`}
       >
         {label}
       </button>
