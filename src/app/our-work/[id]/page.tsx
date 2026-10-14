@@ -103,7 +103,8 @@ export default async function PublicProjectPage(
     image: project.cover_drive_file_id
       ? driveImageUrl(project.cover_drive_file_id, 1200)
       : defaultShareImage(content, locale, t.header.appName).url,
-    datePublished: project.project_date,
+    // The story's date, else the day it was created (sort_date), as the sitemap does.
+    datePublished: project.project_date ?? project.sort_date,
     locale,
     appName: t.header.appName,
   });
