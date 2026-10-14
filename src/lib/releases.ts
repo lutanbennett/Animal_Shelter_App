@@ -74,16 +74,24 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  "One person can now do two jobs for a while on the one login. Admin: on Settings → Security, under a person's role, tap Add a role, pick the second role and, if you know it, the last day. That person then sees both roles' tiles on their home, both roles' menus and manual topics, and is offered both roles' recurring jobs on the rota and in My tasks, for example the Head of Medical covering the Head of Maintenance. The role stops by itself the day after its last day, covers ending within the week are listed on Security, and Remove ends one early. Admin can't be given as a second role.",
-  "On the facility map, tapping a zone on the Shelter overview now opens that zone's plan straight away (a zone with no plan yet opens its list of enclosures), and a ‘← Shelter overview’ link above a zone's plan takes you back. The zone's resident count is on its shape on the overview and above its plan.",
-  "The public website is friendlier to a visitor who lands in the wrong place or on a Thai phone. A link that goes nowhere now shows a proper page with the header, a kind message, links to the animals, Our work and the home page, and the recent happy endings. A phone set to Thai opens the site in Thai the first time, and the language button still wins afterwards. The adoption list now says ‘Dogs and cats looking for a home’ with a short invitation to message or call, and the menu calls it ‘Meet the animals’. Pages that are still only in English now say so in Thai on the home page story and the ‘How adoption works’ box.",
-  "Admin: on Settings → Who does what the Move up and Move down buttons are readable again in every theme, the cards are smaller so more fit, Also allowed sits under the cards, and on a laptop you can drag a card from Available cards to give it, back to take it away, or onto another to move it. The buttons on each card still do the same, and are all a phone shows.",
-  "The Maintenance tile on your home screen now shows how many of your maintenance jobs are due today or overdue, the number the My tasks menu entry already showed.",
-];
+export const unreleased: ReleaseNote[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.31.0",
+    date: "2026-10-15",
+    title:
+      "One person can now cover two roles, and the map opens the zone you tap",
+    major: true,
+    notes: [
+    "One person can now do two jobs for a while on the one login. Admin: on Settings → Security, under a person's role, tap Add a role, pick the second role and, if you know it, the last day. That person then sees both roles' tiles on their home, both roles' menus and manual topics, and is offered both roles' recurring jobs on the rota and in My tasks, for example the Head of Medical covering the Head of Maintenance. The role stops by itself the day after its last day, covers ending within the week are listed on Security, and Remove ends one early. Admin can't be given as a second role.",
+    "On the facility map, tapping a zone on the Shelter overview now opens that zone's plan straight away (a zone with no plan yet opens its list of enclosures), and a ‘← Shelter overview’ link above a zone's plan takes you back. The zone's resident count is on its shape on the overview and above its plan.",
+    "The public website is friendlier to a visitor who lands in the wrong place or on a Thai phone. A link that goes nowhere now shows a proper page with the header, a kind message, links to the animals, Our work and the home page, and the recent happy endings. A phone set to Thai opens the site in Thai the first time, and the language button still wins afterwards. The adoption list now says ‘Dogs and cats looking for a home’ with a short invitation to message or call, and the menu calls it ‘Meet the animals’. Pages that are still only in English now say so in Thai on the home page story and the ‘How adoption works’ box.",
+    "Admin: on Settings → Who does what the Move up and Move down buttons are readable again in every theme, the cards are smaller so more fit, Also allowed sits under the cards, and on a laptop you can drag a card from Available cards to give it, back to take it away, or onto another to move it. The buttons on each card still do the same, and are all a phone shows.",
+    "The Maintenance tile on your home screen now shows how many of your maintenance jobs are due today or overdue, the number the My tasks menu entry already showed.",
+    ],
+  },
   {
     version: "0.30.0",
     date: "2026-10-14",
