@@ -190,7 +190,7 @@ export async function checkBackup(): Promise<CheckOutcome<BackupFacts>> {
   const where = resolveBackupFolder(process.env);
   const backupFolderId = where.folderId;
   const rootId = where.rootId;
-  if (where.source === "none") return { state: "fail", error: "GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured." };
+  if (where.source === "none") return { state: "fail", error: "This machine was not told where backups are kept (neither BACKUP_DRIVE_FOLDER_ID nor GOOGLE_DRIVE_ROOT_FOLDER_ID is set), so it did not look. That is a settings fault, not a missing backup." };
 
   const drive = getDriveClient();
   const folder = backupFolderId
