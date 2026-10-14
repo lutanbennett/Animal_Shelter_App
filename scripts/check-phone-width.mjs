@@ -183,6 +183,8 @@ try {
   fail(`nothing is answering at ${base}. Start it: node scripts/worktree.mjs dev`);
 }
 
+if (args.includes("--public-only")) process.exit(await publicPass());
+
 try {
   const ids = await seed();
   const accounts = await makeAccounts();
@@ -512,7 +514,7 @@ async function publicPass() {
       // The phone menu: Talk to us must be on screen without scrolling.
       await page.goto(`${base}/`, { waitUntil: "domcontentloaded", timeout: 60_000 }).catch(() => {});
       await settle(page);
-      await page.locator("button[aria-controls]").first().click().catch(() => {});
+      await page.locator("button[aria-controls]:visible").first().click().catch(() => {});
       await page.waitForTimeout(400);
       const menu = await page
         .evaluate(() => {
