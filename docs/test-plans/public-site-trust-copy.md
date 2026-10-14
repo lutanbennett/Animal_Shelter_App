@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Until sponsorship exists, promise what the Donate page delivers**, **Impact band: hide a live tile whose number is 0 or 1, and lead with the totals**, **A "Help us do more of this" line at the end of every story and under the Our work list** (all three ticked here); **Add "since <year>" to the baseline figures** deliberately not built (needs a column — see the decision file) |
 | Branch / worktree | `claude/public-site-trust-copy` @ `C:\Development\Animal_Shelter_public-site-trust-copy` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3005` |
-| PR | #607 |
+| PR | #608 |
 | Tested by / date | Claude / 2026-10-14 |
 | Carries a migration? | no |
 | Tested at SHA | `a5227465` (the code commit; the commits after it are docs and this plan) |
