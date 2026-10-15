@@ -50,6 +50,13 @@ import { readCachedPhoto, writeCachedPhoto } from "@/lib/photo-cache";
  * rendition yet the original is served, briefly cached, and nothing is
  * written to disk. Without `?w=` nothing changes: the original, as before.
  *
+ * WebP: a sized request from a browser that sends `Accept: image/webp` is
+ * served Drive's WebP rendition, roughly half the bytes. That is a different
+ * body for the same URL, so it is a separate edge-cache key (`&fmt=webp`), a
+ * separate disk file (`<width>.webp`) and the response says `Vary: Accept`.
+ * Only `?w=` requests negotiate; the original and the deceased-resident
+ * archive (which calls Drive directly, not this route) stay JPEG/PNG.
+ *
  * No cache is invalidated when a photo is deleted or stops being public
  * (a resident hidden, a project unpublished) — the entry simply expires with
  * the TTL below, as any browser's copy does. Deleted photos are no longer
@@ -59,7 +66,7 @@ import { readCachedPhoto, writeCachedPhoto } from "@/lib/photo-cache";
 const FILE_ID_PATTERN = /^[A-Za-z0-9_-]{10,100}$/;
 const CACHE_SECONDS = 60 * 60 * 24; // 24h — well under Drive's throttle window either way.
 // Bump the version to orphan every entry the edge cache holds.
-const EDGE_CACHE_NAMESPACE = "public-v2";
+const EDGE_CACHE_NAMESPACE = "public-v3";
 // An original served because Drive had no rendition yet: look again soon.
 const FALLBACK_CACHE_SECONDS = 60 * 5;
 
@@ -117,10 +124,12 @@ export async function GET(
     if (!width) return NextResponse.json({ error: "Invalid photo size." }, { status: 400 });
   }
 
+  const webp = width !== null && (request.headers.get("accept") ?? "").toLowerCase().includes("image/webp");
+
   const cache = getEdgeCache();
   const cacheKey = new Request(
     new URL(
-      `/api/photos/${fileId}?edge=${EDGE_CACHE_NAMESPACE}${width ? `&w=${width}` : ""}`,
+      `/api/photos/${fileId}?edge=${EDGE_CACHE_NAMESPACE}${width ? `&w=${width}` : ""}${webp ? "&fmt=webp" : ""}`,
       request.url,
     ),
     { method: "GET" },
@@ -148,7 +157,7 @@ export async function GET(
   // The disk copy, if this Pi has one. Only after the checks above, so a
   // photo that has stopped being public is not served from disk.
   if (width && isPublic) {
-    const onDisk = await readCachedPhoto(fileId, width);
+    const onDisk = await readCachedPhoto(fileId, width, webp);
     if (onDisk) {
       const response = new NextResponse(new Uint8Array(onDisk.body), {
         status: 200,
@@ -157,6 +166,7 @@ export async function GET(
           "X-Content-Type-Options": "nosniff",
           "Content-Disposition": "inline",
           "Cache-Control": publicHeaders(CACHE_SECONDS),
+          Vary: "Accept",
         },
       });
       if (cache) await cache.put(cacheKey, response.clone());
@@ -172,7 +182,7 @@ export async function GET(
     // A failed or missing rendition is not a failed request: fall back to
     // the original, which is what every photo was before sizes existed.
     const rendition = width
-      ? await drive.downloadThumbnail(fileId, width).catch(() => null)
+      ? await drive.downloadThumbnail(fileId, width, { webp }).catch(() => null)
       : null;
     if (rendition && width) {
       ({ contentType, body } = rendition);
@@ -196,6 +206,7 @@ export async function GET(
       "X-Content-Type-Options": "nosniff",
       "Content-Disposition": safeToRenderInline(contentType) ? "inline" : "attachment",
       "Cache-Control": isPublic ? publicHeaders(cacheSeconds) : "private, no-store",
+      ...(width ? { Vary: "Accept" } : {}),
     },
   });
 

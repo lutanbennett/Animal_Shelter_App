@@ -11,7 +11,7 @@ import { readFileSync } from "node:fs";
 import { isPublicPage, isPublicPath, isEdgeCachedPage, PUBLIC_PAGE_PREFIXES } from "../src/lib/public-paths.ts";
 
 const open = [
-  "/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg",
+  "/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg", "/lca-logo-160.jpg",
   "/adopt", "/adopt/12", "/our-work", "/our-work/abc", "/foster", "/volunteer", "/donate", "/friends",
   "/privacy", "/r/CODE1", "/e/12", "/api/photos/abc",
 ];
@@ -20,7 +20,7 @@ const openNot = [
   "/residents", "/admin", "/management/cashflow", "/api/status/alerts", "/api/photos", "/r", "/e",
   "/login/other", "/leaked.png", "/api/x.svg", "/manual/login.png",
 ];
-const locked = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg", "/privacy", "/privacy/x"];
+const locked = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg", "/lca-logo-160.jpg", "/privacy", "/privacy/x"];
 const lockedNot = ["/adopt", "/r/CODE1", "/e/12", "/api/photos/abc", "/privacy-admin", "/privacyx", "/residents"];
 
 let failed = 0;

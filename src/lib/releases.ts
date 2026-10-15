@@ -76,6 +76,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   "The User manual and Release notes are now in the menu under your name at the top of every page (tap your name), so you can reach them without the left-hand menu.",
+  "The public website loads a little faster: photos arrive about a third smaller on phones and browsers that can read the newer image format, and the logo in the header is a much smaller file.",
 ];
 
 /** Newest first. */
