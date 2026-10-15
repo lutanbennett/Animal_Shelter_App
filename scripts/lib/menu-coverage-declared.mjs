@@ -7,6 +7,8 @@
 export const CHROME = [
   { page: "/home", file: "src/app/AppHeader.tsx", needle: 'href="/"', what: "the logo in the header" },
   { page: "/account/password", file: "src/app/AccountMenu.tsx", needle: 'href="/account/password"', what: "the account menu" },
+  { page: "/manual", file: "src/app/AccountMenu.tsx", needle: 'href="/manual"', what: "the account menu" },
+  { page: "/releases", file: "src/app/AccountMenu.tsx", needle: 'href="/releases"', what: "the account menu" },
   // Drawn only for a login that holds assistant.ask (AppHeader); the script applies that test.
   { page: "/assistant", file: "src/components/assistant/AssistantPanel.tsx", needle: 'href="/assistant"', what: "the Assistant button's slide-over", needs: "assistant.ask" },
 ];
