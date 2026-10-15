@@ -38,7 +38,7 @@ export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "
  * (isPublicPage) and the Worker (worker/index.mjs, which decides what the edge
  * caches) all derive from it; do not write these prefixes out anywhere else.
  */
-export const PUBLIC_PAGE_PREFIXES = ["/adopt", "/our-work", "/foster", "/volunteer", "/donate", "/friends", "/privacy", "/r", "/e"];
+export const PUBLIC_PAGE_PREFIXES = ["/adopt", "/our-work", "/foster", "/volunteer", "/donate", "/about", "/friends", "/privacy", "/r", "/e"];
 
 /** Pages that exist only per item (/r/CODE, /e/ID): the bare "/r" and "/e" are not public paths. */
 const PER_ITEM_PAGE_PREFIXES = ["/r", "/e"];
