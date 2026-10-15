@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "On the Enclosures and Residents lists, the \"All zones\" button now shows as chosen in plain white (or black) instead of orange, so it no longer looks like the Orange zone is picked.",
   "Registering a resident: the Review step shows the intake date again (it had been reading \"NaN undefined NaN\"). The date saved was always right.",
 ];
 
