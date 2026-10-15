@@ -140,7 +140,7 @@ Automated checks by: Claude  Date: 2026-10-15
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: one item is open, for Lutan
 
 Manual verification by: pending: Lutan to open /r and /e on a phone
 
