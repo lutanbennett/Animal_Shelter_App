@@ -56,7 +56,7 @@
    the attribute. Only the tokens change, so every component follows. */
 :root[data-env="dev"] {
   --background: #0e1615;
-  --surface: #172221;
+  --surface: #141e1d;
   --surface-hover: #1f2d2c;
   --border: #2c3d3b;
 
