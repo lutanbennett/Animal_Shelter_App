@@ -98,6 +98,7 @@ export default async function ClinicPage(props: PageProps<"/clinics/[id]">) {
       doctors={doctorsResult.data ?? []}
       canManage={can(perms, "clinics.list")}
       canOpenVisits={can(perms, "medical.visits", "read")}
+      canBook={can(perms, "visit.book")}
       now={new Date().toISOString()}
     />
   );

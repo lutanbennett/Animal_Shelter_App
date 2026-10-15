@@ -30,6 +30,7 @@ export function ClinicVisitForm({
   lockedDoctor,
   doctorNamesByClinic,
   preselectedResidentIds,
+  preselectedClinicId,
 }: {
   residents: ResidentOption[];
   clinics: ClinicOption[];
@@ -38,13 +39,15 @@ export function ClinicVisitForm({
   lockedDoctor: string | null;
   doctorNamesByClinic: DoctorNamesByClinic;
   preselectedResidentIds: string[];
+  /** From a clinic's page; ignored unless it is one of `clinics` (a doctor's own). */
+  preselectedClinicId: string;
 }) {
   const [state, onSubmit, pending] = useKeptForm(bookClinicVisit, undefined);
   const { t } = useI18n();
   const [selectedIds, setSelectedIds] = useState<string[]>(
     preselectedResidentIds,
   );
-  const [clinicId, setClinicId] = useState(fixedClinic?.id ?? "");
+  const [clinicId, setClinicId] = useState(fixedClinic?.id ?? preselectedClinicId);
   const [statusTouched, setStatusTouched] = useState(false);
   const [status, setStatus] = useState<"scheduled" | "completed">(
     "scheduled",

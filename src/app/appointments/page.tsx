@@ -1,4 +1,7 @@
 import Link from "next/link";
+import { ActionLink } from "@/components/ActionLink";
+import { CLINIC_ICONS } from "@/components/hub-icons";
+import { can } from "@/lib/permissions/can";
 import { refuseFor } from "@/lib/auth/require-role";
 import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
@@ -31,9 +34,16 @@ export default async function AppointmentsPage() {
 
   const shell = (body: React.ReactNode) => (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">{a.pageTitle}</h1>
-        <p className="text-sm text-muted">{a.pageSubtitle}</p>
+      <div className="flex flex-col gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">{a.pageTitle}</h1>
+          <p className="text-sm text-muted">{a.pageSubtitle}</p>
+        </div>
+        {can(perms, "visit.book") && (
+          <div>
+            <ActionLink href="/clinic-visits/new" label={t.vetVisits.bookAppointment} icon={CLINIC_ICONS.visits} variant="primary" iconOnlyOnMobile={false} />
+          </div>
+        )}
       </div>
       {body}
     </main>

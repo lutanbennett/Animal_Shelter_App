@@ -726,8 +726,9 @@ const manual: Manual = {
           title: "Booking and recording clinic visits",
           roles: ["admin", "management", "doctor"],
           activity: "medical.visits",
-          path: "Resident hub → Clinic Visits → Book clinic visit",
+          path: "Resident hub → Clinic Visits → Book clinic visit, or the Book a vet appointment button on Upcoming visits, Appointments and a clinic's page",
           steps: [
+            "You can start a booking from the resident, or without one: the Book a vet appointment button at the top of Upcoming visits, Appointments and each clinic's page opens the same form with no resident chosen (from a clinic's page, with that clinic already chosen). The button shows only if you are allowed to book visits.",
             "Choose one or more residents and the clinic (clinics are set up under Management → Clinics). If you know which doctor will see them, type their name in Doctor — it is optional. The doctors on that clinic's list are offered as you type, so pick one rather than spelling it a new way. A name that isn't offered is added to the clinic's list when you book.",
             "Enter the date and time. Use a past date to record a visit that already happened, including emergencies.",
             "Give the reason, set the status and add notes. The status follows the date you enter — a past date sets Completed, a future one Scheduled — but it is yours to change: choose Scheduled for a past visit you can't yet confirm took place.",

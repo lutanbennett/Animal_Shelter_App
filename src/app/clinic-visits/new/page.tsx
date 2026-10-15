@@ -27,6 +27,8 @@ export default async function NewClinicVisitPage(
     }
   }
 
+  const clinicIdParam = searchParams.clinicId;
+
   const supabase = await createClient();
   const scope = await loadClinicScope(supabase);
 
@@ -93,6 +95,11 @@ export default async function NewClinicVisitPage(
         lockedDoctor={scope.kind === "clinics" ? scope.doctorName : null}
         doctorNamesByClinic={doctorNamesByClinic}
         preselectedResidentIds={[...preselectedIds]}
+        preselectedClinicId={
+          typeof clinicIdParam === "string" && clinics.some((c) => c.id === clinicIdParam)
+            ? clinicIdParam
+            : ""
+        }
       />
     </main>
   );
