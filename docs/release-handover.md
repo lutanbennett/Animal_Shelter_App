@@ -61,7 +61,7 @@ missing one. Honouring that, from the previous edition:
 | Dev database | `200 applied`, **0 pending**, `No drift: test matches origin/main.` |
 | Next free migration number | **`0200`** |
 | `unreleased` notes already waiting | **0**, read off `origin/main` after the release |
-| Open PRs | the record PR this file is in, **#638 `planner-handover-156`** (open before the release and not part of it), and whatever has landed since |
+| Open PRs | **#638 `planner-handover-156`** — open before the release and not part of it — plus the small PR correcting this file, and whatever has landed since. `0.32.0`'s own two PRs (#639 cut, #640 record) are merged |
 
 **All four builds came from the release SHA**, for the eighth release running —
 **and for the first time in three releases it cost nothing to make true**, because
@@ -200,10 +200,26 @@ the numbering, in either direction.
 list`.** Writing one down was tried twice and was stale within the hour both
 times. What is durable is the shape:
 
-- The release's own worktrees — the cut (`cut-release-0-32-0`) and this record (`record-0-32-0`) — are free leftovers once their PRs merge. `/clean-streams` is the one-pass way to clear them.
+- A release's own two worktrees — the cut and the record — become free leftovers once their PRs merge, and clearing them is the release manager's last step. **`0.32.0`'s own two are already gone**, `done` cleanly with their branches removed locally and on `origin`.
 - `HELD — <session name>` means someone is still in it. Ask; do not tear it down.
 - The list also names **husks**, folders git no longer tracks, which `done <name>` clears.
-- There were already nine older leftovers before `0.31.0` started, all `nothing beyond main` and all `HELD`, and nothing has been done about them since. That is `/clean-streams` work, not a release manager's, and it is now two releases old.
+- **What was actually left after `0.32.0`: two or three leftovers, not nine.** `public-site-visitor-fold` (`HELD by a dev server`) and `small-ui-fixes-fold` (bare `HELD`) are both `nothing beyond main` and are genuine `/clean-streams` work. `donate-page-order` read as all-`-` on the last run, which usually means a folder mid-removal or briefly unreadable — look rather than assume. **`planner-handover-156` is not a leftover at all**: it is #638's live branch, dirty and four commits ahead, so leave it alone.
+
+**A correction, and the reason it is worth the space.** The edition of this file
+written minutes earlier said there were "nine older leftovers … and nothing has
+been done about them since", carried over from the `0.31.0` edition without being
+checked. The real number was two or three, and one of the four folders on the list
+was somebody's live work. So something *had* been done about them, and the
+sentence was wrong in the one direction that matters — it told the next release
+manager a tidy-up was bigger and more neglected than it is, and it described an
+active stream as abandoned.
+
+This is precisely what the standing instruction at the top of this file is for: **a
+confidently wrong warning costs more than a missing one.** A count copied from the
+previous edition is not a fact, it is a quotation. If you repeat a number from the
+last handover, run `node scripts/worktree.mjs list` first and quote what it says —
+or write "run the list" and no number at all, which is what the line above this one
+has always correctly told you to do.
 
 ---
 
@@ -223,7 +239,7 @@ times. What is durable is the shape:
 12. **Budget the Worker deploys at ~9–10 minutes each** and **do not overlap them with each other or with anything building in the same checkout** — both build in the main checkout, so the production command cannot be handed over until the test deploy has finished. **The Pi builds are on a different machine and do not conflict** — but under the new order they come *after* the production Worker deploy, not alongside the test one. Start the record worktree during the CI wait, and **remember it needs `worktree.mjs sync` before you write in it**.
 13. **Hand over commands only at the moment they should be run.** `0.25.0`'s lesson; it has now held nine releases running.
 14. **Confirm the release mail arrived, not just `sent N`.** `lannacareforanimals@gmail.com` being skipped with `E_RECIPIENT_NOT_ALLOWED` is expected and known.
-15. `/clean-streams` for the release's own two worktrees once their PRs merge — and the nine older leftovers have now been waiting two releases.
+15. **Clear your own two worktrees — the cut and the record — once their PRs merge**, as the last step of the release rather than as someone else's tidy-up. `0.32.0` did, so you start from a clean list. Beyond that, run `node scripts/worktree.mjs list` and read it: do not carry a leftover *count* over from this file, which is how the previous edition came to claim nine when there were two or three. See "In flight".
 16. **Writing the cut's test plan *before* opening the PR makes the first CI run green**, where the template expects it to fail on `test-plan` by construction. `0.32.0` did this. The one cost is that the plan's header has to guess the PR number — it guessed #638 and got #639 — which the CI-green commit then corrects. Worth doing, and worth knowing so a green first run does not look like a mistake.
 
 ---
