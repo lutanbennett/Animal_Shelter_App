@@ -951,6 +951,7 @@ const manual: Manual = {
           title: "Finding your way round on the map",
           roles: ["admin", "management", "volunteer"],
           activity: "facility.enclosures",
+          activityLevel: "read",
           path: "Operations → Enclosures → Map",
           steps: [
             "Open Enclosures and tap Map, next to List at the top. The Map button only appears once the shelter's hand-drawn plan has been loaded for at least one zone. Plans are added and replaced under Settings → Facility map, and a new or replaced plan shows here the next time you open the map.",
