@@ -193,6 +193,22 @@ conflict, four lines, about two minutes.
 
 **Read both sides for what they ASSERT before choosing. Neither side is usually wrong.**
 
+### A STREAM CAN TURN `main`'s LINT RED BY FILING A BACKLOG ITEM IN THE WRONG PLACE
+
+**It happened on 2026-10-15 and the planner found it, not the stream.** #636 filed its follow-up —
+*Drop `map_rooms.map_id` and `.shape`* — **below `## Completed`** in `docs/backlog.md`, where
+`check-backlog-sections` correctly reports it as invisible to every session and to `/plan-day`.
+That is part of `npm run lint`, so **`main` went red and every branch cut from it inherited the
+red.** The handover branch's own gates were what surfaced it.
+
+**Two things follow.** First: **when a gate fails on a docs-only branch, suspect `main` before
+suspecting your change** — run the failing gate alone and read what it names. Second: the fix is a
+**backlog-branch edit, not a PR** (same text, moved into its section), then `git merge backlog`
+into `main`. That is the documented path and it took about three minutes.
+
+**And the near-miss worth naming:** an item filed below `## Completed` is not just a lint failure,
+it is **a piece of work that would never have been planned.** The gate is doing exactly its job.
+
 ### Other mechanics
 
 - **`worktree.mjs new` exceeds the 7-minute tool timeout** on `npm ci` and gets backgrounded. The
