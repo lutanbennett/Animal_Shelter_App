@@ -77,6 +77,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 export const unreleased: ReleaseNote[] = [
   "Anyone who can see the list of enclosures can now see the facility map too, with no separate permission to grant. Giving someone the Enclosures card now shows them the Map button.",
   {
+    text: "Settings → Website → Pages: you can now choose a photo for the Donate, Foster and Volunteer pages, with a description in English and Thai. It shows beside the page's heading on the public website; a page with no photo looks as it does today.",
+    roles: ["admin", "management"],
+  },
+  {
     text: "A Book a vet appointment button now sits at the top of Upcoming visits and of each clinic's page, for anyone who can book visits. From a clinic's page it opens the form with that clinic already chosen, and you pick the residents on the form.",
     roles: ["admin", "management"],
   },

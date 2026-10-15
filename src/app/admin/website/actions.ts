@@ -833,3 +833,101 @@ export async function removeDonationQr(id: string): Promise<ActionResult> {
     return { ok: true };
   });
 }
+
+/** The three pages that take a photo beside the heading (0200). */
+export type PagePhotoPage = "donate" | "foster" | "volunteer";
+const PAGE_PHOTO_PAGES: readonly string[] = ["donate", "foster", "volunteer"];
+
+export async function uploadPagePhoto(page: string, formData: FormData): Promise<SiteContentFormState> {
+  const { t } = await getT();
+  return runAction("website.uploadPagePhoto", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!PAGE_PHOTO_PAGES.includes(page)) return refuse(t.common.somethingWentWrong("page-photo"));
+
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) {
+      return refuse(t.admin.website.errors.noFile);
+    }
+
+    let driveFileId: string;
+    try {
+      driveFileId = await uploadToWebsiteFolder(file);
+    } catch (err) {
+      return refuse(await driveErrorMessage(err, t.admin.website.errors.uploadFailed));
+    }
+
+    const column = `${page}_photo_drive_file_id`;
+    const supabase = await createClient();
+    const { data: current } = await supabase
+      .from("site_content")
+      .select(column)
+      .eq("id", true)
+      .limit(1)
+      .returns<Record<string, string | null>[]>();
+
+    const { error } = await supabase
+      .from("site_content")
+      .update({ [column]: driveFileId })
+      .eq("id", true);
+
+    if (error) return refuse(error.message);
+
+    const previousFileId = current?.[0]?.[column];
+    if (previousFileId) await trashInDrive(previousFileId);
+
+    revalidateWebsitePages();
+    return { ok: true, success: t.admin.website.pagePhotos.updated };
+  });
+}
+
+export async function removePagePhoto(page: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("website.removePagePhoto", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!PAGE_PHOTO_PAGES.includes(page)) return refuse(t.common.somethingWentWrong("page-photo"));
+
+    const column = `${page}_photo_drive_file_id`;
+    const supabase = await createClient();
+    const { data: current } = await supabase
+      .from("site_content")
+      .select(column)
+      .eq("id", true)
+      .limit(1)
+      .returns<Record<string, string | null>[]>();
+
+    const { error } = await supabase
+      .from("site_content")
+      .update({ [column]: null })
+      .eq("id", true);
+
+    if (error) return refuse(error.message);
+
+    const previousFileId = current?.[0]?.[column];
+    if (previousFileId) await trashInDrive(previousFileId);
+
+    revalidateWebsitePages();
+    return { ok: true };
+  });
+}
+
+export async function savePagePhotoAlt(page: string, formData: FormData): Promise<SiteContentFormState> {
+  const { t } = await getT();
+  return runAction("website.savePagePhotoAlt", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!PAGE_PHOTO_PAGES.includes(page)) return refuse(t.common.somethingWentWrong("page-photo"));
+
+    const clean = (name: string) => {
+      const v = String(formData.get(name) ?? "").trim().slice(0, 300);
+      return v === "" ? null : v;
+    };
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("site_content")
+      .update({ [`${page}_photo_alt`]: clean("alt"), [`${page}_photo_alt_th`]: clean("alt_th") })
+      .eq("id", true);
+    if (error) return refuse(error.message);
+
+    revalidateWebsitePages();
+    return { ok: true, success: t.common.saved };
+  });
+}
