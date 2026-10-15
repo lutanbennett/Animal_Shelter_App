@@ -95,6 +95,7 @@ export function ClinicHub({
   doctors,
   canManage,
   canOpenVisits,
+  canBook,
   now,
 }: {
   clinic: Clinic;
@@ -104,6 +105,8 @@ export function ClinicHub({
   canManage: boolean;
   /** medical.visits read: the Schedule rows' Edit link (the visit page refuses without it). */
   canOpenVisits: boolean;
+  /** visit.book: the Book a vet appointment button (the form it opens refuses without it). */
+  canBook: boolean;
   /** Server-computed timestamp (ISO string) — avoids calling Date.now() during render. */
   now: string;
 }) {
@@ -286,6 +289,11 @@ export function ClinicHub({
           )}
           {clinic.notes && (
             <p className="whitespace-pre-line text-sm text-muted">{clinic.notes}</p>
+          )}
+          {canBook && (
+            <div className="pt-1">
+              <ActionLink href={`/clinic-visits/new?clinicId=${clinic.id}`} label={t.vetVisits.bookAppointment} icon={CLINIC_ICONS.visits} variant="primary" iconOnlyOnMobile={false} />
+            </div>
           )}
           {canManage && (
             <ActionLink href="/management/clinics" label={t.vets.manageInAdmin} icon={ACTION_ICONS.manage} iconOnlyOnMobile={false} />

@@ -3552,6 +3552,7 @@ const en = {
 
   vetVisits: {
     pageTitle: "Book Clinic Visit",
+    bookAppointment: "Book a vet appointment",
     pageSubtitle:
       "Log a clinic visit — upcoming, or retrospective for a visit (including an emergency) that already happened. Select multiple residents to book one visit for several at once.",
     couldntLoadResidents: "Couldn't load residents",

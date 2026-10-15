@@ -75,6 +75,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "A Book a vet appointment button now sits at the top of Upcoming visits and of each clinic's page, for anyone who can book visits. From a clinic's page it opens the form with that clinic already chosen, and you pick the residents on the form.",
+    roles: ["admin", "management"],
+  },
 ];
 
 /** Newest first. */
