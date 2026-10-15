@@ -10,8 +10,8 @@ import { CupboardOrder } from "@/components/CupboardOrder";
 import { STOCK_RATE_DAYS, readStock, stockFiguresOf } from "@/lib/management/stock";
 import { UnitsPanel } from "@/components/UnitsPanel";
 import { doseUnitLabel } from "@/lib/i18n/enum-labels";
-import { inPurchaseUnit, pricePerPurchaseUnit } from "@/lib/units";
-import { loadConversions } from "@/lib/units-server";
+import { effectiveCost, inPurchaseUnit, pricePerPurchaseUnit } from "@/lib/units";
+import { loadConversions, loadDeliveryCosts } from "@/lib/units-server";
 import { loadReceipts } from "@/lib/management/receipts-server";
 import { receivedSinceCount } from "@/lib/management/purchasing";
 import { requirePermission } from "@/lib/permissions/require";
@@ -129,6 +129,7 @@ export default async function MedicationStockPage(props: PageProps<"/management/
   const rateWindow = windows.findIndex((window) => window.days === STOCK_RATE_DAYS);
 
   const conversions = await loadConversions(supabase, "medication");
+  const deliveryCosts = await loadDeliveryCosts(supabase, "medication");
   // A unit's English is its key; what the page shows is the reader's language (0166).
   const shownUnit = <T extends { unit: string }>(itemId: string, x: T | null): T | null =>
     x && { ...x, unit: localLabel(locale, x.unit, conversions.data[itemId]?.find((c) => c.unit === x.unit)?.unitTh) };
@@ -150,11 +151,16 @@ export default async function MedicationStockPage(props: PageProps<"/management/
       };
     });
     const stock = stockFiguresOf(medication);
+    // Latest priced delivery wins; the typed price is the fallback (0199).
+    const delivery = deliveryCosts[medication.id];
+    const price = effectiveCost(medication.cost_per_unit == null ? null : Number(medication.cost_per_unit), delivery?.costPerBase);
     return {
       id: medication.id,
       name: localLabel(locale, medication.name, medication.name_th),
       dose_unit: medication.dose_unit,
       cost_per_unit: medication.cost_per_unit == null ? null : Number(medication.cost_per_unit),
+      shownCost: price.value,
+      costFromDelivery: price.fromDelivery && delivery ? formatDate(delivery.receivedAt, locale) : null,
       forecast,
       stock,
       stockReading: readStock(
@@ -172,10 +178,7 @@ export default async function MedicationStockPage(props: PageProps<"/management/
       ),
       packPrice: shownUnit(
         medication.id,
-        pricePerPurchaseUnit(
-          medication.cost_per_unit == null ? null : Number(medication.cost_per_unit),
-          conversions.data[medication.id] ?? [],
-        ),
+        pricePerPurchaseUnit(price.value, conversions.data[medication.id] ?? []),
       ),
     };
   });
@@ -279,7 +282,8 @@ export default async function MedicationStockPage(props: PageProps<"/management/
             name: medication.name,
             baseUnit: doseUnitLabel(t, medication.dose_unit),
             conversions: conversions.data[medication.id] ?? [],
-            costPerBase: medication.cost_per_unit,
+            costPerBase: medication.shownCost,
+            costFromDelivery: medication.costFromDelivery,
           }))}
         />
       </div>
