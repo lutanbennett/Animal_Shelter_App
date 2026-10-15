@@ -74,7 +74,9 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "The User manual and Release notes are now in the menu under your name at the top of every page (tap your name), so you can reach them without the left-hand menu.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [
