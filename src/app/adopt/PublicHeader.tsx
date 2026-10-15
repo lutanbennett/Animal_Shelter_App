@@ -200,7 +200,7 @@ export async function PublicHeader({
     <Link href="/" className="flex min-h-11 items-center gap-2.5 text-site-ink lg:gap-3">
       <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-1 ring-1 ring-site-line lg:h-12 lg:w-12">
         <Image
-          src="/lca-logo.jpg"
+          src="/lca-logo-160.jpg"
           alt=""
           width={40}
           height={40}
