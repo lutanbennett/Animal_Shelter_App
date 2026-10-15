@@ -78,10 +78,10 @@ export default async function OurWorkPage(props: PageProps<"/our-work">) {
 
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 sm:px-12">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold text-foreground">
+          <h1 className="font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl xl:text-[60px]">
             {t.ourWork.pageTitle}
           </h1>
-          <p className="max-w-2xl text-sm text-muted">{t.ourWork.pageSubtitle}</p>
+          <p className="max-w-2xl text-lg text-site-ink-soft sm:text-xl">{t.ourWork.pageSubtitle}</p>
         </div>
 
         {error && (

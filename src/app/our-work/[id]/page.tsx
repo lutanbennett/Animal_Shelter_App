@@ -145,7 +145,7 @@ export default async function PublicProjectPage(
           >
             {projectCategoryLabel(t, project.category)}
           </Link>
-          <h1 className="text-3xl font-semibold text-foreground">{title}</h1>
+          <h1 className="font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl xl:text-[60px]">{title}</h1>
           {(project.project_date || project.location) && (
             <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted">
               {project.project_date && (

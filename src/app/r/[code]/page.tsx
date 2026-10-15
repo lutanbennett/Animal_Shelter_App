@@ -205,10 +205,10 @@ export default async function ResidentCardPage(props: PageProps<"/r/[code]">) {
             <img
               src={driveImageUrl(resident.profile_photo_drive_file_id, 1200)}
               alt={resident.name}
-              className="aspect-square w-full rounded-lg border border-border object-cover"
+              className="aspect-square w-full rounded-[20px] border border-border object-cover"
             />
           ) : (
-            <div className="flex aspect-square w-full items-center justify-center rounded-lg border border-border bg-surface text-sm text-muted">
+            <div className="flex aspect-square w-full items-center justify-center rounded-[20px] border border-border bg-surface text-sm text-muted">
               {c.noPhoto}
             </div>
           )}
@@ -223,7 +223,7 @@ export default async function ResidentCardPage(props: PageProps<"/r/[code]">) {
                   {resident.resident_code}
                 </span>
               </div>
-              <h1 className="text-2xl font-semibold text-foreground">{resident.name}</h1>
+              <h1 className="break-words font-display text-[32px] font-bold leading-tight text-site-ink sm:text-4xl">{resident.name}</h1>
               {resident.thai_name && (
                 <p className="text-base text-muted">{resident.thai_name}</p>
               )}
@@ -279,7 +279,7 @@ export default async function ResidentCardPage(props: PageProps<"/r/[code]">) {
             {recommendation.length > 0 && (
               <section
                 aria-labelledby="recommendation-heading"
-                className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4"
+                className="flex flex-col gap-3 rounded-[20px] border border-border bg-surface p-5"
               >
                 <h2 id="recommendation-heading" className="text-sm font-semibold text-foreground">
                   {r.heading(resident.name)}
