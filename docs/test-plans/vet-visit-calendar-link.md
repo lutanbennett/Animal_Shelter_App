@@ -6,7 +6,7 @@
 |---|---|
 | Feature | Add to Google Calendar link on Scheduled vet visits |
 | Backlog item | `docs/backlog.md` → Booked vet visits in the Director's Google Calendar (way (a) only) |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/vet-visit-calendar-link` @ `C:DevelopmentAnimal_Shelter_vet-visit-calendar-link` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | pending: opened after this commit |
 | Tested by / date | Claude, 2026-10-15 |
@@ -208,12 +208,8 @@ Automated checks by: Claude  Date: 2026-10-15
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
-- `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
   (changed 2026-09-24): it is the normal state for most of a PR's life, and a
