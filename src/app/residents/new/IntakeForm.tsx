@@ -100,7 +100,10 @@ function buildReview(
   const f = t.residents.new.fields;
   const w = t.residents.new.wizard;
   const v = (id: string) => display(form, id, t);
-  const intakeDate = v("intakeDate");
+  // Read the submitted ISO value (the hidden input DateInput names), not the
+  // visible day-first box that carries the id.
+  const intakeDate =
+    form.querySelector<HTMLInputElement>('input[name="intakeDate"]')?.value.trim() || null;
 
   return [
     {

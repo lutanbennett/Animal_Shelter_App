@@ -37,6 +37,7 @@ function dateParts(value: string | number | Date, locale: Locale) {
 /** "20 Sep 2026" / "20 ก.ย. 2569". */
 export function formatDate(value: string | null | undefined, locale: Locale = "en") {
   if (!value) return "—";
+  if (Number.isNaN(new Date(value).getTime())) return value;
   const { day, month, year } = dateParts(value, locale);
   return `${day} ${month} ${year}`;
 }
