@@ -150,6 +150,6 @@ Automated checks by: Claude  Date: 2026-10-15
 
 ### Manual verification
 
-pending: someone signed in opens Settings → Facility map and /enclosures/map and places a room
+Manual verification by: pending: someone signed in opens Settings → Facility map and /enclosures/map and places a room
 
 Result: pass
