@@ -76,6 +76,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   "The Donate page now shows the ways to give straight under its opening paragraph, with the explanation below. Buttons say what they do, for example \"Give by card or PayPal (DonorBox)\", and while no way is set up the page says so and points to the contact details.",
+  "Each booked vet visit now has an Add to Google Calendar link, on the Vet visits page and on the resident's Clinic visits list (where booking takes you). It fills in the title, the time and a link back to the app. It adds the visit once: if the visit is rescheduled or cancelled later, your calendar does not change, so update it there.",
   "The User manual and Release notes are now in the menu under your name at the top of every page (tap your name), so you can reach them without the left-hand menu.",
   { roles: ["admin", "management"], text: "Settings → Website → Donate: after you tap Add, a message now names the way you added and says it is in the list above. If the Donate page cannot load its ways to give, it now shows an error instead of looking empty." },
   "The public website loads a little faster: photos arrive about a third smaller on phones and browsers that can read the newer image format, and the logo in the header is a much smaller file.",

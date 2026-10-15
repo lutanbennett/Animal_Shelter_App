@@ -9,10 +9,12 @@ import { ACTION_ICONS, PLACEMENT_ICONS, SECTION_ICONS } from "@/components/hub-i
 import { RowActionLink } from "@/components/RowAction";
 import { availablePlacementActions } from "@/lib/placements/available";
 import type { SectionContext } from "./types";
+import { googleCalendarUrl } from "@/lib/clinics/calendar-link";
+import { getSiteOrigin } from "@/lib/site-origin";
 import { RecordList } from "./shared";
 
 export async function renderClinicVisitsSection(ctx: SectionContext): Promise<React.ReactNode> {
-  const { id, residentState, isDeceased, perms, t, locale, supabase, showArchived, canArchive, archivedCount, archivedToggle, archivedList } = ctx;
+  const { id, resident, residentState, isDeceased, perms, t, locale, supabase, showArchived, canArchive, archivedCount, archivedToggle, archivedList } = ctx;
   const [{ data }, { data: visitWeights }] = await Promise.all([
     supabase
       .from("clinic_visits")
@@ -67,6 +69,19 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
         >()
     : { data: [] };
   const today = todayIso();
+  const origin = await getSiteOrigin();
+  const sv = t.shelterVisits;
+  const calendarUrl = (row: { status: string; appointment_date: string; reason: string | null; clinics: { name: string; name_th: string | null } | null }) => {
+    const clinicName = row.clinics ? localLabel(locale, row.clinics.name, row.clinics.name_th) : "";
+    return googleCalendarUrl({
+      status: row.status,
+      appointmentDate: row.appointment_date,
+      title: sv.calendarTitle(resident.name, clinicName || "—"),
+      details: `${sv.calendarDetails(row.reason ?? sv.fallbackReason)}${origin ? ` ${new URL(`/residents/${id}/clinic-visits`, origin).toString()}` : ""}`,
+      location: clinicName || null,
+    });
+  };
+  const anyCalendar = (data ?? []).some((row) => calendarUrl(row) !== null);
   // A visit can end with the resident admitted; offer that on each record
   // unless they're already in hospital, adopted out, or gone.
   const canSendToHospital = availablePlacementActions(
@@ -87,6 +102,7 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
           />
         </div>
       )}
+      {anyCalendar && <p className="text-xs text-muted">{sv.calendarNote}</p>}
       <RecordList
         rows={data ?? []}
         empty={t.residents.sections.empty.vetAppointments}
@@ -111,6 +127,11 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
                 {row.cost != null && ` · ${formatBaht(Number(row.cost), locale)}`}
               </span>
               <div className="flex flex-wrap justify-end gap-2">
+                {calendarUrl(row) && (
+                  <a href={calendarUrl(row)!} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-primary hover:underline">
+                    {sv.addToCalendar}
+                  </a>
+                )}
                 {!isDeceased && (
                   <>
                     {can(perms, "medical.visits") && (
