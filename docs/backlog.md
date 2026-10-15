@@ -857,3 +857,4 @@ These were written as rows in `Left for manual verification` tables and sat ther
 
 
 
+- [ ] **Drop `map_rooms.map_id` and `.shape` now that nothing reads them.** Follow-up to *Map rooms: one room placed on several maps* (PR #636). Since that PR the editor and `/enclosures/map` read and write rooms only through `map_room_placements` (`0198`); the two old columns, nullable since `0198`, are left holding the pre-change values on old rooms and null on new ones. **Build:** one small schema PR: `alter table map_rooms drop column if exists map_id, drop column if exists shape` (re-runnable; check `scripts/check-map-rooms.mjs` and `check-map-markers.mjs`, which still insert them, and rewrite those first), plus the three leftovers named in `docs/decisions/2026-10-10-map-rooms-editor.md` (the one-per-kind unique rule, the `map_rooms_name_from_kind` trigger and `map_room_kind_name()`, and whether `kind` goes). Take the next free migration number from `main`.
