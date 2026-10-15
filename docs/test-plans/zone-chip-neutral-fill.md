@@ -8,7 +8,7 @@ Evidence: gates `typecheck=0 lint=0 test=0 build=0`. Contrast of the new active 
 |---|---|
 | Feature | zone-chip-neutral-fill |
 | Backlog item | `docs/backlog.md` → Lutan's call: the default orange is very like the Orange zone |
-| Branch / worktree | `claude/zone-chip-neutral-fill` @ `C:DevelopmentAnimal_Shelter_zone-chip-neutral-fill` |
+| Branch / worktree | `claude/zone-chip-neutral-fill` @ `C:\Development\Animal_Shelter_zone-chip-neutral-fill` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | pending |
 | Tested by / date | Claude, 2026-10-15 |
