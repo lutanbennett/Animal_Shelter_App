@@ -80,8 +80,8 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   // Resident counts come from resident_list_view rather than a dedicated
   // occupancy view so no migration is needed; the shelter's headcount is
   // small enough that pulling one row per resident is cheap.
-  // The map is for whoever holds facility.map (0132), and reads the same rows as the list.
-  const canMap = can(perms, "facility.map");
+  // The map is a view of the enclosures, so whoever may read them may see it (facility.map is retired:
+  // docs/decisions/2026-10-15-facility-map-is-a-view-of-enclosures.md).
   const [zonesResult, enclosuresResult, residentsResult, jobsResult, tagOrigin, specialDiets, plansResult] = await Promise.all([
     supabase.from("zones").select("id, name, name_th, internal, map_shape, sort_order, colour"),
     supabase
@@ -100,9 +100,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
     getTagOrigin(),
     // Who is on a special diet, for the marker on each card (0087).
     loadSpecialDiets(supabase, undefined, locale),
-    canMap
-      ? supabase.from("facility_maps").select("id, kind, zone_id, image_path, width, height").returns<PlanRow[]>()
-      : Promise.resolve({ data: [] as PlanRow[] }),
+    supabase.from("facility_maps").select("id, kind, zone_id, image_path, width, height").returns<PlanRow[]>(),
   ]);
 
   // The open-maintenance filter is hidden from doctors, and a ?maint=open link
@@ -211,7 +209,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   // enclosure), and a place or zone filter would only leave it empty. The Map toggle is offered
   // only once a plan image exists, so a shelter that has none yet sees no empty map.
   const plans = plansResult.data ?? [];
-  const hasMap = canMap && plans.length > 0;
+  const hasMap = plans.length > 0;
   const showMap = hasMap && searchParams.view === "map";
   let mapData: FacilityMapData | null = null;
   if (showMap) {

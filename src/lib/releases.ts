@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Anyone who can see the list of enclosures can now see the facility map too, with no separate permission to grant. Giving someone the Enclosures card now shows them the Map button.",
   {
     text: "A Book a vet appointment button now sits at the top of Upcoming visits and of each clinic's page, for anyone who can book visits. From a clinic's page it opens the form with that clinic already chosen, and you pick the residents on the form.",
     roles: ["admin", "management"],

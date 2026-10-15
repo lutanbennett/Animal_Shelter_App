@@ -950,7 +950,7 @@ const manual: Manual = {
           id: "enclosure-map",
           title: "Finding your way round on the map",
           roles: ["admin", "management", "volunteer"],
-          activity: "facility.map",
+          activity: "facility.enclosures",
           path: "Operations → Enclosures → Map",
           steps: [
             "Open Enclosures and tap Map, next to List at the top. The Map button only appears once the shelter's hand-drawn plan has been loaded for at least one zone. Plans are added and replaced under Settings → Facility map, and a new or replaced plan shows here the next time you open the map.",
@@ -960,7 +960,7 @@ const manual: Manual = {
             "To zoom, pinch with two fingers, double-tap, or use the + and − buttons under the plan; drag to move round when zoomed in, and the button with the arrows fits the whole plan again. On a computer, hold Ctrl and scroll to zoom.",
             "Rooms that are not enclosures — the Medical room, the Kitchen, Storage and any others the shelter has added — are drawn too, as blue dashed shapes. Their names are not written on the plan; tap one to see its name and, under it, what the room is for, in your language once it has been translated. A room nobody has described yet just says it is a room. Rooms open nothing.",
             "Enclosures that have not been placed on a plan yet are listed under it as \"Not on this plan yet\", each one a link to its page, so nothing is lost while the plans are being filled in. The List view is always there too, with its search, zone filters and sorting.",
-            "The map is for staff and volunteers. Visitors never see it: the QR code on each enclosure already shows them who lives there.",
+            "Anyone who can see the list of enclosures can see the map too; it is not a separate permission. Visitors never see it: the QR code on each enclosure already shows them who lives there.",
           ],
         },
         {
