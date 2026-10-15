@@ -31,7 +31,7 @@
  * locked environments too. Exact path only. It is not an isPublicPage()
  * page, so the Worker never edge-caches it.
  */
-export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/api/version"];
+export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/lca-logo-160.jpg", "/api/version"];
 
 /**
  * The public *pages* — the one list. The proxy (isPublicPath), the layout gate
@@ -73,7 +73,7 @@ export const PUBLIC_PATH_PREFIXES = [
  * carry the session cookie. No /r/ or /e/ either: a scanned card or QR
  * code lands on /login with ?next= and goes back there after sign-in.
  */
-export const LOCKED_PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/api/version"];
+export const LOCKED_PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/lca-logo-160.jpg", "/api/version"];
 
 export const LOCKED_PUBLIC_PATH_PREFIXES = ["/privacy"];
 

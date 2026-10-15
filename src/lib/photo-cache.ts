@@ -29,8 +29,8 @@ const DEFAULT_MAX_MB = 1024;
 const SWEEP_EVERY_MS = 10 * 60 * 1000;
 const SWEEP_AFTER_BYTES = 64 * 1024 * 1024;
 
-const EXTENSIONS: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png" };
-const CONTENT_TYPES: Record<string, string> = { jpg: "image/jpeg", png: "image/png" };
+const EXTENSIONS: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+const CONTENT_TYPES: Record<string, string> = { jpg: "image/jpeg", png: "image/png", webp: "image/webp" };
 
 let lastSweep = 0;
 let writtenSinceSweep = 0;
@@ -52,12 +52,21 @@ async function loadFs() {
 
 export type CachedPhoto = { contentType: string; body: Buffer };
 
-export async function readCachedPhoto(fileId: string, width: number): Promise<CachedPhoto | null> {
+/**
+ * A WebP copy is only ever returned to a caller that said it can read one
+ * (`webp: true`); everyone else is offered the JPEG/PNG copy and nothing else.
+ */
+export async function readCachedPhoto(
+  fileId: string,
+  width: number,
+  webp = false,
+): Promise<CachedPhoto | null> {
   const dir = cacheDir();
   if (!dir) return null;
   try {
     const { fs, path } = await loadFs();
     for (const ext of Object.keys(CONTENT_TYPES)) {
+      if ((ext === "webp") !== webp) continue;
       try {
         const body = await fs.readFile(path.join(dir, fileId, `${width}.${ext}`));
         return { contentType: CONTENT_TYPES[ext], body };
