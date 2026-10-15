@@ -220,7 +220,7 @@ const PINNED = {
   "/maintenance/[id]/edit": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.jobs"] },
   // Detail pages: they open at the list's own level, and every control that writes asks can().
   "/maintenance/[id]": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.bills", "maintenance.delete", "maintenance.jobs", "maintenance.progress", "translations.manage"] },
-  "/clinics/[id]": { guards: ['requirePermission("clinics.list", "read")'], decides: ["clinics.list", "medical.visits:read"] },
+  "/clinics/[id]": { guards: ['requirePermission("clinics.list", "read")'], decides: ["clinics.list", "medical.visits:read", "visit.book"] },
   "/contacts/[id]": { guards: ['requirePermission("contacts.browse")'], decides: ["contacts.directory", "friends.manage"] },
   "/enclosures/[id]": { guards: ['requirePermission("facility.enclosures", "read")'], decides: ["facility.enclosures", "maintenance.jobs"] },
   "/projects/[id]": { guards: ['requirePermission("projects.folders", "read")'], decides: ["projects.folders", "projects.publish", "translations.manage"] },
