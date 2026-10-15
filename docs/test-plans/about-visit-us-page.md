@@ -245,7 +245,7 @@ Manual verification by: pending: the Director filling in the gaps and a person v
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [x] Checklist pasted into the PR
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — n/a: the release manager reads it at release time
 
 Result: pass with accepted defects
 
