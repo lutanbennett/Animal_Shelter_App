@@ -86,7 +86,7 @@ export default async function EnclosureTagPage(props: PageProps<"/e/[id]">) {
               {c.zone}: {placeName(locale, enclosure.zone_name, enclosure.zone_name_th)}
             </span>
           </div>
-          <h1 className="text-2xl font-semibold text-foreground">{enclosure.name}</h1>
+          <h1 className="break-words font-display text-[32px] font-bold leading-tight text-site-ink sm:text-4xl">{enclosure.name}</h1>
           {enclosure.name_th && (
             <p className="text-base text-muted">{enclosure.name_th}</p>
           )}
@@ -108,7 +108,7 @@ export default async function EnclosureTagPage(props: PageProps<"/e/[id]">) {
               ))}
             </div>
           ) : (
-            <p className="rounded-lg border border-border bg-surface px-4 py-3 text-sm text-muted">
+            <p className="rounded-[20px] border border-border bg-surface px-5 py-4 text-sm text-muted">
               {c.empty}
             </p>
           )}

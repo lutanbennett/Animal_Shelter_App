@@ -137,10 +137,10 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
 
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 sm:px-12">
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-semibold text-foreground">
+          <h1 className="font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl xl:text-[60px]">
             {t.adopt.pageTitle}
           </h1>
-          <p className="max-w-2xl text-sm text-muted">{signedIn ? t.adopt.pageSubtitleSignedIn : t.adopt.pageSubtitle}</p>
+          <p className="max-w-2xl text-lg text-site-ink-soft sm:text-xl">{signedIn ? t.adopt.pageSubtitleSignedIn : t.adopt.pageSubtitle}</p>
         </div>
 
         {error && (
@@ -244,7 +244,7 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
             id="how-to-adopt"
             data-reveal
             aria-labelledby="how-to-adopt-heading"
-            className="flex scroll-mt-6 flex-col gap-4 rounded-lg border border-border bg-surface p-6 sm:p-8"
+            className="flex scroll-mt-6 flex-col gap-4 rounded-[20px] border border-border bg-surface p-6 sm:p-8"
           >
             <h2 id="how-to-adopt-heading" className="text-xl font-semibold text-foreground">
               {howToText.title}

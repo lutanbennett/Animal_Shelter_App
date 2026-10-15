@@ -153,13 +153,13 @@ export async function SitePageView({
       <article className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10 sm:px-12">
         {hero ? (
           <div className="flex flex-col-reverse items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-3xl font-semibold text-foreground sm:text-4xl">
+            <h1 className="font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl xl:text-[60px]">
               {text.title || t.header.appName}
             </h1>
             <div className="w-56 shrink-0 self-center sm:w-64">{hero}</div>
           </div>
         ) : (
-          <h1 className="text-3xl font-semibold text-foreground">
+          <h1 className="font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl xl:text-[60px]">
             {text.title || t.header.appName}
           </h1>
         )}
@@ -194,7 +194,7 @@ export async function SitePageView({
         )}
 
         {channels.length > 0 && (
-          <div data-reveal className="mt-4 flex flex-col gap-3 rounded-lg border border-border bg-surface p-6">
+          <div data-reveal className="mt-4 flex flex-col gap-3 rounded-[20px] border border-border bg-surface p-6 sm:p-8">
             <h2 className="text-lg font-semibold text-foreground">
               {t.sitePages.getInTouch}
             </h2>
@@ -221,7 +221,7 @@ export async function SitePageView({
         )}
 
         {showFriends && (
-          <div data-reveal className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-6">
+          <div data-reveal className="flex flex-col gap-2 rounded-[20px] border border-border bg-surface p-6 sm:p-8">
             <h2 className="text-lg font-semibold text-foreground">
               {t.shelterFriends.donateMention.heading}
             </h2>
