@@ -117,7 +117,7 @@ function PagePhoto({ page, photo }: { page: PagePhotoPage; photo: Photo }) {
             <input name="alt_th" defaultValue={photo.altTh ?? ""} maxLength={300} className="min-h-11 rounded border border-border bg-background px-3 font-normal" />
           </label>
           <div>
-            <ActionButton type="submit" disabled={isPending}>{t.common.save}</ActionButton>
+            <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save} disabled={isPending}>{t.common.save}</ActionButton>
           </div>
         </form>
       )}

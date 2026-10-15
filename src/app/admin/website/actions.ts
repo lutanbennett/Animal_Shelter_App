@@ -842,7 +842,7 @@ export async function uploadPagePhoto(page: string, formData: FormData): Promise
   const { t } = await getT();
   return runAction("website.uploadPagePhoto", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
-    if (!PAGE_PHOTO_PAGES.includes(page)) return refuse(t.common.somethingWentWrong);
+    if (!PAGE_PHOTO_PAGES.includes(page)) return refuse(t.common.somethingWentWrong("page-photo"));
 
     const file = formData.get("file");
     if (!(file instanceof File) || file.size === 0) {
@@ -884,7 +884,7 @@ export async function removePagePhoto(page: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("website.removePagePhoto", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
-    if (!PAGE_PHOTO_PAGES.includes(page)) return refuse(t.common.somethingWentWrong);
+    if (!PAGE_PHOTO_PAGES.includes(page)) return refuse(t.common.somethingWentWrong("page-photo"));
 
     const column = `${page}_photo_drive_file_id`;
     const supabase = await createClient();
@@ -914,7 +914,7 @@ export async function savePagePhotoAlt(page: string, formData: FormData): Promis
   const { t } = await getT();
   return runAction("website.savePagePhotoAlt", t.common.somethingWentWrong, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
-    if (!PAGE_PHOTO_PAGES.includes(page)) return refuse(t.common.somethingWentWrong);
+    if (!PAGE_PHOTO_PAGES.includes(page)) return refuse(t.common.somethingWentWrong("page-photo"));
 
     const clean = (name: string) => {
       const v = String(formData.get(name) ?? "").trim().slice(0, 300);
