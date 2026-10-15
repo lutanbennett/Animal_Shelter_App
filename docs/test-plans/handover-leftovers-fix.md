@@ -45,7 +45,7 @@ edition into the `0.32.0` one in the first place.
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit. Ticked in a follow-up commit once the run is actually green
+- [x] CI green on the PR (runs the same three) — all 7 jobs `success` on run **38693344505** at `815ec503`, read from `gh run view 38693344505 --json jobs` rather than `gh pr checks`. `audit` green. Green on the first run, because the plan was committed with the change rather than after the PR existed. Ticking this line is itself a commit, so a second run follows it and the merge waits for that one
 
 ## 3. Schema and data — *skip if no migration*
 
