@@ -74,7 +74,9 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "Registering a resident: the Review step shows the intake date again (it had been reading \"NaN undefined NaN\"). The date saved was always right.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [
