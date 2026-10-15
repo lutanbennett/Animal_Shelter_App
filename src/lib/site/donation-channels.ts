@@ -46,6 +46,8 @@ export async function loadPublicDonationChannels(
     .order("sort_order")
     .order("id")
     .returns<PublicDonationChannel[]>();
+  // A failed read must not look like "no ways to give" (docs/decisions/2026-10-11-silent-empty-reads.md).
+  if (error) throw new Error(`Donate: could not read the ways to give: ${error.message}`);
   return data ?? [];
 }
 

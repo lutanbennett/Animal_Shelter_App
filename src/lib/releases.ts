@@ -74,7 +74,9 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  { roles: ["admin", "management"], text: "Settings → Website → Donate: after you tap Add, a message now names the way you added and says it is in the list above. If the Donate page cannot load its ways to give, it now shows an error instead of looking empty." },
+];
 
 /** Newest first. */
 export const releases: Release[] = [
