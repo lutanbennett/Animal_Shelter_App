@@ -390,6 +390,7 @@ export function MapEditor({
   const k = plan ? plan.height / plan.width : 1;
   const btn =
     "inline-flex min-h-11 items-center gap-2 rounded-lg border border-border bg-surface px-3 text-sm font-medium text-foreground hover:bg-surface-hover disabled:cursor-not-allowed disabled:opacity-50 md:min-h-9";
+  const btnOn = btn.replace("border-border bg-surface", "border-primary bg-primary/15");
 
   return (
     <div className="flex flex-col gap-4">
@@ -592,11 +593,11 @@ export function MapEditor({
             <section className="flex min-w-0 flex-col gap-3">
               <div className="flex flex-wrap items-center gap-2">
                 <div role="group" aria-label={m.tool} className="flex gap-1.5">
-                  <button type="button" aria-pressed={tool === "rect"} onClick={() => { setTool("rect"); setDraft([]); }} className={`${btn} ${tool === "rect" ? "border-primary bg-primary/15" : ""}`}>
+                  <button type="button" aria-pressed={tool === "rect"} onClick={() => { setTool("rect"); setDraft([]); }} className={tool === "rect" ? btnOn : btn}>
                     <Square aria-hidden="true" className="h-4 w-4" />
                     {m.toolRect}
                   </button>
-                  <button type="button" aria-pressed={tool === "poly"} onClick={() => { setTool("poly"); setDraft([]); }} className={`${btn} ${tool === "poly" ? "border-primary bg-primary/15" : ""}`}>
+                  <button type="button" aria-pressed={tool === "poly"} onClick={() => { setTool("poly"); setDraft([]); }} className={tool === "poly" ? btnOn : btn}>
                     <Hexagon aria-hidden="true" className="h-4 w-4" />
                     {m.toolPoly}
                   </button>

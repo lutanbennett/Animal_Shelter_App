@@ -699,6 +699,8 @@ export async function saveDonationChannel(
         .from("donation_channels")
         .insert({ ...row, sort_order: (last?.[0]?.sort_order ?? 0) + 1 });
       if (error) return refuse(error.message);
+      revalidateDonate();
+      return { ok: true, success: d.addedNamed(label) };
     }
 
     revalidateDonate();

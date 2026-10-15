@@ -40,12 +40,14 @@ export const CHANNEL_COLUMNS =
 export async function loadPublicDonationChannels(
   supabase: SupabaseClient,
 ): Promise<PublicDonationChannel[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("public_donation_channels")
     .select(PUBLIC_CHANNEL_COLUMNS)
     .order("sort_order")
     .order("id")
     .returns<PublicDonationChannel[]>();
+  // A failed read must not look like "no ways to give" (docs/decisions/2026-10-11-silent-empty-reads.md).
+  if (error) throw new Error(`Donate: could not read the ways to give: ${error.message}`);
   return data ?? [];
 }
 

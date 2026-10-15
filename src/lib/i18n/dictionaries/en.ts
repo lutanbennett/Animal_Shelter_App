@@ -1834,6 +1834,7 @@ const en = {
         noteHint: "e.g. \"Best from the US\" or \"No fees in Thailand\". The Thai is written in Management → Translations.",
         add: "Add",
         adding: "Adding...",
+        addedNamed: (label: string) => `Added “${label}”. It is in the list above.`,
         save: "Save",
         saving: "Saving...",
         hide: "Hide",

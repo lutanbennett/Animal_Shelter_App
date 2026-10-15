@@ -100,7 +100,7 @@ const blend =(fg, alpha, bg) =>
 
 // Dev near-misses that predate the themes (dev only; production and every
 // selectable theme pass). Printed, not counted, and on the backlog to retune.
-const KNOWN = new Set(["dark (dev)|danger / danger/10 on surface", "dark (dev)|info / surface"]);
+const KNOWN = new Set([]);
 
 for (const [name, t] of Object.entries(themes)) {
   const text = [
