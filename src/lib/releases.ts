@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { roles: ["admin", "management"], text: "Settings → Facility map: one room, such as the Medical room or the Kitchen, can now be drawn on several plans. Add room has a new choice, Place a room already on another plan, and each room lists the plans it is on. Remove from this plan takes it off one plan only; Delete room removes it from every plan, and the question names each one. Renaming a room or changing what it is for now changes it on every plan, and tapping the room on the map shows the same details wherever it is." },
   "The Donate page now shows the ways to give straight under its opening paragraph, with the explanation below. Buttons say what they do, for example \"Give by card or PayPal (DonorBox)\", and while no way is set up the page says so and points to the contact details.",
   "Each booked vet visit now has an Add to Google Calendar link, on the Vet visits page and on the resident's Clinic visits list (where booking takes you). It fills in the title, the time and a link back to the app. It adds the visit once: if the visit is rescheduled or cancelled later, your calendar does not change, so update it there.",
   "The User manual and Release notes are now in the menu under your name at the top of every page (tap your name), so you can reach them without the left-hand menu.",

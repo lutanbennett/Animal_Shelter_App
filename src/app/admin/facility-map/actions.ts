@@ -102,15 +102,16 @@ export async function addRoom(
     if (typeof value === "string") return refuse(value);
 
     const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("map_rooms")
-      .insert({ map_id: mapId, ...names, shape: value })
-      .select("id")
-      .single<{ id: string }>();
-    if (error) {
+    // The room is what it is (names); where it is drawn is its placement on this plan (0198).
+    const { data, error } = await supabase.from("map_rooms").insert(names).select("id").single<{ id: string }>();
+    if (error) return databaseFailure("facilityMap.addRoom", error, t.common);
+    const placed = await supabase.from("map_room_placements").insert({ room_id: data.id, map_id: mapId, shape: value });
+    if (placed.error) {
+      // A room is never left without a place: take the row back so a refused add stores nothing.
+      await supabase.from("map_rooms").delete().eq("id", data.id);
       // 23503: the plan was removed while the editor was open.
-      if (error.code === "23503") return refuse(e.notFound);
-      return databaseFailure("facilityMap.addRoom", error, t.common);
+      if (placed.error.code === "23503") return refuse(e.notFound);
+      return databaseFailure("facilityMap.addRoom", placed.error, t.common);
     }
 
     refreshMapViews();
@@ -119,8 +120,8 @@ export async function addRoom(
 }
 
 /**
- * Draws a room again, on the plan that is open: the same plan reshapes it, another plan moves it there.
- * A room is on the site once, so there is no second copy. Updated by its own id (the primary key).
+ * Draws a room on the plan that is open: a plan it is already on is reshaped, one it is not on gains a
+ * placement. Other plans keep their own outline of it. One row per (room, plan), so this is an upsert.
  */
 export async function saveRoomShape(id: string, mapId: string, shape: Point[]): Promise<ActionResult<{ shape: Point[] }>> {
   const { t } = await getT();
@@ -131,12 +132,14 @@ export async function saveRoomShape(id: string, mapId: string, shape: Point[]): 
     if (typeof value === "string") return refuse(value);
 
     const supabase = await createClient();
-    const { data, error } = await supabase.from("map_rooms").update({ map_id: mapId, shape: value }).eq("id", id).select("id");
+    const { error } = await supabase
+      .from("map_room_placements")
+      .upsert({ room_id: id, map_id: mapId, shape: value }, { onConflict: "room_id,map_id" });
     if (error) {
+      // 23503: the room or the plan was removed while the editor was open.
       if (error.code === "23503") return refuse(e.notFound);
       return databaseFailure("facilityMap.saveRoomShape", error, t.common);
     }
-    if (!data?.length) return refuse(e.notFound);
 
     refreshMapViews();
     return { ok: true, shape: value };
@@ -171,7 +174,24 @@ export async function saveRoomDetails(
   });
 }
 
-/** Deletes a room: its outline, names and description. Nothing else refers to a room. */
+/** Takes a room off one plan. Only the placement goes: the room, its text and its other plans stay. */
+export async function removeRoomPlacement(roomId: string, mapId: string): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.facilityMap.errors;
+  return runAction("facilityMap.removeRoomPlacement", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
+
+    const supabase = await createClient();
+    const { data, error } = await supabase.from("map_room_placements").delete().eq("room_id", roomId).eq("map_id", mapId).select("id");
+    if (error) return databaseFailure("facilityMap.removeRoomPlacement", error, t.common);
+    if (!data?.length) return refuse(e.notFound);
+
+    refreshMapViews();
+    return { ok: true };
+  });
+}
+
+/** Deletes a room from every plan it is on: its outlines (they cascade), names and description. */
 export async function deleteRoom(id: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("facilityMap.deleteRoom", t.common.somethingWentWrong, async () => {
@@ -198,10 +218,10 @@ async function shapesOn(supabase: Supabase, plan: PlanRow): Promise<ShapeSnapsho
       ? supabase.from("zones").select("id, map_shape").not("map_shape", "is", null).returns<ShapeRow[]>()
       : supabase.from("enclosures").select("id, map_shape").eq("zone_id", plan.zone_id!).not("map_shape", "is", null).returns<ShapeRow[]>(),
     supabase
-      .from("map_rooms")
-      .select("id, kind, name, name_th, description, shape")
+      .from("map_room_placements")
+      .select("shape, map_rooms!inner(id, kind, name, name_th, description)")
       .eq("map_id", plan.id)
-      .returns<{ id: string; kind: string | null; name: string; name_th: string | null; description: string | null; shape: unknown }[]>(),
+      .returns<{ shape: unknown; map_rooms: { id: string; kind: string | null; name: string; name_th: string | null; description: string | null } }[]>(),
   ]);
   if (places.error) throw places.error;
   if (rooms.error) throw rooms.error;
@@ -212,21 +232,21 @@ async function shapesOn(supabase: Supabase, plan: PlanRow): Promise<ShapeSnapsho
   return {
     zones: plan.kind === "overview" ? list : [],
     enclosures: plan.kind === "zone" ? list : [],
-    rooms: (rooms.data ?? []).flatMap((r) => {
-      const shape = parseShape(r.shape);
+    rooms: (rooms.data ?? []).flatMap(({ shape: raw, map_rooms: r }) => {
+      const shape = parseShape(raw);
       return shape ? [{ id: r.id, kind: r.kind, name: r.name, name_th: r.name_th, description: r.description, shape }] : [];
     }),
   };
 }
 
-/** Takes every shape off one plan (a replace that is a new layout, or an undo of one). */
+/** Takes every shape off one plan (a replace that is a new layout, or an undo of one). Rooms stay; their placements here go. */
 async function clearShapesOn(supabase: Supabase, plan: PlanRow) {
   const places =
     plan.kind === "overview"
       ? await supabase.from("zones").update({ map_shape: null }).not("map_shape", "is", null)
       : await supabase.from("enclosures").update({ map_shape: null }).eq("zone_id", plan.zone_id!).not("map_shape", "is", null);
   if (places.error) throw places.error;
-  const rooms = await supabase.from("map_rooms").delete().eq("map_id", plan.id);
+  const rooms = await supabase.from("map_room_placements").delete().eq("map_id", plan.id);
   if (rooms.error) throw rooms.error;
 }
 
@@ -250,16 +270,28 @@ async function restoreShapes(supabase: Supabase, planId: string, snap: ShapeSnap
   const writes = [
     ...snap.zones.map((z) => supabase.from("zones").update({ map_shape: z.shape }).eq("id", z.id)),
     ...snap.enclosures.map((x) => supabase.from("enclosures").update({ map_shape: x.shape }).eq("id", x.id)),
-    ...snap.rooms.flatMap((r) => {
-      if (r.id && r.name) {
-        const row = { id: r.id, map_id: planId, name: r.name, name_th: r.name_th ?? null, description: r.description ?? null, shape: r.shape };
-        return [supabase.from("map_rooms").upsert(row, { onConflict: "id" })];
-      }
-      const legacy = r.kind ? LEGACY_ROOM_NAMES[r.kind] : undefined;
-      return legacy ? [supabase.from("map_rooms").insert({ map_id: planId, ...legacy, shape: r.shape })] : [];
-    }),
   ];
   for (const { error } of await Promise.all(writes)) if (error) throw error;
+  // A room comes back as a placement on this plan. A room row that still exists keeps its current names
+  // (it may have been renamed since); one that was deleted is put back from the snapshot, by its id.
+  for (const r of snap.rooms) {
+    let roomId = r.id;
+    if (roomId && r.name) {
+      const id = roomId;
+      const row = { id, name: r.name, name_th: r.name_th ?? null, description: r.description ?? null };
+      const back = await supabase.from("map_rooms").upsert(row, { onConflict: "id", ignoreDuplicates: true });
+      if (back.error) throw back.error;
+    } else {
+      const legacy = r.kind ? LEGACY_ROOM_NAMES[r.kind] : undefined;
+      if (!legacy) continue;
+      const made = await supabase.from("map_rooms").insert(legacy).select("id").single<{ id: string }>();
+      if (made.error) throw made.error;
+      roomId = made.data.id;
+    }
+    if (!roomId) continue;
+    const placed = await supabase.from("map_room_placements").upsert({ room_id: roomId, map_id: planId, shape: r.shape }, { onConflict: "room_id,map_id" });
+    if (placed.error) throw placed.error;
+  }
 }
 
 async function who(supabase: Supabase): Promise<HistoryEntry["by"]> {
