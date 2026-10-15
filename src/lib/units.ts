@@ -48,7 +48,7 @@ export type ConversionRow = {
 };
 
 export const CONVERSION_COLUMNS =
-  "id, medication_id, diet_type_id, unit, unit_th, base_units_per, is_purchase_unit, is_count_unit, note";
+  "id, medication_id, diet_type_id, unit, unit_th, base_units_per, is_purchase_unit, is_default_purchase, is_count_unit, note";
 
 export function conversionOf(row: ConversionRow): UnitConversion {
   return {
@@ -151,7 +151,11 @@ export function resolveEntered(
 
 /** The unit a form should open on: the purchase unit for deliveries, the count unit for counts. */
 export function defaultUnit(conversions: UnitConversion[], use: "purchase" | "count"): UnitConversion | null {
-  return conversions.find((c) => (use === "purchase" ? c.isPurchase : c.isCount)) ?? null;
+  if (use === "purchase") {
+    // Several sizes may be bought in (0199); only the default is "the" purchase unit.
+    return conversions.find((c) => c.isDefaultPurchase) ?? conversions.find((c) => c.isPurchase) ?? null;
+  }
+  return conversions.find((c) => c.isCount) ?? null;
 }
 
 /** A base-unit figure in one conversion's unit, to 2 places: 480 cups at 200 per bag → 2.4. */
