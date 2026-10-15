@@ -74,7 +74,9 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "On the Enclosures and Residents lists, the \"All zones\" button now shows as chosen in plain white (or black) instead of orange, so it no longer looks like the Orange zone is picked.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [

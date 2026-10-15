@@ -46,7 +46,7 @@ export function PlaceZoneChips({
   function chipClass(active: boolean) {
     return `inline-flex min-h-11 shrink-0 items-center rounded-full border px-3 py-1.5 text-sm font-medium transition md:min-h-0 ${
       active
-        ? "border-primary bg-primary text-primary-foreground"
+        ? "border-foreground bg-foreground font-semibold text-background"
         : "border-border bg-surface text-muted hover:bg-surface-hover hover:text-foreground"
     }`;
   }
