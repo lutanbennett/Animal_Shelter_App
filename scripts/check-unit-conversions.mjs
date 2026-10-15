@@ -19,7 +19,8 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const migration = readFileSync(join(root, "supabase/migrations/0118_unit_conversions.sql"), "utf8");
+const migration = readFileSync(join(root, "supabase/migrations/0118_unit_conversions.sql"), "utf8") +
+  readFileSync(join(root, "supabase/migrations/0199_pack_sizes.sql"), "utf8");
 
 const sql = `
 begin;
@@ -89,9 +90,15 @@ begin
   v_ok := false; begin insert into item_unit_conversions (item_kind, diet_type_id, unit, base_units_per) values ('diet_type', v_kibble, ' KG ', 1);
   exception when unique_violation then v_ok := true; end;
   if not v_ok then raise exception 'FAIL C duplicate unit (case/space) accepted'; end if;
-  v_ok := false; begin insert into item_unit_conversions (item_kind, diet_type_id, unit, base_units_per, is_purchase_unit) values ('diet_type', v_kibble, 'sack', 100, true);
-  exception when unique_violation then v_ok := true; end;
-  if not v_ok then raise exception 'FAIL C second purchase unit accepted'; end if;
+  -- 0199: several bought-in sizes allowed, exactly one default
+  insert into item_unit_conversions (item_kind, diet_type_id, unit, base_units_per, is_purchase_unit) values ('diet_type', v_kibble, 'sack', 100, true);
+  if (select count(*) from item_unit_conversions where diet_type_id = v_kibble and is_purchase_unit) < 2 then raise exception 'FAIL C second purchase unit refused'; end if;
+  if (select count(*) from item_unit_conversions where diet_type_id = v_kibble and is_default_purchase) <> 1 then raise exception 'FAIL C not exactly one default'; end if;
+  update item_unit_conversions set is_default_purchase = true where diet_type_id = v_kibble and unit = 'sack';
+  if (select count(*) from item_unit_conversions where diet_type_id = v_kibble and is_default_purchase) <> 1 then raise exception 'FAIL C default not moved'; end if;
+  update item_unit_conversions set is_purchase_unit = false where diet_type_id = v_kibble and unit = 'sack';
+  if (select count(*) from item_unit_conversions where diet_type_id = v_kibble and is_default_purchase and is_purchase_unit) <> 1 then raise exception 'FAIL C default not handed on'; end if;
+  delete from item_unit_conversions where diet_type_id = v_kibble and unit = 'sack';
   v_ok := false; begin insert into item_unit_conversions (item_kind, diet_type_id, unit, base_units_per, is_count_unit) values ('diet_type', v_kibble, 'sack', 100, true);
   exception when unique_violation then v_ok := true; end;
   if not v_ok then raise exception 'FAIL C second count unit accepted'; end if;
