@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Several pack sizes for one item** (left open, status note added) |
 | Branch / worktree | `claude/pack-sizes-schema` @ `C:\Development\Animal_Shelter_pack-sizes-schema` |
 | Dev server | not started — no UI surface in this PR |
-| PR | pending |
+| PR | #635 |
 | Tested by / date | Claude / 2026-10-15 |
 | Carries a migration? | yes — `0199_pack_sizes.sql` |
 | Tested at SHA | `2d8b7694` |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all 7 checks passing on #635, read from the PR status before merging
 
 ## 3. Schema and data — *skip if no migration*
 
