@@ -58,7 +58,7 @@ are all his.** The planner's job is the trade-off, a recommendation and the cons
 |---|---|
 | `main` when this was written | **`0d66ecc0`** (#629–#637 all merged, backlog folded in) |
 | Dev database | **200 applied, 0 pending.** Latest `0199_pack_sizes.sql` |
-| Production database | **not read from this session.** The backup alarm below is still the live gap |
+| Production database | **the planner cannot read it — two read-only attempts were refused as [Production Reads]; Lutan ran the read instead.** `status_alert_checks`: six ok, `release` amber |
 | Next free migration number | **`0200`, unclaimed** |
 | Open backlog items | **102**, `main` and `backlog` in step |
 | Open PRs | **none** at the time of writing. All nine merged within the morning |
@@ -245,25 +245,52 @@ leftover, because a squash-merged branch stays ahead for ever.
 
 ---
 
-## The red backup alarm — STILL OUTSTANDING, and still one secret
+## The red backup alarm — CLOSED 2026-10-15, after eleven days blind
 
-**Production's backup alarm is still blind**, and nothing on 2026-10-15 touched it.
+**It is fixed and verified. Do not re-raise it, and do not plan it.**
 
-**The fix is one secret and it is Lutan's**, being a production Worker change (his instruction,
-2026-10-02): set **`BACKUP_DRIVE_FOLDER_ID`** alone on the production Worker from the id in
-`.env.deploy.production`, then confirm `fail_runs` is 0. **Give him that command at the moment he
-runs it, never earlier.**
+Lutan set **`BACKUP_DRIVE_FOLDER_ID`** alone on the production Worker
+(`wrangler secret put … --env production`, Worker `lanna-animal-care`) — **no deploy**. Read back
+read-only from the main checkout minutes later: `status_alert_checks.backup` is **`state=ok`,
+`fail_runs=0`** (it was `fail` at **315**), the *"BACKUP_DRIVE_FOLDER_ID is not set here"* error
+text is gone, and **`alerted_at` has cleared**, so a genuine failure can raise mail again. Six of
+the seven checks read ok.
 
-**Three things not to re-derive:**
+**Four things worth keeping, because this fault survived eleven days on the strength of them:**
 
-1. **The live error is a missing secret on the Worker**, which runs the 15-minute alert cron — not
-   the "no backup found" the original item recorded. The Pi has had the value since 2026-10-12.
-2. **The green System status tile is NOT proof the alarm works.** The tile is drawn by the Pi,
-   which has the secret; the alarm is the Worker, which does not. **Two readers, two answers.**
-3. **DO NOT fix it with `deploy.mjs --env production --secrets`.** #616 guards that path but does
-   **not** set the secret.
+1. **The green System status tile was never proof.** The tile is drawn by the Pi, which had the
+   secret from 2026-10-12; the alarm is the Worker, which did not. **Two readers, two answers** —
+   that is what let it run. When a check and a page disagree, **ask which process computes each**
+   before believing either.
+2. **The fix was one secret, not a deploy**, and it stayed Lutan's because it touches the
+   production Worker (his instruction, 2026-10-02). **Never close it with
+   `deploy.mjs --env production --secrets`** — #616 guards that path but does not set the secret.
+3. **The planner cannot read production.** Two attempts at a read-only
+   `status_alert_checks` query were refused by the auto-mode classifier as *[Production Reads]*,
+   even from the main checkout and even after Lutan asked in chat. **Do not keep retrying.** What
+   worked: write the read-only script, hand him the one-line command, read the result from his
+   terminal. The script is in the planner's scratchpad and is trivially rewritten — it refuses any
+   project ref but `dbkodyyxxhtygxcxmfcu` and makes one GET.
+4. **Check the column names before printing a table you will act on.** The first read printed
+   `status=undefined` for every row because the script guessed `check`/`status`; `0098`'s real
+   columns are **`check_key`, `state`, `error`, `fail_runs`, `alerted_at`, `updated_at`**. The
+   numbers that *did* print were right, which is exactly how a half-wrong read gets believed.
 
----
+### The side-effect: `wrangler secret put` leaves the live Worker UNTAGGED
+
+**Setting that secret turned the `release` check amber**, and the next person to see it should not
+have to work out why. `checkRelease()` (`src/lib/status/health.ts:132`) compares the Worker's
+`CF_VERSION_METADATA.tag` with `v<latestRelease.version>`; it now reads *"The Worker is tagged with
+nothing, not v0.32.0: it was deployed without scripts/deploy.mjs."*
+
+**Nothing is broken.** `wrangler secret put` creates a **new Worker version from the same code**,
+and only `scripts/deploy.mjs` passes `--tag v<version>` (`deploy.mjs:295`), so the running build is
+still the tagged 0.32.0 one with an untagged version stacked on it. The state is **`warn`**,
+`fail_runs=0`, no mail. **It clears itself at the next production deploy through `deploy.mjs`.**
+
+Filed on the backlog as its own item, with the open question: should the check distinguish
+*untagged but the code matches the latest release* from *tagged as the wrong release*? Today both
+produce the same amber, and **only one of them means somebody bypassed the deploy script.**
 
 ## The menu removal: the gate is now a LIST, and two of its questions are Lutan's
 
@@ -325,7 +352,7 @@ covered."*
 
 ## Blocked, and on whom
 
-- **Lutan:** **the one-secret backup alarm fix**; **the release now underway — major versus minor**;
+- **Lutan:** **the release now underway — major versus minor**;
   **the two cards questions and the Doctor's broken home**; the two auth decisions; the third
   Supabase project; **the twelve unfiled database review findings**; F3's delete rule; the five red
   harnesses; the Pi failover options paper; the second admin account (Anchalee); the mobile sweep
