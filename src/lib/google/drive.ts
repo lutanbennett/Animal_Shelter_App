@@ -370,13 +370,19 @@ export class DriveClient {
    * It is tried with this client's token first and then bare, since for
    * some files the link is pre-signed and for others it wants the token.
    */
-  async downloadThumbnail(fileId: string, size: number): Promise<DriveDownload | null> {
+  async downloadThumbnail(
+    fileId: string,
+    size: number,
+    options: { webp?: boolean } = {},
+  ): Promise<DriveDownload | null> {
     const { thumbnailLink } = await this.getFile(fileId, "thumbnailLink");
     if (!thumbnailLink) return null;
     const url = thumbnailLink.replace(/=s\d+$/, `=s${size}`);
     // Without an Accept header googleusercontent may answer with WebP,
-    // which the PDF renderer can't embed.
-    const accept = { Accept: "image/jpeg,image/png" };
+    // which the PDF renderer can't embed — so JPEG/PNG stays the default and
+    // WebP is asked for by name, only by the public photo route for a
+    // browser that sent Accept: image/webp. The archive never passes it.
+    const accept = { Accept: options.webp ? "image/webp,image/jpeg,image/png" : "image/jpeg,image/png" };
 
     let res = await fetch(url, {
       headers: { ...accept, Authorization: `Bearer ${await getAccessToken()}` },
