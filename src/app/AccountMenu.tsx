@@ -11,7 +11,7 @@ import { ThemePicker } from "./ThemePicker";
  * The header's "who am I": the person's name and role, and on tap the email
  * they signed in with (a name alone cannot tell two accounts apart — the
  * three test logins are all "Lutan", two staff may both be "Noi"), a way to
- * change their name, their colour theme, and Sign out. The header keeps its own Sign out button
+ * change their name, the user manual and release notes (pages every login can open, so reachable with the left menu gone), their colour theme, and Sign out. The header keeps its own Sign out button
  * beside this; the menu's copy is for someone who opened it to check which
  * account they were on.
  */
@@ -88,6 +88,22 @@ export function AccountMenu({
             className="rounded py-1 text-foreground underline hover:text-primary"
           >
             {t.header.yourProfile}
+          </Link>
+          <Link
+            href="/manual"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="rounded py-1 text-foreground underline hover:text-primary"
+          >
+            {t.nav.manual}
+          </Link>
+          <Link
+            href="/releases"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="rounded py-1 text-foreground underline hover:text-primary"
+          >
+            {t.nav.releaseNotes}
           </Link>
           <ThemePicker />
           <SignOutButton className="self-start whitespace-nowrap rounded py-1 text-sm font-medium text-foreground hover:text-primary" />
