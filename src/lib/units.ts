@@ -27,6 +27,8 @@ export type UnitConversion = {
   /** Base units in ONE of this unit. */
   basePer: number;
   isPurchase: boolean;
+  /** The one bought-in size forms and prices use (0199). */
+  isDefaultPurchase?: boolean;
   isCount: boolean;
   note: string | null;
 };
@@ -43,6 +45,7 @@ export type ConversionRow = {
   unit_th: string | null;
   base_units_per: number | string;
   is_purchase_unit: boolean;
+  is_default_purchase?: boolean;
   is_count_unit: boolean;
   note: string | null;
 };
@@ -57,6 +60,7 @@ export function conversionOf(row: ConversionRow): UnitConversion {
     unitTh: row.unit_th,
     basePer: Number(row.base_units_per),
     isPurchase: row.is_purchase_unit,
+    isDefaultPurchase: row.is_default_purchase,
     isCount: row.is_count_unit,
     note: row.note,
   };
