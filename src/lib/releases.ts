@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Anyone who can see the list of enclosures can now see the facility map too, with no separate permission to grant. Giving someone the Enclosures card now shows them the Map button.",
   {
     text: "Settings → Website → Pages: you can now choose a photo for the Donate, Foster and Volunteer pages, with a description in English and Thai. It shows beside the page's heading on the public website; a page with no photo looks as it does today.",
     roles: ["admin", "management"],
