@@ -61,10 +61,10 @@ are all his.** The planner's job is the trade-off, a recommendation and the cons
 | Production database | **the planner cannot read it — two read-only attempts were refused as [Production Reads]; Lutan ran the read instead.** `status_alert_checks`: six ok, `release` amber |
 | Next free migration number | **`0200`, unclaimed** |
 | Open backlog items | **102**, `main` and `backlog` in step |
-| Open PRs | **none** at the time of writing. All nine merged within the morning |
-| Last release | **`0.31.0`, cut and recorded 2026-10-15**, before these nine |
-| `unreleased` | **SIX lines, and a release was underway as this was written** (the release manager session is live). **Major versus minor is his** |
-| Leftover worktrees | **THIRTEEN.** See *Leftovers* — this is the largest backlog of folders the project has carried |
+| Open PRs | **#638, this handover, and nothing else.** All nine of the day merged within the morning |
+| Last release | **`0.32.0`, cut, recorded and deployed 2026-10-15 — the SECOND release of the day**, after `0.31.0` that morning |
+| `unreleased` | **empty.** `0.32.0` was cut, recorded and deployed on 2026-10-15 (#639, #640) — **major, on Lutan's call** — carrying #628–#637. It was the SECOND release of the day, after `0.31.0` that morning |
+| Leftover worktrees | **ONE** (`small-ui-fixes-fold`), plus this handover's own. It peaked at thirteen and was cleaned the same day — see *Leftovers* |
 | Workstreams since this handover | **0 — the counter restarts here.** `.plan-day.md` carries it |
 
 **The nine, in the order they were set up.** Batch 1: #629 `menu-coverage-orphans`, #630
@@ -223,27 +223,25 @@ it is **a piece of work that would never have been planned.** The gate is doing 
 
 ---
 
-## Leftovers — THIRTEEN, and `/clean-streams` is overdue
+## Leftovers — down to ONE, after a day that peaked at thirteen
 
-**Every build worktree from 2026-10-14's nine was already outstanding when this day began, and this
-day added more.** At the time of writing:
+**Checked at the end of the day, after `0.32.0` shipped: `git worktree list` holds the main
+checkout, `Animal_Shelter_Backlog`, `planner-handover-156` (this file's own stream, clearable once
+#638 merges) and exactly one real leftover, `small-ui-fixes-fold`.**
 
-`cut-release-0-31-0` · `record-0-31-0` · `upload-blood-work` · `public-site-visitor-fold` ·
-`menu-coverage-orphans` · `public-site-speed-follow-ups` · `small-ui-fixes-fold` ·
-`map-rooms-schema` · `vet-visit-calendar-link` · `donate-page-order` · `pack-sizes-schema` ·
-`map-rooms-build` · `public-site-inner-pages`
+**This paragraph was rewritten twice in one session, and that is the lesson.** It first said
+*thirteen*, which was true when the handover was drafted and false an hour later once the streams
+were cleaned up. A handover that overstates the mess is not harmless: #641 exists precisely because
+the release handover carried a stale leftover claim. **Re-read `git worktree list` and the `ahead`
+column at the moment you write the number, and do not carry one forward from earlier in the same
+session.**
 
-**Every one is merged and `ahead 0`, so none of it is unsubmitted work.** Several read `HELD` by
-their own idle sessions, and `done` refuses a folder a process has open — **so the sessions must be
-closed first. Ask; do not tear down a `HELD` worktree.** `/clean-streams` does the round.
+**The rule that matters more than the count:** ahead with **no** PR is unsubmitted work, and
+`done`ing it destroys a day's build; ahead with a **merged** PR is a leftover, because a
+squash-merged branch stays ahead for ever. **Nothing was ever in the first category today.**
 
-**Plus `planner-handover-156`**, this file's own stream, clearable once its PR merges.
-
-**Re-read the `ahead` column against the open PRs rather than trusting this paragraph:** ahead with
-no PR is unsubmitted work and `done`ing it destroys a day's build; ahead with a merged PR is a
-leftover, because a squash-merged branch stays ahead for ever.
-
----
+**`done` refuses a folder a process has open**, so a `HELD` worktree needs its session closed
+first. Ask; do not tear one down. `/clean-streams` does the whole round.
 
 ## The red backup alarm — CLOSED 2026-10-15, after eleven days blind
 
@@ -286,7 +284,7 @@ nothing, not v0.32.0: it was deployed without scripts/deploy.mjs."*
 **Nothing is broken.** `wrangler secret put` creates a **new Worker version from the same code**,
 and only `scripts/deploy.mjs` passes `--tag v<version>` (`deploy.mjs:295`), so the running build is
 still the tagged 0.32.0 one with an untagged version stacked on it. The state is **`warn`**,
-`fail_runs=0`, no mail. **It clears itself at the next production deploy through `deploy.mjs`.**
+**It clears itself at the next production deploy through `deploy.mjs`** — but note that `0.32.0`'s deploy had **already happened** when the secret was set, so this one does not clear it. **The amber will sit there until the next release**, and that is expected, not a regression.
 
 Filed on the backlog as its own item, with the open question: should the check distinguish
 *untagged but the code matches the latest release* from *tagged as the wrong release*? Today both
@@ -352,8 +350,7 @@ covered."*
 
 ## Blocked, and on whom
 
-- **Lutan:** **the release now underway — major versus minor**;
-  **the two cards questions and the Doctor's broken home**; the two auth decisions; the third
+- **Lutan:** **the two cards questions and the Doctor's broken home**; the two auth decisions; the third
   Supabase project; **the twelve unfiled database review findings**; F3's delete rule; the five red
   harnesses; the Pi failover options paper; the second admin account (Anchalee); the mobile sweep
   (**declined five times — offer only as a swap**); the product `.org` name; **the thirteen
