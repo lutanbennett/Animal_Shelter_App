@@ -75,6 +75,8 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "An item can now be bought in several sizes — kibble in 20, 14 and 10 kg bags, tablets as singles, sleeves or boxes. In Settings → Medications or Diets, tick every size you buy and mark the one you usually buy; Record a delivery and Purchasing open on the usual one, and every size can still be chosen.",
+  "Diet stock and Medication stock now work out the cost per unit from what you actually paid on the latest delivery (a donated delivery with no cost is ignored), and say so on the card. An item with no priced delivery still uses its typed price.",
 ];
 
 /** Newest first. */

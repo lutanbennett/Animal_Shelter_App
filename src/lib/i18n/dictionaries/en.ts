@@ -2007,6 +2007,7 @@ const en = {
     summary: (count: number) => (count === 0 ? "no other units" : `${count} other ${count === 1 ? "unit" : "units"}`),
     oneIs: (unit: string, factor: string, base: string) => `1 ${unit} = ${factor} ${base}`,
     purchaseBadge: "Bought in",
+    defaultBadge: "Usually bought",
     countBadge: "Counted in",
     add: "Add a unit",
     edit: "Edit",
@@ -2021,7 +2022,9 @@ const en = {
     factor: (base: string) => `How many ${base} in one`,
     note: "Note (optional)",
     notePlaceholder: "e.g. level scoop of the green cup",
-    isPurchase: "The unit it is bought in",
+    isPurchase: "We buy it in this size",
+    isDefaultPurchase: "This is the size we usually buy",
+    defaultLocked: "To change the usual size, tick “usually buy” on another size.",
     isCount: "The unit it is counted in",
     price: {
       title: "Price per purchase unit",
@@ -2030,6 +2033,9 @@ const en = {
       now: (price: string, unit: string, perBase: string, base: string) =>
         `Now ${price} per ${unit} (฿${perBase} per ${base}).`,
       set: "Set price",
+      fromDelivery: (date: string) => `from the delivery on ${date}`,
+      deliveryWins: (date: string) =>
+        `The forecasts use the price paid on the delivery of ${date}. A price typed here is used only for an item with no priced delivery.`,
       panelTitle: "Price per pack",
       panelIntro:
         "For an item bought in a bag, box or bottle: enter what one costs and the price per base unit is worked out from it. The units themselves are set up under Settings.",

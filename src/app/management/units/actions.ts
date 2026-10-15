@@ -21,6 +21,8 @@ export type ConversionFields = {
   factor: string;
   note: string;
   isPurchase: boolean;
+  /** The one size usually bought (0199). Implies isPurchase; the database moves the flag off the others. */
+  isDefaultPurchase: boolean;
   isCount: boolean;
 };
 
@@ -60,8 +62,9 @@ async function baseUnitOf(kind: ItemKind, itemId: string) {
  * correct one, and is safe: deliveries and counts already saved carry their
  * own copy of the factor (stock_*.entered, 0118), so nothing recorded moves.
  *
- * Purchase and count are one-per-item (partial unique indexes checked row by
- * row), so the flag is cleared on the others first.
+ * Count is one-per-item (partial unique index checked row by row), so the
+ * flag is cleared on the others first. Bought in is many-per-item (0199);
+ * the database triggers keep exactly one of them the default.
  */
 export async function saveConversion(
   kind: ItemKind,
@@ -89,7 +92,6 @@ export async function saveConversion(
 
     const tb = table(kind);
     for (const [flag, column] of [
-      [fields.isPurchase, "is_purchase_unit"],
       [fields.isCount, "is_count_unit"],
     ] as const) {
       if (!flag) continue;
@@ -103,7 +105,8 @@ export async function saveConversion(
       unit: parsed.unit,
       unit_th: fields.unitTh.trim() || null,
       base_units_per: parsed.basePer,
-      is_purchase_unit: fields.isPurchase,
+      is_purchase_unit: fields.isPurchase || fields.isDefaultPurchase,
+      is_default_purchase: fields.isDefaultPurchase,
       is_count_unit: fields.isCount,
       note: parsed.note,
     };

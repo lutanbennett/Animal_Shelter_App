@@ -10,8 +10,8 @@ import { CupboardOrder } from "@/components/CupboardOrder";
 import { STOCK_RATE_DAYS, readStock, stockFiguresOf } from "@/lib/management/stock";
 import { UnitsPanel } from "@/components/UnitsPanel";
 import { dietUnitLabel } from "@/lib/i18n/enum-labels";
-import { inPurchaseUnit, pricePerPurchaseUnit } from "@/lib/units";
-import { loadConversions } from "@/lib/units-server";
+import { effectiveCost, inPurchaseUnit, pricePerPurchaseUnit } from "@/lib/units";
+import { loadConversions, loadDeliveryCosts } from "@/lib/units-server";
 import { loadReceipts } from "@/lib/management/receipts-server";
 import { receivedSinceCount } from "@/lib/management/purchasing";
 import { requirePermission } from "@/lib/permissions/require";
@@ -124,6 +124,7 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
   const rateWindow = windows.findIndex((window) => window.days === STOCK_RATE_DAYS);
 
   const conversions = await loadConversions(supabase, "diet");
+  const deliveryCosts = await loadDeliveryCosts(supabase, "diet");
   // A unit's English is its key; what the page shows is the reader's language (0166).
   const shownUnit = <T extends { unit: string }>(itemId: string, x: T | null): T | null =>
     x && { ...x, unit: localLabel(locale, x.unit, conversions.data[itemId]?.find((c) => c.unit === x.unit)?.unitTh) };
@@ -136,12 +137,17 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
   );
 
   const dietTypes: DietStockRow[] = (typesResult.data ?? []).map((type) => {
+    // The price actually paid on the latest priced delivery wins; the typed price is the fallback (0199).
+    // diet_forecast prices at the typed figure in SQL, so the baht are worked out here from its quantity.
+    const delivery = deliveryCosts[type.id];
+    const price = effectiveCost(Number(type.cost_per_unit), delivery?.costPerBase);
     const forecast = forecasts.map((byType) => {
       const row = byType.get(type.id);
+      const quantity = Number(row?.quantity ?? 0);
       return {
         residents: row?.resident_count ?? 0,
-        quantity: Number(row?.quantity ?? 0),
-        cost: Number(row?.cost ?? 0),
+        quantity,
+        cost: price.fromDelivery ? quantity * (price.value ?? 0) : Number(row?.cost ?? 0),
       };
     });
     const stock = stockFiguresOf(type);
@@ -151,6 +157,8 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
       is_standard: type.is_standard,
       unit: type.unit,
       cost_per_unit: Number(type.cost_per_unit),
+      shownCost: price.value ?? 0,
+      costFromDelivery: price.fromDelivery && delivery ? formatDate(delivery.receivedAt, locale) : null,
       forecast,
       stock,
       stockReading: readStock(
@@ -165,7 +173,7 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
       unitOptionLabels: Object.fromEntries(
         (conversions.data[type.id] ?? []).map((c) => [c.unit, localLabel(locale, c.unit, c.unitTh)]),
       ),
-      packPrice: shownUnit(type.id, pricePerPurchaseUnit(Number(type.cost_per_unit), conversions.data[type.id] ?? [])),
+      packPrice: shownUnit(type.id, pricePerPurchaseUnit(price.value, conversions.data[type.id] ?? [])),
     };
   });
 
@@ -261,7 +269,8 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
             name: type.name,
             baseUnit: dietUnitLabel(t, type.unit),
             conversions: conversions.data[type.id] ?? [],
-            costPerBase: type.cost_per_unit,
+            costPerBase: type.shownCost,
+            costFromDelivery: type.costFromDelivery,
           }))}
         />
       </div>
