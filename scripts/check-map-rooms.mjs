@@ -11,7 +11,7 @@
 //   - the editor's writes by primary key work, including the restore path's upsert on id;
 //   - the description is prose: writing one queues a translations row that the queue labels and links, and
 //     deleting the room drops it;
-//   - the outline's shape rules, and that deleting a plan takes its rooms with it.
+//   - the outline's shape rules (on map_room_placements), and that deleting a plan takes its placements, not its rooms.
 // It deliberately does NOT assert the one-per-kind rule or the trigger exist: both are due to be dropped
 // (docs/decisions/2026-10-10-map-rooms-editor.md), and this check must stay green when they are.
 //
@@ -59,7 +59,7 @@ const probes = [];
 const add = (who, name, sql) => probes.push(`  perform pg_temp.probe('${who}', ${lit(ID[who])}, '${name}', $q$${sql}$q$);`);
 for (const who of REAL) {
   add(who, "read", `select 1 from map_rooms where id = ${ROOM}`);
-  add(who, "insert", `insert into map_rooms (map_id, name, shape) values (${MAP}, 'Harness ${who}', ${SQUARE})`);
+  add(who, "insert", `insert into map_rooms (name) values ('Harness ${who}')`);
   add(who, "rename", `update map_rooms set name = 'Renamed by ${who}' where id = ${ROOM}`);
   add(who, "describe", `update map_rooms set description = 'Written by ${who}' where id = ${ROOM}`);
   add(who, "delete", `delete from map_rooms where id = ${ROOM}`);
@@ -68,11 +68,11 @@ add("volunteer", "read_room_thai", `select 1 from translations where table_name 
 add("volunteer", "read_other_translation", `select 1 from translations where table_name <> 'map_rooms' and text = 'harness-other'`);
 add("admin", "admin_other_translation", `select 1 from translations where table_name <> 'map_rooms' and text = 'harness-other'`);
 for (const [name, sql] of [
-  ["two_points", `insert into map_rooms (map_id, name, shape) values (${MAP}, 'x', '[[1,1],[2,2]]'::jsonb)`],
-  ["out_of_range", `insert into map_rooms (map_id, name, shape) values (${MAP}, 'x', '[[1,1],[2,2],[101,3]]'::jsonb)`],
-  ["no_plan", `insert into map_rooms (map_id, name, shape) values (gen_random_uuid(), 'x', ${SQUARE})`],
-  ["no_name", `insert into map_rooms (map_id, shape) values (${MAP}, ${SQUARE})`],
-  ["blank_name", `insert into map_rooms (map_id, name, shape) values (${MAP}, '  ', ${SQUARE})`],
+  ["two_points", `insert into map_room_placements (room_id, map_id, shape) values (${ROOM}, ${MAP}, '[[1,1],[2,2]]'::jsonb)`],
+  ["out_of_range", `insert into map_room_placements (room_id, map_id, shape) values (${ROOM}, ${MAP}, '[[1,1],[2,2],[101,3]]'::jsonb)`],
+  ["no_plan", `insert into map_room_placements (room_id, map_id, shape) values (${ROOM}, gen_random_uuid(), ${SQUARE})`],
+  ["no_name", `insert into map_rooms (description) values ('no name')`],
+  ["blank_name", `insert into map_rooms (name) values ('  ')`],
 ]) add("admin", name, sql);
 
 const harness = `
@@ -111,7 +111,7 @@ begin
   if not exists (select 1 from facility_maps) then
     insert into facility_maps (kind, image_path, width, height) values ('overview', 'storage:plans/harness/harness.png', 100, 100);
   end if;
-  insert into map_rooms (map_id, name, shape) values (${MAP}, 'Harness probe room', ${SQUARE});
+  insert into map_rooms (name) values ('Harness probe room');
   -- 0184: an approved Thai description on the room, and an approved translation of another table's row
   insert into translations (table_name, row_id, column_name, source_lang, target_lang, source_text, status, text)
     select 'map_rooms', id, 'description', 'en', 'th', 'Harness description', 'approved', 'harness-th'
@@ -132,26 +132,26 @@ declare v_a uuid; v_b uuid; v_id uuid := gen_random_uuid(); v_legacy uuid; v_n b
 begin
   -- two rooms with no kind: the one-per-kind rule never limits an added room
   begin
-    insert into map_rooms (map_id, name, shape) values (${MAP}, 'Harness added A', ${SQUARE}) returning id into v_a;
-    insert into map_rooms (map_id, name, shape) values (${MAP}, 'Harness added B', ${SQUARE}) returning id into v_b;
+    insert into map_rooms (name) values ('Harness added A') returning id into v_a;
+    insert into map_rooms (name) values ('Harness added B') returning id into v_b;
     insert into res (who, probe, n) values ('sweep', 'two_added', (select count(*) from map_rooms where id in (v_a, v_b)));
   exception when others then insert into res (who, probe, n, s) values ('sweep', 'two_added', -2, sqlerrm);
   end;
 
   -- a typed name is kept, on a kind-less room and on a legacy kinded one, on insert and on rename
-  insert into map_rooms (map_id, name, name_th, shape) values (${MAP}, 'Typed name', 'ชื่อที่พิมพ์', ${SQUARE}) returning id into v_a;
+  insert into map_rooms (name, name_th) values ('Typed name', 'ชื่อที่พิมพ์') returning id into v_a;
   insert into res (who, probe, s) select 'sweep', 'typed_kept', name || ' / ' || name_th from map_rooms where id = v_a;
   delete from map_rooms where kind = 'medical';
-  insert into map_rooms (map_id, kind, name, shape) values (${MAP}, 'medical', 'Treatment room', ${SQUARE}) returning id into v_legacy;
+  insert into map_rooms (kind, name) values ('medical', 'Treatment room') returning id into v_legacy;
   insert into res (who, probe, s) select 'sweep', 'legacy_typed_kept', name from map_rooms where id = v_legacy;
   update map_rooms set name = 'Clinic', name_th = 'คลินิก' where id = v_legacy;
   insert into res (who, probe, s) select 'sweep', 'legacy_rename_kept', name || ' / ' || name_th from map_rooms where id = v_legacy;
 
   -- the restore path: an upsert on the primary key puts a room back, and a second one updates it
-  insert into map_rooms (id, map_id, name, shape) values (v_id, ${MAP}, 'Restored', ${SQUARE})
-    on conflict (id) do update set name = excluded.name, shape = excluded.shape;
-  insert into map_rooms (id, map_id, name, shape) values (v_id, ${MAP}, 'Restored again', ${SQUARE})
-    on conflict (id) do update set name = excluded.name, shape = excluded.shape;
+  insert into map_rooms (id, name) values (v_id, 'Restored')
+    on conflict (id) do update set name = excluded.name;
+  insert into map_rooms (id, name) values (v_id, 'Restored again')
+    on conflict (id) do update set name = excluded.name;
   insert into res (who, probe, n, s) select 'sweep', 'upsert_by_id', count(*), max(name) from map_rooms where id = v_id;
 
   -- the description is prose: queued, labelled and linked, and dropped with the room
@@ -165,9 +165,9 @@ begin
   insert into res (who, probe, n) select 'sweep', 'delete_drops_translation', count(*) from translations where table_name = 'map_rooms' and row_id = v_a;
 end $sweep$;
 
--- deleting the plan takes its rooms with it
+-- deleting a plan takes its placements with it, and leaves the room (0198: a room is placed, not owned)
 do $cascade$
-declare v_map uuid;
+declare v_map uuid; v_room uuid;
 begin
   insert into facility_maps (kind, zone_id, image_path, width, height)
     select 'zone', z.id, 'storage:plans/harness/cascade.png', 100, 100 from zones z
@@ -175,10 +175,13 @@ begin
     returning id into v_map;
   if v_map is null then
     insert into res (who, probe, n) values ('sweep', 'cascade', -9);
+    insert into res (who, probe, n) values ('sweep', 'cascade_room', -9);
   else
-    insert into map_rooms (map_id, name, shape) values (v_map, 'Harness cascade', ${SQUARE});
+    insert into map_rooms (name) values ('Harness cascade') returning id into v_room;
+    insert into map_room_placements (room_id, map_id, shape) values (v_room, v_map, ${SQUARE});
     delete from facility_maps where id = v_map;
-    insert into res (who, probe, n) select 'sweep', 'cascade', count(*) from map_rooms where name = 'Harness cascade';
+    insert into res (who, probe, n) select 'sweep', 'cascade', count(*) from map_room_placements where room_id = v_room;
+    insert into res (who, probe, n) select 'sweep', 'cascade_room', count(*) from map_rooms where id = v_room;
   end if;
 end $cascade$;
 
@@ -250,7 +253,8 @@ eqs("sweep", "upsert_by_id", "Restored again", "and the second upsert updated it
 eq("sweep", "description_queued", 1, "a description queues one translations row");
 eqs("sweep", "queue_names_it", "Map room · Typed name | /admin/facility-map", "the queue names the room and links Settings → Facility map");
 eq("sweep", "delete_drops_translation", 0, "deleting the room drops its translation");
-eq("sweep", "cascade", 0, "deleting a plan deletes its rooms");
+eq("sweep", "cascade", 0, "deleting a plan deletes the room's placement on it");
+eq("sweep", "cascade_room", 1, "and leaves the room itself");
 eq("sweep", "anon_read", 0, "anon cannot read");
 
 console.log(`\n${ok} checks held, ${fails} failed.${breakName ? ` (deliberate break: ${breakName})` : ""}`);
