@@ -8,6 +8,7 @@ import { loadTranslations, translationKey } from "@/lib/translations/queries";
 import { SiteSettingsForm } from "./SiteSettingsForm";
 import { ClinicVisitEstimate } from "./ClinicVisitEstimate";
 import { SitePageForm, type SitePageRow } from "./SitePageForm";
+import { PagePhotos } from "./PagePhotos";
 import { HeroPhoto } from "./HeroPhoto";
 import { GalleryPhotos, type GalleryPhotoRow } from "./GalleryPhotos";
 import { FeaturedResident, type FeaturedResidentOption } from "./FeaturedResident";
@@ -179,6 +180,14 @@ export default async function WebsitePage({
               </>
             ),
             pages: (
+              <>
+              <PagePhotos
+                photos={{
+                  donate: { fileId: content.donate_photo_drive_file_id, alt: content.donate_photo_alt, altTh: content.donate_photo_alt_th },
+                  foster: { fileId: content.foster_photo_drive_file_id, alt: content.foster_photo_alt, altTh: content.foster_photo_alt_th },
+                  volunteer: { fileId: content.volunteer_photo_drive_file_id, alt: content.volunteer_photo_alt, altTh: content.volunteer_photo_alt_th },
+                }}
+              />
               <section className="flex flex-col gap-4">
                 <div>
                   <h2 className="text-lg font-semibold text-foreground">
@@ -213,6 +222,7 @@ export default async function WebsitePage({
                   })}
                 />
               </section>
+              </>
             ),
             donate: <DonationChannels rows={channelsResult.data ?? []} />,
             gallery: <GalleryPhotos photos={photosResult.data ?? []} />,

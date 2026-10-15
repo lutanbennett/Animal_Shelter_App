@@ -1740,6 +1740,21 @@ const en = {
         updated: "Hero photo updated.",
         removeConfirm: "Remove the hero photo?",
       },
+      pagePhotos: {
+        heading: "Page photos",
+        subtitle:
+          "A photo beside the heading of the Donate, Foster and Volunteer pages. A page with no photo simply shows its heading across the full width.",
+        pages: { donate: "Donate page", foster: "Foster page", volunteer: "Volunteer page" },
+        noPhoto: "No photo set",
+        replace: "Choose photo",
+        remove: "Remove",
+        updated: "Page photo updated.",
+        removeConfirm: "Remove this page's photo?",
+        altHelp:
+          "Describe the photo for visitors who cannot see it. Left blank, screen readers skip the photo.",
+        alt: "Photo description (English)",
+        altTh: "Photo description (Thai)",
+      },
       settings: {
         heading: "Labels and contact details",
         subtitle:
