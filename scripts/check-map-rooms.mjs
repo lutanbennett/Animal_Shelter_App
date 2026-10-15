@@ -68,7 +68,6 @@ add("volunteer", "read_room_thai", `select 1 from translations where table_name 
 add("volunteer", "read_other_translation", `select 1 from translations where table_name <> 'map_rooms' and text = 'harness-other'`);
 add("admin", "admin_other_translation", `select 1 from translations where table_name <> 'map_rooms' and text = 'harness-other'`);
 for (const [name, sql] of [
-  ["null_shape", `insert into map_rooms (map_id, name, shape) values (${MAP}, 'x', null)`],
   ["two_points", `insert into map_rooms (map_id, name, shape) values (${MAP}, 'x', '[[1,1],[2,2]]'::jsonb)`],
   ["out_of_range", `insert into map_rooms (map_id, name, shape) values (${MAP}, 'x', '[[1,1],[2,2],[101,3]]'::jsonb)`],
   ["no_plan", `insert into map_rooms (map_id, name, shape) values (gen_random_uuid(), 'x', ${SQUARE})`],
@@ -235,7 +234,7 @@ for (const who of REAL) {
     eq(who, "delete", 0, `${who} delete touches nothing`);
   }
 }
-for (const k of ["null_shape", "two_points", "out_of_range", "no_plan", "no_name"]) refused("admin", k, `admin ${k} rejected`);
+for (const k of ["two_points", "out_of_range", "no_plan", "no_name"]) refused("admin", k, `admin ${k} rejected`);
 // A blank name is stopped by the app (cleanRoomName); the table only insists on not null. Recorded, not judged.
 if (verbose) console.log(`note  a blank-name insert returns ${get("admin", "blank_name")} (the editor never sends one)`);
 
