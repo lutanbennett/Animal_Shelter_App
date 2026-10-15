@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none — a release cut closes no backlog item |
 | Branch / worktree | `claude/cut-release-0-32-0` @ `C:\Development\Animal_Shelter_cut-release-0-32-0` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3015` (not driven — `/releases` is behind sign-in; see §5) |
-| PR | #638 |
+| PR | #639 |
 | Tested by / date | Claude (production release manager session) / 2026-10-15 |
 | Carries a migration? | no — the release's two (`0198`, `0199`) merged in their own PRs (#632, #635) |
 | Tested at SHA | the tip of this branch, re-run after the plan was filled in |
@@ -100,7 +100,9 @@ The comparison reads `origin/main`'s copy of the file through
 Bash mangles a `<rev>:<path>` argument whose path starts with a dot, and the
 failure mode is an empty result that looks exactly like "nothing to compare".
 
-- [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a` on the first push and tick it in a follow-up commit once the run is actually green — n/a: not yet — the PR does not exist at this commit. The first run on this branch is expected to fail on `test-plan` by construction, because the commit that creates the PR cannot yet contain this file. **Ticking this line is itself a commit, so a further run follows it, and the merge waits for that one**
+- [x] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so leave it `n/a` on the first push and tick it in a follow-up commit once the run is actually green — all 7 jobs `success` on run **38684899210** at `89237a52`: `script-integrity`, `public-views`, `migration-numbers`, `check`, `audit`, `test-plan`, `new-policy-role-names`. Read from `gh run view 38684899210 --json jobs`, not from `gh pr checks`. `audit` is green this run, which it has not always been — a red there would not have been a blocker either way.
+
+  **The first run was green, which the template says to expect not to be, and the reason is worth recording.** The usual first run fails on `test-plan` by construction, because the commit that creates the PR cannot yet contain the plan. Here the plan was written *before* the PR was opened and committed alongside the cut, so `test-plan` had a complete plan to read on the first push. The one cost of doing it that way is that the plan's header had to guess the PR number — it guessed #638 and the PR came out #639 — which this same commit corrects. **Ticking this line is itself a commit, so a further run follows it, and the merge waits for that one**
 
 ## 3. Schema and data — *skip if no migration*
 
