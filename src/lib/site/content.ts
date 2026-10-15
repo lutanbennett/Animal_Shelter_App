@@ -46,10 +46,13 @@ export type SiteContent = {
   volunteer_photo_drive_file_id: string | null;
   volunteer_photo_alt: string | null;
   volunteer_photo_alt_th: string | null;
+  about_photo_drive_file_id: string | null;
+  about_photo_alt: string | null;
+  about_photo_alt_th: string | null;
 };
 
 export const SITE_CONTENT_COLUMNS =
-  "hero_drive_file_id, hero_alt, hero_alt_th, tagline, tagline_th, contact_email, contact_address, contact_phone, contact_line, contact_map_url, facebook_url, instagram_url, messenger_url, whatsapp_number, x_url, visiting_hours, visiting_hours_th, featured_resident_id, preferred_channels, donate_photo_drive_file_id, donate_photo_alt, donate_photo_alt_th, foster_photo_drive_file_id, foster_photo_alt, foster_photo_alt_th, volunteer_photo_drive_file_id, volunteer_photo_alt, volunteer_photo_alt_th";
+  "hero_drive_file_id, hero_alt, hero_alt_th, tagline, tagline_th, contact_email, contact_address, contact_phone, contact_line, contact_map_url, facebook_url, instagram_url, messenger_url, whatsapp_number, x_url, visiting_hours, visiting_hours_th, featured_resident_id, preferred_channels, donate_photo_drive_file_id, donate_photo_alt, donate_photo_alt_th, foster_photo_drive_file_id, foster_photo_alt, foster_photo_alt_th, volunteer_photo_drive_file_id, volunteer_photo_alt, volunteer_photo_alt_th, about_photo_drive_file_id, about_photo_alt, about_photo_alt_th";
 
 export async function loadSiteContent(
   supabase: SupabaseClient,

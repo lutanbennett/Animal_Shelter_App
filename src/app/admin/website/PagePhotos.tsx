@@ -22,7 +22,7 @@ export function PagePhotos({ photos }: { photos: Record<PagePhotoPage, Photo> })
         <h2 className="text-lg font-semibold text-foreground">{p.heading}</h2>
         <p className="text-sm text-muted">{p.subtitle}</p>
       </div>
-      {(["donate", "foster", "volunteer"] as const).map((page) => (
+      {(["donate", "foster", "volunteer", "about"] as const).map((page) => (
         <PagePhoto key={page} page={page} photo={photos[page]} />
       ))}
     </section>

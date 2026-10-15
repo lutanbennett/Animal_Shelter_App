@@ -196,6 +196,7 @@ const en = {
     helpFeedThem: "Help feed them",
     ourStoryFallback: "Our story",
     seeOurWork: "See our work in the community",
+    readMoreAbout: "Read more about us",
     footerOrgName: "Lanna Care for Animals Foundation",
     /** The impact band under the hero — each label reads after its number. */
     stats: {
@@ -394,6 +395,25 @@ const en = {
      * timelines, countries served, partner names or licence claims, which
      * only the shelter can state.
      */
+    /**
+     * /about's starter text (0206), shown until an admin saves a body of their own.
+     * Appendix A.3 of docs/public-site-review-2026-10-13.md, with every fact the Director
+     * still owes left as a [bracketed gap] rather than a plausible guess: a wrong registration
+     * number or opening hours on a public page is a false statement about a charity.
+     */
+    aboutStarter: {
+      title: "About us and visiting",
+      body: [
+        "## Who we are",
+        "Lanna Care for Animals Foundation is a registered Thai foundation in Mae Wang, near Chiang Mai. [Foundation registration number and year: the Director to fill in.] [Who runs the shelter, how many staff and volunteers, and how it began: the Director to fill in.]",
+        "## Where we are",
+        "[Full address in Thai and English: the Director to fill in.] [How to get here from Chiang Mai, and where to park: the Director to fill in.] The map link and our contact details are in the footer at the bottom of this page.",
+        "## Visiting",
+        "Please message us before you come, so someone is free to show you round. [Opening days and hours: the Director to fill in.] [What to bring, whether children and dogs on leads are welcome, and the rules for photographs: the Director to fill in.]",
+        "## How to help",
+        "- [Adopt](/adopt): meet the animals looking for a home\n- [Foster](/foster): give an animal a place to recover\n- [Volunteer](/volunteer): give your time\n- [Donate](/donate): help with food and care\n- [Become a Shelter Friend](/friends/join): a business that supports us",
+      ].join("\n\n"),
+    },
     internationalStarter: {
       title: "International adoption",
       body: [
@@ -1743,8 +1763,8 @@ const en = {
       pagePhotos: {
         heading: "Page photos",
         subtitle:
-          "A photo beside the heading of the Donate, Foster and Volunteer pages. A page with no photo simply shows its heading across the full width.",
-        pages: { donate: "Donate page", foster: "Foster page", volunteer: "Volunteer page" },
+          "A photo beside the heading of the Donate, Foster, Volunteer and About pages. A page with no photo simply shows its heading across the full width.",
+        pages: { donate: "Donate page", foster: "Foster page", volunteer: "Volunteer page", about: "About page" },
         noPhoto: "No photo set",
         replace: "Choose photo",
         remove: "Remove",
@@ -1919,6 +1939,7 @@ const en = {
           donate: "Donate",
           "international-adoption": "International adoption",
           "shelter-friends-join": "Become a Shelter Friend",
+          about: "About & visiting us",
         } as Record<string, string>,
         where: {
           "our-story": "The story section on the welcome page, under the photo strip.",
@@ -1927,6 +1948,7 @@ const en = {
           volunteer: "The Volunteer page, linked from the header and the \"How you can help\" strip.",
           donate: "The Donate page, linked from the Donate button on every public page.",
           "international-adoption": "The International adoption page (/adopt/international), linked from Adopt in the header and footer, and from the adoption listing for adopters abroad.",
+          about: "The About page (/about), linked from About & contact in the header and from Our story on the home page. The footer stays where the contact details are.",
           "shelter-friends-join": "The Become a Shelter Friend page (/friends/join), linked from Get involved in the header and footer, the Shelter Friends band on the home page, the Shelter Friends page and the Donate page.",
         } as Record<string, string>,
         starterNote:

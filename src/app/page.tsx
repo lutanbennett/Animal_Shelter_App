@@ -474,9 +474,14 @@ export default async function WelcomePage() {
               ))}
             </div>
           )}
-          <Link href="/our-work" className={`${textLink} self-start text-site-action`}>
-            {t.home.seeOurWork} &rarr;
-          </Link>
+          <div className="flex flex-col items-start gap-1">
+            <Link href="/about" className={`${textLink} self-start text-site-action`}>
+              {t.home.readMoreAbout} &rarr;
+            </Link>
+            <Link href="/our-work" className={`${textLink} self-start text-site-action`}>
+              {t.home.seeOurWork} &rarr;
+            </Link>
+          </div>
         </div>
       </section>
 

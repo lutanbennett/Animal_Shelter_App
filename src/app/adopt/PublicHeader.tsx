@@ -30,7 +30,8 @@ export type PublicSection =
   | "donate"
   | "friends"
   | "friends-join"
-  | "adopt-international";
+  | "adopt-international"
+  | "about";
 
 /**
  * One step of the trail under the header. No `href` on the last (the page the
@@ -132,10 +133,9 @@ export async function PublicHeader({
       links: [],
     },
     { kind: "link", link: link("our-work", "/our-work", t.adopt.ourWorkNav) },
-    // No About page yet: the footer is where the shelter's address and
-    // contact details are, on every page. The homepage (part 2) can point
-    // this at its story instead.
-    { kind: "link", link: { key: "about", href: "#contact", label: n.about, current: false } },
+    // The About page (0206): who we are, where, and how to visit. The footer
+    // is still where the contact details live, on every page.
+    { kind: "link", link: link("about", "/about", n.about) },
   ];
   // A group with nothing in it is left out rather than shown as an empty menu.
   const entries = allEntries.filter((entry) => entry.kind === "link" || entry.links.length > 0);
