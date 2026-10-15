@@ -8,10 +8,11 @@ import { getSiteOrigin } from "@/lib/site-origin";
 import { defaultShareImage, shareImageMetadata } from "@/lib/site/share";
 import { bodyLead } from "@/lib/site/body";
 import { preferredChannels } from "@/lib/site/channels";
-import { loadSiteContent } from "@/lib/site/content";
+import { loadSiteContent, pairedText } from "@/lib/site/content";
 import { loadSitePage, SITE_PAGE_PATHS, sitePageText, type SitePageSlug } from "@/lib/site/pages";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { SiteBody } from "@/components/SiteBody";
+import { PublicPhoto } from "@/components/PublicPhoto";
 import { PublicHeader, type PublicSection } from "./PublicHeader";
 import { PublicFooter } from "./PublicFooter";
 
@@ -108,6 +109,23 @@ export async function SitePageView({
     // /donate points at the Shelter Friends — only once there are some.
     slug === "donate" ? hasPublicFriends() : false,
   ]);
+  // A photo an admin chose for Donate, Foster or Volunteer (0200). None chosen, or
+  // a page that has no such photo: the heading takes the full width, as it always did.
+  // A blank description renders as alt="" (skipped by screen readers), never a filename.
+  const photoSlug = slug === "donate" || slug === "foster" || slug === "volunteer" ? slug : null;
+  const photoId = photoSlug && content ? content[`${photoSlug}_photo_drive_file_id`]?.trim() : "";
+  const photoNode =
+    hero ??
+    (photoSlug && photoId ? (
+      <div className="relative aspect-[4/3] overflow-hidden rounded-[20px] bg-surface">
+        <PublicPhoto
+          fileId={photoId}
+          alt={pairedText(locale, content?.[`${photoSlug}_photo_alt`], content?.[`${photoSlug}_photo_alt_th`])}
+          sizes="(min-width: 640px) 256px, 224px"
+          className="object-cover"
+        />
+      </div>
+    ) : null);
   const raw = page ? sitePageText(page, locale) : null;
   const text = pageText(t, slug, raw);
   // A Thai reader on a page nobody has translated yet: say so, once, in Thai
@@ -151,12 +169,12 @@ export async function SitePageView({
       />
 
       <article className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10 sm:px-12">
-        {hero ? (
+        {photoNode ? (
           <div className="flex flex-col-reverse items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h1 className="font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl xl:text-[60px]">
               {text.title || t.header.appName}
             </h1>
-            <div className="w-56 shrink-0 self-center sm:w-64">{hero}</div>
+            <div className="w-56 shrink-0 self-center sm:w-64">{photoNode}</div>
           </div>
         ) : (
           <h1 className="font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl xl:text-[60px]">
