@@ -377,7 +377,7 @@ export class DriveClient {
   ): Promise<DriveDownload | null> {
     const { thumbnailLink } = await this.getFile(fileId, "thumbnailLink");
     if (!thumbnailLink) return null;
-    const url = thumbnailLink.replace(/=s\d+$/, `=s${size}`);
+    const url = thumbnailLink.replace(/=s\d+$/, `=s${size}${options.webp ? "-rw" : ""}`);
     // Without an Accept header googleusercontent may answer with WebP,
     // which the PDF renderer can't embed — so JPEG/PNG stays the default and
     // WebP is asked for by name, only by the public photo route for a

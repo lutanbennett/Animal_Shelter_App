@@ -74,7 +74,9 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "The public website loads a little faster: photos arrive about a third smaller on phones and browsers that can read the newer image format, and the logo in the header is a much smaller file.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [

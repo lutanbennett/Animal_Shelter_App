@@ -124,7 +124,7 @@ export async function GET(
     if (!width) return NextResponse.json({ error: "Invalid photo size." }, { status: 400 });
   }
 
-  const webp = width !== null && /image/webp/i.test(request.headers.get("accept") ?? "");
+  const webp = width !== null && (request.headers.get("accept") ?? "").toLowerCase().includes("image/webp");
 
   const cache = getEdgeCache();
   const cacheKey = new Request(
