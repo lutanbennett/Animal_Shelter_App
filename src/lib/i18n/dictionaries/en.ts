@@ -326,7 +326,14 @@ const en = {
   /** /foster, /volunteer, /donate and the how-to-adopt section (0059). */
   donateWays: {
     heading: "Ways to give",
-    give: (label: string) => label,
+    /** What each link does, then the company in brackets. "other" shows its own label. */
+    give: {
+      paypal: "Give with PayPal",
+      donorbox: "Give by card or PayPal (DonorBox)",
+      wise: "Bank transfer from abroad (Wise)",
+    } as Record<string, string>,
+    /** Shown while no way to give has been set up. */
+    none: "Online giving is being set up. To donate in the meantime, please get in touch below and we will send you the details.",
     opensInNewTab: "Opens in a new tab",
     bank: "Bank",
     accountName: "Account name",
@@ -1831,7 +1838,7 @@ const en = {
         accountNumber: "Account number",
         promptpayId: "PromptPay ID (phone or tax number)",
         note: "Short note (optional)",
-        noteHint: "e.g. \"Best from the US\" or \"No fees in Thailand\". The Thai is written in Management → Translations.",
+        noteHint: "Written for the donor, who reads it under the button: e.g. \"Any currency; a receipt is emailed to you\" or \"No fees in Thailand\". The Thai is written in Management → Translations.",
         add: "Add",
         adding: "Adding...",
         addedNamed: (label: string) => `Added “${label}”. It is in the list above.`,
