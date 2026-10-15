@@ -21,8 +21,14 @@ export async function DonateWays() {
   const supabase = await createClient();
   const { t, locale } = await getT();
   const channels = await loadPublicDonationChannels(supabase);
-  if (channels.length === 0) return null;
   const w = t.donateWays;
+  if (channels.length === 0) {
+    return (
+      <p data-reveal className="rounded-lg border border-border bg-surface p-4 text-base text-muted">
+        {w.none}
+      </p>
+    );
+  }
 
   return (
     <section data-reveal aria-labelledby="ways-to-give" className="flex flex-col gap-4">
@@ -65,7 +71,7 @@ async function LinkWay({
         rel="noopener noreferrer"
         className="spring-lift flex min-h-14 w-full items-center justify-center gap-3 rounded-lg bg-primary px-6 py-3 text-lg font-semibold text-primary-foreground hover:bg-primary-hover"
       >
-        {t.donateWays.give(label)}
+        {t.donateWays.give[channel.way] ?? label}
         <ExternalLink aria-hidden className="h-5 w-5 shrink-0" />
         <span className="sr-only">({t.donateWays.opensInNewTab})</span>
       </a>

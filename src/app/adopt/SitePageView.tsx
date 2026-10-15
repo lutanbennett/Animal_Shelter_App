@@ -88,14 +88,17 @@ export async function SitePageView({
   slug,
   section,
   hero,
-  after,
+  afterIntro,
 }: {
   slug: SitePageSlug;
   section: PublicSection;
   /** A picture beside the heading, stacked above it on a phone. */
   hero?: ReactNode;
-  /** Under the page text, above the contact card (the Donate page's ways to give). */
-  after?: ReactNode;
+  /**
+   * Directly under the page text's first paragraph, before the rest of it (the
+   * Donate page's ways to give). Pages that leave it out render exactly as before.
+   */
+  afterIntro?: ReactNode;
 }) {
   const supabase = await createClient();
   const { t, locale } = await getT();
@@ -111,6 +114,10 @@ export async function SitePageView({
   // (the same honesty as the Release notes and Manual, docs/decisions/
   // 2026-10-04-staff-wording-and-thai.md), instead of English that looks like a mistake.
   const englishOnly = !!raw?.bodyIsOriginal;
+  // Split at the first blank line: the intro paragraph, then everything else.
+  const bodyParts = (text.body ?? "").replace(/\r\n/g, "\n").trim().split(/\n\s*\n/);
+  const intro = bodyParts[0] ?? "";
+  const rest = bodyParts.slice(1).join("\n\n");
   // A business asking to join gets the message already started, where the
   // channel can take one (email, LINE, WhatsApp). The channels come in the
   // shelter's order, and the card offers the first three.
@@ -162,14 +169,29 @@ export async function SitePageView({
           </p>
         )}
         {text.body ? (
-          <div data-reveal>
-            <SiteBody body={text.body} size="lg" headingLevel="h2" />
-          </div>
+          afterIntro ? (
+            <>
+              <div data-reveal>
+                <SiteBody body={intro} size="lg" headingLevel="h2" />
+              </div>
+              {afterIntro}
+              {rest && (
+                <div data-reveal>
+                  <SiteBody body={rest} size="lg" headingLevel="h2" />
+                </div>
+              )}
+            </>
+          ) : (
+            <div data-reveal>
+              <SiteBody body={text.body} size="lg" headingLevel="h2" />
+            </div>
+          )
         ) : (
-          <p className="text-sm text-muted">{t.sitePages.comingSoon}</p>
+          <>
+            <p className="text-sm text-muted">{t.sitePages.comingSoon}</p>
+            {afterIntro}
+          </>
         )}
-
-        {after}
 
         {channels.length > 0 && (
           <div data-reveal className="mt-4 flex flex-col gap-3 rounded-lg border border-border bg-surface p-6">
