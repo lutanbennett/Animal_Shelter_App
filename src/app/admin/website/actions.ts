@@ -835,8 +835,8 @@ export async function removeDonationQr(id: string): Promise<ActionResult> {
 }
 
 /** The three pages that take a photo beside the heading (0200). */
-export type PagePhotoPage = "donate" | "foster" | "volunteer";
-const PAGE_PHOTO_PAGES: readonly string[] = ["donate", "foster", "volunteer"];
+export type PagePhotoPage = "donate" | "foster" | "volunteer" | "about";
+const PAGE_PHOTO_PAGES: readonly string[] = ["donate", "foster", "volunteer", "about"];
 
 export async function uploadPagePhoto(page: string, formData: FormData): Promise<SiteContentFormState> {
   const { t } = await getT();

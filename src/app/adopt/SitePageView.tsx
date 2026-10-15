@@ -40,6 +40,7 @@ import { PublicFooter } from "./PublicFooter";
 export function sitePageStarter(t: Dictionary, slug: SitePageSlug) {
   if (slug === "international-adoption") return t.sitePages.internationalStarter;
   if (slug === "shelter-friends-join") return t.sitePages.friendsJoinStarter;
+  if (slug === "about") return t.sitePages.aboutStarter;
   return null;
 }
 
@@ -112,7 +113,7 @@ export async function SitePageView({
   // A photo an admin chose for Donate, Foster or Volunteer (0200). None chosen, or
   // a page that has no such photo: the heading takes the full width, as it always did.
   // A blank description renders as alt="" (skipped by screen readers), never a filename.
-  const photoSlug = slug === "donate" || slug === "foster" || slug === "volunteer" ? slug : null;
+  const photoSlug = slug === "donate" || slug === "foster" || slug === "volunteer" || slug === "about" ? slug : null;
   const photoId = photoSlug && content ? content[`${photoSlug}_photo_drive_file_id`]?.trim() : "";
   const photoNode =
     hero ??

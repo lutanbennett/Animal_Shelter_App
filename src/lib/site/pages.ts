@@ -20,6 +20,9 @@ export const SITE_PAGE_SLUGS = [
   // 0099; at /friends/join, from the homepage Shelter Friends band,
   // /friends, /donate and Get involved in the menu.
   "shelter-friends-join",
+  // 0206; at /about, behind "About & contact" in the menu and "Read more about us"
+  // under Our story on the home page.
+  "about",
 ] as const;
 export type SitePageSlug = (typeof SITE_PAGE_SLUGS)[number];
 
@@ -37,6 +40,7 @@ export const SITE_PAGE_PATHS: Record<SitePageSlug, string> = {
   donate: "/donate",
   "international-adoption": "/adopt/international",
   "shelter-friends-join": "/friends/join",
+  about: "/about",
 };
 
 export function isSitePageSlug(value: string): value is SitePageSlug {

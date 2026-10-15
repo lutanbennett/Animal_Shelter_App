@@ -186,6 +186,7 @@ export default async function WebsitePage({
                   donate: { fileId: content.donate_photo_drive_file_id, alt: content.donate_photo_alt, altTh: content.donate_photo_alt_th },
                   foster: { fileId: content.foster_photo_drive_file_id, alt: content.foster_photo_alt, altTh: content.foster_photo_alt_th },
                   volunteer: { fileId: content.volunteer_photo_drive_file_id, alt: content.volunteer_photo_alt, altTh: content.volunteer_photo_alt_th },
+                  about: { fileId: content.about_photo_drive_file_id, alt: content.about_photo_alt, altTh: content.about_photo_alt_th },
                 }}
               />
               <section className="flex flex-col gap-4">

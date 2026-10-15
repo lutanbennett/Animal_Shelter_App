@@ -305,6 +305,7 @@ const EXEMPT = {
   "/adopt/international": { public: true, why: "Public website: static page from site_content." },
   "/our-work": { public: true, why: "Public website: the public_projects views (0042)." },
   "/our-work/[id]": { public: true, why: "Public website: one public_projects row." },
+  "/about": { public: true, why: "Public website: a site_pages page (SitePageView), the same text for every visitor, signed in or not." },
   "/foster": { public: true, why: "Public website: a site_pages page (SitePageView), the same text for every visitor, signed in or not." },
   "/volunteer": { public: true, why: "Public website: a site_pages page (SitePageView), the same text for every visitor, signed in or not." },
   "/donate": { public: true, why: "Public website: a site_pages page (SitePageView), the same text for every visitor, signed in or not." },
