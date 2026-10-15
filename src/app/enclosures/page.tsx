@@ -232,18 +232,20 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
     }
     // Rooms that are not enclosures (map_rooms), with their stored names and what each is for (0175).
     // The description's approved translation rides along, so the card shows it in the reader's language.
+    // A room is placed on zero or more plans (0198): one entry per placement, all with the room's one name and text.
     const { data: roomRows } = await supabase
       .from("map_rooms")
-      .select("id, map_id, name, name_th, description, shape")
-      .returns<{ id: string; map_id: string; name: string; name_th: string | null; description: string | null; shape: unknown }[]>();
+      .select("id, name, name_th, description, map_room_placements(map_id, shape)")
+      .returns<{ id: string; name: string; name_th: string | null; description: string | null; map_room_placements: { map_id: string; shape: unknown }[] }[]>();
     const roomTranslations = await loadTranslations(supabase, "map_rooms", (roomRows ?? []).filter((r) => r.description).map((r) => r.id));
     const rooms: FacilityMapData["rooms"] = [];
-    for (const { id, map_id, name, name_th, description, shape: raw } of roomRows ?? []) {
-      const shape = parseShape(raw);
-      if (!shape) continue;
+    for (const { id, name, name_th, description, map_room_placements } of roomRows ?? []) {
       const tr = roomTranslations.get(translationKey(id, "description"));
       const approved = tr && tr.status === "approved" && tr.text?.trim() ? { description: { lang: tr.target_lang, text: tr.text } } : null;
-      rooms.push({ id, map_id, name, name_th, description, translations: approved, shape });
+      for (const p of map_room_placements) {
+        const shape = parseShape(p.shape);
+        if (shape) rooms.push({ id, map_id: p.map_id, name, name_th, description, translations: approved, shape });
+      }
     }
     const onSite = summaries.filter((e) => !e.is_system && e.zone_internal);
     const shapeOf = new Map((enclosuresResult.data ?? []).map((row) => [row.id, parseShape(row.map_shape)]));

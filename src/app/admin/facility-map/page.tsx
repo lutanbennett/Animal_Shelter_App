@@ -27,9 +27,9 @@ export default async function FacilityMapAdminPage() {
     supabase.from("facility_maps").select("id, kind, zone_id, image_path, width, height").returns<PlanRow[]>(),
     supabase
       .from("map_rooms")
-      .select("id, map_id, name, name_th, description, shape")
+      .select("id, name, name_th, description, map_room_placements(map_id, shape)")
       .order("created_at")
-      .returns<{ id: string; map_id: string; name: string; name_th: string | null; description: string | null; shape: unknown }[]>(),
+      .returns<{ id: string; name: string; name_th: string | null; description: string | null; map_room_placements: { map_id: string; shape: unknown }[] }[]>(),
   ]);
 
   // Listed in the shelter's order (Settings → Zones and Enclosures).
@@ -61,10 +61,12 @@ export default async function FacilityMapAdminPage() {
   const roomRows = roomsResult.data ?? [];
   const roomTranslations = await loadTranslations(supabase, "map_rooms", roomRows.map((r) => r.id));
   const rooms: EditorRoom[] = [];
-  for (const { id, map_id, name, name_th, description, shape: raw } of roomRows) {
-    const shape = parseShape(raw);
-    if (!shape) continue;
-    rooms.push({ id, map_id, name, name_th, description, shape, translation: roomTranslations.get(translationKey(id, "description")) ?? null });
+  for (const { id, name, name_th, description, map_room_placements } of roomRows) {
+    const placements = map_room_placements.flatMap((p) => {
+      const shape = parseShape(p.shape);
+      return shape ? [{ map_id: p.map_id, shape }] : [];
+    });
+    rooms.push({ id, name, name_th, description, placements, translation: roomTranslations.get(translationKey(id, "description")) ?? null });
   }
 
   const error = zonesResult.error ?? enclosuresResult.error ?? plansResult.error ?? roomsResult.error;

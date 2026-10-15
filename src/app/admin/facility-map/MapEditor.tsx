@@ -25,7 +25,7 @@ import {
 import type { MapPlan } from "@/lib/facility-map/types";
 import { formatDateTime } from "@/lib/format";
 import { ROOM_DESCRIPTION_MAX, ROOM_NAME_MAX } from "@/lib/facility-map/rooms";
-import { addRoom, deleteRoom, removePlan, saveRoomDetails, saveRoomShape, saveShape, undoReplace } from "./actions";
+import { addRoom, deleteRoom, removePlan, removeRoomPlacement, saveRoomDetails, saveRoomShape, saveShape, undoReplace } from "./actions";
 import { AddPlan, ReplacePlan } from "./PlanUpload";
 
 /**
@@ -54,11 +54,11 @@ export type EditorPlan = MapPlan & {
 };
 export type EditorRoom = {
   id: string;
-  map_id: string;
   name: string;
   name_th: string | null;
   description: string | null;
-  shape: Point[];
+  /** Where the room is drawn (0198): one outline per plan it is on, none for a room on no plan. */
+  placements: { map_id: string; shape: Point[] }[];
   /** The description's other-language row (0175 queues one), shown beside the box. */
   translation: TranslationRow | null;
 };
@@ -103,7 +103,7 @@ export function MapEditor({
   // The shapes as the editor holds them; each is written to the database the moment it is finished.
   const fromProps = () => Object.fromEntries([...zones, ...enclosures].map((x) => [x.id, x.shape]));
   const [rawShapes, setRawShapes] = useState<Record<string, Point[] | null>>(fromProps);
-  // The rooms, each on one plan (a room is on the site once, so drawing it on another plan moves it).
+  // The rooms, each placed on any number of plans (0198).
   const [roomList, setRoomList] = useState(rooms);
   // A room being added: named, waiting to be drawn. It is stored only once it has a shape.
   const [newRoom, setNewRoom] = useState<{ name: string; name_th: string } | null>(null);
@@ -151,9 +151,16 @@ export function MapEditor({
   const items = useMemo(() => [...things, ...roomItems], [things, roomItems]);
   const shapes = useMemo(() => {
     const here: Record<string, Point[] | null> = { ...rawShapes };
-    for (const r of roomList) here[roomKey(r.id)] = plan && r.map_id === plan.id ? r.shape : null;
+    for (const r of roomList) here[roomKey(r.id)] = plan ? (r.placements.find((p) => p.map_id === plan.id)?.shape ?? null) : null;
     return here;
   }, [rawShapes, roomList, plan]);
+  /** A plan's name as the plan list shows it. */
+  const planNameOf = (id: string) => {
+    const p = planList.find((x) => x.id === id);
+    if (!p) return t.common.dash;
+    const z = zones.find((x) => x.id === p.zone_id);
+    return p.kind === "overview" ? t.enclosures.map.overview : z ? zoneName(z) : t.common.dash;
+  };
   const roomOf = (itemId: string) => roomList.find((r) => roomKey(r.id) === itemId) ?? null;
 
   const active = items.find((i) => i.id === activeId) ?? null;
@@ -223,7 +230,7 @@ export function MapEditor({
 
   /**
    * Stores a room's shape on the open plan: a new room is created by it, an existing one is reshaped
-   * or, drawn on another plan, moved here. Returns the room's item id, or null when it was refused.
+   * or, if it is not on this plan yet, placed here. Its other plans keep their own outlines. Returns the room's item id, or null when it was refused.
    */
   async function saveRoom(item: Item, shape: Point[]): Promise<string | null> {
     const room = roomOf(item.id);
@@ -237,7 +244,7 @@ export function MapEditor({
         setMessage({ kind: "error", text: r.error });
         return null;
       }
-      setRoomList((prev) => [...prev, { id: r.id, map_id: plan.id, name: r.name, name_th: r.name_th, description: null, shape: r.shape, translation: null }]);
+      setRoomList((prev) => [...prev, { id: r.id, name: r.name, name_th: r.name_th, description: null, placements: [{ map_id: plan.id, shape: r.shape }], translation: null }]);
       setNewRoom(null);
       setMessage({ kind: "ok", text: m.roomAdded(placeName(locale, r.name, r.name_th)) });
       return roomKey(r.id);
@@ -249,7 +256,7 @@ export function MapEditor({
       setMessage({ kind: "error", text: r.error });
       return null;
     }
-    setRoomList((prev) => prev.map((x) => (x.id === room.id ? { ...x, map_id: plan.id, shape: r.shape } : x)));
+    setRoomList((prev) => prev.map((x) => (x.id === room.id ? { ...x, placements: [...x.placements.filter((p) => p.map_id !== plan.id), { map_id: plan.id, shape: r.shape }] } : x)));
     setMessage({ kind: "ok", text: m.saved(item.name) });
     return item.id;
   }
@@ -264,7 +271,7 @@ export function MapEditor({
     const item = active;
     if (item.target === "room") {
       // A room stays picked, so its name and description can be written next. The editor never moves
-      // on to another room by itself: the others are on their own plans, and drawing one here moves it.
+      // on to another room by itself.
       const id = await saveRoom(item, shape);
       if (!id) return;
       setDraft([]);
@@ -290,11 +297,31 @@ export function MapEditor({
     }
   }
 
-  /** A room cannot be off the map, so taking it off is deleting it, with what is written about it. */
+  /** Takes a room off the open plan only; its other plans, name and description stay. */
+  async function removeFromPlan(item: Item) {
+    const room = roomOf(item.id);
+    if (!room || !plan) return;
+    const here = planNameOf(plan.id);
+    if (!(await confirm({ body: m.removeFromPlanConfirm(item.name, here), confirmLabel: m.removeFromPlan }))) return;
+    setSaving(true);
+    setMessage(null);
+    const r = await removeRoomPlacement(room.id, plan.id);
+    setSaving(false);
+    if (!r.ok) {
+      setMessage({ kind: "error", text: r.error });
+      return;
+    }
+    setRoomList((prev) => prev.map((x) => (x.id === room.id ? { ...x, placements: x.placements.filter((p) => p.map_id !== plan.id) } : x)));
+    reset();
+    setMessage({ kind: "ok", text: m.removedFromPlan(item.name, here) });
+  }
+
+  /** Deleting a room takes it off every plan it is on, so the confirmation names each one. */
   async function removeRoom(item: Item) {
     const room = roomOf(item.id);
     if (!room) return;
-    if (!(await confirm({ body: m.deleteRoomConfirm(item.name), confirmLabel: m.deleteRoom }))) return;
+    const planNames = room.placements.map((p) => planNameOf(p.map_id));
+    if (!(await confirm({ body: m.deleteRoomConfirm(item.name, planNames), confirmLabel: m.deleteRoom }))) return;
     setSaving(true);
     setMessage(null);
     const r = await deleteRoom(room.id);
@@ -556,8 +583,14 @@ export function MapEditor({
                           <span className="ml-auto shrink-0 text-xs text-muted">{placed ? m.placed : room ? m.onAnotherPlan : m.notPlaced}</span>
                         </button>
                         {placed && <RowActionButton label={m.redraw} subject={item.name} icon={ACTION_ICONS.edit} onClick={() => pick(item.id, true)} />}
+                        {placed && room && <RowActionButton label={m.removeFromPlan} subject={item.name} icon={ACTION_ICONS.clear} onClick={() => void removeFromPlan(item)} />}
                         {room && <RowActionButton label={m.deleteRoom} subject={item.name} icon={ACTION_ICONS.delete} onClick={() => void removeRoom(item)} />}
                       </div>
+                      {room && (
+                        <p className="px-1.5 text-xs text-muted">
+                          {room.placements.length ? m.roomOnPlans(room.placements.map((p) => planNameOf(p.map_id)).join(", ")) : m.roomOnNoPlan}
+                        </p>
+                      )}
                       {on && room && (
                         <RoomDetails
                           key={`${room.id}:${room.name}:${room.name_th ?? ""}:${room.description ?? ""}`}
@@ -577,6 +610,8 @@ export function MapEditor({
               </ul>
               {newRoom ? null : (
                 <AddRoomForm
+                  others={roomList.filter((r) => !plan || !r.placements.some((p) => p.map_id === plan.id)).map((r) => ({ id: r.id, name: placeName(locale, r.name, r.name_th) }))}
+                  onPlaceExisting={(id) => pick(roomKey(id))}
                   onStart={(names) => {
                     setNewRoom(names);
                     setActiveId(NEW_ROOM);
@@ -769,12 +804,22 @@ const INPUT =
  * Add room: a name first (English, and Thai if it is known), then the room is drawn on the open plan like
  * any shape. Nothing is stored until it is drawn, so a room is never in the table without a place.
  */
-function AddRoomForm({ onStart }: { onStart: (names: { name: string; name_th: string }) => void }) {
+function AddRoomForm({
+  onStart,
+  others,
+  onPlaceExisting,
+}: {
+  onStart: (names: { name: string; name_th: string }) => void;
+  /** Rooms not on the open plan, for "place a room already on another plan". */
+  others: { id: string; name: string }[];
+  onPlaceExisting: (id: string) => void;
+}) {
   const { t } = useI18n();
   const m = t.admin.facilityMap;
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [nameTh, setNameTh] = useState("");
+  const [existing, setExisting] = useState("");
 
   if (!open) {
     return (
@@ -794,6 +839,37 @@ function AddRoomForm({ onStart }: { onStart: (names: { name: string; name_th: st
         onStart({ name: name.trim(), name_th: nameTh.trim() });
       }}
     >
+      <div className="flex flex-col gap-2 border-b border-border pb-2">
+        <p className="text-xs font-medium text-muted">{m.placeExisting}</p>
+        {others.length === 0 ? (
+          <p className="text-xs text-muted">{m.placeExistingNone}</p>
+        ) : (
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="flex min-w-0 flex-1 flex-col gap-1 text-xs font-medium text-muted">
+              {m.placeExistingPick}
+              <select value={existing} onChange={(e) => setExisting(e.target.value)} className={INPUT}>
+                <option value="">{m.placeExistingChoose}</option>
+                {others.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <ActionButton
+              icon={Square}
+              compact
+              disabled={!existing}
+              onClick={() => {
+                onPlaceExisting(existing);
+                setOpen(false);
+              }}
+            >
+              {m.placeExistingStart}
+            </ActionButton>
+          </div>
+        )}
+      </div>
       <p className="text-xs text-muted">{m.addRoomHelp}</p>
       <label className="flex flex-col gap-1 text-xs font-medium text-muted">
         {m.roomName}
