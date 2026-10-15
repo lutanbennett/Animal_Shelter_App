@@ -40,7 +40,7 @@ export const CHANNEL_COLUMNS =
 export async function loadPublicDonationChannels(
   supabase: SupabaseClient,
 ): Promise<PublicDonationChannel[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("public_donation_channels")
     .select(PUBLIC_CHANNEL_COLUMNS)
     .order("sort_order")
