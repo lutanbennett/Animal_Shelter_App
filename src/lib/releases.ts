@@ -79,6 +79,8 @@ export const unreleased: ReleaseNote[] = [
     text: "A Book a vet appointment button now sits at the top of Upcoming visits and of each clinic's page, for anyone who can book visits. From a clinic's page it opens the form with that clinic already chosen, and you pick the residents on the form.",
     roles: ["admin", "management"],
   },
+  "An item can now be bought in several sizes — kibble in 20, 14 and 10 kg bags, tablets as singles, sleeves or boxes. In Settings → Medications or Diets, tick every size you buy and mark the one you usually buy; Record a delivery and Purchasing open on the usual one, and every size can still be chosen.",
+  "Diet stock and Medication stock now work out the cost per unit from what you actually paid on the latest delivery (a donated delivery with no cost is ignored), and say so on the card. An item with no priced delivery still uses its typed price.",
 ];
 
 /** Newest first. */

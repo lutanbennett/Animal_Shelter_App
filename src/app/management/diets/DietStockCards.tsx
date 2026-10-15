@@ -25,6 +25,10 @@ export type DietStockRow = {
   unit: string;
   /** Baht per unit, up to 4 places (0161). Not null: 0 until priced. */
   cost_per_unit: number;
+  /** The cost the forecast uses: the latest delivery's, else cost_per_unit (0199). */
+  shownCost: number;
+  /** Date of that delivery when it is what set the cost, else null. */
+  costFromDelivery: string | null;
   /**
    * One entry per forecast window (same order as the page's forecastHeadings):
    * residents fed at the shelter, the quantity in `unit` and the cost in
@@ -208,7 +212,8 @@ function DietCard({ dietType, forecastHeadings }: { dietType: DietStockRow; fore
           </label>
         ) : (
           <span className="flex flex-wrap gap-x-2 text-foreground">
-            <span>{m.stockCard.costPerUnit(formatUnitCost(dietType.cost_per_unit, locale), unit)}</span>
+            <span>{m.stockCard.costPerUnit(formatUnitCost(dietType.shownCost, locale), unit)}</span>
+            {dietType.costFromDelivery && <span className="text-xs text-muted">{t.units.price.fromDelivery(dietType.costFromDelivery)}</span>}
             {dietType.packPrice && (
               <span className="text-muted">
                 ({s.packPrice(formatBahtPrice(dietType.packPrice.price, locale), dietType.packPrice.unit)})

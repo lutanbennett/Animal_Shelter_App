@@ -1920,6 +1920,7 @@ const th: Dictionary = {
     summary: (count: number) => (count === 0 ? "ไม่มีหน่วยอื่น" : `หน่วยอื่น ${count} หน่วย`),
     oneIs: (unit: string, factor: string, base: string) => `1 ${unit} = ${factor} ${base}`,
     purchaseBadge: "หน่วยที่ซื้อ",
+    defaultBadge: "ซื้อเป็นประจำ",
     countBadge: "หน่วยที่นับ",
     add: "เพิ่มหน่วย",
     edit: "แก้ไข",
@@ -1934,7 +1935,9 @@ const th: Dictionary = {
     factor: (base: string) => `หนึ่งหน่วยเท่ากับกี่ ${base}`,
     note: "หมายเหตุ (ไม่บังคับ)",
     notePlaceholder: "เช่น ตักเต็มถ้วยสีเขียว",
-    isPurchase: "หน่วยที่ใช้ซื้อ",
+    isPurchase: "เราซื้อขนาดนี้",
+    isDefaultPurchase: "นี่คือขนาดที่เราซื้อเป็นประจำ",
+    defaultLocked: "หากต้องการเปลี่ยนขนาดที่ซื้อเป็นประจำ ให้ติ๊ก “ซื้อเป็นประจำ” ที่ขนาดอื่น",
     isCount: "หน่วยที่ใช้นับ",
     price: {
       title: "ราคาต่อหน่วยที่ซื้อ",
@@ -1943,6 +1946,9 @@ const th: Dictionary = {
       now: (price: string, unit: string, perBase: string, base: string) =>
         `ตอนนี้ ${price} ต่อ ${unit} (฿${perBase} ต่อ ${base})`,
       set: "ตั้งราคา",
+      fromDelivery: (date: string) => `จากการรับของวันที่ ${date}`,
+      deliveryWins: (date: string) =>
+        `การคาดการณ์ใช้ราคาที่จ่ายจริงในการรับของวันที่ ${date} ราคาที่ใส่ตรงนี้ใช้เฉพาะรายการที่ไม่มีการรับของที่ระบุราคา`,
       panelTitle: "ราคาต่อแพ็ค",
       panelIntro:
         "สำหรับรายการที่ซื้อเป็นกระสอบ กล่อง หรือขวด: ใส่ราคาต่อหนึ่งแพ็ค แล้วระบบจะคำนวณราคาต่อหน่วยฐานให้ ส่วนตัวหน่วยตั้งที่หน้าการตั้งค่า",

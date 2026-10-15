@@ -24,12 +24,14 @@ export type UnitsPanelItem = {
   conversions: UnitConversion[];
   /** Cost per base unit, when set. */
   costPerBase: number | null;
+  /** Date of the delivery that set costPerBase, when one did (0199); a typed price is then only the fallback. */
+  costFromDelivery?: string | null;
 };
 
 const inputClass =
   "rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
 
-const EMPTY: ConversionFields = { unit: "", unitTh: "", factor: "", note: "", isPurchase: false, isCount: false };
+const EMPTY: ConversionFields = { unit: "", unitTh: "", factor: "", note: "", isPurchase: false, isDefaultPurchase: false, isCount: false };
 
 /**
  * Which half of the 2026-10-08 split this panel is on. "conversions" is
@@ -109,6 +111,7 @@ function ItemUnits({ kind, mode, item }: { kind: ItemKind; mode: UnitsPanelMode;
             factor: String(conversion.basePer),
             note: conversion.note ?? "",
             isPurchase: conversion.isPurchase,
+            isDefaultPurchase: conversion.isDefaultPurchase ?? false,
             isCount: conversion.isCount,
           }
         : EMPTY,
@@ -152,6 +155,7 @@ function ItemUnits({ kind, mode, item }: { kind: ItemKind; mode: UnitsPanelMode;
                   fields={fields}
                   set={set}
                   pending={pending}
+                  wasDefault={c.isDefaultPurchase ?? false}
                   onSave={() => run(() => saveConversion(kind, item.id, c.id, fields), () => setEditingId(null))}
                   onCancel={() => setEditingId(null)}
                 />
@@ -160,7 +164,7 @@ function ItemUnits({ kind, mode, item }: { kind: ItemKind; mode: UnitsPanelMode;
               <li key={c.id} className="flex flex-wrap items-center justify-between gap-2">
                 <span className="flex flex-wrap items-center gap-2 text-foreground">
                   {u.oneIs(localLabel(locale, c.unit, c.unitTh), formatQuantity(c.basePer), item.baseUnit)}
-                  {c.isPurchase && <Badge>{u.purchaseBadge}</Badge>}
+                  {c.isPurchase && <Badge>{c.isDefaultPurchase ? u.defaultBadge : u.purchaseBadge}</Badge>}
                   {c.isCount && <Badge>{u.countBadge}</Badge>}
                   {c.note && <span className="text-xs text-muted">{c.note}</span>}
                 </span>
@@ -193,6 +197,7 @@ function ItemUnits({ kind, mode, item }: { kind: ItemKind; mode: UnitsPanelMode;
             fields={fields}
             set={set}
             pending={pending}
+            wasDefault={false}
             onSave={() => run(() => saveConversion(kind, item.id, null, fields), () => setEditingId(null))}
             onCancel={() => setEditingId(null)}
           />
@@ -216,6 +221,9 @@ function ItemUnits({ kind, mode, item }: { kind: ItemKind; mode: UnitsPanelMode;
                   item.baseUnit,
                 )}
               </span>
+            )}
+            {item.costFromDelivery && (
+              <span className="text-xs text-muted">{u.price.deliveryWins(item.costFromDelivery)}</span>
             )}
             <div className="flex flex-wrap items-center gap-2">
               <input
@@ -261,10 +269,13 @@ function ConversionForm({
   fields,
   set,
   pending,
+  wasDefault,
   onSave,
   onCancel,
 }: {
   base: string;
+  /** Editing the size that is the usual one now: it can only be handed on by ticking another. */
+  wasDefault: boolean;
   fields: ConversionFields;
   set: <K extends keyof ConversionFields>(key: K, value: ConversionFields[K]) => void;
   pending: boolean;
@@ -318,14 +329,35 @@ function ConversionForm({
       </div>
       <div className="flex flex-wrap gap-4 text-sm text-foreground">
         <label className="flex items-center gap-2">
-          <input type="checkbox" checked={fields.isPurchase} onChange={(e) => set("isPurchase", e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={fields.isPurchase}
+            onChange={(e) => {
+              set("isPurchase", e.target.checked);
+              if (!e.target.checked) set("isDefaultPurchase", false);
+            }}
+            disabled={wasDefault}
+          />
           {u.isPurchase}
+        </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={fields.isDefaultPurchase}
+            onChange={(e) => {
+              set("isDefaultPurchase", e.target.checked);
+              if (e.target.checked) set("isPurchase", true);
+            }}
+            disabled={wasDefault}
+          />
+          {u.isDefaultPurchase}
         </label>
         <label className="flex items-center gap-2">
           <input type="checkbox" checked={fields.isCount} onChange={(e) => set("isCount", e.target.checked)} />
           {u.isCount}
         </label>
       </div>
+      {wasDefault && <p className="text-xs text-muted">{u.defaultLocked}</p>}
       <div className="flex gap-2">
         <ActionButton icon={Save} variant="primary" compact disabled={pending} onClick={onSave}>
           {pending ? u.saving : u.save}

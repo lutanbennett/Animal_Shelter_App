@@ -30,6 +30,10 @@ export type MedicationStockRow = {
   dose_unit: string;
   /** Baht per one dose_unit, up to 4 places (0071, 0161). Null means nobody has priced it yet. */
   cost_per_unit: number | null;
+  /** The cost the forecast uses: the latest delivery's, else cost_per_unit (0199). */
+  shownCost: number | null;
+  /** Date of that delivery when it is what set the cost, else null. */
+  costFromDelivery: string | null;
   /**
    * One entry per forecast window (same order as the page's forecastHeadings):
    * living, non-adopted residents with a dose due, whole doses due, and the
@@ -238,13 +242,14 @@ function MedicationCard({
             />
             <span className="text-xs text-muted">{m.stockCard.costHint(unit)}</span>
           </label>
-        ) : medication.cost_per_unit == null ? (
+        ) : medication.shownCost == null ? (
           // Never "฿0": an unpriced medication is a gap in the cashflow
           // forecast, and the forecast page counts these rows.
           <span className="text-muted">{m.table.notPricedYet}</span>
         ) : (
           <span className="flex flex-wrap gap-x-2 text-foreground">
-            <span>{m.table.costPerUnit(formatUnitCost(medication.cost_per_unit, locale), unit)}</span>
+            <span>{m.table.costPerUnit(formatUnitCost(medication.shownCost, locale), unit)}</span>
+            {medication.costFromDelivery && <span className="text-xs text-muted">{t.units.price.fromDelivery(medication.costFromDelivery)}</span>}
             {medication.packPrice && (
               <span className="text-muted">
                 ({s.packPrice(formatBahtPrice(medication.packPrice.price, locale), medication.packPrice.unit)})

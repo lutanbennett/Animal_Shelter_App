@@ -197,6 +197,20 @@ export function costPerBaseUnit(
   return { ok: true, value };
 }
 
+/**
+ * The cost per base unit the forecasts use (0199): the latest delivery's real
+ * cost when there is a priced one, else the typed cost_per_unit. A donated
+ * delivery (cost 0) is not a price: item_latest_delivery_cost already leaves
+ * it out, and a non-positive figure is refused here too, so a gift can never
+ * drag a forecast down to zero. A typed 0 or null passes through as it was
+ * (diets: 0 until priced; medicines: null = not priced).
+ */
+export type EffectiveCost = { value: number | null; fromDelivery: boolean };
+export function effectiveCost(typed: number | null, delivery: number | null | undefined): EffectiveCost {
+  if (delivery != null && Number.isFinite(delivery) && delivery > 0) return { value: delivery, fromDelivery: true };
+  return { value: typed, fromDelivery: false };
+}
+
 /** How a base-unit cost reads in the purchase unit, for display next to the cost cell. */
 export function pricePerPurchaseUnit(costPerBase: number | null, conversions: UnitConversion[]) {
   const purchase = defaultUnit(conversions, "purchase");

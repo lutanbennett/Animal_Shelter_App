@@ -107,5 +107,22 @@ eq("price per purchase unit derived from the cost", pricePerPurchaseUnit(4.25, k
   eq("a new delivery uses the corrected factor", resolveEntered(2, "bag (20 kg)", corrected).base, 360);
 }
 
+// --- several pack sizes and the price actually paid (0199)
+{
+  const { effectiveCost } = lib;
+  const c = (id, unit, basePer, isPurchase, isDefaultPurchase) => ({ id, unit, basePer, isPurchase, isDefaultPurchase, isCount: false, note: null });
+  const sizes = [c("s", "bag (10 kg)", 100, true, false), c("m", "bag (14 kg)", 140, true, false), c("l", "bag (20 kg)", 200, true, true)];
+  eq("the default of several bought-in sizes is the one opened on", defaultUnit(sizes, "purchase").unit, "bag (20 kg)");
+  eq("no flagged default: first bought-in size", defaultUnit(sizes.map((s) => ({ ...s, isDefaultPurchase: false })), "purchase").unit, "bag (10 kg)");
+  // Cups at 10 per kg. 14 kg bag on special: 700 baht / 140 cups = 5 per cup.
+  eq("delivery cost wins over the typed price", effectiveCost(8, 5), { value: 5, fromDelivery: true });
+  eq("a donated delivery (0) falls back to the typed price", effectiveCost(8, 0), { value: 8, fromDelivery: false });
+  eq("no delivery falls back to the typed price", effectiveCost(8, undefined), { value: 8, fromDelivery: false });
+  eq("no delivery and no typed price stays unpriced", effectiveCost(null, null), { value: null, fromDelivery: false });
+  eq("a negative figure is no price", effectiveCost(8, -1), { value: 8, fromDelivery: false });
+  // 1000 cups forecast at 5 a cup is 5000 baht, whatever bag it came in.
+  eq("forecast baht from the delivery price", 1000 * effectiveCost(8, 700 / 140).value, 5000);
+}
+
 console.log(fails ? `\n${fails} FAILED` : "\nall ok");
 process.exit(fails ? 1 : 0);
