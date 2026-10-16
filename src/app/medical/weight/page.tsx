@@ -7,8 +7,10 @@ import { formatDate, formatWeightKg, todayIso } from "@/lib/format";
 import { placeName } from "@/lib/enclosures/names";
 import { refuseFor } from "@/lib/auth/require-role";
 import { requirePermission } from "@/lib/permissions/require";
-import { loadOneResident, loadPickableResidents } from "@/lib/medical/residents";
+import { loadOneResident, loadPickableResidents, matchesQuery } from "@/lib/medical/residents";
+import { loadWeighFirst } from "@/lib/medical/weigh-first";
 import { ResidentPicker } from "../ResidentPicker";
+import { WeighFirstList } from "./WeighFirstList";
 import { WeightKeypad } from "./WeightKeypad";
 import { BackLink } from "@/components/BackLink";
 
@@ -17,9 +19,15 @@ import { BackLink } from "@/components/BackLink";
  *
  * Not under /residents: she cannot open a resident's record, only who and where (0134). So the
  * picker reads `resident_who_and_where`, the history reads `weight` (a flat table whose policy asks
- * medical.weight), and nothing here reads `residents`, `resident_current_state` or
- * `clinic_visits`, none of which her login can. There is no clinic-visit link and no date: the
- * reading is today's. Adjusting a dose from the weight is judgement and is not recorded here.
+ * medical.weight), and nothing here reads `residents` or `resident_current_state`, neither of which
+ * her login can. There is no clinic-visit link and no date: the reading is today's. Adjusting a
+ * dose from the weight is judgement and is not recorded here.
+ *
+ * "Weigh these first" (2026-10-16) is the one thing here that knows about clinic visits, and it
+ * still does not read `clinic_visits`: `weigh_first_visits()` (0207) is a security definer function
+ * returning resident id, instant and clinic name for visits yesterday or today, and nothing else.
+ * Her cells were not widened to build this and must not be — see
+ * docs/decisions/2026-10-16-weigh-these-first.md.
  */
 export default async function RecordWeightPage(props: PageProps<"/medical/weight">) {
   const { perms } = await requirePermission("medical.weight");
@@ -153,6 +161,10 @@ export default async function RecordWeightPage(props: PageProps<"/medical/weight
     }
   }
   const { residents, error } = await loadPickableResidents(supabase);
+  // The visits are matched against the picker's own list, so a resident it would not offer is not
+  // offered here either, and the search narrows both lists together.
+  const { waiting, error: waitingError } = await loadWeighFirst(supabase, residents);
+  const waitingShown = waiting.filter((v) => matchesQuery(v.resident, q));
   return shell(
     <>
       {savedLine && (
@@ -165,7 +177,27 @@ export default async function RecordWeightPage(props: PageProps<"/medical/weight
         </p>
       )}
       <p className="text-base text-muted">{w.pickIntro}</p>
-      <ResidentPicker t={t} locale={locale} base="/medical/weight" residents={residents} query={q} error={error} />
+      <ResidentPicker
+        t={t}
+        locale={locale}
+        base="/medical/weight"
+        residents={residents}
+        query={q}
+        error={error}
+        before={
+          <>
+            <WeighFirstList
+              t={t}
+              locale={locale}
+              base="/medical/weight"
+              waiting={waitingShown}
+              error={waitingError}
+              filtered={!!q.trim()}
+            />
+            <h2 className="break-words text-xl font-semibold text-foreground">{w.everyone}</h2>
+          </>
+        }
+      />
     </>,
   );
 }

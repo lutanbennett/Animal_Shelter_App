@@ -130,10 +130,12 @@ export function ResidentPicker({
       )}
 
       {groupByPlace(shown).map((zone) => (
-        <section key={zone.zone?.name ?? "none"} className="flex flex-col gap-3">
+        <section key={zone.kind === "zone" ? zone.zone!.name : zone.kind} className="flex flex-col gap-3">
           <h2 className="break-words border-b border-border pb-1 text-xl font-semibold text-foreground">
-            {zone.zone ? (
-              <ZoneName name={placeName(locale, zone.zone.name, zone.zone.nameTh)} colour={zone.zone.colour} />
+            {zone.kind === "zone" ? (
+              <ZoneName name={placeName(locale, zone.zone!.name, zone.zone!.nameTh)} colour={zone.zone!.colour} />
+            ) : zone.kind === "offSite" ? (
+              p.offSite
             ) : (
               p.elsewhere
             )}

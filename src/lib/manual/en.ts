@@ -812,6 +812,28 @@ const manual: Manual = {
           },
         },
         {
+          id: "record-weight",
+          title: "Record Weight on a phone",
+          roles: ["admin", "management"],
+          path: "Home → Record Weight (the Head of Medical)",
+          intro:
+            "The Head of Medical's own weighing page, built for a phone with the scales in front of you. It shows who to weigh and takes the reading, and nothing else: it does not open the animal's medical record.",
+          steps: [
+            "Tap Record Weight on your home screen. At the top is Weigh these first.",
+            "Weigh these first is everyone the vet saw yesterday or today who has had no weight recorded since that visit. Each one shows its photo, name, R-code, where it lives, and which clinic and what time (\"Novel, yesterday 09:30\"), so you know why it is on the list. The ones waiting longest are first.",
+            "Weigh an animal and it leaves the list as soon as you save the reading — the list is what is still outstanding, not a record of the visits. If there is nobody to weigh, the page says so in one line.",
+            "Below that, Everyone by enclosure lists every resident in the order you would walk the site, zone by zone and enclosure by enclosure. Anyone in hospital, with a foster carer or out in the community is in one group at the end, under Away from the shelter.",
+            "Use the search box at the top to jump to a name or an R-code at any time. While you are searching, Weigh these first shows only the animals that match.",
+            "Tap an animal, from either list, and the number keypad opens for its weight. Save, and you are back on the list with a line confirming what was recorded.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "A cancelled clinic visit never puts an animal on Weigh these first, and the days are counted on the shelter's clock, so a visit at one in the morning still counts as today. The page shows the visit's clinic and time but cannot open the visit or the animal's medical record — the Head of Medical does not have access to those, and this page does not change that.",
+            },
+          ],
+        },
+        {
           id: "procedures",
           title: "Logging a procedure",
           roles: ["admin", "management", "doctor"],
