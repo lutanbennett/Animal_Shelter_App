@@ -29,6 +29,7 @@
 
 import { loadEnv, parseEnvArg } from "./lib/env.mjs";
 import { classifyUnlistedView } from "./lib/public-view-owner.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const { name: envName } = parseEnvArg(process.argv.slice(2));
 const env = loadEnv(envName);
@@ -334,4 +335,4 @@ if (failures.length) {
   console.log(`\n${failures.length} failure(s):`);
   for (const line of failures) console.log(line);
 }
-process.exit(failures.length ? 1 : 0);
+await exitWith(failures.length ? 1 : 0);

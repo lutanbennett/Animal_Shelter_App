@@ -20,6 +20,7 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright-core";
 import { giveRole } from "./lib/user-role.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -71,7 +72,7 @@ try {
   if (KEEP) console.log(`\n--keep: rows named "${NAME}…" and ${made.users.length} login(s) are left in dev.`);
   else await cleanup();
 }
-process.exit(exitCode);
+await exitWith(exitCode);
 
 async function insert(table, row) {
   const { data, error } = await service.from(table).insert(row).select().single();

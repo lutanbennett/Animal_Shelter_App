@@ -14,6 +14,7 @@ import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { giveRole } from "./lib/user-role.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -116,4 +117,4 @@ try {
   for (const id of made) await service.auth.admin.deleteUser(id);
 }
 console.log(failures.length ? `\n${failures.length} FAILED` : "\nall held");
-process.exit(failures.length ? 1 : 0);
+await exitWith(failures.length ? 1 : 0);

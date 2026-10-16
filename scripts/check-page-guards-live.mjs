@@ -17,6 +17,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import { exitWith } from "./lib/exit.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -133,4 +134,4 @@ try {
   console.log(`  deleted ${made.length} throwaway login(s) and the harness role`);
 }
 console.log(fails.length ? `\n${fails.length} FAILED` : "\nall held");
-process.exit(fails.length ? 1 : 0);
+await exitWith(fails.length ? 1 : 0);
