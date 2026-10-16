@@ -11,6 +11,8 @@ import { availablePlacementActions } from "@/lib/placements/available";
 import type { SectionContext } from "./types";
 import { googleCalendarUrl } from "@/lib/clinics/calendar-link";
 import { getSiteOrigin } from "@/lib/site-origin";
+import { calendarConfigured } from "@/lib/clinics/calendar-sync";
+import { retryCalendarSync } from "@/app/clinic-visits/calendar-actions";
 import { RecordList } from "./shared";
 
 export async function renderClinicVisitsSection(ctx: SectionContext): Promise<React.ReactNode> {
@@ -18,7 +20,7 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
   const [{ data }, { data: visitWeights }] = await Promise.all([
     supabase
       .from("clinic_visits")
-      .select("id, appointment_date, status, reason, doctor_name, notes, cost, clinics(name, name_th)")
+      .select("id, appointment_date, status, reason, doctor_name, notes, cost, calendar_synced_at, calendar_out_of_date_at, clinics(name, name_th)")
       .is("archived_at", null)
       .eq("resident_id", id)
       .order("appointment_date", { ascending: false })
@@ -31,6 +33,8 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
           doctor_name: string | null;
           notes: string | null;
           cost: number | null;
+          calendar_synced_at: string | null;
+          calendar_out_of_date_at: string | null;
           clinics: { name: string; name_th: string | null } | null;
         }[]
       >(),
@@ -81,6 +85,13 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
       location: clinicName || null,
     });
   };
+  // A booked visit to come that the shelter calendar does not match yet (Google down, or just booked).
+  const calendarOn = calendarConfigured();
+  const notInCalendar = (row: { status: string; appointment_date: string; calendar_synced_at: string | null; calendar_out_of_date_at: string | null }) =>
+    calendarOn &&
+    row.status === "scheduled" &&
+    visitDate(row) >= today &&
+    (!row.calendar_synced_at || (row.calendar_out_of_date_at !== null && row.calendar_out_of_date_at > row.calendar_synced_at));
   const anyCalendar = (data ?? []).some((row) => calendarUrl(row) !== null);
   // A visit can end with the resident admitted; offer that on each record
   // unless they're already in hospital, adopted out, or gone.
@@ -127,6 +138,14 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
                 {row.cost != null && ` · ${formatBaht(Number(row.cost), locale)}`}
               </span>
               <div className="flex flex-wrap justify-end gap-2">
+                {notInCalendar(row) && can(perms, "medical.visits") && (
+                  <form action={retryCalendarSync} className="flex items-center gap-2">
+                    <input type="hidden" name="visitId" value={row.id} />
+                    <input type="hidden" name="residentId" value={id} />
+                    <span className="text-xs text-muted">{sv.notInCalendar}</span>
+                    <button type="submit" className="text-xs font-medium text-primary hover:underline">{sv.retryCalendar}</button>
+                  </form>
+                )}
                 {calendarUrl(row) && (
                   <a href={calendarUrl(row)!} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-primary hover:underline">
                     {sv.addToCalendar}

@@ -35,6 +35,11 @@ if (!clientId || !clientSecret) {
   process.exit(1);
 }
 
+// --calendar mints the shelter calendar's own token (calendar.events only), kept apart from the Drive one
+// so a calendar fault can never stop photo uploads. Paste it as GOOGLE_CALENDAR_REFRESH_TOKEN.
+const forCalendar = process.argv.includes("--calendar");
+const tokenName = forCalendar ? "GOOGLE_CALENDAR_REFRESH_TOKEN" : "GOOGLE_OAUTH_REFRESH_TOKEN";
+
 const PORT = 8991;
 const redirectUri = `http://127.0.0.1:${PORT}/oauth2callback`;
 
@@ -43,7 +48,7 @@ const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri)
 const authUrl = oauth2Client.generateAuthUrl({
   access_type: "offline",
   prompt: "consent",
-  scope: ["https://www.googleapis.com/auth/drive"],
+  scope: [forCalendar ? "https://www.googleapis.com/auth/calendar.events" : "https://www.googleapis.com/auth/drive"],
 });
 
 const server = http.createServer(async (req, res) => {

@@ -18,6 +18,8 @@ import {
   type AssistantContext,
 } from "@/lib/assistant/data";
 import type { Draft, Intent } from "@/lib/assistant/types";
+import { syncVisitToCalendar } from "@/lib/clinics/calendar-sync";
+import { getSiteOrigin } from "@/lib/site-origin";
 
 export type AssistantResult = { error: string } | { ok: true };
 
@@ -161,6 +163,8 @@ export async function assistantBookClinicVisit(
       // The RPC books for a list of residents, so it answers with a list
       // of ids; the assistant only ever sends one.
       const id = Array.isArray(data) ? data[0] : data;
+      // Saved first; the calendar is second and can never undo it (calendar-sync.ts).
+      if (typeof id === "string" && id) await syncVisitToCalendar(id, (await getSiteOrigin())?.origin ?? null);
       return { ok: true, id: typeof id === "string" ? id : "" };
     },
     () => {

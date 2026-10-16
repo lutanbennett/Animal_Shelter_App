@@ -1051,6 +1051,12 @@ const en = {
           notConnected: "Not connected — every upload fails until a new token is set.",
           failed: "Google Drive did not answer the check.",
         },
+        calendar: {
+          title: "Shelter calendar (Google Calendar)",
+          off: "Not set up: vet visits are not being sent to a calendar.",
+          ok: (v: { unsynced: number }) => v.unsynced === 0 ? "Connected: every vet visit is in the calendar." : `Connected: ${v.unsynced} vet visit(s) still waiting to be sent; they are retried every 15 minutes.`,
+          failed: (v: { unsynced: number }) => `The calendar could not be reached or the token is not working. ${v.unsynced} vet visit(s) are waiting; bookings are not affected.`,
+        },
         migrations: {
           title: "Database migrations",
           ok: (v: { expected: string | number }) =>
@@ -5136,6 +5142,8 @@ const en = {
     edit: "Edit",
     fallbackReason: "Vet visit",
     addToCalendar: "Add to Google Calendar",
+    notInCalendar: "Not in the shelter calendar yet",
+    retryCalendar: "Retry",
     calendarNote: "Add to Google Calendar adds the visit once. If the visit is rescheduled or cancelled, your calendar will not change, so update it there yourself.",
     calendarTitle: (resident: string, clinic: string) => `Vet: ${resident} · ${clinic}`,
     calendarDetails: (reason: string) => `${reason}. Booked in the shelter app; this entry does not update if the visit changes.`,

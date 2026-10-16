@@ -10,6 +10,8 @@ import { initialLocaleCookie, localeCookieName } from "@/lib/i18n/locales";
  * else goes through the session gate as before.
  */
 const STATUS_ALERTS_PATH = "/api/status/alerts";
+/** Same for the calendar sweep (src/app/api/calendar/sweep/route.ts). */
+const CALENDAR_SWEEP_PATH = "/api/calendar/sweep";
 
 export default async function proxy(request: NextRequest) {
   // Pi only (see src/lib/origin-key.ts): refuse what did not come through the Worker.
@@ -19,7 +21,9 @@ export default async function proxy(request: NextRequest) {
   })) {
     return new NextResponse("Forbidden", { status: 403, headers: { "cache-control": "no-store" } });
   }
-  if (request.nextUrl.pathname === STATUS_ALERTS_PATH && request.method === "POST") return NextResponse.next();
+  if ((request.nextUrl.pathname === STATUS_ALERTS_PATH || request.nextUrl.pathname === CALENDAR_SWEEP_PATH) && request.method === "POST") {
+    return NextResponse.next();
+  }
   // A first visit from a Thai phone: no `locale` cookie yet, Thai first in
   // Accept-Language. Set the cookie (on the request, so this render sees it,
   // and on the response, so the browser keeps it); the toggle overwrites it

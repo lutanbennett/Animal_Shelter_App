@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import { getWaitingAccessRequests } from "@/lib/status/access-requests";
+import { checkCalendar } from "@/lib/clinics/calendar-sync";
 import { checkAlerts } from "@/lib/status/alerts";
 import { getHealthReport } from "@/lib/status/health";
 import { type CheckResult, type CheckState, runCheck } from "@/lib/status/run";
@@ -145,6 +146,23 @@ function ageText(t: T, ageDays: number) {
   return ageDays < 1 ? b.ageToday : b.ageDays({ days: Math.floor(ageDays) });
 }
 
+/** Beside the Drive tile: token works, calendar reachable, visits waiting. Its own check, so an unset calendar never raises an alert. */
+async function CalendarTile({ t, locale }: { t: T; locale: Locale }) {
+  const x = t.admin.status.tiles.calendar;
+  const result = await runCheck(async () => {
+    const c = await checkCalendar();
+    if (c.state === "off") return { state: "off" as const, facts: { unsynced: 0 } };
+    if (c.state === "fail") return { state: "fail" as const, error: c.error, facts: { unsynced: c.unsynced } };
+    return { state: c.unsynced > 0 ? ("warn" as const) : ("ok" as const), facts: { unsynced: c.unsynced } };
+  });
+  const unsynced = result.facts?.unsynced ?? 0;
+  return (
+    <Tile title={x.title} result={result} t={t} locale={locale}>
+      <p>{result.state === "off" ? x.off : result.state === "fail" ? x.failed({ unsynced }) : x.ok({ unsynced })}</p>
+    </Tile>
+  );
+}
+
 async function Health({ t, locale }: { t: T; locale: Locale }) {
   const r = await getHealthReport();
   const x = t.admin.status.tiles;
@@ -172,6 +190,8 @@ async function Health({ t, locale }: { t: T; locale: Locale }) {
       <Tile title={x.drive.title} result={r.drive} t={t} locale={locale}>
         <p>{r.drive.state === "ok" ? x.drive.ok : drive?.notConnected ? x.drive.notConnected : x.drive.failed}</p>
       </Tile>
+
+      <CalendarTile t={t} locale={locale} />
 
       <Tile title={x.migrations.title} result={r.migrations} t={t} locale={locale}>
         {!mig ? (

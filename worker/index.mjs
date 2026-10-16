@@ -179,11 +179,28 @@ const worker = {
     } catch (err) {
       console.error(`status-alerts: ${err?.message ?? err}`);
     }
+    // The shelter calendar's safety net: sends any vet visit that is out of date. Never throws.
+    await runCalendarSweep(env, ctx);
     // Machine-drafted translations (worker/translations.mjs) share the trigger.
     // After the alerts so they can never delay one; runTranslations does not throw.
     await runTranslations(env);
   },
 };
+
+async function runCalendarSweep(env, ctx) {
+  if (!env.STATUS_ALERT_SITE || !env.GOOGLE_CALENDAR_REFRESH_TOKEN) return;
+  try {
+    const request = new Request(`${env.STATUS_ALERT_SITE}/api/calendar/sweep`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY ?? ""}` },
+    });
+    const response = await openNext.fetch(request, env, ctx);
+    const log = response.ok ? console.log : console.error;
+    log(`calendar-sweep: ${response.status} ${await response.text()}`);
+  } catch (err) {
+    console.error(`calendar-sweep: ${err?.message ?? err}`);
+  }
+}
 
 async function runStatusAlerts(controller, env, ctx) {
   if (!env.STATUS_ALERT_SITE) {
