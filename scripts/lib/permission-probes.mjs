@@ -114,6 +114,8 @@ export const PROBES = [
   // 0168: donations, its lines and the receipt register share the one cell; receipts are made only by issue_donation_receipt(), which asks it too.
   // A read probe needs a fixture row, and there is none yet
   { activity: "donation.receipt", level: "edit", sql: `insert into donations (received_on, donor_name, method) values (current_date, 'Probe donor', 'cash')` },
+  // 0210: appeals and their photos share the one cell. Admin only until it is delegated, so every other role is refused.
+  { activity: "appeal.run", level: "edit", sql: `insert into appeals (resident_id, title, target_amount) values ((select id from residents order by id limit 1), 'Probe appeal', 1)` },
 
   // --- Clinics, contacts, supporters
   { activity: "clinics.list", level: "edit", sql: `update clinics set notes = 'probe' where id = $CLINIC` },

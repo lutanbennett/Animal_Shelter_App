@@ -74,16 +74,24 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
+export const unreleased: ReleaseNote[] = [];
+
+/** Newest first. */
+export const releases: Release[] = [
+  {
+    version: "0.33.0",
+    date: "2026-10-16",
+    title:
+      "Weigh the animals the vet has just seen, and the website speaks more Thai",
+    major: true,
+    notes: [
   "Settings → Website → impact figures: each figure has a new optional \"Counting since (year)\" box. Once a year is typed, the home page reads, for example, \"Animals rehomed since 2019\" (in Thai too). With the box empty nothing changes.",
   "Residents: the edit page has new optional boxes for the breed and the colour in Thai. A Thai reader of the website sees the Thai where it has been typed and the English where it has not, never a blank.",
   "On the Enclosures and Residents lists, the \"All zones\" button now shows as chosen in plain white (or black) instead of orange, so it no longer looks like the Orange zone is picked.",
   "Registering a resident: the Review step shows the intake date again (it had been reading \"NaN undefined NaN\"). The date saved was always right.",
   "Record Weight now opens on \"Weigh these first\": every animal the vet saw yesterday or today that has had no weight recorded since, with its photo, where it lives, and which clinic and what time. Each one leaves the list the moment you save its weight, and if there is nobody waiting the page says so. Everyone else is below, grouped by zone and enclosure in the order you walk the site, with anyone in hospital, in foster or out in the community in one group at the end. The search box still jumps to a name or R-code.",
-];
-
-/** Newest first. */
-export const releases: Release[] = [
+    ],
+  },
   {
     version: "0.32.1",
     date: "2026-10-15",
