@@ -1119,6 +1119,8 @@ const en = {
         notRemembered: (v: { note: string | number }) =>
           `The check couldn't record its result, so nothing was mailed: ${v.note}`,
         callFailed: "Couldn't reach the server. Try again.",
+        fixHere: "To turn this green: press Send a test alert. When the mail reaches an admin, this turns green. If an address above says it is not allowed, verify it in Cloudflare (Email Routing → Destination addresses) first.",
+        fixOnPi: "To turn this green: the mail has to be sent from a page the Cloudflare Worker draws, because the buttons are off on this one (the Pi cannot send mail). Ask Lutan to press Send a test alert there. When the mail reaches an admin, this turns green. If an address above says it is not allowed, verify it in Cloudflare (Email Routing → Destination addresses) first.",
         onPi: "The two buttons are off on this page: it was drawn by the Pi, which cannot send mail. Alert mail is sent by the Cloudflare Worker, on its 15-minute schedule.",
       },
       tiles: {

@@ -80,6 +80,10 @@ export const unreleased: ReleaseNote[] = [
     roles: ["admin", "management", "head_of_medical"],
   },
   {
+    text: "System status: when the Status alert mail tile is red because the last alert mail reached nobody, it now says what to do. Press Send a test alert; when that mail reaches an admin the tile turns green. If the page was drawn by the Pi, where the buttons are off, it says the test has to be sent from the Cloudflare Worker page.",
+    roles: ["admin"],
+  },
+  {
     text: "The assistant can now record a death and place a resident with a foster carer or an adopter. Type, for example, \"Bella died yesterday, lung problems\" or \"Panda goes to foster with Khun Noi\". Nothing is recorded until you press Confirm: the card shows the resident's photo, code and where they are now, leaves the date blank unless you typed one (\"last night\" is left for you to pick), and a death asks once more in the same words as the Record death page. If a name could mean two residents, it asks which one. In English or Thai.",
     roles: ["admin", "management"],
   },
