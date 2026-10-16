@@ -5922,7 +5922,7 @@ const en = {
         firstName: "First name to show (optional)",
         firstNameHint: "One word, typed by you. Leave empty to show no name. Never a surname.",
         photosNote:
-          "Every photo on this update (except any in the Medical folder) is shown. Delete a photo you do not want shown.",
+          "Any photo on this update (except one in the Medical folder) can be shown. Delete a photo you do not want shown.",
       },
       notePlaceholder: "Settling in well, sleeps on the sofa, has a new friend next door…",
       photos: "Photos",

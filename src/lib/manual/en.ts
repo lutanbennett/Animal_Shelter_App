@@ -534,7 +534,7 @@ const manual: Manual = {
             },
             {
               kind: "tip",
-              text: "Ticked updates appear in Home at last on the public adoption page and on the animal's own card page once adopted. Every photo on the update shows, except any filed under Medical. To take one down, edit it, untick Publish and save: it leaves both pages at once. A copy of a photo that someone already loaded can stay visible to a person who saved its direct link for up to a day.",
+              text: "Ticked updates appear in Home at last on the public adoption page and on the animal's own card page once adopted. Any photo on the update can show, except one filed under Medical, so delete a photo you do not want shown. To take one down, edit it, untick Publish and save: it leaves both pages at once. A copy of a photo that someone already loaded can stay visible to a person who saved its direct link for up to a day.",
             },
             {
               kind: "tip",
