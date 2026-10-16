@@ -789,6 +789,7 @@ const en = {
         "translations.manage": "Translate the website, and every label's Thai",
         "translations.view": "See the website's translations",
         "donation.receipt": "Issue a donation receipt",
+        "appeal.run": "Run a fundraising appeal for a sick resident",
         "assistant.ask": "Ask the assistant a question",
         "assistant.record": "Record something through the assistant",
         "website.content": "The public website's content",
