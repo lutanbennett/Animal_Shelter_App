@@ -12,11 +12,11 @@ import { isPublicPage, isPublicPath, isEdgeCachedPage, PUBLIC_PAGE_PREFIXES } fr
 
 const open = [
   "/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/lca-logo.jpg", "/lca-logo-160.jpg",
-  "/adopt", "/adopt/12", "/our-work", "/our-work/abc", "/foster", "/volunteer", "/donate", "/friends",
+  "/adopt", "/adopt/12", "/appeals", "/appeals/abc", "/our-work", "/our-work/abc", "/foster", "/volunteer", "/donate", "/friends",
   "/privacy", "/r/CODE1", "/e/12", "/api/photos/abc",
 ];
 const openNot = [
-  "/adoptive", "/adopt-admin", "/our-workshop", "/fosterage", "/donate2", "/friends-only", "/privacy-admin",
+  "/adoptive", "/adopt-admin", "/appealsx", "/our-workshop", "/fosterage", "/donate2", "/friends-only", "/privacy-admin",
   "/residents", "/admin", "/management/cashflow", "/api/status/alerts", "/api/photos", "/r", "/e",
   "/login/other", "/leaked.png", "/api/x.svg", "/manual/login.png",
 ];

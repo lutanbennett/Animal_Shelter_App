@@ -326,6 +326,88 @@ const en = {
     getInTouchHint: (list: string) => `Reach us on ${list} and we'll get back to you.`,
   },
 
+  /** /appeals and /appeals/[id]: sponsorship drives for sick residents (0210). */
+  appeals: {
+    /** The header entry and the breadcrumb. */
+    navLabel: "Help a sick resident",
+    pageTitle: "Help a sick resident",
+    metaDescription:
+      "Some of our animals need treatment we cannot pay for alone. See who needs help, what is wrong and what it costs.",
+    heading: "Help a sick resident",
+    lead: "Some of our animals need treatment that costs more than we can cover alone. Here is who needs help, what is wrong, what it costs and how much has been given so far.",
+    askingHeading: "Needing help now",
+    noneOpen: "No appeal is open right now. Every gift to the shelter still helps the animals who are here.",
+    finishedHeading: "Reached their goal, or finished",
+    allAppeals: "All appeals",
+    shareText: (name: string) => `Please help ${name} get the treatment they need.`,
+    shareFallback: (name: string, cost: string) => `Help ${name} get treatment. The cost is ${cost}.`,
+    meet: (name: string) => `Meet ${name}`,
+    badge: { open: "Help needed", goalReached: "Goal reached", closed: "Appeal finished" },
+    progressHeading: "How much has been given",
+    goalReachedOver: (over: string) =>
+      `The goal has been reached, with ${over} over it. Thank you.`,
+    goalReachedExact: "The goal has been reached. Thank you.",
+    updated: (date: string) => `Last updated ${date}.`,
+    noGiftsYet: "No gifts have been recorded for this appeal yet.",
+    countedNote:
+      "This counts only gifts we have recorded against this appeal, so a gift made in the last day or two may not show yet.",
+    deadlinePassed: (date: string) => `The target date, ${date}, has passed.`,
+    lastDay: "Today is the last day.",
+    daysLeft: (days: number, date: string) => `${days} ${days === 1 ? "day" : "days"} left (until ${date}).`,
+    outcomeHeading: "How it went",
+    whatIsWrong: (name: string) => `What is wrong with ${name}`,
+    treatment: "The treatment",
+    cost: "The cost",
+    giveHeading: (name: string) => `How to help ${name}`,
+    giveMark: (name: string, title: string) =>
+      `Please write “for ${name}” (${title}) in the transfer note or message when you give, so we can record your gift against this appeal. If you gave and forgot, tell us and we will add it.`,
+    extraGoes:
+      "If more is given than the treatment costs, the extra goes to the medical care of the other animals here.",
+    closedHeading: "This appeal has finished",
+    closedBody: "It is no longer taking gifts. Thank you to everyone who gave.",
+    fundedHeading: "The goal has been reached",
+    fundedBody:
+      "This appeal is no longer asking for gifts. If you would still like to help, any gift to the shelter goes to the care of the animals here.",
+    otherWays: "Other ways to help",
+    about: (name: string) => `About ${name}`,
+    alsoOn: "Also on",
+    socialNames: { facebook: "Facebook", instagram: "Instagram", line: "LINE" } as Record<string, string>,
+    card: {
+      photoHidden: "Photo hidden: it may be upsetting",
+      daysLeft: (days: number) => `${days} ${days === 1 ? "day" : "days"} left`,
+      lastDay: "Last day",
+      deadlinePassed: "Target date passed",
+      goalReached: "Goal reached",
+      finished: "Appeal finished",
+    },
+    progress: {
+      raised: "Raised",
+      goal: "Goal",
+      funded: "Funded",
+      percent: (n: number) => `${n}% of the goal`,
+      none: "No gifts recorded yet.",
+      over: (raised: string, over: string) => `${raised} raised, ${over} over the goal`,
+      raisedOfGoal: (raised: string, goal: string) => `${raised} raised of ${goal}`,
+    },
+    photos: {
+      none: "No photo yet",
+      warning: "This photo may be upsetting. Do you want to see it?",
+      show: "Show photo",
+      showPhoto: (n: number) => `Show photo ${n}`,
+    },
+    /** The strip on the home page while an appeal is live. */
+    strip: {
+      heading: "Someone here needs your help",
+      lead: "A resident needs treatment we cannot pay for alone.",
+      cta: "See who needs help",
+    },
+    /** On a resident's own page while they have a live appeal. */
+    onResident: {
+      heading: (name: string) => `${name} needs help with treatment`,
+      link: (name: string) => `See ${name}'s appeal`,
+    },
+  },
+
   /** /foster, /volunteer, /donate and the how-to-adopt section (0059). */
   donateWays: {
     heading: "Ways to give",

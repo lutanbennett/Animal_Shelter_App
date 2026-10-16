@@ -15,7 +15,10 @@ import { PublicPhoto } from "@/components/PublicPhoto";
 import { localizedField } from "@/lib/translations/localize";
 import type { PublicTranslations } from "@/lib/translations/types";
 import { sexLabel, speciesLabel } from "@/lib/i18n/enum-labels";
-import { formatAge } from "@/lib/format";
+import { formatAge, todayIso } from "@/lib/format";
+import { appealPhase } from "@/lib/appeals/state";
+import { appealProgress, loadPublicAppeals } from "@/lib/appeals/public";
+import { AppealCard } from "./appeals/AppealCard";
 import { friendAnchor } from "@/lib/shelter-friends/friends";
 import { loadPublicFriends } from "@/lib/shelter-friends/public";
 import { loadSiteContent, pairedText } from "@/lib/site/content";
@@ -161,6 +164,11 @@ export default async function WelcomePage() {
     // The Shelter Friends band (0076) — the public view only.
     loadPublicFriends(supabase),
   ]);
+  // Appeals still asking for money, at most three. A failed read drops the
+  // strip rather than the home page.
+  const openAppeals = await loadPublicAppeals(supabase)
+    .then((all) => all.filter((a) => appealPhase(appealProgress(a)) === "open").slice(0, 3))
+    .catch(() => []);
   // No friends (or a failed query): no band, rather than an empty thank-you.
   const friends = friendsResult.friends.slice(0, FRIENDS_SHOWN);
 
@@ -210,11 +218,11 @@ export default async function WelcomePage() {
   ];
 
   const h = t.home.howToHelp;
-  // "Help with their care" → /donate: the card promises only what the page
-  // delivers until sponsorship exists (review §6.2, 2026-10-14).
+  // "Help with their care" → /donate, or → /appeals while one is asking: the
+  // card promises only what the page delivers (review §6.2, 2026-10-14).
   const helpCards = [
     { key: "adopt", href: "/adopt", ...h.adopt },
-    { key: "care", href: "/donate", ...h.care },
+    { key: "care", href: openAppeals.length > 0 ? "/appeals" : "/donate", ...h.care },
     { key: "foster", href: "/foster", ...h.foster },
     { key: "volunteer", href: "/volunteer", ...h.volunteer },
   ];
@@ -279,6 +287,39 @@ export default async function WelcomePage() {
           </div>
         )}
       </section>
+
+      {openAppeals.length > 0 && (
+        <section aria-labelledby="appeals-strip-heading" className={`${wrap} pb-12`}>
+          <div data-reveal className="flex flex-col gap-6 rounded-[20px] bg-site-sand p-6 sm:p-10">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
+              <div className="flex flex-col gap-2">
+                <h2
+                  id="appeals-strip-heading"
+                  className="font-display text-[28px] font-bold leading-tight text-site-ink lg:text-[32px]"
+                >
+                  {t.appeals.strip.heading}
+                </h2>
+                <p className="max-w-2xl text-[17px] leading-normal text-site-ink-soft">{t.appeals.strip.lead}</p>
+              </div>
+              <Link
+                href="/appeals"
+                className="spring-lift flex h-[52px] shrink-0 items-center self-start rounded-full bg-site-action px-[26px] text-[17px] font-bold text-site-on-action hover:bg-site-action-hover lg:self-auto"
+              >
+                {t.appeals.strip.cta}
+              </Link>
+            </div>
+            <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {openAppeals.map((appeal) => (
+                <li key={appeal.id} className="flex">
+                  <div className="flex w-full flex-col">
+                    <AppealCard appeal={appeal} t={t} locale={locale} today={todayIso()} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       {stats.length > 0 && (
         <section aria-labelledby="impact-heading" className={wrap}>
