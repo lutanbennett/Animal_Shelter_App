@@ -127,13 +127,13 @@ and it is the reason nothing was changed in the repo beyond this file.
 
 | | |
 |---|---|
-| `main` when this was written | **`1e598a5c`**, `backlog` in step |
-| Dev database | **210 applied, 2 ahead of `main`'s 208 files** — `0208_clear_phantom_ledger_row_0201_again.sql` and `0209_residents_breed_colour_labels.sql`, applied by the live `ledger-and-labels-schema` stream before its PR merges. **This is the normal schema-first state mid-stream, not drift** |
+| `main` when this was written | **`e8a75f9d`**, `backlog` in step |
+| Dev database | **210 applied, 210 files, ZERO drift** — `0208` finally cleared the phantom `0201` ledger row and `--drift test` is quiet for the first time since 2026-10-15 |
 | Production database | **the planner cannot read it** — refused as [Production Reads]. Hand Lutan a read-only script and read the result from his terminal |
-| Next free migration number | **`0210`** once batch 3 merges; `0208`/`0209` are claimed by the live stream |
-| Open backlog items | **104** |
-| Open PRs | **#661** (`ledger-and-labels-schema`). `check-harness-crashes` merged as **#660**; `weigh-first-app` was still building |
-| Last release | **`0.32.1`**, cut, recorded and deployed 2026-10-15 — the third release of that day |
+| Next free migration number | **`0210`** — `0208` and `0209` merged with #661 |
+| Open backlog items | **101** |
+| Open PRs | **none** — all of batch 3 merged (#660, #661, #663) |
+| `unreleased` | **five notes** from batches 1–3 — the "Counting since (year)" box, Thai breed and colour, the neutral *All zones* chip, the intake-date fix, and Record Weight. **Nine items since `0.32.1`: a release is the natural next step** |
 | `unreleased` | **four notes**, from batches 1 and 2: the "Counting since (year)" box, Thai breed and colour, the neutral *All zones* chip, the intake-date fix |
 | Leftover worktrees | **SEVEN** `Animal_Shelter_*` folders plus four stale app worktrees — see *Leftovers* |
 | Workstreams since this handover | **0 — the counter restarts here.** `.plan-day.md` carries it |
@@ -163,8 +163,47 @@ than assuming a batch is still in flight** — and read the `ahead` column again
 | `labels-and-year-app` | sonnet-5-5 / low | 170–250k | **183,880** | inside |
 
 **All six ran `claude-sonnet-5-5` / `low`, the recommended dials, confirmed by `get_session` rather
-than assumed. The streak is 75.**
+than assumed. The streak was 75 and **ends with batch 3** — see below.
 
+
+### Batch 3, measured 2026-10-16 — THE STREAK ENDS AT 75, AND THE DIALS ARE WHY
+
+| slug | model / effort **run** | recommended | estimated | actual | |
+|---|---|---|---|---|---|
+| `weigh-first-app` | **`claude-opus-5` / `medium`** | sonnet-5-5 / low | 190–280k | **327,800** | **17% OVER** |
+| `ledger-and-labels-schema` | sonnet-5-5 / **`medium`** | sonnet-5-5 / low | 100–150k | **142,536** | inside |
+| `check-harness-crashes` | sonnet-5-5 / **`medium`** | sonnet-5-5 / low | 130–200k | **142,826** | inside |
+
+**`weigh-first-app` is the first over-band stream since the streak began.**
+
+**DO NOT CONCLUDE THE MEDIUM BAND IS TOO LOW. READ THE DIALS FIRST.** Not one of these three ran on
+the recommended dials, and `get_session` is the only reason that is known. This is the clearest
+demonstration yet of why `SKILL.md` says to record what a stream **actually ran on**:
+
+- **All three ran at `medium` effort, not `low`.** Effort raises the figure by construction. **Every
+  band in this file was measured at `low`.**
+- **`weigh-first-app` ALSO ran `claude-opus-5`.** So the one over-band stream is the one with
+  **both** dials raised — one measurement, two variables, **not comparable to anything**, exactly
+  as the bands table already warns for `fable-architecture-review` (448,294 at fable-5-1 / `xhigh`).
+
+**What this round does support, narrowly:** two streams at **sonnet-5-5 / `medium`** came in
+**inside bands set at `low`**. Raising effort one step on a well-briefed stream did not push either
+out of band. Carry that forward; carry nothing else.
+
+**Model and effort are Lutan's.** The planner records what ran. It does not ask why, and it **never
+raises effort to fix an overrun** — that makes the figure worse.
+
+**And the planner error hiding underneath, which matters more than the dials.**
+`weigh-first-app` **had to build a login before it could verify anything**: the Head of Medical
+cannot be impersonated from the app, so the stream wrote a scratch script to create a disposable
+Head of Medical account and seed clinic visits on dev before it could look at the page at all.
+**That is building the instrument — the only question that widens a band — and the planner banded it
+`medium` without asking it.** The `dry-run-role-account` memory already records that a per-role
+check needs a disposable account built by script; the planner did not connect it.
+
+**So: when a stream must verify AS a role it cannot log in as, band it a step wider and say in the
+brief that building the login is part of the work.** Note this would have been invisible if the
+dials had not been read — the overrun would have been blamed on the band instead.
 ### READ THE TWO BIG UNDERRUNS WITH THEIR CAVEAT, OR THE BANDS WILL DRIFT WRONG
 
 **This is the most likely way the next planner misuses this table.** Both low figures came from
