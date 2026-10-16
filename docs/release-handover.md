@@ -349,6 +349,8 @@ production is the production setting and the mail is real. Also:
 - **A Worker whose bundle was built at an earlier SHA still reports the right version.** `/api/version` reads `releases.ts`, so a stale Worker and a current one both say the release. The SHA in that response comes from the build, so it *is* the thing to compare — but only `/api/version`, not `/api/releases/current`, which carries no SHA at all.
 - **A red `lint` on a fresh release-cut branch may not be yours.** Check whether the failure exists on `main` before debugging your own branch.
 
+**Update 2026-10-16 (`claude/ci-script-fixes-fold`): the stopgap below is mostly retired.** `check-public-views.mjs` now prints `WARN` and skips a view that another unmerged `origin/*` branch's migration creates, so that collision no longer turns your branch red. A `FAIL ... a new public view?` that remains means **no other branch claims the view**: it is on `main`, in your own migrations, or unaccounted for, and that is a real finding, not noise. The manual hunt below is only needed for the rare case where the foreign branch has not been pushed.
+
 **And a red `public-views` is almost certainly not yours — but unlike the others it
 genuinely blocks you.** This bit `0.33.0`'s record PR. The mechanism, because it will
 recur and cost someone an hour:
