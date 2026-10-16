@@ -203,7 +203,7 @@ export default async function WelcomePage() {
   // The strip is a nice-to-have: a failed query drops it rather than the page.
   // Totals first, then today's counts, with a live 0 or 1 left out (impact.ts).
   const stats = [
-    ...impactFigureStats(figuresResult.data, locale === "th" ? "th" : "en"),
+    ...impactFigureStats(figuresResult.data, locale === "th" ? "th" : "en", t.home.stats.sinceYear),
     ...impactStats(t, statsResult.data?.[0] ?? null),
   ];
 

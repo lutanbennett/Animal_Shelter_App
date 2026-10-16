@@ -99,10 +99,25 @@ function BaselineForm({ row }: { row: ImpactBaselineRow }) {
             className="rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
           />
         </label>
+        <label className="flex flex-col gap-1 text-sm font-medium text-muted">
+          {i.sinceYearLabel}
+          <input
+            name="since_year"
+            type="number"
+            min={1990}
+            max={2100}
+            step={1}
+            inputMode="numeric"
+            defaultValue={row.since_year ?? ""}
+            placeholder={i.sinceYearPlaceholder}
+            className="w-32 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+          />
+        </label>
         <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save} disabled={pending}>
           {pending ? t.common.saving : t.common.saveChanges}
         </ActionButton>
       </div>
+      <p className="text-xs text-muted">{i.sinceYearHelp}</p>
       {row.baseline_count === null && <p className="text-xs text-muted">{i.notShown}</p>}
       {state && !state.ok && <p className="text-sm text-danger">{state.error}</p>}
       {state && state.ok && <p className="text-sm text-success">{state.success}</p>}

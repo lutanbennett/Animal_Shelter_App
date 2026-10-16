@@ -95,7 +95,7 @@ export default async function WebsitePage({
       // The starting numbers behind the homepage band (0156).
       supabase
         .from("impact_baselines")
-        .select("key, label, label_th, baseline_count, baseline_date, set_at")
+        .select("key, label, label_th, baseline_count, baseline_date, since_year, set_at")
         .order("key")
         .returns<ImpactBaselineRow[]>(),
       // Every way to give, hidden ones too (website.content reads the table; /donate reads the view).
