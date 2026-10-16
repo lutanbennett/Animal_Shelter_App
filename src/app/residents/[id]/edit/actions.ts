@@ -13,6 +13,7 @@ import {
   IDEAL_HOME_MAX,
   readAdoptionCopy,
   readAdoptionProfile,
+  readThaiBreedColour,
 } from "@/lib/residents/adoption-profile";
 import { isDuplicateChipError, readMicrochip } from "@/lib/residents/microchip";
 import { parseBloodTestInterval } from "@/lib/residents/blood-test-interval";
@@ -168,6 +169,7 @@ export async function updateResident(
         is_public_visible: readyForAdoption,
         blood_test_interval_months: bloodTestIntervalMonths,
         ...readAdoptionProfile(formData),
+        ...readThaiBreedColour(formData),
         ...adoptionCopy,
         ...chip,
       })
