@@ -76,6 +76,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "Adoption updates can now be published as success stories. When an adopter has told you we may show their photo and words, open the update, tick Publish to the website, type the words they agreed to share and, if you like, a first name. The photos and those words then appear in Home at last on the public adoption page and on the animal's own card page. The staff note is never shown, and nothing is published unless you tick it: every existing update stays private. Untick and save to take one down.",
+    roles: ["admin", "management"],
+  },
+  {
     text: "Add Medical Photos and Record Weight can now pick the resident from their name card. In the resident list, type the code printed on the card (R-0042) or paste the card's link and only that resident is shown. On an Android phone, tap Scan card and hold the phone to the card. On an iPhone, tap Scan card, then hold the phone to the card within 5 minutes: the card opens in Safari and takes you straight to the job for that resident, so you need to be signed in in Safari. The page always shows the resident's name and code, so check them against the card before you save.",
     roles: ["admin", "management", "head_of_medical"],
   },

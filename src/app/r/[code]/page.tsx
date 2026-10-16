@@ -28,6 +28,8 @@ import {
 } from "@/lib/i18n/enum-labels";
 import { formatAge, formatDate } from "@/lib/format";
 import { loadResidentCard } from "@/lib/residents/card";
+import { loadPublicStoriesFor } from "@/lib/adoption-updates/public";
+import { PublicPhoto } from "@/components/PublicPhoto";
 import { residentTagPath } from "@/lib/tags/links";
 import { PublicHeader } from "@/app/adopt/PublicHeader";
 import { PublicFooter } from "@/app/adopt/PublicFooter";
@@ -198,6 +200,9 @@ export default async function ResidentCardPage(props: PageProps<"/r/[code]">) {
         ? c.passed(resident.name)
         : null;
 
+  // Once adopted: the news the adopter agreed to share, from the public view only.
+  const stories = resident.status === "Adopted" ? await loadPublicStoriesFor(supabase, resident.id) : [];
+
   const signInHref = `/login?next=${encodeURIComponent(residentTagPath(code))}`;
 
   return (
@@ -238,6 +243,32 @@ export default async function ResidentCardPage(props: PageProps<"/r/[code]">) {
               <p className="rounded-lg border border-border bg-surface px-4 py-3 text-sm text-muted">
                 {gone}
               </p>
+            )}
+
+            {stories.length > 0 && (
+              <section aria-labelledby="stories-heading" className="flex flex-col gap-3">
+                <h2 id="stories-heading" className="text-sm font-semibold text-foreground">
+                  {t.adopt.successStories.cardHeading(resident.name)}
+                </h2>
+                {stories.map((story) => (
+                  <figure key={story.id} className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3">
+                    <div className="relative aspect-[4/3] w-full overflow-hidden rounded bg-background">
+                      <PublicPhoto
+                        fileId={story.photoIds[0]}
+                        alt={t.adopt.successStories.photoAlt(resident.name)}
+                        sizes="(min-width: 640px) 380px, 100vw"
+                        className="object-cover"
+                      />
+                    </div>
+                    {story.story && (
+                      <blockquote className="whitespace-pre-line text-sm text-foreground">{story.story}</blockquote>
+                    )}
+                    {story.firstName && (
+                      <figcaption className="text-xs text-muted">{t.adopt.successStories.from(story.firstName)}</figcaption>
+                    )}
+                  </figure>
+                ))}
+              </section>
             )}
 
             {details.length > 0 && (
