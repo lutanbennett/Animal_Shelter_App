@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { X } from "lucide-react";
+import { HeartCrack, X } from "lucide-react";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -13,8 +14,11 @@ import { EnclosurePicker } from "@/components/EnclosurePicker";
 import type { AssistantClinic, AssistantResident } from "@/lib/assistant/data";
 import { isoLocal } from "@/lib/assistant/text";
 import { doctorNameCore, type DoctorNamesByClinic } from "@/lib/clinics/doctors";
+import type { CarerOption } from "@/lib/contacts/carers";
 import type {
+  DeathDraft,
   Draft,
+  RehomeDraft,
   HospitalDraft,
   HospitalReturnDraft,
   MoveDraft,
@@ -22,6 +26,8 @@ import type {
   WeightDraft,
 } from "@/lib/assistant/types";
 import {
+  assistantRecordDeath,
+  assistantRehome,
   assistantBookClinicVisit,
   assistantLogWeight,
   assistantMove,
@@ -54,6 +60,8 @@ export type CardContext = {
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
   clinics: AssistantClinic[];
+  /** Carers the foster / adopt card may choose from. */
+  carers: CarerOption[];
   /** Each clinic's active doctors, offered on the clinic card. */
   doctors: DoctorNamesByClinic;
   /** Residents the name could have meant, when it could have meant several. */
@@ -843,6 +851,255 @@ function WeightCard({ ctx, draft }: { ctx: CardContext; draft: WeightDraft }) {
 }
 
 /** The card for whichever intent the parser claimed. */
+/**
+ * Who the card is about, said in the words a person can check against the
+ * animal in front of them: name, code, and where the shelter has them.
+ * Shown under the resident field on the destructive cards, because a
+ * first name alone is not enough to be sure which animal is being closed.
+ */
+function ResidentIdentity({
+  resident,
+  line,
+}: {
+  resident: AssistantResident | null;
+  line: (code: string, place: string) => string;
+}) {
+  const { t, locale } = useI18n();
+  if (!resident) return null;
+  const place = placeName(locale, resident.enclosureName, resident.enclosureNameTh) || t.common.dash;
+  return (
+    <div className="flex items-center gap-3 rounded-md border border-border bg-background p-2">
+      {resident.photoFileId ? (
+        <img
+          src={driveImageUrl(resident.photoFileId)}
+          alt=""
+          className="size-14 rounded-md object-cover"
+        />
+      ) : null}
+      <div className="min-w-0">
+        <p className="truncate text-sm font-medium text-foreground">
+          {resident.thaiName ? `${resident.name} (${resident.thaiName})` : resident.name}
+        </p>
+        <p className="text-xs text-muted">{line(resident.code, place)}</p>
+      </div>
+    </div>
+  );
+}
+
+function DeathCard({ ctx, draft }: { ctx: CardContext; draft: DeathDraft }) {
+  const { t, locale } = useI18n();
+  const a = t.assistant;
+  const d = t.residents.deceased;
+  const [residentId, setResidentId] = useState(draft.residentId ?? "");
+  // Never defaulted: the day of a death is the person's to give.
+  const [date, setDate] = useState(draft.date ?? "");
+  const [cause, setCause] = useState(draft.causeOfDeath ?? "");
+  const [confirming, setConfirming] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
+  const chrome = useCardChrome(ctx, !!residentId);
+
+  function record() {
+    if (!resident || !date) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await assistantRecordDeath({
+        residentId: resident.id,
+        date,
+        causeOfDeath: cause.trim() || null,
+        request: ctx.request,
+        draft: { ...draft, residentId: resident.id, date, causeOfDeath: cause.trim() || null },
+      });
+      setConfirming(false);
+      if ("error" in result) return setError(result.error);
+      ctx.onSettle({
+        kind: "done",
+        message: a.death.done(`${resident.name} (${resident.code})`),
+        residentId: resident.id,
+      });
+    });
+  }
+
+  return (
+    <>
+      <Card
+        title={a.death.title}
+        summary={a.death.summary(
+          resident ? `${resident.name} (${resident.code})` : a.unknown,
+          date ? formatDate(date, locale) : a.unknown,
+        )}
+        hint={!date ? a.death.dateNeeded : chrome.hint}
+        hintTone={chrome.hintTone}
+        error={error}
+        pending={pending}
+        canConfirm={!!resident && !!date}
+        notesStamp={chrome.notesStamp}
+        onConfirm={() => setConfirming(true)}
+        onCancel={() => ctx.onSettle({ kind: "cancelled" })}
+      >
+        <ResidentField
+          ctx={ctx}
+          idPrefix="death"
+          residentId={residentId}
+          onChange={setResidentId}
+        />
+        <ResidentIdentity resident={resident} line={a.death.who} />
+        <DateField
+          id={`death-${ctx.turnId}-date`}
+          label={d.fields.date}
+          value={date}
+          onChange={setDate}
+          max={viewerToday()}
+        />
+        <div className="flex flex-col gap-1">
+          <label
+            htmlFor={`death-${ctx.turnId}-cause`}
+            className="text-sm font-medium text-muted"
+          >
+            {a.fields.causeOfDeath}
+          </label>
+          <input
+            id={`death-${ctx.turnId}-cause`}
+            value={cause}
+            onChange={(e) => setCause(e.target.value)}
+            placeholder={d.fields.causeOfDeathPlaceholder}
+            className={inputClass}
+          />
+        </div>
+      </Card>
+      {/* The same dialog, in the same words, as the deceased page. */}
+      <ConfirmDialog
+        open={confirming}
+        icon={HeartCrack}
+        title={d.confirm.title(resident ? `${resident.name} (${resident.code})` : "")}
+        body={d.confirm.body}
+        consequences={d.whatHappens.items}
+        confirmLabel={d.confirm.confirmButton}
+        pendingLabel={d.recording}
+        pending={pending}
+        onCancel={() => setConfirming(false)}
+        onConfirm={record}
+      />
+    </>
+  );
+}
+
+function RehomeCard({ ctx, draft }: { ctx: CardContext; draft: RehomeDraft }) {
+  const { t, locale } = useI18n();
+  const a = t.assistant;
+  const [residentId, setResidentId] = useState(draft.residentId ?? "");
+  const [kind, setKind] = useState<"foster" | "adopt" | "">(draft.rehomeKind ?? "");
+  const [carerId, setCarerId] = useState(draft.carerId ?? "");
+  const [date, setDate] = useState(draft.date ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
+  const carer = ctx.carers.find((c) => c.id === carerId) ?? null;
+  const chrome = useCardChrome(ctx, !!residentId);
+
+  function confirm() {
+    if (!resident || !carer || !kind || !date) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await assistantRehome({
+        residentId: resident.id,
+        rehomeKind: kind,
+        carerId: carer.id,
+        date,
+        request: ctx.request,
+        draft: {
+          ...draft,
+          residentId: resident.id,
+          rehomeKind: kind,
+          carerId: carer.id,
+          date,
+        },
+      });
+      if ("error" in result) return setError(result.error);
+      ctx.onSettle({
+        kind: "done",
+        message: a.rehome.done(
+          `${resident.name} (${resident.code})`,
+          a.rehome.kinds[kind],
+          carer.name,
+        ),
+        residentId: resident.id,
+      });
+    });
+  }
+
+  return (
+    <Card
+      title={a.rehome.title}
+      summary={a.rehome.summary(
+        resident ? `${resident.name} (${resident.code})` : a.unknown,
+        kind ? a.rehome.verbs[kind] : a.unknown,
+        carer ? carer.name : a.unknown,
+        date ? formatDate(date, locale) : a.unknown,
+      )}
+      hint={!carer && ctx.carers.length > 0 ? chrome.hint : !carer ? a.rehome.carerMissing : chrome.hint}
+      hintTone={chrome.hintTone}
+      error={error}
+      pending={pending}
+      canConfirm={!!resident && !!carer && !!kind && !!date}
+      notesStamp={chrome.notesStamp}
+      onConfirm={confirm}
+      onCancel={() => ctx.onSettle({ kind: "cancelled" })}
+    >
+      <ResidentField
+        ctx={ctx}
+        idPrefix="rehome"
+        residentId={residentId}
+        onChange={setResidentId}
+      />
+      <ResidentIdentity resident={resident} line={a.rehome.who} />
+      <div className="flex flex-col gap-1">
+        <label htmlFor={`rehome-${ctx.turnId}-kind`} className="text-sm font-medium text-muted">
+          {a.rehome.kindLabel} <span className="text-danger">*</span>
+        </label>
+        <select
+          id={`rehome-${ctx.turnId}-kind`}
+          value={kind}
+          onChange={(e) => setKind(e.target.value as "foster" | "adopt" | "")}
+          className={inputClass}
+        >
+          <option value="">{a.rehome.pickKind}</option>
+          <option value="foster">{a.rehome.verbs.foster}</option>
+          <option value="adopt">{a.rehome.verbs.adopt}</option>
+        </select>
+      </div>
+      <div className="flex flex-col gap-1">
+        <label htmlFor={`rehome-${ctx.turnId}-carer`} className="text-sm font-medium text-muted">
+          {a.rehome.carerLabel} <span className="text-danger">*</span>
+        </label>
+        <select
+          id={`rehome-${ctx.turnId}-carer`}
+          value={carerId}
+          onChange={(e) => setCarerId(e.target.value)}
+          className={inputClass}
+        >
+          <option value="">{a.rehome.pickCarer}</option>
+          {ctx.carers.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <DateField
+        id={`rehome-${ctx.turnId}-date`}
+        label={a.fields.date}
+        value={date}
+        onChange={setDate}
+        max={viewerToday()}
+      />
+    </Card>
+  );
+}
+
 export function AssistantCard({ ctx, draft }: { ctx: CardContext; draft: Draft }) {
   switch (draft.kind) {
     case "move":
@@ -855,6 +1112,10 @@ export function AssistantCard({ ctx, draft }: { ctx: CardContext; draft: Draft }
       return <HospitalReturnCard ctx={ctx} draft={draft} />;
     case "weight":
       return <WeightCard ctx={ctx} draft={draft} />;
+    case "death":
+      return <DeathCard ctx={ctx} draft={draft} />;
+    case "rehome":
+      return <RehomeCard ctx={ctx} draft={draft} />;
     default:
       // The lookups never reach a card; they are answered inline.
       return null;

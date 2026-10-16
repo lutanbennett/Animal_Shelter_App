@@ -9,6 +9,9 @@ import {
   sendResidentToHospital,
 } from "@/lib/placements/hospital";
 import { recordWeight } from "@/lib/weight/record";
+import { recordResidentDeath } from "@/lib/placements/deceased";
+import { rehomeResident, type RehomeKind } from "@/lib/placements/rehome";
+import { archiveDeceasedResident } from "@/lib/archive/archive-deceased-resident";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { logAssistantAction, type AssistantActionStatus } from "@/lib/assistant/audit";
@@ -243,6 +246,82 @@ export async function assistantLogWeight(
       revalidatePath(`/residents/${input.residentId}/weight`);
     },
     "weight",
+  );
+}
+
+/**
+ * Same helper as /residents/[id]/deceased, then the same Drive archive.
+ *
+ * The placement is the source of truth and has committed by the time the
+ * archive runs; a Drive failure leaves the resident correctly deceased and
+ * the hub offers a retry, exactly as it does from the deceased page.
+ */
+export async function assistantRecordDeath(
+  input: WriteInput<{ residentId: string; date: string; causeOfDeath: string | null }>,
+): Promise<AssistantResult> {
+  return runWrite(
+    "death",
+    input,
+    async (supabase, t) => {
+      const result = await recordResidentDeath(supabase, t, {
+        residentId: input.residentId,
+        date: input.date,
+        causeOfDeath: input.causeOfDeath?.trim() || null,
+        notes: stamp(t, input.request),
+      });
+      if ("error" in result) return result;
+      await archiveDeceasedResident(supabase, input.residentId);
+      return { ok: true, id: "" };
+    },
+    () => {
+      revalidatePath("/residents");
+      revalidatePath(`/residents/${input.residentId}`, "layout");
+      revalidatePath("/enclosures", "layout");
+      revalidatePath("/adopt", "layout");
+      revalidatePath("/");
+      revalidatePath("/management/dashboard");
+      revalidatePath("/assistant");
+    },
+    "placement_history",
+  );
+}
+
+/**
+ * Same helper as /residents/[id]/rehome, with an existing carer only: a
+ * new carer is added on that page, never conjured from a sentence.
+ */
+export async function assistantRehome(
+  input: WriteInput<{
+    residentId: string;
+    rehomeKind: RehomeKind;
+    carerId: string;
+    date: string;
+  }>,
+): Promise<AssistantResult> {
+  return runWrite(
+    "rehome",
+    input,
+    async (supabase, t) => {
+      const result = await rehomeResident(supabase, t, {
+        residentId: input.residentId,
+        kind: input.rehomeKind,
+        carerId: input.carerId,
+        newCarer: null,
+        date: input.date,
+        notes: stamp(t, input.request),
+      });
+      return "error" in result ? result : { ok: true as const, id: "" };
+    },
+    () => {
+      revalidatePath("/residents");
+      revalidatePath(`/residents/${input.residentId}`);
+      revalidatePath(`/residents/${input.residentId}/housing`);
+      revalidatePath("/enclosures", "layout");
+      revalidatePath("/adopt", "layout");
+      revalidatePath("/");
+      revalidatePath("/assistant");
+    },
+    "placement_history",
   );
 }
 

@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { loadEnclosureOptions, type EnclosureOption, type ZoneOption } from "@/lib/enclosures/options";
 import { can, type Permissions } from "@/lib/permissions/can";
 import { NOT_DECEASED } from "@/lib/residents/status";
+import { loadCarerOptions, type CarerOption } from "@/lib/contacts/carers";
 import { loadDoctorNamesByClinic, type DoctorNamesByClinic } from "@/lib/clinics/doctors";
 
 /** A resident as the parser matches it and the cards display it. */
@@ -28,6 +29,8 @@ export type AssistantContext = {
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
   clinics: AssistantClinic[];
+  /** Carers not archived: the foster / adopt card matches against these. */
+  carers: CarerOption[];
   /** Each clinic's active doctors, for the clinic card's optional Doctor field. */
   doctors: DoctorNamesByClinic;
   /** assistant.ask: the assistant opens at all (the doctor's role is external, 0070). */
@@ -56,7 +59,7 @@ type ListRow = {
 export function emptyAssistantContext(
   error: string | null = null,
 ): AssistantContext {
-  return { residents: [], zones: [], enclosures: [], clinics: [], doctors: {}, canAsk: false, canWrite: false, error };
+  return { residents: [], zones: [], enclosures: [], clinics: [], carers: [], doctors: {}, canAsk: false, canWrite: false, error };
 }
 
 /**
@@ -81,7 +84,7 @@ export async function loadAssistantContext(
   supabase: SupabaseClient,
   perms: Permissions,
 ): Promise<AssistantContext> {
-  const [listResult, clinicsResult, options, doctors] = await Promise.all([
+  const [listResult, clinicsResult, options, doctors, carerResult] = await Promise.all([
     supabase
       .from("resident_list_view")
       .select(
@@ -97,6 +100,7 @@ export async function loadAssistantContext(
       .returns<AssistantClinic[]>(),
     loadEnclosureOptions(supabase),
     loadDoctorNamesByClinic(supabase),
+    loadCarerOptions(supabase),
   ]);
 
   const rows = listResult.data ?? [];
@@ -154,6 +158,7 @@ export async function loadAssistantContext(
     zones: options.zones,
     enclosures: options.enclosures,
     clinics: clinicsResult.data ?? [],
+    carers: carerResult.carers,
     doctors,
     canAsk: true,
     canWrite: can(perms, "assistant.record"),

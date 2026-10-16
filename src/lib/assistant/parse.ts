@@ -13,6 +13,9 @@
  * that several parsers would claim goes to the most specific one.
  *
  *   - the lookups first, so "where is Panda going" is a question, not a move;
+ *   - death next: "Bella died at the hospital" is a death, not an
+ *     admission, and it is the one sentence that must never be misread;
+ *   - rehome before the hospital and bookings, whose words it may share;
  *   - hospital before clinic, because a "vet hospital" is not a booking;
  *   - the return before the admission, because "back from hospital" is
  *     still a sentence about a hospital;
@@ -23,6 +26,8 @@
 
 import { dueIntent, whereIntent, whoIntent } from "./intents/lookups";
 import { hospitalIntent, hospitalReturnIntent } from "./intents/hospital";
+import { deathIntent } from "./intents/death";
+import { rehomeIntent } from "./intents/rehome";
 import { weightIntent } from "./intents/weight";
 import { clinicIntent } from "./intents/clinic";
 import { moveIntent } from "./intents/move";
@@ -32,6 +37,8 @@ export const INTENT_PARSERS: readonly IntentParser[] = [
   whereIntent,
   whoIntent,
   dueIntent,
+  deathIntent,
+  rehomeIntent,
   hospitalReturnIntent,
   hospitalIntent,
   weightIntent,
