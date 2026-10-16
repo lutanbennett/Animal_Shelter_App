@@ -13,6 +13,7 @@
 //        given twice is refused; and who may write: Admin at 2-step yes, Admin at 1-step, a volunteer and a role with no
 //        login no.
 import { join } from "node:path";
+import { register } from "node:module";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
 
@@ -21,6 +22,17 @@ const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/l
 const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
+// cards.ts imports "./jobs" and "@/…" without extensions, as Next allows; plain node needs a resolver hook (as check-multi-role-build.mjs).
+const srcUrl = pathToFileURL(join(root, "src") + "/").href;
+register(
+  "data:text/javascript," +
+    encodeURIComponent(`
+      export async function resolve(spec, ctx, next) {
+        if (spec.startsWith("@/")) return next(${JSON.stringify(srcUrl)} + spec.slice(2) + ".ts", ctx);
+        if (spec.startsWith(".") && !/\\.[a-z]+$/.test(spec)) return next(spec + ".ts", ctx);
+        return next(spec, ctx);
+      }`),
+);
 const { CARDS, CARD_KEYS, bundleOfCards, bundleJson } = await import(pathToFileURL(join(root, "src/lib/permissions/cards.ts")).href);
 const { ACTIVITIES } = await import(pathToFileURL(join(root, "src/lib/permissions/catalogue.ts")).href);
 

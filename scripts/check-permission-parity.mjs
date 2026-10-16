@@ -140,6 +140,7 @@ const rootRes = await fetch(`https://api.supabase.com/v1/projects/${ref}/databas
 F.CATEGORY = (await rootRes.json())[0]?.id;
 if (!F.CATEGORY) throw new Error("no root project folder for 'Events' on dev");
 const lit = (id) => `'${id}'::uuid`;
+const RUN = Math.random().toString(36).slice(2, 8);
 
 // A runnable probe: one row per (probe, scope).
 const runs = [];
@@ -216,8 +217,9 @@ begin
   insert into doctors (id, name) values (${lit(F.DOCTOR)}, 'Harness doctor one'), (${lit(F.DOCTOR2)}, 'Harness doctor two');
   insert into doctor_clinics (clinic_id, doctor_id) values (v_own, ${lit(F.DOCTOR)}), (v_own, ${lit(F.DOCTOR2)});
 
-  insert into residents (id, name, species, bio) values
-    (${lit(F.R_IN)}, 'Harness in-scope', 'Dog', 'bio'), (${lit(F.R_OUT)}, 'Harness out-of-scope', 'Dog', 'bio'), (${lit(F.DEAD)}, 'Harness dead', 'Dog', 'bio'), (${lit(F.BARE)}, 'Harness bare', 'Dog', 'bio');
+  -- Explicit per-run codes: the default ('R-' || nextval) collides with rows already on dev when the sequence lags them.
+  insert into residents (id, name, species, bio, resident_code) values
+    (${lit(F.R_IN)}, 'Harness in-scope', 'Dog', 'bio', 'H-${RUN}-1'), (${lit(F.R_OUT)}, 'Harness out-of-scope', 'Dog', 'bio', 'H-${RUN}-2'), (${lit(F.DEAD)}, 'Harness dead', 'Dog', 'bio', 'H-${RUN}-3'), (${lit(F.BARE)}, 'Harness bare', 'Dog', 'bio', 'H-${RUN}-4');
   insert into zones (id, name) values (${lit(F.ZONE)}, 'Harness zone');
   insert into enclosures (id, name, zone_id) values (${lit(F.ENC)}, 'Harness enclosure', ${lit(F.ZONE)});
 
