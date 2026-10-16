@@ -28,6 +28,7 @@
 // other function.
 
 import { loadEnv, parseEnvArg } from "./lib/env.mjs";
+import { classifyUnlistedView } from "./lib/public-view-owner.mjs";
 
 const { name: envName } = parseEnvArg(process.argv.slice(2));
 const env = loadEnv(envName);
@@ -156,6 +157,18 @@ if (!root.ok) {
   }
   for (const name of exposed.filter((n) => !PUBLIC.has(n))) {
     const read = await fetch(`${url}/rest/v1/${name}?limit=1`, { headers });
+    if (read.ok && name.startsWith("public_")) {
+      // Live in the shared database but unlisted here. If another unmerged
+      // branch's migration created it, it is that branch's to list: say so
+      // loudly and do not fail this one. Anything else stays a FAIL.
+      const owner = classifyUnlistedView(name);
+      if (owner.kind === "foreign") {
+        console.log(
+          `WARN  ${name}: anon can SELECT but is not in PUBLIC_VIEWS. Created by an unmerged foreign branch (${owner.branches.join(", ")}); skipped here, that branch's own check must list it before it merges`,
+        );
+        continue;
+      }
+    }
     report(
       !read.ok,
       `${name}: anon SELECT is refused`,
