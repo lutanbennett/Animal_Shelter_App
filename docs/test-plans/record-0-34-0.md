@@ -29,7 +29,7 @@
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three). `n/a: not yet — the PR does not exist at this commit`
+- [x] CI green on the PR (runs the same three). Seen green, not assumed: run `38910509650` on `fd23ed204f139dee2b82a69f5c15b8e7c54986c6`, `completed/success`, all 8 checks `SUCCESS`. The `headSha` was read from `gh run list` and compared against this branch's HEAD, because the PR bar's cached reading can show an earlier run's result. **The first run on this PR went red on `test-plan` and that was my own mistake, not noise** — see Defect 3 in the release record. Ticking this line is itself a commit, so a further run follows and is waited on before the merge
 - [x] `node scripts/check-test-plan.mjs` — `ok` on this file before the PR was opened, so the first CI run had a complete checklist to validate rather than failing on `test-plan` by construction
 
 ## 3. Schema and data — *skip if no migration*
