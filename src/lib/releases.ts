@@ -76,6 +76,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "Add Medical Photos and Record Weight can now pick the resident from their name card. In the resident list, type the code printed on the card (R-0042) or paste the card's link and only that resident is shown. On an Android phone, tap Scan card and hold the phone to the card. On an iPhone, tap Scan card, then hold the phone to the card within 5 minutes: the card opens in Safari and takes you straight to the job for that resident, so you need to be signed in in Safari. The page always shows the resident's name and code, so check them against the card before you save.",
+    roles: ["admin", "management", "head_of_medical"],
+  },
+  {
     text: "The assistant can now record a death and place a resident with a foster carer or an adopter. Type, for example, \"Bella died yesterday, lung problems\" or \"Panda goes to foster with Khun Noi\". Nothing is recorded until you press Confirm: the card shows the resident's photo, code and where they are now, leaves the date blank unless you typed one (\"last night\" is left for you to pick), and a death asks once more in the same words as the Record death page. If a name could mean two residents, it asks which one. In English or Thai.",
     roles: ["admin", "management"],
   },
