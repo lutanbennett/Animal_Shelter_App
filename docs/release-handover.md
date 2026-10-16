@@ -35,6 +35,14 @@ missing one. Honouring that, from the previous edition:
 - **The build order is still right and still untested.** `main` held still for a
   second release, so the thing it exists to prevent has not happened yet. Do not read
   that as the precaution being unnecessary.
+- **Defect 1 is FIXED, and this file's own Defect 1 warnings went wrong within a day
+  — corrected 2026-10-16.** The guard landed as #658, the three worktrees were cleared,
+  and the phantom row is gone from dev. Five passages said otherwise and have been
+  rewritten. **This is the standing instruction above doing its job**, and it is worth
+  noting how the error would have read: a release manager meeting a red `--drift test`
+  would have been told to expect one specific filename, found two different ones, and
+  had to re-derive the whole thing at exactly the wrong moment. A warning that names
+  the wrong symptom is worse than one that names none.
 
 **Read these first, in this order:**
 
@@ -62,10 +70,10 @@ missing one. Honouring that, from the previous edition:
 | Live everywhere | **`0.32.1`** @ `61fb95ed` — production Pi, production Worker, test Pi, test Worker |
 | Previous release SHA, for the next range | **`61fb95ed`** — `node scripts/release-prs.mjs 61fb95ed <the new release SHA>` |
 | Production database | `207 applied`, **0 pending**, `No drift: production matches origin/main.` |
-| Dev database | `208 applied`, **0 pending**, but **`Drift: test and origin/main disagree`** — one phantom ledger row. **This is known, is Defect 1, and is not yours to be alarmed by** — see below |
-| Next free migration number | **`0207`** |
+| Dev database | **0 pending**, but `--drift test` exits 1 — and **the reason changed on 2026-10-16, so read the section below rather than this row.** The phantom row Defect 1 was about is **gone**; what is one-sided now is an in-flight schema branch, which is the normal case |
+| Next free migration number | **`0210`** in practice. `origin/main`'s highest is `0207`, so the rule would say `0208` — but an **unmerged** branch (`claude/ledger-labels-schema-1b9177`) already carries `0208` and `0209` and has applied both to dev. **Do not take `0208`**; check `git branch -a` and dev's ledger before numbering |
 | `unreleased` notes already waiting | **0**, read off `origin/main` after the release |
-| Open PRs | the record PR for `0.32.1`, plus whatever has landed since. `0.32.1`'s cut (#651) is merged |
+| Open PRs | **none open as of 2026-10-16**; #651 (cut), #652 (record) and #653–#658 are all merged. One stream is in flight *without* a PR yet — see the migration-number row |
 
 **All four builds came from the release SHA**, for the ninth release running — and for
 the second release running it cost nothing to make true, because `main` did not move
@@ -78,22 +86,43 @@ build output, so **matching this file's values is not evidence you checked.** Co
 Worker against Pi. The Pi's second line, `the build in .next carries that key`, is what
 ties the fingerprint to the artefact rather than to the config.
 
-### The one thing in this table that is NOT clean, and what to do about it
+### Defect 1 is fixed — and the dev drift you will see is now a different, normal thing
 
-**Dev carries one phantom `schema_migrations` row**, `0201_map_rooms_drop_map_id_shape.sql`,
-so `--drift test` exits 1. **Production is clean and dev's actual schema is correct.**
+**Re-checked 2026-10-16, the day after the release. All three parts moved, so the
+version of this section written at release time is superseded.**
 
-What it is: `0203` exists to delete that row. It ran, it is recorded as applied, **and
-the row came back**. `apply-migrations.mjs` guards only `uat` and `production`
-(`GUARDED` at line 94), so an `--env test` apply from a checkout whose
-`supabase/migrations/` does not match `origin/main` is permitted — and three
-merged-but-uncleared worktrees still hold the file under its **old** name.
+What `0.32.1` reported: dev carried a phantom `schema_migrations` row,
+`0201_map_rooms_drop_map_id_shape.sql`. `0203` existed to delete it, ran, was recorded
+as applied — and the row came back, because `--env test` was unguarded and three
+uncleared worktrees still held the file under its old name. The fix was written down in
+three parts (backlog, *Deployment*, `4ff283f3`). Where each stands now:
 
-**So when you run `--drift test` and see exactly that one row, it is this, not
-something you have done.** Anything *else* on either side is new. The fix is on the
-backlog under *Deployment* (`4ff283f3`) and is deliberately three parts, because the
-obvious one-part fix does not work: a new migration deleting the row again comes
-straight back the next time an old worktree applies to dev.
+1. **The guard — DONE and merged, #658** (`apply-migrations: refuse stale
+   merged-then-renamed files on --env test`). It took the **narrow** shape the backlog
+   item argued for rather than extending `GUARDED`: `GUARDED` is still
+   `uat || production`, and `--env test` now separately refuses any file that is **in the
+   merge-base but not on `origin/main`** — i.e. was merged and has since been renamed or
+   removed (`scripts/apply-migrations.mjs` ~153–161). That is the distinction that
+   matters: a brand-new file is not in the merge-base, so **schema-first work on dev
+   before merge still works**, which is why full guarding would have been the wrong fix.
+2. **A migration to clear the row — written and applied to dev, NOT yet merged.**
+   `0208_clear_phantom_ledger_row_0201_again.sql`, on `claude/ledger-labels-schema-1b9177`.
+   **The `0201` row is gone from dev's ledger.**
+3. **Clear the three worktrees — DONE.** A `/clean-streams` round removed them, and a
+   sweep of every `Animal_Shelter_*` checkout finds **no copy of the old filename
+   anywhere**. With (1) merged this part is also no longer load-bearing: the guard now
+   refuses the stale apply even if such a checkout reappears.
+
+**So why is `--drift test` still red?** For a different and entirely legitimate reason:
+`0208` and `0209_residents_breed_colour_labels.sql` are applied to dev but are not on
+`origin/main`, because their branch has not merged. That is this file's own
+**"Dev ahead of `main`"** case — a schema branch applied to dev under the schema-first
+rule — and it clears when that branch merges.
+
+**What to actually do:** run `--drift test`, read the filenames, and ask whether an
+unmerged branch explains each one (`git branch -a`, and `gh pr list --state all`). If one
+does, it is normal. **A row named `0201_map_rooms_drop_map_id_shape.sql` would now be a
+genuine surprise** and would mean the #658 guard had been bypassed.
 
 **`--env dev` is not a thing.** `apply-migrations.mjs` takes `test`, `uat` or
 `production`; the dev database *is* `test` (`qxkmhwybjggxvsfxsxbd`). The same goes for
@@ -214,7 +243,8 @@ durable is the shape:
 - A release's own two worktrees — the cut and the record — become free leftovers once their PRs merge, and clearing them is the release manager's last step.
 - `HELD — <session name>` means someone is still in it. Ask; do not tear it down.
 - The list also names **husks**, folders git no longer tracks, which `done <name>` clears.
-- **Three leftovers are now load-bearing for Defect 1**: `facility-map-with-enclosures`, `map-rooms-column-drop` and `mobile-44px-finish` still hold `0201_map_rooms_drop_map_id_shape.sql` under its old name, and an unguarded dev apply from any of them re-creates the phantom row. **Clearing them is part of that fix, not just tidying.** Check their PRs are merged first, as `/clean-streams` does.
+- **The three leftovers this file once called load-bearing for Defect 1 are gone** (`facility-map-with-enclosures`, `map-rooms-column-drop`, `mobile-44px-finish`), cleared by a `/clean-streams` round on 2026-10-15, and no checkout holds the old filename any more. With #658 merged they would not matter even if one came back. Ordinary tidying again, not a fix.
+- **A stream can be in flight with no PR, which a PR list will not show you.** On 2026-10-16 `claude/ledger-labels-schema-1b9177` held two committed migrations already applied to dev with nothing open on GitHub. `git branch -a` is the check that sees it; `gh pr list` is not.
 
 **If you repeat a number from this handover, run the list first and quote what it says**
 — or write "run the list" and no number at all. A count copied from a previous edition
@@ -230,7 +260,7 @@ is not a fact, it is a quotation.
 4. **Check the Server Actions key on both pairs**, Worker against Pi — not against this file's values, which have not changed in four releases and so prove nothing.
 5. **Open with one message to Lutan** carrying major-versus-minor, the silent-failure answer, and **the whole outstanding-verification list**. `0.32.1` did this; because he had already given the version call in his opening instruction, the message carried the other two plus a flag that a case for major existed. The verification list has now closed nothing for **six** releases — **keep asking anyway.** The restore test into a real Supabase project has gone **seven** releases unanswered and is still the cheapest item on it.
 6. **Range starts at `61fb95ed`** — run `release-prs.mjs` against the **release SHA after the cut merges**, not `HEAD` before it, and **re-run it if `main` moves again**. Read its exit code directly, not through a pipe. **Expect exit 1**: `0.32.1` got it on both runs, after two clean releases, and the two clean ones were luck of the range rather than a fix. Match orphans by commit subject, then **confirm each against `gh pr view <n> --json state,mergeCommit`**, and check the merge commit really is in the range with `git merge-base --is-ancestor`. A no-gap PR range is the independent check that none is missing — and a gap is closed by one state query, not by an argument from the numbering.
-7. **Production will be clean; dev will show one phantom row.** `--status --env production` first and expect `0`. On dev, expect exactly `0201_map_rooms_drop_map_id_shape.sql` and nothing else — that is Defect 1, not you. The dev database is `--env test` and the drift check is `--drift test`.
+7. **Production will be clean; dev may be one-sided for a legitimate reason.** `--status --env production` first and expect `0`. On dev, **do not expect a specific filename** — that advice was written while Defect 1 was open and is superseded. Read the names `--drift test` prints and ask whether an unmerged schema branch explains each (`git branch -a`, not just `gh pr list` — a stream can be committed and applied with no PR open). The dev database is `--env test` and the drift check is `--drift test`.
 8. **Decide major or minor with Lutan before cutting.** `0.32.1` went minor on his instruction, against a stated case for major. **There is no presumption either way**, and the question is *can anyone do something today they could not do yesterday*. Minor mails nobody — which also means **nobody is told about the new abilities**, so if the answer is yes and he still says minor, put that on the record as a decision rather than letting it read as an oversight.
 9. **Ask whether anything in the release can fail silently**, and read the candidates in code first. **A header is a statement of intent, not evidence — diff it.** The shape to look for in any release touching the public site is the **public-view rule**: a column is public only when the public view names it, and an omission is silent — a signed-out visitor gets no photo with no error. `0.32.1` checked all twelve new columns against the view and the photo proxy by hand, and the file that *sounded* most dangerous (`0202`, dropping two columns) was again the safe one, because it drops without `CASCADE` and every reader was traced to a different table.
 10. **Expect a production-only guard.** There has been none for nine releases running. It can only appear at the production dry-run, and it is a question for Lutan, not a file to fix.
@@ -272,7 +302,7 @@ ref; a backgrounded `deploy.mjs` writing nothing for minutes is buffering, not h
 direction; and `deploy: release mail … [UAT]` on production is the production setting
 and the mail is real. Also:
 
-- **`--drift test` exits 1 on one phantom row.** Known, Defect 1, not yours. Exactly that one row is expected; anything else is new.
+- **`--drift test` exiting 1 with dev *ahead* is usually normal.** It means a schema branch has been applied to dev before merging, which is the schema-first rule working. Check each name against the unmerged branches. The Defect 1 phantom row is fixed (#658 plus `0208`), so a row named `0201_map_rooms_drop_map_id_shape.sql` would now be a real finding rather than the known one.
 - **A FAILED dry-run can be the correct result.** On `0.32.1` two of seven files reported `42703: column … does not exist` because they rebuild a view naming columns an earlier *pending* file adds, and the dry-run rolls each file back before the next. The runner says so itself and still exits 0. Read the explanation, not just the FAILED line — and a *third* red, or a different file, is a real stop.
 - **The `ERROR Failed to copy …` lines are closed** — zero on the production Worker build, three on the test one, for the fourth release running. Either count is normal.
 - **A `gates.mjs` run that is much faster than the last one is a warm Turbopack cache.** Read the exit codes, not the timings.
