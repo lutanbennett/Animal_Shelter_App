@@ -75,6 +75,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "Food and medicine that come in more than one size are now easier. Record a delivery: tap Add another size to put 2 bags of 20 kg and 1 bag of 14 kg in one delivery, each with its own cost. Stocktake: an item with several sizes shows a row for each size with a big plus and minus, so you count bags and never work out kilos; there is a choice for a bag that is already open (about full, half, a quarter, nearly empty), and the total is written out for you. Purchasing: next to the usual bag size it now shows the same need in the other sizes, rounded up so it is never short, cheapest first.",
+    roles: ["admin", "management", "second_in_command"],
+  },
   "If Management is given the Book clinic visits card, its home screen now shows the tile and it opens the list of upcoming vet visits. Before, the card was given but no tile appeared. A clinic login with the same card still opens its own appointments. On Settings → Who does what, a card that would show no tile now says so, and View residents says it is shown as part of Residents.",
   "Status page, Release tile: when the website's engine has no release tag, the tile now says so plainly (it is expected right after a setting is changed by hand, and clears at the next release) instead of claiming someone deployed the wrong way. If the engine is tagged as a different release, the tile says that separately.",
 ];
