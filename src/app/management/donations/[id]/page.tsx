@@ -13,6 +13,8 @@ type Detail = DonationRow & {
   donation_lines: { description: string; amount: number | string | null; position: number }[];
   contacts: { name: string } | null;
   residents: { name: string } | null;
+  /** The appeal a gift was made for; null for a login that cannot read appeals. */
+  appeals: { id: string; title: string } | null;
 };
 
 /**
@@ -32,7 +34,7 @@ export default async function DonationPage(props: PageProps<"/management/donatio
   const [donationResult, receiptsResult] = await Promise.all([
     supabase
       .from("donations")
-      .select("*, donation_lines(description, amount, position), contacts(name), residents:designation_resident_id(name)")
+      .select("*, donation_lines(description, amount, position), contacts(name), residents:designation_resident_id(name), appeals:designation_appeal_id(id, title)")
       .eq("id", id)
       .maybeSingle<Detail>(),
     supabase.from("donation_receipts").select(RECEIPT_COLUMNS).eq("donation_id", id).order("issued_at", { ascending: false }).returns<DonationReceiptRow[]>(),
@@ -52,7 +54,9 @@ export default async function DonationPage(props: PageProps<"/management/donatio
   const designation =
     donation.designation === "resident" && donation.residents
       ? `${d.designations.resident}: ${donation.residents.name}`
-      : donation.designation_note
+      : donation.designation === "appeal" && donation.appeals
+        ? `${d.designations.appeal}: ${donation.appeals.title}`
+        : donation.designation_note
         ? `${d.designations[donation.designation]}: ${donation.designation_note}`
         : d.designations[donation.designation];
 

@@ -16,6 +16,8 @@ import { RECEIPT_COUNTRIES } from "@/lib/donations/issuer";
 import { recordDonation } from "../actions";
 import { DateInput } from "@/components/DateInput";
 
+export type AppealOption = { id: string; title: string; residentName: string; target: number; raised: number; status: string };
+
 export type DonorContact = { id: string; name: string; email: string | null; phone: string | null; line_id: string | null };
 
 const inputClass =
@@ -27,7 +29,23 @@ const labelClass = "text-sm font-medium text-muted";
  * removed in place; an in-kind gift hides the amounts, because its lines
  * describe goods rather than price them (checkDonation refuses a mix).
  */
-export function DonationForm({ contacts, residents, residentsFailed = false, today }: { contacts: DonorContact[]; residents: ResidentOption[]; residentsFailed?: boolean; today: string }) {
+export function DonationForm({
+  contacts,
+  residents,
+  residentsFailed = false,
+  today,
+  appeals = [],
+  presetAppealId = "",
+}: {
+  contacts: DonorContact[];
+  residents: ResidentOption[];
+  residentsFailed?: boolean;
+  today: string;
+  /** The appeals this login can see and that still take gifts (not closed). */
+  appeals?: AppealOption[];
+  /** Arriving from an appeal's own page: the designation starts on it. */
+  presetAppealId?: string;
+}) {
   const { t, locale } = useI18n();
   const f = t.donations.form;
   const router = useRouter();
@@ -41,8 +59,9 @@ export function DonationForm({ contacts, residents, residentsFailed = false, tod
     donorPhone: "",
     donorLine: "",
     method: "bank_transfer",
-    designation: "general",
+    designation: presetAppealId && appeals.some((a) => a.id === presetAppealId) ? "appeal" : "general",
     designationResidentId: "",
+    designationAppealId: presetAppealId && appeals.some((a) => a.id === presetAppealId) ? presetAppealId : "",
     designationNote: "",
     note: "",
     country: "TH",
@@ -165,6 +184,29 @@ export function DonationForm({ contacts, residents, residentsFailed = false, tod
               onChange={(ids) => set("designationResidentId", ids[0] ?? "")}
               triggerLabel={f.residentPick}
             />
+          </div>
+        )}
+        {fields.designation === "appeal" && (
+          <div className="flex flex-col gap-1">
+            <label htmlFor="dn-appeal" className={labelClass}>{f.appeal}</label>
+            {appeals.length === 0 ? (
+              <p className="rounded border border-border bg-background px-3 py-2 text-sm text-muted">{f.appealNone}</p>
+            ) : (
+              <>
+                <select id="dn-appeal" value={fields.designationAppealId} onChange={(e) => set("designationAppealId", e.target.value)} className={inputClass}>
+                  <option value="">{f.appealPick}</option>
+                  {appeals.map((a) => (
+                    <option key={a.id} value={a.id}>{a.title} · {a.residentName}</option>
+                  ))}
+                </select>
+                {(() => {
+                  const chosen = appeals.find((a) => a.id === fields.designationAppealId);
+                  return chosen ? (
+                    <span className="text-xs text-muted">{f.appealRaised(formatBahtExact(chosen.raised, locale), formatBahtExact(chosen.target, locale))}</span>
+                  ) : null;
+                })()}
+              </>
+            )}
           </div>
         )}
         {(fields.designation === "project" || fields.designation === "appeal") && (

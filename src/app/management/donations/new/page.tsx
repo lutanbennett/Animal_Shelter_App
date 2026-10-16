@@ -4,14 +4,17 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { todayIso } from "@/lib/format";
 import { requirePermission } from "@/lib/permissions/require";
-import { DonationForm, type DonorContact } from "./DonationForm";
+import { loadRaised, loadStaffAppeals } from "@/lib/appeals/staff";
+import { DonationForm, type AppealOption, type DonorContact } from "./DonationForm";
 
 /**
  * Management → Donations → Record a donation. Saving records the gift, issues
  * its receipt with the next LCA number and files it on Drive, then opens the
  * donation's page to send it. Built for the Director's phone as well as her PC.
  */
-export default async function NewDonationPage() {
+export default async function NewDonationPage(props: PageProps<"/management/donations/new">) {
+  const sp = await props.searchParams;
+  const presetAppealId = typeof sp.appeal === "string" ? sp.appeal : "";
   await requirePermission("donation.receipt");
   const { t } = await getT();
   const d = t.donations;
@@ -39,6 +42,23 @@ export default async function NewDonationPage() {
   // this picker reading a column residents does not have.
   if (contacts.error) console.error("donation form: contact list failed", contacts.error);
   if (residents.error) console.error("donation form: resident list failed", residents.error);
+  // Appeals still taking gifts. A login without appeal.run reads none (RLS), and the form says so. A failed read
+  // must not look like "no appeals", so it is logged and the form gets an empty list with the same sentence.
+  let appealOptions: AppealOption[] = [];
+  try {
+    const open = (await loadStaffAppeals(supabase)).filter((a) => a.status !== "closed");
+    const raised = await loadRaised(supabase, open.map((a) => a.id));
+    appealOptions = open.map((a) => ({
+      id: a.id,
+      title: a.title,
+      residentName: a.residents?.name ?? "",
+      target: a.target_amount,
+      raised: raised.get(a.id)?.raised ?? 0,
+      status: a.status,
+    }));
+  } catch (e) {
+    console.error("donation form: appeal list failed", e);
+  }
   const residentOptions: ResidentOption[] = (residents.data ?? []).map(
     ({ resident_id, ...r }) => ({ id: resident_id, ...r }),
   );
@@ -50,7 +70,7 @@ export default async function NewDonationPage() {
         <h1 className="text-2xl font-semibold text-foreground">{d.form.newTitle}</h1>
         <p className="text-sm text-muted">{d.form.newSubtitle}</p>
       </div>
-      <DonationForm contacts={contacts.data ?? []} residents={residentOptions} residentsFailed={!!residents.error} today={todayIso()} />
+      <DonationForm contacts={contacts.data ?? []} residents={residentOptions} residentsFailed={!!residents.error} today={todayIso()} appeals={appealOptions} presetAppealId={presetAppealId} />
     </main>
   );
 }
