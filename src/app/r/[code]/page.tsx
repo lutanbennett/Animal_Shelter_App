@@ -1,7 +1,9 @@
 import { residentText } from "@/lib/residents/labels";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
+import { CARD_WAIT_COOKIE } from "@/lib/residents/card-wait";
 import { LogIn } from "lucide-react";
 import { AvailableBadge } from "@/components/AvailableBadge";
 import { loadSessionRole } from "@/lib/auth/app-access";
@@ -78,6 +80,8 @@ export default async function ResidentCardPage(props: PageProps<"/r/[code]">) {
   ] = await Promise.all([supabase.auth.getUser(), loadResidentCard(supabase, code), getT()]);
 
   if (!resident) notFound();
+  // Scan card left a waiting marker on this phone (iPhone): /scan/arrive decides, clears it, and falls back to this page.
+  if (user && (await cookies()).get(CARD_WAIT_COOKIE)) redirect(`/scan/arrive?code=${encodeURIComponent(code)}`);
   // Never less than a stranger sees: the hub only for a login that can open the record, else the
   // card with what their role adds (docs/decisions/2026-10-07-name-card-taps.md).
   const appAccess = !!user && (await loadSessionRole(supabase))?.opensApp === true;

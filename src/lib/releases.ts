@@ -76,6 +76,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "Add Medical Photos and Record Weight can now pick the resident from their name card. In the resident list, type the code printed on the card (R-0042) or paste the card's link and only that resident is shown. On an Android phone, tap Scan card and hold the phone to the card. On an iPhone, tap Scan card, then hold the phone to the card within 5 minutes: the card opens in Safari and takes you straight to the job for that resident, so you need to be signed in in Safari. The page always shows the resident's name and code, so check them against the card before you save.",
+    roles: ["admin", "management", "head_of_medical"],
+  },
+  {
     text: "System status: when the Status alert mail tile is red because the last alert mail reached nobody, it now says what to do. Press Send a test alert; when that mail reaches an admin the tile turns green. If the page was drawn by the Pi, where the buttons are off, it says the test has to be sent from the Cloudflare Worker page.",
     roles: ["admin"],
   },

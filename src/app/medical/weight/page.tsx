@@ -104,6 +104,7 @@ export default async function RecordWeightPage(props: PageProps<"/medical/weight
           </span>
           <div className="min-w-0">
             <p className="break-words text-2xl font-semibold text-foreground">{name}</p>
+            {resident.code && <p className="text-base font-medium text-muted">{resident.code}</p>}
             {resident.enclosure && (
               <p className="break-words text-base text-muted">
                 {placeName(locale, resident.enclosure.name, resident.enclosure.nameTh)}
@@ -181,6 +182,7 @@ export default async function RecordWeightPage(props: PageProps<"/medical/weight
         t={t}
         locale={locale}
         base="/medical/weight"
+        scanJob="weight"
         residents={residents}
         query={q}
         error={error}

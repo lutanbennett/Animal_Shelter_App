@@ -415,6 +415,10 @@ const manual: Manual = {
             "The 2IC, the Heads and volunteers: you see the public card, plus where the resident lives and a button for each job you can do for that resident (for example Add Medical Photos or Record Weight). The medical record itself is not shown to these roles.",
             "A doctor looking at a resident their clinics do not treat sees the public card instead of an error.",
             "If you are signed in on another browser, the card opens the public page in the one your phone uses. Sign in there once and stay signed in.",
+            "Picking a resident for Add Medical Photos or Record Weight with a card. Whatever the phone, you can type the code printed on the card (R-0042) in the search box, or paste the card's link, and only that resident is shown. If no resident you can pick has that code, the page says so and shows nobody.",
+            "Android phone (Chrome, NFC on): tap Scan card, then hold the back of the phone to the card. The job opens for that resident. A card that is not for a resident you can pick here, or cannot be read, says so and picks nobody.",
+            "iPhone: Safari cannot read the card from inside a page, so tap Scan card, then hold the top of the phone to the card within 5 minutes. The card opens in Safari and takes you straight to the job for that resident. You must be signed in in Safari, the browser the card opens. If you wait too long, tap Scan card again. Tap Stop waiting for a card if you change your mind.",
+            "Always check the name and code shown at the top of the job against the card in your hand before you save a photo or a weight. A scan only chooses the resident; it never saves anything.",
           ],
         },
         {

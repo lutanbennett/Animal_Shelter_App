@@ -445,6 +445,7 @@ const ADMIN_CHECK = /\b(?:requireAdminUser|assertAdminRole|hasAdminRole|refuseUn
 const NO_ACTIVITY = {
   "account/password/actions.ts": "changes the signed-in user's own password and name; its one service-role call clears their own must-change flag after the password check",
   "account/theme/actions.ts": "the signed-in user's own display preference, in their own auth metadata",
+  "medical/scan-actions.ts": "leaves or clears a five-minute waiting cookie and nothing else; startCardWait refuses unless canOpen(perms, route) for the job's own page, and /scan/arrive re-checks it at the redirect",
   "login/actions.ts": "signed out by definition: the sign-in itself",
   "login/forgot/actions.ts": "signed out by definition: asks for a reset email",
   "immunizations/new/actions.ts": "session client and the record_immunizations_fanout RPC, so RLS on immunization_records decides and a refusal is 42501 (databaseFailure)",
