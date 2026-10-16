@@ -11,6 +11,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { register } from "node:module";
+import { exitWith } from "./lib/exit.mjs";
 
 const root = process.cwd();
 const src = pathToFileURL(join(root, "src") + "/").href;
@@ -142,4 +143,4 @@ if (stale.length) console.log("Declared links whose proof is gone (ignored, so t
 const noCards = summary.filter((s) => s.exercised === "NO CARDS").map((s) => s.role);
 if (noCards.length) console.log(`Roles with no cards on dev (their result says little about card homes): ${noCards.join(", ")}`);
 console.log(unexplained ? `\n${unexplained} unexplained orphan(s): the menu cannot go yet.` : "\nNo unexplained orphans.");
-process.exit(unexplained ? 1 : 0);
+await exitWith(unexplained ? 1 : 0);

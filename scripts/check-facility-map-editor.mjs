@@ -18,6 +18,7 @@ import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { giveRole } from "./lib/user-role.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const root = process.cwd();
 const geo = await import(pathToFileURL(join(root, "src/lib/facility-map/geometry.ts")).href);
@@ -154,4 +155,4 @@ try {
   console.log("cleaned up");
 }
 console.log(failures.length ? `\n${failures.length} FAILED` : "\nall ok");
-process.exit(failures.length ? 1 : 0);
+await exitWith(failures.length ? 1 : 0);

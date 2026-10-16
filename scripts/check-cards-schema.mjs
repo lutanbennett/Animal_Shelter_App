@@ -16,6 +16,7 @@ import { join } from "node:path";
 import { register } from "node:module";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
+import { exitWith } from "./lib/exit.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -197,4 +198,4 @@ try {
 }
 
 console.log(failed ? `\n${failed} FAILED` : "\nAll checks passed.");
-process.exit(failed ? 1 : 0);
+await exitWith(failed ? 1 : 0);

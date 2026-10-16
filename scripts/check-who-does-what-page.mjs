@@ -21,6 +21,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import { exitWith } from "./lib/exit.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -185,4 +186,4 @@ try {
 }
 
 console.log(failures.length ? `\n${failures.length} FAILED` : "\nOK");
-process.exit(failures.length ? 1 : 0);
+await exitWith(failures.length ? 1 : 0);

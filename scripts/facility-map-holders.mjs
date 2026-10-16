@@ -3,6 +3,7 @@
 // migration 0212 retires facility.map. Expected: none. Writes nothing.
 //   node scripts/facility-map-holders.mjs [--env production]
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const { name: envName } = parseEnvArg(process.argv.slice(2));
 const env = loadEnv(envName);
@@ -20,9 +21,9 @@ const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/qu
   headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" },
   body: JSON.stringify({ query: sql }),
 });
-if (!res.ok) { console.error(await res.text()); process.exit(1); }
+if (!res.ok) { console.error(await res.text()); await exitWith(1); throw new Error("query failed"); }
 const rows = await res.json();
 console.table(rows);
 const stranded = rows.filter((r) => !r.enclosures_level);
 console.log(`Environment: ${envName}. Roles holding facility.map: ${rows.length}. Without facility.enclosures at Read: ${stranded.length}${stranded.length ? " -> " + stranded.map((r) => r.role).join(", ") + "  (DO NOT APPLY 0212)" : " (safe to retire)"}`);
-process.exit(stranded.length ? 1 : 0);
+await exitWith(stranded.length ? 1 : 0);

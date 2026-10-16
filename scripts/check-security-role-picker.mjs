@@ -27,6 +27,7 @@ import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright-core";
 import { giveRole } from "./lib/user-role.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -91,7 +92,7 @@ try {
   else await cleanup();
 }
 console.log(failures ? `\n${failures} check(s) failed.` : exitCode === 0 ? "\nAll checks passed." : "");
-process.exit(exitCode);
+await exitWith(exitCode);
 
 // ---------------------------------------------------------------------------------------------------------
 

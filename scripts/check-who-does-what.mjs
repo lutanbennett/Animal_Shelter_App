@@ -40,6 +40,7 @@
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
+import { exitWith } from "./lib/exit.mjs";
 
 const root = process.cwd();
 const verbose = process.argv.includes("--verbose");
@@ -350,4 +351,4 @@ if (overListed.length) console.log(`\nFAIL: entries mark boxes that are obeyed (
 if (unprobedMeasured.length) console.log(`\nFAIL: entries marked measured with no probed box: ${unprobedMeasured.map((e) => e.id).join(", ")} (set measured: false and say how it was read)`);
 const ok = !faults.length && !unlisted.length && !stale.length && !overListed.length && !unprobedMeasured.length;
 if (ok) console.log("\nOK: every probed box is obeyed or listed in FIXED_FOR_NOW.");
-process.exit(ok ? 0 : 1);
+await exitWith(ok ? 0 : 1);
