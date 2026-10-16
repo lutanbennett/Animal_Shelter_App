@@ -678,6 +678,29 @@ export const ENTRIES = {
       expect: "The card leaves the public page but the profile is kept.",
     },
   ],
+  "running-an-appeal": [
+    {
+      activity: "Start an appeal for a sick resident, preview it and publish it",
+      needs: "appeal.run",
+      device: "both",
+      do: "Open a resident, tap Start an appeal, fill in a title, what is wrong and a target, create the draft, choose a photo as the cover, tap Preview, then Publish.",
+      expect: "The draft is saved, the preview shows the page as visitors will see it, and after Publish the appeal is on the website; before Publish its public address shows a not-found page.",
+    },
+    {
+      activity: "Record a gift for an appeal and move earlier gifts onto it",
+      needs: "appeal.run",
+      device: "both",
+      do: "On the appeal, tap Record a gift for this appeal and save one; then tick a gift recorded for the resident and tap Move gifts to the appeal.",
+      expect: "The raised figure goes up by exactly the gift moved, the gift now appears under Counted on the appeal, and it no longer shows under gifts for the resident.",
+    },
+    {
+      activity: "Close an appeal with how it went",
+      needs: "appeal.run",
+      device: "both",
+      do: "On a live appeal, write how it went and tap Close the appeal, then confirm.",
+      expect: "The public page says the appeal has finished and shows your words, with no ways to give, and the donation form no longer offers that appeal.",
+    },
+  ],
   "donation-receipts": [
     {
       activity: "Record a donation and issue its receipt",
