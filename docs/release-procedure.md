@@ -247,6 +247,13 @@ running, each time recorded as a gap and each time settled indirectly. Also read
 `strip-baked-env: removed N env var(s)` and the `Server Actions key <fingerprint>`
 line, which must match what the Pi build printed.
 
+**Setting a production secret by hand** (`wrangler secret put`) makes a new Worker
+version from the same code with no tag, so the Release tile on `/admin/status`
+goes amber ("The Worker has no release tag") until the next deploy through
+`deploy.mjs`. That is expected and not a regression. The check cannot tell it from
+a deploy that skipped the script, so if nobody set a secret, ask who deployed.
+(`docs/decisions/2026-10-16-untagged-worker-stays-amber.md`.)
+
 This deploy is also what **mails the admins** on a major release. The Pi deploy
 does not mail, and neither does test (`RELEASE_MAIL_ENV` is `""` there).
 

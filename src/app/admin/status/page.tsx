@@ -221,7 +221,7 @@ async function Health({ t, locale }: { t: T; locale: Locale }) {
               {rel.deployedAt ? x.release.deployed({ time: formatDateTime(rel.deployedAt, locale) }) : x.release.notDeployed}
             </p>
             {rel.unreleased > 0 && <p className="text-muted">{x.release.unreleased({ count: rel.unreleased })}</p>}
-            {r.release.state === "warn" && <p>{x.release.mismatch}</p>}
+            {r.release.state === "warn" && <p>{rel.tagProblem === "untagged" ? x.release.untagged : x.release.mismatch}</p>}
           </>
         )}
       </Tile>

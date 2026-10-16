@@ -1079,7 +1079,9 @@ const en = {
           notDeployed: "Not running on the Worker (a local dev server or the Pi), so there is no deploy time to show.",
           unreleased: (v: { count: string | number }) =>
             `${v.count} change(s) merged since that release, not yet in a numbered release.`,
-          mismatch: "The Worker's version tag doesn't match this release.",
+          mismatch: "The Worker is tagged as a different release. Someone deployed without finishing the deploy script, so ask who deployed last.",
+          untagged:
+            "The Worker has no release tag. If a setting on the Worker was changed by hand recently, this is expected and clears at the next release. If not, ask who deployed last.",
         },
         releaseMail: {
           title: "Release mail",
