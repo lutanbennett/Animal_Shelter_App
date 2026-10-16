@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+import { getSiteOrigin } from "@/lib/site-origin";
+import { syncPendingVisits } from "@/lib/clinics/calendar-sync";
 import { loadClinicScope, scopeAllowsClinic } from "@/lib/clinics/scope";
 
 export type ClinicVisitState = { error: string } | undefined;
@@ -67,6 +69,10 @@ export async function bookClinicVisit(
   });
 
   if (error) return databaseFailure("clinicVisits.create", error, t.common);
+
+  // Saved first; the calendar is second and can never undo it. The booking function returns no ids, so
+  // this sends whatever is out of date (calendar-sync.ts), which is these visits.
+  await syncPendingVisits((await getSiteOrigin())?.origin ?? null);
 
   // Back to what was booked: one resident's clinic visits, or the residents
   // list a bulk booking was started from. Never "/", the public website.

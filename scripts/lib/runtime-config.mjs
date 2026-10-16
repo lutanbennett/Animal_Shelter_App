@@ -38,6 +38,8 @@ export const RUNTIME_CONFIG = [
   { name: "GOOGLE_OAUTH_REFRESH_TOKEN", where: "both", secret: true, scrub: true, required: true, purpose: "Long-lived Drive token for the shelter's Google account." },
   { name: "GOOGLE_DRIVE_ROOT_FOLDER_ID", where: "both", secret: true, scrub: false, required: true, purpose: "Drive folder the app writes into." },
   { name: "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY", where: "both", secret: false, scrub: false, required: true, own: "scripts/lib/actions-key.mjs", purpose: "One Server Actions key per environment, built into both servers so a form one renders the other accepts." },
+  { name: "GOOGLE_CALENDAR_REFRESH_TOKEN", where: "both", secret: true, scrub: true, required: false, purpose: "Its own long-lived token for the shelter calendar (calendar.events scope), apart from the Drive one so a calendar fault never stops photo uploads. Unset: visits are not sent to a calendar." },
+  { name: "GOOGLE_CALENDAR_ID", where: "both", secret: true, scrub: false, required: false, purpose: "Which Google calendar vet visits are written to (src/lib/clinics/calendar-sync.ts); a changed value is how the move to the shelter's own account is made." },
   { name: "BACKUP_DRIVE_FOLDER_ID", where: "both", secret: true, scrub: false, required: false, purpose: "Where the Daily backup tile looks (scripts/backup.mjs), when not Backups/ under the root." },
   { name: "ORIGIN_KEY", where: "both", secret: true, scrub: true, required: false, purpose: "The Worker sends it to the Pi; the WAF rule and the Pi's app check it (src/lib/origin-key.ts)." },
   { name: "CLOUDFLARE_ANALYTICS_TOKEN", where: "both", secret: true, scrub: true, required: false, purpose: "Visitor count on Settings → System status; grey until the zone id is set too." },

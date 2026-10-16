@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+import { getSiteOrigin } from "@/lib/site-origin";
+import { syncVisitToCalendar } from "@/lib/clinics/calendar-sync";
 import { loadClinicScope, scopeAllowsClinic } from "@/lib/clinics/scope";
 
 export type ClinicVisitEditState = { error: string } | undefined;
@@ -98,6 +100,9 @@ export async function updateClinicVisit(
   }
   if (error) return { error: error.message };
   if (!data || data.length === 0) return { error: e.notAuthorized };
+
+  // Saved first; the calendar is second and can never undo it (calendar-sync.ts). A failure is left on the visit.
+  await syncVisitToCalendar(visitId, (await getSiteOrigin())?.origin ?? null);
 
   revalidatePath(`/residents/${residentId}`);
   revalidatePath(`/residents/${residentId}/clinic-visits`);

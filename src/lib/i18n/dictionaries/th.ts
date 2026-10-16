@@ -962,6 +962,12 @@ const th: Dictionary = {
           notConnected: "ยังไม่ได้เชื่อมต่อ — การอัปโหลดทั้งหมดจะไม่สำเร็จจนกว่าจะตั้งค่าโทเค็นใหม่",
           failed: "Google Drive ไม่ตอบการตรวจสอบ",
         },
+        calendar: {
+          title: "ปฏิทินของศูนย์ (Google Calendar)",
+          off: "ยังไม่ได้ตั้งค่า: นัดหมายสัตวแพทย์ยังไม่ถูกส่งเข้าปฏิทิน",
+          ok: (v: { unsynced: number }) => v.unsynced === 0 ? "เชื่อมต่อแล้ว: ทุกนัดหมายอยู่ในปฏิทินแล้ว" : `เชื่อมต่อแล้ว: มี ${v.unsynced} นัดหมายที่รอส่ง ระบบจะลองใหม่ทุก 15 นาที`,
+          failed: (v: { unsynced: number }) => `เข้าปฏิทินไม่ได้หรือโทเคนใช้ไม่ได้ มี ${v.unsynced} นัดหมายที่รอส่ง การจองไม่ได้รับผลกระทบ`,
+        },
         migrations: {
           title: "การปรับโครงสร้างฐานข้อมูล (migrations)",
           ok: (v: { expected: string | number }) =>
@@ -4955,6 +4961,8 @@ const th: Dictionary = {
     edit: "แก้ไข",
     fallbackReason: "พบสัตวแพทย์",
     addToCalendar: "เพิ่มลง Google Calendar",
+    notInCalendar: "ยังไม่อยู่ในปฏิทินของศูนย์",
+    retryCalendar: "ลองใหม่",
     calendarNote: "ปุ่มเพิ่มลง Google Calendar จะเพิ่มนัดนี้ครั้งเดียว ถ้านัดถูกเลื่อนหรือยกเลิก ปฏิทินของคุณจะไม่เปลี่ยนตาม ต้องแก้ในปฏิทินเอง",
     calendarTitle: (resident: string, clinic: string) => `สัตวแพทย์: ${resident} · ${clinic}`,
     calendarDetails: (reason: string) => `${reason} นัดนี้จองไว้ในแอปของศูนย์ รายการนี้จะไม่เปลี่ยนตามถ้านัดมีการแก้ไข`,
