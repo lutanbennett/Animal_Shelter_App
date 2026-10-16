@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Nfc } from "lucide-react";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -76,13 +76,12 @@ export function ScanCardButton({
 }) {
   const p = t.medicalJobs.picker;
   const router = useRouter();
-  const [supported, setSupported] = useState(false);
+  const supported = useSyncExternalStore(() => () => {}, hasWebNfc, () => false);
   const [state, setState] = useState<"idle" | "waiting" | "unreadable" | "unknown" | "denied">("idle");
   const [marker, setMarker] = useState<"off" | "on" | "refused">("off");
   const abort = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    setSupported(hasWebNfc());
     return () => abort.current?.abort();
   }, []);
 
