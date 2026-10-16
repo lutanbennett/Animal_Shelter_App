@@ -94,7 +94,8 @@ rule above is what you have.
 | Dev database | `No drift` at the time of writing. It will go one-sided whenever a schema branch is applied to dev before merging, which is the schema-first rule working and happens most days. **Run `--drift test`; this row will be out of date.** |
 | Next free migration number | **`0213`**, cleanly. `origin/main`'s highest is `0212`, and **no unmerged branch carries anything above it** — checked by listing `supabase/migrations` on every unmerged `origin/claude/*`. This is the first release in three where the obvious answer is the right one, so still check (`git branch -a`, `gh pr list`, dev's ledger) rather than trusting this row |
 | `unreleased` notes already waiting | **0**, read off `origin/main` after the release |
-| Open PRs | **run `gh pr list`.** At the time of writing: **#676 `claude/planner-handover-182`**, opened by another stream *during* this release and deliberately left out of it, so `main` would not move after the cut. It is docs-only and should be an easy first merge. #665–#675 and #677 are merged |
+| Open PRs | **run `gh pr list`.** At the time of writing only **#679**, this release's own record PR, which merges itself. #676 and #678 both merged *after* the release and are **not** in it. #665–#675 and #677 are merged |
+| `main` is already ahead of the release SHA | **Yes — four commits**, before anyone has started the next release: `e7d21d5d` (a backlog item raised during this release), `ce7799de` (#676), `f3f7e490` (#678), `f1e59e84` (`Merge branch 'backlog'`). None is in `0.34.0`. `supabase/migrations` still tops out at `0212` and `unreleased` is still empty, so nothing here changes the two rows above — but **do not expect `main` to be sitting at the release SHA when you begin** |
 
 **All four builds came from the release SHA**, for the eleventh release running —
 and for the fourth running it cost nothing to make true, because `main` did not
@@ -300,14 +301,19 @@ and check the merge commit is in the range with `git merge-base --is-ancestor`).
 
 ## In flight
 
-**Nothing was left open by the release itself.** No migration merged after the cut,
-and `main` did not move after it either.
+**Nothing was left open by the release itself,** and no migration merged after the
+cut. **`main` has moved, though** — four commits, listed in the table above. It
+held still from the cut through the last Pi build, which is what matters, and then
+the next release began.
 
-**#676 is open on purpose.** `claude/planner-handover-182` was opened by another
-stream mid-release and left out so the cut would stay the tip. It is docs-only.
-**Re-read its state before you assert anything about it** — `gh pr view 676 --json
-state` costs a second, and `0.33.0`'s cut plan asserted a PR was open twenty
-minutes after it had merged.
+**A worked example of why you re-read state instead of asserting it, from this
+release.** #676 was open and deliberately left out so the cut would stay the tip,
+and the first draft of this file said so in the present tense. It merged minutes
+later, along with #678 — which had also taken the PR number the record's test plan
+had guessed for itself. Both were caught and corrected before this PR merged, and
+both would have read as confident fact in the handover you are now holding.
+`gh pr view <n> --json state` costs a second. **Anything in this file about another
+stream's PR is a snapshot, not a fact.**
 
 **Do not trust a list of worktrees in this file — run `node scripts/worktree.mjs
 list`.** Writing one down was tried twice and was stale within the hour both times.

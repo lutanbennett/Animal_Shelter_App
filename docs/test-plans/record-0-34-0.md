@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none — a release record closes no backlog item. (One item was *raised* during this release, on the `backlog` branch, for the gate-script exit-code defect; that is not this PR) |
 | Branch / worktree | `claude/record-0-34-0` @ `C:\Development\Animal_Shelter_record-0-34-0` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3016` (not started — this PR has no runtime surface; see §4) |
-| PR | #678 |
+| PR | #679 — the plan first guessed #678, which another stream took in the interval; corrected rather than left standing |
 | Tested by / date | Claude (production release manager session) / 2026-10-16 |
 | Carries a migration? | no |
 | Tested at SHA | the tip of this branch, cut from `598c2e56` — the deployed release SHA |
