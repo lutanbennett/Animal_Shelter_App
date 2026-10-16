@@ -226,13 +226,17 @@ const PINNED = {
   "/projects/[id]": { guards: ['requirePermission("projects.folders", "read")'], decides: ["projects.folders", "projects.publish", "translations.manage"] },
   // A donation's own page is the receipt: issuing it is the yes/no activity, and nothing else.
   "/management/donations/[id]": { guards: ['requirePermission("donation.receipt")'], decides: [] },
+  // Sponsorship drives (0210). The gifts on an appeal's page are read only by a login that may also read donations.
+  "/management/appeals/new": { guards: ['requirePermission("appeal.run")'], decides: [] },
+  "/management/appeals/[id]": { guards: ['requirePermission("appeal.run")'], decides: ["donation.receipt"] },
+  "/management/appeals/[id]/preview": { guards: ['requirePermission("appeal.run")'], decides: ["donation.receipt"] },
 
   // The resident's own pages. requireFullResident() is resident.record at Read plus "not a
   // who-and-where login" (0134); the decision that matters, may this person do the thing, is the
   // body's can(), which the page asks before it renders the form.
   // The record hub: a who-and-where login is redirected to /r/ before this guard (redirect() is not
   // a guard, so it is not listed), and every control on it that writes asks can().
-  "/residents/[id]": { guards: [FULL], decides: ["placement.death", "placement.death_withdraw", "translations.manage", "resident.microchip", "resident.adoption_news"] },
+  "/residents/[id]": { guards: [FULL], decides: ["placement.death", "placement.death_withdraw", "translations.manage", "resident.microchip", "resident.adoption_news", "appeal.run"] },
   "/residents/[id]/edit": { guards: [FULL], decides: ["resident.record"] },
   "/residents/[id]/move": { guards: [FULL], decides: ["placement.move"] },
   "/residents/[id]/hospital": { guards: [FULL], decides: ["placement.hospital"] },

@@ -102,6 +102,18 @@ export async function recordDonation(fields: DonationFields): Promise<ActionResu
     const { lines, country, ...donation } = checked.donation;
 
     const supabase = await createClient();
+    if (donation.designation_appeal_id) {
+      // RLS lets only a login that runs appeals read one, so "not found" also covers "not yours to use".
+      const { data: appeal, error: aErr } = await supabase
+        .from("appeals")
+        .select("status")
+        .eq("id", donation.designation_appeal_id)
+        .maybeSingle<{ status: string }>();
+      if (aErr) return databaseFailure("donations.recordDonation.appeal", aErr, t.common);
+      if (!appeal) return refuse(t.donations.errors.appealNotFound);
+      // A closed appeal has told the public it is finished; a late gift would move its total after the fact.
+      if (appeal.status === "closed") return refuse(t.donations.errors.appealClosed);
+    }
     const { data: created, error } = await supabase.from("donations").insert(donation).select("id").single<{ id: string }>();
     if (error) return databaseFailure("donations.recordDonation.insert", error, t.common);
 

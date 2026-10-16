@@ -204,6 +204,15 @@ export const ROUTES: readonly RouteEntry[] = [
     menu: false,
   },
   {
+    // Sponsorship drives for sick residents (0210). Admin holds the activity; delegable in Settings.
+    path: "/management/appeals",
+    activity: "appeal.run",
+    icon: HandHeart,
+    label: (t) => t.nav.appeals,
+    device: "any",
+    menu: false,
+  },
+  {
     path: "/management/clinics",
     activity: "clinics.list",
     icon: CLINIC_ICONS.clinic,

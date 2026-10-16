@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Fundraising appeals can now be run from the app. On a resident's page, an Admin taps Start an appeal, writes what is wrong and what it costs, picks a bar, thermometer or gauge for progress, chooses photos (never Medical ones, with a blur option for distressing ones), previews the page exactly as visitors will see it, then publishes. Gifts are recorded against the appeal from the donation form, gifts already recorded for the resident can be moved onto it without ever counting twice, and closing the appeal with how it went stops it asking. Management can be given this in Settings.",
   {
     text: "Food and medicine that come in more than one size are now easier. Record a delivery: tap Add another size to put 2 bags of 20 kg and 1 bag of 14 kg in one delivery, each with its own cost. Stocktake: an item with several sizes shows a row for each size with a big plus and minus, so you count bags and never work out kilos; there is a choice for a bag that is already open (about full, half, a quarter, nearly empty), and the total is written out for you. Purchasing: next to the usual bag size it now shows the same need in the other sizes, rounded up so it is never short, cheapest first.",
     roles: ["admin", "management", "second_in_command"],

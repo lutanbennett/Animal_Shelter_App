@@ -1311,6 +1311,39 @@ const manual: Manual = {
           ],
         },
         {
+          id: "running-an-appeal",
+          title: "Running an appeal",
+          roles: ["admin"],
+          activity: "appeal.run",
+          path: "Residents → the resident → Fundraising appeal, or Management → Appeals",
+          intro:
+            "An appeal is a public page asking for help paying for one sick resident's treatment: what is wrong, what the vet will do, what it costs and how much has been given. You write it, preview it exactly as visitors will see it, publish it, record the gifts as they arrive, and close it with how it went. Admin can do this; Management gets it when an Admin turns on Run a fundraising appeal for them in Settings.",
+          steps: [
+            "Open the resident and tap Start an appeal (or Management → Appeals → Start an appeal and choose them). Give it a title such as “Panda needs hip surgery”, say what is wrong and what treatment is needed, and enter the target in baht. A deadline is optional. Add the links to our Facebook, Instagram or LINE posts, one https:// link per line. Tap Create the draft.",
+            "Pick how progress is shown: a bar, a thermometer or a gauge. Each is drawn live with the appeal's real figure, so you can see which you prefer. The list of appeals always uses the bar.",
+            "Photos: tick the resident's photos you want on the appeal and choose one as the cover. Photos filed under Medical are never offered and cannot be added. If a photo is distressing, tick Distressing: visitors then see a warning and tap to look, and a shared link never uses it as its picture.",
+            "Tap Preview as visitors will see it. It is the real public page with today's figure. While the appeal is a draft nobody else can see it, and its public address shows a not-found page.",
+            "Tap Publish on the website. It is then public, and the header, home page and the resident's own page point to it.",
+            "Record each gift: open the appeal and tap Record a gift for this appeal (or Record a donation and choose An appeal under What it is for). Only gifts recorded against the appeal count towards the figure on the page.",
+            "Gifts you recorded earlier “for the resident” are not counted. On the appeal's page, tick the ones that were meant for it and tap Move gifts to the appeal. A gift is moved, not copied: it counts on the appeal and no longer for the resident, so it can never be counted twice. If one was moved by mistake, tap Take out beside it and it goes back to the resident.",
+            "When the money is in, tap Mark goal reached: the page stays up but stops asking. When the treatment is done, write how it went under Close with how it went and tap Close the appeal. The page then shows your words and asks for nothing, and the donation form no longer accepts gifts for it. This cannot be undone.",
+          ],
+          callouts: [
+            {
+              kind: "warning",
+              text: "The figure on the public page is only recorded gifts, so record every gift promptly and against the appeal, not for the resident. A gift made in the last day or two may not show yet, and the page says so.",
+            },
+            {
+              kind: "note",
+              text: "What happens to money given beyond the target is stated on the page: it goes to the medical care of the other animals. That wording is the Director's to confirm. The page says nothing about tax, so it never implies a gift is deductible.",
+            },
+            {
+              kind: "note",
+              text: "Thai wording: what you write goes to the translation queue when you save, and visitors reading Thai see the English until it has been reviewed.",
+            },
+          ],
+        },
+        {
           id: "manage-vets",
           title: "Managing clinics",
           roles: ["admin", "management"],

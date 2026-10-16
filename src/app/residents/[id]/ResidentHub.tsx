@@ -2,7 +2,8 @@
 
 import { Fragment, useState, type ReactNode } from "react";
 import Link from "next/link";
-import { Pencil } from "lucide-react";
+import { HandHeart, Pencil } from "lucide-react";
+import type { AppealStatus } from "@/lib/appeals/state";
 import {
   DeceasedBanner,
   DeceasedRestoreNotice,
@@ -189,6 +190,7 @@ export function ResidentHub({
   procedures,
   bloodTests,
   photoCount,
+  appeals,
   adoptionUpdates,
   now,
   tagOrigin,
@@ -228,6 +230,8 @@ export function ResidentHub({
   procedures: ProcedureRow[];
   bloodTests: BloodTestRow[];
   photoCount: number;
+  /** Sponsorship drives for this resident (0210); null when this login may not run them. */
+  appeals: { count: number; latestId: string | null; latestStatus: AppealStatus | null } | null;
   adoptionUpdates: AdoptionUpdatesSummary;
   /** Server-computed timestamp (ISO string) — avoids calling Date.now() during render. */
   now: string;
@@ -610,6 +614,23 @@ export function ResidentHub({
               tone="neutral"
               href={`${base}/photos`}
             />
+            {appeals && (
+              <StatCard
+                title={t.appealsAdmin.hubCard.title}
+                icon={HandHeart}
+                value={`${appeals.count}`}
+                detail={
+                  appeals.count === 0 || !appeals.latestStatus
+                    ? t.appealsAdmin.hubCard.none
+                    : appeals.count === 1
+                      ? t.appealsAdmin.hubCard.one(t.appealsAdmin.status[appeals.latestStatus])
+                      : t.appealsAdmin.hubCard.many(appeals.count, t.appealsAdmin.status[appeals.latestStatus])
+                }
+                tone={appeals.latestStatus === "live" ? "success" : "neutral"}
+                href={appeals.latestId ? `/management/appeals/${appeals.latestId}` : `/management/appeals/new?resident=${resident.id}`}
+                actions={[{ href: `/management/appeals/new?resident=${resident.id}`, label: t.appealsAdmin.hubCard.start }]}
+              />
+            )}
             {/* Any resident ever adopted keeps the card, returned or not —
                 the news from their time away stays on the record
                 (docs/decisions.md, 2026-09-27). */}

@@ -28,6 +28,8 @@ export type DonationFields = {
   method: DonationMethod;
   designation: DonationDesignation;
   designationResidentId: string;
+  /** The appeal a gift is for (0210); read when designation is "appeal". */
+  designationAppealId: string;
   designationNote: string;
   note: string;
   country: ReceiptCountry;
@@ -46,6 +48,7 @@ export type DonationRow = {
   method: DonationMethod;
   designation: DonationDesignation;
   designation_resident_id: string | null;
+  designation_appeal_id: string | null;
   designation_note: string | null;
   note: string | null;
   created_at: string;
@@ -77,6 +80,7 @@ export type DonationProblem =
   | "method"
   | "designation"
   | "designationResident"
+  | "designationAppeal"
   | "country"
   | "noLines"
   | "tooManyLines"
@@ -95,6 +99,7 @@ export type CleanDonation = {
   method: DonationMethod;
   designation: DonationDesignation;
   designation_resident_id: string | null;
+  designation_appeal_id: string | null;
   designation_note: string | null;
   note: string | null;
   country: ReceiptCountry;
@@ -145,6 +150,13 @@ export function checkDonation(
     return { ok: false, problem: "designationResident" };
   }
 
+  // An appeal gift names its appeal: the database refuses one that does not (donations_appeal_designation, 0210),
+  // and only gifts tied to an appeal count towards its raised figure.
+  const appealId = f.designation === "appeal" ? trimmed(f.designationAppealId) : null;
+  if (f.designation === "appeal" && (!appealId || !UUID.test(appealId))) {
+    return { ok: false, problem: "designationAppeal" };
+  }
+
   const email = trimmed(f.donorEmail);
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, problem: "email" };
 
@@ -180,6 +192,7 @@ export function checkDonation(
       method: f.method,
       designation: f.designation,
       designation_resident_id: residentId,
+      designation_appeal_id: appealId,
       designation_note: f.designation === "general" ? null : trimmed(f.designationNote),
       note: trimmed(f.note),
       country: f.country,
