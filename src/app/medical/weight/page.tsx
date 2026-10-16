@@ -182,6 +182,7 @@ export default async function RecordWeightPage(props: PageProps<"/medical/weight
         t={t}
         locale={locale}
         base="/medical/weight"
+        scanJob="weight"
         residents={residents}
         query={q}
         error={error}

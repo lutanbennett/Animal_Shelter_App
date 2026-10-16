@@ -102,7 +102,7 @@ export default async function AddMedicalPhotosPage(props: PageProps<"/medical/ph
   return shell(
     <>
       <p className="text-base text-muted">{p.pickIntro}</p>
-      <ResidentPicker t={t} locale={locale} base="/medical/photos" residents={residents} query={q} error={error} />
+      <ResidentPicker t={t} locale={locale} base="/medical/photos" scanJob="photos" residents={residents} query={q} error={error} />
     </>,
   );
 }

@@ -6,6 +6,8 @@ import { Nfc } from "lucide-react";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { PickableResident } from "@/lib/medical/residents";
 import { residentCodeFrom } from "@/lib/tags/links";
+import type { CardWaitJob } from "@/lib/residents/card-wait";
+import { startCardWait, stopCardWait } from "./scan-actions";
 
 /**
  * "Scan card" for the resident picker (docs/decisions/2026-10-16-name-card-scanning.md).
@@ -62,17 +64,21 @@ export function ScanCardButton({
   base,
   residents,
   onFound,
+  job,
 }: {
   t: Dictionary;
   /** Where a found resident opens when the picker is a plain page: `${base}?resident=<id>`. */
   base: string;
   residents: PickableResident[];
   onFound?: (r: PickableResident) => void;
+  /** The job a waiting marker names where there is no Web NFC (iPhone). Without it there, no button. */
+  job?: CardWaitJob;
 }) {
   const p = t.medicalJobs.picker;
   const router = useRouter();
   const [supported, setSupported] = useState(false);
   const [state, setState] = useState<"idle" | "waiting" | "unreadable" | "unknown" | "denied">("idle");
+  const [marker, setMarker] = useState<"off" | "on" | "refused">("off");
   const abort = useRef<AbortController | null>(null);
 
   useEffect(() => {
@@ -80,7 +86,44 @@ export function ScanCardButton({
     return () => abort.current?.abort();
   }, []);
 
-  if (!supported) return null;
+  if (!supported) {
+    if (!job) return null;
+    return (
+      <div className="flex flex-col gap-2">
+        {marker !== "on" ? (
+          <button
+            type="button"
+            onClick={async () => setMarker((await startCardWait(job)).ok ? "on" : "refused")}
+            className="flex min-h-12 items-center justify-center gap-2 rounded-lg border border-primary px-4 text-base font-medium text-primary"
+          >
+            <Nfc aria-hidden className="h-5 w-5" />
+            {p.scanCard}
+          </button>
+        ) : (
+          <>
+            <p role="status" className="rounded-lg border border-border bg-surface p-3 text-base text-foreground">
+              {p.waitHold}
+            </p>
+            <button
+              type="button"
+              onClick={async () => {
+                await stopCardWait();
+                setMarker("off");
+              }}
+              className="inline-flex min-h-11 items-center self-start text-sm font-medium text-primary hover:underline"
+            >
+              {p.waitStop}
+            </button>
+          </>
+        )}
+        {marker === "refused" && (
+          <p role="alert" className="rounded-lg border border-border bg-surface p-3 text-base text-foreground">
+            {p.waitRefused}
+          </p>
+        )}
+      </div>
+    );
+  }
 
   async function start() {
     abort.current?.abort();

@@ -9,6 +9,7 @@ import type { Locale } from "@/lib/i18n/locales";
 import { residentCodeFrom } from "@/lib/tags/links";
 import { groupByPlace, matchesQuery, type PickableResident } from "@/lib/medical/residents";
 import { ACTION_ICONS } from "@/components/hub-icons";
+import type { CardWaitJob } from "@/lib/residents/card-wait";
 import { ScanCardButton } from "./ScanCardButton";
 
 /**
@@ -31,6 +32,7 @@ export function ResidentPicker({
   onPick,
   onQueryChange,
   before,
+  scanJob,
 }: {
   t: Dictionary;
   locale: Locale;
@@ -44,6 +46,8 @@ export function ResidentPicker({
   onQueryChange?: (q: string) => void;
   /** Shown under the search, above the list (recent and nearby choices). */
   before?: React.ReactNode;
+  /** The job a scanned card opens on an iPhone; omit where a page load would lose work. */
+  scanJob?: CardWaitJob;
 }) {
   const p = t.medicalJobs.picker;
   const shown = residents.filter((r) => matchesQuery(r, query));
@@ -68,7 +72,7 @@ export function ResidentPicker({
 
   return (
     <div className="flex flex-col gap-4">
-      <ScanCardButton t={t} base={base} residents={residents} onFound={onPick} />
+      <ScanCardButton t={t} base={base} residents={residents} onFound={onPick} job={onPick ? undefined : scanJob} />
       <form
         method="get"
         action={base}
