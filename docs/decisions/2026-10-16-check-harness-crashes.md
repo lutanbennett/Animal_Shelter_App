@@ -1,0 +1,13 @@
+# 2026-10-16 — Two crashing check harnesses repaired, and why neither is in CI
+
+**What was wrong.** `check-cards-schema.mjs` could not load `cards.ts` (extensionless `./jobs` import, which Next accepts and plain `node` does not). `check-permission-parity.mjs` died in its fixture insert: `residents.resident_code` defaults to `'R-' || nextval(...)`, and on dev the sequence has fallen behind existing rows (the first value it hands out, `R-1001`, already exists), so the unique constraint fires before any assertion.
+
+**Import fix.** Copied the pattern `check-multi-role-build.mjs` already uses: a `register()`ed resolver hook that appends `.ts` to extensionless relative imports and maps `@/…` onto `src/`. `cards.ts` is unchanged, so the app build is untouched.
+
+**Fixture fix.** The four fixture residents now carry explicit codes, `H-<random>-1…4`, one set per run, instead of drawing from the sequence. Re-runnable, and independent of where the sequence stands. The sequence lag itself is a dev-data fact, not fixed here.
+
+**Shown to work.** `check-cards-schema` was run with a 22nd card added to `CARDS` locally: it printed `FAIL the agreed set is twenty-one cards; cards.ts has 22` and exited 1; reverted. Unmodified, it reports twenty-one cards and exits 0.
+
+**What `check-permission-parity` now shows (not this change's regression).** It runs to `RESULT: RED`. The 21 `doctor: the default says ALLOWED, the database REFUSES` lines are the recorded doctor disagreement from *Thirteen dev check harnesses still red*, and need Lutan's per-role ruling; expectations were not touched. Visible for the first time, and not in that record: four `[STALE]` `medical.archive` entries (note N4 lists doctor as allowed but the database now matches the default) and `NEITHER PROBED NOR EXPLAINED: maintenance.bills`.
+
+**CI: neither goes in.** Both authenticate to the *dev* project with `SUPABASE_ACCESS_TOKEN` through the Management API, and CI deliberately holds no Supabase token (see the comment above `check-new-policy-role-names.mjs` in `ci.yml`). Putting a token that can run arbitrary SQL on dev into a public repo's CI is a worse trade than the guard is worth. So "not in CI" is now deliberate, not an oversight: these are local, run before a release and by any stream that edits cards or permissions. `check-permission-parity` additionally stays red on a known content disagreement, which would make a CI job permanently red. The one part of the card guard that needs no database, the twenty-one count, could run in CI; filed as a backlog follow-up rather than done here. Neither is, or should become, a required check without Lutan's say.
