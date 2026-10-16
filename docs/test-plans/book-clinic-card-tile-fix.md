@@ -149,7 +149,7 @@ Automated checks by: Claude  Date: 2026-10-16
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the two items above
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: two items are listed and nobody has looked yet
 
 Manual verification by: pending: Management-login look at the home tile and the Who does what note
 
