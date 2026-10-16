@@ -83,8 +83,8 @@ export function DeliverySteps({
   const [saved, setSaved] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const amountInput = useRef<HTMLInputElement>(null);
-  /** Set when a size was just added, so its box is the one the keyboard opens on. */
-  const focusNew = useRef(false);
+  /** The size just added, so its box is the one the keyboard opens on. */
+  const [focusKey, setFocusKey] = useState<number | null>(null);
 
   const item = items[kind].find((i) => i.id === itemId);
   const date = earlier ? earlierDate : today;
@@ -314,7 +314,8 @@ export function DeliverySteps({
                   <label className="flex flex-col gap-1 text-sm font-medium text-muted">
                     {s.amount.label(label)}
                     <input
-                      ref={index === (focusNew.current ? lines.length - 1 : 0) ? amountInput : undefined}
+                      ref={index === 0 ? amountInput : undefined}
+                      autoFocus={line.key === focusKey}
                       type="text"
                       inputMode="decimal"
                       enterKeyHint="next"
@@ -392,8 +393,9 @@ export function DeliverySteps({
             )}
             <BigButton
               onClick={() => {
-                focusNew.current = true;
-                setLines((all) => [...all, newLine(usualUnit(item))]);
+                const added = newLine(usualUnit(item));
+                setFocusKey(added.key);
+                setLines((all) => [...all, added]);
               }}
               icon={<Plus aria-hidden="true" className="h-5 w-5" />}
             >
