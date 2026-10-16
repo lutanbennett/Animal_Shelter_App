@@ -146,7 +146,7 @@ export function AddPhotosFlow({
   const queue = (photoKey: string, r: PickableResident) => {
     const photo = photosRef.current.find((p) => p.key === photoKey);
     if (!photo || photo.tags.some((tag) => tag.residentId === r.id && tag.status !== "failed")) return;
-    const tag: Tag = { residentId: r.id, name: nameOf(r), status: "saving" };
+    const tag: Tag = { residentId: r.id, name: r.code ? `${nameOf(r)} · ${r.code}` : nameOf(r), status: "saving" };
     commit(
       photosRef.current.map((p) =>
         p.key === photoKey ? { ...p, tags: [...p.tags.filter((x) => x.residentId !== r.id), tag] } : p,
