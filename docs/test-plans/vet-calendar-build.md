@@ -155,7 +155,7 @@ Automated checks by: Claude  Date: 2026-10-16
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not done yet, listed under Left for manual verification; the list is not empty
 
-Manual verification by: pending: book, reschedule and cancel through the forms (needs the Pi on this code), the Retry path, the signed-in record link and the Director on her phone; items 1 to 6 above
+Manual verification by: pending: Lutan reported in chat (2026-10-16) that booking, rescheduling and cancelling on test work as expected for phase 1 (one-way); not yet checked: the 03:00 Bangkok case in the real calendar, a failed Google call then Retry, the signed-in and signed-out record link, the Director on her phone
 
 ### Result
 
