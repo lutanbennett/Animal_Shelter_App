@@ -2821,6 +2821,10 @@ const en = {
       fold: (n: number) => `${n} item${n === 1 ? "" : "s"} need${n === 1 ? "s" : ""} nothing for this period`,
       qty: (quantity: string, unit: string) => `${quantity} ${unit}`,
       equals: (quantity: string, unit: string) => `= ${quantity} ${unit}`,
+      // The same need in the other sizes (Pack sizes, part c), cheapest first. Always rounded up.
+      others: (list: string) => `Or about ${list}`,
+      otherSize: (packs: string, size: string, base: string, unit: string) => `${packs} × ${size} (${base} ${unit})`,
+      orJoin: " or ",
       empty: "Nothing listed yet.",
       list: {
         title: "To buy",

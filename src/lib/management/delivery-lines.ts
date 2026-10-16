@@ -53,9 +53,9 @@ export function resolveDeliveryLines(
     if (!resolved.ok) return { ok: false, reason: resolved.reason, line: i };
     // A line in the base unit has no `entered` of its own; beside other lines it
     // is written out with factor 1, so the array still adds up to the total.
-    entered.push(
-      resolved.entered?.[0] ?? { quantity: quantity.value, unit: normaliseUnitName(baseNames[0]) || "unit", factor: 1 },
-    );
+    const made = resolved.entered?.[0] ?? { quantity: quantity.value, unit: normaliseUnitName(baseNames[0]) || "unit", factor: 1 };
+    // The price stays with its own line, so Purchasing can tell what each size costs.
+    entered.push(cost.value == null ? made : { ...made, cost: cost.value });
   }
 
   const priced = costs.filter((c) => c != null).length;
