@@ -203,6 +203,8 @@ const en = {
       heading: "Our impact",
       inCare: "dogs and cats in our care today",
       adoptedThisYear: "adopted into new homes this year",
+      // A baseline figure with a year entered (impact_baselines.since_year): "Animals rehomed since 2019".
+      sinceYear: "{label} since {year}",
       inFoster: "living with foster families",
       inVetCare: "in treatment right now",
     },
@@ -1842,6 +1844,10 @@ const en = {
         countLabel: "Starting number",
         countPlaceholder: "e.g. 412",
         dateLabel: "True up to and including",
+        sinceYearLabel: "Counting since (year, optional)",
+        sinceYearPlaceholder: "e.g. 2019",
+        sinceYearHelp: "Shown on the website as \"since 2019\" beside this figure. Leave blank to show no year.",
+        invalidYear: "Enter the year as four digits, between 1990 and 2100.",
         countedNote:
           "The system adds every adoption recorded after this date, so do not count those twice.",
         outingsNote:
@@ -4277,9 +4283,12 @@ const en = {
         species: "Species",
         selectSpecies: "Select species",
         breed: "Breed",
+        breedTh: "Breed in Thai (optional)",
         sex: "Sex",
         colour: "Colour",
         colourHint: "e.g. Black and tan",
+        colourTh: "Colour in Thai (optional)",
+        thaiOptionalHint: "Shown to Thai readers on the website. Leave blank to show the English.",
         desexed: "Desexed (spayed / neutered)",
         desexedUnknown: "Not known",
         microchipNumber: "Microchip number",

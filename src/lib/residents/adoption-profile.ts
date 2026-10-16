@@ -36,6 +36,15 @@ export function readAdoptionCopy(
   return { hook_line: hook, ideal_home: idealHome };
 }
 
+/** The Thai breed and colour (0205): the edit form only, blank = null = the English is shown. */
+export function readThaiBreedColour(formData: FormData) {
+  const str = (name: string) => {
+    const value = formData.get(name);
+    return typeof value === "string" && value.trim() ? value.trim() : null;
+  };
+  return { breed_th: str("breedTh"), colour_th: str("colourTh") };
+}
+
 /**
  * The adoption recommendation columns (0060) as the intake and edit
  * actions write them, read from the fields AdoptionProfileFields renders.

@@ -10,6 +10,7 @@ import {
 
 export type AdoptionProfile = {
   colour: string | null;
+  colour_th?: string | null;
   is_desexed: boolean | null;
   good_with_dogs: string | null;
   good_with_cats: string | null;
@@ -30,9 +31,12 @@ const inputClass =
 export function AdoptionProfileFields({
   value,
   idPrefix = "",
+  withThai = false,
 }: {
   value?: AdoptionProfile | null;
   idPrefix?: string;
+  /** The Thai colour box: on the edit form only (intake leaves Thai for later, see the decision file). */
+  withThai?: boolean;
 }) {
   const { t } = useI18n();
   const f = t.residents.new.fields;
@@ -68,6 +72,24 @@ export function AdoptionProfileFields({
           className={inputClass}
         />
       </div>
+      {withThai && (
+        <div className="flex flex-col gap-1">
+          <label htmlFor={id("colourTh")} className="text-sm font-medium text-muted">
+            {f.colourTh}
+          </label>
+          <input
+            id={id("colourTh")}
+            name="colourTh"
+            lang="th"
+            defaultValue={value?.colour_th ?? ""}
+            aria-describedby={id("colourThHint")}
+            className={inputClass}
+          />
+          <p id={id("colourThHint")} className="text-xs text-muted">
+            {f.thaiOptionalHint}
+          </p>
+        </div>
+      )}
       <div className="flex flex-col gap-1">
         <label htmlFor={id("isDesexed")} className="text-sm font-medium text-muted">
           {f.desexed}
