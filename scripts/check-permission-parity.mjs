@@ -81,7 +81,7 @@ for (const line of paper.slice(start + 2)) {
     cells[m[1]][role] = v === "–" ? 0 : LEVEL[v];
   }
 }
-if (Object.keys(cells).length !== 63) throw new Error(`expected 63 activities in §4, parsed ${Object.keys(cells).length}`);
+if (Object.keys(cells).length !== 62) throw new Error(`expected 62 activities in §4, parsed ${Object.keys(cells).length}`);
 
 // RE-BASELINED 2026-10-06 (director-draft-apply): the volunteer's expected cells are the Director's draft 2 (3 cells on the paper, 5
 // under the draft), not the paper's R1 column. The DOCTOR column is deliberately NOT overridden: the paper gives doctors 13 cells, the draft
@@ -490,7 +490,7 @@ const PREDICATES = [
   // live only in the fixture (written before the conversion); check-recurring-job-eligibility.mjs
   // holds the new canDoJob to them. Only the pages with a single activity are paired here.
   // One list, several pages: its single truth table is paired with each activity the pages now ask.
-  ...[["facility.enclosures", 1], ["maintenance.jobs", 1], ["projects.folders", 1], ["contacts.directory", 1], ["clinics.list", 1], ["facility.map", 2]].map(([activity, level]) => (
+  ...[["facility.enclosures", 1], ["maintenance.jobs", 1], ["projects.folders", 1], ["contacts.directory", 1], ["clinics.list", 1]].map(([activity, level]) => (
     { id: `isShelterRole(${activity})`, row: "isShelterRole", fn: "isShelterRole", file: "src/lib/auth/app-access.ts", activity, level })),
   // requireAdminUser, hasAdminRole and the inline role === "admin" were never one function; one table, paired with every admin-only activity.
   ...["website.content", "reference.types", "audit.view", "audit.undo", "system.status"].map((activity) => (

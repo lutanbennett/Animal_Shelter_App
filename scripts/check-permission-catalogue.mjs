@@ -71,6 +71,11 @@ for (const f of migrations) {
   for (const m of sql.matchAll(/\('([a-z_]+)', '([a-z_]+\.[a-z_]+)', ([12])\)/g)) {
     seededCells.push([m[1] === "vet" ? "doctor" : m[1], m[2], Number(m[3])]);
   }
+  // a later file retiring an activity (0212: facility.map) takes it, and its cells, out of what the database holds
+  for (const m of sql.matchAll(/delete from permission_activities where key = '([a-z_.]+)'/g)) {
+    seeded.delete(m[1]);
+    for (let i = seededCells.length - 1; i >= 0; i--) if (seededCells[i][1] === m[1]) seededCells.splice(i, 1);
+  }
 }
 
 // ---- A ----

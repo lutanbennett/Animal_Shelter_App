@@ -112,12 +112,12 @@ begin
   if n <> 1 or lvl <> 1 then raise exception 'FAIL view_residents should give exactly resident.record at Read, got % cells', n; end if;
 
   -- an extra the cards do not give, then a higher card that includes the first and adds to it
-  insert into role_extras (role_id, activity, level, why) values (v_role, 'facility.map', 2, 'harness');
+  insert into role_extras (role_id, activity, level, why) values (v_role, 'maintenance.delete', 2, 'harness');
   perform set_role_cards(v_role, array['residents'], '${bj(["residents"])}'::jsonb);
   select level into lvl from role_permissions where role_id = v_role and activity = 'resident.record';
   if lvl is distinct from 2 then raise exception 'FAIL Residents should lift resident.record to Edit, got %', lvl; end if;
   if not exists (select 1 from role_permissions where role_id = v_role and activity = 'photos.resident_add') then raise exception 'FAIL Residents should bring photo upload'; end if;
-  if not exists (select 1 from role_permissions where role_id = v_role and activity = 'facility.map' and level = 2) then raise exception 'FAIL the extra must survive a recompute'; end if;
+  if not exists (select 1 from role_permissions where role_id = v_role and activity = 'maintenance.delete' and level = 2) then raise exception 'FAIL the extra must survive a recompute'; end if;
   if exists (select 1 from role_permissions where role_id = v_role and activity = 'placement.death_withdraw') then raise exception 'FAIL Residents must not give death withdrawal'; end if;
 
   -- levels flow down: Residents -> View residents. Swap Residents for the lower card: the edit and the photos go, the read stays
@@ -125,7 +125,7 @@ begin
   select level into lvl from role_permissions where role_id = v_role and activity = 'resident.record';
   if lvl is distinct from 1 then raise exception 'FAIL swapping Residents for View residents should drop resident.record to Read, got %', lvl; end if;
   if exists (select 1 from role_permissions where role_id = v_role and activity = 'photos.resident_add') then raise exception 'FAIL photo upload should go with the Residents card'; end if;
-  if not exists (select 1 from role_permissions where role_id = v_role and activity = 'facility.map') then raise exception 'FAIL the extra must survive removing a card'; end if;
+  if not exists (select 1 from role_permissions where role_id = v_role and activity = 'maintenance.delete') then raise exception 'FAIL the extra must survive removing a card'; end if;
 
   -- a card removed while another still covers its activity: Medical records and Book clinic visits both read medical.visits
   perform set_role_cards(v_role, array['medical_records', 'book_clinic_visits'], '${bj(["medical_records", "book_clinic_visits"])}'::jsonb);
@@ -135,7 +135,7 @@ begin
   if not exists (select 1 from role_permissions where role_id = v_role and activity = 'visit.book') then raise exception 'FAIL Book clinic visits keeps visit.book'; end if;
   if exists (select 1 from role_permissions where role_id = v_role and activity = 'medical.prescriptions') then raise exception 'FAIL removing Medical records should take its other cells'; end if;
   -- an extra raised by a card is not lowered when the card goes
-  update role_extras set level = 2, activity = 'medical.visits' where role_id = v_role and activity = 'facility.map';
+  update role_extras set level = 2, activity = 'medical.visits' where role_id = v_role and activity = 'maintenance.delete';
   perform set_role_cards(v_role, array['book_clinic_visits'], '${bj(["book_clinic_visits"])}'::jsonb);
   select level into lvl from role_permissions where role_id = v_role and activity = 'medical.visits';
   if lvl is distinct from 2 then raise exception 'FAIL an extra held at Edit must beat a card giving Read, got %', lvl; end if;

@@ -189,7 +189,6 @@ function table(activity, name, update, insert, del, flags) {
 // runner prints this list so the gap is read, not inferred.
 export const NO_DB_PROBE = {
   "placement.death_withdraw": undefined, // probed above; kept out of this list on purpose
-  "facility.map": "a page over data the facility.enclosures probes already cover; no table of its own",
   "projects.publish": undefined,
   "stock.purchasing": "a page over medication_forecast / diet_forecast, which read what stock.medications and stock.diets probes already cover",
   "stock.usage": "a page over stock_counts and stock_receipts, covered by the stock.delivery and stock.count probes",

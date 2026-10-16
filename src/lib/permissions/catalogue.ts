@@ -70,7 +70,6 @@ export const ACTIVITIES = [
   { key: "photos.resident_manage", kind: "yesno", area: "photos", sort: 20, requires: [], probes: [] },
   { key: "photos.resident_publish", kind: "yesno", area: "photos", sort: 21, requires: [], probes: [] },
   { key: "facility.enclosures", kind: "level", area: "enclosures", sort: 22, requires: [], probes: [] },
-  { key: "facility.map", kind: "yesno", area: "enclosures", sort: 23, requires: [], probes: [] },
   { key: "maintenance.jobs", kind: "level", area: "maintenance", sort: 24, requires: [], probes: [] },
   { key: "maintenance.progress", kind: "yesno", area: "maintenance", sort: 25, requires: [], probes: [] },
   { key: "maintenance.photos", kind: "yesno", area: "maintenance", sort: 26, requires: [], probes: [] },
