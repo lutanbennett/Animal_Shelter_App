@@ -340,6 +340,9 @@ async function Alerts({ t, locale }: { t: T; locale: Locale }) {
                 })}
               </p>
             )}
+            {f.lastMail && f.lastMail.sent === 0 && (
+              <p className="font-medium text-foreground">{renderedBy() === "pi" ? a.fixOnPi : a.fixHere}</p>
+            )}
             <p className="text-xs text-muted">{a.how}</p>
           </>
         )}
