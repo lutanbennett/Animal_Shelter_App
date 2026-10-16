@@ -51,7 +51,7 @@ All cut checks passed.
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three). `n/a: not yet — the PR does not exist at this commit`
+- [x] CI green on the PR (runs the same three). Seen green, not assumed: run `38904131074` on `567ab60537b3`, `completed/success`, all 8 checks passing and none pending. The `headSha` was read directly from `gh run list` and matched this branch's HEAD, because the PR bar's cached reading can still show an earlier run's result. This was the **first** run and it was green, which is expected rather than suspicious: the plan was written and committed before the PR was opened, so `test-plan` had a complete checklist to validate on the first push. Ticking this line is itself a commit, so a second run follows and is waited on before the merge
 - [x] `node scripts/check-release-guards.mjs` — all 15 guards `ok`, including `unreleased notes are a problem`, `package.json behind the newest release is a problem` and `a migration the database lacks is refused`. These are the guards that stand between a bad cut and a production deploy, so they are exercised on the branch that changes the file they read
 
 ## 3. Schema and data — *skip if no migration*
