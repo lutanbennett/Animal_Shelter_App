@@ -56,80 +56,70 @@ and this handover moved *Weekly · all models* from about 15% to **21%**. Nine s
 
 ---
 
-## THE PROCESS CHANGED ON 2026-10-16: `/plan-day` NO LONGER CREATES WORKTREES
+## THE WORKTREE EPISODE OF 2026-10-16 — TRIED, AND REVERTED THE SAME DAY
 
-**Lutan's decision, and the single most important operational change in this handover.** Read this
-before setting up a batch, because `SKILL.md` step 7 still says
-`node scripts/worktree.mjs new <slug>` and that is now **wrong**.
+**Read this before setting up a batch. `SKILL.md` step 7 says
+`node scripts/worktree.mjs new <slug>`, and after a day of being wrong that is RIGHT AGAIN.**
 
-**What happens now.** The desktop app cuts its **own** worktree for every new session, under
-`C:\Development\Animal_Shelter_App\.claude\worktrees\<slug>-<hash>`, on a branch
-`claude/<slug>-<hash>`, branched from `main`. `get_session` shows it plainly: `worktreePath` is the
-app's folder, `originCwd` is wherever the session was started.
+**Where it landed, first, because that is what you need:** Lutan **changed the Claude Code setting
+back to the original folder** on 2026-10-16. So **`/plan-day` creates `Animal_Shelter_<slug>`
+worktrees as it always did**, a session is opened on that folder, `.brief.md` lives in it, and
+`.port` is written by the script. **Nothing in `SKILL.md` or `CLAUDE.md` needs changing.**
 
-**How this was discovered:** batch 2's three sessions were started on the planner's
-`Animal_Shelter_<slug>` folders, and the app made its own worktrees anyway. The planner's three
-folders — three `npm ci` runs each — were **never used.** The merged branches were
-`claude/vet-calendar-build-e5f89d`, `claude/migration-test-guard-930a8b` and
-`claude/labels-year-app-84e026`.
+**Do not re-derive the middle of this. Here is what happened.**
 
-**So the planner now writes ONLY the brief**, to `C:\Development\Claude_Briefs\<slug>.md`, and hands
-Lutan one line per stream:
+For part of 2026-10-15 and 2026-10-16 the desktop app was set to cut its **own** worktree for every
+new session, under `C:\Development\Animal_Shelter_App\.claude\worktrees\<slug>-<hash>`, on a branch
+`claude/<slug>-<hash>`, branched from `main`. `get_session` showed it plainly: `worktreePath` the
+app's folder, `originCwd` the planner's.
 
-> Read `C:\Development\Claude_Briefs\<slug>.md` and do what it says.
+- **Batch 2's three sessions were started on the planner's folders and the app made its own anyway.**
+  The planner's three folders — an `npm ci` each — were **never used**. The merged branches were
+  `claude/vet-calendar-build-e5f89d`, `claude/migration-test-guard-930a8b`,
+  `claude/labels-year-app-84e026`.
+- On that evidence the planner asked whether to keep making worktrees, Lutan said stop, and **batch 3
+  was set up with briefs only**, written to `C:\Development\Claude_Briefs\<slug>.md`, with one
+  paste-ready line per stream. All three started correctly.
+- **He then reverted the setting.** Batch 3's three streams were already running in app-cut
+  worktrees and stayed there; they are the last that will be.
 
-He starts a new session on the **main checkout** and pastes that line. Batch 3 was set up this way
-and all three streams started correctly.
+### What this episode leaves behind that is still TRUE and still bites
 
-**Why the brief lives OUTSIDE the repo, which is not obvious:** `.brief.md` is **gitignored**, so it
-does not travel into a worktree the app cuts from `main`. And a folder named `Animal_Shelter_*`
-would be reported as a **husk** by `worktree.mjs list` and offered for deletion. Hence
-`C:\Development\Claude_Briefs\`.
+**1. The port trap, which is real whenever a worktree has no `.port`.**
+`readPort(dir) ?? MAIN_PORT` (`scripts/worktree.mjs:477` and `:353`) falls back to **3000 — the main
+checkout's port**. Every portless worktree's `launch.json` therefore aims at 3000, and
+`preview_start` attaches the session to whatever already serves there — **another stream's dev
+server**. A stream can then verify its change against someone else's build and see it pass for
+reasons unconnected to its work, silently.
 
-### THE TRAP THIS CREATED — and it is still only worked around, not fixed
+**And `nextFreePort` cannot see a worktree with no `.port`, so it hands the same port out twice.**
+This handover's own worktree was given **3008**, already assigned to the live
+`ledger-and-labels-schema` stream. Harmless for a docs branch; a second dev server on 3008 would not
+have been.
 
-**An app-cut worktree has NO `.port` file, and `worktree.mjs` falls back to 3000 — the MAIN
-CHECKOUT's port** (`readPort(dir) ?? MAIN_PORT`, `scripts/worktree.mjs:477` and `:353`).
+**This is filed on the backlog.** With the setting reverted, `worktree.mjs new` writes `.port` again
+and the trap is dormant — **but it is one setting away from returning**, and the fix (make
+`nextFreePort` see every worktree `git worktree list` knows, and refuse to default a non-main
+worktree to 3000) is worth doing anyway.
 
-So every portless worktree's `launch.json` aims at 3000, and `preview_start` attaches the session to
-whatever is already serving there — the main checkout, or **another stream's dev server**. **A
-stream can verify its change against someone else's build and see it pass for reasons unconnected to
-its work.** The failure is completely silent.
+**2. Four stale app worktrees under `.claude/worktrees/`** beyond batch 3's live three.
+**`worktree.mjs done` does not know about them at all** — they need `git worktree remove`. Count
+them with `git worktree list`, not `worktree.mjs list`.
 
-**Confirmed, not reasoned:** all three of batch 2's app-cut worktrees have no `.port`, while the
-planner's folders held 3001–3006.
+**3. `C:\Development\Claude_Briefs\` exists** and holds batch 3's three briefs. It is outside the
+repo because `.brief.md` is gitignored and so cannot travel into a worktree cut from `main`, and
+because a folder named `Animal_Shelter_*` would be reported as a **husk** by `worktree.mjs list` and
+offered for deletion. **With the setting reverted it is no longer needed** — leave it or delete it,
+but do not build on it.
 
-**The workaround, which every brief must now carry as its FIRST step:**
+### The lesson worth more than the mechanics
 
-```
-printf '<port>\n' > .port && node scripts/worktree.mjs launch
-```
-
-Batch 3 used 3007, 3008, 3009, because 3001–3006 are held by leftovers. **The real fix belongs in
-`worktree.mjs`** — probably allocating a free port and writing `.port` itself when the file is
-missing and the checkout is not main — and it is **filed on the backlog, not something to patch
-inside a feature stream.**
-
-**And the trap has a SECOND half, demonstrated by this very handover.** `worktree.mjs new
-planner-handover-173` was given port **3008** — the port already assigned to the live
-`ledger-and-labels-schema` stream. `nextFreePort` walks the worktrees it knows and reads their
-`.port` files, and **the app-cut worktrees have none, so their ports are invisible to it and get
-handed out twice.** Harmless here (a docs branch needs no dev server), but **a second stream that
-started a dev server on 3008 would have collided with a live one.** So the fix must make
-`nextFreePort` see the app's worktrees too, not merely write a `.port` when one is missing.
-
-### Two things this change leaves broken, both filed, both needing a PR
-
-- **`CLAUDE.md` still says *"If there is a `.brief.md`, that is the task"*** and describes a
-  workstream as `C:\Development\Animal_Shelter_<feature>` with its port from `.port`. Both are now
-  only sometimes true. **A session currently finds its brief only because it is told the path, and
-  that convention lives in a chat rather than the repo** — exactly what is lost when a chat ends.
-- **`worktree.mjs new`/`done`/`list`/`sync` all still assume `Animal_Shelter_<slug>`.** Not broken,
-  but `list` does not name the app's worktrees usefully, so **the planner's step-2 "what is in
-  flight" read is now partly blind.** Use `git worktree list` as well, every run.
-
-**Do not fix either inside a feature branch.** The 2026-10-07 failure `CLAUDE.md` documents by name
-is what happens when a rule reaches `main` through the `backlog` branch instead of a PR.
+**The planner asked rather than quietly absorbing the change, and that was right** — but it then
+**rewrote the process on one day's evidence**, and the evidence was a setting, not a decision. **A
+mechanism you have observed three times is still a mechanism, not a policy.** Next time a tool
+starts behaving differently, say what changed and ask **what he wants it to be**, before writing it
+into the process. Filing the two follow-ups was correct; changing `SKILL.md` would not have been,
+and it is the reason nothing was changed in the repo beyond this file.
 
 ---
 
@@ -137,12 +127,12 @@ is what happens when a rule reaches `main` through the `backlog` branch instead 
 
 | | |
 |---|---|
-| `main` when this was written | **`1c6e0ac1`**, `backlog` in step |
+| `main` when this was written | **`1e598a5c`**, `backlog` in step |
 | Dev database | **210 applied, 2 ahead of `main`'s 208 files** — `0208_clear_phantom_ledger_row_0201_again.sql` and `0209_residents_breed_colour_labels.sql`, applied by the live `ledger-and-labels-schema` stream before its PR merges. **This is the normal schema-first state mid-stream, not drift** |
 | Production database | **the planner cannot read it** — refused as [Production Reads]. Hand Lutan a read-only script and read the result from his terminal |
 | Next free migration number | **`0210`** once batch 3 merges; `0208`/`0209` are claimed by the live stream |
-| Open backlog items | **106** |
-| Open PRs | **none.** Batch 3's three are still being built |
+| Open backlog items | **104** |
+| Open PRs | **#661** (`ledger-and-labels-schema`). `check-harness-crashes` merged as **#660**; `weigh-first-app` was still building |
 | Last release | **`0.32.1`**, cut, recorded and deployed 2026-10-15 — the third release of that day |
 | `unreleased` | **four notes**, from batches 1 and 2: the "Counting since (year)" box, Thai breed and colour, the neutral *All zones* chip, the intake-date fix |
 | Leftover worktrees | **SEVEN** `Animal_Shelter_*` folders plus four stale app worktrees — see *Leftovers* |
@@ -301,7 +291,7 @@ three live batch-3 ones.
 - Seven folders: `calendar-and-weigh-schema`, `intake-date-nan-fix`, `labels-and-year-app`,
   `migration-test-guard`, `vet-calendar-build`, `zone-chip-neutral-fill`, and
   `handover-defect1-source-gone` (not the planner's — another session's).
-- **Three of those seven were never used at all** — they are the batch-2 folders the app ignored.
+- **Three of those seven were never used at all** — the batch-2 folders the app ignored during the worktree episode. With the setting reverted this will not recur.
 - **They hold ports 3001–3006**, which is why batch 3 had to start at 3007.
 
 **The rule that matters more than the count:** ahead with **no** PR is unsubmitted work, and
@@ -377,7 +367,7 @@ those need `git worktree remove`, and that is part of the filed tooling gap.
 7. **Raising model or effort is NOT the answer to a brief or handoff miss.** Proved again this round
    by a brief-accuracy error that more thinking per turn would not have caught.
 8. **The quick-win band stays as written.** Asked four times.
-9. **`/plan-day` no longer creates worktreees.** His decision, 2026-10-16.
+9. **`/plan-day` creates worktrees, as it always did.** Tried the other way on 2026-10-16 and **reverted the same day** when Lutan put the Claude Code setting back — see *THE WORKTREE EPISODE*. `SKILL.md` step 7 is correct as written.
 
 ---
 
@@ -394,9 +384,12 @@ attach a file naming real people. **Never give him a command before the moment h
 **He takes the planner's recommendation when it is explicit and first.** Every stream this round ran
 exactly what was recommended, and he confirmed all three of each batch with no swaps.
 
-**He answers a well-posed either/or immediately, and the answer can change the process.** Offered
-three options on the worktree question, he picked "stop making them" at once. **So when the planner
-finds a mechanism that is wasting work, ASK — do not quietly keep doing it.**
+**He answers a well-posed either/or immediately — and he also reverses himself when the answer
+turns out to rest on a setting.** Offered three options on the worktree question he picked "stop
+making them" at once, then **put the setting back the same day**. Both were right on the information
+he had. **So: ASK when a mechanism is wasting work — but frame it as "this is what the tool is
+doing, what do you want it to be", not "shall we change the process", and change nothing in the repo
+until it has held for more than a day.**
 
 **He files items himself, mid-day, from looking at the live app.** Re-read an item fresh when
 writing its brief.
