@@ -82,6 +82,7 @@ export default async function AddMedicalPhotosPage(props: PageProps<"/medical/ph
           </span>
           <div className="min-w-0">
             <p className="break-words text-2xl font-semibold text-foreground">{name}</p>
+            {resident.code && <p className="text-base font-medium text-muted">{resident.code}</p>}
             {resident.enclosure && (
               <p className="break-words text-base text-muted">
                 {placeName(locale, resident.enclosure.name, resident.enclosure.nameTh)}

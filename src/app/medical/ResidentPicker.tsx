@@ -6,8 +6,10 @@ import { placeName } from "@/lib/enclosures/names";
 import { ZoneName } from "@/components/ZoneName";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { Locale } from "@/lib/i18n/locales";
+import { residentCodeFrom } from "@/lib/tags/links";
 import { groupByPlace, matchesQuery, type PickableResident } from "@/lib/medical/residents";
 import { ACTION_ICONS } from "@/components/hub-icons";
+import { ScanCardButton } from "./ScanCardButton";
 
 /**
  * "Who?" for the Head of Medical's phone jobs: residents as big photo tiles, by zone then
@@ -66,6 +68,7 @@ export function ResidentPicker({
 
   return (
     <div className="flex flex-col gap-4">
+      <ScanCardButton t={t} base={base} residents={residents} onFound={onPick} />
       <form
         method="get"
         action={base}
@@ -125,7 +128,7 @@ export function ResidentPicker({
       )}
       {!error && shown.length === 0 && (
         <p className="rounded-lg border border-border bg-surface p-4 text-muted">
-          {query ? p.noMatch : p.empty}
+          {query ? (residentCodeFrom(query) ? p.noMatchCode : p.noMatch) : p.empty}
         </p>
       )}
 

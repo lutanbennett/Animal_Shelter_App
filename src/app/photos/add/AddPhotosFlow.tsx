@@ -5,7 +5,6 @@ import { Camera, CheckCircle2, ImagePlus, Loader2, RotateCcw, XCircle } from "lu
 import { ActionButton } from "@/components/ActionButton";
 import { uploadResidentPhoto } from "@/components/PhotoUploader";
 import { ResidentPicker } from "@/app/medical/ResidentPicker";
-import { ScanCardSeam } from "./ScanCardSeam";
 import { placeName } from "@/lib/enclosures/names";
 import { photoFolderLabel } from "@/lib/i18n/enum-labels";
 import { todayIso } from "@/lib/format";
@@ -395,7 +394,6 @@ export function AddPhotosFlow({
                   )}
                 </div>
               )}
-              <ScanCardSeam residents={residents} onFound={pick} />
               <ResidentPicker
                 t={t}
                 locale={locale}
