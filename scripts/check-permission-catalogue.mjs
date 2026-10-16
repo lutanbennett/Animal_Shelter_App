@@ -311,6 +311,7 @@ const EXEMPT = {
   "/privacy": { public: true, why: "Static privacy notice; Google's consent screen links to it." },
   "/adopt": { public: true, why: "Public website: reads public_resident_profiles, the anonymous tier (§6)." },
   "/adopt/[id]": { public: true, why: "Public website: one public_resident_profiles row." },
+  "/adopt/stories/[id]": { public: true, why: "Public website: the public_adoption_updates rows an adopter agreed to share about one animal." },
   "/appeals": { public: true, why: "Public website: reads public_appeals, the anonymous tier (0210); drafts are excluded in SQL." },
   "/appeals/[id]": { public: true, why: "Public website: one public_appeals row and its public_appeal_photos." },
   "/adopt/international": { public: true, why: "Public website: static page from site_content." },

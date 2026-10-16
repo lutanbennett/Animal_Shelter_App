@@ -11,7 +11,7 @@
 | PR | not yet open at this commit |
 | Tested by / date | Claude / 2026-10-17 |
 | Carries a migration? | no, but it reads `0215` (`public_recent_adoptions.resident_id`, PR #688), which must merge and reach production before this deploys |
-| Tested at SHA | `PLACEHOLDER` |
+| Tested at SHA | `fdc8b332` |
 
 ## 1. Scope and risk
 
