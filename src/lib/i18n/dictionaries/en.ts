@@ -2282,6 +2282,29 @@ const en = {
       doneBack: "Back to the first card",
     },
     deliveriesLink: "Record a delivery",
+    // Counting in sizes (Pack sizes, part b): one whole-number row per size.
+    sizes: {
+      hint: "Tap + once for each one you can see. You do not need to work out any weights.",
+      loose: (unit: string) => `Loose ${unit} (not in a bag or box)`,
+      more: (size: string) => `One more: ${size}`,
+      fewer: (size: string) => `One fewer: ${size}`,
+      howMany: (item: string, size: string) => `${item}: how many, ${size}`,
+      openTitle: "Is a bag or box already open?",
+      openWarn:
+        "Do not count an open one in the rows above. Say roughly how full it is instead. It is a guess, and a rough guess is fine.",
+      openAdd: "Yes, one is open",
+      openAnother: "Another one is open",
+      openRemove: "Take this one off",
+      openWhich: "Which size is the open one?",
+      openHow: "How full is it?",
+      levels: { full: "About full", half: "About half", quarter: "About a quarter", nearly: "Nearly empty" },
+      openLine: (size: string, level: string) => `1 open ${size}, ${level.toLowerCase()}`,
+      total: (n: string, unit: string) => `Together: ${n} ${unit}`,
+      totalAbout: (n: string, unit: string) => `Together: about ${n} ${unit}`,
+      clear: "Clear this count",
+      sameLines: (what: string) => `Same as last time: ${what}`,
+      reviewLine: (what: string) => what,
+    },
   },
 
   bills: {

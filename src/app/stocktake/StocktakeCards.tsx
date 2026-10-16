@@ -9,6 +9,7 @@ import { driveImageUrl } from "@/lib/google/drive-client";
 import { formatQuantity } from "@/lib/diets/options";
 import { readStock } from "@/lib/management/stock";
 import { inUnit } from "@/lib/units";
+import { SizeCounter } from "./SizeCounter";
 import {
   cardsAdvance,
   cardsBack,
@@ -17,6 +18,7 @@ import {
   currentCardId,
   entryUnit,
   rowOutcome,
+  usesSizes,
   type CardsState,
   type RowEntry,
   type StocktakeItem,
@@ -213,15 +215,19 @@ function CardView({
   const c = s.cards;
   const [value, setValue] = useState(entry && !entry.same ? entry.value : "");
   const [unitChoice, setUnitChoice] = useState<string | undefined>(entry?.unit);
+  const [sized, setSized] = useState<RowEntry | undefined>(entry && !entry.same ? entry : undefined);
+  const sizeMode = usesSizes(item);
   const input = useRef<HTMLInputElement>(null);
 
   // The keypad opens on arrival: the person taps a button, the next card
   // appears, and the number field is already waiting.
   useEffect(() => {
-    input.current?.focus({ preventScroll: true });
-  }, []);
+    if (!sizeMode) input.current?.focus({ preventScroll: true });
+  }, [sizeMode]);
 
-  const draft: RowEntry = { value, same: false, unit: unitChoice };
+  const draft: RowEntry = sizeMode
+    ? { value: "", same: false, unit: unitChoice, sizes: sized?.sizes, open: sized?.open }
+    : { value, same: false, unit: unitChoice };
   const outcome = rowOutcome(item, draft);
   const unit = entryUnit(item, draft);
   const conversions = item.conversions ?? [];
@@ -301,7 +307,8 @@ function CardView({
             submit();
           }}
         >
-          <div className="flex gap-2">
+          {sizeMode && <SizeCounter item={item} entry={draft} onChange={setSized} big />}
+          <div className={sizeMode ? "hidden" : "flex gap-2"}>
             {conversions.length > 0 && (
               <select
                 aria-label={t.units.entry.unit}

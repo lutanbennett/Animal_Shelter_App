@@ -13,7 +13,7 @@
  * exactly one of: left alone, counted, confirmed.
  */
 
-import { defaultUnit, resolveEntered, type UnitConversion } from "@/lib/units";
+import { defaultUnit, resolveEntered, roundBase, type EnteredLine, type UnitConversion } from "@/lib/units";
 
 export type StocktakeKind = "medication" | "diet";
 
@@ -27,9 +27,95 @@ export type StocktakeItem = {
   lastCountedAt: string | null;
   /** Drive id of the box/bottle label photo (medications only, 0129). */
   labelFileId?: string | null;
+  /** The base unit as stored (English), to tell a loose line from a size when a last count is read back. */
+  baseUnit?: string;
   /** Other units it is counted in (0118), as they are now. Absent = base unit only. */
   conversions?: UnitConversion[];
+  /**
+   * The sizes the last count was made in, when it was made in several, so
+   * "Same as last time" can repeat the lines and not only the total. Null =
+   * counted in one figure, or not counted.
+   */
+  lastEntered?: EnteredLine[] | null;
 };
+
+/**
+ * Counting in sizes (backlog, "Pack sizes, the rest", part b). An item with
+ * other sizes set up is counted one whole-number row per size, plus a row for
+ * loose stock in the base unit, and the system adds them up. Nobody types a
+ * decimal or a conversion.
+ *
+ * An OPEN bag cannot be a whole number of bags, so it is a rough choice of how
+ * full it is. The fractions sit at or below the middle of each wording
+ * ("about full" is 0.9, not 1) so a half-used bag is never counted as a whole
+ * one, which is the way a stocktake goes wrong: it overstates stock and the
+ * forecast says the shelter has longer than it has.
+ */
+export type OpenLevel = "full" | "half" | "quarter" | "nearly";
+export const OPEN_LEVELS: OpenLevel[] = ["full", "half", "quarter", "nearly"];
+export const OPEN_FRACTION: Record<OpenLevel, number> = { full: 0.9, half: 0.5, quarter: 0.25, nearly: 0.1 };
+
+/** One open bag, box or sleeve: which size it is (a unit name) and roughly how full. */
+export type OpenBag = { unit: string; level: OpenLevel };
+
+/** The biggest whole number a size row takes: far above any real shelf, low enough to catch a slipped finger. */
+export const MAX_PER_SIZE = 9999;
+
+/** One line of a count in sizes, as typed: a unit name ("" = loose, in the base unit) and how many. */
+export type CountLine = { quantity: number; unit: string };
+
+export type SizeRow = { key: string; factor: number; conversion?: UnitConversion };
+
+/** Counted in sizes: the item has any other size set up. Anything else keeps the single figure box. */
+export function usesSizes(item: StocktakeItem): boolean {
+  return (item.conversions?.length ?? 0) > 0;
+}
+
+/**
+ * The rows, in the order the person meets them: the size it is usually counted
+ * in, then the one usually bought, then the rest biggest first, and loose
+ * stock (the base unit) last.
+ */
+export function sizeRows(item: StocktakeItem): SizeRow[] {
+  const conversions = item.conversions ?? [];
+  if (conversions.length === 0) return [];
+  const rank = (c: UnitConversion) => (c.isCount ? 0 : c.isDefaultPurchase ? 1 : c.isPurchase ? 2 : 3);
+  const ordered = [...conversions].sort((a, b) => rank(a) - rank(b) || b.basePer - a.basePer);
+  return [
+    ...ordered.map((c) => ({ key: c.unit, factor: c.basePer, conversion: c })),
+    { key: "", factor: 1 },
+  ];
+}
+
+/** The sizes a person can call an open one: the packs, never the loose row. */
+export function openChoices(item: StocktakeItem): SizeRow[] {
+  return sizeRows(item).filter((r) => r.key !== "");
+}
+
+/** What the person has counted in sizes, as lines: whole ones first, then the open ones as a fraction of their size. */
+export function countLines(entry: RowEntry | undefined): CountLine[] {
+  const lines: CountLine[] = [];
+  for (const [unit, n] of Object.entries(entry?.sizes ?? {})) if (n > 0) lines.push({ quantity: n, unit });
+  for (const bag of entry?.open ?? []) lines.push({ quantity: OPEN_FRACTION[bag.level], unit: bag.unit });
+  return lines;
+}
+
+/** Base units in a set of lines, each against its OWN size factor. Null if a unit is not one of the item sizes. */
+export function linesBase(item: StocktakeItem, lines: CountLine[]): number | null {
+  const rows = sizeRows(item);
+  let total = 0;
+  for (const line of lines) {
+    const row = rows.find((r) => r.key === line.unit);
+    if (!row) return null;
+    total += line.quantity * row.factor;
+  }
+  return roundBase(total);
+}
+
+/** True once the person has touched the size rows (a 0 they chose counts: none left). */
+export function touchedSizes(entry: RowEntry | undefined): boolean {
+  return Object.keys(entry?.sizes ?? {}).length > 0 || (entry?.open?.length ?? 0) > 0;
+}
 
 /** The unit a row counts in unless the person changed it: the count unit, else the base unit (""). */
 export function entryUnit(item: StocktakeItem, entry: RowEntry | undefined): string {
@@ -45,13 +131,17 @@ export type RowEntry = {
   same: boolean;
   /** A conversion's unit name; "" = base. Unset = the item's default count unit. */
   unit?: string;
+  /** Counted in sizes: how many whole ones of each (unit name, "" = loose). A key at 0 is a count of none. */
+  sizes?: Record<string, number>;
+  /** Counted in sizes: open bags, boxes or sleeves, each a rough fullness. */
+  open?: OpenBag[];
 };
 
 export type RowOutcome =
   | { kind: "untouched" }
   /** `count` is in BASE units; `typed` is what was entered when that was another unit. */
-  | { kind: "counted"; count: number; typed?: { quantity: number; unit: string } }
-  | { kind: "confirmed"; count: number }
+  | { kind: "counted"; count: number; typed?: { quantity: number; unit: string }; lines?: CountLine[] }
+  | { kind: "confirmed"; count: number; kept?: EnteredLine[] }
   | { kind: "invalid" };
 
 /**
@@ -62,9 +152,22 @@ export type RowOutcome =
 export function rowOutcome(item: StocktakeItem, entry: RowEntry | undefined): RowOutcome {
   if (!entry) return { kind: "untouched" };
   if (entry.same) {
-    return item.lastCount == null
-      ? { kind: "untouched" }
-      : { kind: "confirmed", count: item.lastCount };
+    if (item.lastCount == null) return { kind: "untouched" };
+    // The sizes the last count was made in come along, when they still add up to it.
+    const kept = item.lastEntered;
+    const keptOk =
+      !!kept &&
+      kept.length > 0 &&
+      Math.abs(kept.reduce((sum, l) => sum + l.quantity * l.factor, 0) - item.lastCount) <=
+        0.000001 * Math.max(1, item.lastCount);
+    return keptOk ? { kind: "confirmed", count: item.lastCount, kept } : { kind: "confirmed", count: item.lastCount };
+  }
+  if (usesSizes(item) && touchedSizes(entry)) {
+    const sizes = entry.sizes ?? {};
+    if (Object.values(sizes).some((n) => !Number.isInteger(n) || n < 0 || n > MAX_PER_SIZE)) return { kind: "invalid" };
+    const lines = countLines(entry);
+    const count = linesBase(item, lines);
+    return count == null ? { kind: "invalid" } : { kind: "counted", count, lines };
   }
   const trimmed = entry.value.trim();
   if (!trimmed) return { kind: "untouched" };
@@ -112,7 +215,16 @@ export type SheetSummary = {
 };
 
 /** One row of the save: `count` in base units, plus the unit it was typed in when that was not the base. */
-export type SheetCount = { id: string; count: number; quantity?: number; unit?: string };
+export type SheetCount = {
+  id: string;
+  count: number;
+  quantity?: number;
+  unit?: string;
+  /** Counted in sizes: the server restamps each against the live conversion. */
+  lines?: CountLine[];
+  /** Confirmed same as last time with its sizes: kept as they were, their own factors included. */
+  kept?: EnteredLine[];
+};
 
 export function summarise(
   items: Record<StocktakeKind, StocktakeItem[]>,
@@ -129,9 +241,13 @@ export function summarise(
       } else {
         summary.lines.push({ kind, item, outcome, big: isBigChange(item.lastCount, outcome.count) });
         summary[kind].push(
-          outcome.kind === "counted" && outcome.typed
-            ? { id: item.id, count: outcome.count, quantity: outcome.typed.quantity, unit: outcome.typed.unit }
-            : { id: item.id, count: outcome.count },
+          outcome.kind === "counted" && outcome.lines
+            ? { id: item.id, count: outcome.count, lines: outcome.lines }
+            : outcome.kind === "counted" && outcome.typed
+              ? { id: item.id, count: outcome.count, quantity: outcome.typed.quantity, unit: outcome.typed.unit }
+              : outcome.kind === "confirmed" && outcome.kept
+                ? { id: item.id, count: outcome.count, kept: outcome.kept }
+                : { id: item.id, count: outcome.count },
         );
       }
     }
