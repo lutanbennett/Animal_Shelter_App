@@ -1,3 +1,4 @@
+import { residentText } from "@/lib/residents/labels";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -162,7 +163,7 @@ export default async function PublicResidentPage(
     },
     resident.sex && { label: d.sex, value: sexLabel(t, resident.sex) },
     resident.breed
-      ? { label: d.breed, value: resident.breed }
+      ? { label: d.breed, value: residentText(locale, resident.breed, resident.breed_th) ?? resident.breed }
       : resident.species && { label: d.species, value: speciesLabel(t, resident.species) },
     resident.size && { label: d.size, value: sizeLabel(t, resident.size) },
     health.length > 0 && { label: p.health, value: health.join(" · ") },
@@ -385,7 +386,7 @@ export default async function PublicResidentPage(
             </h2>
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               {similar.map((other) => (
-                <ResidentCard key={other.id} resident={other} t={t} />
+                <ResidentCard key={other.id} resident={other} t={t} locale={locale} />
               ))}
             </div>
           </section>

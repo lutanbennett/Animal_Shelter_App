@@ -1,3 +1,4 @@
+import { residentText } from "@/lib/residents/labels";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -139,10 +140,10 @@ export default async function ResidentCardPage(props: PageProps<"/r/[code]">) {
 
   const details = [
     resident.species && { label: d.species, value: speciesLabel(t, resident.species) },
-    resident.breed && { label: d.breed, value: resident.breed },
+    resident.breed && { label: d.breed, value: residentText(locale, resident.breed, resident.breed_th) ?? resident.breed },
     resident.sex && { label: d.sex, value: sexLabel(t, resident.sex) },
     resident.size && { label: d.size, value: sizeLabel(t, resident.size) },
-    resident.colour && { label: d.colour, value: resident.colour },
+    resident.colour && { label: d.colour, value: residentText(locale, resident.colour, resident.colour_th) ?? resident.colour },
     resident.estimated_age_years != null && {
       label: d.age,
       value: formatAge(t, resident.estimated_age_years, resident.age_estimated_on),

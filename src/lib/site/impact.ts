@@ -71,20 +71,28 @@ export type ImpactFigure = {
   label: string;
   label_th: string | null;
   total: number;
+  since_year: number | null;
 };
 
-export const IMPACT_FIGURE_COLUMNS = "key, label, label_th, total";
+export const IMPACT_FIGURE_COLUMNS = "key, label, label_th, total, since_year";
 
 /** Tiles for the band, in the Thai label when the reader wants it and one exists. */
 export function impactFigureStats(
   figures: ImpactFigure[] | null,
   locale: "en" | "th",
+  sinceTemplate: string,
 ): ImpactStat[] {
-  return (figures ?? []).map((f) => ({
-    key: `figure-${f.key}`,
-    value: f.total,
-    label: (locale === "th" && f.label_th?.trim()) || f.label,
-  }));
+  return (figures ?? []).map((f) => {
+    const label = (locale === "th" && f.label_th?.trim()) || f.label;
+    return {
+      key: `figure-${f.key}`,
+      value: f.total,
+      // No year entered: the label exactly as before, no "since".
+      label: f.since_year
+        ? sinceTemplate.replace("{label}", label).replace("{year}", String(f.since_year))
+        : label,
+    };
+  });
 }
 
 /** impact_baselines (0156), as the Settings editor reads them. */
@@ -94,5 +102,6 @@ export type ImpactBaselineRow = {
   label_th: string | null;
   baseline_count: number | null;
   baseline_date: string | null;
+  since_year: number | null;
   set_at: string;
 };

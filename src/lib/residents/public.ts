@@ -16,6 +16,7 @@ export type PublicResident = ResidentCardRow & {
   estimated_age_years: number | null;
   age_estimated_on: string | null;
   colour: string | null;
+  colour_th: string | null;
   is_desexed: boolean | null;
   is_vaccinated: boolean;
   /** 0117: that a chip is on file. The number itself is never public. */
@@ -29,10 +30,10 @@ export type PublicResident = ResidentCardRow & {
 };
 
 export const PUBLIC_RESIDENT_COLUMNS =
-  "id, name, species, breed, sex, size, ready_for_adoption, bio, temperament_notes, past_story_notes, profile_photo_drive_file_id, estimated_age_years, age_estimated_on, translations, colour, is_desexed, is_vaccinated, is_microchipped, good_with_dogs, good_with_cats, good_with_children, energy_level, hook_line, ideal_home";
+  "id, name, species, breed, sex, size, ready_for_adoption, bio, temperament_notes, past_story_notes, profile_photo_drive_file_id, estimated_age_years, age_estimated_on, translations, colour, colour_th, breed_th, is_desexed, is_vaccinated, is_microchipped, good_with_dogs, good_with_cats, good_with_children, energy_level, hook_line, ideal_home";
 
 export const CARD_COLUMNS =
-  "id, name, species, breed, size, ready_for_adoption, profile_photo_drive_file_id";
+  "id, name, species, breed, breed_th, size, ready_for_adoption, profile_photo_drive_file_id";
 
 export async function loadPublicResident(
   supabase: SupabaseClient,

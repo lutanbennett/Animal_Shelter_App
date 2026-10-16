@@ -17,9 +17,11 @@ export type ResidentCard = {
   thai_name: string | null;
   species: string | null;
   breed: string | null;
+  breed_th: string | null;
   sex: string | null;
   size: string | null;
   colour: string | null;
+  colour_th: string | null;
   is_desexed: boolean | null;
   estimated_age_years: number | null;
   age_estimated_on: string | null;
@@ -39,7 +41,7 @@ export type ResidentCard = {
 };
 
 const CARD_COLUMNS =
-  "id, resident_code, name, thai_name, species, breed, sex, size, colour, is_desexed, estimated_age_years, age_estimated_on, intake_date, bio, temperament_notes, profile_photo_drive_file_id, ready_for_adoption, is_public_visible, good_with_dogs, good_with_cats, good_with_children, energy_level, translations, status";
+  "id, resident_code, name, thai_name, species, breed, breed_th, sex, size, colour, colour_th, is_desexed, estimated_age_years, age_estimated_on, intake_date, bio, temperament_notes, profile_photo_drive_file_id, ready_for_adoption, is_public_visible, good_with_dogs, good_with_cats, good_with_children, energy_level, translations, status";
 
 /**
  * By R-code (what the card carries; case-insensitive so a hand-typed

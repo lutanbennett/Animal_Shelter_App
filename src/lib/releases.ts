@@ -75,6 +75,8 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Settings → Website → impact figures: each figure has a new optional \"Counting since (year)\" box. Once a year is typed, the home page reads, for example, \"Animals rehomed since 2019\" (in Thai too). With the box empty nothing changes.",
+  "Residents: the edit page has new optional boxes for the breed and the colour in Thai. A Thai reader of the website sees the Thai where it has been typed and the English where it has not, never a blank.",
   "On the Enclosures and Residents lists, the \"All zones\" button now shows as chosen in plain white (or black) instead of orange, so it no longer looks like the Orange zone is picked.",
   "Registering a resident: the Review step shows the intake date again (it had been reading \"NaN undefined NaN\"). The date saved was always right.",
 ];
