@@ -6,7 +6,7 @@
 |---|---|
 | Feature | Retire the `facility.map` permission activity: nothing asks it since the map became a view of enclosures |
 | Backlog item | `docs/backlog.md` → **Retire the `facility.map` activity (tidy-up migration, small; schema PR)** |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/facility-map-retire` @ `C:DevelopmentAnimal_Shelter_facility-map-retire` |
 | Dev server | not started: no page changes; the behaviour is in the database and was measured by script |
 | PR | pending: opened after this commit |
 | Tested by / date | Claude / 2026-10-16 |
@@ -210,12 +210,9 @@ Automated checks by: Claude  Date: 2026-10-16
 ### Manual verification
 
 The items in **Left for manual verification** above. Signed by the person who
-looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
+looked. Claude never signs this line on someone else's behalf.
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
@@ -245,7 +242,7 @@ Manual verification by: pending: Lutan runs the production holders query (see Le
 
 - [x] Open defects are either fixed or explicitly accepted above — no defects found
 - [x] Checklist pasted into the PR — pasted in the PR body
-- [ ] Handed to the production release manager — deferred: release manager reads it at release
+- [ ] Handed to the production release manager — n/a: handed over by the PR itself; the release manager reads the plan at release
 
 Result: pass
 
