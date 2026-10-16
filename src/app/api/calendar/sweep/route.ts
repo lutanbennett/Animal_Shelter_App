@@ -20,10 +20,26 @@ function authorised(request: Request): boolean {
   return timingSafeEqual(digest(token), digest(key));
 }
 
+/**
+ * Where the links in an event point. The deploy pins NEXT_PUBLIC_SITE_URL, so that wins: the cron's own
+ * request has no real host (a first test run wrote https://undefined into the links). With neither, no links.
+ */
+function siteOrigin(request: Request): string | null {
+  for (const candidate of [process.env.NEXT_PUBLIC_SITE_URL, request.url]) {
+    try {
+      const url = new URL(candidate ?? "");
+      if (url.hostname && url.hostname !== "undefined") return url.origin;
+    } catch {
+      // not a URL: try the next
+    }
+  }
+  return null;
+}
+
 export async function POST(request: Request) {
   if (!authorised(request)) {
     return Response.json({ error: "Not authorised." }, { status: 401, headers: { "cache-control": "no-store" } });
   }
-  const result = await syncPendingVisits(new URL(request.url).origin);
+  const result = await syncPendingVisits(siteOrigin(request));
   return Response.json(result, { headers: { "cache-control": "no-store" } });
 }
