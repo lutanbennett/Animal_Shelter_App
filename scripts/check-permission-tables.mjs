@@ -85,7 +85,7 @@ for (const line of paper.slice(start + 2)) {
   expected.length = 0;
   expected.push(...kept, ...cellsFor(draft, "volunteer", Object.fromEntries(ACTIVITIES.map((a) => [a.key, a.kind]))).map((c) => `('volunteer', '${c.activity}', ${c.level})`));
 }
-if (activityCount !== 62) throw new Error(`expected 62 activities in §4, parsed ${activityCount}`);
+if (activityCount !== 63) throw new Error(`expected 63 activities in §4, parsed ${activityCount}`);
 
 const sql = `
 begin;
@@ -231,8 +231,8 @@ declare
 begin
   -- A: the seed.
   perform pg_temp.eq('A roles', (select count(*) from roles where key in ('admin','management','staff','doctor','volunteer','public_viewer'))::text, '6');
-  perform pg_temp.eq('A activities', (select count(*) from permission_activities)::text, '62');
-  perform pg_temp.eq('A yesno+level', (select count(*) filter (where kind = 'yesno') || '/' || count(*) filter (where kind = 'level') from permission_activities), '42/20'); -- 42 since 0169 added community.outings (a yes/no, Management)
+  perform pg_temp.eq('A activities', (select count(*) from permission_activities)::text, '63');
+  perform pg_temp.eq('A yesno+level', (select count(*) filter (where kind = 'yesno') || '/' || count(*) filter (where kind = 'level') from permission_activities), '43/20'); -- 42 since 0169 added community.outings (a yes/no, Management)
   -- RE-BASELINED 2026-10-06 (director-draft-apply): the Director's draft 2 is the agreed state of the volunteer (3 -> 5: the
   -- residents list, who and where, the map and its enclosures read, own recurring jobs, the assistant). The DOCTOR stays at the
   -- paper's 13 and is checked with eq_known(): the draft gives doctors only the microchip (2 cells) and Lutan said doctors are on hold,
@@ -249,7 +249,7 @@ begin
   perform pg_temp.eq('A real logins have role_id', (select count(*) from user_roles where role_id is null)::text, '0');
   perform pg_temp.eq('A scopes doctor', (select scope_residents || '/' || scope_clinical || '/' || scope_contacts || '/' || scope_photos || '/' || sees_login_emails from roles where key = 'doctor'), 'own_clinic/own_clinic/name_type/medical_only/false');
   perform pg_temp.eq('A scopes volunteer', (select scope_contacts || '/' || sees_login_emails from roles where key = 'volunteer'), 'name_phone/false');
-  v_report := v_report || 'A: 6 roles, 62 activities, cells 57/39/13/5/0/0, every real login has a role_id | ';
+  v_report := v_report || 'A: 6 roles, 63 activities, cells 57/39/13/5/0/0, every real login has a role_id | ';
 
   -- B: has_permission().
   -- the four answers-no cases
@@ -288,7 +288,7 @@ begin
 
   -- C: my_permissions().
   perform pg_temp.eq('C admin is_admin', pg_temp.q(v_admin, '(my_permissions() ->> ''is_admin'')'), 'true');
-  perform pg_temp.eq('C admin cells', pg_temp.q(v_admin, '(select count(*) from jsonb_object_keys(my_permissions() -> ''permissions''))'), '62');
+  perform pg_temp.eq('C admin cells', pg_temp.q(v_admin, '(select count(*) from jsonb_object_keys(my_permissions() -> ''permissions''))'), '63');
   perform pg_temp.eq('C staff cells', pg_temp.q(v_staff, '(select count(*) from jsonb_object_keys(my_permissions() -> ''permissions''))'), '39');
   perform pg_temp.eq('C staff role', pg_temp.q(v_staff, '(my_permissions() -> ''role'' ->> ''key'')'), 'harness_staff_cells'); -- the stand-in role (0173)
   perform pg_temp.eq('C staff delivery level', pg_temp.q(v_staff, '(my_permissions() -> ''permissions'' ->> ''stock.delivery'')'), '2');
@@ -324,9 +324,9 @@ begin
       v_checked := v_checked + 2;
     end loop;
   end loop;
-  perform pg_temp.eq('H answers checked', v_checked::text, '744');
+  perform pg_temp.eq('H answers checked', v_checked::text, '756');
   perform pg_temp.eq('H expected cells', (select count(*) from harness_expected)::text, '114'); -- 114 since 0189 (maintenance.bills, one Management cell; paper row fixed 2026-10-13). Was 113: 110 on the paper (0163 gave Management website.content; 0169 community.outings and 0168 donation.receipt one Management cell each); the volunteer is 5 under the draft. Measured on dev after 0168/0169 were applied, 2026-10-09
-  v_report := v_report || 'H: 744 answers, six roles x 62 activities x read and edit, equal the paper''s §4 table | ';
+  v_report := v_report || 'H: 756 answers, six roles x 63 activities x read and edit, equal the paper''s §4 table | ';
 
   n := pg_temp.try(null, format('insert into role_permissions (role_id, activity, level) values (%L, ''stock.count'', 2)', v_role_admin), 'aal1', 'service_role');
   if n <> -2 then raise exception 'HARNESS-FAIL D: a cell for admin was accepted (%)', n; end if;
@@ -415,7 +415,7 @@ begin
   -- E: RLS and grants.
   perform pg_temp.eq('E admin reads roles', pg_temp.q(v_admin, '(select count(*) from roles where key = ''admin'')', 'aal2'), '1');
   perform pg_temp.eq('E admin reads cells', pg_temp.q(v_admin, '(select count(*) from role_permissions)', 'aal1'), (select count(*)::text from role_permissions));
-  perform pg_temp.eq('E admin reads catalogue', pg_temp.q(v_admin, '(select count(*) from permission_activities)', 'aal1'), '62');
+  perform pg_temp.eq('E admin reads catalogue', pg_temp.q(v_admin, '(select count(*) from permission_activities)', 'aal1'), '63');
   foreach t in array array['management', 'staff', 'doctor', 'volunteer', 'public_viewer'] loop
     foreach n in array array[1, 2, 3] loop
       perform pg_temp.eq('E ' || t || ' reads table ' || n,
