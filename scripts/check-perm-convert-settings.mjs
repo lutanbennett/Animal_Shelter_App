@@ -10,7 +10,7 @@
 //   translations       read / update / insert / delete: write translations.manage; read that or translations.view (0154);
 //                      a vet reads through its own policy and writes nothing
 //   facility_maps      read / update / insert / delete: read is every login with app access (0170); write facility.enclosures Edit
-//                      (facility.map, which staff and volunteers hold, opens nothing)
+//                     
 //   fixed_outgoings    read / update / insert / delete: reports.cashflow Read for read, Edit for the rest
 // Principals: admin, management, volunteer, a vet (a doctor login since 0172), no role, and configured roles (Staff left
 // when 0173 retired it; it matched management or the vet everywhere). Then structural sweeps: no policy
@@ -37,7 +37,6 @@ const CUSTOM = {
   c_vol_all: { floor: "volunteer", cells: [] }, // volunteer floor, scope all: still refused
   c_encl_read: { cells: [["facility.enclosures", 1]] },
   c_encl_edit: { cells: [["facility.enclosures", 2]] },
-  c_map: { cells: [["facility.map", 2]] },
   c_cash_read: { cells: [["reports.cashflow", 1]] },
   c_cash_edit: { cells: [["reports.cashflow", 2]] },
 };
@@ -198,5 +197,5 @@ if (sweep("names_mgmt_or_staff") === 0) pass("no policy names management or staf
 if (sweep("bare_has_permission") === 0) pass("every *_perm policy wraps has_permission() in (select ...)"); else fail(`${sweep("bare_has_permission")} policy(ies) call has_permission() bare`);
 if (sweep("perm_policies") === 14) pass("14 *_perm policies"); else fail(`expected 14 *_perm policies (13 new plus 0141's translations_maintenance_select_perm), found ${sweep("perm_policies")}`);
 console.log(`\n${ok} checks held, ${fails} failed.`);
-console.log(fails ? "RESULT: RED" : "RESULT: GREEN (each table answers as its cell says; facility.map alone opens no map write; management reads only its own assistant rows)");
+console.log(fails ? "RESULT: RED" : "RESULT: GREEN (each table answers as its cell says; management reads only its own assistant rows)");
 process.exitCode = fails ? 1 : 0;

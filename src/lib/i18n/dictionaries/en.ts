@@ -841,7 +841,6 @@ const en = {
         "photos.resident_manage": "Refile or remove a photo, choose the profile photo",
         "photos.resident_publish": "Put a resident's photo on the public website",
         "facility.enclosures": "Enclosures and zones",
-        "facility.map": "The facility map",
         "maintenance.jobs": "Maintenance jobs: log, change, assign, cost, delete",
         "maintenance.progress": "Move a job on: in progress, blocked, completed",
         "maintenance.photos": "Add and remove a job's photos",

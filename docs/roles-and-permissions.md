@@ -162,7 +162,7 @@ and each of today's staff logins becomes one of the roles above or is archived.
 Which login becomes which is the one part still to be asked (L5).
 
 **"The map" exists since 2026-10-04.** It is the Map toggle on `/enclosures`
-(`facility.map`, held by a volunteer since 0132/0134); this paragraph once said it was a
+(it asked `facility.map` until 0212 retired that activity; it now follows `facility.enclosures`); this paragraph once said it was a
 prototype at `/enclosures/map-prototype`, which has been deleted. Placing enclosures on it is
 the admin's Settings → Facility map page, under `facility.enclosures`.
 
@@ -331,7 +331,6 @@ Admin is shown for completeness; it is never stored (§6).
 | `photos.resident_publish` | Put a resident's photo on the public website | Y/N | Y | Y | Y | – | – | 15 | *Split*, finding A5. Today it is not a separate act: filing a photo anywhere but Medical publishes it. Lutan's answer 8: at Lanna, Management and Admin only |
 | **Enclosures** | | | | | | | | | |
 | `facility.enclosures` | Enclosures and zones | E/R | E | R | R | – | R | 16 | Edit is Settings → Zones and Enclosures |
-| `facility.map` | The facility map | Y/N | Y | Y | Y | – | Y | 16 | A prototype today |
 | **Maintenance** | | | | | | | | | |
 | `maintenance.jobs` | Maintenance jobs: log, edit, assign, cost | E/R | E | E | E | – | – | 17 | |
 | `maintenance.progress` | Move a job on: in progress, blocked, completed | Y/N | Y | Y | Y | – | – | 17 | *Split.* Lets someone finish a job without managing the board |
@@ -1531,7 +1530,7 @@ means §6: not a cell.
 | system-status | `system.status` |
 
 Activities with no manual topic of their own yet: `photos.resident_publish` (not a separate act today),
-`facility.map` (a prototype), `recurring.do_any`, `maintenance.photos`.
+`recurring.do_any`, `maintenance.photos`.
 
 ## Appendix B. How the audit was done, and how to repeat it
 

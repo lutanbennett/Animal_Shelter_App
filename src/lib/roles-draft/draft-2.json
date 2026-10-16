@@ -238,8 +238,8 @@
       "label": "View the facility map",
       "keys": [
         {
-          "activity": "facility.map",
-          "level": "yes"
+          "activity": "facility.enclosures",
+          "level": "read"
         }
       ]
     },

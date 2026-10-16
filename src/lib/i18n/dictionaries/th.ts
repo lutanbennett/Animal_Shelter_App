@@ -751,7 +751,6 @@ const th: Dictionary = {
         "photos.resident_manage": "ย้ายหรือลบรูป และเลือกรูปโปรไฟล์",
         "photos.resident_publish": "แสดงรูปสัตว์บนเว็บไซต์สาธารณะ",
         "facility.enclosures": "กรงและโซน",
-        "facility.map": "แผนผังศูนย์พักพิง",
         "maintenance.jobs": "งานซ่อมบำรุง: บันทึก แก้ไข มอบหมาย ค่าใช้จ่าย ลบ",
         "maintenance.progress": "อัปเดตสถานะงาน: กำลังทำ ติดขัด เสร็จแล้ว",
         "maintenance.photos": "เพิ่มและลบรูปของงาน",
