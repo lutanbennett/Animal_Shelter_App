@@ -107,6 +107,14 @@ export type ReleaseFacts = {
   workerTag: string | null;
   /** Rendered by the Worker, or somewhere without its bindings. */
   runtime: "worker" | "elsewhere";
+  /**
+   * Why the tile is amber, so the page can say which. "untagged": no tag at all,
+   * which `wrangler secret put` leaves behind and a deploy around deploy.mjs also
+   * leaves behind; this check cannot tell those apart. "other": tagged as a
+   * different release, which only a deploy that skipped or half-finished
+   * deploy.mjs produces. null when green or off the Worker.
+   */
+  tagProblem: "untagged" | "other" | null;
 };
 
 /**
@@ -125,11 +133,26 @@ export async function checkRelease(): Promise<CheckOutcome<ReleaseFacts>> {
     deployedAt: meta?.timestamp ?? null,
     workerTag: meta?.tag || null,
     runtime: meta ? "worker" : "elsewhere",
+    tagProblem: null,
   };
   if (meta && meta.tag !== `v${latestRelease.version}`) {
+    // An untagged Worker stays amber. Nothing inside the Worker can show that
+    // its code IS the release: the version and sha it reports were stamped by
+    // whatever build produced it, deploy.mjs or not, so "the code matches" would
+    // be inferred from the build vouching for itself. See
+    // docs/decisions/2026-10-16-untagged-worker-stays-amber.md.
+    if (!meta.tag) {
+      facts.tagProblem = "untagged";
+      return {
+        state: "warn",
+        error: `The Worker has no release tag (expected v${latestRelease.version}). A secret set by hand with wrangler does this and is harmless; so does a deploy that skipped scripts/deploy.mjs, and this check cannot tell the two apart.`,
+        facts,
+      };
+    }
+    facts.tagProblem = "other";
     return {
       state: "warn",
-      error: `The Worker is tagged ${meta.tag ? `"${meta.tag}"` : "with nothing"}, not v${latestRelease.version}: it was deployed without scripts/deploy.mjs.`,
+      error: `The Worker is tagged "${meta.tag}", not v${latestRelease.version}: it was deployed without finishing scripts/deploy.mjs.`,
       facts,
     };
   }
