@@ -348,4 +348,30 @@ production is the production setting and the mail is real. Also:
 - **A foreground deploy that passes the ten-minute tool cap is moved to the background, not killed.** Read its log file rather than re-running it.
 - **A Worker whose bundle was built at an earlier SHA still reports the right version.** `/api/version` reads `releases.ts`, so a stale Worker and a current one both say the release. The SHA in that response comes from the build, so it *is* the thing to compare — but only `/api/version`, not `/api/releases/current`, which carries no SHA at all.
 - **A red `lint` on a fresh release-cut branch may not be yours.** Check whether the failure exists on `main` before debugging your own branch.
+
+**And a red `public-views` is almost certainly not yours — but unlike the others it
+genuinely blocks you.** This bit `0.33.0`'s record PR. The mechanism, because it will
+recur and cost someone an hour:
+
+- `public-views` runs against the **shared dev database**, not against your branch.
+- The schema-first rule says a schema branch applies its migration to dev **before it
+  merges**. So the moment another stream applies a migration that adds a public view,
+  that view **exists in dev** while `scripts/check-public-views.mjs` on `main` does
+  not list it.
+- The check then fails on **every branch cut from `main`**, with
+  `FAIL public_<thing>: anon SELECT is refused — HTTP 200 (a new public view? add it
+  to PUBLIC_VIEWS)`.
+- The fix lives on the *other* stream's branch, which normally does update
+  `PUBLIC_VIEWS` — so **there is nothing to fix on yours.** It clears when that PR
+  merges.
+
+**What to do:** read the failing view name and look for an unmerged schema branch that
+owns it (`git ls-tree -r origin/claude/<branch> --name-only -- supabase/migrations`,
+then `git grep` the view name on that branch). If one does, say so and wait for that
+merge rather than changing anything. **Do not add the view to `PUBLIC_VIEWS` on your
+own branch to go green** — that duplicates the other stream's change and will conflict.
+
+On 2026-10-16 this was `0210_appeals.sql` (#667), applied to dev about a minute after
+that PR's own CI had passed — which is why its run was green and every other branch's
+went red.
 - **`width=device-width` contains the substring `dev`.** Grepping the production gate page for "dev" to rule out a Dev badge matches the viewport meta tag twice. Read the context before treating it as a rollback signal.
