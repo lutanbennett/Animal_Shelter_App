@@ -2,6 +2,8 @@ import Link from "next/link";
 import { AvailableBadge } from "@/components/AvailableBadge";
 import { EmptyPhoto } from "@/components/EmptyPhoto";
 import { PublicPhoto } from "@/components/PublicPhoto";
+import type { Locale } from "@/lib/i18n/locales";
+import { residentText } from "@/lib/residents/labels";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { sizeLabel, speciesLabel } from "@/lib/i18n/enum-labels";
 
@@ -11,6 +13,8 @@ export type ResidentCardRow = {
   name: string;
   species: string | null;
   breed: string | null;
+  /** Optional so a loader that predates 0205 still type-checks; absent = the English. */
+  breed_th?: string | null;
   size: string | null;
   ready_for_adoption: boolean;
   profile_photo_drive_file_id: string | null;
@@ -24,10 +28,12 @@ export type ResidentCardRow = {
 export function ResidentCard({
   resident,
   t,
+  locale = "en",
   href = `/adopt/${resident.id}`,
 }: {
   resident: ResidentCardRow;
   t: Dictionary;
+  locale?: Locale;
   href?: string;
 }) {
   return (
@@ -57,7 +63,7 @@ export function ResidentCard({
           {resident.name}
         </h2>
         <p className="text-sm text-muted">
-          {[speciesLabel(t, resident.species), resident.breed, sizeLabel(t, resident.size)]
+          {[speciesLabel(t, resident.species), residentText(locale, resident.breed, resident.breed_th), sizeLabel(t, resident.size)]
             .filter(Boolean)
             .join(" · ") || t.adopt.detailsComingSoon}
         </p>

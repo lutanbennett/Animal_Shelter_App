@@ -1,3 +1,4 @@
+import { residentText } from "@/lib/residents/labels";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { AvailableBadge } from "@/components/AvailableBadge";
@@ -40,6 +41,7 @@ type FeaturedResident = {
   name: string;
   species: string | null;
   breed: string | null;
+  breed_th: string | null;
   sex: string | null;
   estimated_age_years: number | null;
   age_estimated_on: string | null;
@@ -177,7 +179,7 @@ export default async function WelcomePage() {
     const { data } = await supabase
       .from("public_resident_profiles")
       .select(
-        "id, name, species, breed, sex, estimated_age_years, age_estimated_on, is_desexed, ready_for_adoption, bio, hook_line, profile_photo_drive_file_id, translations",
+        "id, name, species, breed, breed_th, sex, estimated_age_years, age_estimated_on, is_desexed, ready_for_adoption, bio, hook_line, profile_photo_drive_file_id, translations",
       )
       .eq("id", content.featured_resident_id)
       .limit(1)
@@ -193,7 +195,7 @@ export default async function WelcomePage() {
   const featuredFacts = featured
     ? [
         sexLabel(t, featured.sex),
-        featured.breed || speciesLabel(t, featured.species),
+        residentText(locale, featured.breed, featured.breed_th) || speciesLabel(t, featured.species),
         featured.estimated_age_years != null &&
           formatAge(t, featured.estimated_age_years, featured.age_estimated_on),
         featured.is_desexed === true && t.home.featured.desexed,
@@ -203,7 +205,7 @@ export default async function WelcomePage() {
   // The strip is a nice-to-have: a failed query drops it rather than the page.
   // Totals first, then today's counts, with a live 0 or 1 left out (impact.ts).
   const stats = [
-    ...impactFigureStats(figuresResult.data, locale === "th" ? "th" : "en"),
+    ...impactFigureStats(figuresResult.data, locale === "th" ? "th" : "en", t.home.stats.sinceYear),
     ...impactStats(t, statsResult.data?.[0] ?? null),
   ];
 

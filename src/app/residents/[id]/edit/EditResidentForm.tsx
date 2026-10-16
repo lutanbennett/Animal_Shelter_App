@@ -48,6 +48,8 @@ export type EditableResident = {
   other_names: string | null;
   species: string | null;
   breed: string | null;
+  breed_th: string | null;
+  colour_th: string | null;
   sex: string | null;
   size: string | null;
   estimated_age_years: number | null;
@@ -275,6 +277,22 @@ export function EditResidentForm({
               />
             </div>
             <div className="flex flex-col gap-1">
+              <label htmlFor="breedTh" className="text-sm font-medium text-muted">
+                {f.breedTh}
+              </label>
+              <input
+                id="breedTh"
+                name="breedTh"
+                lang="th"
+                defaultValue={resident.breed_th ?? ""}
+                aria-describedby="breedThHint"
+                className={inputClass}
+              />
+              <p id="breedThHint" className="text-xs text-muted">
+                {f.thaiOptionalHint}
+              </p>
+            </div>
+            <div className="flex flex-col gap-1">
               <label htmlFor="sex" className="text-sm font-medium text-muted">
                 {f.sex}
               </label>
@@ -451,7 +469,7 @@ export function EditResidentForm({
             {t.residents.edit.sections.flags}
           </legend>
           <p className="text-sm text-muted">{t.residents.new.adoptionHint}</p>
-          <AdoptionProfileFields value={resident} idPrefix="edit-" />
+          <AdoptionProfileFields value={resident} idPrefix="edit-" withThai />
           <MicrochipFields
             number={resident.microchip_number}
             implantedOn={resident.microchip_implanted_on}

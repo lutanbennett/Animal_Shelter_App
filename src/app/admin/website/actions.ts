@@ -570,7 +570,16 @@ export async function updateImpactBaseline(
     const key = text("key");
     const rawCount = text("baseline_count");
     const rawDate = text("baseline_date");
+    const rawYear = text("since_year");
     const i = t.admin.website.impact;
+
+    // The year is the Director's: blank stays null, and nothing here ever fills one in.
+    let sinceYear: number | null = null;
+    if (rawYear) {
+      if (!/^\d{4}$/.test(rawYear)) return refuse(i.invalidYear);
+      sinceYear = Number(rawYear);
+      if (sinceYear < 1990 || sinceYear > 2100) return refuse(i.invalidYear);
+    }
 
     if (!rawCount && !rawDate) {
       // Cleared: both null, which the table's pair check requires together.
@@ -596,7 +605,7 @@ export async function updateImpactBaseline(
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("impact_baselines")
-      .update({ baseline_count: count, baseline_date: date })
+      .update({ baseline_count: count, baseline_date: date, since_year: sinceYear })
       .eq("key", key)
       .select("key")
       .returns<{ key: string }[]>();

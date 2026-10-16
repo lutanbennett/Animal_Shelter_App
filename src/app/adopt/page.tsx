@@ -231,7 +231,7 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
             )}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {shown.map((resident) => (
-                <ResidentCard key={resident.id} resident={resident} t={t} />
+                <ResidentCard key={resident.id} resident={resident} t={t} locale={locale} />
               ))}
             </div>
           </>

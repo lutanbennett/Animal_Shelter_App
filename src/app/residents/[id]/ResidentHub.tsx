@@ -35,6 +35,7 @@ import {
   compatibilityLabel,
   energyLevelLabel,
 } from "@/lib/i18n/enum-labels";
+import { residentText } from "@/lib/residents/labels";
 import type { AdoptionProfile } from "@/components/AdoptionProfileFields";
 import { CopyTagLink } from "@/components/CopyTagLink";
 import { ZoneName } from "@/components/ZoneName";
@@ -52,6 +53,7 @@ export type Resident = {
   other_names: string | null;
   species: string | null;
   breed: string | null;
+  breed_th: string | null;
   sex: string | null;
   size: string | null;
   estimated_age_years: number | null;
@@ -406,7 +408,7 @@ export function ResidentHub({
   // shows as "Is {name} right for you?".
   const fl = t.residents.new.fields;
   const adoptionFields = [
-    { label: fl.colour, value: resident.colour },
+    { label: fl.colour, value: residentText(locale, resident.colour, resident.colour_th) },
     {
       label: fl.desexed,
       value: resident.is_desexed == null ? null : resident.is_desexed ? t.common.yes : t.common.no,
@@ -474,7 +476,7 @@ export function ResidentHub({
             <p className="text-sm text-muted">
               {[
                 speciesLabel(t, resident.species),
-                resident.breed,
+                residentText(locale, resident.breed, resident.breed_th),
                 sexLabel(t, resident.sex),
                 sizeLabel(t, resident.size),
               ]
