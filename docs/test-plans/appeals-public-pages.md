@@ -167,7 +167,7 @@ Automated checks by: Claude  Date: 2026-10-16
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the three items above
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty and nobody has looked yet
 
 Manual verification by: pending: the Director's yes on the over-raising wording, a Thai reader, and a phone check
 
