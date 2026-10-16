@@ -13,21 +13,24 @@ import { PrintButton } from "@/components/PrintButton";
 import { PurchasingPhone, type PhoneItem } from "./PurchasingPhone";
 import { loadConversions } from "@/lib/units-server";
 import { defaultUnit } from "@/lib/units";
-import { loadReceipts } from "@/lib/management/receipts-server";
+import { loadPricedReceipts, loadReceipts } from "@/lib/management/receipts-server";
 import { STOCK_RATE_DAYS } from "@/lib/management/stock";
 import { shelterDate } from "@/lib/management/stock-usage";
 import {
   PURCHASE_PERIOD_DAYS,
   groupBySupplier,
+  latestSizePrices,
   parseIncludeLead,
   parsePeriod,
   purchaseRow,
   purchaseWindow,
   receivedSinceCount,
+  sizeAlternatives,
   usualSuppliers,
   windowDaysFor,
   type PurchaseRow,
   type ShoppingLine,
+  type SizeAlternative,
 } from "@/lib/management/purchasing";
 
 /**
@@ -64,6 +67,8 @@ type Item = {
   isStandard: boolean;
   /** The purchase unit, when the item has one. */
   pack: { unit: string; basePer: number } | null;
+  /** The shortfall in every size it is bought in, cheapest first; empty with one size or nothing to buy. */
+  others: (SizeAlternative & { label: string })[];
   supplierId: string | null;
   leadDays: number | null;
 };
@@ -107,12 +112,14 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
     ]);
     return { days, m, d };
   });
-  const [forecasts, medReceipts, dietReceipts, medConversions, dietConversions] = await Promise.all([
+  const [forecasts, medReceipts, dietReceipts, medConversions, dietConversions, medPriced, dietPriced] = await Promise.all([
     Promise.all(forecastCalls),
     loadReceipts(supabase, "medication"),
     loadReceipts(supabase, "diet"),
     loadConversions(supabase, "medication"),
     loadConversions(supabase, "diet"),
+    loadPricedReceipts(supabase, "medication"),
+    loadPricedReceipts(supabase, "diet"),
   ]);
 
   const usage = (kind: Kind) => {
@@ -138,6 +145,8 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
     dietResult.error?.message ??
     medReceipts.error ??
     dietReceipts.error ??
+    medPriced.error ??
+    dietPriced.error ??
     medConversions.error ??
     dietConversions.error ??
     forecastError;
@@ -148,28 +157,45 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
     const used = usage(kind);
     const received = receivedSinceCount(receipts, new Map(rows.map((r) => [r.id, r.stock_counted_at])));
     const suppliers = usualSuppliers(receipts);
+    const prices = latestSizePrices((kind === "medication" ? medPriced : dietPriced).data);
     return rows.map((r) => {
       const purchase = defaultUnit(conversions[r.id] ?? [], "purchase");
       const days = windowDaysFor(period, r.reorder_lead_days, includeLead);
+      const bought = (conversions[r.id] ?? []).filter((c) => c.isPurchase);
+      const row = purchaseRow({
+        id: r.id,
+        name: localLabel(locale, r.name, r.name_th),
+        counted: r.stock_on_hand == null ? null : Number(r.stock_on_hand),
+        countedAt: r.stock_counted_at,
+        usedInRateWindow: used(r.id, STOCK_RATE_DAYS),
+        usedInWindow: used(r.id, days),
+        windowDays: days,
+        receivedSince: received.get(r.id) ?? 0,
+        safetyStock: r.safety_stock == null ? null : Number(r.safety_stock),
+        packBase: purchase?.basePer ?? null,
+      });
+      // The usual size is the main answer above; the others are the same need in the sizes on special.
+      const others =
+        bought.length > 1 && row.shortfall != null
+          ? sizeAlternatives(
+              row.shortfall,
+              bought.map((c) => ({ unit: c.unit, basePer: c.basePer, pricePerBase: prices.get(r.id)?.get(c.unit) ?? null })),
+            )
+              .filter((a) => a.unit !== purchase?.unit)
+              .map((a) => {
+                const c = bought.find((x) => x.unit === a.unit);
+                return { ...a, label: c ? localLabel(locale, c.unit, c.unitTh) : a.unit };
+              })
+          : [];
       return {
+        others,
         kind,
         unitLabel: kind === "medication" ? doseUnitLabel(t, r.unit) : dietUnitLabel(t, r.unit),
         isStandard: r.is_standard ?? false,
         pack: purchase ? { unit: localLabel(locale, purchase.unit, purchase.unitTh), basePer: purchase.basePer } : null,
         supplierId: suppliers.get(r.id) ?? null,
         leadDays: r.reorder_lead_days,
-        row: purchaseRow({
-          id: r.id,
-          name: localLabel(locale, r.name, r.name_th),
-          counted: r.stock_on_hand == null ? null : Number(r.stock_on_hand),
-          countedAt: r.stock_counted_at,
-          usedInRateWindow: used(r.id, STOCK_RATE_DAYS),
-          usedInWindow: used(r.id, days),
-          windowDays: days,
-          receivedSince: received.get(r.id) ?? 0,
-          safetyStock: r.safety_stock == null ? null : Number(r.safety_stock),
-          packBase: purchase?.basePer ?? null,
-        }),
+        row,
       };
     });
   }
@@ -263,6 +289,20 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
     );
   }
 
+  /** The same need in the other sizes, cheapest first, each rounded up so it is never less than needed. */
+  function OtherSizes({ item }: { item: Item }) {
+    if (item.others.length === 0) return null;
+    return (
+      <span className="mt-1 block text-xs text-muted">
+        {p.others(
+          item.others
+            .map((a) => p.otherSize(String(a.packs), a.label, formatQuantity(a.base), item.unitLabel))
+            .join(p.orJoin),
+        )}
+      </span>
+    );
+  }
+
   function buyCell(item: Item) {
     const r = item.row;
     if (!(r.buy && r.buy > 0)) return <span className="text-muted">{p.nothingToBuy}</span>;
@@ -272,6 +312,7 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
           <span className="font-medium text-foreground">{p.qty(String(r.packs), item.pack.unit)}</span>
           <br />
           <span className="text-xs text-muted">{p.equals(formatQuantity(r.buy), item.unitLabel)}</span>
+          <OtherSizes item={item} />
         </>
       );
     }
@@ -387,6 +428,7 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
               unitLabel: i.unitLabel,
               isStandard: i.isStandard,
               packUnit: i.pack?.unit ?? null,
+              others: i.others,
               countedOn: i.row.countedAt ? formatDate(shelterDate(i.row.countedAt), locale) : null,
               leadDays: i.leadDays ?? 0,
             }),

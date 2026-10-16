@@ -3,13 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { parseBahtAmount } from "@/lib/format";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
-import { resolveEntered } from "@/lib/units";
+import { resolveDeliveryLines, type DeliveryLineInput } from "@/lib/management/delivery-lines";
 import { loadConversions } from "@/lib/units-server";
 import {
-  parseDeliveryQuantity,
   receivedAtFor,
   type DeliveryKind,
   type DeliveryTiming,
@@ -18,16 +16,13 @@ import {
 export type DeliveryInput = {
   kind: DeliveryKind;
   itemId: string;
-  /** In `unit`, as typed. */
-  quantity: string;
-  /** One of the item's conversions by name; blank = the item's base unit. */
-  unit: string;
+  /** Size, how many and cost, one per line; a unit is one of the item conversions by name, blank = the base unit. */
+  lines: DeliveryLineInput[];
   /** YYYY-MM-DD, the shelter day it arrived. */
   date: string;
   /** Only asked for on a day the item was counted. */
   timing: DeliveryTiming | null;
   supplierId: string;
-  cost: string;
   note: string;
 };
 
@@ -57,11 +52,6 @@ export async function recordDelivery(input: DeliveryInput): Promise<DeliveryResu
 
   if (input.kind !== "medication" && input.kind !== "diet") return { ok: false, error: e.itemRequired };
   if (!input.itemId) return { ok: false, error: e.itemRequired };
-  const quantity = parseDeliveryQuantity(input.quantity);
-  if (!quantity.ok) return { ok: false, error: e.quantityInvalid };
-  const cost = parseBahtAmount(input.cost);
-  if (!cost.ok) return { ok: false, error: e.costInvalid };
-
   // The factor is stamped from the conversion as it is NOW and stored with the
   // row (entered, 0118); history never looks it up again.
   const itemKind = input.kind === "medication" ? "medication" : "diet";
@@ -72,14 +62,18 @@ export async function recordDelivery(input: DeliveryInput): Promise<DeliveryResu
     .select(itemKind === "medication" ? "unit:dose_unit" : "unit")
     .eq("id", input.itemId)
     .maybeSingle<{ unit: string }>();
-  const resolved = resolveEntered(
-    quantity.value,
-    typeof input.unit === "string" ? input.unit : "",
+  const resolved = resolveDeliveryLines(
+    Array.isArray(input.lines) ? input.lines : [],
     conversions.data[input.itemId] ?? [],
     baseUnit.data ? [baseUnit.data.unit] : [],
   );
   if (!resolved.ok) {
-    return { ok: false, error: resolved.reason === "unknownUnit" ? t.units.errors.unknownUnit : e.quantityInvalid };
+    const error =
+      resolved.reason === "unknownUnit" ? t.units.errors.unknownUnit
+      : resolved.reason === "costInvalid" ? e.costInvalid
+      : resolved.reason === "costIncomplete" ? e.costIncomplete
+      : e.quantityInvalid;
+    return { ok: false, error };
   }
   if (!(resolved.base > 0)) return { ok: false, error: e.quantityInvalid };
 
@@ -104,7 +98,7 @@ export async function recordDelivery(input: DeliveryInput): Promise<DeliveryResu
     entered: resolved.entered,
     ...(at.value ? { received_at: at.value } : {}),
     supplier_contact_id: input.supplierId || null,
-    cost: cost.value,
+    cost: resolved.cost,
     note: note || null,
   });
   if (error) return { ok: false, error: `${e.failed}: ${error.message}` };

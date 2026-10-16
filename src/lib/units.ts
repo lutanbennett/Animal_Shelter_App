@@ -34,7 +34,13 @@ export type UnitConversion = {
 };
 
 /** One line of stock_receipts.entered / stock_counts.entered. */
-export type EnteredLine = { quantity: number; unit: string; factor: number };
+export type EnteredLine = {
+  quantity: number;
+  unit: string;
+  factor: number;
+  /** Deliveries only: what this line cost in baht, so a size has its own price even beside others (0 = donated). */
+  cost?: number;
+};
 
 /** The item_unit_conversions columns as PostgREST returns them. */
 export type ConversionRow = {

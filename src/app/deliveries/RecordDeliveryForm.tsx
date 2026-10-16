@@ -7,8 +7,9 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { localLabel } from "@/lib/translations/labels";
 import { localizedValidity } from "@/lib/i18n/validity";
 import { formatQuantity } from "@/lib/diets/options";
-import { defaultUnit, resolveEntered, type UnitConversion } from "@/lib/units";
+import { defaultUnit, type UnitConversion } from "@/lib/units";
 import { packTotal, parseDeliveryQuantity, type DeliveryKind, type DeliveryTiming } from "@/lib/management/stock-receipts";
+import { previewBase } from "@/lib/management/delivery-lines";
 import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
 import { recordDelivery } from "./actions";
 import { attachCardToDelivery } from "@/app/bills/actions";
@@ -27,13 +28,19 @@ export type DeliveryFormItem = {
   conversions: UnitConversion[];
 };
 
+/** One size on the delivery: what it is counted in, how many, and what that cost. */
+type Line = { key: number; unit: string; quantity: string; packs: string; perPack: string; cost: string };
+let nextKey = 1;
+const newLine = (unit = "", cost = ""): Line => ({ key: nextKey++, unit, quantity: "", packs: "", perPack: "", cost });
+
 const inputClass =
   "rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
 
 /**
- * One delivery of one item. After a save the item, quantity, cost and note
- * clear but the kind, day and supplier stay: one delivery van usually
- * brings several items, entered one after another.
+ * One delivery of one item, in one or more sizes (2 × 20 kg bag + 1 × 14 kg
+ * bag). After a save the item, lines and note clear but the kind, day and
+ * supplier stay: one delivery van usually brings several items, entered one
+ * after another.
  */
 export function RecordDeliveryForm({
   initialKind,
@@ -61,15 +68,10 @@ export function RecordDeliveryForm({
 
   const [kind, setKind] = useState<DeliveryKind>(initialKind);
   const [itemId, setItemId] = useState("");
-  const [quantity, setQuantity] = useState("");
-  /** A conversion's unit name; "" = the item's base unit. */
-  const [unitName, setUnitName] = useState("");
-  const [packs, setPacks] = useState("");
-  const [perPack, setPerPack] = useState("");
+  const [lines, setLines] = useState<Line[]>(() => [newLine("", billCost ?? "")]);
   const [date, setDate] = useState(today);
   const [timing, setTiming] = useState<DeliveryTiming | null>(null);
   const [supplierId, setSupplierId] = useState("");
-  const [cost, setCost] = useState(billCost ?? "");
   const [cardId, setCardId] = useState(fromBill ?? null);
   const bill = useDeferredUploads();
   const [note, setNote] = useState("");
@@ -78,41 +80,38 @@ export function RecordDeliveryForm({
 
   const item = items[kind].find((i) => i.id === itemId);
   const countedThatDay = itemId !== "" && (countDays[kind][itemId] ?? []).includes(date);
-  const quantityOk = parseDeliveryQuantity(quantity).ok;
-  // unitName is the English key the receipt stamps; what is shown is the reader's language (0166).
-  const unitLabel = unitName
-    ? localLabel(locale, unitName, item?.conversions.find((c) => c.unit === unitName)?.unitTh)
-    : item?.unit || "";
-  const preview =
-    item && unitName && quantityOk ? resolveEntered(Number(quantity), unitName, item.conversions) : null;
+  // A line's unit is the English key the receipt stamps; what is shown is the reader's language (0166).
+  const unitLabelOf = (unit: string) =>
+    unit ? localLabel(locale, unit, item?.conversions.find((c) => c.unit === unit)?.unitTh) : item?.unit || "";
+  const usualUnit = (it: DeliveryFormItem | undefined) =>
+    it ? (defaultUnit(it.conversions, "purchase")?.unit ?? "") : "";
+  const together = item ? previewBase(lines, item.conversions) : null;
+
+  const patch = (key: number, change: Partial<Line>) =>
+    setLines((all) => all.map((l) => (l.key === key ? { ...l, ...change } : l)));
+  const setPack = (line: Line, packs: string, perPack: string) => {
+    const total = packTotal(packs, perPack);
+    patch(line.key, { packs, perPack, ...(total != null ? { quantity: String(total) } : {}) });
+  };
   const chooseItem = (id: string) => {
     setItemId(id);
     setTiming(null);
     const next = items[kind].find((i) => i.id === id);
-    setUnitName(next ? (defaultUnit(next.conversions, "purchase")?.unit ?? "") : "");
-  };
-
-  const setPack = (nextPacks: string, nextPerPack: string) => {
-    setPacks(nextPacks);
-    setPerPack(nextPerPack);
-    const total = packTotal(nextPacks, nextPerPack);
-    if (total != null) setQuantity(String(total));
+    setLines([newLine(usualUnit(next))]);
   };
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     setMessage(null);
-    const saved = { name: item?.name ?? "", quantity, unit: unitLabel };
+    const saved = { name: item?.name ?? "", quantity: String(together ?? 0), unit: item?.unit ?? "" };
     startTransition(async () => {
       const result = await recordDelivery({
         kind,
         itemId,
-        quantity,
-        unit: unitName,
+        lines: lines.map((l) => ({ quantity: l.quantity, unit: l.unit, cost: l.cost })),
         date,
         timing: countedThatDay ? timing : null,
         supplierId,
-        cost,
         note,
       });
       if (!result.ok) {
@@ -137,12 +136,8 @@ export function RecordDeliveryForm({
         text: d.saved(saved.name, formatQuantity(Number(saved.quantity)), saved.unit) + (billNote ? " " + billNote : ""),
       });
       setItemId("");
-      setUnitName("");
-      setQuantity("");
-      setPacks("");
-      setPerPack("");
+      setLines([newLine()]);
       setTiming(null);
-      setCost("");
       setNote("");
     });
   };
@@ -160,7 +155,7 @@ export function RecordDeliveryForm({
               if (k === kind) return;
               setKind(k);
               setItemId("");
-              setUnitName("");
+              setLines([newLine()]);
               setTiming(null);
             }}
             className={`rounded px-3 py-1.5 text-sm font-medium ${
@@ -200,85 +195,133 @@ export function RecordDeliveryForm({
             size={96}
           />
         )}
-
-        <div className="flex flex-col gap-1">
-          <label htmlFor="delivery-quantity" className="text-sm font-medium text-muted">
-            {item ? f.quantityIn(unitLabel) : f.quantity}
-          </label>
-          <input
-            id="delivery-quantity"
-            required
-            type="number"
-            min={0}
-            step="any"
-            inputMode="decimal"
-            value={quantity}
-            onChange={(e) => {
-              setQuantity(e.target.value);
-              setPacks("");
-              setPerPack("");
-            }}
-            aria-invalid={quantity !== "" && !quantityOk}
-            className={`${inputClass} w-36`}
-          />
-          <span className="text-xs text-muted">{f.quantityHint}</span>
-        </div>
-
-        {item && item.conversions.length > 0 && (
-          <div className="flex flex-col gap-1">
-            <label htmlFor="delivery-unit" className="text-sm font-medium text-muted">
-              {t.units.entry.unit}
-            </label>
-            <select
-              id="delivery-unit"
-              value={unitName}
-              onChange={(e) => setUnitName(e.target.value)}
-              className={`${inputClass} w-44`}
-            >
-              <option value="">{item.unit}</option>
-              {item.conversions.map((c) => (
-                <option key={c.id} value={c.unit}>
-                  {localLabel(locale, c.unit, c.unitTh)}
-                </option>
-              ))}
-            </select>
-            {preview?.ok && (
-              <span className="text-xs text-muted">
-                {t.units.entry.equals(formatQuantity(preview.base), item.unit)} · {t.units.entry.approx}
-              </span>
-            )}
-          </div>
-        )}
-
-        <fieldset className="flex flex-col gap-1">
-          <legend className="text-sm font-medium text-muted">{f.packs}</legend>
-          <div className="flex items-center gap-2 text-sm text-foreground">
-            <input
-              aria-label={f.packsCount}
-              type="number"
-              min={0}
-              step="any"
-              inputMode="decimal"
-              value={packs}
-              onChange={(e) => setPack(e.target.value, perPack)}
-              className={`${inputClass} w-20`}
-            />
-            <span aria-hidden="true">×</span>
-            <input
-              aria-label={item ? f.perPackIn(unitLabel) : f.perPack}
-              type="number"
-              min={0}
-              step="any"
-              inputMode="decimal"
-              value={perPack}
-              onChange={(e) => setPack(packs, e.target.value)}
-              className={`${inputClass} w-24`}
-            />
-            {item && <span className="text-muted">{unitLabel}</span>}
-          </div>
-          <span className="text-xs text-muted">{f.packsHint}</span>
-        </fieldset>
       </div>
+
+      {lines.map((line, index) => {
+        const quantityOk = parseDeliveryQuantity(line.quantity).ok;
+        const label = unitLabelOf(line.unit);
+        const id = `delivery-line-${line.key}`;
+        return (
+          <fieldset key={line.key} className="flex flex-col gap-3 rounded border border-border p-3">
+            {lines.length > 1 && <legend className="px-1 text-sm font-semibold text-foreground">{f.sizeN(index + 1)}</legend>}
+            <div className="flex flex-wrap items-start gap-3">
+              {item && item.conversions.length > 0 && (
+                <div className="flex flex-col gap-1">
+                  <label htmlFor={`${id}-unit`} className="text-sm font-medium text-muted">
+                    {t.units.entry.unit}
+                  </label>
+                  <select
+                    id={`${id}-unit`}
+                    value={line.unit}
+                    onChange={(e) => patch(line.key, { unit: e.target.value })}
+                    className={`${inputClass} w-44`}
+                  >
+                    <option value="">{item.unit}</option>
+                    {item.conversions.map((c) => (
+                      <option key={c.id} value={c.unit}>
+                        {localLabel(locale, c.unit, c.unitTh)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div className="flex flex-col gap-1">
+                <label htmlFor={`${id}-quantity`} className="text-sm font-medium text-muted">
+                  {item ? f.quantityIn(label) : f.quantity}
+                </label>
+                <input
+                  id={`${id}-quantity`}
+                  required
+                  type="number"
+                  min={0}
+                  step="any"
+                  inputMode="decimal"
+                  value={line.quantity}
+                  onChange={(e) => patch(line.key, { quantity: e.target.value, packs: "", perPack: "" })}
+                  aria-invalid={line.quantity !== "" && !quantityOk}
+                  className={`${inputClass} w-36`}
+                />
+                {index === 0 && <span className="text-xs text-muted">{f.quantityHint}</span>}
+                {item && line.unit && quantityOk && (
+                  <span className="text-xs text-muted">
+                    {t.units.entry.equals(formatQuantity(previewBase([line], item.conversions) ?? 0), item.unit)} ·{" "}
+                    {t.units.entry.approx}
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-col gap-1">
+                <label htmlFor={`${id}-cost`} className="text-sm font-medium text-muted">
+                  {f.cost}
+                </label>
+                <input
+                  id={`${id}-cost`}
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  inputMode="decimal"
+                  value={line.cost}
+                  onChange={(e) => patch(line.key, { cost: e.target.value })}
+                  className={`${inputClass} w-36`}
+                />
+                {index === 0 && <span className="text-xs text-muted">{f.costHint}</span>}
+              </div>
+              <fieldset className="flex flex-col gap-1">
+                <legend className="text-sm font-medium text-muted">{f.packs}</legend>
+                <div className="flex items-center gap-2 text-sm text-foreground">
+                  <input
+                    aria-label={f.packsCount}
+                    type="number"
+                    min={0}
+                    step="any"
+                    inputMode="decimal"
+                    value={line.packs}
+                    onChange={(e) => setPack(line, e.target.value, line.perPack)}
+                    className={`${inputClass} w-20`}
+                  />
+                  <span aria-hidden="true">×</span>
+                  <input
+                    aria-label={item ? f.perPackIn(label) : f.perPack}
+                    type="number"
+                    min={0}
+                    step="any"
+                    inputMode="decimal"
+                    value={line.perPack}
+                    onChange={(e) => setPack(line, line.packs, e.target.value)}
+                    className={`${inputClass} w-24`}
+                  />
+                  {item && <span className="text-muted">{label}</span>}
+                </div>
+                {index === 0 && <span className="text-xs text-muted">{f.packsHint}</span>}
+              </fieldset>
+            </div>
+            {lines.length > 1 && (
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setLines((all) => all.filter((l) => l.key !== line.key))}
+                  className="min-h-10 rounded border border-border px-3 text-sm text-foreground hover:bg-surface-hover"
+                >
+                  {f.removeSize}
+                </button>
+              </div>
+            )}
+          </fieldset>
+        );
+      })}
+      {item && (
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setLines((all) => [...all, newLine(usualUnit(item))])}
+            className="min-h-10 rounded border border-border px-3 text-sm font-medium text-foreground hover:bg-surface-hover"
+          >
+            {f.addSize}
+          </button>
+          {lines.length > 1 && together != null && (
+            <span className="text-sm font-medium text-foreground">{f.together(formatQuantity(together), item.unit)}</span>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-start gap-3">
         <div className="flex flex-col gap-1">
@@ -339,28 +382,12 @@ export function RecordDeliveryForm({
             ))}
           </select>
         </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="delivery-cost" className="text-sm font-medium text-muted">
-            {f.cost}
-          </label>
-          <input
-            id="delivery-cost"
-            type="number"
-            min={0}
-            step="0.01"
-            inputMode="decimal"
-            value={cost}
-            onChange={(e) => setCost(e.target.value)}
-            className={`${inputClass} w-36`}
-          />
-          <span className="text-xs text-muted">{f.costHint}</span>
-        </div>
         <div className="flex basis-full flex-col gap-1">
           <BillPhotoField uploads={bill} />
         </div>
         {/* basis-48, not a min-width on the input: the box wraps onto its own
-            line when Cost leaves under 12rem (a phone), then takes the row.
-            With min-w-0 flex-1 it stayed beside Cost and its input
+            line when the supplier leaves under 12rem (a phone), then takes the row.
+            With min-w-0 flex-1 it stayed beside the supplier and its input
             overflowed the form by 76px (114 in Thai). */}
         <div className="flex min-w-0 flex-1 basis-48 flex-col gap-1">
           <label htmlFor="delivery-note" className="text-sm font-medium text-muted">

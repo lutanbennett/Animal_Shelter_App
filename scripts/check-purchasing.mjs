@@ -199,5 +199,27 @@ eq(
 eq("csv: a leading = is neutralised, a number is not", [csvField("=SUM(A1)"), csvField("-12.5")], ["'=SUM(A1)", "-12.5"]);
 eq("csv: a name with a comma is quoted", toCsv([["A, B", "x"]]), '"A, B",x\r\n');
 
+// Other sizes (Pack sizes, part c): the same shortfall in every size, rounded UP, cheapest first.
+const alt = (shortfall, sizes) => P.sizeAlternatives(shortfall, sizes).map((a) => [a.unit, a.packs, a.base, a.cost]);
+const sz = (unit, basePer, pricePerBase = null) => ({ unit, basePer, pricePerBase });
+eq("55 kg short: 3 x 20 kg and 4 x 14 kg both cover it", alt(55, [sz("20kg", 20), sz("14kg", 14)]), [["14kg", 4, 56, null], ["20kg", 3, 60, null]]);
+eq("3.4 bags is 4 bags, never 3", alt(68, [sz("20kg", 20)]), [["20kg", 4, 80, null]]);
+eq("an exact fit stays exact", alt(60, [sz("20kg", 20)]), [["20kg", 3, 60, null]]);
+eq("float dust does not buy an extra bag", alt(0.1 + 0.2 + 59.7, [sz("20kg", 20)]), [["20kg", 3, 60, null]]);
+eq("cheapest first when priced (whole packs, so overshoot is paid for)", alt(55, [sz("20kg", 20, 1.5), sz("14kg", 14, 1.4)]), [["14kg", 4, 56, 78.4], ["20kg", 3, 60, 90]]);
+eq("a dearer-per-kg size can still be cheapest once rounded up", alt(41, [sz("20kg", 20, 2), sz("14kg", 14, 2.1)]), [["20kg", 3, 60, 120], ["14kg", 3, 42, 88.2]].sort((a, b) => a[3] - b[3]));
+eq("priced sizes come before unpriced ones", alt(30, [sz("10kg", 10), sz("20kg", 20, 2)]).map((a) => a[0]), ["20kg", "10kg"]);
+eq("nothing short, nothing offered", alt(0, [sz("20kg", 20)]), []);
+
+const rec = (item_id, received_at, quantity, cost, entered) => ({ item_id, received_at, quantity, cost, entered });
+const priced = P.latestSizePrices([
+  rec("k", "2026-10-10T03:00:00Z", 54, 2300, [{ quantity: 2, unit: "20kg", factor: 20, cost: 1600 }, { quantity: 1, unit: "14kg", factor: 14, cost: 700 }]),
+  rec("k", "2026-09-10T03:00:00Z", 40, 1000, [{ quantity: 2, unit: "20kg", factor: 20 }]),
+  rec("k", "2026-09-01T03:00:00Z", 34, 900, [{ quantity: 1, unit: "20kg", factor: 20 }, { quantity: 1, unit: "14kg", factor: 14 }]),
+  rec("k", "2026-10-11T03:00:00Z", 20, 0, [{ quantity: 1, unit: "10kg", factor: 10, cost: 0 }]),
+]);
+eq("the latest priced delivery of each size", [priced.get("k").get("20kg"), Math.round(priced.get("k").get("14kg") * 100) / 100], [1600 / 40, 50]);
+eq("an old mixed delivery with no line prices says nothing", priced.get("k").has("10kg"), false);
+
 console.log(fails ? `${fails} FAILED` : "all passed");
 process.exitCode = fails ? 1 : 0;

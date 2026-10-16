@@ -6,7 +6,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { localLabel } from "@/lib/translations/labels";
 import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { type StocktakeItem, type StocktakeKind } from "@/lib/management/stocktake";
-import { CONVERSION_COLUMNS, groupConversions, type ConversionRow } from "@/lib/units";
+import { CONVERSION_COLUMNS, groupConversions, type ConversionRow, type EnteredLine } from "@/lib/units";
 import { StocktakeSheet } from "./StocktakeSheet";
 
 type StockRow = {
@@ -39,7 +39,7 @@ export default async function StocktakePage(props: PageProps<"/stocktake">) {
   const searchParams = await props.searchParams;
   const initialTab: StocktakeKind = searchParams.tab === "diets" ? "diet" : "medication";
 
-  const [medicationResult, dietResult, conversionsResult] = await Promise.all([
+  const [medicationResult, dietResult, conversionsResult, lastCountsResult] = await Promise.all([
     supabase
       .from("stock_medications")
       .select("id, name, name_th, unit:dose_unit, stock_on_hand, stock_counted_at, label_drive_file_id")
@@ -53,8 +53,22 @@ export default async function StocktakePage(props: PageProps<"/stocktake">) {
       .order("name")
       .returns<StockRow[]>(),
     supabase.from("item_unit_conversions").select(CONVERSION_COLUMNS).returns<ConversionRow[]>(),
+    // The latest count of each item, for the sizes it was made in (Same as last time repeats them).
+    supabase
+      .from("stock_counts")
+      .select("medication_id, diet_type_id, entered")
+      .neq("source", "correction")
+      .order("counted_at", { ascending: false })
+      .limit(3000)
+      .returns<{ medication_id: string | null; diet_type_id: string | null; entered: EnteredLine[] | null }[]>(),
   ]);
   const conversions = groupConversions(conversionsResult.data ?? []);
+  // First row per item is its latest count. A failed read only costs the repeat of the sizes, never the count.
+  const lastEntered = new Map<string, EnteredLine[] | null>();
+  for (const row of lastCountsResult.data ?? []) {
+    const id = row.medication_id ?? row.diet_type_id;
+    if (id && !lastEntered.has(id)) lastEntered.set(id, row.entered);
+  }
 
   const toItem =
     (unitLabel: (unit: string) => string) =>
@@ -65,7 +79,9 @@ export default async function StocktakePage(props: PageProps<"/stocktake">) {
       lastCount: row.stock_on_hand == null ? null : Number(row.stock_on_hand),
       lastCountedAt: row.stock_counted_at,
       labelFileId: row.label_drive_file_id ?? null,
+      baseUnit: row.unit,
       conversions: conversions[row.id] ?? [],
+      lastEntered: lastEntered.get(row.id) ?? null,
     });
 
   const s = t.stocktake;
