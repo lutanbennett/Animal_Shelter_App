@@ -77,8 +77,12 @@ function fail(msg) {
   process.exit(1);
 }
 
-/** All worktrees as { dir, branch, main, prunable } — the first one is the main checkout. */
-function worktrees() {
+/**
+ * All worktrees as { dir, branch, main, prunable } — the first one is the main checkout.
+ * `includeSpare` also returns the desktop app's spare checkouts under .claude/worktrees/: not streams
+ * (so never listed or cleaned) but real folders that can hold a port.
+ */
+function worktrees({ includeSpare = false } = {}) {
   const out = git(["worktree", "list", "--porcelain"]);
   const list = [];
   for (const block of out.split(/\n\n+/)) {
@@ -88,7 +92,7 @@ function worktrees() {
     const prunable = /^prunable/m.test(block);
     // The desktop app keeps spare checkouts under .claude/worktrees/ and reuses or
     // reaps them itself; they are not streams and must not be listed or cleaned.
-    if (list.length > 0 && /[\/]\.claude[\/]worktrees[\/]/.test(dir)) continue;
+    if (!includeSpare && list.length > 0 && /[\/]\.claude[\/]worktrees[\/]/.test(dir)) continue;
     list.push({ dir: path.resolve(dir), branch, main: list.length === 0, prunable });
   }
   return list;
@@ -101,8 +105,10 @@ function readPort(dir) {
   return Number.isFinite(n) ? n : null;
 }
 
-function nextFreePort(trees) {
-  const used = new Set(trees.map((t) => readPort(t.dir)).filter(Boolean));
+// Counts every worktree git knows, spare checkouts included, so a port is never issued twice
+// (2026-10-16: a new stream was handed 3008, a live stream's).
+function nextFreePort() {
+  const used = new Set(worktrees({ includeSpare: true }).map((t) => readPort(t.dir)).filter(Boolean));
   let p = FIRST_PORT;
   while (used.has(p)) p++;
   return p;
@@ -350,7 +356,16 @@ function husks(trees) {
 // gitignored, and written from .port whenever a worktree is created, synced or
 // started.
 function writeLaunch(dir, { quiet = false } = {}) {
-  const port = readPort(dir) ?? MAIN_PORT;
+  let port = readPort(dir);
+  // Only the main checkout may run on MAIN_PORT. A worktree with no .port would get a launch.json aimed at 3000,
+  // and preview_start would attach it to whatever serves there — the main checkout or another stream's dev
+  // server — so it would verify its change against someone else's build.
+  if (port === null && path.resolve(dir) !== worktrees()[0].dir) {
+    port = nextFreePort();
+    writeFileSync(path.join(dir, ".port"), `${port}\n`);
+    console.log(`no .port in ${dir}: assigned ${port}`);
+  }
+  port ??= MAIN_PORT;
   const config = {
     version: "0.0.1",
     configurations: [
@@ -445,7 +460,7 @@ function cmdNew(args) {
     }
   }
 
-  const port = nextFreePort(trees);
+  const port = nextFreePort();
   writeFileSync(path.join(dir, ".port"), `${port}\n`);
   console.log(`dev-server port ${port} (.port)`);
   writeLaunch(dir);
@@ -474,8 +489,8 @@ Ready. Next:
 }
 
 function cmdDev() {
-  const port = readPort(repo) ?? MAIN_PORT;
   writeLaunch(repo);
+  const port = readPort(repo) ?? MAIN_PORT;
   console.log(`next dev on port ${port} (${repo})`);
   run("npm", ["run", "dev", "--", "--port", String(port)], repo);
 }

@@ -133,6 +133,22 @@ jobs:
       - run: node scripts/check-site-hosts.mjs
       - run: node scripts/check-public-paths.mjs
 
+  # The twenty-one cards: cards.ts has exactly the agreed set and every card names
+  # a real activity. The code half of check-cards-schema.mjs, which needs the dev
+  # token and so cannot run here (check-cards-count.mjs reads only cards.ts and
+  # catalogue.ts). Fails honestly — no continue-on-error. "Advisory" means only
+  # that it is not a required check in branch protection, which is Lutan's call
+  # (docs/decisions/2026-10-16-cards-count-in-ci.md). Judges the tree, so PRs and main.
+  cards-count:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - run: node scripts/check-cards-count.mjs
+
   # Known-vulnerable production dependencies, reported, not enforced. Red on
   # this job would learn to be ignored: npm audit routinely reports things
   # nobody can act on today (an advisory with no fixed release, a chain that
