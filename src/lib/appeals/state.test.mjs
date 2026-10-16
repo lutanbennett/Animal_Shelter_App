@@ -8,6 +8,8 @@ test("percent rounds DOWN: only a reached target reads 100", () => {
   assert.equal(percentRaised(14950, 15000), 99);
   assert.equal(percentRaised(15000, 15000), 100);
   assert.equal(percentRaised(17250, 15000), 115);
+  assert.equal(percentRaised(1150, 1000), 115);
+  assert.equal(percentRaised(9999.99, 10000), 99);
   assert.equal(percentRaised(5, 0), 0);
 });
 

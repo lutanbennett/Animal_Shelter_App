@@ -24,7 +24,8 @@ export type AppealProgress = {
 /** Whole percent of the target raised, rounded down. 0 when nothing is raised. */
 export function percentRaised(raised: number, target: number): number {
   if (!(target > 0) || !(raised > 0)) return 0;
-  return Math.floor((raised / target) * 100);
+  // In whole satang, so 17,250 of 15,000 is exactly 115 and not 114.99999999999999.
+  return Math.floor((Math.round(raised * 100) * 100) / Math.round(target * 100));
 }
 
 /** 0..1, the part of the picture to fill. */
