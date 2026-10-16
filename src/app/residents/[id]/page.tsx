@@ -9,6 +9,7 @@ import { getTagOrigin } from "@/lib/tags/origin";
 import { loadTranslations } from "@/lib/translations/queries";
 import { placeName } from "@/lib/enclosures/names";
 import { getT } from "@/lib/i18n/get-t";
+import type { AppealStatus } from "@/lib/appeals/state";
 import { localLabel } from "@/lib/translations/labels";
 import {
   ResidentHub,
@@ -233,6 +234,20 @@ export default async function ResidentPage(
         ).data ?? []
       : [];
 
+  // Sponsorship drives (0210): only a login that may run them reads the table (RLS says the same).
+  // A failed read shows no card rather than failing the record.
+  let appealsSummary: { count: number; latestId: string | null; latestStatus: AppealStatus | null } | null = null;
+  if (can(perms, "appeal.run")) {
+    const { data, error } = await supabase
+      .from("appeals")
+      .select("id, status")
+      .eq("resident_id", id)
+      .order("created_at", { ascending: false })
+      .returns<{ id: string; status: AppealStatus }[]>();
+    if (error) console.error("resident hub: appeals read failed", error);
+    else appealsSummary = { count: data.length, latestId: data[0]?.id ?? null, latestStatus: data[0]?.status ?? null };
+  }
+
   return (
     <ResidentHub
       resident={resident}
@@ -281,6 +296,7 @@ export default async function ResidentPage(
       procedures={(proceduresResult.data ?? []).map((p) => ({ ...p, procedure_types: local(p.procedure_types) }))}
       bloodTests={bloodTestsResult.data ?? []}
       photoCount={attachmentsCountResult.count ?? 0}
+      appeals={appealsSummary}
       adoptionUpdates={{
         count: adoptionUpdatesResult.data?.length ?? 0,
         latest: adoptionUpdatesResult.data?.[0] ?? null,
