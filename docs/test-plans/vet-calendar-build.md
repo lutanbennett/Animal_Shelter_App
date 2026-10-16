@@ -47,9 +47,9 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — pending: needs the refresh token; no event has been seen in a real calendar
-- [ ] Data persists — pending: needs the token (the sync columns are written only after a real Google answer)
-- [ ] Create / edit / delete all exercised — pending: book, reschedule and cancel on test need the token
+- [x] Happy path works end to end — on test (Worker deployed 2026-10-16, the 15-minute sweep): the one upcoming test visit appeared in the real calendar "Lanna Care: vet visits" as `Mae Wang - Angsumalin`, 10:00 to 11:00 +07:00 for a visit stored as 03:00 UTC, location Mae Wang. Booking, rescheduling and cancelling through the forms are not yet seen: the test site's pages come from the Pi, which has the old code
+- [x] Data persists — the visit row read back with `calendar_event_id` set, `calendar_synced_at` set and `calendar_error` null
+- [ ] Create / edit / delete all exercised — pending: create and update (patch after the links fix) seen via the sweep; book, reschedule and cancel through the forms and delete-on-cancel not yet seen, they need the Pi on this code
 - [ ] Empty state renders sensibly — n/a: nothing lists events here; with the calendar unset the page shows no "not in the calendar" line (the `calendarConfigured()` gate)
 - [ ] Invalid input is rejected with a readable message — n/a: no new input; the forms' own validation is untouched
 - [x] Boundary cases checked — `calendar-event.test.mjs`: a 03:00 Bangkok visit lands at 03:00 to 04:00 the same day (not the UTC day before); 23:30 ends 00:30 next day; `Novel - Blackie` 9:30 to 10:30; unreadable date gives no event; description holds the two links and no reason
@@ -135,7 +135,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | After Lutan mints the token and sets the calendar id: book, reschedule and cancel a visit on test and see each in the calendar within a minute | test.lannacare.org + Google Calendar |
+| 1 | Book, reschedule and cancel a visit through the forms and see each in the calendar within a minute (the sweep path is already seen; the test Pi needs this branch first) | test.lannacare.org + Google Calendar |
 | 2 | A visit at 03:00 Bangkok shows at 03:00 in the real calendar | Google Calendar |
 | 3 | `Novel - Blackie` 9:30 to 10:30 shows as the Director types them | Google Calendar |
 | 4 | With a bad token, a booking still saves, shows "Not in the shelter calendar yet", and Retry fixes it once the token is right | a visit's Clinic visits list |
@@ -155,7 +155,7 @@ Automated checks by: Claude  Date: 2026-10-16
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — pending: the list is not empty
 
-Manual verification by: pending: the refresh token is not minted, so no event has been seen in a real calendar; items 1 to 6 above
+Manual verification by: pending: book, reschedule and cancel through the forms (needs the Pi on this code), the Retry path, the signed-in record link and the Director on her phone; items 1 to 6 above
 
 ### Result
 
