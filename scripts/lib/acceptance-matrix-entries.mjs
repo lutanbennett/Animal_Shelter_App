@@ -446,6 +446,15 @@ export const ENTRIES = {
       expect: "The weight chart updates. Weighing the same resident twice on one day corrects the first reading instead of adding a second.",
     },
   ],
+  "record-weight": [
+    {
+      activity: "Weigh the animals the vet has just seen",
+      device: "phone",
+      do: "Tap Record Weight on Home and look at Weigh these first, then weigh one of them.",
+      expect:
+        "Every animal the vet saw yesterday or today with no weight since is at the top, with its clinic and time, and drops off the list as soon as its weight is saved. Everyone else is below, by enclosure, with those away from the shelter in one group at the end.",
+    },
+  ],
   procedures: [
     {
       activity: "Log a procedure",

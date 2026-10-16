@@ -1,5 +1,6 @@
 import type { createClient } from "@/lib/supabase/server";
 import { loadPlaceOrder, natural } from "@/lib/enclosures/order";
+import { residentPlace } from "@/lib/residents/place";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -150,17 +151,41 @@ export function matchesQuery(r: PickableResident, q: string): boolean {
 }
 
 export type PickerZone = {
+  /** `zone` names a real zone, `nowhere` is no enclosure on record, `offSite` is away from the shelter. */
+  kind: "zone" | "nowhere" | "offSite";
   zone: { name: string; nameTh: string | null; colour: string | null } | null;
   enclosures: { enclosure: { name: string; nameTh: string | null } | null; residents: PickableResident[] }[];
 };
 
-/** Zone, then enclosure; residents with no enclosure on record go last in a group of their own. */
+/**
+ * Zone, then enclosure; residents with no enclosure on record go last in a group of their own.
+ *
+ * Anyone off site — in hospital, with a foster carer, or in an external zone (`residentPlace`) —
+ * goes after all of those, in one group of their own, keeping their place as a sub-heading inside
+ * it. A keeper walking the site will not find them, so they do not belong among the enclosures
+ * being walked, and someone weighing the residents in front of her should not be scrolling past
+ * them (docs/decisions/2026-10-16-weigh-these-first.md).
+ */
 export function groupByPlace(residents: PickableResident[]): PickerZone[] {
+  const away = residents.filter((r) => residentPlace(r.status) === "external");
+  const here = residents.filter((r) => residentPlace(r.status) !== "external");
+  const zones = groupHereByPlace(here);
+  if (away.length > 0) {
+    zones.push({
+      kind: "offSite",
+      zone: null,
+      enclosures: groupHereByPlace(away).flatMap((z) => z.enclosures),
+    });
+  }
+  return zones;
+}
+
+function groupHereByPlace(residents: PickableResident[]): PickerZone[] {
   const zones: PickerZone[] = [];
   for (const r of residents) {
     let zone = zones.find((z) => (z.zone?.name ?? null) === (r.zone?.name ?? null));
     if (!zone) {
-      zone = { zone: r.zone, enclosures: [] };
+      zone = { kind: r.zone ? "zone" : "nowhere", zone: r.zone, enclosures: [] };
       zones.push(zone);
     }
     let enclosure = zone.enclosures.find((e) => (e.enclosure?.name ?? null) === (r.enclosure?.name ?? null));
