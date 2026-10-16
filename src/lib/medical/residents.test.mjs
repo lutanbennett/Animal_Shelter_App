@@ -92,3 +92,14 @@ test("the search matches name, R-code and enclosure, ignoring case", () => {
   }
   assert.equal(matchesQuery(panda, "bella"), false);
 });
+
+test("a code, a pasted card link or an older UUID link picks exactly that resident", () => {
+  const panda = { ...r("Panda", "Resident", "A1", "Blue"), id: "0f0f0f0f-0000-4000-8000-000000000001", code: "R-0042" };
+  for (const q of ["R-0042", "r0042", "r-0042", "https://test.lannacare.org/r/R-0042", "/r/r-0042?x=1", "https://x.org/r/0f0f0f0f-0000-4000-8000-000000000001"]) {
+    assert.equal(matchesQuery(panda, q), true, q);
+  }
+  for (const q of ["R-0043", "https://x.org/r/R-0043", "https://x.org/r/0f0f0f0f-0000-4000-8000-000000000002"]) {
+    assert.equal(matchesQuery(panda, q), false, q);
+  }
+  assert.equal(matchesQuery(panda, "R-00"), true, "half-typed code stays a substring search");
+});

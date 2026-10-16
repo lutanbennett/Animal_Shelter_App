@@ -1,6 +1,7 @@
 import type { createClient } from "@/lib/supabase/server";
 import { loadPlaceOrder, natural } from "@/lib/enclosures/order";
 import { residentPlace } from "@/lib/residents/place";
+import { isUuid, residentCodeFrom } from "@/lib/tags/links";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -145,6 +146,12 @@ export async function loadOneResident(
 export function matchesQuery(r: PickableResident, q: string): boolean {
   const needle = q.trim().toLowerCase();
   if (!needle) return true;
+  // A whole code, a UUID or a pasted card link picks exactly one resident, never a near one. A half-typed
+  // code ("R-00") stays a plain substring search, so the live field does not go blank mid-typing.
+  const code = residentCodeFrom(needle);
+  if (code && (isUuid(code) || needle.includes("/r/") || /\d{4,}$/.test(needle))) {
+    return isUuid(code) ? r.id.toLowerCase() === code : (r.code ?? "").toLowerCase() === code.toLowerCase();
+  }
   return [r.name, r.thaiName, r.code, r.enclosure?.name, r.enclosure?.nameTh].some((v) =>
     (v ?? "").toLowerCase().includes(needle),
   );
