@@ -74,6 +74,7 @@ export function AssistantConversation({
         nameTh: e.name_th,
       })),
       clinics: context.clinics,
+      carers: context.carers,
     }),
     [context],
   );
@@ -243,6 +244,7 @@ function TurnReply({
             zones: context.zones,
             enclosures: context.enclosures,
             clinics: context.clinics,
+            carers: context.carers,
             doctors: context.doctors,
             candidates: turn.parsed.residentCandidates,
             onSettle: (outcome) => onSettle(turn, outcome),

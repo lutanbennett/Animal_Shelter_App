@@ -26,11 +26,15 @@ export type ParserEnclosure = { id: string; name: string; nameTh: string | null 
 
 export type ParserClinic = { id: string; name: string };
 
+export type ParserCarer = { id: string; name: string };
+
 /** Everything a parser may match a sentence against. */
 export type ParseContext = {
   residents: ParserResident[];
   enclosures: ParserEnclosure[];
   clinics: ParserClinic[];
+  /** Existing carers only: a new one is never created from a sentence. */
+  carers: ParserCarer[];
   /** The person's own clock, so "tomorrow" is tomorrow where they are. */
   now: Date;
 };
@@ -47,6 +51,8 @@ export type Intent =
   | "hospital"
   | "hospital-return"
   | "weight"
+  | "death"
+  | "rehome"
   | "where"
   | "who"
   | "due";
@@ -58,6 +64,8 @@ export const WRITE_INTENTS: readonly Intent[] = [
   "hospital",
   "hospital-return",
   "weight",
+  "death",
+  "rehome",
 ];
 
 export function isWriteIntent(intent: Intent): boolean {
@@ -106,6 +114,24 @@ export type WeightDraft = {
   date: string | null;
 };
 
+export type DeathDraft = {
+  kind: "death";
+  residentId: string | null;
+  /** Never defaulted: "last night" straddles midnight, so it stays null. */
+  date: string | null;
+  causeOfDeath: string | null;
+};
+
+export type RehomeDraft = {
+  kind: "rehome";
+  residentId: string | null;
+  /** Null when the sentence said neither (or both) of foster and adopt. */
+  rehomeKind: "foster" | "adopt" | null;
+  /** An existing carer; null unless the sentence named exactly one. */
+  carerId: string | null;
+  date: string | null;
+};
+
 export type WhereDraft = { kind: "where"; residentId: string | null };
 
 export type WhoDraft = { kind: "who"; enclosureId: string | null };
@@ -122,6 +148,8 @@ export type Draft =
   | HospitalDraft
   | HospitalReturnDraft
   | WeightDraft
+  | DeathDraft
+  | RehomeDraft
   | WhereDraft
   | WhoDraft
   | DueDraft;

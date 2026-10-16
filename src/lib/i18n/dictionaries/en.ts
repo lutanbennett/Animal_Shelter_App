@@ -3625,6 +3625,7 @@ const en = {
       `Send ${resident} to hospital today`,
       `${resident} is back from hospital`,
       `${resident} weighs 12.4 kg`,
+      `${resident} died yesterday, kidney failure`,
       `Move ${resident} to ${enclosure} today`,
       `Book a clinic visit for ${resident} with ${clinic} on Friday at 10am`,
     ],
@@ -3632,7 +3633,7 @@ const en = {
     send: "Send",
     looking: "Looking...",
     cantHelp:
-      "I didn't understand that one. I can send a resident to hospital and back, log a weight, move a resident, book a clinic visit, and answer \"where is …\", \"who is in …\" and \"what is due this week\". The user manual has the exact sentences.",
+      "I didn't understand that one. I can send a resident to hospital and back, log a weight, record a death, place a resident with a foster or adopting carer, move a resident, book a clinic visit, and answer \"where is …\", \"who is in …\" and \"what is due this week\". The user manual has the exact sentences.",
     severalMatch: "More than one resident has that name — pick the right one.",
     whichOne: "Which one do you mean?",
     fillBlanks: "Check the details, fill in anything missing, then confirm.",
@@ -3676,9 +3677,39 @@ const en = {
         `Record ${resident} at ${kg} kg on ${date}`,
       done: (resident: string, kg: number) => `Done — ${resident} recorded at ${kg} kg.`,
     },
+    death: {
+      title: "Record a death",
+      summary: (resident: string, date: string) =>
+        `Record ${resident} as deceased on ${date}`,
+      done: (resident: string) =>
+        `Done — ${resident} has been recorded as deceased. Their record is now closed.`,
+      who: (code: string, place: string) => `Code ${code} · now in ${place}`,
+      dateNeeded:
+        "Pick the date yourself. The assistant never guesses the day of a death.",
+      pickResidentFirst:
+        "Choose the resident. The name wasn't clear enough to be sure which one you meant.",
+    },
+    rehome: {
+      title: "Foster or adopt",
+      summary: (resident: string, kind: string, carer: string, date: string) =>
+        `${kind} ${resident} with ${carer} on ${date}`,
+      done: (resident: string, kind: string, carer: string) =>
+        `Done — ${resident} is now ${kind} with ${carer}.`,
+      kinds: { foster: "fostered", adopt: "adopted" },
+      verbs: { foster: "Foster", adopt: "Adopt" },
+      kindLabel: "What's happening?",
+      pickKind: "Choose foster or adopt",
+      carerLabel: "Carer",
+      pickCarer: "Choose a carer",
+      carerMissing:
+        "Only carers already on the list can be chosen here. To use someone new, add them on the resident's foster / adopt page first.",
+      who: (code: string, place: string) => `Code ${code} · now in ${place}`,
+    },
     fields: {
       resident: "Resident",
       enclosure: "To enclosure",
+      causeOfDeath: "Cause of death",
+
       vet: "Clinic",
       date: "Date",
       time: "Time",
