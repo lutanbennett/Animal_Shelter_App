@@ -86,6 +86,9 @@ const PUBLIC_VIEWS = [
   // donor name reaches anon; drafts and non-public residents are filtered in the view (owner-run, no RLS to fall back
   // on). The photos view leaves out Medical-folder files.
   "public_appeals",
+  // 0214. Opted-in adoption updates (success stories): animal, photo, agreed words, first name. share_publicly
+  // defaults false and is never backfilled; note, contact, channel and dates are not selected.
+  "public_adoption_updates",
   "public_appeal_photos",
 ];
 // No base tables: site_content, site_content_photos and site_pages were
