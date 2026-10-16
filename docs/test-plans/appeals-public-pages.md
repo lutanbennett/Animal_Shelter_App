@@ -11,7 +11,7 @@
 | PR | pending: the number is known once the PR is open |
 | Tested by / date | Claude, 2026-10-16 |
 | Carries a migration? | no (`0210` merged earlier in #667) |
-| Tested at SHA | @@SHA@@ |
+| Tested at SHA | 6c75b3ea |
 
 ## 1. Scope and risk
 
@@ -23,10 +23,26 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync`: `origin/main` merged in cleanly (already up to date)
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Exit code read directly, output redirected to a file:
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 test=0 build=0`. Exit code read directly, output redirected to a file:
 
 ```
-@@GATES@@
+=== gates: typecheck — npm run typecheck
+
+=== gates: typecheck exited 0 after 12s
+
+=== gates: lint — npm run lint
+
+=== gates: lint exited 0 after 80s
+
+=== gates: test — npm test
+
+=== gates: test exited 0 after 3s
+
+=== gates: build — npm run build
+
+=== gates: build exited 0 after 38s
+
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
@@ -48,7 +64,7 @@
 Test appeals were inserted on dev by script (Panda, Markey, Dryrun Yota EN) because the staff form does not exist yet; dev test data is disposable.
 
 - [x] Happy path works end to end: list shows live appeals, detail shows photos, story, cost, progress, ways to give, share buttons; signed out, port 3002
-- [x] Data persists — reload: n/a is wrong here, the pages are read-only; a gift inserted in `donations`/`donation_lines` designated to the appeal moved the figure (฿6,000 of ฿15,000 → 40%; ฿17,250 → 115%) on reload
+- [x] Data persists — reload: the pages are read-only, so this was checked as a gift inserted in `donations`/`donation_lines` designated to the appeal moved the figure after reload (฿6,000 of ฿15,000 → 40%; ฿17,250 → 115%) on reload
 - [ ] Create / edit / delete all exercised — n/a: the public pages only read; creating appeals is the staff half
 - [x] Empty state renders sensibly: an appeal with no gifts reads "No gifts recorded yet."; an appeal with no photos shows "No photo yet" (cards) or the resident's profile photo (detail); the list with none open shows its own sentence (read in code, not driven)
 - [x] Invalid input is rejected with a readable message, not a crash: a malformed id and a draft's id both show the not-found page, and the draft's title is not in the page or the list
