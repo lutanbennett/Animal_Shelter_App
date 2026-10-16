@@ -39,6 +39,9 @@ export type WeighFirst = {
 export async function loadWeighFirst(
   supabase: Supabase,
   residents: PickableResident[],
+  /** The instant "today" is read from. A parameter so the Bangkok boundary can be asserted at a
+   *  fixed instant rather than waited for: weigh-first.test.mjs runs both sides of 17:00Z. */
+  now: Date | number = Date.now(),
 ): Promise<{ waiting: WeighFirst[]; error: string | null }> {
   // Cast rather than `.returns<>()`: the generated types read a table-returning function as one
   // row, so the array shape is asserted here as it is for `recurring_job_dates`.
@@ -48,7 +51,7 @@ export async function loadWeighFirst(
   if (visits.length === 0) return { waiting: [], error: null };
 
   const byId = new Map(residents.map((r) => [r.id, r]));
-  const today = todayIso();
+  const today = todayIso(now);
 
   // One candidate per resident: the latest visit. Each visit wants a weight dated on or after its
   // own day, so the latest is the hardest to satisfy — if it is met, every earlier one is too.
