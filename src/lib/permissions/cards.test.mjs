@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CARDS, CARD_KEYS, bundleOfCards, includedCards } from "./cards.ts";
+import { CARDS, CARD_KEYS, bundleOfCards, includedCards, cardOpens } from "./cards.ts";
 import { JOBS, JOBS_OF_ROLE, bundleOfRole } from "./jobs.ts";
 import { ACTIVITIES } from "./catalogue.ts";
 import { ROUTES } from "./routes.ts";
@@ -29,7 +29,8 @@ test("includes are real cards and never loop", () => {
 
 test("a card's tile opens a page in the registry", () => {
   const paths = new Set(ROUTES.map((r) => r.path));
-  const unknown = CARD_KEYS.filter((k) => !paths.has(CARDS[k].opens) && !["/residents", "/bills", "/assistant"].includes(CARDS[k].opens));
+  const pages = CARD_KEYS.flatMap((k) => [CARDS[k].opens, CARDS[k].opensAny ?? CARDS[k].opens]);
+  const unknown = pages.filter((p) => !paths.has(p) && !["/residents", "/bills", "/assistant"].includes(p));
   assert.deepEqual(unknown, []);
 });
 
@@ -53,4 +54,10 @@ test("Enclosures is narrow: Read on the enclosures and nothing of maintenance", 
 
 test("Management is not handed a power it does not hold: Residents leaves death withdrawal out", () => {
   assert.ok(!bundleOfCards(["residents"]).has("placement.death_withdraw"));
+});
+
+test("Book clinic visits opens the clinic login's page for a clinic login and the shelter's list for everyone else", () => {
+  assert.equal(cardOpens(CARDS.book_clinic_visits, "own_clinic"), "/appointments");
+  assert.equal(cardOpens(CARDS.book_clinic_visits, "any"), "/upcoming-visits");
+  assert.equal(cardOpens(CARDS.contacts, "any"), CARDS.contacts.opens);
 });
