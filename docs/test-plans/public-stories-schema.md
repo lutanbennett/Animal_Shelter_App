@@ -24,7 +24,7 @@
 
 - [x] `node scripts/worktree.mjs sync` — run before opening the PR; `origin/main` merged in
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — see the PR body for the final line
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all checks passing on #683, read from the PR status
 
 ## 3. Schema and data — *skip if no migration*
 
