@@ -87,3 +87,13 @@ export async function loadPublicStoriesFor(supabase: SupabaseClient, residentId:
   const cards = await loadCards(supabase, [residentId]);
   return foldStories(data, cards);
 }
+
+/** Which animals have a published story, so Happy endings links only the pictures that lead somewhere. */
+export async function loadStoryResidentIds(supabase: SupabaseClient): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from("public_adoption_updates")
+    .select("resident_id")
+    .returns<{ resident_id: string }[]>();
+  if (error) return new Set();
+  return new Set((data ?? []).map((r) => r.resident_id));
+}

@@ -6177,6 +6177,8 @@ const en = {
       heading: "Happy endings",
       subtitle: "Residents who found their forever homes recently.",
       adopted: (month: string) => `Adopted ${month}`,
+      readStory: (name: string) => `Read the news about ${name} at home`,
+      seeStory: "Read their news",
     },
     successStories: {
       heading: "Home at last",

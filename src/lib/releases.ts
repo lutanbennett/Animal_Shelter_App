@@ -76,7 +76,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
-    text: "Adoption updates can now be published as success stories. When an adopter has told you we may show their photo and words, open the update, tick Publish to the website, type the words they agreed to share and, if you like, a first name. The photos and those words then appear in Home at last on the public adoption page and on the animal's own card page. The staff note is never shown, and nothing is published unless you tick it: every existing update stays private. Untick and save to take one down.",
+    text: "Adoption updates can now be published as success stories. When an adopter has told you we may show their photo and words, open the update, tick Publish to the website, type the words they agreed to share and, if you like, a first name. The animal then shows a Read their news link under its picture in Happy endings on the public adoption page, which opens a page with the photos and those words, and the same news appears on the animal's own card page. The staff note is never shown, and nothing is published unless you tick it: every existing update stays private. Untick and save to take one down.",
     roles: ["admin", "management"],
   },
   {

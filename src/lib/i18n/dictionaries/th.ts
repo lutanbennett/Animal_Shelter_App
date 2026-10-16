@@ -5959,6 +5959,8 @@ const th: Dictionary = {
       heading: "เรื่องราวดี ๆ",
       subtitle: "สัตว์ที่เพิ่งได้บ้านตลอดไปเมื่อไม่นานมานี้",
       adopted: (month: string) => `รับเลี้ยงเมื่อ ${month}`,
+      readStory: (name: string) => `อ่านข่าวของ ${name} ที่บ้านใหม่`,
+      seeStory: "อ่านข่าวของน้อง",
     },
     successStories: {
       heading: "ถึงบ้านแล้ว",

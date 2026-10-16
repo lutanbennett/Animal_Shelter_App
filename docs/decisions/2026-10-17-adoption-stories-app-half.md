@@ -2,6 +2,8 @@
 
 Builds on `2026-10-16-public-adoption-updates-columns.md`. The privacy shape is unchanged; this records what the app does with it.
 
+**Revised the same day (Lutan): no strip on `/adopt`.** The stories sit on their own page, `/adopt/stories/<resident id>`, reached by tapping the animal's picture under Happy endings (it shows Read their news only for animals with a ticked story; the rest stay plain). That needed the animal's id in `public_recent_adoptions`, added as `resident_id` by `0215` (PR #688) in its own schema PR, which must merge first. An animal that has left the 90-day Happy endings window no longer has a link, but its story stays on its `/r/<code>` card page. No published story at the address is a 404.
+
 **Public routes read only `public_adoption_updates`**, through `src/lib/adoption-updates/public.ts`. The animal's name and species come from `public_resident_cards` (the view carries no name), and a row with no card is dropped. `adoption_updates` is never queried from a public route, and the staff `note` is not selectable there.
 
 **Where "a line on the animal's own page once adopted" went.** An adopted animal is excluded from `public_resident_profiles`, so `/adopt/<id>` is a 404 for them. Their page is the `/r/<code>` card page, which already says "has been adopted"; the stories sit under that line. No view change was needed.
