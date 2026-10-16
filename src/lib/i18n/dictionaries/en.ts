@@ -3938,6 +3938,7 @@ const en = {
       noMatch: "No one matches that name.",
       empty: "No residents to show.",
       elsewhere: "Not in an enclosure",
+      offSite: "Away from the shelter",
       couldntLoad: "Couldn't load the residents",
       photoAlt: (name: string) => `Photo of ${name}`,
       noPhoto: "No photo",
@@ -3945,6 +3946,20 @@ const en = {
     weight: {
       title: "Record Weight",
       pickIntro: "Tap the resident you are weighing.",
+      /** "Weigh these first": seen by a vet yesterday or today, with no weight since (0207). */
+      weighFirst: {
+        title: "Weigh these first",
+        intro: "Seen by a vet yesterday or today, with no weight recorded since.",
+        none: "Nobody is waiting. Everyone the vet saw yesterday or today has been weighed.",
+        today: "today",
+        yesterday: "yesterday",
+        /** "Novel, yesterday 09:30" — the clinic, which day it was, and the time. */
+        visit: (clinic: string, day: string, time: string) => `${clinic}, ${day} ${time}`,
+        /** The same where no clinic is on record. */
+        visitNoClinic: (day: string, time: string) => `Vet visit ${day} ${time}`,
+        couldntLoad: "Couldn't load the vet visits",
+      },
+      everyone: "Everyone by enclosure",
       forResident: (name: string) => `Weighing ${name}`,
       kgLabel: "Weight in kg",
       lastReading: (weight: string, date: string) => `Last time: ${weight}, ${date}`,
