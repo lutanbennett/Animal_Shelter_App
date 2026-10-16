@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Draft, Intent } from "./types";
 
 /** Mirrors the assistant_action_status enum (0070). */
-export type AssistantActionStatus = "confirmed" | "cancelled" | "unmatched";
+export type AssistantActionStatus = "confirmed" | "cancelled" | "unmatched" | "refused";
 
 export type AssistantActionLog = {
   /** Exactly as typed — not trimmed, cased or otherwise tidied (0070). */

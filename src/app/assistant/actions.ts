@@ -348,6 +348,31 @@ export async function recordAssistantTurn(input: {
 }
 
 /**
+ * A volunteer asked for a write and was turned away in the browser. Records
+ * what they typed and that it was refused — no intent or draft, which would
+ * be the parser's guess rather than anything they said.
+ *
+ * Under `assistant.ask` the table policy (0214) lets a volunteer insert
+ * `refused` on their own row and nothing else, and they cannot read it back,
+ * so this is a bare insert with no `.select()`. Fire-and-forget: it never
+ * throws, so the refusal they see is unaffected by the bookkeeping.
+ */
+export async function recordRefusedTurn(request: string): Promise<void> {
+  try {
+    const supabase = await createClient();
+    await logAssistantAction(supabase, {
+      requestText: request,
+      intent: null,
+      draft: null,
+      status: "refused",
+      result: null,
+    });
+  } catch (e) {
+    console.error("assistant: could not record the refusal —", e);
+  }
+}
+
+/**
  * The rows the parser matches against, for the slide-over — the /assistant
  * page loads them itself. Fetched when the panel is first opened rather
  * than with every layout render, since most screens never open it.
