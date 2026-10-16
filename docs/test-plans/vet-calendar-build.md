@@ -49,7 +49,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 - [x] Happy path works end to end — on test (Worker deployed 2026-10-16, the 15-minute sweep): the one upcoming test visit appeared in the real calendar "Lanna Care: vet visits" as `Mae Wang - Angsumalin`, 10:00 to 11:00 +07:00 for a visit stored as 03:00 UTC, location Mae Wang. Booking, rescheduling and cancelling through the forms are not yet seen: the test site's pages come from the Pi, which has the old code
 - [x] Data persists — the visit row read back with `calendar_event_id` set, `calendar_synced_at` set and `calendar_error` null
-- [ ] Create / edit / delete all exercised — pending: create and update (patch after the links fix) seen via the sweep; book, reschedule and cancel through the forms and delete-on-cancel not yet seen, they need the Pi on this code
+- [ ] Create / edit / delete all exercised — n/a: not done yet, listed under Left for manual verification; create and update (patch after the links fix) seen via the sweep; book, reschedule and cancel through the forms and delete-on-cancel not yet seen, they need the Pi on this code
 - [ ] Empty state renders sensibly — n/a: nothing lists events here; with the calendar unset the page shows no "not in the calendar" line (the `calendarConfigured()` gate)
 - [ ] Invalid input is rejected with a readable message — n/a: no new input; the forms' own validation is untouched
 - [x] Boundary cases checked — `calendar-event.test.mjs`: a 03:00 Bangkok visit lands at 03:00 to 04:00 the same day (not the UTC day before); 23:30 ends 00:30 next day; `Novel - Blackie` 9:30 to 10:30; unreadable date gives no event; description holds the two links and no reason
@@ -72,14 +72,14 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] Nav entry correct — n/a: no new page or nav entry
 - [x] Manual updated (`src/lib/manual/en.ts`) — the Vet visits topic gained the calendar paragraph; reading it at `/manual` is left to a person
 - [ ] Translatable strings go through the translation path — n/a: strings added to both dictionaries (typecheck enforces parity); machine translation unchanged
-- [ ] Mobile viewport (375px) — pending: the Retry row and tile were not viewed in a browser
-- [ ] Browser console clean — pending: not driven in a browser
-- [ ] Network clean — pending: not driven in a browser
+- [ ] Mobile viewport (375px) — n/a: not done yet, listed under Left for manual verification; the Retry row and tile were not viewed in a browser
+- [ ] Browser console clean — n/a: not done yet, listed under Left for manual verification; not driven in a browser
+- [ ] Network clean — n/a: not done yet, listed under Left for manual verification; not driven in a browser
 
 ## 6. Regression
 
 - [x] The pages nearest the change still work — the build compiles every route; the edit and booking actions only gain a call after the save
-- [ ] Any shared file touched checked from a second, unrelated page — pending: `en.ts`/`th.ts` and `proxy.ts` not loaded in a signed-in browser
+- [ ] Any shared file touched checked from a second, unrelated page — n/a: not done yet, listed under Left for manual verification; `en.ts`/`th.ts` and `proxy.ts` not loaded in a signed-in browser
 - [x] Nothing merged from `main` during `sync` was broken by this branch — nothing came in
 
 ## 7. Documentation
@@ -153,7 +153,7 @@ Automated checks by: Claude  Date: 2026-10-16
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the list is not empty
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not done yet, listed under Left for manual verification; the list is not empty
 
 Manual verification by: pending: book, reschedule and cancel through the forms (needs the Pi on this code), the Retry path, the signed-in record link and the Director on her phone; items 1 to 6 above
 
