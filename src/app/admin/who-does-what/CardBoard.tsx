@@ -16,7 +16,7 @@ import { runCardOp, type CardOp } from "./CardControls";
  * A drop calls runCardOp(), the very function the buttons call, so it takes the same server action and leaves the same
  * audit row. docs/decisions/2026-10-14-cards-board-drag-and-buttons.md
  */
-export type Tile = { key: string; label: string; description: string; includes: string; href: string };
+export type Tile = { key: string; label: string; description: string; includes: string; href: string; warn?: boolean };
 
 export function CardBoard({
   roleKey,
@@ -106,6 +106,7 @@ export function CardBoard({
         <span className="text-sm font-semibold text-foreground [overflow-wrap:anywhere]">{tl.label}</span>
         <span className="line-clamp-2 text-xs text-muted [overflow-wrap:anywhere]">{tl.description}</span>
         {tl.includes && <span className="text-xs text-muted [overflow-wrap:anywhere]">{c.includesNote(tl.includes)}</span>}
+        {tl.warn && <span className="text-xs font-medium text-danger [overflow-wrap:anywhere]">{c.noTile}</span>}
       </Link>
       {canEdit && (
         <div className="flex flex-wrap gap-1">

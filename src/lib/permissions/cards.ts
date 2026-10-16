@@ -47,7 +47,17 @@ export type Card = {
   bundle: readonly BundleEntry[];
   /** The page the card's tile opens: a route in the registry. */
   opens: string;
+  /**
+   * The page it opens instead for a role whose clinical scope is "any" (shelter staff), when `opens` is a clinic
+   * login's own page that they are refused. Read it through cardOpens(), never directly.
+   */
+  opensAny?: string;
 };
+
+/** The page this card's tile opens for a role with this clinical scope: one that role can open. */
+export function cardOpens(card: Pick<Card, "opens" | "opensAny">, clinical: string): string {
+  return clinical === "own_clinic" ? card.opens : (card.opensAny ?? card.opens);
+}
 
 type NewCard = Omit<Card, "key" | "label">;
 
@@ -91,7 +101,9 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   book_clinic_visits: {
     includes: ["view_residents"],
     bundle: [{ activity: "visit.book" }, { activity: "medical.visits", level: "read" }],
+    // /appointments is the clinic login's own page (refused to shelter roles); the shelter's list of visits is /upcoming-visits.
     opens: "/appointments",
+    opensAny: "/upcoming-visits",
   },
   contacts: {
     includes: [],

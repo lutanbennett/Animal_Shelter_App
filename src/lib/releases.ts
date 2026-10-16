@@ -74,7 +74,9 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "If Management is given the Book clinic visits card, its home screen now shows the tile and it opens the list of upcoming vet visits. Before, the card was given but no tile appeared. A clinic login with the same card still opens its own appointments. On Settings → Who does what, a card that would show no tile now says so, and View residents says it is shown as part of Residents.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [
