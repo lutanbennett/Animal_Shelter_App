@@ -11,7 +11,7 @@
 | PR | n/a: not yet — the PR does not exist at this commit |
 | Tested by / date | Claude Opus 5 (Daily Planner) / 2026-10-16 |
 | Carries a migration? | no |
-| Tested at SHA | `0cb5135d` |
+| Tested at SHA | `eb5b3bf1` |
 
 ## 1. Scope and risk
 
