@@ -7,7 +7,11 @@
 //     2  every card it holds has a tile, or is the included card of a held card that opens the same page
 //        (View residents under Residents); a card with neither is a card the person cannot open, and fails
 //     3  the tiles come out in the order role_cards keeps
-//     4  extras give no tile
+//   4  extras give no tile
+//   5  for EACH clinical scope (any, own_clinic): a card whose page is gated by a scope must name a page that
+//      scope can open. A card is given to a role by a bundle, so the check builds a role holding exactly that
+//      card's bundle at each scope and requires its tile to be drawn and to open a page the role can open.
+//      This is the guard against a card that works for one kind of role and silently draws nothing for another.
 //   And prints a hash of role_permissions per role, to be compared before and after (this script writes nothing).
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -31,7 +35,8 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 const { cardTilesFor } = await imp("src/lib/home/tiles.ts");
-const { CARDS, includedCards, isCardKey } = await imp("src/lib/permissions/cards.ts");
+const { CARDS, CARD_KEYS, bundleOfCards, cardOpens, includedCards, isCardKey } = await imp("src/lib/permissions/cards.ts");
+const { routeFor, canOpen } = await imp("src/lib/permissions/routes.ts");
 const { parsePermissions } = await imp("src/lib/permissions/can.ts");
 const en = (await imp("src/lib/i18n/dictionaries/en.ts")).default;
 const th = (await imp("src/lib/i18n/dictionaries/th.ts")).default;
@@ -50,6 +55,29 @@ async function sql(query) {
 let failed = 0;
 const fail = (m) => { failed++; console.log(`FAIL ${m}`); };
 const ok = (m) => console.log(`ok   ${m}`);
+
+// 5: every card, at every clinical scope (needs no database row: the bundle is the card's own).
+const synthetic = (key, clinical) =>
+  parsePermissions({
+    role: { key: "check_" + key, name: key, name_th: null, kind: "custom", opens_app: true, home_path: null },
+    is_admin: false,
+    scopes: { residents: "all", clinical, contacts: "all", photos: "all", sees_login_emails: false },
+    permissions: Object.fromEntries([...bundleOfCards([key])].map(([a, l]) => [a, l === "edit" ? 2 : 1])),
+  });
+// A card whose page the shelter's own staff run (a medical job) is checked at "any" only; one that opens a clinic
+// login's page (/appointments) is for a clinic login too, so it is checked at both. Nothing else can be refused by scope.
+for (const clinical of ["any", "own_clinic"]) {
+  for (const key of CARD_KEYS) {
+    const page = cardOpens(CARDS[key], clinical);
+    const route = routeFor(page);
+    const serves = routeFor(CARDS[key].opens)?.scope?.clinical === "own_clinic" ? ["any", "own_clinic"] : ["any"];
+    if (!serves.includes(clinical) || (!route?.scope && !CARDS[key].opensAny)) continue;
+    const perms = synthetic(key, clinical);
+    const tile = cardTilesFor([key], perms, en, 0)[0];
+    if (!canOpen(perms, route) || !tile) fail(`card ${key} at clinical scope "${clinical}": its tile opens ${page}, which a role holding the card cannot open (add or fix its opensAny)`);
+    else ok(`card ${key} at clinical scope "${clinical}": opens ${page}`);
+  }
+}
 
 const roles = await sql(`select id, key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails from roles where archived_at is null order by key`);
 const cards = await sql(`select r.key, c.card, c.position from role_cards c join roles r on r.id = c.role_id order by r.key, c.position`);

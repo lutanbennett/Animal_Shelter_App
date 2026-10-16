@@ -8,6 +8,8 @@ import { ACTIVITIES, type ActivityKey } from "@/lib/permissions/catalogue";
 import { CARDS, CARD_KEYS, bundleOfCards, includedCards, isCardKey, type CardKey } from "@/lib/permissions/cards";
 import { TWO_STEP_PATH, hasTwoStep } from "@/lib/auth/two-step";
 import { opensWhoDoesWhat, WHO_DOES_WHAT_PATH } from "@/lib/permissions/who-does-what";
+import { parsePermissions } from "@/lib/permissions/can";
+import { cardTile, isSubsumed } from "@/lib/home/tiles";
 import { getT } from "@/lib/i18n/get-t";
 import { AddExtraForm, CardButton } from "./CardControls";
 import { CardBoard } from "./CardBoard";
@@ -46,18 +48,33 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
   const names = new Map(roles.map((r) => [r.key, roleName(r, t, locale)]));
 
   const admin = createAdminClient();
-  const [{ data: cardRows, error: cardsError }, { data: extraRows, error: extrasError }] = await Promise.all([
+  const [{ data: cardRows, error: cardsError }, { data: extraRows, error: extrasError }, { data: roleRow }, { data: cellRows }] = await Promise.all([
     admin.from("role_cards").select("card, position").eq("role_id", role?.id ?? "").order("position"),
     admin.from("role_extras").select("activity, level, why").eq("role_id", role?.id ?? ""),
+    admin.from("roles").select("key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails").eq("id", role?.id ?? "").maybeSingle(),
+    admin.from("role_permissions").select("activity, level").eq("role_id", role?.id ?? ""),
   ]);
   if (cardsError || extrasError) throw new Error(`Who does what: ${(cardsError ?? extrasError)?.message}`);
 
   const held: CardKey[] = (cardRows ?? []).map((r) => r.card as string).filter(isCardKey);
+  // The home the role really gets: a held card draws a tile unless the person could not open its page, or another held
+  // card (Residents) already stands for it. A card with neither is the one that silently shows nothing.
+  const rolePerms = roleRow
+    ? parsePermissions({
+        role: { key: roleRow.key, name: roleRow.name, name_th: null, kind: roleRow.kind, opens_app: roleRow.opens_app, home_path: roleRow.home_path },
+        is_admin: false,
+        scopes: { residents: roleRow.scope_residents, clinical: roleRow.scope_clinical, contacts: roleRow.scope_contacts, photos: roleRow.scope_photos, sees_login_emails: roleRow.sees_login_emails },
+        permissions: Object.fromEntries((cellRows ?? []).map((x) => [x.activity as string, x.level as number])),
+      })
+    : null;
+  const noTile = (k: CardKey) => !!rolePerms && !isSubsumed(k, held, rolePerms) && !cardTile(k, rolePerms, t);
+  const stoodForBy = (k: CardKey) => (rolePerms && isSubsumed(k, held, rolePerms) ? held.find((o) => o !== k && includedCards(o).includes(k)) : undefined);
   const library = CARD_KEYS.filter((k) => !held.includes(k));
   const label = (k: CardKey) => CARDS[k].label(t);
   const describe = (k: CardKey) => c.description[k];
 
   const tileOf = (k: CardKey) => ({
+    warn: held.includes(k) && noTile(k),
     key: k,
     label: label(k),
     description: describe(k),
@@ -170,6 +187,10 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
             </ul>
           </div>
           <p className="text-sm text-muted">{held.includes(cardParam) ? c.has : c.notHas}</p>
+          {held.includes(cardParam) && stoodForBy(cardParam) && (
+            <p className="text-sm text-foreground">{c.shownAsPart(label(stoodForBy(cardParam)!))}</p>
+          )}
+          {held.includes(cardParam) && noTile(cardParam) && <p role="alert" className="text-sm font-medium text-danger">{c.noTile}</p>}
           {canEdit &&
             (held.includes(cardParam) ? (
               <CardButton op={{ kind: "remove", roleKey: role.key, card: cardParam }} label={c.remove} ariaLabel={c.removeFor(label(cardParam))} danger />

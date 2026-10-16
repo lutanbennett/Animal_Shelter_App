@@ -13,7 +13,7 @@ import { canUseBills } from "@/lib/bills/access";
 import { NAV_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "@/lib/permissions/can";
-import { CARDS, includedCards, type CardKey } from "@/lib/permissions/cards";
+import { CARDS, cardOpens, includedCards, type CardKey } from "@/lib/permissions/cards";
 import { jobsOfRole } from "@/lib/permissions/jobs";
 import { canOpen, routeFor, routesFor, type RouteEntry } from "@/lib/permissions/routes";
 
@@ -89,13 +89,14 @@ export function cardTile(key: CardKey, perms: Permissions, t: Dictionary, billsW
   const card = CARDS[key];
   const covered = card.bundle.every((b) => (b.level ? can(perms, b.activity, b.level) : can(perms, b.activity)));
   if (!covered) return null;
-  const outside = OUTSIDE_REGISTRY[card.opens];
-  const route = routeFor(card.opens);
+  const page = cardOpens(card, perms.scopes.clinical);
+  const outside = OUTSIDE_REGISTRY[page];
+  const route = routeFor(page);
   const icon = outside?.icon ?? route?.icon;
   const opens = outside ? outside.open(perms) : route ? canOpen(perms, route) : false;
   if (!icon || !opens) return null;
-  const badge = card.opens === "/bills" && billsWaiting ? { badge: t.bills.tile.waiting(billsWaiting) } : {};
-  return { href: card.opens, label: card.label(t), icon, ...badge };
+  const badge = page === "/bills" && billsWaiting ? { badge: t.bills.tile.waiting(billsWaiting) } : {};
+  return { href: page, label: card.label(t), icon, ...badge };
 }
 
 /**
@@ -103,9 +104,15 @@ export function cardTile(key: CardKey, perms: Permissions, t: Dictionary, billsW
  * another held card includes and shares its page with (View residents under Residents) is that card's tile, not a
  * second one. Roles with no cards get the derived home below, as a role a shelter creates always did.
  */
+/** A card another held card includes and shares its page with (View residents under Residents) draws no tile of its own. */
+export function isSubsumed(key: CardKey, held: readonly CardKey[], perms: Permissions): boolean {
+  const clinical = perms.scopes.clinical;
+  return held.some((o) => o !== key && cardOpens(CARDS[o], clinical) === cardOpens(CARDS[key], clinical) && includedCards(o).includes(key));
+}
+
 export function cardTilesFor(held: readonly CardKey[], perms: Permissions, t: Dictionary, billsWaiting?: number): HomeTile[] {
   return held.flatMap((key) => {
-    const subsumed = held.some((o) => o !== key && CARDS[o].opens === CARDS[key].opens && includedCards(o).includes(key));
+    const subsumed = isSubsumed(key, held, perms);
     const tile = subsumed ? null : cardTile(key, perms, t, billsWaiting);
     return tile ? [tile] : [];
   });

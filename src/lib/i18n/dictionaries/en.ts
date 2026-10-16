@@ -627,6 +627,8 @@ const en = {
         includesNote: (names: string) => `includes ${names}`,
         gives: "What it gives",
         givesNote: "The card's own activities; anything it includes comes on top.",
+        shownAsPart: (card: string) => `Shown as part of ${card} on the home screen: this role gets one ${card} tile, which opens the same page.`,
+        noTile: "Warning: this role holds this card but gets no tile for it on its home screen, because it cannot open the page the card leads to.",
         alsoHeading: "Also allowed",
         alsoIntro: "Single things this role can do that no card gives. Each says why.",
         noExtras: "Nothing. Everything this role can do comes from its cards.",
