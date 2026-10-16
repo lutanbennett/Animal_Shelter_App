@@ -142,6 +142,29 @@ if (GUARDED && !readOnly) {
   }
 }
 
+if (envName === "test" && !readOnly) {
+  // Dev is where schema-first work is applied before it merges, so the full
+  // guard would forbid the normal flow. The narrower rule: a file that is not
+  // on origin/main must be new on this branch. One already in the merge-base
+  // but gone from main is a merged migration under an old name, and applying
+  // it re-inserts a ledger row main has deleted.
+  const base = git(["merge-base", "HEAD", "origin/main"]);
+  if (!fetched.ok || !base.ok) {
+    console.error("apply-migrations: test needs origin/main and a merge-base to tell stale files from new ones; could not get them. Nothing was sent to any database.");
+    process.exit(2);
+  }
+  const baseBlobs = parseLsTree(git(["ls-tree", base.out, `${MIGRATIONS_DIR}/`]).out);
+  const stale = files.filter((name) => !mainBlobs.has(name) && baseBlobs.has(name));
+  if (stale.length) {
+    console.error(
+      "apply-migrations: test refuses files that were merged and have since been renamed or removed on origin/main (this checkout is stale):\n  - " +
+        stale.join("\n  - ") +
+        "\nRun worktree.mjs sync, or apply from a current checkout. Nothing was sent to any database.",
+    );
+    process.exit(2);
+  }
+}
+
 const env = loadEnv(envName);
 const url = env.NEXT_PUBLIC_SUPABASE_URL;
 const token = env.SUPABASE_ACCESS_TOKEN;
