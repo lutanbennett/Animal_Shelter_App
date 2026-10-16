@@ -239,7 +239,8 @@ export async function checkCalendar(): Promise<CalendarStatus> {
     .returns<{ calendar_synced_at: string | null; calendar_out_of_date_at: string }[]>();
   const unsynced = (data ?? []).filter(isPending).length;
   try {
-    const res = await calendarFetch("");
+    // calendar.events does not allow reading the calendar itself, only its events: list one.
+    const res = await calendarFetch("/events?maxResults=1");
     if (!res.ok) return { state: "fail", error: `Calendar answered ${res.status}: ${await errorText(res)}`, unsynced };
     return { state: "ok", unsynced };
   } catch (err) {
