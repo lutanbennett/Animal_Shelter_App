@@ -48,3 +48,23 @@ test("publishing needs a reason to be asking", () => {
   assert.equal(publishBlocker({ what_is_wrong: null, treatment_needed: " " }), "story");
   assert.equal(publishBlocker({ what_is_wrong: "x", treatment_needed: null }), null);
 });
+
+import { checkDonation } from "../donations/donations.ts";
+
+const gift = {
+  receivedOn: "2026-10-15", donorName: "A", contactId: "", donorEmail: "", donorPhone: "", donorLine: "",
+  method: "bank_transfer", designation: "appeal", designationResidentId: "", designationAppealId: "",
+  designationNote: "", note: "", country: "TH", lines: [{ description: "x", amount: "100" }],
+};
+
+test("a gift for an appeal must name the appeal, and carries no resident", () => {
+  assert.equal(checkDonation(gift, "2026-10-16").problem, "designationAppeal");
+  assert.equal(checkDonation({ ...gift, designationAppealId: "nope" }, "2026-10-16").problem, "designationAppeal");
+  const id = "11111111-2222-3333-4444-555555555555";
+  const ok = checkDonation({ ...gift, designationAppealId: id, designationResidentId: id }, "2026-10-16");
+  assert.equal(ok.ok, true);
+  assert.equal(ok.donation.designation_appeal_id, id);
+  assert.equal(ok.donation.designation_resident_id, null);
+  const general = checkDonation({ ...gift, designation: "general", designationAppealId: id }, "2026-10-16");
+  assert.equal(general.donation.designation_appeal_id, null);
+});

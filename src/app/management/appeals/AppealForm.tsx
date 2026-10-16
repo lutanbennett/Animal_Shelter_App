@@ -120,7 +120,7 @@ export function AppealForm({
         <legend className="px-1 text-base font-semibold text-foreground">{f.style}</legend>
         <span className={hintClass}>{f.styleHint}</span>
         <span className="text-sm text-muted">{usingExample ? f.previewExample : f.previewCurrent}</span>
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2">
           {APPEAL_STYLES.map((style: AppealStyle) => {
             const on = fields.displayStyle === style;
             return (

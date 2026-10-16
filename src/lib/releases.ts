@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Fundraising appeals can now be run from the app. On a resident's page, an Admin taps Start an appeal, writes what is wrong and what it costs, picks a bar, thermometer or gauge for progress, chooses photos (never Medical ones, with a blur option for distressing ones), previews the page exactly as visitors will see it, then publishes. Gifts are recorded against the appeal from the donation form, gifts already recorded for the resident can be moved onto it without ever counting twice, and closing the appeal with how it went stops it asking. Management can be given this in Settings.",
   "If Management is given the Book clinic visits card, its home screen now shows the tile and it opens the list of upcoming vet visits. Before, the card was given but no tile appeared. A clinic login with the same card still opens its own appointments. On Settings → Who does what, a card that would show no tile now says so, and View residents says it is shown as part of Residents.",
   "Status page, Release tile: when the website's engine has no release tag, the tile now says so plainly (it is expected right after a setting is changed by hand, and clears at the next release) instead of claiming someone deployed the wrong way. If the engine is tagged as a different release, the tile says that separately.",
 ];

@@ -81,7 +81,6 @@ export function AppealPhotosEditor({
             const on = !!state[c.attachmentId];
             return (
               <li key={c.attachmentId} className={`flex flex-col gap-2 rounded-lg border-2 p-2 ${on ? "border-primary" : "border-border"}`}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={driveImageUrl(c.fileId)} alt={c.name} loading="lazy" className="h-40 w-full rounded object-cover" />
                 <label className="flex min-h-11 items-center gap-2 text-sm text-foreground">
                   <input type="checkbox" checked={on} onChange={(e) => toggle(c.attachmentId, e.target.checked)} />
