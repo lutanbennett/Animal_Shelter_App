@@ -7,7 +7,8 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { localLabel } from "@/lib/translations/labels";
 import { formatBahtPrice, formatDate, parseBahtAmount } from "@/lib/format";
 import { formatQuantity } from "@/lib/diets/options";
-import { defaultUnit, resolveEntered } from "@/lib/units";
+import { defaultUnit } from "@/lib/units";
+import { previewBase } from "@/lib/management/delivery-lines";
 import {
   packTotal,
   parseDeliveryQuantity,
@@ -21,6 +22,11 @@ import { BillPhotoField } from "@/components/BillPhotoField";
 import { useDeferredUploads } from "@/components/DeferredUploads";
 import type { DeliveryFormItem } from "./RecordDeliveryForm";
 import { DateInput } from "@/components/DateInput";
+
+/** One size on the delivery: what it is counted in, how many, and what that cost. */
+type Line = { key: number; unit: string; quantity: string; inPacks: boolean; packs: string; perPack: string; cost: string };
+let nextKey = 1;
+const newLine = (unit = "", cost = ""): Line => ({ key: nextKey++, unit, quantity: "", inPacks: false, packs: "", perPack: "", cost });
 
 type Step = "kind" | "item" | "amount" | "when" | "extras" | "confirm" | "done";
 
@@ -65,16 +71,11 @@ export function DeliverySteps({
   const [kind, setKind] = useState<DeliveryKind>(initialKind);
   const [itemId, setItemId] = useState("");
   const [search, setSearch] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [unitName, setUnitName] = useState("");
-  const [inPacks, setInPacks] = useState(false);
-  const [packs, setPacks] = useState("");
-  const [perPack, setPerPack] = useState("");
+  const [lines, setLines] = useState<Line[]>(() => [newLine("", billCost ?? "")]);
   const [earlier, setEarlier] = useState(false);
   const [earlierDate, setEarlierDate] = useState("");
   const [timing, setTiming] = useState<DeliveryTiming | null>(null);
   const [supplierId, setSupplierId] = useState("");
-  const [cost, setCost] = useState(billCost ?? "");
   const [cardId, setCardId] = useState(fromBill ?? null);
   const bill = useDeferredUploads();
   const [note, setNote] = useState("");
@@ -82,18 +83,26 @@ export function DeliverySteps({
   const [saved, setSaved] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const amountInput = useRef<HTMLInputElement>(null);
+  /** The size just added, so its box is the one the keyboard opens on. */
+  const [focusKey, setFocusKey] = useState<number | null>(null);
 
   const item = items[kind].find((i) => i.id === itemId);
   const date = earlier ? earlierDate : today;
   const countedThatDay = itemId !== "" && date !== "" && (countDays[kind][itemId] ?? []).includes(date);
-  // unitName is the English key the receipt stamps; what is shown is the reader's language (0166).
-  const unitLabel = unitName
-    ? localLabel(locale, unitName, item?.conversions.find((c) => c.unit === unitName)?.unitTh)
-    : item?.unit || "";
-  const quantityOk = parseDeliveryQuantity(quantity).ok;
-  const preview = item && unitName && quantityOk ? resolveEntered(Number(quantity), unitName, item.conversions) : null;
+  // A line unit is the English key the receipt stamps; what is shown is the reader language (0166).
+  const unitLabelOf = (unit: string) =>
+    unit ? localLabel(locale, unit, item?.conversions.find((c) => c.unit === unit)?.unitTh) : item?.unit || "";
+  const usualUnit = (it: DeliveryFormItem | undefined) =>
+    it ? (defaultUnit(it.conversions, "purchase")?.unit ?? "") : "";
+  const quantityOkOf = (l: Line) => parseDeliveryQuantity(l.quantity).ok;
+  const allOk = lines.every(quantityOkOf);
+  const together = item ? previewBase(lines, item.conversions) : null;
+  const patch = (key: number, change: Partial<Line>) =>
+    setLines((all) => all.map((l) => (l.key === key ? { ...l, ...change } : l)));
+  /** "2 20 kg bag" for the confirm sentence and the cost labels. */
+  const describe = (l: Line) => `${formatQuantity(Number(l.quantity))} ${unitLabelOf(l.unit)}`;
   const supplier = suppliers.find((x) => x.id === supplierId);
-  const costParsed = parseBahtAmount(cost);
+  const costsParsed = lines.map((l) => parseBahtAmount(l.cost));
   const kindWord = d.steps.kind[kind].toLowerCase();
 
   const go = (next: Step) => {
@@ -111,7 +120,7 @@ export function DeliverySteps({
       setKind(k);
       setItemId("");
       setSearch("");
-      setUnitName("");
+      setLines([newLine()]);
       setTiming(null);
     }
     go("item");
@@ -122,34 +131,28 @@ export function DeliverySteps({
       setItemId(id);
       setTiming(null);
       const next = items[kind].find((i) => i.id === id);
-      setUnitName(next ? (defaultUnit(next.conversions, "purchase")?.unit ?? "") : "");
+      setLines([newLine(usualUnit(next), lines[0]?.cost ?? "")]);
     }
     go("amount");
   };
 
-  const setPack = (nextPacks: string, nextPerPack: string) => {
-    setPacks(nextPacks);
-    setPerPack(nextPerPack);
-    const total = packTotal(nextPacks, nextPerPack);
-    if (total != null) setQuantity(String(total));
-  };
-
   const whenOk = date !== "" && date <= today && (!countedThatDay || timing != null);
-  const extrasOk = costParsed.ok;
+  // Every size priced, or none: one unpriced size would drag the price per kg down (delivery-lines.ts).
+  const pricedCount = lines.filter((l) => l.cost.trim() !== "").length;
+  const costRuleOk = pricedCount === 0 || pricedCount === lines.length;
+  const extrasOk = costsParsed.every((c) => c.ok) && costRuleOk;
 
   const record = () => {
     setError(null);
-    const done = { name: item?.name ?? "", quantity, unit: unitLabel };
+    const done = { name: item?.name ?? "", quantity: String(together ?? 0), unit: item?.unit ?? "" };
     startTransition(async () => {
       const result = await recordDelivery({
         kind,
         itemId,
-        quantity,
-        unit: unitName,
+        lines: lines.map((l) => ({ quantity: l.quantity, unit: l.unit, cost: l.cost })),
         date,
         timing: countedThatDay ? timing : null,
         supplierId,
-        cost,
         note,
       });
       if (!result.ok) {
@@ -173,13 +176,8 @@ export function DeliverySteps({
       // The next item of the same delivery: day and supplier stay.
       setItemId("");
       setSearch("");
-      setUnitName("");
-      setQuantity("");
-      setInPacks(false);
-      setPacks("");
-      setPerPack("");
+      setLines([newLine()]);
       setTiming(null);
-      setCost("");
       setNote("");
       go("done");
     });
@@ -285,88 +283,126 @@ export function DeliverySteps({
             className="flex flex-col gap-3"
             onSubmit={(e) => {
               e.preventDefault();
-              if (quantityOk) go("when");
+              if (allOk) go("when");
             }}
           >
-            {item.conversions.length > 0 && (
-              <label className="flex flex-col gap-1 text-sm font-medium text-muted">
-                {s.amount.unit}
-                <select value={unitName} onChange={(e) => setUnitName(e.target.value)} className={inputClass}>
-                  <option value="">{item.unit}</option>
-                  {item.conversions.map((c) => (
-                    <option key={c.id} value={c.unit}>
-                      {localLabel(locale, c.unit, c.unitTh)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-            <label className="flex flex-col gap-1 text-sm font-medium text-muted">
-              {s.amount.label(unitLabel)}
-              <input
-                ref={amountInput}
-                type="text"
-                inputMode="decimal"
-                enterKeyHint="next"
-                autoComplete="off"
-                value={quantity}
-                onChange={(e) => {
-                  setQuantity(e.target.value);
-                  setPacks("");
-                  setPerPack("");
-                }}
-                aria-invalid={(quantity !== "" && !quantityOk) || undefined}
-                className={`${inputClass} text-center text-2xl ${quantity !== "" && !quantityOk ? "border-danger" : ""}`}
-              />
-            </label>
-            {quantity !== "" && !quantityOk && <p className="text-sm text-danger">{s.amount.invalid}</p>}
-            {preview?.ok && (
-              <p className="text-sm text-muted">
-                {s.amount.equals(formatQuantity(preview.base), item.unit)} · {t.units.entry.approx}
-              </p>
-            )}
+            {lines.map((line, index) => {
+              const quantityOk = quantityOkOf(line);
+              const label = unitLabelOf(line.unit);
+              return (
+                <fieldset key={line.key} className="flex flex-col gap-3 rounded border border-border p-3">
+                  {lines.length > 1 && (
+                    <legend className="px-1 text-base font-semibold text-foreground">{s.amount.sizeN(index + 1)}</legend>
+                  )}
+                  {item.conversions.length > 0 && (
+                    <label className="flex flex-col gap-1 text-sm font-medium text-muted">
+                      {s.amount.unit}
+                      <select
+                        value={line.unit}
+                        onChange={(e) => patch(line.key, { unit: e.target.value })}
+                        className={inputClass}
+                      >
+                        <option value="">{item.unit}</option>
+                        {item.conversions.map((c) => (
+                          <option key={c.id} value={c.unit}>
+                            {localLabel(locale, c.unit, c.unitTh)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                  <label className="flex flex-col gap-1 text-sm font-medium text-muted">
+                    {s.amount.label(label)}
+                    <input
+                      ref={index === 0 ? amountInput : undefined}
+                      autoFocus={line.key === focusKey}
+                      type="text"
+                      inputMode="decimal"
+                      enterKeyHint="next"
+                      autoComplete="off"
+                      value={line.quantity}
+                      onChange={(e) => patch(line.key, { quantity: e.target.value, packs: "", perPack: "" })}
+                      aria-invalid={(line.quantity !== "" && !quantityOk) || undefined}
+                      className={`${inputClass} text-center text-2xl ${line.quantity !== "" && !quantityOk ? "border-danger" : ""}`}
+                    />
+                  </label>
+                  {line.quantity !== "" && !quantityOk && <p className="text-sm text-danger">{s.amount.invalid}</p>}
+                  {line.unit && quantityOk && (
+                    <p className="text-sm text-muted">
+                      {s.amount.equals(formatQuantity(previewBase([line], item.conversions) ?? 0), item.unit)} ·{" "}
+                      {t.units.entry.approx}
+                    </p>
+                  )}
 
-            <label className="flex min-h-12 items-center gap-3 text-base text-foreground">
-              <input
-                type="checkbox"
-                checked={inPacks}
-                onChange={(e) => setInPacks(e.target.checked)}
-                className="h-5 w-5 shrink-0"
-              />
-              {s.amount.packsToggle}
-            </label>
-            {inPacks && (
-              <div className="grid grid-cols-2 gap-2">
-                <label className="flex flex-col gap-1 text-sm font-medium text-muted">
-                  {s.amount.packsCount}
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    autoComplete="off"
-                    value={packs}
-                    onChange={(e) => setPack(e.target.value, perPack)}
-                    className={`${inputClass} text-center text-xl`}
-                  />
-                </label>
-                <label className="flex flex-col gap-1 text-sm font-medium text-muted">
-                  {s.amount.perPack(unitLabel)}
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    autoComplete="off"
-                    value={perPack}
-                    onChange={(e) => setPack(packs, e.target.value)}
-                    className={`${inputClass} text-center text-xl`}
-                  />
-                </label>
-                {packTotal(packs, perPack) != null && (
-                  <p className="col-span-2 text-sm text-muted">
-                    {s.amount.packsTotal(formatQuantity(packTotal(packs, perPack) ?? 0), unitLabel)}
-                  </p>
-                )}
-              </div>
+                  <label className="flex min-h-12 items-center gap-3 text-base text-foreground">
+                    <input
+                      type="checkbox"
+                      checked={line.inPacks}
+                      onChange={(e) => patch(line.key, { inPacks: e.target.checked })}
+                      className="h-5 w-5 shrink-0"
+                    />
+                    {s.amount.packsToggle}
+                  </label>
+                  {line.inPacks && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="flex flex-col gap-1 text-sm font-medium text-muted">
+                        {s.amount.packsCount}
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          autoComplete="off"
+                          value={line.packs}
+                          onChange={(e) => {
+                            const total = packTotal(e.target.value, line.perPack);
+                            patch(line.key, { packs: e.target.value, ...(total != null ? { quantity: String(total) } : {}) });
+                          }}
+                          className={`${inputClass} text-center text-xl`}
+                        />
+                      </label>
+                      <label className="flex flex-col gap-1 text-sm font-medium text-muted">
+                        {s.amount.perPack(label)}
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          autoComplete="off"
+                          value={line.perPack}
+                          onChange={(e) => {
+                            const total = packTotal(line.packs, e.target.value);
+                            patch(line.key, { perPack: e.target.value, ...(total != null ? { quantity: String(total) } : {}) });
+                          }}
+                          className={`${inputClass} text-center text-xl`}
+                        />
+                      </label>
+                      {packTotal(line.packs, line.perPack) != null && (
+                        <p className="col-span-2 text-sm text-muted">
+                          {s.amount.packsTotal(formatQuantity(packTotal(line.packs, line.perPack) ?? 0), label)}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {lines.length > 1 && (
+                    <BigButton onClick={() => setLines((all) => all.filter((l) => l.key !== line.key))}>
+                      {s.amount.removeSize}
+                    </BigButton>
+                  )}
+                </fieldset>
+              );
+            })}
+            {lines.length > 1 && together != null && (
+              <p className="text-base font-medium text-foreground">{s.amount.together(formatQuantity(together), item.unit)}</p>
             )}
-            <BigButton primary disabled={!quantityOk} onClick={() => go("when")} icon={<ArrowRight aria-hidden="true" className="h-5 w-5" />}>
+            <BigButton
+              onClick={() => {
+                const added = newLine(usualUnit(item));
+                setFocusKey(added.key);
+                setLines((all) => [...all, added]);
+              }}
+              icon={<Plus aria-hidden="true" className="h-5 w-5" />}
+            >
+              {s.amount.addSize}
+            </BigButton>
+            <p className="text-xs text-muted">{s.amount.addSizeHint}</p>
+            <BigButton primary disabled={!allOk} onClick={() => go("when")} icon={<ArrowRight aria-hidden="true" className="h-5 w-5" />}>
               {s.next}
             </BigButton>
           </form>
@@ -436,19 +472,26 @@ export function DeliverySteps({
               ))}
             </select>
           </label>
-          <label className="flex flex-col gap-1 text-sm font-medium text-muted">
-            {s.extras.cost}
-            <input
-              type="text"
-              inputMode="decimal"
-              autoComplete="off"
-              value={cost}
-              onChange={(e) => setCost(e.target.value)}
-              aria-invalid={!extrasOk || undefined}
-              className={`${inputClass} ${extrasOk ? "" : "border-danger"}`}
-            />
-            <span className="text-xs font-normal">{extrasOk ? s.extras.costHint : d.errors.costInvalid}</span>
-          </label>
+          {lines.map((line, index) => (
+            <label key={line.key} className="flex flex-col gap-1 text-sm font-medium text-muted">
+              {lines.length > 1 ? s.extras.costFor(describe(line)) : s.extras.cost}
+              <input
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                value={line.cost}
+                onChange={(e) => patch(line.key, { cost: e.target.value })}
+                aria-invalid={!costsParsed[index].ok || undefined}
+                className={`${inputClass} ${costsParsed[index].ok ? "" : "border-danger"}`}
+              />
+              <span className="text-xs font-normal">
+                {!costsParsed[index].ok ? d.errors.costInvalid : s.extras.costHint}
+              </span>
+            </label>
+          ))}
+          {lines.length > 1 && (
+            <p className={`text-sm ${costRuleOk ? "text-muted" : "text-danger"}`}>{s.extras.costRule}</p>
+          )}
           <BillPhotoField uploads={bill} />
           <label className="flex flex-col gap-1 text-sm font-medium text-muted">
             {s.extras.note}
@@ -470,20 +513,19 @@ export function DeliverySteps({
         <Screen title={s.confirm.title}>
           <div className="flex flex-col gap-2 rounded border border-border bg-surface p-4 text-base text-foreground">
             <p className="font-medium">
-              {s.confirm.will(formatQuantity(Number(quantity)), unitLabel, item.name, when)}
+              {s.confirm.willLines(lines.map(describe).join(", "), item.name, when)}
             </p>
-            {preview?.ok && (
+            {lines.some((l) => l.unit) && together != null && (
               <p className="text-sm text-muted">
-                {s.amount.equals(formatQuantity(preview.base), item.unit)} · {t.units.entry.approx}
+                {s.amount.equals(formatQuantity(together), item.unit)} · {t.units.entry.approx}
               </p>
             )}
             {countedThatDay && timing && <p>{s.confirm[timing]}</p>}
             {supplier && <p>{s.confirm.from(supplier.name)}</p>}
-            {costParsed.ok && costParsed.value != null && (
-              <p>
-                {costParsed.value === 0 ? s.confirm.donated : s.confirm.cost(formatBahtPrice(costParsed.value, locale))}
-              </p>
-            )}
+            {pricedCount > 0 && costsParsed.every((c) => c.ok) && (() => {
+              const total = costsParsed.reduce((sum, c) => sum + (c.ok ? (c.value ?? 0) : 0), 0);
+              return <p>{total === 0 ? s.confirm.donated : s.confirm.cost(formatBahtPrice(total, locale))}</p>;
+            })()}
             {note.trim() && <p className="text-sm text-muted">{note.trim()}</p>}
             <p className="text-sm text-muted">{s.confirm.notACount}</p>
           </div>

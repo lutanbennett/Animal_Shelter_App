@@ -18,6 +18,7 @@ import {
   rowOutcome,
   summarise,
   isBigChange,
+  usesSizes,
   type CardsState,
   type RowEntry,
   type SheetSummary,
@@ -27,6 +28,7 @@ import {
 import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
 import { saveStocktake } from "./actions";
 import { StocktakeCards } from "./StocktakeCards";
+import { SizeCounter, describeLines } from "./SizeCounter";
 
 type Items = Record<StocktakeKind, StocktakeItem[]>;
 type Entries = Record<StocktakeKind, Record<string, RowEntry>>;
@@ -490,6 +492,38 @@ function StocktakeRow({
           <span className="text-xs text-muted">{lastLine}</span>
         </div>
       </div>
+      {usesSizes(item) ? (
+        <div className="flex flex-col gap-2">
+          <SizeCounter item={item} entry={entry} onChange={onChange} />
+          <button
+            type="button"
+            aria-pressed={same}
+            disabled={neverCounted}
+            title={neverCounted ? s.sameUnavailable : undefined}
+            onClick={() => onChange({ value: "", same: !same, unit: entry?.unit })}
+            className={`inline-flex min-h-12 items-center justify-center gap-1 rounded border px-3 text-sm font-medium disabled:opacity-40 ${
+              same
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-surface text-foreground hover:bg-surface-hover"
+            }`}
+          >
+            <Check aria-hidden="true" className={`h-4 w-4 ${same ? "" : "opacity-30"}`} />
+            {s.same}
+          </button>
+          {outcome.kind === "confirmed" && outcome.kept && (
+            <p className="text-xs text-muted">
+              {s.sizes.sameLines(
+                describeLines(
+                  locale,
+                  item,
+                  outcome.kept.map((l) => ({ quantity: l.quantity, unit: l.unit === item.baseUnit ? "" : l.unit })),
+                  s.sizes,
+                ),
+              )}
+            </p>
+          )}
+        </div>
+      ) : (
       <div className="flex gap-2">
         {conversions.length > 0 && (
           <select
@@ -547,6 +581,7 @@ function StocktakeRow({
           {s.same}
         </button>
       </div>
+      )}
       {outcome.kind === "invalid" && <p className="text-xs text-danger">{s.invalid}</p>}
       {outcome.kind === "counted" && outcome.typed && (
         <p className="text-xs text-muted">
@@ -653,6 +688,11 @@ function ReviewDialog({
                 </span>
               ) : (
                 <>
+                  {line.outcome.kind === "counted" && line.outcome.lines && line.outcome.lines.length > 0 && (
+                    <span className="text-xs text-muted">
+                      {describeLines(locale, line.item, line.outcome.lines, s.sizes)}
+                    </span>
+                  )}
                   {line.outcome.kind === "counted" && line.outcome.typed && (
                     <span className="text-xs text-muted">
                       {t.units.entry.recent(

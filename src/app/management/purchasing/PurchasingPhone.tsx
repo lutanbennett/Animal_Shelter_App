@@ -5,7 +5,13 @@ import { ChevronDown, ClipboardCheck, Download, Printer, TriangleAlert } from "l
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { downloadCsv } from "@/lib/csv";
 import { formatQuantity } from "@/lib/diets/options";
-import { PURCHASE_PERIOD_DAYS, groupBySupplier, type PurchaseRow, type ShoppingLine } from "@/lib/management/purchasing";
+import {
+  PURCHASE_PERIOD_DAYS,
+  groupBySupplier,
+  type PurchaseRow,
+  type ShoppingLine,
+  type SizeAlternative,
+} from "@/lib/management/purchasing";
 
 /** One medicine or food, reduced to what the steps show. Plain data: it crosses from the server page. */
 export type PhoneItem = {
@@ -15,6 +21,8 @@ export type PhoneItem = {
   isStandard: boolean;
   /** The purchase unit's name, when the item has one. */
   packUnit: string | null;
+  /** The same need in the other sizes it is bought in, cheapest first. */
+  others: (SizeAlternative & { label: string })[];
   /** The count date, already written for this locale. */
   countedOn: string | null;
   /** The supplier's lead time, in days, when it is counted into the period. */
@@ -162,6 +170,15 @@ export function PurchasingPhone({
                                 </summary>
                                 <div className="flex flex-col gap-1 pb-3">
                                   {i && <ItemBadges item={i} />}
+                                  {i && i.others.length > 0 && (
+                                    <span className="text-sm text-foreground">
+                                      {p.others(
+                                        i.others
+                                          .map((a) => p.otherSize(String(a.packs), a.label, formatQuantity(a.base), i.unitLabel))
+                                          .join(p.orJoin),
+                                      )}
+                                    </span>
+                                  )}
                                   {l.unit !== l.baseUnit && (
                                     <span className="text-sm text-muted">
                                       {p.equals(formatQuantity(l.baseQuantity), l.baseUnit)}

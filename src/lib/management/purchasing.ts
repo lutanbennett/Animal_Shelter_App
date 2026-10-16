@@ -235,6 +235,80 @@ export function usualSuppliers(receipts: ReceiptFigure[]): Map<string, string> {
   return new Map([...latest].map(([item, v]) => [item, v.supplier]));
 }
 
+/** A size an item is bought in, with its latest known price per base unit (null = never bought priced in that size). */
+export type SizeOption = { unit: string; basePer: number; pricePerBase: number | null };
+
+/** What buying the shortfall in one size comes to: whole packs of it, rounded UP. */
+export type SizeAlternative = {
+  unit: string;
+  packs: number;
+  /** Base units those packs hold; never less than the shortfall. */
+  base: number;
+  /** Baht for those packs at that size latest price, or null when it has none. */
+  cost: number | null;
+};
+
+/**
+ * The shortfall in each size the item is bought in ("about 3 × 20 kg or
+ * 4 × 14 kg"). ROUNDED UP in every size, because the other way leaves an animal
+ * short at the end of the month: 3.4 bags of 20 kg is 4 bags, never 3. So the
+ * packs always hold at least what is needed, and the base figure beside them
+ * says by how much more.
+ *
+ * Cheapest first: sizes with a known price by what they would cost (the whole
+ * packs, so a size that overshoots pays for it); sizes with no price after
+ * them, the closest fit first. Nothing here chooses for the buyer.
+ */
+export function sizeAlternatives(shortfall: number, sizes: SizeOption[]): SizeAlternative[] {
+  if (!(shortfall > 0)) return [];
+  return sizes
+    .filter((s) => s.basePer > 0)
+    .map((s) => {
+      const packs = Math.ceil(shortfall / s.basePer - 1e-9);
+      const base = round6(packs * s.basePer);
+      return { unit: s.unit, packs, base, cost: s.pricePerBase != null ? Math.round(base * s.pricePerBase * 100) / 100 : null };
+    })
+    .sort((a, b) => {
+      if (a.cost != null && b.cost != null) return a.cost - b.cost || a.base - b.base;
+      if (a.cost != null) return -1;
+      if (b.cost != null) return 1;
+      return a.base - b.base;
+    });
+}
+
+/** One delivery line, as the price lookup reads it. */
+export type PricedReceipt = {
+  item_id: string;
+  received_at: string;
+  quantity: number;
+  cost: number | null;
+  entered: { quantity: number; unit: string; factor: number; cost?: number }[] | null;
+};
+
+/**
+ * Per item and size, the price per base unit from the LATEST delivery that
+ * bought that size with a price. A line carrying its own cost is read as it
+ * is; an older delivery of a single size is its whole cost over its whole
+ * quantity. A mixed delivery from before lines carried a cost says nothing
+ * about any one size, and a donation (0) is not a price.
+ */
+export function latestSizePrices(receipts: PricedReceipt[]): Map<string, Map<string, number>> {
+  const out = new Map<string, Map<string, { at: number; price: number }>>();
+  for (const r of receipts) {
+    const at = Date.parse(r.received_at);
+    for (const line of r.entered ?? []) {
+      const base = line.quantity * line.factor;
+      const lineCost = line.cost ?? (r.entered?.length === 1 ? r.cost : null);
+      if (!(base > 0) || lineCost == null || !(lineCost > 0)) continue;
+      const sizes = out.get(r.item_id) ?? new Map<string, { at: number; price: number }>();
+      const have = sizes.get(line.unit);
+      if (!have || at > have.at) sizes.set(line.unit, { at, price: lineCost / base });
+      out.set(r.item_id, sizes);
+    }
+  }
+  return new Map([...out].map(([id, sizes]) => [id, new Map([...sizes].map(([unit, v]) => [unit, v.price]))]));
+}
+
 export type ShoppingLine = {
   kind: "medication" | "diet";
   name: string;
