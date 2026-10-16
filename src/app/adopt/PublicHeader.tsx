@@ -6,6 +6,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { createClient } from "@/lib/supabase/server";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
+import { hasLiveAppeals } from "@/lib/appeals/public";
 import { preferredChannels, talkChannels } from "@/lib/site/channels";
 import { loadSiteContent, socialLinks, visitingHoursLines } from "@/lib/site/content";
 import { LanguageSwitcher } from "../LanguageSwitcher";
@@ -31,6 +32,7 @@ export type PublicSection =
   | "friends"
   | "friends-join"
   | "adopt-international"
+  | "appeals"
   | "about";
 
 /**
@@ -74,8 +76,14 @@ export async function PublicHeader({
       data: { user },
     },
     showFriends,
+    liveAppeals,
     site,
-  ] = await Promise.all([supabase.auth.getUser(), hasPublicFriends(), loadSiteContent(supabase)]);
+  ] = await Promise.all([
+    supabase.auth.getUser(),
+    hasPublicFriends(),
+    hasLiveAppeals(),
+    loadSiteContent(supabase),
+  ]);
   // Staff get "Open the app". A public viewer (src/lib/auth/app-access.ts)
   // is a visitor here with nothing to open — only a way to sign out. A
   // visitor who isn't signed in sees neither here: Staff login is in the footer and, on a phone, the menu.
@@ -107,10 +115,12 @@ export async function PublicHeader({
       links: [
         link("foster", "/foster", t.adopt.fosterNav),
         link("volunteer", "/volunteer", t.adopt.volunteerNav),
-        // No sponsor flow yet — that waits on the /donate item. Until then
-        // it's the Donate page, which says how to give; never marked
-        // current, because Donate is.
-        { key: "care", href: "/donate", label: n.care, current: false },
+        // While an appeal is live (or the visitor is on one) this entry is the
+        // sponsorship page; with none it stays the Donate page, which says how
+        // to give, and is never marked current, because Donate is.
+        liveAppeals || current === "appeals"
+          ? link("appeals", "/appeals", t.appeals.navLabel)
+          : { key: "care", href: "/donate", label: n.care, current: false },
         // Shelter Friends is listed once there is someone to thank — or
         // while the visitor is on /friends itself, so the page stays marked.
         ...(showFriends || current === "friends"

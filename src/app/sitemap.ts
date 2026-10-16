@@ -29,12 +29,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (!origin) return [];
   const abs = (path: string) => new URL(path, origin).toString();
 
-  const [residents, projects] = await Promise.all([
+  const [residents, projects, appeals] = await Promise.all([
     supabase.from("public_resident_profiles").select("id").returns<{ id: string }[]>(),
     supabase
       .from("public_projects")
       .select("id, sort_date")
       .returns<{ id: string; sort_date: string | null }[]>(),
+    // Appeals still asking (live) or just funded; the list page covers the rest.
+    supabase.from("public_appeals").select("id").in("status", ["live", "funded"]).returns<{ id: string }[]>(),
   ]);
 
   // The static public pages, the home page first; /adopt#how-to-adopt is a
@@ -42,6 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pages: MetadataRoute.Sitemap = [
     { url: abs("/"), changeFrequency: "weekly", priority: 1 },
     { url: abs("/adopt"), changeFrequency: "daily", priority: 0.9 },
+    { url: abs("/appeals"), changeFrequency: "daily", priority: 0.8 },
     { url: abs("/our-work"), changeFrequency: "weekly", priority: 0.8 },
     { url: abs("/donate"), changeFrequency: "monthly", priority: 0.8 },
     { url: abs("/foster"), changeFrequency: "monthly", priority: 0.6 },
@@ -65,5 +68,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.5,
   }));
 
-  return [...pages, ...animals, ...stories];
+  const drives: MetadataRoute.Sitemap = (appeals.data ?? []).map((a) => ({
+    url: abs(`/appeals/${a.id}`),
+    changeFrequency: "daily",
+    priority: 0.7,
+  }));
+
+  return [...pages, ...animals, ...drives, ...stories];
 }

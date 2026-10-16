@@ -24,6 +24,8 @@ import {
 } from "@/lib/residents/public";
 import { preferredChannels } from "@/lib/site/channels";
 import { loadSiteContent, visitingHoursLines } from "@/lib/site/content";
+import { appealPhase } from "@/lib/appeals/state";
+import { appealProgress, appealText, loadLiveAppealForResident } from "@/lib/appeals/public";
 import { ShareButton } from "@/components/ShareButton";
 import { BackLink } from "../BackLink";
 import { PublicHeader } from "../PublicHeader";
@@ -119,7 +121,12 @@ export default async function PublicResidentPage(
     loadSiteContent(supabase),
   ]);
   if (!resident) notFound();
-  const similar = await loadSimilarResidents(supabase, resident);
+  const [similar, appeal] = await Promise.all([
+    loadSimilarResidents(supabase, resident),
+    loadLiveAppealForResident(supabase, resident.id),
+  ]);
+  // A live appeal that is still short of its goal replaces the plain gift line.
+  const askingAppeal = appeal && appealPhase(appealProgress(appeal)) === "open" ? appeal : null;
 
   // Each profile field in the visitor's language when a manager has
   // approved a translation into it, else as staff wrote it (0056, 0094).
@@ -364,16 +371,27 @@ export default async function PublicResidentPage(
             </Link>
           </section>
 
-          {/* A gift, not sponsorship: /donate offers no monthly or per-animal
-              option yet (review §6.2, 2026-10-14). */}
-          <section data-reveal aria-labelledby="care-heading" className="flex flex-col gap-1">
-            <h2 id="care-heading" className="font-site! text-lg font-bold text-site-ink">
-              {p.careHeading}
-            </h2>
-            <Link href="/donate" className={`${textLink} self-start text-base`}>
-              {p.careLink(resident.name)} &rarr;
-            </Link>
-          </section>
+          {/* While this resident has an appeal asking for money, the sponsor line
+              is that appeal; otherwise a plain gift to /donate. */}
+          {askingAppeal ? (
+            <section data-reveal aria-labelledby="care-heading" className="flex flex-col gap-1">
+              <h2 id="care-heading" className="font-site! text-lg font-bold text-site-ink">
+                {t.appeals.onResident.heading(appealText(locale, askingAppeal).residentName)}
+              </h2>
+              <Link href={`/appeals/${askingAppeal.id}`} className={`${textLink} self-start text-base`}>
+                {t.appeals.onResident.link(appealText(locale, askingAppeal).residentName)} &rarr;
+              </Link>
+            </section>
+          ) : (
+            <section data-reveal aria-labelledby="care-heading" className="flex flex-col gap-1">
+              <h2 id="care-heading" className="font-site! text-lg font-bold text-site-ink">
+                {p.careHeading}
+              </h2>
+              <Link href="/donate" className={`${textLink} self-start text-base`}>
+                {p.careLink(resident.name)} &rarr;
+              </Link>
+            </section>
+          )}
         </div>
 
         {similar.length > 0 && (
