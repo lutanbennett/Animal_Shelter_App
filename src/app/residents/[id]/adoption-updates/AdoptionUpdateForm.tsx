@@ -57,6 +57,9 @@ export function AdoptionUpdateForm({
     sender_contact_id: string | null;
     channel: string;
     note: string | null;
+    share_publicly: boolean;
+    public_story: string | null;
+    public_first_name: string | null;
   } | null;
   /** Carers of this resident's Adopt placements, newest first. */
   adopters: SenderOption[];
@@ -79,6 +82,9 @@ export function AdoptionUpdateForm({
   );
   const [channel, setChannel] = useState(update?.channel ?? "");
   const [note, setNote] = useState(update?.note ?? "");
+  const [sharePublicly, setSharePublicly] = useState(update?.share_publicly ?? false);
+  const [publicStory, setPublicStory] = useState(update?.public_story ?? "");
+  const [publicFirstName, setPublicFirstName] = useState(update?.public_first_name ?? "");
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -130,6 +136,10 @@ export function AdoptionUpdateForm({
       setError(a.errors.channelRequired);
       return;
     }
+    if (sharePublicly && !publicStory.trim()) {
+      setError(a.errors.storyRequired);
+      return;
+    }
     setPending(true);
     try {
       const result = await saveAdoptionUpdate(residentId, savedId, {
@@ -137,6 +147,9 @@ export function AdoptionUpdateForm({
         senderContactId: senderId || null,
         channel,
         note: note || null,
+        sharePublicly,
+        publicStory: publicStory || null,
+        publicFirstName: publicFirstName || null,
       });
       if (!result.ok) {
         setError(result.error);
@@ -253,7 +266,10 @@ export function AdoptionUpdateForm({
 
       <div className="flex flex-col gap-1">
         <label htmlFor="note" className="text-sm font-medium text-muted">
-          {a.form.note}
+          {a.form.note}{" "}
+          <span className="rounded-full bg-surface-hover px-2 py-0.5 text-xs font-semibold text-foreground">
+            {a.form.staffOnlyBadge}
+          </span>
         </label>
         <textarea
           id="note"
@@ -317,6 +333,64 @@ export function AdoptionUpdateForm({
           </ul>
         )}
       </div>
+
+      <fieldset
+        className={`flex flex-col gap-3 rounded-lg border-2 p-4 ${
+          sharePublicly ? "border-danger bg-danger/5" : "border-border bg-surface"
+        }`}
+      >
+        <legend className="px-1 text-sm font-semibold text-foreground">{a.form.publish.legend}</legend>
+        <p className="text-sm text-muted">{a.form.publish.intro}</p>
+        <label className="flex items-start gap-3 text-sm font-medium text-foreground">
+          <input
+            type="checkbox"
+            checked={sharePublicly}
+            onChange={(e) => setSharePublicly(e.target.checked)}
+            className="mt-0.5 h-5 w-5 shrink-0"
+          />
+          <span>{a.form.publish.tick}</span>
+        </label>
+        {sharePublicly && (
+          <p role="alert" className="rounded border border-danger/40 bg-danger/10 p-3 text-sm font-medium text-danger">
+            {a.form.publish.warning}
+          </p>
+        )}
+        <div className="flex flex-col gap-1">
+          <label htmlFor="publicStory" className="text-sm font-medium text-muted">
+            {a.form.publish.story}{" "}
+            <span className="rounded-full bg-danger/15 px-2 py-0.5 text-xs font-semibold text-danger">
+              {a.form.publicBadge}
+            </span>
+          </label>
+          <textarea
+            id="publicStory"
+            rows={3}
+            value={publicStory}
+            onChange={(e) => setPublicStory(e.target.value)}
+            placeholder={a.form.publish.storyPlaceholder}
+            className={textareaClass}
+          />
+          <p className="text-xs text-muted">{a.form.publish.storyHint}</p>
+        </div>
+        <div className="flex flex-col gap-1 sm:max-w-xs">
+          <label htmlFor="publicFirstName" className="text-sm font-medium text-muted">
+            {a.form.publish.firstName}{" "}
+            <span className="rounded-full bg-danger/15 px-2 py-0.5 text-xs font-semibold text-danger">
+              {a.form.publicBadge}
+            </span>
+          </label>
+          <input
+            id="publicFirstName"
+            type="text"
+            maxLength={40}
+            value={publicFirstName}
+            onChange={(e) => setPublicFirstName(e.target.value.replace(/s/g, ""))}
+            className={inputClass}
+          />
+          <p className="text-xs text-muted">{a.form.publish.firstNameHint}</p>
+        </div>
+        <p className="text-xs text-muted">{a.form.publish.photosNote}</p>
+      </fieldset>
 
       {error && <p className="text-sm text-danger">{error}</p>}
 

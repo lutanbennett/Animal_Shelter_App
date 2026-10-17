@@ -5871,6 +5871,9 @@ const en = {
       visit: "Visit",
     },
     /** Under every photo an adopter sent, wherever it is shown. */
+    publishedBadge: "Public on the website",
+    publishedAs: (first: string | null) =>
+      first ? `Shown to the public, signed ${first}:` : "Shown to the public, with no name:",
     provenance: (sender: string | null, date: string, channel: string) =>
       `Sent by ${sender ?? "the adopter"} · ${date} · ${channel}`,
     seeUpdate: "See the update",
@@ -5904,6 +5907,23 @@ const en = {
       senderHint: "The adopter is chosen for you. Change it if someone else in the family sent it.",
       channel: "Came in by",
       note: "What they said",
+      staffOnlyBadge: "Staff only. Never published.",
+      publicBadge: "Goes on the website",
+      publish: {
+        legend: "Publish to the website",
+        intro:
+          "Only tick this if the adopter has told you that we may show their photo and words to the public. Nothing is published unless you tick it.",
+        tick: "Publish this update's photos and the words below on the public website",
+        warning: "This will be visible to anyone on the internet. Untick and save to take it down.",
+        story: "Words to publish",
+        storyPlaceholder: "Mango loves her new garden and sleeps on the sofa every night.",
+        storyHint:
+          "Write or paste only what the adopter agreed to share. Do not copy from \"What they said\" above: that is for staff.",
+        firstName: "First name to show (optional)",
+        firstNameHint: "One word, typed by you. Leave empty to show no name. Never a surname.",
+        photosNote:
+          "Any photo on this update (except one in the Medical folder) can be shown. Delete a photo you do not want shown.",
+      },
       notePlaceholder: "Settling in well, sleeps on the sofa, has a new friend next door…",
       photos: "Photos",
       addMorePhotos: "Add more photos",
@@ -5925,6 +5945,8 @@ const en = {
       dateRequired: "Enter the date the update was received.",
       dateInFuture: "The date received can't be in the future.",
       channelRequired: "Choose how the update came in.",
+      storyRequired: "Type the words to publish, or untick Publish.",
+      firstNameOneWord: "The first name must be one word of 40 letters or fewer.",
       notFound: "That update no longer exists — it may have been deleted.",
       saveFailed: "Couldn't reach the server, so nothing was saved. Check the connection and try again.",
       deleteFailed: "Couldn't reach the server, so nothing was deleted. Check the connection and try again.",
@@ -6155,6 +6177,15 @@ const en = {
       heading: "Happy endings",
       subtitle: "Residents who found their forever homes recently.",
       adopted: (month: string) => `Adopted ${month}`,
+      readStory: (name: string) => `Read the news about ${name} at home`,
+      seeStory: "Read their news",
+    },
+    successStories: {
+      heading: "Home at last",
+      subtitle: "News and photos from families who adopted from us, shared with their permission.",
+      photoAlt: (name: string) => `${name} in their new home`,
+      from: (first: string) => `— ${first}`,
+      cardHeading: (name: string) => `${name} in their new home`,
     },
   },
 

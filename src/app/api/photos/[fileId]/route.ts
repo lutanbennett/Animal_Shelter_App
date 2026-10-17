@@ -147,7 +147,20 @@ export async function GET(
   );
   if (publicError) return notFound();
 
+  // A ticked adoption update's photo (0214), asked of the view as the caller, so an untick or
+  // a hidden or deceased animal stops it being public the moment the database says so.
+  // is_public_drive_file is not widened: this stream carries no migration.
+  let isPublicStory = false;
   if (!isPublic) {
+    const { count, error: storyError } = await supabase
+      .from("public_adoption_updates")
+      .select("id", { count: "exact", head: true })
+      .eq("drive_file_id", fileId);
+    isPublicStory = !storyError && (count ?? 0) > 0;
+  }
+  const isPublicFile = isPublic === true || isPublicStory;
+
+  if (!isPublicFile) {
     if (!(await canSeeInternalFile(supabase, fileId))) return notFound();
   }
 
@@ -156,7 +169,7 @@ export async function GET(
 
   // The disk copy, if this Pi has one. Only after the checks above, so a
   // photo that has stopped being public is not served from disk.
-  if (width && isPublic) {
+  if (width && isPublicFile) {
     const onDisk = await readCachedPhoto(fileId, width, webp);
     if (onDisk) {
       const response = new NextResponse(new Uint8Array(onDisk.body), {
@@ -186,7 +199,7 @@ export async function GET(
       : null;
     if (rendition && width) {
       ({ contentType, body } = rendition);
-      if (isPublic) await writeCachedPhoto(fileId, width, contentType, body);
+      if (isPublicFile) await writeCachedPhoto(fileId, width, contentType, body);
     } else {
       ({ contentType, body } = await drive.downloadFile(fileId));
       if (width) cacheSeconds = FALLBACK_CACHE_SECONDS;
@@ -205,12 +218,12 @@ export async function GET(
       // never render a proxied file as a page on our origin.
       "X-Content-Type-Options": "nosniff",
       "Content-Disposition": safeToRenderInline(contentType) ? "inline" : "attachment",
-      "Cache-Control": isPublic ? publicHeaders(cacheSeconds) : "private, no-store",
+      "Cache-Control": isPublicFile ? publicHeaders(cacheSeconds) : "private, no-store",
       ...(width ? { Vary: "Accept" } : {}),
     },
   });
 
-  if (cache && isPublic) {
+  if (cache && isPublicFile) {
     await cache.put(cacheKey, response.clone());
   }
 

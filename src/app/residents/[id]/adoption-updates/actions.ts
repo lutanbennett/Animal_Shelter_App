@@ -20,12 +20,21 @@ export type AdoptionUpdateInput = {
   senderContactId: string | null;
   channel: string;
   note: string | null;
+  /** Publishes to the internet. Only ever true when a person ticked it (0214). */
+  sharePublicly: boolean;
+  /** The words the adopter agreed to publish. Never the staff note. */
+  publicStory: string | null;
+  /** One word, typed by hand. */
+  publicFirstName: string | null;
 };
 
 function revalidateResident(residentId: string) {
   revalidatePath(`/residents/${residentId}`);
   revalidatePath(`/residents/${residentId}/adoption-updates`);
   revalidatePath(`/residents/${residentId}/photos`);
+  // The public pages that show a ticked update: untick must take it off them now.
+  revalidatePath("/adopt");
+  revalidatePath("/r/[code]", "page");
 }
 
 /**
@@ -63,6 +72,13 @@ export async function saveAdoptionUpdate(
     if (!isIsoDate(input.receivedOn)) return { ok: false, error: e.dateRequired };
     if (isFutureDate(input.receivedOn, new Date())) return { ok: false, error: e.dateInFuture };
     if (!isAdoptionUpdateChannel(input.channel)) return { ok: false, error: e.channelRequired };
+
+    const publicStory = input.publicStory?.trim() || null;
+    const publicFirstName = input.publicFirstName?.trim() || null;
+    if (publicFirstName && (/s/.test(publicFirstName) || publicFirstName.length > 40)) {
+      return { ok: false, error: e.firstNameOneWord };
+    }
+    if (input.sharePublicly && !publicStory) return { ok: false, error: e.storyRequired };
 
     const row = {
       received_on: input.receivedOn,

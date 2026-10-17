@@ -21,7 +21,7 @@ export async function PublicNotFound() {
   const [supabase, { t, locale }] = await Promise.all([createClient(), getT()]);
   const { data } = await supabase
     .from("public_recent_adoptions")
-    .select("id, name, species, profile_photo_drive_file_id, adopted_on")
+    .select("id, resident_id, name, species, profile_photo_drive_file_id, adopted_on")
     .order("adopted_on", { ascending: false })
     .limit(8)
     .returns<RecentAdoption[]>();

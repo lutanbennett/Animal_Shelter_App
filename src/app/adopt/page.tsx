@@ -17,6 +17,7 @@ import { PublicHeader } from "./PublicHeader";
 import { PublicFooter } from "./PublicFooter";
 import { ResidentCard, type ResidentCardRow } from "./ResidentCard";
 import { HappyEndings, type RecentAdoption } from "./HappyEndings";
+import { loadStoryResidentIds } from "@/lib/adoption-updates/public";
 
 export async function generateMetadata(): Promise<Metadata> {
   const [supabase, { t, locale }, origin] = await Promise.all([
@@ -69,7 +70,7 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
   const { t, locale } = await getT();
   const signedIn = Boolean((await supabase.auth.getUser()).data.user);
 
-  const [residentsResult, recentResult, content, howTo] = await Promise.all([
+  const [residentsResult, recentResult, content, howTo, storyIds] = await Promise.all([
     supabase
       .from("public_resident_profiles")
       .select(CARD_COLUMNS)
@@ -77,12 +78,13 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
       .returns<ResidentCardRow[]>(),
     supabase
       .from("public_recent_adoptions")
-      .select("id, name, species, profile_photo_drive_file_id, adopted_on")
+      .select("id, resident_id, name, species, profile_photo_drive_file_id, adopted_on")
       .order("adopted_on", { ascending: false })
       .limit(8)
       .returns<RecentAdoption[]>(),
     loadSiteContent(supabase),
     loadSitePage(supabase, "how-to-adopt"),
+    loadStoryResidentIds(supabase),
   ]);
   const all = residentsResult.data ?? [];
   const error = residentsResult.error;
@@ -237,7 +239,7 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
           </>
         )}
 
-        <HappyEndings recent={recent} t={t} locale={locale} />
+        <HappyEndings recent={recent} t={t} locale={locale} withStories={storyIds} />
 
         {howToText?.body && (
           <section
