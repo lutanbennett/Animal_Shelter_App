@@ -18,7 +18,13 @@ import { jobsOfRole } from "@/lib/permissions/jobs";
 import { canOpen, routeFor, routesFor, type RouteEntry } from "@/lib/permissions/routes";
 
 /** Counts shown on tiles (what the left menu's badge showed): due today or overdue. */
-export type TileCounts = { my?: number; maintenance?: number; billsWaiting?: number };
+export type TileCounts = {
+  my?: number;
+  maintenance?: number;
+  billsWaiting?: number;
+  /** Resident photos waiting for approval; only a login that may publish is given a number (countPhotosWaiting). */
+  photosWaiting?: number;
+};
 
 export type HomeTile = {
   href: string;
@@ -118,9 +124,22 @@ export function cardTilesFor(held: readonly CardKey[], perms: Permissions, t: Di
   });
 }
 
+/**
+ * Photos to approve belongs to an activity, not to a role or a card: whoever may publish (the database's own test
+ * for approving) gets the tile and the number waiting, whatever their home is built from. A count of undefined
+ * means this login may not approve, so nothing is added.
+ */
+function withApprovalTile(tiles: HomeTile[], t: Dictionary, waiting: number): HomeTile[] {
+  if (tiles.some((x) => x.href === "/photos/approve")) return tiles;
+  const route = routeFor("/photos/approve");
+  if (!route) return tiles;
+  return [...tiles, { href: route.path, label: route.label(t), icon: route.icon, ...(waiting > 0 ? { badge: t.photoApproval.tileWaiting(waiting) } : {}) }];
+}
+
 /** Put the due-today counts on the tiles they belong to: My tasks carries the total, Maintenance its share. */
-function withCounts(tiles: HomeTile[], t: Dictionary, counts?: TileCounts): HomeTile[] {
-  if (!counts) return tiles;
+function withCounts(drawn: HomeTile[], t: Dictionary, counts?: TileCounts): HomeTile[] {
+  if (!counts) return drawn;
+  const tiles = counts.photosWaiting === undefined ? drawn : withApprovalTile(drawn, t, counts.photosWaiting);
   return tiles.map((tile) => {
     const n = tile.href === "/my" ? counts.my : tile.href === "/maintenance" ? counts.maintenance : undefined;
     return n && n > 0 && !tile.badge ? { ...tile, badge: t.my.navBadge(n) } : tile;

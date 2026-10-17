@@ -13,7 +13,7 @@
  * rest, and Settings and Management landing pages with their areas.
  */
 
-import { Activity, Camera, ClipboardCheck, HandHeart, Coins, Globe, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
+import { Activity, BadgeCheck, Camera, ClipboardCheck, HandHeart, Coins, Globe, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
 import { CONTACT_ICONS, ENCLOSURE_ICONS, NAV_ICONS, SECTION_ICONS, CLINIC_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "./can";
@@ -263,6 +263,15 @@ export const ROUTES: readonly RouteEntry[] = [
     alsoActivity: "photos.shelter_add",
     icon: ImagePlus,
     label: (t) => t.appHome.cards.addPhotos,
+    device: "any",
+    menu: false,
+  },
+  {
+    // Photos filed by a login that may not publish wait here for one that may (0217); approving is the activity the database checks.
+    path: "/photos/approve",
+    activity: "photos.resident_publish",
+    icon: BadgeCheck,
+    label: (t) => t.photoApproval.title,
     device: "any",
     menu: false,
   },

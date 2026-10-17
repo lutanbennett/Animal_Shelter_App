@@ -5,6 +5,7 @@ import { loadPermissions } from "@/lib/permissions/load";
 import { listHomeRoles, loadRoleCards, loadRolePermissions } from "@/lib/home/roles";
 import { homeTilesFor } from "@/lib/home/tiles";
 import { countBillsWaiting } from "@/lib/bills/waiting";
+import { countPhotosWaiting } from "@/lib/photos/approval";
 import { getT } from "@/lib/i18n/get-t";
 import { HomeTiles } from "@/components/HomeTiles";
 import { HomeSwitch } from "@/components/HomeSwitch";
@@ -44,7 +45,9 @@ export default async function RoleHomePage(props: PageProps<"/home/[role]">) {
   if (!perms || !listed) notFound();
 
   const name = (locale === "th" && listed.nameTh) || listed.name;
-  const tiles = homeTilesFor(perms, t, await countBillsWaiting(supabase, perms), await loadRoleCards(roleKey));
+  const tiles = homeTilesFor(perms, t, await countBillsWaiting(supabase, perms), await loadRoleCards(roleKey), {
+    photosWaiting: await countPhotosWaiting(supabase, perms),
+  });
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">

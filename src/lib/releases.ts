@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Photos filed by a volunteer now wait for Management before the website can show them. A new Photos to approve page (and a tile with the number waiting on Management's home screen) shows each waiting photo large, with the animal's name and who added it. Tap Approve, or tick several photos you have looked at and approve them together, or Remove one you do not want. Someone who has been given the Add Shelter Photos card can file photos; the card is given to people in Settings.",
   "Management → Contacts now opens on the list of contacts, with a New contact button that opens the form on its own page; and each contact's phone, LINE, Messenger, WhatsApp and email show as small tap-to-use icons instead of written-out text, so a row fits on a phone.",
   "Add Medical Photos and Record Weight open again when you come in from the menu with no resident chosen. They had stopped opening at all; the Scan card button and the R-code box on them work.",
 ];
