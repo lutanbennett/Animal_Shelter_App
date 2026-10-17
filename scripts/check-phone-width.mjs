@@ -540,6 +540,18 @@ async function publicPass() {
           continue;
         }
         await settle(page);
+        // The public site is not a signed-in page, so it never went through checkPage: look for a sideways scroll here too.
+        const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth).catch(() => 0);
+        if (wide > TOLERANCE) {
+          failures += 1;
+          console.log(`
+FAIL  public ${locale} ${target}  scrolls sideways by ${wide} px at ${WIDTH} px`);
+        }
+        if (SHOTS) {
+          mkdirSync(SHOTS, { recursive: true });
+          const h = await page.evaluate(() => document.documentElement.scrollHeight).catch(() => 2000);
+          await page.screenshot({ path: join(SHOTS, `public-${locale}-${target.replace(/[^a-z0-9]+/gi, "_")}.png`), clip: { x: 0, y: 0, width: WIDTH, height: Math.min(h, 2000) } }).catch(() => {});
+        }
         const small = await page
           .evaluate((tap) => {
             const out = [];
