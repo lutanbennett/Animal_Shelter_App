@@ -110,6 +110,7 @@ export const ACTIVITIES = [
   { key: "maintenance.delete", kind: "yesno", area: "maintenance", sort: 61, requires: [], probes: [] },
   { key: "maintenance.bills", kind: "yesno", area: "maintenance", sort: 62, requires: [], probes: [] },
   { key: "appeal.run", kind: "yesno", area: "management", sort: 63, requires: [], probes: [] },
+  { key: "appeal.medical_photo", kind: "yesno", area: "management", sort: 64, requires: [], probes: [] },
 ] as const satisfies readonly ActivityDef[];
 
 export type Activity = (typeof ACTIVITIES)[number];

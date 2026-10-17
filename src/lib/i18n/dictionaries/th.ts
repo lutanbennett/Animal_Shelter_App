@@ -784,6 +784,7 @@ const th: Dictionary = {
         "translations.view": "ดูคำแปลของเว็บไซต์",
         "donation.receipt": "ออกใบเสร็จรับเงินบริจาค",
         "appeal.run": "จัดการรณรงค์ระดมทุนช่วยน้องที่ป่วย",
+        "appeal.medical_photo": "แสดงรูปทางการแพทย์ในการรณรงค์ระดมทุน (เปิดเผยเฉพาะหน้านั้น)",
         "assistant.ask": "ถามคำถามผู้ช่วย",
         "assistant.record": "บันทึกข้อมูลผ่านผู้ช่วย",
         "website.content": "เนื้อหาเว็บไซต์สาธารณะ",
