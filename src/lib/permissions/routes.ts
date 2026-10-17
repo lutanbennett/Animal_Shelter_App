@@ -259,7 +259,7 @@ export const ROUTES: readonly RouteEntry[] = [
     path: "/photos/add",
     activity: "photos.resident_add",
     icon: ImagePlus,
-    label: (t) => t.addPhotos.title,
+    label: (t) => t.appHome.cards.addPhotos,
     device: "any",
     menu: false,
   },

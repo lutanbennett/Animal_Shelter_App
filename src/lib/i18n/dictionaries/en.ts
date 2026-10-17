@@ -177,6 +177,7 @@ const en = {
       outreachNotes: "Outreach notes",
       assistant: "Assistant",
       enclosures: "Enclosures",
+      addPhotos: "Add Shelter Photos",
     },
   },
 
@@ -745,6 +746,7 @@ const en = {
           outreach_notes: "Write up community outreach visits.",
           assistant: "Ask the assistant questions and have it record things for you.",
           enclosures: "See the enclosures, and which animal is where.",
+          add_photos: "Take or pick a photo, then tap which resident is in it. It goes in the Shelter folder; Medical only for a role that may add medical photos.",
         },
       },
       title: "Who does what",
