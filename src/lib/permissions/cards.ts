@@ -34,7 +34,8 @@ export type NewCardKey =
   | "website"
   | "outreach_notes"
   | "assistant"
-  | "enclosures";
+  | "enclosures"
+  | "add_photos";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -136,6 +137,14 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // Lutan, 2026-10-13: deliberately narrow. Which animal is where; NOT bundled with Do Maintenance, so the
   // 2IC gets no maintenance write access by it. The facility map and rooms belong to no card (accepted).
   enclosures: { includes: [], bundle: [{ activity: "facility.enclosures", level: "read" }], opens: "/enclosures" },
+  // Card twenty-two (2026-10-17): file photos into the Shelter folder, phone-first, for a volunteer. The bundle is
+  // photos.shelter_add and the who-and-where read the picker needs, and NOTHING else: never photos.resident_publish,
+  // which is what puts a photo on the website. The photo waits for Management to approve it (0217).
+  add_photos: {
+    includes: [],
+    bundle: [{ activity: "photos.shelter_add" }, { activity: "resident.record", level: "read" }],
+    opens: "/photos/add",
+  },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */
@@ -153,6 +162,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   outreach_notes: (t) => t.appHome.cards.outreachNotes,
   assistant: (t) => t.appHome.cards.assistant,
   enclosures: (t) => t.appHome.cards.enclosures,
+  add_photos: (t) => t.appHome.cards.addPhotos,
 };
 
 export const CARDS: Record<CardKey, Card> = {

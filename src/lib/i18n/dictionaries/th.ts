@@ -168,6 +168,7 @@ const th: Dictionary = {
       outreachNotes: "บันทึกการออกพื้นที่",
       assistant: "ผู้ช่วย",
       enclosures: "คอกและที่อยู่",
+      addPhotos: "เพิ่มรูปของศูนย์",
     },
   },
 
@@ -656,6 +657,7 @@ const th: Dictionary = {
           outreach_notes: "เขียนบันทึกการออกพบชุมชน",
           assistant: "ถามผู้ช่วย และให้ผู้ช่วยบันทึกสิ่งต่าง ๆ แทน",
           enclosures: "ดูคอก และดูว่าสัตว์ตัวไหนอยู่ที่ไหน",
+          add_photos: "ถ่ายหรือเลือกรูป แล้วแตะว่าตัวไหนอยู่ในรูป รูปจะอยู่ในโฟลเดอร์ศูนย์ และรอฝ่ายบริหารอนุมัติก่อนจึงจะขึ้นเว็บไซต์ได้",
         },
       },
       title: "ใครทำอะไรได้บ้าง",
@@ -3939,6 +3941,8 @@ const th: Dictionary = {
     folderLabel: "โฟลเดอร์",
     goesIn: (folder: string) => `รูปเหล่านี้จะอยู่ในโฟลเดอร์ ${folder}`,
     medicalNever: "รูปทางการแพทย์จะไม่ขึ้นบนเว็บไซต์",
+    waitsNote: "รูปของคุณรอให้ฝ่ายบริหารตรวจก่อน คนนอกศูนย์จะยังไม่เห็นจนกว่าจะอนุมัติ",
+    savedWaiting: "บันทึกแล้ว รออนุมัติ",
     tagged: (done: number, total: number) => `ระบุแล้ว ${done} จาก ${total}`,
     allDone: "ระบุตัวและบันทึกรูปครบทุกรูปแล้ว",
     whoFor: "ในรูปที่เลือกคือตัวไหน",
@@ -5627,6 +5631,9 @@ const th: Dictionary = {
     medicalNotProfile:
       "รูปภาพในโฟลเดอร์ Medical จะไม่แสดงบนเว็บไซต์ จึงตั้งเป็นรูปโปรไฟล์ไม่ได้",
     medicalTile: "Medical",
+    waitingForApproval: "รออนุมัติ",
+    waitingNote: "รออนุมัติ เว็บไซต์ยังไม่แสดงรูปนี้",
+    waitingProfile: "รูปนี้ยังรออนุมัติ จึงตั้งเป็นรูปโปรไฟล์ยังไม่ได้",
     moveToFolder: "ย้ายไปโฟลเดอร์",
     moveButton: (folder: string) => `ย้ายไป ${folder}`,
     uploader: {

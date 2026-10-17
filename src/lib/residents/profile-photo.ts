@@ -25,13 +25,19 @@ export async function setResidentProfilePhoto(
 ): Promise<{ error: string } | undefined> {
   const { data: rows } = await supabase
     .from("attachments")
-    .select("sub_folder")
+    .select("sub_folder, approved_at")
     .eq("owner_type", "resident")
     .eq("owner_id", residentId)
     .eq("drive_file_id", driveFileId)
-    .returns<{ sub_folder: string | null }[]>();
+    .returns<{ sub_folder: string | null; approved_at: string | null }[]>();
   if (rows?.some((row) => isMedicalFolder(row.sub_folder))) {
     return { error: t.photos.errors.medicalProfile };
+  }
+
+  // A photo still waiting for Management's approval (0217) is not on the website, so it cannot be the profile
+  // photo. The database does not stop this; refusing it is the app's job (docs/decisions/2026-10-17-photo-approval-schema.md).
+  if (rows?.some((row) => row.approved_at === null)) {
+    return { error: t.photos.waitingProfile };
   }
 
   // The RPC keeps its own checks: the role, and that the file is one of

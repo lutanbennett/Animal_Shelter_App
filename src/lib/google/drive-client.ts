@@ -64,7 +64,12 @@ export type PhotoCategory = (typeof PHOTO_CATEGORIES)[number];
  * upload route refuses anything else.
  */
 export function photoCategoriesFor(perms: Permissions | null | undefined): readonly PhotoCategory[] {
-  return can(perms, "photos.resident_publish") ? PHOTO_CATEGORIES : ["Medical"];
+  if (can(perms, "photos.resident_publish")) return PHOTO_CATEGORIES;
+  // photos.shelter_add (0217) is Shelter and nowhere else, and only for a login that may not publish: the rule
+  // belongs to the activity, never to the page, so Management keeps all four and the Head of Medical keeps Medical.
+  // A login holding shelter_add and resident_add (no publish) has both of those two.
+  if (can(perms, "photos.shelter_add")) return can(perms, "photos.resident_add") ? ["Shelter", "Medical"] : ["Shelter"];
+  return ["Medical"];
 }
 
 /**

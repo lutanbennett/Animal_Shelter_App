@@ -28,6 +28,8 @@ export type PhotoRow = {
   file_name: string | null;
   sub_folder: string | null;
   date_taken: string | null;
+  /** NULL = waiting for Management to approve it (0217); the website shows only approved photos. */
+  approved_at?: string | null;
   /**
    * Set when an adopter sent the photo (attachments.adoption_update_id,
    * 0097): who, when and how. Read with RESIDENT_PHOTO_SELECT so every list
@@ -215,6 +217,11 @@ export function PhotoGallery({
                 decoding="async"
                 className="h-full w-full object-cover transition group-hover:brightness-90"
               />
+              {photo.approved_at === null && (
+                <span className="absolute right-1.5 top-1.5 rounded-full bg-amber-600 px-2 py-0.5 text-[10px] font-medium text-white">
+                  {t.photos.waitingForApproval}
+                </span>
+              )}
               {isProfile && (
                 <span className="absolute left-1.5 top-1.5 rounded-full bg-primary px-2 py-0.5 text-[10px] font-medium text-primary-foreground">
                   {t.photos.profileBadge}
@@ -302,6 +309,7 @@ export function PhotoGallery({
                 />
               </div>
 
+              {openPhoto.approved_at === null && <p className="text-sm font-medium text-foreground">{t.photos.waitingNote}</p>}
               {error && <p className="text-sm text-danger">{error}</p>}
 
               {readOnly ? (
@@ -330,7 +338,9 @@ export function PhotoGallery({
                   {/* A Medical photo is never on the website, so it is not
                       offered as the profile photo (setResidentProfilePhoto
                       refuses it too). One already there stays labelled. */}
-                  {isMedicalFolder(openPhoto.sub_folder) &&
+                  {openPhoto.approved_at === null ? (
+                    <p className="max-w-xs text-right text-xs text-muted">{t.photos.waitingProfile}</p>
+                  ) : isMedicalFolder(openPhoto.sub_folder) &&
                   openPhoto.drive_file_id !== profilePhotoDriveFileId ? (
                     <p className="max-w-xs text-right text-xs text-muted">
                       {t.photos.medicalNotProfile}
