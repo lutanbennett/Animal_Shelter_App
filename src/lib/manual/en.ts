@@ -976,7 +976,7 @@ const manual: Manual = {
         {
           id: "add-photos-unknown",
           title: "Adding photos: if you don't know the resident",
-          roles: ["admin", "management", "volunteer"],
+          roles: ["admin"],
           activity: "photos.shelter_add",
           path: "Home → Add Shelter Photos",
           intro:
