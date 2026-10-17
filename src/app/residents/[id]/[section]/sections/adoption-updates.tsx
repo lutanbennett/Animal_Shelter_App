@@ -17,7 +17,7 @@ export async function renderAdoptionUpdatesSection(ctx: SectionContext): Promise
   const [updatesResult, photosResult, adoptCountResult] = await Promise.all([
     supabase
       .from("adoption_updates")
-      .select(`id, received_on, channel, note, created_at, sender:${contactEmbed()}`)
+      .select(`id, received_on, channel, note, share_publicly, public_story, public_first_name, created_at, sender:${contactEmbed()}`)
       .eq("resident_id", id)
       .order("received_on", { ascending: false })
       .order("created_at", { ascending: false })
@@ -27,6 +27,9 @@ export async function renderAdoptionUpdatesSection(ctx: SectionContext): Promise
           received_on: string;
           channel: string;
           note: string | null;
+          share_publicly: boolean;
+          public_story: string | null;
+          public_first_name: string | null;
           created_at: string;
           sender: { name: string } | null;
         }[]
@@ -98,6 +101,11 @@ export async function renderAdoptionUpdatesSection(ctx: SectionContext): Promise
                       <span className="ml-2 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
                         {channelLabel(update.channel)}
                       </span>
+                      {update.share_publicly && (
+                        <span className="ml-2 rounded-full bg-danger/15 px-2 py-0.5 text-xs font-semibold text-danger">
+                          {a.publishedBadge}
+                        </span>
+                      )}
                     </span>
                     <span className="text-xs text-muted">
                       {update.sender?.name ? a.sentBy(update.sender.name) : a.senderUnknown}
@@ -114,6 +122,14 @@ export async function renderAdoptionUpdatesSection(ctx: SectionContext): Promise
                 </div>
                 {update.note && (
                   <p className="whitespace-pre-line text-foreground">{update.note}</p>
+                )}
+                {update.share_publicly && update.public_story && (
+                  <p className="whitespace-pre-line rounded border border-danger/30 bg-danger/5 p-2 text-foreground">
+                    <span className="block text-xs font-semibold text-danger">
+                      {a.publishedAs(update.public_first_name)}
+                    </span>
+                    {update.public_story}
+                  </p>
                 )}
                 {updatePhotos.length > 0 && (
                   <PhotoGallery

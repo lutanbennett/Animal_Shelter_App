@@ -524,12 +524,17 @@ const manual: Manual = {
             "Date received: the day the news arrived. Sent by: the adopter from their adoption is already chosen — change it if a partner or someone else in the family sent it, or choose Not recorded.",
             "Came in by: LINE, Facebook, Email or Visit. What they said: the message, in your words or theirs — optional when there are only photos.",
             "Photos: choose any photos they sent — several at once is fine. Tap Save update. The update is saved first, then each photo uploads with a progress bar, and you're taken to the list of updates.",
-            "Each update lists its date, how it came in, who sent it, the note and its photos. Edit / add photos corrects any of it or adds more photos; Delete removes the update and says how many photos go with it.",
+            "Optional, and only if the adopter has told you we may: in the red-edged Publish to the website box, tick the box, type the words they agreed to share, and a first name if you like (one word, never a surname). Nothing is published unless you tick it, and What they said is staff only and is never shown.",
+            "Each update lists its date, how it came in, who sent it, the note and its photos. A red Public on the website tag marks the ones that are published. Edit / add photos corrects any of it or adds more photos; Delete removes the update and says how many photos go with it.",
           ],
           callouts: [
             {
               kind: "note",
               text: "Every photo an adopter sent stays labelled with who sent it, when and how — on the update, and on the resident's Photos page too. In Drive they are kept apart from the shelter's own, under Adoption updates in the resident's folder.",
+            },
+            {
+              kind: "tip",
+              text: "A ticked update makes the animal's picture under Happy endings on the public adoption page a link to a page with its photos and words (shown while it is among the recent adoptions), and the same news appears on the animal's own card page once adopted. Any photo on the update can show, except one filed under Medical, so delete a photo you do not want shown. To take one down, edit it, untick Publish and save: it leaves those pages at once. A copy of a photo that someone already loaded can stay visible to a person who saved its direct link for up to a day.",
             },
             {
               kind: "tip",

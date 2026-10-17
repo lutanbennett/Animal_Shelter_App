@@ -31,7 +31,7 @@ export async function AdoptionUpdatePage({
     updateId
       ? supabase
           .from("adoption_updates")
-          .select("id, received_on, sender_contact_id, channel, note")
+          .select("id, received_on, sender_contact_id, channel, note, share_publicly, public_story, public_first_name")
           .eq("id", updateId)
           .eq("resident_id", residentId)
           .limit(1)
@@ -42,6 +42,9 @@ export async function AdoptionUpdatePage({
               sender_contact_id: string | null;
               channel: string;
               note: string | null;
+              share_publicly: boolean;
+              public_story: string | null;
+              public_first_name: string | null;
             }[]
           >()
       : null,
