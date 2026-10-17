@@ -232,6 +232,7 @@ async function seed() {
     species: "Dog",
     breed: "Thai Ridgeback cross with a very long breed description",
     intake_date: "2026-01-15",
+    resident_code: `ZZ${tag}A`,
   });
   await insert("placement_history", {
     resident_id: resident.id,
@@ -239,7 +240,7 @@ async function seed() {
     zone_id: zone.id,
     enclosure_id: enclosure.id,
   });
-  const ill = await insert("residents", { name: `ZZ Width ${tag} Hospital Patient`, species: "Cat", intake_date: "2026-02-01" });
+  const ill = await insert("residents", { name: `ZZ Width ${tag} Hospital Patient`, species: "Cat", intake_date: "2026-02-01", resident_code: `ZZ${tag}B` });
   await insert("placement_history", { resident_id: ill.id, placement_type: "Intake", zone_id: zone.id, enclosure_id: enclosure.id, start_date: "2026-02-01T00:00:00Z", end_date: "2026-03-01T00:00:00Z" });
   await insert("placement_history", { resident_id: ill.id, placement_type: "SendToHospital", zone_id: zone.id, enclosure_id: enclosure.id, start_date: "2026-03-01T00:00:00Z" })
     .catch((error) => console.warn(`  warning: could not put a resident in hospital, so the Return from hospital page will be skipped (${error.message})`));
