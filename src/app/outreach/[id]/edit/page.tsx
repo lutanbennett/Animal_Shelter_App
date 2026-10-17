@@ -29,7 +29,7 @@ export default async function EditOutingPage(props: PageProps<"/outreach/[id]/ed
       : [{ id: outing.place_id, ...outing.community_places }, ...places];
 
   return (
-    <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">
+    <main className="flex flex-1 flex-col gap-6 p-6">
       <Link href="/outreach" className="inline-flex min-h-11 items-center text-sm text-muted hover:text-foreground md:min-h-0">
         {t.outreach.backToList}
       </Link>

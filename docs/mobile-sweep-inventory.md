@@ -1,10 +1,15 @@
-# Mobile sweep inventory (375 px, English and Thai)
+| `/privacy` | fixed | Contact e-mail link 22 px tall on the public pages check; now min-h-11. Nothing hidden. | this branch || `/outreach/[id]/edit` | fixed | Same cause as /outreach/new (same form). Nothing hidden. | this branch || `/outreach/new` | fixed | Sticky wizard bar assumes 24 px page padding; page had 16 px, so Thai overflowed 8 px. Page now p-6. Nothing hidden. | this branch |# Mobile sweep inventory (375 px, English and Thai)
 
 Branch `claude/mobile-sweep`. **This file is the resume point**: a route with a verdict is done; the first group with blank verdicts is where to continue.
 
 Generated 2026-10-17 from the filesystem: `find src/app -name page.tsx` (121 routes), grouped by path prefix. Regenerate the list, never hand-edit it, so none is missed.
 
 Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or hidden on phones is named under "What was wrong".
+
+## Progress so far (2026-10-17)
+
+- `check-phone-width.mjs` now covers about 40 more routes plus 16 public pages. Admin in Thai ran clean except `/outreach/new` (fixed). Admin in English ran clean on the original 57 pages only; the extended set has not been run in English, nor for other roles.
+- A clean machine check is NOT yet recorded as a verdict below: no route is marked `ok` until it has also been looked at in the browser pane (the check cannot see cramped or clipped layout). Next: run the check per role and per language, one at a time (the whole set exceeds a 10-minute command), then look at each group, then try the `fieldset { min-width: 0 }` rule.
 
 ## Public (16)
 

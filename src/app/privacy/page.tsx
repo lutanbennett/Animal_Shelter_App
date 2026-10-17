@@ -77,7 +77,7 @@ export default async function Page() {
                 {content?.contact_email ? (
                   <a
                     href={`mailto:${content.contact_email}`}
-                    className="font-medium text-primary hover:underline"
+                    className="inline-flex min-h-11 items-center font-medium text-primary hover:underline"
                   >
                     {content.contact_email}
                   </a>
