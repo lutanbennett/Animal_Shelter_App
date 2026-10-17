@@ -43,7 +43,7 @@
 // Exit 0: nothing overflowed and every component action is 44 px. Exit 1: at
 // least one is not. Exit 2: could not run.
 import { randomBytes } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
@@ -58,6 +58,7 @@ const args = process.argv.slice(2);
 const opt = (name) => args.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3).split(",").filter(Boolean);
 const VERBOSE = args.includes("--verbose");
 const KEEP = args.includes("--keep");
+const SHOTS = opt("shots")?.[0];
 
 const WIDTH = 375;
 /** Slack for sub-pixel rounding: a 1 px nudge is not a page you can scroll. */
@@ -148,13 +149,76 @@ const PAGES = [
   "/admin/website",
   "/admin/medications",
   "/admin/diets",
+  "/about",
+  "/privacy",
+  "/appeals",
+  "/assistant",
+  "/bills",
+  "/friends/join",
+  "/no-access",
+  "/operations",
+  "/operations/medication-list",
+  "/outreach",
+  "/outreach/new",
+  "/photos/add",
+  "/weight/new",
+  "/clinic-visits/new",
+  "/medical/diets",
+  "/medical/photos",
+  "/medical/weight",
+  "/upcoming-visits",
+  "/management/appeals",
+  "/management/appeals/new",
+  "/management/cashflow/fixed-outgoings",
+  "/management/donations",
+  "/management/donations/new",
+  "/management/medication-list",
+  "/management/recurring-jobs",
+  "/management/shelter-friends",
+  "/management/shelter-friends/new",
+  "/management/translations",
+  "/admin/blood-test-types",
+  "/admin/facility-map",
+  "/admin/frequencies",
+  "/admin/immunization-types",
+  "/admin/procedure-types",
+  "/admin/recent-changes",
+  "/admin/role-draft",
+  "/admin/security",
+  "/admin/status",
+  "/admin/who-does-what",
+  "/admin/who-does-what/details",
+  "/residents/new",
+  "/residents/{resident}/deceased",
+  "/residents/{resident}/adoption-updates/new",
+  "/clinic-visits/{visit}/edit",
+  "/diets/{dietRow}/edit",
+  "/prescriptions/{rx}/edit",
+  "/weight/{weightRow}/edit",
+  "/management/donations/{donation}",
+  "/management/appeals/{appeal}",
+  "/management/appeals/{appeal}/preview",
+  "/appeals/{appeal}",
+  "/projects/{folder}",
+  "/maintenance/{job}",
+  "/maintenance/{job}/edit",
+  "/residents/{updateResident}/adoption-updates/{updateId}/edit",
+  "/e/{enclosure}",
+  "/r/{code}",
+  "/adopt/stories/{resident}",
+  "/appointments",
+  "/management/medication-list",
+  "/admin/role-draft",
+  "/admin/security",
+  "/admin/security/verify",
+  "/admin/who-does-what/details",
   // everyone
   "/manual",
   "/releases",
   "/account/password",
 ];
 // Signed-out public site, checked by publicPass() below.
-const PUBLIC_PAGES = ["/", "/adopt", "/adopt/international", "/friends", "/donate", "/foster", "/volunteer", "/our-work"];
+const PUBLIC_PAGES = ["/", "/adopt", "/adopt/international", "/friends", "/friends/join", "/donate", "/foster", "/volunteer", "/our-work", "/about", "/privacy", "/login", "/login/forgot", "/login/request", "/projects", "/releases"];
 const onlyPages = opt("pages");
 
 const env = loadEnv("test");
@@ -232,6 +296,7 @@ async function seed() {
     species: "Dog",
     breed: "Thai Ridgeback cross with a very long breed description",
     intake_date: "2026-01-15",
+    resident_code: `ZZ${tag}A`,
   });
   await insert("placement_history", {
     resident_id: resident.id,
@@ -239,11 +304,31 @@ async function seed() {
     zone_id: zone.id,
     enclosure_id: enclosure.id,
   });
-  const ill = await insert("residents", { name: `ZZ Width ${tag} Hospital Patient`, species: "Cat", intake_date: "2026-02-01" });
+  const ill = await insert("residents", { name: `ZZ Width ${tag} Hospital Patient`, species: "Cat", intake_date: "2026-02-01", resident_code: `ZZ${tag}B` });
   await insert("placement_history", { resident_id: ill.id, placement_type: "Intake", zone_id: zone.id, enclosure_id: enclosure.id, start_date: "2026-02-01T00:00:00Z", end_date: "2026-03-01T00:00:00Z" });
   await insert("placement_history", { resident_id: ill.id, placement_type: "SendToHospital", zone_id: zone.id, enclosure_id: enclosure.id, start_date: "2026-03-01T00:00:00Z" })
     .catch((error) => console.warn(`  warning: could not put a resident in hospital, so the Return from hospital page will be skipped (${error.message})`));
-  return { resident: resident.id, hospitalised: ill.id, enclosure: enclosure.id, clinic: clinic.id, contact: contact.id };
+  // Existing dev rows, for the pages that open one record (read only; never created or deleted here).
+  const first = async (table, column = "id") => (await service.from(table).select(column).limit(1)).data?.[0]?.[column] ?? null;
+  const update = (await service.from("adoption_updates").select("id, resident_id").limit(1)).data?.[0];
+  return {
+    resident: resident.id,
+    hospitalised: ill.id,
+    enclosure: enclosure.id,
+    clinic: clinic.id,
+    contact: contact.id,
+    visit: await first("clinic_visits"),
+    dietRow: await first("resident_diets"),
+    rx: await first("prescriptions"),
+    weightRow: await first("weight"),
+    donation: await first("donations"),
+    appeal: await first("appeals"),
+    folder: await first("project_folders"),
+    job: await first("maintenance"),
+    updateId: update?.id ?? null,
+    updateResident: update?.resident_id ?? null,
+    code: resident.resident_code,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -345,6 +430,23 @@ function measureInPage({ tolerance }) {
   // The deepest boxes that stick out are what set the width; their parents only follow.
   const deepest = out.filter((el) => !out.some((other) => other !== el && el.contains(other)));
   deepest.sort((a, b) => b.getBoundingClientRect().right - a.getBoundingClientRect().right);
+  if (!deepest.length) {
+    // Nothing sticks out on its own: a clipping box or an off-screen element is holding the page wide. Name what reaches past the screen, clipped or not.
+    const reaching = [...document.querySelectorAll("body *")]
+      .filter((el) => el.getBoundingClientRect().width > 0 && el.getBoundingClientRect().right > viewport + tolerance)
+      .sort((a, b) => b.getBoundingClientRect().right - a.getBoundingClientRect().right);
+    if (reaching.length) return { overflow, inMain: main !== document.body, culprits: reaching.slice(0, 3).map(describe) };
+    // Still nothing (a pseudo-element, a transform, an inline box): hide boxes one at a time and name the one whose removal ends the scroll.
+    const hit = [...document.querySelectorAll("body *")].filter((el) => !el.closest("nextjs-portal")).reverse().find((el) => {
+      const before = el.style.display;
+      el.style.display = "none";
+      const gone = root.scrollWidth - root.clientWidth <= tolerance;
+      el.style.display = before;
+      return gone;
+    });
+    // The first box that does it is the outermost; walk down to the innermost that still does.
+    return { overflow, inMain: main !== document.body, culprits: hit ? [describe(hit)] : [] };
+  }
   return { overflow, inMain: main !== document.body, culprits: deepest.slice(0, 3).map(describe) };
 }
 
@@ -496,6 +598,18 @@ async function publicPass() {
           continue;
         }
         await settle(page);
+        // The public site is not a signed-in page, so it never went through checkPage: look for a sideways scroll here too.
+        const wide = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth).catch(() => 0);
+        if (wide > TOLERANCE) {
+          failures += 1;
+          console.log(`
+FAIL  public ${locale} ${target}  scrolls sideways by ${wide} px at ${WIDTH} px`);
+        }
+        if (SHOTS) {
+          mkdirSync(SHOTS, { recursive: true });
+          const h = await page.evaluate(() => document.documentElement.scrollHeight).catch(() => 2000);
+          await page.screenshot({ path: join(SHOTS, `public-${locale}-${target.replace(/[^a-z0-9]+/gi, "_")}.png`), clip: { x: 0, y: 0, width: WIDTH, height: Math.min(h, 2000) } }).catch(() => {});
+        }
         const small = await page
           .evaluate((tap) => {
             const out = [];
@@ -566,6 +680,15 @@ async function checkPage(page, { roleName, locale, target }) {
   // Next's not-found page can answer 200 in some setups.
   const notFound = await page.evaluate(() => /could not be found|This page could not be found/i.test(document.querySelector("main")?.textContent ?? "")).catch(() => false);
   if (notFound) return { ...where, kind: "skipped", why: "not found" };
+  // Pages judged desktop-only show a notice at phone width with a Show anyway button (LargerScreenNotice); an admin who presses it must get a usable page, so press it before measuring.
+  for (const b of await page.locator("main [role=note] button").all()) await b.click().catch(() => {});
+  await settle(page);
+  if (SHOTS) {
+    // --shots=<dir>: keep what each page looks like (first 2000 px), for the by-eye pass overflow checks cannot do.
+    mkdirSync(SHOTS, { recursive: true });
+    const h = await page.evaluate(() => document.documentElement.scrollHeight).catch(() => 2000);
+    await page.screenshot({ path: join(SHOTS, `${roleName}-${locale}-${target.replace(/[^a-z0-9]+/gi, "_")}.png`), clip: { x: 0, y: 0, width: WIDTH, height: Math.min(h, 2000) } }).catch(() => {});
+  }
   let m;
   try {
     m = await page.evaluate(measureInPage, { tolerance: TOLERANCE });

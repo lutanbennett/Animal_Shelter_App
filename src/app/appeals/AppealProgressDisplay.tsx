@@ -61,7 +61,7 @@ export function AppealProgressDisplay({
   }
 
   const facts = (
-    <dl className="grid grid-cols-1 gap-3">
+    <dl className="grid min-w-[9rem] flex-1 grid-cols-1 gap-3">
       <div>
         <dt className="text-[13px] text-site-ink-muted">{p.raised}</dt>
         <dd className="font-display text-3xl font-bold tabular-nums text-site-ink">{money(raised)}</dd>
@@ -81,7 +81,7 @@ export function AppealProgressDisplay({
   );
 
   return (
-    <div className="flex items-center gap-6">
+    <div className="flex flex-wrap items-center gap-6">
       {style === "thermometer" ? <Thermometer fraction={fraction} /> : <Gauge fraction={fraction} />}
       {facts}
     </div>

@@ -55,7 +55,7 @@ export function DateInput({ value, defaultValue, onChange, className, name, min,
   }
 
   return (
-    <span className="flex items-center gap-2">
+    <span className="flex min-w-0 items-center gap-2">
       <input
         {...rest}
         id={id}
