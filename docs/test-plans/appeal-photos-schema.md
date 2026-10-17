@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **Appeals may show medical photos, chosen one by one, on the appeal's pages only** (left open, status note added on the `backlog` branch) |
 | Branch / worktree | `claude/appeal-photos-schema` @ `C:\Development\Animal_Shelter_appeal-photos-schema` |
 | Dev server | not started — no UI surface in this PR |
-| PR | pending: number is known once the PR is opened |
+| PR | #696 |
 | Tested by / date | Claude / 2026-10-17 |
 | Carries a migration? | yes — `0216_appeal_medical_photos.sql` |
 | Tested at SHA | `337598d9` |
@@ -29,7 +29,7 @@
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all 8 checks passing on #696, read from the PR status
 
 ## 3. Schema and data — *skip if no migration*
 
