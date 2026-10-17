@@ -922,6 +922,28 @@ const manual: Manual = {
           },
         },
         {
+          id: "approve-photos",
+          title: "Approving photos",
+          roles: ["admin", "management"],
+          activity: "photos.resident_publish",
+          path: "Home → Photos to approve",
+          intro:
+            "A photo filed by someone who may not publish waits here until you have looked at it. Nothing waiting is shown on the website.",
+          steps: [
+            "Tap Photos to approve on your home screen. The number on it is how many photos are waiting. You can also reach it from a resident's Photos section, which says when that resident has photos waiting.",
+            "Each photo is shown large, with the resident's name and code, who added it and when. Look at the picture: is it the right animal, and is there anything in it the shelter would not want to show?",
+            "Tap Approve to approve that one photo. It can then be shown on the website, and can be chosen as the resident's profile photo.",
+            "To approve several at once, tick the box under each photo you have looked at, then tap the Approve button at the bottom. It asks you to confirm and names the residents. There is no tick-everything button on purpose.",
+            "Tap Remove to delete a photo you do not want. It asks first, then deletes the file from the shelter's Google Drive (it stays in Drive's bin for 30 days).",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Approving is recorded with your name and the time. Only a login that may publish photos can approve; a volunteer can see their photo is waiting but cannot approve it.",
+            },
+          ],
+        },
+        {
           id: "add-photos-quick",
           title: "Adding photos: the quick way",
           roles: ["admin", "management", "doctor"],

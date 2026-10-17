@@ -3932,6 +3932,42 @@ const th: Dictionary = {
     },
   },
 
+  /** /photos/approve: รูปสัตว์ที่รอฝ่ายจัดการอนุมัติ */
+  photoApproval: {
+    title: "รูปที่รออนุมัติ",
+    intro: "ดูรูปทีละรูป อนุมัติเฉพาะรูปที่เป็นสัตว์ตัวที่ถูกต้องและไม่มีสิ่งที่ควรเก็บเป็นความลับ รูปที่อนุมัติแล้วจะแสดงบนเว็บไซต์ได้",
+    empty: "ไม่มีรูปที่รออนุมัติ ทุกรูปที่ส่งมาได้รับการตรวจแล้ว",
+    tileWaiting: (n: number) => `รอ ${n} รูป`,
+    photoAlt: (name: string) => `รูปที่รออนุมัติ: ${name}`,
+    addedBy: (who: string, when: string) => `เพิ่มโดย ${who} เมื่อ ${when}`,
+    selectToApprove: "ติ๊กเพื่ออนุมัติพร้อมรูปอื่น",
+    approve: "อนุมัติ",
+    approveN: (n: number) => `อนุมัติ ${n} รูปที่ติ๊กไว้`,
+    clearSelection: "ยกเลิกการติ๊กทั้งหมด",
+    bulkConfirmTitle: (n: number) => `อนุมัติ ${n} รูป?`,
+    bulkConfirmBody: (names: string) => `คุณติ๊กรูปของ: ${names} คุณดูครบทุกรูปแล้วใช่ไหม รูปที่อนุมัติแล้วจะแสดงบนเว็บไซต์ได้`,
+    approved: (n: number) => `อนุมัติแล้ว ${n} รูป`,
+    remove: "ลบ",
+    removeConfirmTitle: "ลบรูปนี้?",
+    removeConfirmBody: (name: string) => `รูปของ ${name} จะถูกลบ`,
+    removeConsequence: "ไฟล์จะถูกลบออกจาก Google Drive ของศูนย์ และอยู่ในถังขยะของ Drive 30 วัน",
+    removeConfirm: "ลบรูป",
+    removed: "ลบรูปแล้ว",
+    driveLeftBehind: "ลบรูปในแอปแล้ว แต่ไฟล์ยังอยู่ใน Google Drive ให้ผู้ดูแลระบบลบออกจาก Drive",
+    resident: {
+      waiting: (n: number) => `มี ${n} รูปรออนุมัติ`,
+      review: "ไปตรวจรูปที่รออนุมัติ",
+    },
+    errors: {
+      notAllowed: "คุณไม่มีสิทธิ์อนุมัติรูป",
+      nothingChosen: "ติ๊กอย่างน้อยหนึ่งรูปก่อน",
+      tooMany: (max: number) => `อนุมัติได้ครั้งละไม่เกิน ${max} รูป`,
+      approveFailed: "อนุมัติรูปไม่ได้ ไม่มีอะไรเปลี่ยนแปลง ลองอีกครั้ง",
+      notWaiting: "รูปนี้ถูกอนุมัติหรือลบไปแล้ว รีเฟรชหน้า",
+      removeFailed: "ลบรูปไม่ได้ ไม่มีอะไรเปลี่ยนแปลง",
+    },
+  },
+
   /** งานบนมือถือของหัวหน้างานการแพทย์ (docs/decisions/2026-10-04-medical-jobs-app.md) */
   addPhotos: {
     title: "เพิ่มรูป",

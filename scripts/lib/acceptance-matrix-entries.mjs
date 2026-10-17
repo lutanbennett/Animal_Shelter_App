@@ -495,6 +495,30 @@ export const ENTRIES = {
     },
   ],
 
+  "approve-photos": [
+    {
+      activity: "Approve a photo that is waiting",
+      needs: "photos.resident_publish",
+      device: "phone",
+      do: "Tap Photos to approve on the home screen, look at the first photo, and tap Approve.",
+      expect: "The photo leaves the list, the number on the tile goes down by one, and the photo no longer says Waiting for approval on the resident's Photos tab.",
+    },
+    {
+      activity: "Approve several photos at once",
+      needs: "photos.resident_publish",
+      device: "phone",
+      do: "On Photos to approve, tick the box under two photos you have looked at, tap the Approve button at the bottom and confirm.",
+      expect: "It asks first and names the residents, there is no button that ticks everything, and both photos leave the list.",
+    },
+    {
+      activity: "Remove a photo that is waiting",
+      needs: "photos.resident_manage",
+      device: "phone",
+      do: "On Photos to approve, tap Remove under a photo you do not want and confirm.",
+      expect: "It asks first and says the file is deleted from Google Drive, then the photo leaves the list.",
+    },
+  ],
+
   "add-photos-quick": [
     {
       activity: "Add photos, then say who is in each",

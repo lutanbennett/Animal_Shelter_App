@@ -9,6 +9,7 @@ import { listHomeRoles, loadCardsByRole } from "@/lib/home/roles";
 import { homeTilesForRoles } from "@/lib/home/tiles";
 import { loadUrgentCounts } from "@/lib/my-tasks/urgent";
 import { countBillsWaiting } from "@/lib/bills/waiting";
+import { countPhotosWaiting } from "@/lib/photos/approval";
 import { getT } from "@/lib/i18n/get-t";
 import { HomeTiles } from "@/components/HomeTiles";
 
@@ -52,6 +53,7 @@ export default async function HomePage() {
   const tiles = homeTilesForRoles(perms, t, await countBillsWaiting(supabase, perms), await loadCardsByRole(perms.roles), {
     my: urgent.total,
     maintenance: urgent.maintenance,
+    photosWaiting: await countPhotosWaiting(supabase, perms),
   });
 
   return (

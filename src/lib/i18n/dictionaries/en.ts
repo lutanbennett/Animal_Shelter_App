@@ -4067,6 +4067,42 @@ const en = {
     },
   },
 
+  /** /photos/approve: resident photos waiting for Management (docs/decisions/2026-10-17-photo-approval-queue.md). */
+  photoApproval: {
+    title: "Photos to approve",
+    intro: "Look at each photo. Approve it only if it is the right animal and nothing in it should stay private. Approved photos can then be shown on the website.",
+    empty: "No photos are waiting. Everything filed has been looked at.",
+    tileWaiting: (n: number) => `${n} waiting`,
+    photoAlt: (name: string) => `Photo waiting for approval: ${name}`,
+    addedBy: (who: string, when: string) => `Added by ${who} on ${when}`,
+    selectToApprove: "Tick to approve together with others",
+    approve: "Approve",
+    approveN: (n: number) => (n === 1 ? "Approve 1 ticked photo" : `Approve ${n} ticked photos`),
+    clearSelection: "Untick all",
+    bulkConfirmTitle: (n: number) => (n === 1 ? "Approve 1 photo?" : `Approve ${n} photos?`),
+    bulkConfirmBody: (names: string) => `You ticked photos of: ${names}. Have you looked at each one? Approved photos can be shown on the website.`,
+    approved: (n: number) => (n === 1 ? "1 photo approved." : `${n} photos approved.`),
+    remove: "Remove",
+    removeConfirmTitle: "Remove this photo?",
+    removeConfirmBody: (name: string) => `The photo of ${name} will be deleted.`,
+    removeConsequence: "The file is deleted from the shelter's Google Drive. It stays in Drive's bin for 30 days.",
+    removeConfirm: "Remove photo",
+    removed: "Photo removed.",
+    driveLeftBehind: "The photo is removed here, but its file is still in Google Drive. Ask an admin to delete it there.",
+    resident: {
+      waiting: (n: number) => (n === 1 ? "1 photo is waiting for approval." : `${n} photos are waiting for approval.`),
+      review: "Review photos to approve",
+    },
+    errors: {
+      notAllowed: "You can't approve photos.",
+      nothingChosen: "Tick at least one photo first.",
+      tooMany: (max: number) => `Approve at most ${max} photos at a time.`,
+      approveFailed: "The photos could not be approved. Nothing was changed. Try again.",
+      notWaiting: "That photo was already approved or removed. Refresh the page.",
+      removeFailed: "The photo could not be removed. Nothing was changed.",
+    },
+  },
+
   /** Add photos: take or choose the photos first, then say who is in each (/photos/add). */
   addPhotos: {
     title: "Add photos",
