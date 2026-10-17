@@ -146,7 +146,7 @@ Automated checks by: Claude  Date: 2026-10-17
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: one live upload by a card-holding login
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: one item is handed to a person (a live upload by a card-holding login), see Manual verification by below
 
 Manual verification by: pending: live volunteer upload on dev
 
