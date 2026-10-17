@@ -20,7 +20,7 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/adopt` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
 | `/adopt/[id]` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
 | `/adopt/international` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
-| `/adopt/stories/[id]` |  |  |  |
+| `/adopt/stories/[id]` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/donate` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
 | `/foster` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
 | `/friends` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
@@ -56,13 +56,13 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/admin/medications` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/admin/procedure-types` | ok | Rows stack name above count; nothing hidden. |  |
 | `/admin/recent-changes` | ok | Log table scrolls inside its box; cramped but nothing hidden. Possible card layout later; not a defect at 375 px. |  |
-| `/admin/role-draft` |  |  |  |
-| `/admin/security` |  |  |  |
-| `/admin/security/verify` |  |  |  |
+| `/admin/role-draft` | ok | Redirect only (to the enclosure, the resident, /operations/medication-list, /admin/who-does-what); no layout of its own. The target pages are in this inventory. |  |
+| `/admin/security` | not checked: needs a 2-step-verified admin | Redirects to /admin/security/verify (looked at, ok) for the throwaway admin, so the users table, its role column and the access-request list were never seen on a phone. The brief names this users table as a starting point: do it with a verified login. |  |
+| `/admin/security/verify` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/admin/status` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/admin/website` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/admin/who-does-what` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/admin/who-does-what/details` |  |  |  |
+| `/admin/who-does-what/details` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/admin/zones` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 
 ## Resident & day-to-day (30)
@@ -70,11 +70,11 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | Route | Verdict | What was wrong | Fixed in |
 |---|---|---|---|
 | `/appeals` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/appeals/[id]` |  |  |  |
+| `/appeals/[id]` | ok | Public appeal page; shares the progress component fixed under /management/appeals/[id], measured clean after the fix. | this branch |
 | `/assistant` | ok | Fits. Example-question buttons are 20 px tall bare buttons, already ruled in 2026-10-07-bare-buttons-lightbox. |  |
 | `/contacts` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/contacts/[id]` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/e/[id]` |  |  |  |
+| `/e/[id]` | ok | Redirect only (to the enclosure, the resident, /operations/medication-list, /admin/who-does-what); no layout of its own. The target pages are in this inventory. |  |
 | `/enclosures` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/enclosures/[id]` | ok | Fits. The small "inside the shelter" badge beside the zone name wraps to two short lines; cramped, nothing lost. |  |
 | `/home` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
@@ -84,11 +84,11 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/outreach/[id]/edit` | fixed | Same cause and fix as /outreach/new (same form). Nothing hidden. | this branch |
 | `/outreach/new` | fixed | Sticky wizard bar assumes 24 px page padding; the page had 16 px, so Thai overflowed 8 px. Page now p-6. Nothing hidden. | this branch |
 | `/photos/add` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/r/[code]` |  |  |  |
+| `/r/[code]` | ok | Redirect only (to the enclosure, the resident, /operations/medication-list, /admin/who-does-what); no layout of its own. The target pages are in this inventory. |  |
 | `/residents` | ok | Zone chip strip scrolls sideways inside itself by design; nothing hidden. |  |
 | `/residents/[id]` | ok | Long name wraps beside the photo; fits. |  |
 | `/residents/[id]/[section]` | ok | Housing, photos and weight sections looked at, Thai, 375 px: fit. |  |
-| `/residents/[id]/adoption-updates/[updateId]/edit` |  |  |  |
+| `/residents/[id]/adoption-updates/[updateId]/edit` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/residents/[id]/adoption-updates/new` | fixed | Long resident name squeezed beside the icon and code, so the heading wrapped one word per line. Heading now flows as text on phones; desktop layout unchanged. Nothing hidden. | this branch |
 | `/residents/[id]/deceased` | fixed | Long resident name squeezed beside the icon and code, so the heading wrapped one word per line. Heading now flows as text on phones; desktop layout unchanged. Nothing hidden. | this branch |
 | `/residents/[id]/deceased/undo` | fixed | Long resident name squeezed beside the icon and code, so the heading wrapped one word per line. Heading now flows as text on phones; desktop layout unchanged. Nothing hidden. (Same markup as its sibling; the fix applied, this page itself not separately viewed.) | this branch |
@@ -104,23 +104,23 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 
 | Route | Verdict | What was wrong | Fixed in |
 |---|---|---|---|
-| `/appointments` |  |  |  |
+| `/appointments` | not checked: needs a doctor with a clinic | Doctor-only; the throwaway doctor has no clinic, so the page refuses it. Doctor role otherwise measured clean (19 pages). Needs a doctor login assigned to a clinic. |  |
 | `/blood-tests/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/clinic-visits/[id]/edit` |  |  |  |
+| `/clinic-visits/[id]/edit` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/clinic-visits/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/clinics` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/clinics/[id]` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/diets/[id]/edit` |  |  |  |
+| `/diets/[id]/edit` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/diets/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/immunizations/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/medical/diets` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/medical/photos` | not checked: page crashes | the page crashes (server error) when opened with no resident, so there is no layout to judge. Real bug, filed on the backlog branch (ResidentPicker is passed the whole dictionary). Layout of the picker itself unseen. |  |
 | `/medical/weight` | not checked: page crashes | the page crashes (server error) when opened with no resident, so there is no layout to judge. Real bug, filed on the backlog branch (ResidentPicker is passed the whole dictionary). Layout of the picker itself unseen. |  |
-| `/prescriptions/[id]/edit` |  |  |  |
+| `/prescriptions/[id]/edit` | ok | Looked at; the dev row is for a deceased resident so only the closed-record notice showed. The edit form itself was not seen on a phone. |  |
 | `/prescriptions/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/procedures/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/upcoming-visits` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/weight/[id]/edit` |  |  |  |
+| `/weight/[id]/edit` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/weight/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 
 ## Operations & stock (11)
@@ -130,13 +130,13 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/bills` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/deliveries` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/maintenance` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/maintenance/[id]` |  |  |  |
-| `/maintenance/[id]/edit` |  |  |  |
+| `/maintenance/[id]` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/maintenance/[id]/edit` | fixed | Date field plus its Clear button overflowed 31 px in Thai (the date box could not shrink). DateInput now has min-w-0; fixes every date field beside a button. Nothing hidden. | this branch |
 | `/maintenance/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/operations` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/operations/medication-list` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/projects` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/projects/[id]` |  |  |  |
+| `/projects/[id]` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/stocktake` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 
 ## Management (23)
@@ -145,8 +145,8 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 |---|---|---|---|
 | `/management` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/management/appeals` | ok | Fits. The "no donations recorded" line under each progress bar is very faint; contrast, not layout, so left and noted. |  |
-| `/management/appeals/[id]` |  |  |  |
-| `/management/appeals/[id]/preview` |  |  |  |
+| `/management/appeals/[id]` | fixed | Raised / goal / funded numbers were squeezed to 14 px beside the thermometer and pushed the page 31 px wide. The row now wraps. Nothing hidden. | this branch |
+| `/management/appeals/[id]/preview` | ok | Shares the progress component fixed under /management/appeals/[id]; clean after the fix. | this branch |
 | `/management/appeals/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/management/cashflow` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/management/cashflow/fixed-outgoings` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
@@ -156,9 +156,9 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/management/dashboard` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/management/diets` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/management/donations` | ok | Fits. In the list, a donor name wrapping beside the payment method makes two lines sit close together; cramped, nothing lost. |  |
-| `/management/donations/[id]` |  |  |  |
+| `/management/donations/[id]` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/management/donations/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/management/medication-list` |  |  |  |
+| `/management/medication-list` | ok | Redirect only (to the enclosure, the resident, /operations/medication-list, /admin/who-does-what); no layout of its own. The target pages are in this inventory. |  |
 | `/management/medications` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/management/purchasing` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/management/recurring-jobs` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
