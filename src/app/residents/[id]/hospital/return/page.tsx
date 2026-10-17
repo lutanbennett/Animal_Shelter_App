@@ -94,8 +94,8 @@ export default async function ReturnFromHospitalPage(
         {t.residents.sections.backTo(displayName)}
       </Link>
       <div>
-        <h1 className="flex items-center gap-3 text-2xl font-semibold text-foreground">
-          <Icon aria-hidden="true" className="h-6 w-6 shrink-0 text-muted" />
+        <h1 className="text-2xl md:flex md:items-center md:gap-3 font-semibold text-foreground">
+          <Icon aria-hidden="true" className="mr-3 inline-block h-6 w-6 shrink-0 align-[-0.15em] text-muted md:mr-0 md:align-baseline" />
           {t.residents.hospitalReturn.pageTitle(displayName)}{" "}
           <span className="text-lg font-normal text-muted">
             ({resident.resident_code})
