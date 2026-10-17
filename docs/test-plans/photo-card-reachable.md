@@ -1,17 +1,17 @@
-| Tested at SHA | c5bfb65f || Carries a migration? | no || Tested by / date | Claude / 2026-10-17 || PR | pending: number assigned on open || Backlog item | `docs/backlog.md` → filed on the `backlog` branch 2026-10-17 (not yet on this branch; ticked there with the PR number) || Feature | Add Shelter Photo card (card 22) for /photos/add; the page offers the Shelter folder only |# Test plan: photo-card-reachable
+# Test plan: photo-card-reachable
 
 ## Header
 
 | | |
 |---|---|
-| Feature | |
-| Backlog item | `docs/backlog.md` → |
+| Feature | Add Shelter Photo card (card 22) for /photos/add; the page offers the Shelter folder only |
+| Backlog item | `docs/backlog.md` → filed on the `backlog` branch 2026-10-17; ticked there with the PR number |
 | Branch / worktree | `claude/photo-card-reachable` @ `C:\Development\Animal_Shelter_photo-card-reachable` |
-| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
-| PR | |
-| Tested by / date | |
-| Carries a migration? | yes / no |
-| Tested at SHA | |
+| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3001` |
+| PR | pending: number assigned on open |
+| Tested by / date | Claude / 2026-10-17 |
+| Carries a migration? | no |
+| Tested at SHA | c5bfb65f |
 
 ## 1. Scope and risk
 
