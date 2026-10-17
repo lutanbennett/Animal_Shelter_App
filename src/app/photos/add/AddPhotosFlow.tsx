@@ -10,20 +10,41 @@ import { photoFolderLabel } from "@/lib/i18n/enum-labels";
 import { todayIso } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { matchesQuery, type PickableResident } from "@/lib/medical/residents";
+import type { EnclosureChoices } from "@/lib/photos/pending";
+import { EnclosureChooser, type PickedEnclosure } from "./EnclosureChooser";
+import { uploadPendingPhoto } from "./uploadPending";
 import type { PhotoCategory } from "@/lib/google/drive-client";
 
 type Status = "saving" | "saved" | "failed";
 
 /** One photo saved (or being saved) to one resident. A photo with two dogs has two of these. */
-type Tag = { residentId: string; name: string; status: Status; error?: string };
+type Tag = { residentId: string; name: string; status: Status; error?: string; enclosureId?: string };
 
 type Photo = { key: string; file: File; preview: string; tags: Tag[] };
 
 /** One upload waiting its turn. Sequential: the first upload for a resident may create their Drive folder. */
-type Job = { photoKey: string; residentId: string; folder: PhotoCategory };
+type Job = { photoKey: string; residentId: string; folder: PhotoCategory; enclosureId?: string };
 
 const RECENT_KEY = "photos-add:recent";
 const RECENT_MAX = 8;
+const RECENT_ENCLOSURES_KEY = "photos-add:recent-enclosures";
+
+function readRecentEnclosures(): string[] {
+  try {
+    const list = JSON.parse(window.localStorage.getItem(RECENT_ENCLOSURES_KEY) ?? "[]") as unknown;
+    return Array.isArray(list) ? list.filter((x): x is string => typeof x === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeRecentEnclosures(ids: string[]) {
+  try {
+    window.localStorage.setItem(RECENT_ENCLOSURES_KEY, JSON.stringify(ids.slice(0, RECENT_MAX)));
+  } catch {
+    /* private window or blocked storage: the page works without recents */
+  }
+}
 
 function readRecent(): string[] {
   try {
@@ -57,6 +78,7 @@ export function AddPhotosFlow({
   waits,
   residents,
   loadError,
+  enclosures,
 }: {
   categories: readonly PhotoCategory[];
   route: "staff" | "medical" | "shelter";
@@ -64,6 +86,8 @@ export function AddPhotosFlow({
   waits: boolean;
   residents: PickableResident[];
   loadError: string | null;
+  /** Where a photo can be tagged when the person does not know the animal; null where that path is not offered. */
+  enclosures: EnclosureChoices | null;
 }) {
   const { t, locale } = useI18n();
   const a = t.addPhotos;
@@ -72,6 +96,8 @@ export function AddPhotosFlow({
   const [allToOne, setAllToOne] = useState(false);
   const [folder, setFolder] = useState<PhotoCategory>(categories.includes("Shelter") ? "Shelter" : categories[0]);
   const [query, setQuery] = useState("");
+  const [mode, setMode] = useState<"resident" | "enclosure">("resident");
+  const [recentEnclosureIds, setRecentEnclosureIds] = useState<string[]>(() => (typeof window === "undefined" ? [] : readRecentEnclosures()));
   const [recentIds, setRecentIds] = useState<string[]>(() => (typeof window === "undefined" ? [] : readRecent()));
   const cameraRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
@@ -107,14 +133,16 @@ export function AddPhotosFlow({
         if (!job) break;
         const photo = photosRef.current.find((p) => p.key === job.photoKey);
         if (!photo) continue;
-        const result = await uploadResidentPhoto(
-          t,
-          job.residentId,
-          photo.file,
-          { category: job.folder, dateTaken: todayIso() },
-          () => {},
-          route,
-        );
+        const result = job.enclosureId
+          ? await uploadPendingPhoto(t, job.enclosureId, photo.file)
+          : await uploadResidentPhoto(
+              t,
+              job.residentId,
+              photo.file,
+              { category: job.folder, dateTaken: todayIso() },
+              () => {},
+              route,
+            );
         patchTag(
           job.photoKey,
           job.residentId,
@@ -177,7 +205,47 @@ export function AddPhotosFlow({
     if (!after) setAllToOne(false);
   };
 
+  // The enclosure path: the same photos, tagged to a place instead of an animal. The tag's key is the place,
+  // prefixed so it can never equal a resident's id; a photo can carry both kinds (one dog known, one not).
+  const pickEnclosure = (e: PickedEnclosure) => {
+    const targets = allToOne
+      ? photosRef.current.filter((p) => p.tags.length === 0).map((p) => p.key)
+      : pickedKey
+        ? [pickedKey]
+        : [];
+    if (targets.length === 0) return;
+    const key = `enc:${e.id}`;
+    for (const photoKey of targets) {
+      const photo = photosRef.current.find((p) => p.key === photoKey);
+      if (!photo || photo.tags.some((tag) => tag.residentId === key && tag.status !== "failed")) continue;
+      const tag: Tag = { residentId: key, name: e.label, status: "saving", enclosureId: e.id };
+      commit(
+        photosRef.current.map((p) =>
+          p.key === photoKey ? { ...p, tags: [...p.tags.filter((x) => x.residentId !== key), tag] } : p,
+        ),
+      );
+      jobs.current.push({ photoKey, residentId: key, folder: "Shelter", enclosureId: e.id });
+    }
+    void drain();
+    const next = [e.id, ...readRecentEnclosures().filter((id) => id !== e.id)];
+    writeRecentEnclosures(next);
+    setRecentEnclosureIds(next.slice(0, RECENT_MAX));
+    const after = photosRef.current.find((p) => p.tags.length === 0 && !targets.includes(p.key));
+    setPickedKey(after ? after.key : allToOne ? null : pickedKey);
+    if (!after) setAllToOne(false);
+  };
+
   const retry = (photoKey: string, residentId: string) => {
+    const failedTag = photosRef.current.find((p) => p.key === photoKey)?.tags.find((x) => x.residentId === residentId);
+    if (failedTag?.enclosureId) {
+      // pickEnclosure tags the picked photo; point it at this one first.
+      setAllToOne(false);
+      setPickedKey(photoKey);
+      jobs.current.push({ photoKey, residentId, folder: "Shelter", enclosureId: failedTag.enclosureId });
+      patchTag(photoKey, residentId, { status: "saving", error: undefined });
+      void drain();
+      return;
+    }
     const r = residents.find((x) => x.id === residentId);
     if (r) {
       queue(photoKey, r);
@@ -252,6 +320,9 @@ export function AddPhotosFlow({
   const recentRows = shortcuts(recent);
   const nearbyRows = shortcuts(nearby);
   const canTag = photos.length > 0 && (allToOne || pickedKey !== null);
+  // The enclosure path files into Shelter only, so it is offered only while the folder is Shelter.
+  const offerEnclosure = enclosures !== null && folder === "Shelter";
+  const enclosureMode = mode === "enclosure" && offerEnclosure;
 
   return (
     <div className="flex flex-col gap-4">
@@ -378,7 +449,32 @@ export function AddPhotosFlow({
           </h2>
           <p className="text-sm text-muted">{a.another}</p>
 
-          {canTag && (
+          {canTag && offerEnclosure && (
+            <div className="grid grid-cols-2 gap-2" role="group" aria-label={a.whoFor}>
+              <button
+                type="button"
+                aria-pressed={!enclosureMode}
+                onClick={() => setMode("resident")}
+                className={`min-h-12 rounded-lg border-2 px-3 text-base font-semibold text-foreground ${enclosureMode ? "border-border bg-surface" : "border-primary bg-primary/10"}`}
+              >
+                {a.enclosure.iKnow}
+              </button>
+              <button
+                type="button"
+                aria-pressed={enclosureMode}
+                onClick={() => setMode("enclosure")}
+                className={`min-h-12 rounded-lg border-2 px-3 text-base font-semibold text-foreground ${enclosureMode ? "border-primary bg-primary/10" : "border-border bg-surface"}`}
+              >
+                {a.enclosure.dontKnow}
+              </button>
+            </div>
+          )}
+
+          {canTag && enclosureMode && enclosures && (
+            <EnclosureChooser choices={enclosures} recentIds={recentEnclosureIds} onPick={pickEnclosure} />
+          )}
+
+          {canTag && !enclosureMode && (
             <>
               {(recentRows.length > 0 || nearbyRows.length > 0) && (
                 <div className="flex flex-col gap-2">

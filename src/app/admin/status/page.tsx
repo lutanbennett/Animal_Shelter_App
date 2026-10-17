@@ -10,6 +10,8 @@ import { checkAlerts } from "@/lib/status/alerts";
 import { getHealthReport } from "@/lib/status/health";
 import { type CheckResult, type CheckState, runCheck } from "@/lib/status/run";
 import { USAGE_PERIODS, getUsageReport, parsePeriod, type UsagePeriod } from "@/lib/status/usage";
+import { createClient } from "@/lib/supabase/server";
+import { countStalePending } from "@/lib/photos/pending";
 import { checkNow } from "./actions";
 import { renderedBy } from "@/lib/status/runtime";
 import { AlertActions } from "./AlertActions";
@@ -55,6 +57,13 @@ export default async function SystemStatusPage(props: PageProps<"/admin/status">
         <h2 className="text-lg font-semibold text-foreground">{s.accessRequests.heading}</h2>
         <Suspense fallback={<p className="text-sm text-muted">{s.checking}</p>}>
           <AccessRequests t={t} locale={locale} />
+        </Suspense>
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold text-foreground">{s.unassignedPhotos.heading}</h2>
+        <Suspense fallback={<p className="text-sm text-muted">{s.checking}</p>}>
+          <UnassignedPhotos t={t} locale={locale} />
         </Suspense>
       </section>
 
@@ -295,6 +304,40 @@ async function AccessRequests({ t, locale }: { t: T; locale: Locale }) {
               {a.review}
             </Link>
             <p className="text-xs text-muted">{a.how}</p>
+          </>
+        )}
+      </Tile>
+    </div>
+  );
+}
+
+/**
+ * Photos tagged to an enclosure that nobody has given a resident for more than 30 days (pending_photos, 0218), so
+ * they do not pile up unseen. Read as the signed-in admin (RLS lets a login that may publish see the table). Amber
+ * while any wait: it needs a person, nothing is broken. Not part of the health report, so no alert mail.
+ */
+async function UnassignedPhotos({ t, locale }: { t: T; locale: Locale }) {
+  const supabase = await createClient();
+  const r = await runCheck(async () => {
+    const stale = await countStalePending(supabase);
+    if (stale.error) return { state: "fail" as const, error: stale.error };
+    return { state: stale.count > 0 ? ("warn" as const) : ("ok" as const), facts: stale };
+  }, 5_000);
+  const a = t.admin.status.unassignedPhotos;
+  const f = r.facts;
+  return (
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <Tile title={a.title} result={r} t={t} locale={locale}>
+        {!f ? (
+          <p>{a.fail}</p>
+        ) : f.count === 0 ? (
+          <p>{a.none}</p>
+        ) : (
+          <>
+            <p>{a.waiting({ count: f.count, age: a.oldestDays({ days: f.oldestDays }) })}</p>
+            <Link href="/photos/approve" className="font-medium text-primary hover:underline">
+              {a.review}
+            </Link>
           </>
         )}
       </Tile>

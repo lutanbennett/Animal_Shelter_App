@@ -3,21 +3,40 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Trash2, X } from "lucide-react";
+import { Check, Repeat, Trash2, X } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { formatDate } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { WaitingPhoto } from "@/lib/photos/approval";
+import { ResidentPicker } from "@/app/medical/ResidentPicker";
+import type { PickableResident } from "@/lib/medical/residents";
 import { approvePhotos, removeWaitingPhoto } from "./actions";
+import { reassignWaitingPhoto } from "./pending-actions";
 
 /**
  * The Photos to approve list: each photo large enough to judge, the resident named beside it, Approve as the easy
  * path and Remove as the considered one. Approving several at once is only ever on photos ticked one by one:
  * there is no "select all" and no button that takes the page.
  */
-export function ApproveQueue({ photos, canRemove }: { photos: WaitingPhoto[]; canRemove: boolean }) {
+export function ApproveQueue({
+  photos,
+  canRemove,
+  canReassign,
+  residents,
+  loadError,
+  othersWaiting,
+}: {
+  photos: WaitingPhoto[];
+  canRemove: boolean;
+  /** Fix a photo the volunteer tagged to the wrong resident, before approving. */
+  canReassign: boolean;
+  residents: PickableResident[];
+  loadError: string | null;
+  /** Photos tagged to an enclosure are waiting above this list, so "nothing is waiting" would be untrue. */
+  othersWaiting: boolean;
+}) {
   const { t, locale } = useI18n();
   const q = t.photoApproval;
   const router = useRouter();
@@ -25,6 +44,8 @@ export function ApproveQueue({ photos, canRemove }: { photos: WaitingPhoto[]; ca
   const [pending, startTransition] = useTransition();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const [changing, setChanging] = useState<string | null>(null);
+  const [changeQuery, setChangeQuery] = useState("");
 
   function toggle(id: string) {
     setSelected((prev) => {
@@ -58,6 +79,21 @@ export function ApproveQueue({ photos, canRemove }: { photos: WaitingPhoto[]; ca
     });
   }
 
+  function reassign(photo: WaitingPhoto, to: PickableResident) {
+    startTransition(async () => {
+      setMessage(null);
+      const result = await reassignWaitingPhoto(photo.id, to.id);
+      setChanging(null);
+      setChangeQuery("");
+      if (result.ok) {
+        setMessage({ ok: true, text: result.driveWarning ?? q.pending.reassigned(to.name) });
+        router.refresh();
+      } else {
+        setMessage({ ok: false, text: result.error });
+      }
+    });
+  }
+
   function remove(photo: WaitingPhoto) {
     startTransition(async () => {
       const ok = await confirm({
@@ -81,6 +117,10 @@ export function ApproveQueue({ photos, canRemove }: { photos: WaitingPhoto[]; ca
         setMessage({ ok: false, text: result.error });
       }
     });
+  }
+
+  if (photos.length === 0 && othersWaiting) {
+    return message ? <p role="status" className={`rounded border px-3 py-2 text-sm ${message.ok ? "border-success/40 text-success" : "border-danger/40 text-danger"}`}>{message.text}</p> : null;
   }
 
   if (photos.length === 0) {
@@ -133,12 +173,40 @@ export function ApproveQueue({ photos, canRemove }: { photos: WaitingPhoto[]; ca
               <ActionButton icon={Check} variant="primary" disabled={pending} onClick={() => approve([photo.id], false)}>
                 {q.approve}
               </ActionButton>
+              {canReassign && (
+                <ActionButton
+                  icon={Repeat}
+                  compact
+                  disabled={pending}
+                  onClick={() => {
+                    setChangeQuery("");
+                    setChanging(changing === photo.id ? null : photo.id);
+                  }}
+                >
+                  {changing === photo.id ? q.pending.cancelChange : q.pending.changeResident}
+                </ActionButton>
+              )}
               {canRemove && (
                 <ActionButton icon={Trash2} variant="danger" compact disabled={pending} onClick={() => remove(photo)}>
                   {q.remove}
                 </ActionButton>
               )}
             </div>
+            {canReassign && changing === photo.id && (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm text-muted">{q.pending.changeHelp(photo.residentName)}</p>
+                <ResidentPicker
+                  t={t}
+                  locale={locale}
+                  base="/photos/approve"
+                  residents={residents.filter((r) => r.id !== photo.residentId)}
+                  query={changeQuery}
+                  error={loadError}
+                  onPick={(r) => reassign(photo, r)}
+                  onQueryChange={setChangeQuery}
+                />
+              </div>
+            )}
           </li>
         ))}
       </ul>
