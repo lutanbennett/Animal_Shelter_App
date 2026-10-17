@@ -11,7 +11,7 @@
 | PR | pending: number assigned on open |
 | Tested by / date | Claude / 2026-10-17 |
 | Carries a migration? | no |
-| Tested at SHA | 4b79d1ac |
+| Tested at SHA | 57dd89ff |
 
 ## 1. Scope and risk
 
@@ -40,7 +40,7 @@ indistinguishable from one that passed.
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
 
 ```
-=== gates: build exited 0 after 118s
+=== gates: build exited 0 after 30s
 
 gates: typecheck=0 lint=0 test=0 build=0
 ```
@@ -62,12 +62,12 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — n/a: not driven in a browser this session (no volunteer login to sign in as); covered by src/lib/home/add-photos-card.test.mjs and the gates, and listed under Left for manual verification; the upload route itself has not been run against Drive and the dev database
-- [ ] Data persists — reload the page and the change is still there — n/a: not driven in a browser this session; the photo row is written by record_attachment() (0217), which this PR only calls
-- [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: filing only; delete, move and profile stay with the Residents card and are not offered by this one
-- [ ] Empty state renders sensibly (no rows yet) — n/a: the page's empty states are unchanged
-- [x] Invalid input is rejected with a readable message, not a crash — the route refuses any category but Shelter, an adopter's photo, a non-image, an oversize file, an unseen resident; read in the code, not driven
-- [ ] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — n/a: no new free-text or number inputs
+- [ ] Happy path works end to end — n/a: not driven in a browser this session (no signed-in Management login to use); covered by src/lib/photos/approval.test.mjs and the gates, and listed under Left for manual verification
+- [ ] Data persists — reload the page and the change is still there — n/a: not driven in a browser this session (no signed-in Management login to use); covered by src/lib/photos/approval.test.mjs and the gates, and listed under Left for manual verification (the write is an update of approved_at)
+- [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: not driven in a browser this session (no signed-in Management login to use); covered by src/lib/photos/approval.test.mjs and the gates, and listed under Left for manual verification (Approve and Remove)
+- [ ] Empty state renders sensibly (no rows yet) — n/a: not driven in a browser this session (no signed-in Management login to use); covered by src/lib/photos/approval.test.mjs and the gates, and listed under Left for manual verification (the empty state is a sentence, read in ApproveQueue.tsx)
+- [x] Invalid input is rejected with a readable message, not a crash — approvePhotos refuses a login that may not publish, an empty list and more than 50 ids; removeWaitingPhoto refuses a photo that is no longer waiting; each has a sentence in both dictionaries; read in the code, not driven
+- [ ] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — n/a: no free-text or number inputs; the only bound is the 50-photo batch limit, read in the code
 
 ### Role access matrix
 
@@ -93,30 +93,30 @@ animal — and do not re-derive this list by grepping for quoted strings; read t
 | volunteer | | | |
 | signed out | | | |
 
-- [ ] Every role above tested — n/a: not driven in a browser this session (no volunteer login to sign in as); covered by src/lib/home/add-photos-card.test.mjs and the gates, and listed under Left for manual verification
-- [x] A role that should not have access is blocked server-side (hitting the URL directly fails) — canOpen and photoCategoriesFor asserted in add-photos-card.test.mjs; the page uses requireAnyPermission and the route re-checks photos.shelter_add and the Shelter folder before any Drive call
+- [ ] Every role above tested — n/a: not driven in a browser this session (no signed-in Management login to use); covered by src/lib/photos/approval.test.mjs and the gates, and listed under Left for manual verification
+- [x] A role that should not have access is blocked server-side (hitting the URL directly fails) — approval.test.mjs asserts canOpen is true only for photos.resident_publish; the page uses requirePermission, both actions re-check it before touching anything, and 0217's trigger refuses an approval from anyone else; not driven by hitting the URL
 
 ## 5. Cross-cutting
 
-- [ ] Nav entry correct (`src/app/NavLinks.tsx`) — appears for the right roles, no dead links — n/a: no nav entry; the card is a home tile that Lutan assigns
-- [x] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — the Adding photos topic names the card and describes the volunteer variant; not loaded at /manual
+- [ ] Nav entry correct (`src/app/NavLinks.tsx`) — appears for the right roles, no dead links — n/a: no menu entry (menu: false); the way in is the home tile and the link on a resident's Photos section
+- [x] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — new topic Approving photos in the Photos chapter; not loaded at /manual
 - [ ] Translatable strings go through the translation path, checked at `/management/translations` — n/a: strings are in both dictionaries (en, th), not the translations table
-- [ ] Mobile viewport (375px) — no overflow, controls reachable — n/a: not driven in a browser this session (no volunteer login to sign in as); covered by src/lib/home/add-photos-card.test.mjs and the gates, and listed under Left for manual verification (Thai at 375 px is on the manual list)
-- [ ] Browser console clean — no errors or React warnings — n/a: not driven in a browser this session (no volunteer login to sign in as); covered by src/lib/home/add-photos-card.test.mjs and the gates, and listed under Left for manual verification
-- [ ] Network clean — no unexpected 4xx/5xx on the feature's pages — n/a: not driven in a browser this session (no volunteer login to sign in as); covered by src/lib/home/add-photos-card.test.mjs and the gates, and listed under Left for manual verification
+- [ ] Mobile viewport (375px) — no overflow, controls reachable — n/a: not driven in a browser this session (no signed-in Management login to use); covered by src/lib/photos/approval.test.mjs and the gates, and listed under Left for manual verification (Thai at 375 px is on the manual list)
+- [ ] Browser console clean — no errors or React warnings — n/a: not driven in a browser this session (no signed-in Management login to use); covered by src/lib/photos/approval.test.mjs and the gates, and listed under Left for manual verification
+- [ ] Network clean — no unexpected 4xx/5xx on the feature's pages — n/a: not driven in a browser this session (no signed-in Management login to use); covered by src/lib/photos/approval.test.mjs and the gates, and listed under Left for manual verification
 
 ## 6. Regression
 
-- [x] The pages nearest the change still work (list the ones checked) — check-home-screens.mjs, check-permission-catalogue.mjs, acceptance-matrix --check and the cards tests all pass inside lint/test; the three-row folder regression (Management four, Head of Medical Medical, volunteer Shelter) is asserted in add-photos-card.test.mjs
-- [ ] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — **by loading that page, not by reading the file**. Reading proves only that you did not edit it; loading proves the value it still supplies at runtime is the one the other page expects. The weaker reading is the tempting one — n/a: manual/en.ts, the dictionaries and routes.ts were edited; the build compiled every page that imports them (build=0), not loaded by hand
+- [x] The pages nearest the change still work (list the ones checked) — check-permission-catalogue.mjs (the resident Photos section and the new actions file are pinned in it), check-home-screens.mjs, acceptance-matrix --check and the home tests all pass inside lint/test; the profile-photo guard from #699 reads approved_at and was not edited
+- [ ] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — **by loading that page, not by reading the file**. Reading proves only that you did not edit it; loading proves the value it still supplies at runtime is the one the other page expects. The weaker reading is the tempting one — n/a: manual/en.ts, the dictionaries, routes.ts and tiles.ts were edited; the build compiled every page that imports them (build=0), not loaded by hand
 - [x] Nothing merged from `main` during `sync` was broken by this branch — sync merged one backlog line, nothing else
 
 ## 7. Documentation
 
-- [ ] Backlog item ticked in `docs/backlog.md` **on this branch** (follow-ups go on the `backlog` branch instead) — n/a: deliberately not ticked: approving is not built (docs/decisions/2026-10-17-photo-approval-schema.md); both items are annotated on the backlog branch
-- [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`) — docs/decisions/2026-10-17-add-photo-approval-queue.md
-- [x] `README.md` still accurate — it does not mention the card count or this page
-- [ ] **Release notes.** Would a shelter user notice this change? If so, `unreleased` in `src/lib/releases.ts` has a line for it, **in this PR**, written for a shelter user and not as a commit message. If not, `n/a: <why nobody would notice>`: a refactor, a script, a fix to something no user reached. The checker holds this line to the diff. A tick fails if `unreleased` gained no line. A PR touching `src/app/`, `src/components/`, `src/lib/manual/`, `src/lib/i18n/` or `worker/` fails if this line is missing, and its `n/a` reason is printed for the reviewer. An empty `unreleased` looks exactly like "nothing visible shipped", so this line is the only place that difference gets written down. **Do not tick while this PR's own decision file, README or backlog note records a step still outstanding before a user could see it (a deploy, a hand-edited file on the Pi, a setting).** A note promises the user it works now; a tick that only means "the code is in" sent #518's false note to every admin (decisions, 2026-10-11). Write `n/a: <the outstanding step>` and put the note in the PR that closes the step A PR that touches nothing but `docs/test-plans/` (a sign-off recorded after merge) has a tick checked against the merge that introduced the plan instead, so leave the feature's tick as it was. The checker finds this line by its bold **Release notes.** label, so keep the label as it is — n/a: a volunteer can file but nobody can approve, and the card is on no role until Lutan ticks it, so nothing a shelter user can see works end to end; the queue stream writes the line (2026-10-11-release-note-truth-rule.md)
+- [x] Backlog item ticked in `docs/backlog.md` **on this branch** (follow-ups go on the `backlog` branch instead) — three items ticked with the PR noted; the enclosure item is deliberately left open
+- [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`) — docs/decisions/2026-10-17-photo-approval-queue.md
+- [x] `README.md` still accurate — it does not describe photo approval
+- [x] **Release notes.** Would a shelter user notice this change? If so, `unreleased` in `src/lib/releases.ts` has a line for it, **in this PR**, written for a shelter user and not as a commit message. If not, `n/a: <why nobody would notice>`: a refactor, a script, a fix to something no user reached. The checker holds this line to the diff. A tick fails if `unreleased` gained no line. A PR touching `src/app/`, `src/components/`, `src/lib/manual/`, `src/lib/i18n/` or `worker/` fails if this line is missing, and its `n/a` reason is printed for the reviewer. An empty `unreleased` looks exactly like "nothing visible shipped", so this line is the only place that difference gets written down. **Do not tick while this PR's own decision file, README or backlog note records a step still outstanding before a user could see it (a deploy, a hand-edited file on the Pi, a setting).** A note promises the user it works now; a tick that only means "the code is in" sent #518's false note to every admin (decisions, 2026-10-11). Write `n/a: <the outstanding step>` and put the note in the PR that closes the step A PR that touches nothing but `docs/test-plans/` (a sign-off recorded after merge) has a tick checked against the merge that introduced the plan instead, so leave the feature's tick as it was. The checker finds this line by its bold **Release notes.** label, so keep the label as it is — ticked: `unreleased` gained a line saying that photos wait for Management and that the Add Shelter Photos card is given in Settings, so it does not claim any role has it; no deploy or hand step is outstanding for what it says
 - [x] Commit messages say why, not just what
 - [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** No gate reads prose: `typecheck`, `lint`, `build` and this checklist all pass with a confidently wrong explanation in the commit that ships the fix, and the wrong explanation is what the next person inherits. Worth real attention on timezone, concurrency and floating-point work, where intuition is unusually unreliable and a plausible story is easy to tell — the folder table is asserted by test, not reasoned
 
@@ -162,8 +162,8 @@ database; `lannacare.org` runs **production** (`dbkodyyxxhtygxcxmfcu`).
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| 1 | Medium | The new /api/photos/shelter/[id] route and the Waiting label were never run against Drive and the dev database in this session (no volunteer login was used), only typechecked, linted, built and unit-tested | accepted: first item on the manual list; a failure there blocks ticking the card onto Volunteer |
-| 2 | Low | The route uses the service-role client to read and once write a resident's Drive folder id, because a volunteer cannot read `residents` and there is no migration in this PR | accepted: recorded in the decision file with the migration alternative |
+| 1 | Medium | The page and both actions were never run against Drive and the dev database in this session (no signed-in Management login was used), only typechecked, linted, built and unit-tested | accepted: first item on the manual list |
+| 2 | Low | Remove deletes the row first and then trashes the Drive file; if Drive fails the file stays in the resident's Drive folder and the person is told | accepted: the quieter of the two orders, recorded in the decision file |
 
 ## Left for manual verification
 
@@ -187,11 +187,13 @@ section 8's.
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | As a disposable volunteer login holding the card: pick or take a photo, tag a resident that has a Drive folder and one that has none, and see Saved, waiting for approval. Then as Management, see it on that resident's Photos tab marked Waiting for approval, and confirm it is NOT on the public resident page | Settings → give a test role the card; /photos/add; /residents/<id>/photos |
-| 2 | Management and the Head of Medical open /photos/add and are offered the same folders as before (four; Medical only) | /photos/add as each |
-| 3 | A waiting photo's viewer shows no Set as profile photo button, and the server refuses it if forced | resident Photos tab |
-| 4 | Phone at 375 px in English and in Thai: the tile, the page with no folder choice, the waiting sentence, the badge | Home; /photos/add; resident Photos tab |
-| 5 | Ticking the card onto Volunteer, Management and the 2IC is Lutan's step, once the queue exists | Settings → Who does what |
+| 1 | As Management on a phone: with one waiting photo (file one as a disposable login holding the card, or ask Lutan), open Photos to approve, see the photo large with the right resident and who added it, tap Approve, and confirm it leaves the list, appears on the resident's page without the Waiting label and, once the site is unlocked, on the public page | Home → Photos to approve; /residents/<id>/photos |
+| 2 | Tick two photos, check the bottom button counts 2 and asks for confirmation naming the residents; there is no tick-everything button | /photos/approve |
+| 3 | Remove one: the confirmation names the resident and says the file is deleted from Drive; afterwards the photo is gone from the list and the Drive folder (it is in Drive's bin) | /photos/approve; the resident's Drive folder |
+| 4 | The home tile shows the number waiting and the number drops after approving; a resident with waiting photos shows the sentence and link | Home; resident Photos tab |
+| 5 | Phone at 375 px in English and in Thai: the large photo, the buttons, the sticky approve bar, the confirmation text | /photos/approve |
+| 6 | As a login without photos.resident_publish (the Head of Medical or a volunteer): no tile, and /photos/approve is refused | Home; /photos/approve |
+| 7 | Ticking the card onto Volunteer, Management and the 2IC is Lutan's step in Settings; nothing in this PR grants it | Settings → Who does what |
 
 ## Sign-off
 
@@ -216,7 +218,7 @@ The items in **Left for manual verification** above are for the person who looks
 
 - [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it — n/a: the list is not empty, so only the person who looked may tick it
 
-Manual verification by: pending: Lutan to try the card on a phone as a volunteer, in English and Thai, and tick it onto the roles he wants
+Manual verification by: pending: Lutan to approve, bulk approve and remove a photo on a phone, in English and Thai, once he has given himself or a test login the card
 
 ### Result
 
