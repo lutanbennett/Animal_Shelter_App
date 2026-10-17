@@ -11,6 +11,7 @@ import { groupByPlace, matchesQuery, type PickableResident } from "@/lib/medical
 import { ACTION_ICONS } from "@/components/hub-icons";
 import type { CardWaitJob } from "@/lib/residents/card-wait";
 import { ScanCardButton } from "./ScanCardButton";
+import { scanCardStrings } from "./scan-card-strings";
 
 /**
  * "Who?" for the Head of Medical's phone jobs: residents as big photo tiles, by zone then
@@ -72,7 +73,7 @@ export function ResidentPicker({
 
   return (
     <div className="flex flex-col gap-4">
-      <ScanCardButton t={t} base={base} residents={residents} onFound={onPick} job={onPick ? undefined : scanJob} />
+      <ScanCardButton strings={scanCardStrings(t)} base={base} residents={residents} onFound={onPick} job={onPick ? undefined : scanJob} />
       <form
         method="get"
         action={base}

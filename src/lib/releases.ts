@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Add Medical Photos and Record Weight open again when you come in from the menu with no resident chosen. They had stopped opening at all; the Scan card button and the R-code box on them work.",
 ];
 
 /** Newest first. */
