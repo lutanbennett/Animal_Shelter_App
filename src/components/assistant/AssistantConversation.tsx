@@ -7,7 +7,7 @@ import { parseRequest, type ParsedRequest } from "@/lib/assistant/parse";
 import { isoLocal } from "@/lib/assistant/text";
 import { isWriteIntent } from "@/lib/assistant/types";
 import type { AssistantContext } from "@/lib/assistant/data";
-import { recordAssistantTurn } from "@/app/assistant/actions";
+import { recordAssistantTurn, recordRefusedTurn } from "@/app/assistant/actions";
 import { assistantLookup, type LookupAnswer } from "@/app/assistant/lookups";
 import { AssistantCard, type AssistantOutcome } from "./AssistantCards";
 import { AssistantAnswer } from "./AssistantAnswers";
@@ -100,6 +100,12 @@ export function AssistantConversation({
 
     setTurns((prev) => [...prev, { id, request: trimmed, parsed, state }]);
     setText("");
+
+    if (state.kind === "readOnly") {
+      // Bookkeeping only: a failure here must never touch the refusal shown.
+      recordRefusedTurn(trimmed).catch(() => {});
+      return;
+    }
 
     if (!parsed) {
       // The sentences a keyword parser could not place are the test set
