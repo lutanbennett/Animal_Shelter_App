@@ -168,7 +168,7 @@ const th: Dictionary = {
       outreachNotes: "บันทึกการออกพื้นที่",
       assistant: "ผู้ช่วย",
       enclosures: "คอกและที่อยู่",
-      addPhotos: "เพิ่มรูปของศูนย์",
+      addPhotos: "เพิ่มรูปศูนย์",
     },
   },
 
@@ -3934,6 +3934,7 @@ const th: Dictionary = {
   /** งานบนมือถือของหัวหน้างานการแพทย์ (docs/decisions/2026-10-04-medical-jobs-app.md) */
   addPhotos: {
     title: "เพิ่มรูป",
+    noShelter: "บทบาทของคุณยังเพิ่มรูปของศูนย์ไม่ได้ กรุณาถามผู้อำนวยการ",
     intro: "ถ่ายหรือเลือกรูปก่อน แล้วแตะว่าในรูปคือตัวไหน",
     take: "ถ่ายรูป",
     choose: "เลือกจากโทรศัพท์",

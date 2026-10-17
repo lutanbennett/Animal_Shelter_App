@@ -1,4 +1,4 @@
-# Add Shelter Photos: a card, not a rule in the tile code
+# Add Shelter Photo: a card, not a rule in the tile code
 
 **Cause (found by reading, 2026-10-17).** The brief's candidates were all about the old derived home. Since cards
 (0194) a role that holds cards gets exactly those cards' tiles (`cardTilesFor`) and nothing else; Admin's phone home
@@ -19,8 +19,18 @@ label.
 `ResidentPicker`, the tagging path, `JOBS_OF_ROLE`, and every role's grants. Migration: none. Existing roles' cards
 are unchanged, so no home changes until someone ticks the card.
 
-**Wording (proposal, Lutan to say yes/no).** Card, tile and route label: **Add Shelter Photos** / Thai
-**เพิ่มรูปของศูนย์**, to sit beside "Add Medical Photos". The page's own heading stays "Add photos".
+**Wording (proposal, Lutan to say yes/no).** Card, tile and route label: **Add Shelter Photo** / Thai
+**เพิ่มรูปศูนย์**, to sit beside "Add Medical Photos". The page's own heading stays "Add photos".
 
-**Still Lutan's.** Ticking Add Shelter Photos onto Volunteer (and Management, which is what Admin's phone shows) in
+**Still Lutan's.** Ticking Add Shelter Photo onto Volunteer (and Management, which is what Admin's phone shows) in
 Settings → Who does what. Until he does, no volunteer has the card; the release note says only that it can now be given.
+
+**Added mid-build, Lutan's words 2026-10-17: Shelter is the only folder** on this page ("No medical, foster or adoption"),
+and the button is **Add Shelter Photo**, "separate to the add medical photo". `/photos/add` now offers Shelter and
+nothing else; a login the server does not allow Shelter sees a sentence instead of the flow.
+
+**Open question for Lutan (not settled by this PR).** The server lets a login with only `photos.resident_add` file into
+Medical alone; Shelter (and Foster, Adoption) need `photos.resident_publish` as well (`photoCategoriesFor`). So a role
+given just this card sees "Your role cannot add Shelter photos yet" until either (a) the server is changed so Add photos
+alone allows Shelter, or (b) Publish photos is ticked too. (a) widens what a volunteer may do, and a Shelter photo can
+become a resident's profile photo, which is public, so it was not done without his say-so. Lutan was asked and did not choose.

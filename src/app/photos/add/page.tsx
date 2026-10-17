@@ -12,16 +12,16 @@ import { AddPhotosFlow } from "./AddPhotosFlow";
  * server-side except this page.
  *
  * Two things are decided here, on the server, from the login:
- *  - the folders: `photoCategoriesFor` (Shelter, Medical, Foster, Adoption for a login that may publish;
- *    Medical alone otherwise, as /medical/photos). The upload routes refuse anything else regardless.
- *  - the route: a login whose only folder is Medical and who sees every clinic (the Head of Medical)
- *    cannot read `residents`, so it files through her own route; everyone else through the hub's.
+ *  - the folder: Shelter only, and only if `photoCategoriesFor` allows this login Shelter. The upload route refuses
+ *    anything else regardless. It files through the hub's route.
  */
 export default async function AddPhotosPage() {
   const { perms } = await requirePermission("photos.resident_add");
   const { t } = await getT();
-  const categories = photoCategoriesFor(perms);
-  const route = categories.length === 1 && perms.scopes.clinical === "any" ? "medical" : "staff";
+  // Shelter is the only folder this page offers (Lutan, 2026-10-17: no Medical, Foster or Adoption). Medical photos
+  // have their own page, Add Medical Photos. A login the server does not allow Shelter gets a sentence, not a flow
+  // that would be refused on every photo.
+  const categories = photoCategoriesFor(perms).filter((c) => c === "Shelter");
 
   const supabase = await createClient();
   const { residents, error } = await loadPickableResidents(supabase);
@@ -30,7 +30,11 @@ export default async function AddPhotosPage() {
     <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 md:p-6">
       <h1 className="text-2xl font-semibold text-foreground">{t.addPhotos.title}</h1>
       <p className="text-base text-muted">{t.addPhotos.intro}</p>
-      <AddPhotosFlow categories={categories} route={route} residents={residents} loadError={error} />
+      {categories.length > 0 ? (
+        <AddPhotosFlow categories={categories} route="staff" residents={residents} loadError={error} />
+      ) : (
+        <p className="rounded-lg border border-border bg-surface p-4 text-sm text-foreground">{t.addPhotos.noShelter}</p>
+      )}
     </main>
   );
 }

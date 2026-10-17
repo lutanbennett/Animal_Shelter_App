@@ -177,7 +177,7 @@ const en = {
       outreachNotes: "Outreach notes",
       assistant: "Assistant",
       enclosures: "Enclosures",
-      addPhotos: "Add Shelter Photos",
+      addPhotos: "Add Shelter Photo",
     },
   },
 
@@ -4069,6 +4069,7 @@ const en = {
   /** Add photos: take or choose the photos first, then say who is in each (/photos/add). */
   addPhotos: {
     title: "Add photos",
+    noShelter: "Your role cannot add Shelter photos yet. Ask the Director.",
     intro: "Take or choose the photos first, then tap who is in each one.",
     take: "Take a photo",
     choose: "Choose from phone",

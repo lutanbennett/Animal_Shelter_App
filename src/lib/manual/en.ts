@@ -926,11 +926,11 @@ const manual: Manual = {
           title: "Adding photos: the quick way",
           roles: ["admin", "management", "doctor"],
           activity: "photos.resident_add",
-          path: "Home → Add Shelter Photos",
+          path: "Home → Add Shelter Photo",
           intro:
             "Photo first, then the resident: you do not have to find the resident before you take the picture. The hub's Photos card still works the same.",
           steps: [
-            "Tap Add Shelter Photos on your home screen (if you do not see it, ask the Director to give your role the Add Shelter Photos card), then Take a photo, or Choose from phone to pick several at once.",
+            "Tap Add Shelter Photo on your home screen (if you do not see it, ask the Director to give your role the Add Shelter Photo card), then Take a photo, or Choose from phone to pick several at once.",
             "Your photos appear as small pictures with \"Not tagged yet\" on them. The count above them (for example \"3 of 5 tagged\") tells you how many are done.",
             "Tap a photo, then tap who is in it. Search by name, R-code or enclosure, or tap one of the quick choices: the residents you tagged last, and the others in the same enclosure. The photo is saved to that resident straight away, and the next photo is picked for you.",
             "Five photos of one dog? Tap All to the same resident, then tap the dog once. Tap One photo at a time to go back.",
@@ -941,7 +941,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "You only see Add Shelter Photos if your role may add photos to residents. Opening the address without that right is refused.",
+              text: "You only see Add Shelter Photo if your role may add photos to residents. Opening the address without that right is refused.",
             },
           ],
         },

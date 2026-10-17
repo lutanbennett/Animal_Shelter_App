@@ -75,7 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "New home card, Add Shelter Photos: take or pick photos, then tap which resident is in each. The Director can now give it to any role in Settings, and a role that has it sees the card on its home.",
+  "New home card, Add Shelter Photo: take or pick photos, then tap which resident is in each. The Director can now give it to any role in Settings, and a role that has it sees the card on its home.",
   "Management → Contacts now opens on the list of contacts, with a New contact button that opens the form on its own page; and each contact's phone, LINE, Messenger, WhatsApp and email show as small tap-to-use icons instead of written-out text, so a row fits on a phone.",
   "Add Medical Photos and Record Weight open again when you come in from the menu with no resident chosen. They had stopped opening at all; the Scan card button and the R-code box on them work.",
 ];
