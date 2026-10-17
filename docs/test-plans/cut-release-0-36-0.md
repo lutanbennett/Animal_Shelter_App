@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none — a release cut closes no backlog item |
 | Branch / worktree | `claude/cut-release-0-36-0` @ `C:\Development\Animal_Shelter_cut-release-0-36-0` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3013` (not driven — `/releases` is behind sign-in; see §5) |
-| PR | #704 |
+| PR | #705 — this plan guessed **#704 and guessed wrong**: another stream's planner-handover PR took that number in the interval. Corrected rather than left standing |
 | Tested by / date | Claude (production release manager session) / 2026-10-17 |
 | Carries a migration? | no — the release's four (`0216`–`0219`) merged in their own PRs and are applied as a release step |
 | Tested at SHA | the tip of this branch, re-run after the plan was filled in |
