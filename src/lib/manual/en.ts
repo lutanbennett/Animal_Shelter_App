@@ -926,11 +926,11 @@ const manual: Manual = {
           title: "Adding photos: the quick way",
           roles: ["admin", "management", "doctor"],
           activity: "photos.resident_add",
-          path: "Home → Add photos",
+          path: "Home → Add Shelter Photos",
           intro:
             "Photo first, then the resident: you do not have to find the resident before you take the picture. The hub's Photos card still works the same.",
           steps: [
-            "Tap Add photos on your home screen, then Take a photo, or Choose from phone to pick several at once.",
+            "Tap Add Shelter Photos on your home screen, then Take a photo, or Choose from phone to pick several at once.",
             "Your photos appear as small pictures with \"Not tagged yet\" on them. The count above them (for example \"3 of 5 tagged\") tells you how many are done.",
             "Tap a photo, then tap who is in it. Search by name, R-code or enclosure, or tap one of the quick choices: the residents you tagged last, and the others in the same enclosure. The photo is saved to that resident straight away, and the next photo is picked for you.",
             "Five photos of one dog? Tap All to the same resident, then tap the dog once. Tap One photo at a time to go back.",
@@ -941,7 +941,11 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "You only see Add photos if your role may add photos to residents. Opening the address without that right is refused.",
+              text: "You only see Add Shelter Photos if your role may add photos to residents. Opening the address without that right is refused.",
+            },
+            {
+              kind: "note",
+              text: "If your role may file Shelter photos but not publish them (a volunteer), there is no Folder choice: every photo goes in Shelter, and it waits for Management to approve it before the website can show it. Staff see it on the resident's Photos tab marked Waiting for approval; it cannot be the profile photo until it is approved.",
             },
           ],
         },
