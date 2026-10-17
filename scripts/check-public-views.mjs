@@ -333,6 +333,37 @@ if (publicNonImage) {
   console.log("skip  is_public_drive_file(): no non-image attachment in a public project folder to ask about");
 }
 
+// A Medical-folder photo is public only through a medical_ok row on a PUBLISHED appeal (0216). So every Medical
+// file the proxy would serve to anon must be backed by exactly that, and every other Medical file must be refused.
+// A photo that is public for any other reason (the "is it known?" shortcut, a view that forgot the Medical test)
+// shows up here as a Medical file anon is told yes to with no published appeal behind it.
+{
+  const medical = await fetch(
+    `${url}/rest/v1/attachments?select=id,drive_file_id&owner_type=eq.resident&sub_folder=ilike.*medical*&limit=1000`,
+    { headers: serviceHeaders },
+  ).then((r) => (r.ok ? r.json() : null));
+  const ok = await fetch(
+    `${url}/rest/v1/appeal_photos?select=attachment_id,appeals!inner(published,status)&medical_ok=eq.true&appeals.published=eq.true&limit=1000`,
+    { headers: serviceHeaders },
+  ).then((r) => (r.ok ? r.json() : null));
+  if (medical === null || ok === null) {
+    report(false, "Medical photos: list them to check none is public off an appeal", "service read failed");
+  } else {
+    const backed = new Set(ok.filter((p) => p.appeals?.status !== "draft").map((p) => p.attachment_id));
+    const leaks = [];
+    for (const m of medical) {
+      if (backed.has(m.id)) continue;
+      const answer = await anonIsPublic(m.drive_file_id);
+      if (answer !== false) leaks.push(m.drive_file_id);
+    }
+    report(
+      leaks.length === 0,
+      `Medical photos: ${medical.length} checked, none public unless on a published appeal with medical_ok`,
+      leaks.length ? `LEAK: ${leaks.join(", ")}` : "",
+    );
+  }
+}
+
 console.log(`\nProject: ${new URL(url).hostname}`);
 if (failures.length) {
   console.log(`\n${failures.length} failure(s):`);

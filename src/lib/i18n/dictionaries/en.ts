@@ -874,6 +874,7 @@ const en = {
         "translations.view": "See the website's translations",
         "donation.receipt": "Issue a donation receipt",
         "appeal.run": "Run a fundraising appeal for a sick resident",
+        "appeal.medical_photo": "Show a medical photo on a fundraising appeal (public on that appeal)",
         "assistant.ask": "Ask the assistant a question",
         "assistant.record": "Record something through the assistant",
         "website.content": "The public website's content",

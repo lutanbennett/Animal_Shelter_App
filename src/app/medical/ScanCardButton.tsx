@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Nfc } from "lucide-react";
-import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import type { ScanCardStrings } from "./scan-card-strings";
 import type { PickableResident } from "@/lib/medical/residents";
 import { residentCodeFrom } from "@/lib/tags/links";
 import type { CardWaitJob } from "@/lib/residents/card-wait";
@@ -60,13 +60,13 @@ export function residentForCard(
 }
 
 export function ScanCardButton({
-  t,
+  strings: p,
   base,
   residents,
   onFound,
   job,
 }: {
-  t: Dictionary;
+  strings: ScanCardStrings;
   /** Where a found resident opens when the picker is a plain page: `${base}?resident=<id>`. */
   base: string;
   residents: PickableResident[];
@@ -74,7 +74,6 @@ export function ScanCardButton({
   /** The job a waiting marker names where there is no Web NFC (iPhone). Without it there, no button. */
   job?: CardWaitJob;
 }) {
-  const p = t.medicalJobs.picker;
   const router = useRouter();
   const supported = useSyncExternalStore(() => () => {}, hasWebNfc, () => false);
   const [state, setState] = useState<"idle" | "waiting" | "unreadable" | "unknown" | "denied">("idle");
