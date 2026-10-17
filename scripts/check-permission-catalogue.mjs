@@ -216,6 +216,7 @@ const PINNED = {
   "/outreach/new": { guards: ['requirePermission("community.outings")'], decides: [] },
   "/outreach/[id]/edit": { guards: ['requirePermission("community.outings")'], decides: [] },
   "/management/donations/new": { guards: ['requirePermission("donation.receipt")'], decides: [] },
+  "/management/contacts/new": { guards: ['requirePermission("contacts.directory")'], decides: [] },
   "/management/shelter-friends/new": { guards: ['requirePermission("friends.manage")'], decides: [] },
   "/management/cashflow/fixed-outgoings": { guards: ['requirePermission("reports.cashflow")'], decides: [] },
   "/management/clinics/[id]/doctors": { guards: ['requirePermission("clinics.doctors")'], decides: [] },

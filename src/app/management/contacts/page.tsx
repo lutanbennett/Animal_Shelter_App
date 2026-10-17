@@ -2,7 +2,6 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CONTACT_COLUMNS, type Contact } from "@/lib/contacts/contacts";
-import { CreateContactForm } from "./CreateContactForm";
 import { ContactsTable, type ContactRow } from "./ContactsTable";
 import { ActionLink } from "@/components/ActionLink";
 import { ACTION_ICONS } from "@/components/hub-icons";
@@ -109,12 +108,21 @@ export default async function ContactsAdminPage(
             </Link>
           </p>
         </div>
-        <ActionLink
-          href="/management/shelter-friends/new"
-          label={t.shelterFriends.wizard.addButton}
-          icon={ACTION_ICONS.add}
-          iconOnlyOnMobile={false}
-        />
+        <div className="flex flex-wrap gap-2">
+          <ActionLink
+            href="/management/contacts/new"
+            label={t.management.contacts.newButton}
+            icon={ACTION_ICONS.add}
+            variant="primary"
+            iconOnlyOnMobile={false}
+          />
+          <ActionLink
+            href="/management/shelter-friends/new"
+            label={t.shelterFriends.wizard.addButton}
+            icon={ACTION_ICONS.add}
+            iconOnlyOnMobile={false}
+          />
+        </div>
       </div>
 
       {/* No larger-screen notice: opened by Management or the 2IC on a phone (decision 2026-10-07). */}
@@ -132,7 +140,11 @@ export default async function ContactsAdminPage(
           </p>
         )}
 
-        <CreateContactForm />
+        {typeof searchParams.added === "string" && searchParams.added && (
+          <p role="status" className="text-sm text-success">
+            {t.management.contacts.added(searchParams.added)}
+          </p>
+        )}
         <div className="flex flex-col gap-2">
           {(archivedCount > 0 || friendCount > 0 || onlyFriends) && (
             <p className="flex flex-wrap items-center gap-2 text-sm text-muted">

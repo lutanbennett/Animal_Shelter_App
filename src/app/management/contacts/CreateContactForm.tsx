@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -10,10 +13,21 @@ import { createContact } from "./actions";
 const inputClass =
   "rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
 
-export function CreateContactForm() {
+/**
+ * With `listHref` (the /new page) a saved contact returns to the list with
+ * "Added: <name>" shown, and Cancel links back; without it the form stays put.
+ */
+export function CreateContactForm({ listHref }: { listHref?: string }) {
   const [state, onSubmit, pending] = useKeptForm(createContact, undefined);
   const { t } = useI18n();
+  const router = useRouter();
   const f = t.management.contacts.createForm;
+
+  useEffect(() => {
+    if (listHref && state?.ok) {
+      router.push(`${listHref}?added=${encodeURIComponent(state.name ?? "")}`);
+    }
+  }, [listHref, state, router]);
 
   return (
     <form
@@ -153,6 +167,14 @@ export function CreateContactForm() {
         <ACTION_ICONS.add aria-hidden="true" className="h-4 w-4" />
         {pending ? t.common.creating : f.addButton}
       </button>
+      {listHref && (
+        <Link
+          href={listHref}
+          className="inline-flex min-h-11 items-center rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover md:min-h-0"
+        >
+          {t.common.cancel}
+        </Link>
+      )}
       {state && !state.ok && (
         <p className="w-full text-sm text-danger">{state.error}</p>
       )}

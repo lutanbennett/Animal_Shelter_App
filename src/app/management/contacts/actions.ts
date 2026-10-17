@@ -17,7 +17,7 @@ import { loadPermissions } from "@/lib/permissions/load";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
-export type ContactFormState = ActionResult<{ success: string }> | undefined;
+export type ContactFormState = ActionResult<{ success: string; name?: string }> | undefined;
 
 export type ContactFields = {
   name: string;
@@ -73,7 +73,7 @@ export async function createContact(
     if (!created.ok) return refuse(created.error);
 
     revalidateContactPages();
-    return { ok: true, success: t.management.contacts.createdContact(created.name) };
+    return { ok: true, success: t.management.contacts.createdContact(created.name), name: created.name };
   });
 }
 

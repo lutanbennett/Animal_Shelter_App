@@ -32,6 +32,8 @@ export function ContactActions({
   contact,
   size = "sm",
   mapLink,
+  showMap = true,
+  align = "end",
 }: {
   contact: ContactDetails;
   size?: "sm" | "lg";
@@ -41,6 +43,10 @@ export function ContactActions({
    * null hides the button. Left out, it is built from the address alone.
    */
   mapLink?: string | null;
+  /** False leaves the Map button out (the Management table has its own address column). */
+  showMap?: boolean;
+  /** Which edge the compact row hugs. */
+  align?: "start" | "end";
 }) {
   const { t } = useI18n();
   const a = t.contacts.actions;
@@ -53,7 +59,10 @@ export function ContactActions({
     { key: "email", href: mailtoHref(contact.email), label: a.email, value: contact.email, icon: CONTACT_ICONS.email, external: false },
     // The tile's value is the written address only — never the link (0164).
     { key: "map", href: mapLink === undefined ? mapHref(contactMapSource(contact)) : mapLink, label: a.map, value: addressText(contact.address) || null, icon: CONTACT_ICONS.map, external: true },
-  ].filter((action): action is typeof action & { href: string } => action.href !== null);
+  ].filter(
+    (action): action is typeof action & { href: string } =>
+      action.href !== null && (showMap || action.key !== "map"),
+  );
 
   if (actions.length === 0) return null;
 
@@ -80,7 +89,7 @@ export function ContactActions({
   }
 
   return (
-    <div className="flex flex-wrap justify-end gap-2">
+    <div className={`flex flex-wrap gap-2 ${align === "end" ? "justify-end" : "justify-start"}`}>
       {actions.map((action) => (
         <a
           key={action.key}
