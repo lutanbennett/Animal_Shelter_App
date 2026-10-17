@@ -1,4 +1,13 @@
-# Release handover — written 2026-10-16, after `0.34.0`
+# Release handover — written 2026-10-16 after `0.34.0`, refreshed 2026-10-17
+
+**What changed in the 2026-10-17 refresh** (this file is a snapshot, and a day of
+streams had already made parts of it wrong):
+
+- **The gate-script exit-code warning is withdrawn — it is fixed and verified.** It was the top section of this file; it is now kept as history.
+- **The vet calendar question is answered** by Lutan and no longer needs asking. See item 18.
+- **Every state row was re-read**, not carried over: production now has three pending migrations, the next free number is `0216` rather than `0213`, `unreleased` holds five notes rather than none, and no PRs are open.
+- **`main` is a full day of streams ahead of the release SHA.** The row saying so is now a standing warning rather than a count.
+- One bullet was **left alone on purpose**: another stream (`claude/ci-script-fixes-fold`) updated the `public-views` guidance below on 2026-10-16, and theirs is newer and more specific than anything this refresh knows.
 
 **What this file is.** A snapshot for whoever runs the next production release,
 written at the end of the previous one. It says where things stand *right now*,
@@ -44,10 +53,27 @@ missing one. Honouring that, from the previous edition:
 
 ---
 
-## Read this first: a gate script's exit code can contradict its own verdict
+## A gate script's exit code could contradict its own verdict — FIXED 2026-10-16
 
-**New, and it is the one thing in this file that could make you do the wrong thing
-with production.**
+**Withdrawn, and this is what withdrawing a warning looks like.** The previous
+edition put this at the top of the file as the one thing that could make you do
+the wrong thing with production. **It has since been fixed and the fix is
+verified**, so it is kept only as history and as a fallback for an old checkout.
+
+**The fix:** `3557e06e`, *Gate scripts: exit by draining, not by `process.exit`
+after fetch* (`claude/ci-script-fixes-fold`), which merged the same day the
+defect was filed. Verified rather than taken on trust —
+`node scripts/facility-map-holders.mjs --env test` now exits **0**, twice in a
+row, with no assertion line:
+
+```
+Environment: test. Roles holding facility.map: 0. Without facility.enclosures at Read: 0 (safe to retire)
+EXIT=0
+```
+
+**So on a current checkout you can read these scripts' exit codes normally
+again.** What follows is what it looked like, because the shape is worth
+recognising if you ever meet it in an older tree.
 
 `node scripts/facility-map-holders.mjs --env production` is the gate before
 `0212`. It exits 1 when a role would be stranded, so **non-zero means "DO NOT
@@ -77,10 +103,15 @@ this family of scripts and one day wave away a real one.
 > verdict and the table. A non-zero exit accompanied by an `async.c` assertion
 > line is noise. A non-zero exit WITHOUT one is a real verdict.**
 
-Most `scripts/check-*.mjs` share the shape, and CI reads some of their exit
-codes. A fix is filed on the `backlog` branch (a shared drain-then-exit helper in
-`scripts/lib/`, plus a check of which CI jobs are exposed). Until it lands, the
-rule above is what you have.
+Most `scripts/check-*.mjs` shared the shape, and CI reads some of their exit
+codes, which is why it was filed rather than worked around. **It is now fixed in
+`scripts/lib/`, so the rule above applies only to a checkout older than
+`3557e06e`.**
+
+**The part that generalises, and does not go away with the fix:** the defect hid
+because the checker was read through `| tail` and its exit code never looked at.
+That cost the `0.34.0` record PR a red `test-plan` as well. **Read exit codes
+directly, not through a pipe** — it is the same mistake in two places on one day.
 
 ---
 
@@ -90,12 +121,12 @@ rule above is what you have.
 |---|---|
 | Live everywhere | **`0.34.0`** @ `598c2e56` — production Pi, production Worker, test Pi, test Worker |
 | Previous release SHA, for the next range | **`598c2e56`** — `node scripts/release-prs.mjs 598c2e56 <the new release SHA>` |
-| Production database | `213 applied`, `No drift`, **at the moment of the release**. Expect it to have gone to one or more pending by the time you read this — that is the normal case. **Run `--status --env production` yourself; do not trust this number.** |
-| Dev database | `No drift` at the time of writing. It will go one-sided whenever a schema branch is applied to dev before merging, which is the schema-first rule working and happens most days. **Run `--drift test`; this row will be out of date.** |
-| Next free migration number | **`0213`**, cleanly. `origin/main`'s highest is `0212`, and **no unmerged branch carries anything above it** — checked by listing `supabase/migrations` on every unmerged `origin/claude/*`. This is the first release in three where the obvious answer is the right one, so still check (`git branch -a`, `gh pr list`, dev's ledger) rather than trusting this row |
-| `unreleased` notes already waiting | **0**, read off `origin/main` after the release |
-| Open PRs | **run `gh pr list`.** At the time of writing only **#679**, this release's own record PR, which merges itself. #676 and #678 both merged *after* the release and are **not** in it. #665–#675 and #677 are merged |
-| `main` is already ahead of the release SHA | **Yes — four commits**, before anyone has started the next release: `e7d21d5d` (a backlog item raised during this release), `ce7799de` (#676), `f3f7e490` (#678), `f1e59e84` (`Merge branch 'backlog'`). None is in `0.34.0`. `supabase/migrations` still tops out at `0212` and `unreleased` is still empty, so nothing here changes the two rows above — but **do not expect `main` to be sitting at the release SHA when you begin** |
+| Production database | **`213 applied`, `3 pending`** as of 2026-10-17: `0213`, `0214`, `0215`, all merged after `0.34.0` shipped. This is the normal between-releases state — production carries the last release and whatever merged since is pending for the next. **Run `--status --env production` yourself; do not trust this number.** |
+| Dev database | `No drift` when `0.34.0` shipped. It goes one-sided whenever a schema branch is applied to dev before merging, which is the schema-first rule working and happens most days. **Run `--drift test`; this row will be out of date.** |
+| Next free migration number | **`0216`** as of 2026-10-17. `origin/main`'s highest is `0215`, and **no unmerged branch carries anything** — there are no unmerged `origin/claude/*` branches at all, checked by listing `supabase/migrations` on each. Still check (`git branch -a`, `gh pr list`, dev's ledger) rather than trusting this row: it was `0213` when this file was written at the release and three migrations landed the same day |
+| `unreleased` notes already waiting | **5** as of 2026-10-17, read off `origin/main`. It was 0 at the release. **So the next release already has user-visible work in it before anyone starts.** |
+| Open PRs | **run `gh pr list`.** None open as of 2026-10-17. #665–#679 are merged; #679 was `0.34.0`'s own record PR |
+| `main` is a long way ahead of the release SHA | **Yes — a full day of streams**, and this row is the standing warning rather than a count. At the release it was four commits; by the next morning `main` had absorbed a 121-route mobile sweep, adoption stories, name-card scanning, assistant work, three migrations and several backlog merges. **Do not expect `main` to be anywhere near the release SHA when you begin, and do not reason from the previous release's quietness.** `598c2e56` remains the correct *start* of the next range |
 
 **All four builds came from the release SHA**, for the eleventh release running —
 and for the fourth running it cost nothing to make true, because `main` did not
@@ -368,7 +399,7 @@ changes, say so.**
 15. **Check what is already on test before overwriting it.** `0.33.0` found the test Pi on a feature-branch build from a verification; `0.34.0` found it on a clean `0.33.0` with nobody mid-test. Ask before destroying it.
 16. **Clear your own two worktrees — the cut and the record — once their PRs merge**, as the last step of the release. Beyond that, run `node scripts/worktree.mjs list` and read it; do not carry a leftover *count* over from this file.
 17. **Writing the cut's test plan *before* opening the PR makes the first CI run green**, where the template expects it to fail on `test-plan` by construction. `0.34.0` did this and the first run was green, the third release running. The cost is that the plan's header has to guess the PR number — `0.32.0` guessed wrong; `0.32.1`, `0.33.0` and `0.34.0` guessed right. **Then ticking the CI line is itself a commit, so a second run follows — wait for it and confirm its `headSha` matches your HEAD** with `gh run list --json databaseId,headSha,conclusion,status`, because the PR bar's cached reading can show the first run's result.
-18. **Settle the vet calendar question.** Unresolved for two releases now. It was put to Lutan on `0.34.0` and not answered; nothing depends on it and no note promises it, so the release is safe either way. The Worker's quarter-hourly sweep has no token binding and **definitely** no-ops; whether the production Pi carries `GOOGLE_CALENDAR_REFRESH_TOKEN` and `GOOGLE_CALENDAR_ID` cannot be read (refused as a production read, correctly). **Ask him directly rather than inferring, and when it is confirmed working, that is the PR that carries the release note**, per the truth rule.
+18. **The vet calendar is ANSWERED — stop asking, and do not infer it from the build environment.** Lutan, 2026-10-17: **"The vet calendar is only setup on test right now."** So on **production** it is dormant, by configuration and on purpose; on **test** it is configured. Three consequences. (a) **Two releases of guessing are closed** — `0.33.0` and `0.34.0` both recorded it as unresolved, and `0.34.0` noted that `strip-baked-env` listed `GOOGLE_CALENDAR_REFRESH_TOKEN` and `GOOGLE_CALENDAR_ID` among the 13 it removed, wondering whether that meant production was configured after all. **It did not**: that list comes from the build environment, not from production's own secrets, so it was never evidence either way. Do not repeat that inference. (b) **No release note is owed yet**, and ticking the release-notes line for the calendar would be exactly the false promise the truth rule exists to stop — a note saying it works would reach every admin while production does nothing. (c) **When he sets it up on production, that is the PR that carries the note.** Until then, if a release touches the calendar, write `n/a: configured on test only, dormant on production (Lutan, 2026-10-17)`. The read that would confirm it on the Pi is still correctly refused as a production read; you no longer need it.
 
 ---
 
