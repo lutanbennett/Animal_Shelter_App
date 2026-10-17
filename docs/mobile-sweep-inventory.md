@@ -29,7 +29,7 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/our-work` |  |  |  |
 | `/our-work/[id]` |  |  |  |
 | `/privacy` |  |  |  |
-| `/releases` |  |  |  |
+| `/releases` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/volunteer` |  |  |  |
 
 ## Account & sign-in (5)
@@ -85,19 +85,19 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/outreach/new` |  |  |  |
 | `/photos/add` |  |  |  |
 | `/r/[code]` |  |  |  |
-| `/residents` |  |  |  |
-| `/residents/[id]` |  |  |  |
-| `/residents/[id]/[section]` |  |  |  |
+| `/residents` | ok | Zone chip strip scrolls sideways inside itself by design; nothing hidden. |  |
+| `/residents/[id]` | ok | Long name wraps beside the photo; fits. |  |
+| `/residents/[id]/[section]` | ok | Housing, photos and weight sections looked at, Thai, 375 px: fit. |  |
 | `/residents/[id]/adoption-updates/[updateId]/edit` |  |  |  |
-| `/residents/[id]/adoption-updates/new` |  |  |  |
-| `/residents/[id]/deceased` |  |  |  |
-| `/residents/[id]/deceased/undo` |  |  |  |
-| `/residents/[id]/edit` |  |  |  |
-| `/residents/[id]/hospital` |  |  |  |
-| `/residents/[id]/hospital/return` |  |  |  |
-| `/residents/[id]/move` |  |  |  |
-| `/residents/[id]/rehome` |  |  |  |
-| `/residents/[id]/rehome/return` |  |  |  |
+| `/residents/[id]/adoption-updates/new` | fixed | Long resident name squeezed beside the icon and code, so the heading wrapped one word per line. Heading now flows as text on phones; desktop layout unchanged. Nothing hidden. | this branch |
+| `/residents/[id]/deceased` | fixed | Long resident name squeezed beside the icon and code, so the heading wrapped one word per line. Heading now flows as text on phones; desktop layout unchanged. Nothing hidden. | this branch |
+| `/residents/[id]/deceased/undo` | fixed | Long resident name squeezed beside the icon and code, so the heading wrapped one word per line. Heading now flows as text on phones; desktop layout unchanged. Nothing hidden. (Same markup as its sibling; the fix applied, this page itself not separately viewed.) | this branch |
+| `/residents/[id]/edit` | ok | Heading already wrapped well (not flex); form fits. Looked at, Thai. |  |
+| `/residents/[id]/hospital` | fixed | Long resident name squeezed beside the icon and code, so the heading wrapped one word per line. Heading now flows as text on phones; desktop layout unchanged. Nothing hidden. | this branch |
+| `/residents/[id]/hospital/return` | fixed | Long resident name squeezed beside the icon and code, so the heading wrapped one word per line. Heading now flows as text on phones; desktop layout unchanged. Nothing hidden. | this branch |
+| `/residents/[id]/move` | fixed | Long resident name squeezed beside the icon and code, so the heading wrapped one word per line. Heading now flows as text on phones; desktop layout unchanged. Nothing hidden. | this branch |
+| `/residents/[id]/rehome` | fixed | Long resident name squeezed beside the icon and code, so the heading wrapped one word per line. Heading now flows as text on phones; desktop layout unchanged. Nothing hidden. | this branch |
+| `/residents/[id]/rehome/return` | fixed | Long resident name squeezed beside the icon and code, so the heading wrapped one word per line. Heading now flows as text on phones; desktop layout unchanged. Nothing hidden. (Same markup as its sibling; the fix applied, this page itself not separately viewed.) | this branch |
 | `/residents/new` |  |  |  |
 
 ## Medical (18)
@@ -135,7 +135,7 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/maintenance/new` |  |  |  |
 | `/operations` |  |  |  |
 | `/operations/medication-list` |  |  |  |
-| `/projects` |  |  |  |
+| `/projects` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/projects/[id]` |  |  |  |
 | `/stocktake` |  |  |  |
 
