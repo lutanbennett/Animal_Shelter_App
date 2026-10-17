@@ -902,3 +902,4 @@ These were written as rows in `Left for manual verification` tables and sat ther
 
 
 
+- [ ] **Guard against function-valued props at client boundaries (2026-10-17, from medical-picker-crash).** The `/medical/photos` crash (docs/decisions/2026-10-17-scan-button-plain-strings.md) was a server page handing the translation dictionary, which holds functions, to a `"use client"` component. Only that one button now has a narrow type. A general guard (a lint rule that knows which files are client components and refuses `Dictionary` or any function-typed prop across them) was judged not cheap enough to half-build. Worth doing if it happens a second time.
