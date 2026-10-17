@@ -841,6 +841,7 @@ const en = {
         "photos.resident_add": "Add a photo to a resident",
         "photos.resident_manage": "Refile or remove a photo, choose the profile photo",
         "photos.resident_publish": "Put a resident's photo on the public website",
+        "photos.shelter_add": "Add a resident's photo to the Shelter folder only (shown on the website once approved)",
         "facility.enclosures": "Enclosures and zones",
         "maintenance.jobs": "Maintenance jobs: log, change, assign, cost, delete",
         "maintenance.progress": "Move a job on: in progress, blocked, completed",

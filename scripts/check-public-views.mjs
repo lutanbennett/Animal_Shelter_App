@@ -364,6 +364,33 @@ if (publicNonImage) {
   }
 }
 
+// A photo waiting for approval (0217: attachments.approved_at null) is public nowhere: not in any view, and not by
+// its direct file URL. Every such file must be refused by the proxy's own question, and none may be in the gallery.
+{
+  const waiting = await fetch(
+    `${url}/rest/v1/attachments?select=id,drive_file_id&approved_at=is.null&limit=1000`,
+    { headers: serviceHeaders },
+  ).then((r) => (r.ok ? r.json() : null));
+  if (waiting === null) {
+    report(false, "Waiting photos: list them to check none is public", "service read failed");
+  } else {
+    const leaks = [];
+    for (const w of waiting) {
+      const inGallery = await fetch(
+        `${url}/rest/v1/public_resident_photos?select=id&drive_file_id=eq.${encodeURIComponent(w.drive_file_id)}`,
+        { headers },
+      ).then((r) => (r.ok ? r.json() : []));
+      const answer = await anonIsPublic(w.drive_file_id);
+      if (answer !== false || inGallery.length) leaks.push(w.drive_file_id);
+    }
+    report(
+      leaks.length === 0,
+      `Waiting photos: ${waiting.length} checked, none public by view or by direct file URL`,
+      leaks.length ? `LEAK: ${leaks.join(", ")}` : "",
+    );
+  }
+}
+
 console.log(`\nProject: ${new URL(url).hostname}`);
 if (failures.length) {
   console.log(`\n${failures.length} failure(s):`);
