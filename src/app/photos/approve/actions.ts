@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
 import { getT } from "@/lib/i18n/get-t";
 import { loadPermissions } from "@/lib/permissions/load";
-import { canApprovePhotos } from "@/lib/photos/approval";
+import { can } from "@/lib/permissions/can";
 
 /** The most one tap may approve: a page is never "everything", and a long list is looked at in pieces. */
 const MAX_BATCH = 50;
@@ -25,7 +25,7 @@ export async function approvePhotos(ids: string[]): Promise<ActionResult<{ appro
   const { t } = await getT();
   return runAction<{ approved: number }>("photos.approve", t.common.somethingWentWrong, async () => {
     const perms = await loadPermissions();
-    if (!canApprovePhotos(perms)) return { ok: false, error: t.photoApproval.errors.notAllowed };
+    if (!can(perms, "photos.resident_publish")) return { ok: false, error: t.photoApproval.errors.notAllowed };
     const chosen = [...new Set(ids)];
     if (chosen.length === 0) return { ok: false, error: t.photoApproval.errors.nothingChosen };
     if (chosen.length > MAX_BATCH) return { ok: false, error: t.photoApproval.errors.tooMany(MAX_BATCH) };
@@ -60,7 +60,7 @@ export async function removeWaitingPhoto(attachmentId: string): Promise<ActionRe
   const { t } = await getT();
   return runAction<{ driveWarning?: string }>("photos.removeWaiting", t.common.somethingWentWrong, async () => {
     const perms = await loadPermissions();
-    if (!canApprovePhotos(perms)) return { ok: false, error: t.photoApproval.errors.notAllowed };
+    if (!can(perms, "photos.resident_publish")) return { ok: false, error: t.photoApproval.errors.notAllowed };
 
     const supabase = await createClient();
     const { data: waiting } = await supabase
