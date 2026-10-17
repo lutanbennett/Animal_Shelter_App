@@ -391,6 +391,39 @@ if (publicNonImage) {
   }
 }
 
+// An unassigned photo (0218: pending_photos, filed against an enclosure, no resident) is public nowhere: anon cannot
+// read the table, and every such file is refused by the proxy's own question and is on no public photo view.
+{
+  const anonRead = await fetch(`${url}/rest/v1/pending_photos?select=id&limit=1`, { headers });
+  report(
+    !anonRead.ok,
+    "Unassigned photos: anon cannot read pending_photos",
+    anonRead.ok ? `anon read returned ${anonRead.status}` : "",
+  );
+  const pending = await fetch(
+    `${url}/rest/v1/pending_photos?select=id,drive_file_id&limit=1000`,
+    { headers: serviceHeaders },
+  ).then((r) => (r.ok ? r.json() : null));
+  if (pending === null) {
+    report(false, "Unassigned photos: list them to check none is public", "service read failed");
+  } else {
+    const leaks = [];
+    for (const w of pending) {
+      const inGallery = await fetch(
+        `${url}/rest/v1/public_resident_photos?select=id&drive_file_id=eq.${encodeURIComponent(w.drive_file_id)}`,
+        { headers },
+      ).then((r) => (r.ok ? r.json() : []));
+      const answer = await anonIsPublic(w.drive_file_id);
+      if (answer !== false || inGallery.length) leaks.push(w.drive_file_id);
+    }
+    report(
+      leaks.length === 0,
+      `Unassigned photos: ${pending.length} checked, none public by view or by direct file URL`,
+      leaks.length ? `LEAK: ${leaks.join(", ")}` : "",
+    );
+  }
+}
+
 console.log(`\nProject: ${new URL(url).hostname}`);
 if (failures.length) {
   console.log(`\n${failures.length} failure(s):`);
