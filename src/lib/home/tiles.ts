@@ -130,10 +130,12 @@ export function cardTilesFor(held: readonly CardKey[], perms: Permissions, t: Di
  * means this login may not approve, so nothing is added.
  */
 function withApprovalTile(tiles: HomeTile[], t: Dictionary, waiting: number): HomeTile[] {
-  if (tiles.some((x) => x.href === "/photos/approve")) return tiles;
+  const badge = waiting > 0 ? { badge: t.photoApproval.tileWaiting(waiting) } : {};
+  // A home built from the registry already drew the tile (without a number); put the number on it.
+  if (tiles.some((x) => x.href === "/photos/approve")) return tiles.map((x) => (x.href === "/photos/approve" ? { ...x, ...badge } : x));
   const route = routeFor("/photos/approve");
   if (!route) return tiles;
-  return [...tiles, { href: route.path, label: route.label(t), icon: route.icon, ...(waiting > 0 ? { badge: t.photoApproval.tileWaiting(waiting) } : {}) }];
+  return [...tiles, { href: route.path, label: route.label(t), icon: route.icon, ...badge }];
 }
 
 /** Put the due-today counts on the tiles they belong to: My tasks carries the total, Maintenance its share. */
