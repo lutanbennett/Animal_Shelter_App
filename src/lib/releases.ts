@@ -75,6 +75,17 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+];
+
+/** Newest first. */
+export const releases: Release[] = [
+  {
+    version: "0.35.0",
+    date: "2026-10-17",
+    title:
+      "Adoption success stories, name-card scanning, and the app on a phone",
+    major: true,
+    notes: [
   "The app now reads properly on a phone held upright, in English and Thai. Every screen was checked at phone width: nothing scrolls sideways any more. The pages that changed most are the resident actions (Send to hospital, Move, Rehome, Record death), where a long name no longer wraps one word per line; the maintenance edit page, whose due date and Clear button no longer push the page wide; the donation appeal pages; and the outreach forms. Nothing was removed from any screen.",
   {
     text: "Adoption updates can now be published as success stories. When an adopter has told you we may show their photo and words, open the update, tick Publish to the website, type the words they agreed to share and, if you like, a first name. The animal then shows a Read their news link under its picture in Happy endings on the public adoption page, which opens a page with the photos and those words, and the same news appears on the animal's own card page. The staff note is never shown, and nothing is published unless you tick it: every existing update stays private. Untick and save to take one down.",
@@ -92,10 +103,8 @@ export const unreleased: ReleaseNote[] = [
     text: "The assistant can now record a death and place a resident with a foster carer or an adopter. Type, for example, \"Bella died yesterday, lung problems\" or \"Panda goes to foster with Khun Noi\". Nothing is recorded until you press Confirm: the card shows the resident's photo, code and where they are now, leaves the date blank unless you typed one (\"last night\" is left for you to pick), and a death asks once more in the same words as the Record death page. If a name could mean two residents, it asks which one. In English or Thai.",
     roles: ["admin", "management"],
   },
-];
-
-/** Newest first. */
-export const releases: Release[] = [
+    ],
+  },
   {
     version: "0.34.0",
     date: "2026-10-16",
