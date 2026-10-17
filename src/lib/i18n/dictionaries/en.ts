@@ -3502,6 +3502,10 @@ const en = {
       subtitle:
         "The people the shelter works with: foster and adoptive carers, volunteers and suppliers. Set them up here; only contacts of type Carer can be given a resident, and that's done from the resident's hub.",
       viewList: "Open the contact list →",
+      newButton: "New contact",
+      newTitle: "New contact",
+      newSubtitle: "Add someone the shelter works with. Cancel returns to the list.",
+      added: (name: string) => `Added: ${name}`,
       couldntLoad: "Couldn't load contacts",
       couldntLoadUsage: "Couldn't load placement counts",
       createForm: {
@@ -3535,6 +3539,7 @@ const en = {
         phone: "Phone",
         email: "Email",
         messaging: "Messaging",
+        contactDetails: "Contact",
         address: "Address",
         notes: "Notes",
         residents: "Residents",

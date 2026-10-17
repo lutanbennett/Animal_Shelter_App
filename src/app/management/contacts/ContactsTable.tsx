@@ -1,5 +1,6 @@
 "use client";
 
+import { ContactActions } from "@/components/ContactActions";
 import { ActionButton } from "@/components/ActionButton";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
@@ -76,12 +77,6 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
   const typeLocked = contact.placement_count > 0;
   const deleteBlocker =
     contact.placement_count > 0 ? c.errors.hasPlacements(contact.placement_count) : null;
-
-  const messaging = [
-    { label: c.createForm.lineId, value: contact.line_id },
-    { label: c.createForm.messenger, value: contact.messenger_id },
-    { label: c.createForm.whatsapp, value: contact.whatsapp },
-  ].filter((m) => m.value);
 
   function reset() {
     setName(contact.name);
@@ -212,35 +207,23 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
         </td>
         <td className="px-4 py-2">
           {editing ? (
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder={c.createForm.phonePlaceholder}
-              className={`${inputClass} min-w-32`}
-            />
-          ) : (
-            <span className="whitespace-nowrap text-muted">
-              {contact.phone ?? t.common.dash}
-            </span>
-          )}
-        </td>
-        <td className="px-4 py-2">
-          {editing ? (
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder={c.createForm.emailPlaceholder}
-              className={`${inputClass} min-w-40`}
-            />
-          ) : (
-            <span className="break-all text-muted">{contact.email ?? t.common.dash}</span>
-          )}
-        </td>
-        <td className="px-4 py-2">
-          {editing ? (
             <div className="flex min-w-40 flex-col gap-1">
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder={c.createForm.phonePlaceholder}
+                aria-label={c.createForm.phone}
+                className={inputClass}
+              />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder={c.createForm.emailPlaceholder}
+                aria-label={c.createForm.email}
+                className={inputClass}
+              />
               <input
                 value={lineId}
                 onChange={(e) => setLineId(e.target.value)}
@@ -265,16 +248,9 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
               />
             </div>
           ) : (
-            <dl className="flex flex-col gap-0.5 text-xs text-muted">
-              {messaging.length > 0
-                ? messaging.map((m) => (
-                    <div key={m.label} className="flex gap-1 whitespace-nowrap">
-                      <dt>{m.label}:</dt>
-                      <dd className="text-foreground">{m.value}</dd>
-                    </div>
-                  ))
-                : t.common.dash}
-            </dl>
+            // One icon per method the record has; the values are in each
+            // icon's label and tooltip, and written out on the contact's page.
+            <ContactActions contact={contact} showMap={false} align="start" />
           )}
         </td>
         <td className="px-4 py-2">
@@ -401,7 +377,7 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
       {message && (
         <tr>
           <td
-            colSpan={9}
+            colSpan={7}
             className={`px-4 pb-2 text-xs ${
               message.type === "error" ? "text-danger" : "text-success"
             }`}
@@ -425,9 +401,7 @@ export function ContactsTable({ contacts }: { contacts: ContactRow[] }) {
           <tr>
             <th className="px-4 py-2 font-medium">{h.name}</th>
             <th className="px-4 py-2 font-medium">{h.type}</th>
-            <th className="px-4 py-2 font-medium">{h.phone}</th>
-            <th className="px-4 py-2 font-medium">{h.email}</th>
-            <th className="px-4 py-2 font-medium">{h.messaging}</th>
+            <th className="px-4 py-2 font-medium">{h.contactDetails}</th>
             <th className="px-4 py-2 font-medium">{h.address}</th>
             <th className="px-4 py-2 font-medium">{h.notes}</th>
             <th className="px-4 py-2 font-medium">{h.residents}</th>
@@ -440,7 +414,7 @@ export function ContactsTable({ contacts }: { contacts: ContactRow[] }) {
           ))}
           {contacts.length === 0 && (
             <tr>
-              <td colSpan={9} className="px-4 py-6 text-center text-muted">
+              <td colSpan={7} className="px-4 py-6 text-center text-muted">
                 {h.noContacts}
               </td>
             </tr>
