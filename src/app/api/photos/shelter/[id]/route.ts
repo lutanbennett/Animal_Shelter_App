@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
@@ -20,7 +19,7 @@ import { todayIso } from "@/lib/format";
  * Why its own route: the staff route reads `residents` and writes its Drive folder id, and a volunteer reads only
  * `resident_who_and_where` (0134), so the staff route answers "Resident not found". Here the login is authorised
  * first (shelter_add, the Shelter folder, and the resident is one it can see through who-and-where), and only then
- * does the service role read and, once, write the resident's Drive folder id: the one thing the login cannot do for
+ * do two narrow database functions (0219) read and, once, write the resident's Drive folder id: the one thing the login cannot do for
  * itself. The photo is recorded as the login (record_attachment), so 0217's trigger marks it WAITING and the 0152
  * folder guards still refuse it anywhere but Shelter. Nothing here can publish a photo.
  */
@@ -82,9 +81,8 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
   }
 
   // The database answers for this login (shelter_add is checked inside the function), no service role.
-  const { data: folderRows, error: folderError } = await supabase
-    .rpc("shelter_photo_folder", { p_resident_id: id })
-    .returns<{ resident_found: boolean; drive_folder_id: string | null }[]>();
+  const { data: folderData, error: folderError } = await supabase.rpc("shelter_photo_folder", { p_resident_id: id });
+  const folderRows = folderData as { resident_found: boolean; drive_folder_id: string | null }[] | null;
   if (folderError || !folderRows?.[0]?.resident_found) {
     return NextResponse.json({ error: "Resident not found." }, { status: 404 });
   }
