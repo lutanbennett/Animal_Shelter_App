@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three). `n/a: not yet — the PR does not exist at this commit`
+- [x] CI green on the PR (runs the same three). Seen green, not assumed: run `39022118807` on `223bcad10950d2af2e748604aff0ffe7b25a1bef`, `completed/success`, all 8 checks `SUCCESS`, `MERGEABLE/CLEAN`. The `headSha` was read from `gh run list` and compared with this branch's HEAD rather than trusting the PR bar's cache. The run before it reads `cancelled` because the PR-number correction superseded it mid-run, which is expected and is not a failure
 - [x] `node scripts/check-test-plan.mjs` — `ok`, **and its exit code read directly rather than through a pipe.** That is not a formality here: reading this checker through `| tail` is what hid a failing run on the `0.34.0` record PR, and this refresh is partly about that mistake
 
 ## 3. Schema and data — *skip if no migration*
