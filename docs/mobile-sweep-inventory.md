@@ -1,4 +1,4 @@
-| `/privacy` | fixed | Contact e-mail link 22 px tall on the public pages check; now min-h-11. Nothing hidden. | this branch || `/outreach/[id]/edit` | fixed | Same cause as /outreach/new (same form). Nothing hidden. | this branch || `/outreach/new` | fixed | Sticky wizard bar assumes 24 px page padding; page had 16 px, so Thai overflowed 8 px. Page now p-6. Nothing hidden. | this branch |# Mobile sweep inventory (375 px, English and Thai)
+# Mobile sweep inventory (375 px, English and Thai)
 
 Branch `claude/mobile-sweep`. **This file is the resume point**: a route with a verdict is done; the first group with blank verdicts is where to continue.
 
@@ -15,31 +15,31 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 
 | Route | Verdict | What was wrong | Fixed in |
 |---|---|---|---|
-| `/` |  |  |  |
+| `/` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
 | `/about` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/adopt` |  |  |  |
-| `/adopt/[id]` |  |  |  |
-| `/adopt/international` |  |  |  |
+| `/adopt` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
+| `/adopt/[id]` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
+| `/adopt/international` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
 | `/adopt/stories/[id]` |  |  |  |
-| `/donate` |  |  |  |
-| `/foster` |  |  |  |
-| `/friends` |  |  |  |
+| `/donate` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
+| `/foster` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
+| `/friends` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
 | `/friends/join` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/manual` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/our-work` |  |  |  |
-| `/our-work/[id]` |  |  |  |
-| `/privacy` |  |  |  |
+| `/our-work` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
+| `/our-work/[id]` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
+| `/privacy` | fixed | Contact e-mail link was 22 px tall; now min-h-11. Nothing hidden. | this branch |
 | `/releases` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/volunteer` |  |  |  |
+| `/volunteer` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
 
 ## Account & sign-in (5)
 
 | Route | Verdict | What was wrong | Fixed in |
 |---|---|---|---|
 | `/account/password` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/login` |  |  |  |
-| `/login/forgot` |  |  |  |
-| `/login/request` |  |  |  |
+| `/login` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
+| `/login/forgot` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
+| `/login/request` | ok | Public, Thai (English also measured), 375 px: no sideways scroll, looked at. |  |
 | `/no-access` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 
 ## Admin (18)
@@ -81,8 +81,8 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/home/[role]` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/my` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/outreach` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/outreach/[id]/edit` |  |  |  |
-| `/outreach/new` |  |  |  |
+| `/outreach/[id]/edit` | fixed | Same cause and fix as /outreach/new (same form). Nothing hidden. | this branch |
+| `/outreach/new` | fixed | Sticky wizard bar assumes 24 px page padding; the page had 16 px, so Thai overflowed 8 px. Page now p-6. Nothing hidden. | this branch |
 | `/photos/add` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/r/[code]` |  |  |  |
 | `/residents` | ok | Zone chip strip scrolls sideways inside itself by design; nothing hidden. |  |
