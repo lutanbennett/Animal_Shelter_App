@@ -40,7 +40,7 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/login` |  |  |  |
 | `/login/forgot` |  |  |  |
 | `/login/request` |  |  |  |
-| `/no-access` |  |  |  |
+| `/no-access` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 
 ## Admin (18)
 
@@ -79,11 +79,11 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/enclosures/[id]` | ok | Fits. The small "inside the shelter" badge beside the zone name wraps to two short lines; cramped, nothing lost. |  |
 | `/home` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/home/[role]` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/my` |  |  |  |
-| `/outreach` |  |  |  |
+| `/my` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/outreach` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/outreach/[id]/edit` |  |  |  |
 | `/outreach/new` |  |  |  |
-| `/photos/add` |  |  |  |
+| `/photos/add` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/r/[code]` |  |  |  |
 | `/residents` | ok | Zone chip strip scrolls sideways inside itself by design; nothing hidden. |  |
 | `/residents/[id]` | ok | Long name wraps beside the photo; fits. |  |
@@ -98,7 +98,7 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/residents/[id]/move` | fixed | Long resident name squeezed beside the icon and code, so the heading wrapped one word per line. Heading now flows as text on phones; desktop layout unchanged. Nothing hidden. | this branch |
 | `/residents/[id]/rehome` | fixed | Long resident name squeezed beside the icon and code, so the heading wrapped one word per line. Heading now flows as text on phones; desktop layout unchanged. Nothing hidden. | this branch |
 | `/residents/[id]/rehome/return` | fixed | Long resident name squeezed beside the icon and code, so the heading wrapped one word per line. Heading now flows as text on phones; desktop layout unchanged. Nothing hidden. (Same markup as its sibling; the fix applied, this page itself not separately viewed.) | this branch |
-| `/residents/new` |  |  |  |
+| `/residents/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 
 ## Medical (18)
 
@@ -114,14 +114,14 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/diets/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/immunizations/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/medical/diets` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/medical/photos` |  |  |  |
-| `/medical/weight` |  |  |  |
+| `/medical/photos` | not checked: page crashes | the page crashes (server error) when opened with no resident, so there is no layout to judge. Real bug, filed on the backlog branch (ResidentPicker is passed the whole dictionary). Layout of the picker itself unseen. |  |
+| `/medical/weight` | not checked: page crashes | the page crashes (server error) when opened with no resident, so there is no layout to judge. Real bug, filed on the backlog branch (ResidentPicker is passed the whole dictionary). Layout of the picker itself unseen. |  |
 | `/prescriptions/[id]/edit` |  |  |  |
-| `/prescriptions/new` |  |  |  |
-| `/procedures/new` |  |  |  |
-| `/upcoming-visits` |  |  |  |
+| `/prescriptions/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/procedures/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/upcoming-visits` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/weight/[id]/edit` |  |  |  |
-| `/weight/new` |  |  |  |
+| `/weight/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 
 ## Operations & stock (11)
 
@@ -133,11 +133,11 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/maintenance/[id]` |  |  |  |
 | `/maintenance/[id]/edit` |  |  |  |
 | `/maintenance/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/operations` |  |  |  |
-| `/operations/medication-list` |  |  |  |
+| `/operations` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/operations/medication-list` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/projects` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/projects/[id]` |  |  |  |
-| `/stocktake` |  |  |  |
+| `/stocktake` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 
 ## Management (23)
 
