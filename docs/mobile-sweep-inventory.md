@@ -25,7 +25,7 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/foster` |  |  |  |
 | `/friends` |  |  |  |
 | `/friends/join` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/manual` |  |  |  |
+| `/manual` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/our-work` |  |  |  |
 | `/our-work/[id]` |  |  |  |
 | `/privacy` |  |  |  |
@@ -77,8 +77,8 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/e/[id]` |  |  |  |
 | `/enclosures` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/enclosures/[id]` | ok | Fits. The small "inside the shelter" badge beside the zone name wraps to two short lines; cramped, nothing lost. |  |
-| `/home` |  |  |  |
-| `/home/[role]` |  |  |  |
+| `/home` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/home/[role]` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/my` |  |  |  |
 | `/outreach` |  |  |  |
 | `/outreach/[id]/edit` |  |  |  |
@@ -112,8 +112,8 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/clinics/[id]` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/diets/[id]/edit` |  |  |  |
 | `/diets/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/immunizations/new` |  |  |  |
-| `/medical/diets` |  |  |  |
+| `/immunizations/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/medical/diets` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/medical/photos` |  |  |  |
 | `/medical/weight` |  |  |  |
 | `/prescriptions/[id]/edit` |  |  |  |
@@ -129,10 +129,10 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 |---|---|---|---|
 | `/bills` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/deliveries` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
-| `/maintenance` |  |  |  |
+| `/maintenance` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/maintenance/[id]` |  |  |  |
 | `/maintenance/[id]/edit` |  |  |  |
-| `/maintenance/new` |  |  |  |
+| `/maintenance/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/operations` |  |  |  |
 | `/operations/medication-list` |  |  |  |
 | `/projects` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
@@ -143,28 +143,28 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 
 | Route | Verdict | What was wrong | Fixed in |
 |---|---|---|---|
-| `/management` |  |  |  |
-| `/management/appeals` |  |  |  |
+| `/management` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/management/appeals` | ok | Fits. The "no donations recorded" line under each progress bar is very faint; contrast, not layout, so left and noted. |  |
 | `/management/appeals/[id]` |  |  |  |
 | `/management/appeals/[id]/preview` |  |  |  |
-| `/management/appeals/new` |  |  |  |
-| `/management/cashflow` |  |  |  |
-| `/management/cashflow/fixed-outgoings` |  |  |  |
-| `/management/clinics` |  |  |  |
-| `/management/clinics/[id]/doctors` |  |  |  |
-| `/management/contacts` |  |  |  |
-| `/management/dashboard` |  |  |  |
-| `/management/diets` |  |  |  |
-| `/management/donations` |  |  |  |
+| `/management/appeals/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/management/cashflow` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/management/cashflow/fixed-outgoings` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/management/clinics` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/management/clinics/[id]/doctors` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/management/contacts` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/management/dashboard` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/management/diets` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/management/donations` | ok | Fits. In the list, a donor name wrapping beside the payment method makes two lines sit close together; cramped, nothing lost. |  |
 | `/management/donations/[id]` |  |  |  |
-| `/management/donations/new` |  |  |  |
+| `/management/donations/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/management/medication-list` |  |  |  |
-| `/management/medications` |  |  |  |
-| `/management/purchasing` |  |  |  |
-| `/management/recurring-jobs` |  |  |  |
-| `/management/shelter-friends` |  |  |  |
-| `/management/shelter-friends/new` |  |  |  |
-| `/management/stock-usage` |  |  |  |
-| `/management/translations` |  |  |  |
+| `/management/medications` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/management/purchasing` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/management/recurring-jobs` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/management/shelter-friends` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/management/shelter-friends/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/management/stock-usage` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/management/translations` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 
 
