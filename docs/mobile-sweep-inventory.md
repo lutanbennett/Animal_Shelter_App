@@ -1,4 +1,4 @@
-| `/admin/recent-changes` | ok | Log table scrolls inside its box; cramped but nothing hidden. Candidate for a card layout later, not a defect at 375 px. | || `/admin/procedure-types` | ok | Rows stack name above count; nothing hidden. | || `/admin/immunization-types` | ok | As /admin/diets: table scrolls inside its box. | || `/admin/frequencies` | ok | As /admin/diets: table scrolls inside its box. | || `/admin/diets` | ok | Shown after Show anyway (desktop-only notice). Tables scroll inside their own box, nothing hidden. | || `/admin/medications` | ok (admin, Thai, 375 px: no overflow, looked at) |  | || `/admin/facility-map` | ok (admin, Thai, 375 px: no overflow, looked at) |  | || `/admin/enclosures` | ok (admin, Thai, 375 px: no overflow, looked at) |  | || `/admin/zones` | ok (admin, Thai, 375 px: no overflow, looked at) |  | || `/admin/who-does-what` | ok (admin, Thai, 375 px: no overflow, looked at) |  | || `/admin/website` | ok (admin, Thai, 375 px: no overflow, looked at) |  | || `/admin/status` | ok (admin, Thai, 375 px: no overflow, looked at) |  | || `/admin/blood-test-types` | ok (admin, Thai, 375 px: no overflow, looked at) |  | || `/admin` | ok (admin, Thai, 375 px: no overflow, looked at) |  | || `/account/password` | ok (admin, Thai, 375 px: no overflow, looked at) |  | || `/about` | ok (admin, Thai, 375 px: no overflow, looked at) |  | || `/privacy` | fixed | Contact e-mail link 22 px tall on the public pages check; now min-h-11. Nothing hidden. | this branch || `/outreach/[id]/edit` | fixed | Same cause as /outreach/new (same form). Nothing hidden. | this branch || `/outreach/new` | fixed | Sticky wizard bar assumes 24 px page padding; page had 16 px, so Thai overflowed 8 px. Page now p-6. Nothing hidden. | this branch |# Mobile sweep inventory (375 px, English and Thai)
+| `/privacy` | fixed | Contact e-mail link 22 px tall on the public pages check; now min-h-11. Nothing hidden. | this branch || `/outreach/[id]/edit` | fixed | Same cause as /outreach/new (same form). Nothing hidden. | this branch || `/outreach/new` | fixed | Sticky wizard bar assumes 24 px page padding; page had 16 px, so Thai overflowed 8 px. Page now p-6. Nothing hidden. | this branch |# Mobile sweep inventory (375 px, English and Thai)
 
 Branch `claude/mobile-sweep`. **This file is the resume point**: a route with a verdict is done; the first group with blank verdicts is where to continue.
 
@@ -16,7 +16,7 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | Route | Verdict | What was wrong | Fixed in |
 |---|---|---|---|
 | `/` |  |  |  |
-| `/about` |  |  |  |
+| `/about` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/adopt` |  |  |  |
 | `/adopt/[id]` |  |  |  |
 | `/adopt/international` |  |  |  |
@@ -36,7 +36,7 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 
 | Route | Verdict | What was wrong | Fixed in |
 |---|---|---|---|
-| `/account/password` |  |  |  |
+| `/account/password` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/login` |  |  |  |
 | `/login/forgot` |  |  |  |
 | `/login/request` |  |  |  |
@@ -46,24 +46,24 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 
 | Route | Verdict | What was wrong | Fixed in |
 |---|---|---|---|
-| `/admin` |  |  |  |
-| `/admin/blood-test-types` |  |  |  |
-| `/admin/diets` |  |  |  |
-| `/admin/enclosures` |  |  |  |
-| `/admin/facility-map` |  |  |  |
-| `/admin/frequencies` |  |  |  |
-| `/admin/immunization-types` |  |  |  |
-| `/admin/medications` |  |  |  |
-| `/admin/procedure-types` |  |  |  |
-| `/admin/recent-changes` |  |  |  |
+| `/admin` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/admin/blood-test-types` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/admin/diets` | ok | Shown after Show anyway (desktop-only notice). Tables scroll inside their own box; nothing hidden. |  |
+| `/admin/enclosures` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/admin/facility-map` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/admin/frequencies` | ok | As /admin/diets: table scrolls inside its box. |  |
+| `/admin/immunization-types` | ok | As /admin/diets: table scrolls inside its box. |  |
+| `/admin/medications` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/admin/procedure-types` | ok | Rows stack name above count; nothing hidden. |  |
+| `/admin/recent-changes` | ok | Log table scrolls inside its box; cramped but nothing hidden. Possible card layout later; not a defect at 375 px. |  |
 | `/admin/role-draft` |  |  |  |
 | `/admin/security` |  |  |  |
 | `/admin/security/verify` |  |  |  |
-| `/admin/status` |  |  |  |
-| `/admin/website` |  |  |  |
-| `/admin/who-does-what` |  |  |  |
+| `/admin/status` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/admin/website` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/admin/who-does-what` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/admin/who-does-what/details` |  |  |  |
-| `/admin/zones` |  |  |  |
+| `/admin/zones` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 
 ## Resident & day-to-day (30)
 
