@@ -497,6 +497,34 @@ export const ENTRIES = {
 
   "approve-photos": [
     {
+      activity: "Choose the animal for a photo tagged to an enclosure",
+      needs: "photos.resident_publish",
+      device: "phone",
+      do: "On Photos to approve, find a card that says Taken in an enclosure, resident not chosen, tap the animal in it (or search for another), and tap Assign and approve.",
+      expect: "The card leaves the list and the photo is on that animal's Photos tab, approved. Choosing two animals puts it on both, each with its own copy.",
+    },
+    {
+      activity: "Assign a photo but keep it off the website",
+      needs: "photos.resident_publish",
+      device: "phone",
+      do: "On a photo tagged to an enclosure, choose an animal, tick Keep it off the website, and tap Assign, keep private.",
+      expect: "The photo is on the animal's Photos tab marked Waiting for approval and is not on the public page.",
+    },
+    {
+      activity: "Move a waiting photo to the right animal",
+      needs: "photos.resident_manage",
+      device: "phone",
+      do: "On a waiting photo of a resident, tap Wrong animal?, then tap the right animal.",
+      expect: "The photo leaves the first animal's Photos tab, appears on the second's, and still waits for approval.",
+    },
+    {
+      activity: "Discard a photo tagged to an enclosure",
+      needs: "photos.resident_publish",
+      device: "phone",
+      do: "On a photo tagged to an enclosure, tap Discard and confirm.",
+      expect: "The card leaves the list and the tile count goes down by one.",
+    },
+    {
       activity: "Approve a photo that is waiting",
       needs: "photos.resident_publish",
       device: "phone",
@@ -516,6 +544,16 @@ export const ENTRIES = {
       device: "phone",
       do: "On Photos to approve, tap Remove under a photo you do not want and confirm.",
       expect: "It asks first and says the file is deleted from Google Drive, then the photo leaves the list.",
+    },
+  ],
+
+  "add-photos-unknown": [
+    {
+      activity: "Tag a photo to an enclosure when you do not know the animal",
+      needs: "photos.shelter_add",
+      device: "phone",
+      do: "Tap Add Shelter Photos, take a photo, tap it, tap I don't know, tag the enclosure, tap a zone, then tap an enclosure.",
+      expect: "The photo shows a tick and the enclosure's name, and reads Saved, waiting for approval. It does not appear on any resident's page.",
     },
   ],
 

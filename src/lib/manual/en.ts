@@ -935,6 +935,8 @@ const manual: Manual = {
             "Tap Approve to approve that one photo. It can then be shown on the website, and can be chosen as the resident's profile photo.",
             "To approve several at once, tick the box under each photo you have looked at, then tap the Approve button at the bottom. It asks you to confirm and names the residents. There is no tick-everything button on purpose.",
             "Tap Remove to delete a photo you do not want. It asks first, then deletes the file from the shelter's Google Drive (it stays in Drive's bin for 30 days).",
+            "Filed under the wrong animal? Tap Wrong animal? on that photo, then tap the right one. The photo moves and keeps waiting for approval.",
+            "Photos tagged to an enclosure, because the person did not know which animal it was, are listed first. See Adding photos: if you don't know the resident, below.",
           ],
           callouts: [
             {
@@ -968,6 +970,33 @@ const manual: Manual = {
             {
               kind: "note",
               text: "If your role may file Shelter photos but not publish them (a volunteer), there is no Folder choice: every photo goes in Shelter, and it waits for Management to approve it before the website can show it. Staff see it on the resident's Photos tab marked Waiting for approval; it cannot be the profile photo until it is approved.",
+            },
+          ],
+        },
+        {
+          id: "add-photos-unknown",
+          title: "Adding photos: if you don't know the resident",
+          roles: ["admin"],
+          activity: "photos.shelter_add",
+          path: "Home → Add Shelter Photos",
+          intro:
+            "You took a photo but do not know which animal is in it? Tag the enclosure you were standing in. Management then chooses the animal. The photo is not shown to anyone outside the shelter in the meantime.",
+          steps: [
+            "Tap Add Shelter Photos, then take or choose the photo, and tap it.",
+            "Tap I don't know, tag the enclosure. (If you do know who it is, tap I know who it is and carry on as usual.)",
+            "Tap the zone, then tap the enclosure you were in. The enclosures you tagged last are at the top, so a walk round one zone is quick. The photo is saved at once, and the next photo is picked for you.",
+            "Many photos from one enclosure? Tap All to the same resident, then tap the enclosure once.",
+            "Management sees the photo on Photos to approve as Taken in that enclosure, resident not chosen. They are shown the animals that were recorded in that enclosure that day, each with their own photo, or can search for anyone else. One photo can be given to several animals.",
+            "When they choose, the photo is filed in each animal's Shelter folder and approved. They can instead choose Keep it off the website: the photo is still filed, but it is not approved. They can also discard a photo.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "The list of enclosures shows the places where an animal is living now. If the enclosure you were in is empty, it may not be in the list: ask Management to add the photo to the animal instead.",
+            },
+            {
+              kind: "note",
+              text: "Management: a photo not assigned within 30 days appears on Settings → System status under Photos with no resident.",
             },
           ],
         },

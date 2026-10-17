@@ -79,10 +79,14 @@ export async function loadWaitingPhotos(supabase: SupabaseClient): Promise<Waiti
 /** The count on the home tile; undefined for a login that cannot approve, so no tile is drawn for it. */
 export async function countPhotosWaiting(supabase: SupabaseClient, perms: Permissions | null): Promise<number | undefined> {
   if (!canApprovePhotos(perms)) return undefined;
-  const { count } = await supabase
-    .from("attachments")
-    .select("id", { count: "exact", head: true })
-    .eq("owner_type", "resident")
-    .is("approved_at", null);
-  return count ?? 0;
+  const [{ count }, { count: pending }] = await Promise.all([
+    supabase
+      .from("attachments")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_type", "resident")
+      .is("approved_at", null),
+    // Photos tagged to an enclosure wait too (0218): one tile counts both kinds.
+    supabase.from("pending_photos").select("id", { count: "exact", head: true }),
+  ]);
+  return (count ?? 0) + (pending ?? 0);
 }

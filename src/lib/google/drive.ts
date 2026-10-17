@@ -322,6 +322,20 @@ export class DriveClient {
     return (await res.json()) as DriveFile;
   }
 
+  /**
+   * `files.copy` into one folder: a second Drive file with its own ID and the same bytes. Used when one photo is
+   * assigned to several residents (0218): every resident gets a file of their own, because delete, refile and
+   * set-profile-photo all assume one file is one attachment.
+   */
+  async copyFile(fileId: string, parentId: string, name?: string): Promise<DriveFile> {
+    const res = await this.request(`${DRIVE_API}/files/${encodeURIComponent(fileId)}/copy?fields=id`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=UTF-8" },
+      body: JSON.stringify({ parents: [parentId], ...(name ? { name } : {}) }),
+    });
+    return (await res.json()) as DriveFile;
+  }
+
   /** Metadata `files.update` changing only the name. */
   async renameFile(fileId: string, name: string): Promise<DriveFile> {
     const res = await this.request(
