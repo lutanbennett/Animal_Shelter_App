@@ -81,14 +81,11 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 409 });
   }
 
-  const admin = createAdminClient();
-  const { data: folderRows } = await admin
-    .from("residents")
-    .select("drive_folder_id")
-    .eq("id", id)
-    .limit(1)
-    .returns<{ drive_folder_id: string | null }[]>();
-  if (!folderRows?.[0]) {
+  // The database answers for this login (shelter_add is checked inside the function), no service role.
+  const { data: folderRows, error: folderError } = await supabase
+    .rpc("shelter_photo_folder", { p_resident_id: id })
+    .returns<{ resident_found: boolean; drive_folder_id: string | null }[]>();
+  if (folderError || !folderRows?.[0]?.resident_found) {
     return NextResponse.json({ error: "Resident not found." }, { status: 404 });
   }
 
@@ -101,8 +98,8 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
     dateToYymm(dateTaken),
   );
   if (isNewResidentFolder) {
-    // Only when there is none: this can never repoint a resident at another folder.
-    await admin.from("residents").update({ drive_folder_id: residentFolderId }).eq("id", id).is("drive_folder_id", null);
+    // Only when there is none: the function writes where drive_folder_id is null, so it can never repoint a resident.
+    await supabase.rpc("set_shelter_photo_folder", { p_resident_id: id, p_folder_id: residentFolderId });
   }
 
   const driveFileId = await uploadImageToFolder(drive, uploadFolderId, {
