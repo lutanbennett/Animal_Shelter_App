@@ -2,7 +2,7 @@
 
 Evidence: `gates: typecheck=0 lint=0 test=0 build=0`. Fix: `ScanCardButton` (use client) took the whole dictionary, which holds functions; it now takes a plain `ScanCardStrings`. Driven as an admin on dev, from the nav with nothing chosen: both pages open in English and Thai, console clean; a stubbed Web NFC read of R-0036 opened Kame, R-0036.
 
-Copy this file to the feature branch as `docs/test-plans/<feature>.md`, fill the
+Copy this file to the feature branch as `docs/test-plans/medical-picker-crash.md`, fill the
 header, and tick as you go.
 
 Every line must end up in one of three states, and CI checks this:
@@ -31,7 +31,7 @@ Never tick something you did not do, and never leave a line untouched. Anything
 that failed goes under **Defects**.
 
 **No merge without a signed-off checklist. No exceptions.** CI enforces it: a PR
-with no completed `docs/test-plans/<feature>.md` fails. Small changes are not
+with no completed `docs/test-plans/medical-picker-crash.md` fails. Small changes are not
 exempt — they are simply fast, because most lines are honestly `n/a`. Writing the
 `n/a` reason *is* the check; that is what says someone looked at everything rather
 than at the happy path.
@@ -53,7 +53,7 @@ release manager before `npm run deploy:prod`.
 |---|---|
 | Feature | medical-picker-crash |
 | Backlog item | `docs/backlog.md` → `/medical/photos` and `/medical/weight` crash when opened with no resident chosen |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/medical-picker-crash` @ `C:\Development\Animal_Shelter_medical-picker-crash` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3003` |
 | PR | pending |
 | Tested by / date | Claude, 2026-10-17 |
@@ -250,11 +250,11 @@ Automated checks by: Claude  Date: 2026-10-17
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
+has looked and explicitly asks in chat; the line then says so, e.g. `the name —
+confirmed in chat; line written by Claude at their request  Date: the date`.
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
+- `the name, then the date` — a person looked. The date is required here.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
