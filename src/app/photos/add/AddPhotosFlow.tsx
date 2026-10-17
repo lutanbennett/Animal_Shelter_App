@@ -54,11 +54,14 @@ function writeRecent(ids: string[]) {
 export function AddPhotosFlow({
   categories,
   route,
+  waits,
   residents,
   loadError,
 }: {
   categories: readonly PhotoCategory[];
-  route: "staff" | "medical";
+  route: "staff" | "medical" | "shelter";
+  /** The photos filed here wait for Management's approval; say so. */
+  waits: boolean;
   residents: PickableResident[];
   loadError: string | null;
 }) {
@@ -304,6 +307,7 @@ export function AddPhotosFlow({
         <p className="text-sm text-muted">{a.goesIn(photoFolderLabel(t, categories[0]))}</p>
       )}
       {folder === "Medical" && <p className="text-sm text-muted">{a.medicalNever}</p>}
+      {waits && <p className="text-sm font-medium text-foreground">{a.waitsNote}</p>}
 
       {photos.length === 0 ? (
         <p className="rounded-lg border border-border bg-surface p-4 text-muted">{a.noPhotos}</p>
@@ -338,7 +342,7 @@ export function AddPhotosFlow({
                   {p.tags.map((tag) => (
                     <span key={tag.residentId} className="flex flex-col gap-1">
                       <span className="flex items-center gap-1 break-words text-sm font-medium text-foreground">
-                        {tag.status === "saved" && <CheckCircle2 aria-label={a.saved} role="img" className="h-4 w-4 shrink-0 text-green-700" />}
+                        {tag.status === "saved" && <CheckCircle2 aria-label={waits ? a.savedWaiting : a.saved} role="img" className="h-4 w-4 shrink-0 text-green-700" />}
                         {tag.status === "saving" && <Loader2 aria-label={a.saving} role="img" className="h-4 w-4 shrink-0 animate-spin" />}
                         {tag.status === "failed" && <XCircle aria-label={a.failed} role="img" className="h-4 w-4 shrink-0 text-red-700" />}
                         {tag.name}

@@ -163,6 +163,16 @@ for (const r of ROUTES) {
   if (!exists) continue;
   const text = readFileSync(page, "utf8");
   const level = r.level ? `,\\s*"${r.level}"` : "";
+  if (r.alsoActivity) {
+    // Two activities open the page: it must guard with requireAnyPermission naming both.
+    const named = /requireAnyPermission\(\s*\[([^\]]*)\]/.exec(text)?.[1] ?? "";
+    eq(
+      `E ${r.path} guards with requireAnyPermission naming ${r.activity} and ${r.alsoActivity}`,
+      named.includes(`"${r.activity}"`) && named.includes(`"${r.alsoActivity}"`),
+      true,
+    );
+    continue;
+  }
   eq(
     `E ${r.path} guards with requirePermission("${r.activity}")`,
     new RegExp(`requirePermission\\(\\s*"${r.activity.replace(".", "\\.")}"${level}\\s*\\)`).test(text),

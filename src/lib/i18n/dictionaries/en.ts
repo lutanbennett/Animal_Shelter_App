@@ -177,6 +177,7 @@ const en = {
       outreachNotes: "Outreach notes",
       assistant: "Assistant",
       enclosures: "Enclosures",
+      addPhotos: "Add Shelter Photos",
     },
   },
 
@@ -745,6 +746,7 @@ const en = {
           outreach_notes: "Write up community outreach visits.",
           assistant: "Ask the assistant questions and have it record things for you.",
           enclosures: "See the enclosures, and which animal is where.",
+          add_photos: "Take or pick photos, then tap which resident is in each. They go in the Shelter folder and wait for Management to approve them before the website can show them.",
         },
       },
       title: "Who does what",
@@ -4074,6 +4076,8 @@ const en = {
     folderLabel: "Folder",
     goesIn: (folder: string) => `These go in the ${folder} folder.`,
     medicalNever: "Medical photos never go on the website.",
+    waitsNote: "Your photos wait for Management to look at them. Nobody outside the shelter sees them until then.",
+    savedWaiting: "Saved, waiting for approval",
     tagged: (done: number, total: number) => `${done} of ${total} tagged`,
     allDone: "All photos are tagged and saved.",
     whoFor: "Who is in the photo you picked?",
@@ -5827,6 +5831,9 @@ const en = {
     medicalNotProfile:
       "Medical photos never appear on the website, so one can't be the profile photo.",
     medicalTile: "Medical",
+    waitingForApproval: "Waiting for approval",
+    waitingNote: "Waiting for approval. The website does not show this photo yet.",
+    waitingProfile: "This photo is waiting for approval, so it can't be the profile photo yet.",
     moveToFolder: "Move to folder",
     moveButton: (folder: string) => `Move to ${folder}`,
     uploader: {

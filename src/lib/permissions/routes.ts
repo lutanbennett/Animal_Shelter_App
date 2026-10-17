@@ -23,6 +23,8 @@ export type RouteEntry = {
   /** The path as a person types it, no trailing slash. A page under it inherits nothing: list each page. */
   path: string;
   activity: ActivityKey;
+  /** A second yes/no activity that opens the page as well (either is enough); see requireAnyPermission. */
+  alsoActivity?: ActivityKey;
   /** The level the page needs to open. Omit for a yes/no activity. */
   level?: Level;
   /**
@@ -258,8 +260,9 @@ export const ROUTES: readonly RouteEntry[] = [
     // holding the activity; the page picks the folders and the upload route from what the login may use.
     path: "/photos/add",
     activity: "photos.resident_add",
+    alsoActivity: "photos.shelter_add",
     icon: ImagePlus,
-    label: (t) => t.addPhotos.title,
+    label: (t) => t.appHome.cards.addPhotos,
     device: "any",
     menu: false,
   },
@@ -427,6 +430,7 @@ export const ROUTES: readonly RouteEntry[] = [
 /** Whether `perms` opens this entry. */
 export function canOpen(perms: Permissions | null | undefined, route: RouteEntry): boolean {
   if (route.scope && perms?.scopes.clinical !== route.scope.clinical) return false;
+  if (route.alsoActivity && can(perms, route.alsoActivity as LevelKey)) return true;
   return can(perms, route.activity as LevelKey, route.level);
 }
 

@@ -36,6 +36,24 @@ export async function requirePermission(activity: YesNoKey | LevelKey, level: Le
 }
 
 /**
+ * The guard for a page two activities open: either one is enough. Used by /photos/add, which a login that may
+ * add photos anywhere (photos.resident_add) and a login that may add Shelter photos only (photos.shelter_add) both open.
+ * The route registry names the second as alsoActivity, and check-permission-catalogue.mjs fails when they disagree.
+ */
+export async function requireAnyPermission(activities: readonly YesNoKey[]): Promise<Guarded> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const perms = await loadPermissions();
+  if (!perms || !activities.some((a) => can(perms, a))) refuseFor(perms);
+
+  return { supabase, user, perms };
+}
+
+/**
  * The guard for a landing page (Operations, Management, Settings): a page that is a grid
  * of the pages in its section, so it has no activity of its own. It opens for whoever may open at
  * least one page the route registry puts in `section` (sectionOf: the entry's own `section`, else

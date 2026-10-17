@@ -45,14 +45,18 @@ export function uploadResidentPhoto(
   file: File,
   fields: Record<string, string>,
   onProgress: (percent: number) => void,
-  /** The Head of Medical files through her own route (/api/medical/...); everyone else through the default. */
-  route: "staff" | "medical" = "staff",
+  /** The Head of Medical files through her own route (/api/medical/...), a Shelter-only login through /api/photos/shelter; everyone else through the default. */
+  route: "staff" | "medical" | "shelter" = "staff",
 ): Promise<{ error?: string; archiveWarning?: string }> {
   return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
     xhr.open(
       "POST",
-      route === "medical" ? `/api/medical/residents/${residentId}/photos` : `/api/residents/${residentId}/photos`,
+      route === "medical"
+        ? `/api/medical/residents/${residentId}/photos`
+        : route === "shelter"
+          ? `/api/photos/shelter/${residentId}`
+          : `/api/residents/${residentId}/photos`,
     );
 
     xhr.upload.onprogress = (e) => {
