@@ -24,7 +24,7 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/donate` |  |  |  |
 | `/foster` |  |  |  |
 | `/friends` |  |  |  |
-| `/friends/join` |  |  |  |
+| `/friends/join` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/manual` |  |  |  |
 | `/our-work` |  |  |  |
 | `/our-work/[id]` |  |  |  |
@@ -69,14 +69,14 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 
 | Route | Verdict | What was wrong | Fixed in |
 |---|---|---|---|
-| `/appeals` |  |  |  |
+| `/appeals` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/appeals/[id]` |  |  |  |
-| `/assistant` |  |  |  |
-| `/contacts` |  |  |  |
-| `/contacts/[id]` |  |  |  |
+| `/assistant` | ok | Fits. Example-question buttons are 20 px tall bare buttons, already ruled in 2026-10-07-bare-buttons-lightbox. |  |
+| `/contacts` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/contacts/[id]` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/e/[id]` |  |  |  |
-| `/enclosures` |  |  |  |
-| `/enclosures/[id]` |  |  |  |
+| `/enclosures` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/enclosures/[id]` | ok | Fits. The small "inside the shelter" badge beside the zone name wraps to two short lines; cramped, nothing lost. |  |
 | `/home` |  |  |  |
 | `/home/[role]` |  |  |  |
 | `/my` |  |  |  |
@@ -105,13 +105,13 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | Route | Verdict | What was wrong | Fixed in |
 |---|---|---|---|
 | `/appointments` |  |  |  |
-| `/blood-tests/new` |  |  |  |
+| `/blood-tests/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/clinic-visits/[id]/edit` |  |  |  |
-| `/clinic-visits/new` |  |  |  |
-| `/clinics` |  |  |  |
-| `/clinics/[id]` |  |  |  |
+| `/clinic-visits/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/clinics` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/clinics/[id]` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/diets/[id]/edit` |  |  |  |
-| `/diets/new` |  |  |  |
+| `/diets/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/immunizations/new` |  |  |  |
 | `/medical/diets` |  |  |  |
 | `/medical/photos` |  |  |  |
@@ -127,8 +127,8 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 
 | Route | Verdict | What was wrong | Fixed in |
 |---|---|---|---|
-| `/bills` |  |  |  |
-| `/deliveries` |  |  |  |
+| `/bills` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
+| `/deliveries` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/maintenance` |  |  |  |
 | `/maintenance/[id]` |  |  |  |
 | `/maintenance/[id]/edit` |  |  |  |
