@@ -191,6 +191,27 @@ const PAGES = [
   "/residents/new",
   "/residents/{resident}/deceased",
   "/residents/{resident}/adoption-updates/new",
+  "/clinic-visits/{visit}/edit",
+  "/diets/{dietRow}/edit",
+  "/prescriptions/{rx}/edit",
+  "/weight/{weightRow}/edit",
+  "/management/donations/{donation}",
+  "/management/appeals/{appeal}",
+  "/management/appeals/{appeal}/preview",
+  "/appeals/{appeal}",
+  "/projects/{folder}",
+  "/maintenance/{job}",
+  "/maintenance/{job}/edit",
+  "/residents/{updateResident}/adoption-updates/{updateId}/edit",
+  "/e/{enclosure}",
+  "/r/{code}",
+  "/adopt/stories/{resident}",
+  "/appointments",
+  "/management/medication-list",
+  "/admin/role-draft",
+  "/admin/security",
+  "/admin/security/verify",
+  "/admin/who-does-what/details",
   // everyone
   "/manual",
   "/releases",
@@ -287,7 +308,27 @@ async function seed() {
   await insert("placement_history", { resident_id: ill.id, placement_type: "Intake", zone_id: zone.id, enclosure_id: enclosure.id, start_date: "2026-02-01T00:00:00Z", end_date: "2026-03-01T00:00:00Z" });
   await insert("placement_history", { resident_id: ill.id, placement_type: "SendToHospital", zone_id: zone.id, enclosure_id: enclosure.id, start_date: "2026-03-01T00:00:00Z" })
     .catch((error) => console.warn(`  warning: could not put a resident in hospital, so the Return from hospital page will be skipped (${error.message})`));
-  return { resident: resident.id, hospitalised: ill.id, enclosure: enclosure.id, clinic: clinic.id, contact: contact.id };
+  // Existing dev rows, for the pages that open one record (read only; never created or deleted here).
+  const first = async (table, column = "id") => (await service.from(table).select(column).limit(1)).data?.[0]?.[column] ?? null;
+  const update = (await service.from("adoption_updates").select("id, resident_id").limit(1)).data?.[0];
+  return {
+    resident: resident.id,
+    hospitalised: ill.id,
+    enclosure: enclosure.id,
+    clinic: clinic.id,
+    contact: contact.id,
+    visit: await first("clinic_visits"),
+    dietRow: await first("resident_diets"),
+    rx: await first("prescriptions"),
+    weightRow: await first("weight"),
+    donation: await first("donations"),
+    appeal: await first("appeals"),
+    folder: await first("project_folders"),
+    job: await first("maintenance"),
+    updateId: update?.id ?? null,
+    updateResident: update?.resident_id ?? null,
+    code: resident.resident_code,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -389,6 +430,23 @@ function measureInPage({ tolerance }) {
   // The deepest boxes that stick out are what set the width; their parents only follow.
   const deepest = out.filter((el) => !out.some((other) => other !== el && el.contains(other)));
   deepest.sort((a, b) => b.getBoundingClientRect().right - a.getBoundingClientRect().right);
+  if (!deepest.length) {
+    // Nothing sticks out on its own: a clipping box or an off-screen element is holding the page wide. Name what reaches past the screen, clipped or not.
+    const reaching = [...document.querySelectorAll("body *")]
+      .filter((el) => el.getBoundingClientRect().width > 0 && el.getBoundingClientRect().right > viewport + tolerance)
+      .sort((a, b) => b.getBoundingClientRect().right - a.getBoundingClientRect().right);
+    if (reaching.length) return { overflow, inMain: main !== document.body, culprits: reaching.slice(0, 3).map(describe) };
+    // Still nothing (a pseudo-element, a transform, an inline box): hide boxes one at a time and name the one whose removal ends the scroll.
+    const hit = [...document.querySelectorAll("body *")].filter((el) => !el.closest("nextjs-portal")).reverse().find((el) => {
+      const before = el.style.display;
+      el.style.display = "none";
+      const gone = root.scrollWidth - root.clientWidth <= tolerance;
+      el.style.display = before;
+      return gone;
+    });
+    // The first box that does it is the outermost; walk down to the innermost that still does.
+    return { overflow, inMain: main !== document.body, culprits: hit ? [describe(hit)] : [] };
+  }
   return { overflow, inMain: main !== document.body, culprits: deepest.slice(0, 3).map(describe) };
 }
 
