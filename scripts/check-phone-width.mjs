@@ -43,7 +43,7 @@
 // Exit 0: nothing overflowed and every component action is 44 px. Exit 1: at
 // least one is not. Exit 2: could not run.
 import { randomBytes } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
@@ -58,6 +58,7 @@ const args = process.argv.slice(2);
 const opt = (name) => args.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3).split(",").filter(Boolean);
 const VERBOSE = args.includes("--verbose");
 const KEEP = args.includes("--keep");
+const SHOTS = opt("shots")?.[0];
 
 const WIDTH = 375;
 /** Slack for sub-pixel rounding: a 1 px nudge is not a page you can scroll. */
@@ -609,6 +610,15 @@ async function checkPage(page, { roleName, locale, target }) {
   // Next's not-found page can answer 200 in some setups.
   const notFound = await page.evaluate(() => /could not be found|This page could not be found/i.test(document.querySelector("main")?.textContent ?? "")).catch(() => false);
   if (notFound) return { ...where, kind: "skipped", why: "not found" };
+  // Pages judged desktop-only show a notice at phone width with a Show anyway button (LargerScreenNotice); an admin who presses it must get a usable page, so press it before measuring.
+  for (const b of await page.locator("main [role=note] button").all()) await b.click().catch(() => {});
+  await settle(page);
+  if (SHOTS) {
+    // --shots=<dir>: keep what each page looks like (first 2000 px), for the by-eye pass overflow checks cannot do.
+    mkdirSync(SHOTS, { recursive: true });
+    const h = await page.evaluate(() => document.documentElement.scrollHeight).catch(() => 2000);
+    await page.screenshot({ path: join(SHOTS, `${roleName}-${locale}-${target.replace(/[^a-z0-9]+/gi, "_")}.png`), clip: { x: 0, y: 0, width: WIDTH, height: Math.min(h, 2000) } }).catch(() => {});
+  }
   let m;
   try {
     m = await page.evaluate(measureInPage, { tolerance: TOLERANCE });
