@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none. The backlog item this refresh reports as **fixed** (gate scripts exiting 127) was raised on the `backlog` branch during `0.34.0` and closed by `3557e06e`; its tick belongs to that PR, not this one |
 | Branch / worktree | `claude/handover-refresh` @ `C:\Development\Animal_Shelter_handover-refresh` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3001` (not started — no runtime surface) |
-| PR | #690 |
+| PR | #691 — the plan guessed #690; another stream took it in the interval, as #678 was taken from the `0.34.0` record plan the day before. **A guessed PR number is wrong about as often as it is right here**, so it is corrected after opening rather than trusted |
 | Tested by / date | Claude (production release manager session) / 2026-10-17 |
 | Carries a migration? | no |
 | Tested at SHA | the tip of this branch, cut from `origin/main` at `e784df44` |
