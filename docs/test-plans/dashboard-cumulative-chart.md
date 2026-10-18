@@ -37,7 +37,8 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exac — n/a: see the pasted gates line below; filled in once the final run exits clean
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exac
+gates: typecheck=0 lint=0 test=0 build=0
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
