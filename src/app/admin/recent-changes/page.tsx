@@ -199,9 +199,9 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
       {!page.error && page.entries.length === 0 ? (
         <p className="text-sm text-muted">{filtered || filters.before ? s.none : s.emptyLog}</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-surface text-muted">
+        <div className="lg:overflow-x-auto lg:rounded-lg lg:border lg:border-border">
+          <table className="block w-full text-left text-sm lg:table">
+            <thead className="hidden bg-surface text-muted lg:table-header-group">
               <tr>
                 <th className="px-3 py-2 font-medium">{s.cols.when}</th>
                 <th className="px-3 py-2 font-medium">{s.cols.who}</th>
@@ -210,25 +210,25 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
                 <th className="px-3 py-2 font-medium">{s.cols.fields}</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="block lg:table-row-group">
               {page.entries.map((e) => {
                 const isOpen = filters.open === e.id;
                 return (
-                  <tr key={e.id} className="border-t border-border align-top">
-                    <td className="whitespace-nowrap px-3 py-2 text-muted">
+                  <tr key={e.id} className="mb-3 block rounded-lg border border-border align-top lg:mb-0 lg:table-row lg:rounded-none lg:border-0 lg:border-t">
+                    <td data-label={s.cols.when} className="whitespace-nowrap px-3 py-2 text-muted block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] lg:table-cell lg:before:hidden">
                       {formatDateTime(e.at, locale)}
                     </td>
-                    <td className="px-3 py-2">
+                    <td data-label={s.cols.who} className="px-3 py-2 block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] lg:table-cell lg:before:hidden">
                       {e.actor ? (actorLabel.get(e.actor) ?? s.unknownUser) : s.filters.system}
                     </td>
-                    <td className="px-3 py-2 font-medium text-foreground">{s.kinds[e.kind]}</td>
-                    <td className="px-3 py-2">
+                    <td data-label={s.cols.what} className="px-3 py-2 font-medium text-foreground block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] lg:table-cell lg:before:hidden">{s.kinds[e.kind]}</td>
+                    <td data-label={s.cols.record} className="px-3 py-2 block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] lg:table-cell lg:before:hidden">
                       {recordCell(e)}
                       <Link className="text-xs text-muted underline" href={link({ row: e.rowId })}>
                         {s.history}
                       </Link>
                     </td>
-                    <td className="px-3 py-2">
+                    <td data-label={s.cols.fields} className="px-3 py-2 block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] lg:table-cell lg:before:hidden">
                       <div className="text-muted">
                         {e.kind === "edited"
                           ? e.changed.length > 0

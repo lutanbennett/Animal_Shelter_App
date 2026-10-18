@@ -54,7 +54,7 @@ export default async function AppealsPage() {
                 </Link>
                 <p className="text-sm text-muted">{a.forResident(x.residents?.name ?? "")}</p>
                 {raised ? (
-                  <div className="font-site text-site-ink">
+                  <div className="font-site text-foreground [--site-ink:var(--foreground)] [--site-ink-soft:var(--muted)] [--site-sand:var(--background)] [--site-line:var(--border)]">
                     <AppealProgressDisplay style="bar" compact raised={r} target={x.target_amount} locale={locale} t={t} />
                   </div>
                 ) : (
