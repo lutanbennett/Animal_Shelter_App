@@ -178,6 +178,7 @@ const en = {
       assistant: "Assistant",
       enclosures: "Enclosures",
       addPhotos: "Add Shelter Photos",
+      runAppeals: "Run fundraising appeals",
     },
   },
 
@@ -341,6 +342,8 @@ const en = {
     noneOpen: "No appeal is open right now. Every gift to the shelter still helps the animals who are here.",
     finishedHeading: "Reached their goal, or finished",
     allAppeals: "All appeals",
+    otherWaysToGive: "Other ways to give",
+    otherWaysToGiveHint: "You can give to the shelter at any time, not only to an appeal.",
     shareText: (name: string) => `Please help ${name} get the treatment they need.`,
     shareFallback: (name: string, cost: string) => `Help ${name} get treatment. The cost is ${cost}.`,
     meet: (name: string) => `Meet ${name}`,
@@ -751,6 +754,7 @@ const en = {
           assistant: "Ask the assistant questions and have it record things for you.",
           enclosures: "See the enclosures, and which animal is where.",
           add_photos: "Take or pick photos, then tap which resident is in each. They go in the Shelter folder and wait for Management to approve them before the website can show them.",
+          run_appeals: "Start, publish and close appeals for sick residents, and see how much each has raised.",
         },
       },
       title: "Who does what",
@@ -1855,6 +1859,8 @@ const en = {
       subtitle:
         "Everything on the public website that isn't a resident or a project story: photos, the wording of each page in both languages, and how to reach the shelter. Changes go live immediately.",
       couldntLoad: "Couldn't load website content",
+      appealsNote: "Fundraising appeals for sick residents are run from",
+      appealsLink: "Management → Appeals",
       tabs: {
         aria: "Website sections",
         labels: {

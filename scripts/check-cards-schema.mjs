@@ -58,8 +58,8 @@ for (const k of CARD_KEYS) {
   for (const e of CARDS[k].bundle) if (!known.has(e.activity)) fail(`card ${k} names an activity the catalogue lacks: ${e.activity}`);
   for (const i of CARDS[k].includes) if (!CARDS[i]) fail(`card ${k} includes ${i}, which is not a card`);
 }
-if (CARD_KEYS.length !== 22) fail(`the agreed set is twenty-two cards; cards.ts has ${CARD_KEYS.length}`);
-else pass("cards.ts has the twenty-two agreed cards, all naming real activities");
+if (CARD_KEYS.length !== 23) fail(`the agreed set is twenty-three cards; cards.ts has ${CARD_KEYS.length}`);
+else pass("cards.ts has the twenty-three agreed cards, all naming real activities");
 
 // ---- 1. live rows vs code
 const roles = await sql(`select id, key, kind from roles order by key`);

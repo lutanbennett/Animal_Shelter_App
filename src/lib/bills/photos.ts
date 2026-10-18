@@ -15,6 +15,8 @@ export async function loadBillPhotos(
     .from("attachments")
     .select("id, owner_id, drive_file_id, file_name")
     .eq("owner_type", ownerType)
+    // A visit can also carry a doctor's report (0220); only bills are bills.
+    .eq("purpose", "bill")
     .in("owner_id", ownerIds)
     .order("uploaded_at", { ascending: true })
     .returns<{ id: string; owner_id: string; drive_file_id: string; file_name: string | null }[]>();
