@@ -11,7 +11,7 @@
 | PR | pending: opened after this push |
 | Tested by / date | Claude, 2026-10-18 |
 | Carries a migration? | yes, 0223 (0222 is reserved for approve-photos-app) |
-| Tested at SHA | 1c9b7126 |
+| Tested at SHA | 0054ee9d |
 
 ## 1. Scope and risk
 
