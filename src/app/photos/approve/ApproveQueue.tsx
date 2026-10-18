@@ -56,17 +56,18 @@ export function ApproveQueue({
     });
   }
 
-  function approve(ids: string[], confirmFirst: boolean) {
+  async function approve(ids: string[], confirmFirst: boolean) {
+    // Ask first, transition after: a confirm awaited inside startTransition never lets the dialog commit.
+    if (confirmFirst) {
+      const names = photos.filter((p) => ids.includes(p.id)).map((p) => p.residentName);
+      const ok = await confirm({
+        title: q.bulkConfirmTitle(ids.length),
+        body: q.bulkConfirmBody(names.join(", ")),
+        confirmLabel: q.approveN(ids.length),
+      });
+      if (!ok) return;
+    }
     startTransition(async () => {
-      if (confirmFirst) {
-        const names = photos.filter((p) => ids.includes(p.id)).map((p) => p.residentName);
-        const ok = await confirm({
-          title: q.bulkConfirmTitle(ids.length),
-          body: q.bulkConfirmBody(names.join(", ")),
-          confirmLabel: q.approveN(ids.length),
-        });
-        if (!ok) return;
-      }
       setMessage(null);
       const result = await approvePhotos(ids);
       if (result.ok) {
@@ -94,15 +95,16 @@ export function ApproveQueue({
     });
   }
 
-  function remove(photo: WaitingPhoto) {
+  async function remove(photo: WaitingPhoto) {
+    // Ask first, transition after: a confirm awaited inside startTransition never lets the dialog commit.
+    const ok = await confirm({
+      title: q.removeConfirmTitle,
+      body: q.removeConfirmBody(photo.residentName),
+      consequences: [q.removeConsequence],
+      confirmLabel: q.removeConfirm,
+    });
+    if (!ok) return;
     startTransition(async () => {
-      const ok = await confirm({
-        title: q.removeConfirmTitle,
-        body: q.removeConfirmBody(photo.residentName),
-        consequences: [q.removeConsequence],
-        confirmLabel: q.removeConfirm,
-      });
-      if (!ok) return;
       setMessage(null);
       const result = await removeWaitingPhoto(photo.id);
       if (result.ok) {

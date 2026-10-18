@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Photos to approve: Discard and Remove now show their \"Are you sure?\" box, and the app no longer locks up when you press them.",
   "Who does what: if you have not yet verified with your authenticator app, the cards board now says so on the board itself, with a Verify now link, and shows greyed-out buttons instead of nothing. It used to look broken.",
 ];
 
