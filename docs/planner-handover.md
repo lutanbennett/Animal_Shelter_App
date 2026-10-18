@@ -1,10 +1,10 @@
-# Planner handover — written 2026-10-18, after NINE workstreams in ONE conversation
+# Planner handover — written 2026-10-18, after TEN workstreams in ONE conversation
 
 **What this file is.** A snapshot for whoever runs `/plan-day` next in a fresh chat. Written at the
-end of **nine workstreams planned, built and merged between 00:40 and 07:35 on 2026-10-18** — one
-morning, one chat, **three clean batches of three**, each batch set up only after the previous one
-had merged. It says where the planning loop stands, what is blocked and on whom, and what not to
-re-derive. It is **rewritten every nine workstreams or so** and is deliberately short-lived.
+end of **ten workstreams planned, built and merged on 2026-10-18** — three batches of three plus
+this handover, each batch set up only after the previous one had merged. It says where the planning
+loop stands, what is blocked and on whom, and what not to re-derive. It is **rewritten every nine or
+ten workstreams** and is deliberately short-lived.
 
 **What this file is not.** The work is `docs/backlog.md`; the plan is
 `C:\Development\Animal_Shelter_App\.plan-day.md`; the rules are `CLAUDE.md` and
@@ -14,15 +14,18 @@ are right and this file is stale — check the date at the top.
 **Read these first, in this order:**
 
 1. `CLAUDE.md` — the workstream rules, start to finish
-2. `.claude/skills/plan-day/SKILL.md` — the loop you are about to run
-3. `.plan-day.md` — this round's is short, and the measurement table is the valuable part
+2. `.claude/skills/plan-day/SKILL.md` — the loop you are about to run. **It gained two rules this
+   round, in the same PR as this file: a third estimating axis, and a stop rule for every brief.
+   Read both; they are the whole lesson of 2026-10-18**
+3. `.plan-day.md` — the measurement table is the valuable part
 4. this file
-5. **`docs/decisions/2026-10-18-doctor-report-schema.md`** — the schema decision file whose
-   *"What the app half must do"* section made its app half briefable in minutes. **It is the
-   standard. Read it before writing any schema brief.**
+5. **`docs/decisions/2026-10-18-approve-photos-schema.md`** and
+   **`docs/decisions/2026-10-18-social-shares-schema.md`** — the two schema decision files whose
+   *"What the app half must do"* sections made their app halves briefable in minutes. **They are the
+   standard. Read one before writing any schema brief.**
 
-**The branch slug is `212`, which is the true cumulative count.** The last handover's slug said
-`201` when the real figure was `203`; `203 + 9 = 212`. Recorded so nobody redoes the arithmetic.
+**The branch slug is `221`, the true cumulative count** (212 + 9 last round's figure carried
+forward + this round's). Recorded so nobody redoes the arithmetic.
 
 ---
 
@@ -38,7 +41,7 @@ concluding anything.**
 
 ---
 
-## THE BIGGEST THING ON THIS PAGE: NEVER BLOCK HIS PAID USAGE
+## THE BIGGEST THING ON THIS PAGE: NEVER BLOCK HIS PAID USAGE — AND THIS ROUND TESTED IT
 
 **Lutan, 2026-10-14: *"I am happy for you to warn me and advise but not block like this, it's
 actually unethical for you to block the usage I paid for."*** Also in memory as
@@ -52,9 +55,15 @@ actually unethical for you to block the usage I paid for."*** Also in memory as
 **Do not reintroduce a numeric stop threshold into a brief, ever.** **Model, effort, which allowance
 gets spent, and whether to start at all are all his.**
 
-**The allowance was nowhere near the constraint, for the third round running.** Nine workstreams,
-one migration, two new pages and a new chart moved *Weekly · all models* from **42% to 45%** — about
-**3% for nine streams**. Fable sat at **9%**, untouched, all day.
+**This round is the first where the allowance WAS a real constraint, and it must not be misread.**
+*Weekly · all models* went **42% → 69%** and *Weekly · Fable* **9% → 48%** in one day. **Almost all
+of that was one stream** (below). The other nine cost about 5% between them, in line with every
+previous round.
+
+**Lutan's words, 2026-10-18, after it: *"This cannot happen again - it has burnt a large portion of
+my weekly budget."*** **The answer to that is a smaller BRIEF, never a smaller allowance and never a
+token threshold in a brief.** The two `SKILL.md` rules added this round are that answer. **If a
+later session reads this as licence to gate his usage, it has misread it.**
 
 ---
 
@@ -62,235 +71,315 @@ one migration, two new pages and a new chart moved *Weekly · all models* from *
 
 | | |
 |---|---|
-| `main` when this was written | **`1b50cf87`** (#715 merged, then a `backlog` merge) |
+| `main` when this was written | **`6539dcb0`** (#729 merged, then a `backlog` merge) |
 | `backlog` branch | **in sync with `main`**, fast-forwarded and pushed |
-| Dev database | **221 applied, 221 files, 0 pending, zero drift** |
-| Next free migration number | **`0221`** (highest on `main` is `0220_doctor_report_purpose.sql`) |
+| Dev database | **224 applied, 224 files, 0 pending, zero drift** |
+| Next free migration number | **`0224`** (highest on `main` is `0223_social_shares.sql`) |
 | Production database | **the planner cannot read it.** Write the read-only script, hand Lutan the one-line command, read the result from his terminal |
-| Open backlog items | **108** |
+| Open backlog items | **112** — up from 108, because the dry run's findings were filed as items |
 | Open PRs | **none** |
-| Release | **`0.36.0` is cut, recorded and deployed.** `unreleased` carries **four** lines from today's nine streams. **`0.37.0` is NOT cut** — the release manager's session, not the planner's |
-| Leftover worktrees | **ten**, most `HELD` by their own sessions. See *Leftovers* |
+| Release | **`0.36.1` is cut, recorded and deployed.** `unreleased` carries **four** lines from today: the meme library, the posted-on-social badge, the home-screen fix and the Approve photos card. **`0.37.0` is NOT cut** — the release manager's session, and Lutan moved to it straight after this file |
+| Leftover worktrees | **eleven**, all at `0` ahead with merged PRs. See *Leftovers* |
 | Workstreams since this handover | **0 — the counter restarts here.** `.plan-day.md` carries it |
 
-**The nine, in order.** Batch 1: #707 `photo-approve-freeze`, #708 `pi-deploy-safety`, #709
-`who-does-what-verify-note`. Batch 2: #710 `doctor-report-schema`, #711 `appeals-findable`, #712
-`resident-photo-lightbox`. Batch 3: #713 `admin-tables-cards`, #714 `dashboard-cumulative-chart`
-(plus **#716**, a one-line follow-up), #715 `clinic-visit-record`.
+**The ten, in order.** Batch 1: #721 `approve-photos-schema`, #722 `deploy-pi-self-update`, #723
+`mobile-sweep-leftovers`. Batch 2: #724 `approve-photos-app`, #725 `social-shares-schema`, #727
+`fable-acceptance-dry-run` (**partial, stopped**). Batch 3: #726 `role-home-is-tiles`, #728
+`posted-on-social-app`, #729 `meme-library-app`. Plus this handover.
 
-**All nine merged. None closed unmerged. None ended with a built branch and no PR.** The two
-standing brief blocks are doing their job and must stay.
-
-**Unlike last round, this one held its shape**: three planned batches of three, no feature that grew
-to seven streams. **Both shapes are normal. Plan for three and do not be surprised by seven.**
+**All ten merged. None closed unmerged. None ended with a built branch and no PR** — including the
+one that was stopped mid-run, which is the strongest evidence yet for the two standing brief blocks.
+**Keep both verbatim.**
 
 ---
 
-## THE FINDING OF THIS ROUND: THE BANDS ARE TOO WIDE, AND THERE IS NOW ENOUGH EVIDENCE TO SAY SO
+## THE FINDING OF THIS ROUND: A PROGRAMME WAS BRIEFED AS ONE STREAM
 
-| slug | model / effort | estimated | actual | |
-|---|---|---|---|---|
-| `photo-approve-freeze` | sonnet-5-5 / low | 110–170k | **134,743** | inside |
-| `pi-deploy-safety` | sonnet-5-5 / low | 170–290k | **147,503** | **−13%** |
-| `who-does-what-verify-note` | sonnet-5-5 / low | 110–170k | **137,703** | inside |
-| `doctor-report-schema` | sonnet-5-5 / low | 140–200k | **159,587** | inside |
-| `appeals-findable` | sonnet-5-5 / low | 170–290k | **170,799** | at the floor |
-| `resident-photo-lightbox` | sonnet-5-5 / low | 170–290k | **153,476** | **−10%** |
-| `admin-tables-cards` | sonnet-5-5 / low | 170–290k | **162,245** | **−5%** |
-| `dashboard-cumulative-chart` | sonnet-5-5 / low | 250–380k | **182,292** | **−27%** |
-| `clinic-visit-record` | sonnet-5-5 / low | 280–400k | **237,951** | **−15%** |
+`fable-acceptance-dry-run` was banded **300–460k** and reached **819,980 at about 35% done** before
+Lutan stopped it. No auto-compact had happened (82% of the window, threshold 97%), so **that figure
+is real, not understated.**
 
-**Nine streams, 134,743–237,951. Five came in UNDER their band and four inside. Not one over.**
-Every figure read from `get_usage` in the same turn the merge was noticed — **the capture rule held
-nine for nine** — and `get_session` confirmed **all nine actually ran `claude-sonnet-5-5` / `low`**,
-so these rows are settings, not recommendations mistaken for settings.
+**Extrapolated, a full run was ~2.3M tokens — more than two context windows.** It was unfinishable
+in one session at any effort, on any model. **The task was not plannable as a workstream and the
+planner planned it as one. That is a planning error, not a stream failure.**
 
-**That is nineteen consecutive streams under band on those dials** (ten last round, nine today).
+### Why the old estimating rule did not catch it
 
-### The prediction that failed, and it is the useful part
+The rule was *"must this stream BUILD something to measure with?"* This stream did not —
+`scripts/acceptance-matrix.mjs` already existed — so it scored cheap. **What it actually faced was
+132 activities + 42 "must not" lines, × 6 roles × 2 languages × 2 widths, every row driven by real
+taps in a browser.**
 
-**`dashboard-cumulative-chart` was banded 250–380k specifically because it had to BUILD THE
-COUNTING** — a daily at-the-shelter series that existed nowhere, derived from `placement_history`,
-plus a cross-check. By the "must it build the instrument?" rule that is the expensive shape, and the
-last handover named it as the one real test of the bands.
+**`SKILL.md` now asks three questions, in order** (added this round, read it there):
 
-**It came in at 182,292 — 27% under — and it wrote `src/lib/management/daily-count.ts` AND
-`scripts/check-daily-count.mjs` along the way.**
+1. **Must it build the instrument?** Dear. Widen.
+2. **How many live interactions must it drive?** **Dearest, and it scales with the row count.**
+3. **Must it merely read a lot?** Cheap. Do not widen.
 
-**So the "building the instrument is expensive" rule is now doubtful**, and that matters, because it
-is the rule the planner has been using to widen bands. The one case still supporting it
-(`who-does-what-view`, +50%) is from the `claude-opus-5-5` / `medium` era and predates every process
-improvement since.
+**A walk of N items × M roles is a PROGRAMME, NOT A WORKSTREAM.** Do not brief one.
 
-### What to actually do about it
+### The sharper half: a turn costs the whole session
 
-**Narrow the bands on the next round's evidence, not before, and narrow them like this:**
+**Asked to stop, the stream (a) walked more rows its own report had already listed as not reached,
+then (b) did the correct, brief-mandated tidy-up — merge `main`, test plan, open the PR, tick CI
+once seen green.**
 
-- **A prescriptively-briefed stream on sonnet-5-5 / low is ~135k–240k, almost regardless of shape.**
-  All nine fit in that span, and so did all ten of last round.
-- **The floor is ~87k and did not move all day** (System tools ~39k · MCP ~20k · Memory 11,120 ·
-  System prompt ~10k · Skills 6,601). **That is more than half of a typical stream.**
-- **So the dominant lever on usage is HOW MANY STREAMS YOU CREATE, not how big each one is.**
-  `pi-deploy-safety` did two Next-up items for 147,503; as two streams it would have cost ~230k, and
-  the extra ~85k would have been pure floor. **Rule 8 — fold small items — is the one that pays.**
+**(b) was obedience, not error** — and it cost about **6% of the weekly Fable window on its own**,
+measured: between two readings the context grew **21,282 tokens** while Fable moved **41% → 47%**.
 
-**Keep varying nothing else.** Nineteen streams on one setting is a good baseline; spend it rather
-than muddying it.
+**Because every turn re-sends the whole context as input, the cost of a turn is the size of the
+session, not the size of the work.** At ~800k, writing one short test plan costs as much as an hour
+of early work. **The first minute of a session is its cheapest and the last is its dearest.**
 
-### The condition being measured — say this out loud every time
+Hence the new **stop rule in every brief** (`SKILL.md` step 7): told to stop, commit, say what is
+done — and **if the session is already large, do NOT merge, write a test plan or open the PR.** Say
+*"the PR is still to open"* and let the planner open it from a fresh session.
 
-Every brief in all nine was **unusually prescriptive**: it named the files, named the decision to
-be made, said what was *not* in scope and who had it, and in three cases pointed at a predecessor's
-decision file. **That is the condition producing these numbers, and it is not free** — it is paid
-for in the planning chat instead. **Do not read these figures as "streams are cheap now."**
+**That rule is a deliberately NARROW exception to the finish-line block and sits beside it, not
+instead of it.** The finish-line block exists because two streams once ended with finished work and
+no PR, and it governs every ordinary-sized session. **Do not let a later round delete either one.**
+
+### It was expensive AND worth it — do not abandon the dry run
+
+**From the Admin pass alone: 15 findings, three of them *wrong result* defects nobody knew about** —
+a bill turned into a delivery loses its cost and never attaches; a mistyped diet silently inflates
+the food forecast, purchasing and cashflow; a visit left "Scheduled" with a past time saves as
+Completed. **Four more are the acceptance checklist ITSELF being wrong**, including a control it
+tells testers to use that does not exist. Those four would have wasted the Director's and the
+staff's time on the real sign-off run.
+
+**All of them are now filed as backlog items** (that is why the open count rose to 112).
+
+**The item is reshaped on the `backlog` branch into ONE STREAM PER ROLE** — five remain
+(Management, Doctor, Volunteer, Public viewer, Signed-out visitor); **the Admin pass is done and must
+not be repeated.** The five disposable role logins already exist on dev and are listed in the
+report, so each stream can sign in at once. **Do not re-brief it as a single stream.**
 
 ---
 
-## THE OTHER FINDING: A SAVED PLAN WENT STALE INSIDE ONE MORNING
+## THE SECOND FINDING, AND IT INVALIDATES THIS ROUND'S MODEL COLUMN
 
-**`dashboard-cumulative-chart` was planned against the monthly-average reading of its item.** By the
-time its brief was written, two batches later, **Lutan had answered the item on the `backlog`
-branch** and his answer *replaced* that recommendation:
+**Lutan, 2026-10-18: *"They did bounce to fable at some point and I had to move them back"* and
+*"I set sonnet but they changed at some point in the build."***
 
-> *"Run cumulative numbers based on start number + intake - fostered - adopted - deceased +
-> returned, on a daily plot."*
+**Sessions changed model mid-run, by themselves, from the Sonnet he had set.** So:
 
-That changes the x-axis from ~12 points to ~365, and **reverses** whether fostered residents count
-as in care. **A brief written from the saved plan would have built the wrong chart.**
+- **`get_session`'s `model` is the setting AT READ TIME, not the model the stream ran on.** One
+  reading at the end cannot establish what a stream used.
+- **`role-home-is-tiles` reads `claude-fable-5-1`.** It was recommended Sonnet and Lutan says he set
+  Sonnet. **Whether that row is a bounce caught at read time or a deliberate choice cannot be told
+  from here, and it must not be presented as either.**
+- **The Fable window reading cannot be attributed cleanly**, because bounced streams spend Fable
+  where Sonnet was set. Some of 9% → 48% is the dry run, which was legitimately Fable; some may not
+  be.
 
-It was caught only because `SKILL.md` says to re-read the item fresh from the `backlog` branch **at
-the moment the brief is written**. **Last round the same failure actually cost a stream (#697,
-173,670 tokens, closed unmerged). This round it cost nothing.** The rule works; keep it.
+**So: draw NO model conclusion from this round's rows.** The **token figures stand** — context size
+is measured directly and does not depend on which model produced it. The **model attribution does
+not.**
 
-**Two smaller versions of the same trap, both hit today:**
+**And treat the older claim with the same caution.** Previous handovers said *"nineteen consecutive
+streams on `claude-sonnet-5-5` / `low`"*, built from exactly this single-reading method. **Those
+rows cannot be re-verified now.** The rule in `SKILL.md` — *record what it actually ran on, not what
+you recommended* — was right to exist and is simply not achievable from one reading.
 
-- **Line numbers shift between batches.** The dashboard item moved 481 → 482 in one morning.
-  **Locate items with `grep -n` on their title, never by a line number recorded earlier.**
-- **An item can exist on `backlog` and not on `main` at all.** The Cloudflare cache item was filed
-  *after* the morning sync, so `main` never had it — yet it was briefed, built and merged, and the
-  merge then had to bring the item across from the `backlog` side.
+**What to do next round:** either read `get_session` at the **start as well as the end** of each
+stream and say so, or **stop treating the dials as a controlled variable** and present the table as
+token figures against task shape only. **Do not publish a model finding you cannot support.** A
+false finding about the dials is worse than no finding, because it is the thing Lutan would act on.
+
+**Also tell him when a Fable reading looks higher than planned Fable work** — it may be bounced
+streams, not his choices, and he has had to move sessions back by hand.
+
+---
+
+## The bands: the streak broke, honestly
+
+| slug | estimated | actual | |
+|---|---|---|---|
+| `approve-photos-schema` | 150–230k | **144,261** | **−4% under** |
+| `deploy-pi-self-update` | 140–210k | **143,482** | at the floor |
+| `mobile-sweep-leftovers` | 150–240k | **160,310** | inside |
+| `approve-photos-app` | 170–260k | **190,875** | inside |
+| `social-shares-schema` | 140–200k | **173,981** | inside, upper end |
+| `fable-acceptance-dry-run` | 300–460k | **819,980 at ~35%** | **unfinishable; see above** |
+| `role-home-is-tiles` | 150–240k | **216,696** | inside |
+| `posted-on-social-app` | 160–250k | **288,248** | **+15% OVER** |
+| `meme-library-app` | 200–300k | **391,548** | **+31% OVER** |
+
+**Seven of nine inside or under; two over; one unfinishable.** The previous handover's narrowed
+span — *"a prescriptively-briefed stream is ~135k–240k almost regardless of shape"* — **held for the
+first seven and broke for the last two. Do not keep quoting it as a law.**
+
+**Why the two app halves ran over, and it is a planning lesson.** Both were the app halves of the
+**folded** schema PR (`social-shares-schema`, two items in one migration). **The fold saved the
+schema cost and the planner then under-banded the app halves as if they were also folded. They were
+not — they were two full features** (a whole new `/memes` section with upload, Drive folder, filters
+and search; a grid, filter, lightbox, multi-select and both dictionaries). **Folding schema does not
+fold the app work. Band each app half as the full feature it is.**
+
+**The floor held again at ~87k** (System tools ~39k · MCP ~20k · Memory ~11k · System prompt ~10–12k
+· Skills 6,601), identical across every stream. **More than half of a typical stream, so the
+dominant lever is still HOW MANY STREAMS YOU CREATE** — the batch 2 fold was right, and Rule 8
+remains the one that pays.
 
 ---
 
 ## The pattern that keeps paying: decision files as the brief
 
-**`docs/decisions/2026-10-18-doctor-report-schema.md` is the best example the repo now has.** Its
-*"What the app half must do"* section named:
+**Two more examples this round, both now standards:**
+`docs/decisions/2026-10-18-approve-photos-schema.md` and
+`docs/decisions/2026-10-18-social-shares-schema.md`. Their *"What the app half must do"* sections
+named the exact function signature and its messages, the write shape field by field, the permission
+condition **by named activity**, which check script already covers what, and what they deliberately
+did **not** do.
 
-- the exact write — `record_attachment(…, p_purpose => 'report')`, allowed values `'bill'` |
-  `'report'`, the report date in `date_taken`, **and that there is no note column**;
-- the attach points, **verified on `main`**, file by file;
-- the permission condition for read, write and the doctor's own-clinic case, **by named function**;
-- the multi-resident answer, which **contradicted the backlog item's phrasing** and was right;
-- what it deliberately did **not** do, including *"`loadBillPhotos()` must stay bill-only; do not
-  loosen it to share code."*
+**`social-shares-schema`'s went further and split that section per app half**, because it served
+two. Both app halves then shipped the same day.
 
-**`clinic-visit-record`'s brief pointed at it and said "where this disagrees with me, it is right
-and I am wrong."** That stream then closed **two** backlog items and built a new page for 237,951 —
-under its band.
+**So: when briefing a schema half, require that section explicitly, split per consumer if it serves
+more than one.** It costs the schema stream almost nothing while it still has the context.
 
-**So: when briefing a schema half, require that section explicitly.** It costs the schema stream
-almost nothing while it still has the context, and it is the highest-leverage line in the brief.
+**Both schema streams also reported a finding rather than papering over it** — see *Items whose
+remaining condition is a person*. **Keep asking for that; it is where the real defects come from.**
 
 ---
 
 ## What briefs should do
 
 Both standing blocks are in `SKILL.md` — the finish-line block at the top, the pre-push test-plan
-block at the end. **Copy both verbatim.** **No stream this round pushed a broken test plan, and none
-ended with a built branch and no PR.** What else earned its place, all used this round:
+block at the end — **plus the new stop rule beside the finish-line block.** **Copy all three
+verbatim.** No stream this round pushed a broken test plan, and none ended with a built branch and
+no PR. What else earned its place, all used this round:
 
 - **POINT AT THE PREDECESSOR'S DECISION FILE AND SAY IT OUTRANKS YOU.** Still the single
-  highest-value line.
-- **BRIEF AN OPTION, NOT A MANDATE — AND SAY WHICH IT IS.** `doctor-report-schema` was offered a
-  `purpose` column or a new enum value, with the lean and the reason; it took the column and said
-  why. `admin-tables-cards` was offered "all four pages, or just the log, and tell me which" — **it
-  chose the log only** and recorded the judgement. That is delegation working.
-- **TELL A STREAM WHAT IS *NOT* ITS SCOPE, AND WHO HAS IT.** Used in all nine; nobody crossed.
-- **SAY WHAT THE USER WILL DO BY HAND, AND FORBID DOING IT FOR THEM.** `appeals-findable` created
-  the *Run fundraising appeals* card and **granted it to nobody**, as instructed.
-- **NAME THE ONE THING THAT CAN HURT SOMEONE, AND MAKE IT A RISK THE CHANGE INTRODUCES.** Lutan
-  ruled on 2026-10-17 that naming a *pre-existing* risk wastes the stream's attention and invites
-  friction nobody asked for. Done correctly nine times: the quiet `loadBillPhotos()` breakage, the
-  first read-only door into the medical record, a plausible-but-wrong line on a chart the Director
-  reads as fact.
-- **TELL A STREAM TO REPORT A DATA PROBLEM RATHER THAN PAPER OVER IT.** New this round, and it
-  worked — see below.
-- **GIVE A SCOPE-CREEP GUARD WITH A NAMED ESCAPE.** `clinic-visit-record` was told to wire the extra
-  entry points only if each was a one-line link, and otherwise to report. It kept the stream inside
-  its band.
+  highest-value line. Both app halves had it; both shipped in one go.
+- **GIVE EVERY BRIEF A HARD DELIVERABLE BOUNDARY.** **New, and the lesson of the round.** The
+  scope-creep escape was given to three streams and **left off the largest** — the one that needed
+  it. Name the unit the stream stops at.
+- **BRIEF AN OPTION, NOT A MANDATE — AND SAY WHICH IT IS.** `deploy-pi-self-update` was offered
+  three options with a lean; it took the lean, added a `bash -n` precondition nobody had asked for
+  so a deploy **refuses before anything is swapped**, and came in at the floor. **A stream given a
+  real decision is not inherently expensive.**
+- **TELL A STREAM WHAT IS *NOT* ITS SCOPE, AND WHO HAS IT.** Used in all nine; nobody crossed. With
+  three streams in one batch touching cards, tiles and photos, the per-file ownership lines
+  (*"`meme-library-app` owns `cards.ts`; `role-home-is-tiles` must not touch it"*) are what kept
+  them apart.
+- **SAY WHAT THE USER WILL DO BY HAND, AND FORBID DOING IT FOR THEM.** `social.library` was granted
+  to nobody and the Approve photos card ticked onto no role, as instructed.
+- **NAME THE ONE THING THAT CAN HURT SOMEONE, AND MAKE IT A RISK THE CHANGE INTRODUCES.** Done nine
+  times. The sharpest was the meme library's: a joke made from a dying animal's photograph reaching
+  the open internet under the shelter's name. It wrote the refusal test first.
+- **TELL A STREAM TO REPORT A DATA PROBLEM RATHER THAN PAPER OVER IT.** Produced two real findings
+  this round (below).
 - **For a schema half, three sentences**: the feature is not usable when this merges; say so in the
-  last message; do not tick the item. Held again.
+  last message; do not tick the item. Held twice.
 
 ---
 
-## A REAL DATA PROBLEM THE CROSS-CHECK FOUND — and it is Lutan's to answer
+## RULINGS BY LUTAN THIS ROUND — settled, do not re-litigate
 
-`dashboard-cumulative-chart`'s brief said the cross-check was **part of the deliverable**, and that
-a disagreement would be *"a finding about the data, not a bug in your chart"*. It found one:
+### 1. Retired roles are excluded from the photo-approver guard
 
-> `scripts/check-daily-count.mjs`, dev, six dates across the year: **five agree. 2026-07-16 differs
-> by one** (series 80, straight count 81). Resident `853951b2-…` has a **Foster** placement
-> (2026-06-01 to 2026-09-07) whose **enclosure is Unassigned, not Fostered**. By type it is away; by
-> enclosure the app's status view reads it as Outreach.
+> *"exclude retired roles as this will future proof the system going forward."*
 
-**Either the type or the enclosure on that row is wrong, and only Lutan can say which.** The chart
-follows the placement **type**. The script will surface any further such rows.
+Answering #721's finding that the retired `staff` role counted as an approver. Shipped as `0222`,
+carried by **`approve-photos-app`** (not the schema stream) because
+`docs/decisions/2026-10-18-approve-photos-schema.md` requires the screen and the database to use the
+**same "holds the activity" test** — one stream had to change both or they would drift.
 
-**This is the shape to repeat.** A stream told to report rather than reconcile produced a finding
-about real data that nobody was looking for, at no extra cost. **Do not let a later brief soften
-this into "make the numbers agree."**
+**That put two migrations in one batch, which `CLAUDE.md` normally forbids.** It was done with
+**both numbers assigned explicitly by the planner** (0222 and 0223), so the rule's purpose — no two
+streams claiming a number, no dev schema `main` lacks — still held. **It is a documented one-off,
+not a precedent. Do not repeat it without the same explicit assignment.**
+
+The brief also forbade hard-coding `staff` ("future proof" means the next retired role falls out by
+itself) and forbade retiring or removing the role. Both held.
+
+### 2. A role's home screen is its who-does-what tiles
+
+> *"the Home Screen should be their tiles as defined by the who does what feature."*
+
+Answering the Doctor defect: sign-in sent the Doctor to `/appointments`, which their own cells
+refused, and it had blocked the phone-width harness twice. **Shipped by #726**: nothing redirects
+away from `/home` any more and `roles.home_path` is unread
+(`docs/decisions/2026-10-18-role-home-is-tiles.md`).
+
+**This item did not exist on the backlog** — the Doctor defect was only a clause inside *Choose each
+role's home tiles in Settings*. **The planner filed it from his ruling.** That is the right move:
+a ruling with no item has nothing to tick and no record.
+
+**It unblocked more than itself**: the *Mobile sweep leftovers* item is now **ticked** (its
+`/appointments` part was the last one open), and `check-menu-coverage.mjs` reports **0 orphans for
+the Doctor**, 66 left across the other five roles.
+
+**Consequence for planning:** *Choose each role's home tiles in Settings* **moved to next round on
+purpose.** His ruling defines what that panel overrides, so briefing it earlier would have designed
+against the old shape. **It is now the natural next step.**
 
 ---
 
 ## Traps in the tooling
 
-Everything in the last edition's list still holds. **`git show <rev>:<path>` LIES SILENTLY** — this
-round it returned **empty for `docs/backlog.md`**, an *undotted* path, mid-merge, and the zero
-looked exactly like "the item is not there". `git grep <pattern> <rev> -- <path>` gave the truth.
-**Never trust an empty result from `git show <rev>:<path>` in this shell, dotted or not** — the
-`CLAUDE.md` note saying `docs/backlog.md` works is too generous.
-**No long prose in `node -e` or heredocs** — use the Write tool. **`python` is the Store stub.**
-**`gh` reports `mergeStateStatus: UNKNOWN` for a MERGED PR.** **`worktree.mjs new` can exceed the
-tool timeout on `npm ci`**, but the folder and `.port` exist well before it finishes. **Split
-`git add` from `git commit`** — chained, the auto-mode classifier refuses them as "Modify Shared
-Resources".
+Everything in the last edition's list still holds. **`git show <rev>:<path>` LIES SILENTLY** — never
+trust an empty result in this shell, dotted path or not; use
+`git grep <pattern> <rev> -- <path>`. **No long prose in `node -e` or heredocs** — use the Write
+tool. **`python` is the Store stub.** **`gh` reports `mergeStateStatus: UNKNOWN`** for a merged PR
+*and* for an open one GitHub has not finished computing — **green checks plus `UNKNOWN` is not a
+conflict; look again before concluding.** **`worktree.mjs new` can exceed the tool timeout on
+`npm ci`**, but the folder and `.port` exist well before it finishes. **Split `git add` from
+`git commit`.** **The Write tool refuses to overwrite a file this session has not read** — `rm` it
+and Write it as new rather than re-reading 460 lines.
 
-**New, small, and it will catch someone:** the **Write tool refuses to overwrite a file this
-session has not read**, which bites when rewriting this handover in a fresh worktree. `rm` the file
-first and Write it as new, rather than burning context re-reading 480 lines you have already read
-on `main`.
+### NEW: the backlog moves under you WITHIN a single session
 
-### `git merge backlog`: conflicted once in three merges today
+**Not just between batches.** This round Lutan filed an item mid-conversation and **every line
+number shifted**. Three items had already been read by line number and came back as three
+*different*, already-completed items — which looks exactly like "the work is done, do not plan it".
 
-**Expect one, but it is not every time.** Batches 2 and 3 merged clean; batch 1 conflicted.
+**Locate items with `grep -n` on their title, every time, even minutes after reading the file.**
+Re-run `git merge backlog` before briefing. **A line number is never a durable reference here.**
 
-**The method, which takes a minute:** extract both sides with `sed`, normalise the tick
-(`sed 's/^- \[.\]/- [X]/'`), `diff` them. **If the only difference is the tick and an added note,
-take the ticked side without further thought** — `main` is the backlog line plus the tick plus a
-*Done* note, so it is strictly newer. Both differences were exactly that.
+### NEW: another session may resolve or commit under you
 
-**The new wrinkle: one side may hold an item the other has never seen.** The resolution is a **plain
-union with no editorial change** — bring the unseen item across in its filed position and take the
-ticked lines from `main`. **Do not reword an item during a merge**; rewording belongs on the
-`backlog` branch.
+The daily `git merge backlog` conflicted. Mid-resolution the conflict markers vanished from the
+working file, and a `git add` succeeded while the following `git commit` reported *nothing to
+commit* — **another session had resolved and committed it in between.**
+
+**So: before resolving, check whether it is still yours to resolve; after a surprising "nothing to
+commit", read the log rather than assuming your work was lost.** Nothing was.
+
+### `git merge backlog`: the conflict method, which worked again
+
+**Expect one roughly every third merge.** The method: extract both sides with `sed`, normalise the
+tick (`sed 's/^- \[.\]/- [X]/'`), `diff`. **If `main`'s line is strictly longer and differs only
+where the `backlog` line ends, it is the backlog line plus a tick and a note — take `main`'s side
+without further thought.** Both blocks were exactly that this round.
+
+**The wrinkle again: one side held items the other had never seen.** The resolution is a **plain
+union with no editorial change** — bring the unseen items across in their filed position, take the
+ticked lines from `main`. **Never reword an item during a merge.**
 
 Then **`node scripts/check-backlog-sections.mjs` with the path passed explicitly**:
 `node scripts/check-backlog-sections.mjs ../Animal_Shelter_Backlog/docs/backlog.md`. The script
-resolves its default **relative to itself**, so the App checkout's copy always checks the App's
-file whichever directory you stand in. **A silent pass on the wrong file is worse than no check.**
+resolves its default **relative to itself**. **A silent pass on the wrong file is worse than no
+check.**
 
 ---
 
-## Leftovers — ten worktrees
+## Leftovers — eleven worktrees
 
-- **`Animal_Shelter_photo-card-reachable` — KEEP.** `ahead 5`, `free`, **no open PR because its PR
-  was CLOSED, not merged**, and `shelter-photos-card` started from it. **The one documented
-  exception to "ahead with no PR is unsubmitted work".** Worth keeping until `0.37.0` ships.
-- **`Animal_Shelter_photo-approval-queue`** — dirty with junk, 0 ahead, `free`, PR merged.
-  `done --force` clears it.
-- **This round's nine, plus `planner-handover-212`**, are `HELD` by their own sessions while those
-  are open. **Close the sessions first; ask, do not tear one down.** `/clean-streams` does the round.
+**All eleven of this round's streams are at `0` ahead with merged PRs**, which makes every one a
+leftover: `approve-photos-schema`, `approve-photos-app`, `deploy-pi-self-update`,
+`mobile-sweep-leftovers`, `social-shares-schema`, `fable-acceptance-dry-run`, `role-home-is-tiles`,
+`posted-on-social-app`, `meme-library-app`, plus `planner-handover-221` once this merges.
+
+**Most will still be `HELD` by their own sessions. Close the sessions first; ask, do not tear one
+down.** `/clean-streams` does the round.
+
+**Before clearing `fable-acceptance-dry-run`, read its report.** It left a **standing admin login on
+dev** — `dryrun-admin-20261018@example.test`, full admin with an approved authenticator app, TOTP
+secret in that worktree's **gitignored `.env.local`**. **Clearing the worktree destroys the secret
+but not the account.** Archive it in Settings → Security, and do not lose track of it.
 
 **The rule that matters more than the count:** ahead with **no** PR is unsubmitted work, and
 `done`ing it destroys a day's build; ahead with a **merged** PR is a leftover, because a
@@ -298,17 +387,24 @@ squash-merged branch stays ahead for ever.
 
 ---
 
-## BEFORE THE NEXT PRODUCTION DEPLOY — two things from today
+## BEFORE THE NEXT PRODUCTION DEPLOY
 
-**These are the release manager's, but they will be missed if this file does not say them.**
+**These are the release manager's, but they will be missed if this file does not say them.** Lutan
+moved straight to a release after this file was written, so **they are live.**
 
-1. **`0220` must be applied to production BEFORE this round's app code deploys.**
-   `loadBillPhotos()` and the Bills inbox now select on `attachments.purpose`. Deploy the code
-   first and **both error**. (`docs/decisions/2026-10-18-doctor-report-schema.md`, "Production".)
-2. **A Cloudflare cache purge is now a runbook step after every Pi deploy**, added by #708 to
-   `docs/release-procedure.md`, with `scripts/pi/check-assets.mjs` to catch it when missed. Until
-   someone automates it, **a Pi deploy without a purge can serve a year-long broken stylesheet to
-   whichever edge is unlucky** — it reached a real user on a real phone on 2026-10-17.
+1. **`0222` and `0223` must be applied to production BEFORE this round's app code deploys.** `0222`
+   changes `set_role_cards()`; `0223` adds the social-shares and memes tables that the Photos badge
+   and `/memes` read. Deploy the code first and both surfaces error. **`0221` too, if `0.36.1` did
+   not already carry it** — check, do not assume.
+2. **A Cloudflare cache purge is a runbook step after every Pi deploy** (#708, with
+   `scripts/pi/check-assets.mjs`). **It now runs from the deploy machine, not the Pi** (#720).
+3. **`deploy-pi.sh` no longer runs the old copy of itself** (#722, re-exec with a `bash -n`
+   precondition). **But that has never been exercised on a real Pi.** #722 deliberately left #708's
+   item and the cache item **open** for exactly that reason. **The next Pi deploy is the proof** —
+   watch for the new script's own log line, and report what you see.
+4. **Confirm by hand that every PR in the release has a completed test-plan checklist.** `test-plan`
+   is not a required check, so a PR can reach `main` unchecked. **#727's plan is honest but
+   partial** — read it rather than counting it.
 
 ---
 
@@ -316,16 +412,26 @@ squash-merged branch stays ahead for ever.
 
 **These look exactly like stale items and are the opposite. Do not tick them, do not plan them.**
 
-- **The peak-memory measurement on the next Pi build** — `/usr/bin/time -v npm run build`,
-  *Maximum resident set size*. **New this round.** It decides whether dropping the typecheck from
-  the Pi build is necessary or merely tidy, and the item is explicit that the measurement comes
-  *before* the fix. #708 put the step in the runbook; only Lutan can take it.
-- **Whether the Pi gets a Cloudflare API token** so the purge can be automatic. **New this round.**
-  A security trade-off against `docs/security/`, set out in
-  `docs/decisions/2026-10-18-pi-deploy-safety.md` so the ruling is one read.
-- **The placement row with a Foster type and an Unassigned enclosure** (above). **New this round.**
-- **Ticking the *Run fundraising appeals* card onto Management**, and the **Add Shelter Photos**
-  card onto Volunteer, Management and the 2IC. His own steps, claimed in writing.
+- **The placement row with a Foster type and an Unassigned enclosure** — only Lutan can say which
+  field is wrong. Carried from last round, still open.
+- **The Pi peak-memory measurement** (`/usr/bin/time -v npm run build`, *Maximum resident set
+  size*) — decides whether dropping the typecheck from the Pi build is necessary or merely tidy, and
+  the item is explicit the measurement comes **first**.
+- **Whether the Pi gets a Cloudflare API token** — a security trade-off set out in
+  `docs/decisions/2026-10-18-pi-deploy-safety.md`. **Partly overtaken by #720**, which purges from
+  the deploy machine instead; **re-read the item before planning anything.**
+- **Ticking the new cards onto roles** — **Approve photos** (nobody holds it; until someone does,
+  Add resident photos cannot be given out at all), **`social.library`** for the meme library, the
+  **Run fundraising appeals** card, and **Add Shelter Photos** onto Volunteer, Management and the
+  2IC. All claimed by him in writing. **Four release notes shipped describing features nobody can
+  reach until he does this** — worth saying to him plainly, once.
+- **The retired `staff` role itself.** `0222` now excludes retired roles from the approver guard,
+  but the role still exists and still holds cells through Residents. **Whether to retire it properly
+  is a separate decision he has not been asked for.**
+- **66 unexplained menu orphans** across the other five roles, from
+  `check-menu-coverage.mjs`. The Doctor's are now 0. Needs his answer per role.
+- **The five remaining acceptance dry-run role passes** — ordinary streams now, but five of them on
+  a window that ended the day at 69%. **His call on timing; advise next week's reset, do not gate.**
 - **The sponsorship/appeals threads**: the Director's wording for money raised beyond a target, a
   Thai reader's review, the share-preview image's style.
 - **The vet calendar's last mile** — set up on **test only**. Mint `GOOGLE_CALENDAR_REFRESH_TOKEN`
@@ -334,16 +440,11 @@ squash-merged branch stays ahead for ever.
   calendar with the Director.
 - **The Pi relay for the alert-mail test**, the **Pi `x-origin-key` activation**, the spare-clone
   timer, running the app on its own Pi user.
-- **The menu removal**: 68 unexplained orphans, and **the Doctor's broken `home_path`** among them —
-  sign-in sends the Doctor to `/appointments`, which their cells cannot open. **A live defect on
-  dev.** Offered as a batch 1 swap this round and declined; it needs his answer on where the Doctor
-  should land instead.
 - **The production cutover** — blocked on the Director transferring `lannacareforanimals.org` to
   Cloudflare from sav.com. **Not plannable until the zone reads Active.**
 - **`from-zero-rebuild`** — needs a third free Supabase project (the free tier allows two). **Not a
   paid plan.**
 - **`Review the manual against real use`** — a staff member and a volunteer on a phone for a day.
-  **It reads like a Fable review item and is not one.**
 - **The photo lightbox at 375 px**, **the maintenance board on a phone**, **the map on the
   Director's actual phone**.
 - **Three SEO items** and **about nine public-site review items** need the Director.
@@ -352,11 +453,12 @@ squash-merged branch stays ahead for ever.
 
 ## Blocked, and on whom
 
-- **Lutan:** the Pi peak-memory measurement; the Cloudflare token decision; the Foster/Unassigned
-  placement row; ticking two cards onto roles; the calendar token and deploy; the Pi relay decision;
-  the Pi deploys; the Doctor's home; the third Supabase project; F3's delete rule; the red
-  harnesses; the Pi failover options paper; the second admin account; the product `.org` name;
-  promoting `test-plan` to a required check; the Bills tile.
+- **Lutan:** the Foster/Unassigned row; the Pi peak-memory measurement; the Cloudflare token
+  question; ticking four cards onto roles; whether to retire `staff`; the 66 menu orphans; the
+  calendar token and deploy; the Pi relay decision; the Pi deploys; the third Supabase project; F3's
+  delete rule; the red harnesses; the Pi failover options paper; the second admin account; the
+  product `.org` name; promoting `test-plan` to a required check; the Bills tile; the dry-run
+  findings he accepts as work.
 - **The Director:** the over-raising wording; signing the roles draft; the community-dogs baseline;
   the Thai receipt wording; the online shop; **the domain transfer, which gates the cutover**; the
   Thai public-page wording; a photo per public page; the "since &lt;year&gt;" year.
@@ -365,22 +467,22 @@ squash-merged branch stays ahead for ever.
 
 ### Answered and closed — do not re-raise
 
-1. **Never block his paid usage.** No numeric stop thresholds in briefs.
+1. **Never block his paid usage.** No numeric stop thresholds in briefs. **The answer to an overrun
+   is a smaller brief.**
 2. **A red `audit` check is not a blocker and never has been.** It is `continue-on-error`.
 3. **A release's own two PRs are merged by Claude the moment CI is green, without asking.** Major
    versus minor and the production Worker deploy stay his. **The record PR is never a gate.**
-4. **Raising model or effort is NOT the answer to a band being wrong.** Nineteen streams on the
-   recommended dials, none over band. **The answer is a tighter brief or a fold.**
+4. **Raising model or effort is NOT the answer to a band being wrong**, and **effort could not have
+   saved the dry run** — it would have raised the figure while the row count stayed the same.
 5. **The quick-win band stays as written.**
-6. **"Three or more sub-features is large" is NOT a rule.** Count what must change and how many
-   screens it needs.
+6. **"Three or more sub-features is large" is NOT a rule.**
 7. **The card is "Add Shelter Photos", plural.** Settled.
-8. **The service-role bypass in the Shelter upload route is GONE** (#703, `0219`).
-9. **Appeals may show medical photos is DONE** — shipped 2026-10-17
-   (`docs/decisions/2026-10-17-appeal-medical-photos.md`; its harness passes every assertion). It
-   read open on the backlog for a day and was flagged to Lutan this round. **Do not plan it.**
-10. **Fable had no work on this board again.** The acceptance dry run remains the one genuinely
-    runnable Fable item, and **an unused bucket is not a reason to invent work for it.**
+8. **Admin does not count as the photo approver** (2026-10-18). Settled.
+9. **Retired roles do not count as approvers** (2026-10-18, `0222`). Settled.
+10. **A role's home is its who-does-what tiles** (2026-10-18, #726). Settled.
+11. **Appeals may show medical photos is DONE** — shipped 2026-10-17. **Do not plan it.**
+12. **The 90-day token mystery is SOLVED** — it was a Supabase token, replaced 2026-10-18 with one
+    that does not expire. **Nothing is due to break around 2026-12-21.** The memory note is updated.
 
 ---
 
@@ -392,19 +494,23 @@ in these areas: **plain English, no jargon, options with consequences and a reco
 Deliverables go to `C:\Users\Leidos\OneDrive\Desktop`. **The repo is public** — never commit or
 attach a file naming real people. **Never give him a command before the moment he should run it.**
 
-**He merges PRs himself, fast, often before the planner has read the checks.** All nine went that
-way, and twice he had merged a whole batch before the planner next looked.
+**He merges PRs himself, fast, often before the planner has read the checks.** Twice this round he
+had merged a whole batch before the planner next looked, and once he merged #729 between two of the
+planner's own commands.
 
-**He reviews what he is shown and sends small corrections straight back.** #716 exists because he
-read the chart's own explanatory note and said *Bold line*, not *Black line* — which is white in
-dark mode. **A one-line follow-up PR on a merged branch is normal and fine; it is not a defect in
-the stream, and it is not a tenth workstream.**
+**He watches the dials and intervenes.** He set Sonnet, saw sessions bounce to Fable mid-build, and
+**moved them back by hand.** **So a model reading may be his correction, a bounce, or his choice —
+ask him rather than inferring.**
+
+**He stops a stream that is running away, and he is right to.** He stopped the dry run at ~35%.
+**Support that: report figures early and in plain numbers, and never make him ask twice.**
 
 **He delegates judgement calls back.** **Decide, give the two reasons, and record that he delegated
 it** so a later session does not read the decision as drift.
 
-**He files items mid-session from looking at the live app** — four arrived today while the batches
-ran. **Re-read an item fresh when writing its brief.**
+**He files items mid-session from looking at the live app**, and he answers findings quickly — two
+rulings this round came within minutes of being asked. **Re-read an item fresh when writing its
+brief.**
 
 **He sets the order of work and means it.** *"Carry on" after a correction means "continue what you
 were doing", not "begin the thing you offered."*
@@ -413,27 +519,30 @@ were doing", not "begin the thing you offered."*
 
 ## Next round's strongest candidates
 
-Not a plan — the next chat plans. But this is what the board is pointing at, and **the first two he
-filed today**:
+Not a plan — the next chat plans. But this is what the board is pointing at:
 
-1. **An "Approve photos" card, assignable to any role, and Add resident photos cannot be given out
-   until some role can approve** (small schema PR, then app). **Lutan, 2026-10-18.** Pairs with his
-   related item that **Admin should not count as the photo approver**.
-2. **Videos of residents in the Photos section, uploaded straight to Drive** — **decision on storage
-   first**, then schema, then app. **Lutan, 2026-10-18**, with a companion item about the shelter's
-   1 TB Drive. **The storage decision is his and comes first**; do not brief a build before it.
-3. **Cutting `0.37.0`** — four lines in `unreleased`, nine streams merged, carrying the doctor's
-   report, the visit page, the cumulative chart and the appeals links. **The release manager's
-   session, not the planner's**, and read the two deploy warnings above first.
-4. **The Doctor's broken `home_path`** — a live defect on dev, and a genuine quick win **the moment
-   he says where the Doctor should land.**
-5. **Mobile sweep leftovers** — the four screens the sweep could not see, including
-   `/admin/security` at 375 px. `admin-tables-cards` deliberately did **not** absorb it.
-6. **The other three wide admin tables** — #713 converted the audit log only, by design, judging the
-   rest readable. **Check that judgement before re-planning them**:
-   `docs/decisions/2026-10-18-admin-tables-cards-log-only.md`.
-7. **Mark a resident's photo as "posted on social media"**, and the **meme library** (stage 1
-   schema, stage 2 the maker). All Lutan, 2026-10-17, all untouched.
+1. **Cutting `0.37.0`** — four `unreleased` lines, nine streams merged. **The release manager's
+   session, not the planner's**, and **read the four deploy warnings above first.** Lutan moved to
+   this immediately after this file.
+2. **Choose each role's home tiles in Settings** (item under Admin) — **now properly unblocked by
+   #726**, which defined what the panel overrides. Schema half (`role_home_tiles`) then app.
+   **Its second clause — removing the left-hand menu for non-Admin logins — pairs with the 66 menu
+   orphans and needs his answer first.**
+3. **The acceptance dry run, five streams, one role each** — Management, Doctor, Volunteer, Public
+   viewer, Signed-out visitor. **Do not repeat Admin. Do not brief it as one stream.** Timing is
+   his, given the window.
+4. **The three *wrong result* defects the dry run found** — the bill-to-delivery cost loss, the
+   mistyped diet inflating the forecast, the past-dated "Scheduled" visit saving as Completed. All
+   filed. **These are real bugs with a user impact and they are the strongest quick wins on the
+   board.**
+5. **The four checklist errors** (F-04 to F-07) — cheap to fix and they protect the real sign-off
+   run.
+6. **Meme maker, stage 2** — now that stage 1 has shipped.
+7. **Videos of residents in the Photos section** — **the storage decision is his and comes first**;
+   do not brief a build before it.
+8. **Mobile sweep: `/admin/security` at 375 px** was done this round; **the other three wide admin
+   tables** were deliberately left (`docs/decisions/2026-10-18-admin-tables-cards-log-only.md`).
+   **Check that judgement before re-planning them.**
 
 ---
 
@@ -443,16 +552,22 @@ When `.plan-day.md`'s counter reaches nine, `/plan-day` says so. **Rewrite this 
 that still has the context, then start the fresh chat.** Offer it; do not just do it — and **do not
 start it on an ambiguous yes.**
 
+**Apply the new turn-cost rule to yourself when you do.** Check your own context first: writing a
+460-line file from a session already past halfway costs several times what it costs from a fresh one.
+This edition was written at 31%, which was cheap. **If you are large, hand it to a fresh session
+with this file's structure as the brief.**
+
 **Count the workstreams honestly.** A stream that produced nothing still counts, or the counter will
-flatter the round that most needs examining. **A one-line follow-up PR on an already-merged branch
-(#716) is NOT a workstream** — no worktree, no brief, no separate session.
+flatter the round that most needs examining. **A stream that was stopped part-way counts** — #727
+is one of this round's ten. **A one-line follow-up PR on an already-merged branch is NOT a
+workstream.**
 
 It goes through **a branch, a worktree, a test plan and a PR**, exactly as `docs/release-handover.md`
-does. This one is `claude/planner-handover-212`; the previous were **#704** (`201`, truly 203),
-**#690** (`193`), **#676** (`182`), **#662** (`173`), **#638** (`156`), **#625** (`147`), **#612**
-(`138`), **#597** (`127`), **#588** (`116`), **#575** (`105`), **#562** (`96`), **#546** (`93`),
-**#514** (`87`), **#501** (`84`) and **#490** (`81`). Lutan asked on 2026-10-09 whether the PR was
-really needed; **it is.**
+does. This one is `claude/planner-handover-221`; the previous were **#717** (`212`), **#704** (`201`,
+truly 203), **#690** (`193`), **#676** (`182`), **#662** (`173`), **#638** (`156`), **#625** (`147`),
+**#612** (`138`), **#597** (`127`), **#588** (`116`), **#575** (`105`), **#562** (`96`), **#546**
+(`93`), **#514** (`87`), **#501** (`84`) and **#490** (`81`). Lutan asked on 2026-10-09 whether the
+PR was really needed; **it is.**
 
 **Re-verify every number in the table above against the repo** — and **check `gh pr list` for an
 open `planner-handover-*` PR before you trust the file on `main` at all**, remembering that an open
