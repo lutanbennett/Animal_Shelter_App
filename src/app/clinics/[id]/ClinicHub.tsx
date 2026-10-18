@@ -465,12 +465,20 @@ export function ClinicHub({
                         </span>
                       </div>
                       {canOpenVisits && (
-                        <Link
-                          href={`/clinic-visits/${visit.id}/edit`}
-                          className="inline-flex min-h-11 shrink-0 items-center rounded border border-border bg-background px-3 text-sm font-medium text-primary hover:bg-surface-hover"
-                        >
-                          {t.common.edit}
-                        </Link>
+                        <div className="flex shrink-0 gap-2">
+                          <Link
+                            href={`/clinic-visits/${visit.id}`}
+                            className="inline-flex min-h-11 items-center rounded border border-border bg-background px-3 text-sm font-medium text-primary hover:bg-surface-hover"
+                          >
+                            {t.vetVisits.record.view}
+                          </Link>
+                          <Link
+                            href={`/clinic-visits/${visit.id}/edit`}
+                            className="inline-flex min-h-11 items-center rounded border border-border bg-background px-3 text-sm font-medium text-primary hover:bg-surface-hover"
+                          >
+                            {t.common.edit}
+                          </Link>
+                        </div>
                       )}
                     </li>
                   ))}

@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Clinic visits now have their own page. On a resident's Clinic Visits list, tap anywhere on a visit to read its notes, bill photos and everything logged at it (blood tests, procedures, prescriptions, weight). It also opens for someone who can only look, and for a resident who has died. Appointments, Upcoming visits and each clinic's page have an Open button for the same page. You can also add the doctor's written report there: photograph the pages or choose a PDF. It is kept private in the animal's Medical folder, never shown on the website, and never counted as a bill.",
   {
     text: "Dashboard: the last-12-months chart has a Cumulative view. A daily line shows how many residents are at the shelter (hospital counts; residents in foster care do not while they are away), over running totals of intakes, adoptions and deaths. Switch between Month by month and Cumulative above the chart; it remembers your choice, and Copy as text and Print follow it.",
     roles: ["admin", "management", "second_in_command"],

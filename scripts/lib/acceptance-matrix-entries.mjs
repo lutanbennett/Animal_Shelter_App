@@ -395,6 +395,32 @@ export const ENTRIES = {
       expect: "A table shows each resident, vaccine and next-due date, and the records appear on each resident's Immunizations page.",
     },
   ],
+  "vet-visit-record": [
+    {
+      activity: "Open a clinic visit and read it",
+      needs: "medical.visits",
+      device: "both",
+      do: "On a resident's Clinic visits list, tap anywhere on a visit's card.",
+      expect: "The visit's page opens with its notes, bill photos, doctor's report and the records made at it. Edit and the log buttons show only if you may change visits and the resident is alive.",
+      notes: { doctor: "A doctor sees only their own clinic's visits; another clinic's says so and shows nothing." },
+    },
+  ],
+  "vet-visit-report": [
+    {
+      activity: "Add the doctor's written report to a visit",
+      needs: "medical.visits",
+      device: "both",
+      do: "Open the visit, tap Add report, photograph each page or choose a PDF, and wait for it to save.",
+      expect: "Each page shows as a picture or PDF card on the visit, and the resident's Clinic visits list says how many pages the visit has. It is not in the Bills inbox.",
+    },
+    {
+      activity: "Remove a page of the report",
+      needs: "medical.visits",
+      device: "both",
+      do: "Tap Remove under a report page and confirm.",
+      expect: "The page disappears from the visit.",
+    },
+  ],
   "vet-visits": [
     {
       activity: "Book a clinic visit",

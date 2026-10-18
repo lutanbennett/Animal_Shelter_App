@@ -97,7 +97,7 @@ export default async function VetVisitsPage() {
           allClinics: v.allClinics, clinicFilter: v.clinicFilter, showCompleted: v.showCompleted,
           showCancelled: v.showCancelled, hideOverdue: v.hideOverdue, showOverdue: v.showOverdue,
           empty: v.empty, emptyDay: v.emptyDay, previous: v.previous, next: v.next, openResident: v.openResident,
-          edit: v.edit, addToCalendar: v.addToCalendar, calendarNote: v.calendarNote, fallbackReason: v.fallbackReason, noPhoto: v.noPhoto, weekOf: v.weekOf,
+          edit: v.edit, view: t.vetVisits.record.view, addToCalendar: v.addToCalendar, calendarNote: v.calendarNote, fallbackReason: v.fallbackReason, noPhoto: v.noPhoto, weekOf: v.weekOf,
           weekdays: v.weekdays, status: v.status,
         }}
         overdueHiddenTemplate={v.overdueHidden(999999)}

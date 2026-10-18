@@ -732,6 +732,43 @@ const manual: Manual = {
           ],
         },
         {
+          id: "vet-visit-record",
+          title: "Clinic visits: opening a visit",
+          roles: ["admin", "management", "doctor"],
+          activity: "medical.visits",
+          activityLevel: "read",
+          path: "Resident hub → Clinic Visits → tap a visit (also Appointments, Upcoming visits and a clinic's page → Open)",
+          intro:
+            "Every clinic visit has its own page. Tap anywhere on a visit's card on the resident's Clinic Visits list, or Open on Appointments, Upcoming visits or a clinic's page, and you see the whole visit in one place. It opens for anyone who may look at clinic visits, and it opens for a resident who has died (read only).",
+          steps: [
+            "The top shows the resident (tap them to go to their hub), then the clinic, doctor, date and time, status, reason, notes and cost.",
+            "Bill photos and the doctor's report come next. Tap a photo to see it large; a PDF opens in its own tab.",
+            "Under Recorded at this visit are the blood tests, procedures, prescriptions and weight that were logged against the visit. Tap one to open that part of the resident's record.",
+            "At the bottom are the buttons you may use: Edit, Log blood test, Add prescription, Log weight and Log procedure. They are not shown if your role can only look, or if the resident has died.",
+            "A vet sees only their own clinic's visits. Another clinic's visit says so and shows nothing else.",
+          ],
+        },
+        {
+          id: "vet-visit-report",
+          title: "Clinic visits: adding the doctor's report",
+          roles: ["admin", "management", "doctor"],
+          activity: "medical.visits",
+          path: "Resident hub → Clinic Visits → tap a visit → Doctor's report",
+          steps: [
+            "Open the visit, find Doctor's report and tap Add report.",
+            "On a phone the camera opens: photograph each page of the paper report. You can also choose several photos at once, or a PDF.",
+            "If you want, change the report's date (it starts as the visit's date) and type a short note before you tap Add report. They apply to the pages you add next.",
+            "Each page shows as a small picture or a PDF card. Tap a picture to see it large; a PDF opens in its own tab. Remove asks you first.",
+            "The report is filed in the animal's own Medical folder in Google Drive, named with the date, so it can be found without the app, and the resident's Clinic Visits list says how many pages the visit has.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "The report is private. It is never on the public website or in an appeal, and it is not a bill: it does not appear in the Bills inbox. If one booking covered two animals, they are two visits, so add the report to each visit.",
+            },
+          ],
+        },
+        {
           id: "vet-visits",
           title: "Booking and recording clinic visits",
           roles: ["admin", "management", "doctor"],
