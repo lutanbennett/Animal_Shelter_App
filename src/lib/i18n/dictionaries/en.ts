@@ -4782,6 +4782,8 @@ const en = {
     },
     hub: {
       backToResidents: "← Back to residents",
+      viewPhotoLarge: (name: string) => `View ${name}'s photo full size`,
+      seeAllPhotos: "See all photos",
       microchip: "Microchip",
       microchipImplanted: (date: string) => `implanted ${date}`,
       microchipNudge: "Ready for adoption but no microchip number recorded. Overseas adopters will need one.",
@@ -5944,6 +5946,11 @@ const en = {
     confirmRemove: "Confirm remove",
     photoFallback: "Photo",
     residentPhotoAlt: "Resident photo",
+    viewer: {
+      position: (n: number, total: number) => `${n} of ${total}`,
+      previous: "Previous photo",
+      next: "Next photo",
+    },
     showAll: (n: number) => `Show all (${n})`,
     showFewer: "Show fewer",
     medicalNotProfile:
