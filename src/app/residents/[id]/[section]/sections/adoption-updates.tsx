@@ -1,5 +1,6 @@
 import { formatDate } from "@/lib/format";
 import { can } from "@/lib/permissions/can";
+import { loadPhotoShares } from "@/lib/social-shares";
 import { PhotoGallery, type PhotoRow } from "@/components/PhotoGallery";
 import { type PhotoProvenance } from "@/lib/adoption-updates/options";
 import { AdoptionUpdateActions } from "../../adoption-updates/AdoptionUpdateActions";
@@ -50,6 +51,10 @@ export async function renderAdoptionUpdatesSection(ctx: SectionContext): Promise
   ]);
   const updates = updatesResult.data ?? [];
   const photos = photosResult.data ?? [];
+  // An adopter's photo can be posted too (0223): the badge shows here, and marking works for the same logins as Photos.
+  const shares = await loadPhotoShares(supabase, photos.map((p) => p.id));
+  // The same test the table's policies make: photos.resident_manage, and a role that sees all residents.
+  const canMarkPosted = can(perms, "photos.resident_manage") && perms?.scopes.residents === "all";
   const canWrite =
     can(perms, "resident.adoption_news") && (adoptCountResult.count ?? 0) > 0;
   const a = t.adoptionUpdates;
@@ -136,6 +141,8 @@ export async function renderAdoptionUpdatesSection(ctx: SectionContext): Promise
                     residentId={id}
                     photos={updatePhotos}
                     profilePhotoDriveFileId={resident.profile_photo_drive_file_id}
+                    shares={shares}
+                    canMarkPosted={canMarkPosted}
                   />
                 )}
               </li>

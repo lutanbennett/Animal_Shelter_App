@@ -17,6 +17,8 @@ import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { setResidentProfilePhoto } from "@/lib/residents/profile-photo";
 import { todayIso } from "@/lib/format";
+import { checkHttpsUrl, linkErrorText } from "@/lib/links/validate";
+import { isSocialPlatform } from "@/lib/social-shares";
 
 /** `archiveWarning` is set when a deceased resident's Drive archive could not be refreshed. */
 export type PhotoActionState = ActionResult<{ archiveWarning?: string }>;
@@ -224,5 +226,88 @@ export async function movePhotoToFolder(
     const archiveWarning = await archiveWarningFor(supabase, t, residentId);
     revalidateResident(residentId);
     return { ok: true, archiveWarning };
+  });
+}
+
+/**
+ * Records that one or more of a resident's photos were posted on social
+ * media (backlog, "posted on social media", 2026-10-17; schema 0223). One
+ * row per photo, all with the same platform, date, link and note — "mark
+ * three at once" is one insert of three rows. The signed-in client does the
+ * insert, so the table's own policy (photos.resident_manage, and the
+ * caller sees all residents) is the check, and the database stamps
+ * recorded_by. Nothing here touches Drive or the website: marking a photo
+ * never makes it public.
+ */
+export async function markPhotosPosted(
+  residentId: string,
+  attachmentIds: string[],
+  input: { platform: string; sharedOn: string; postUrl: string; note: string },
+): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("residents.markPhotosPosted", t.common.somethingWentWrong, async () => {
+    const ids = Array.from(new Set(attachmentIds)).filter((id) => typeof id === "string" && id.length > 0);
+    if (ids.length === 0) return { ok: false, error: t.photos.posted.errors.nothingSelected };
+    if (!isSocialPlatform(input.platform)) return { ok: false, error: t.photos.posted.errors.choosePlatform };
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(input.sharedOn) || input.sharedOn > todayIso()) {
+      return { ok: false, error: t.photos.posted.errors.badDate };
+    }
+    const link = checkHttpsUrl(input.postUrl);
+    if (!link.ok) return { ok: false, error: linkErrorText(t.linkErrors, link) ?? t.photos.posted.errors.badLink };
+    const note = input.note.trim();
+    if (note.length > 500) return { ok: false, error: t.photos.posted.errors.noteTooLong };
+
+    const supabase = await createClient();
+    // Only this resident's own photos: an id from another resident's gallery (or a meme's) is refused here, so the
+    // rows written always belong to the page they were marked from.
+    const { data: owned } = await supabase
+      .from("attachments")
+      .select("id")
+      .eq("owner_type", "resident")
+      .eq("owner_id", residentId)
+      .in("id", ids)
+      .returns<{ id: string }[]>();
+    if ((owned ?? []).length !== ids.length) return { ok: false, error: t.photos.errors.notFound };
+
+    const { error } = await supabase.from("social_shares").insert(
+      ids.map((id) => ({
+        owner_type: "attachment",
+        owner_id: id,
+        platform: input.platform,
+        shared_on: input.sharedOn,
+        post_url: link.url,
+        note: note || null,
+      })),
+    );
+    if (error) {
+      // RLS answers a refused insert with a policy violation (42501); say so in the person's words.
+      if (error.code === "42501") return { ok: false, error: t.photos.errors.notAuthorized };
+      return { ok: false, error: error.message };
+    }
+    revalidateResident(residentId);
+    return { ok: true };
+  });
+}
+
+/** Undo: deletes one share row. The policy decides who may; a row that is not an attachment's is never touched. */
+export async function undoPhotoPosted(residentId: string, shareId: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("residents.undoPhotoPosted", t.common.somethingWentWrong, async () => {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("social_shares")
+      .delete()
+      .eq("id", shareId)
+      .eq("owner_type", "attachment")
+      .select("id")
+      .returns<{ id: string }[]>();
+    if (error) {
+      if (error.code === "42501") return { ok: false, error: t.photos.errors.notAuthorized };
+      return { ok: false, error: error.message };
+    }
+    // Zero rows: already undone, or RLS hid it. Either way the person may not do this, or it is done.
+    if ((data ?? []).length === 0) return { ok: false, error: t.photos.posted.errors.undoNotFound };
+    revalidateResident(residentId);
+    return { ok: true };
   });
 }
