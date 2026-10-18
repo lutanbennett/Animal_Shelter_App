@@ -4,6 +4,8 @@ import { Fragment, useCallback, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { HandHeart, Pencil } from "lucide-react";
 import type { AppealStatus } from "@/lib/appeals/state";
+import type { Platform } from "@/lib/memes/platforms";
+import { SharedOn } from "@/app/memes/PlatformIcon";
 import {
   DeceasedBanner,
   DeceasedRestoreNotice,
@@ -192,6 +194,7 @@ export function ResidentHub({
   bloodTests,
   photoCount,
   appeals,
+  memes,
   adoptionUpdates,
   now,
   tagOrigin,
@@ -236,6 +239,8 @@ export function ResidentHub({
   photoCount: number;
   /** Sponsorship drives for this resident (0210); null when this login may not run them. */
   appeals: { count: number; latestId: string | null; latestStatus: AppealStatus | null } | null;
+  /** Memes featuring this resident (0223), newest first; null when this login may not browse the library. */
+  memes: { id: string; drive_file_id: string; title: string; platforms: Platform[] }[] | null;
   adoptionUpdates: AdoptionUpdatesSummary;
   /** Server-computed timestamp (ISO string) — avoids calling Date.now() during render. */
   now: string;
@@ -762,6 +767,40 @@ export function ResidentHub({
               ) : (
                 <p className="text-sm text-muted">{t.residents.hub.noAdoptionProfile}</p>
               )}
+            </div>
+          )}
+
+          {/* The memes this resident is in (0223). Drawn only when the server handed a list: a login without
+              social.library gets null and never learns a meme exists here. Six newest; the library has the rest. */}
+          {memes && (
+            <div className="flex flex-col gap-2 rounded border border-border bg-surface p-4">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-base font-semibold text-foreground">{t.memes.hub.title}</h3>
+                <Link href="/memes" className="text-sm font-medium text-primary hover:underline">
+                  {t.memes.hub.open}
+                </Link>
+              </div>
+              {memes.length === 0 ? (
+                <p className="text-sm text-muted">{t.memes.hub.none}</p>
+              ) : (
+                <ul className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                  {memes.slice(0, 6).map((meme) => (
+                    <li key={meme.id}>
+                      <Link href={`/memes/${meme.id}`} className="flex flex-col gap-1 rounded focus:outline-none focus:ring-2 focus:ring-primary/40">
+                        <img
+                          src={driveImageUrl(meme.drive_file_id, 160)}
+                          alt={t.memes.imageAlt(meme.title)}
+                          loading="lazy"
+                          className="aspect-square w-full rounded border border-border object-cover"
+                        />
+                        <span className="line-clamp-1 text-xs text-foreground">{meme.title}</span>
+                        <SharedOn platforms={meme.platforms} names={t.memes.platforms} notSharedYet={t.memes.notSharedYet} sharedOn={t.memes.sharedOn} />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {memes.length > 6 && <p className="text-xs text-muted">{t.memes.hub.more(memes.length - 6)}</p>}
             </div>
           )}
         </section>

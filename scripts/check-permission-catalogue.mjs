@@ -248,6 +248,10 @@ const PINNED = {
   "/management/appeals/new": { guards: ['requirePermission("appeal.run")'], decides: [] },
   "/management/appeals/[id]": { guards: ['requirePermission("appeal.run")'], decides: ["donation.receipt"] },
   "/management/appeals/[id]/preview": { guards: ['requirePermission("appeal.run")'], decides: ["donation.receipt"] },
+  // The meme library (0223). A meme's page opens at the list's Read; Record a share, Edit and Archive ask Edit in the body.
+  "/memes/new": { guards: ['requirePermission("social.library")'], decides: [] },
+  "/memes/[id]": { guards: ['requirePermission("social.library", "read")'], decides: ["social.library"] },
+  "/memes/[id]/edit": { guards: ['requirePermission("social.library")'], decides: [] },
 
   // The resident's own pages. requireFullResident() is resident.record at Read plus "not a
   // who-and-where login" (0134); the decision that matters, may this person do the thing, is the

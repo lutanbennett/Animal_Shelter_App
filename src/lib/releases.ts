@@ -76,6 +76,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "A meme library, at Memes under Management and as a Meme library card in Settings → Who does what. It keeps the memes the shelter makes elsewhere, who is in each one, and a record of where and when each was posted (Facebook, Instagram, LINE, TikTok), so the next post is easy to pick and nothing goes out twice. Filter to Not shared yet, search the captions, download a meme to post it from your phone, and see a resident's memes on their page. Memes are never shown on the website. Admin ticks the card onto a role; until then only Admin can open the library.",
+    roles: ["admin", "management"],
+  },
+  {
     text: "A resident's Photos now show which pictures have already been posted on social media. A posted photo carries a green Posted label with where it went (Facebook, Instagram, LINE, TikTok or Other), and the buttons above the gallery show just the photos not posted yet, so whoever makes the next post can pick one that has not been used. Open a photo and tap Mark as posted to record where and when it was posted, with a link to the post if you have one; Undo removes a record made by mistake. To record several at once, tap Select photos, tap each one, then Mark as posted. Admin and Management can mark photos; everyone who can see the photos sees the labels. Marking a photo never puts it on the website.",
     roles: ["admin", "management"],
   },

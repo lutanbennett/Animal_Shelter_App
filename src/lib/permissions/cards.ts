@@ -9,7 +9,7 @@
  * the code (the 2026-10-04 ruling: the bundles are written by a session). WHICH cards a role has is data
  * (role_cards, 0194).
  *
- * ADDING CARD TWENTY-TWO is one entry in NEW_CARDS below, its key in NewCardKey, its title in NEW_CARD_LABEL
+ * ADDING CARD TWENTY-SIX is one entry in NEW_CARDS below, its key in NewCardKey, its title in NEW_CARD_LABEL
  * and in appHome.cards in both dictionaries. Nothing else lists the cards: the eight jobs are cards by being
  * in JOBS, and the database holds no copy of a bundle (set_role_cards() is handed the bundle this file
  * computes). check-cards-schema.mjs fails if what the database holds for a role ever differs from what this
@@ -37,7 +37,8 @@ export type NewCardKey =
   | "enclosures"
   | "add_photos"
   | "approve_photos"
-  | "run_appeals";
+  | "run_appeals"
+  | "meme_library";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -175,6 +176,15 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
     bundle: [{ activity: "appeal.run" }, { activity: "donation.receipt" }],
     opens: "/management/appeals",
   },
+  // Card twenty-five (2026-10-18): the social media library, for whoever runs the shelter's Facebook and Instagram. One
+  // activity at Edit: browse the memes, add one, record where it was posted, archive one. Nothing about residents' photos or
+  // records: a meme is not a resident's photo (docs/decisions/2026-10-18-social-shares-schema.md). NOT granted to any role
+  // here: who gets it is a Settings answer, and the Director ticks it on.
+  meme_library: {
+    includes: [],
+    bundle: [{ activity: "social.library", level: "edit" }],
+    opens: "/memes",
+  },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */
@@ -195,6 +205,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   add_photos: (t) => t.appHome.cards.addPhotos,
   approve_photos: (t) => t.appHome.cards.approvePhotos,
   run_appeals: (t) => t.appHome.cards.runAppeals,
+  meme_library: (t) => t.appHome.cards.memeLibrary,
 };
 
 export const CARDS: Record<CardKey, Card> = {

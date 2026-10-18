@@ -600,6 +600,37 @@ export const ENTRIES = {
     },
   ],
 
+  "memes": [
+    {
+      activity: "Add a meme featuring two residents",
+      needs: "social.library",
+      device: "phone",
+      do: "Tap Meme library on the home screen, then Add a meme. Choose an image from the phone, give it a title and a caption, choose two residents, add a tag, and tap Save meme.",
+      expect: "The meme's own page opens with the picture, the caption and both residents' names. In the library it is first, marked Not shared yet, and it is on both residents' pages under Memes.",
+    },
+    {
+      activity: "Record where a meme was shared",
+      needs: "social.library",
+      device: "phone",
+      do: "On a meme's page tap Record a share, choose Facebook, paste a link to the post, and tap Record share. Do it again for Instagram without a link.",
+      expect: "Both shares are listed with their dates, the Facebook one with Open the post. In the library the meme shows the Facebook and Instagram marks, and it no longer appears under the Not shared yet filter.",
+    },
+    {
+      activity: "Download a meme to post it",
+      needs: "social.library:read",
+      device: "phone",
+      do: "On a meme's page tap Download.",
+      expect: "The phone saves the image file; nothing else changes.",
+    },
+    {
+      activity: "Archive a meme",
+      needs: "social.library",
+      device: "phone",
+      do: "On a meme's page tap Archive and confirm.",
+      expect: "The meme leaves the library and the residents' pages. Its page still opens, says it is archived, and Bring back restores it.",
+    },
+  ],
+
   // ── Enclosures ───────────────────────────────────────────────────────────
   "enclosure-map": [
     {
