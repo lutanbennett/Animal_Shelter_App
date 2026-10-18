@@ -29,6 +29,10 @@
 # which the Worker's fallback answers (worker/index.mjs). Run from the repo root as
 # the user the service runs as. See docs/decisions/2026-10-18-pi-deploy-safety.md.
 set -euo pipefail
+# Absolute path and original arguments, kept for the re-exec below (this script cd's, and
+# the argument loop shifts them away).
+SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+ORIG_ARGS=("$@")
 # Never run as root: this script already calls sudo for the steps that need it, and
 # running all of it under sudo leaves node_modules, .next and the env file root-owned
 # (docs/decisions/2026-10-06-setup-test-sudo-guard.md).
@@ -98,12 +102,32 @@ fi
 NICE=()
 [[ "$ENV_NAME" == "test" ]] && NICE=(nice -n 10)
 
-echo "deploy-pi: fetching main"
-# The test clone may be put on any branch (--ref origin/claude/<feature>), so it
-# fetches them all; the production clone only ever needs main.
-if [[ "$ENV_NAME" == "test" ]]; then git fetch origin --quiet; else git fetch origin main --quiet; fi
-git checkout main --quiet
-git reset --hard "$REF" --quiet
+if [[ -z "${DEPLOY_PI_REEXECED:-}" ]]; then   # the re-exec below runs this script again; fetch once
+  echo "deploy-pi: fetching main"
+  # The test clone may be put on any branch (--ref origin/claude/<feature>), so it
+  # fetches them all; the production clone only ever needs main.
+  if [[ "$ENV_NAME" == "test" ]]; then git fetch origin --quiet; else git fetch origin main --quiet; fi
+  git checkout main --quiet
+  git reset --hard "$REF" --quiet
+fi
+
+# This file is the one bash is executing, and the checkout above may have just replaced it.
+# Bash reads a script incrementally, so without this the OLD text would carry on and a change
+# to this script would take effect one deploy late (docs/decisions/2026-10-18-deploy-pi-reexec.md).
+# So: check the new copy parses (before anything is built or swapped), then hand over to it.
+# exec keeps the pid, the open log redirect and the setsid/nohup wrapper. The env guard makes
+# the second run skip all of this, so it cannot loop. Only the lines ABOVE this point still
+# run from the old copy; keep them few and boring.
+if [[ -z "${DEPLOY_PI_REEXECED:-}" ]]; then
+  if ! bash -n "$SELF"; then
+    echo "deploy-pi: REFUSING: the script just checked out ($SELF) does not parse, so it cannot be run." >&2
+    echo "  Nothing has been built or restarted; $SERVICE keeps serving what it has." >&2
+    exit 2
+  fi
+  export DEPLOY_PI_REEXECED=1
+  echo "deploy-pi: restarting under the script from $(git rev-parse --short HEAD)"
+  exec bash "$SELF" ${ORIG_ARGS[@]+"${ORIG_ARGS[@]}"}
+fi
 echo "deploy-pi: at $(git rev-parse --short HEAD) — $(git log -1 --format=%s)"
 
 # A ref CI never saw: production and uat ship only commits that are on main (every
