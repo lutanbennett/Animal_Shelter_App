@@ -42,7 +42,7 @@
 // printed as "skipped" or "warning" and do not fail the run.
 // Exit 0: nothing overflowed and every component action is 44 px. Exit 1: at
 // least one is not. Exit 2: could not run.
-import { randomBytes } from "node:crypto";
+import { createHmac, randomBytes } from "node:crypto";
 import { mkdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -229,7 +229,7 @@ const supaUrl = env.NEXT_PUBLIC_SUPABASE_URL;
 const service = createClient(supaUrl, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } });
 
 const tag = randomBytes(4).toString("hex");
-const made = { users: [], seed: [] }; // for cleanup, in creation order
+const made = { users: [], seed: [], links: [] }; // for cleanup, in creation order
 let exitCode = 0;
 
 function fail(message) {
@@ -252,7 +252,7 @@ if (args.includes("--public-only")) process.exit(await publicPass());
 
 try {
   const ids = await seed();
-  const accounts = await makeAccounts();
+  const accounts = await makeAccounts(ids.clinic);
   exitCode = await run(ids, accounts);
 } catch (error) {
   console.error(error);
@@ -308,6 +308,12 @@ async function seed() {
   await insert("placement_history", { resident_id: ill.id, placement_type: "Intake", zone_id: zone.id, enclosure_id: enclosure.id, start_date: "2026-02-01T00:00:00Z", end_date: "2026-03-01T00:00:00Z" });
   await insert("placement_history", { resident_id: ill.id, placement_type: "SendToHospital", zone_id: zone.id, enclosure_id: enclosure.id, start_date: "2026-03-01T00:00:00Z" })
     .catch((error) => console.warn(`  warning: could not put a resident in hospital, so the Return from hospital page will be skipped (${error.message})`));
+  // A prescription on the living resident, so /prescriptions/{rx}/edit shows the form, not the closed-record notice.
+  const med = (await service.from("medication").select("id").limit(1)).data?.[0]?.id;
+  const freq = (await service.from("frequency").select("id").limit(1)).data?.[0]?.id ?? null;
+  const livingRx = med
+    ? await insert("prescriptions", { resident_id: resident.id, medication_id: med, frequency_id: freq, start_date: "2026-10-01", notes: `ZZ Width ${tag} a long note to see how the form wraps on a phone` }).catch((error) => (console.warn(`  warning: no living prescription (${error.message})`), null))
+    : null;
   // Existing dev rows, for the pages that open one record (read only; never created or deleted here).
   const first = async (table, column = "id") => (await service.from(table).select(column).limit(1)).data?.[0]?.[column] ?? null;
   const update = (await service.from("adoption_updates").select("id, resident_id").limit(1)).data?.[0];
@@ -319,7 +325,7 @@ async function seed() {
     contact: contact.id,
     visit: await first("clinic_visits"),
     dietRow: await first("resident_diets"),
-    rx: await first("prescriptions"),
+    rx: livingRx?.id ?? (await first("prescriptions")),
     weightRow: await first("weight"),
     donation: await first("donations"),
     appeal: await first("appeals"),
@@ -335,7 +341,7 @@ async function seed() {
 // Accounts and sessions
 // ---------------------------------------------------------------------------
 
-async function makeAccounts() {
+async function makeAccounts(clinicId) {
   const out = {};
   for (const name of roleNames) {
     const spec = ALL_ROLES[name];
@@ -353,13 +359,44 @@ async function makeAccounts() {
     if (roleError) throw new Error(`no role ${spec.configured ?? spec.legacy} in dev: ${roleError.message}`);
     const { error: roleWriteError } = await service.from("user_roles").insert({ user_id: data.user.id, role_id: role.id });
     if (roleWriteError) throw new Error(`giving the ${name} login its role: ${roleWriteError.message}`);
-    out[name] = { email, password };
+    // A doctor login with no clinic is refused by /appointments: give this one the seeded clinic.
+    if (name === "doctor") {
+      const doctor = await insert("doctors", { name: `ZZ Width ${tag} Dr Throwaway`, user_id: data.user.id });
+      await service.from("doctor_clinics").insert({ doctor_id: doctor.id, clinic_id: clinicId }).then(({ error }) => { if (error) throw error; made.links.push(doctor.id); }).catch((e) => console.warn(`  warning: doctor not linked to a clinic (${e.message})`));
+    }
+    out[name] = { email, password, userId: data.user.id };
   }
   return out;
 }
 
+/** RFC 6238 code for a base32 secret (as scripts/check-two-step-session.mjs). */
+function totp(secret) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  const bits = [...secret.replace(/=+$/, "").toUpperCase()].map((c) => alphabet.indexOf(c).toString(2).padStart(5, "0")).join("");
+  const key = Buffer.from(bits.match(/.{8}/g).map((b) => parseInt(b, 2)));
+  const counter = Buffer.alloc(8);
+  counter.writeBigUInt64BE(BigInt(Math.floor(Date.now() / 30000)));
+  const h = createHmac("sha1", key).update(counter).digest();
+  const o = h[h.length - 1] & 0xf;
+  return String((h.readUInt32BE(o) & 0x7fffffff) % 1_000_000).padStart(6, "0");
+}
+
+/**
+ * Lifts the throwaway admin's session to aal2 so /admin/security renders instead of redirecting to /verify:
+ * enrols an authenticator app on that login, verifies it with a computed code, then marks it the approved one
+ * (app_metadata, service role only). Scoped to this run: the login and its factor are deleted at the end.
+ */
+async function passTwoStep(ssr, userId) {
+  const { data: factor, error } = await ssr.auth.mfa.enroll({ factorType: "totp", friendlyName: `phonewidth ${tag}` });
+  if (error) throw new Error(`enrolling 2-step for the throwaway admin: ${error.message}`);
+  const { error: verifyError } = await ssr.auth.mfa.challengeAndVerify({ factorId: factor.id, code: totp(factor.totp.secret) });
+  if (verifyError) throw new Error(`verifying 2-step for the throwaway admin: ${verifyError.message}`);
+  const { error: metaError } = await service.auth.admin.updateUserById(userId, { app_metadata: { two_step_factor: factor.id } });
+  if (metaError) throw new Error(`approving the throwaway admin factor: ${metaError.message}`);
+}
+
 /** The session cookies the app's own SSR client would set for a password sign-in. */
-async function signInCookies({ email, password }) {
+async function signInCookies({ email, password, userId }, verified = false) {
   const jar = new Map();
   const ssr = createServerClient(supaUrl, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
     cookies: {
@@ -369,6 +406,7 @@ async function signInCookies({ email, password }) {
   });
   const { error } = await ssr.auth.signInWithPassword({ email, password });
   if (error) throw new Error(`signing in as ${email}: ${error.message}`);
+  if (verified) await passTwoStep(ssr, userId);
   return [...jar].map(([name, value]) => ({ name, value, url: base }));
 }
 
@@ -536,7 +574,7 @@ async function run(ids, accounts) {
   const results = []; // { role, locale, path, kind: ok|overflow|skipped|warning, ... }
   try {
     for (const roleName of roleNames) {
-      const cookies = await signInCookies(accounts[roleName]);
+      const cookies = await signInCookies(accounts[roleName], roleName === "admin");
       for (const locale of locales) {
         const context = await browser.newContext({ viewport: { width: WIDTH, height: 800 }, isMobile: true, hasTouch: true, deviceScaleFactor: 1 });
         await context.addCookies([...cookies, { name: "locale", value: locale, url: base }]);
@@ -687,7 +725,7 @@ async function checkPage(page, { roleName, locale, target }) {
     // --shots=<dir>: keep what each page looks like (first 2000 px), for the by-eye pass overflow checks cannot do.
     mkdirSync(SHOTS, { recursive: true });
     const h = await page.evaluate(() => document.documentElement.scrollHeight).catch(() => 2000);
-    await page.screenshot({ path: join(SHOTS, `${roleName}-${locale}-${target.replace(/[^a-z0-9]+/gi, "_")}.png`), clip: { x: 0, y: 0, width: WIDTH, height: Math.min(h, 2000) } }).catch(() => {});
+    await page.screenshot({ path: join(SHOTS, `${roleName}-${locale}-${target.replace(/[^a-z0-9]+/gi, "_")}.png`), fullPage: true }).catch(() => {});
   }
   let m;
   try {
@@ -781,6 +819,7 @@ FAIL  ${label(r)}  ${r.zoom.join(", ")} has type under 16 px: iPhone Safari zoom
 // ---------------------------------------------------------------------------
 
 async function cleanup() {
+  for (const id of made.links) await service.from("doctor_clinics").delete().eq("doctor_id", id);
   // Children before parents: placements, then residents, then the rest, newest first.
   for (const id of made.seed.filter(([t]) => t === "residents").map(([, i]) => i)) {
     await service.from("placement_history").delete().eq("resident_id", id);

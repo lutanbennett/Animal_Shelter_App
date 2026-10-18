@@ -1,3 +1,7 @@
+| `/medical/weight` | ok | Checked 2026-10-18 after the crash fix, admin, English and Thai, 375 px: no sideways scroll, no action under 44 px. |  |
+| `/medical/photos` | ok | Checked 2026-10-18 after the crash fix, admin, English and Thai, 375 px: no sideways scroll, no action under 44 px. |  |
+| `/appointments` | not checked: the dev Doctor role cannot open it | The harness now gives the throwaway doctor a doctor row linked to a clinic, but the page still sends it to /no-access: dev's Doctor role holds only `resident.record` and `resident.microchip`, no `medical.visits`, so the clinic was never the blocker. That is the known broken Doctor landing (backlog, `home_path`), Lutan's to decide; not changed here. Needs a doctor with the visits cell, or the cell granted. |  |
+| `/admin/security` | ok | Checked 2026-10-18 as a 2-step-verified admin the script now makes, English and Thai, 375 px: no sideways scroll, no action under 44 px, looked at. The access-request card and the add-login form fit. The users table scrolls inside its own box (as the other settings tables, `2026-10-18-admin-tables-cards-log-only.md`): the Email column fills the screen, so the role and other columns are off to the right until swiped. Nothing hidden or clipped; left as #713 judged. |  |
 # Mobile sweep inventory (375 px, English and Thai)
 
 Branch `claude/mobile-sweep`. **This file is the resume point**: a route with a verdict is done; the first group with blank verdicts is where to continue.
@@ -116,7 +120,7 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 | `/medical/diets` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/medical/photos` | not checked: page crashes | the page crashes (server error) when opened with no resident, so there is no layout to judge. Real bug, filed on the backlog branch (ResidentPicker is passed the whole dictionary). Layout of the picker itself unseen. |  |
 | `/medical/weight` | not checked: page crashes | the page crashes (server error) when opened with no resident, so there is no layout to judge. Real bug, filed on the backlog branch (ResidentPicker is passed the whole dictionary). Layout of the picker itself unseen. |  |
-| `/prescriptions/[id]/edit` | ok | Looked at; the dev row is for a deceased resident so only the closed-record notice showed. The edit form itself was not seen on a phone. |  |
+| `/prescriptions/[id]/edit` | ok | Checked 2026-10-18 on a living resident's prescription the script now seeds, admin, English and Thai, 375 px: the edit form fits, no action under 44 px. The date pickers' "Open calendar" buttons are 36 px bare buttons (a note, not a failure; the existing bare-button ruling). |  |
 | `/prescriptions/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/procedures/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/upcoming-visits` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
