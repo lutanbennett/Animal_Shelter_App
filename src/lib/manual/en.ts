@@ -959,6 +959,29 @@ const manual: Manual = {
           },
         },
         {
+          id: "posted-on-social",
+          title: "Marking a photo as posted on social media",
+          roles: ["admin", "management"],
+          activity: "photos.resident_manage",
+          path: "Resident hub → Photos",
+          intro:
+            "Whoever makes the shelter's next Facebook, Instagram, LINE or TikTok post can see at a glance which of a resident's photos have already been used, so nobody posts the same picture twice and a photo that has never been shown gets its turn.",
+          steps: [
+            "Open the Photos card on the hub. A photo that has been posted carries a green Posted label with where it went (FB, IG, LINE, TT or Other). The buttons above the gallery show just the photos not posted yet, just the posted ones, or all of them. Start from Not posted yet when you are choosing a picture for a new post.",
+            "Posted one photo? Tap it to open it, then tap Mark as posted. Choose where it was posted, check the date (it starts on today), paste a link to the post if you have one, add a note if it helps (\"boosted\", \"appeal for Chao Guay 2\"), and tap the green button. The photo gets its label straight away.",
+            "Posted several at once? Tap Select photos above the gallery, tap each photo you posted (Select all shown picks every photo on screen), then tap Mark as posted and fill in the same details once. Every selected photo is recorded with them. Tap Done to leave selecting.",
+            "Opening a posted photo lists each time it was posted, with Open post where a link was saved. Posted the same photo twice, on two platforms or on two days? Mark it again: each post is kept, and the label shows every place it went.",
+            "Marked the wrong photo? Open it and tap Undo next to that post. The record is removed; the photo itself is untouched.",
+            "Medical photos can be marked too, for the times an appeal's photo goes out. Marking only records where a photo went: it never puts a photo on the website. A Medical photo stays off the website whatever is recorded here.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Only a login that may manage a resident's photos (Admin and Management) sees Mark as posted and Undo. Everyone who can see the photos sees the Posted labels, so a volunteer can tell which pictures have been used.",
+            },
+          ],
+        },
+        {
           id: "approve-photos",
           title: "Approving photos",
           roles: ["admin", "management"],

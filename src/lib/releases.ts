@@ -76,6 +76,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "A resident's Photos now show which pictures have already been posted on social media. A posted photo carries a green Posted label with where it went (Facebook, Instagram, LINE, TikTok or Other), and the buttons above the gallery show just the photos not posted yet, so whoever makes the next post can pick one that has not been used. Open a photo and tap Mark as posted to record where and when it was posted, with a link to the post if you have one; Undo removes a record made by mistake. To record several at once, tap Select photos, tap each one, then Mark as posted. Admin and Management can mark photos; everyone who can see the photos sees the labels. Marking a photo never puts it on the website.",
+    roles: ["admin", "management"],
+  },
+  {
     text: "Signing in now always lands on your home screen: the tiles your role has been given on Who does what. A doctor used to be sent straight to Appointments, which their role was not allowed to open, so they saw a refusal instead of their home. Now a doctor lands on their tiles like everyone else, and Appointments is one of them as soon as Admin gives the Doctor role the Book clinic visits card. Admin's home is unchanged.",
     roles: ["admin", "management", "doctor"],
   },
