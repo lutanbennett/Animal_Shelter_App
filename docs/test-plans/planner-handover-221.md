@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none: the handover is a process artifact, written when `.plan-day.md`'s counter reaches nine. The `SKILL.md` change is a process fix from this round's overrun, also not a backlog item |
 | Branch / worktree | `claude/planner-handover-221` @ `C:\Development\Animal_Shelter_planner-handover-221` |
 | Dev server | not started — `docs/` and `.claude/` only, nothing to render |
-| PR | opened from this branch; number added in the follow-up commit that ticks CI |
+| PR | #730 |
 | Tested by / date | Claude (Daily Planner) / 2026-10-18 |
 | Carries a migration? | no |
 | Tested at SHA | `7976d894` |
@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all eight checks pass on #730 (audit, cards-count, check, migration-numbers, new-policy-role-names, public-views, script-integrity, test-plan); seen green before ticking
 
 ## 3. Schema and data — *skip if no migration*
 
