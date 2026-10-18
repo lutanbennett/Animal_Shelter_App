@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **A role's home screen is its who-does-what tiles, and the Doctor's broken `home_path` is the live case** (ticked here); also closes **Mobile sweep leftovers** (its `/appointments` line) |
 | Branch / worktree | `claude/role-home-is-tiles` @ `C:\Development\Animal_Shelter_role-home-is-tiles` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3008` |
-| PR | to be opened from this branch (filled in the follow-up commit) |
+| PR | #726 |
 | Tested by / date | Claude / 2026-10-18 |
 | Carries a migration? | no — `roles.home_path` is left unread, not cleared (`docs/decisions/2026-10-18-role-home-is-tiles.md`) |
 | Tested at SHA | `b342791d` (after sync with `origin/main`: already up to date) |
@@ -33,7 +33,7 @@
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR: #726, all 8 checks passing on `50a9731f` (read from the PR status, 2026-10-18)
 
 ## 3. Schema and data — *skip if no migration*
 
