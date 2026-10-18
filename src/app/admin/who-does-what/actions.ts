@@ -64,6 +64,11 @@ function done(): ActionResult {
 
 async function apply(supabase: Supabase, roleId: string, cards: CardKey[], where: string, t: Dict): Promise<ActionResult> {
   const { error } = await supabase.rpc("set_role_cards", { p_role: roleId, p_cards: cards, p_bundle: bundleJson(cards) });
+  // The two photo-approver refusals (0221, 0222) are written for the person reading them; show them as they are. Any other
+  // check failure keeps the generic words, so a constraint name never reaches the browser.
+  if (error?.code === "23514" && /approve photos/i.test(error.message ?? "") && /^(Give a role|This is the last role)/.test(error.message ?? "")) {
+    return { ok: false, error: error.message };
+  }
   if (error) return databaseFailure(where, error, t.common);
   return { ok: true };
 }
