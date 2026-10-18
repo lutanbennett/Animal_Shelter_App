@@ -16,7 +16,9 @@ import { runCardOp, type CardOp } from "./CardControls";
  * A drop calls runCardOp(), the very function the buttons call, so it takes the same server action and leaves the same
  * audit row. docs/decisions/2026-10-14-cards-board-drag-and-buttons.md
  */
-export type Tile = { key: string; label: string; description: string; includes: string; href: string; warn?: boolean };
+export type Tile = { key: string; label: string; description: string; includes: string; href: string; warn?: boolean;
+  /** Why this card cannot be given yet (it needs another role's card first); shown beside a disabled +. */
+  blocked?: string };
 
 export function CardBoard({
   roleKey,
@@ -74,7 +76,11 @@ export function CardBoard({
     setOver(null);
     const p = payload(e);
     if (!p) return;
-    if (p.from === "library") return run([{ kind: "add", roleKey, card: p.key }]);
+    if (p.from === "library") {
+      const why = library.find((x) => x.key === p.key)?.blocked;
+      if (why) return setError(why);
+      return run([{ kind: "add", roleKey, card: p.key }]);
+    }
     if (!target || target === p.key) return;
     // Reordering is the Move buttons pressed as many times as it takes: each step is the same action and the same audit row.
     const from = heldKeys.indexOf(p.key);
@@ -125,7 +131,16 @@ export function CardBoard({
       {canEdit && (
         <div className="flex flex-wrap gap-1">
           {side === "library" ? (
-            <RowActionButton icon={Plus} label={c.addFor(tl.label)} disabled={pending} onClick={() => run([{ kind: "add", roleKey, card: tl.key }])} />
+            <>
+              <RowActionButton
+                icon={Plus}
+                label={tl.blocked ? c.needsApproverFor(tl.label) : c.addFor(tl.label)}
+                hint={tl.blocked}
+                disabled={pending || !!tl.blocked}
+                onClick={() => run([{ kind: "add", roleKey, card: tl.key }])}
+              />
+              {tl.blocked && <span className="min-w-0 self-center text-xs text-muted [overflow-wrap:anywhere]">{tl.blocked}</span>}
+            </>
           ) : (
             <>
               {i > 0 && <RowActionButton icon={ArrowUp} label={c.moveUpFor(tl.label)} disabled={pending} onClick={() => run([{ kind: "up", roleKey, card: tl.key }])} />}

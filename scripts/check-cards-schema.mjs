@@ -238,6 +238,36 @@ begin
     delete from role_extras where role_id = v_third;
     delete from role_permissions where activity = 'photos.resident_publish';
     perform set_role_cards(v_vol, array[]::text[], '[]'::jsonb);
+
+    -- 6 a RETIRED role (roles.archived_at set) holding the activity is not an approver (0222, Lutan 2026-10-18).
+    --   Only the flag decides: this role is named nothing like staff.
+    declare v_old uuid;
+    begin
+      insert into roles (key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails)
+        values ('harness_old', 'Harness old', 'custom', true, '/home', 'who_and_where', 'any', 'name_type', 'medical_only', false) returning id into v_old;
+      perform set_role_cards(v_old, array['residents'], '${bj(["residents"])}'::jsonb);
+      -- live and holding it: it approves, so Add resident photos can be given out
+      perform set_role_cards(v_vol, array['add_photos'], '${bj(["add_photos"])}'::jsonb);
+      perform set_role_cards(v_vol, array[]::text[], '[]'::jsonb);
+      -- retire it: the cell is still there, but it no longer counts
+      update roles set archived_at = now() where id = v_old;
+      if not exists (select 1 from role_permissions where role_id = v_old and activity = 'photos.resident_publish') then raise exception 'FAIL the retired role lost its cell (the harness premise)'; end if;
+      begin
+        perform set_role_cards(v_vol, array['add_photos'], '${bj(["add_photos"])}'::jsonb);
+        raise exception 'FAIL a retired role was counted as the approver';
+      exception when check_violation then
+        if sqlerrm <> 'Give a role the Approve photos card first, so someone can approve these photos.' then raise exception 'FAIL wrong refusal message: %', sqlerrm; end if;
+      end;
+      -- a live approver alongside it satisfies the guard again, and the last LIVE one is protected
+      perform set_role_cards(v_mgmt, array['residents'], '${bj(["residents"])}'::jsonb);
+      perform set_role_cards(v_vol, array['add_photos'], '${bj(["add_photos"])}'::jsonb);
+      begin
+        perform set_role_cards(v_mgmt, array[]::text[], '[]'::jsonb);
+        raise exception 'FAIL the last live approver was removed because a retired role still holds the cell';
+      exception when check_violation then
+        if sqlerrm not like '%Harness vol%' then raise exception 'FAIL the refusal did not name the holding role: %', sqlerrm; end if;
+      end;
+    end;
   end;
 
   raise exception 'cards-harness-ok';
