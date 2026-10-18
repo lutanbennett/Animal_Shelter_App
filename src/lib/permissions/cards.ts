@@ -54,6 +54,11 @@ export type Card = {
    * login's own page that they are refused. Read it through cardOpens(), never directly.
    */
   opensAny?: string;
+  /**
+   * Cards that SOME OTHER role must hold before any role may be given this one (0221 enforces it in set_role_cards()).
+   * Each name is satisfied by the cards in CARD_SATISFIED_BY, not only by itself.
+   */
+  requiresCardSomewhere?: readonly string[];
 };
 
 /** The page this card's tile opens for a role with this clinical scope: one that role can open. */
@@ -145,6 +150,7 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
     includes: [],
     bundle: [{ activity: "photos.shelter_add" }, { activity: "resident.record", level: "read" }],
     opens: "/photos/add",
+    requiresCardSomewhere: ["approve_photos"],
   },
   // Card twenty-three (2026-10-18): run the fundraising appeals. donation.receipt is bundled because the appeals
   // pages show what has been raised only to a login that holds it (the one donations read there is). NOT granted to
@@ -182,6 +188,15 @@ export const CARDS: Record<CardKey, Card> = {
   ...(Object.fromEntries(
     (Object.keys(NEW_CARDS) as NewCardKey[]).map((k) => [k, { key: k, label: NEW_CARD_LABEL[k], ...NEW_CARDS[k] }]),
   ) as unknown as Record<NewCardKey, Card>),
+};
+
+/**
+ * Which cards satisfy a requirement named in requiresCardSomewhere. The Approve photos card (app half, not yet defined) is
+ * satisfied by itself and by Residents, which bundles photos.resident_publish. Whoever adds that card adds it here too.
+ * The database counts the ACTIVITY (photos.resident_publish), so it stays correct for extras and for both cards.
+ */
+export const CARD_SATISFIED_BY: Record<string, readonly CardKey[]> = {
+  approve_photos: ["residents"],
 };
 
 export const CARD_KEYS = Object.keys(CARDS) as CardKey[];
