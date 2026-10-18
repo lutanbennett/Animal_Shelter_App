@@ -36,6 +36,7 @@ export type NewCardKey =
   | "assistant"
   | "enclosures"
   | "add_photos"
+  | "approve_photos"
   | "run_appeals";
 
 export type CardKey = JobKey | NewCardKey;
@@ -58,7 +59,7 @@ export type Card = {
    * Cards that SOME OTHER role must hold before any role may be given this one (0221 enforces it in set_role_cards()).
    * Each name is satisfied by the cards in CARD_SATISFIED_BY, not only by itself.
    */
-  requiresCardSomewhere?: readonly string[];
+  requiresCardSomewhere?: readonly CardKey[];
 };
 
 /** The page this card's tile opens for a role with this clinical scope: one that role can open. */
@@ -145,12 +146,26 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   enclosures: { includes: [], bundle: [{ activity: "facility.enclosures", level: "read" }], opens: "/enclosures" },
   // Card twenty-two (2026-10-17): file photos into the Shelter folder, phone-first, for a volunteer. The bundle is
   // photos.shelter_add and the who-and-where read the picker needs, and NOTHING else: never photos.resident_publish,
-  // which is what puts a photo on the website. The photo waits for Management to approve it (0217).
+  // which is what puts a photo on the website. The photo waits for a role holding Approve photos (or Residents) to approve it (0217).
   add_photos: {
     includes: [],
     bundle: [{ activity: "photos.shelter_add" }, { activity: "resident.record", level: "read" }],
     opens: "/photos/add",
     requiresCardSomewhere: ["approve_photos"],
+  },
+  // Card twenty-four (2026-10-18): approve the photos that wait for it, and remove one that should not be seen. The bundle is
+  // exactly what /photos/approve needs and nothing wider: photos.resident_publish (the database guard 0221/0222 keys on this
+  // activity), photos.resident_manage (delete_resident_photo and refiling a waiting photo ask it, 0152), and the who-and-where
+  // read. NOT resident.record at edit, not photos.resident_add, not any placement or medical cell: a role can approve photos
+  // without being able to edit a resident. Residents (Management) still approves, by union. Not granted to any role here.
+  approve_photos: {
+    includes: [],
+    bundle: [
+      { activity: "photos.resident_publish" },
+      { activity: "photos.resident_manage" },
+      { activity: "resident.record", level: "read" },
+    ],
+    opens: "/photos/approve",
   },
   // Card twenty-three (2026-10-18): run the fundraising appeals. donation.receipt is bundled because the appeals
   // pages show what has been raised only to a login that holds it (the one donations read there is). NOT granted to
@@ -178,6 +193,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   assistant: (t) => t.appHome.cards.assistant,
   enclosures: (t) => t.appHome.cards.enclosures,
   add_photos: (t) => t.appHome.cards.addPhotos,
+  approve_photos: (t) => t.appHome.cards.approvePhotos,
   run_appeals: (t) => t.appHome.cards.runAppeals,
 };
 
@@ -191,12 +207,12 @@ export const CARDS: Record<CardKey, Card> = {
 };
 
 /**
- * Which cards satisfy a requirement named in requiresCardSomewhere. The Approve photos card (app half, not yet defined) is
- * satisfied by itself and by Residents, which bundles photos.resident_publish. Whoever adds that card adds it here too.
- * The database counts the ACTIVITY (photos.resident_publish), so it stays correct for extras and for both cards.
+ * Which cards satisfy a requirement named in requiresCardSomewhere. The Approve photos card is satisfied by itself and by
+ * Residents, which bundles photos.resident_publish. The database counts the ACTIVITY (photos.resident_publish) on roles that
+ * are not retired (0222), so it stays correct for extras and both cards; the screen must ask the same question (approverTest).
  */
-export const CARD_SATISFIED_BY: Record<string, readonly CardKey[]> = {
-  approve_photos: ["residents"],
+export const CARD_SATISFIED_BY: Partial<Record<CardKey, readonly CardKey[]>> = {
+  approve_photos: ["approve_photos", "residents"],
 };
 
 export const CARD_KEYS = Object.keys(CARDS) as CardKey[];

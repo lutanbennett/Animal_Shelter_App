@@ -273,6 +273,26 @@ for (const [method, body] of [["GET"], ["POST", {}], ["PATCH", {}], ["DELETE"]])
   report(!call.ok, `audit_log: anon ${method} is refused`, `HTTP ${call.status}`);
 }
 
+// The social media library (0223). A meme can be made from a medical or sad photo, with a joke that needs context,
+// and a share records where it was posted. None of it is ever public, so anon is refused every method on all three
+// tables, and no public view may carry a meme or a share column (a 2xx on a missing column would be the leak).
+for (const table of ["memes", "meme_residents", "social_shares"]) {
+  for (const [method, body] of [["GET"], ["POST", {}], ["PATCH", {}], ["DELETE"]]) {
+    const call = await fetch(`${url}/rest/v1/${table}${method === "GET" ? "?select=id&limit=1" : `?${noRow}`}`, {
+      method,
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    report(!call.ok, `${table}: anon ${method} is refused`, `HTTP ${call.status}`);
+  }
+}
+for (const name of PUBLIC) {
+  for (const column of ["caption_en", "post_url"]) {
+    const read = await fetch(`${url}/rest/v1/${name}?select=${column}&limit=1`, { headers });
+    report(!read.ok, `${name}.${column}: no public object carries a meme or share column`, `HTTP ${read.status}`);
+  }
+}
+
 // is_public_drive_file must tell the two kinds of file apart when anon asks:
 // yes for a photo the public site shows, no for an internal attachment the
 // photo proxy also knows (a blood-test or procedure file). Skipped, not
