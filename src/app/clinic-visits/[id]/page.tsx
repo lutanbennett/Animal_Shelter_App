@@ -124,6 +124,19 @@ export default async function ClinicVisitPage(props: PageProps<"/clinic-visits/[
   const procs = procRes.data ?? [];
   const rxs = rxRes.data ?? [];
   const weights = weightRes.data ?? [];
+  // Files filed on those records (a lab report, procedure photos), shown under each so nothing is hidden behind a tab.
+  const recordIds = [...blood.map((b) => b.id), ...procs.map((p) => p.id)];
+  const { data: fileRows, error: fileError } = recordIds.length
+    ? await supabase
+        .from("attachments")
+        .select("id, owner_id, drive_file_id, file_name")
+        .in("owner_type", ["blood_test", "procedure"])
+        .in("owner_id", recordIds)
+        .order("uploaded_at", { ascending: true })
+        .returns<{ id: string; owner_id: string; drive_file_id: string; file_name: string | null }[]>()
+    : { data: [], error: null };
+  if (fileError) throw new Error(fileError.message);
+  const filesOf = (ownerId: string) => (fileRows ?? []).filter((a) => a.owner_id === ownerId);
   const anyRecorded = blood.length + procs.length + rxs.length + weights.length > 0;
   const writable = canEdit && !isDeceased;
     const started = visitDate(visit) <= todayIso();
@@ -135,7 +148,7 @@ export default async function ClinicVisitPage(props: PageProps<"/clinic-visits/[
       <dd className="text-sm text-foreground">{value ?? v.none}</dd>
     </div>
   );
-  const group = (title: string, items: React.ReactNode[], href: string) =>
+  const group = (title: string, items: { label: string; files?: { id: string; drive_file_id: string; file_name: string | null }[] }[], href: string) =>
     items.length > 0 && (
       <div className="flex flex-col gap-1">
         <h3 className="text-sm font-semibold text-foreground">{title}</h3>
@@ -143,8 +156,19 @@ export default async function ClinicVisitPage(props: PageProps<"/clinic-visits/[
           {items.map((item, i) => (
             <li key={i}>
               <Link href={href} className={`${recordLink} inline-flex min-h-11 items-center md:min-h-0`}>
-                {item}
+                {item.label}
               </Link>
+              {item.files && item.files.length > 0 && (
+                <ul className="flex flex-wrap gap-2 pb-1">
+                  {item.files.map((a) => (
+                    <li key={a.id}>
+                      <a href={driveImageUrl(a.drive_file_id)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center text-xs text-primary hover:underline md:min-h-0">
+                        {a.file_name ?? v.file}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           ))}
         </ul>
@@ -205,22 +229,22 @@ export default async function ClinicVisitPage(props: PageProps<"/clinic-visits/[
         {!anyRecorded && <p className="text-sm text-muted">{v.nothingRecorded}</p>}
         {group(
           v.bloodTests,
-          blood.map((b) => `${b.blood_test_types ? localLabel(locale, b.blood_test_types.name, b.blood_test_types.name_th) : v.bloodTests} · ${formatDate(b.date, locale)}`),
+          blood.map((b) => ({ files: filesOf(b.id), label: `${b.blood_test_types ? localLabel(locale, b.blood_test_types.name, b.blood_test_types.name_th) : v.bloodTests} · ${formatDate(b.date, locale)}` })),
           `/residents/${rid}/blood-tests`,
         )}
         {group(
           v.procedures,
-          procs.map((p) => `${p.procedure_types ? localLabel(locale, p.procedure_types.name, p.procedure_types.name_th) : v.procedures} · ${formatDate(p.date, locale)}`),
+          procs.map((p) => ({ files: filesOf(p.id), label: `${p.procedure_types ? localLabel(locale, p.procedure_types.name, p.procedure_types.name_th) : v.procedures} · ${formatDate(p.date, locale)}` })),
           `/residents/${rid}/procedures`,
         )}
         {group(
           v.prescriptions,
-          rxs.map((p) => `${p.medication ? localLabel(locale, p.medication.name, p.medication.name_th) : v.prescriptions} · ${formatDate(p.start_date, locale)}`),
+          rxs.map((p) => ({ label: `${p.medication ? localLabel(locale, p.medication.name, p.medication.name_th) : v.prescriptions} · ${formatDate(p.start_date, locale)}` })),
           `/residents/${rid}/prescriptions`,
         )}
         {group(
           v.weight,
-          weights.map((w) => `${formatWeightKg(Number(w.weight_kg), locale)} · ${formatDate(w.date, locale)}`),
+          weights.map((w) => ({ label: `${formatWeightKg(Number(w.weight_kg), locale)} · ${formatDate(w.date, locale)}` })),
           `/residents/${rid}/weight`,
         )}
       </section>

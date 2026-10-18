@@ -2105,7 +2105,7 @@ const en = {
         subtitle:
           "Everything currently on the public Our work page. Stories are published from their folder under Projects (\"Show on website\"); remove one here to take it off the site straight away — the folder and its photos stay as they are.",
         none: "No project stories are on the website.",
-        view: "View on site",
+      view: "View on site",
         remove: "Remove from website",
         removeConfirm: (name: string) =>
           `Remove "${name}" from the public website? It can be shown again from its folder under Projects.`,
@@ -3838,6 +3838,7 @@ const en = {
       title: "Clinic visit",
       open: "Open this visit",
       view: "Open",
+      file: "File",
       backTo: (name: string) => `Back to ${name}`,
       resident: "Resident",
       clinic: "Clinic",
