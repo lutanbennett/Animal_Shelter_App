@@ -11,7 +11,7 @@
 | PR | opened from this branch; number added in the follow-up commit that ticks CI |
 | Tested by / date | Claude (Daily Planner) / 2026-10-17 |
 | Carries a migration? | no |
-| Tested at SHA | `25fde12a` |
+| Tested at SHA | `b4b26b05` |
 
 ## 1. Scope and risk
 
@@ -100,7 +100,7 @@ from the repository by Claude sessions and by Lutan. The table is left unfilled 
 
 ### Tested build
 
-- [x] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — `25fde12a`; it is the tip of this branch, and the file does not ship in any build
+- [x] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — `b4b26b05`; it is the tip of this branch, and the file does not ship in any build
 - [ ] Deployed SHA matches the tested SHA — deferred: production release manager. Nothing in this PR reaches a build, but the SHA check belongs to whoever next deploys — and this round is the reason it matters: see Defect 1
 - [ ] Deployed to test — deferred: production release manager. A `docs/` file is not deployed
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: production release manager. No deployed surface to smoke-test
