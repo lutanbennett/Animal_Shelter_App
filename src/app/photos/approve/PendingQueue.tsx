@@ -62,15 +62,16 @@ export function PendingQueue({ photos, residents, loadError }: { photos: Pending
     });
   }
 
-  function discard(photo: PendingPhoto) {
+  async function discard(photo: PendingPhoto) {
+    // Ask first, transition after: a confirm awaited inside startTransition never lets the dialog commit.
+    const ok = await confirm({
+      title: p.discardConfirmTitle,
+      body: p.discardConfirmBody,
+      consequences: [t.photoApproval.removeConsequence],
+      confirmLabel: p.discardConfirm,
+    });
+    if (!ok) return;
     startTransition(async () => {
-      const ok = await confirm({
-        title: p.discardConfirmTitle,
-        body: p.discardConfirmBody,
-        consequences: [t.photoApproval.removeConsequence],
-        confirmLabel: p.discardConfirm,
-      });
-      if (!ok) return;
       setMessage(null);
       const result = await discardPendingPhoto(photo.id);
       setMessage(result.ok ? { ok: true, text: result.driveWarning ?? p.discarded } : { ok: false, text: result.error });
