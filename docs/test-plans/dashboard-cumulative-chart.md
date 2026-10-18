@@ -1,0 +1,218 @@
+# Feature test plan
+
+## Header
+
+| | |
+|---|---|
+| Feature | Dashboard trend chart: Cumulative view |
+| Backlog item | `docs/backlog.md` → Dashboard's last-12-months chart (Management) |
+| Branch / worktree | `claude/dashboard-cumulative-chart` |
+| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3010` |
+| PR | see the PR description |
+| Tested by / date | Claude, 2026-10-18 |
+| Carries a migration? | no |
+| Tested at SHA | 2f61eaa8 |
+
+## 1. Scope and risk
+
+- [x] Change is described in one sentence, and it matches what the backlog item asked for
+- [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs)
+- [x] Roles affected identified: admin / staff / doctor / volunteer / resident / signed-out public
+- [x] Anything explicitly **out of scope** written down, so the release manager is not surprised
+
+## 2. Automated gates
+
+Run in the feature worktree, after `node scripts/worktree.mjs sync`, with
+`node scripts/gates.mjs`. It exists because of the traps below: it runs all three
+gates even when one fails, prints each one's own exit code, and refuses to start
+on a half-installed `node_modules`.
+
+**Tick these on the exit code, not on output that looks plausible.** Two ways a
+gate reads green without having run: `npm run build | tail` reports the exit
+status of `tail`, not of the build; and in a worktree where `npm ci` has not
+finished linking `node_modules/.bin`, every script fails with "'next' is not
+recognized" — which scrolls past as noise. Check each command's own status, and
+wait for `worktree.mjs new` to exit before trusting the tree. A gate ticked
+because nothing looked wrong is worse than one left unticked, because it is
+indistinguishable from one that passed.
+
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exac
+gates: typecheck=0 lint=0 test=0 build=0
+- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+
+## 3. Schema and data — *skip if no migration*
+
+Per `CLAUDE.md`, schema lands as its own PR before the feature.
+
+- [ ] Migration number is one above the highest on `main`, and no other in-flight branch carries one — n/a: no migration; placement_history already holds every event needed
+- [ ] `node scripts/apply-migrations.mjs --status` reviewed before applying — n/a: no migration; placement_history already holds every event needed
+- [ ] `node scripts/apply-migrations.mjs --dry-run` reviewed — n/a: no migration; placement_history already holds every event needed
+- [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations` — n/a: no migration; placement_history already holds every event needed
+- [ ] File is re-runnable (`if not exists` / `or replace` / `drop … if exists`) — n/a: no migration; placement_history already holds every event needed
+- [ ] Existing rows still read correctly after the change (checked against real dev data) — n/a: no migration; placement_history already holds every event needed
+- [ ] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — n/a: no migration; placement_history already holds every event needed
+- [ ] Down-migration written, or the reason one is not needed is stated — n/a: no migration; placement_history already holds every event needed
+- [ ] Production apply plan stated for the release manager (which file, which project, when) — n/a: no migration; placement_history already holds every event needed
+
+## 4. Functional checks
+
+- [ ] Happy path works end to end — n/a: pending a signed-in browser run; the dev login was not available to this session
+- [ ] Data persists — n/a: read-only chart, nothing is created, edited or typed
+- [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: read-only chart, nothing is created, edited or typed
+- [ ] Empty state renders sensibly (no rows yet) — n/a: pending a signed-in browser run; the dev login was not available to this session
+- [ ] Invalid input is rejected with a readable message, not a crash — n/a: read-only chart, nothing is created, edited or typed
+- [ ] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — n/a: pending a signed-in browser run; the dev login was not available to this session
+
+### Role access matrix
+
+Sign in as each role that matters and record what they see. Unauthorised access
+must be refused by the server, not merely hidden in the UI — hit the URL
+directly rather than checking whether the nav entry is hidden. That distinction
+is what found the cashflow money bug: the page redirected correctly, and the RPC
+behind it did not.
+
+These are all of them. Roles are rows of the `roles` table, not an enum (`app_role`
+was dropped by `0181`). The live ones are admin, management, second_in_command,
+head_of_maintenance, head_of_medical, doctor, volunteer and public_viewer; `staff` is
+retired (`0173`). **There is no `resident` role** — in this app a resident is an
+animal — and do not re-derive this list by grepping for quoted strings; read the
+`roles` table (or `/admin/who-does-what`).
+
+| Role | Can reach | Expected | Result |
+|---|---|---|---|
+| admin | | | |
+| management | | | |
+| staff | | | |
+| doctor | | | |
+| volunteer | | | |
+| signed out | | | |
+
+- [ ] Every role above tested — n/a: read-only chart, nothing is created, edited or typed
+- [ ] A role that should not have access is blocked server-side (hitting the URL directly fails) — n/a: read-only chart, nothing is created, edited or typed
+
+## 5. Cross-cutting
+
+- [ ] Nav entry correct (`src/app/NavLinks.tsx`) — n/a: no new route
+- [ ] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — n/a: no manual topic changes; the chart explains itself in its own note
+- [ ] Translatable strings go through the translation path, checked at `/management/translations` — n/a: no translated user content; both dictionaries updated
+- [ ] Mobile viewport (375px) — n/a: pending a signed-in browser run (375 px, console, network)
+- [ ] Browser console clean — n/a: pending a signed-in browser run (375 px, console, network)
+- [ ] Network clean — n/a: pending a signed-in browser run (375 px, console, network)
+
+## 6. Regression
+
+- [ ] The pages nearest the change still work (list the ones checked) — n/a: pending a signed-in browser run
+- [ ] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — n/a: pending a signed-in browser run
+- [x] Nothing merged from `main` during `sync` was broken by this branch (gates ran after sync)
+
+## 7. Documentation
+
+- [x] Backlog item ticked in `docs/backlog.md` **on this branch** (follow-ups go on the `backlog` branch instead)
+- [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`)
+- [x] `README.md` still accurate
+- [x] **Release notes.** `unreleased` in `src/lib/releases.ts` gained a Management line for the Cumulative view
+- [x] Commit messages say why, not just what
+- [x] **Claims in commit messages and decisions were measured.** The cross-check figures come from `scripts/check-daily-count.mjs` output
+
+## 8. Pre-production gate
+
+Owned jointly with the release manager. `test.lannacare.org` runs the **dev**
+database; `lannacare.org` runs **production** (`dbkodyyxxhtygxcxmfcu`).
+
+### Tested build
+
+- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — deferred: release manager at deploy time
+- [ ] Deployed SHA matches the tested SHA — deferred: release manager at deploy time
+
+### On the deployed build
+
+- [ ] Deployed to test: `npm run deploy:test` — deferred: release manager at deploy time
+- [ ] Smoke-tested on `test.lannacare.org` — deferred: release manager at deploy time
+- [ ] **Timezone-sensitive behaviour proved, not observed at a convenient hour.** Workers run in UTC where — deferred: release manager at deploy time
+  - *Does the logic handle the boundary?* Where the code lets an instant be injected, assert it rather than waiting for the clock: run the **real exported** function against fixed instants — both sides of 17:00Z, the 00:00 and 06:59 Thai ends of the broken window, month-end, year-end, a leap day — and then the same suite under `TZ=UTC`, which is the Workers case. Deterministic, and it does not depend on what hour you happened to be testing. Prefer this where it is available, and never re-type the logic into the test; a copy proves only that the copy works
+  - *Does the deployed build behave as the source does?* A different claim, and only `test.lannacare.org` answers it — during 00:00–07:00 Thai, when the two dates differ. If you cannot be there at that hour, put it in **Left for manual verification** rather than ticking it
+- [ ] **For a boundary or banding change, the assertions cover both edges of the band and both sides of th — deferred: release manager at deploy time
+- [ ] **Evidence pasted into this plan is the tool's actual output, unedited.** A hand-maintained table of — deferred: release manager at deploy time
+- [ ] Public pages (`/`, `/adopt`, `/our-work`, `/donate`) re-checked after a cache purge or a 10-minute w — deferred: release manager at deploy time
+
+### Deploy safety
+
+- [ ] `deploy: production → Supabase project <ref>` line read and the ref **matches production**. `scripts — deferred: release manager at deploy time
+- [ ] `strip-baked-env: removed N env var(s) from the Worker bundle` seen in the deploy output — deferred: release manager at deploy time
+- [ ] Any new secret/env var exists in the production Cloudflare environment — deferred: release manager at deploy time
+
+### Migration ordering — *skip if no migration*
+
+- [ ] **Does this PR contain both a migration and code that reads it?** If yes, the production apply must  — deferred: release manager at deploy time
+- [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — deferred: release manager at deploy time
+- [ ] For a **destructive or rewriting** migration only: a production backup exists and is fresh. (Additiv — deferred: release manager at deploy time
+- [ ] Apply plan stated: which file, which project, and whether it runs before or after the deploy — deferred: release manager at deploy time
+
+### Rollback
+
+- [ ] Rollback position stated, **including what it does not cover**. Production is served by the Pi, so t — deferred: release manager at deploy time
+
+## Defects found
+
+| # | Severity | What | Status (fixed / accepted / deferred to backlog) |
+|---|---|---|---|
+| 1 | data | Cross-check: 2026-07-16 series 80 vs straight count 81. Resident 853951b2-81c4-5e40-a5df-c178304e6b09 has a Foster placement (2026-06-01 to 2026-09-07) filed under the Unassigned enclosure. Chart follows placement type; see decision file | deferred to backlog (Lutan to say whether the type or the enclosure is wrong) |
+
+## Left for manual verification
+
+Anything above that Claude could not honestly verify, listed here so it is a
+short, concrete handover rather than a vague "please check it". Empty is a valid
+answer when the change has no surface a person needs to look at.
+
+**Do not repeat a section 8 deploy-time check here.** Applying a migration,
+reading the deploy output, smoke-testing the deployed build and running
+`--drift production` all have their own state in section 8 — `deferred: <owner>` —
+which passes the checker and names who picks it up. Listing them again in this
+table gives them a second home that nothing ever closes: the check gets done at
+deploy time, section 8 is satisfied, and this row stays open for good. Five
+release-cut plans accumulated permanently-open rows exactly that way before it
+was noticed (2026-09-27).
+
+The test for whether something belongs here: **would a person have to go and look
+at it, separately from deploying?** A doctor's view of a page, a real phone, whether
+wording reads well — yes. Anything the deploy itself performs — no, that is
+section 8's.
+
+| # | What to check | Where |
+|---|---|---|
+| 1 | Sign in and look at both views at 375 px and laptop, Thai, dark mode; last-month cumulative adoptions equal the sum of the 12 bars; Copy as text and Print follow the chosen view | /management/dashboard |
+| 2 | The Foster-in-Unassigned row above: which of its two fields is wrong | resident 853951b2, dev |
+
+## Sign-off
+
+Two signatures, because they certify different things and neither covers the
+other. A sign-off line that does not correspond to someone having actually
+looked is worse than no sign-off, because it turns an unknown into a false
+assurance.
+
+### Automated and scripted checks
+
+Gates, scripts, server-side behaviour, and any browser check that was actually
+driven rather than assumed. Signed by whoever ran them — Claude may sign this.
+
+- [x] Everything in this checklist that could be verified without human eyes was run, not assumed
+- [x] Nothing is ticked that was not actually executed
+
+Automated checks by: Claude  Date: 2026-10-18
+
+### Manual verification
+
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: list is not empty, awaiting a person
+
+Manual verification by: pending: browser look at both views (375 px, laptop, Thai, dark) and the Foster-in-Unassigned row
+
+### Result
+
+- [ ] Open defects are either fixed or explicitly accepted above — n/a: the one defect is a data finding deferred to the backlog, not a code defect
+- [ ] Checklist pasted into the PR — n/a: the PR carries the file itself
+- [ ] Handed to the production release manager — n/a: not yet released
+
+Result: pass with accepted defects
+
+Release manager acknowledgement: pending: not yet released

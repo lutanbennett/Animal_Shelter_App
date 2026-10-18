@@ -75,6 +75,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "Dashboard: the last-12-months chart has a Cumulative view. A daily line shows how many residents are at the shelter (hospital counts; residents in foster care do not while they are away), over running totals of intakes, adoptions and deaths. Switch between Month by month and Cumulative above the chart; it remembers your choice, and Copy as text and Print follow it.",
+    roles: ["admin", "management", "second_in_command"],
+  },
   "Resident page: tap the photo at the top to see it large and uncropped. Swipe or use the arrows to go through the other photos (medical ones are never shown), and \"See all photos\" takes you to the Photos tab.",
   "Appeals are easy to find: the public site now always links to Appeals in the footer and under Get involved, and the page explains itself when no appeal is open. In the app, Appeals is in the menu for anyone who may run them, and there is a new Run fundraising appeals card you can give a role in Settings → Who does what. On Settings → Website there is a line pointing to Appeals.",
   "Photos to approve: Discard and Remove now show their \"Are you sure?\" box, and the app no longer locks up when you press them.",
