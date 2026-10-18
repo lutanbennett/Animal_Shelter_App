@@ -10,6 +10,7 @@ import { loadTranslations } from "@/lib/translations/queries";
 import { placeName } from "@/lib/enclosures/names";
 import { getT } from "@/lib/i18n/get-t";
 import { isMedicalFolder } from "@/lib/google/drive-client";
+import { canBrowseMemes, loadResidentMemes } from "@/lib/memes/queries";
 import type { AppealStatus } from "@/lib/appeals/state";
 import { localLabel } from "@/lib/translations/labels";
 import {
@@ -249,6 +250,11 @@ export default async function ResidentPage(
     else appealsSummary = { count: data.length, latestId: data[0]?.id ?? null, latestStatus: data[0]?.status ?? null };
   }
 
+  // The memes featuring this resident (0223): only for a login holding social.library at Read. Many roles can open
+  // this page and must not learn a meme exists here, so the gate is pinned on this list as it is on the library
+  // (docs/decisions/2026-10-18-meme-library-app.md). null = no list drawn at all.
+  const memes = canBrowseMemes(perms) ? await loadResidentMemes(supabase, id) : null;
+
   // The header photo's viewer: the same attachments the Photos tab lists, minus the Medical
   // folder (isMedicalFolder, the rule the profile-photo and appeal code use). A failed read
   // leaves the viewer with the profile photo alone.
@@ -315,6 +321,10 @@ export default async function ResidentPage(
       bloodTests={bloodTestsResult.data ?? []}
       photoCount={attachmentsCountResult.count ?? 0}
       appeals={appealsSummary}
+      memes={
+        memes &&
+        memes.map((m) => ({ id: m.id, drive_file_id: m.drive_file_id, title: m.title, platforms: m.platforms }))
+      }
       adoptionUpdates={{
         count: adoptionUpdatesResult.data?.length ?? 0,
         latest: adoptionUpdatesResult.data?.[0] ?? null,

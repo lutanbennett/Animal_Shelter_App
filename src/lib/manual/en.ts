@@ -959,6 +959,29 @@ const manual: Manual = {
           },
         },
         {
+          id: "posted-on-social",
+          title: "Marking a photo as posted on social media",
+          roles: ["admin", "management"],
+          activity: "photos.resident_manage",
+          path: "Resident hub → Photos",
+          intro:
+            "Whoever makes the shelter's next Facebook, Instagram, LINE or TikTok post can see at a glance which of a resident's photos have already been used, so nobody posts the same picture twice and a photo that has never been shown gets its turn.",
+          steps: [
+            "Open the Photos card on the hub. A photo that has been posted carries a green Posted label with where it went (FB, IG, LINE, TT or Other). The buttons above the gallery show just the photos not posted yet, just the posted ones, or all of them. Start from Not posted yet when you are choosing a picture for a new post.",
+            "Posted one photo? Tap it to open it, then tap Mark as posted. Choose where it was posted, check the date (it starts on today), paste a link to the post if you have one, add a note if it helps (\"boosted\", \"appeal for Chao Guay 2\"), and tap the green button. The photo gets its label straight away.",
+            "Posted several at once? Tap Select photos above the gallery, tap each photo you posted (Select all shown picks every photo on screen), then tap Mark as posted and fill in the same details once. Every selected photo is recorded with them. Tap Done to leave selecting.",
+            "Opening a posted photo lists each time it was posted, with Open post where a link was saved. Posted the same photo twice, on two platforms or on two days? Mark it again: each post is kept, and the label shows every place it went.",
+            "Marked the wrong photo? Open it and tap Undo next to that post. The record is removed; the photo itself is untouched.",
+            "Medical photos can be marked too, for the times an appeal's photo goes out. Marking only records where a photo went: it never puts a photo on the website. A Medical photo stays off the website whatever is recorded here.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Only a login that may manage a resident's photos (Admin and Management) sees Mark as posted and Undo. Everyone who can see the photos sees the Posted labels, so a volunteer can tell which pictures have been used.",
+            },
+          ],
+        },
+        {
           id: "approve-photos",
           title: "Approving photos",
           roles: ["admin", "management"],
@@ -1034,6 +1057,33 @@ const manual: Manual = {
             {
               kind: "note",
               text: "Management: a photo not assigned within 30 days appears on Settings → System status under Photos with no resident.",
+            },
+          ],
+        },
+        {
+          id: "memes",
+          title: "Memes: adding one and recording where it went",
+          roles: ["admin"],
+          activity: "social.library",
+          path: "Home → Meme library (or Management → Memes)",
+          intro:
+            "The meme library keeps the memes the shelter makes elsewhere (a phone app, Canva) and a record of where each one has been posted, so nobody posts the same joke twice and the next post is easy to pick. Memes are never shown on the website: they can be made from medical or sad photos, and a joke needs its context.",
+          steps: [
+            "Tap Meme library on your home screen. The newest memes are first. Under each one you see the places it has been shared (the Facebook, Instagram, LINE or TikTok mark) or Not shared yet.",
+            "To find one, type a word from its caption in the search box, or filter by the resident in it, a tag, or where it was shared. Choose Not shared yet under Shared on to see what is still waiting to be posted. Clear filters takes the filters off.",
+            "To add a meme, tap Add a meme, then Choose from phone or photo library and pick the image you saved from the app you made it in. Give it a title, the caption you post with it (English and Thai are separate boxes, both optional), the residents who are in it (none, one or several) and some tags separated by commas. Tap Save meme.",
+            "Tap a meme to open it. Download saves the image to your phone so you can post it. Each resident's name is a link to their page, and the resident's page has a short Memes list of its own.",
+            "When you have posted it, tap Record a share, choose where, check the date (it starts on today), paste the link to the post if you have it, add a note such as \"boosted\" if you like, and tap Record share. The meme now shows that place in the library.",
+            "Edit changes the title, captions, residents and tags; the picture itself cannot be changed, so a new version is a new meme. Archive takes a meme out of the library and off the residents' pages without deleting it; its page still opens and Bring back restores it.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Who can see the library is a Settings choice: the Meme library card under Who does what gives a role the whole library (browse, add, record shares, archive). Until Admin ticks it onto a role, only Admin can open it. A role that only needs to browse and download gets the activity at Read.",
+            },
+            {
+              kind: "warning",
+              text: "A meme can only ever be seen by a signed-in login that holds the library. It is never on the website, and a link to a meme image does not work for anyone else.",
             },
           ],
         },

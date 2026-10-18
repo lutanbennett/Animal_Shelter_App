@@ -13,7 +13,7 @@
  * rest, and Settings and Management landing pages with their areas.
  */
 
-import { Activity, BadgeCheck, Camera, ClipboardCheck, HandHeart, Coins, Globe, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
+import { Activity, BadgeCheck, Camera, Laugh, ClipboardCheck, HandHeart, Coins, Globe, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
 import { CONTACT_ICONS, ENCLOSURE_ICONS, NAV_ICONS, SECTION_ICONS, CLINIC_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "./can";
@@ -213,6 +213,17 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.nav.appeals,
     device: "any",
     menu: true,
+  },
+  {
+    // The social media library (0223): memes made elsewhere, and where each was posted. Opens at Read; never public.
+    path: "/memes",
+    activity: "social.library",
+    level: "read",
+    icon: Laugh,
+    label: (t) => t.nav.memes,
+    device: "any",
+    menu: false,
+    section: "management",
   },
   {
     path: "/management/clinics",

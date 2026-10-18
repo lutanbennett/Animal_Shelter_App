@@ -521,6 +521,12 @@ export const ENTRIES = {
     },
   ],
 
+  "posted-on-social": [
+    { activity: "photos.resident_manage", device: "phone", do: "Open a resident's Photos, tap a photo, tap Mark as posted, choose Facebook, keep today's date, tap the green button", expect: "The photo shows a green Posted FB label; the Not posted yet count drops by one" },
+    { activity: "photos.resident_manage", device: "phone", do: "Tap Select photos, tap three photos, tap Mark as posted, choose Instagram, tap the green button", expect: "All three photos show Posted IG; the Posted count rises by three" },
+    { activity: "photos.resident_manage", device: "phone", do: "Open a posted photo and tap Undo next to the post", expect: "The post record disappears and the photo loses its Posted label" },
+    { activity: "resident.record", device: "both", do: "As a login that can see photos but not manage them, open the same resident's Photos", expect: "The Posted labels show; there is no Select photos, Mark as posted or Undo" },
+  ],
   "approve-photos": [
     {
       activity: "Choose the animal for a photo tagged to an enclosure",
@@ -591,6 +597,37 @@ export const ENTRIES = {
       do: "Tap Add photos on the home screen, take or choose two photos, tap one, then tap the resident in it, and do the same for the other.",
       expect: "The count reads 2 of 2 tagged, each photo shows a tick, and each appears on its resident's Photos tab.",
       notes: { doctor: "A doctor has no folder choice: photos go into Medical, and never to the website." },
+    },
+  ],
+
+  "memes": [
+    {
+      activity: "Add a meme featuring two residents",
+      needs: "social.library",
+      device: "phone",
+      do: "Tap Meme library on the home screen, then Add a meme. Choose an image from the phone, give it a title and a caption, choose two residents, add a tag, and tap Save meme.",
+      expect: "The meme's own page opens with the picture, the caption and both residents' names. In the library it is first, marked Not shared yet, and it is on both residents' pages under Memes.",
+    },
+    {
+      activity: "Record where a meme was shared",
+      needs: "social.library",
+      device: "phone",
+      do: "On a meme's page tap Record a share, choose Facebook, paste a link to the post, and tap Record share. Do it again for Instagram without a link.",
+      expect: "Both shares are listed with their dates, the Facebook one with Open the post. In the library the meme shows the Facebook and Instagram marks, and it no longer appears under the Not shared yet filter.",
+    },
+    {
+      activity: "Download a meme to post it",
+      needs: "social.library:read",
+      device: "phone",
+      do: "On a meme's page tap Download.",
+      expect: "The phone saves the image file; nothing else changes.",
+    },
+    {
+      activity: "Archive a meme",
+      needs: "social.library",
+      device: "phone",
+      do: "On a meme's page tap Archive and confirm.",
+      expect: "The meme leaves the library and the residents' pages. Its page still opens, says it is archived, and Bring back restores it.",
     },
   ],
 

@@ -18,8 +18,8 @@ import { readCachedPhoto, writeCachedPhoto } from "@/lib/photo-cache";
  *  - A file the public site shows (`is_public_drive_file`, 0084) is served
  *    to anyone, and cached as public.
  *  - Any other file — blood-test and procedure attachments, a resident's
- *    non-profile photos, maintenance photos, unpublished project photos and
- *    Friend logos and medication label photos — only to a caller whose own session can select the row
+ *    non-profile photos, maintenance photos, unpublished project photos,
+ *    Friend logos, medication label photos and memes — only to a caller whose own session can select the row
  *    that holds it (`canSeeInternalFile`), so RLS decides: signed out, an
  *    archived login and a role with no app access all see nothing, and a
  *    doctor is refused a maintenance photo as the maintenance pages refuse
@@ -92,6 +92,21 @@ async function canSeeInternalFile(supabase: Supabase, fileId: string) {
 }
 
 /**
+ * A meme (0223), asked of the memes table as the caller: RLS answers a row only to a session holding
+ * social.library at Read, so a signed-out visitor, an archived login and a role without the library all get
+ * nothing. Asked here and not through can_see_drive_file because the app half carried no migration
+ * (docs/decisions/2026-10-18-meme-library-app.md); fold it into that function in the next schema PR. Never public:
+ * is_public_drive_file is not widened, and a meme is served `private, no-store` like every internal file.
+ */
+async function isMemeTheCallerMaySee(supabase: Supabase, fileId: string) {
+  const { count, error } = await supabase
+    .from("memes")
+    .select("id", { count: "exact", head: true })
+    .eq("drive_file_id", fileId);
+  return !error && (count ?? 0) > 0;
+}
+
+/**
  * Only raster images and PDFs are shown in the browser; anything else Drive
  * reports (HTML, SVG, text) is downloaded instead, so an uploaded file can't
  * run as a page on our origin when its URL is opened directly.
@@ -161,7 +176,9 @@ export async function GET(
   const isPublicFile = isPublic === true || isPublicStory;
 
   if (!isPublicFile) {
-    if (!(await canSeeInternalFile(supabase, fileId))) return notFound();
+    if (!(await canSeeInternalFile(supabase, fileId)) && !(await isMemeTheCallerMaySee(supabase, fileId))) {
+      return notFound();
+    }
   }
 
   const publicHeaders = (seconds: number) =>
