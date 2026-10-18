@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → "An 'Approve photos' card, assignable to any role…" (not ticked: the app half ticks it) |
 | Branch / worktree | `claude/approve-photos-schema` @ `C:\Development\Animal_Shelter_approve-photos-schema` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3001` (not used) |
-| PR | pending |
+| PR | #721 |
 | Tested by / date | Claude, 2026-10-18 |
 | Carries a migration? | yes, 0221 |
 | Tested at SHA | 78f53802 |
@@ -115,7 +115,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] Migration and code that reads it in one PR — n/a: no code reads the migration yet
 - [ ] Production dry-run clean — deferred: release manager
 - [ ] Production backup for a destructive migration — n/a: additive function replacement
-- [ ] Apply plan stated: file 0221, production project, with the release, before or after the deploy is immaterial
+- [x] Apply plan stated: file 0221, production project, with the release, before or after the deploy is immaterial
 
 ### Rollback
 
