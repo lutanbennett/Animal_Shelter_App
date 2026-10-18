@@ -521,6 +521,12 @@ export const ENTRIES = {
     },
   ],
 
+  "posted-on-social": [
+    { activity: "photos.resident_manage", device: "phone", do: "Open a resident's Photos, tap a photo, tap Mark as posted, choose Facebook, keep today's date, tap the green button", expect: "The photo shows a green Posted FB label; the Not posted yet count drops by one" },
+    { activity: "photos.resident_manage", device: "phone", do: "Tap Select photos, tap three photos, tap Mark as posted, choose Instagram, tap the green button", expect: "All three photos show Posted IG; the Posted count rises by three" },
+    { activity: "photos.resident_manage", device: "phone", do: "Open a posted photo and tap Undo next to the post", expect: "The post record disappears and the photo loses its Posted label" },
+    { activity: "resident.record", device: "both", do: "As a login that can see photos but not manage them, open the same resident's Photos", expect: "The Posted labels show; there is no Select photos, Mark as posted or Undo" },
+  ],
   "approve-photos": [
     {
       activity: "Choose the animal for a photo tagged to an enclosure",
