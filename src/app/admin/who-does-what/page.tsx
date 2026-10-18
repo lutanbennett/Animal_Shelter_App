@@ -205,6 +205,8 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
           roleKey={role.key}
           roleName={names.get(role.key) ?? role.key}
           canEdit={canEdit}
+          locked={isAdmin && !canEdit}
+          verifyHref={TWO_STEP_PATH}
           held={held.map(tileOf)}
           library={library.map(tileOf)}
         />
