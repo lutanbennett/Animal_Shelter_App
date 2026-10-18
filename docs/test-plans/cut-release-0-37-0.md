@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none — a release cut closes no backlog item |
 | Branch / worktree | `claude/release-0-37-0` @ `C:\Development\Animal_Shelter_release-0-37-0` |
 | Dev server | not driven — `/releases` is behind sign-in; see §5 |
-| PR | **#731** — guessed at the time of writing and **to be corrected here from `gh pr view` once opened**, not left standing. The last two cuts guessed wrong (#704→#705, #717→#718), so the guess is recorded as a guess |
+| PR | **#731** — guessed at the time of writing and then **re-read from `gh pr view` after opening: the guess was correct.** The last two cuts guessed wrong (#704→#705, #717→#718), so it was written down as a guess and verified rather than trusted. Three wrong in a row did not happen, but the re-read is what established that |
 | Tested by / date | Claude (production release manager session) / 2026-10-19 |
 | Carries a migration? | no — the release's **three** (`0221`, `0222`, `0223`) merged in their own PRs and are applied as a release step |
 | Tested at SHA | the tip of this branch, re-run after the plan was filled in |
@@ -59,7 +59,7 @@ VERDICT: all checks passed
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — `n/a: not yet — the PR does not exist at this commit.` Written and committed before the PR is opened so the first run is green by construction. Ticked in a follow-up commit once a run is seen green, with its `headSha` read from `gh run list` and matched against this branch's HEAD
+- [x] CI green on the PR (runs the same three) — **all 8 checks passing, 0 failing, `mergeStateStatus: CLEAN`** on PR #731. The run's `headSha` was read from `gh run list` and matched against this branch's HEAD rather than taken from the PR bar's cached reading: `success 0dfd2ac9 CI` against `HEAD=0dfd2ac93ecc895c8d764f5d4180abd1d8757da9`. **The first run was green by construction for the fifth release running**, because the plan was written and committed before the PR was opened. This tick is itself a commit, so a second run follows and is expected
 - [x] `node scripts/check-release-guards.mjs` — all guards `ok`, exit 0
 
 ## 3. Schema and data — *skip if no migration*
