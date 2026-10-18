@@ -76,6 +76,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "A resident's Photos now show which pictures have already been posted on social media. A posted photo carries a green Posted label with where it went (Facebook, Instagram, LINE, TikTok or Other), and the buttons above the gallery show just the photos not posted yet, so whoever makes the next post can pick one that has not been used. Open a photo and tap Mark as posted to record where and when it was posted, with a link to the post if you have one; Undo removes a record made by mistake. To record several at once, tap Select photos, tap each one, then Mark as posted. Admin and Management can mark photos; everyone who can see the photos sees the labels. Marking a photo never puts it on the website.",
+    roles: ["admin", "management"],
+  },
+  {
     text: "Settings → Who does what has a new Approve photos card. Whoever holds it can look at the resident photos waiting, approve them for the website, and remove one that should not be seen, without being able to change a resident's record. Add Shelter Photos now waits on it: its Add button is greyed out, with the reason, until some role can approve photos. A role that has been retired no longer counts as one that can approve. Admin ticks the card onto a role; nobody has it yet.",
     roles: ["admin", "management"],
   },
