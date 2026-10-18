@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Resident page: tap the photo at the top to see it large and uncropped. Swipe or use the arrows to go through the other photos (medical ones are never shown), and \"See all photos\" takes you to the Photos tab.",
   "Photos to approve: Discard and Remove now show their \"Are you sure?\" box, and the app no longer locks up when you press them.",
   "Who does what: if you have not yet verified with your authenticator app, the cards board now says so on the board itself, with a Verify now link, and shows greyed-out buttons instead of nothing. It used to look broken.",
 ];

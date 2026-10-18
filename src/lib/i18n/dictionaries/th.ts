@@ -4598,6 +4598,8 @@ const th: Dictionary = {
     },
     hub: {
       backToResidents: "← กลับไปหน้าสัตว์ในความดูแล",
+      viewPhotoLarge: (name: string) => `ดูรูปของ ${name} ขนาดเต็ม`,
+      seeAllPhotos: "ดูรูปทั้งหมด",
       microchip: "ไมโครชิป",
       microchipImplanted: (date: string) => `ฝังชิปเมื่อ ${date}`,
       microchipNudge: "พร้อมหาบ้านแล้วแต่ยังไม่มีหมายเลขไมโครชิป ผู้รับเลี้ยงต่างประเทศจะต้องใช้",
@@ -5738,6 +5740,11 @@ const th: Dictionary = {
     confirmRemove: "ยืนยันการลบ",
     photoFallback: "รูปภาพ",
     residentPhotoAlt: "รูปภาพสัตว์",
+    viewer: {
+      position: (n: number, total: number) => `${n} จาก ${total}`,
+      previous: "รูปก่อนหน้า",
+      next: "รูปถัดไป",
+    },
     showAll: (n: number) => `แสดงทั้งหมด (${n})`,
     showFewer: "แสดงน้อยลง",
     medicalNotProfile:

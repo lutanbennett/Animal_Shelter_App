@@ -9,6 +9,7 @@ import { getTagOrigin } from "@/lib/tags/origin";
 import { loadTranslations } from "@/lib/translations/queries";
 import { placeName } from "@/lib/enclosures/names";
 import { getT } from "@/lib/i18n/get-t";
+import { isMedicalFolder } from "@/lib/google/drive-client";
 import type { AppealStatus } from "@/lib/appeals/state";
 import { localLabel } from "@/lib/translations/labels";
 import {
@@ -248,8 +249,25 @@ export default async function ResidentPage(
     else appealsSummary = { count: data.length, latestId: data[0]?.id ?? null, latestStatus: data[0]?.status ?? null };
   }
 
+  // The header photo's viewer: the same attachments the Photos tab lists, minus the Medical
+  // folder (isMedicalFolder, the rule the profile-photo and appeal code use). A failed read
+  // leaves the viewer with the profile photo alone.
+  const { data: photoRows } = resident.profile_photo_drive_file_id
+    ? await supabase
+        .from("attachments")
+        .select("drive_file_id, file_name, sub_folder")
+        .eq("owner_type", "resident")
+        .eq("owner_id", id)
+        .order("uploaded_at", { ascending: true })
+        .returns<{ drive_file_id: string; file_name: string | null; sub_folder: string | null }[]>()
+    : { data: null };
+  const otherPhotos = (photoRows ?? [])
+    .filter((p) => !isMedicalFolder(p.sub_folder))
+    .map((p) => ({ drive_file_id: p.drive_file_id, file_name: p.file_name }));
+
   return (
     <ResidentHub
+      otherPhotos={otherPhotos}
       resident={resident}
       status={listViewResult.data?.[0] ?? null}
       isDeceased={currentState?.is_deceased ?? false}

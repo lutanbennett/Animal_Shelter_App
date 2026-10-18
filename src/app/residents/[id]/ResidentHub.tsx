@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, type ReactNode } from "react";
+import { Fragment, useCallback, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { HandHeart, Pencil } from "lucide-react";
 import type { AppealStatus } from "@/lib/appeals/state";
@@ -27,6 +27,7 @@ import {
   todayIso,
 } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
+import { PhotoViewer, type ViewerPhoto } from "@/components/PhotoViewer";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import {
   statusLabel,
@@ -194,7 +195,10 @@ export function ResidentHub({
   adoptionUpdates,
   now,
   tagOrigin,
+  otherPhotos,
 }: {
+  /** The resident's non-medical photos (page.tsx filters), for the header's photo viewer. */
+  otherPhotos: ViewerPhoto[];
   resident: Resident;
   status: ResidentStatus | null;
   isDeceased: boolean;
@@ -246,6 +250,22 @@ export function ResidentHub({
     : resident.name;
 
   const base = `/residents/${resident.id}`;
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const photoButtonRef = useRef<HTMLButtonElement>(null);
+  const closeViewer = useCallback(() => {
+    setViewerOpen(false);
+    photoButtonRef.current?.focus();
+  }, []);
+  // The profile photo first (it is what was tapped), then the other non-medical ones.
+  const viewerList: ViewerPhoto[] = resident.profile_photo_drive_file_id
+    ? [
+        {
+          drive_file_id: resident.profile_photo_drive_file_id,
+          file_name: otherPhotos.find((p) => p.drive_file_id === resident.profile_photo_drive_file_id)?.file_name ?? null,
+        },
+        ...otherPhotos.filter((p) => p.drive_file_id !== resident.profile_photo_drive_file_id),
+      ]
+    : [];
 
   // Housing & status. A hospitalised resident is off-site in medical care,
   // and a fostered or adopted one is living with a carer, so the card says
@@ -432,11 +452,33 @@ export function ResidentHub({
       <div className="flex flex-col gap-4 rounded-lg border border-border bg-surface p-5 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex min-w-0 gap-4">
           {resident.profile_photo_drive_file_id ? (
-            <img
-              src={driveImageUrl(resident.profile_photo_drive_file_id)}
-              alt={displayName}
-              className="h-20 w-20 shrink-0 rounded-lg border border-border object-cover"
-            />
+            <>
+              <button
+                ref={photoButtonRef}
+                type="button"
+                onClick={() => setViewerOpen(true)}
+                aria-label={t.residents.hub.viewPhotoLarge(displayName)}
+                className="shrink-0 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              >
+                <img
+                  src={driveImageUrl(resident.profile_photo_drive_file_id)}
+                  alt=""
+                  className="h-20 w-20 rounded-lg border border-border object-cover"
+                />
+              </button>
+              {viewerOpen && (
+                <PhotoViewer
+                  photos={viewerList}
+                  startIndex={0}
+                  onClose={closeViewer}
+                  footer={
+                    <Link href={`${base}/photos`} className="font-medium underline">
+                      {t.residents.hub.seeAllPhotos}
+                    </Link>
+                  }
+                />
+              )}
+            </>
           ) : (
             <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg border border-border bg-surface-hover text-center text-xs text-muted">
               {t.residents.hub.noPhoto}
