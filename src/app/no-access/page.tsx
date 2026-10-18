@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import { CalendarClock, Home } from "lucide-react";
+import { Home } from "lucide-react";
 import { ActionLink } from "@/components/ActionLink";
 import { getT } from "@/lib/i18n/get-t";
-import { createClient } from "@/lib/supabase/server";
-import { loadSessionRole } from "@/lib/auth/app-access";
-import { DEFAULT_SIGNED_IN_PATH, DOCTOR_HOME_PATH } from "@/lib/auth/next-path";
+import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/next-path";
 
 export const metadata: Metadata = { robots: { index: false } };
 
@@ -20,7 +18,6 @@ export const metadata: Metadata = { robots: { index: false } };
 export default async function NoAccessPage() {
   const { t } = await getT();
   const n = t.noAccess;
-  const isDoctor = (await loadSessionRole(await createClient()))?.key === "doctor";
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-4 p-6">
@@ -30,9 +27,9 @@ export default async function NoAccessPage() {
       </div>
       <div>
         <ActionLink
-          href={isDoctor ? DOCTOR_HOME_PATH : DEFAULT_SIGNED_IN_PATH}
-          label={isDoctor ? n.goToAppointments : t.nav.home}
-          icon={isDoctor ? CalendarClock : Home}
+          href={DEFAULT_SIGNED_IN_PATH}
+          label={t.nav.home}
+          icon={Home}
           variant="primary"
           iconOnlyOnMobile={false}
         />

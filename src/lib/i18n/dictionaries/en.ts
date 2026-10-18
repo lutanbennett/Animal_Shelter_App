@@ -5601,7 +5601,6 @@ const en = {
     pageTitle: "You don't have access to this page",
     body: "Your role doesn't include it. If you need it for your work, ask a manager or an admin.",
     goToMy: "Go to My tasks",
-    goToAppointments: "Go to Appointments",
   },
 
   shelterVisits: {

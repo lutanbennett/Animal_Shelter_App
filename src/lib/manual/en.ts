@@ -89,7 +89,7 @@ const manual: Manual = {
           steps: [
             "Open the app's address in your browser and tap Staff & Volunteer Login — or, once the website is open to the public, Staff login at the very bottom of any public page, or in the menu on a phone (or go straight to /login). Already signed in? The public pages have Open the app at the top instead, which takes you to the same place.",
             "Enter your email and password and tap Sign in — or tap Continue with Google if your account was set up with Google.",
-            "You land on My tasks, the app's home page: what's assigned to you today (a doctor lands on Appointments instead). Sign out any time with the Sign out button at the top right.",
+            "You land on your home screen: one tile for each job your role has been given on Who does what (a doctor included — Appointments is a tile there when the Doctor role has the Book clinic visits card). Sign out any time with the Sign out button at the top right.",
             "Forgotten your password? Tap Forgot password? under the Sign in button, enter your email, and follow the link in the message to choose a new one — it's valid for an hour. If you were given a temporary password and it's lost, ask an admin to issue another instead.",
             "To change your password at any time, pick Change password from the bottom of the menu. You'll be asked for your current password first, and once it's changed every other phone or computer signed in as you is signed out — you stay signed in on this one. If you've forgotten the current one, sign out and use Forgot password? instead.",
             "The top of every screen shows who is signed in — your name and your role, such as \"Noi · Volunteer\". Tap it to see the email address of the account, change your name (under Change password), or sign out. If your account has no name yet, the email is shown instead; add one under Change password so people can tell you from someone with the same first name.",
@@ -265,7 +265,7 @@ const manual: Manual = {
       title: "Appointments",
       icon: CalendarClock,
       intro:
-        "A doctor's home page: the visits booked with your clinics. It replaces My tasks for a doctor — tasks are the shelter's own routine work, and a doctor has none.",
+        "The visits booked with your clinics. A doctor opens it from the Appointments tile on their home screen, which the Doctor role has when Who does what gives it the Book clinic visits card. There is no My tasks for a doctor — tasks are the shelter's own routine work, and a doctor has none.",
       topics: [
         {
           id: "appointments-vet",
@@ -273,7 +273,7 @@ const manual: Manual = {
           roles: ["doctor"],
           path: "Appointments (first in the menu)",
           intro:
-            "Appointments is the page you land on when you sign in. It lists every visit booked with your clinic — not just your own patients' — in three groups: To write up (the visit date has passed and it is not marked done — oldest first, its count and dates in red), Upcoming (today or later) and Recently done (marked done in the last 30 days). Each row names the resident, which opens their page, and offers Log procedure, Log blood test, Add prescription, Log weight and Edit, all already linked to that visit; prescription and weight appear once the visit has started. Marking a visit done does not lock it: you can still add records to it, and anything you were typing when someone marked it done is saved as normal. A cancelled visit is not listed. The visits of all your clinics are listed together. If the page says your account is not linked to a clinic, ask an admin to link it to your doctor entry (Accounts and roles).",
+            "Tap the Appointments tile on your home screen. It lists every visit booked with your clinic — not just your own patients' — in three groups: To write up (the visit date has passed and it is not marked done — oldest first, its count and dates in red), Upcoming (today or later) and Recently done (marked done in the last 30 days). Each row names the resident, which opens their page, and offers Log procedure, Log blood test, Add prescription, Log weight and Edit, all already linked to that visit; prescription and weight appear once the visit has started. Marking a visit done does not lock it: you can still add records to it, and anything you were typing when someone marked it done is saved as normal. A cancelled visit is not listed. The visits of all your clinics are listed together. If the page says your account is not linked to a clinic, ask an admin to link it to your doctor entry (Accounts and roles).",
         },
       ],
     },

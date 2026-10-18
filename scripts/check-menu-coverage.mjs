@@ -97,12 +97,11 @@ for (const role of roles) {
   const deepOpen = DEEP.filter((d) => pages.has(d.parent) && (!d.needs || can(perms, d.needs, d.level)));
   const deepPages = [...new Set(deepOpen.map((d) => d.page))];
 
-  // How the role gets in: its home tiles, unless the home redirects (a configured landing page, or a clinic login).
-  const redirect = role.home_path && role.home_path !== "/home" ? role.home_path : perms.scopes.clinical === "own_clinic" ? "/appointments" : null;
+  // How the role gets in: its home tiles. Nothing redirects away from the home any more (2026-10-18): roles.home_path
+  // is not read, and a clinic login lands on its tiles like everyone else, not on /appointments.
   const tiles = homeTilesFor(perms, t, 0, held).map((x) => x.href);
   const entries = new Map(); // page -> how
-  if (redirect) entries.set(redirect, "the home redirects here");
-  else for (const h of tiles) entries.set(h, "a tile on the home");
+  for (const h of tiles) entries.set(h, "a tile on the home");
   for (const c of CHROME) if (proved(c.file, c.needle) && (!c.needs || can(perms, c.needs))) entries.set(c.page, c.what);
 
   // Spread: landings read their own tile lists, deep pages hang off a parent. Repeat to a fixed point.
@@ -116,9 +115,6 @@ for (const role of roles) {
     }
   }
 
-  // A home that redirects to a page the role cannot open is a broken landing, whatever the menu does.
-  const broken = redirect && !pages.has(redirect) ? redirect : null;
-  if (broken) unexplained++;
   const accepted = (p) => ACCEPTED.find((a) => (a.role === "*" || a.role === role.key) && a.page === p && a.reason && a.acceptedBy);
   const all = [...pages, ...deepPages].sort();
   const orphans = all.filter((p) => !how.has(p));
@@ -126,8 +122,7 @@ for (const role of roles) {
   unexplained += bad.length;
 
   const exercised = held.length > 0 ? `${held.length} cards` : "NO CARDS on dev: the derived/legacy home was tested, not a card home";
-  console.log(`\n=== ${role.key} — ${exercised}${redirect ? `; home redirects to ${redirect} (tiles are not shown)` : ""}`);
-  if (broken) console.log(`    BROKEN HOME: signing in sends this role to ${broken}, which its cells do not let it open`);
+  console.log(`\n=== ${role.key} — ${exercised}`);
   console.log(`    ${all.length} pages openable, ${all.length - orphans.length} reachable without the menu, ${orphans.length} orphan(s)`);
   for (const p of all) {
     const via = how.get(p);

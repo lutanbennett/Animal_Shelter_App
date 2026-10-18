@@ -666,7 +666,7 @@ it costs her a sign-out and a sign-in each evening.
 
 The general form of that, so it is not a special case for one person:
 
-- **A home screen belongs to a role** and is made of that role's tasks. A role starts with the derived home (a tile for each page its cells open); only a role with a curated list (today Management's four tiles, `CURATED_HOME` in `tiles.ts`) has another, and `roles.home_path` is a landing redirect, not the home (2026-10-06).
+- **A home screen belongs to a role** and is made of that role's tasks. A role starts with the derived home (a tile for each page its cells open); only a role with a curated list (today Management's four tiles, `CURATED_HOME` in `tiles.ts`) has another, and `roles.home_path` was a landing redirect, not the home (2026-10-06); since 2026-10-18 nothing redirects away from a role's home at all and the column is unread (`docs/decisions/2026-10-18-role-home-is-tiles.md`). A role with cards (0194) shows its cards, one tile each.
 - **Admin can open any role's home screen**, because Admin can do everything on
   all of them. The switch lists them: Management, 2IC, Maintenance, Medical.
   That is also how the Director sees exactly what the 2IC sees when the 2IC rings
