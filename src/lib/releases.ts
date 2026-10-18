@@ -76,6 +76,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "Dashboard: the last-12-months chart has a Cumulative view. A daily line shows how many residents are at the shelter (hospital counts; residents in foster care do not while they are away), over running totals of intakes, adoptions and deaths. Switch between Month by month and Cumulative above the chart; it remembers your choice, and Copy as text and Print follow it.",
+    roles: ["admin", "management", "second_in_command"],
+  },
+  {
     text: "Recent changes reads better on a phone: each entry is a card showing When, Who, What, Record and Fields in full, instead of a table you scroll sideways. On Appeals, the line under each progress bar is easier to read in dark mode.",
     roles: ["admin", "management", "second_in_command"],
   },
