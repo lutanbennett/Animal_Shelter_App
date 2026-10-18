@@ -61,6 +61,22 @@ if ! command -v cloudflared >/dev/null; then
 fi
 cloudflared --version
 
+echo "== 2b. Swap: a 4 GB file beside the Pi's zram, so `next build` can finish"
+# `next build` peaks above 6 GB on this 4 GB Pi. At 4 GB RAM + 2 GB swap it was killed three
+# times running (2026-10-17); with ~4 GB of FILE-backed swap added it went through first try.
+# Raspberry Pi OS's 2 GB swap is zram (compressed RAM) and adds little real headroom, so it
+# is the file that matters. deploy-pi.sh refuses below ~6 GB. docs/pi-hosting.md, "Swap".
+if ! swapon --show=NAME --noheadings | grep -qx /swapfile2; then
+  if [[ ! -f /swapfile2 ]]; then
+    sudo fallocate -l 4G /swapfile2
+    sudo chmod 600 /swapfile2
+    sudo mkswap /swapfile2
+  fi
+  sudo swapon /swapfile2
+fi
+grep -q '^/swapfile2 ' /etc/fstab || echo '/swapfile2 none swap sw 0 0' | sudo tee -a /etc/fstab >/dev/null
+swapon --show
+
 echo "== 3. The app: dependencies, env file, first build"
 npm ci --no-audit --no-fund
 node scripts/pi/write-env.mjs --env production

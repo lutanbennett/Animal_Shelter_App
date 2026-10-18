@@ -111,7 +111,8 @@ updates. Re-runnable.
   notes, `package.json` is not the newest release, or the database lacks a
   migration the commit carries (`could not ask` only warns); `--env test` is
   unguarded. A refusal happens before anything is built, so the running service
-  is untouched. A genuine emergency: `./scripts/pi/deploy-pi.sh --force "why"`
+  is untouched. Production and uat also refuse a commit that is not on
+  `origin/main` (CI never passed it). A genuine emergency: `./scripts/pi/deploy-pi.sh --force "why"`
   prints every overridden problem loudly and appends the reason to
   `~/lanna-deploy-overrides.log`; mention it in the next release record. Also
   `npm run deploy:prod` from the dev machine so the fallback keeps pace —
@@ -380,6 +381,27 @@ backups, and `rm -rf ~/photo-cache` is always safe. The Worker fallback has no d
 and goes to Drive. To see it working: request a size twice; the second is served
 from the folder with no Drive call.
 
+## Swap (why the Pi carries 6 GB of it)
+
+`next build` needs more memory than this 4 GB Pi has. On 2026-10-17 the build was
+killed by the kernel three times running at **4 GB RAM + 2 GB swap**, then went
+through first try with a **4 GB file-backed swap file** added and nothing else
+changed. So its peak is above 6 GB; the true figure has not been measured yet
+(`docs/release-procedure.md`, "Measure the build's peak memory").
+
+- **The file does the work, not the zram.** Raspberry Pi OS's 2 GB swap is
+  zram, i.e. compressed RAM, and adds little real headroom. `/swapfile2` (4 GB,
+  on disk) is what got the build through. Check with `swapon --show`.
+- `scripts/pi/setup.sh` (step 2b) creates `/swapfile2` and its `/etc/fstab`
+  line, so a rebuilt Pi gets it. On the live Pi it already exists, added by hand.
+- `deploy-pi.sh` **refuses** to start if the box has under about 6 GB of swap
+  (exit 2, before anything is touched), saying the number and why. `--force
+  "why"` turns the refusal into a warning.
+- The cost: a 4 GB machine permanently carrying 4 GB of disk-backed memory for one
+  stage of one command. The alternative that removes the demand instead of housing
+  it is not typechecking on the Pi; that waits on the measurement above
+  (`docs/decisions/2026-10-18-pi-deploy-safety.md`).
+
 ## Edge cache notes
 
 The Worker caches anonymous GETs of `/`, `/adopt…`, `/our-work…`,
@@ -390,6 +412,14 @@ to visitors (staff, being signed in, always bypass). Photos are cached
 separately by the proxy's own headers (a day). To flush early: Cloudflare
 dashboard → Caching → Configuration → **Purge Everything** (free; the
 edge cache and the photo cache both go).
+
+**`/_next/static/**` is cached for a year and never revalidated** (`immutable`).
+If Cloudflare stores a 404 or half-written file for a stylesheet while a deploy is
+rewriting `.next`, that edge serves an unstyled app for a year (found 2026-10-17;
+it looked fine from the laptop and broken on a phone). `deploy-pi.sh` now ends by
+fetching the served stylesheet and comparing it with the build
+(`scripts/pi/check-assets.mjs`) and fails loudly if they differ; the fix is a manual
+**Purge Everything** (`docs/release-procedure.md`, "Purge the Cloudflare cache").
 
 ## Keeping the Supabase token off the Pi
 
