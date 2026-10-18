@@ -17,7 +17,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { speciesLabel } from "@/lib/i18n/enum-labels";
-import { addMonthsToKey, formatBaht, formatMonth, shelterMidnight } from "@/lib/format";
+import { addDaysIso, addMonthsToKey, formatBaht, formatMonth, shelterMidnight, todayIso } from "@/lib/format";
 import { StatCard } from "@/components/StatCard";
 import { PrintButton } from "@/components/PrintButton";
 import {
@@ -42,7 +42,8 @@ import {
 } from "@/lib/management/report";
 import { ReportCard } from "./ReportCard";
 import { CopyTextButton } from "./CopyTextButton";
-import { TrendChart } from "./TrendChart";
+import { TrendView } from "./TrendView";
+import { dailySeries, DAILY_COUNT_PLACEMENTS, type DailyPlacement } from "@/lib/management/daily-count";
 import { requirePermission } from "@/lib/permissions/require";
 
 const TREND_MONTHS = 12;
@@ -210,6 +211,27 @@ export default async function ManagementDashboardPage(
     maintenance: maintenanceResult.data ?? [],
   });
   const buckets = trend(placements, TREND_MONTHS, window.key);
+
+  // The cumulative view counts residents at the shelter from the whole placement history (the
+  // start number is everyone already there), read in pages past the 1000-row cap.
+  const history: DailyPlacement[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data } = await supabase
+      .from("placement_history")
+      .select("resident_id, placement_type, start_date, end_date")
+      .in("placement_type", DAILY_COUNT_PLACEMENTS)
+      .order("id")
+      .range(from, from + 999)
+      .returns<DailyPlacement[]>();
+    history.push(...(data ?? []));
+    if (!data || data.length < 1000) break;
+  }
+  const windowLastDay = addDaysIso(window.endDate, -1);
+  const daily = dailySeries(
+    history,
+    `${addMonthsToKey(window.key, -(TREND_MONTHS - 1))}-01`,
+    windowLastDay < todayIso(now) ? windowLastDay : todayIso(now),
+  );
 
   // The first of the month as a date string, not window.start: that is the
   // shelter's midnight, 17:00 UTC the day before, and would read as the
@@ -470,7 +492,7 @@ export default async function ManagementDashboardPage(
           <p className="text-sm text-muted">{d.trend.subheading}</p>
         </div>
         <div className="rounded-lg border border-border bg-surface p-3 md:p-4">
-          <TrendChart buckets={buckets} />
+          <TrendView buckets={buckets} daily={daily} />
         </div>
       </section>
     </main>

@@ -5,17 +5,17 @@ import { formatMonth } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { TrendBucket } from "@/lib/management/report";
 
-const HEIGHT = 220;
-const MARGIN = { top: 12, right: 12, bottom: 28, left: 32 };
+export const HEIGHT = 220;
+export const MARGIN = { top: 12, right: 12, bottom: 28, left: 32 };
 const GROUP_GAP = 6;
 const BAR_GAP = 1;
 const BAR_MAX_WIDTH = 18;
 
-type SeriesKey = "intakes" | "adoptions" | "deaths";
+export type SeriesKey = "intakes" | "adoptions" | "deaths";
 
 // Intakes in the brand colour, adoptions in the success tone, deaths in the
 // danger tone — the same meaning those tones carry on the stat cards.
-const SERIES: { key: SeriesKey; fill: string }[] = [
+export const SERIES: { key: SeriesKey; fill: string }[] = [
   { key: "intakes", fill: "var(--primary)" },
   { key: "adoptions", fill: "var(--success)" },
   { key: "deaths", fill: "var(--danger)" },
@@ -34,7 +34,7 @@ function barPath(x: number, y: number, w: number, h: number, r: number) {
   ].join(" ");
 }
 
-function yTicks(max: number): number[] {
+export function yTicks(max: number): number[] {
   const top = Math.max(max, 1);
   const step = [1, 2, 5, 10, 20, 50, 100].find((s) => top / s <= 5) ?? 100;
   const ticks: number[] = [];

@@ -3249,10 +3249,20 @@ const en = {
       },
       trend: {
         heading: "Last 12 months",
-        subheading: "Intakes, adoptions and deaths by month",
+        subheading: "Intakes, adoptions and deaths, by month or cumulative",
         intakes: "Intakes",
         adoptions: "Adoptions",
         deaths: "Deaths",
+        residents: "Residents at the shelter",
+        modeLabel: "Chart view",
+        modeMonth: "Month by month",
+        modeCumulative: "Cumulative",
+        monthEnd: "Month end",
+        cumulativeCaption: "Residents at the shelter and running totals at the end of each month",
+        cumulativeAriaLabel: (days: number) =>
+          `Residents at the shelter each day, with running totals of intakes, adoptions and deaths, over ${days} days`,
+        cumulativeNote:
+          "Black line (right-hand scale): residents at the shelter each day — start number + intakes − fostered out − adopted − deceased + returned. Residents in the hospital are counted; residents in foster care are not while they are away. Coloured lines (left-hand scale): running totals from the first month shown.",
         ariaLabel: (months: number) =>
           `Intakes, adoptions and deaths per month for the last ${months} months`,
       },
