@@ -132,6 +132,8 @@ jobs:
       # Public hostnames (site-hosts.ts) and public pages (public-paths.ts) are each one list.
       - run: node scripts/check-site-hosts.mjs
       - run: node scripts/check-public-paths.mjs
+      # deploy-pi.sh must run the script it just checked out, not the copy bash had open.
+      - run: node scripts/pi/check-self-update.mjs
 
   # The twenty-one cards: cards.ts has exactly the agreed set and every card names
   # a real activity. The code half of check-cards-schema.mjs, which needs the dev

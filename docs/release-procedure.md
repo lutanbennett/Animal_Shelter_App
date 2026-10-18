@@ -287,7 +287,13 @@ than the foreground tool timeout, and a timeout kills the SSH session mid-build:
 ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && rm -f ~/deploy-prod.log && setsid nohup ./scripts/pi/deploy-pi.sh > ~/deploy-prod.log 2>&1 < /dev/null & sleep 20; tail -15 ~/deploy-prod.log'
 ```
 
-then poll with `sleep <n>; tail ~/deploy-prod.log`. The script ends with
+then poll with `sleep <n>; tail ~/deploy-prod.log`.
+
+**Check the log has `deploy-pi: restarting under the script from <sha>`.** That line means the
+script from the release commit is the one that ran, so its guards (swap, `.next.prev`, asset
+check) are live on this very deploy. If a clone's `deploy-pi.sh` predates that fix (the first
+deploy that brings it in), the line is absent and the guards the release added did NOT run: do
+them by hand (swap, `node scripts/pi/check-assets.mjs`) and say so in the release record. The script ends with
 `deploy-pi: lanna-care running` and a `served by: x-lanna-served-by: pi` line it
 checks itself.
 

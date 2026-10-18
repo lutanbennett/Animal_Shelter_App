@@ -103,6 +103,17 @@ updates. Re-runnable.
 
 ## Day to day
 
+- **`deploy-pi.sh` runs the version it just checked out.** It fetches and resets the clone
+  to the target ref, and that replaces the very file bash is executing; bash would carry on
+  with the old text. So right after the checkout it checks the new copy parses (`bash -n`),
+  then `exec`s it (`DEPLOY_PI_REEXECED=1` stops a second round) and prints
+  `restarting under the script from <sha>`. A change to the script therefore takes effect on
+  the deploy that ships it. **Exception: the lines above that point** (argument parsing, the
+  root/clone-pairing refusals, the fetch itself) still run from the old copy on the deploy that
+  changes them; keep them few. A deploy log without the `restarting under` line was run by a
+  script from before this fix, so none of its newer guards ran (as on `0.36.1`). Proof:
+  `node scripts/pi/check-self-update.mjs` (CI). Not yet seen on a real Pi.
+
 - **Deploy**: after cutting a release (`src/lib/releases.ts`, `package.json`),
   merging it to `main` and applying migrations from the dev machine, on the Pi
   `cd ~/Animal_Shelter_App && ./scripts/pi/deploy-pi.sh` (pull, **guard**, build,
