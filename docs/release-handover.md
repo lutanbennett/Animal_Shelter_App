@@ -1,12 +1,15 @@
-# Release handover — written 2026-10-17 after `0.36.0`
+# Release handover — written 2026-10-18 after `0.36.1`
 
-**Read this first.** The previous edition was written four hours earlier, after
-`0.35.0`, and **`0.36.0` proved its headline prescription wrong.** It said to expect
-the first Pi build of each clone to be OOM-killed and to budget one retry each. On
-`0.36.0` the test clone was killed **four times running**, and retrying turned out
-not to be a remedy at all. What fixed it was Lutan adding swap. The Pi section below
-is rewritten accordingly — which is this file's standing instruction working as
-intended, in the uncomfortable direction.
+**Read this first: the two warnings this file led with have both been FIXED, and
+the fixes have both been exercised.** That is unusually good news for this file, so
+do not skim past it.
+
+- **The Pi memory fault is fixed.** Swap is 6 GB and both clones built **first time** on `0.36.1` after `0.36.0`'s four consecutive kills. **And the peak is now measured** — see the Pi section.
+- **The cache poisoning has a check.** `deploy-pi.sh` now fetches the served stylesheet and compares it with the build. It works — it was run by hand on both environments and passed.
+- **But that safety code did NOT run on the release that shipped it**, because `deploy-pi.sh` updates itself mid-run. That is `0.36.1`'s Defect 1 and the newest thing in this file.
+
+Three releases shipped in two days (`0.35.0`, `0.36.0`, `0.36.1`), so **every number
+below has moved at least twice. Re-read, do not quote.**
 
 **What this file is.** A snapshot for whoever runs the next production release,
 written at the end of the previous one. It says where things stand *right now*,
@@ -63,14 +66,38 @@ contention or a leak. The build's appetite simply exceeds the machine, and it gr
 with every release.
 
 **What actually fixed it: Lutan increased the Pi's swap from 2 GB to 6 GB**, adding
-a 4 GB file-backed swapfile (`/swapfile2`, visible in `swapon --show`) alongside the
-existing 2 GB of zram. The next test build completed, and the production build then
-succeeded **first time**. Note that zram is compressed RAM and adds little real
-headroom; the **file-backed** swap is what did it.
+a 4 GB file-backed swapfile (`/swapfile2`) alongside the existing 2 GB of zram. The
+next test build completed, and the production build then succeeded **first time**.
+**On `0.36.1` both clones built first time** — so the fix is now exercised, not just
+believed.
+
+**AND THE PEAK IS NOW MEASURED, which settles the open question.** `0.36.1` took the
+measurement the runbook asked for. A **cold** build (the first attempt was useless —
+a warm Turbopack cache compiled in 7.5 s and never reached the heavy stage), sampled
+every 3 s:
+
+```
+peak node RSS   : 3372 MB
+peak swap used  :  947 MB
+PEAK COMBINED   : 4320 MB
+```
+
+The Pi has **4,049 MB** of usable RAM, so the build needs about **270 MB more than
+the machine physically has.** That is the whole story: at "4 GB RAM + 2 GB zram"
+there was never really 6 GB, because **zram is compressed RAM, not extra capacity** —
+the file-backed swapfile is what gave those 270 MB somewhere real to go.
+
+**Against the threshold in `docs/decisions/2026-10-18-pi-deploy-safety.md`** (a
+little over 6 GB → swap is defensible; well over → dropping the typecheck is the only
+honest answer), **4,320 MB is comfortably under, so the swap is the right answer and
+`ignoreBuildErrors` can wait.** Two caveats: **the margin is only 270 MB and the app
+grows every release**, and **sampling every 3 s can miss a spike, so treat 4,320 MB
+as a floor.** `/usr/bin/time` is not installed on the Pi; installing it would give an
+exact figure next time.
 
 > **The rules, corrected:**
 > 1. **"Budget one retry" is WITHDRAWN as a remedy.** It worked once by luck. Retrying is not a fix.
-> 2. **The swap is now load-bearing and undocumented.** `/swapfile2` was made by hand on a live machine. It is **not** in `scripts/pi/setup.sh` or `docs/pi-hosting.md`, so **a rebuilt Pi goes straight back to failing.** Check `swapon --show` reports ~6 GB before you start; if it reports 2 GB you are about to hit this.
+> 2. **The swap IS now in the repo** — `scripts/pi/setup.sh` creates `/swapfile2` and `docs/pi-hosting.md` explains the number (#708, merged in `0.36.1`). A rebuilt Pi gets it. `deploy-pi.sh` also refuses below 5.5 GiB — **but see Defect 1 below: that refusal did not actually run on `0.36.1`.** Check it yourself with `cat /proc/swaps` (`swapon` is not on the non-interactive `ssh` PATH); expect ~6 GB.
 > 3. **If a build is killed, stop and tell Lutan — do not improvise on the machine that serves users.** That rule held and is what produced the fix. But bring the **diagnosis**, not the question: `free -m` between attempts, the biggest processes, and what you have already ruled out.
 > 4. **A restart does not help.** He asked; the answer was no, with numbers — a restart reclaims memory that is already free, the box had been up 15 days without leaking, and it briefly drops the Pi as the production origin for no gain.
 
@@ -108,6 +135,36 @@ plan, not a release step.**
 
 ---
 
+## THE NEWEST THING: `deploy-pi.sh` updates itself, so a fix to it lands ONE DEPLOY LATE
+
+**`0.36.1` shipped #708's Pi safety work — the swap gate, the `.next.prev` fallback
+and the automatic asset check — and NONE of it ran.** Not on either clone.
+
+The new script **is** on disk afterwards, `scripts/pi/check-assets.mjs` exists, and
+the clone sits at the release SHA. It was checked out and simply not used.
+
+**Why:** `deploy-pi.sh` runs `git fetch` and checks out the target ref near the top,
+which **replaces the very file bash is executing**. Bash reads a script
+incrementally, so it carries on with the copy it already had open.
+
+> **A self-updating deploy script always runs the OLD version on the deploy that
+> introduces the new one. So any change to `deploy-pi.sh` takes effect on the NEXT
+> deploy, not the one that ships it.**
+
+**What this means for you, concretely:**
+
+- **On the release that ships a `deploy-pi.sh` change, run its new checks by hand.** `0.36.1` did: `node scripts/pi/check-assets.mjs --url https://lannacare.org/` from the clone, and the same against test. Both passed — `check-assets: ok … 95277 bytes, identical to the build`. **The tool works; it simply was not invoked.**
+- **Do not read "this is now guarded" and believe it for that release.** The two faults #708 exists to prevent were unprotected on exactly the deploy that shipped their protection.
+- **Check the preconditions by hand too.** `0.36.1` confirmed swap at 6,143 MB itself, which was just as well since the script's own gate never fired.
+
+Raised on the backlog with three options (accept and document; `exec "$0" "$@"` after
+checkout with a loop guard; split into a thin launcher plus payload). **Accepting it
+is defensible — but it has to be written down**, because "I fixed the deploy script
+and the next deploy will still be broken" is the kind of surprise that costs an hour
+at the wrong moment.
+
+---
+
 ## THE SECOND THING: a Pi deploy can poison the edge cache, and you cannot see it from your machine
 
 **`0.36.0` passed every release check and the app was still broken for a real person
@@ -141,15 +198,21 @@ only with what some edge nodes had stored.
 **What tells you it is this and not a stale browser cache:** clearing the browser
 fixes it *and then it breaks again*. A one-off stale cache does not do that.
 
-**The fix available today is Lutan purging the Cloudflare cache** (Caching →
-Configuration → Purge Everything). **There is no purge script in the repo and no
-dashboard access from a session**, so this is his step, and that is itself an
-argument for automating it. Four candidate fixes are on the backlog under *Next up*.
+**Partly fixed since.** `scripts/pi/check-assets.mjs` (#708) fetches the served
+stylesheet and compares it byte-for-byte with the build, and `deploy-pi.sh` runs it
+as its last step — **once the self-updating problem above lets it**. On `0.36.1` it
+was run by hand against both environments and passed, including against production
+**before** the purge (`CF-Cache-Status: MISS`, 95,277 bytes identical), so that
+deploy poisoned nothing.
 
-**Until one lands: after a Pi deploy, check the site from a phone on mobile data**,
-or accept that this class of fault is invisible to you. A post-deploy check that
-fetches the referenced stylesheet and asserts its length is the cheapest thing that
-would have caught it.
+**But the purge is still Lutan's, and it is now a required runbook step after every
+Pi deploy** (`docs/release-procedure.md`). He has done it by hand twice in two days.
+**He ruled on 2026-10-18 for automating it** — a scoped Cloudflare token on the Pi —
+and that is raised as its own PR rather than folded into a release.
+
+**Purge even when the check is green.** The check only sees the edge location it
+reaches; a phone on mobile data may reach another. That is exactly how `0.36.0`'s
+fault hid from the deploy machine, and it is why the runbook says to purge anyway.
 
 ---
 
@@ -157,40 +220,47 @@ would have caught it.
 
 | | |
 |---|---|
-| Live everywhere | **`0.36.0`** @ `1f7eacb5` — production Pi, production Worker, test Pi, test Worker |
-| Previous release SHA, for the next range | **`1f7eacb5`** — `node scripts/release-prs.mjs 1f7eacb5 <the new release SHA>` |
-| Production database | **`220 applied`, `0 pending`** at the end of this release, `No drift`. The normal between-releases state is that this grows one pending per migration merged since. **Run `--status --env production` yourself; do not trust this number.** |
-| Dev database | `No drift: test matches origin/main`, 220 of 220. It goes one-sided whenever a schema branch is applied to dev before merging, which is the schema-first rule working and happens most days. **Run `--drift test`; this row will be out of date.** |
-| Next free migration number | **`0220`** as of the end of this release. `origin/main`'s highest is `0219`. **Still check** (`git branch -a`, `gh pr list`, dev's ledger) rather than trusting this row — two days running, four migrations landed between one release and the next |
-| `unreleased` notes already waiting | **0** at the moment the cut merged. **It will not stay 0 for long**: `0.35.0`'s edition recorded 0 at its cut and there were **four** waiting by the time `0.36.0` began, hours later |
-| Open PRs | **run `gh pr list`.** #704 (a planner handover) was open at the time of writing and is not in this release. #694–#705 are otherwise merged, and **#697 is CLOSED, never merged** — superseded by #699, which is why the numbering has a gap |
-| **The Pi's swap** | **6 GB, set by hand on 2026-10-17 and not in the repo.** `swapon --show` must report ~6 GB or the Pi will fail to build — see the section above |
-| `main` moves under you — including mid-cut | **Yes, and it did.** It moved **three `backlog` commits between the gates running and the cut PR opening** (`docs/backlog.md` only, one line). Harmless, but it is why the gates were re-run against the merged tree rather than trusted from the earlier run. It then held still from the cut through the last Pi build, which is the stillness that matters. **Do not expect `main` to be anywhere near the release SHA when you begin** |
+| Live everywhere | **`0.36.1`** @ `e581c631` — production Pi, production Worker, test Pi, test Worker |
+| Previous release SHA, for the next range | **`e581c631`** — `node scripts/release-prs.mjs e581c631 <the new release SHA>` |
+| Production database | **`221 applied`, `0 pending`** at the end of this release, `No drift`. The normal between-releases state is that this grows one pending per migration merged since. **Run `--status --env production` yourself; do not trust this number.** |
+| Dev database | `No drift: test matches origin/main`, 221 of 221. It goes one-sided whenever a schema branch is applied to dev before merging, which is the schema-first rule working and happens most days. **Run `--drift test`; this row will be out of date.** |
+| Next free migration number | **`0221`** as of the end of this release. `origin/main`'s highest is `0220`. **Still check** (`git branch -a`, `gh pr list`, dev's ledger) rather than trusting this row — across the last three releases, four then one migration landed between one release and the next |
+| `unreleased` notes already waiting | **0** at the moment the cut merged — and **do not read anything into that.** `0.36.0`'s edition said the same and there were **seven** waiting hours later, one of which fixed a defect `0.36.0` had just shipped |
+| Open PRs | **run `gh pr list`.** #704–#718 are merged; **#697 is CLOSED, never merged** (superseded by #699), which is why that numbering has a gap. `0.36.1`'s own gap was #717, a planner handover that merged and is **in** the release |
+| **The Pi's swap** | **6 GB, and now IN THE REPO** — `scripts/pi/setup.sh` creates `/swapfile2`, `docs/pi-hosting.md` explains the size (#708). Check it with `cat /proc/swaps`; `swapon` is not on the non-interactive `ssh` PATH |
+| **The build's peak memory** | **4,320 MB measured on a cold build** against 4,049 MB of RAM — see the Pi section. A floor, not a ceiling |
+| `main` moves under you — including mid-cut | **Yes, every time.** On `0.36.0` it moved three `backlog` commits between the gates running and the cut PR opening, which is why the gates were re-run against the merged tree. **Do not expect `main` to be anywhere near the release SHA when you begin** — `0.36.1`'s range was 72 commits |
 
-**All four builds came from the release SHA**, for the twelfth release running,
-with both Pis pinned `--ref faee19c5` to the SHA Lutan's deploy reported.
+**All four builds came from the release SHA**, for the fourteenth release running,
+with both Pis pinned `--ref e581c631` to the SHA Lutan's deploy reported.
 
-**Server Actions key checked on both pairs again** (now seven times): production
+**Server Actions key checked on both pairs again** (now nine times): production
 `cbd55beae8d8` on Worker and Pi; test `ecc41837fc0b` on both. Both unchanged since
 `0.31.0`, which is expected — they are environment configuration, not build
 output, so **matching this file's values is not evidence you checked.** Compare
 Worker against Pi. The Pi's second line, `the build in .next carries that key`, is
 what ties the fingerprint to the artefact rather than to the config.
 
-### This was a major release, so the mail went out — and arrival was confirmed again
+### `0.36.1` was MINOR, so the mail check inverted — and this is the worked example
 
-`deploy: release mail for 0.35.0 [UAT]: sent 1, skipped 1` — sent to
+**On a major release, confirm the mail ARRIVED.** `0.35.0` and `0.36.0` both did:
+`deploy: release mail for <version> [UAT]: sent 1, skipped 1` — sent to
 `lutan.bennett2@gmail.com`, skipped `lannacareforanimals@gmail.com` with
-`E_RECIPIENT_NOT_ALLOWED`, which is expected and known. `[UAT]` on production is
-the production setting and the mail is real.
+`E_RECIPIENT_NOT_ALLOWED`, which is expected and known — and the message was then
+found in the inbox rather than inferred from `sent N`. That costs one call and turns
+an inference into a fact.
 
-**The mail was then found in the inbox** — from `releases@lannacare.org`, 10:45:34Z,
-unread, with the phone-width note in the body. **Second release running that
-arrival was confirmed rather than inferred from `sent N`.** It costs one call.
+**On a minor release, confirm its ABSENCE, in both directions.** `0.36.1` is the
+worked example:
 
-**The mail check inverts with the version call.** On a major release confirm the
-mail *arrived*. On a minor release confirm the opposite — grep the log and show
-there is no `deploy: release mail` line at all.
+1. **Before the deploy**, assert `majorReleasesSince("<previous>")` returns **`[]`**. This is the *inverse* of the usual assertion and it is the whole difference between the release and an email to every admin, so assert it mechanically rather than reading the `major:` flag.
+2. **After each deploy**, grep the log for `release mail` and expect **no line at all**. Both of `0.36.1`'s deploys instead printed `deploy: no major release new to production (was 0.36.0), so no email.`
+
+**Why minor was chosen, since it is a precedent:** three genuinely new abilities
+shipped, so the standing test pointed at major — but it was the **third release of
+one day** and the headline was a fix for buttons broken that morning. A third email
+in a day to say "we fixed what we shipped" reads worse than a quiet release.
+**Lutan's call; the reasoning is in `docs/releases/2026-10-18.md`.**
 
 **And note the ordering risk this release exposed:** the mail goes out at Lutan's
 Worker deploy, which under the build order is *before* the Pi builds. If the Pi
@@ -199,14 +269,27 @@ argument for checking `/api/version` promptly, not for changing the order.
 
 ---
 
-## Lutan's time: two touches, and the opening message that achieves it
+## Lutan's time: the budget says two, the runbook now needs THREE — say so
 
-A release costs him **exactly two interventions**:
+A release has always cost him **two interventions**:
 
 1. **Major versus minor** — it mails every admin and cannot be undone
 2. **The production Worker deploy** — his by his instruction of 2026-10-02
 
-**`0.35.0` met that**, as `0.34.0` did. `0.33.0` cost three and `0.28.0` five.
+**But since 2026-10-18 the runbook adds a third**, and this is a genuine conflict
+rather than an overrun to apologise for:
+
+3. **Purging the Cloudflare cache after every Pi deploy** — `docs/release-procedure.md`, added by #708 in response to `0.36.0`'s cache-poisoning defect
+
+**So the honest position is that a release costs three until the purge is
+automated.** He ruled for automating it on 2026-10-18 (a scoped Cloudflare token on
+the Pi), raised as its own PR. **Until that lands, plan for three and do not record
+the third as a defect** — it is the runbook working as written. When it lands,
+restore the budget to two here.
+
+**Scores:** `0.34.0` and `0.35.0` cost two; `0.33.0` three; `0.36.0` three (the Pi
+blocker, unavoidable — enlarging swap needs a `sudo` outside the four commands the
+Pi grants); `0.36.1` three (the purge, by design); `0.28.0` five.
 
 **The opening message is the whole technique, and it now has a proven shape.**
 One message, four things, answered in one round of clicks:
@@ -365,17 +448,18 @@ outstanding-item count from six to seven out loud rather than quietly.
 
 ## What the next release will need
 
-1. **Step 0: read `docs/releases/2026-10-17-0-36-0.md` → *Defect 1* first**, then the same file's *What Lutan asked for, and what it actually proved*, then `docs/releases/2026-10-17.md` → `## 0.35.0`. `0.36.0`'s own dry-run trap is the best worked example of that trap *firing*; `0.32.1` in `2026-10-15.md` is the other.
-1b. **After both Pi builds, check the site from a phone on mobile data — or ask Lutan to purge the Cloudflare cache and check anyway.** See *THE SECOND THING* above. `0.36.0` passed every other check while rendering unstyled for a real user, and the deploy machine cannot see it.
-2. **Check `swapon --show` on the Pi reports ~6 GB before you start.** If it reports 2 GB, the hand-made swapfile is gone and the Pi will fail to build this app — see the section at the top. **Do not budget "one retry" as a remedy; that was withdrawn.** After every Pi build read `/api/version` on both hosts rather than trusting the service state or the clone's SHA.
-3. **Copy the production deploy command out of `docs/release-procedure.md` verbatim.** It has worked twice running after costing `0.33.0` a third touch. Do not compose one.
-4. **Merge the cut PR and the record PR yourself, as soon as CI is green. Do not ask.** Two touches is the budget. Never call the record PR "ready to merge when you say".
-5. **`npm ci` in the main checkout before any deploy**, read `node_modules/next/package.json` against `package.json` straight afterwards, and read the `Next.js version :` line on the first Worker build as well. Eight releases running this has been the cheap step that would have caught the expensive fault.
-6. **Check the Server Actions key on both pairs**, Worker against Pi — not against this file's values, which have not changed in seven releases and so prove nothing.
-7. **Open with ONE message to Lutan** carrying all four things in *Lutan's time* above, with the pending-items list **as a question** and any quietly-breaking change **named separately**. That shape has now produced a one-round answer twice. The outstanding-verification list has closed **one** item in nine releases (`0212`'s production gate). **The restore test into a real Supabase project has gone ten releases unanswered** and is still the cheapest item on it.
-8. **Range starts at `1f7eacb5`** — run `release-prs.mjs` against the **release SHA after the cut merges**, not `HEAD` before it, and **re-run it if `main` moves again**. Read its exit code directly, not through a pipe. **Expect neither 0 nor 1**: it has gone 1,1,1,0,1,0. **The previous release's record PR will be in your range and will not be flagged** (held three releases running). **And check any gap in the PR numbers with `gh pr view <n>` rather than reasoning about it** — `0.36.0`'s gap at #697 was a PR closed without merging, found in one call.
+1. **Step 0: read `docs/releases/2026-10-18.md` → *Defect 1* first** (the self-updating deploy script), then its *The Pi* section for the peak-memory number, then `docs/releases/2026-10-17-0-36-0.md` → *Defect 2* (the cache poisoning, and how it hid). `0.36.1`'s dry-run was a single file; `0.36.0` and `0.32.1` are the worked examples of the per-file trap *firing*.
+1b. **After both Pi builds, run the asset check — by hand if the script did not.** `node scripts/pi/check-assets.mjs --url https://lannacare.org/` from the clone. Then **ask Lutan to purge the Cloudflare cache and check again**, even if it was green: the check only sees the edge it reaches. See *THE SECOND THING*.
+2. **Check the Pi's swap with `cat /proc/swaps` before you start** — expect ~6 GB (`swapon` is not on the non-interactive `ssh` PATH). `deploy-pi.sh` now refuses below 5.5 GiB, **but do not rely on that gate for the release that ships a change to it** — see *THE NEWEST THING*. **Do not budget "one retry" as a remedy; that was withdrawn.** After every Pi build read `/api/version` on both hosts rather than trusting the service state or the clone's SHA.
+3. **Copy the production deploy command out of `docs/release-procedure.md` verbatim.** It has worked three releases running after costing `0.33.0` a third touch. Do not compose one.
+4. **Merge the cut PR and the record PR yourself, as soon as CI is green. Do not ask.** Never call the record PR "ready to merge when you say".
+5. **`npm ci` in the main checkout before any deploy**, read `node_modules/next/package.json` against `package.json` straight afterwards, and read the `Next.js version :` line on the first Worker build as well. Ten releases running this has been the cheap step that would have caught the expensive fault.
+6. **Check the Server Actions key on both pairs**, Worker against Pi — not against this file's values, which have not changed in nine releases and so prove nothing.
+7. **Open with ONE message to Lutan** carrying the version case, the silent-failure answer, the pending-items list **as a question**, and any quietly-breaking change **named separately**. That shape has now produced a one-round answer **five releases running** — it is the highest-leverage habit in this file. The outstanding-verification list has closed **three** items in eleven releases (`0212`'s production gate; the Pi first-deploy and peak-memory items on `0.36.1`). **The restore test into a real Supabase project has gone twelve releases unanswered** and is still the cheapest item on it.
+8. **Range starts at `e581c631`** — run `release-prs.mjs` against the **release SHA after the cut merges**, not `HEAD` before it, and **re-run it if `main` moves again**. Read its exit code directly, not through a pipe. **Expect neither 0 nor 1**: it has gone 1,1,1,0,1,0,1. **The previous release's record PR will be in your range and will not be flagged** (held four releases running). **And check any gap in the PR numbers with `gh pr view <n>` rather than reasoning about it** — `0.36.0`'s gap at #697 was a PR closed without merging; `0.36.1`'s at #717 was a PR that had merged and belonged in the release. One call each.
+8b. **Do not trust the PR number your cut's test plan guessed.** Four correct guesses then **two wrong in a row** (#704→#705, #717→#718). Keep writing the plan before opening the PR — the first CI run is still green by construction, six releases running — but re-read the number afterwards and correct the header.
 9. **Read both databases rather than trusting the table above.** `--status --env production` first: expect the last release's files applied, plus one pending per migration merged since. On dev, a red `--drift test` is usually legitimate: read the names it prints and ask whether an unmerged schema branch explains each (`git branch -a`, not just `gh pr list`). The dev database is `--env test` and the drift check is `--drift test`. **`--env dev` is not a thing.**
-10. **Decide major or minor with Lutan before cutting.** The question is *can anyone do something today they could not do yesterday*. `0.35.0` went major because three genuinely new abilities shipped — **three majors in a row, which is a first**. There is no presumption either way, and if the answer is yes and he still says minor, put that on the record as a decision rather than letting it read as an oversight.
+10. **Decide major or minor with Lutan before cutting.** The question is *can anyone do something today they could not do yesterday* — **but it is not the only consideration, and `0.36.1` is the precedent.** Three new abilities shipped there, so the test said major; he called it **minor** because it was the third release of one day and the headline was a fix for what the morning's release broke. **A third email in a day to say "we fixed what we shipped" reads worse than a quiet release.** So: put the test's answer to him, then let him weigh the audience's experience against it, and **record the reasoning either way** rather than letting a departure from the test read as an oversight. And remember the mail check inverts with the answer — see the mail section.
 11. **Ask whether anything in the release can fail silently**, and read the candidates in code first. **A header is a statement of intent, not evidence — diff it.** `0.35.0`'s worked example: `0214` claimed a public view carrying nothing but the agreed words, and the view was checked to select five columns with `note`, `sender_contact_id` and `created_by` absent, the opt-in `not null default false` and never backfilled. **And check the consumer, not only the view** — the photo proxy was the subtle one, and it is right because it asks the view *as the caller* and only then reads its disk cache. **The public-view rule** is the shape to look for in anything touching the public site: a column is public only when the public view names it, and an omission is silent.
 11b. **When two migrations in one release touch the SAME view, check the later one did not revert the earlier.** `0.36.0`'s worked example: `0216` relaxed `public_appeals` to allow a ticked Medical photo, and `0217` then recreated that same view to add its approval filter. Had `0217` been written against the pre-`0216` definition it would have silently dropped the medical rule. It did not — its definition carries **both** conditions plus `0216`'s appended column — but **no per-feature test plan could have caught that**, because each plan only sees its own file. Grep the release's migrations for `create or replace view` and look for repeats. (`create or replace view` cannot drop or reorder columns, so the *column* half fails loudly; it is the *`where` clause* that can go quiet.)
 12. **A migration whose guard is false on dev has never run anywhere.** `0.35.0`'s `0213` is the worked example: `if v_type = 'integer'` is false on dev, so its view-rebuilding block was dead code there and **production was the first place it ever executed**. A wrong grant or a lost `security_invoker` would have been silent. **Read the guard, ask "is this true on dev?", and if not, verify the block's effect against production before and after** — the "after" read is what makes the record evidence rather than assertion.
