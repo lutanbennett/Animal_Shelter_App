@@ -98,6 +98,8 @@ export default async function BillsPage() {
           .from("attachments")
           .select("owner_id")
           .in("owner_type", ["stock_receipt", "clinic_visit"])
+          // A doctor's report on a visit is not its bill (0220).
+          .eq("purpose", "bill")
           .in("owner_id", candidateIds)
           .returns<{ owner_id: string }[]>()
       : Promise.resolve({ data: [], error: null }),
