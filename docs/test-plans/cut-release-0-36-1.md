@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none — a release cut closes no backlog item |
 | Branch / worktree | `claude/cut-release-0-36-1` @ `C:\Development\Animal_Shelter_cut-release-0-36-1` |
 | Dev server | not driven — `/releases` is behind sign-in; see §5 |
-| PR | #717 — a guess; the last cut guessed wrong, so it is re-read before the merge and corrected if taken |
+| PR | **#718.** The plan guessed #717 and **guessed wrong for the second cut running** — a planner-handover PR took that number in the interval and has already merged. Corrected here rather than left standing. Two wrong guesses in a row is the signal: `main` is busy enough now that a guessed number is no longer safe, and the handover should stop treating a correct guess as the norm |
 | Tested by / date | Claude (production release manager session) / 2026-10-18 |
 | Carries a migration? | no — the release's one (`0220`) merged in its own PR and is applied as a release step |
 | Tested at SHA | the tip of this branch, re-run after the plan was filled in |
