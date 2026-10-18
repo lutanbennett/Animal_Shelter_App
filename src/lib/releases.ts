@@ -80,6 +80,10 @@ export const unreleased: ReleaseNote[] = [
     roles: ["admin", "management"],
   },
   {
+    text: "Signing in now always lands on your home screen: the tiles your role has been given on Who does what. A doctor used to be sent straight to Appointments, which their role was not allowed to open, so they saw a refusal instead of their home. Now a doctor lands on their tiles like everyone else, and Appointments is one of them as soon as Admin gives the Doctor role the Book clinic visits card. Admin's home is unchanged.",
+    roles: ["admin", "management", "doctor"],
+  },
+  {
     text: "Settings → Who does what has a new Approve photos card. Whoever holds it can look at the resident photos waiting, approve them for the website, and remove one that should not be seen, without being able to change a resident's record. Add Shelter Photos now waits on it: its Add button is greyed out, with the reason, until some role can approve photos. A role that has been retired no longer counts as one that can approve. Admin ticks the card onto a role; nobody has it yet.",
     roles: ["admin", "management"],
   },

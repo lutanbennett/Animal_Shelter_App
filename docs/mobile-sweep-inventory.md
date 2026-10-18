@@ -1,6 +1,6 @@
 | `/medical/weight` | ok | Checked 2026-10-18 after the crash fix, admin, English and Thai, 375 px: no sideways scroll, no action under 44 px. |  |
 | `/medical/photos` | ok | Checked 2026-10-18 after the crash fix, admin, English and Thai, 375 px: no sideways scroll, no action under 44 px. |  |
-| `/appointments` | not checked: the dev Doctor role cannot open it | The harness now gives the throwaway doctor a doctor row linked to a clinic, but the page still sends it to /no-access: dev's Doctor role holds only `resident.record` and `resident.microchip`, no `medical.visits`, so the clinic was never the blocker. That is the known broken Doctor landing (backlog, `home_path`), Lutan's to decide; not changed here. Needs a doctor with the visits cell, or the cell granted. |  |
+| `/appointments` | ok | Checked 2026-10-18 (`role-home-is-tiles`) as the throwaway doctor the script makes, now that the Doctor role on dev holds the Book clinic visits card and the home no longer redirects: English and Thai, 375 px, no sideways scroll, no action under 44 px. | `claude/role-home-is-tiles` |
 | `/admin/security` | ok | Checked 2026-10-18 as a 2-step-verified admin the script now makes, English and Thai, 375 px: no sideways scroll, no action under 44 px, looked at. The access-request card and the add-login form fit. The users table scrolls inside its own box (as the other settings tables, `2026-10-18-admin-tables-cards-log-only.md`): the Email column fills the screen, so the role and other columns are off to the right until swiped. Nothing hidden or clipped; left as #713 judged. |  |
 # Mobile sweep inventory (375 px, English and Thai)
 
@@ -108,7 +108,7 @@ Verdict is one of: `ok`, `fixed`, `not checked: <why>`. Any information moved or
 
 | Route | Verdict | What was wrong | Fixed in |
 |---|---|---|---|
-| `/appointments` | not checked: needs a doctor with a clinic | Doctor-only; the throwaway doctor has no clinic, so the page refuses it. Doctor role otherwise measured clean (19 pages). Needs a doctor login assigned to a clinic. |  |
+| `/appointments` | ok | Checked 2026-10-18 (`role-home-is-tiles`): doctor with a clinic and the Book clinic visits card, English and Thai, 375 px, no overflow. | `claude/role-home-is-tiles` |
 | `/blood-tests/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/clinic-visits/[id]/edit` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |
 | `/clinic-visits/new` | ok | Admin, Thai, 375 px: no overflow, looked at. |  |

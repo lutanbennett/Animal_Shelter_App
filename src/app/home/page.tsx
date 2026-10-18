@@ -2,7 +2,6 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { refuseFor } from "@/lib/auth/require-role";
-import { safeNextPath, DOCTOR_HOME_PATH } from "@/lib/auth/next-path";
 import { loadPermissions } from "@/lib/permissions/load";
 import { deviceFrom } from "@/lib/home/device";
 import { listHomeRoles, loadCardsByRole } from "@/lib/home/roles";
@@ -18,10 +17,12 @@ import { HomeTiles } from "@/components/HomeTiles";
  *
  *  - Admin: one login, the home follows the device. A phone goes to the Management home, anything
  *    larger to Settings (src/lib/home/device.ts). The switch on both opens the others.
- *  - A role with a configured landing page (`roles.home_path`): there.
- *  - A role whose clinical scope is its own clinic (the doctor): its appointments, as before. The
- *    test is the scope, not the role's name.
- *  - Everyone else: their own home, one tile per page they may open (src/lib/home/tiles.ts).
+ *  - Every other role: its own home, its who-does-what tiles (src/lib/home/tiles.ts). Nothing
+ *    redirects away from it any more: not `roles.home_path` (a landing page nothing sets, left
+ *    unread) and not the clinic scope (the doctor's old hard-coded Appointments, which its own cells
+ *    refused). Lutan, 2026-10-18: "the Home Screen should be their tiles as defined by the who does
+ *    what feature" (docs/decisions/2026-10-18-role-home-is-tiles.md). A role whose cards draw
+ *    nothing sees the empty state below, which is a finding about its cards, not a page to redirect.
  *
  * The device is asked afresh at every landing; nothing is stored.
  */
@@ -43,10 +44,6 @@ export default async function HomePage() {
     const management = roles.find((r) => r.key === "management") ?? roles[0];
     redirect(management ? `/home/${management.key}` : "/admin");
   }
-
-  const configured = safeNextPath(perms.role.homePath);
-  if (configured && configured !== "/home") redirect(configured);
-  if (perms.scopes.clinical === "own_clinic") redirect(DOCTOR_HOME_PATH);
 
   const { t } = await getT();
   const urgent = await loadUrgentCounts(supabase, perms, user.id);
