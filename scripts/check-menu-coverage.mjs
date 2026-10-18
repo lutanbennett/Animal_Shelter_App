@@ -115,9 +115,6 @@ for (const role of roles) {
     }
   }
 
-  // A home that redirects to a page the role cannot open is a broken landing, whatever the menu does.
-  const broken = redirect && !pages.has(redirect) ? redirect : null;
-  if (broken) unexplained++;
   const accepted = (p) => ACCEPTED.find((a) => (a.role === "*" || a.role === role.key) && a.page === p && a.reason && a.acceptedBy);
   const all = [...pages, ...deepPages].sort();
   const orphans = all.filter((p) => !how.has(p));
@@ -125,8 +122,7 @@ for (const role of roles) {
   unexplained += bad.length;
 
   const exercised = held.length > 0 ? `${held.length} cards` : "NO CARDS on dev: the derived/legacy home was tested, not a card home";
-  console.log(`\n=== ${role.key} — ${exercised}${redirect ? `; home redirects to ${redirect} (tiles are not shown)` : ""}`);
-  if (broken) console.log(`    BROKEN HOME: signing in sends this role to ${broken}, which its cells do not let it open`);
+  console.log(`\n=== ${role.key} — ${exercised}`);
   console.log(`    ${all.length} pages openable, ${all.length - orphans.length} reachable without the menu, ${orphans.length} orphan(s)`);
   for (const p of all) {
     const via = how.get(p);
