@@ -186,6 +186,60 @@ begin
   end loop;
   if not exists (select 1 from role_permissions where role_id = v_role and activity = 'facility.enclosures') then raise exception 'FAIL a refused caller changed cells'; end if;
 
+  -- photo-approver guard (0221). Start from "nobody approves": clear that cell everywhere in this rolled-back transaction.
+  delete from role_permissions where activity = 'photos.resident_publish';
+  declare
+    v_mgmt uuid; v_third uuid; v_vol uuid;
+  begin
+    insert into roles (key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails)
+      values ('harness_mgmt', 'Harness mgmt', 'custom', true, '/home', 'who_and_where', 'any', 'name_type', 'medical_only', false) returning id into v_mgmt;
+    insert into roles (key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails)
+      values ('harness_third', 'Harness third', 'custom', true, '/home', 'who_and_where', 'any', 'name_type', 'medical_only', false) returning id into v_third;
+    insert into roles (key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails)
+      values ('harness_vol', 'Harness vol', 'custom', true, '/home', 'who_and_where', 'any', 'name_type', 'medical_only', false) returning id into v_vol;
+
+    -- 1 no approver (Admin holds no cells, so it cannot count): Add resident photos is refused, plain message, nothing written
+    begin
+      perform set_role_cards(v_vol, array['add_photos'], '${bj(["add_photos"])}'::jsonb);
+      raise exception 'FAIL add_photos was given with no approver';
+    exception when check_violation then
+      if sqlerrm <> 'Give a role the Approve photos card first, so someone can approve these photos.' then raise exception 'FAIL wrong refusal message: %', sqlerrm; end if;
+    end;
+    if exists (select 1 from role_cards where role_id = v_vol) then raise exception 'FAIL the refused call wrote a card'; end if;
+    -- a role given Residents and Add resident photos in one call approves for itself, so that is allowed
+    perform set_role_cards(v_third, array['residents', 'add_photos'], '${bj(["residents", "add_photos"])}'::jsonb);
+    perform set_role_cards(v_third, array[]::text[], '[]'::jsonb);
+    delete from role_permissions where activity = 'photos.resident_publish';
+
+    -- 2 permissive: Residents (the Management case) counts as an approver; Add resident photos then goes on silently
+    perform set_role_cards(v_mgmt, array['residents'], '${bj(["residents"])}'::jsonb);
+    perform set_role_cards(v_vol, array['add_photos'], '${bj(["add_photos"])}'::jsonb);
+    if not exists (select 1 from role_cards where role_id = v_vol and card = 'add_photos') then raise exception 'FAIL add_photos not given though Residents approves'; end if;
+    perform set_role_cards(v_vol, array['add_photos', 'view_residents'], '${bj(["add_photos", "view_residents"])}'::jsonb);
+
+    -- 3 last approver: taking Residents off the only approver is refused while Harness vol holds Add resident photos, naming it
+    begin
+      perform set_role_cards(v_mgmt, array[]::text[], '[]'::jsonb);
+      raise exception 'FAIL the last approver was removed';
+    exception when check_violation then
+      if sqlerrm not like '%Harness vol%' then raise exception 'FAIL the refusal did not name the holding role: %', sqlerrm; end if;
+    end;
+    if not exists (select 1 from role_permissions where role_id = v_mgmt and activity = 'photos.resident_publish') then raise exception 'FAIL the refused removal changed cells'; end if;
+    -- an unrelated change on the approver stays silent
+    perform set_role_cards(v_mgmt, array['residents', 'enclosures'], '${bj(["residents", "enclosures"])}'::jsonb);
+
+    -- 4 a second approver (an extra counts) frees the first to go
+    insert into role_extras (role_id, activity, level, why) values (v_third, 'photos.resident_publish', 2, 'harness');
+    perform recompute_role_permissions(v_third, '[]'::jsonb);
+    perform set_role_cards(v_mgmt, array[]::text[], '[]'::jsonb);
+    if exists (select 1 from role_cards where role_id = v_mgmt) then raise exception 'FAIL Residents could not be removed though an extra approves'; end if;
+
+    -- 5 taking Add resident photos away is always allowed, even with no approver left
+    delete from role_extras where role_id = v_third;
+    delete from role_permissions where activity = 'photos.resident_publish';
+    perform set_role_cards(v_vol, array[]::text[], '[]'::jsonb);
+  end;
+
   raise exception 'cards-harness-ok';
 end $h$;
 `;
@@ -193,7 +247,7 @@ try {
   await sql(harness);
   fail("the harness did not finish");
 } catch (e) {
-  if (String(e.message).includes("cards-harness-ok")) pass("functions: cards add, include, remove and keep what another card gives; extras survive; no-op writes nothing; refusals hold");
+  if (String(e.message).includes("cards-harness-ok")) pass("functions: cards add, include, remove and keep what another card gives; extras survive; no-op writes nothing; refusals hold; the photo-approver guard refuses both ways and stays silent otherwise");
   else fail(`harness: ${e.message}`);
 }
 
