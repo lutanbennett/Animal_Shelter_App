@@ -75,6 +75,17 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+];
+
+/** Newest first. */
+export const releases: Release[] = [
+  {
+    version: "0.36.1",
+    date: "2026-10-18",
+    title:
+      "The clinic visit page, a cumulative dashboard view, and the Photos to approve buttons fixed",
+    major: false,
+    notes: [
   "Clinic visits now have their own page. On a resident's Clinic Visits list, tap anywhere on a visit to read its notes, bill photos and everything logged at it (blood tests, procedures, prescriptions, weight). It also opens for someone who can only look, and for a resident who has died. Appointments, Upcoming visits and each clinic's page have an Open button for the same page. You can also add the doctor's written report there: photograph the pages or choose a PDF. It is kept private in the animal's Medical folder, never shown on the website, and never counted as a bill.",
   {
     text: "Dashboard: the last-12-months chart has a Cumulative view. A daily line shows how many residents are at the shelter (hospital counts; residents in foster care do not while they are away), over running totals of intakes, adoptions and deaths. Switch between Month by month and Cumulative above the chart; it remembers your choice, and Copy as text and Print follow it.",
@@ -88,10 +99,8 @@ export const unreleased: ReleaseNote[] = [
   "Appeals are easy to find: the public site now always links to Appeals in the footer and under Get involved, and the page explains itself when no appeal is open. In the app, Appeals is in the menu for anyone who may run them, and there is a new Run fundraising appeals card you can give a role in Settings → Who does what. On Settings → Website there is a line pointing to Appeals.",
   "Photos to approve: Discard and Remove now show their \"Are you sure?\" box, and the app no longer locks up when you press them.",
   "Who does what: if you have not yet verified with your authenticator app, the cards board now says so on the board itself, with a Verify now link, and shows greyed-out buttons instead of nothing. It used to look broken.",
-];
-
-/** Newest first. */
-export const releases: Release[] = [
+    ],
+  },
   {
     version: "0.36.0",
     date: "2026-10-17",
