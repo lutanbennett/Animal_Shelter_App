@@ -83,6 +83,27 @@ const roles = await sql(`select id, key, name, kind, opens_app, home_path, scope
 const cards = await sql(`select r.key, c.card, c.position from role_cards c join roles r on r.id = c.role_id order by r.key, c.position`);
 const cells = await sql(`select r.key, p.activity, p.level from role_permissions p join roles r on r.id = p.role_id order by r.key, p.activity`);
 
+// 6: who approves photos. The Who does what screen (approverNames) must give the very answer the database guard gives
+//    (0222): a live, non-Admin role holding photos.resident_publish. A retired role (archived_at set) holding it must NOT be
+//    listed, so the + on Add resident photos is disabled for exactly the states the database would refuse.
+{
+  const { approverNames, needsApprover, APPROVE_ACTIVITY } = await imp("src/lib/permissions/approvers.ts");
+  const holders = await sql(`select r.key, r.name, (r.archived_at is not null) as archived, p.activity, p.level from role_permissions p join roles r on r.id = p.role_id where p.activity = 'photos.resident_publish'`);
+  const db = await sql(`select name from roles r where r.archived_at is null and r.key <> 'admin' and exists (select 1 from role_permissions p where p.role_id = r.id and p.activity = 'photos.resident_publish' and p.level >= 1) order by r.name`);
+  const screen = approverNames(holders.map((h) => ({ roleKey: h.key, roleName: h.name, archived: h.archived, activity: h.activity, level: h.level })));
+  if (JSON.stringify([...screen].sort()) !== JSON.stringify(db.map((x) => x.name).sort())) fail(`approvers: the screen says [${screen}] but the database guard counts [${db.map((x) => x.name)}]`);
+  else ok(`approvers: screen and database agree (${screen.length ? screen.join(", ") : "none"})`);
+  const retired = holders.filter((h) => h.archived);
+  if (retired.some((h) => screen.includes(h.name))) fail("approvers: a retired role is listed as an approver");
+  else ok(`approvers: ${retired.length} retired role(s) hold ${APPROVE_ACTIVITY} and are not listed`);
+  if (!needsApprover("add_photos") || needsApprover("approve_photos")) fail("approvers: only Add resident photos should wait on an approver");
+  else ok("approvers: Add resident photos waits on an approver; Approve photos does not");
+  // the card grants exactly three cells
+  const grant = [...bundleOfCards(["approve_photos"])].map(([a, l]) => `${a}=${l}`).sort().join(",");
+  if (grant !== "photos.resident_manage=edit,photos.resident_publish=edit,resident.record=read") fail(`approve_photos grants ${grant}`);
+  else ok("approve_photos grants exactly publish, manage and the who-and-where read");
+}
+
 for (const role of roles) {
   const rolesCells = cells.filter((c) => c.key === role.key);
   const hash = createHash("sha256").update(rolesCells.map((c) => `${c.activity}=${c.level}`).join("|")).digest("hex").slice(0, 12);
