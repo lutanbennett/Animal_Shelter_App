@@ -29,7 +29,7 @@ type Labels = {
   today: string; tomorrow: string; overdue: string; overdueHint: string; earlier: string;
   allClinics: string; clinicFilter: string; showCompleted: string; showCancelled: string;
   hideOverdue: string; showOverdue: string; empty: string; emptyDay: string;
-  previous: string; next: string; openResident: string; edit: string; addToCalendar: string; calendarNote: string; fallbackReason: string;
+  previous: string; next: string; openResident: string; edit: string; view: string; addToCalendar: string; calendarNote: string; fallbackReason: string;
   noPhoto: string; weekOf: string; weekdays: string[];
   status: Record<string, string>;
 };
@@ -129,6 +129,9 @@ export function VetVisitsView({
           <Link href={`/residents/${r.residentId}`} className="text-xs font-medium text-primary hover:underline">
             {labels.openResident}
           </Link>
+          <Link href={`/clinic-visits/${r.id}`} className="text-xs font-medium text-primary hover:underline">
+            {labels.view}
+          </Link>
           <Link href={`/clinic-visits/${r.id}/edit`} className="text-xs font-medium text-primary hover:underline">
             {labels.edit}
           </Link>
@@ -223,7 +226,7 @@ export function VetVisitsView({
                 {items.map((r) => (
                   <Link
                     key={r.id}
-                    href={`/clinic-visits/${r.id}/edit`}
+                    href={`/clinic-visits/${r.id}`}
                     title={`${r.time} ${r.residentName} · ${r.clinicName}`}
                     className={`truncate rounded px-1 py-0.5 text-[11px] leading-tight hover:underline ${isOverdue(asVisit(r), today) ? "bg-danger/10 text-danger" : "bg-primary/10 text-primary"}`}
                   >

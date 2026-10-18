@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Clinic visits now have their own page. On a resident's Clinic Visits list, tap anywhere on a visit to read its notes, bill photos and everything logged at it (blood tests, procedures, prescriptions, weight). It also opens for someone who can only look, and for a resident who has died. Appointments, Upcoming visits and each clinic's page have an Open button for the same page. You can also add the doctor's written report there: photograph the pages or choose a PDF. It is kept private in the animal's Medical folder, never shown on the website, and never counted as a bill.",
   "Resident page: tap the photo at the top to see it large and uncropped. Swipe or use the arrows to go through the other photos (medical ones are never shown), and \"See all photos\" takes you to the Photos tab.",
   "Appeals are easy to find: the public site now always links to Appeals in the footer and under Get involved, and the page explains itself when no appeal is open. In the app, Appeals is in the menu for anyone who may run them, and there is a new Run fundraising appeals card you can give a role in Settings → Who does what. On Settings → Website there is a line pointing to Appeals.",
   "Photos to approve: Discard and Remove now show their \"Are you sure?\" box, and the app no longer locks up when you press them.",
