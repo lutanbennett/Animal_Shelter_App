@@ -127,6 +127,9 @@ export default async function AppointmentsPage() {
                       {t.residents.sections.logWeight}
                     </Link>
                   )}
+                  <Link href={`/clinic-visits/${row.id}`} className={actionClass}>
+                    {t.vetVisits.record.view}
+                  </Link>
                   <Link href={`/clinic-visits/${row.id}/edit`} className={actionClass}>
                     {t.common.edit}
                   </Link>

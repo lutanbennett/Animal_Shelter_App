@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { formatBaht, formatDate, todayIso } from "@/lib/format";
 import { localLabel } from "@/lib/translations/labels";
 import { appointmentStatusLabel } from "@/lib/i18n/enum-labels";
@@ -52,6 +53,19 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
   const weightByVisit = new Map(
     (visitWeights ?? []).map((w) => [w.clinic_visit_id, w.id]),
   );
+  // Pages of the doctor's report filed on each visit (0220); private, so the count is all the list shows.
+  const visitIds = (data ?? []).map((row) => row.id);
+  const { data: reportRows } = visitIds.length
+    ? await supabase
+        .from("attachments")
+        .select("owner_id")
+        .eq("owner_type", "clinic_visit")
+        .eq("purpose", "report")
+        .in("owner_id", visitIds)
+        .returns<{ owner_id: string }[]>()
+    : { data: [] as { owner_id: string }[] };
+  const reportPages = new Map<string, number>();
+  for (const r of reportRows ?? []) reportPages.set(r.owner_id, (reportPages.get(r.owner_id) ?? 0) + 1);
   const visitCount = await archivedCount("clinic_visits");
   const { data: archivedVisits } = showArchived
     ? await supabase
@@ -118,18 +132,26 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
         rows={data ?? []}
         empty={t.residents.sections.empty.vetAppointments}
         render={(row) => (
-          <div className="flex items-center justify-between gap-3">
+          <div className="relative -mx-4 -my-3 flex items-center justify-between gap-3 px-4 py-3">
             <div className="flex flex-col">
-              <span className="font-medium">
+              {/* The whole card is the way in: this link's ::after covers it; the small actions sit above it (z-10). */}
+              <Link
+                href={`/clinic-visits/${row.id}`}
+                aria-label={`${t.vetVisits.record.open}: ${visitSubject(row)}`}
+                className="font-medium after:absolute after:inset-0 after:content-['']"
+              >
                 {row.reason ?? t.residents.sections.vetVisitFallback}
-              </span>
+              </Link>
+              {reportPages.has(row.id) && (
+                <span className="text-xs text-muted">{t.vetVisits.record.reports.onVisit(reportPages.get(row.id)!)}</span>
+              )}
               {((row.clinics && localLabel(locale, row.clinics.name, row.clinics.name_th)) || row.doctor_name) && (
                 <span className="text-xs text-muted">
                   {[(row.clinics && localLabel(locale, row.clinics.name, row.clinics.name_th)), row.doctor_name].filter(Boolean).join(" · ")}
                 </span>
               )}
             </div>
-            <div className="flex flex-col items-end gap-1">
+            <div className="relative z-10 flex flex-col items-end gap-1">
               <span className="text-xs text-muted">
                 {formatDate(row.appointment_date, locale)}
               </span>
