@@ -44,8 +44,16 @@ export function PhotoViewer({
   );
 
   // Back gesture: one history entry while open; popping it closes the viewer.
+  // The history.back() is deferred so a dev-mode remount (effect cleanup then re-run) cancels it
+  // instead of popping the entry it is about to push again.
+  const backTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    history.pushState({ photoViewer: true }, "");
+    if (backTimer.current) {
+      clearTimeout(backTimer.current);
+      backTimer.current = null;
+    } else {
+      history.pushState({ photoViewer: true }, "");
+    }
     function onPop() {
       closedByPop.current = true;
       onClose();
@@ -53,7 +61,10 @@ export function PhotoViewer({
     window.addEventListener("popstate", onPop);
     return () => {
       window.removeEventListener("popstate", onPop);
-      if (!closedByPop.current && history.state?.photoViewer) history.back();
+      backTimer.current = setTimeout(() => {
+        backTimer.current = null;
+        if (!closedByPop.current && history.state?.photoViewer) history.back();
+      }, 0);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
