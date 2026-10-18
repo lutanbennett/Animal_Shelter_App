@@ -248,7 +248,15 @@ was the backlog line plus the tick plus a *Done* note — strictly newer, so it 
 **The method, which takes a minute:** extract both sides with `sed`, normalise the tick
 (`sed 's/^- \[.\]/- [X]/'`), `diff` them. If the only difference is the tick and an added note,
 **take the ticked side without further thought.** Then **`node scripts/check-backlog-sections.mjs`
-from the App checkout** before committing — it printed `ok — 107 open items`.
+**with the path passed explicitly** before committing — `node scripts/check-backlog-sections.mjs ../Animal_Shelter_Backlog/docs/backlog.md`.
+
+**That instruction matters and the previous wording was wrong.** The script resolves its default file
+**relative to itself** (`new URL("../docs/backlog.md", import.meta.url)`), so running the App
+checkout's copy always checks the **App's** `docs/backlog.md`, whichever directory you are standing
+in. Earlier editions said "run it from the App checkout", which is what the planner did on
+2026-10-18 — and it cheerfully reported the same open-item count **after an item had been added to
+the backlog branch**, because it had not looked at that file at all. **A silent pass on the wrong
+file is worse than no check.** Pass the path; the count should change when you expect it to.
 
 **And split `git add` from `git commit`:** the auto-mode classifier refuses them chained as "Modify
 Shared Resources". Two calls went through unchanged.
@@ -401,20 +409,51 @@ became two streams. **Re-read an item fresh when writing its brief.**
 
 ---
 
+## WRITTEN LATER THE SAME EVENING — three things that change the picture
+
+This file was finished before the following, all of 2026-10-17/18. **The items are on the `backlog`
+branch with full diagnoses; this is the context a fresh chat will not get from them.**
+
+- **Production is serving code from an UNCUT release.** `0.36.0` is not cut, yet Lutan reached
+  `/photos/approve` on **production**. Believed to be the Pi deploy that the swap got through,
+  taking current `main`. **Settle it with the release manager before planning anything**: production
+  and the release record disagree about what is live, and that is the same class of split this round
+  already hit once.
+- **A live freeze on production, now the top item on the board.** Discard and Remove on *Photos to
+  approve* call `await confirm(...)` **inside** `startTransition`, so the dialog that must be
+  clicked can never commit and the transition never ends — and because Next routes through
+  transitions, **the whole app including the nav goes dead.** Twelve other `useConfirm` callers ask
+  first and start the transition after; these two files are the only ones in `src/` that invert it.
+  **The planner got this wrong twice before getting it right** (a hanging Drive call, then an RLS
+  refusal) — both times by reasoning from the code instead of asking what the user actually saw.
+  **The dead nav was the tell**, and it only arrived when asked for directly.
+- **The Pi OOM was unblocked by swap, which points the permanent fix at dropping the typecheck.**
+  Three kills at 4 GB RAM + 2 GB swap, then success with ~4 GB more and nothing else changed — so
+  the peak is above 6 GB on a 4 GB machine. That makes a heap cap the wrong answer. **Nobody has
+  measured the actual peak; the item asks for that before the fix.**
+
+**The lesson under the first two, for briefs and for the planner's own debugging:** *ask what the
+person saw before explaining what the code does.* Two wrong answers cost more of this evening than
+the fix will.
+
 ## Next round's strongest candidates
 
 Not a plan — the next chat plans. But this is what the board is pointing at:
 
-1. **Cutting `0.36.0`** — four lines in `unreleased`, ten streams merged, and it carries the
+1. **The `/photos/approve` freeze** — live on production, trivial fix, top of Next up. **But note it
+   only reaches production through another Pi deploy**, which item 2 currently makes painful, so the
+   two are adjacent on the board for that reason.
+2. **The Pi build running out of memory** — blocking deploys; measure the peak first.
+3. **Cutting `0.36.0`** — four lines in `unreleased`, ten streams merged, and it carries the
    correction to `0.35.0`'s untrue note. **The release manager's session, not the planner's.**
-2. **The Doctor's broken `home_path`** — sign-in sends the Doctor to a page their cells cannot
+4. **The Doctor's broken `home_path`** — sign-in sends the Doctor to a page their cells cannot
    open. A live defect on dev, and the kind of quick win that went first this round to good effect.
-3. **The dashboard Month by month / Cumulative toggle** (Lutan, 2026-10-17) — verified undone,
+5. **The dashboard Month by month / Cumulative toggle** (Lutan, 2026-10-17) — verified undone,
    app only, small.
-4. **Resident hub: tap the photo for a large pop-up** (Lutan, 2026-10-17) — verified undone, small.
-5. **Appeals are hard to find, on the public site and for staff** — small, app only; verified that
+6. **Resident hub: tap the photo for a large pop-up** (Lutan, 2026-10-17) — verified undone, small.
+7. **Appeals are hard to find, on the public site and for staff** — small, app only; verified that
    neither nav file mentions the appeals routes.
-6. **A clinic visit has no page to read** and **attach the doctor's written report** — the second
+8. **A clinic visit has no page to read** and **attach the doctor's written report** — the second
    needs schema, so they are two batches, not one. Both verified undone on 2026-10-17.
 
 ---
