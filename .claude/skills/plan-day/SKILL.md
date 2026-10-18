@@ -235,6 +235,45 @@ judgement — it was banded ~250–400k on exactly the reasoning above and
 count?" but "must it build the instrument?" Reading is cheap; building
 the instrument is not.
 
+**THE THIRD AXIS, AND THE ONE THAT COST THE MOST: HOW MANY LIVE
+INTERACTIONS?** Added 2026-10-18 after `fable-acceptance-dry-run` was banded
+300–460k and reached **819,980 at about 35% done** before Lutan stopped it. By
+the test above it looked cheap — `scripts/acceptance-matrix.mjs` already
+existed, so it did not have to build its instrument. **What it had to do was
+drive 132 activities + 42 "must not" lines, × 6 roles × 2 languages × 2
+widths, by real taps in a browser.** Extrapolated, a complete run was **~2.3M
+tokens, more than two context windows**: unfinishable in one session at any
+effort, on any model.
+
+So the questions are now three, in this order:
+
+1. **Must it build the instrument?** Dear. Widen.
+2. **How many live interactions must it drive?** **Dearest, and it scales with
+   the row count.** Reading 64 files is 64 cheap calls; driving 132 screens is
+   thousands of expensive ones, each returning a page into the context.
+3. **Must it merely read a lot?** Cheap. Do not widen (the `silent-empty-reads`
+   correction above).
+
+**A WALK OF N ITEMS × M ROLES IS A PROGRAMME, NOT A WORKSTREAM.** Do not brief
+one. Split it into finishable units — one role per stream for the acceptance
+dry run — and say so to the user as a plan rather than handing a stream an
+unbounded walk. **Nine is a target for items, never a licence to pack an
+unfinishable one into a single brief.**
+
+**EVERY BRIEF NEEDS A HARD DELIVERABLE BOUNDARY**, not only the scope-creep
+escape. The escape ("build the rest, report that one, stop") was given to three
+streams that day and **left off the largest**, which is the one that needed it.
+Name the unit the stream stops at.
+
+**AND THE COST OF A TURN IS THE SIZE OF THE SESSION, NOT THE SIZE OF THE
+WORK**, because every turn re-sends the whole window as input. Measured the
+same day: that session's context grew **21,282 tokens** while the weekly Fable
+window moved **41% → 47%** — about a whole ordinary stream's allowance — and
+all of it went on merging `main`, filling a test plan and opening the PR at
+~800k. **The first minute of a session is its cheapest and the last is its
+dearest.** Hence the stop-and-hand-over rule in step 7.
+
+
 ### Model and effort
 
 **Two dials, and they do not behave the same way.** **Model** changes the
@@ -399,6 +438,54 @@ So:
 **Add one line for a stream that is two PRs** (a schema half then an app half):
 *this applies **twice**, because merging the schema PR is not finishing.* That
 is the exact trap the second stream fell into.
+
+### And every brief carries this STOP rule beside the finish-line block
+
+Added 2026-10-18. **The finish-line block above stays exactly as it is** — it
+exists because two streams ended with finished work and no PR, and that holds
+for every ordinary stream. **This is a narrow exception to it, for one
+condition only: a session that has already grown large.**
+
+`fable-acceptance-dry-run` was asked to stop at about 35% and then (a) walked
+more rows its own report had already listed as not reached, and (b) did the
+correct, brief-mandated tidy-up — merge `origin/main`, fill the test plan, open
+the PR, tick CI once seen green. **(b) was obedience, not error.** But at ~800k
+of context each of those turns cost ~800k of input, and the tidy-up alone spent
+about 6% of the weekly Fable window — roughly a whole ordinary stream.
+
+**The brief gave it no stop condition at all.** It said walk the checklist; the
+only stopping rule was *"if you must stop before the work is done, stop with
+words"*, which is the stream's own judgement, not a response to being told to
+stop. Append this to every `.brief.md`, directly after the finish-line block:
+
+```markdown
+## IF YOU ARE TOLD TO STOP, STOP — and do not tidy up from a large session
+
+**"Stop" means stop the work itself, at once.** Do not finish the current unit, do not go back for
+rows or files you listed earlier as not done, and do not start anything new. Then:
+
+1. **Commit what you have.** Always. A commit is the only checkpoint that survives.
+2. **Say in your last message** what is done, what is not, and what the next session should do.
+3. **Then judge the size of this session.** If it has grown large — you have been running a long
+   time, or your context is well past halfway — **STOP THERE.** Do **not** merge `origin/main`, do
+   **not** fill in a test plan, and do **not** open the PR. Say plainly: *"the PR is still to
+   open"*, and name the branch.
+
+**Why, and it is not a detail:** every turn re-sends your whole context as input, so the cost of a
+turn is the size of the session, not the size of the work. At 800k, writing one short test plan
+costs as much as an hour of early work. A session that has already run long is the most expensive
+possible place to do bookkeeping. **The planner will open the PR from a fresh session for a
+fraction of the cost.**
+
+**This is the ONE exception to the finish-line block above.** Everywhere else, and in every
+ordinary-sized session, that block governs: never end with a built branch and no PR. Here, saying
+clearly that the PR is still to open *is* the handover.
+```
+
+**Do not water this down, and do not let it cancel the finish-line block.** The
+two coexist: finish the work and open the PR *unless* you were told to stop and
+the session is already large.
+
 
 **And the planner's own half of this, in step 2:** read `worktree.mjs list`'s
 **`ahead`** column against the open PRs every run. **Ahead with no PR is
