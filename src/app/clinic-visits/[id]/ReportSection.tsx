@@ -7,6 +7,7 @@ import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { uploadAttachmentFile } from "@/components/AttachmentUploader";
 import { useConfirm } from "@/components/ConfirmProvider";
+import { DateInput } from "@/components/DateInput";
 import { PhotoViewer } from "@/components/PhotoViewer";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { driveImageUrl } from "@/lib/google/drive-client";
@@ -115,7 +116,7 @@ export function ReportSection({
         <div className="flex max-w-md flex-col gap-2">
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-muted">{r.dateLabel}</span>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="min-h-11 rounded border border-border bg-surface px-2" />
+            <DateInput value={date} onChange={(e) => setDate(e.target.value)} className="min-h-11 rounded border border-border bg-surface px-2" />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             <span className="text-muted">{r.noteLabel}</span>
