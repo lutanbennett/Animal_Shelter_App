@@ -24,12 +24,17 @@ export function CardBoard({
   held,
   library,
   canEdit,
+  locked = false,
+  verifyHref,
 }: {
   roleKey: string;
   roleName: string;
   held: Tile[];
   library: Tile[];
   canEdit: boolean;
+  /** An admin who has not verified: the board is read-only, so say why where the buttons would be. */
+  locked?: boolean;
+  verifyHref: string;
 }) {
   const { t } = useI18n();
   const c = t.admin.whoDoesWhat.cardsView;
@@ -108,6 +113,15 @@ export function CardBoard({
         {tl.includes && <span className="text-xs text-muted [overflow-wrap:anywhere]">{c.includesNote(tl.includes)}</span>}
         {tl.warn && <span className="text-xs font-medium text-danger [overflow-wrap:anywhere]">{c.noTile}</span>}
       </Link>
+      {locked && (
+        <div className="flex flex-wrap gap-1">
+          {side === "library" ? (
+            <RowActionButton icon={Plus} label={c.addFor(tl.label)} hint={c.lockedAddFor(tl.label)} disabled onClick={() => {}} />
+          ) : (
+            <RowActionButton icon={X} tone="danger" label={c.removeFor(tl.label)} hint={c.lockedRemoveFor(tl.label)} disabled onClick={() => {}} />
+          )}
+        </div>
+      )}
       {canEdit && (
         <div className="flex flex-wrap gap-1">
           {side === "library" ? (
@@ -126,11 +140,20 @@ export function CardBoard({
     </li>
   );
 
+  const lockedNote = locked && (
+    <p role="note" className="rounded-md border border-border bg-surface p-2 text-sm text-foreground">
+      {c.lockedNote}{" "}
+      <Link href={verifyHref} className="font-medium text-primary underline">
+        {c.verifyLink}
+      </Link>
+    </p>
+  );
   const zone = (z: string) => `rounded-lg ${over === z ? "outline outline-2 outline-primary" : ""}`;
 
   return (
     <div className="flex flex-col gap-2">
       {canEdit && <p className="hidden text-sm text-muted md:block">{c.dragHint}</p>}
+      {locked && <p className="hidden text-sm text-muted md:block">{c.lockedHint}</p>}
       {error && (
         <p role="alert" className="text-sm text-danger [overflow-wrap:anywhere]">
           {error}
@@ -141,6 +164,7 @@ export function CardBoard({
           <h2 id="cards-h" className="text-lg font-semibold text-foreground">
             {c.cardsHeading(roleName)}
           </h2>
+          {lockedNote}
           {held.length === 0 ? (
             <p className="text-sm text-muted">{c.noCards}</p>
           ) : (
@@ -152,6 +176,7 @@ export function CardBoard({
             {c.addHeading}
           </h2>
           <p className="text-sm text-muted">{c.addIntro}</p>
+          {lockedNote}
           {library.length === 0 ? (
             <p className="text-sm text-foreground">{c.allHeld}</p>
           ) : (
