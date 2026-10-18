@@ -159,7 +159,8 @@ restore_build() {
   echo "  (Check the served version with /api/version: a git-updated clone is not a deployed clone.)" >&2
   if [[ -d .next.prev ]]; then rm -rf .next && mv .next.prev .next; fi
 }
-if ! "${NICE[@]}" npm run build; then restore_build; exit 1; fi
+if ! "${NICE[@]}" npm run build
+then restore_build; exit 1; fi
 # The build must carry this environment's Server Actions key, the one the Worker
 # builds with, or forms rendered by one are rejected by the other. Stops before
 # the restart, so the running service keeps serving what it has. Compare the
