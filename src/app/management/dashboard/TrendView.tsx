@@ -25,6 +25,7 @@ export function TrendView({ buckets, daily }: { buckets: TrendBucket[]; daily: D
 
   useEffect(() => {
     try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- storage only exists in the browser; reading it during render would not match the server HTML
       if (localStorage.getItem(MODE_KEY) === "cumulative") setMode("cumulative");
     } catch {
       // A private window refuses storage; the default view is fine.
