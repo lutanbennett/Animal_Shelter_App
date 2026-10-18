@@ -11,11 +11,11 @@
 | PR | not yet opened |
 | Tested by / date | Claude, 2026-10-18 |
 | Carries a migration? | no |
-| Tested at SHA | 819e9f87 |
+| Tested at SHA | 15637aff |
 
 ## 1. Scope and risk
 
-- [x] One sentence: /admin/recent-changes stacks into labelled cards below md, and the appeals list progress text uses app colours
+- [x] One sentence: /admin/recent-changes stacks into labelled cards below lg, and the appeals list progress text uses app colours
 - [x] Touched: src/app/admin/recent-changes/page.tsx, src/app/management/appeals/page.tsx, src/lib/releases.ts, docs
 - [x] Roles: admin (audit log), management (appeals list)
 - [x] Out of scope: diets, frequencies, immunization-types (inline editors, left as scrolling tables), appeals list layout
@@ -43,12 +43,12 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — n/a: browser pane refused localhost, see Left for manual verification
+- [x] Happy path works end to end: /admin/recent-changes as a throwaway admin on dev, 50 rows, cards below 1024 px and the table from 1024 px up
 - [ ] Data persists — n/a: presentation only, no data changes
 - [ ] Create / edit / delete — n/a: presentation only, the log is read-only
 - [ ] Empty state — n/a: the empty-state branch of the page is untouched
 - [ ] Invalid input — n/a: no input added
-- [ ] Boundary cases — n/a: browser pane refused localhost, see Left for manual verification
+- [ ] Boundary cases — n/a: dev log holds only Added/Edited entries by no login, so a deleted record and a named Who were not seen, see Left for manual verification
 
 | Role | Can reach | Expected | Result |
 |---|---|---|---|
@@ -62,13 +62,13 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] Nav entry — n/a: no nav change
 - [ ] Manual updated — n/a: layout-only change, no topic describes the table's shape
 - [ ] Translatable strings — n/a: labels reuse the existing column heading strings
-- [ ] Mobile viewport (375px) — n/a: browser pane refused localhost, see Left for manual verification
-- [ ] Console clean — n/a: browser pane refused localhost, see Left for manual verification
+- [x] Mobile viewport (375px): no horizontal overflow (scrollWidth 375), every field visible, Thai labels fit
+- [ ] Console clean — n/a: console not read; no errors seen on the pages
 - [ ] Network clean — n/a: no requests changed
 
 ## 6. Regression
 
-- [ ] Nearest pages still work — n/a: build passed; page not loaded, see Left for manual verification
+- [x] Nearest pages still work: /management/appeals loaded at 1280 px
 - [ ] Shared file checked from second page — n/a: no shared file touched except releases.ts, which only the build reads
 - [ ] Nothing from main broken — n/a: gates passed after sync
 
@@ -79,7 +79,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [x] README still accurate
 - [x] **Release notes.** `unreleased` gained a line for phone users of Recent changes and Appeals
 - [x] Commit messages say why
-- [x] Claims were measured: the contrast cause was read from the source (site-ink on app surface), not yet seen on screen
+- [x] Claims were measured: the contrast cause was confirmed on screen: text colour was rgb(42,33,24) on rgb(20,30,29), now rgb(245,245,245)
 
 ## 8. Pre-production gate
 
@@ -104,15 +104,15 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 | # | Severity | What | Status |
 |---|---|---|---|
-| 1 | none found | nothing seen on screen yet | n/a |
+| 1 | low | At 768 px the side menu squeezed the table, so the card breakpoint moved from md to lg (1024 px) | fixed |
 
 ## Left for manual verification
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Audit log at 375 px, just below and above 768 px, light and dark, Thai: every column present, long What, deleted record, entry with no Who | /admin/recent-changes |
-| 2 | Appeals progress line ("No donations recorded…") readable in dark and light | /management/appeals |
-| 3 | Diets, frequencies, immunization-types unchanged | /admin/diets, /admin/frequencies, /admin/immunization-types |
+| 1 | A deleted record and an entry with a named Who in the log at 375 px (dev has none) | /admin/recent-changes |
+| 2 | Real phone look; light theme of the appeals progress line | /admin/recent-changes, /management/appeals |
+| 3 | Diets, frequencies, immunization-types still scroll as before (not touched) | /admin/diets, /admin/frequencies, /admin/immunization-types |
 
 ## Sign-off
 
@@ -123,14 +123,14 @@ Automated checks by: Claude  Date: 2026-10-18
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: items listed above are awaiting a person
 
-Manual verification by: pending: rows 1-3 above, screen checks the browser pane could not do
+Manual verification by: pending: rows 1-3 above
 
 ### Result
 
-- [ ] Open defects are fixed or accepted — n/a: none found
+- [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — n/a: PR not opened yet
 - [ ] Handed to the release manager — n/a: not merged
 
-Result: pass with accepted defects
+Result: pass
 
-Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
+Release manager acknowledgement: pending

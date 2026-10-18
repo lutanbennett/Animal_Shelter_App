@@ -199,9 +199,9 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
       {!page.error && page.entries.length === 0 ? (
         <p className="text-sm text-muted">{filtered || filters.before ? s.none : s.emptyLog}</p>
       ) : (
-        <div className="md:overflow-x-auto md:rounded-lg md:border md:border-border">
-          <table className="block w-full text-left text-sm md:table">
-            <thead className="hidden bg-surface text-muted md:table-header-group">
+        <div className="lg:overflow-x-auto lg:rounded-lg lg:border lg:border-border">
+          <table className="block w-full text-left text-sm lg:table">
+            <thead className="hidden bg-surface text-muted lg:table-header-group">
               <tr>
                 <th className="px-3 py-2 font-medium">{s.cols.when}</th>
                 <th className="px-3 py-2 font-medium">{s.cols.who}</th>
@@ -210,25 +210,25 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
                 <th className="px-3 py-2 font-medium">{s.cols.fields}</th>
               </tr>
             </thead>
-            <tbody className="block md:table-row-group">
+            <tbody className="block lg:table-row-group">
               {page.entries.map((e) => {
                 const isOpen = filters.open === e.id;
                 return (
-                  <tr key={e.id} className="mb-3 block rounded-lg border border-border align-top md:mb-0 md:table-row md:rounded-none md:border-0 md:border-t">
-                    <td data-label={s.cols.when} className="whitespace-nowrap px-3 py-2 text-muted block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] md:table-cell md:before:hidden">
+                  <tr key={e.id} className="mb-3 block rounded-lg border border-border align-top lg:mb-0 lg:table-row lg:rounded-none lg:border-0 lg:border-t">
+                    <td data-label={s.cols.when} className="whitespace-nowrap px-3 py-2 text-muted block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] lg:table-cell lg:before:hidden">
                       {formatDateTime(e.at, locale)}
                     </td>
-                    <td data-label={s.cols.who} className="px-3 py-2 block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] md:table-cell md:before:hidden">
+                    <td data-label={s.cols.who} className="px-3 py-2 block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] lg:table-cell lg:before:hidden">
                       {e.actor ? (actorLabel.get(e.actor) ?? s.unknownUser) : s.filters.system}
                     </td>
-                    <td data-label={s.cols.what} className="px-3 py-2 font-medium text-foreground block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] md:table-cell md:before:hidden">{s.kinds[e.kind]}</td>
-                    <td data-label={s.cols.record} className="px-3 py-2 block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] md:table-cell md:before:hidden">
+                    <td data-label={s.cols.what} className="px-3 py-2 font-medium text-foreground block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] lg:table-cell lg:before:hidden">{s.kinds[e.kind]}</td>
+                    <td data-label={s.cols.record} className="px-3 py-2 block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] lg:table-cell lg:before:hidden">
                       {recordCell(e)}
                       <Link className="text-xs text-muted underline" href={link({ row: e.rowId })}>
                         {s.history}
                       </Link>
                     </td>
-                    <td data-label={s.cols.fields} className="px-3 py-2 block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] md:table-cell md:before:hidden">
+                    <td data-label={s.cols.fields} className="px-3 py-2 block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] lg:table-cell lg:before:hidden">
                       <div className="text-muted">
                         {e.kind === "edited"
                           ? e.changed.length > 0

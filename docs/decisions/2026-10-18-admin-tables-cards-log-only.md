@@ -3,7 +3,7 @@
 Backlog item "Wide admin tables on a phone could become cards" (2026-10-17).
 
 - `/admin/recent-changes` is a read-only table, so it was converted with CSS alone
-  (below `md` each row is a bordered card; every cell carries a `data-label`
+  (below `lg` each row is a bordered card; every cell carries a `data-label`
   taken from the column heading, shown above its value). No column is dropped
   and nothing is truncated.
 - `/admin/diets`, `/admin/frequencies`, `/admin/immunization-types` have inline
