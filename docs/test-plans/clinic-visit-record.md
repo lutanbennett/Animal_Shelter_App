@@ -61,7 +61,7 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — n/a: not driven — the browser pane had no signed-in session and the test password is not Claude's to read; listed under Left for manual verification
+- [x] Happy path works end to end
 - [ ] Data persists — reload the page and the change is still there — n/a: not driven — the browser pane had no signed-in session and the test password is not Claude's to read; listed under Left for manual verification
 - [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: not driven — the browser pane had no signed-in session and the test password is not Claude's to read; listed under Left for manual verification
 - [ ] Empty state renders sensibly (no rows yet) — n/a: not driven — the browser pane had no signed-in session and the test password is not Claude's to read; listed under Left for manual verification
@@ -85,7 +85,7 @@ animal — and do not re-derive this list by grepping for quoted strings; read t
 
 | Role | Can reach | Expected | Result |
 |---|---|---|---|
-| admin | `/clinic-visits/<id>` | opens; Edit, Add report, Remove shown | not driven |
+| admin | `/clinic-visits/<id>` | opens; Edit, Add report, Remove shown | seen at 375 px: card tap opens the visit; the blood-test action on the same card opened its own page, not the visit; a PDF report uploaded and showed with Remove |
 | management | `/clinic-visits/<id>` | same as admin | not driven; policy checked by the 0220 harness |
 | staff | n/a | retired by 0173 | n/a |
 | doctor | `/clinic-visits/<id>` | own clinic only; no bill section; may add a report | not driven; own-clinic and bill-refused checked by the 0220 harness |
@@ -100,7 +100,7 @@ animal — and do not re-derive this list by grepping for quoted strings; read t
 - [ ] Nav entry correct (`src/app/NavLinks.tsx`) — appears for the right roles, no dead links — n/a: no nav change; the page is reached from existing lists
 - [x] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual`
 - [x] Translatable strings go through the translation path, checked at `/management/translations`
-- [ ] Mobile viewport (375px) — no overflow, controls reachable — n/a: not driven — the browser pane had no signed-in session and the test password is not Claude's to read; listed under Left for manual verification
+- [x] Mobile viewport (375px) — no overflow, controls reachable
 - [ ] Browser console clean — no errors or React warnings — n/a: not driven — the browser pane had no signed-in session and the test password is not Claude's to read; listed under Left for manual verification
 - [ ] Network clean — no unexpected 4xx/5xx on the feature's pages — n/a: not driven — the browser pane had no signed-in session and the test password is not Claude's to read; listed under Left for manual verification
 
@@ -161,7 +161,7 @@ database; `lannacare.org` runs **production** (`dbkodyyxxhtygxcxmfcu`).
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| 1 | medium | The page, the whole-card tap target, an upload and the role matrix were not driven in a browser | deferred to manual verification below; acceptance pending Lutan |
+| 1 | medium | Driven as admin only; other roles, a photographed report, the deceased case and the console/network were not driven | deferred to manual verification below; acceptance pending Lutan |
 
 ## Left for manual verification
 
@@ -185,9 +185,9 @@ section 8's.
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | At 375 px, tap a visit card: it opens the visit. Tap Edit or Log blood test on the same card: they open their own pages, not the visit. The card is at least 44 px tall | Resident hub → Clinic visits |
-| 2 | Add a two-page photographed report and a PDF to a visit; both show, photos open full size, the PDF opens in a tab, Remove asks first | /clinic-visits/id |
-| 3 | The Bills inbox does not list the reports; a bill photo on the same visit still shows as a bill | /bills and the visit |
+| 1 | Edit and the other small actions: only the blood-test one was tapped (it opened its own page). Check the card is 44 px or more tall on a real phone | Resident hub → Clinic visits |
+| 2 | A PDF was uploaded and showed. Still to do: a two-page photographed report, photo opens full size, Remove asks first, the file in Drive under Photos/Medical | /clinic-visits/id |
+| 3 | Seen: the Bills inbox does not list the report. Still to do: a bill photo on the same visit still shows as a bill | /bills and the visit |
 | 4 | A read-only role sees the page with no Edit and no Add report; a role without medical.visits is refused by typing the URL; a doctor is refused another clinic's visit; a deceased resident's visit opens read-only | /clinic-visits/id |
 | 5 | Open on Appointments, Upcoming visits and a clinic's page lands on the visit | those pages |
 | 6 | The file lands in the resident's Drive folder under Photos/Medical with the dated name | Google Drive |
