@@ -291,11 +291,28 @@ then poll with `sleep <n>; tail ~/deploy-prod.log`. The script ends with
 `deploy-pi: lanna-care running` and a `served by: x-lanna-served-by: pi` line it
 checks itself.
 
-### Purge the Cloudflare cache — Lutan does this, after every Pi deploy
+### Purge the Cloudflare cache — Claude does this, after every Pi deploy
 
 A Pi deploy rewrites `.next` while requests keep arriving, and Cloudflare keeps
-whatever it saw at `/_next/static/**` for a year. **Cloudflare dashboard → Caching →
-Configuration → Purge Everything**, then ask the Pi to re-run the check:
+whatever it saw at `/_next/static/**` for a year. From the **main checkout**, after
+both Pi builds:
+
+```bash
+node scripts/purge-cache.mjs --env production
+```
+
+It purges the zone and then proves the purge took rather than trusting the API's own
+"success": where it can it re-runs the asset check, and where it cannot it prints the
+command to run on the Pi. **It runs here, not on the Pi, so no Cloudflare credential
+lives on the internet-facing box** —
+`docs/decisions/2026-10-18-purge-from-the-deploy-machine.md`.
+
+It needs `CLOUDFLARE_PURGE_TOKEN` in `.env.deploy.production` (an API token scoped to
+**Zone → Cache Purge** on the one zone; `CLOUDFLARE_ZONE_ID` is already there, so
+this is one new value). **If it is missing the script refuses and names exactly what
+to create**, and the fallback is unchanged — **Cloudflare dashboard → Caching →
+Configuration → Purge Everything**, which is Lutan's step — then re-run the check on
+the Pi:
 
 ```bash
 ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && node scripts/pi/check-assets.mjs --url https://lannacare.org/'
@@ -303,11 +320,14 @@ ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && node scripts/pi/check-asset
 
 `deploy-pi.sh` already runs that check as its last step and **fails loudly** if the
 served stylesheet differs from the build; a red result there means purge, then re-run.
-Do it even when the check is green: it only samples the edge it reaches, and a phone
-on mobile data may reach another. Symptom of a missed one: the app renders with no
-styling (white, serif, no orange) while the content is current. Automating the purge
-needs a Cloudflare API token on the Pi: Lutan's decision, set out in
-`docs/decisions/2026-10-18-pi-deploy-safety.md`.
+**Purge even when the check is green**: it only samples the edge it reaches, and a
+phone on mobile data may reach another. Symptom of a missed one: the app renders with
+no styling (white, serif, no orange) while the content is current.
+
+**One caveat before you rely on any of this:** a change to `deploy-pi.sh` takes
+effect on the **next** deploy, not the one that ships it — the script checks out the
+new ref over the file bash is already executing. On a release that changes it, run
+its checks by hand (`docs/releases/2026-10-18.md`, Defect 1).
 
 ### Measure the build's peak memory — on the next Pi build
 
