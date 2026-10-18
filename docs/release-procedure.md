@@ -291,6 +291,32 @@ then poll with `sleep <n>; tail ~/deploy-prod.log`. The script ends with
 `deploy-pi: lanna-care running` and a `served by: x-lanna-served-by: pi` line it
 checks itself.
 
+### Purge the Cloudflare cache — Lutan does this, after every Pi deploy
+
+A Pi deploy rewrites `.next` while requests keep arriving, and Cloudflare keeps
+whatever it saw at `/_next/static/**` for a year. **Cloudflare dashboard → Caching →
+Configuration → Purge Everything**, then ask the Pi to re-run the check:
+
+```bash
+ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && node scripts/pi/check-assets.mjs --url https://lannacare.org/'
+```
+
+`deploy-pi.sh` already runs that check as its last step and **fails loudly** if the
+served stylesheet differs from the build; a red result there means purge, then re-run.
+Do it even when the check is green: it only samples the edge it reaches, and a phone
+on mobile data may reach another. Symptom of a missed one: the app renders with no
+styling (white, serif, no orange) while the content is current. Automating the purge
+needs a Cloudflare API token on the Pi: Lutan's decision, set out in
+`docs/decisions/2026-10-18-pi-deploy-safety.md`.
+
+### Measure the build's peak memory — on the next Pi build
+
+The swap fix (docs/pi-hosting.md, "Swap") rests on a number nobody has taken. Run the
+next production Pi build once as `/usr/bin/time -v npm run build` (a one-off, not
+through `deploy-pi.sh`) and write down **Maximum resident set size** on the Pi-memory
+backlog item and in a new `docs/decisions/` file. A little over 6 GB: the swap stays
+defensible. Well over: dropping the typecheck from the Pi build is the only honest answer.
+
 ## 7. Verify
 
 `docs/release-smoke-test.md` is the checklist. What can be done without an
