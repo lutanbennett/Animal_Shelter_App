@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { refuseFor } from "@/lib/auth/require-role";
 import { loadPermissions } from "@/lib/permissions/load";
 import { ACTIVITIES, type ActivityKey } from "@/lib/permissions/catalogue";
+import { APPROVE_ACTIVITY, approverNames, needsApprover } from "@/lib/permissions/approvers";
 import { CARDS, CARD_KEYS, bundleOfCards, includedCards, isCardKey, type CardKey } from "@/lib/permissions/cards";
 import { TWO_STEP_PATH, hasTwoStep } from "@/lib/auth/two-step";
 import { opensWhoDoesWhat, WHO_DOES_WHAT_PATH } from "@/lib/permissions/who-does-what";
@@ -56,6 +57,24 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
   ]);
   if (cardsError || extrasError) throw new Error(`Who does what: ${(cardsError ?? extrasError)?.message}`);
 
+  // Who approves photos right now, asked as the database asks it (0222): live, not Admin, holding the activity.
+  const { data: approverRows, error: approverError } = await admin
+    .from("role_permissions")
+    .select("activity, level, roles!inner(key, name, name_th, archived_at)")
+    .eq("activity", APPROVE_ACTIVITY)
+    .gte("level", 1)
+    .returns<{ activity: string; level: number; roles: { key: string; name: string; name_th: string | null; archived_at: string | null } }[]>();
+  if (approverError) throw new Error(`Who does what: ${approverError.message}`);
+  const approvers = approverNames(
+    (approverRows ?? []).map((x) => ({
+      roleKey: x.roles.key,
+      roleName: roleName({ key: x.roles.key, name: x.roles.name, nameTh: x.roles.name_th }, t, locale),
+      archived: !!x.roles.archived_at,
+      activity: x.activity,
+      level: x.level,
+    })),
+  );
+
   const held: CardKey[] = (cardRows ?? []).map((r) => r.card as string).filter(isCardKey);
   // The home the role really gets: a held card draws a tile unless the person could not open its page, or another held
   // card (Residents) already stands for it. A card with neither is the one that silently shows nothing.
@@ -80,6 +99,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
     description: describe(k),
     includes: CARDS[k].includes.map((x) => label(x)).join(", "),
     href: href({ card: k }) + "#card-detail",
+    blocked: needsApprover(k) && approvers.length === 0 ? c.needsApprover : undefined,
   });
 
   const activityName = (key: ActivityKey) => w.activities[key];
@@ -186,6 +206,11 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
               ))}
             </ul>
           </div>
+          {(cardParam === "approve_photos" || needsApprover(cardParam)) && (
+            <p className="text-sm text-foreground [overflow-wrap:anywhere]">
+              {approvers.length > 0 ? c.approversNow(approvers.join(", ")) : c.noApproversNow}
+            </p>
+          )}
           <p className="text-sm text-muted">{held.includes(cardParam) ? c.has : c.notHas}</p>
           {held.includes(cardParam) && stoodForBy(cardParam) && (
             <p className="text-sm text-foreground">{c.shownAsPart(label(stoodForBy(cardParam)!))}</p>
@@ -194,6 +219,8 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
           {canEdit &&
             (held.includes(cardParam) ? (
               <CardButton op={{ kind: "remove", roleKey: role.key, card: cardParam }} label={c.remove} ariaLabel={c.removeFor(label(cardParam))} danger />
+            ) : needsApprover(cardParam) && approvers.length === 0 ? (
+              <p role="note" className="text-sm font-medium text-danger">{c.needsApprover}</p>
             ) : (
               <CardButton op={{ kind: "add", roleKey: role.key, card: cardParam }} label={c.add} ariaLabel={c.addFor(label(cardParam))} />
             ))}
