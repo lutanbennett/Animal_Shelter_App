@@ -205,10 +205,35 @@ was run by hand against both environments and passed, including against producti
 **before** the purge (`CF-Cache-Status: MISS`, 95,277 bytes identical), so that
 deploy poisoned nothing.
 
-**But the purge is still Lutan's, and it is now a required runbook step after every
-Pi deploy** (`docs/release-procedure.md`). He has done it by hand twice in two days.
-**He ruled on 2026-10-18 for automating it** — a scoped Cloudflare token on the Pi —
-and that is raised as its own PR rather than folded into a release.
+**The purge itself is now a required runbook step after every Pi deploy**
+(`docs/release-procedure.md`). Lutan has done it by hand twice in two days, and
+ruled on 2026-10-18 for automating it.
+
+### Which purge you run depends on one value — check before you plan the release
+
+**The automation is built and open as #720, and it is waiting on a Cloudflare token
+that may or may not exist by the time you read this.** Find out first, because it
+decides whether the purge is yours or his:
+
+```bash
+node scripts/purge-cache.mjs --env production --dry-run
+```
+
+- **If it prints what it would purge** — the token exists. **The purge is yours**, not Lutan's: run `node scripts/purge-cache.mjs --env production` from the **main checkout** after both Pi builds. That takes the release back to **two touches**.
+- **If it refuses naming `CLOUDFLARE_PURGE_TOKEN`** — the token does not exist yet. **The purge is Lutan's**, from the dashboard (Caching → Configuration → Purge Everything), and the release costs **three touches**. Say so in your opening message rather than surprising him with it at the end.
+
+**It runs on the deploy machine, not the Pi** — deliberately, so no Cloudflare
+credential lives on the internet-facing box
+(`docs/decisions/2026-10-18-purge-from-the-deploy-machine.md`). It needs **one** new
+value; `CLOUDFLARE_ZONE_ID` is already in `.env.deploy.production`. It is **not** a
+Worker secret and must never be pushed as one.
+
+**Two things about it that are not yet proven**, so do not treat a green run as
+routine the first time: **the success path has never executed** (only the refusal
+paths are tested, because the token did not exist when it was written), and the
+wrong-or-under-scoped-token branch is unexercised. **The first real purge is a thing
+to watch, not a formality** — and when it works, tick the backlog item, which is
+deliberately left open until then.
 
 **Purge even when the check is green.** The check only sees the edge location it
 reaches; a phone on mobile data may reach another. That is exactly how `0.36.0`'s
@@ -282,10 +307,23 @@ rather than an overrun to apologise for:
 3. **Purging the Cloudflare cache after every Pi deploy** — `docs/release-procedure.md`, added by #708 in response to `0.36.0`'s cache-poisoning defect
 
 **So the honest position is that a release costs three until the purge is
-automated.** He ruled for automating it on 2026-10-18 (a scoped Cloudflare token on
-the Pi), raised as its own PR. **Until that lands, plan for three and do not record
-the third as a defect** — it is the runbook working as written. When it lands,
-restore the budget to two here.
+automated** — and whether it still does is **a question with a one-command answer**,
+not something to assume:
+
+```bash
+node scripts/purge-cache.mjs --env production --dry-run
+```
+
+- **It prints what it would purge** → the token exists, **the purge is yours**, and the budget is back to **two**. Say nothing to him about purging.
+- **It refuses naming `CLOUDFLARE_PURGE_TOKEN`** → still **three**, and the third is his. **Put that in the opening message** so he knows before the deploy, not after.
+
+**Either way, do not record the third as a defect** — it is the runbook working as
+written. The automation is built and open as #720
+(`docs/decisions/2026-10-18-purge-from-the-deploy-machine.md`); it needs one value,
+`CLOUDFLARE_PURGE_TOKEN` in `.env.deploy.production`, and it runs on the deploy
+machine rather than the Pi so no credential goes on the internet-facing box. **When
+you confirm a real purge has run, update this section to say two and tick the
+backlog item**, which is deliberately left open until then.
 
 **Scores:** `0.34.0` and `0.35.0` cost two; `0.33.0` three; `0.36.0` three (the Pi
 blocker, unavoidable — enlarging swap needs a `sudo` outside the four commands the
@@ -449,7 +487,7 @@ outstanding-item count from six to seven out loud rather than quietly.
 ## What the next release will need
 
 1. **Step 0: read `docs/releases/2026-10-18.md` → *Defect 1* first** (the self-updating deploy script), then its *The Pi* section for the peak-memory number, then `docs/releases/2026-10-17-0-36-0.md` → *Defect 2* (the cache poisoning, and how it hid). `0.36.1`'s dry-run was a single file; `0.36.0` and `0.32.1` are the worked examples of the per-file trap *firing*.
-1b. **After both Pi builds, run the asset check — by hand if the script did not.** `node scripts/pi/check-assets.mjs --url https://lannacare.org/` from the clone. Then **ask Lutan to purge the Cloudflare cache and check again**, even if it was green: the check only sees the edge it reaches. See *THE SECOND THING*.
+1b. **After both Pi builds, run the asset check — by hand if the script did not.** `node scripts/pi/check-assets.mjs --url https://lannacare.org/` from the clone. **Then purge, even if it was green** — the check only sees the edge it reaches. **Whose job the purge is depends on one value, so find out at the START of the release, not the end**: `node scripts/purge-cache.mjs --env production --dry-run`. If it prints what it would purge, the purge is **yours** and the budget is two; if it refuses naming `CLOUDFLARE_PURGE_TOKEN`, it is **Lutan's** from the dashboard and the budget is three — **tell him in the opening message**. See *THE SECOND THING*.
 2. **Check the Pi's swap with `cat /proc/swaps` before you start** — expect ~6 GB (`swapon` is not on the non-interactive `ssh` PATH). `deploy-pi.sh` now refuses below 5.5 GiB, **but do not rely on that gate for the release that ships a change to it** — see *THE NEWEST THING*. **Do not budget "one retry" as a remedy; that was withdrawn.** After every Pi build read `/api/version` on both hosts rather than trusting the service state or the clone's SHA.
 3. **Copy the production deploy command out of `docs/release-procedure.md` verbatim.** It has worked three releases running after costing `0.33.0` a third touch. Do not compose one.
 4. **Merge the cut PR and the record PR yourself, as soon as CI is green. Do not ask.** Never call the record PR "ready to merge when you say".
