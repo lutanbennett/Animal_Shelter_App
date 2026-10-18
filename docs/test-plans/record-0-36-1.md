@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none. The self-updating-deploy-script finding was raised **on the `backlog` branch** (`773dc69f`), not here |
 | Branch / worktree | `claude/record-0-36-1` @ `C:\Development\Animal_Shelter_record-0-36-1` |
 | Dev server | not started — this PR is three Markdown files |
-| PR | **a guess, and the last two cuts guessed wrong** — re-read and corrected in a follow-up commit once the PR exists |
+| PR | **#719** — read off `gh pr create` rather than guessed, after the last two cuts guessed wrong |
 | Tested by / date | Claude (production release manager session) / 2026-10-18 |
 | Carries a migration? | no |
 | Tested at SHA | the tip of this branch |
