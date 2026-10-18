@@ -35,6 +35,3 @@ export function safeNextPath(next: string | null | undefined): string | null {
  * 2026-09-26, Lutan; it is now a tile on the home, and `/my` still opens it).
  */
 export const DEFAULT_SIGNED_IN_PATH = "/home";
-
-/** A doctor's home: /my sends them here, since they have no tasks (2026-09-29). */
-export const DOCTOR_HOME_PATH = "/appointments";

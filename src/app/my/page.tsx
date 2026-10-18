@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { todayIso } from "@/lib/format";
-import { DOCTOR_HOME_PATH } from "@/lib/auth/next-path";
+import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/next-path";
 import { TWO_STEP_PATH, getAssuranceLevel } from "@/lib/auth/two-step";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -35,8 +35,8 @@ export default async function MyPage() {
     supabase.auth.getUser(),
     loadPermissions(),
   ]);
-  // Tasks are shelter operations; a clinic login's home is its appointments (the scope, as /home asks).
-  if (perms?.scopes.clinical === "own_clinic") redirect(DOCTOR_HOME_PATH);
+  // Tasks are shelter operations, which a clinic login has none of: its home is its tiles (the scope, not the role name).
+  if (perms?.scopes.clinical === "own_clinic") redirect(DEFAULT_SIGNED_IN_PATH);
   const userId = auth.user?.id;
 
   const sections: MyTaskSection[] = userId

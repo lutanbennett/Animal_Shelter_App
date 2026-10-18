@@ -97,12 +97,11 @@ for (const role of roles) {
   const deepOpen = DEEP.filter((d) => pages.has(d.parent) && (!d.needs || can(perms, d.needs, d.level)));
   const deepPages = [...new Set(deepOpen.map((d) => d.page))];
 
-  // How the role gets in: its home tiles, unless the home redirects (a configured landing page, or a clinic login).
-  const redirect = role.home_path && role.home_path !== "/home" ? role.home_path : perms.scopes.clinical === "own_clinic" ? "/appointments" : null;
+  // How the role gets in: its home tiles. Nothing redirects away from the home any more (2026-10-18): roles.home_path
+  // is not read, and a clinic login lands on its tiles like everyone else, not on /appointments.
   const tiles = homeTilesFor(perms, t, 0, held).map((x) => x.href);
   const entries = new Map(); // page -> how
-  if (redirect) entries.set(redirect, "the home redirects here");
-  else for (const h of tiles) entries.set(h, "a tile on the home");
+  for (const h of tiles) entries.set(h, "a tile on the home");
   for (const c of CHROME) if (proved(c.file, c.needle) && (!c.needs || can(perms, c.needs))) entries.set(c.page, c.what);
 
   // Spread: landings read their own tile lists, deep pages hang off a parent. Repeat to a fixed point.
