@@ -1037,6 +1037,33 @@ const manual: Manual = {
             },
           ],
         },
+        {
+          id: "memes",
+          title: "Memes: adding one and recording where it went",
+          roles: ["admin"],
+          activity: "social.library",
+          path: "Home → Meme library (or Management → Memes)",
+          intro:
+            "The meme library keeps the memes the shelter makes elsewhere (a phone app, Canva) and a record of where each one has been posted, so nobody posts the same joke twice and the next post is easy to pick. Memes are never shown on the website: they can be made from medical or sad photos, and a joke needs its context.",
+          steps: [
+            "Tap Meme library on your home screen. The newest memes are first. Under each one you see the places it has been shared (the Facebook, Instagram, LINE or TikTok mark) or Not shared yet.",
+            "To find one, type a word from its caption in the search box, or filter by the resident in it, a tag, or where it was shared. Choose Not shared yet under Shared on to see what is still waiting to be posted. Clear filters takes the filters off.",
+            "To add a meme, tap Add a meme, then Choose from phone or photo library and pick the image you saved from the app you made it in. Give it a title, the caption you post with it (English and Thai are separate boxes, both optional), the residents who are in it (none, one or several) and some tags separated by commas. Tap Save meme.",
+            "Tap a meme to open it. Download saves the image to your phone so you can post it. Each resident's name is a link to their page, and the resident's page has a short Memes list of its own.",
+            "When you have posted it, tap Record a share, choose where, check the date (it starts on today), paste the link to the post if you have it, add a note such as \"boosted\" if you like, and tap Record share. The meme now shows that place in the library.",
+            "Edit changes the title, captions, residents and tags; the picture itself cannot be changed, so a new version is a new meme. Archive takes a meme out of the library and off the residents' pages without deleting it; its page still opens and Bring back restores it.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Who can see the library is a Settings choice: the Meme library card under Who does what gives a role the whole library (browse, add, record shares, archive). Until Admin ticks it onto a role, only Admin can open it. A role that only needs to browse and download gets the activity at Read.",
+            },
+            {
+              kind: "warning",
+              text: "A meme can only ever be seen by a signed-in login that holds the library. It is never on the website, and a link to a meme image does not work for anyone else.",
+            },
+          ],
+        },
       ],
     },
 
