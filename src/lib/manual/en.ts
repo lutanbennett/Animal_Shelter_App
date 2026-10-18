@@ -1381,10 +1381,11 @@ const manual: Manual = {
           title: "Running an appeal",
           roles: ["admin"],
           activity: "appeal.run",
-          path: "Residents → the resident → Fundraising appeal, or Management → Appeals",
+          path: "Appeals in the menu, Residents → the resident → Fundraising appeal, or Management → Appeals",
           intro:
-            "An appeal is a public page asking for help paying for one sick resident's treatment: what is wrong, what the vet will do, what it costs and how much has been given. You write it, preview it exactly as visitors will see it, publish it, record the gifts as they arrive, and close it with how it went. Admin can do this; Management gets it when an Admin turns on Run a fundraising appeal for them in Settings.",
+            "An appeal is a public page asking for help paying for one sick resident's treatment: what is wrong, what the vet will do, what it costs and how much has been given. You write it, preview it exactly as visitors will see it, publish it, record the gifts as they arrive, and close it with how it went. Admin can do this; Management gets it when an Admin ticks the Run fundraising appeals card for them in Settings → Who does what; they then see Appeals in the menu and a tile on their home screen.",
           steps: [
+            "Finding the public page: the footer of every public page, and the Get involved menu, always link to Appeals. While an appeal is live the header shows it as well, and the home page shows it on a strip. With nothing live, the page says so, lists the most recent finished appeals and points to Donate.",
             "Open the resident and tap Start an appeal (or Management → Appeals → Start an appeal and choose them). Give it a title such as “Panda needs hip surgery”, say what is wrong and what treatment is needed, and enter the target in baht. A deadline is optional. Add the links to our Facebook, Instagram or LINE posts, one https:// link per line. Tap Create the draft.",
             "Pick how progress is shown: a bar, a thermometer or a gauge. Each is drawn live with the appeal's real figure, so you can see which you prefer. The list of appeals always uses the bar.",
             "Photos: tick the resident's photos you want on the appeal and choose one as the cover. Photos filed under Medical are never offered and cannot be added. If a photo is distressing, tick Distressing: visitors then see a warning and tap to look, and a shared link never uses it as its picture.",

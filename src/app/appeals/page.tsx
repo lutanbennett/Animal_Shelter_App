@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
@@ -87,6 +88,18 @@ export default async function AppealsPage() {
           <p className="max-w-3xl rounded-2xl border border-site-line bg-site-paper p-5 text-lg text-site-ink-soft">
             {a.noneOpen}
           </p>
+        )}
+
+        {asking.length === 0 && (
+          <section aria-labelledby="give-heading" className="flex max-w-3xl flex-col gap-3">
+            <h2 id="give-heading" className="font-display text-[26px] font-bold lg:text-[30px]">
+              {a.otherWaysToGive}
+            </h2>
+            <p className="text-lg text-site-ink-soft">{a.otherWaysToGiveHint}</p>
+            <Link href="/donate" className="flex min-h-11 items-center self-start font-semibold underline underline-offset-4">
+              {t.adopt.donateNav} →
+            </Link>
+          </section>
         )}
 
         {finished.length > 0 && (

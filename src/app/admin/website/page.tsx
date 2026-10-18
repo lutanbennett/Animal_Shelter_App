@@ -19,7 +19,9 @@ import { CHANNEL_COLUMNS, type DonationChannelRow } from "@/lib/site/donation-ch
 import { WebsiteTabs } from "./WebsiteTabs";
 import { PagesAccordion } from "./PagesAccordion";
 import { PublishedProjects, type PublishedProjectRow } from "./PublishedProjects";
+import Link from "next/link";
 import { requirePermission } from "@/lib/permissions/require";
+import { can } from "@/lib/permissions/can";
 
 type PublicResidentRow = {
   id: string;
@@ -34,7 +36,7 @@ export default async function WebsitePage({
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
-  await requirePermission("website.content");
+  const { perms } = await requirePermission("website.content");
   const { tab } = await searchParams;
   const { t } = await getT();
 
@@ -151,6 +153,14 @@ export default async function WebsitePage({
           {t.admin.website.title}
         </h1>
         <p className="text-sm text-muted">{t.admin.website.subtitle}</p>
+        {can(perms, "appeal.run") && (
+          <p className="text-sm text-muted">
+            {t.admin.website.appealsNote}{" "}
+            <Link href="/management/appeals" className="underline underline-offset-4">
+              {t.admin.website.appealsLink}
+            </Link>
+          </p>
+        )}
       </div>
 
       {!content && (
