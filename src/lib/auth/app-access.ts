@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { parsePermissions } from "@/lib/permissions/can";
 import { isPublicPath } from "@/lib/public-paths";
-import { DEFAULT_SIGNED_IN_PATH, DOCTOR_HOME_PATH } from "./next-path";
+import { DEFAULT_SIGNED_IN_PATH } from "./next-path";
 
 /**
  * Whether a role opens the app is the role's own `opens_app` (roles, 0132), read through my_permissions():
@@ -28,13 +28,14 @@ export async function loadSessionRole(supabase: SupabaseClient): Promise<Session
 }
 
 /**
- * Where a sign-in lands. Staff go where `next` says, else the app's home,
- * My tasks. A public viewer lands on the home page — or on `next` when that is
- * a public page, so a resident card scanned on the locked site still opens
- * after sign-in.
+ * Where a sign-in lands. App users go where `next` says, else the app's home
+ * (/home, their who-does-what tiles; a doctor too, since 2026-10-18 — it was
+ * sent to Appointments by role key, a page its cells did not open). A public
+ * viewer lands on the home page — or on `next` when that is a public page, so
+ * a resident card scanned on the locked site still opens after sign-in.
  */
 export function signedInLandingPath(role: SessionRole | null, next: string | null): string {
-  if (role?.opensApp) return next ?? (role.key === "doctor" ? DOCTOR_HOME_PATH : DEFAULT_SIGNED_IN_PATH);
+  if (role?.opensApp) return next ?? DEFAULT_SIGNED_IN_PATH;
   if (next && isPublicPath(new URL(next, "http://x").pathname)) return next;
   return "/";
 }
