@@ -142,6 +142,7 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
           )}
           <Link href="/friends/join" className={footerLink}>{t.publicNav.becomeFriend}</Link>
           <Link href="/donate" className={footerLink}>{t.adopt.donateNav}</Link>
+          <Link href="/appeals" className={footerLink}>{t.appeals.navLabel}</Link>
           {/* Services (f.services) comes back with its first entry — desexing
               drives; it went empty when Pet relocation came off the site. */}
         </div>

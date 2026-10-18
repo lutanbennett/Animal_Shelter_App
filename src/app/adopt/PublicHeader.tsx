@@ -118,9 +118,14 @@ export async function PublicHeader({
         // While an appeal is live (or the visitor is on one) this entry is the
         // sponsorship page; with none it stays the Donate page, which says how
         // to give, and is never marked current, because Donate is.
-        liveAppeals || current === "appeals"
-          ? link("appeals", "/appeals", t.appeals.navLabel)
-          : { key: "care", href: "/donate", label: n.care, current: false },
+        // Appeals is always reachable: with none live it follows Donate, and
+        // /appeals then says nothing is open and points back to giving.
+        ...(liveAppeals || current === "appeals"
+          ? [link("appeals", "/appeals", t.appeals.navLabel)]
+          : [
+              { key: "care" as const, href: "/donate", label: n.care, current: false },
+              link("appeals", "/appeals", t.appeals.navLabel),
+            ]),
         // Shelter Friends is listed once there is someone to thank — or
         // while the visitor is on /friends itself, so the page stays marked.
         ...(showFriends || current === "friends"

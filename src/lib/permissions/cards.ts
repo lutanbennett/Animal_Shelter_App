@@ -35,7 +35,8 @@ export type NewCardKey =
   | "outreach_notes"
   | "assistant"
   | "enclosures"
-  | "add_photos";
+  | "add_photos"
+  | "run_appeals";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -145,6 +146,14 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
     bundle: [{ activity: "photos.shelter_add" }, { activity: "resident.record", level: "read" }],
     opens: "/photos/add",
   },
+  // Card twenty-three (2026-10-18): run the fundraising appeals. donation.receipt is bundled because the appeals
+  // pages show what has been raised only to a login that holds it (the one donations read there is). NOT granted to
+  // any role here: the Director ticks it onto roles in Settings.
+  run_appeals: {
+    includes: [],
+    bundle: [{ activity: "appeal.run" }, { activity: "donation.receipt" }],
+    opens: "/management/appeals",
+  },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */
@@ -163,6 +172,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   assistant: (t) => t.appHome.cards.assistant,
   enclosures: (t) => t.appHome.cards.enclosures,
   add_photos: (t) => t.appHome.cards.addPhotos,
+  run_appeals: (t) => t.appHome.cards.runAppeals,
 };
 
 export const CARDS: Record<CardKey, Card> = {

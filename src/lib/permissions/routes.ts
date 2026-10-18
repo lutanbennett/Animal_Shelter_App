@@ -212,7 +212,7 @@ export const ROUTES: readonly RouteEntry[] = [
     icon: HandHeart,
     label: (t) => t.nav.appeals,
     device: "any",
-    menu: false,
+    menu: true,
   },
   {
     path: "/management/clinics",
