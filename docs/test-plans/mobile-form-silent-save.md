@@ -6,7 +6,7 @@
 |---|---|
 | Feature | |
 | Backlog item | `docs/backlog.md` → |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/mobile-form-silent-save` @ `C:DevelopmentAnimal_Shelter_mobile-form-silent-save` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | |
 | Tested by / date | |
@@ -209,11 +209,11 @@ Automated checks by: Claude  Date: 2026-10-19
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
+has looked and explicitly asks in chat; the line then says so, e.g. `a person —
+confirmed in chat; line written by Claude at their request  Date: date`.
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
+- `a person  Date: date` — a person looked. The date is required here.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
