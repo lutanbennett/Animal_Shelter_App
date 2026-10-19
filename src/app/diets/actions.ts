@@ -9,8 +9,9 @@ import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { todayIso } from "@/lib/format";
+import { implausibleDiet } from "@/lib/diets/plausible";
 
-export type DietFormState = { error: string } | undefined;
+export type DietFormState = { error: string; confirm?: true } | undefined;
 
 function str(formData: FormData, key: string): string | null {
   const value = formData.get(key);
@@ -81,6 +82,29 @@ function parseDietFields(formData: FormData, t: Dictionary): { error: string } |
 }
 
 /**
+ * A diet that looks like a typo is held until the user ticks "this is right".
+ * It feeds the food forecast, purchasing and cashflow, so a slipped finger
+ * must not pass silently; a warning rather than a hard limit, so a genuinely
+ * big eater can still be saved.
+ */
+async function bigDietWarning(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  formData: FormData,
+  fields: ParsedDiet,
+  t: Dictionary,
+): Promise<DietFormState> {
+  if (formData.get("confirmBig") === "on") return undefined;
+  const { data } = await supabase
+    .from("picker_diet_types")
+    .select("daily_qty_small, daily_qty_medium, daily_qty_large")
+    .eq("id", fields.dietTypeId)
+    .maybeSingle();
+  if (!data) return undefined;
+  const why = implausibleDiet({ mealsPerDay: fields.mealsPerDay, dailyQuantity: fields.dailyQuantity, type: data });
+  return why ? { error: t.diets.errors.bigDiet, confirm: true } : undefined;
+}
+
+/**
  * Records a diet for a resident and returns to the Diet tab. The deceased
  * lock (0026 via 0051) rejects the insert for a closed record, which the
  * page refuses to show anyway.
@@ -96,6 +120,8 @@ export async function createDiet(_state: DietFormState, formData: FormData): Pro
   const { fields } = parsed;
 
   const supabase = await createClient();
+  const big = await bigDietWarning(supabase, formData, fields, t);
+  if (big) return big;
   const { error } = await supabase.from("resident_diets").insert({
     resident_id: residentId,
     diet_type_id: fields.dietTypeId,
@@ -129,6 +155,8 @@ export async function updateDiet(_state: DietFormState, formData: FormData): Pro
   const { fields } = parsed;
 
   const supabase = await createClient();
+  const big = await bigDietWarning(supabase, formData, fields, t);
+  if (big) return big;
   const { data, error } = await supabase
     .from("resident_diets")
     .update({

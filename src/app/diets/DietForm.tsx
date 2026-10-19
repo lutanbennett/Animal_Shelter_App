@@ -194,6 +194,12 @@ export function DietForm({
       </div>
 
       {state?.error && <p className="text-sm text-danger">{state.error}</p>}
+      {state?.confirm && (
+        <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+          <input type="checkbox" name="confirmBig" className="h-5 w-5" />
+          {t.diets.errors.confirmBig}
+        </label>
+      )}
 
       <div className="flex items-center gap-4">
         <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save}

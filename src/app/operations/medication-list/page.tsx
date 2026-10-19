@@ -52,7 +52,7 @@ export default async function MedicationListPage(props: PageProps<"/operations/m
   const chosen = ROUND_KEYS.find((k) => k === sp.round) ?? null;
   const round: RoundKey = chosen ?? suggestRound("medication");
   // The round starts at the stock room, so the pick list is the front door and by-resident the second tab.
-  const view = sp.view === "list" ? "list" : "pick";
+  const view = sp.view === "pick" ? "pick" : "list";
   const href = (r: RoundKey, v: string) => `/operations/medication-list?round=${r}&view=${v}`;
 
   const supabase = await createClient();
