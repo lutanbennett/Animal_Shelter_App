@@ -119,13 +119,13 @@ export function StatCard({
                 href={action.href}
                 title={action.label}
                 aria-label={action.label}
-                className="relative z-10 inline-flex items-center gap-1 rounded-full border border-primary/40 p-1.5 text-xs font-medium text-primary hover:bg-primary/10 md:rounded md:border-0 md:p-0 md:hover:bg-transparent md:hover:underline"
+                className="relative z-10 inline-flex items-center gap-1 min-h-8 rounded-full border border-primary/40 px-2.5 py-1 text-xs font-medium text-primary hover:bg-primary/10 md:min-h-0 md:rounded md:border-0 md:p-0 md:hover:bg-transparent md:hover:underline"
               >
                 <ActionIcon
                   aria-hidden="true"
                   className="h-4 w-4 shrink-0 md:h-3.5 md:w-3.5"
                 />
-                <span className="hidden md:inline">{action.label}</span>
+                <span>{action.label}</span>
               </Link>
             );
           })}
