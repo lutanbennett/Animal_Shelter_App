@@ -104,7 +104,12 @@ begin
 end
 $swap$;
 
--- Seed. Management first, so there is an approver the moment the guard looks.
+-- Seed. Written once in the plain form so scripts that read the migrations (the acceptance matrix) can see who holds it.
+insert into role_permissions (role_id, activity, level)
+select r.id, 'photos.approve', 2 from roles r where r.key = 'management'
+on conflict (role_id, activity) do nothing;
+
+-- Management first, so there is an approver the moment the guard looks.
 do $seed$
 declare
   v_mgmt uuid;
