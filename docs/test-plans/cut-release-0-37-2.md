@@ -7,7 +7,7 @@
 | Feature | Cut release `0.37.2`: move the four notes in `unreleased` into a new `0.37.2` entry, **add a fifth** for the status test alert whose outstanding step this release closes, **`major: false`**, and bump `package.json` to match |
 | Backlog item | `docs/backlog.md` → none — a release cut closes no backlog item |
 | Branch / worktree | `claude/cut-release-0-37-2` @ `C:\Development\Animal_Shelter_cut-release-0-37-2` |
-| PR | **#759 — a guess at the time of writing, to be re-read with `gh pr view` after opening.** The last two cuts guessed right (#731, #743) after two wrong in a row before them (#704→#705, #717→#718). It is written down as a guess so that re-reading it is what makes it true |
+| PR | **#759 — guessed before opening and re-read afterwards, which is what made it true.** Three cuts in a row now right (#731, #743, #759), after two wrong before them (#704→#705, #717→#718). Confirmed from `gh pr create`'s own output, not assumed |
 | Dev server | not driven — `/releases` is behind sign-in; see §5 |
 | Tested by / date | Claude (production release manager session) / 2026-10-19 |
 | Carries a migration? | no — the release's **three** (`0227`, `0228`, `0229`) merged in their own PRs and are applied as a release step |
@@ -79,7 +79,18 @@ TARGET: releases[0] (0.37.2) notes, 5 note(s)
 
 gates: typecheck=0 lint=0 test=0 build=0
 ```
-- [ ] CI green on the PR (runs the same three) — `n/a: not yet at this commit — no PR exists until this plan is committed.` The plan is written and committed **before** the PR is opened, which has made the first run green by construction for eight releases running. When it opens, the run's `headSha` is read from `gh run list` and matched against this branch's HEAD rather than taken from the PR bar's cached reading, and this line is then ticked with the output. **Ticking it is itself a commit, so a second run follows and is expected**
+- [x] CI green on the PR (runs the same three) — **all 8 checks passing, 0 failing, `mergeable: MERGEABLE`, `mergeStateStatus: CLEAN`** on PR #759. The run's `headSha` was read from `gh run list` and matched against this branch's HEAD rather than taken from the PR bar's cached reading: `completed success 0303a8d0 run=39269365628` against `HEAD=0303a8d05692c660b228352019b272280b702cda`. **The first run was green by construction for the ninth release running**, because the plan was written and committed before the PR was opened. `test-plan` and `audit` both passed. **Ticking this line is itself a commit, so a second run follows and is expected**; it is confirmed against the new HEAD before the merge
+
+```
+audit                  pass   12s
+cards-count            pass   7s
+check                  pass   2m22s
+migration-numbers      pass   11s
+new-policy-role-names  pass   13s
+public-views           pass   2m20s
+script-integrity       pass   15s
+test-plan              pass   7s
+```
 - [x] `node scripts/check-release-guards.mjs` — all 16 guards `ok`, exit 0
 
 ```
