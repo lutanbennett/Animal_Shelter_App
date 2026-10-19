@@ -36,10 +36,11 @@ if (problem) {
 console.log(`actions-key (${name}): configured key fingerprint ${keyFingerprint(key)}`);
 
 if (rest.includes("--built")) {
-  const built = builtKeyProblem(key);
+  const dist = process.env.NEXT_DIST_DIR || ".next";
+  const built = builtKeyProblem(key, `${dist}/server/server-reference-manifest.json`);
   if (built) {
     console.error(`actions-key (${name}): ${built}`);
     process.exit(1);
   }
-  console.log(`actions-key (${name}): the build in .next carries that key`);
+  console.log(`actions-key (${name}): the build in ${dist} carries that key`);
 }
