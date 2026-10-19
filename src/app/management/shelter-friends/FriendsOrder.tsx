@@ -110,12 +110,14 @@ export function FriendsOrder({ friends }: { friends: FriendOrderRow[] }) {
                   disabled={isPending || index === 0}
                   onClick={() => run(() => moveFriend(friend.id, "up"))}
                   label={f.manage.moveUp(name)}
+                  word={f.manage.moveUpWord}
                   icon={ACTION_ICONS.moveUp}
                 />
                 <RowActionButton
                   disabled={isPending || index === friends.length - 1}
                   onClick={() => run(() => moveFriend(friend.id, "down"))}
                   label={f.manage.moveDown(name)}
+                  word={f.manage.moveDownWord}
                   icon={ACTION_ICONS.moveDown}
                 />
               </div>

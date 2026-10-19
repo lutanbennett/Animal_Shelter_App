@@ -24,8 +24,12 @@ type Common = {
   /** Tooltip when it should say more than the word, e.g. why a button is disabled. */
   hint?: string;
   icon: LucideIcon;
+  /** A short word shown beside the icon on phones only (a mouse has the tooltip). */
+  word?: string;
   tone?: keyof typeof TONE_CLASSES;
 };
+
+const WORD_BASE = "!w-auto gap-1.5 px-2 text-sm font-medium md:!w-9 md:gap-0 md:px-0";
 
 function names({ label, subject, hint }: Pick<Common, "label" | "subject" | "hint">) {
   return { title: hint ?? label, "aria-label": subject ? `${label}: ${subject}` : label };
@@ -41,11 +45,13 @@ export function RowActionLink({
   href,
   icon: Icon,
   tone = "default",
+  word,
   ...rest
 }: Common & { href: string }) {
   return (
-    <Link href={href} {...names(rest)} data-action="RowActionLink" className={`${BASE} ${TONE_CLASSES[tone]}`}>
-      <Icon aria-hidden="true" className="h-5 w-5 md:h-4 md:w-4" />
+    <Link href={href} {...names(rest)} data-action="RowActionLink" className={`${BASE} ${word ? WORD_BASE : ""} ${TONE_CLASSES[tone]}`}>
+      <Icon aria-hidden="true" className="h-5 w-5 shrink-0 md:h-4 md:w-4" />
+      {word && <span className="md:sr-only">{word}</span>}
     </Link>
   );
 }
@@ -54,6 +60,7 @@ export function RowActionLink({
 export function RowActionButton({
   icon: Icon,
   tone = "default",
+  word,
   label,
   subject,
   hint,
@@ -65,9 +72,10 @@ export function RowActionButton({
       {...buttonProps}
       {...names({ label, subject, hint })}
       data-action="RowActionButton"
-      className={`${BASE} ${TONE_CLASSES[tone]}`}
+      className={`${BASE} ${word ? WORD_BASE : ""} ${TONE_CLASSES[tone]}`}
     >
-      <Icon aria-hidden="true" className="h-5 w-5 md:h-4 md:w-4" />
+      <Icon aria-hidden="true" className="h-5 w-5 shrink-0 md:h-4 md:w-4" />
+      {word && <span className="md:sr-only">{word}</span>}
     </button>
   );
 }

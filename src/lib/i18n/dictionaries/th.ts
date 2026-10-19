@@ -6663,6 +6663,8 @@ const th: Dictionary = {
       empty: "ยังไม่มีเพื่อนของศูนย์ กด “เพิ่มเพื่อนของศูนย์พักพิง” เพื่อขอบคุณธุรกิจแรก",
       moveUp: (name: string) => `เลื่อน ${name} ขึ้น`,
       moveDown: (name: string) => `เลื่อน ${name} ลง`,
+      moveUpWord: "ขึ้น",
+      moveDownWord: "ลง",
       openContact: "เปิดผู้ติดต่อ",
       archivedNote: "ผู้ติดต่อถูกเก็บถาวร — ไม่แสดงบนเว็บไซต์",
     },

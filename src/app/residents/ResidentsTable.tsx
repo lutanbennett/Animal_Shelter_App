@@ -197,10 +197,10 @@ export function ResidentsTable({
       onClick={() => setDownloading(downloadName)}
       title={downloadLabel}
       aria-label={downloadLabel}
-      className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded border border-border p-2 text-sm font-medium text-foreground hover:bg-surface-hover md:min-h-0 md:min-w-0 md:px-4 md:py-2"
+      className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-surface-hover md:min-h-0"
     >
       <Download aria-hidden="true" className="h-5 w-5 shrink-0 md:h-4 md:w-4" />
-      <span className="hidden md:inline">{downloadLabel}</span>
+      <span>{downloadLabel}</span>
     </a>
   );
 
@@ -216,10 +216,11 @@ export function ResidentsTable({
           {allTicked && leftOut > 0 && ` · ${t.residents.list.selectAllLeftOut(leftOut)}`}
         </p>
         {!limited && (
-        <div className="ml-auto flex gap-2">
+        <div className="grid w-full grid-cols-2 gap-2 md:ml-auto md:flex md:w-auto md:justify-end">
           {downloadLink}
           <ActionLink
             href={immunizationHref}
+            iconOnlyOnMobile={false}
             label={
               selected.size > 0
                 ? t.residents.list.logImmunizationsCount(selected.size)
@@ -229,6 +230,7 @@ export function ResidentsTable({
           />
           <ActionLink
             href={bookingHref}
+            iconOnlyOnMobile={false}
             label={
               selected.size > 0
                 ? t.residents.list.bookVetVisitCount(selected.size)
@@ -238,6 +240,7 @@ export function ResidentsTable({
           />
           <ActionLink
             href="/residents/new"
+            iconOnlyOnMobile={false}
             label={t.residents.list.newResident}
             icon={PawPrint}
             variant="primary"
