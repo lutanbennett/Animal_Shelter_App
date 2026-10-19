@@ -18,5 +18,4 @@ Measured on dev: STICKY 6 -> 3, SHARED 3 (management and 2IC `stock.delivery`, m
 **Acceptance rows.** Checked against the code of main after #733-#738, not the 2026-10-18 list; the R numbers had
 moved, so rows were matched by wording. Unpublish was left alone: #734 put the word on Management -> Shelter Friends.
 Not click-tested in a browser (no role login this session): Manual verification is `pending`.
-Seen and not touched (reported): row "Hand a date over", "Weigh the animals" for Management have no tile; the Home
-tile set is `role-home-tiles-schema`'s.
+The Home tile set belongs to `role-home-tiles-schema`; rows that name a tile now say where Admin and Management open the page instead.
