@@ -199,6 +199,8 @@ NEXT_DIST_DIR=.next.new node scripts/actions-key.mjs --env "$ENV_NAME" --built |
 HOST=lannacare.org   # UAT's for good; production keeps it until the cutover (docs/decisions.md)
 [[ "$ENV_NAME" == "test" ]] && HOST=test.lannacare.org
 
+[[ -d .next.new ]] || { echo "deploy-pi: the build reported success but .next.new is missing; nothing swapped, $SERVICE keeps serving the old version." >&2; exit 1; }
+
 # From here a build is live, so the stylesheet check must run however this script ends: it is the
 # one check that finds a poisoned edge cache (a year of unstyled pages for whoever hits it), and
 # an earlier failing step used to exit before it (0.37.1). Its own failure sets the exit status.

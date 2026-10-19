@@ -34,7 +34,7 @@ report_build_failure() {
 # a bare loopback probe reads "nothing" on production even when the deploy worked (0.37.1). Print the
 # key from an env file so the probe can present it; prints nothing when there is none (test).
 origin_key_from() {
-  [[ -f "$1" ]] && sed -n 's/^ORIGIN_KEY=//p' "$1" | tail -1 | tr -d '"' || true
+  [[ -f "$1" ]] && sed -n 's/^ORIGIN_KEY=//p' "$1" | tail -1 | tr -d '"' || true
 }
 
 # Fatal check that what is served is the version just built. URL is the /api/version endpoint;
