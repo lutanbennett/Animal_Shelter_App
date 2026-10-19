@@ -600,6 +600,22 @@ export const ENTRIES = {
     },
   ],
 
+  "meme-maker": [
+    {
+      activity: "Make a meme from a resident's photo with English and Thai words",
+      needs: "social.library",
+      device: "phone",
+      do: "Open a resident's Photos tab, open a photo and tap Make a meme. Type English top text and Thai bottom text, choose a style and a crop, and tap Save to the library.",
+      expect: "The preview updates as you type, long text wraps instead of running off the picture, and Thai tone marks and ำ show correctly. The meme opens in the library tagged with that resident, with the logo in a corner and Download working. The original photo is unchanged.",
+    },
+    {
+      activity: "Check that a Medical photo cannot be made into a meme",
+      needs: "social.library",
+      device: "phone",
+      do: "Open a resident's photo filed under Medical and look for Make a meme. Then open Make a meme from the library and choose that resident.",
+      expect: "The Medical photo has no Make a meme button and is not in the maker's photo choices.",
+    },
+  ],
   "memes": [
     {
       activity: "Add a meme featuring two residents",
