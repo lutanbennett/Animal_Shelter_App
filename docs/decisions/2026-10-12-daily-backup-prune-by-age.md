@@ -41,7 +41,7 @@ The dump is the app's records only (photos live in Drive, not the database) and 
 0.69 MB when the Pi backup was first set up, and "under 1 MB" in
 `2026-09-30-one-pi-hosting-and-backup.md`. Not re-measured against production here: production reads
 are not allowed from a worktree. Even at ten times that, 14 dumps are about 100 MB against the
-shelter's 15 GB, and a month of downloads from Supabase is about 300 MB against the free plan's
+Drive quota (see the correction below), and a month of downloads from Supabase is about 300 MB against the free plan's
 5 GB monthly egress. Drive's trash still counts toward quota for 30 days, so allow for about 44 dumps
 at once. Still free; if a dump ever grows past roughly 100 MB this needs revisiting, not a paid plan.
 The test database stays unscheduled, as before.
@@ -51,3 +51,18 @@ The test database stays unscheduled, as before.
 Daily running needs the crontab edit on the Pi (`scripts/pi/setup.sh` step 7 does it for a rebuilt
 Pi). Until it is done the Pi still runs the Sunday job, so there is no release note
 (`2026-10-11-release-note-truth-rule.md`); a backlog item tracks the step.
+
+## Correction, 2026-10-19: the "15 GB" was wrong
+
+The cost paragraph above originally compared the dumps with "the shelter's 15 GB". That was an
+assumed free-tier figure. The shelter's account, `lannacareforanimals@gmail.com`, holds **1 TB**
+(confirmed by Lutan, 2026-10-19).
+
+**Which account the backups use was not established.** They land on the `lannaanimalfoundationbwm`
+tree today, not the shelter's account, and its quota could not be read from a session, so no figure
+is written for it. Either way the dumps are tiny (about 100 MB for 14 at ten times today's size), so
+the free-tier conclusion stands whether the quota is 15 GB or 1 TB.
+
+**What the corrected figure does not change:** it is no reason to keep more backups. The two-week
+retention is also a privacy choice: a dump holds medical history and names carers and adopters.
+Changing it is its own decision with Lutan, not a consequence of having more disk.
