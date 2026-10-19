@@ -145,7 +145,7 @@ Automated checks by: Claude  Date: 2026-10-19
 
 ### Manual verification
 
-- [ ] pending: items 1 to 5 above need a person on a phone
+- [ ] The manual list above is checked by a person — n/a: not yet looked at; see the signature line below, which stays pending
 
 Manual verification by: pending: Lutan to check the five items above
 
