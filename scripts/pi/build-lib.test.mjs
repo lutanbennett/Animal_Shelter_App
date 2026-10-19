@@ -50,3 +50,21 @@ test("prune refuses any path that is not a .next/cache", () => {
   assert.equal(r.status, 2);
   assert.ok(existsSync(`${root}/keep`));
 });
+
+test("the probe presents the origin key, and an origin that refuses without it still reads as a failure", () => {
+  // A fake origin: answers the version only when x-origin-key is right, like src/proxy.ts.
+  const fake = `curl() { local k=""; while [[ $# -gt 0 ]]; do [[ "$1" == "-H" ]] && k="$2"; shift; done; [[ "$k" == "x-origin-key: s3cret" ]] && echo '{"version":"0.37.1"}' || return 22; }; sleep() { :; }`;
+  const good = sh(`${fake}; check_served_version http://x 0.37.1 s3cret`);
+  assert.equal(good.status, 0);
+  const refused = sh(`${fake}; check_served_version http://x 0.37.1`);
+  assert.equal(refused.status, 1);
+  assert.match(refused.stderr, /DEPLOY FAILED/);
+  assert.match(refused.stderr, /serves 'nothing'/);
+});
+
+test("origin_key_from reads ORIGIN_KEY from an env file, and prints nothing without one", () => {
+  const root = mkdtempSync(join(tmpdir(), "ok-")).split(String.fromCharCode(92)).join("/");
+  writeFileSync(`${root}/env`, 'A=1\nORIGIN_KEY="abc123"\n');
+  assert.equal(sh(`origin_key_from "${root}/env"`).stdout.trim(), "abc123");
+  assert.equal(sh(`origin_key_from "${root}/missing"`).stdout.trim(), "");
+});

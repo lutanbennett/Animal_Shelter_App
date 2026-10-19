@@ -324,6 +324,8 @@ the Pi:
 ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && node scripts/pi/check-assets.mjs --url https://lannacare.org/'
 ```
 
+The script builds into `.next.new` and renames it over `.next` only once it compiled, so a request never meets a half-written build; it probes the Pi on loopback **with the origin key** (production answers `Forbidden` without it); and the asset check below runs from an exit trap, so a failure in an earlier step can no longer skip it. A `DEPLOY FAILED` banner is believed — but if the probe line says `serves 'nothing'`, confirm with `https://lannacare.org/api/version` before rolling back, and **run the asset check by hand either way**.
+
 `deploy-pi.sh` already runs that check as its last step and **fails loudly** if the
 served stylesheet differs from the build; a red result there means purge, then re-run.
 **Purge even when the check is green**: it only samples the edge it reaches, and a

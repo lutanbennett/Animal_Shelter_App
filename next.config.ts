@@ -13,6 +13,9 @@ function gitSha(): string {
 }
 
 const nextConfig: NextConfig = {
+  // The Pi deploy builds into .next.new and renames it into place (scripts/pi/deploy-pi.sh), so the
+  // folder the service serves is never rewritten under live requests. Unset everywhere else: .next.
+  ...(process.env.NEXT_DIST_DIR ? { distDir: process.env.NEXT_DIST_DIR } : {}),
   env: {
     // What /api/version answers: the release in package.json and the commit
     // this build was made from, so a caller can ask the serving origin what

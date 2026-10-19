@@ -25,6 +25,8 @@ try {
   // stubs for everything the script calls that a laptop/CI runner must not really do
   const bin = join(tmp, "bin"); mkdirSync(bin);
   for (const c of ["npm", "sudo", "curl", "sleep"]) { writeFileSync(join(bin, c), `#!/bin/sh\necho "STUB ${c} $*" >> "${tmp}/stubs.log"\n`); chmodSync(join(bin, c), 0o755); }
+  // a real build leaves its output folder; deploy-pi.sh builds into $NEXT_DIST_DIR and renames it in
+  writeFileSync(join(bin, "npm"), `#!/bin/sh\necho "STUB npm $*" >> "${tmp}/stubs.log"\n[ -n "$NEXT_DIST_DIR" ] && mkdir -p "$NEXT_DIST_DIR"\nexit 0\n`);
   writeFileSync(join(tmp, "meminfo"), "SwapTotal:       6291452 kB\n");
 
   const origin = join(tmp, "origin.git"); execFileSync("git", ["init", "--bare", "-b", "main", origin], { env });

@@ -30,18 +30,28 @@ report_build_failure() {
   } >&2
 }
 
-# Fatal check that what is served is the version just built. URL is the /api/version endpoint.
+# The Pi refuses any request without the Worker's x-origin-key (src/proxy.ts, 403 "Forbidden"), so
+# a bare loopback probe reads "nothing" on production even when the deploy worked (0.37.1). Print the
+# key from an env file so the probe can present it; prints nothing when there is none (test).
+origin_key_from() {
+  [[ -f "$1" ]] && sed -n 's/^ORIGIN_KEY=//p' "$1" | tail -1 | tr -d '"' || true
+}
+
+# Fatal check that what is served is the version just built. URL is the /api/version endpoint;
+# optional 3rd arg is the origin key to present.
 check_served_version() {
-  local url="$1" expected="$2" got
-  local i
+  local url="$1" expected="$2" key="${3:-}" got
+  local i hdr=()
+  [[ -n "$key" ]] && hdr=(-H "x-origin-key: $key")
   for i in 1 2 3 4 5; do   # the service needs a moment after the restart
-    got="$(curl -fsS --max-time 10 "$url" 2>/dev/null | sed -n 's/.*"version":"\([^"]*\)".*/\1/p')"
+    got="$(curl -fsS --max-time 10 ${hdr[@]+"${hdr[@]}"} "$url" 2>/dev/null | sed -n 's/.*"version":"\([^"]*\)".*/\1/p')"
     [[ "$got" == "$expected" ]] && break
     sleep 2
   done
   if [[ "$got" != "$expected" ]]; then
     report_build_failure 1
     echo "deploy-pi: $url serves '${got:-nothing}', expected '$expected'." >&2
+    [[ -z "$got" ]] && echo "  (An empty answer can also mean the origin refused the probe; confirm with the public URL before rolling back.)" >&2
     return 1
   fi
   echo "deploy-pi: serving $got as expected."
