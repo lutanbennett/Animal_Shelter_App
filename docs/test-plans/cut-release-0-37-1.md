@@ -65,7 +65,19 @@ tags: 1:admin  2:UNTAGGED(everyone)  3:admin+management+second_in_command+head_o
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR (runs the same three) — `n/a: this line is the PR's own CI result, which cannot exist before the PR does; it is replaced by a tick and the run's output once green.` The plan is written and committed **before** the PR is opened, which is what has made the first run green by construction for seven releases. **Ticking this line is itself a commit, so a second run follows**; its `headSha` is read from `gh run list` and matched against this branch's HEAD rather than taken from the PR bar's cached reading
+- [x] CI green on the PR (runs the same three) — **all 8 checks passing, 0 failing, `mergeable: MERGEABLE`** on PR #743. The run's `headSha` was read from `gh run list` and matched against this branch's HEAD rather than taken from the PR bar's cached reading: `success 63a08ddd run=39223378505` against `HEAD=63a08ddde33de6bf2cb65c035382ec40e398b0c3`. **The first run was green by construction for the eighth release running**, because the plan was written and committed before the PR was opened. `test-plan` and `audit` both passed. **Ticking this line is itself a commit, so a second run follows and is expected**; it is confirmed against the new HEAD before the merge
+
+```
+cards-count            pass   7s
+check                  pass   2m18s
+migration-numbers      pass   14s
+new-policy-role-names  pass   9s
+public-views           pass   2m4s
+script-integrity       pass   15s
+test-plan              pass   10s
+audit                  pass   9s
+```
+
 - [x] `node scripts/check-release-guards.mjs` — all 15 guards `ok`, exit 0
 
 ## 3. Schema and data — *skip if no migration*
