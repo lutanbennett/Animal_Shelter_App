@@ -120,7 +120,7 @@ export function DeliverySteps({
       setKind(k);
       setItemId("");
       setSearch("");
-      setLines([newLine()]);
+      setLines([newLine("", lines[0]?.cost ?? "")]);
       setTiming(null);
     }
     go("item");
