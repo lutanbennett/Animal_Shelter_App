@@ -4210,6 +4210,9 @@ const en = {
         notAllowed: "Your role cannot change the meme library.",
         saveFailed: "The meme could not be saved. Try again.",
         notFound: "That meme is no longer here.",
+        sourceNotFound: "The picture could not be found, so the meme was not saved.",
+        sourceMedical: "A medical photo cannot be made into a meme. Choose a different photo.",
+        sourceNotApproved: "That photo is still waiting for approval, so it cannot be made into a meme yet.",
       },
     },
     page: {
