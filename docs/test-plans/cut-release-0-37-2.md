@@ -72,7 +72,13 @@ TARGET: releases[0] (0.37.2) notes, 5 note(s)
 **The `majorReleasesSince` assertion is the live one this release, in its inverted form.** It must return **nothing**: that is the difference between this release and a **third** mail reaching every admin in one day. Asserted mechanically rather than by reading the `major:` flag — and **the presence of a `deploy: release mail` line in the deploy log would be the defect**.
 
 - [x] `node scripts/worktree.mjs sync` — the worktree was created from `origin/main` at `8f6e8224` minutes before the cut, which was the tip; re-checked before the PR was opened
-- [ ] `node scripts/gates.mjs` ends `typecheck=0 lint=0 test=0 build=0` — `n/a: not yet — the run is in flight as this plan is committed.` Its unedited output is pasted here and this line ticked before the PR is opened; an unticked gates line must never reach a PR
+- [x] `node scripts/gates.mjs` ends `typecheck=0 lint=0 test=0 build=0` — output pasted below, unedited. It prints `test=0` as well as the three the template names
+
+```
+=== gates: build exited 0 after 104s
+
+gates: typecheck=0 lint=0 test=0 build=0
+```
 - [ ] CI green on the PR (runs the same three) — `n/a: not yet at this commit — no PR exists until this plan is committed.` The plan is written and committed **before** the PR is opened, which has made the first run green by construction for eight releases running. When it opens, the run's `headSha` is read from `gh run list` and matched against this branch's HEAD rather than taken from the PR bar's cached reading, and this line is then ticked with the output. **Ticking it is itself a commit, so a second run follows and is expected**
 - [x] `node scripts/check-release-guards.mjs` — all 16 guards `ok`, exit 0
 
