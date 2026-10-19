@@ -26,6 +26,10 @@
 //              database differs and the difference is not listed, and fails if
 //              a listed difference is gone (§11, and decisions/2026-10-02-
 //              check-scripts-assert-live-not-replay.md)
+//   sharedWith activities that DELIBERATELY open the same statement (stock.delivery's read is also
+//              stock.purchasing's; a medication insert is also stock.medications Edit). The who-does-what
+//              check then reports SHARED, proved by a run with this box and those all taken away, instead
+//              of calling the box impossible to remove
 //   fn         the statement is a function call; its refusal is an exception
 //              rather than zero rows
 //
@@ -136,7 +140,7 @@ export const PROBES = [
   // --- Stock and ordering
   { activity: "stock.count", level: "edit", fn: true, sql: `select record_stocktake('[]'::jsonb, '[]'::jsonb)` },
   { activity: "stock.delivery", level: "edit", sql: `insert into stock_receipts (item_kind, medication_id, quantity) values ('medication', ${MED}, 1)` },
-  { activity: "stock.delivery", level: "read", sql: `select 1 from stock_receipts where id = $RECEIPT` },
+  { activity: "stock.delivery", level: "read", sharedWith: ["stock.purchasing"], sql: `select 1 from stock_receipts where id = $RECEIPT` },
   { activity: "stock.medications", level: "edit", sql: `update medication set cost_per_unit = cost_per_unit where id = ${MED}` },
   { activity: "stock.medications", level: "read", sql: `select cost_per_unit from medication where id = ${MED}`, known: [{ id: "N1", roles: ["doctor"] }] },
   { activity: "stock.diets", level: "edit", sql: `update diet_types set notes = 'probe' where id = $DIET` },
@@ -157,7 +161,7 @@ export const PROBES = [
   { activity: "reference.types", level: "edit", sql: `update immunization_types set cost = cost where id = (select id from immunization_types limit 1)`, known: [{ id: "C3", roles: ["doctor"] }] },
   { activity: "reference.types", level: "edit", sql: `insert into immunization_types (name, interval_months) values ('Probe type', 12)`, known: [{ id: "C3", roles: ["doctor"] }] },
   { activity: "reference.types", level: "edit", sql: `update blood_test_types set name = name where id = (select id from blood_test_types limit 1)` },
-  { activity: "reference.add_while_recording", level: "edit", sql: `insert into medication (name) values ('Probe medication')` },
+  { activity: "reference.add_while_recording", level: "edit", sharedWith: ["stock.medications"], sql: `insert into medication (name) values ('Probe medication')` },
   { activity: "reference.add_while_recording", level: "edit", sql: `insert into frequency (label) values ('Probe frequency')` },
   { activity: "reference.add_while_recording", level: "edit", sql: `insert into procedure_types (name) values ('Probe procedure')` },
   { activity: "audit.view", level: "edit", sql: `select 1 from audit_log limit 1` },

@@ -923,9 +923,9 @@ const en = {
             "This role can open the contacts book, but sees each contact's name and phone number only. Not the address, notes or history.",
         },
         databaseWider: {
-          title: "Looser in the database than on screen",
+          title: "Shared on purpose with another box",
           reason:
-            "The screens follow this box. Underneath, another box this role holds also opens the same records, so a specially built request could get past the screen.",
+            "The screens follow this box. Underneath, another box this role holds deliberately opens the same records too (stock receipts are also read by Purchasing; a medication can also be added with Stock medications Edit). Turning this box off alone will not close that door.",
         },
       },
     },
