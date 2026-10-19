@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
-import { driveImageUrl } from "@/lib/google/drive-client";
 import { fitText } from "@/lib/memes/maker-layout";
 import type { SourceKind } from "@/lib/memes/sources";
 import { createMeme } from "../actions";

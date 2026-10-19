@@ -13,6 +13,7 @@ import { AttachmentUploader } from "@/components/AttachmentUploader";
 import { TranslationPanel } from "@/components/TranslationPanel";
 import { localizedFromRow } from "@/lib/translations/localize";
 import type { TranslationRow } from "@/lib/translations/types";
+import { MakeMemeLink } from "@/components/MakeMemeLink";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { FileTypeIcon } from "@/components/FileTypeIcon";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -44,6 +45,7 @@ import {
 export function MaintenanceJobView({
   job,
   canWrite,
+  canMakeMeme = false,
   canMove,
   canDelete,
   canBills,
@@ -55,6 +57,7 @@ export function MaintenanceJobView({
   job: MaintenanceJob;
   /** Staff/admin: change status and details, remove files. */
   canWrite: boolean;
+  canMakeMeme?: boolean;
   /** maintenance.progress: the status buttons. */
   canMove: boolean;
   canDelete: boolean;
@@ -253,6 +256,7 @@ export function MaintenanceJobView({
             dropHere={d.dropBefore}
             attachments={before}
             canRemove={canWrite}
+            canMakeMeme={canMakeMeme}
             disabled={isPending}
             onRemove={removeAttachment}
           />
@@ -266,6 +270,7 @@ export function MaintenanceJobView({
             dropHere={d.dropAfter}
             attachments={after}
             canRemove={canWrite}
+            canMakeMeme={canMakeMeme}
             disabled={isPending}
             onRemove={removeAttachment}
           />
@@ -347,6 +352,7 @@ function PhotoSection({
   dropHere,
   attachments,
   canRemove,
+  canMakeMeme,
   disabled,
   onRemove,
 }: {
@@ -359,6 +365,7 @@ function PhotoSection({
   dropHere: string;
   attachments: MaintenanceAttachment[];
   canRemove: boolean;
+  canMakeMeme: boolean;
   disabled: boolean;
   onRemove: (attachmentId: string, fileName: string) => Promise<void>;
 }) {
@@ -415,6 +422,11 @@ function PhotoSection({
                     </span>
                   )}
                 </a>
+                {canMakeMeme && kind === "image" && (
+                  <div className="p-1">
+                    <MakeMemeLink source="maintenance" fileId={attachment.drive_file_id} />
+                  </div>
+                )}
                 {canRemove && (
                   <div className="absolute right-1 top-1 md:hidden md:group-hover:block">
                     <RowActionButton

@@ -9,6 +9,7 @@ import { FileDropZone, PendingFileList, useDeferredUploads } from "@/components/
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { OutingPhoto } from "@/lib/outreach/outings";
+import { MakeMemeLink } from "@/components/MakeMemeLink";
 import { deleteOuting, deleteOutingPhoto, setOutingPhotoPublic } from "../../actions";
 
 /**
@@ -17,7 +18,7 @@ import { deleteOuting, deleteOutingPhoto, setOutingPhotoPublic } from "../../act
  * tick is recorded only: nothing on the website reads it yet, and the page
  * says so rather than letting it look published.
  */
-export function OutingPhotos({ outingId, photos }: { outingId: string; photos: OutingPhoto[] }) {
+export function OutingPhotos({ outingId, photos, canMakeMeme = false }: { outingId: string; photos: OutingPhoto[]; canMakeMeme?: boolean }) {
   const { t } = useI18n();
   const o = t.outreach;
   const router = useRouter();
@@ -54,6 +55,7 @@ export function OutingPhotos({ outingId, photos }: { outingId: string; photos: O
                   alt={p.file_name ?? ""}
                   className="aspect-square w-full rounded object-cover"
                 />
+                {canMakeMeme && /.(jpe?g|png|webp)$/i.test(p.file_name ?? "") && <MakeMemeLink source="outing" fileId={p.drive_file_id} />}
                 <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-foreground">
                   <input
                     type="checkbox"

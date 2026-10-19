@@ -114,6 +114,11 @@ export async function createMeme(formData: FormData): Promise<ActionResult<{ id:
         caption_en: fields.captionEn.trim() || null,
         caption_th: fields.captionTh.trim() || null,
         tags: parseTags(fields.tags),
+        source_kind: sourceKind,
+        outing_id: link.outingId,
+        maintenance_id: link.maintenanceId,
+        project_id: link.projectId,
+        source_photo_ref: sourceKind && sourceKind !== "upload" ? sourceFileId : null,
       })
       .select("id")
       .single<{ id: string }>();
