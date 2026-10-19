@@ -250,6 +250,7 @@ const PINNED = {
   "/management/appeals/[id]/preview": { guards: ['requirePermission("appeal.run")'], decides: ["donation.receipt"] },
   // The meme library (0223). A meme's page opens at the list's Read; Record a share, Edit and Archive ask Edit in the body.
   "/memes/new": { guards: ['requirePermission("social.library")'], decides: [] },
+  "/memes/make": { guards: ['requirePermission("social.library")'], decides: [] },
   "/memes/[id]": { guards: ['requirePermission("social.library", "read")'], decides: ["social.library"] },
   "/memes/[id]/edit": { guards: ['requirePermission("social.library")'], decides: [] },
 
@@ -282,7 +283,7 @@ const PINNED = {
   "/residents/[id]/[section]": {
     guards: ["requireFullResident(SECTION_READS[section])"],
     inDir: "src/app/residents/[id]/[section]/sections",
-    decides: ["medical.archive", "medical.visits", "medical.prescriptions", "medical.diet", "medical.weight", "photos.approve", "photos.resident_manage", "resident.adoption_news", "resident.microchip"],
+    decides: ["medical.archive", "medical.visits", "medical.prescriptions", "medical.diet", "medical.weight", "photos.approve", "photos.resident_manage", "resident.adoption_news", "resident.microchip", "social.library"],
     table: {
       name: "SECTION_READS",
       want: {
