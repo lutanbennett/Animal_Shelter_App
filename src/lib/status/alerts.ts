@@ -263,14 +263,15 @@ function buildMail(
 async function recordRun(
   trigger: AlertTrigger,
   row: { failing: string[]; mailed: object | null; sent: string[]; skipped: Skipped[]; note: string | null },
-) {
+): Promise<number | null> {
   const db = createAdminClient();
-  const { error } = await db.from("status_alert_runs").insert({ trigger, ...row });
+  const { data: made, error } = await db.from("status_alert_runs").insert({ trigger, ...row }).select("id").single();
   if (error) throw new Error(`Could not record the run: ${error.message}`);
   await db
     .from("status_alert_runs")
     .delete()
     .lt("ran_at", new Date(Date.now() - KEEP_RUNS_DAYS * 86_400_000).toISOString());
+  return (made?.id as number | undefined) ?? null;
 }
 
 /**
@@ -374,7 +375,9 @@ export async function runStatusAlerts(trigger: "cron" | "manual", origin: string
  * says it is a test. Changes no check's state; recorded as a 'test' run so
  * the tile can say whether it reached anyone.
  */
-export async function sendTestAlert(origin: string): Promise<{ sent: string[]; skipped: Skipped[]; note: string | null }> {
+export async function sendTestAlert(
+  origin: string,
+): Promise<{ sent: string[]; skipped: Skipped[]; note: string | null; runId?: number | null }> {
   // Nothing was tried, so nothing is recorded: a run that cannot mail would become "the last mail".
   if (renderedBy() === "pi") return { sent: [], skipped: [], note: PI_NO_MAIL_REASON };
   const to = await adminEmails();
@@ -390,8 +393,66 @@ export async function sendTestAlert(origin: string): Promise<{ sent: string[]; s
         origin,
       )
     : { sent: [], skipped: [], note: "No admin has an email address, so nobody could be told." };
-  await recordRun("test", { failing: [], mailed: null, ...out });
-  return out;
+  const runId = await recordRun("test", { failing: [], mailed: null, ...out });
+  return { ...out, runId };
+}
+
+/**
+ * The Pi button: ask for a test mail. The Pi cannot send, so this only writes
+ * a row (0226); the Worker's next 15-minute run sends it. One pending request
+ * at a time (a partial unique index), so a second press is "already asked".
+ */
+export async function requestTestAlert(by: { id: string | null; name: string | null }): Promise<"requested" | "already"> {
+  const { error } = await createAdminClient()
+    .from("status_alert_test_requests")
+    .insert({ requested_by: by.id, requested_by_name: by.name });
+  if (!error) return "requested";
+  if (error.code === "23505") return "already";
+  throw new Error(`Could not record the request: ${error.message}`);
+}
+
+/**
+ * Worker cron: send the test for each pending request (at most one exists),
+ * exactly as the Worker-drawn button does, and mark it with the run it made.
+ * Only the Worker can mail; on the Pi the request is left waiting. Also trims
+ * old requests. Never throws.
+ */
+export async function processTestRequests(origin: string): Promise<{ handled: number; note: string | null }> {
+  if (renderedBy() === "pi") return { handled: 0, note: null };
+  try {
+    const db = createAdminClient();
+    await db
+      .from("status_alert_test_requests")
+      .delete()
+      .lt("requested_at", new Date(Date.now() - KEEP_RUNS_DAYS * 86_400_000).toISOString());
+    const { data, error } = await db.from("status_alert_test_requests").select("id").eq("status", "pending");
+    if (error) return { handled: 0, note: redactSecrets(error.message) };
+    let handled = 0;
+    for (const { id } of data ?? []) {
+      const pickedUp = new Date().toISOString();
+      try {
+        const r = await sendTestAlert(origin);
+        await db
+          .from("status_alert_test_requests")
+          .update({
+            status: r.sent.length ? "sent" : "failed",
+            picked_up_at: pickedUp,
+            run_id: r.runId ?? null,
+            note: r.sent.length ? null : (r.note ?? "The test reached nobody."),
+          })
+          .eq("id", id);
+      } catch (err) {
+        await db
+          .from("status_alert_test_requests")
+          .update({ status: "failed", picked_up_at: pickedUp, note: redactSecrets(err instanceof Error ? err.message : String(err)) })
+          .eq("id", id);
+      }
+      handled++;
+    }
+    return { handled, note: null };
+  } catch (err) {
+    return { handled: 0, note: redactSecrets(err instanceof Error ? err.message : String(err)) };
+  }
 }
 
 export type AlertFacts = {
@@ -402,6 +463,8 @@ export type AlertFacts = {
   open: HealthCheckKey[];
   /** The most recent run that tried to mail (an alert or a test). */
   lastMail: { at: string; trigger: AlertTrigger; sent: number; skipped: Skipped[]; note: string | null } | null;
+  /** A test mail asked for from a Pi-drawn page and not yet sent. Never turns the tile green. */
+  pendingTest: { at: string; by: string | null } | null;
 };
 
 /**
@@ -414,7 +477,7 @@ export type AlertFacts = {
 export async function checkAlerts(): Promise<CheckOutcome<AlertFacts>> {
   const scheduledHere = !!workerEnv()?.STATUS_ALERT_SITE;
   const db = createAdminClient();
-  const [cron, mail, open] = await Promise.all([
+  const [cron, mail, open, pending] = await Promise.all([
     db.from("status_alert_runs").select("ran_at").eq("trigger", "cron").order("ran_at", { ascending: false }).limit(1),
     db
       .from("status_alert_runs")
@@ -423,6 +486,12 @@ export async function checkAlerts(): Promise<CheckOutcome<AlertFacts>> {
       .order("ran_at", { ascending: false })
       .limit(20),
     db.from("status_alert_checks").select("check_key").not("alerted_at", "is", null),
+    db
+      .from("status_alert_test_requests")
+      .select("requested_at, requested_by_name")
+      .eq("status", "pending")
+      .order("requested_at", { ascending: false })
+      .limit(1),
   ]);
   const error = cron.error ?? mail.error ?? open.error;
   if (error) return { state: "fail", error: error.message };
@@ -434,6 +503,10 @@ export async function checkAlerts(): Promise<CheckOutcome<AlertFacts>> {
   const facts: AlertFacts = {
     scheduledHere,
     lastCronAt: (cron.data?.[0]?.ran_at as string | undefined) ?? null,
+    // A failed read of the request table only drops a line; it never breaks the tile.
+    pendingTest: pending.data?.[0]
+      ? { at: pending.data[0].requested_at as string, by: pending.data[0].requested_by_name as string | null }
+      : null,
     open: (open.data ?? []).map((r) => r.check_key as HealthCheckKey),
     lastMail: m
       ? {

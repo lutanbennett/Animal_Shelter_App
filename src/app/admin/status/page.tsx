@@ -383,6 +383,11 @@ async function Alerts({ t, locale }: { t: T; locale: Locale }) {
                 })}
               </p>
             )}
+            {f.pendingTest && (
+              <p className="font-medium text-foreground">
+                {a.testWaiting({ time: formatDateTime(f.pendingTest.at, locale), name: f.pendingTest.by ?? "" })}
+              </p>
+            )}
             {f.lastMail && f.lastMail.sent === 0 && (
               <p className="font-medium text-foreground">{renderedBy() === "pi" ? a.fixOnPi : a.fixHere}</p>
             )}

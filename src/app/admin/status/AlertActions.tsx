@@ -39,9 +39,9 @@ export function AlertActions({ onPi = false }: { onPi?: boolean }) {
         </ActionButton>
         <ActionButton
           icon={ACTION_ICONS.send}
-          disabled={isPending || onPi}
+          disabled={isPending}
           onClick={async () => {
-            if (await confirm({ body: a.testConfirm })) run(sendTestAlertNow);
+            if (await confirm({ body: onPi ? a.testConfirmPi : a.testConfirm })) run(sendTestAlertNow);
           }}
         >
           {a.sendTest}

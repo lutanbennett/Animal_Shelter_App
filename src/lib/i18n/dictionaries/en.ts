@@ -1153,8 +1153,13 @@ const en = {
           `The check couldn't record its result, so nothing was mailed: ${v.note}`,
         callFailed: "Couldn't reach the server. Try again.",
         fixHere: "To turn this green: press Send a test alert. When the mail reaches an admin, this turns green. If an address above says it is not allowed, verify it in Cloudflare (Email Routing → Destination addresses) first.",
-        fixOnPi: "To turn this green: the mail has to be sent from a page the Cloudflare Worker draws, because the buttons are off on this one (the Pi cannot send mail). Ask Lutan to press Send a test alert there. When the mail reaches an admin, this turns green. If an address above says it is not allowed, verify it in Cloudflare (Email Routing → Destination addresses) first.",
-        onPi: "The two buttons are off on this page: it was drawn by the Pi, which cannot send mail. Alert mail is sent by the Cloudflare Worker, on its 15-minute schedule.",
+        fixOnPi: "To turn this green: press Send a test alert. This page was drawn by the Pi, which cannot send mail, so the request is passed to the Cloudflare Worker and the mail goes out on its next 15-minute run. When the mail reaches an admin, this turns green. If an address above says it is not allowed, verify it in Cloudflare (Email Routing → Destination addresses) first.",
+        onPi: "Run the alert check now is off on this page: it was drawn by the Pi, which cannot send mail. Send a test alert still works. It asks the Cloudflare Worker, which mails on its 15-minute schedule.",
+        testConfirmPi: "Ask for a test mail to every admin? It goes out on the next 15-minute run, not straight away.",
+        testRequested: "Asked. The test mail goes out on the next 15-minute run. This tile only turns green once it reaches an admin.",
+        testAlreadyRequested: "A test is already waiting for the next 15-minute run. No second one was queued.",
+        testWaiting: (v: { time: string | number; name: string | number }) =>
+          `Test mail waiting, up to 15 minutes (asked ${v.time}${v.name ? ` by ${v.name}` : ""}).`,
       },
       tiles: {
         database: {

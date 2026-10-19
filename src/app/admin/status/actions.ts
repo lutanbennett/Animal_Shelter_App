@@ -4,9 +4,10 @@ import { revalidatePath } from "next/cache";
 import { type ActionResult, runAction } from "@/lib/action-result";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
-import { runStatusAlerts, sendTestAlert, type Skipped } from "@/lib/status/alerts";
+import { requestTestAlert, runStatusAlerts, sendTestAlert, type Skipped } from "@/lib/status/alerts";
 import { clearStatusCache } from "@/lib/status/run";
 import { renderedBy } from "@/lib/status/runtime";
+import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 
@@ -69,7 +70,18 @@ export async function sendTestAlertNow(): Promise<AlertActionResult> {
   const { t } = await getT();
   const a = t.admin.status.alerts;
   if (!can(await loadPermissions(), "system.status")) return { ok: false, error: t.admin.security.errors.adminAccessRequired };
-  if (renderedBy() === "pi") return { ok: false, error: a.onPi };
+  if (renderedBy() === "pi") {
+    // The Pi cannot mail: leave a request for the Worker's next run instead.
+    return runAction<AlertOutcome>("status.requestTestAlert", t.common.somethingWentWrong, async () => {
+      const {
+        data: { user },
+      } = await (await createClient()).auth.getUser();
+      const name = (user?.user_metadata?.full_name as string | undefined) ?? user?.email ?? null;
+      const r = await requestTestAlert({ id: user?.id ?? null, name });
+      revalidatePath("/admin/status");
+      return { ok: true, message: r === "already" ? a.testAlreadyRequested : a.testRequested, skipped: [] };
+    });
+  }
   return runAction<AlertOutcome>("status.sendTestAlert", t.common.somethingWentWrong, async () => {
     const r = await sendTestAlert(await origin());
     revalidatePath("/admin/status");
