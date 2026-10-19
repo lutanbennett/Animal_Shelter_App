@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none — a release record closes no backlog item. **The three faults this release found went on the `backlog` branch**, not here |
 | Branch / worktree | `claude/record-0-37-0` @ `C:\Development\Animal_Shelter_record-0-37-0` |
 | Dev server | not driven — no runtime surface; see §5 |
-| PR | **#732** — guessed at the time of writing, **to be re-read from `gh pr view` after opening and corrected here**. #731 was guessed right after two wrong; the re-read is what makes it safe either way |
+| PR | **#732** — guessed at the time of writing and then **re-read from `gh pr view` after opening: correct.** Two right in a row this release after two wrong in the two before it; the re-read, not the streak, is what makes it safe to write down |
 | Tested by / date | Claude (production release manager session) / 2026-10-19 |
 | Carries a migration? | no |
 | Tested at SHA | the tip of this branch |
@@ -29,7 +29,7 @@
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR — `n/a: not yet — the PR does not exist at this commit.` Written and committed before the PR is opened so the first run is green by construction; ticked in a follow-up commit once a run is seen green with its `headSha` matched against this branch's HEAD
+- [x] CI green on the PR — green on PR #732, with the run's `headSha` read from `gh run list` and matched against this branch's HEAD (`success 7dcb1b18` against `HEAD=7dcb1b18`) rather than taken from the PR bar's cached reading. **The first run was green by construction**, because the plan was written and committed before the PR was opened — eighth release running. This tick is itself a commit, so a second run follows and is expected
 - [x] `node scripts/check-test-plan.mjs` — the plan is complete and correct
 
 ## 3. Schema and data — *skip if no migration*
