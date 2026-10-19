@@ -75,6 +75,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "Bills: tapping Record a new delivery from this bill now carries the cost you typed into the delivery, and the bill is filed on the delivery when you save (before, the cost was dropped and the bill stayed waiting). Likely matches now always include a recent delivery when there is one. Starting an appeal lets you search for the animal, and no longer lists animals who have died, been adopted or are on outreach. Shelter Friends shows the word Publish or Unpublish beside its icon.",
+    roles: ["admin", "management"],
+  },
 ];
 
 /** Newest first. */
