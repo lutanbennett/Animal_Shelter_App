@@ -110,6 +110,8 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
     measured: true,
   },
   {
+    // SHARED ON PURPOSE (Lutan, 2026-10-19: keep the shared read). check-who-does-what.mjs proves each box
+    // by the probe's `sharedWith` and reports SHARED, not "cannot be taken away". Older note, same boxes:
     // The screens ask these boxes; the database is looser because another box the role holds opens the same
     // thing. perm-policy-cleanup (0182) narrowed contacts, friends, clinics and doctors, and split visit.book,
     // maintenance.progress and projects.publish out, and 0187 put a trigger on the four medical tables so
@@ -126,7 +128,7 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
       second_in_command: ["stock.delivery"],
     },
     shown: false,
-    stays: false,
+    stays: true,
     closedBy: null,
     measured: true,
   },

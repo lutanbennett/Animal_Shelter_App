@@ -24,6 +24,9 @@
 //            function, another box that opens the same table)
 //   INERT    no, and still refused with the box set to yes: it cannot be given. True today and often
 //            only a missing prerequisite, so reported for who-does-what-edit and never required here
+//   SHARED   a STICKY box whose probe names the other boxes that deliberately open the same read or write
+//            (the probe's `sharedWith`: the ONE way to say it), and which is proved: with this box AND those
+//            boxes all taken away the database refuses. Not a fault in the box; the sharing is the design.
 // Then it compares with FIXED_FOR_NOW:
 //   UNLISTED   a WRONG or STICKY box that no `measured` entry covers: the page shows it as true. FAIL
 //   STALE      a `measured` entry whose boxes are all obeyed now: shorten the list. FAIL
@@ -213,6 +216,12 @@ PROBES.forEach((p, i) => {
   for (const role of ROLES) {
     tasks.push({ k: `${i}:${role}:asis`, uid: ID[role], pre: null, sql });
     tasks.push({ k: `${i}:${role}:flip`, uid: ID[role], pre: flipSql(role, p), sql });
+    // A probe that declares sharedWith gets a third run: this box and every box it is shared with, taken away.
+    if (p.sharedWith) {
+      const roleId = `(select id from public.roles where key = '${role}')`;
+      const drops = p.sharedWith.map((a) => `delete from public.role_permissions where role_id = ${roleId} and activity = '${a}'`);
+      tasks.push({ k: `${i}:${role}:flip2`, uid: ID[role], pre: [flipSql(role, p), ...drops].join("; "), sql });
+    }
   }
 });
 
@@ -259,7 +268,7 @@ function allowed(res, p) {
 //            cannot be given. True today, and often only a missing prerequisite (photos need the
 //            record), so it is reported for the edit stream and never fails this check
 const faults = [];
-const RANK = { obeyed: 0, inert: 1, sticky: 2, wrong: 3 };
+const RANK = { obeyed: 0, shared: 1, inert: 2, sticky: 3, wrong: 4 };
 const box = new Map(); // `${role}|${activity}` -> { state, notes: [] }
 PROBES.forEach((p, i) => {
   const short = p.sql.replace(/\s+/g, " ").slice(0, 70);
@@ -277,12 +286,18 @@ PROBES.forEach((p, i) => {
       continue;
     }
     const says = allowsAt(cellOf(role, p.activity), p);
-    const state = asis !== says ? "wrong" : flip === asis ? (says ? "sticky" : "inert") : "obeyed";
+    let state = asis !== says ? "wrong" : flip === asis ? (says ? "sticky" : "inert") : "obeyed";
+    let sharers = "";
+    if (state === "sticky" && p.sharedWith) {
+      // Proved, not assumed: shared only if the role holds a sharer and removing it as well closes the door.
+      const held = p.sharedWith.filter((a) => cellOf(role, a) > 0);
+      if (held.length && allowed(actual.get(`${i}:${role}:flip2`), p) === false) { state = "shared"; sharers = held.join(", "); }
+    }
     const key = `${role}|${p.activity}`;
     const b = box.get(key) ?? { state: "obeyed", notes: [] };
     if (RANK[state] > RANK[b.state]) b.state = state;
     if (state !== "obeyed") {
-      const what = { wrong: `the box says ${says ? "yes" : "no"}, the database ${asis ? "allows" : "refuses"}`, sticky: "allowed with the box set to no", inert: "refused with the box set to yes" }[state];
+      const what = { shared: `allowed with the box set to no, because it is deliberately shared with ${sharers} (refused once both are taken away)`, wrong: `the box says ${says ? "yes" : "no"}, the database ${asis ? "allows" : "refuses"}`, sticky: "allowed with the box set to no", inert: "refused with the box set to yes" }[state];
       b.notes.push(`${p.level}: ${what}  (${short})`);
     }
     box.set(key, b);
@@ -292,7 +307,8 @@ PROBES.forEach((p, i) => {
 // Compare with FIXED_FOR_NOW.
 const listed = new Map(); // box key -> entries
 for (const e of FIXED_FOR_NOW) for (const k of boxesOf(e, ROLES)) listed.set(k, [...(listed.get(k) ?? []), e]);
-const needsListing = (b) => b.state === "wrong" || b.state === "sticky";
+// SHARED is listed too: the grid says "shared on purpose" for it (fixed-for-now.ts, databaseWider).
+const needsListing = (b) => b.state === "wrong" || b.state === "sticky" || b.state === "shared";
 const required = [...box.entries()].filter(([, b]) => needsListing(b));
 // A box the grid's prerequisite rules account for (src/lib/permissions/prerequisites.ts) is not a lie the page tells:
 // the edit refuses the combination and the page names it, so it needs no FIXED_FOR_NOW entry.
@@ -314,6 +330,7 @@ console.log(`Activities with a database probe: ${probed.size} of ${ACTIVITIES.le
 console.log(`  OBEYED     ${count("obeyed")}`);
 console.log(`  WRONG      ${count("wrong")}   (must be in FIXED_FOR_NOW)`);
 console.log(`  STICKY     ${count("sticky")}   (must be in FIXED_FOR_NOW)`);
+console.log(`  SHARED     ${count("shared")}   (deliberately shared, proved; must be in FIXED_FOR_NOW so the grid says so)`);
 console.log(`  INERT      ${count("inert")}   (reported, not required)`);
 console.log(`  UNLISTED   ${unlisted.length}`);
 console.log(`  STALE      ${stale.length}`);
@@ -333,6 +350,7 @@ const show = (title, st) => {
 };
 show("WRONG today", "wrong");
 show("STICKY: cannot be taken away", "sticky");
+show("SHARED: still allowed with the box off, on purpose, because another box opens the same thing", "shared");
 show("INERT: cannot be given (often a prerequisite; for who-does-what-edit)", "inert");
 if (verbose) {
   console.log("\nObeyed:");
