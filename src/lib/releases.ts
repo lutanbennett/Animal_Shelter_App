@@ -75,6 +75,17 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+];
+
+/** Newest first. */
+export const releases: Release[] = [
+  {
+    version: "0.37.1",
+    date: "2026-10-19",
+    title:
+      "Make a meme in the app, safer diets and clinic visits, and forms that wait on a slow phone",
+    major: false,
+    notes: [
   {
     text: "Meme library: you can now make a meme in the app. Tap Make a meme in the library, or open a resident's photo and tap it there. Add English or Thai words (they wrap to fit), pick a classic, caption-bar or speech-bubble style and a square or 4:5 crop, and save. The meme lands in the library with the resident tagged and the shelter logo in the corner. Medical photos cannot be made into memes.",
     roles: ["admin"],
@@ -91,11 +102,8 @@ export const unreleased: ReleaseNote[] = [
   {
     text: "Approving photos is now only the Approve photos card. Having Residents still lets you add photos that go straight onto the website, but it no longer lets you approve photos other people add through Add Shelter Photos. Management has been given Approve photos. The Second in command no longer sees Photos to approve; an Admin can give her the card on Who does what.",
     roles: ["admin", "management", "second_in_command"],
+  },],
   },
-];
-
-/** Newest first. */
-export const releases: Release[] = [
   {
     version: "0.37.0",
     date: "2026-10-19",
