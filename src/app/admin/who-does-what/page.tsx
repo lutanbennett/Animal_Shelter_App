@@ -14,6 +14,8 @@ import { cardTile, isSubsumed } from "@/lib/home/tiles";
 import { getT } from "@/lib/i18n/get-t";
 import { AddExtraForm, CardButton } from "./CardControls";
 import { CardBoard } from "./CardBoard";
+import { HomeScreenPanel } from "./HomeScreenPanel";
+import { homePanelData } from "./home-panel-data";
 import { loadRoles, roleName } from "./roles";
 
 /**
@@ -126,6 +128,10 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
     .sort((x, y) => x.sort - y.sort)
     .map((a) => ({ key: a.key as string, label: activityName(a.key as ActivityKey), kind: a.kind }));
 
+  const { data: homeRows, error: homeError } = await admin.from("role_home_tiles").select("path").eq("role_id", role?.id ?? "").order("position");
+  if (homeError) throw new Error(`Who does what: ${homeError.message}`);
+  const home = role ? await homePanelData((homeRows ?? []).map((r) => r.path as string), role.key, rolePerms, t) : null;
+
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -236,6 +242,19 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
           verifyHref={TWO_STEP_PATH}
           held={held.map(tileOf)}
           library={library.map(tileOf)}
+        />
+      )}
+
+      {role && home && (
+        <HomeScreenPanel
+          roleKey={role.key}
+          roleName={names.get(role.key) ?? role.key}
+          tiles={home.tiles}
+          options={home.options}
+          derived={home.derived}
+          canEdit={canEdit}
+          locked={isAdmin && !canEdit}
+          verifyHref={TWO_STEP_PATH}
         />
       )}
 

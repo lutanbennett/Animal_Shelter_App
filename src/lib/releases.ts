@@ -75,6 +75,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "Home screen tiles are now chosen in Settings. Open Who does what, pick a role, and the new Home screen section lists that role's tiles in order: move them up or down, remove one, or add any page. If the role can't open the page yet, it says so and offers to give them the one permission it needs, for example giving the 2IC Enclosures and adding the tile in one tap. A tile whose permission is later taken away stays in the list greyed out, with the reason, and is hidden on the home. Only an Admin can choose tiles, for every role: no role edits its own, Management's included. The left-hand menu is unchanged.",
+    roles: ["admin"],
+  },
   { text: "Settings → Who does what: a search box finds a card by name or what it gives, and the newest cards now come first in Available cards.", roles: ["admin"] },
 ];
 

@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { refuseFor } from "@/lib/auth/require-role";
 import { loadPermissions } from "@/lib/permissions/load";
 import { deviceFrom } from "@/lib/home/device";
-import { listHomeRoles, loadCardsByRole } from "@/lib/home/roles";
+import { listHomeRoles, loadCardsByRole, loadHomeTilesByRole } from "@/lib/home/roles";
 import { homeTilesForRoles } from "@/lib/home/tiles";
 import { loadUrgentCounts } from "@/lib/my-tasks/urgent";
 import { countBillsWaiting } from "@/lib/bills/waiting";
@@ -51,7 +51,7 @@ export default async function HomePage() {
     my: urgent.total,
     maintenance: urgent.maintenance,
     photosWaiting: await countPhotosWaiting(supabase, perms),
-  });
+  }, await loadHomeTilesByRole(perms.roles));
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">

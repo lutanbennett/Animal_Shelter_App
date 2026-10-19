@@ -684,6 +684,34 @@ const en = {
      * the keys, §4 rule 6 keeps the words here). `fixed` is FIXED_FOR_NOW's reasons, one per entry id.
      */
     whoDoesWhat: {
+      homeView: {
+        heading: (role: string) => `${role}'s home screen`,
+        intro:
+          "The tiles this role sees when it opens the app, in this order. Only an Admin chooses them, for every role: no role edits its own. A tile is shown only while the role can open its page.",
+        derivedNote: "No tiles have been chosen for this role yet, so this is the home it gets today. The first change you make saves this list.",
+        readOnly: "Only an Admin can choose home screen tiles.",
+        verifyPrompt: "To change home screen tiles, verify with your authenticator app first.",
+        verifyLink: "Verify now",
+        empty: "This role has no tiles.",
+        hidden: (why: string) => `Not shown: the role needs ${why}.`,
+        moveUp: (tile: string) => `Move ${tile} up`,
+        moveDown: (tile: string) => `Move ${tile} down`,
+        remove: "Remove",
+        removeFor: (tile: string) => `Remove the ${tile} tile`,
+        addHeading: "Add a tile",
+        pick: "Choose a page",
+        notYet: "cannot open yet",
+        add: "Add this tile",
+        cantOpen: (role: string, page: string, missing: string) => `${role} can't open ${page} yet. It needs ${missing}.`,
+        grantAndAdd: (role: string, activity: string, level: string) => `Give ${role} ${activity}: ${level}, and add the tile`,
+        grantReason: (page: string) => `Needed for the ${page} tile on the home screen`,
+        cannotGrant: "No single permission opens this page for this role, so it cannot be added.",
+        clinicRule: "the clinic rule for visiting doctors",
+        billsRule: "a delivery, clinic visit or maintenance permission that lets it use Bills",
+        noPermissions: "its permissions",
+        alreadyHas: "That tile is already on this home screen.",
+        lastTile: "A role needs at least one tile. Add another before removing the last.",
+      },
       cardsView: {
         subtitle:
           "Give a role cards. Each card puts a tile on the person's home screen and gives what they need to use it, so a tile can never open a page they cannot use. Tap a card to see exactly what it gives.",
@@ -1006,6 +1034,7 @@ const en = {
         roles: "Role",
         role_permissions: "Permission",
         role_cards: "Card",
+        role_home_tiles: "Home screen tile",
         role_extras: "Extra permission",
       },
       kinds: {

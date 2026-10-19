@@ -54,6 +54,25 @@ export async function loadRolePermissions(supabase: SupabaseClient, roleKey: str
   });
 }
 
+/**
+ * The tiles Admin chose for a role (role_home_tiles, 0225), as page paths in order. An empty list means none were chosen,
+ * and the role keeps the home it derives. Admin-only under RLS, so read with the service role for one role key the caller
+ * has already settled, exactly as loadRoleCards does.
+ */
+export async function loadRoleHomeTiles(roleKey: string): Promise<string[]> {
+  const admin = createAdminClient();
+  const { data: role } = await admin.from("roles").select("id").eq("key", roleKey).maybeSingle();
+  if (!role) return [];
+  const { data, error } = await admin.from("role_home_tiles").select("path").eq("role_id", role.id).order("position");
+  if (error) throw new Error(`Home tiles: could not read role_home_tiles: ${error.message}`);
+  return (data ?? []).map((r) => r.path as string);
+}
+
+export async function loadHomeTilesByRole(roleKeys: readonly string[]): Promise<Record<string, string[]>> {
+  const keys = [...new Set(roleKeys)];
+  return Object.fromEntries(await Promise.all(keys.map(async (key) => [key, await loadRoleHomeTiles(key)] as const)));
+}
+
 /** The cards of each of these roles (a login may hold several, 0196), by role key. */
 export async function loadCardsByRole(roleKeys: readonly string[]): Promise<Record<string, CardKey[]>> {
   const keys = [...new Set(roleKeys)];

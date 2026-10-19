@@ -93,6 +93,12 @@ for (const role of roles) {
       ? ok(`${role.key} (${lang}): ${seeded.length} seeded tile(s) = what the home draws today`)
       : fail(`${role.key} (${lang}): seeded [${seeded}] but the home draws [${drawn}]`);
   }
+  // The home now READS the rows (0225 app half): drawn from the saved paths it must be the same home, and reordering the
+  // rows must reorder the tiles.
+  const fromRows = homeTilesForRoles(perms, en, undefined, {}, undefined, { [role.key]: seeded }).map((x) => x.href);
+  JSON.stringify(fromRows) === JSON.stringify(seeded) ? ok(`${role.key}: drawn from the saved rows = the seeded home`) : fail(`${role.key}: rows [${seeded}] draw [${fromRows}]`);
+  const flipped = homeTilesForRoles(perms, en, undefined, {}, undefined, { [role.key]: [...seeded].reverse() }).map((x) => x.href);
+  JSON.stringify(flipped) === JSON.stringify([...seeded].reverse()) ? ok(`${role.key}: reversing the rows reverses the home`) : fail(`${role.key}: reversed rows draw [${flipped}]`);
 }
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log("\nall ok");

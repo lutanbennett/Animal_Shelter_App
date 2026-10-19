@@ -35,6 +35,8 @@ export const AUDITED_TABLES = [
   // Which cards a role has, and the single activities it holds beyond them (0194).
   "role_cards",
   "role_extras",
+  // Which pages a role shows as tiles on its home, in order (0225).
+  "role_home_tiles",
 ] as const;
 export type AuditedTable = (typeof AUDITED_TABLES)[number];
 
@@ -199,6 +201,8 @@ function toEntry(raw: RawRow): AuditEntry {
               ? str(image.activity)
             : table === "role_cards"
               ? str(image.card)
+            : table === "role_home_tiles"
+              ? str(image.path)
               : null,
     residentId,
   };
