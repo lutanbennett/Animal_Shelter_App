@@ -47,10 +47,11 @@ export default async function NewImmunizationPage(
         .from("picker_immunization_types")
         .select("id, name, name_th, is_mandatory, interval_months")
         .order("name"),
-      supabase.from("zones").select("id, name, name_th, sort_order, colour"),
+      supabase.from("zones").select("id, name, name_th, sort_order, colour").neq("name", "Lifecycle"),
       supabase
         .from("enclosures")
-        .select("id, name, name_th, zone_id, sort_order"),
+        .select("id, name, name_th, zone_id, sort_order, zones!inner(name)")
+        .neq("zones.name", "Lifecycle"),
     ]);
 
   const residents: ResidentOption[] = (residentsResult.data ?? []).map(

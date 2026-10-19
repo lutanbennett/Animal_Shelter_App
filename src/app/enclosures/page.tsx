@@ -130,7 +130,10 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   }
 
   // Physical zones in the shelter's order (Settings → Zones), the Lifecycle pseudo-zone last.
+  // The Lifecycle pseudo-zone is not a place, so it has no chip and its buckets no cards (2026-10-19);
+  // residents in them are found by the Residents list chips and on their own page.
   const zones = [...(zonesResult.data ?? [])]
+    .filter((zone) => zone.name !== SYSTEM_ZONE)
     .map((zone) => ({ ...zone, is_system: zone.name === SYSTEM_ZONE }))
     .sort((a, b) => Number(a.is_system) - Number(b.is_system) || byShelterOrder(a, b));
 
@@ -163,7 +166,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       special_diet_residents: specialByEnclosure.get(row.id) ?? [],
     }));
   const enclosures = summaries
-    .filter((e) => !e.is_system || PINNED_STATUSES.includes(e.name))
+    .filter((e) => !e.is_system)
     // Any zone chip leaves the Lifecycle cards out unless the Status chip is one of them.
     .filter((e) => shownZones.size === 0 || shownZones.has(e.zone_id))
     // Only jobs on the enclosure itself, matching the count on its card;
