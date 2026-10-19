@@ -275,6 +275,34 @@ is free to move a dependency *backwards* across a major version, and on
 2026-10-07 the only fix it offered was dragging the entire Cloudflare build and
 deploy chain back to `wrangler@4.15.2`.
 
+## Answering a decision on a backlog item
+
+When a stream or a chat records an answer on an item, the item must read
+correctly *without* its last paragraph. Anything that skims the backlog reads
+the title, and nobody re-asks a question they believe is already with the user,
+so a false block is silent. `assistant-retention` was decided 2026-10-10 and
+parked as blocked by every `/plan-day` for nine days because its title still
+said a decision was pending; Lutan was asked three times for answers he had
+already given twice.
+
+1. **Rewrite the title** so it alone says what is still open.
+2. **Mark the superseded passage in place** (`SUPERSEDED 2026-MM-DD: …`), never
+   leave it to be read as current.
+3. **Say plainly if nothing is left to decide** (`Nothing left to decide; buildable now`).
+
+Two neighbouring faults, same shape:
+
+- **One item, one consolidated block.** Do not append a sixth dated note; fold
+  the notes into one. Six notes on the Home Assistant item in one day buried it.
+- **Do not assert what you could ask for in one line.** A Home Assistant Green
+  was assumed to have 128 GB from its model name, ~108 GB was "inferred as
+  consumed", and a paragraph sent a future session hunting through backups. The
+  box has 28 GB. Ask, or write "not established".
+
+`node scripts/check-stale-titles.mjs` lists candidates (an answered body under a
+"decide/settle/waiting" title). It is a heuristic with false positives, always
+exits 0, and `/plan-day` runs it; it is not in CI on purpose.
+
 ## The main checkout
 
 Once a day, before starting streams, in `C:\Development\Animal_Shelter_App`:

@@ -19,12 +19,11 @@
 # whatever .next is in its WorkingDirectory. This script refuses to run for one
 # environment from the other's clone (docs/decisions/2026-10-02-pi-test-own-clone.md).
 #
-# `next build` rewrites .next in place (next.config.ts has no distDir switch), so
-# this script keeps a copy of the last good .next and puts it back if the build or
-# the Server Actions key check fails: a failed build never leaves the service on a
-# half-written one. While a build runs, assets of the old build can still 404 --
-# that is the window that poisoned Cloudflare's year-long cache on 2026-10-17, so
-# the last step fetches the served stylesheet and compares it with the build
+# The build goes into .next.new (NEXT_DIST_DIR) and is renamed over .next only once it
+# has compiled and carries the right Server Actions key, so a failed build never touches what is
+# served and no request sees a half-written file mid-build -- the window that poisoned
+# Cloudflare's year-long cache on 2026-10-17. The last step (an EXIT trap, so it runs even if an
+# earlier step failed) fetches the served stylesheet and compares it with the build
 # (scripts/pi/check-assets.mjs). The restart itself takes a second or two, during
 # which the Worker's fallback answers (worker/index.mjs). Run from the repo root as
 # the user the service runs as. See docs/decisions/2026-10-18-pi-deploy-safety.md.
@@ -176,43 +175,66 @@ fi
 
 node scripts/pi/write-env.mjs --env "$ENV_NAME"
 "${NICE[@]}" npm ci --no-audit --no-fund   # devDependencies too: next build needs TypeScript and Tailwind
-# Keep the last good build; put it back if this one does not get through.
-# Bound the Turbopack cache BEFORE the backup copy and the build: a 4.4 GB one starved a 4 GB Pi
+# Build into .next.new and rename it into place, so the folder the service serves is never
+# rewritten under live requests (next.config.ts reads NEXT_DIST_DIR). The old build keeps serving,
+# untouched, until the swap; a failed build just deletes .next.new. The cache is seeded from the
+# old build so the build is not slower; bound it first: a 4.4 GB one starved a 4 GB Pi
 # (docs/decisions/2026-10-19-pi-build-cache-bound.md). Ceiling 1024 MB.
 prune_build_cache .next/cache 1024
-rm -rf .next.prev
-[[ -d .next ]] && cp -a .next .next.prev
-restore_build() {
-  echo "deploy-pi: BUILD FAILED — putting the previous .next back; $SERVICE keeps serving the old version." >&2
+rm -rf .next.new .next.prev
+[[ -d .next/cache ]] && mkdir .next.new && cp -a .next/cache .next.new/cache
+abandon_build() {
+  echo "deploy-pi: BUILD FAILED — discarding .next.new; .next was never touched and $SERVICE keeps serving the old version." >&2
   echo "  (Check the served version with /api/version: a git-updated clone is not a deployed clone.)" >&2
-  if [[ -d .next.prev ]]; then rm -rf .next && mv .next.prev .next; fi
+  rm -rf .next.new
 }
-"${NICE[@]}" npm run build && BUILD_RC=0 || BUILD_RC=$?
-if [[ "$BUILD_RC" -ne 0 ]]; then restore_build; report_build_failure "$BUILD_RC"; exit 1; fi
+NEXT_DIST_DIR=.next.new "${NICE[@]}" npm run build && BUILD_RC=0 || BUILD_RC=$?
+if [[ "$BUILD_RC" -ne 0 ]]; then abandon_build; report_build_failure "$BUILD_RC"; exit 1; fi
 # The build must carry this environment's Server Actions key, the one the Worker
 # builds with, or forms rendered by one are rejected by the other. Stops before
 # the restart, so the running service keeps serving what it has. Compare the
 # fingerprint with the one `npm run deploy:*` prints on the dev machine.
-node scripts/actions-key.mjs --env "$ENV_NAME" --built || { restore_build; exit 1; }
+NEXT_DIST_DIR=.next.new node scripts/actions-key.mjs --env "$ENV_NAME" --built || { abandon_build; exit 1; }
 
+HOST=lannacare.org   # UAT's for good; production keeps it until the cutover (docs/decisions.md)
+[[ "$ENV_NAME" == "test" ]] && HOST=test.lannacare.org
+
+[[ -d .next.new ]] || { echo "deploy-pi: the build reported success but .next.new is missing; nothing swapped, $SERVICE keeps serving the old version." >&2; exit 1; }
+
+# From here a build is live, so the stylesheet check must run however this script ends: it is the
+# one check that finds a poisoned edge cache (a year of unstyled pages for whoever hits it), and
+# an earlier failing step used to exit before it (0.37.1). Its own failure sets the exit status.
+ASSETS_DONE=""
+run_asset_check() {
+  local rc=$?
+  trap - EXIT
+  if [[ -z "$ASSETS_DONE" ]]; then
+    ASSETS_DONE=1
+    echo "deploy-pi: asset check (runs even when an earlier step failed; exit status so far $rc)"
+    node scripts/pi/check-assets.mjs --url "https://$HOST/" --dir .next || { [[ "$rc" -eq 0 ]] && rc=1; }
+  fi
+  exit "$rc"
+}
+trap run_asset_check EXIT
+
+# The swap: two renames, so .next is absent for microseconds instead of for a whole build.
+mv .next .next.prev 2>/dev/null || true
+mv .next.new .next
 sudo systemctl restart "$SERVICE"
-rm -rf .next.prev
 sleep 3
 LOCAL_PORT=3000; [[ "$ENV_NAME" == "test" ]] && LOCAL_PORT=3001
-check_served_version "http://localhost:$LOCAL_PORT/api/version" "$(node -p "require(\"./package.json\").version")" || exit 1
+# Production refuses a request without the Worker's x-origin-key (403 Forbidden), so the probe presents it.
+check_served_version "http://localhost:$LOCAL_PORT/api/version" "$(node -p "require(\"./package.json\").version")" "$(origin_key_from .env.production.local)" || {
+  echo "deploy-pi: the previous build is kept in .next.prev; roll back with: rm -rf .next && mv .next.prev .next && sudo systemctl restart $SERVICE" >&2
+  exit 1
+}
 sudo systemctl is-active --quiet "$SERVICE" && echo "deploy-pi: $SERVICE running" || {
   echo "deploy-pi: $SERVICE failed to start — journalctl -u $SERVICE -n 50"; exit 1;
 }
+rm -rf .next.prev
 
 # The public site through Cloudflare should now come from here.
-# lannacare.org is UAT's for good; production keeps it only until the
-# cutover moves it to lannacareforanimals.org (docs/decisions.md).
-HOST=lannacare.org
-[[ "$ENV_NAME" == "test" ]] && HOST=test.lannacare.org
-[[ "$ENV_NAME" == "uat" ]] && HOST=lannacare.org
 echo -n "deploy-pi: https://$HOST/ served by: "
 curl -s -D - -o /dev/null "https://$HOST/?deploy=$(date +%s)" | grep -i x-lanna-served-by | tr -d '\r' || echo "(no header — Worker not deployed?)"
 
-# The served stylesheet must be the one just built. Fatal: a poisoned edge stays poisoned for a
-# year (docs/release-procedure.md, "Purge the Cloudflare cache").
-node scripts/pi/check-assets.mjs --url "https://$HOST/" --dir .next
+# The asset check runs from the EXIT trap above, so it also runs when a step before this one fails.
