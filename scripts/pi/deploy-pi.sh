@@ -51,6 +51,7 @@ if [[ "$(id -u)" -eq 0 ]]; then
   exit 2
 fi
 cd "$(dirname "$0")/../.."
+source scripts/pi/build-lib.sh
 
 ENV_NAME=production
 SERVICE=lanna-care
@@ -176,6 +177,9 @@ fi
 node scripts/pi/write-env.mjs --env "$ENV_NAME"
 "${NICE[@]}" npm ci --no-audit --no-fund   # devDependencies too: next build needs TypeScript and Tailwind
 # Keep the last good build; put it back if this one does not get through.
+# Bound the Turbopack cache BEFORE the backup copy and the build: a 4.4 GB one starved a 4 GB Pi
+# (docs/decisions/2026-10-19-pi-build-cache-bound.md). Ceiling 1024 MB.
+prune_build_cache .next/cache 1024
 rm -rf .next.prev
 [[ -d .next ]] && cp -a .next .next.prev
 restore_build() {
@@ -183,8 +187,8 @@ restore_build() {
   echo "  (Check the served version with /api/version: a git-updated clone is not a deployed clone.)" >&2
   if [[ -d .next.prev ]]; then rm -rf .next && mv .next.prev .next; fi
 }
-if ! "${NICE[@]}" npm run build
-then restore_build; exit 1; fi
+"${NICE[@]}" npm run build && BUILD_RC=0 || BUILD_RC=$?
+if [[ "$BUILD_RC" -ne 0 ]]; then restore_build; report_build_failure "$BUILD_RC"; exit 1; fi
 # The build must carry this environment's Server Actions key, the one the Worker
 # builds with, or forms rendered by one are rejected by the other. Stops before
 # the restart, so the running service keeps serving what it has. Compare the
@@ -194,6 +198,8 @@ node scripts/actions-key.mjs --env "$ENV_NAME" --built || { restore_build; exit 
 sudo systemctl restart "$SERVICE"
 rm -rf .next.prev
 sleep 3
+LOCAL_PORT=3000; [[ "$ENV_NAME" == "test" ]] && LOCAL_PORT=3001
+check_served_version "http://localhost:$LOCAL_PORT/api/version" "$(node -p "require(\"./package.json\").version")" || exit 1
 sudo systemctl is-active --quiet "$SERVICE" && echo "deploy-pi: $SERVICE running" || {
   echo "deploy-pi: $SERVICE failed to start — journalctl -u $SERVICE -n 50"; exit 1;
 }

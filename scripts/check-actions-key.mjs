@@ -73,7 +73,7 @@ check("deploy.mjs puts the key in the build's environment", /\[\.\.\.BUILD_VARS,
 check("deploy.mjs checks the build it made", /builtKeyProblem\(env\[ACTIONS_KEY_VAR\]\)/.test(deploy));
 check("write-env.mjs refuses to write a file without the key", /actionsKeyProblem\(env\[ACTIONS_KEY_VAR\]\)/.test(writeEnv));
 check("write-env.mjs writes the key to .env.production.local", /`\$\{ACTIONS_KEY_VAR\}=\$\{env\[ACTIONS_KEY_VAR\]\}`/.test(writeEnv));
-const afterBuild = deployPi.split(/npm run build\n/)[1] ?? "";
+const afterBuild = deployPi.split(/npm run build\b/)[1] ?? "";
 check(
   "deploy-pi.sh checks the build before restarting the service",
   /actions-key\.mjs --env "\$ENV_NAME" --built/.test(afterBuild) &&

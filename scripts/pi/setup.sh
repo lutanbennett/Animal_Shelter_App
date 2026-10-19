@@ -74,7 +74,7 @@ if ! swapon --show=NAME --noheadings | grep -qx /swapfile2; then
   fi
   sudo swapon /swapfile2
 fi
-grep -q '^/swapfile2 ' /etc/fstab || echo '/swapfile2 none swap sw 0 0' | sudo tee -a /etc/fstab >/dev/null
+grep -q '^/swapfile2 ' /etc/fstab || echo '/swapfile2 none swap sw,pri=200 0 0' | sudo tee -a /etc/fstab >/dev/null
 swapon --show
 
 echo "== 3. The app: dependencies, env file, first build"
