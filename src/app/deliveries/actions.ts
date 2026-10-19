@@ -100,11 +100,12 @@ export async function recordDelivery(input: DeliveryInput): Promise<DeliveryResu
     supplier_contact_id: input.supplierId || null,
     cost: resolved.cost,
     note: note || null,
-  });
+  }).select("id").single();
   if (error) return { ok: false, error: `${e.failed}: ${error.message}` };
 
   revalidateStockPages();
-  return { ok: true };
+  // The id lets the caller file a bill on the delivery; without it the bill never attaches.
+  return { ok: true, id: inserted?.id };
 }
 
 /** A delivery typed wrong is deleted and recorded again (0096 allows both). */

@@ -8,6 +8,7 @@ import { driveImageUrl } from "@/lib/google/drive-client";
 import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
+import { ActionButton } from "@/components/ActionButton";
 import { RowActionButton } from "@/components/RowAction";
 import { moveFriend, setFriendPublished } from "./actions";
 
@@ -95,13 +96,16 @@ export function FriendsOrder({ friends }: { friends: FriendOrderRow[] }) {
                 </div>
               </div>
               <div className="ml-auto flex items-center gap-2">
-                <RowActionButton
+                {/* The word shows: a worker following a checklist looks for "Unpublish", not a globe. */}
+                <ActionButton
+                  compact
                   disabled={isPending}
                   onClick={() => run(() => setFriendPublished(friend.id, !friend.published))}
-                  label={friend.published ? f.card.unpublish : f.card.publish}
-                  subject={name}
+                  aria-label={`${friend.published ? f.card.unpublish : f.card.publish}: ${name}`}
                   icon={friend.published ? ACTION_ICONS.unpublish : ACTION_ICONS.publish}
-                />
+                >
+                  {friend.published ? f.card.unpublish : f.card.publish}
+                </ActionButton>
                 <RowActionButton
                   disabled={isPending || index === 0}
                   onClick={() => run(() => moveFriend(friend.id, "up"))}
