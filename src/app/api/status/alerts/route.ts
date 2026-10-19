@@ -1,5 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
-import { runStatusAlerts } from "@/lib/status/alerts";
+import { processTestRequests, runStatusAlerts } from "@/lib/status/alerts";
 
 /**
  * POST /api/status/alerts — one scheduled alert run (src/lib/status/alerts.ts).
@@ -27,6 +27,10 @@ export async function POST(request: Request) {
   if (!authorised(request)) {
     return Response.json({ error: "Not authorised." }, { status: 401, headers: { "cache-control": "no-store" } });
   }
-  const result = await runStatusAlerts("cron", new URL(request.url).origin);
-  return Response.json(result, { status: result.remembered ? 200 : 503, headers: { "cache-control": "no-store" } });
+  const origin = new URL(request.url).origin;
+  const result = await runStatusAlerts("cron", origin);
+  // Tests asked for from a Pi-drawn page (0226); after the run, so they can never delay it.
+  const tests = await processTestRequests(origin);
+  if (tests.note) console.error(`status-alerts: test requests: ${tests.note}`);
+  return Response.json({ ...result, testsSent: tests.handled }, { status: result.remembered ? 200 : 503, headers: { "cache-control": "no-store" } });
 }
