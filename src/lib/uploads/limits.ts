@@ -33,3 +33,14 @@ export const WEBSITE_IMAGE_MIME_TYPES: ReadonlySet<string> = new Set([
   "image/heic",
   "image/heif",
 ]);
+
+/**
+ * Videos (schema half, 0229; the upload itself is the app half). They never
+ * pass through the app: the browser sends them to Drive in chunks, so
+ * MAX_UPLOAD_BYTES above does not apply. The cap only protects a phone
+ * connection: 500 MB is about five minutes (Lutan, 2026-10-18).
+ */
+export const MAX_VIDEO_BYTES = 500 * 1024 * 1024;
+
+/** Video types phones record. */
+export const VIDEO_MIME_TYPES: ReadonlySet<string> = new Set(["video/mp4", "video/quicktime"]);
