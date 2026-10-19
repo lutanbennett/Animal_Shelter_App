@@ -32,7 +32,7 @@ type Row = {
 };
 
 /** Whether this login sees the queue: the one activity that may approve (0217 refuses anyone else). */
-export const canApprovePhotos = (perms: Permissions | null | undefined): boolean => can(perms, "photos.resident_publish");
+export const canApprovePhotos = (perms: Permissions | null | undefined): boolean => can(perms, "photos.approve");
 
 /** Oldest first, so the photo that has waited longest is the one on top. */
 export async function loadWaitingPhotos(supabase: SupabaseClient): Promise<WaitingPhoto[]> {

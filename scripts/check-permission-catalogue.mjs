@@ -282,7 +282,7 @@ const PINNED = {
   "/residents/[id]/[section]": {
     guards: ["requireFullResident(SECTION_READS[section])"],
     inDir: "src/app/residents/[id]/[section]/sections",
-    decides: ["medical.archive", "medical.visits", "medical.prescriptions", "medical.diet", "medical.weight", "photos.resident_manage", "photos.resident_publish", "resident.adoption_news", "resident.microchip"],
+    decides: ["medical.archive", "medical.visits", "medical.prescriptions", "medical.diet", "medical.weight", "photos.approve", "photos.resident_manage", "resident.adoption_news", "resident.microchip"],
     table: {
       name: "SECTION_READS",
       want: {

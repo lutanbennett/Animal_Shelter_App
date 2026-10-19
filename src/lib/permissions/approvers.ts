@@ -1,7 +1,7 @@
 /**
  * Who approves photos, asked the way the database asks it (0221, 0222) so the screen and set_role_cards() cannot disagree.
  * An approver is a role that is not Admin (a fixed role holding no cells) and not retired (roles.archived_at set) and holds
- * photos.resident_publish at any level, through a card (Approve photos, Residents) or an extra. The test is the ACTIVITY
+ * photos.approve at any level, through a card (Approve photos) or an extra. The test is the ACTIVITY
  * and the retired FLAG, never a card name and never the key 'staff': the next retired role drops out by itself.
  * Lutan, 2026-10-18: "exclude retired roles as this will future proof the system going forward."
  *
@@ -9,7 +9,7 @@
  */
 import { CARDS, type CardKey } from "./cards";
 
-export const APPROVE_ACTIVITY = "photos.resident_publish";
+export const APPROVE_ACTIVITY = "photos.approve";
 
 export type RoleCell = { roleKey: string; roleName: string; archived: boolean; activity: string; level: number };
 

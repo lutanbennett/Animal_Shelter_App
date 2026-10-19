@@ -25,7 +25,7 @@ export async function renderPhotosSection(ctx: SectionContext): Promise<React.Re
   const canMarkPosted = can(perms, "photos.resident_manage") && perms?.scopes.residents === "all";
   return (
     <div className="flex flex-col gap-6">
-      {waiting > 0 && can(perms, "photos.resident_publish") && (
+      {waiting > 0 && can(perms, "photos.approve") && (
         <p className="text-sm text-foreground">
           {t.photoApproval.resident.waiting(waiting)}{" "}
           <Link href="/photos/approve" className="font-medium text-primary underline">
