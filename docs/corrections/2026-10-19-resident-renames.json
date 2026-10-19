@@ -1,0 +1,135 @@
+{
+  "residents": [
+    {
+      "code": "R-0006",
+      "name": "Chao Guay (1)",
+      "was": {
+        "name": "Choa Guay",
+        "enclosure": "Lifecycle / Unassigned"
+      },
+      "enclosure": "Main Zone / Enclosure 2 (Main Room Garden)"
+    },
+    {
+      "code": "R-0323",
+      "name": "Chao Guay (2)",
+      "was": {
+        "name": "Chao Guay 2"
+      }
+    },
+    {
+      "code": "R-0439",
+      "name": "Chao Guay (3)",
+      "was": {
+        "name": "Chao Guay 2"
+      }
+    },
+    {
+      "code": "R-0197",
+      "name": "Mon (2)",
+      "thai_name": "ม่อน 2",
+      "was": {
+        "name": "Mon",
+        "thai_name": "มอม"
+      }
+    },
+    {
+      "code": "R-0033",
+      "name": "Sua (2)",
+      "was": {
+        "name": "Suea"
+      }
+    },
+    {
+      "code": "R-0436",
+      "name": "Singha",
+      "was": {
+        "name": "Sing"
+      }
+    },
+    {
+      "code": "R-0442",
+      "name": "Mhee Khao (2)",
+      "thai_name": "หมีขาว (2)",
+      "was": {
+        "name": "Mee",
+        "thai_name": "หมี"
+      }
+    },
+    {
+      "code": "R-0374",
+      "name": "Mhee Khao (1)",
+      "thai_name": "หมีขาว (1)",
+      "was": {
+        "name": "Mhee Khao",
+        "thai_name": "หมีขาว"
+      }
+    },
+    {
+      "code": "R-0230",
+      "name": "Khaow",
+      "was": {
+        "name": "Khao"
+      }
+    },
+    {
+      "code": "R-0064",
+      "name": "Gigi (1)",
+      "thai_name": "จีจี้ (1)",
+      "was": {
+        "name": "GiGi",
+        "thai_name": "จีจี้"
+      }
+    },
+    {
+      "code": "R-0039",
+      "name": "Lava (Yai)",
+      "thai_name": "ลาวา (ใหญ่)",
+      "was": {
+        "name": "Lava",
+        "thai_name": "ลาวา"
+      }
+    },
+    {
+      "code": "R-0073",
+      "name": "Huay Kaew (1)",
+      "was": {
+        "name": "Huay Kaew"
+      }
+    },
+    {
+      "code": "R-0390",
+      "name": "Huay Kaew (2)",
+      "was": {
+        "name": "Huay Kaew 2"
+      }
+    },
+    {
+      "code": "R-0438",
+      "name": "Nom Sod (M)",
+      "was": {
+        "name": "Nom Sod"
+      }
+    },
+    {
+      "code": "R-0002",
+      "name": "Panda (Ed)",
+      "was": {
+        "name": "Panda"
+      }
+    },
+    {
+      "code": "R-0010",
+      "enclosure": "Main Zone / Enclosure 1 (Main Room)",
+      "was": {
+        "enclosure": "Right Zone / Enclosure 1"
+      }
+    },
+    {
+      "code": "R-0062",
+      "enclosure": "Main Zone / Enclosure 1 (Main Room)",
+      "was": {
+        "enclosure": "Right Zone / Enclosure 9"
+      }
+    }
+  ]
+}
