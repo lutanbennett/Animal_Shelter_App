@@ -228,6 +228,7 @@ function JobCard({ summary, onEdit }: { summary: JobSummary; onEdit: () => void 
             onClick={onEdit}
             disabled={isPending}
             label={rj.edit}
+            word={rj.edit}
             subject={job.title}
             icon={ACTION_ICONS.edit}
           />
@@ -235,6 +236,7 @@ function JobCard({ summary, onEdit }: { summary: JobSummary; onEdit: () => void 
             disabled={isPending}
             onClick={() => run(() => setRecurringJobActive(job.id, !job.active))}
             label={job.active ? rj.pause : rj.resume}
+            word={job.active ? rj.pause : rj.resume}
             subject={job.title}
             icon={job.active ? ACTION_ICONS.pause : ACTION_ICONS.resume}
           />
@@ -244,6 +246,7 @@ function JobCard({ summary, onEdit }: { summary: JobSummary; onEdit: () => void 
               if (await confirm({ body: rj.confirmDelete(job.title), confirmLabel: t.common.delete })) run(async () => deleteRecurringJob(job.id));
             }}
             label={rj.delete}
+            word={rj.delete}
             subject={job.title}
             icon={ACTION_ICONS.delete}
             tone="danger"
@@ -532,6 +535,7 @@ function Covered({ covered }: { covered: CoveredDate[] }) {
                   })
                 }
                 label={c.handBack}
+                word={c.handBack}
                 subject={row.title}
                 icon={ACTION_ICONS.handBack}
               />

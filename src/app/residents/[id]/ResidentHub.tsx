@@ -508,9 +508,10 @@ export function ResidentHub({
                   href={`${base}/edit`}
                   title={t.residents.hub.editResident}
                   aria-label={t.residents.hub.editResident}
-                  className="rounded p-1 text-muted hover:bg-surface-hover hover:text-foreground"
+                  className="inline-flex items-center gap-1 rounded p-1 text-sm text-muted hover:bg-surface-hover hover:text-foreground"
                 >
                   <Pencil aria-hidden="true" className="h-4 w-4" />
+                  <span className="md:sr-only">{t.residents.hub.editResident}</span>
                 </Link>
               )}
               {!isDeceased && canRecordDeath && (
@@ -518,9 +519,10 @@ export function ResidentHub({
                   href={`${base}/deceased`}
                   title={t.residents.deceased.recordButton}
                   aria-label={t.residents.deceased.recordButton}
-                  className="rounded p-1 text-muted hover:bg-danger/10 hover:text-danger"
+                  className="inline-flex items-center gap-1 rounded p-1 text-sm text-muted hover:bg-danger/10 hover:text-danger"
                 >
                   <PLACEMENT_ICONS.deceased aria-hidden="true" className="h-4 w-4" />
+                  <span className="md:sr-only">{t.residents.deceased.recordButton}</span>
                 </Link>
               )}
             </div>

@@ -6914,6 +6914,8 @@ const en = {
       empty: "No Shelter Friends yet. Tap Add a Shelter Friend to thank the first business.",
       moveUp: (name: string) => `Move ${name} up`,
       moveDown: (name: string) => `Move ${name} down`,
+      moveUpWord: "Up",
+      moveDownWord: "Down",
       openContact: "Open contact",
       archivedNote: "Contact archived — hidden from the website",
     },
