@@ -48,14 +48,13 @@ export function ClinicVisitForm({
     preselectedResidentIds,
   );
   const [clinicId, setClinicId] = useState(fixedClinic?.id ?? preselectedClinicId);
-  const [statusTouched, setStatusTouched] = useState(false);
-  const [status, setStatus] = useState<"scheduled" | "completed">(
-    "scheduled",
-  );
+  const [status, setStatus] = useState<"scheduled" | "completed">("scheduled");
+  // The status is never changed for the user: a past date left on Scheduled
+  // stays Scheduled and shows as overdue, as the status hint says.
+  const [datePassed, setDatePassed] = useState(false);
 
   function handleDateChange(value: string) {
-    if (statusTouched || !value) return;
-    setStatus(new Date(value).getTime() <= Date.now() ? "completed" : "scheduled");
+    setDatePassed(!!value && new Date(value).getTime() <= Date.now());
   }
 
   return (
@@ -155,7 +154,6 @@ export function ClinicVisitForm({
             name="status"
             value={status}
             onChange={(e) => {
-              setStatusTouched(true);
               setStatus(e.target.value as "scheduled" | "completed");
             }}
             className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
@@ -164,6 +162,9 @@ export function ClinicVisitForm({
             <option value="completed">{t.vetVisits.statusCompleted}</option>
           </select>
           <p className="text-xs text-muted">{t.vetVisits.statusHint}</p>
+          {datePassed && status === "scheduled" && (
+            <p role="status" className="text-xs font-medium text-foreground">{t.vetVisits.pastScheduledWarning}</p>
+          )}
         </div>
       </div>
 
