@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { billCostParam } from "@/lib/bills/cost-param";
 import { Receipt, Scale } from "lucide-react";
 import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
@@ -64,7 +65,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
   const initialKind: DeliveryKind = searchParams.tab === "diets" ? "diet" : "medication";
   // Opened from a card in the Bills inbox ("Record a new delivery from this bill"): its photos move onto the delivery.
   const fromBill = typeof searchParams.fromBill === "string" && /^[0-9a-f-]{36}$/i.test(searchParams.fromBill) ? searchParams.fromBill : null;
-  const billCost = typeof searchParams.cost === "string" && /^\d+(\.\d{1,2})?$/.test(searchParams.cost) ? searchParams.cost : "";
+  const billCost = billCostParam(searchParams.cost);
 
   const [medicationResult, dietResult, countsResult, suppliersResult, receiptsResult, conversionsResult] = await Promise.all([
     supabase.from("stock_medications").select("id, name, name_th, unit:dose_unit, label_drive_file_id").order("name").returns<ItemRow[]>(),
