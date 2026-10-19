@@ -25,7 +25,10 @@ export default async function MemesPage() {
           <p className="text-base text-muted">{t.memes.intro}</p>
         </div>
         {can(perms, "social.library") && (
-          <ActionLink href="/memes/new" label={t.memes.add} icon={ACTION_ICONS.add} variant="primary" iconOnlyOnMobile={false} />
+          <div className="flex flex-wrap gap-2">
+            <ActionLink href="/memes/make" label={t.memes.maker.button} icon={ACTION_ICONS.add} variant="primary" iconOnlyOnMobile={false} />
+            <ActionLink href="/memes/new" label={t.memes.add} icon={ACTION_ICONS.uploadImage} iconOnlyOnMobile={false} />
+          </div>
         )}
       </div>
       <MemeLibrary

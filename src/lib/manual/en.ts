@@ -1087,6 +1087,29 @@ const manual: Manual = {
             },
           ],
         },
+        {
+          id: "meme-maker",
+          title: "Memes: making one",
+          roles: ["admin"],
+          activity: "social.library",
+          path: "Meme library → Make a meme (or a resident's Photos → open a photo → Make a meme)",
+          intro:
+            "Make a meme puts words on a resident's photo and saves it straight into the meme library with that resident already tagged. The original photo is never changed. Medical photos are never offered, and the app refuses them even if one is chosen another way.",
+          steps: [
+            "Start from a photo: on a resident's Photos tab, open a photo and tap Make a meme. Or tap Make a meme in the Meme library, choose the resident, then one of their photos.",
+            "Type the Top text and the Bottom text. English and Thai both work, and the picture updates as you type. Long text wraps onto more lines and shrinks to fit instead of running off the edge.",
+            "Choose a Text style: Classic (white letters with a black outline), Caption bar (the words in a white bar under the photo) or Speech bubble (the top text in a bubble above the animal).",
+            "Choose a Crop: Square (for Instagram), 4:5 or Original. The photo is cropped from the middle.",
+            "Leave Put the shelter logo in a corner ticked so the shelter's name goes with the meme wherever it is shared. Untick it only when you have a reason.",
+            "Tap Save to the library. The meme opens in the library, ready for Download and Record a share.",
+          ],
+          callouts: [
+            {
+              kind: "warning",
+              text: "Think before you post. A joke made from a sad or sick animal reaches the internet under the shelter's name. Photos filed under Medical cannot be made into memes, and neither can photos still waiting for approval.",
+            },
+          ],
+        },
       ],
     },
 

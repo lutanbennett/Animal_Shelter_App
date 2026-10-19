@@ -75,6 +75,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "Meme library: you can now make a meme in the app. Tap Make a meme in the library, or open a resident's photo and tap it there. Add English or Thai words (they wrap to fit), pick a classic, caption-bar or speech-bubble style and a square or 4:5 crop, and save. The meme lands in the library with the resident tagged and the shelter logo in the corner. Medical photos cannot be made into memes.",
+    roles: ["admin"],
+  },
   "Diets: a diet that looks like a typo (such as 22 meals a day, or far more food than the biggest default) is now held with a message and a tick box, so a slipped finger can no longer quietly inflate the food forecast, purchasing and cashflow. Clinic visits: a past time is no longer switched to Completed for you; the form tells you to pick Completed if the visit happened, and otherwise it shows as overdue. The medication list now opens on the by-resident list; the stock-room pick list is one tap away.",
   {
     text: "Forms on a phone: if you tap Save (Return from hospital, Add zone, Move and the others) before the page has finished loading, the form now waits and saves once it is ready, instead of saving nothing. The date box now says when a day does not exist (31/04/2026) rather than blaming the format. The project folder shows Not on the website / On the website as soon as you flip the switch. The people ticked for maintenance and recurring jobs no longer include test logins.",

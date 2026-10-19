@@ -9,6 +9,7 @@ import {
   ChevronUp,
   ExternalLink,
   FolderInput,
+  Laugh,
   Megaphone,
   Square,
   SquareCheck,
@@ -19,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
+import { ActionLink } from "@/components/ActionLink";
 import { DateInput } from "@/components/DateInput";
 import { formatDate, todayIso } from "@/lib/format";
 import { photoFolderLabel } from "@/lib/i18n/enum-labels";
@@ -195,6 +197,7 @@ export function PhotoGallery({
   readOnly = false,
   shares,
   canMarkPosted = false,
+  canMakeMeme = false,
 }: {
   residentId: string;
   photos: PhotoRow[];
@@ -226,6 +229,8 @@ export function PhotoGallery({
    * badge itself shows to anyone who can see the photo.
    */
   canMarkPosted?: boolean;
+  /** May this login open the meme maker (social.library at Edit)? A Medical or waiting photo never gets the button. */
+  canMakeMeme?: boolean;
 }) {
   const { t, locale } = useI18n();
   const p = t.photos.posted;
@@ -660,6 +665,12 @@ export function PhotoGallery({
                     />
                   )}
                 </section>
+              )}
+
+              {canMakeMeme && openPhoto.approved_at !== null && !isMedicalFolder(openPhoto.sub_folder) && !openPhoto.adoption_update && (
+                <div>
+                  <ActionLink href={`/memes/make?photo=${openPhoto.drive_file_id}`} label={t.memes.maker.button} icon={Laugh} iconOnlyOnMobile={false} />
+                </div>
               )}
 
               {readOnly ? (

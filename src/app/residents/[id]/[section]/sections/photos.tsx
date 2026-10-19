@@ -43,6 +43,7 @@ export async function renderPhotosSection(ctx: SectionContext): Promise<React.Re
         moveCategories={photoCategoriesFor(perms)}
         shares={shares}
         canMarkPosted={canMarkPosted}
+        canMakeMeme={can(perms, "social.library")}
       />
     </div>
   );
