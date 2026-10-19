@@ -534,7 +534,7 @@ const en = {
   privacy: {
     nav: "Privacy",
     title: "Privacy notice",
-    updated: "Last updated 26 September 2026",
+    updated: "Last updated 19 October 2026",
     intro:
       "Lanna Care for Animals Foundation runs this website and the record-keeping app behind it. This page explains what personal information we hold, why we hold it, and how to ask us about it.",
     sections: [
@@ -569,6 +569,7 @@ const en = {
         heading: "How long we keep it",
         paragraphs: [
           "An animal's care records, and the people attached to them, are kept for as long as that history is useful — for a shelter that is usually indefinitely, because an animal may come back years later. Staff and volunteer accounts are archived when someone leaves rather than deleted, so past records still show who made them.",
+          "Sentences that staff and volunteers type into the in-app assistant are kept for 2 days and then deleted. The exception is a request the assistant could not help with: those are kept for 90 days, so the shelter can see what people ask that gets no answer. Only an Admin can read other people's requests.",
         ],
       },
       {

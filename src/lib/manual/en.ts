@@ -246,7 +246,7 @@ const manual: Manual = {
             },
             {
               kind: "warning",
-              text: "If it says it didn't understand, it has written nothing — use the ordinary page instead. It is worth typing the request anyway: the sentences it can't place are kept, and they are what the next version is taught on.",
+              text: "If it says it didn't understand, it has written nothing — use the ordinary page instead. It is worth typing the request anyway: the sentences it can't place are kept for 90 days, and they are what the next version is taught on. Everything else you type is deleted after 2 days, and only an Admin can read other people's requests.",
             },
           ],
         },
