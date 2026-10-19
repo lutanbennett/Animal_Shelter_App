@@ -20,7 +20,7 @@ test("the bundle is exactly publish, manage and the who-and-where read, at those
   const b = bundleOfCards(["approve_photos"]);
   assert.deepEqual(
     [...b].sort(([x], [y]) => x.localeCompare(y)),
-    [["photos.resident_manage", "edit"], ["photos.resident_publish", "edit"], ["resident.record", "read"]],
+    [["photos.approve", "edit"], ["photos.resident_manage", "edit"], ["resident.record", "read"]],
   );
   assert.deepEqual(bundleJson(["approve_photos"]).map((e) => e.level).sort(), [1, 2, 2]);
 });
@@ -33,12 +33,13 @@ test("nothing that edits a resident, adds a photo or moves an animal rides along
   assert.equal(b.get("resident.record"), "read");
 });
 
-test("it opens /photos/approve, includes nothing, and is what Add resident photos waits on (Residents satisfies it too)", () => {
+test("it opens /photos/approve, includes nothing, and is what Add resident photos waits on", () => {
   assert.equal(CARDS.approve_photos.opens, "/photos/approve");
   assert.deepEqual(CARDS.approve_photos.includes, []);
   assert.deepEqual(CARDS.add_photos.requiresCardSomewhere, ["approve_photos"]);
-  assert.deepEqual([...CARD_SATISFIED_BY.approve_photos].sort(), ["approve_photos", "residents"]);
-  assert.ok(bundleOfCards(["residents"]).has("photos.resident_publish"));
+  assert.deepEqual([...CARD_SATISFIED_BY.approve_photos].sort(), ["approve_photos"]);
+  assert.equal(bundleOfCards(["residents"]).has("photos.approve"), false);
+  for (const [k, c] of Object.entries(CARDS)) assert.equal(k === "approve_photos", bundleOfCards([k]).has("photos.approve"), k + " bundles photos.approve");
 });
 
 test("a role holding the card gets its tile and may open the page; a role without the cells gets neither", () => {

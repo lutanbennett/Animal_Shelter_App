@@ -530,14 +530,14 @@ export const ENTRIES = {
   "approve-photos": [
     {
       activity: "Choose the animal for a photo tagged to an enclosure",
-      needs: "photos.resident_publish",
+      needs: "photos.approve",
       device: "phone",
       do: "On Photos to approve, find a card that says Taken in an enclosure, resident not chosen, tap the animal in it (or search for another), and tap Assign and approve.",
       expect: "The card leaves the list and the photo is on that animal's Photos tab, approved. Choosing two animals puts it on both, each with its own copy.",
     },
     {
       activity: "Assign a photo but keep it off the website",
-      needs: "photos.resident_publish",
+      needs: "photos.approve",
       device: "phone",
       do: "On a photo tagged to an enclosure, choose an animal, tick Keep it off the website, and tap Assign, keep private.",
       expect: "The photo is on the animal's Photos tab marked Waiting for approval and is not on the public page.",
@@ -551,21 +551,21 @@ export const ENTRIES = {
     },
     {
       activity: "Discard a photo tagged to an enclosure",
-      needs: "photos.resident_publish",
+      needs: "photos.approve",
       device: "phone",
       do: "On a photo tagged to an enclosure, tap Discard and confirm.",
       expect: "The card leaves the list and the tile count goes down by one.",
     },
     {
       activity: "Approve a photo that is waiting",
-      needs: "photos.resident_publish",
+      needs: "photos.approve",
       device: "phone",
       do: "Tap Photos to approve on the home screen, look at the first photo, and tap Approve.",
       expect: "The photo leaves the list, the number on the tile goes down by one, and the photo no longer says Waiting for approval on the resident's Photos tab.",
     },
     {
       activity: "Approve several photos at once",
-      needs: "photos.resident_publish",
+      needs: "photos.approve",
       device: "phone",
       do: "On Photos to approve, tick the box under two photos you have looked at, tap the Approve button at the bottom and confirm.",
       expect: "It asks first and names the residents, there is no button that ticks everything, and both photos leave the list.",

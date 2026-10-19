@@ -13,10 +13,10 @@ import { PendingQueue } from "./PendingQueue";
  * and above them the photos tagged to an enclosure by someone who did not know the animal (0218), waiting for
  * someone to say who is in them. Two lists and two cards on purpose
  * (docs/decisions/2026-10-17-photo-approval-queue.md): a pending photo has no resident yet.
- * Gated on photos.resident_publish, the activity the database itself checks.
+ * Gated on photos.approve, the activity the database itself checks.
  */
 export default async function ApprovePhotosPage() {
-  const { perms } = await requirePermission("photos.resident_publish");
+  const { perms } = await requirePermission("photos.approve");
   const { t } = await getT();
   const supabase = await createClient();
   const [photos, pending, { residents, error }] = await Promise.all([

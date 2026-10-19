@@ -84,6 +84,10 @@ export const unreleased: ReleaseNote[] = [
     text: "Bills: tapping Record a new delivery from this bill now carries the cost you typed into the delivery, and the bill is filed on the delivery when you save (before, the cost was dropped and the bill stayed waiting). Likely matches now always include a recent delivery when there is one. Starting an appeal lets you search for the animal, and no longer lists animals who have died, been adopted or are on outreach. Shelter Friends shows the word Publish or Unpublish beside its icon.",
     roles: ["admin", "management"],
   },
+  {
+    text: "Approving photos is now only the Approve photos card. Having Residents still lets you add photos that go straight onto the website, but it no longer lets you approve photos other people add through Add Shelter Photos. Management has been given Approve photos. The Second in command no longer sees Photos to approve; an Admin can give her the card on Who does what.",
+    roles: ["admin", "management", "second_in_command"],
+  },
 ];
 
 /** Newest first. */

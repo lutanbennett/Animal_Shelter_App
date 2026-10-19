@@ -49,7 +49,7 @@ export async function assignPendingPhoto(
     t.common.somethingWentWrong,
     async () => {
       const perms = await loadPermissions();
-      if (!can(perms, "photos.resident_publish")) return { ok: false, error: t.photoApproval.errors.notAllowed };
+      if (!can(perms, "photos.approve")) return { ok: false, error: t.photoApproval.errors.notAllowed };
       const chosen = [...new Set(residentIds)];
       if (!isUuid(pendingId) || chosen.length === 0 || !chosen.every(isUuid)) return { ok: false, error: e.nobodyChosen };
       if (chosen.length > MAX_RESIDENTS) return { ok: false, error: e.tooMany(MAX_RESIDENTS) };
@@ -152,7 +152,7 @@ export async function discardPendingPhoto(pendingId: string): Promise<ActionResu
   const { t } = await getT();
   return runAction<{ driveWarning?: string }>("photos.discardPending", t.common.somethingWentWrong, async () => {
     const perms = await loadPermissions();
-    if (!can(perms, "photos.resident_publish")) return { ok: false, error: t.photoApproval.errors.notAllowed };
+    if (!can(perms, "photos.approve")) return { ok: false, error: t.photoApproval.errors.notAllowed };
     if (!isUuid(pendingId)) return { ok: false, error: t.photoApproval.pending.errors.gone };
 
     const supabase = await createClient();
@@ -193,7 +193,7 @@ export async function reassignWaitingPhoto(
     const perms = await loadPermissions();
     // The database lets a login with photos.resident_manage change a waiting photo's owner; the approval page is
     // for logins that may publish. Both are asked, so the sentence comes from here and not a bare refusal.
-    if (!can(perms, "photos.resident_publish") || !can(perms, "photos.resident_manage")) {
+    if (!can(perms, "photos.approve") || !can(perms, "photos.resident_manage")) {
       return { ok: false, error: e.notAllowed };
     }
     if (!isUuid(attachmentId) || !isUuid(residentId)) return { ok: false, error: e.notWaiting };

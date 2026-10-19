@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { approverNames, needsApprover } from "./approvers.ts";
 
-const cell = (roleKey, o = {}) => ({ roleKey, roleName: roleKey, archived: false, activity: "photos.resident_publish", level: 2, ...o });
+const cell = (roleKey, o = {}) => ({ roleKey, roleName: roleKey, archived: false, activity: "photos.approve", level: 2, ...o });
 
 test("a live non-Admin role holding the activity approves", () => {
   assert.deepEqual(approverNames([cell("management")]), ["management"]);
