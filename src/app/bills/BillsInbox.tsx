@@ -143,9 +143,14 @@ function CardView({
   const pageInput = useRef<HTMLInputElement>(null);
 
   const details = { amount, date, note };
-  const nearest = [...suggestions]
-    .sort((x, y) => Math.abs(dayNumber(x.day) - dayNumber(card.day)) - Math.abs(dayNumber(y.day) - dayNumber(card.day)))
-    .slice(0, SHOWN);
+  const byNearness = [...suggestions].sort(
+    (x, y) => Math.abs(dayNumber(x.day) - dayNumber(card.day)) - Math.abs(dayNumber(y.day) - dayNumber(card.day)),
+  );
+  // The nearest of each kind first, so up to thirty recent jobs cannot push every delivery or visit off the card.
+  const firstOfKind = byNearness.filter((x, i) => byNearness.findIndex((y) => y.kind === x.kind) === i);
+  const nearest = [...firstOfKind, ...byNearness.filter((x) => !firstOfKind.includes(x))]
+    .slice(0, SHOWN)
+    .sort((x, y) => byNearness.indexOf(x) - byNearness.indexOf(y));
 
   const run = (work: () => Promise<{ ok: true } | { ok: false; error: string }>, done: string) =>
     startTransition(async () => {
