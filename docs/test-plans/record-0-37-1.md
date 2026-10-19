@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none — a release record closes no backlog item. **The two faults this release found went on the `backlog` branch**, not here |
 | Branch / worktree | `claude/record-0-37-1` @ `C:\Development\Animal_Shelter_record-0-37-1` |
 | Dev server | not driven — no runtime surface; see §5 |
-| PR | **#745 — a guess at the time of writing, to be re-read with `gh pr view` after opening.** The last two guesses were right (#731, #743); the re-read, not the streak, is what makes it safe to write down |
+| PR | **#747** — guessed as **#745** and **the guess was WRONG**, after two right in a row (#731, #743). Two PRs (#745, #746) were opened by other streams between the guess and `gh pr create`. **Re-read from `gh pr create`'s output and corrected.** This is the case the "write it as a guess, then re-read" rule exists for, and it is the third wrong guess in six |
 | Tested by / date | Claude (production release manager session) / 2026-10-19 |
 | Carries a migration? | no |
 | Tested at SHA | the tip of this branch |
@@ -110,7 +110,7 @@
 
 - [x] **Does this PR contain both a migration and code that reads it?** No — neither. The release's three applied **before** every deploy, which mattered: `0224`'s six declared consumers were on `main` but not live, exactly as the dry-run's six warnings said
 - [x] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — **all three `ok`** across two runs (`0224`/`0225` before the cut deployed, `0226` after #744 was folded in). The per-file rollback trap did **not** fire
-- [x] For a **destructive or rewriting** migration only: a production backup exists and is fresh — `0224` rewrites permission rows rather than dropping anything, and its effect is the open item recorded above. The backup position is unchanged from `0.37.0` earlier the same day. **The README restore recipe has still never been exercised — fourteen releases unanswered, and still the cheapest item on the outstanding list**
+- [x] For a **destructive or rewriting** migration only: a production backup exists and is fresh — `0224` rewrites permission rows rather than dropping anything, and its effect is the open item recorded above. The backup position is unchanged from `0.37.0` earlier the same day. **The README restore recipe had still never been exercised at the time of this release — fourteen releases unanswered. That may be about to change: PR #745, "Record the first real restore of a production backup into Supabase", was opened by another stream while this plan was being written. It is NOT in `0.37.1`. Check whether it has merged before repeating the "never exercised" line** — it has been true for fourteen releases and is exactly the kind of claim that outlives its truth
 - [x] Apply plan stated: which file, which project, and whether it runs before or after the deploy — carried out as stated: `0224`, `0225`, then `0226`, project `dbkodyyxxhtygxcxmfcu`, all **before** every deploy
 
 ### Rollback
