@@ -45,6 +45,12 @@ export function CardBoard({
   const [error, setError] = useState<string | null>(null);
   const [over, setOver] = useState<"held" | "library" | string | null>(null);
   const heldKeys = held.map((h) => h.key);
+  // One box filters both columns by name and description. Reordering stays on the full list (heldKeys above).
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const match = (x: Tile) => !q || `${x.label} ${x.description}`.toLowerCase().includes(q);
+  const shownHeld = held.filter(match);
+  const shownLibrary = library.filter(match);
 
   function run(ops: CardOp[]) {
     setError(null);
@@ -169,6 +175,15 @@ export function CardBoard({
     <div className="flex flex-col gap-2">
       {canEdit && <p className="hidden text-sm text-muted md:block">{c.dragHint}</p>}
       {locked && <p className="hidden text-sm text-muted md:block">{c.lockedHint}</p>}
+      <p className="text-sm text-muted">{c.addIntro}</p>
+      <input
+        type="search"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={c.searchPlaceholder}
+        aria-label={c.searchLabel}
+        className="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-foreground md:max-w-md"
+      />
       {error && (
         <p role="alert" className="text-sm text-danger [overflow-wrap:anywhere]">
           {error}
@@ -182,20 +197,23 @@ export function CardBoard({
           {lockedNote}
           {held.length === 0 ? (
             <p className="text-sm text-muted">{c.noCards}</p>
+          ) : shownHeld.length === 0 ? (
+            <p className="text-sm text-muted">{c.noMatch}</p>
           ) : (
-            <ol className="grid grid-cols-2 gap-3 xl:grid-cols-3">{held.map((h, i) => tile(h, "held", i))}</ol>
+            <ol className="grid grid-cols-2 gap-3 xl:grid-cols-3">{shownHeld.map((h) => tile(h, "held", heldKeys.indexOf(h.key)))}</ol>
           )}
         </section>
         <section aria-labelledby="add-h" className={`flex min-w-0 flex-col gap-3 md:order-1 ${zone("library")}`} onDragOver={allow("library")} onDragLeave={() => setOver(null)} onDrop={dropOnLibrary}>
           <h2 id="add-h" className="text-lg font-semibold text-foreground">
             {c.addHeading}
           </h2>
-          <p className="text-sm text-muted">{c.addIntro}</p>
           {lockedNote}
           {library.length === 0 ? (
             <p className="text-sm text-foreground">{c.allHeld}</p>
+          ) : shownLibrary.length === 0 ? (
+            <p className="text-sm text-muted">{c.noMatch}</p>
           ) : (
-            <ul className="grid grid-cols-2 gap-3 md:grid-cols-1 xl:grid-cols-2">{library.map((l) => tile(l, "library", 0))}</ul>
+            <ul className="grid grid-cols-2 gap-3 md:grid-cols-1 xl:grid-cols-2">{shownLibrary.map((l) => tile(l, "library", 0))}</ul>
           )}
         </section>
       </div>

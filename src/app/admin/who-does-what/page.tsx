@@ -88,7 +88,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
     : null;
   const noTile = (k: CardKey) => !!rolePerms && !isSubsumed(k, held, rolePerms) && !cardTile(k, rolePerms, t);
   const stoodForBy = (k: CardKey) => (rolePerms && isSubsumed(k, held, rolePerms) ? held.find((o) => o !== k && includedCards(o).includes(k)) : undefined);
-  const library = CARD_KEYS.filter((k) => !held.includes(k));
+  const library = CARD_KEYS.filter((k) => !held.includes(k)).reverse(); // newest cards are added last, so they lead
   const label = (k: CardKey) => CARDS[k].label(t);
   const describe = (k: CardKey) => c.description[k];
 
