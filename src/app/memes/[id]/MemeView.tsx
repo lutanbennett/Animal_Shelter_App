@@ -17,6 +17,7 @@ import { driveImageUrl } from "@/lib/google/drive-client";
 import { formatDate, todayIso } from "@/lib/format";
 import { MEME_NOTE_MAX } from "@/lib/memes/form";
 import { PLATFORMS, type Platform } from "@/lib/memes/platforms";
+import type { SourceKind } from "@/lib/memes/sources";
 import { PlatformIcon } from "../PlatformIcon";
 import { recordMemeShare, removeMemeShare, setMemeArchived } from "../actions";
 
@@ -30,6 +31,7 @@ export type ViewMeme = {
   tags: string[];
   archived: boolean;
   created_at: string;
+  source_kind: SourceKind | null;
   residents: { id: string; name: string; thai_name: string | null }[];
   shares: { id: string; platform: Platform; shared_on: string; post_url: string | null; note: string | null }[];
 };
@@ -261,6 +263,10 @@ export function MemeView({ meme, canEdit, today }: { meme: ViewMeme; canEdit: bo
           </dl>
         )}
       </section>
+
+      {meme.source_kind && (
+        <p className="text-sm text-muted">{m.page.madeFrom(m.maker.sources[meme.source_kind])}</p>
+      )}
 
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-foreground">{m.page.residents}</h2>

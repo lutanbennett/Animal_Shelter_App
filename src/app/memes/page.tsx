@@ -32,7 +32,7 @@ export default async function MemesPage() {
         )}
       </div>
       <MemeLibrary
-        memes={memes.map(({ id, drive_file_id, title, caption_en, caption_th, tags, residents, platforms }) => ({
+        memes={memes.map(({ id, drive_file_id, title, caption_en, caption_th, tags, residents, platforms, source_kind }) => ({
           id,
           drive_file_id,
           title,
@@ -41,6 +41,7 @@ export default async function MemesPage() {
           tags,
           residents,
           platforms,
+          source_kind,
         }))}
         tags={tagsInUse(memes)}
       />

@@ -6,6 +6,7 @@ import { Search, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { matchesSearch } from "@/lib/memes/form";
+import { SOURCE_KINDS, type SourceKind } from "@/lib/memes/sources";
 import { PLATFORMS, type Platform } from "@/lib/memes/platforms";
 import { SharedOn } from "./PlatformIcon";
 
@@ -19,9 +20,11 @@ export type LibraryMeme = {
   tags: string[];
   residents: { id: string; name: string; thai_name: string | null }[];
   platforms: Platform[];
+  source_kind: SourceKind | null;
 };
 
 const NOT_SHARED = "none";
+const NO_SOURCE = "unrecorded";
 const selectClass =
   "min-h-11 w-full rounded border border-border bg-background px-2 py-1 text-base text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 sm:text-sm";
 
@@ -37,6 +40,7 @@ export function MemeLibrary({ memes, tags }: { memes: LibraryMeme[]; tags: strin
   const [resident, setResident] = useState("");
   const [tag, setTag] = useState("");
   const [platform, setPlatform] = useState("");
+  const [source, setSource] = useState("");
 
   const residents = useMemo(() => {
     const byId = new Map<string, { id: string; name: string; thai_name: string | null }>();
@@ -51,12 +55,13 @@ export function MemeLibrary({ memes, tags }: { memes: LibraryMeme[]; tags: strin
           matchesSearch(meme, search) &&
           (!resident || meme.residents.some((r) => r.id === resident)) &&
           (!tag || meme.tags.includes(tag)) &&
+          (!source || (source === NO_SOURCE ? meme.source_kind === null : meme.source_kind === source)) &&
           (!platform || (platform === NOT_SHARED ? meme.platforms.length === 0 : meme.platforms.includes(platform as Platform))),
       ),
-    [memes, search, resident, tag, platform],
+    [memes, search, resident, tag, platform, source],
   );
 
-  const filtering = search.trim() !== "" || resident !== "" || tag !== "" || platform !== "";
+  const filtering = search.trim() !== "" || resident !== "" || tag !== "" || platform !== "" || source !== "";
   const residentName = (r: { name: string; thai_name: string | null }) =>
     locale === "th" && r.thai_name ? r.thai_name : r.name;
 
@@ -74,7 +79,7 @@ export function MemeLibrary({ memes, tags }: { memes: LibraryMeme[]; tags: strin
             className={`${selectClass} pl-8`}
           />
         </label>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <label className="flex flex-col gap-1 text-xs text-muted">
             {m.filters.resident}
             <select value={resident} onChange={(e) => setResident(e.target.value)} className={selectClass}>
@@ -109,6 +114,18 @@ export function MemeLibrary({ memes, tags }: { memes: LibraryMeme[]; tags: strin
               ))}
             </select>
           </label>
+          <label className="flex flex-col gap-1 text-xs text-muted">
+            {m.filters.source}
+            <select value={source} onChange={(e) => setSource(e.target.value)} className={selectClass}>
+              <option value="">{m.filters.anySource}</option>
+              {SOURCE_KINDS.map((k) => (
+                <option key={k} value={k}>
+                  {m.maker.sources[k]}
+                </option>
+              ))}
+              <option value={NO_SOURCE}>{m.filters.unrecordedSource}</option>
+            </select>
+          </label>
         </div>
         <div className="flex items-center justify-between gap-2 text-sm text-muted">
           <span>{m.count(shown.length)}</span>
@@ -120,6 +137,7 @@ export function MemeLibrary({ memes, tags }: { memes: LibraryMeme[]; tags: strin
                 setResident("");
                 setTag("");
                 setPlatform("");
+                setSource("");
               }}
               className="inline-flex min-h-11 items-center gap-1 rounded px-2 text-sm font-medium text-primary hover:bg-surface-hover md:min-h-9"
             >

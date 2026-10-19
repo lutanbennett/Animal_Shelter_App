@@ -11,7 +11,8 @@ import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { confirmUploaded, findOrCreateFolder, getDriveClient, uploadImageToFolder } from "@/lib/google/drive";
 import { checkMemeFields, checkPostUrl, parseTags, MEME_NOTE_MAX, type MemeFields } from "@/lib/memes/form";
 import { isPlatform } from "@/lib/memes/platforms";
-import { checkMakerSource, type MakerSourceRow } from "@/lib/memes/maker-source";
+import { resolveSource } from "@/lib/memes/source-server";
+import { isSourceKind, type SourceKind } from "@/lib/memes/sources";
 
 /**
  * The meme library's writes (0223). Every one asks can() for a sentence; the database asks has_permission() for the
@@ -64,19 +65,21 @@ export async function createMeme(formData: FormData): Promise<ActionResult<{ id:
     // A meme from the maker names the photo it was made from. That photo is checked here, on the save path, not in
     // the picker: a Medical photo is refused, and the residents tagged come from the photo, not from the request.
     const sourceFileId = (formData.get("sourceFileId") as string | null) ?? "";
-    if (sourceFileId) {
+    const rawKind = (formData.get("sourceKind") as string | null) ?? (sourceFileId ? "resident" : "");
+    // An upload names no earlier photo; every other source is re-checked here as the caller (resolveSource).
+    const sourceKind: SourceKind | null = isSourceKind(rawKind) ? rawKind : null;
+    let link = { outingId: null as string | null, maintenanceId: null as string | null, projectId: null as string | null };
+    if (sourceKind && sourceKind !== "upload") {
       if (!/^[A-Za-z0-9_-]{10,100}$/.test(sourceFileId)) return { ok: false, error: e.sourceNotFound };
-      const { data: srcRows } = await (await createClient())
-        .from("attachments")
-        .select("owner_id, sub_folder, approved_at")
-        .eq("owner_type", "resident")
-        .eq("drive_file_id", sourceFileId)
-        .returns<MakerSourceRow[]>();
-      const source = checkMakerSource(srcRows);
+      const source = await resolveSource(await createClient(), perms, sourceKind, sourceFileId);
       if (!source.ok) {
-        return { ok: false, error: source.reason === "medical" ? e.sourceMedical : source.reason === "notApproved" ? e.sourceNotApproved : e.sourceNotFound };
+        return {
+          ok: false,
+          error: source.reason === "medical" ? e.sourceMedical : source.reason === "notApproved" ? e.sourceNotApproved : source.reason === "notAllowed" ? e.sourceNotAllowed : e.sourceNotFound,
+        };
       }
       fields.residentIds = [...new Set([...fields.residentIds, ...source.residentIds])];
+      link = source;
     }
 
     const file = formData.get("file");

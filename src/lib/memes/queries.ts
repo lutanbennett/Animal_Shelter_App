@@ -2,6 +2,7 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { can, type Permissions } from "@/lib/permissions/can";
 import { isPlatform, type Platform } from "./platforms";
+import { isSourceKind, type SourceKind } from "./sources";
 
 /**
  * The meme library's reads (memes, meme_residents, social_shares with owner_type 'meme': 0223). Every query runs as
@@ -29,6 +30,8 @@ export type MemeSummary = {
   tags: string[];
   archived: boolean;
   created_at: string;
+  /** Where the photo came from (0228). Null: filed before sources were recorded, or made elsewhere. */
+  source_kind: SourceKind | null;
   residents: MemeResident[];
   /** Distinct platforms this meme has been shared on, newest share first. Empty = not shared yet. */
   platforms: Platform[];
@@ -46,12 +49,13 @@ type MemeRow = {
   tags: string[] | null;
   archived: boolean;
   created_at: string;
+  source_kind: string | null;
 };
 
 type LinkRow = { meme_id: string; resident_id: string; residents: MemeResident | MemeResident[] | null };
 type ShareRow = { id: string; owner_id: string; platform: string; shared_on: string; post_url: string | null; note: string | null };
 
-const MEME_COLUMNS = "id, drive_file_id, file_name, title, caption_en, caption_th, tags, archived, created_at";
+const MEME_COLUMNS = "id, drive_file_id, file_name, title, caption_en, caption_th, tags, archived, created_at, source_kind";
 
 /** Whether this login may open the library at all (Read), and whether it may change it (Edit). */
 export const canBrowseMemes = (perms: Permissions | null | undefined): boolean => can(perms, "social.library", "read");
@@ -96,6 +100,7 @@ async function attach(supabase: SupabaseClient, rows: MemeRow[]): Promise<MemeDe
     const memeShares = sharesOf.get(r.id) ?? [];
     return {
       ...r,
+      source_kind: isSourceKind(r.source_kind) ? r.source_kind : null,
       tags: r.tags ?? [],
       residents: (residentsOf.get(r.id) ?? []).sort((a, b) => a.name.localeCompare(b.name)),
       shares: memeShares,
