@@ -398,7 +398,7 @@ from the folder with no Drive call.
 killed by the kernel three times running at **4 GB RAM + 2 GB swap**, then went
 through first try with a **4 GB file-backed swap file** added and nothing else
 changed. So its peak is above 6 GB; the true figure has not been measured yet
-(`docs/release-procedure.md`, "Measure the build's peak memory").
+(the cause of the 2026-10-19 failures turned out to be the build cache, below).
 
 - **The file does the work, not the zram.** Raspberry Pi OS's 2 GB swap is
   zram, i.e. compressed RAM, and adds little real headroom. `/swapfile2` (4 GB,
@@ -412,6 +412,9 @@ changed. So its peak is above 6 GB; the true figure has not been measured yet
   stage of one command. The alternative that removes the demand instead of housing
   it is not typechecking on the Pi; that waits on the measurement above
   (`docs/decisions/2026-10-18-pi-deploy-safety.md`).
+
+- **Priority matters.** `setup.sh` writes `/swapfile2` with `pri=200`, above zram. zram is compressed RAM and spends RAM to save RAM; the disk file should be used first. Without `pri=` a rebuilt Pi gets the file *below* zram.
+- **Build cache.** `deploy-pi.sh` deletes `.next/cache` when it exceeds 1 GB (it prints what it removes). Diagnose with `du -sh .next .next/cache node_modules`.
 
 ## Edge cache notes
 

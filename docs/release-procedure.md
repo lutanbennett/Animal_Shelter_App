@@ -335,13 +335,9 @@ effect on the **next** deploy, not the one that ships it — the script checks o
 new ref over the file bash is already executing. On a release that changes it, run
 its checks by hand (`docs/releases/2026-10-18.md`, Defect 1).
 
-### Measure the build's peak memory — on the next Pi build
+### When a Pi build is killed
 
-The swap fix (docs/pi-hosting.md, "Swap") rests on a number nobody has taken. Run the
-next production Pi build once as `/usr/bin/time -v npm run build` (a one-off, not
-through `deploy-pi.sh`) and write down **Maximum resident set size** on the Pi-memory
-backlog item and in a new `docs/decisions/` file. A little over 6 GB: the swap stays
-defensible. Well over: dropping the typecheck from the Pi build is the only honest answer.
+If one clone builds and its twin does not on the same machine, run `du -sh .next .next/cache node_modules` on both **before** theorising about the machine. A bloated `.next/cache` (4.4 GB on 2026-10-19) starves the build; `deploy-pi.sh` now removes it above 1 GB. A failed build prints a boxed `DEPLOY FAILED` banner and exits 1; a deploy also fails if `/api/version` does not show the new version.
 
 ## 7. Verify
 

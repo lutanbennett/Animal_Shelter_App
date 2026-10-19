@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     // Linting it runs Node out of heap.
     ".open-next/**",
     ".wrangler/**",
+    // Leftover app-cut worktrees hold .next/.open-next output; linting it ran Node out of heap.
+    ".claude/**",
     "cloudflare-env.d.ts",
   ]),
   {
