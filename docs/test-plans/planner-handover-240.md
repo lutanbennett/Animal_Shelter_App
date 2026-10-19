@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — all eight checks pass on #758 (audit, cards-count, check, migration-numbers, new-policy-role-names, public-views, script-integrity, test-plan); `check` 2m54s and `public-views` 2m11s were the last two, and all eight were seen green before this was ticked
 
 ## 3. Schema and data — *skip if no migration*
 
