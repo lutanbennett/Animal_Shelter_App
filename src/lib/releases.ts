@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Settings → Who does what: a search box finds a card by name or what it gives, and the newest cards now come first in Available cards.", roles: ["admin"] },
 ];
 
 /** Newest first. */
