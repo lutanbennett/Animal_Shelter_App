@@ -756,12 +756,12 @@ That half is still unproved and is its own backlog item
 (`docs/decisions/2026-10-13-restore-rehearsal-local.md`).
 
 **Restoring into a Supabase project** (production after a disaster, or a
-scratch project) — **never yet run against a real Supabase project.** The
-steps below were corrected on 2026-10-13 by running them locally against a
-stand-in for a fresh project; each correction is noted. Run the rehearsal
-above on the chosen backup first, so you know the file itself is good.
-Then, on the administrator's own machine, with the private key saved to a
-file out of the repo:
+scratch project) — **run for real on 2026-10-19** into a throwaway project from
+a fresh production backup, and everything below is what that run needed
+(`docs/decisions/2026-10-19-restore-drill-real-supabase.md`). Run the
+rehearsal above on the chosen backup first, so you know the file itself is
+good. Then, on the administrator's own machine, with the private key saved to
+a file out of the repo:
 
 ```bash
 node scripts/decrypt-backup.mjs lannacare-production-<timestamp>.dump.age --identity path/to/key.txt
@@ -770,19 +770,29 @@ node scripts/decrypt-backup.mjs lannacare-production-<timestamp>.dump.age --iden
 
 Then, in this order, with `DB` set to the project's session-pooler
 connection string
-(`postgresql://postgres.<ref>:<password>@aws-0-ap-south-1.pooler.supabase.com:5432/postgres`):
+(`postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres`;
+the drill's pooler was `us-east-1`, so copy yours from the project's Connect
+page). Two traps with it: the password is the project's **database** password
+(set under Database settings), not your Supabase account password; and a
+password containing `@` breaks the string, so reset it to letters and digits
+first. Error messages can echo part of the connection string: redact them
+before pasting anywhere.
 
 1. **The accounts first**, rows only (the `auth` tables already exist in
-   every Supabase project). Run it with
-   `PGOPTIONS="-c session_replication_role=replica"` set, so a table can
-   load before the one it points to (`identities` comes before `users` in
-   the dump and is otherwise rejected):
-   `pg_restore --dbname="$DB" --schema=auth --data-only --no-owner --no-privileges <file>.dump`
-   *Corrected:* the old recipe ran this step last, so the twenty links from
-   app tables to `auth.users` were created against an empty table and
-   failed, quietly: the rows loaded, and the database was left without
-   those checks. Whether Supabase's `postgres` user may set
-   `session_replication_role` is not yet proved.
+   every Supabase project), **one table at a time, `users` before
+   `identities`**:
+   `pg_restore --dbname="$DB" --schema=auth --table=users --data-only --no-owner --no-privileges <file>.dump`
+   then the same with `--table=identities`.
+   *Corrected on 2026-10-19:* the earlier recipe set
+   `PGOPTIONS="-c session_replication_role=replica"` so a table could load
+   before the one it points to. **Supabase's `postgres` user is not allowed
+   to set that**, so on the real thing `identities` failed its link to
+   `users`. Loading `users` first and `identities` second needs no setting.
+   One error is expected and harmless here: `auth.schema_migrations` is
+   "permission denied" on load, because Supabase owns that table. (The older
+   correction still stands: `auth` goes first, or the twenty links from app
+   tables to `auth.users` are created against an empty table and fail
+   quietly.)
 2. **Create the `private` schema**: `create schema if not exists private;`
    in the SQL editor. *Corrected:* `pg_restore --schema=…` restores the
    objects in a schema but never the schema itself.
@@ -791,13 +801,43 @@ connection string
    *Corrected:* the old recipe left out `private`, which holds no rows but
    is what about fifteen `public` views and their access policies are built
    on, including `resident_current_state`.
-4. `node scripts/apply-migrations.mjs --status --env …` to confirm
-   `schema_migrations` came across, and to apply anything newer than the
-   backup.
+   **Expect about 490 errors on a fresh project, and most are fine.** On the
+   drill it logged ~493, every one a `DROP … IF EXISTS` for something that
+   does not exist yet in an empty project. Tell harmless from real by the
+   verb: a failed `DROP` is noise; a failed `CREATE`, `COPY`, `ALTER` or
+   `ADD CONSTRAINT` is real, so search the output for those. The proof is
+   the counts in step 4, not the error count.
+   **It is slow over the internet**: several minutes for a 1.3 MB backup. Give
+   it time, and do not run it through anything with a 120-second timeout, which will cut it off
+   part-way.
+4. **Check the counts.** In the drill's result: 82 public base tables, 53
+   views across `public` and `private`, 324 policies, 304 residents,
+   `schema_migrations` 226 rows (the same as the backup), `auth.users` 5,
+   `identities` 7. Supabase's default privileges gave `anon`,
+   `authenticated` and `service_role` access to every restored public table
+   with no manual grants. Then `node scripts/apply-migrations.mjs --status --env …`
+   to apply anything newer than the backup (**this last command was not run
+   in the drill**).
 5. Delete the decrypted `.dump`: it is plaintext.
 
-The dump has no session tables, so nobody is signed in afterwards, and
-authenticator apps are re-enrolled (see above).
+**Logins after a real disaster.** A restore brings back everyone's password
+*hashes*, not passwords, so nobody can sign in unless they know their old
+password, and the dump has no session tables, so nobody is signed in. Plan to
+send **password-reset emails** to every user. Authenticator-app (MFA/TOTP)
+enrolments are not restored by design, so everyone re-enrols (see above). In
+the drill, one account's password was set by hand in the scratch project to
+prove sign-in; never do that to production.
+
+**What the drill proved** (2026-10-19): a staff-role user saw all 304 residents
+and all 304 rows of `resident_current_state`, signed-out (`anon`) saw 0, and
+a user whose role is archived saw 0. A real password sign-in against the
+project's `/auth/v1/token` then read `/rest/v1/residents` (304 of 304).
+**Not covered:** the app itself was not pointed at the scratch project, and
+`apply-migrations.mjs --status` was not run (only the 226-row
+`schema_migrations` count was compared with the backup). **Gap:** a
+`pg_dump` does not contain Supabase Storage, so uploaded files and photos are
+**not** in these backups; after a disaster the database comes back but the
+files in storage buckets do not.
 
 **Backups made before 2026-10-13 have no `private` schema** (`backup.mjs`
 dumped only `public` and `auth` until then). Their data is complete, since
