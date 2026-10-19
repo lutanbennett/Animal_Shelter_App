@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/permissions/require";
+import { can } from "@/lib/permissions/can";
 import { getT } from "@/lib/i18n/get-t";
 import { loadOuting, loadOutingPhotos, loadPlaces } from "@/lib/outreach/outings";
 import { OutingForm } from "../../OutingForm";
@@ -13,7 +14,7 @@ import { OutingPhotos } from "./OutingPhotos";
 export default async function EditOutingPage(props: PageProps<"/outreach/[id]/edit">) {
   const { id } = await props.params;
   const { t } = await getT();
-  const { supabase } = await requirePermission("community.outings");
+  const { supabase, perms } = await requirePermission("community.outings");
 
   const [outing, photos, { places }] = await Promise.all([
     loadOuting(supabase, id),
@@ -35,7 +36,7 @@ export default async function EditOutingPage(props: PageProps<"/outreach/[id]/ed
       </Link>
       <h1 className="text-2xl font-semibold text-foreground">{t.outreach.editTitle}</h1>
       <OutingForm mode="edit" places={withCurrent} initial={outing} />
-      <OutingPhotos outingId={outing.id} photos={photos} />
+      <OutingPhotos outingId={outing.id} photos={photos} canMakeMeme={can(perms, "social.library")} />
     </main>
   );
 }

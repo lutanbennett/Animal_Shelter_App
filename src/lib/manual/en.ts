@@ -1079,6 +1079,10 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
+              text: "Making a meme: Make a meme in the library opens tabs for where the photo comes from: Residents, Outreach, Maintenance jobs, Projects, Website, or Upload a photo from your phone. You only see the tabs for pages you can already open, and medical photos are never offered. Each meme remembers where its photo came from; the library has a Photo from filter, and Make a meme also sits under photos on an outreach note and a maintenance job. An uploaded photo is used only for that meme.",
+            },
+            {
+              kind: "note",
               text: "Who can see the library is a Settings choice: the Meme library card under Who does what gives a role the whole library (browse, add, record shares, archive). Until Admin ticks it onto a role, only Admin can open it. A role that only needs to browse and download gets the activity at Read.",
             },
             {

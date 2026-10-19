@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
-import { driveImageUrl } from "@/lib/google/drive-client";
 import { fitText } from "@/lib/memes/maker-layout";
+import type { SourceKind } from "@/lib/memes/sources";
 import { createMeme } from "../actions";
 
 type Style = "classic" | "bar" | "bubble";
@@ -142,7 +142,19 @@ function draw(
  * Noto Sans Thai, then sent to the same createMeme the library uses, with `sourceFileId` so the server re-checks the
  * photo (Medical is refused there) and tags its residents. The original photo is only read, never written.
  */
-export function MemeMaker({ photoId, residentLabel }: { photoId: string; residentLabel: string }) {
+export function MemeMaker({
+  photoSrc,
+  sourceKind,
+  sourceFileId,
+  residentLabel,
+}: {
+  /** What to draw: the photo route for a filed photo, or a blob: URL for an uploaded one (never sent anywhere). */
+  photoSrc: string;
+  sourceKind: SourceKind;
+  /** The Drive file the photo came from; null for an upload, which is filed against nothing. */
+  sourceFileId: string | null;
+  residentLabel: string;
+}) {
   const { t } = useI18n();
   const m = t.memes.maker;
   const router = useRouter();
@@ -160,7 +172,7 @@ export function MemeMaker({ photoId, residentLabel }: { photoId: string; residen
 
   useEffect(() => {
     let alive = true;
-    Promise.all([loadFont(), loadImage(driveImageUrl(photoId, 1200)), loadImage("/lca-logo.jpg").catch(() => null)])
+    Promise.all([loadFont(), loadImage(photoSrc), loadImage("/lca-logo.jpg").catch(() => null)])
       .then(([, p, l]) => {
         if (!alive) return;
         setPhoto(p);
@@ -170,7 +182,7 @@ export function MemeMaker({ photoId, residentLabel }: { photoId: string; residen
     return () => {
       alive = false;
     };
-  }, [photoId]);
+  }, [photoSrc]);
 
   useEffect(() => {
     if (photo && canvas.current) draw(canvas.current, photo, logo, { top, bottom, style, crop, logoOn });
@@ -190,13 +202,14 @@ export function MemeMaker({ photoId, residentLabel }: { photoId: string; residen
       data.set("captionEn", words.slice(0, 2000));
       data.set("captionTh", "");
       data.set("tags", "meme maker");
-      data.set("sourceFileId", photoId);
+      data.set("sourceKind", sourceKind);
+      if (sourceFileId) data.set("sourceFileId", sourceFileId);
       data.set("file", new File([blob], "meme.jpg", { type: "image/jpeg" }));
       const result = await createMeme(data);
       if (!result.ok) return setError(result.error);
       router.push(`/memes/${result.id}`);
     });
-  }, [top, bottom, photoId, residentLabel, router, m]);
+  }, [top, bottom, sourceKind, sourceFileId, residentLabel, router, m]);
 
   const choice = <T extends string>(label: string, value: T, set: (v: T) => void, options: [T, string][]) => (
     <fieldset className="flex flex-col gap-1">

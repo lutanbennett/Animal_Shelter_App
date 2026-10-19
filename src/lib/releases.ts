@@ -77,6 +77,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 export const unreleased: ReleaseNote[] = [
   { text: "On a phone, the main buttons now have words beside their icons: the buttons above the residents list, Edit and Record death on a resident, the actions on each hub card, Edit, Pause and Delete on recurring jobs, and Up and Down on Shelter Friends.", roles: ["admin", "management", "second_in_command"] },
   {
+    text: "The meme maker can now use photos from more places than residents. Tap Make a meme in the library and pick a tab: Residents, Outreach, Maintenance jobs, Projects, Website, or Upload a photo from your phone (used only for that meme). You see a tab only if you can already open that page, and medical photos are never offered. There is also a Make a meme button under each photo on an outreach note and on a maintenance job. The library now records where each meme came from, shows it on the meme's page, and has a Photo from filter.",
+    roles: ["admin"],
+  },
+  {
     text: "Home screen tiles are now chosen in Settings. Open Who does what, pick a role, and the new Home screen section lists that role's tiles in order: move them up or down, remove one, or add any page. If the role can't open the page yet, it says so and offers to give them the one permission it needs, for example giving the 2IC Enclosures and adding the tile in one tap. A tile whose permission is later taken away stays in the list greyed out, with the reason, and is hidden on the home. Only an Admin can choose tiles, for every role: no role edits its own, Management's included. The left-hand menu is unchanged.",
     roles: ["admin"],
   },

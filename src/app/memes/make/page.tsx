@@ -3,52 +3,124 @@ import { BackLink } from "@/components/BackLink";
 import { getT } from "@/lib/i18n/get-t";
 import { requirePermission } from "@/lib/permissions/require";
 import { driveImageUrl, isMedicalFolder } from "@/lib/google/drive-client";
-import { checkMakerSource, type MakerSourceRow } from "@/lib/memes/maker-source";
+import { resolveSource } from "@/lib/memes/source-server";
+import { isSourceKind, sourcesFor, type SourceKind } from "@/lib/memes/sources";
 import { MemeMaker } from "./MemeMaker";
+import { UploadPicker } from "./UploadPicker";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const FILE_ID = /^[A-Za-z0-9_-]{10,100}$/;
+const IMAGE_NAME = /\.(jpe?g|png|webp)$/i;
+const LIST_LIMIT = 90;
+
+type Thumb = { drive_file_id: string; file_name: string | null };
 
 /**
- * The meme maker (stage 2 of the library). `?photo=<drive file id>` opens it on that photo; `?resident=<id>` lists that
- * resident's photos to choose from; with neither, the residents. Only non-Medical, approved photos are offered here,
- * and the save (createMeme with sourceFileId) refuses a Medical one again on the server, so this page is a convenience
- * and not the rule. docs/decisions/2026-10-19-meme-maker.md.
+ * The meme maker (stage 2 of the library, widened to any photo). `?source=` picks a tab (residents by default);
+ * `?photo=<drive file id>` opens the maker on that photo; `?resident=<id>` lists one resident's photos. A tab is
+ * offered only to a login that may open the page those photos live on (sourcesFor), and the photo is checked again
+ * here and at the save (resolveSource), so the page is a convenience and not the rule. Medical photos are never a
+ * source. docs/decisions/2026-10-19-meme-maker.md, 2026-10-19-meme-sources-app.md.
  */
 export default async function MakeMemePage(props: PageProps<"/memes/make">) {
-  const { photo, resident } = await props.searchParams;
+  const { photo, resident, source: sourceParam } = await props.searchParams;
   const photoId = typeof photo === "string" ? photo : "";
   const residentId = typeof resident === "string" ? resident : "";
-  const { supabase } = await requirePermission("social.library");
+  const { supabase, perms } = await requirePermission("social.library");
   const { t } = await getT();
   const m = t.memes.maker;
 
-  const shell = (body: React.ReactNode) => (
+  const offered = sourcesFor(perms);
+  const kind: SourceKind = isSourceKind(sourceParam) && offered.includes(sourceParam) ? sourceParam : "resident";
+
+  const shell = (body: React.ReactNode, showTabs = true) => (
     <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 md:p-6">
       <BackLink href="/memes">{m.back}</BackLink>
       <h1 className="text-2xl font-semibold text-foreground">{m.title}</h1>
+      {showTabs && (
+        <nav aria-label={m.sourcesLabel} className="flex flex-wrap gap-2">
+          {offered.map((k) => (
+            <Link
+              key={k}
+              href={k === "resident" ? "/memes/make" : `/memes/make?source=${k}`}
+              aria-current={k === kind ? "page" : undefined}
+              className={`inline-flex min-h-11 items-center rounded border px-3 py-2 text-sm font-medium ${
+                k === kind ? "border-primary bg-primary text-primary-foreground" : "border-border text-foreground hover:bg-surface-hover"
+              }`}
+            >
+              {m.sources[k]}
+            </Link>
+          ))}
+        </nav>
+      )}
       {body}
     </main>
   );
 
   if (photoId) {
-    const { data: rows } = FILE_ID.test(photoId)
-      ? await supabase
-          .from("attachments")
-          .select("owner_id, sub_folder, approved_at")
-          .eq("owner_type", "resident")
-          .eq("drive_file_id", photoId)
-          .returns<MakerSourceRow[]>()
-      : { data: null };
-    const source = checkMakerSource(rows);
-    if (!source.ok) return shell(<p role="alert" className="text-base text-danger">{m.refused}</p>);
-    const { data: names } = await supabase
-      .from("resident_list_view")
-      .select("name")
-      .in("resident_id", source.residentIds)
-      .returns<{ name: string }[]>();
-    const label = (names ?? []).map((n) => n.name).join(", ");
-    return shell(<MemeMaker photoId={photoId} residentLabel={label} />);
+    if (kind === "upload" || !FILE_ID.test(photoId)) return shell(<p role="alert" className="text-base text-danger">{m.refused}</p>, false);
+    const source = await resolveSource(supabase, perms, kind, photoId);
+    if (!source.ok) return shell(<p role="alert" className="text-base text-danger">{m.refused}</p>, false);
+    let label = "";
+    if (source.residentIds.length > 0) {
+      const { data: names } = await supabase
+        .from("resident_list_view")
+        .select("name")
+        .in("resident_id", source.residentIds)
+        .returns<{ name: string }[]>();
+      label = (names ?? []).map((n) => n.name).join(", ");
+    }
+    return shell(
+      <MemeMaker photoSrc={driveImageUrl(photoId, 1200)} sourceKind={kind} sourceFileId={photoId} residentLabel={label} />,
+      false,
+    );
+  }
+
+  const grid = (photos: Thumb[]) => {
+    const usable = photos.filter((p) => !p.file_name || IMAGE_NAME.test(p.file_name));
+    if (usable.length === 0) return <p className="text-base text-muted">{m.noSourcePhotos}</p>;
+    return (
+      <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
+        {usable.map((p) => (
+          <li key={p.drive_file_id}>
+            <Link href={`/memes/make?source=${kind}&photo=${p.drive_file_id}`} className="block overflow-hidden rounded border border-border">
+              <img src={driveImageUrl(p.drive_file_id, 400)} alt={p.file_name ?? ""} className="aspect-square w-full object-cover" />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
+  if (kind === "upload") return shell(<UploadPicker />);
+
+  if (kind === "outing") {
+    const { data } = await supabase
+      .from("community_outing_photos")
+      .select("drive_file_id, file_name")
+      .order("uploaded_at", { ascending: false })
+      .limit(LIST_LIMIT)
+      .returns<Thumb[]>();
+    return shell(grid(data ?? []));
+  }
+  if (kind === "maintenance" || kind === "project") {
+    const { data } = await supabase
+      .from("attachments")
+      .select("drive_file_id, file_name, sub_folder")
+      .eq("owner_type", kind)
+      .order("uploaded_at", { ascending: false })
+      .limit(LIST_LIMIT)
+      .returns<(Thumb & { sub_folder: string | null })[]>();
+    return shell(grid((data ?? []).filter((p) => !isMedicalFolder(p.sub_folder))));
+  }
+  if (kind === "website") {
+    const { data } = await supabase
+      .from("site_content_photos")
+      .select("drive_file_id")
+      .order("sort_order")
+      .limit(LIST_LIMIT)
+      .returns<{ drive_file_id: string }[]>();
+    return shell(grid((data ?? []).map((p) => ({ ...p, file_name: null }))));
   }
 
   if (residentId && UUID.test(residentId)) {
@@ -63,25 +135,11 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
         .returns<{ drive_file_id: string; file_name: string | null; sub_folder: string | null }[]>(),
       supabase.from("resident_list_view").select("name").eq("resident_id", residentId).returns<{ name: string }[]>(),
     ]);
-    const usable = (photos ?? []).filter(
-      (p) => !isMedicalFolder(p.sub_folder) && /\.(jpe?g|png|webp)$/i.test(p.file_name ?? ""),
-    );
+    const usable = (photos ?? []).filter((p) => !isMedicalFolder(p.sub_folder) && IMAGE_NAME.test(p.file_name ?? ""));
     return shell(
       <>
         <h2 className="text-lg font-semibold text-foreground">{m.pickPhoto(who?.[0]?.name ?? "")}</h2>
-        {usable.length === 0 ? (
-          <p className="text-base text-muted">{m.noPhotos}</p>
-        ) : (
-          <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
-            {usable.map((p) => (
-              <li key={p.drive_file_id}>
-                <Link href={`/memes/make?photo=${p.drive_file_id}`} className="block overflow-hidden rounded border border-border">
-                  <img src={driveImageUrl(p.drive_file_id, 400)} alt={p.file_name ?? ""} className="aspect-square w-full object-cover" />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+        {usable.length === 0 ? <p className="text-base text-muted">{m.noPhotos}</p> : grid(usable)}
       </>,
     );
   }
