@@ -28,3 +28,16 @@ test("time", () => {
   assert.equal(normalizeTime("905"), "09:05");
   assert.equal(normalizeTime("24:00"), "");
 });
+test("an impossible day is named as such, a bad format is not", async () => {
+  const { badDateMessage } = await import("./date-input.ts");
+  assert.match(badDateMessage("31/04/2026"), /no day 31/);
+  assert.match(badDateMessage("29/02/2027"), /1 to 28/);
+  assert.match(badDateMessage("10/13/2026"), /not a month/);
+  assert.match(badDateMessage("abc"), /DD\/MM\/YYYY/);
+});
+test("test logins are recognised by the reserved .test domain only", async () => {
+  const { isTestLogin } = await import("./auth/test-login.ts");
+  assert.equal(isTestLogin({ email: "a@example.test" }), true);
+  assert.equal(isTestLogin({ email: "a@gmail.com" }), false);
+  assert.equal(isTestLogin({ email: null }), false);
+});

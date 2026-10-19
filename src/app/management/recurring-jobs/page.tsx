@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { addDaysIso, todayIso } from "@/lib/format";
 import { appUserLabel, loadAppUsersById, type AppUser } from "@/lib/auth/app-users";
+import { isTestLogin } from "@/lib/auth/test-login";
 import {
   loadJobDates,
   loadOpenOccurrences,
@@ -87,7 +88,7 @@ export default async function RecurringJobsPage() {
   // May each role in play do the page a job links to? role_can() (0133), asked in keys because a
   // configured role's enum value is a borrowed one (0146): the people who can be picked, plus anyone
   // already on a job or its cover, so a stranded one is judged by their own role too.
-  const people0 = await withHeldRoles(peopleResult.data ?? []);
+  const people0 = await withHeldRoles((peopleResult.data ?? []).filter((u) => !isTestLogin(u)));
   const roleKeys = [
     ...new Set([
       ...people0.flatMap((user) => user.role_keys ?? [user.role_key]),
