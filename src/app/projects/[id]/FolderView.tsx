@@ -90,6 +90,8 @@ export function FolderView({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [driveWarning, setDriveWarning] = useState<string | null>(null);
+  // The switch's answer, shown at once; the server's copy catches up on refresh.
+  const [publicOverride, setPublicOverride] = useState<{ from: boolean; to: boolean } | null>(null);
   const [mode, setMode] = useState<"view" | "rename" | "info">("view");
   const [moveOpen, setMoveOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -102,6 +104,8 @@ export function FolderView({
   const summaryTranslation =
     translations.find((row) => row.table_name === "project_folders" && row.row_id === folder.id) ?? null;
   const summary = localizedFromRow(locale, folder.summary, summaryTranslation) || null;
+  const isPublic =
+    publicOverride && publicOverride.from === folder.is_public ? publicOverride.to : folder.is_public;
   const isEmpty = folder.child_count === 0 && folder.photo_count === 0;
 
   function run(action: () => Promise<ActionResult<{ driveWarning?: string | null; folderId?: string }>>, after?: (folderId?: string) => void) {
@@ -110,6 +114,7 @@ export function FolderView({
     startTransition(async () => {
       const result = await action();
       if (!result.ok) {
+        setPublicOverride(null);
         setError(result.error);
         return;
       }
@@ -199,13 +204,13 @@ export function FolderView({
                   <MapPin aria-hidden="true" className="h-4 w-4" />
                   {folder.location ?? info.noLocation}
                 </span>
-                <span className={`flex items-center gap-1 ${folder.is_public ? "text-success" : ""}`}>
-                  {folder.is_public ? (
+                <span className={`flex items-center gap-1 ${isPublic ? "text-success" : ""}`}>
+                  {isPublic ? (
                     <Globe aria-hidden="true" className="h-4 w-4" />
                   ) : (
                     <Lock aria-hidden="true" className="h-4 w-4" />
                   )}
-                  {folder.is_public ? info.isPublic : info.isPrivate}
+                  {isPublic ? info.isPublic : info.isPrivate}
                 </span>
               </p>
             )}
@@ -320,9 +325,13 @@ export function FolderView({
                     <label className="flex items-center gap-2 border-t border-border pt-3 text-sm text-foreground">
                       <input
                         type="checkbox"
-                        checked={folder.is_public}
+                        checked={isPublic}
                         disabled={isPending}
-                        onChange={(e) => run(() => setProjectFolderPublic(folder.id, e.target.checked))}
+                        onChange={(e) => {
+                          const to = e.target.checked;
+                          setPublicOverride({ from: folder.is_public, to });
+                          run(() => setProjectFolderPublic(folder.id, to));
+                        }}
                         className="h-4 w-4 accent-primary"
                       />
                       {info.showOnWebsite}

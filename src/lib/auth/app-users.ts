@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isTestLogin } from "./test-login";
 import { ASSIGNABLE_KEY_FILTER } from "@/lib/recurring-jobs/eligibility";
 
 /** A row of the `app_users` view (0055, 0063): a login that holds a role. */
@@ -25,7 +26,8 @@ export function appUserLabel(user: Pick<AppUser, "email" | "display_name"> | nul
 /**
  * Logins a maintenance job can be assigned to: everyone who actions
  * jobs. Doctors are left out — they don't fix fences — and so is anyone
- * without a role or who has been archived. Sorted by the name that will
+ * without a role, who has been archived, or who is a test login
+ * (test-login.ts). Sorted by the name that will
  * be shown.
  */
 export async function loadAssignableUsers(supabase: SupabaseClient) {
@@ -35,7 +37,7 @@ export async function loadAssignableUsers(supabase: SupabaseClient) {
     .not("role_key", "in", ASSIGNABLE_KEY_FILTER)
     .is("archived_at", null)
     .returns<AppUser[]>();
-  const users = (data ?? []).sort((a, b) => appUserLabel(a).localeCompare(appUserLabel(b)));
+  const users = (data ?? []).filter((u) => !isTestLogin(u)).sort((a, b) => appUserLabel(a).localeCompare(appUserLabel(b)));
   return { users, error: error?.message ?? null };
 }
 

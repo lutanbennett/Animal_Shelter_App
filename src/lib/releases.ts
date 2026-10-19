@@ -77,6 +77,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 export const unreleased: ReleaseNote[] = [
   "Diets: a diet that looks like a typo (such as 22 meals a day, or far more food than the biggest default) is now held with a message and a tick box, so a slipped finger can no longer quietly inflate the food forecast, purchasing and cashflow. Clinic visits: a past time is no longer switched to Completed for you; the form tells you to pick Completed if the visit happened, and otherwise it shows as overdue. The medication list now opens on the by-resident list; the stock-room pick list is one tap away.",
   {
+    text: "Forms on a phone: if you tap Save (Return from hospital, Add zone, Move and the others) before the page has finished loading, the form now waits and saves once it is ready, instead of saving nothing. The date box now says when a day does not exist (31/04/2026) rather than blaming the format. The project folder shows Not on the website / On the website as soon as you flip the switch. The people ticked for maintenance and recurring jobs no longer include test logins.",
+    roles: ["admin", "management", "second_in_command", "head_of_maintenance", "head_of_medical", "volunteer"],
+  },
+  {
     text: "Bills: tapping Record a new delivery from this bill now carries the cost you typed into the delivery, and the bill is filed on the delivery when you save (before, the cost was dropped and the bill stayed waiting). Likely matches now always include a recent delivery when there is one. Starting an appeal lets you search for the animal, and no longer lists animals who have died, been adopted or are on outreach. Shelter Friends shows the word Publish or Unpublish beside its icon.",
     roles: ["admin", "management"],
   },

@@ -39,3 +39,19 @@ export function normalizeTime(text: string): string {
   if (h > 23 || min > 59) return "";
   return `${String(h).padStart(2, "0")}:${m[2]}`;
 }
+
+/**
+ * Why `text` is not a date: the day does not exist (31/04/2026), or the
+ * format is wrong. Only called for text `dmyToIso` refused.
+ */
+export function badDateMessage(text: string): string {
+  const m = /^\s*(\d{1,2})[/.\-\s](\d{1,2})[/.\-\s](\d{4})\s*$/.exec(text);
+  if (m) {
+    const day = Number(m[1]);
+    const month = Number(m[2]);
+    if (month < 1 || month > 12) return `${m[2]} is not a month. Months run from 1 to 12.`;
+    const last = new Date(Date.UTC(Number(m[3]), month, 0)).getUTCDate();
+    if (day < 1 || day > last) return `That month has no day ${day}. Pick a day from 1 to ${last}.`;
+  }
+  return "Enter a date as DD/MM/YYYY, for example 13/10/2026.";
+}

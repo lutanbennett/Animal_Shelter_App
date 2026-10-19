@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { CalendarDays } from "lucide-react";
-import { autoSlash, dmyToIso, isoToDmy, normalizeTime } from "@/lib/date-input";
+import { autoSlash, badDateMessage, dmyToIso, isoToDmy, normalizeTime } from "@/lib/date-input";
 
 // A browser draws <input type="date"> in ITS OWN language, so a Chrome set to
 // English (United States) shows mm/dd/yyyy whatever the page says. These two
@@ -21,7 +21,7 @@ type Props = InputProps & {
   onChange?: (e: ChangeLike) => void;
 };
 
-const BAD_DATE = "Enter a date as DD/MM/YYYY, for example 13/10/2026.";
+
 
 function outOfRange(iso: string, min?: string | number, max?: string | number) {
   if (min && iso < String(min).slice(0, 10)) return `Date must be ${isoToDmy(String(min).slice(0, 10))} or later.`;
@@ -44,7 +44,7 @@ export function DateInput({ value, defaultValue, onChange, className, name, min,
   }
 
   useEffect(() => {
-    const msg = text === "" ? "" : iso === "" ? BAD_DATE : outOfRange(iso, min, max);
+    const msg = text === "" ? "" : iso === "" ? badDateMessage(text) : outOfRange(iso, min, max);
     visible.current?.setCustomValidity(msg);
   }, [text, iso, min, max]);
 

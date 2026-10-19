@@ -11,6 +11,8 @@ import { THEME_METADATA_KEY, parseTheme, themeAttribute } from "@/lib/theme/them
 import { ConfirmProvider } from "@/components/ConfirmProvider";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
+import { HydrationMark } from "./HydrationMark";
+import { EARLY_SUBMIT_GUARD } from "@/lib/early-submit-guard";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -69,6 +71,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} ${notoSansThai.variable} ${fraunces.variable} ${sourceSans.variable} h-full antialiased [--app-header-h:4.25rem] md:scroll-pt-[var(--app-header-h)]`}
     >
       <body className="min-h-full flex flex-col">
+        <script dangerouslySetInnerHTML={{ __html: EARLY_SUBMIT_GUARD }} />
+        <HydrationMark />
         <I18nProvider locale={locale}>
           <ConfirmProvider>
           <OfflineBanner />
