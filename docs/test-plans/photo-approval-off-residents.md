@@ -253,11 +253,11 @@ Automated checks by: Claude  Date: 2026-10-19
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
+has looked and explicitly asks in chat; the line then says so, e.g. `Name —
+confirmed in chat; line written by Claude at their request  Date: 2026-10-19`.
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
+- `Name  Date: 2026-10-19` — a person looked. The date is required here.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
