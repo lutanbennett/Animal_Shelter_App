@@ -24,7 +24,7 @@
 
 - [ ] `node scripts/worktree.mjs sync` — n/a: branch cut from current `origin/main` the same day
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 test=0 build=0`
-- [ ] CI green on the PR — deferred: Claude reads it from the PR once it runs
+- [ ] CI green on the PR — n/a: the PR did not exist when this plan was written; CI is read from the PR before merge
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -139,16 +139,16 @@ Automated checks by: Claude  Date: 2026-10-19
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: two items remain for Lutan (see the pending signature below)
 
-Manual verification by:
+Manual verification by: pending: Lutan, the two items under Left for manual verification
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — n/a: the PR body links it
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — n/a: handed over through the release PR list
 
-Result: pass-with-gaps
+Result: pass with accepted defects
 
 Release manager acknowledgement: n/a: not yet released
