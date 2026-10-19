@@ -226,7 +226,7 @@ const PINNED = {
     decides: ["medical.visits", "resident.microchip"],
   },
   "/outreach/new": { guards: ['requirePermission("community.outings")'], decides: [] },
-  "/outreach/[id]/edit": { guards: ['requirePermission("community.outings")'], decides: [] },
+  "/outreach/[id]/edit": { guards: ['requirePermission("community.outings")'], decides: ["social.library"] },
   "/management/donations/new": { guards: ['requirePermission("donation.receipt")'], decides: [] },
   "/management/contacts/new": { guards: ['requirePermission("contacts.directory")'], decides: [] },
   "/management/shelter-friends/new": { guards: ['requirePermission("friends.manage")'], decides: [] },
@@ -237,7 +237,7 @@ const PINNED = {
   "/maintenance/new": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.jobs"] },
   "/maintenance/[id]/edit": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.jobs"] },
   // Detail pages: they open at the list's own level, and every control that writes asks can().
-  "/maintenance/[id]": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.bills", "maintenance.delete", "maintenance.jobs", "maintenance.progress", "translations.manage"] },
+  "/maintenance/[id]": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.bills", "maintenance.delete", "maintenance.jobs", "maintenance.progress", "social.library", "translations.manage"] },
   "/clinics/[id]": { guards: ['requirePermission("clinics.list", "read")'], decides: ["clinics.list", "medical.visits:read", "visit.book"] },
   "/contacts/[id]": { guards: ['requirePermission("contacts.browse")'], decides: ["contacts.directory", "friends.manage"] },
   "/enclosures/[id]": { guards: ['requirePermission("facility.enclosures", "read")'], decides: ["facility.enclosures", "maintenance.jobs"] },
