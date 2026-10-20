@@ -18,15 +18,26 @@
  * fault, and a check that failed on it would be wrong 133 times.
  *
  *   node scripts/check-backlog-sections.mjs [path-to-backlog.md]
+ *   node scripts/check-backlog-sections.mjs --staged   (the index copy; the pre-commit hook runs this)
  */
 import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 // An explicit path is for exercising the failure modes (see the test plan);
 // `npm run lint` calls it with none.
-const file = process.argv[2] ?? fileURLToPath(new URL("../docs/backlog.md", import.meta.url));
-const lines = readFileSync(file, "utf8").split(/\r?\n/);
+// The script lives in the checkout it checks, so the default path is that
+// worktree's own file. --staged reads the index instead, so an unstaged edit
+// cannot make a bad commit look good (or a good one bad).
+const staged = process.argv[2] === "--staged";
+const file = staged
+  ? "docs/backlog.md (staged)"
+  : (process.argv[2] ?? fileURLToPath(new URL("../docs/backlog.md", import.meta.url)));
+const text = staged
+  ? execFileSync("git", ["show", ":docs/backlog.md"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
+  : readFileSync(file, "utf8");
+const lines = text.split(/\r?\n/);
 
 const problems = [];
 
@@ -87,13 +98,13 @@ lines.forEach((l, i) => {
 });
 
 if (problems.length) {
-  console.error(`check-backlog-sections: ${problems.length} problem(s) in ${relative(process.cwd(), file) || file}\n`);
+  console.error(`check-backlog-sections: ${problems.length} problem(s) in ${staged ? file : relative(process.cwd(), file) || file}\n`);
   for (const p of problems) console.error(`  ${p}`);
   console.error(
     "\nThe convention: open items are the `- [ ]` lines above `## Completed`. " +
       "Anything below it is invisible to every session and to /plan-day.",
   );
-  process.exit(1);
+  process.exit(staged ? 3 : 1); // 3 = refusal, as check-migration-numbers: the hook tells it from a crash
 }
 
 const open = lines.slice(0, lines.findIndex((l) => /^## Completed\s*$/.test(l))).filter((l) => /^- \[ \] /.test(l)).length;

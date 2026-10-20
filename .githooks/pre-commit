@@ -13,14 +13,35 @@
 # node starts — node alone takes about a second on this machine, and every
 # commit in every stream would pay it. The script repeats the same test, so
 # this line only decides how fast the answer comes, never what it is.
-git diff --cached --quiet --no-renames --diff-filter=A -- supabase/migrations/ && exit 0
-command -v node >/dev/null 2>&1 || exit 0
-[ -f scripts/check-migration-numbers.mjs ] || exit 0
-node scripts/check-migration-numbers.mjs --staged
-rc=$?
-# 3 is the script's refusal. Anything else non-zero is node failing before it
-# could give a verdict (a syntax error, a broken import), which must not wedge
-# the commit.
-[ "$rc" -eq 3 ] && exit 1
-[ "$rc" -ne 0 ] && echo "pre-commit: migration numbering check crashed (exit $rc) — commit allowed; CI checks the PR." >&2
+check_migrations() {
+  git diff --cached --quiet --no-renames --diff-filter=A -- supabase/migrations/ && return 0
+  command -v node >/dev/null 2>&1 || return 0
+  [ -f scripts/check-migration-numbers.mjs ] || return 0
+  node scripts/check-migration-numbers.mjs --staged
+  rc=$?
+  # 3 is the script's refusal. Anything else non-zero is node failing before it
+  # could give a verdict (a syntax error, a broken import), which must not wedge
+  # the commit.
+  [ "$rc" -eq 3 ] && return 1
+  [ "$rc" -ne 0 ] && echo "pre-commit: migration numbering check crashed (exit $rc) — commit allowed; CI checks the PR." >&2
+  return 0
+}
+
+# Same shape for the backlog: an open item filed below `## Completed` is invisible
+# to every session, and on 2026-10-19 one reached main through the backlog branch
+# (no PR, no CI) and reddened every open PR's lint. Fast path again: nothing
+# touching docs/backlog.md stops here before node starts. Fails open the same way.
+check_backlog() {
+  git diff --cached --quiet -- docs/backlog.md && return 0
+  command -v node >/dev/null 2>&1 || return 0
+  [ -f scripts/check-backlog-sections.mjs ] || return 0
+  node scripts/check-backlog-sections.mjs --staged
+  rc=$?
+  [ "$rc" -eq 3 ] && return 1
+  [ "$rc" -ne 0 ] && echo "pre-commit: backlog section check crashed (exit $rc) — commit allowed; CI checks the PR." >&2
+  return 0
+}
+
+check_migrations || exit 1
+check_backlog || exit 1
 exit 0

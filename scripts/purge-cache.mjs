@@ -20,6 +20,9 @@
 //
 // WHAT IT NEEDS. In `.env.deploy.<env>` (gitignored), two values:
 //   CLOUDFLARE_ZONE_ID      the zone for lannacare.org
+//   CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS  optional, production only: the zone for
+//                           lannacareforanimals.org. When set it is purged and checked too,
+//                           so the domain cutover needs no code change.
 //   CLOUDFLARE_PURGE_TOKEN  an API token scoped to Zone -> Cache Purge, that zone only
 // Nothing else in the repo reads CLOUDFLARE_PURGE_TOKEN, and it is never printed.
 import { join } from "node:path";
@@ -43,6 +46,12 @@ if (!["production", "uat", "test"].includes(envName)) {
   const token = env.CLOUDFLARE_PURGE_TOKEN;
   const host = envName === "test" ? "test.lannacare.org" : "lannacare.org";
 
+  // Production also serves lannacareforanimals.org once the domain cutover happens;
+  // its zone id is optional so nothing changes until Lutan adds it.
+  const extraZone = envName === "production" ? env.CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS : undefined;
+  const targets = [{ zone, host }];
+  if (extraZone) targets.push({ zone: extraZone, host: "lannacareforanimals.org" });
+
   // Refuse with instructions rather than a stack trace: whoever hits this is
   // mid-release and needs to know exactly what to add and with what scope.
   const missing = [];
@@ -56,7 +65,7 @@ if (!["production", "uat", "test"].includes(envName)) {
     console.error("  CLOUDFLARE_PURGE_TOKEN, with CLOUDFLARE_ZONE_ID beside it.");
     console.error("  Until then, purge by hand: Cloudflare -> Caching -> Configuration -> Purge Everything.");
     process.exitCode = 2;
-  } else if (dryRun) {
+  } else for (const { zone, host } of targets) if (dryRun) {
     console.log(`purge-cache: would purge everything for ${host} (zone ${zone.slice(0, 8)}…). Dry run, nothing sent.`);
   } else {
     const res = await fetch(`https://api.cloudflare.com/client/v4/zones/${zone}/purge_cache`, {
