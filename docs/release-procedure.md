@@ -71,6 +71,41 @@ sat waiting on a handover that did not need to be sequential.
 
 ---
 
+## The paperwork has a time budget too
+
+Lutan, 2026-10-20, after `0.38.0`: *"we started the release hours ago and it was
+released at least an hour ago but all the paperwork seems to be taking a huge
+amount of time to complete which is causing these conflicts."* He was right, and
+the conflicts were a direct consequence: that release's record PR was blocked
+twice by a check it could not affect, because a documents PR took long enough for
+three feature streams to move `main` underneath it.
+`docs/decisions/2026-10-20-release-paperwork-speedup.md` has the measurements.
+
+**The release is finished when it is deployed and verified. Everything after that
+is bookkeeping, and bookkeeping is allowed to be short.** Five rules, all agreed
+2026-10-20:
+
+1. **A documents-only PR skips the heavy CI jobs.** `scripts/check-docs-only.mjs` decides, and `ci.yml` gates everything except `test-plan` on it. Nothing to do — but **do not "fix" a documents PR by touching code to make a check run**, and if you find yourself waiting on `check` or `public-views` for a diff of markdown, something has gone wrong with the gate rather than with the PR.
+2. **One worktree and one PR per release.** The cut gets a worktree; **the record and the handover go in that same worktree after the cut's PR merges**, not a second one. A fresh worktree costs a four-minute `npm ci` to hold two markdown files. If the cut's worktree is already gone, reuse any free leftover before making a new one.
+3. **The record and the handover are one PR.** They are written at the same moment, from the same facts, by the same person. `0.37.2` used two PRs (#760, #761) and paid two CI cycles for it.
+4. **The handover is a DELTA, and it has a ceiling.** It says what changed since the last edition, what is open, and where things stand — nothing else. **Aim for about 100 lines and treat 150 as the limit.** Anything durable gets **promoted into this file once** rather than recopied every release, and anything the record already says is cited, not repeated. `0.38.0`'s first draft ran to 300 lines, most of it re-deriving this runbook; roughly 45 minutes of the hour after deployment went on writing documents that largely restated each other.
+5. **Draft the record while the deploys run.** There are ~25 minutes of unavoidable waiting in every release — two Worker deploys at nine or ten minutes and two Pi builds at five. The record's header, what-shipped, why-major and before-the-deploy sections are all knowable before the first deploy finishes. Write them then, and fill in results afterwards. Do not poll a log you are already being notified about.
+
+**What none of this touches:** the test plans, the mechanical cut verification, the
+smoke test, and the two signatures. Those are the checks, and on `0.38.0` they
+each caught something real — a release note that would otherwise have shipped
+invisibly, and a public-view narrowing that had to be read in code to be known
+safe. **Shorten the prose, never the checking.**
+
+**And when the paperwork is overtaken, say so in it.** Twice on `0.38.0` an item
+the record called open was closed by another stream before the record merged, and
+one inference written into the handover ("the byte gap grew, so it is less likely
+a rounding artefact") was simply wrong — two data points turned into a trend.
+A record that corrects itself is worth more than one that reads as though nothing
+moved.
+
+---
+
 ## 0. Read the last release's record first
 
 **Before anything else, read `docs/releases/<most recent>.md` end to end.** It is
