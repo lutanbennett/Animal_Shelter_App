@@ -11,6 +11,7 @@ import {
   FolderInput,
   Laugh,
   Megaphone,
+  Play,
   Square,
   SquareCheck,
   SquareCheckBig,
@@ -27,7 +28,7 @@ import { photoFolderLabel } from "@/lib/i18n/enum-labels";
 import type { PhotoProvenance } from "@/lib/adoption-updates/options";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { Locale } from "@/lib/i18n/locales";
-import { PHOTO_CATEGORIES, driveImageUrl, isMedicalFolder, type PhotoCategory } from "@/lib/google/drive-client";
+import { PHOTO_CATEGORIES, driveImageUrl, videoUrl, isMedicalFolder, type PhotoCategory } from "@/lib/google/drive-client";
 import {
   deletePhoto,
   markPhotosPosted,
@@ -54,6 +55,9 @@ export type PhotoRow = {
   date_taken: string | null;
   /** NULL = waiting for Management to approve it (0217); the website shows only approved photos. */
   approved_at?: string | null;
+  /** 'video' for a clip filed in the same folders (0229); absent or 'photo' for everything else. */
+  media_kind?: "photo" | "video" | null;
+  duration_ms?: number | null;
   /**
    * Set when an adopter sent the photo (attachments.adoption_update_id,
    * 0097): who, when and how. Read with RESIDENT_PHOTO_SELECT so every list
@@ -61,6 +65,15 @@ export type PhotoRow = {
    */
   adoption_update?: PhotoProvenance | null;
 };
+
+/** 1:05 or 1:02:03 — the badge on a video tile. */
+function formatDuration(ms: number): string {
+  const total = Math.round(ms / 1000);
+  const h = Math.floor(total / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const sec = String(total % 60).padStart(2, "0");
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${sec}` : `${m}:${sec}`;
+}
 
 type PhotoFilter = "all" | "shelter" | "adopters";
 type PostedFilter = "all" | "notPosted" | "posted";
@@ -238,6 +251,7 @@ export function PhotoGallery({
   const [showAll, setShowAll] = useState(false);
   const [filter, setFilter] = useState<PhotoFilter>("all");
   const [postedFilter, setPostedFilter] = useState<PostedFilter>("all");
+  const [mediaFilter, setMediaFilter] = useState<"all" | "photo" | "video">("all");
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [moveTarget, setMoveTarget] = useState<PhotoCategory | "">("");
   const [marking, setMarking] = useState(false);
@@ -345,10 +359,13 @@ export function PhotoGallery({
   // tell apart — both kinds, so never inside one update's own gallery.
   const adopterCount = photos.filter((p) => p.adoption_update).length;
   const showFilter = adopterCount > 0 && adopterCount < photos.length;
+  // Photos / Videos / All (0229): the chips appear once the resident has a video, since until then there is nothing to filter.
+  const videoCount = photos.filter((p) => p.media_kind === "video").length;
+  const byMedia = mediaFilter === "all" ? photos : photos.filter((p) => (mediaFilter === "video") === (p.media_kind === "video"));
   const byKind =
     filter === "all"
-      ? photos
-      : photos.filter((p) => (filter === "adopters") === Boolean(p.adoption_update));
+      ? byMedia
+      : byMedia.filter((p) => (filter === "adopters") === Boolean(p.adoption_update));
   const filtered =
     postedFilter === "all" ? byKind : byKind.filter((p) => (postedFilter === "posted") === isPosted(p));
   const visiblePhotos = showAll ? filtered : filtered.slice(0, INITIAL_TILE_COUNT);
@@ -369,6 +386,27 @@ export function PhotoGallery({
 
   return (
     <>
+      {videoCount > 0 && (
+        <div role="group" aria-label={t.photos.videos.filter.label} className="mb-3 flex flex-wrap gap-2">
+          {(
+            [
+              ["photo", t.photos.videos.filter.photos(photos.length - videoCount)],
+              ["video", t.photos.videos.filter.videos(videoCount)],
+              ["all", t.photos.videos.filter.all(photos.length)],
+            ] as const
+          ).map(([key, label]) => (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={mediaFilter === key}
+              onClick={() => setMediaFilter(key)}
+              className={chip(mediaFilter === key)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
       {showFilter && (
         <div role="group" aria-label={t.photos.filter.label} className="mb-3 flex flex-wrap gap-2">
           {(
@@ -479,12 +517,24 @@ export function PhotoGallery({
               }`}
             >
               <img
-                src={driveImageUrl(photo.drive_file_id)}
-                alt={photo.file_name ?? t.photos.residentPhotoAlt}
+                src={driveImageUrl(photo.drive_file_id, photo.media_kind === "video" ? 400 : undefined)}
+                alt={photo.media_kind === "video" ? t.photos.videos.videoAlt(photo.file_name ?? "") : (photo.file_name ?? t.photos.residentPhotoAlt)}
                 loading="lazy"
                 decoding="async"
                 className="h-full w-full object-cover transition group-hover:brightness-90"
               />
+              {photo.media_kind === "video" && (
+                <span aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-black/60 text-white">
+                    <Play className="h-6 w-6" fill="currentColor" />
+                  </span>
+                  {photo.duration_ms ? (
+                    <span className="absolute bottom-7 right-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                      {formatDuration(photo.duration_ms)}
+                    </span>
+                  ) : null}
+                </span>
+              )}
               {selecting && (
                 <span
                   aria-hidden="true"
@@ -598,11 +648,26 @@ export function PhotoGallery({
               </div>
 
               <div className="shrink-0 overflow-hidden rounded bg-background">
-                <img
-                  src={driveImageUrl(openPhoto.drive_file_id)}
-                  alt={openPhoto.file_name ?? t.photos.residentPhotoAlt}
-                  className="mx-auto max-h-[50vh] w-auto object-contain"
-                />
+                {openPhoto.media_kind === "video" ? (
+                  <video
+                    key={openPhoto.drive_file_id}
+                    src={videoUrl(openPhoto.drive_file_id)}
+                    poster={driveImageUrl(openPhoto.drive_file_id, 800)}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    aria-label={t.photos.videos.videoAlt(openPhoto.file_name ?? "")}
+                    className="mx-auto max-h-[50vh] w-auto max-w-full bg-black"
+                  >
+                    {t.photos.videos.cannotPlay}
+                  </video>
+                ) : (
+                  <img
+                    src={driveImageUrl(openPhoto.drive_file_id)}
+                    alt={openPhoto.file_name ?? t.photos.residentPhotoAlt}
+                    className="mx-auto max-h-[50vh] w-auto object-contain"
+                  />
+                )}
               </div>
 
               {openPhoto.approved_at === null && <p className="text-sm font-medium text-foreground">{t.photos.waitingNote}</p>}
@@ -667,7 +732,7 @@ export function PhotoGallery({
                 </section>
               )}
 
-              {canMakeMeme && openPhoto.approved_at !== null && !isMedicalFolder(openPhoto.sub_folder) && !openPhoto.adoption_update && (
+              {canMakeMeme && openPhoto.media_kind !== "video" && openPhoto.approved_at !== null && !isMedicalFolder(openPhoto.sub_folder) && !openPhoto.adoption_update && (
                 <div>
                   <ActionLink href={`/memes/make?photo=${openPhoto.drive_file_id}`} label={t.memes.maker.button} icon={Laugh} iconOnlyOnMobile={false} />
                 </div>
@@ -699,7 +764,7 @@ export function PhotoGallery({
                   {/* A Medical photo is never on the website, so it is not
                       offered as the profile photo (setResidentProfilePhoto
                       refuses it too). One already there stays labelled. */}
-                  {openPhoto.approved_at === null ? (
+                  {openPhoto.media_kind === "video" ? null : openPhoto.approved_at === null ? (
                     <p className="max-w-xs text-right text-xs text-muted">{t.photos.waitingProfile}</p>
                   ) : isMedicalFolder(openPhoto.sub_folder) &&
                   openPhoto.drive_file_id !== profilePhotoDriveFileId ? (

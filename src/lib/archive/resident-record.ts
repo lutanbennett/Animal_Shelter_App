@@ -440,6 +440,7 @@ export async function loadResidentArchiveRecord(
       .select(`owner_type, owner_id, ${RESIDENT_PHOTO_SELECT}`)
       .eq("owner_type", "resident")
       .eq("owner_id", residentId)
+      .eq("media_kind", "photo")
       .order("date_taken", { ascending: true })
       .returns<(AttachmentRow & { adoption_update: PhotoProvenance | null })[]>(),
   ]);

@@ -1116,6 +1116,13 @@ const th: Dictionary = {
           notConnected: "ยังไม่ได้เชื่อมต่อ — การอัปโหลดทั้งหมดจะไม่สำเร็จจนกว่าจะตั้งค่าโทเค็นใหม่",
           failed: "Google Drive ไม่ตอบการตรวจสอบ",
         },
+        driveSpace: {
+          title: "พื้นที่ Drive (รูปและวิดีโอ)",
+          ok: (v: { used: string; limit: string; percent: number }) => `ใช้ไป ${v.used} จาก ${v.limit} (${v.percent}%)`,
+          unlimited: (v: { used: string }) => `ใช้ไป ${v.used} บัญชีนี้ไม่ได้กำหนดขีดจำกัด`,
+          nearlyFull: "ใกล้เต็มแล้ว วิดีโอใช้พื้นที่มากที่สุด ล้างพื้นที่ใน Drive ก่อนที่การอัปโหลดครั้งต่อไปจะไม่สำเร็จ",
+          failed: "Google Drive ไม่รายงานพื้นที่ที่ใช้",
+        },
         calendar: {
           title: "ปฏิทินของศูนย์ (Google Calendar)",
           off: "ยังไม่ได้ตั้งค่า: นัดหมายสัตวแพทย์ยังไม่ถูกส่งเข้าปฏิทิน",
@@ -6005,6 +6012,28 @@ const th: Dictionary = {
     confirmRemove: "ยืนยันการลบ",
     photoFallback: "รูปภาพ",
     residentPhotoAlt: "รูปภาพสัตว์",
+    videos: {
+      dropHere: "ลากรูปหรือวิดีโอมาวางที่นี่ หรือแตะเพื่ออัปโหลด",
+      hint: "วิดีโอ: MP4 หรือ MOV ไม่เกิน 500 MB (ประมาณ 5 นาที) ส่งตรงไปที่ Google Drive และส่งต่อได้ถ้าสัญญาณหลุด",
+      uploadingVideo: (percent: number) => `กำลังอัปโหลด ${percent}%`,
+      retrying: "สัญญาณหลุด กำลังลองอีกครั้ง…",
+      finishing: "กำลังบันทึก…",
+      videoFallback: "วิดีโอ",
+      videoAlt: (name: string) => `วิดีโอ: ${name}`,
+      cannotPlay: "เบราว์เซอร์นี้เล่นวิดีโอไม่ได้",
+      filter: {
+        label: "รูปและวิดีโอ",
+        all: (n: number) => `รูปและวิดีโอ (${n})`,
+        photos: (n: number) => `รูป (${n})`,
+        videos: (n: number) => `วิดีโอ (${n})`,
+      },
+      errors: {
+        wrongType: (name: string) => `${name} ไม่ใช่วิดีโอ MP4 หรือ MOV จึงไม่ได้เพิ่ม`,
+        tooBig: (name: string) => `${name} ใหญ่กว่า 500 MB (ประมาณ 5 นาที) ตัดให้สั้นลงหรือถ่ายคลิปที่สั้นกว่านี้`,
+        incomplete: "วิดีโอส่งมาไม่ครบ ลองอีกครั้ง",
+        failed: "อัปโหลดวิดีโอไม่สำเร็จ ลองอีกครั้ง",
+      },
+    },
     viewer: {
       position: (n: number, total: number) => `${n} จาก ${total}`,
       previous: "รูปก่อนหน้า",

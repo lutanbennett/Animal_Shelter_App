@@ -12,6 +12,8 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { todayIso } from "@/lib/format";
 import { DateInput } from "@/components/DateInput";
+import { uploadResidentVideo } from "@/lib/uploads/resumable-video";
+import { MAX_VIDEO_BYTES, VIDEO_MIME_TYPES } from "@/lib/uploads/limits";
 
 type UploadStatus = "queued" | "uploading" | "done" | "error";
 
@@ -24,6 +26,8 @@ type QueueItem = {
   status: UploadStatus;
   error?: string;
   warning?: string;
+  /** A video whose connection dropped and is being picked up again. */
+  retrying?: boolean;
 };
 
 // Sequential, not parallel: the upload route does a check-then-create when
@@ -130,20 +134,30 @@ export function PhotoUploader({
           const item = items[index];
           index += 1;
           updateItem(item.key, { status: "uploading" });
-          const result = await uploadResidentPhoto(
-            t,
-            residentId,
-            item.file,
-            { dateTaken: item.dateTaken, category: item.category },
-            (progress) => updateItem(item.key, { progress }),
-          );
+          // A video goes to Drive in chunks, not through the app (resumable-video.ts); a photo as before.
+          const result = VIDEO_MIME_TYPES.has(item.file.type)
+            ? await uploadResidentVideo(
+                t,
+                residentId,
+                item.file,
+                { dateTaken: item.dateTaken, category: item.category },
+                (progress) => updateItem(item.key, { progress }),
+                (retrying) => updateItem(item.key, { retrying }),
+              )
+            : await uploadResidentPhoto(
+                t,
+                residentId,
+                item.file,
+                { dateTaken: item.dateTaken, category: item.category },
+                (progress) => updateItem(item.key, { progress }),
+              );
           if (result.error) {
             updateItem(item.key, { status: "error", error: result.error });
           } else {
             updateItem(item.key, {
               status: "done",
               progress: 100,
-              warning: result.archiveWarning,
+              warning: (result as { archiveWarning?: string }).archiveWarning,
             });
             refreshNeeded = true;
           }
@@ -162,20 +176,32 @@ export function PhotoUploader({
   const addFiles = useCallback(
     (fileList: FileList | null) => {
       if (!canUpload || !fileList || fileList.length === 0) return;
-      const files = Array.from(fileList).filter((f) => f.type.startsWith("image/"));
-      const items: QueueItem[] = files.map((file) => ({
-        key: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
-        file,
-        dateTaken,
-        category: category as PhotoCategory,
-        progress: 0,
-        status: "queued",
-      }));
+      const files = Array.from(fileList).filter((f) => f.type.startsWith("image/") || f.type.startsWith("video/"));
+      const items: QueueItem[] = files.map((file) => {
+        const isVideo = file.type.startsWith("video/");
+        // Refused here, before any bytes move, with the same sentences the route would answer.
+        const refusal = !isVideo
+          ? undefined
+          : !VIDEO_MIME_TYPES.has(file.type)
+            ? t.photos.videos.errors.wrongType(file.name)
+            : file.size > MAX_VIDEO_BYTES
+              ? t.photos.videos.errors.tooBig(file.name)
+              : undefined;
+        return {
+          key: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
+          file,
+          dateTaken,
+          category: category as PhotoCategory,
+          progress: 0,
+          status: refusal ? ("error" as const) : ("queued" as const),
+          error: refusal,
+        };
+      });
       if (items.length === 0) return;
       setQueue((prev) => [...prev, ...items]);
-      runQueue(items);
+      runQueue(items.filter((item) => item.status === "queued"));
     },
-    [runQueue, dateTaken, category, canUpload],
+    [runQueue, dateTaken, category, canUpload, t],
   );
 
   function retry(item: QueueItem) {
@@ -262,16 +288,17 @@ export function PhotoUploader({
       >
         <span className="text-sm font-medium text-foreground">
           {canUpload
-            ? t.photos.uploader.dropHere
+            ? t.photos.videos.dropHere
             : t.photos.uploader.selectFolderFirst}
         </span>
         <span className="text-xs text-muted">
           {t.photos.uploader.multipleHint}
         </span>
+        <span className="text-xs text-muted">{t.photos.videos.hint}</span>
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept="image/*,video/mp4,video/quicktime"
           multiple
           hidden
           disabled={!canUpload}
@@ -314,12 +341,21 @@ export function PhotoUploader({
                   </span>
                 )
               ) : (
-                <div className="h-1.5 w-24 overflow-hidden rounded-full bg-surface-hover">
-                  <div
-                    className="h-full bg-primary transition-all"
-                    style={{ width: `${item.progress}%` }}
-                  />
-                </div>
+                <>
+                  {item.retrying ? (
+                    <span className="text-xs text-muted">{t.photos.videos.retrying}</span>
+                  ) : VIDEO_MIME_TYPES.has(item.file.type) ? (
+                    <span className="text-xs text-muted">
+                      {item.progress >= 100 ? t.photos.videos.finishing : t.photos.videos.uploadingVideo(item.progress)}
+                    </span>
+                  ) : null}
+                  <div className="h-1.5 w-24 overflow-hidden rounded-full bg-surface-hover">
+                    <div
+                      className="h-full bg-primary transition-all"
+                      style={{ width: `${item.progress}%` }}
+                    />
+                  </div>
+                </>
               )}
             </li>
           ))}

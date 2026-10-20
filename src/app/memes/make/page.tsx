@@ -109,6 +109,7 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
       .from("attachments")
       .select("drive_file_id, file_name, sub_folder")
       .eq("owner_type", kind)
+      .eq("media_kind", "photo")
       .order("uploaded_at", { ascending: false })
       .limit(LIST_LIMIT)
       .returns<(Thumb & { sub_folder: string | null })[]>();
@@ -132,6 +133,7 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
         .eq("owner_type", "resident")
         .eq("owner_id", residentId)
         .not("approved_at", "is", null)
+        .eq("media_kind", "photo")
         .order("uploaded_at", { ascending: false })
         .returns<{ drive_file_id: string; file_name: string | null; sub_folder: string | null }[]>(),
       supabase.from("resident_list_view").select("name").eq("resident_id", residentId).returns<{ name: string }[]>(),
