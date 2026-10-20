@@ -148,8 +148,8 @@ Manual verification by: n/a: no UI surface, nothing for a person to look at
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR
-- [ ] Handed to the production release manager
+- [x] Checklist pasted into the PR
+- [ ] Handed to the production release manager — n/a: handed over when the release is cut, after this PR merges
 
 Result: pass
 
