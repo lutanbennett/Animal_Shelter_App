@@ -221,6 +221,16 @@ export const ENTRIES = {
       expect: "A Review access requests task shows how many are waiting, and it disappears by itself once nobody is waiting.",
     },
   ],
+  "home-covering-another-role": [
+    {
+      activity: "Switch between my job and the role I am covering",
+      device: "phone",
+      naRest: true,
+      audience: "signedin",
+      do: "While you hold a second role, open Home and tap the other role at the top.",
+      expect: "Two buttons, My job first; the other role shows its own tiles and Covering until with the last day. The day after that date only your own job remains.",
+    },
+  ],
   "my-recurring-jobs": [
     {
       activity: "Mark a recurring job done or skipped",

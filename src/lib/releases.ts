@@ -76,6 +76,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   { text: "Adding or editing a prescription now has Morning, Lunch and Evening ticks under the frequency. Choosing a frequency ticks its usual rounds and you can change them; the medication list and pick list use what you tick. For a fourth dose a day, tick the three rounds and say in the notes when the extra one is given. The note now shows on the medication list.", roles: ["admin", "management", "doctor"] },
+  "If you cover another role for a while, your Home screen now keeps each job's tiles together. On a phone, switch between My job and the role you are covering (it says when the cover ends); on a computer they sit one under the other.",
   "A fundraising appeal can now show a medical photo, chosen one by one. It is public on that appeal only, starts covered until a visitor taps it, and is never used as the picture in a shared link.",
   { text: "Make a meme: the Residents tab now has a search box. Type part of a name, a Thai name or an R-code to find a resident; with nothing typed, residents with the newest photos come first.", roles: ["admin", "management", "second_in_command"] },
   {
