@@ -6,41 +6,48 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { saveAppealPhotos } from "./actions";
 
-export type PhotoCandidate = { attachmentId: string; fileId: string; name: string };
-export type PhotoChosen = { attachmentId: string; isCover: boolean; isGraphic: boolean };
+export type PhotoCandidate = { attachmentId: string; fileId: string; name: string; medical: boolean };
+export type PhotoChosen = { attachmentId: string; isCover: boolean; isGraphic: boolean; medicalOk: boolean };
 
 /**
- * Which of the resident's photos the appeal shows. Only non-Medical images are
- * offered (the page that renders this filters them, the database refuses the
- * rest), and each chosen photo can be marked distressing so the public page
- * blurs it behind a warning.
+ * Which of the resident's photos the appeal shows. Medical-folder photos sit in
+ * a separate group beneath the others: each is a deliberate choice, is public
+ * on this appeal only, and starts covered until tapped (0216). Any chosen photo
+ * can also be marked distressing so the public page blurs it behind a warning.
  */
 export function AppealPhotosEditor({
   appealId,
   candidates,
   chosen,
+  canMedical,
+  published,
 }: {
   appealId: string;
   candidates: PhotoCandidate[];
   chosen: PhotoChosen[];
+  canMedical: boolean;
+  published: boolean;
 }) {
   const { t } = useI18n();
   const p = t.appealsAdmin.photos;
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
-  const [state, setState] = useState<Record<string, { isCover: boolean; isGraphic: boolean }>>(
-    Object.fromEntries(chosen.map((c) => [c.attachmentId, { isCover: c.isCover, isGraphic: c.isGraphic }])),
+  const [state, setState] = useState<Record<string, { isCover: boolean; isGraphic: boolean; medicalOk: boolean }>>(
+    Object.fromEntries(chosen.map((c) => [c.attachmentId, { isCover: c.isCover, isGraphic: c.isGraphic, medicalOk: c.medicalOk }])),
   );
 
+  const plain = candidates.filter((c) => !c.medical);
+  const medical = candidates.filter((c) => c.medical);
   const picked = candidates.filter((c) => state[c.attachmentId]);
   const cover = picked.find((c) => state[c.attachmentId].isCover)?.attachmentId ?? null;
 
-  function toggle(id: string, on: boolean) {
+  function toggle(id: string, on: boolean, medical = false) {
     setMessage(null);
+    if (on && medical && !window.confirm(p.medicalConfirm)) return;
     setState((prev) => {
       const next = { ...prev };
-      if (on) next[id] = { isCover: false, isGraphic: false };
+      if (on) next[id] = { isCover: false, isGraphic: medical, medicalOk: medical };
       else delete next[id];
       return next;
     });
@@ -60,7 +67,7 @@ export function AppealPhotosEditor({
       const result = await saveAppealPhotos(
         appealId,
         cover,
-        picked.map((c) => ({ attachmentId: c.attachmentId, isGraphic: state[c.attachmentId].isGraphic })),
+        picked.map((c) => ({ attachmentId: c.attachmentId, isGraphic: state[c.attachmentId].isGraphic, medicalOk: state[c.attachmentId].medicalOk })),
       );
       if (!result.ok) return setMessage({ type: "error", text: result.error });
       setMessage({ type: "ok", text: p.saved });
@@ -68,43 +75,57 @@ export function AppealPhotosEditor({
     });
   }
 
+  const photoGrid = (items: PhotoCandidate[]) => (
+        <ul className="grid gap-3 sm:grid-cols-2">
+      {items.map((c) => {
+        const on = !!state[c.attachmentId];
+        return (
+          <li key={c.attachmentId} className={`flex flex-col gap-2 rounded-lg border-2 p-2 ${on ? "border-primary" : "border-border"}`}>
+            <img src={driveImageUrl(c.fileId)} alt={c.name} loading="lazy" className="h-40 w-full rounded object-cover" />
+            <label className="flex min-h-11 items-center gap-2 text-sm text-foreground">
+              <input type="checkbox" checked={on} disabled={c.medical && !canMedical && !on} onChange={(e) => toggle(c.attachmentId, e.target.checked, c.medical)} />
+              {c.medical ? p.medicalShow : p.show}
+            </label>
+            {c.medical && on && published && <p className="text-xs text-muted">{p.medicalPublicNow}</p>}
+            {on && (
+              <>
+                <label className="flex min-h-11 items-center gap-2 text-sm text-foreground">
+                  <input type="radio" name="appeal-cover" checked={state[c.attachmentId].isCover} onChange={() => makeCover(c.attachmentId)} />
+                  {state[c.attachmentId].isCover ? p.cover : p.makeCover}
+                </label>
+                <label className="flex min-h-11 items-start gap-2 text-sm text-foreground">
+                  <input className="mt-1" type="checkbox" checked={state[c.attachmentId].isGraphic} onChange={(e) => setGraphic(c.attachmentId, e.target.checked)} />
+                  <span className="flex flex-col">
+                    {p.graphic}
+                    <span className="text-xs text-muted">{p.graphicHint}</span>
+                  </span>
+                </label>
+              </>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+
   return (
     <section className="flex max-w-3xl flex-col gap-3 rounded border border-border bg-surface p-4">
       <h2 className="text-base font-semibold text-foreground">{p.heading}</h2>
       <p className="text-sm text-muted">{p.hint}</p>
       <p className="text-sm text-muted">{p.medicalNote}</p>
-      {candidates.length === 0 ? (
+      {plain.length === 0 ? (
         <p className="rounded border border-border bg-background px-3 py-2 text-sm text-muted">{p.none}</p>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {candidates.map((c) => {
-            const on = !!state[c.attachmentId];
-            return (
-              <li key={c.attachmentId} className={`flex flex-col gap-2 rounded-lg border-2 p-2 ${on ? "border-primary" : "border-border"}`}>
-                <img src={driveImageUrl(c.fileId)} alt={c.name} loading="lazy" className="h-40 w-full rounded object-cover" />
-                <label className="flex min-h-11 items-center gap-2 text-sm text-foreground">
-                  <input type="checkbox" checked={on} onChange={(e) => toggle(c.attachmentId, e.target.checked)} />
-                  {p.show}
-                </label>
-                {on && (
-                  <>
-                    <label className="flex min-h-11 items-center gap-2 text-sm text-foreground">
-                      <input type="radio" name="appeal-cover" checked={state[c.attachmentId].isCover} onChange={() => makeCover(c.attachmentId)} />
-                      {state[c.attachmentId].isCover ? p.cover : p.makeCover}
-                    </label>
-                    <label className="flex min-h-11 items-start gap-2 text-sm text-foreground">
-                      <input className="mt-1" type="checkbox" checked={state[c.attachmentId].isGraphic} onChange={(e) => setGraphic(c.attachmentId, e.target.checked)} />
-                      <span className="flex flex-col">
-                        {p.graphic}
-                        <span className="text-xs text-muted">{p.graphicHint}</span>
-                      </span>
-                    </label>
-                  </>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        photoGrid(plain)
+      )}
+      {medical.length > 0 && (
+        <div className="flex flex-col gap-3 border-t border-border pt-3">
+          <h3 className="text-sm font-semibold text-foreground">{p.medicalHeading}</h3>
+          <p className="text-sm text-muted">{p.medicalHint}</p>
+          {!canMedical && <p className="text-sm text-muted">{p.medicalNoPermission}</p>}
+          {photoGrid(medical)}
+          <p className="text-xs text-muted">{p.medicalCoverHint}</p>
+        </div>
       )}
       {picked.length > 0 && !cover && <p className="text-xs text-muted">{p.noCover}</p>}
       {message && (

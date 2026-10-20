@@ -50,10 +50,10 @@ export default async function AppealPage(props: PageProps<"/management/appeals/[
       .returns<AttachmentRow[]>(),
     supabase
       .from("appeal_photos")
-      .select("attachment_id, is_cover, is_graphic, position")
+      .select("attachment_id, is_cover, is_graphic, medical_ok, position")
       .eq("appeal_id", appeal.id)
       .order("position")
-      .returns<{ attachment_id: string; is_cover: boolean; is_graphic: boolean; position: number }[]>(),
+      .returns<{ attachment_id: string; is_cover: boolean; is_graphic: boolean; medical_ok: boolean; position: number }[]>(),
     supabase.from("residents").select("is_public_visible").eq("id", appeal.resident_id).maybeSingle<{ is_public_visible: boolean }>(),
     canSeeGifts
       ? supabase
@@ -79,13 +79,18 @@ export default async function AppealPage(props: PageProps<"/management/appeals/[
   if (counted?.error) throw new Error(`Appeals: could not read the gifts: ${counted.error.message}`);
   if (movable?.error) throw new Error(`Appeals: could not read the resident's gifts: ${movable.error.message}`);
 
-  // Only non-Medical images are offered. The database refuses the rest as well.
+  // Images only. Medical-folder ones are offered in their own group and are public only when ticked (0216).
   const candidates: PhotoCandidate[] = (attachments.data ?? [])
-    .filter((x) => x.file_name && IMAGE.test(x.file_name) && (x.sub_folder ?? "").trim().toLowerCase() !== "medical")
-    .map((x) => ({ attachmentId: x.id, fileId: x.drive_file_id, name: x.file_name ?? "" }));
+    .filter((x) => x.file_name && IMAGE.test(x.file_name))
+    .map((x) => ({
+      attachmentId: x.id,
+      fileId: x.drive_file_id,
+      name: x.file_name ?? "",
+      medical: (x.sub_folder ?? "").trim().toLowerCase() === "medical",
+    }));
   const chosen: PhotoChosen[] = (chosenRows.data ?? [])
     .filter((c) => candidates.some((x) => x.attachmentId === c.attachment_id))
-    .map((c) => ({ attachmentId: c.attachment_id, isCover: c.is_cover, isGraphic: c.is_graphic }));
+    .map((c) => ({ attachmentId: c.attachment_id, isCover: c.is_cover, isGraphic: c.is_graphic, medicalOk: c.medical_ok }));
 
   const raised = raisedMap?.get(appeal.id);
   const name = (locale === "th" && appeal.residents?.thai_name) || appeal.residents?.name || "";
@@ -156,7 +161,13 @@ export default async function AppealPage(props: PageProps<"/management/appeals/[
 
       <AppealForm mode="edit" appealId={appeal.id} initial={initial} raised={raised?.raised ?? 0} />
 
-      <AppealPhotosEditor appealId={appeal.id} candidates={candidates} chosen={chosen} />
+      <AppealPhotosEditor
+        appealId={appeal.id}
+        candidates={candidates}
+        chosen={chosen}
+        canMedical={can(perms, "appeal.medical_photo")}
+        published={appeal.published}
+      />
     </main>
   );
 }

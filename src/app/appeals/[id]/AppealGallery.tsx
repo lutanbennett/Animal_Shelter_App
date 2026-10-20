@@ -5,7 +5,7 @@ import { PublicPhoto } from "@/components/PublicPhoto";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
-export type GalleryItem = { id: string; fileId: string; isGraphic: boolean };
+export type GalleryItem = { id: string; fileId: string; isGraphic: boolean; isMedical?: boolean };
 
 /**
  * The appeal's photos. A photo staff marked as distressing is blurred, with a
@@ -46,7 +46,7 @@ export function AppealGallery({ items, alt }: { items: GalleryItem[]; alt: strin
         />
         {hidden && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-site-ink/55 p-6 text-center text-white">
-            <p className="max-w-xs text-lg font-bold leading-snug">{g.warning}</p>
+            <p className="max-w-xs text-lg font-bold leading-snug">{current.isMedical ? g.medicalWarning : g.warning}</p>
             <button
               type="button"
               onClick={() => setShown((prev) => new Set(prev).add(current.id))}

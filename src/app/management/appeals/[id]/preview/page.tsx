@@ -12,7 +12,7 @@ import { AppealView, type AppealGalleryItem } from "@/app/appeals/AppealView";
 export const dynamic = "force-dynamic";
 
 type AttachmentRow = { id: string; drive_file_id: string; file_name: string | null; sub_folder: string | null };
-type ChosenRow = { attachment_id: string; is_cover: boolean; is_graphic: boolean; position: number };
+type ChosenRow = { attachment_id: string; is_cover: boolean; is_graphic: boolean; medical_ok: boolean; position: number };
 
 const IMAGE = /\.(jpe?g|png|webp|heic|heif|gif)$/i;
 
@@ -40,7 +40,7 @@ export default async function AppealPreviewPage(props: PageProps<"/management/ap
     can(perms, "donation.receipt") ? loadRaised(supabase, [appeal.id]) : Promise.resolve(null),
     supabase
       .from("appeal_photos")
-      .select("attachment_id, is_cover, is_graphic, position")
+      .select("attachment_id, is_cover, is_graphic, medical_ok, position")
       .eq("appeal_id", appeal.id)
       .returns<ChosenRow[]>(),
     supabase
@@ -67,11 +67,11 @@ export default async function AppealPreviewPage(props: PageProps<"/management/ap
         !!x.att &&
         !!x.att.file_name &&
         IMAGE.test(x.att.file_name) &&
-        (x.att.sub_folder ?? "").trim().toLowerCase() !== "medical",
+        ((x.att.sub_folder ?? "").trim().toLowerCase() !== "medical" || x.c.medical_ok),
     )
     .sort((p, q) => Number(q.c.is_cover) - Number(p.c.is_cover) || p.c.position - q.c.position);
 
-  const gallery: AppealGalleryItem[] = photos.map((p) => ({ id: p.c.attachment_id, fileId: p.att.drive_file_id, isGraphic: p.c.is_graphic }));
+  const gallery: AppealGalleryItem[] = photos.map((p) => ({ id: p.c.attachment_id, fileId: p.att.drive_file_id, isGraphic: p.c.is_graphic, isMedical: (p.att.sub_folder ?? "").trim().toLowerCase() === "medical" }));
   const profile = residentRes.data?.profile_photo_drive_file_id ?? null;
   if (gallery.length === 0 && profile) gallery.push({ id: "profile", fileId: profile, isGraphic: false });
 
@@ -97,6 +97,7 @@ export default async function AppealPreviewPage(props: PageProps<"/management/ap
     social_links: appeal.social_links,
     cover_drive_file_id: gallery[0]?.fileId ?? null,
     cover_is_graphic: gallery[0]?.isGraphic ?? false,
+    cover_is_medical: !!photos[0] && (photos[0].att.sub_folder ?? "").trim().toLowerCase() === "medical",
     published_at: appeal.published_at,
     closed_at: appeal.closed_at,
     translations: {},
