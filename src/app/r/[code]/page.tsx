@@ -210,6 +210,16 @@ export default async function ResidentCardPage(props: PageProps<"/r/[code]">) {
       <PublicHeader />
 
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-6 py-10 sm:px-12">
+        {!user && (
+          // Staff whose card opened in a browser they are not signed in on: a big button, back to this scan.
+          <Link
+            href={signInHref}
+            className="flex min-h-14 items-center justify-center gap-2 rounded-lg bg-primary px-5 py-4 text-base font-semibold text-primary-foreground hover:bg-primary-hover"
+          >
+            <LogIn className="h-5 w-5" aria-hidden />
+            {c.workHere}
+          </Link>
+        )}
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2">
           {resident.profile_photo_drive_file_id ? (
             <img

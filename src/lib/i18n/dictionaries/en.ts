@@ -6778,6 +6778,7 @@ const en = {
     fullProfile: (name: string) => `See ${name}'s adoption profile`,
     staffHint: "Staff and volunteers:",
     staffSignIn: "sign in to see the full record",
+    workHere: "I work here: sign in",
     livesIn: "Lives in",
     yourJobs: (name: string) => `Jobs for ${name}`,
   },
