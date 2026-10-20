@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /**
  * What each environment is called on this page. Until the cutover the
- * build app-env calls "production" is lannacare.org — UAT for good
+ * build app-env calls "production" is the UAT site — UAT for good
  * (docs/decisions.md) — so it is still labelled UAT, matching the `[UAT]`
  * its release mail carries (wrangler.jsonc RELEASE_MAIL_ENV). The cutover
  * sets UAT_PROJECT_REF in app-env and changes production's label here to

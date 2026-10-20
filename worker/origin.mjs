@@ -45,6 +45,10 @@ export async function fetchFromOrigin(request, env) {
   const headers = new Headers(request.headers);
   headers.set("x-origin-key", env.ORIGIN_KEY ?? "");
   headers.set("x-forwarded-host", publicHost);
+  // cloudflared rewrites Host and x-forwarded-host to its own ingress values, so the
+  // app could not tell which address the visitor used. This one survives
+  // (src/lib/site-hosts.ts requestHost).
+  headers.set("x-lanna-public-host", publicHost);
   headers.set("x-forwarded-proto", "https");
 
   const idempotent = IDEMPOTENT_METHODS.has(request.method);

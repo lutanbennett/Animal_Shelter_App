@@ -1,4 +1,4 @@
-// The Worker in front of lannacare.org: edge cache, then the Pi, then itself.
+// The Worker in front of the site: edge cache, then the Pi, then itself.
 //
 // Cloudflare's free plan gives a Worker 10 ms of CPU per request and a
 // Next.js page render costs 30–40 ms, so rendering here throws the

@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 import { originKeyRefuses } from "@/lib/origin-key";
 import { initialLocaleCookie, localeCookieName } from "@/lib/i18n/locales";
+import { hostRedirect, requestHost } from "@/lib/site-hosts";
+import { isPublicPage } from "@/lib/public-paths";
 
 /**
  * The scheduled alert run (src/app/api/status/alerts/route.ts) has no
@@ -20,6 +22,19 @@ export default async function proxy(request: NextRequest) {
     PHOTO_CACHE_DIR: process.env.PHOTO_CACHE_DIR,
   })) {
     return new NextResponse("Forbidden", { status: 403, headers: { "cache-control": "no-store" } });
+  }
+  // Which address serves what (src/lib/site-hosts.ts): public pages on the public
+  // address, the staff app on the app address, each sending the visitor to the other.
+  // Navigations only; a Server Action is a POST and is answered where it was sent.
+  if (request.method === "GET" || request.method === "HEAD") {
+    const to = hostRedirect(
+      requestHost((n) => request.headers.get(n)),
+      request.nextUrl.pathname,
+      { isPublicPage },
+    );
+    if (to) {
+      return NextResponse.redirect(`https://${to}${request.nextUrl.pathname}${request.nextUrl.search}`, 307);
+    }
   }
   if ((request.nextUrl.pathname === STATUS_ALERTS_PATH || request.nextUrl.pathname === CALENDAR_SWEEP_PATH) && request.method === "POST") {
     return NextResponse.next();

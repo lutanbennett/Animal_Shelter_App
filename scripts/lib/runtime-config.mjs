@@ -45,6 +45,8 @@ export const RUNTIME_CONFIG = [
   { name: "CLOUDFLARE_ANALYTICS_TOKEN", where: "both", secret: true, scrub: true, required: false, purpose: "Visitor count on Settings → System status; grey until the zone id is set too." },
   { name: "CLOUDFLARE_ZONE_ID", where: "both", secret: true, scrub: false, required: false, purpose: "Zone the visitor count reads." },
   { name: "PUBLIC_SITE", where: "pi", secret: false, scrub: false, required: false, source: "wrangler", purpose: "Worker var from wrangler.jsonc, copied so the Pi renders what the Worker would (src/lib/public-site.ts)." },
+  { name: "APP_HOST", where: "pi", secret: false, scrub: false, required: false, build: false, source: "wrangler", purpose: "The staff app's hostname (src/lib/site-hosts.ts); wrangler.jsonc var, copied so the Pi serves what the Worker would." },
+  { name: "PUBLIC_HOST", where: "pi", secret: false, scrub: false, required: false, build: false, source: "wrangler", purpose: "The public website's hostname (src/lib/site-hosts.ts); wrangler.jsonc var, copied to the Pi." },
   { name: "SUPABASE_ACCESS_TOKEN", where: "tools", secret: false, scrub: true, required: false, neverOnPi: true, purpose: "Management API token for migrations and deploys." },
   { name: "SUPABASE_DB_URL", where: "tools", secret: false, scrub: true, required: false, purpose: "Session-pooler connection string with the password, for scripts/backup.mjs; set on the Pi so the backup never needs the Management API token." },
   { name: "SUPABASE_DB_PASSWORD", where: "tools", secret: false, scrub: true, required: false, purpose: "Database password for scripts/backup.mjs." },

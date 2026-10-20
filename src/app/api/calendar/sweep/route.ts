@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
+import { appUrl } from "@/lib/site-hosts";
 import { pollCalendarChanges } from "@/lib/clinics/calendar-poll";
 import { syncPendingVisits } from "@/lib/clinics/calendar-sync";
 
@@ -22,11 +23,11 @@ function authorised(request: Request): boolean {
 }
 
 /**
- * Where the links in an event point. The deploy pins NEXT_PUBLIC_SITE_URL, so that wins: the cron's own
+ * Where the links in an event point. APP_HOST (src/lib/site-hosts.ts) wins: the cron's own
  * request has no real host (a first test run wrote https://undefined into the links). With neither, no links.
  */
 function siteOrigin(request: Request): string | null {
-  for (const candidate of [process.env.NEXT_PUBLIC_SITE_URL, request.url]) {
+  for (const candidate of [appUrl(), request.url]) {
     try {
       const url = new URL(candidate ?? "");
       if (url.hostname && url.hostname !== "undefined") return url.origin;

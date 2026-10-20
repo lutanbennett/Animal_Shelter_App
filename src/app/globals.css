@@ -208,7 +208,7 @@
 
 /* The same system on the dev database: the action colour turns teal and the
    cream takes a green cast, as the app does above, so a public page on
-   test.lannacare.org is never mistaken for the live site either. The accent
+   the test site is never mistaken for the live site either. The accent
    stays forest green — it marks "talk to us", not the environment. */
 :root[data-env="dev"] {
   --site-cream: #eef3ec;

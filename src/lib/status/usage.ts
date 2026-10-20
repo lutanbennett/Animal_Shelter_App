@@ -110,7 +110,7 @@ const VISITOR_KEYS = ["CLOUDFLARE_ANALYTICS_TOKEN", "CLOUDFLARE_ZONE_ID"] as con
  *
  * Needs a Cloudflare API token with Zone → Analytics → Read in
  * CLOUDFLARE_ANALYTICS_TOKEN and the zone's id in CLOUDFLARE_ZONE_ID.
- * Counts are for the whole zone, so they include test.lannacare.org and
+ * Counts are for the whole zone, so they include the test site and
  * staff.
  *
  * The values have to be where the page is served from, and on production

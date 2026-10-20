@@ -46,6 +46,12 @@
       "vars": {
         "NODE_ENV": "production",
         "ORIGIN_HOST": "test-pi.lannacare.org",
+        // The two addresses (src/lib/site-hosts.ts), hostnames only. Equal = one address
+        // serves everything. The public website's move to its own domain is PUBLIC_HOST
+        // changing here; the staff app's move to its Cooper address is APP_HOST.
+        // docs/domain-checklist.md lists the places outside the code that also change.
+        "APP_HOST": "test.lannacare.org",
+        "PUBLIC_HOST": "test.lannacare.org",
         "ORIGIN_TIMEOUT_MS": "20000",
         "RELEASE_MAIL_ENV": "",
         "PUBLIC_SITE": "locked",
@@ -82,6 +88,12 @@
       "vars": {
         "NODE_ENV": "production",
         "ORIGIN_HOST": "",
+        // The two addresses (src/lib/site-hosts.ts), hostnames only. Equal = one address
+        // serves everything. The public website's move to its own domain is PUBLIC_HOST
+        // changing here; the staff app's move to its Cooper address is APP_HOST.
+        // docs/domain-checklist.md lists the places outside the code that also change.
+        "APP_HOST": "lannacare.org",
+        "PUBLIC_HOST": "lannacare.org",
         "ORIGIN_TIMEOUT_MS": "20000",
         "RELEASE_MAIL_ENV": "UAT",
         "RELEASE_MAIL_FROM": "releases@lannacare.org",
@@ -114,6 +126,12 @@
       "vars": {
         "NODE_ENV": "production",
         "ORIGIN_HOST": "pi.lannacare.org",
+        // The two addresses (src/lib/site-hosts.ts), hostnames only. Equal = one address
+        // serves everything. The public website's move to its own domain is PUBLIC_HOST
+        // changing here; the staff app's move to its Cooper address is APP_HOST.
+        // docs/domain-checklist.md lists the places outside the code that also change.
+        "APP_HOST": "lannacare.org",
+        "PUBLIC_HOST": "lannacare.org",
         "ORIGIN_TIMEOUT_MS": "20000",
         "RELEASE_MAIL_ENV": "UAT",
         "RELEASE_MAIL_FROM": "releases@lannacare.org",
