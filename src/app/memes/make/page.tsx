@@ -6,6 +6,7 @@ import { driveImageUrl, isMedicalFolder } from "@/lib/google/drive-client";
 import { resolveSource } from "@/lib/memes/source-server";
 import { isSourceKind, sourcesFor, type SourceKind } from "@/lib/memes/sources";
 import { MemeMaker } from "./MemeMaker";
+import { ResidentSearch } from "./ResidentSearch";
 import { UploadPicker } from "./UploadPicker";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -27,7 +28,7 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
   const photoId = typeof photo === "string" ? photo : "";
   const residentId = typeof resident === "string" ? resident : "";
   const { supabase, perms } = await requirePermission("social.library");
-  const { t } = await getT();
+  const { t, locale } = await getT();
   const m = t.memes.maker;
 
   const offered = sourcesFor(perms);
@@ -146,27 +147,60 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
     );
   }
 
-  const { data: residents } = await supabase
-    .from("resident_list_view")
-    .select("resident_id, name, thai_name")
-    .order("name")
-    .returns<{ resident_id: string; name: string; thai_name: string | null }[]>();
+  const [{ data: residents }, { data: profiles }, { data: recent }] = await Promise.all([
+    supabase
+      .from("resident_list_view")
+      .select("resident_id, name, thai_name, resident_code, enclosure_name, enclosure_name_th, zone_name, zone_name_th")
+      .order("name")
+      .returns<
+        {
+          resident_id: string;
+          name: string;
+          thai_name: string | null;
+          resident_code: string | null;
+          enclosure_name: string | null;
+          enclosure_name_th: string | null;
+          zone_name: string | null;
+          zone_name_th: string | null;
+        }[]
+      >(),
+    supabase
+      .from("residents")
+      .select("id, profile_photo_drive_file_id")
+      .not("profile_photo_drive_file_id", "is", null)
+      .returns<{ id: string; profile_photo_drive_file_id: string }[]>(),
+    supabase
+      .from("attachments")
+      .select("owner_id")
+      .eq("owner_type", "resident")
+      .not("approved_at", "is", null)
+      .order("uploaded_at", { ascending: false })
+      .limit(400)
+      .returns<{ owner_id: string }[]>(),
+  ]);
+  const photoOf = new Map((profiles ?? []).map((p) => [p.id, p.profile_photo_drive_file_id]));
+  const rank = new Map<string, number>();
+  for (const a of recent ?? []) if (!rank.has(a.owner_id)) rank.set(a.owner_id, rank.size);
+  const th = locale === "th";
+  const list = (residents ?? [])
+    .map((r) => {
+      const zone = th ? (r.zone_name_th ?? r.zone_name) : r.zone_name;
+      const enc = th ? (r.enclosure_name_th ?? r.enclosure_name) : r.enclosure_name;
+      const photo = photoOf.get(r.resident_id);
+      return {
+        id: r.resident_id,
+        name: r.name,
+        thai_name: r.thai_name,
+        code: r.resident_code,
+        where: [zone, enc].filter(Boolean).join(" · ") || null,
+        photo: photo ? driveImageUrl(photo, 160) : null,
+      };
+    })
+    .sort((a, b) => (rank.get(a.id) ?? 1e9) - (rank.get(b.id) ?? 1e9) || a.name.localeCompare(b.name));
   return shell(
     <>
       <p className="text-base text-muted">{m.pickResidentHint}</p>
-      <ul className="flex flex-col gap-1">
-        {(residents ?? []).map((r) => (
-          <li key={r.resident_id}>
-            <Link
-              href={`/memes/make?resident=${r.resident_id}`}
-              className="flex min-h-11 items-center rounded border border-border px-3 py-2 text-base text-foreground hover:bg-surface-hover"
-            >
-              {r.name}
-              {r.thai_name ? <span className="ml-2 text-muted">{r.thai_name}</span> : null}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <ResidentSearch residents={list} placeholder={m.searchResident} recentLabel={m.recentResidents} noMatch={m.noResidentMatch} />
     </>,
   );
 }
