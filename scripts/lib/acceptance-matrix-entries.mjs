@@ -510,6 +510,23 @@ export const ENTRIES = {
   ],
 
   // ── Photos ───────────────────────────────────────────────────────────────
+  "resident-videos": [
+    {
+      activity: "Add a video to a resident",
+      needs: "photos.resident_add",
+      device: "phone",
+      do: "Open Photos on a resident, choose a folder, and add a short MP4 or MOV video from the phone.",
+      expect: "It shows Uploading, then Done, and the video appears in the gallery with a play button and its length. Tapping it plays it on the page.",
+      notes: { doctor: "A doctor has no folder choice: videos go into Medical, and never to the website." },
+    },
+    {
+      activity: "Try a video that is too big",
+      needs: "photos.resident_add",
+      device: "phone",
+      do: "Try to add a video larger than 500 MB.",
+      expect: "It is refused with a message saying the limit is 500 MB (about 5 minutes), and nothing is uploaded.",
+    },
+  ],
   "resident-photos": [
     {
       activity: "Add photos to a resident",
