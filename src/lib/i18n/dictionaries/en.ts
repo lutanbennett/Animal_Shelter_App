@@ -1165,7 +1165,7 @@ const en = {
         lastRun: (v: { time: string | number }) =>
           `Checked every 15 minutes; last run ${v.time}.`,
         neverRun: "The alert schedule is set up on this site but has never run.",
-        offHere: "Not scheduled here: only the Worker (test.lannacare.org and lannacare.org) runs the alert schedule. The buttons below still test the path.",
+        offHere: "Not scheduled here: only the Worker (the test and live sites) runs the alert schedule. The buttons below still test the path.",
         open: (v: { names: string | number }) =>
           `Admins have been told these are not working, and they have not recovered yet: ${v.names}.`,
         lastMail: (v: { kind: string | number; sent: string | number; skipped: string | number; time: string | number }) =>
@@ -1308,7 +1308,7 @@ const en = {
           title: "Website visitors",
           value: (v: { pageViews: string | number; visitors: string | number }) =>
             `${v.pageViews} page views; ${v.visitors} visitors, counted per day and added up.`,
-          note: "Cloudflare's own totals for the whole lannacare.org domain (test site and staff included). No cookies or tracking — see the privacy page.",
+          note: "Cloudflare's own totals for the whole domain (test site and staff included). No cookies or tracking — see the privacy page.",
           missing: {
             pi: (v: { names: string; file: string }) =>
               `Not reaching the Pi, which serves the pages: ${v.names} missing there. Worker secrets do not reach the Pi. Copy the CLOUDFLARE_ANALYTICS_TOKEN and CLOUDFLARE_ZONE_ID lines from ${v.file} on the laptop into the same file on the Pi, then run deploy-pi.sh.`,

@@ -6,7 +6,7 @@
  * badge for dev and uat; generated PDFs carry a watermark for both.
  *
  * Derived from the Supabase URL `next build` inlines rather than from
- * NODE_ENV, which is "production" on test.lannacare.org as well
+ * NODE_ENV, which is "production" on the test site as well
  * (wrangler.jsonc): the runtime isn't the thing worth telling apart, the
  * database is. Test shares the dev database, so it wears the dev colours
  * too. Anything that isn't a known non-production project renders as

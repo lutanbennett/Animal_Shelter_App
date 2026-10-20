@@ -254,9 +254,13 @@ console.log(`deploy: ${envName} → Supabase project ${projectRef(env)} (${git("
 if (!skipBuild) {
   const buildEnv = { ...process.env };
   for (const key of [...BUILD_VARS, ACTIONS_KEY_VAR]) buildEnv[key] = env[key];
-  // Pinned, not inherited: the shell beats every env file, so none can leak a
-  // host into the bundle, and the Worker's host no longer rides on a file.
-  buildEnv.NEXT_PUBLIC_SITE_URL = SITE_ORIGINS[envName];
+  // The two addresses from wrangler.jsonc (src/lib/site-hosts.ts): next.config.ts
+  // builds serverActions.allowedOrigins from them. Pinned, not inherited, so
+  // no shell or env file can put another host in the bundle.
+  const wranglerVars = readWranglerConfig().env?.[envName]?.vars ?? {};
+  buildEnv.APP_HOST = wranglerVars.APP_HOST;
+  buildEnv.PUBLIC_HOST = wranglerVars.PUBLIC_HOST;
+  delete buildEnv.NEXT_PUBLIC_SITE_URL;
   run("npm run opennext:build", { env: buildEnv });
   run("node scripts/strip-baked-env.mjs");
 }

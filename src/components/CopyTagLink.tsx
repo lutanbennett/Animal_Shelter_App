@@ -11,7 +11,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
  * A tag's address (src/lib/tags/links.ts) with a Copy button, for handing
  * to whatever programs the enclosure QR code or resident RFID card. The
  * origin comes from the server (getTagOrigin — the real host behind
- * Cloudflare), so the link reads https://lannacare.org/… whichever
+ * Cloudflare), so the link reads the public address (PUBLIC_HOST) /… whichever
  * machine it was copied on; if the request had no host at all, the
  * browser's own origin fills in.
  *

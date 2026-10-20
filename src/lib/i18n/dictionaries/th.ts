@@ -1072,7 +1072,7 @@ const th: Dictionary = {
         lastRun: (v: { time: string | number }) =>
           `ตรวจสอบทุก 15 นาที ครั้งล่าสุดเมื่อ ${v.time}`,
         neverRun: "ตั้งเวลาไว้ที่เว็บไซต์นี้แล้ว แต่ยังไม่เคยทำงาน",
-        offHere: "ไม่ได้ตั้งเวลาที่นี่: มีเพียง Worker (test.lannacare.org และ lannacare.org) ที่ตรวจสอบตามเวลา ปุ่มด้านล่างยังใช้ทดสอบได้",
+        offHere: "ไม่ได้ตั้งเวลาที่นี่: มีเพียง Worker (เว็บทดสอบและเว็บจริง) ที่ตรวจสอบตามเวลา ปุ่มด้านล่างยังใช้ทดสอบได้",
         open: (v: { names: string | number }) =>
           `แจ้งผู้ดูแลแล้วว่าใช้งานไม่ได้ และยังไม่กลับมาปกติ: ${v.names}`,
         lastMail: (v: { kind: string | number; sent: string | number; skipped: string | number; time: string | number }) =>
@@ -1215,7 +1215,7 @@ const th: Dictionary = {
           title: "ผู้เข้าชมเว็บไซต์",
           value: (v: { pageViews: string | number; visitors: string | number }) =>
             `${v.pageViews} การเปิดหน้า; ผู้เข้าชม ${v.visitors} คน นับรายวันแล้วรวมกัน`,
-          note: "ยอดรวมของ Cloudflare เองสำหรับโดเมน lannacare.org ทั้งหมด (รวมเว็บทดสอบและเจ้าหน้าที่) ไม่มีคุกกี้หรือการติดตาม — ดูหน้านโยบายความเป็นส่วนตัว",
+          note: "ยอดรวมของ Cloudflare เองสำหรับโดเมนทั้งหมด (รวมเว็บทดสอบและเจ้าหน้าที่) ไม่มีคุกกี้หรือการติดตาม — ดูหน้านโยบายความเป็นส่วนตัว",
           missing: {
             pi: (v: { names: string; file: string }) =>
               `ยังไม่ถึง Pi ซึ่งเป็นเครื่องที่ให้บริการหน้าเว็บ: ไม่มี ${v.names} บน Pi ความลับของ Worker ไปไม่ถึง Pi ให้คัดลอกบรรทัด CLOUDFLARE_ANALYTICS_TOKEN และ CLOUDFLARE_ZONE_ID จาก ${v.file} บนแล็ปท็อปไปไว้ในไฟล์เดียวกันบน Pi แล้วรัน deploy-pi.sh`,

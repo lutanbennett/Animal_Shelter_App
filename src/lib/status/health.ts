@@ -49,7 +49,7 @@ export type MigrationFacts = {
  * list in at build time; a Worker has no folder to read) against the
  * database's schema_migrations — the same comparison as
  * `apply-migrations.mjs --drift`, through the same function. A deploy is
- * built from main, so on test.lannacare.org and lannacare.org this is
+ * built from main, so on the test and live sites this is
  * "in step with main"; on a workstream's dev server it is that branch.
  *
  * A file the database hasn't applied is red: the running code expects a

@@ -9,7 +9,7 @@ import { isSiteHostname } from "@/lib/site-hosts";
  *
  * What it compares is deliberate. It NEVER compares `Origin` with the host the
  * server believes it is: behind the Worker and cloudflared that host is
- * `pi.lannacare.org` in `x-forwarded-host` and `localhost:3000` in
+ * the Pi's ingress host in `x-forwarded-host` and `localhost:3000` in
  * `request.nextUrl`, and doing that rejected every Server Action on
  * 2026-10-01 (docs/decisions/2026-10-01-server-actions-allowed-origins.md).
  * Instead:

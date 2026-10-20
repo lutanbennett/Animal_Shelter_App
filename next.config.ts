@@ -1,7 +1,7 @@
 import { execSync } from "node:child_process";
 import { readdirSync, readFileSync } from "node:fs";
 import type { NextConfig } from "next";
-import { SITE_ALLOWED_ORIGINS } from "./src/lib/site-hosts";
+import { siteAllowedOrigins } from "./src/lib/site-hosts";
 import { MAX_UPLOAD_BODY_BYTES } from "./src/lib/uploads/limits";
 
 function gitSha(): string {
@@ -152,19 +152,19 @@ const nextConfig: NextConfig = {
     // follow the app's one limit (src/lib/uploads/limits.ts).
     serverActions: {
       bodySizeLimit: MAX_UPLOAD_BODY_BYTES,
-      // Production is rendered by the Pi (ORIGIN_HOST=pi.lannacare.org),
+      // Production is rendered by the Pi (ORIGIN_HOST),
       // reached through cloudflared — which sets `x-forwarded-host` to its
       // own ingress hostname, overwriting the public host the Worker put
       // there (worker/index.mjs). Next compares the browser's `Origin`
       // against that header, so from 2026-09-30 every action on
-      // lannacare.org was aborted: "`x-forwarded-host` ... `pi.lannacare.org`
-      // does not match `origin` ... `www.lannacare.org`". Not only sign-in —
+      // the site was aborted: "`x-forwarded-host` ... (the Pi's ingress host)
+      // does not match `origin` ... (the www host)". Not only sign-in —
       // every one of the app's "use server" files. cloudflared's
       // httpHostHeader rewrites `Host` alone, which is why that is not enough.
-      // These are the hosts in the visitor's address bar, which is what the
+      // These are the hosts in the visitor's address bar (APP_HOST and PUBLIC_HOST, src/lib/site-hosts.ts), which is what the
       // docs say to list; the apex needs its own entry because `*` matches
       // exactly one label and never the bare name.
-      allowedOrigins: SITE_ALLOWED_ORIGINS,
+      allowedOrigins: siteAllowedOrigins(),
     },
     proxyClientMaxBodySize: MAX_UPLOAD_BODY_BYTES,
   },

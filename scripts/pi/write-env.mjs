@@ -61,22 +61,16 @@ const RUNTIME_VARS = PI_WRANGLER_VARS;
 const wrangler = readWranglerConfig().env?.[name] ?? {};
 const vars = wrangler.vars ?? {};
 
-// The origin the visitor is actually on, pinned rather than derived.
-// src/lib/site-origin.ts normally reads `x-forwarded-host`, and the Worker
-// sets it to the public host — but cloudflared then receives the request at
-// pi.lannacare.org and overwrites that header with its own ingress hostname,
-// so on the Pi the app would believe it is pi.lannacare.org. That is the
-// case site-origin.ts's own comment anticipates with NEXT_PUBLIC_SITE_URL.
-// Without it, signInWithGoogle builds a redirectTo Supabase rejects as
-// off-allow-list, and /auth/callback sends the browser somewhere it cannot
-// reach. Taken from the Worker's own routes so there is one list of public
-// hostnames, not two: the first is the canonical one (the apex, with www
-// second), and it matches what cloudflared rewrites Host to.
-const publicHost = (wrangler.routes ?? [])[0]?.pattern;
+// The address the visitor is on is no longer pinned here: with two addresses a
+// single pinned origin would be wrong for one of them. The Worker sends it in
+// x-lanna-public-host (worker/origin.mjs) and the app reads that
+// (src/lib/site-origin.ts); APP_HOST and PUBLIC_HOST arrive through
+// PI_WRANGLER_VARS above. A Pi deploy needs a route only to be reachable.
+const publicHost = vars.APP_HOST ?? (wrangler.routes ?? [])[0]?.pattern;
 if (!publicHost) {
   console.error(
-    `write-env: ${name} has no routes in wrangler.jsonc, so the public host is unknown. ` +
-      `A Pi deploy needs one: add the route, or deploy an environment that has one.`,
+    `write-env: ${name} has no APP_HOST in wrangler.jsonc, so the host is unknown. ` +
+      `A Pi deploy needs one: add the var, or deploy an environment that has one.`,
   );
   process.exit(2);
 }
@@ -89,7 +83,6 @@ const lines = [
   // the backup tile's folder and the visitor count's Cloudflare pair.
   ...PI_OPTIONAL.filter((k) => env[k]).map((k) => `${k}=${env[k]}`),
   ...RUNTIME_VARS.filter((k) => vars[k]).map((k) => `${k}=${vars[k]}`),
-  `NEXT_PUBLIC_SITE_URL=https://${publicHost}`,
   // The sized-photo disk cache (src/lib/photo-cache.ts). Only a Pi has this
   // line, so the Worker fallback and `next dev` stay diskless. Disposable and
   // capped (PHOTO_CACHE_MAX_MB, default 1024), kept outside ~/backups.
