@@ -99,6 +99,10 @@ export const JOBS: Record<JobKey, Job> = {
       { activity: "recurring.do_own" },
       { activity: "resident.record", level: "read" }, // who and where, nothing more (0134)
       { activity: "facility.enclosures", level: "read" }, // the board names and picks them
+      // Lutan ruled 2026-10-19 she keeps both: she works entirely on a phone, photographing what she
+      // found is most of what the board is for, and the assistant is how someone with no keyboard asks.
+      { activity: "maintenance.photos" },
+      { activity: "assistant.ask" },
     ],
     opens: "/maintenance",
   },

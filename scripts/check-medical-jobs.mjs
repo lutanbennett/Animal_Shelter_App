@@ -30,7 +30,11 @@ const { bundleOfRole } = await import(pathToFileURL(join(process.cwd(), "src/lib
 
 // Cells a migration grants ahead of the screen that turns them into a job. Empty since batch 47: all three
 // of 0140's cells are now jobs in jobs.ts, so bundleOfRole() carries them. Add one here only if a cell lands first.
-const AHEAD = new Map();
+// Lutan ruled 2026-10-19 that the Head of Medical KEEPS these three (the cells are right, the expectation was
+// short): counting what is left is part of the medication rounds, ticking off her own repeating jobs is how
+// rounds are recorded, and seeing the enclosures is how she finds the animal. Not copied from the database
+// on assumption; they live here, not in jobs.ts, because no job tile of hers opens a page that needs them.
+const AHEAD = new Map([["facility.enclosures", 1], ["recurring.do_own", 2], ["stock.count", 2]]);
 
 const lit = (id) => `'${id}'::uuid`;
 const P = ["hom", "admin", "management", "volunteer", "doctor", "norole"];
