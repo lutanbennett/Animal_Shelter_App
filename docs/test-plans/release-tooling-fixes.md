@@ -112,7 +112,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Run `node scripts/check-cron-job.mjs --env production`; it must print ok. Claude could not read production | Lutan's machine |
+| 1 | Run `node scripts/check-cron-job.mjs --env production`; it must print ok. Claude could not read production | Lutan's machine. Lutan ran it 2026-10-20 and it printed ok (seen in chat) |
 
 ## Sign-off
 
@@ -127,7 +127,7 @@ Automated checks by: Claude  Date: 2026-10-20
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: one item is left for Lutan, so this is not ticked
 
-Manual verification by: pending: Lutan runs check-cron-job.mjs on production
+Manual verification by: pending: Lutan ran the production check and it printed ok; the signature line is his to write
 
 ### Result
 
