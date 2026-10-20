@@ -8,7 +8,7 @@ import { isPublicPath, isPublicPage, isEdgeCachedPage } from "./public-paths.ts"
 test("the open site: these are reachable signed out", () => {
   for (const p of [
     "/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/lca-logo-160.jpg", "/api/version",
-    "/adopt", "/adopt/12", "/appeals", "/appeals/abc", "/our-work", "/our-work/abc", "/foster", "/volunteer", "/donate", "/friends", "/privacy",
+    "/adopt", "/adopt/12", "/appeals", "/appeals/abc", "/services/desexing", "/our-work", "/our-work/abc", "/foster", "/volunteer", "/donate", "/friends", "/privacy",
     "/r/CODE1", "/e/12", "/api/photos/abc",
   ]) assert.equal(isPublicPath(p), true, p);
 });
