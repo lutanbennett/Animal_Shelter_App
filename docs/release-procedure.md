@@ -549,3 +549,65 @@ Cloudflare's GraphQL API, and CSP governs only what the browser loads. It also
 has never shown a number, because `CLOUDFLARE_ANALYTICS_TOKEN` and
 `CLOUDFLARE_ZONE_ID` are unset. The row cost Lutan's attention at the one moment
 the release was waiting on him.
+
+**When `main` moves mid-release, read what is deploying — do not reason about
+it.** Added after `0.38.1`, where this was the release's only avoidable cost. A
+docs-only commit (#787, the planner's handover) merged nine minutes after the
+cut. The release manager inferred that Lutan's Worker deploy would therefore
+build from the new tip and break the "all four builds from one SHA" property, and
+rebuilt both Pis to the new SHA to match. **His deploy had already started, from
+the original release SHA, and said so in its first lines** — in the log he was
+`tee`-ing into the checkout:
+
+```
+deploy: production → Supabase project dbkodyyxxhtygxcxmfcu (1de7bdb4)
+```
+
+So the Pis were moved away from what was shipping and had to be moved back, which
+left Cloudflare holding the intermediate build's HTML. `check-assets` caught it
+from `deploy-pi.sh`'s exit trap:
+
+```
+check-assets: FAILED — the served stylesheet is not the one just built.
+  This is what a poisoned Cloudflare cache looks like: the app renders with no styling.
+```
+
+**Doing nothing would have been correct** — all four builds were already on one
+SHA. So: **the pin for a Pi build is the shipped SHA, never `main`'s tip**, and
+when `main` moves, one `grep` of the deploy log settles it. If you do rebuild a Pi
+after the edge has seen another build, **purge before you believe the site**, then
+re-run `check-assets.mjs` on the Pi. And **believe a red `check-assets`**: it was
+right and the session was wrong, on a release that shipped a change to that very
+script.
+
+**The zone purge covers `test.lannacare.org` as well as `lannacare.org`.** They
+are one Cloudflare zone, so `purge-cache.mjs --env production` clears both.
+`purge-cache.mjs --env test` **refuses with exit 2** — `CLOUDFLARE_ZONE_ID` and
+`CLOUDFLARE_PURGE_TOKEN` live in `.env.deploy.production`, not `.env.local` — and
+that is usually irrelevant for exactly this reason. **Confirm by re-running the
+test asset check rather than assuming it either way.** Only worth fixing if test
+ever needs purging on its own.
+
+**`gh pr merge` printing nothing at all is neither success nor refusal.**
+`0.38.1`'s cut merged with no output whatsoever. **Always re-read the state** —
+`gh pr view <n> --json state,mergedAt` — which is the same rule the 502 trap
+above gives, for a case that looks nothing like a 502.
+
+**An absence-check needs a presence-check beside it.** On a minor release the mail
+check is that `majorReleasesSince("<previous>")` returns nothing — which an
+always-empty function would also satisfy. Assert the emptiness *and*, in the same
+run, that the function still finds the previous major when asked from further
+back, and print both. `0.38.1` paired `majorReleasesSince("0.38.0") → []` with
+`majorReleasesSince("0.37.2") → ["0.38.0"]`.
+
+**`git checkout main` in a second worktree is refused** (`'main' is already used
+by worktree at …`), because the main checkout holds it. To reuse the cut's
+worktree for the record — which rule 2 of the paperwork budget requires — create
+the branch there and then `git reset --hard origin/main`.
+
+**A predicted `-- consumer:` warning that does not appear is fine.** It means the
+declared consumer file is unchanged since the live release, so its reader was
+already live and the schema landed under code that already reads it — the safest
+order there is. One `git diff --stat <previous release SHA>..HEAD -- <the file>`
+proves it. **Over-predicting warnings is free; the point is that none surprises
+you.**
