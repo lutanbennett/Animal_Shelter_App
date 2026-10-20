@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "A name card opened while you are signed out now shows a large I work here: sign in button at the top of the dog's page; sign in and you come straight back to the card.", roles: ["admin", "management", "head_of_medical", "doctor", "volunteer"] },
   { text: "Vet visits in the shelter calendar now sync back: move an entry to another time in Google Calendar and the visit moves with it within about 15 minutes; delete one and the visit is cancelled (kept, noted Cancelled from Google Calendar) and every admin is emailed.", roles: ["admin", "management", "doctor"] },
 ];
 

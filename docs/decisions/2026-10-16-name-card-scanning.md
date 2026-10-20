@@ -32,5 +32,8 @@ server call or permission is added. Unreadable cards are reported separately.
 - Known limit: a different card tapped on that phone within the five minutes is taken as the scan. That is the same
   person, job and phone, and the marker is then spent.
 
+## Public card sign-in button (2026-10-20)
+The public card shows a large *I work here: sign in* button at the top only when nobody is signed in. It links to `/login?next=/r/<code>`, so login returns to the scan; the waiting marker cookie is untouched by it (signed out, `/r/` keeps it), so the iPhone flow resumes. The small staff hint stays below.
+
 ## Not done
-The public card's large *I work here: sign in* button (returning to the scan, keeping the marker).
+Scan card on other per-resident forms.
