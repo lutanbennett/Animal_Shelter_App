@@ -47,7 +47,7 @@ export function residentPhotoSelect(perms: Permissions | null | undefined): stri
 }
 
 function photoSelectWith(senderEmbed: string): string {
-  return `id, drive_file_id, file_name, sub_folder, date_taken, approved_at, adoption_update:adoption_updates!attachments_adoption_update_fk(id, received_on, channel, sender:${senderEmbed})`;
+  return `id, drive_file_id, file_name, sub_folder, date_taken, approved_at, media_kind, duration_ms, adoption_update:adoption_updates!attachments_adoption_update_fk(id, received_on, channel, sender:${senderEmbed})`;
 }
 
 /**

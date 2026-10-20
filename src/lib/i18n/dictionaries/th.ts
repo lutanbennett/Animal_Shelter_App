@@ -6002,6 +6002,28 @@ const th: Dictionary = {
     confirmRemove: "ยืนยันการลบ",
     photoFallback: "รูปภาพ",
     residentPhotoAlt: "รูปภาพสัตว์",
+    videos: {
+      dropHere: "ลากรูปหรือวิดีโอมาวางที่นี่ หรือแตะเพื่ออัปโหลด",
+      hint: "วิดีโอ: MP4 หรือ MOV ไม่เกิน 500 MB (ประมาณ 5 นาที) ส่งตรงไปที่ Google Drive และส่งต่อได้ถ้าสัญญาณหลุด",
+      uploadingVideo: (percent: number) => `กำลังอัปโหลด ${percent}%`,
+      retrying: "สัญญาณหลุด กำลังลองอีกครั้ง…",
+      finishing: "กำลังบันทึก…",
+      videoFallback: "วิดีโอ",
+      videoAlt: (name: string) => `วิดีโอ: ${name}`,
+      cannotPlay: "เบราว์เซอร์นี้เล่นวิดีโอไม่ได้",
+      filter: {
+        label: "รูปและวิดีโอ",
+        all: (n: number) => `รูปและวิดีโอ (${n})`,
+        photos: (n: number) => `รูป (${n})`,
+        videos: (n: number) => `วิดีโอ (${n})`,
+      },
+      errors: {
+        wrongType: (name: string) => `${name} ไม่ใช่วิดีโอ MP4 หรือ MOV จึงไม่ได้เพิ่ม`,
+        tooBig: (name: string) => `${name} ใหญ่กว่า 500 MB (ประมาณ 5 นาที) ตัดให้สั้นลงหรือถ่ายคลิปที่สั้นกว่านี้`,
+        incomplete: "วิดีโอส่งมาไม่ครบ ลองอีกครั้ง",
+        failed: "อัปโหลดวิดีโอไม่สำเร็จ ลองอีกครั้ง",
+      },
+    },
     viewer: {
       position: (n: number, total: number) => `${n} จาก ${total}`,
       previous: "รูปก่อนหน้า",

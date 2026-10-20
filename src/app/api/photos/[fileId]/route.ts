@@ -218,6 +218,9 @@ export async function GET(
       ({ contentType, body } = rendition);
       if (isPublicFile) await writeCachedPhoto(fileId, width, contentType, body);
     } else {
+      // A video with no thumbnail yet is never read into memory here: it plays from /api/videos/[fileId] (0229).
+      const { mimeType } = await drive.getFile(fileId, "mimeType");
+      if (mimeType?.startsWith("video/")) return notFound();
       ({ contentType, body } = await drive.downloadFile(fileId));
       if (width) cacheSeconds = FALLBACK_CACHE_SECONDS;
     }
