@@ -1116,6 +1116,13 @@ const th: Dictionary = {
           notConnected: "ยังไม่ได้เชื่อมต่อ — การอัปโหลดทั้งหมดจะไม่สำเร็จจนกว่าจะตั้งค่าโทเค็นใหม่",
           failed: "Google Drive ไม่ตอบการตรวจสอบ",
         },
+        driveSpace: {
+          title: "พื้นที่ Drive (รูปและวิดีโอ)",
+          ok: (v: { used: string; limit: string; percent: number }) => `ใช้ไป ${v.used} จาก ${v.limit} (${v.percent}%)`,
+          unlimited: (v: { used: string }) => `ใช้ไป ${v.used} บัญชีนี้ไม่ได้กำหนดขีดจำกัด`,
+          nearlyFull: "ใกล้เต็มแล้ว วิดีโอใช้พื้นที่มากที่สุด ล้างพื้นที่ใน Drive ก่อนที่การอัปโหลดครั้งต่อไปจะไม่สำเร็จ",
+          failed: "Google Drive ไม่รายงานพื้นที่ที่ใช้",
+        },
         calendar: {
           title: "ปฏิทินของศูนย์ (Google Calendar)",
           off: "ยังไม่ได้ตั้งค่า: นัดหมายสัตวแพทย์ยังไม่ถูกส่งเข้าปฏิทิน",

@@ -1209,6 +1209,13 @@ const en = {
           notConnected: "Not connected — every upload fails until a new token is set.",
           failed: "Google Drive did not answer the check.",
         },
+        driveSpace: {
+          title: "Drive space (photos and videos)",
+          ok: (v: { used: string; limit: string; percent: number }) => `${v.used} of ${v.limit} used (${v.percent}%).`,
+          unlimited: (v: { used: string }) => `${v.used} used; the account has no set limit.`,
+          nearlyFull: "Nearly full: videos are the biggest users. Free space in Drive before the next upload fails.",
+          failed: "Google Drive did not report its space.",
+        },
         calendar: {
           title: "Shelter calendar (Google Calendar)",
           off: "Not set up: vet visits are not being sent to a calendar.",

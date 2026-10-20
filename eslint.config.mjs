@@ -53,8 +53,8 @@ const eslintConfig = defineConfig([
       "src/lib/status/alerts.ts",
       "src/lib/status/health.ts",
       "src/lib/status/usage.ts",
-      "src/app/api/residents/[id]/videos/start/route.ts",
-      "src/app/api/residents/[id]/videos/finish/route.ts",
+      "src/app/api/residents/*/videos/start/route.ts",
+      "src/app/api/residents/*/videos/finish/route.ts",
     ],
     rules: {
       "no-restricted-imports": [

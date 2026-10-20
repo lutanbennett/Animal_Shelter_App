@@ -158,7 +158,6 @@ export function ApproveQueue({
                 className="max-h-[70vh] w-full rounded bg-black"
               />
             ) : (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={driveImageUrl(photo.driveFileId, 800)}
                 alt={q.photoAlt(photo.residentName)}
