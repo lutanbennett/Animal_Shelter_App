@@ -319,7 +319,7 @@ exits 0, and `/plan-day` runs it; it is not in CI on purpose.
 
 Once a day, before starting streams, in `C:\Development\Animal_Shelter_App`:
 `git checkout main && git pull`, fold in the backlog branch (see below):
-`git merge backlog && git push`, then
+`git merge backlog`, then `node scripts/check-backlog-sections.mjs` (stop with its message if it fails; it reads `main`'s copy of the file, not the backlog worktree's), then `git push`, then
 `git -C ../Animal_Shelter_Backlog merge --ff-only main` (the post-merge
 hook pushes it; `git -C ../Animal_Shelter_Backlog status -sb` should not
 say `ahead`). New streams
