@@ -50,10 +50,13 @@ worktree — then continue once it is clean. Then:
 git -C C:/Development/Animal_Shelter_App checkout main
 git -C C:/Development/Animal_Shelter_App pull
 git -C C:/Development/Animal_Shelter_App merge backlog
+node C:/Development/Animal_Shelter_App/scripts/check-backlog-sections.mjs   # stop here if it fails, before the push
 git -C C:/Development/Animal_Shelter_App push
 git -C C:/Development/Animal_Shelter_Backlog merge --ff-only main
 git -C C:/Development/Animal_Shelter_Backlog push
 ```
+
+(`check-backlog-sections` run from the main checkout reads **`main`'s** copy of `docs/backlog.md`, not the backlog worktree's — if you just edited the other folder, a stale count is expected until the merge above has brought it in.)
 
 (The post-merge hook pushes both merges too; the explicit pushes cost
 nothing and do not depend on `core.hooksPath` being set.)
