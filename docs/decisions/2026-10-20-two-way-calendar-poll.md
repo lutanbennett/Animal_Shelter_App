@@ -9,3 +9,4 @@ Built to the backlog item, with these choices the item left open.
 - **Cancel mails all admins** through the status-alert mail path (alerts.ts send/adminEmails, now exported). The Director is an admin by night.
 - **Pure rules** are in calendar-change.ts with tests; completed or cancelled visits ignore calendar edits; all-day events are ignored.
 - **Push (watch channel) is out of scope**, as briefed.
+- **A clash is not durably listed.** The poll writes it to calendar_error, but the sweep that puts the calendar back clears that field in the same run. The count is in the cron log line (polled.clashes). A lasting list needs the same schema follow-up.

@@ -134,7 +134,7 @@ export async function pollCalendarChanges(origin: string | null): Promise<PollRe
       .eq("calendar_id", calendarId)
       .limit(1)
       .returns<{ sync_token: string | null }[]>();
-    let token = state?.[0]?.sync_token ?? null;
+    const token = state?.[0]?.sync_token ?? null;
     // First run (or an expired token): read everything once to get a token, applying nothing.
     const baseline = !token;
     let pageToken: string | null = null;

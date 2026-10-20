@@ -149,7 +149,7 @@ async function syncRow(row: Row, origin: string | null): Promise<SyncOutcome> {
         body: JSON.stringify(event),
       });
       if (res.ok) {
-        await write({ calendar_synced_at: startedAt, calendar_error: null });
+        await write({ calendar_synced_at: startedAt, calendar_error: null, ...(await stamp(res)) });
         return "updated";
       }
       // Someone deleted the event by hand: make it again rather than fail for good.
