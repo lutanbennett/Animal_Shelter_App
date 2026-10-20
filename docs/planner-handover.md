@@ -354,8 +354,14 @@ squash-merged branch stays ahead for ever. `/clean-streams` does the round.
 
 - **Lutan:** the two security switches; WAF and bot rules; BitLocker; the second admin; the contact
   read on production; the dry-run reviews; the spare-drive steps; the Home Assistant walkthrough;
-  the home-network session; prescriptions with more than three doses a day; `test-plan` as a
-  required check.
+  the home-network session.
+  **Two came off this list on 2026-10-20, both because they had already been decided and this sheet
+  still listed them:** *prescriptions with more than three doses a day* (three rounds stay, a
+  free-text note carries any extra dose) and *`test-plan` as a required check* — **it stays
+  ADVISORY, permanently, and `CLAUDE.md` now says so.** His words: *"Was already decided, another
+  one that I need to reprosecute."* **That is the second time in two rounds that this sheet has
+  cost him a decision he had already made.** An entry here is a claim that someone owes something;
+  before writing one, check the thing rather than the previous edition, and date-stamp it.
 - **The Director:** the domain transfer; the wording and data items; the shop; the sign-off ground
   rules.
 - **Time:** HSTS not before **2026-11-08**; the `sharp` override until `wrangler` and `miniflare`
