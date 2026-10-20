@@ -320,6 +320,25 @@ const manual: Manual = {
           ],
         },
         {
+          id: "home-covering-another-role",
+          title: "Home screen: if you cover another role",
+          path: "Home",
+          intro:
+            "If you have been given a second role for a while (the Head of Medical covering the Head of Maintenance, say), your home keeps each job's tiles together instead of mixing them.",
+          steps: [
+            "On a phone, buttons across the top switch between My job and the other role. The home opens on My job. Tap the other role to see its tiles; the app remembers your choice for the rest of the day.",
+            "On a computer the two sets of tiles sit one under the other, each under its role's name.",
+            "The role you are covering says Covering until, with the last day. The day after that the second set is gone and you see only your own job.",
+            "A tile both roles give appears in each set, because it is the same page. Counts (My tasks, Maintenance, photos waiting) stay on their tiles.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "This only changes how the home is laid out. What you may open is the same as before: both roles' access together.",
+            },
+          ],
+        },
+        {
           id: "my-recurring-jobs",
           title: "Doing your recurring jobs",
           roles: ["admin", "management"],
