@@ -158,6 +158,13 @@ function parsePrescriptionFields(
     if (!Number.isFinite(n) || n <= 0) return { error: t.prescriptions.errors.dosePositive };
     roundDoses[id] = n;
   }
+  // The forecast and medication list still read the one prescription amount (a database
+  // function, 0044), so when rounds differ it holds their average: doses a day x average is the
+  // true daily total whenever every dose sits in a ticked round. Equal amounts average to themselves.
+  const effective = roundIds.map((id) => roundDoses[id]);
+  if (effective.length > 0 && effective.every((v): v is number => v != null)) {
+    doseQuantity = Math.round((effective.reduce((x, y) => x + y, 0) / effective.length) * 1000) / 1000;
+  }
 
   return {
     fields: {
