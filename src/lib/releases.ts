@@ -74,7 +74,17 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
+export const unreleased: ReleaseNote[] = [];
+
+/** Newest first. */
+export const releases: Release[] = [
+  {
+    version: "0.38.0",
+    date: "2026-10-20",
+    title:
+      "Videos of residents, prescription times of day, and the visiting vet can record medical notes",
+    major: true,
+    notes: [
   { text: "Adding or editing a prescription now has Morning, Lunch and Evening ticks under the frequency. Choosing a frequency ticks its usual rounds and you can change them; the medication list and pick list use what you tick. For a fourth dose a day, tick the three rounds and say in the notes when the extra one is given. The note now shows on the medication list.", roles: ["admin", "management", "doctor"] },
   "If you cover another role for a while, your Home screen now keeps each job's tiles together. On a phone, switch between My job and the role you are covering (it says when the cover ends); on a computer they sit one under the other.",
   "A fundraising appeal can now show a medical photo, chosen one by one. It is public on that appeal only, starts covered until a visitor taps it, and is never used as the picture in a shared link.",
@@ -83,10 +93,9 @@ export const unreleased: ReleaseNote[] = [
     text: "You can now add videos of a resident in the same Photos section as pictures: MP4 or MOV, up to 500 MB (about five minutes). They go straight from your phone to Google Drive and carry on if the signal drops, play right on the page, and follow the same Medical and approval rules as photos. Photos and Videos buttons filter the gallery, and System status shows how much Drive space is left.",
     roles: ["admin", "management", "doctor"],
   },
-];
-
-/** Newest first. */
-export const releases: Release[] = [
+  { text: "The visiting vet can now record prescriptions, diets, weights, visits and procedures for residents at their own clinic.", roles: ["admin", "management", "doctor"] },
+    ],
+  },
   {
     version: "0.37.2",
     date: "2026-10-19",
