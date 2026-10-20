@@ -78,10 +78,10 @@ export const PROBES = [
   ...table("medical.immunizations", "immunization_records", `update immunization_records set notes = 'probe' where resident_id = $R`, `insert into immunization_records (resident_id, immunization_type_id, date_administered) values ($R, $IMM_TYPE, current_date - 400)`, `delete from immunization_records where resident_id = $R`, { c4: true }),
   ...table("medical.weight", "weight", `update weight set notes = 'probe' where resident_id = $R`, `insert into weight (resident_id, date, weight_kg) values ($R, current_date - 400, 5)`, `delete from weight where resident_id = $R`, { c5: true }),
   ...table("medical.diet", "resident_diets", `update resident_diets set notes = 'probe' where resident_id = $R`, `insert into resident_diets (resident_id, diet_type_id, start_date) values ($R, (select id from diet_types limit 1), current_date - 400)`, `delete from resident_diets where resident_id = $R`, {}),
-  { activity: "medical.archive", level: "edit", sql: `update weight set archived_at = now(), archive_reason = 'probe' where resident_id = $R`, known: [{ id: "N4", roles: ["doctor"] }] },
-  { activity: "medical.archive", level: "edit", sql: `update prescriptions set archived_at = now(), archive_reason = 'probe' where resident_id = $R`, known: [{ id: "N4", roles: ["doctor"] }] },
-  { activity: "medical.archive", level: "edit", sql: `update immunization_records set archived_at = now(), archive_reason = 'probe' where resident_id = $R`, known: [{ id: "N4", roles: ["doctor"] }] },
-  { activity: "medical.archive", level: "edit", sql: `update clinic_visits set archived_at = now(), archive_reason = 'probe' where resident_id = $R`, known: [{ id: "N4", roles: ["doctor"] }] },
+  { activity: "medical.archive", level: "edit", sql: `update weight set archived_at = now(), archive_reason = 'probe' where resident_id = $R` },
+  { activity: "medical.archive", level: "edit", sql: `update prescriptions set archived_at = now(), archive_reason = 'probe' where resident_id = $R` },
+  { activity: "medical.archive", level: "edit", sql: `update immunization_records set archived_at = now(), archive_reason = 'probe' where resident_id = $R` },
+  { activity: "medical.archive", level: "edit", sql: `update clinic_visits set archived_at = now(), archive_reason = 'probe' where resident_id = $R` },
 
   // --- Photos
   { activity: "photos.resident_add", level: "edit", scoped: true, fn: true, sql: `select record_attachment('resident', $R, 'harness-probe-file', 'probe.jpg', 'Medical', null, null)` },
