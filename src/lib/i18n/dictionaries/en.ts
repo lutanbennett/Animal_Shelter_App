@@ -1837,9 +1837,9 @@ const en = {
       },
     },
     frequencies: {
-      title: "Frequencies",
+      title: "How often",
       subtitle:
-        "The \"how often\" choices the prescription form offers — Twice daily, Weekly, Monthly… The label is what staff see; the schedule is what the medication forecast counts: so many times a day, or one dose every so many days, weeks or months starting on the prescription's start date. \"As needed\" can't be forecast. New ones can be added inline from the prescription form, so duplicates collect here: fix one in place, or merge it into the one to keep — its prescriptions move with it. A frequency that is on any prescription can't be deleted.",
+        "A record of the schedules in use. The prescription form no longer picks from this list: choose times a day, every so many days, weeks or months, or as needed, and the matching row is found or added here. The number of doses a day is the schedule's, never the number of ticked rounds. Read-only; nothing here needs managing.",
       couldntLoad: "Couldn't load frequencies",
       couldntLoadUsage: "Couldn't load prescription counts",
       createForm: {
@@ -4737,6 +4737,10 @@ const en = {
     newFrequencyScheduleHint:
       "So many times a day, or one dose every so many days / weeks / months from the start date. Whole numbers only.",
     chooseExistingFrequency: "Choose an existing frequency instead",
+    schedule: "How often",
+    scheduleHint: "Times a day, one dose every so many days, weeks or months, or as needed. The number of doses a day is set here, not by the ticks below.",
+    roundDose: (round: string) => `Amount at ${round}`,
+    roundDosesHint: "Leave an amount blank to use the dose above.",
     startDate: "Start date",
     endDate: "End date",
     endDateHint: "Leave blank if ongoing.",

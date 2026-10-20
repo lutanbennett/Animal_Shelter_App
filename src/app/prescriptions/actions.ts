@@ -8,7 +8,7 @@ import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { DOSE_UNITS, type DoseUnit } from "@/lib/i18n/enum-labels";
-import { parseSchedule, type FrequencySchedule } from "@/lib/prescriptions/frequency";
+import { parseSchedule, sameSchedule, scheduleLabel, type FrequencySchedule } from "@/lib/prescriptions/frequency";
 import { todayIso } from "@/lib/format";
 
 export type PrescriptionFormState = { error: string } | undefined;
@@ -52,13 +52,19 @@ async function saveRounds(
   supabase: Awaited<ReturnType<typeof createClient>>,
   prescriptionId: string,
   roundIds: string[],
+  /** Amount per ticked round (null = not stated). */
+  doses: Record<string, number | null>,
 ): Promise<{ error: string } | undefined> {
   if (roundIds.length > 0) {
     const { error } = await supabase
       .from("prescription_rounds")
       .upsert(
-        roundIds.map((round_id) => ({ prescription_id: prescriptionId, round_id })),
-        { onConflict: "prescription_id,round_id", ignoreDuplicates: true },
+        roundIds.map((round_id) => ({
+          prescription_id: prescriptionId,
+          round_id,
+          dose_quantity: doses[round_id] ?? null,
+        })),
+        { onConflict: "prescription_id,round_id" },
       );
     if (error) return { error: error.message };
   }
@@ -70,14 +76,14 @@ async function saveRounds(
 
 type ParsedPrescription = {
   roundIds: string[];
+  /** Amount per ticked round; a blank box takes the prescription's dose. */
+  roundDoses: Record<string, number | null>;
   startDate: string;
   endDate: string | null;
   doseQuantity: number | null;
   medicationId: string | null;
   newMedicationName: string | null;
   newMedicationUnit: string | null;
-  frequencyId: string | null;
-  newFrequencyLabel: string | null;
   newSchedule: FrequencySchedule | null;
   clinicVisitId: string | null;
   notes: string | null;
@@ -122,21 +128,35 @@ function parsePrescriptionFields(
     return { error: t.prescriptions.errors.newMedicationUnit };
   }
 
-  // Frequency: optional; an existing id, or a new label + schedule (0044:
-  // times a day, every N days/weeks/months, or as needed).
-  let frequencyId = str(formData, "frequencyId");
-  const newFrequencyLabel = str(formData, "newFrequencyLabel");
+  // How often (0044): times a day, every N days/weeks/months, or as needed. The frequency
+  // is the count of doses a day; the ticks never feed it. Left blank = no frequency.
   let newSchedule: FrequencySchedule | null = null;
-  if (frequencyId === "__new__") frequencyId = null;
-  if (!frequencyId && newFrequencyLabel) {
+  const kind = str(formData, "patternKind");
+  const hasCount = str(formData, "patternDosesPerDay") || str(formData, "patternIntervalCount");
+  if (kind === "asNeeded" || hasCount) {
     const parsed = parseSchedule({
-      kind: str(formData, "newFrequencyKind"),
-      dosesPerDay: str(formData, "newFrequencyDosesPerDay"),
-      intervalCount: str(formData, "newFrequencyIntervalCount"),
-      intervalUnit: str(formData, "newFrequencyIntervalUnit"),
+      kind,
+      dosesPerDay: str(formData, "patternDosesPerDay"),
+      intervalCount: str(formData, "patternIntervalCount"),
+      intervalUnit: str(formData, "patternIntervalUnit"),
     });
     if ("error" in parsed) return { error: t.frequency.errors[parsed.error] };
     newSchedule = parsed.schedule;
+  }
+
+  const roundIds = formData
+    .getAll("roundId")
+    .filter((v): v is string => typeof v === "string" && /^[0-9a-f-]{36}$/i.test(v));
+  const roundDoses: Record<string, number | null> = {};
+  for (const id of roundIds) {
+    const raw = str(formData, `roundDose_${id}`);
+    if (!raw) {
+      roundDoses[id] = doseQuantity;
+      continue;
+    }
+    const n = Number(raw);
+    if (!Number.isFinite(n) || n <= 0) return { error: t.prescriptions.errors.dosePositive };
+    roundDoses[id] = n;
   }
 
   return {
@@ -147,14 +167,11 @@ function parsePrescriptionFields(
       medicationId,
       newMedicationName,
       newMedicationUnit,
-      frequencyId,
-      newFrequencyLabel,
       newSchedule,
       clinicVisitId: str(formData, "clinicVisitId"),
       notes: str(formData, "notes"),
-      roundIds: formData
-        .getAll("roundId")
-        .filter((v): v is string => typeof v === "string" && /^[0-9a-f-]{36}$/i.test(v)),
+      roundIds,
+      roundDoses,
     },
   };
 }
@@ -171,7 +188,8 @@ async function ensureReferenceRows(
   fields: ParsedPrescription,
   t: Dictionary,
 ): Promise<{ error: string } | { medicationId: string; frequencyId: string | null }> {
-  let { medicationId, frequencyId } = fields;
+  let { medicationId } = fields;
+  let frequencyId: string | null = null;
 
   if (!medicationId) {
     // The id is made here, not read back with .select(): a login holding only
@@ -184,16 +202,25 @@ async function ensureReferenceRows(
     medicationId = newId;
   }
 
-  if (!frequencyId && fields.newFrequencyLabel) {
-    const { data, error } = await supabase
+  if (fields.newSchedule) {
+    // Reuse the row for this pattern if there is one, so the list does not fill with duplicates.
+    const { data: existing, error: findError } = await supabase
       .from("frequency")
-      .insert({ label: fields.newFrequencyLabel, ...fields.newSchedule })
-      .select("id")
-      .limit(1)
-      .returns<{ id: string }[]>();
-    if (error) return { error: error.message };
-    frequencyId = data?.[0]?.id ?? null;
-    if (!frequencyId) return { error: t.prescriptions.errors.saveFailed };
+      .select("id, doses_per_day, interval_count, interval_unit")
+      .returns<(FrequencySchedule & { id: string })[]>();
+    if (findError) return { error: findError.message };
+    frequencyId = existing?.find((f) => sameSchedule(f, fields.newSchedule!))?.id ?? null;
+    if (!frequencyId) {
+      const { data, error } = await supabase
+        .from("frequency")
+        .insert({ label: scheduleLabel(fields.newSchedule), ...fields.newSchedule })
+        .select("id")
+        .limit(1)
+        .returns<{ id: string }[]>();
+      if (error) return { error: error.message };
+      frequencyId = data?.[0]?.id ?? null;
+      if (!frequencyId) return { error: t.prescriptions.errors.saveFailed };
+    }
   }
 
   return { medicationId, frequencyId };
@@ -236,7 +263,7 @@ export async function createPrescription(
     notes: fields.notes,
   });
   if (error) return writeError(t, error);
-  const roundsResult = await saveRounds(supabase, prescriptionId, fields.roundIds);
+  const roundsResult = await saveRounds(supabase, prescriptionId, fields.roundIds, fields.roundDoses);
   if (roundsResult) return roundsResult;
 
   revalidateResidentPages(residentId);
@@ -287,7 +314,7 @@ export async function updatePrescription(
   if (error) return writeError(t, error);
   // RLS filters rather than rejects: a volunteer's update matches no rows.
   if (!data || data.length === 0) return { error: t.prescriptions.errors.saveFailed };
-  const roundsResult = await saveRounds(supabase, prescriptionId, fields.roundIds);
+  const roundsResult = await saveRounds(supabase, prescriptionId, fields.roundIds, fields.roundDoses);
   if (roundsResult) return roundsResult;
 
   revalidateResidentPages(residentId);

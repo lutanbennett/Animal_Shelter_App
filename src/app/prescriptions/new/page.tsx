@@ -53,7 +53,7 @@ export default async function NewPrescriptionPage(
       .returns<{ is_deceased: boolean }[]>(),
     loadPrescriptionOptions(supabase, residentId, locale),
   ]);
-  const { medications, frequencies, clinicVisits, rounds, frequencyRounds, roundsError } = options;
+  const { medications, frequencies, clinicVisits, rounds, roundsError } = options;
 
   const resident = residentResult.data?.[0];
   if (!resident) {
@@ -126,7 +126,6 @@ export default async function NewPrescriptionPage(
         frequencies={frequencies.data ?? []}
         clinicVisits={clinicVisits.data ?? []}
         rounds={rounds}
-        frequencyRounds={frequencyRounds}
         preselectedClinicVisitId={
           typeof clinicVisitId === "string" && clinicVisitId
             ? clinicVisitId
