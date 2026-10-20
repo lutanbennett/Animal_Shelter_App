@@ -112,3 +112,26 @@ export function scheduleDosesPerDayForSort(s: FrequencySchedule): number {
 export function compareSchedules<T extends FrequencySchedule>(a: T, b: T): number {
   return scheduleDosesPerDayForSort(b) - scheduleDosesPerDayForSort(a);
 }
+
+/** The English label stored when the form creates a frequency row for a pattern nobody has used yet. */
+export function scheduleLabel(s: FrequencySchedule): string {
+  switch (scheduleKind(s)) {
+    case "perDay":
+      return s.doses_per_day === 1 ? "Once a day" : `${s.doses_per_day} × a day`;
+    case "interval": {
+      const n = s.interval_count as number;
+      const unit = s.interval_unit as IntervalUnit;
+      return n === 1 ? `Every ${unit}` : `Every ${n} ${unit}s`;
+    }
+    default:
+      return "As needed";
+  }
+}
+
+export function sameSchedule(a: FrequencySchedule, b: FrequencySchedule): boolean {
+  return (
+    a.doses_per_day === b.doses_per_day &&
+    a.interval_count === b.interval_count &&
+    a.interval_unit === b.interval_unit
+  );
+}

@@ -1,8 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { compareSchedules, type FrequencySchedule } from "@/lib/prescriptions/frequency";
-import { CreateFrequencyForm } from "./CreateFrequencyForm";
-import { FrequenciesTable, type FrequencyRow } from "./FrequenciesTable";
+import { describeSchedule } from "@/lib/prescriptions/frequency";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { requirePermission } from "@/lib/permissions/require";
 
@@ -30,7 +29,7 @@ export default async function FrequenciesPage() {
       counts.set(row.frequency_id, (counts.get(row.frequency_id) ?? 0) + 1);
     }
   }
-  const frequencies: FrequencyRow[] = (frequenciesResult.data ?? [])
+  const frequencies = (frequenciesResult.data ?? [])
     .map((frequency) => ({
       ...frequency,
       prescription_count: counts.get(frequency.id) ?? 0,
@@ -58,8 +57,28 @@ export default async function FrequenciesPage() {
           </p>
         )}
 
-        <CreateFrequencyForm />
-        <FrequenciesTable frequencies={frequencies} />
+        {frequencies.length === 0 ? (
+          <p className="text-sm text-muted">{f.table.noFrequencies}</p>
+        ) : (
+          <table className="w-full max-w-2xl text-left text-sm">
+            <thead className="text-muted">
+              <tr>
+                <th className="py-2 pr-4 font-medium">{f.table.label}</th>
+                <th className="py-2 pr-4 font-medium">{f.table.schedule}</th>
+                <th className="py-2 font-medium">{f.table.prescriptions}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {frequencies.map((row) => (
+                <tr key={row.id} className="border-t border-border">
+                  <td className="py-2 pr-4 text-foreground">{row.label}</td>
+                  <td className="py-2 pr-4 text-foreground">{describeSchedule(t, row)}</td>
+                  <td className="py-2 text-foreground">{f.table.prescriptionCount(row.prescription_count)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </LargerScreenNotice>
     </main>
   );

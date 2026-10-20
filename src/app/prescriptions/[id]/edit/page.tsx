@@ -50,11 +50,11 @@ export default async function EditPrescriptionPage(
     loadPrescriptionOptions(supabase, residentId, locale, prescription.clinic_visit_id),
     supabase
       .from("prescription_rounds")
-      .select("round_id")
+      .select("round_id, dose_quantity")
       .eq("prescription_id", id)
-      .returns<{ round_id: string }[]>(),
+      .returns<{ round_id: string; dose_quantity: number | null }[]>(),
   ]);
-  const { medications, frequencies, clinicVisits, rounds, frequencyRounds, roundsError } = options;
+  const { medications, frequencies, clinicVisits, rounds, roundsError } = options;
 
   const resident = residentResult.data?.[0];
   if (!resident) notFound();
@@ -114,8 +114,11 @@ export default async function EditPrescriptionPage(
         frequencies={frequencies.data ?? []}
         clinicVisits={clinicVisits.data ?? []}
         rounds={rounds}
-        frequencyRounds={frequencyRounds}
-        initial={{ ...prescription, round_ids: (tickedResult.data ?? []).map((r) => r.round_id) }}
+        initial={{
+          ...prescription,
+          round_ids: (tickedResult.data ?? []).map((r) => r.round_id),
+          round_doses: Object.fromEntries((tickedResult.data ?? []).map((r) => [r.round_id, r.dose_quantity])),
+        }}
         cancelHref={tabHref}
       />
     </main>

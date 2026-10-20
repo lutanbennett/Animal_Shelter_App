@@ -10,11 +10,12 @@ import { createPrescription, updatePrescription } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, todayIso } from "@/lib/format";
 import { DOSE_UNITS, doseUnitLabel } from "@/lib/i18n/enum-labels";
-import { compareSchedules, describeSchedule, type FrequencySchedule } from "@/lib/prescriptions/frequency";
+import { describeSchedule, type FrequencySchedule } from "@/lib/prescriptions/frequency";
 import { defaultRoundKeys, showsRoundTicks, tickVerdict } from "@/lib/prescriptions/rounds";
 import {
   EMPTY_SCHEDULE_FIELDS,
   FrequencyScheduleFields,
+  scheduleToFields,
 } from "@/components/FrequencyScheduleFields";
 import type {
   FrequencyOption,
@@ -41,6 +42,8 @@ export type PrescriptionInitial = {
   notes: string | null;
   /** The rounds ticked now (prescription_rounds), as round ids. */
   round_ids?: string[];
+  /** The amount given in each ticked round (prescription_rounds.dose_quantity), by round id. */
+  round_doses?: Record<string, number | null>;
 };
 
 const inputClass =
@@ -68,7 +71,7 @@ function scheduleOfFields(v: typeof EMPTY_SCHEDULE_FIELDS): FrequencySchedule | 
   if (!Number.isInteger(n) || n <= 0) return null;
   return v.kind === "perDay"
     ? { doses_per_day: n, interval_count: null, interval_unit: null }
-    : { doses_per_day: null, interval_count: n, interval_unit: "day" };
+    : { doses_per_day: null, interval_count: n, interval_unit: v.intervalUnit as FrequencySchedule["interval_unit"] };
 }
 
 export function PrescriptionForm({
@@ -79,7 +82,6 @@ export function PrescriptionForm({
   frequencies,
   clinicVisits,
   rounds,
-  frequencyRounds,
   preselectedClinicVisitId = null,
   initial = null,
   cancelHref,
@@ -91,7 +93,8 @@ export function PrescriptionForm({
   frequencies: FrequencyOption[];
   clinicVisits: ClinicVisitOption[];
   rounds: RoundOption[];
-  frequencyRounds: FrequencyRoundDefaults;
+  /** Kept so the pages need not change; the usual ticks now come from the pattern chosen. */
+  frequencyRounds?: FrequencyRoundDefaults;
   preselectedClinicVisitId?: string | null;
   initial?: PrescriptionInitial | null;
   cancelHref: string;
@@ -114,21 +117,20 @@ export function PrescriptionForm({
     medications.length === 0,
   );
   const [newMedicationUnit, setNewMedicationUnit] = useState<string>("tablet");
-  const [isAddingFrequency, setIsAddingFrequency] = useState(false);
-  const [newSchedule, setNewSchedule] = useState(EMPTY_SCHEDULE_FIELDS);
-
-  // The rounds ticked. Choosing a frequency pre-ticks its defaults; the person can change them.
-  const [frequencyId, setFrequencyId] = useState(initial?.frequency_id ?? "");
-  const [ticked, setTicked] = useState<Set<string>>(
-    () =>
-      new Set(
-        initial?.round_ids ?? (initial?.frequency_id ? (frequencyRounds[initial.frequency_id] ?? []) : []),
-      ),
+  // How often: a pattern (times a day / every N days / as needed), not a pick from a list. The
+  // frequency is the count of doses a day; the ticks below never change it.
+  const [pattern, setPattern] = useState(() => {
+    const current = initial?.frequency_id ? frequencies.find((f) => f.id === initial.frequency_id) : null;
+    return current ? scheduleToFields(current) : EMPTY_SCHEDULE_FIELDS;
+  });
+  const schedule: FrequencySchedule | null = scheduleOfFields(pattern);
+  const [ticked, setTicked] = useState<Set<string>>(() => new Set(initial?.round_ids ?? []));
+  // Amount per ticked round, as typed; blank means "the dose above".
+  const [roundDoses, setRoundDoses] = useState<Record<string, string>>(() =>
+    Object.fromEntries(
+      Object.entries(initial?.round_doses ?? {}).map(([id, q]) => [id, q == null ? "" : String(q)]),
+    ),
   );
-  const chosenFrequency = frequencies.find((f) => f.id === frequencyId) ?? null;
-  const schedule: FrequencySchedule | null = isAddingFrequency
-    ? scheduleOfFields(newSchedule)
-    : chosenFrequency;
   const verdict = tickVerdict(schedule, ticked.size);
 
   function tickDefaultsFor(s: FrequencySchedule | null) {
@@ -283,72 +285,16 @@ export function PrescriptionForm({
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="frequencyId" className="text-sm font-medium text-muted">
-            {t.prescriptions.frequency}
-          </label>
-          {isAddingFrequency ? (
-            <div className="flex flex-col gap-2">
-              <div className="flex gap-2">
-                <input
-                  id="newFrequencyLabel"
-                  name="newFrequencyLabel"
-                  required
-                  autoFocus
-                  placeholder={t.prescriptions.newFrequencyPlaceholder}
-                  className={`${inputClass} flex-1`}
-                />
-                <RowActionButton
-                  icon={ACTION_ICONS.clear}
-                  label={t.prescriptions.chooseExistingFrequency}
-                  onClick={() => {
-                    setIsAddingFrequency(false);
-                    setTicked(new Set(frequencyId ? (frequencyRounds[frequencyId] ?? []) : []));
-                  }}
-                />
-              </div>
-              <span className="text-sm font-medium text-muted">
-                {t.prescriptions.newFrequencySchedule}
-              </span>
-              <FrequencyScheduleFields
-                value={newSchedule}
-                onChange={(v) => {
-                  setNewSchedule(v);
-                  tickDefaultsFor(scheduleOfFields(v));
-                }}
-                namePrefix="newFrequency"
-              />
-              <p className="text-xs text-muted">
-                {t.prescriptions.newFrequencyScheduleHint}
-              </p>
-            </div>
-          ) : (
-            <select
-              id="frequencyId"
-              name="frequencyId"
-              value={frequencyId}
-              onChange={(e) => {
-                if (e.target.value === "__new__") {
-                  setIsAddingFrequency(true);
-                  setFrequencyId("");
-                  tickDefaultsFor(null);
-                  return;
-                }
-                setFrequencyId(e.target.value);
-                setTicked(new Set(frequencyRounds[e.target.value] ?? []));
-              }}
-              className={inputClass}
-            >
-              <option value="">{t.prescriptions.selectFrequency}</option>
-              {[...frequencies]
-                .sort((a, b) => compareSchedules(a, b) || a.label.localeCompare(b.label))
-                .map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.label} — {describeSchedule(t, f)}
-                  </option>
-                ))}
-              <option value="__new__">{t.prescriptions.addNewFrequency}</option>
-            </select>
-          )}
+          <span className="text-sm font-medium text-muted">{t.prescriptions.schedule}</span>
+          <FrequencyScheduleFields
+            value={pattern}
+            onChange={(v) => {
+              setPattern(v);
+              tickDefaultsFor(scheduleOfFields(v));
+            }}
+            namePrefix="pattern"
+          />
+          <p className="text-xs text-muted">{t.prescriptions.scheduleHint}</p>
         </div>
       </div>
 
@@ -373,6 +319,28 @@ export function PrescriptionForm({
               </label>
             ))}
           </div>
+          {rounds.some((r) => ticked.has(r.id)) && (
+            <div className="grid grid-cols-3 gap-2">
+              {rounds
+                .filter((r) => ticked.has(r.id))
+                .map((r) => (
+                  <label key={r.id} className="flex flex-col gap-1 text-xs text-muted">
+                    {t.prescriptions.roundDose(r.name)}
+                    <input
+                      name={`roundDose_${r.id}`}
+                      type="number"
+                      inputMode="decimal"
+                      min="0"
+                      step="any"
+                      value={roundDoses[r.id] ?? ""}
+                      onChange={(e) => setRoundDoses((prev) => ({ ...prev, [r.id]: e.target.value }))}
+                      className={inputClass}
+                    />
+                  </label>
+                ))}
+            </div>
+          )}
+          <p className="text-xs text-muted">{t.prescriptions.roundDosesHint}</p>
           {verdict === "tooMany" && schedule && (
             <p role="alert" className="text-sm text-danger">
               {t.prescriptions.roundsTooMany(describeSchedule(t, schedule), ticked.size)}
