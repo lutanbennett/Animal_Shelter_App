@@ -7,7 +7,7 @@
 | Feature | Record that `0227`'s retention job **is** scheduled on production, and correct the `0.38.0` handover and record, which both say it is open |
 | Backlog item | `docs/backlog.md` → already ticked by another session with the same confirmation; **nothing to tick here** |
 | Branch / worktree | `claude/cron-job-confirmed` @ `C:\Development\Animal_Shelter_cron-job-confirmed` |
-| PR | **#777 — guessed before opening and re-read afterwards** |
+| PR | **#780 — guessed #777 and was WRONG**, re-read from `gh pr create`'s own output and corrected here. Three other streams opened PRs between the guess and the create. The guess is written down precisely so being wrong is visible; the record-PR streak of six was for release PRs opened minutes after their cut, which is a quieter moment than this one |
 | Dev server | not driven — documents only |
 | Tested by / date | Claude Opus 5 / 2026-10-20 |
 | Carries a migration? | no |
