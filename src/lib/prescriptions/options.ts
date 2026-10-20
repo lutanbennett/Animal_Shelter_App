@@ -7,6 +7,10 @@ import { localLabel } from "@/lib/translations/labels";
 export type MedicationOption = { id: string; name: string; dose_unit: string };
 export type FrequencyOption = FrequencySchedule & { id: string; label: string };
 export type ClinicVisitOption = LinkableVisit;
+/** One of the medication rounds (0137), in the order the form shows them. */
+export type RoundOption = { id: string; key: string; name: string };
+/** The rounds each frequency ticks by default (frequency_rounds), as round ids. */
+export type FrequencyRoundDefaults = Record<string, string[]>;
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -26,7 +30,7 @@ export async function loadPrescriptionOptions(
   locale: Locale,
   keepVisitId: string | null = null,
 ) {
-  const [medications, frequencies, linkable] = await Promise.all([
+  const [medications, frequencies, linkable, roundRows, defaultRows] = await Promise.all([
     supabase
       .from("picker_medications")
       .select("id, name, name_th, dose_unit")
@@ -38,7 +42,26 @@ export async function loadPrescriptionOptions(
       .order("label")
       .returns<(FrequencyOption & { label_th: string | null })[]>(),
     loadLinkableVisits(supabase, residentId, { notInFuture: true, keep: keepVisitId }),
+    supabase
+      .from("rounds")
+      .select("id, key, name, name_th")
+      .eq("for_medication", true)
+      .order("sort_order")
+      .returns<{ id: string; key: string; name: string; name_th: string }[]>(),
+    supabase
+      .from("frequency_rounds")
+      .select("frequency_id, round_id")
+      .returns<{ frequency_id: string; round_id: string }[]>(),
   ]);
+  const rounds: RoundOption[] = (roundRows.data ?? []).map((r) => ({
+    id: r.id,
+    key: r.key,
+    name: localLabel(locale, r.name, r.name_th),
+  }));
+  const frequencyRounds: FrequencyRoundDefaults = {};
+  for (const row of defaultRows.data ?? []) {
+    (frequencyRounds[row.frequency_id] ??= []).push(row.round_id);
+  }
   // Same { data, error } shape as the other two, for the pages' error list.
   const clinicVisits = {
     data: linkable.visits,
@@ -55,5 +78,8 @@ export async function loadPrescriptionOptions(
         frequencies.data?.map(({ label_th, ...f }) => ({ ...f, label: localLabel(locale, f.label, label_th) })) ?? null,
     },
     clinicVisits,
+    rounds,
+    frequencyRounds,
+    roundsError: roundRows.error?.message ?? defaultRows.error?.message ?? null,
   };
 }

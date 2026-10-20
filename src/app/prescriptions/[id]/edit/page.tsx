@@ -34,7 +34,7 @@ export default async function EditPrescriptionPage(
   if (!prescription) notFound();
 
   const residentId = prescription.resident_id;
-  const [residentResult, stateResult, options] = await Promise.all([
+  const [residentResult, stateResult, options, tickedResult] = await Promise.all([
     supabase
       .from("residents")
       .select("id, name, thai_name")
@@ -48,8 +48,13 @@ export default async function EditPrescriptionPage(
       .limit(1)
       .returns<{ is_deceased: boolean }[]>(),
     loadPrescriptionOptions(supabase, residentId, locale, prescription.clinic_visit_id),
+    supabase
+      .from("prescription_rounds")
+      .select("round_id")
+      .eq("prescription_id", id)
+      .returns<{ round_id: string }[]>(),
   ]);
-  const { medications, frequencies, clinicVisits } = options;
+  const { medications, frequencies, clinicVisits, rounds, frequencyRounds, roundsError } = options;
 
   const resident = residentResult.data?.[0];
   if (!resident) notFound();
@@ -77,6 +82,7 @@ export default async function EditPrescriptionPage(
     [t.prescriptions.couldntLoadMedications, medications.error],
     [t.prescriptions.couldntLoadFrequencies, frequencies.error],
     [t.prescriptions.couldntLoadVetAppointments, clinicVisits.error],
+    [t.prescriptions.couldntLoadRounds, roundsError ? { message: roundsError } : tickedResult.error],
   ] as const;
 
   return (
@@ -107,7 +113,9 @@ export default async function EditPrescriptionPage(
         medications={medications.data ?? []}
         frequencies={frequencies.data ?? []}
         clinicVisits={clinicVisits.data ?? []}
-        initial={prescription}
+        rounds={rounds}
+        frequencyRounds={frequencyRounds}
+        initial={{ ...prescription, round_ids: (tickedResult.data ?? []).map((r) => r.round_id) }}
         cancelHref={tabHref}
       />
     </main>

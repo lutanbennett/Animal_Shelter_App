@@ -4744,6 +4744,14 @@ const en = {
     noLinkedVisit: "No linked visit",
     notes: "Notes",
     notesPlaceholder: "e.g. give with food, route, anything the carer should know",
+    couldntLoadRounds: "Couldn't load the rounds",
+    rounds: "Time of day",
+    roundsHint: "Tick the rounds the dose is given in. Choosing a frequency ticks its usual ones; change them if this prescription differs.",
+    roundsTooMany: (frequency: string, count: number) =>
+      `${frequency}, but ${count} times of day are ticked. Untick some, or pick a frequency that gives more doses a day.`,
+    roundsFewer: (frequency: string, count: number) =>
+      `${frequency} with ${count} ${count === 1 ? "time" : "times"} of day ticked — say in the notes when the other dose is given (for example "give final tablet at midnight").`,
+    roundsNone: "No time of day is ticked, so this will show on the medication list as having no round. Tick at least one.",
     saving: "Saving...",
     saveButton: "Save prescription",
     editPageTitle: "Edit Prescription",

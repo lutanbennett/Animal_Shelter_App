@@ -10,7 +10,8 @@ import { createPrescription, updatePrescription } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, todayIso } from "@/lib/format";
 import { DOSE_UNITS, doseUnitLabel } from "@/lib/i18n/enum-labels";
-import { compareSchedules, describeSchedule } from "@/lib/prescriptions/frequency";
+import { compareSchedules, describeSchedule, type FrequencySchedule } from "@/lib/prescriptions/frequency";
+import { defaultRoundKeys, showsRoundTicks, tickVerdict } from "@/lib/prescriptions/rounds";
 import {
   EMPTY_SCHEDULE_FIELDS,
   FrequencyScheduleFields,
@@ -19,6 +20,8 @@ import type {
   FrequencyOption,
   MedicationOption,
   ClinicVisitOption,
+  RoundOption,
+  FrequencyRoundDefaults,
 } from "@/lib/prescriptions/options";
 import { OptionalDateInput } from "@/components/OptionalDateInput";
 import { visitDate } from "@/lib/clinics/linkable";
@@ -36,6 +39,8 @@ export type PrescriptionInitial = {
   start_date: string;
   end_date: string | null;
   notes: string | null;
+  /** The rounds ticked now (prescription_rounds), as round ids. */
+  round_ids?: string[];
 };
 
 const inputClass =
@@ -56,6 +61,16 @@ function medicationOptionLabel(t: Parameters<typeof doseUnitLabel>[0], m: { name
     : `${m.name} (${doseUnitLabel(t, m.dose_unit)})`;
 }
 
+/** The schedule the inline "add a frequency" fields describe so far, or null while incomplete. */
+function scheduleOfFields(v: typeof EMPTY_SCHEDULE_FIELDS): FrequencySchedule | null {
+  if (v.kind === "asNeeded") return { doses_per_day: null, interval_count: null, interval_unit: null };
+  const n = Number(v.kind === "perDay" ? v.dosesPerDay : v.intervalCount);
+  if (!Number.isInteger(n) || n <= 0) return null;
+  return v.kind === "perDay"
+    ? { doses_per_day: n, interval_count: null, interval_unit: null }
+    : { doses_per_day: null, interval_count: n, interval_unit: "day" };
+}
+
 export function PrescriptionForm({
   mode = "create",
   residentId,
@@ -63,6 +78,8 @@ export function PrescriptionForm({
   medications,
   frequencies,
   clinicVisits,
+  rounds,
+  frequencyRounds,
   preselectedClinicVisitId = null,
   initial = null,
   cancelHref,
@@ -73,6 +90,8 @@ export function PrescriptionForm({
   medications: MedicationOption[];
   frequencies: FrequencyOption[];
   clinicVisits: ClinicVisitOption[];
+  rounds: RoundOption[];
+  frequencyRounds: FrequencyRoundDefaults;
   preselectedClinicVisitId?: string | null;
   initial?: PrescriptionInitial | null;
   cancelHref: string;
@@ -97,6 +116,33 @@ export function PrescriptionForm({
   const [newMedicationUnit, setNewMedicationUnit] = useState<string>("tablet");
   const [isAddingFrequency, setIsAddingFrequency] = useState(false);
   const [newSchedule, setNewSchedule] = useState(EMPTY_SCHEDULE_FIELDS);
+
+  // The rounds ticked. Choosing a frequency pre-ticks its defaults; the person can change them.
+  const [frequencyId, setFrequencyId] = useState(initial?.frequency_id ?? "");
+  const [ticked, setTicked] = useState<Set<string>>(
+    () =>
+      new Set(
+        initial?.round_ids ?? (initial?.frequency_id ? (frequencyRounds[initial.frequency_id] ?? []) : []),
+      ),
+  );
+  const chosenFrequency = frequencies.find((f) => f.id === frequencyId) ?? null;
+  const schedule: FrequencySchedule | null = isAddingFrequency
+    ? scheduleOfFields(newSchedule)
+    : chosenFrequency;
+  const verdict = tickVerdict(schedule, ticked.size);
+
+  function tickDefaultsFor(s: FrequencySchedule | null) {
+    const keys = s ? defaultRoundKeys(s) : [];
+    setTicked(new Set(rounds.filter((r) => keys.includes(r.key)).map((r) => r.id)));
+  }
+  function toggleRound(id: string) {
+    setTicked((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
 
   // The dose is entered in whichever unit the chosen medication uses.
   const selectedMedication = medications.find((m) => m.id === medicationId);
@@ -254,7 +300,10 @@ export function PrescriptionForm({
                 <RowActionButton
                   icon={ACTION_ICONS.clear}
                   label={t.prescriptions.chooseExistingFrequency}
-                  onClick={() => setIsAddingFrequency(false)}
+                  onClick={() => {
+                    setIsAddingFrequency(false);
+                    setTicked(new Set(frequencyId ? (frequencyRounds[frequencyId] ?? []) : []));
+                  }}
                 />
               </div>
               <span className="text-sm font-medium text-muted">
@@ -262,7 +311,10 @@ export function PrescriptionForm({
               </span>
               <FrequencyScheduleFields
                 value={newSchedule}
-                onChange={setNewSchedule}
+                onChange={(v) => {
+                  setNewSchedule(v);
+                  tickDefaultsFor(scheduleOfFields(v));
+                }}
                 namePrefix="newFrequency"
               />
               <p className="text-xs text-muted">
@@ -273,9 +325,16 @@ export function PrescriptionForm({
             <select
               id="frequencyId"
               name="frequencyId"
-              defaultValue={initial?.frequency_id ?? ""}
+              value={frequencyId}
               onChange={(e) => {
-                if (e.target.value === "__new__") setIsAddingFrequency(true);
+                if (e.target.value === "__new__") {
+                  setIsAddingFrequency(true);
+                  setFrequencyId("");
+                  tickDefaultsFor(null);
+                  return;
+                }
+                setFrequencyId(e.target.value);
+                setTicked(new Set(frequencyRounds[e.target.value] ?? []));
               }}
               className={inputClass}
             >
@@ -292,6 +351,42 @@ export function PrescriptionForm({
           )}
         </div>
       </div>
+
+      {showsRoundTicks(schedule) && rounds.length > 0 && (
+        <fieldset className="flex flex-col gap-2">
+          <legend className="text-sm font-medium text-muted">{t.prescriptions.rounds}</legend>
+          <div className="grid grid-cols-3 gap-2">
+            {rounds.map((r) => (
+              <label
+                key={r.id}
+                className="flex cursor-pointer items-center justify-center gap-2 rounded border border-border bg-surface px-3 py-4 text-base font-medium text-foreground has-[:checked]:border-primary has-[:checked]:bg-primary/10"
+              >
+                <input
+                  type="checkbox"
+                  name="roundId"
+                  value={r.id}
+                  checked={ticked.has(r.id)}
+                  onChange={() => toggleRound(r.id)}
+                  className="h-5 w-5"
+                />
+                {r.name}
+              </label>
+            ))}
+          </div>
+          {verdict === "tooMany" && schedule && (
+            <p role="alert" className="text-sm text-danger">
+              {t.prescriptions.roundsTooMany(describeSchedule(t, schedule), ticked.size)}
+            </p>
+          )}
+          {verdict === "fewer" && schedule && (
+            <p className="text-sm text-muted">
+              {t.prescriptions.roundsFewer(describeSchedule(t, schedule), ticked.size)}
+            </p>
+          )}
+          {verdict === "none" && <p className="text-sm text-muted">{t.prescriptions.roundsNone}</p>}
+          <p className="text-xs text-muted">{t.prescriptions.roundsHint}</p>
+        </fieldset>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1">
