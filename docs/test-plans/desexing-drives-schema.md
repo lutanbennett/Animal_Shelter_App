@@ -22,8 +22,8 @@
 
 ## 2. Automated gates
 
-- [ ] `node scripts/worktree.mjs sync` — n/a: filled in below once run
-- [ ] `node scripts/gates.mjs` — n/a: filled in below once run
+- [x] `node scripts/worktree.mjs sync` — origin/main merged in cleanly (a backlog edit only)
+- [x] `node scripts/gates.mjs` ends as printed: `gates: typecheck=0 lint=0 test=0 build=0`
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
