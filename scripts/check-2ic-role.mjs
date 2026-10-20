@@ -72,21 +72,22 @@ const probes = [
   ["change a stock figure directly", `update medication set stock_on_hand = 1 where id = (select id from medication limit 1)`, MANAGERS],
   ["add a medicine", `insert into medication (name, dose_unit) values ('probe', 'tablet')`, who("admin", "management", "doctor")],
   ["change a conversion", `update item_unit_conversions set note = 'probe' where id = (select id from item_unit_conversions limit 1)`, MANAGERS],
-  ["change a delivery", `update stock_receipts set note = 'probe' where id = (select id from stock_receipts limit 1)`, who()],  // 0145 (C8): no update policy on stock_receipts for anyone; a wrong delivery is deleted and recorded again
+  ["change a delivery", `update stock_receipts set note = 'probe' where id = (select id from stock_receipts limit 1)`, who()],  // 0145 (C8): a wrong delivery is deleted and recorded again; 0191's update policy stays for the bills inbox but 0235's trigger refuses any change except cost
+  ["put a cost on a delivery (bills inbox)", `update stock_receipts set cost = 1 where id = (select id from stock_receipts limit 1)`, DELIVERERS], // 0191/0235: the one legitimate edit
   // her limits: nothing outside the whiteboard
   ["residents", `select 1 from residents where id = '${R}'`, ONLY_SIC],
   ["resident_list_view", `select 1 from resident_list_view where resident_id = '${R}'`, ONLY_SIC],
   // RE-BASELINED 2026-10-06 (director-draft-apply): the draft ticks row 17 (weights) and 15 (prescribe) for the 2IC
   ["weight", `select 1 from weight where resident_id = '${R}'`, SIC_ONE],
   ["prescriptions", `select 1 from prescriptions where resident_id = '${R}'`, SIC_ONE],
-  ["attachments", `select 1 from attachments limit 1`, who("sic", ...OLD)], // RE-BASELINED 2026-10-07 (0152): her maintenance.photos cell reads a job's attachments; 0174: a doctor reads clinical owner types only
+  ["attachments", `select 1 from attachments limit 1`, who("sic", "dl", "doctor", ...OLD)], // RE-BASELINED 2026-10-07 (0152): her maintenance.photos cell reads a job's attachments. RE-BASELINED 2026-10-20: dl reads a delivery's photos (0189 bill_owner_can: stock_receipt needs stock.delivery) and a doctor reads the reports on visits at its own clinic (0220); both policies are scoped to those owner types, so neither reaches other attachments
   ["assistant_actions", `select 1 from assistant_actions limit 1`, ONLY_SIC],
   ["insert placement", `insert into placement_history (resident_id, placement_type, start_date) values ('${R}', 'SendToHospital', now() + interval '1 minute')`, ONLY_SIC],
   ["delete a job", `delete from maintenance where id = '${JOB}'`, who("sic", ...OLD)], // RE-BASELINED 2026-10-11 (0179): maintenance.delete, which the 2IC holds and the Head of Maintenance does not
   ["add a job photo", `insert into maintenance_photos (maintenance_id, drive_file_id) values ('${JOB}', 'probe')`, who("sic", ...OLD)], // RE-BASELINED 2026-10-07 (0152): the draft gives her maintenance.photos
   ["set up a recurring task", `insert into recurring_jobs (title, repeat, weekdays) values ('probe', 'weekly', '{1}')`, MANAGERS],
   // what she can do beyond stock: who and where, the board, her own tasks (0141's cells, 0141's policies)
-  ["resident_who_and_where", `select 1 from resident_who_and_where where id = '${R}'`, who("sic", "volunteer", "po", "co", "dl", ...OLD)], // the borrowed volunteer floor
+  ["resident_who_and_where", `select 1 from resident_who_and_where where id = '${R}'`, who("sic", "volunteer", "po", "co", "dl", ...OLD)], // the borrowed volunteer floor; RE-BASELINED 2026-10-20: admin and management too, by 0192 (sees_all_residents; the view's columns are a subset of what they read in residents)
   ["maintenance board", `select 1 from maintenance where id = '${JOB}'`, who("sic", ...OLD)],
   ["create a job", `insert into maintenance (title, zone_id) values ('probe', '${ZONE}')`, who("sic", ...OLD)],
   ["move a job on", `update maintenance set status = 'In Progress' where id = '${JOB}'`, who("sic", ...OLD)],
