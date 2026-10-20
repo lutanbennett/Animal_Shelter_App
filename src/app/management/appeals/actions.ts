@@ -44,6 +44,10 @@ async function allowed() {
   return can(await loadPermissions(), "appeal.run");
 }
 
+async function canMedical() {
+  return can(await loadPermissions(), "appeal.medical_photo");
+}
+
 type Row = {
   id: string;
   resident_id: string;
@@ -102,14 +106,15 @@ export async function saveAppeal(id: string, fields: AppealFields): Promise<Acti
   });
 }
 
-export type PhotoChoice = { attachmentId: string; isGraphic: boolean };
+export type PhotoChoice = { attachmentId: string; isGraphic: boolean; medicalOk: boolean };
 
 /**
  * Sets which of the resident's photos the appeal shows, in order, one of them
  * the cover. The database refuses a Medical-folder file, a file of another
  * resident and a non-image (appeal_photos_guard); this turns its refusal into
- * words. There is deliberately no way here to override that
- * (docs/decisions/2026-10-16-appeals-schema.md, point 3).
+ * words. A Medical-folder file is accepted only when its row says medicalOk,
+ * the deliberate per-photo choice (0216), and only a person holding
+ * appeal.medical_photo may make it.
  */
 export async function saveAppealPhotos(
   id: string,
@@ -128,6 +133,19 @@ export async function saveAppealPhotos(
     const ids = photos.map((p) => p.attachmentId);
     if (new Set(ids).size !== ids.length) return refuse(e.photoOther);
     if (coverAttachmentId && !ids.includes(coverAttachmentId)) return refuse(e.photoOther);
+
+    // Ticking a medical photo is a narrower power than editing the appeal. The database enforces it too.
+    const { data: have, error: hErr } = await supabase
+      .from("appeal_photos")
+      .select("attachment_id")
+      .eq("appeal_id", id)
+      .eq("medical_ok", true)
+      .returns<{ attachment_id: string }[]>();
+    if (hErr) return databaseFailure("appeals.photos.medical", hErr, t.common);
+    const alreadyOk = new Set((have ?? []).map((x) => x.attachment_id));
+    if (photos.some((p) => p.medicalOk && !alreadyOk.has(p.attachmentId)) && !(await canMedical())) {
+      return refuse(e.photoMedicalPermission);
+    }
 
     // Remove only what is no longer chosen, then upsert the rest, so a refused photo
     // leaves the appeal with the photos it already had rather than none.
@@ -158,10 +176,12 @@ export async function saveAppealPhotos(
           position,
           is_cover: p.attachmentId === coverAttachmentId,
           is_graphic: p.isGraphic,
+          medical_ok: p.medicalOk,
         })),
         { onConflict: "appeal_id,attachment_id" },
       );
       if (error) {
+        if (/permission to show a medical/i.test(error.message ?? "")) return refuse(e.photoMedicalPermission);
         if (/Medical/i.test(error.message ?? "")) return refuse(e.photoMedical);
         if (/own resident|image files/i.test(error.message ?? "")) return refuse(e.photoOther);
         return databaseFailure("appeals.photos.save", error, t.common);

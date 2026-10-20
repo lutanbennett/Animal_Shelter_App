@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "A fundraising appeal can now show a medical photo, chosen one by one. It is public on that appeal only, starts covered until a visitor taps it, and is never used as the picture in a shared link.",
   { text: "Make a meme: the Residents tab now has a search box. Type part of a name, a Thai name or an R-code to find a resident; with nothing typed, residents with the newest photos come first.", roles: ["admin", "management", "second_in_command"] },
   {
     text: "You can now add videos of a resident in the same Photos section as pictures: MP4 or MOV, up to 500 MB (about five minutes). They go straight from your phone to Google Drive and carry on if the signal drops, play right on the page, and follow the same Medical and approval rules as photos. Photos and Videos buttons filter the gallery, and System status shows how much Drive space is left.",

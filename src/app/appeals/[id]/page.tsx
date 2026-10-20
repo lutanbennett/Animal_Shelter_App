@@ -23,7 +23,7 @@ import { AppealView } from "../AppealView";
 export const dynamic = "force-dynamic";
 
 /**
- * Open Graph for Facebook and LINE. The picture is never a distressing one: a
+ * Open Graph for Facebook and LINE. The picture is never a medical one (0216) or a distressing one: a
  * graphic cover is skipped for the first plain photo, then the resident's
  * profile photo, then the site's default picture, because a link preview is
  * shown to people who did not choose to look.
@@ -44,7 +44,7 @@ export async function generateMetadata(props: PageProps<"/appeals/[id]">): Promi
     bodyLead(text.whatIsWrong, 200) ||
     t.appeals.shareFallback(text.residentName, formatBahtExact(appeal.target_amount, locale));
   const title = `${text.title} · ${t.header.appName}`;
-  const plain = photos.find((p) => !p.is_graphic);
+  const plain = photos.find((p) => !p.is_graphic && !p.is_medical);
   const fileId = plain?.drive_file_id ?? resident?.profile_photo_drive_file_id ?? null;
   const image = fileId
     ? { url: driveImageUrl(fileId, 1200), alt: text.residentName }
@@ -88,9 +88,9 @@ export default async function AppealPage(props: PageProps<"/appeals/[id]">) {
 
   // The appeal's own photos; with none, the resident's profile photo so the
   // page is never bare. That photo is already public on /adopt.
-  const gallery = photos.map((p) => ({ id: p.id, fileId: p.drive_file_id, isGraphic: p.is_graphic }));
+  const gallery = photos.map((p) => ({ id: p.id, fileId: p.drive_file_id, isGraphic: p.is_graphic, isMedical: p.is_medical }));
   if (gallery.length === 0 && resident?.profile_photo_drive_file_id) {
-    gallery.push({ id: "profile", fileId: resident.profile_photo_drive_file_id, isGraphic: false });
+    gallery.push({ id: "profile", fileId: resident.profile_photo_drive_file_id, isGraphic: false, isMedical: false });
   }
 
   const pageUrl = origin ? new URL(`/appeals/${appeal.id}`, origin).toString() : null;

@@ -37,6 +37,8 @@ export type PublicAppeal = {
   social_links: string[];
   cover_drive_file_id: string | null;
   cover_is_graphic: boolean;
+  /** True when the cover is a Medical-folder photo (0216): the share preview must not use it. */
+  cover_is_medical: boolean;
   published_at: string | null;
   closed_at: string | null;
   translations: PublicTranslations;
@@ -49,10 +51,11 @@ export type PublicAppealPhoto = {
   position: number;
   is_cover: boolean;
   is_graphic: boolean;
+  is_medical: boolean;
 };
 
 const APPEAL_COLUMNS =
-  "id, resident_id, resident_name, resident_thai_name, species, title, what_is_wrong, treatment_needed, cost_covers, target_amount, raised_amount, raised_as_of, deadline, status, outcome_note, display_style, social_links, cover_drive_file_id, cover_is_graphic, published_at, closed_at, translations";
+  "id, resident_id, resident_name, resident_thai_name, species, title, what_is_wrong, treatment_needed, cost_covers, target_amount, raised_amount, raised_as_of, deadline, status, outcome_note, display_style, social_links, cover_drive_file_id, cover_is_graphic, cover_is_medical, published_at, closed_at, translations";
 
 /** numeric columns can arrive as strings; the page does arithmetic on them. */
 function normalise(row: PublicAppeal): PublicAppeal {
@@ -92,7 +95,7 @@ export async function loadPublicAppealPhotos(
 ): Promise<PublicAppealPhoto[]> {
   const { data, error } = await supabase
     .from("public_appeal_photos")
-    .select("id, appeal_id, drive_file_id, position, is_cover, is_graphic")
+    .select("id, appeal_id, drive_file_id, position, is_cover, is_graphic, is_medical")
     .eq("appeal_id", appealId)
     .returns<PublicAppealPhoto[]>();
   if (error) throw new Error(`Appeals: could not read the photos: ${error.message}`);

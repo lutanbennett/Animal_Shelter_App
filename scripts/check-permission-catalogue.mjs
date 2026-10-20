@@ -246,7 +246,7 @@ const PINNED = {
   "/management/donations/[id]": { guards: ['requirePermission("donation.receipt")'], decides: [] },
   // Sponsorship drives (0210). The gifts on an appeal's page are read only by a login that may also read donations.
   "/management/appeals/new": { guards: ['requirePermission("appeal.run")'], decides: [] },
-  "/management/appeals/[id]": { guards: ['requirePermission("appeal.run")'], decides: ["donation.receipt"] },
+  "/management/appeals/[id]": { guards: ['requirePermission("appeal.run")'], decides: ["appeal.medical_photo", "donation.receipt"] },
   "/management/appeals/[id]/preview": { guards: ['requirePermission("appeal.run")'], decides: ["donation.receipt"] },
   // The meme library (0223). A meme's page opens at the list's Read; Record a share, Edit and Archive ask Edit in the body.
   "/memes/new": { guards: ['requirePermission("social.library")'], decides: [] },

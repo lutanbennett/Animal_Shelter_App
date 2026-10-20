@@ -17,7 +17,7 @@ const prose = "whitespace-pre-line text-[17px] leading-relaxed text-site-ink";
 const textLink =
   "inline-flex min-h-11 items-center font-bold text-site-action-hover underline underline-offset-4 hover:text-site-action";
 
-export type AppealGalleryItem = { id: string; fileId: string; isGraphic: boolean };
+export type AppealGalleryItem = { id: string; fileId: string; isGraphic: boolean; isMedical?: boolean };
 
 /**
  * The body of an appeal's page, without the site header and footer. The public
