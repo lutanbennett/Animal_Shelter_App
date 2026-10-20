@@ -137,12 +137,33 @@ two or three at once; more than that and merging becomes the bottleneck.
    clears. `/clean-streams` does this round in one go: it checks each
    leftover's PR is merged, asks, then `done`s the ones confirmed.
 
-## Release PRs merge without asking
+## Release PRs and the handovers merge without asking
 
 **A release's own two PRs — the cut and the record — are merged by Claude
 as soon as CI is green, with no approval round-trip.** Lutan's decision,
 2026-10-13, after `0.28.0` cost him five interventions where two were
 genuinely his.
+
+**The same now applies to the two handover documents' PRs**
+(`docs/planner-handover.md` and `docs/release-handover.md`) — Lutan,
+2026-10-21: *"the release function has an automerge set so I don't need to
+tell it to merge, could that be done here as well rather than relying on me
+to tell you to merge all the time."* The release handover was already
+covered, because `docs/release-procedure.md` rule 3 puts it in the same PR
+as the record; **what this adds is the planner handover's own PR.**
+
+Why it is safe on exactly these two and nowhere else: a handover **outranks
+nothing** — each says so in its own opening lines — it is read by one chat,
+it is rewritten within nine streams or one release, and **a wrong one is
+corrected by its successor rather than by a reviewer.** Lutan has never
+reviewed one, and asking him to merge it made a gate out of bookkeeping,
+which is the same fault the record PR had.
+
+**There is no auto-merge switch, and do not add one.** Neither GitHub nor
+the app has auto-merge enabled on this repository, and the release side has
+never used one — the mechanism has always been this rule. A second
+mechanism doing the same job would be one more thing to keep in step, and
+the app's switch would merge a PR nobody had read the checks on.
 
 What stays his, and is not negotiable by a later session: **major versus
 minor**, because it mails every admin and cannot be undone, and the
