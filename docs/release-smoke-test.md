@@ -74,7 +74,7 @@ Public pages are the live surface; internal screens are seen only by staff.
 - [ ] One `/adopt/[id]` profile opens with its photo
 - [ ] `/donate`, `/foster`, `/volunteer`, `/our-work` all render
 - [ ] Checked **after a cache purge or a 10-minute wait** — anonymous GETs are edge-cached per data centre, so a stale page can hide a real break or invent one that is not there
-- [ ] The edge cache is actually serving: load a public page twice **in a real browser** and see `x-lanna-cache: HIT` on the second. It matters because the cache is what keeps public pages off the CPU-limited render path while `ORIGIN_HOST` is empty. Do not check this with curl — curl sends no `locale` cookie, so it gets `BYPASS` every time and proves nothing either way
+- [ ] The edge cache is actually serving: load a public page twice **in a real browser** and see `x-lanna-cache: HIT` on the second. It matters because the cache is what keeps public pages off the CPU-limited render path while `ORIGIN_HOST` is empty. Do not check this with curl — curl sends no `locale` cookie, so it gets `BYPASS` every time and proves nothing either way. `HIT` means the Worker answered from its own edge copy; it does not mean the browser may cache it, so `HIT` beside `no-store` is normal (docs/decisions/2026-10-20-release-tooling-fixes.md). While `PUBLIC_SITE` is locked the page checked is the gate, so record this line `n/a: vacuous (site locked)`; after unlock it is a real check
 
 ## Date handling
 
