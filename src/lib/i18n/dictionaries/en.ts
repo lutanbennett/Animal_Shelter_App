@@ -1209,6 +1209,13 @@ const en = {
           notConnected: "Not connected — every upload fails until a new token is set.",
           failed: "Google Drive did not answer the check.",
         },
+        driveSpace: {
+          title: "Drive space (photos and videos)",
+          ok: (v: { used: string; limit: string; percent: number }) => `${v.used} of ${v.limit} used (${v.percent}%).`,
+          unlimited: (v: { used: string }) => `${v.used} used; the account has no set limit.`,
+          nearlyFull: "Nearly full: videos are the biggest users. Free space in Drive before the next upload fails.",
+          failed: "Google Drive did not report its space.",
+        },
         calendar: {
           title: "Shelter calendar (Google Calendar)",
           off: "Not set up: vet visits are not being sent to a calendar.",
@@ -6202,6 +6209,29 @@ const en = {
     confirmRemove: "Confirm remove",
     photoFallback: "Photo",
     residentPhotoAlt: "Resident photo",
+    /** Videos live in the same section as photos (0229, docs/decisions/2026-10-20-videos-uploaded-straight-to-drive.md). */
+    videos: {
+      dropHere: "Drop photos or videos here or tap to upload",
+      hint: "Videos: MP4 or MOV, up to 500 MB (about 5 minutes). They go straight to Google Drive and carry on if the connection drops.",
+      uploadingVideo: (percent: number) => `Uploading ${percent}%`,
+      retrying: "Connection lost. Trying again…",
+      finishing: "Saving…",
+      videoFallback: "Video",
+      videoAlt: (name: string) => `Video: ${name}`,
+      cannotPlay: "This browser cannot play the video.",
+      filter: {
+        label: "Photos and videos",
+        all: (n: number) => `Photos and videos (${n})`,
+        photos: (n: number) => `Photos (${n})`,
+        videos: (n: number) => `Videos (${n})`,
+      },
+      errors: {
+        wrongType: (name: string) => `${name} is not an MP4 or MOV video, so it was not added.`,
+        tooBig: (name: string) => `${name} is bigger than 500 MB (about 5 minutes of video). Trim it or record a shorter clip.`,
+        incomplete: "The video did not arrive in full. Try again.",
+        failed: "The video could not be uploaded. Try again.",
+      },
+    },
     viewer: {
       position: (n: number, total: number) => `${n} of ${total}`,
       previous: "Previous photo",

@@ -349,6 +349,51 @@ export class DriveClient {
     return (await res.json()) as DriveFile;
   }
 
+  /**
+   * Opens a resumable upload session (Drive's "resumable" upload type) and returns its address. The address is
+   * the credential: whoever holds it can send this one file's bytes and nothing else, so it goes to the browser,
+   * which sends the file to Drive in chunks. `origin` is sent as the Origin header because Drive only gives the
+   * browser's cross-origin chunk requests CORS headers for the origin that opened the session.
+   */
+  async startResumableUpload(params: {
+    name: string;
+    mimeType: string;
+    parentId: string;
+    size: number;
+    origin: string;
+  }): Promise<string> {
+    const res = await this.request(`${DRIVE_UPLOAD_API}/files?uploadType=resumable&fields=id`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json; charset=UTF-8",
+        "X-Upload-Content-Type": params.mimeType,
+        "X-Upload-Content-Length": String(params.size),
+        Origin: params.origin,
+      },
+      body: JSON.stringify({ name: params.name, parents: [params.parentId] }),
+    });
+    const location = res.headers.get("location");
+    if (!location) throw new DriveApiError("Drive returned no upload address.", 502);
+    return location;
+  }
+
+  /**
+   * `files.get` with `alt=media` and the caller's Range header. The response is Drive's own (200, or 206 with
+   * Content-Range) with its body unread, so a video streams to the player instead of into memory.
+   */
+  async streamFile(fileId: string, range: string | null): Promise<Response> {
+    return this.request(`${DRIVE_API}/files/${encodeURIComponent(fileId)}?alt=media`, {
+      headers: range ? { Range: range } : {},
+    });
+  }
+
+  /** `about.get` storageQuota: bytes used and the limit (absent on an unlimited account). */
+  async getStorageQuota(): Promise<{ limit: number | null; usage: number }> {
+    const res = await this.request(`${DRIVE_API}/about?fields=storageQuota`);
+    const q = ((await res.json()) as { storageQuota?: { limit?: string; usage?: string } }).storageQuota ?? {};
+    return { limit: q.limit ? Number(q.limit) : null, usage: Number(q.usage ?? 0) };
+  }
+
   /** `files.get` for metadata. */
   async getFile(fileId: string, fields: string): Promise<DriveFile> {
     const res = await this.request(
