@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none. Asked directly by Lutan, 2026-10-20 and 2026-10-21, in chat |
 | Branch / worktree | `claude/handover-delta` @ `C:\Development\Animal_Shelter_handover-delta` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3013` |
-| PR | #788 |
+| PR | #790 |
 | Tested by / date | Claude (Daily Planner session) / 2026-10-21 |
 | Carries a migration? | no |
 | Tested at SHA | `0b0650d2` |
