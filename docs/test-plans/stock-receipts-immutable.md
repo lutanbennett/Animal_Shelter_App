@@ -11,7 +11,7 @@
 | PR | pending: number known once opened |
 | Tested by / date | Claude / 2026-10-20 |
 | Carries a migration? | yes — `0235_stock_receipts_cost_only_update.sql` |
-| Tested at SHA | `SHA_HERE` |
+| Tested at SHA | `409838d8` |
 
 ## 1. Scope and risk
 
@@ -22,8 +22,8 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — SYNC_RESULT
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — GATES_RESULT
+- [x] `node scripts/worktree.mjs sync` — origin/main merged in, already up to date
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — `gates: typecheck=0 lint=0 test=0 build=0`
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
