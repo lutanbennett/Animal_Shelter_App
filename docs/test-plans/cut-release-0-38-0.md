@@ -89,7 +89,18 @@ verify-cut: all checks passed
 
 gates: typecheck=0 lint=0 test=0 build=0
 ```
-- [ ] CI green on the PR (runs the same three) — `n/a: not yet — the PR does not exist at this commit.` **Filled in from `gh run list` once it does**, with the run's `headSha` read and matched against this branch's HEAD rather than taken from the PR bar's cached reading. The plan is written and committed **before** the PR is opened, which is what has made the first run green for nine releases. **Ticking this line is itself a commit, so a second run follows and is expected**; it is confirmed against the new HEAD before the merge
+- [x] CI green on the PR (runs the same three) — **all 8 checks passing, 0 failing, `state: OPEN`, `mergeable: MERGEABLE`, `mergeStateStatus: CLEAN`** on PR #775. The run's `headSha` was read from `gh run view` and matched against this branch's HEAD rather than taken from the PR bar's cached reading: `completed success 7f66c26c run=39417293047` against `HEAD=7f66c26cf33278f08044d0bb44bf83150b7cd71d`. **The first run was green by construction for the tenth release running**, because the plan was written and committed before the PR was opened. `test-plan` and `audit` both passed. **Ticking this line is itself a commit, so a second run follows and is expected**; it is confirmed against the new HEAD before the merge
+
+```
+audit                  pass   11s
+cards-count            pass   8s
+check                  pass   1m58s
+migration-numbers      pass   12s
+new-policy-role-names  pass   8s
+public-views           pass   2m12s
+script-integrity       pass   17s
+test-plan              pass   8s
+```
 - [x] `node scripts/check-release-guards.mjs` — all 16 guards `ok`, exit 0
 
 ```
