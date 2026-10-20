@@ -35,7 +35,7 @@ export function calendarConfigured(): boolean {
 
 let cached: { value: string; expiresAt: number } | null = null;
 
-async function errorText(res: Response): Promise<string> {
+export async function errorText(res: Response): Promise<string> {
   try {
     const body = (await res.json()) as { error?: { message?: string } | string; error_description?: string };
     if (typeof body.error === "string") return body.error_description ?? body.error;
@@ -65,7 +65,7 @@ async function accessToken(): Promise<string> {
   return data.access_token;
 }
 
-async function calendarFetch(path: string, init: RequestInit = {}): Promise<Response> {
+export async function calendarFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const id = encodeURIComponent(process.env.GOOGLE_CALENDAR_ID ?? "");
   const headers = new Headers(init.headers);
   headers.set("Authorization", `Bearer ${await accessToken()}`);
@@ -100,6 +100,16 @@ function wantsEvent(row: Row): boolean {
 
 function isPending(r: Pick<Row, "calendar_synced_at" | "calendar_out_of_date_at">): boolean {
   return !r.calendar_synced_at || (r.calendar_out_of_date_at !== null && r.calendar_out_of_date_at > r.calendar_synced_at);
+}
+
+/** What the app records after its own write, so the poll can tell its own change from the Director's. */
+async function stamp(res: Response): Promise<Record<string, string | null>> {
+  try {
+    const e = (await res.json()) as { id?: string; etag?: string; updated?: string };
+    return { calendar_etag: e.etag ?? null, calendar_event_updated_at: e.updated ?? null };
+  } catch {
+    return {};
+  }
 }
 
 async function syncRow(row: Row, origin: string | null): Promise<SyncOutcome> {
@@ -149,9 +159,15 @@ async function syncRow(row: Row, origin: string | null): Promise<SyncOutcome> {
     }
     const res = await calendarFetch("/events", { method: "POST", body: JSON.stringify(event) });
     if (!res.ok) throw new Error(`Calendar create failed (${res.status}): ${await errorText(res)}`);
-    const created = (await res.json()) as { id?: string };
+    const created = (await res.json()) as { id?: string; etag?: string; updated?: string };
     if (!created.id) throw new Error("Calendar create returned no event id.");
-    await write({ calendar_event_id: created.id, calendar_synced_at: startedAt, calendar_error: null });
+    await write({
+      calendar_event_id: created.id,
+      calendar_synced_at: startedAt,
+      calendar_error: null,
+      calendar_etag: created.etag ?? null,
+      calendar_event_updated_at: created.updated ?? null,
+    });
     return "created";
   } catch (err) {
     const message = (err instanceof Error ? err.message : String(err)).slice(0, 500);
