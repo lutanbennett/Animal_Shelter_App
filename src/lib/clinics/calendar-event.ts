@@ -35,6 +35,8 @@ export function buildCalendarEvent(v: CalendarVisit, origin: string | null) {
     summary: `${v.clinicName} - ${v.residentName}`,
     location: v.clinicName,
     description: lines.join("\n"),
+    // The two-way poll only looks at events carrying this (calendar-poll.ts).
+    extendedProperties: { private: { visitId: v.id } },
     start: { dateTime: bangkokDateTime(start), timeZone: "Asia/Bangkok" },
     end: { dateTime: bangkokDateTime(end), timeZone: "Asia/Bangkok" },
   };

@@ -315,7 +315,7 @@ lives on the internet-facing box** —
 
 It needs `CLOUDFLARE_PURGE_TOKEN` in `.env.deploy.production` (an API token scoped to
 **Zone → Cache Purge** on the one zone; `CLOUDFLARE_ZONE_ID` is already there, so
-this is one new value). **If it is missing the script refuses and names exactly what
+this is one new value). **The token expires 2027-12-31 — renew it before then, or the purge step starts refusing.** **If it is missing the script refuses and names exactly what
 to create**, and the fallback is unchanged — **Cloudflare dashboard → Caching →
 Configuration → Purge Everything**, which is Lutan's step — then re-run the check on
 the Pi:

@@ -210,6 +210,9 @@ const ANON_FUNCTIONS = new Set([
   "is_known_drive_file",
 ]);
 const ANON_OK = /^(public_|site_)/;
+// Tables that deliberately take a public INSERT (and nothing else) from anon. Each needs its own proof in
+// check-public-views.mjs that anon cannot read, change or delete a row.
+const ANON_INSERT_TABLES = new Set(["desexing_drive_signups"]);
 
 /** Statements of a stripped file, trimmed, with blanks dropped. */
 function statements(sql) {
@@ -310,6 +313,7 @@ function securityFindings(sql, before) {
     for (const name of names) {
       if (!name) continue;
       if (ANON_OK.test(name) || (isFn && ANON_FUNCTIONS.has(name))) continue;
+      if (ANON_INSERT_TABLES.has(name) && /^grant +insert/i.test(s)) continue;
       out.push(`\`grant … on ${name} to anon\` — anon may only be granted public_* / site_* objects${isFn ? " or a function on the public-site allow-list (ANON_FUNCTIONS)" : ""}.`);
     }
   }

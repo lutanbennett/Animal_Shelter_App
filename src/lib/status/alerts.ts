@@ -139,7 +139,7 @@ function simulated(report: HealthReport): HealthReport {
 }
 
 /** Every non-archived admin's sign-in email, as release mail finds them. */
-async function adminEmails(): Promise<string[]> {
+export async function adminEmails(): Promise<string[]> {
   const db = createAdminClient();
   const { data, error } = await db
     .from("user_roles")
@@ -153,7 +153,7 @@ async function adminEmails(): Promise<string[]> {
   return [...new Set(emails.filter((e): e is string => !!e))];
 }
 
-type Mail = { subject: string; text: string; html: string };
+export type Mail = { subject: string; text: string; html: string };
 
 const escapeHtml = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -168,7 +168,7 @@ const escapeHtml = (s: string) =>
  *   - anywhere else (the Pi, a Worker without the binding): skipped, with
  *     the reason, never silently.
  */
-async function send(
+export async function send(
   mail: Mail,
   to: string[],
   origin: string,
