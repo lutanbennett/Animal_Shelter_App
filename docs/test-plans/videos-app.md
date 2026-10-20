@@ -11,7 +11,7 @@
 | PR | (opened from this branch) |
 | Tested by / date | Claude (dev, browser pane at 375px) — 2026-10-20 |
 | Carries a migration? | yes — `0231_public_photos_exclude_videos.sql` (renumbered from 0230, which #763 took on `main`) |
-| Tested at SHA | SHA_PLACEHOLDER |
+| Tested at SHA | 49bbefd8 |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,9 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Closing lines, exactly as printed:
 
 ```
-GATES_PLACEHOLDER
+=== gates: build exited 0 after 33s
+
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
