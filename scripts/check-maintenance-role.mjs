@@ -51,7 +51,7 @@ const probes = [
   ["zones", `select 1 from zones where id = '${ZONE}'`, "hm-one"],
   ["enclosures", `select 1 from enclosures where id = '${ENC}'`, "hm-one"],
   ["app_users", `select 1 from app_users limit 1`, "hm-one"],
-  ["resident_who_and_where", `select 1 from resident_who_and_where where id = '${R}'`, { ...NONE, hm: 1, volunteer: 1 }],
+  ["resident_who_and_where", `select 1 from resident_who_and_where where id = '${R}'`, { ...NONE, hm: 1, volunteer: 1, admin: 1, management: 1 }], // RE-BASELINED 2026-10-20: admin and management by 0192 (sees_all_residents)
   ["recurring_jobs", `select 1 from recurring_jobs where id = '${RJ_MINE}'`, "hm-one"],
   ["recurring_job_assignees", `select 1 from recurring_job_assignees where job_id = '${RJ_MINE}'`, "hm-one"],
   // her work
@@ -76,7 +76,7 @@ const probes = [
   ["prescriptions", `select 1 from prescriptions where resident_id = '${R}'`, "hm-zero"],
   ["medication", `select 1 from medication limit 1`, "hm-zero"],
   ["diet_types", `select 1 from diet_types limit 1`, "hm-zero"],
-  ["attachments", `select 1 from attachments limit 1`, WITH_HM], // her own maintenance.photos cell reads a job's attachments (0152)
+  ["attachments", `select 1 from attachments limit 1`, { ...WITH_HM, doctor: 1 }], // her own maintenance.photos cell reads a job's attachments (0152); RE-BASELINED 2026-10-20: a doctor reads the reports on visits at its own clinic (0220), scoped to that owner type
   ["stock_counts", `select 1 from stock_counts limit 1`, "hm-zero"],
   ["contacts", `select 1 from contacts limit 1`, "hm-zero"],
   ["assistant_actions", `select 1 from assistant_actions limit 1`, "hm-zero"],
