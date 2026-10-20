@@ -11,7 +11,7 @@
 | PR | pending |
 | Tested by / date | Claude / 2026-10-20 |
 | Carries a migration? | yes — `0232_calendar_two_way_schema.sql` |
-| Tested at SHA | SHA_HERE |
+| Tested at SHA | `e3a93070` |
 
 ## 1. Scope and risk
 
@@ -22,8 +22,8 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — GATES_SYNC
-- [x] `node scripts/gates.mjs` — GATES_LINE
+- [x] `node scripts/worktree.mjs sync` — `origin/main` `96065c8a` was already merged; nothing new to bring in
+- [x] `node scripts/gates.mjs` — ends `gates: typecheck=0 lint=0 test=0 build=0`
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data
