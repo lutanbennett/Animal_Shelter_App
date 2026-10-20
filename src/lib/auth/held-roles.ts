@@ -45,3 +45,33 @@ export async function withHeldRoles(users: readonly AppUser[]): Promise<AppUser[
   const held = await loadHeldRoleKeys(users.map((u) => u.id));
   return users.map((u) => ({ ...u, role_keys: held.get(u.id) ?? [u.role_key] }));
 }
+
+export type HeldRole = { key: string; name: string; nameTh: string | null; isMain: boolean; endsOn: string | null };
+
+/**
+ * One login's roles in force today for the home screen: the main role first, then each cover with the last day it
+ * counts. Same rule and same service-role read as loadHeldRoleKeys; names are for headings only, never for a check.
+ */
+export async function loadHeldRoles(userId: string): Promise<HeldRole[]> {
+  const today = todayIso();
+  const { data, error } = await createAdminClient()
+    .from("user_roles")
+    .select("is_main, starts_on, ends_on, roles(key, name, name_th, archived_at)")
+    .eq("user_id", userId)
+    .is("archived_at", null)
+    .order("is_main", { ascending: false })
+    .order("ends_on", { ascending: true, nullsFirst: false });
+  if (error) throw new Error(`Held roles: could not read user_roles: ${error.message}`);
+  const out: HeldRole[] = [];
+  for (const row of (data ?? []) as unknown as {
+    is_main: boolean;
+    starts_on: string | null;
+    ends_on: string | null;
+    roles: { key: string; name: string; name_th: string | null; archived_at: string | null } | null;
+  }[]) {
+    if (!row.roles || row.roles.archived_at) continue;
+    if ((row.starts_on && row.starts_on > today) || (row.ends_on && row.ends_on < today)) continue;
+    out.push({ key: row.roles.key, name: row.roles.name, nameTh: row.roles.name_th, isMain: row.is_main, endsOn: row.ends_on });
+  }
+  return out;
+}

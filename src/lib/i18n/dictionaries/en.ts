@@ -139,6 +139,10 @@ const en = {
 
   /** The signed-in home screens (/home): tiles for a role, and Admin's switch between homes. */
   appHome: {
+    /** Home for someone who holds more than one role: the switch over the groups, the main role's tab, and a cover's end. */
+    groupsLabel: "Choose a job",
+    myJob: "My job",
+    coveringUntil: (date: string) => `Covering until ${date}`,
     pageTitle: "Home",
     subtitle: "Tap a job to start it.",
     /** The heading over Admin's switch. */

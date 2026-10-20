@@ -214,6 +214,33 @@ export function homeTilesForRoles(
   return withCounts(shown, t, counts);
 }
 
+/** One role's share of a multi-role home: its tiles, drawn as if it were the person's only role. */
+export type HomeGroup = { roleKey: string; tiles: HomeTile[] };
+
+/**
+ * The same home as homeTilesForRoles(), kept apart by role (main role first) instead of merged: a tile two roles both
+ * give is in each group. Layout only: every tile still needs the union `perms` to open its page. A login with one role
+ * gets one group, the same tiles homeTilesFor() draws.
+ */
+export function homeGroupsForRoles(
+  perms: Permissions,
+  t: Dictionary,
+  billsWaiting: number | undefined,
+  cardsByRole: Readonly<Record<string, readonly CardKey[]>>,
+  counts?: TileCounts,
+  savedByRole: Readonly<Record<string, readonly string[]>> = {},
+): HomeGroup[] {
+  const keys = perms.roles.length > 0 ? perms.roles : [perms.role.key];
+  const raw = keys.map((key) => {
+    const asRole: Permissions = { ...perms, role: { ...perms.role, key } };
+    return { roleKey: key, tiles: homeTilesBase(asRole, t, billsWaiting, cardsByRole[key], savedByRole[key]) };
+  });
+  const addPhotosRedundant = keys.length > 1 && raw.some((g) => g.tiles.some((x) => x.href === "/medical/photos"));
+  return raw
+    .map((g) => ({ roleKey: g.roleKey, tiles: withCounts(addPhotosRedundant ? g.tiles.filter((x) => x.href !== "/photos/add") : g.tiles, t, counts) }))
+    .filter((g, i) => i === 0 || g.tiles.length > 0);
+}
+
 function homeTilesBase(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[], saved?: readonly string[]): HomeTile[] {
   // A role Admin has chosen tiles for shows those; a role with none keeps the home it is derived (0225).
   if (saved && saved.length > 0) return savedTilesFor(saved, perms, t, billsWaiting);
