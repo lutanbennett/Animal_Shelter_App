@@ -36,10 +36,15 @@ than at the happy path.
 
 Run `node scripts/check-test-plan.mjs` locally before pushing to see what CI will say.
 
-The `test-plan` CI job currently reports **red without blocking the merge** — it is
-a deliberate soft gate while the process beds in, not an oversight. Treat a red
-`test-plan` as a stop anyway; it becomes a required check once we know the
-checklist is working.
+The `test-plan` CI job reports **red without blocking the merge**, and **that is
+permanent** — decided by Lutan on 2026-10-20: *"we will NOT make this mandatory
+it stays as advisory"* (`docs/decisions/2026-10-20-test-plan-stays-advisory.md`).
+It is a deliberate soft gate, not an oversight and not a trial. **Treat a red
+`test-plan` as a stop anyway:** the script goes red only when a plan is genuinely
+wrong, so a red one is always someone's mistake to fix.
+It will **not** become a required check. Earlier wording here said it would
+"once we know the checklist is working", which read as a decision still pending
+and got him asked for an answer he had already given.
 The completed checklist is also pasted into the PR and read by the production
 release manager before `npm run deploy:prod`.
 

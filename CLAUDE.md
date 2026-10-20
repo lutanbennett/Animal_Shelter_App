@@ -215,11 +215,23 @@ before pushing.
   genuinely broken plan also reported green. Putting the distinction in
   the script gets both; **do not reintroduce `continue-on-error`, and do
   not make the script fail on an unsigned plan.**
-  It is still deliberately **not** a required check: the user's staged
-  rollout, "see how we go, and if it is working smoothly then we can
-  change to a hard block". Promoting it in branch protection is the
-  user's call and no session's to make; if you find protection already
-  requiring it, say so rather than assuming it was intended.
+  **`test-plan` is ADVISORY, permanently. DECIDED 2026-10-20 by Lutan:
+  "we will NOT make this mandatory it stays as advisory". Do not raise it
+  again, and do not list it anywhere as a decision he owes.**
+  This closes what used to stand here as a staged rollout — *"see how we
+  go, and if it is working smoothly then we can change to a hard block"*.
+  That wording described a trial with a decision pending at the end of
+  it, so every document built from this file carried "`test-plan` as a
+  required check" as something still waiting on him, and on 2026-10-20 a
+  planner put it to him as an open question. **It was not open. The trial
+  ended and the answer was no.**
+  Nothing about the script changes: it still goes red only when a plan is
+  genuinely wrong, a correct-but-unsigned plan still exits 0, and
+  `continue-on-error` still must not come back. What is settled is only
+  that it will **not** be promoted in branch protection.
+  **If you find branch protection already requiring it, say so rather
+  than assuming it was intended** — against this decision, that is a
+  change nobody asked for.
 - **Because it does not block, a PR can reach `main` unchecked.** Closing
   that is release-time work: before any production deploy, confirm by hand
   that every PR in the release has a completed checklist and stop if one
