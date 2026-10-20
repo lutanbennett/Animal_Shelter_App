@@ -17,11 +17,9 @@ and to nothing else** — not to decisions, records, test plans or anything a fe
 > fresh facts.
 
 **What this file is.** A snapshot for whoever runs `/plan-day` next in a fresh chat. **Nothing here
-outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`.** If they disagree with it,
-they are right and this is stale.
-
-**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → this.
-**The next slug is `267`** (258 + nine).
+outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`** — if they disagree with it,
+they are right and this is stale. **Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → this.
+**The next slug is `267`.**
 
 ---
 
@@ -141,12 +139,11 @@ a stream that produced nothing counts, a stream he ran himself counts, a second 
 does not, and the menu-orphan chats are not workstreams.
 
 Branch, worktree, test plan, PR — then **merge it yourself once CI is green.** This one is
-`claude/handover-delta`; the editions before it were #787 (`258`), #774 (`249`), #758 (`240`), #742
-(`231`), #730 (`221`), #717 (`212`), #704 (`201`), #690 (`193`), #676 (`182`), #662 (`173`), #638
-(`156`), #625 (`147`), #612 (`138`), #597 (`127`), #588 (`116`), #575 (`105`), #562 (`96`), #546
-(`93`), #514 (`87`), #501 (`84`) and #490 (`81`).
+`claude/handover-delta`, after #787 (`258`) and #774 (`249`); twenty-one earlier editions are in
+`git log --oneline -- docs/planner-handover.md`. **That list used to be copied forward in full and
+is the first thing this shape drops.**
 
-**This edition is ~125 lines against the previous 400, and it is at the ceiling rather than the aim.**
-What the next one should promote to reach 100: the *Answered and closed* list belongs on each item's
-own backlog title (the standing rule already says so), and the two rulings above belong in their
-decision files, which already exist — cite them and delete the summaries.
+**This edition is 149 lines against the previous 400 — at the limit, not the aim.** What the next
+one should promote to reach 100: the *Answered and closed* list belongs on each item's own backlog
+title, where the standing rule already puts it, and the two rulings above belong in their decision
+files, which already exist. **Cite them and delete the summaries.**
