@@ -75,14 +75,23 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  { text: "Prescriptions: choose how often directly (times a day, every so many days, weeks or months, or as needed) instead of picking from a list, and give each ticked time of day its own amount, such as 2 in the morning and 1 in the evening. Settings → Frequencies is now a read-only record.", roles: ["admin", "management", "head_of_medical", "doctor"] },
-  { text: "Desexing drives: a new Services menu on the website lists upcoming days when people can bring their own dog or cat to be desexed, with the date, place, cost and who can come, and a form to sign up. Add and open drives, and see who has signed up, under Management → Desexing drives.", roles: ["admin", "management"] },
-  { text: "A name card opened while you are signed out now shows a large I work here: sign in button at the top of the dog's page; sign in and you come straight back to the card.", roles: ["admin", "management", "head_of_medical", "doctor", "volunteer"] },
-  { text: "Vet visits in the shelter calendar now sync back: move an entry to another time in Google Calendar and the visit moves with it within about 15 minutes; delete one and the visit is cancelled (kept, noted Cancelled from Google Calendar) and every admin is emailed.", roles: ["admin", "management", "doctor"] },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.38.1",
+    date: "2026-10-20",
+    title:
+      "Prescriptions set how often directly, desexing drives, and vet visits sync back from Google Calendar",
+    major: false,
+    notes: [
+    { text: "Prescriptions: choose how often directly (times a day, every so many days, weeks or months, or as needed) instead of picking from a list, and give each ticked time of day its own amount, such as 2 in the morning and 1 in the evening. Settings → Frequencies is now a read-only record.", roles: ["admin", "management", "head_of_medical", "doctor"] },
+    { text: "Desexing drives: a new Services menu on the website lists upcoming days when people can bring their own dog or cat to be desexed, with the date, place, cost and who can come, and a form to sign up. Add and open drives, and see who has signed up, under Management → Desexing drives.", roles: ["admin", "management"] },
+    { text: "A name card opened while you are signed out now shows a large I work here: sign in button at the top of the dog's page; sign in and you come straight back to the card.", roles: ["admin", "management", "head_of_medical", "doctor", "volunteer"] },
+    { text: "Vet visits in the shelter calendar now sync back: move an entry to another time in Google Calendar and the visit moves with it within about 15 minutes; delete one and the visit is cancelled (kept, noted Cancelled from Google Calendar) and every admin is emailed.", roles: ["admin", "management", "doctor"] },
+    ],
+  },
   {
     version: "0.38.0",
     date: "2026-10-20",
