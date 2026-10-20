@@ -1567,6 +1567,32 @@ const manual: Manual = {
           ],
         },
         {
+          id: "desexing-drives",
+          title: "Desexing drives",
+          roles: ["admin", "management"],
+          activity: "website.content",
+          path: "Management → Desexing drives",
+          intro:
+            "A desexing drive is a day when members of the public bring their own dog or cat to be desexed. You add the drive with its date, place, cost and who can come; the public signs up on the website; you see the list here. Nothing is written for you: the dates, prices and rules are whatever the shelter has decided.",
+          steps: [
+            "Tap Add a drive. Fill in the title, the date, where it is, and which animals it takes. Cost and Who can come are free text: write exactly what the shelter has decided, or leave them blank until it has.",
+            "Places is the most pets the drive takes; leave it blank for no limit. Sign-ups close on is optional. A drive takes sign-ups until its date unless you set one.",
+            "A new drive is a Draft and nobody outside can see it. Set the status to Open when it is ready: it then appears on the website under Services → Desexing drives, with a sign-up form. Cancelled still shows the drive, marked cancelled, and takes no sign-ups.",
+            "Open a drive to see who has signed up: the owner's name, phone and email, and the pet. Change a sign-up to Confirmed once you have spoken to them, and to Attended or Did not come afterwards. Cancelled and removed sign-ups free their place.",
+            "Remove a sign-up that is junk or a duplicate. The public cannot do this and cannot see anyone's sign-up, their own included.",
+          ],
+          callouts: [
+            {
+              kind: "warning",
+              text: "The sign-up list holds members of the public's own names and contact details. It is shown only here, to people who can edit the website. Do not copy it into chats or documents.",
+            },
+            {
+              kind: "note",
+              text: "There is no CAPTCHA. The database limits abuse instead: a drive refuses a sign-up when it is full, closed or cancelled, when the same phone or email already has three sign-ups on it, and when 60 sign-ups have arrived across all drives in an hour. Someone patient can still fill a drive with junk; remove those rows and the places come back.",
+            },
+          ],
+        },
+        {
           id: "manage-vets",
           title: "Managing clinics",
           roles: ["admin", "management"],

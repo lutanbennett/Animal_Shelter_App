@@ -33,6 +33,7 @@ export type PublicSection =
   | "friends-join"
   | "adopt-international"
   | "appeals"
+  | "desexing"
   | "about";
 
 /**
@@ -44,7 +45,7 @@ export type PublicCrumb = { label: string; href?: string };
 /**
  * Header for the public pages (docs/design/, part 1 of the redesign). Four
  * entries — Adopt ▾ · Get involved ▾ · Our work · About & contact (and
- * Services ▾ once it has something in it) — then the language toggle and
+ * Services ▾, which holds desexing drives) — then the language toggle and
  * Donate, the one thing every page of a shelter site asks for. Below a laptop's width the entries move into a full-screen
  * menu (PublicNav.tsx) and only Donate stays beside the menu button.
  *
@@ -138,14 +139,13 @@ export async function PublicHeader({
       ],
     },
     // What the shelter offers the public, as opposed to ways to help it
-    // (Lutan, 2026-09-27). Empty since Pet relocation came off the site —
-    // relocation is not a shelter service — so hidden below until desexing
-    // drives give it an entry.
+    // (Lutan, 2026-09-27). Desexing drives are its first entry (2026-10-19);
+    // a group with no links is still left out below.
     {
       kind: "group",
       key: "services",
       label: n.services,
-      links: [],
+      links: [link("desexing", "/services/desexing", t.desexing.navLabel)],
     },
     { kind: "link", link: link("our-work", "/our-work", t.adopt.ourWorkNav) },
     // The About page (0206): who we are, where, and how to visit. The footer

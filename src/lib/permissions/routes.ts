@@ -13,7 +13,7 @@
  * rest, and Settings and Management landing pages with their areas.
  */
 
-import { Activity, BadgeCheck, Camera, Laugh, ClipboardCheck, HandHeart, Coins, Globe, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
+import { Activity, Scissors, BadgeCheck, Camera, Laugh, ClipboardCheck, HandHeart, Coins, Globe, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
 import { CONTACT_ICONS, ENCLOSURE_ICONS, NAV_ICONS, SECTION_ICONS, CLINIC_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "./can";
@@ -202,6 +202,15 @@ export const ROUTES: readonly RouteEntry[] = [
     activity: "donation.receipt",
     icon: HandCoins,
     label: (t) => t.nav.donations,
+    device: "any",
+    menu: false,
+  },
+  {
+    // Desexing drives and who signed up to them (0233). Opens with the rest of the public site's content.
+    path: "/management/desexing-drives",
+    activity: "website.content",
+    icon: Scissors,
+    label: (t) => t.nav.desexingDrives,
     device: "any",
     menu: false,
   },

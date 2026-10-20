@@ -846,6 +846,22 @@ export const ENTRIES = {
       expect: "The card leaves the public page but the profile is kept.",
     },
   ],
+  "desexing-drives": [
+    {
+      activity: "Add a desexing drive and open it to sign-ups",
+      needs: "website.content",
+      device: "both",
+      do: "Open Management → Desexing drives, tap Add a drive, fill in the title, date, venue and which animals it takes (and cost and who can come if the shelter has decided them), save it, then set its status to Open and save again.",
+      expect: "The drive is saved as a Draft and is not on the website; once Open it appears under Services → Desexing drives with a sign-up form, showing only the cost and eligibility you typed.",
+    },
+    {
+      activity: "See who has signed up to a drive and mark them confirmed",
+      needs: "website.content",
+      device: "both",
+      do: "Open the drive, find a sign-up in the list, and change its status to Confirmed; remove a sign-up that is junk.",
+      expect: "The sign-up shows the owner's name and contact and the pet; the status change is kept after reloading, and a removed sign-up gives its place back on the public page.",
+    },
+  ],
   "running-an-appeal": [
     {
       activity: "Start an appeal for a sick resident, preview it and publish it",
