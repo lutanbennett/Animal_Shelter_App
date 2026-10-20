@@ -26,7 +26,8 @@
 // WHAT IT REMOVES — a resident with no real history:
 //   residents              the row itself
 //   placement_history      its Intake, plus a death recorded and then withdrawn
-//                          (Deceased + DeceasedInError) if that happened
+//                          (Deceased + DeceasedInError) if that happened, and
+//                          its enclosure changes with --enclosure-moves
 //   resident_diets         all of them, and their resident_diet_rounds (which
 //                          go by ON DELETE CASCADE)
 //   weight                 at most one: the intake weight, dated the intake
@@ -42,7 +43,10 @@
 //   - a donation earmarked for it, or being the website's featured resident:
 //     those links are ON DELETE SET NULL, so a delete would quietly blank them
 //   - it was moved, fostered, adopted or sent to hospital (any placement but
-//     the ones above)
+//     the ones above). --enclosure-moves lets enclosure changes through: a
+//     duplicate often gets moved alongside the original before anyone notices
+//     (R-0048, 2026-10-20), and its moves say nothing the original does not.
+//     Foster, adoption and hospital stays are still refused.
 //   - it is recorded as deceased: the database locks it. "Withdraw this death"
 //     in the app (reason: duplicate) unlocks it, then run this again
 //   - a Drive folder, profile photo or deceased archive, unless --drive-trashed
@@ -91,7 +95,7 @@ const value = (name) => {
 };
 
 const VALUED = ["--remove", "--keep", "--receipt", "--confirm", "--copy"];
-const KNOWN = new Set([...VALUED, "--apply", "--force-names", "--drive-trashed", "--merge-into"]);
+const KNOWN = new Set([...VALUED, "--apply", "--force-names", "--enclosure-moves", "--drive-trashed", "--merge-into"]);
 const unknown = args.filter((a, i) => a.startsWith("--") && !KNOWN.has(a) && !VALUED.includes(args[i - 1]));
 if (unknown.length) {
   console.error(`Unknown option(s): ${unknown.join(" ")}. See the top of scripts/correct-resident.mjs.`);
@@ -139,6 +143,7 @@ const removeCode = code(value("--remove"));
 const keepCode = code(value("--keep"));
 const apply = flag("--apply");
 const forceNames = flag("--force-names");
+const enclosureMoves = flag("--enclosure-moves");
 const driveTrashed = flag("--drive-trashed");
 const copyFields = (value("--copy") ?? "")
   .split(",")
@@ -259,6 +264,8 @@ const BLOCKERS = [
 ];
 // History placements: anything but these means the resident has really moved.
 const SEED_PLACEMENTS = new Set(["Intake", "Deceased", "DeceasedInError"]);
+// Let through by --enclosure-moves: a move between enclosures, nothing else.
+const ENCLOSURE_MOVES = new Set(["ChangeEnclosure"]);
 const DRIVE_FIELDS = [
   ["drive_folder_id", "Drive folder"],
   ["profile_photo_drive_file_id", "profile photo"],
@@ -350,12 +357,17 @@ async function run() {
   for (const [label, count] of Object.entries(rows.blockers)) {
     if (Number(count) > 0) refusals.push(`${removeCode} has ${count} ${label}.`);
   }
-  const moved = placements.filter((p) => !SEED_PLACEMENTS.has(p.placement_type));
+  const moved = placements.filter(
+    (p) => !SEED_PLACEMENTS.has(p.placement_type) && !(enclosureMoves && ENCLOSURE_MOVES.has(p.placement_type)),
+  );
   const intakes = placements.filter((p) => p.placement_type === "Intake").length;
   if (moved.length || intakes !== 1) {
+    const onlyEnclosure = intakes === 1 && moved.every((p) => ENCLOSURE_MOVES.has(p.placement_type));
     refusals.push(
       `${removeCode} has been moved since intake (${placements.map((p) => p.placement_type).join(", ") || "no placements"}). ` +
-        "That is history: sort it out in the app.",
+        (onlyEnclosure
+          ? "They are only enclosure changes: if it is a duplicate, add --enclosure-moves and they go with it."
+          : "That is history: sort it out in the app."),
     );
   }
   const intakeWeight =
