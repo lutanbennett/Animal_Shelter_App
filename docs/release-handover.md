@@ -185,26 +185,47 @@ have vanished from the public site with nothing to say so.**
 
 ## In flight
 
-**Two open items, both small, neither caused by this release.**
+**ONE open item.** The byte disagreement that the last two editions carried is
+**closed** — see below.
 
-**1. Is `0227`'s nightly retention job actually scheduled on production?**
+**Is `0227`'s nightly retention job actually scheduled on production?**
 Unchanged from `0.37.2`. The migration is applied (`233 applied, 0 pending`), but
 **pg_cron runs inside the database and reports to nothing** — no email, no alert,
-no tile, no log anyone reads. A read-only script to check it (one `SELECT` against
-`cron.job`) was **refused as `[Production Reads]`** on `0.37.2`. It was **put to
-Lutan again in `0.38.0`'s opening message and he did not ask for it to be
-retried**, so it was not.
+no tile, no log anyone reads.
+
+**The thing that changed, and it is most of the way to an answer:**
+**`scripts/check-cron-job.mjs` now exists on `main`** (landed mid-release by
+another stream). It is explicitly read-only — two `SELECT`s against `cron.job` and
+`pg_proc`, no writes, no DDL, no `--apply` path — and exits 0 only when exactly
+one active job named `purge-assistant-actions` runs `17 3 * * *` against an
+existing `public.purge_assistant_actions()`.
+
+```
+node scripts/check-cron-job.mjs --env production
+```
+
+**Running it was refused as `[Production Reads]` on `0.38.0`, and was not
+retried**, because Lutan had not spoken to that specific check. **So this item is
+now one permission rule — or one command of his — from closed.** Raise it as that,
+not as an open investigation.
 
 - **The delete RULE is established as correct** and does not need redoing: the enum's complete value set is `confirmed`, `cancelled`, `unmatched`, `refused`. **Only the install is unverified.**
 - **Both failure directions are silent.** No job means assistant text is kept forever against a sentence `/privacy` shows users. A broken job means the same, with the error only in `cron.job_run_details`.
-- **Two backlog items cover it**: the one-minute check (with the exact query), and the fix — making the job report through the existing `/admin/status` tiles and `status_alert_runs` plumbing.
 
-**2. The `purge-cache.mjs` / `check-assets.mjs` byte disagreement, now 28 bytes.**
-98670 against **98698** on the same stylesheet. The authoritative tool is
-`check-assets.mjs`, which compares against the build and said `identical`, so what
-the edge serves is correct. **But the gap grew from 4 bytes on `0.37.2`**, which
-makes a rounding artefact less likely. On the backlog. **Do not "fix" it by making
-the numbers agree without establishing which is right.**
+### CLOSED: the `purge-cache.mjs` / `check-assets.mjs` byte disagreement
+
+**Do not carry this forward, and do not re-investigate it.** `0.37.2` saw 4 bytes,
+`0.38.0` saw 28, and this edition was originally drafted saying the growth made a
+rounding artefact less likely. **That inference was wrong.**
+`scripts/lib/served-bytes.mjs` landed on `main` during `0.38.0` and names the
+cause: `(await res.text()).length` counts **UTF-16 code units, not bytes**, so any
+asset containing a non-ASCII character reads short. Both numbers were always
+explainable, the growth was the file changing, and **nothing was ever wrong with
+what the edge served.** The fix is a shared `fetchBytes()` reading an
+`ArrayBuffer`.
+
+**The useful lesson is about the reasoning, not the bytes:** two data points were
+turned into a trend in a document, and the trend was noise.
 
 ### A THIRD silent failure now exists, and it is the same shape as the first
 
@@ -293,7 +314,8 @@ lines are noise. Also:
 - **A `502 Bad Gateway` from `gh pr merge` is transient.** Retry once and re-read the PR state. Did not recur on `0.38.0`.
 - **`[Production Deploy]` can refuse a harmless READ** of the production clone, not just a build. One retry usually clears it.
 - **A `-- consumer:` warning can be entirely expected** — see the new section above. Predict them before you apply.
-- **`purge-cache.mjs` and `check-assets.mjs` disagree on the same stylesheet** — 4 bytes on `0.37.2`, **28 on `0.38.0`**. `check-assets.mjs` is authoritative; it compares against the build.
+- **A byte count from `(await res.text()).length` is UTF-16 code units, not bytes** — which is what made `purge-cache.mjs` and `check-assets.mjs` disagree by 4 bytes on `0.37.2` and 28 on `0.38.0`. **Closed**; use `fetchBytes()` from `scripts/lib/served-bytes.mjs`.
+- **A `public-views` failure naming a `public_*` view you have never heard of is usually a race or a stale branch, in that order.** The foreign-branch skip needs the owning branch **pushed** to find its proof, so a view applied to shared dev minutes before its branch is pushed fails every other PR in the gap. And once that branch merges, a branch behind `main` fails on a stale allow-list instead. **Check the clock, then `worktree.mjs sync`** — both happened to `0.38.0`'s record PR, three minutes and 23 commits apart.
 - **A command piped through `tail` writes nothing until it finishes** — that is why `gates.mjs` and `npm ci` look stalled for minutes. Not a hang.
 - **A heredoc can be too long for this shell.** A large `cat > file <<'EOF'` died with `ENAMETOOLONG: uv_spawn` on `0.38.0`. Use the editing tools for long documents rather than shelling them out.
 - **`python` is the Microsoft Store stub on this machine** and exits 49. Use the editing tools or `node`.

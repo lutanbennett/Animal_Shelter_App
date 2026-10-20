@@ -20,7 +20,45 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Asked once, so the heavy jobs below can skip a documents-only pull request.
+  # A markdown file under docs/, or one at the repository root, is read by no
+  # build, lint, test or database check — nothing in src/, scripts/ or worker/
+  # imports one. `test-plan` is deliberately NOT gated on this: a documents PR
+  # still carries a checklist, and that is the one check that judges a document.
+  #
+  # Added after 0.38.0, where the record PR — two markdown files — paid ~7
+  # minutes of CI and was then blocked TWICE by `public-views`, a check it could
+  # not affect: once by a three-minute race (a view live in shared dev before the
+  # branch proving who owned it was pushed) and once by a stale allow-list after
+  # that branch merged. docs/decisions/2026-10-20-release-paperwork-speedup.md
+  #
+  # It runs on `push` as well as `pull_request` so that `needs: changes` resolves
+  # on main, where it always answers `false` — a skipped dependency would
+  # otherwise skip the job that needs it, and main's CI would quietly stop.
+  # check-docs-only.mjs errs towards `false` for anything it cannot classify.
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      docs-only: ${{ steps.classify.outputs.docs-only }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - id: classify
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            node scripts/check-docs-only.mjs --base origin/${{ github.base_ref }}
+          else
+            node scripts/check-docs-only.mjs
+          fi
+
   check:
+    needs: changes
+    if: needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -79,7 +117,8 @@ jobs:
   # Pull requests only: on main itself every file is main's, so there is
   # nothing new to judge.
   migration-numbers:
-    if: github.event_name == 'pull_request'
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -98,7 +137,8 @@ jobs:
   # docs/decisions/2026-10-07-policy-enum-guard.md). A deliberate one carries
   # "-- policy-role: deliberate — <why>". Pull requests only, like migration-numbers.
   new-policy-role-names:
-    if: github.event_name == 'pull_request'
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -118,6 +158,8 @@ jobs:
   # prints what it does not cover). Pull requests and main alike, because it
   # judges the tree rather than a diff.
   script-integrity:
+    needs: changes
+    if: needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -142,6 +184,8 @@ jobs:
   # that it is not a required check in branch protection, which is Lutan's call
   # (docs/decisions/2026-10-16-cards-count-in-ci.md). Judges the tree, so PRs and main.
   cards-count:
+    needs: changes
+    if: needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -162,7 +206,8 @@ jobs:
   # the PR; act on a high or critical with a fix available. A daily run in
   # advisories.yml covers the days with no PR, and fails on purpose.
   audit:
-    if: github.event_name == 'pull_request'
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     continue-on-error: true
@@ -185,6 +230,8 @@ jobs:
   # are applied to first (CLAUDE.md, "Database migrations"), so a PR's own
   # migration is already there when this runs.
   public-views:
+    needs: changes
+    if: needs.changes.outputs.docs-only != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
