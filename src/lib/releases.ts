@@ -76,6 +76,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   "A fundraising appeal can now show a medical photo, chosen one by one. It is public on that appeal only, starts covered until a visitor taps it, and is never used as the picture in a shared link.",
+  {
+    text: "You can now add videos of a resident in the same Photos section as pictures: MP4 or MOV, up to 500 MB (about five minutes). They go straight from your phone to Google Drive and carry on if the signal drops, play right on the page, and follow the same Medical and approval rules as photos. Photos and Videos buttons filter the gallery, and System status shows how much Drive space is left.",
+    roles: ["admin", "management", "doctor"],
+  },
 ];
 
 /** Newest first. */

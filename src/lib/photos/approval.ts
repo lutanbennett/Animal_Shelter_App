@@ -19,6 +19,8 @@ export type WaitingPhoto = {
   residentCode: string;
   /** Who filed it: the login's name, else email; "—" when the login is gone. */
   addedBy: string;
+  /** A clip rather than a still (0229): the queue shows a player. */
+  isVideo: boolean;
 };
 
 type Row = {
@@ -29,6 +31,7 @@ type Row = {
   date_taken: string | null;
   owner_id: string;
   uploaded_by: string | null;
+  media_kind: string | null;
 };
 
 /** Whether this login sees the queue: the one activity that may approve (0217 refuses anyone else). */
@@ -38,7 +41,7 @@ export const canApprovePhotos = (perms: Permissions | null | undefined): boolean
 export async function loadWaitingPhotos(supabase: SupabaseClient): Promise<WaitingPhoto[]> {
   const { data } = await supabase
     .from("attachments")
-    .select("id, drive_file_id, file_name, uploaded_at, date_taken, owner_id, uploaded_by")
+    .select("id, drive_file_id, file_name, uploaded_at, date_taken, owner_id, uploaded_by, media_kind")
     .eq("owner_type", "resident")
     .is("approved_at", null)
     .order("uploaded_at", { ascending: true })
@@ -71,6 +74,7 @@ export async function loadWaitingPhotos(supabase: SupabaseClient): Promise<Waiti
         residentName: resident.name,
         residentCode: resident.resident_code,
         addedBy: r.uploaded_by ? appUserLabel(users.get(r.uploaded_by)) : "—",
+        isVideo: r.media_kind === "video",
       },
     ];
   });

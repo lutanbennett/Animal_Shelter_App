@@ -98,3 +98,8 @@ export function dateToYymm(isoDate: string): string {
 export function dateToYyyymmdd(isoDate: string): string {
   return isoDate.replaceAll("-", "");
 }
+
+/** Where a resident's video plays from: the ranged stream route (src/app/api/videos/[fileId]/route.ts). */
+export function videoUrl(fileId: string): string {
+  return `/api/videos/${fileId}`;
+}

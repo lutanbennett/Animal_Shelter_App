@@ -7,7 +7,7 @@ import { Check, Repeat, Trash2, X } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { formatDate } from "@/lib/format";
-import { driveImageUrl } from "@/lib/google/drive-client";
+import { driveImageUrl, videoUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { WaitingPhoto } from "@/lib/photos/approval";
 import { ResidentPicker } from "@/app/medical/ResidentPicker";
@@ -147,13 +147,24 @@ export function ApproveQueue({
         {photos.map((photo) => (
           <li key={photo.id} className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-3">
             {/* The original at 800 px: big enough to judge who is in it, and what else is in the picture. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={driveImageUrl(photo.driveFileId, 800)}
-              alt={q.photoAlt(photo.residentName)}
-              className="max-h-[70vh] w-full rounded bg-background object-contain"
-              loading="lazy"
-            />
+            {photo.isVideo ? (
+              <video
+                src={videoUrl(photo.driveFileId)}
+                poster={driveImageUrl(photo.driveFileId, 800)}
+                controls
+                playsInline
+                preload="metadata"
+                aria-label={q.photoAlt(photo.residentName)}
+                className="max-h-[70vh] w-full rounded bg-black"
+              />
+            ) : (
+              <img
+                src={driveImageUrl(photo.driveFileId, 800)}
+                alt={q.photoAlt(photo.residentName)}
+                className="max-h-[70vh] w-full rounded bg-background object-contain"
+                loading="lazy"
+              />
+            )}
             <div className="flex flex-col gap-1">
               <Link href={`/residents/${photo.residentId}`} className="text-lg font-semibold text-foreground underline-offset-2 hover:underline">
                 {photo.residentName}

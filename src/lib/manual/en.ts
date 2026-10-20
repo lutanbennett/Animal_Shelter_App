@@ -959,6 +959,28 @@ const manual: Manual = {
           },
         },
         {
+          id: "resident-videos",
+          title: "Adding resident videos",
+          roles: ["admin", "management", "doctor"],
+          path: "Resident hub → Photos",
+          intro:
+            "Videos live in the same Photos section as pictures, in the same Drive folders, with the same rules. There is no separate place to look.",
+          steps: [
+            "Open the Photos card on the hub and choose the folder and date, exactly as for photos. Then drop a video on the upload area or tap it and choose one from your phone. You can mix photos and videos in one batch.",
+            "Videos can be MP4 or MOV (what an iPhone or Android records), up to 500 MB each, which is about five minutes. A longer or bigger clip is refused with a message before anything is sent. Trim it on the phone, or record two shorter ones.",
+            "A video goes straight from your phone to Google Drive in pieces, so it does not have to fit through the app. If the connection drops, the upload says Connection lost and carries on from where it got to when the signal returns; you do not start again. Keep the page open until it says Done.",
+            "On the gallery a video shows a play button and its length. Above the gallery, the buttons Photos, Videos and Photos and videos show only the one kind. Tap a video to play it where it is, with the phone's own controls (full screen, pause, skip).",
+            "Videos follow the photo rules. A video filed under Medical is never shown outside the shelter. A video added by a login that may not publish waits in Photos to approve until Management approves it. Marking it as posted on social media, moving it to another folder and removing it work as they do for a photo. A video cannot be the profile photo and is not offered for a meme.",
+            "Videos are not shown on the public website yet; only photos are.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Videos take a lot of room. System status (Admin) has a Drive space tile showing how much of the shelter's Google storage is used; it turns amber at 80% and red at 95%.",
+            },
+          ],
+        },
+        {
           id: "posted-on-social",
           title: "Marking a photo as posted on social media",
           roles: ["admin", "management"],
