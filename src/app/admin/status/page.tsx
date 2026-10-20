@@ -6,6 +6,7 @@ import { formatDate, formatDateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import { getWaitingAccessRequests } from "@/lib/status/access-requests";
 import { checkCalendar } from "@/lib/clinics/calendar-sync";
+import { getDriveClient } from "@/lib/google/drive";
 import { checkAlerts } from "@/lib/status/alerts";
 import { getHealthReport } from "@/lib/status/health";
 import { type CheckResult, type CheckState, runCheck } from "@/lib/status/run";
@@ -172,6 +173,35 @@ async function CalendarTile({ t, locale }: { t: T; locale: Locale }) {
   );
 }
 
+const GB = 1024 ** 3;
+const formatGb = (bytes: number) => `${(bytes / GB).toLocaleString("en", { maximumFractionDigits: bytes >= 100 * GB ? 0 : 1 })} GB`;
+
+/** How full the shelter's Drive is, so the 1 TB that videos fill is watched. Its own check, like the calendar's: a full disk is amber at 80% and red at 95%, but never raises an alert email. */
+async function DriveSpaceTile({ t, locale }: { t: T; locale: Locale }) {
+  const x = t.admin.status.tiles.driveSpace;
+  const result = await runCheck(async () => {
+    const { usage, limit } = await getDriveClient().getStorageQuota();
+    const percent = limit ? Math.round((usage / limit) * 100) : 0;
+    return {
+      state: percent >= 95 ? ("fail" as const) : percent >= 80 ? ("warn" as const) : ("ok" as const),
+      error: percent >= 80 ? x.nearlyFull : undefined,
+      facts: { usage, limit, percent },
+    };
+  });
+  const f = result.facts;
+  return (
+    <Tile title={x.title} result={result} t={t} locale={locale}>
+      <p>
+        {!f
+          ? x.failed
+          : f.limit
+            ? x.ok({ used: formatGb(f.usage), limit: formatGb(f.limit), percent: f.percent })
+            : x.unlimited({ used: formatGb(f.usage) })}
+      </p>
+    </Tile>
+  );
+}
+
 async function Health({ t, locale }: { t: T; locale: Locale }) {
   const r = await getHealthReport();
   const x = t.admin.status.tiles;
@@ -199,6 +229,8 @@ async function Health({ t, locale }: { t: T; locale: Locale }) {
       <Tile title={x.drive.title} result={r.drive} t={t} locale={locale}>
         <p>{r.drive.state === "ok" ? x.drive.ok : drive?.notConnected ? x.drive.notConnected : x.drive.failed}</p>
       </Tile>
+
+      <DriveSpaceTile t={t} locale={locale} />
 
       <CalendarTile t={t} locale={locale} />
 
