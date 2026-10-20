@@ -205,9 +205,47 @@ setting produces a false finding.
 
 ### Token estimates (provisional — revise from the actuals)
 
+**START HERE: AN ORDINARY WELL-BRIEFED STREAM COSTS ABOUT 128k, WHATEVER IT IS.**
+Promoted into this file 2026-10-21 from the handover edition that measured it, so
+no future handover has to carry it. On 2026-10-20 four of nine streams landed
+within **4,000 tokens of each other**: `stock-receipts-immutable` 126,512 (a
+migration, a trigger and rulings on four permission findings),
+`nfc-medical-jobs` 127,979 (routing an existing link into an existing picker),
+`prescription-dose-schema` 128,114 (a column, a back-fill and a proof harness) and
+`release-tooling-fixes` 129,848 (four unrelated small items folded into one
+stream).
+
+**Four unlike jobs, one thing in common: each brief named its files, its decision,
+its boundary and what it must not touch.** So the number to start from is the
+**floor (~85k) plus ~43k of messages**, and then add only for the shapes in the
+table below. **Do not add for "it touches a lot of files" or "it has several
+parts"** — those four readings are the counter-example, and the most intricate
+*judgement* of that round is one of them. **Intricacy of judgement is not what
+spends tokens; unbounded scope is.**
+
+Two axes that genuinely do cost, both measured 2026-10-20:
+
+- **Does it CREATE a surface people submit data through, or ROUTE INTO one that
+  exists?** Same band given to both, 108k apart: 235,561 for a new public form
+  with rate limiting and a staff screen, 127,979 for routing into working pages.
+- **Is there an existing caller, credential path and schema to hang a new
+  integration on?** All three exist → an ordinary feature, however new the
+  behaviour sounds. `two-way-calendar-app` was banded 250–320k as a new transport
+  path and came in at **153,821**, because the cron, the Google client and the
+  schema were all already there. **Reserve 250–320k for a stream with no existing
+  piece to extend.**
+
 | scale | band | shape |
 |---|---|---|
-| Floor | **~80k** | every stream, before any work: tools, memory, skills, CLAUDE.md, brief. **Corrected 2026-10-11 from ~110k, on one measurement** — `release-note-truth-rule` came in at **103,070** with only 23,881 of messages, so its fixed overhead was **~77k** (System tools 38,782 · MCP 17,001 · Memory 9,695 · Skills 6,377 · System prompt 4,973). **One measurement, not a law: re-check it.** The 30k error was inherited by every band below, which is most of why they read high |
+| **Ordinary well-briefed stream — the default** | **120–145k** | 126,512 · 127,979 · 128,114 · 129,848 (2026-10-20) |
+| Floor | **~84–85k** | every stream, before any work: tools, memory, skills, CLAUDE.md, brief. Measured across nine streams 2026-10-20: System tools 38.7k · MCP 16.3–16.7k · Memory 11.9–12.0k · System prompt 8.6k · Skills 6.6k. **Corrected 2026-10-11 from ~110k and drifting slowly down since; re-measure rather than carrying a number forward.** The original 30k error was inherited by every band below, which is most of why the older ones read high |
+| Routing into surfaces that already exist | **120–165k** | 127,979 · 119,265 |
+| A new integration on existing machinery | **145–180k** | 153,821 |
+| Schema with a public write path / RLS to get right | **145–185k** | 159,976 |
+| Replacing an existing screen | **155–200k** | 169,220 |
+| Reads very widely and edits many call sites | **185–250k** | 200,612 — **reading widely is cheap; editing many call sites is what cost** |
+| **Creates a new surface people submit data through** | **200–270k** | 235,561 |
+| Builds an instrument / transport path from nothing | **250–320k** | 286,350 — **one reading only, and nothing since has belonged in it. Do not widen a stream into this row because its behaviour sounds new** |
 | Quick win | 110–170k | 1–3 files; screenshots cost far less than first assumed. **Left as written on Lutan's ruling, 2026-10-11** — the planner had been quoting 130–200k while both measured quick wins (129,320 · 135,901) sat *inside* this band. **The band was right and the quoting was high. Do not reopen it** |
 | Schema PR | **~140–155k single-file · 230–285k with code** | measured 6×: `cashflow-forecast-function` 139,791 · `drop-leftovers-schema` 143,030 (three unrelated items in one file) · `receipt-issuer-server-side` 143,678 · `map-rooms-schema` 151,273 · `role-floor-schema` 231,297 · `perm-functions-schema` 284,248 |
 | Medium | **170–290k** | 5–15 files, browser checks, both dictionaries. Measured: `residents-list-sort` 166,843 · `vaccine-stock-forecast` 188,913 · `perm-policy-cleanup` 206,567 · `who-does-what-edit` 210,888 · `place-order-settings` 282,082 |
@@ -316,6 +354,32 @@ batch** and let the table accumulate.
 batch's lowest-risk stream is the real mitigation, and *Weekly · Fable*
 sitting unused is worth spending on the backlog's Fable items rather than
 letting it expire.
+
+### NEVER BLOCK HIS PAID USAGE — a hard rule, not a preference
+
+Promoted into this file 2026-10-21. It had been carried as "the biggest thing
+on this page" by every handover edition while living nowhere permanent, which
+is precisely the fault the delta rule in step 8 exists to fix: **the most
+important rule in the loop was in the one document that gets replaced every
+nine streams.** Also in memory as `never-block-paid-usage`.
+
+**Lutan, 2026-10-14: *"I am happy for you to warn me and advise but not block
+like this, it's actually unethical for you to block the usage I paid for."***
+
+- **Report the figures in the first message**, and forecast in one line what
+  will get done.
+- **Then work. Never refuse to start, and never ask permission to begin**,
+  however little is left.
+- **A forecast is not a refusal.** Say what you expect to cost and carry on.
+- **Mid-work exhaustion is different and still correct:** stop with words,
+  saying what is done and what is not.
+- **Never put a numeric stop threshold in a brief.** Not once, not as a
+  safeguard, not as a suggestion.
+
+**Model, effort, which allowance gets spent, and whether to start at all are
+all his.** A reading of *Weekly · Fable* is never spare headroom either: Fable
+draws on the same weekly allowance (memory: `fable-counts-against-weekly`), so
+"the Fable window is only half used" is not a reason to schedule Fable work.
 
 ## 7. Set up — the current batch only
 
@@ -517,3 +581,47 @@ this order: (1) update `docs/planner-handover.md` now, in this chat, while the
 context exists — offer to do it; (2) then start a fresh chat for the next
 `/plan-day`. Reset the counter to 0 with today's date once the handover is
 written. Why: `docs/decisions/2026-10-08-planner-handover-counter.md`.
+
+### THE HANDOVER IS A DELTA, AND IT HAS A CEILING
+
+**Lutan, 2026-10-20: *"can you just do a delta change to the handover? that's
+what the release handover does now"*, and *"this rule should only be for your
+stream and the release stream — just for the handover documents."*** The release
+side has had this since the same day (`docs/release-procedure.md`, "The paperwork
+has a time budget too", rule 4). This is the planner's half of it.
+
+**Aim for about 100 lines and treat 150 as the limit.** The edition of 2026-10-20
+ran to roughly 400, and by its own author's measurement the writing — not the
+worktree, not CI, not the merge — was the largest single cost of producing it.
+
+Three rules, mirroring the release handover's shape:
+
+1. **Say what CHANGED since the last edition**, not what is true in general. Open
+   by correcting the predecessor where it was wrong or over-cautious, then carry a
+   short list of what each of its warnings actually did — **fired, held, or now
+   closed** — with a running tally where one exists. The release handover is the
+   worked example; read it before writing this one.
+2. **Promote durable facts ONCE, do not recopy them.** A fact that will still be
+   true in three rounds belongs in this skill (the bands, the loop, the brief
+   blocks) or in `CLAUDE.md` (the workstream rules) — **not** in a document that
+   gets rewritten every nine streams. Move it, then cite it.
+3. **Cite `.plan-day.md`, do not repeat it.** The per-stream measurement table,
+   the batch composition and the dependency notes already live there. The handover
+   says what they *mean*; it does not reproduce them.
+
+> **THE ONE THING THE DELTA MUST NOT COVER: anything read from the repo.** Open
+> item counts, the blocked lists, migration numbers, PR numbers, release state and
+> the candidate list are **re-read every time, from the repo, and never diffed
+> against the previous edition.** That saving is not available here, and taking it
+> reintroduces the exact fault that cost Lutan decisions he had already answered
+> twice: a stale sheet carried forward reads as current, and nobody re-asks a
+> question they believe is already with the user. **Short prose, fresh facts.**
+
+**SCOPE: this applies ONLY to the two handover documents** —
+`docs/planner-handover.md` and `docs/release-handover.md` — **and to nothing
+else.** Lutan set that boundary explicitly on 2026-10-20. It is **not** a general
+rule about documents, and it does **not** touch `docs/decisions/` files,
+`docs/releases/<date>.md` records, `docs/test-plans/`, `README.md`, the manual, or
+any document a feature stream writes. Those are records and rules rather than
+short-lived snapshots: a decision file is read years later by someone asking why,
+and shortening one to a delta would destroy the thing it exists for.
