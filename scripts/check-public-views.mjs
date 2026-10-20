@@ -90,6 +90,9 @@ const PUBLIC_VIEWS = [
   // defaults false and is never backfilled; note, contact, channel and dates are not selected.
   "public_adoption_updates",
   "public_appeal_photos",
+  // 0233. Upcoming open or cancelled desexing drives and a count of places left. Owner-run with a WHERE on status and
+  // date, so a draft is never readable. It selects no sign-up column.
+  "public_desexing_drives",
 ];
 // No base tables: site_content, site_content_photos and site_pages were
 // readable by anon with select * until 0122, so a new column was public the
@@ -291,6 +294,59 @@ for (const name of PUBLIC) {
     const read = await fetch(`${url}/rest/v1/${name}?select=${column}&limit=1`, { headers });
     report(!read.ok, `${name}.${column}: no public object carries a meme or share column`, `HTTP ${read.status}`);
   }
+}
+
+// Desexing drive sign-ups (0233) hold the public's own name and contact. anon may INSERT and nothing else: no read,
+// no update, no delete, not even a column. The insert is proven to reach the database gate (a P0001 refusal from the
+// trigger, for a drive that does not exist) and not a permission wall, so the public write path is known to be open
+// and known to be checked. No row is created.
+{
+  const table = "desexing_drive_signups";
+  for (const [method, path, body] of [
+    ["GET", "?select=id&limit=1"],
+    ["GET", "?select=owner_name,owner_phone,owner_email&limit=1"],
+    ["PATCH", `?${noRow}`, {}],
+    ["DELETE", `?${noRow}`],
+  ]) {
+    const call = await fetch(`${url}/rest/v1/${table}${path}`, {
+      method,
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    report(!call.ok, `${table}: anon ${method} is refused`, `HTTP ${call.status}`);
+  }
+  const insert = await fetch(`${url}/rest/v1/${table}`, {
+    method: "POST",
+    headers: { ...headers, "Content-Type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify({
+      drive_id: "00000000-0000-0000-0000-000000000000",
+      owner_name: "check-public-views",
+      owner_email: "check@example.invalid",
+      pet_name: "check",
+      pet_species: "dog",
+    }),
+  });
+  const insertBody = await insert.text();
+  report(
+    !insert.ok && insertBody.includes("desexing_drive_not_open"),
+    `${table}: anon INSERT reaches the gate and is refused for a drive that is not open`,
+    `HTTP ${insert.status}: ${insertBody.slice(0, 100)}`,
+  );
+  // anon may not choose the fields staff own.
+  const forged = await fetch(`${url}/rest/v1/${table}`, {
+    method: "POST",
+    headers: { ...headers, "Content-Type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify({
+      drive_id: "00000000-0000-0000-0000-000000000000",
+      owner_name: "x", owner_email: "x@example.invalid", pet_name: "x", pet_species: "dog",
+      status: "confirmed",
+    }),
+  });
+  report(!forged.ok && !(await forged.text()).includes("desexing_drive_not_open"), `${table}: anon cannot set status`, `HTTP ${forged.status}`);
+}
+for (const name of PUBLIC) {
+  const read = await fetch(`${url}/rest/v1/${name}?select=owner_name,owner_phone,owner_email&limit=1`, { headers });
+  report(!read.ok, `${name}.owner_*: no public object carries a sign-up person column`, `HTTP ${read.status}`);
 }
 
 // is_public_drive_file must tell the two kinds of file apart when anon asks:
