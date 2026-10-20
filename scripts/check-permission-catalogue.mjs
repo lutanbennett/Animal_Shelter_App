@@ -245,6 +245,8 @@ const PINNED = {
   // A donation's own page is the receipt: issuing it is the yes/no activity, and nothing else.
   "/management/donations/[id]": { guards: ['requirePermission("donation.receipt")'], decides: [] },
   // Sponsorship drives (0210). The gifts on an appeal's page are read only by a login that may also read donations.
+  "/management/desexing-drives/new": { guards: ['requirePermission("website.content")'], decides: [] },
+  "/management/desexing-drives/[id]": { guards: ['requirePermission("website.content")'], decides: [] },
   "/management/appeals/new": { guards: ['requirePermission("appeal.run")'], decides: [] },
   "/management/appeals/[id]": { guards: ['requirePermission("appeal.run")'], decides: ["appeal.medical_photo", "donation.receipt"] },
   "/management/appeals/[id]/preview": { guards: ['requirePermission("appeal.run")'], decides: ["donation.receipt"] },
@@ -332,6 +334,7 @@ const EXEMPT = {
   "/adopt/stories/[id]": { public: true, why: "Public website: the public_adoption_updates rows an adopter agreed to share about one animal." },
   "/appeals": { public: true, why: "Public website: reads public_appeals, the anonymous tier (0210); drafts are excluded in SQL." },
   "/appeals/[id]": { public: true, why: "Public website: one public_appeals row and its public_appeal_photos." },
+  "/services/desexing": { public: true, why: "Public website: public_desexing_drives (0233), the drive and a count of places left, never a sign-up." },
   "/adopt/international": { public: true, why: "Public website: static page from site_content." },
   "/our-work": { public: true, why: "Public website: the public_projects views (0042)." },
   "/our-work/[id]": { public: true, why: "Public website: one public_projects row." },
@@ -462,6 +465,7 @@ for (const k of known) console.log(`KNOWN ${k}`);
 const GUARD = /\b(?:can|requirePermission|requireAdminUser|assertAdminRole|hasAdminRole|canEditItemSettings|refuseUnlessAdmin)\(/;
 const ADMIN_CHECK = /\b(?:requireAdminUser|assertAdminRole|hasAdminRole|refuseUnlessAdmin)\(/;
 const NO_ACTIVITY = {
+  "services/desexing/actions.ts": "the public sign-up, signed out by definition: written as the anon role with insert-only column grants (0233), so the database gate decides; it never reads a sign-up back",
   "account/password/actions.ts": "changes the signed-in user's own password and name; its one service-role call clears their own must-change flag after the password check",
   "account/theme/actions.ts": "the signed-in user's own display preference, in their own auth metadata",
   "medical/scan-actions.ts": "leaves or clears a five-minute waiting cookie and nothing else; startCardWait refuses unless canOpen(perms, route) for the job's own page, and /scan/arrive re-checks it at the redirect",

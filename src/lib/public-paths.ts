@@ -38,7 +38,7 @@ export const PUBLIC_PATHS = ["/", "/login", "/login/forgot", "/login/request", "
  * (isPublicPage) and the Worker (worker/index.mjs, which decides what the edge
  * caches) all derive from it; do not write these prefixes out anywhere else.
  */
-export const PUBLIC_PAGE_PREFIXES = ["/adopt", "/appeals", "/our-work", "/foster", "/volunteer", "/donate", "/about", "/friends", "/privacy", "/r", "/e"];
+export const PUBLIC_PAGE_PREFIXES = ["/adopt", "/appeals", "/services", "/our-work", "/foster", "/volunteer", "/donate", "/about", "/friends", "/privacy", "/r", "/e"];
 
 /** Pages that exist only per item (/r/CODE, /e/ID): the bare "/r" and "/e" are not public paths. */
 const PER_ITEM_PAGE_PREFIXES = ["/r", "/e"];
@@ -50,11 +50,11 @@ const PER_ITEM_PAGE_PREFIXES = ["/r", "/e"];
  * enclosure that has since been withdrawn, and a card scan wants the current
  * state. They are also low traffic, so caching buys almost nothing. Decided
  * 2026-10-12 (docs/decisions/2026-10-12-r-and-e-not-edge-cached.md); this is
- * what the Worker's old, separate list already did. /appeals is the third: it asks for money for
+ * what the Worker's old, separate list already did. /services (desexing drives: places left, and a sign-up) is the fourth, and /appeals the third: it asks for money for
  * a named animal and shows how much has been given, and a figure kept for ten minutes after
  * an appeal closed or reached its goal would keep asking (docs/decisions/2026-10-16-appeals-public-pages.md).
  */
-export const NOT_EDGE_CACHED_PAGE_PREFIXES = ["/r", "/e", "/appeals"];
+export const NOT_EDGE_CACHED_PAGE_PREFIXES = ["/r", "/e", "/appeals", "/services"];
 
 /** What the Worker may edge-cache: every public page except the above. */
 export const EDGE_CACHED_PAGE_PREFIXES = PUBLIC_PAGE_PREFIXES.filter((p) => !NOT_EDGE_CACHED_PAGE_PREFIXES.includes(p));
