@@ -9,6 +9,7 @@
 // failure sticks and the app renders with no styling for whoever reaches that edge
 // (docs/decisions/2026-10-18-pi-deploy-safety.md). Exits 1 saying what it fetched,
 // what it expected and what it got; exits 0 only when every stylesheet matches.
+import { fetchBytes } from "../lib/served-bytes.mjs";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
@@ -51,8 +52,7 @@ for (const href of unique) {
     continue;
   }
   const expected = readFileSync(onDisk);
-  const res = await fetch(assetUrl);
-  const got = Buffer.from(await res.arrayBuffer());
+  const { res, bytes: got } = await fetchBytes(assetUrl);
   const cache = res.headers.get("cf-cache-status") ?? "none";
   if (res.status !== 200 || !got.equals(expected)) {
     problems.push(`${assetUrl.pathname}: expected 200 and ${expected.length} bytes, got HTTP ${res.status} and ${got.length} bytes (CF-Cache-Status: ${cache})`);

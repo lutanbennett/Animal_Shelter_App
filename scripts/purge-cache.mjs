@@ -27,6 +27,7 @@
 // Nothing else in the repo reads CLOUDFLARE_PURGE_TOKEN, and it is never printed.
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { fetchBytes } from "./lib/served-bytes.mjs";
 
 const root = process.cwd();
 const args = process.argv.slice(2);
@@ -103,8 +104,7 @@ if (!["production", "uat", "test"].includes(envName)) {
             console.log(`purge-cache: no stylesheet found on https://${host}/ to check (gated page?).`);
           }
           for (const href of hrefs) {
-            const r = await fetch(`https://${host}${href}`);
-            const body = await r.text();
+            const { res: r, bytes: body } = await fetchBytes(`https://${host}${href}`);
             const cf = r.headers.get("cf-cache-status") ?? "?";
             if (!r.ok || body.length < 1000) {
               console.error(`purge-cache: ${href} came back HTTP ${r.status}, ${body.length} bytes (CF ${cf}) — NOT right.`);
