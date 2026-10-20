@@ -560,6 +560,7 @@ end $$;`;
       `--remove ${removeCode} --keep ${keepCode}`,
       copied.length ? `--copy ${copied.join(",")}` : "",
       forceNames ? "--force-names" : "",
+      enclosureMoves ? "--enclosure-moves" : "",
       driveTrashed ? "--drive-trashed" : "",
       "--apply",
       live ? `--confirm ${removeCode}` : "",

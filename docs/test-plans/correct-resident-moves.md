@@ -48,7 +48,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 ## 4. Functional checks
 
 - [x] Happy path works end to end, dry run on dev: with `--enclosure-moves` the R-0048 removal runs cleanly and prints the apply line
-- [ ] Data persists — n/a: no `--apply` from this stream; the live removal follows the merge
+- [x] Data persists: after #771 merged, R-0048 was removed on live from the main checkout (`Doing it … ok`, `R-0048 is deleted.`, R-0065 now reads `Dog, Female`), receipt `removed-R-0048-live-2026-10-20.json` on the Desktop
 - [x] Create / edit / delete all exercised: the delete and the `sex` copy inside the rolled-back transaction
 - [ ] Empty state renders sensibly — n/a: unchanged by this PR; no new input path
 - [x] Invalid input is rejected with a readable message, not a crash: the same dry run without the flag refuses with "They are only enclosure changes: if it is a duplicate, add --enclosure-moves and they go with it."
@@ -129,7 +129,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| | | | |
+| 1 | Low | The "To do it" command printed after a clean dry run left out `--enclosure-moves`, so pasting it as printed would have been refused. Found on the live R-0048 run after #771 merged; the removal was run with the flag added by hand | fixed in the follow-up PR: the printed line now carries the flag. Re-checked on dev: `… --force-names --enclosure-moves --apply` |
 
 ## Left for manual verification
 
@@ -154,7 +154,7 @@ Manual verification by: n/a: a maintenance script with no screen; the live remov
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above — n/a: none found
+- [x] Open defects are either fixed or explicitly accepted above: #1 fixed
 - [ ] Checklist pasted into the PR — n/a: linked from the PR body instead
 - [ ] Handed to the production release manager — n/a: nothing to deploy
 
