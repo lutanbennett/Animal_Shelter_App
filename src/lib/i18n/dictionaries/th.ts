@@ -133,6 +133,9 @@ const th: Dictionary = {
   },
 
   appHome: {
+    groupsLabel: "เลือกงาน",
+    myJob: "งานของฉัน",
+    coveringUntil: (date: string) => `ทำหน้าที่แทนถึง ${date}`,
     pageTitle: "หน้าหลัก",
     subtitle: "แตะงานเพื่อเริ่มทำ",
     switchLabel: "เปิดหน้าหลักของ",
