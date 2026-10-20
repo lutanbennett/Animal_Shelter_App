@@ -135,6 +135,7 @@ export default async function MedicationListPage(props: PageProps<"/operations/m
                 </p>
               )}
               <p className="break-words text-sm text-muted">{often(med)}</p>
+              {med.notes && <p className="break-words text-sm text-foreground">{med.notes}</p>}
               {med.lastDay && (
                 <p className="mt-1 inline-block rounded-full border border-border px-2 py-0.5 text-xs font-medium text-foreground">
                   {m.lastDay}

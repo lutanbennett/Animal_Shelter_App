@@ -42,7 +42,34 @@ function writeError(t: Dictionary, error: { code?: string; message: string }): {
   return { error: error.message };
 }
 
+/**
+ * Writes the ticked rounds for a prescription, replacing what was there. The new
+ * set goes in first and only then are the others removed, so a failure part-way
+ * leaves a superset rather than a prescription with no round. The ticks never
+ * touch the frequency, which stays the count of doses a day.
+ */
+async function saveRounds(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  prescriptionId: string,
+  roundIds: string[],
+): Promise<{ error: string } | undefined> {
+  if (roundIds.length > 0) {
+    const { error } = await supabase
+      .from("prescription_rounds")
+      .upsert(
+        roundIds.map((round_id) => ({ prescription_id: prescriptionId, round_id })),
+        { onConflict: "prescription_id,round_id", ignoreDuplicates: true },
+      );
+    if (error) return { error: error.message };
+  }
+  let del = supabase.from("prescription_rounds").delete().eq("prescription_id", prescriptionId);
+  if (roundIds.length > 0) del = del.not("round_id", "in", `(${roundIds.join(",")})`);
+  const { error } = await del;
+  if (error) return { error: error.message };
+}
+
 type ParsedPrescription = {
+  roundIds: string[];
   startDate: string;
   endDate: string | null;
   doseQuantity: number | null;
@@ -125,6 +152,9 @@ function parsePrescriptionFields(
       newSchedule,
       clinicVisitId: str(formData, "clinicVisitId"),
       notes: str(formData, "notes"),
+      roundIds: formData
+        .getAll("roundId")
+        .filter((v): v is string => typeof v === "string" && /^[0-9a-f-]{36}$/i.test(v)),
     },
   };
 }
@@ -193,7 +223,9 @@ export async function createPrescription(
   const refs = await ensureReferenceRows(supabase, fields, t);
   if ("error" in refs) return refs;
 
+  const prescriptionId = crypto.randomUUID();
   const { error } = await supabase.from("prescriptions").insert({
+    id: prescriptionId,
     resident_id: residentId,
     medication_id: refs.medicationId,
     frequency_id: refs.frequencyId,
@@ -204,6 +236,8 @@ export async function createPrescription(
     notes: fields.notes,
   });
   if (error) return writeError(t, error);
+  const roundsResult = await saveRounds(supabase, prescriptionId, fields.roundIds);
+  if (roundsResult) return roundsResult;
 
   revalidateResidentPages(residentId);
   redirect(`/residents/${residentId}/prescriptions`);
@@ -253,6 +287,8 @@ export async function updatePrescription(
   if (error) return writeError(t, error);
   // RLS filters rather than rejects: a volunteer's update matches no rows.
   if (!data || data.length === 0) return { error: t.prescriptions.errors.saveFailed };
+  const roundsResult = await saveRounds(supabase, prescriptionId, fields.roundIds);
+  if (roundsResult) return roundsResult;
 
   revalidateResidentPages(residentId);
   redirect(`/residents/${residentId}/prescriptions`);

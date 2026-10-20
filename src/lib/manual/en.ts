@@ -811,6 +811,7 @@ const manual: Manual = {
           steps: [
             "Pick the medication from the list (or add a new one, giving what one unit is — tablet, ml, drop…). An admin keeps this list tidy under Settings → Medications.",
             "Enter the dose per administration and pick a frequency, e.g. Twice daily or Every 8 hours. New frequencies can be added inline too.",
+            "Under the frequency, tick the time of day the dose is given: Morning, Lunch and Evening. Choosing a frequency ticks its usual ones (Twice daily ticks Morning and Evening) and you can change them. The frequency still says how many doses a day; the ticks say when. If you tick more times of day than the frequency gives doses, the form tells you. If you tick fewer, that is fine: for four doses a day, tick the three rounds and write in the notes when the other is given, for example \"give final tablet at midnight\". An as-needed prescription shows no ticks.",
             "Set the start date, and an end date if it's a course; leave the end blank if ongoing.",
             "Optionally link the clinic visit that prescribed it and add notes such as \"give with food\". Only visits up to today are offered: a prescription belongs to a visit that has happened, and one still to come can be linked once it has.",
             "Tap Save prescription. The resident's Prescriptions page separates Current from Expired.",

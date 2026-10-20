@@ -16,6 +16,7 @@ type PrescriptionRow = {
   dose_quantity: number | string | null;
   start_date: string;
   end_date: string | null;
+  notes: string | null;
 };
 
 type MedicationRow = { id: string; name: string; name_th: string | null; dose_unit: string; label_drive_file_id: string | null };
@@ -57,6 +58,8 @@ export type ListedMedication = {
   schedule: DueSchedule | null;
   /** The frequency's own label, the fallback when there is no schedule. */
   frequencyLabel: string | null;
+  /** The prescription's free-text note: where an extra dose outside the three rounds is written. */
+  notes: string | null;
   labelFileId: string | null;
   /** The course ends today, so this is the last dose — worth saying. */
   lastDay: boolean;
@@ -128,7 +131,7 @@ export async function loadMedicationList(
   const [prescriptions, medications, frequencies, placements, roundRows, order] = await Promise.all([
     supabase
       .from("prescriptions")
-      .select("id, resident_id, medication_id, frequency_id, dose_quantity, start_date, end_date")
+      .select("id, resident_id, medication_id, frequency_id, dose_quantity, start_date, end_date, notes")
       .is("archived_at", null)
       .lte("start_date", today)
       .or(`end_date.is.null,end_date.gte.${today}`)
@@ -212,6 +215,7 @@ export async function loadMedicationList(
       quantity: quantity != null && Number.isFinite(quantity) ? quantity : null,
       schedule: frequency,
       frequencyLabel: frequency ? localLabel(locale, frequency.label, frequency.label_th) : null,
+      notes: rx.notes,
       labelFileId: medication.label_drive_file_id,
       lastDay: rx.end_date === today,
     });
