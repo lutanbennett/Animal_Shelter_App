@@ -328,6 +328,8 @@ dev server running, none of it matters.
   and commit there (`git -C ../Animal_Shelter_Backlog commit -am
   "Backlog: <what>"`); the post-commit hook pushes it. No `claude/*`
   branch, no PR. Never edit `docs/backlog.md` on `main` directly.
+  New items go **above `## Completed`**, in their section: one filed below it is invisible
+  to every session, and the pre-commit hook refuses it (`scripts/check-backlog-sections.mjs`).
 - **Ticking the item a feature completes** stays on the feature branch,
   as part of finishing it — that is the one edit to `docs/backlog.md`
   that belongs in a PR.
