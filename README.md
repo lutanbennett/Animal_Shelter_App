@@ -973,9 +973,11 @@ runs the released code.
   possible duplicates of existing residents),
   `correct-resident.mjs` (removes a resident entered twice, keeping the
   original, optionally copying details such as the Thai name across; refuses
-  anything with real history; dry run by default, `--apply` to write, receipt
+  anything with real history, though `--enclosure-moves` lets a duplicate's
+  enclosure changes go with it; dry run by default, `--apply` to write, receipt
   on the Desktop first; see
-  `docs/decisions/2026-10-09-resident-corrections-script.md`),
+  `docs/decisions/2026-10-09-resident-corrections-script.md` and
+  `docs/decisions/2026-10-20-correct-resident-enclosure-moves.md`),
   `upload-blood-work.mjs` (the `/upload-blood-work` skill's writer: loads lab
   reports from the Blood Work inbox on Drive as a clinic visit plus one blood
   test per panel with the report attached; dry run by default, `--apply` to
