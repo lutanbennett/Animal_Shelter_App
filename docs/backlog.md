@@ -783,6 +783,8 @@ Environments exist since 2026-09-21 (README "Environments"): `test.lannacare.org
 - [ ] **Guard against function-valued props at client boundaries (2026-10-17, from medical-picker-crash).** The `/medical/photos` crash (docs/decisions/2026-10-17-scan-button-plain-strings.md) was a server page handing the translation dictionary, which holds functions, to a `"use client"` component. Only that one button now has a narrow type. A general guard (a lint rule that knows which files are client components and refuses `Dictionary` or any function-typed prop across them) was judged not cheap enough to half-build. Worth doing if it happens a second time.
 
 
+- [ ] **Run `check-backlog-sections` in the daily sync step before pushing (small).** Left over from the misfiled-backlog item (PR 762 built the pre-commit half). In the main checkout, after `git merge backlog` and before `git push`, run `node scripts/check-backlog-sections.mjs` and stop with its message if it fails; add the same to `/plan-day`. Also still open from the purge-cache item: renewal date of the purge token (2027-12-31) in `docs/release-procedure.md`.
+
 ## Completed
 
 Done items, kept under the same headings as the open work above so follow-ups can be traced back to what they build on.
