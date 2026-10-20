@@ -1,4 +1,5 @@
 import { createHash, timingSafeEqual } from "node:crypto";
+import { pollCalendarChanges } from "@/lib/clinics/calendar-poll";
 import { syncPendingVisits } from "@/lib/clinics/calendar-sync";
 
 /**
@@ -40,6 +41,9 @@ export async function POST(request: Request) {
   if (!authorised(request)) {
     return Response.json({ error: "Not authorised." }, { status: 401, headers: { "cache-control": "no-store" } });
   }
-  const result = await syncPendingVisits(siteOrigin(request));
+  const origin = siteOrigin(request);
+  // Poll first: a move or delete in the calendar is applied before the sweep rebuilds events from the app.
+  const polled = await pollCalendarChanges(origin);
+  const result = { ...(await syncPendingVisits(origin)), polled };
   return Response.json(result, { headers: { "cache-control": "no-store" } });
 }
