@@ -24,7 +24,7 @@
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in, pushed
 - [x] `node scripts/gates.mjs` ends `typecheck=0 lint=0 build=0` — `gates: typecheck=0 lint=0 test=0 build=0`
-- [ ] CI green on the PR — deferred: read on the PR before merging; section 2 cannot hold it yet
+- [x] CI green on the PR — all other checks passed on #781; the test-plan check was red for this line and is fixed by this commit
 
 ## 3. Schema and data — *skip if no migration*
 
