@@ -185,32 +185,28 @@ have vanished from the public site with nothing to say so.**
 
 ## In flight
 
-**ONE open item.** The byte disagreement that the last two editions carried is
-**closed** — see below.
+**NOTHING is open from `0.38.0`.** Both items the first draft of this edition
+carried were closed within the hour — one by another stream, one by Lutan running
+a command. **Do not raise either with him.**
 
-**Is `0227`'s nightly retention job actually scheduled on production?**
-Unchanged from `0.37.2`. The migration is applied (`233 applied, 0 pending`), but
-**pg_cron runs inside the database and reports to nothing** — no email, no alert,
-no tile, no log anyone reads.
+### CLOSED: `0227`'s retention job IS scheduled on production
 
-**The thing that changed, and it is most of the way to an answer:**
-**`scripts/check-cron-job.mjs` now exists on `main`** (landed mid-release by
-another stream). It is explicitly read-only — two `SELECT`s against `cron.job` and
-`pg_proc`, no writes, no DDL, no `--apply` path — and exits 0 only when exactly
-one active job named `purge-assistant-actions` runs `17 3 * * *` against an
-existing `public.purge_assistant_actions()`.
+Open across `0.37.2` and most of `0.38.0`, and **settled on 2026-10-20**. Lutan
+ran `node scripts/check-cron-job.mjs --env production` and it printed:
 
 ```
-node scripts/check-cron-job.mjs --env production
+check-cron-job (production): ok — purge-assistant-actions is active, 17 3 * * *, and the function exists.
 ```
 
-**Running it was refused as `[Production Reads]` on `0.38.0`, and was not
-retried**, because Lutan had not spoken to that specific check. **So this item is
-now one permission rule — or one command of his — from closed.** Raise it as that,
-not as an open investigation.
+So the job exists, is active, runs on the right schedule, and calls a function
+that is really there. `docs/backlog.md` records the same confirmation. **The
+question is answered; asking it again costs him a second answer to something he
+has already done.**
 
-- **The delete RULE is established as correct** and does not need redoing: the enum's complete value set is `confirmed`, `cancelled`, `unmatched`, `refused`. **Only the install is unverified.**
-- **Both failure directions are silent.** No job means assistant text is kept forever against a sentence `/privacy` shows users. A broken job means the same, with the error only in `cron.job_run_details`.
+Two things worth keeping from how it was settled, because they generalise:
+
+- **A refused read is not a dead end, it is an unanswered question with an owner.** It was refused as `[Production Reads]` on two releases running and **was never retried blind**. What closed it was another stream writing a purpose-built read-only checker and Lutan running it in one line — not persistence against the classifier.
+- **"Verified working today" is not "will report if it breaks."** The job is correct *now*. It still reports to nothing, so a future silent failure would be just as invisible. **That is the separate, still-open backlog item** — making it report through the existing `/admin/status` tiles and `status_alert_runs` plumbing — and it is a real piece of work, not a re-check. See the silent-failure pair below.
 
 ### CLOSED: the `purge-cache.mjs` / `check-assets.mjs` byte disagreement
 
@@ -235,9 +231,15 @@ the only warning is a tile on System status — amber at 80%, red at 95% — whi
 (`docs/decisions/2026-10-20-videos-uploaded-straight-to-drive.md`). A full Drive
 stops uploads, and nothing would say so. Nothing is broken today.
 
-**This is the second unwatched silent failure in two releases** (the cron job is
-the first), and both would be fixed by the same plumbing. **Worth naming to Lutan
-as a pair rather than one at a time.**
+**This is the second unwatched silent failure in two releases** (the retention
+job is the first), and both would be fixed by the same plumbing. **Worth naming
+to Lutan as a pair rather than one at a time.**
+
+**Be precise about what is open here, because the neighbouring item is not.**
+The retention job was *confirmed working* on 2026-10-20 — that question is shut.
+What remains, for both it and Drive space, is that **neither would tell anyone if
+it stopped**. That is a piece of work to build, not a check to re-run, and
+describing it as "we should check the cron job" would re-open a settled question.
 
 **Do not trust a list of worktrees in this file — run `node scripts/worktree.mjs
 list`.** What is durable is the shape:
@@ -268,7 +270,7 @@ list`.** What is durable is the shape:
 15. **Read every `-- consumer:` header against this release and predict the warnings** — see the new section above.
 16. **Check a narrowing in code, not by reasoning about it.** A public view gaining a filter is the shape that silently empties a page.
 17. **When two migrations in one release touch the same object, check the later did not revert the earlier.** `0.38.0`'s three shared no object.
-18. **Ask whether anything can fail silently**, read the candidates in code, and **name it separately from the count**. **If a read you need is refused, say so and leave it open** — do not retry blind and do not quietly drop it. There are now **two** standing silent failures of the same shape: the cron job and Drive space.
+18. **Ask whether anything can fail silently**, read the candidates in code, and **name it separately from the count**. **If a read you need is refused, say so and leave it open** — do not retry blind and do not quietly drop it; on `0.38.0` that patience is what got the retention job answered properly rather than guessed at. Two things of the same shape **still report to nobody**: the retention job (confirmed *working* 2026-10-20, but it would not announce a future failure) and Drive space. Both are build-work on the backlog, **not checks to re-run**.
 19. **Expect a production-only guard.** None for sixteen releases.
 20. **The production migration apply is yours, with an allow rule.** It needed no prompt on `0.38.0`.
 21. **Budget the Worker deploys at ~9–10 minutes each, strictly serial. Budget the Pi builds at ~5 minutes each** — `0.38.0`'s compiles were 51s and 50s.
