@@ -194,14 +194,13 @@ the `lannacare.org` routes move from the `production` block of
 `"PUBLIC_SITE": "locked"`, or the live site opens on a sign-in page
 (`scripts/deploy.mjs` refuses `--env production` while the block is off
 `lannacare.org` and still locked);
-`SITE_ORIGINS.production` in `scripts/deploy.mjs` and `HOST=` in
-`scripts/pi/deploy-pi.sh` follow. **A host move that carries the staff app
-with it** also changes `src/lib/site-hosts.ts` (the one list behind
-`serverActions.allowedOrigins` in `next.config.ts` and the upload routes'
-`same-origin.ts`) and `httpHostHeader` in `scripts/pi/cloudflared-config.yml`;
-miss either and every Server Action or upload is refused on the new host while
-every page still loads. `node scripts/check-site-hosts.mjs` fails if the two
-disagree. Outside the repo: today's
+`HOST=` in `scripts/pi/deploy-pi.sh` follows. The two addresses are `APP_HOST` and
+`PUBLIC_HOST` in each `wrangler.jsonc` block (`src/lib/site-hosts.ts`), so a host
+move is those settings plus `httpHostHeader` in `scripts/pi/cloudflared-config.yml`;
+miss the second and every Server Action or upload is refused on the new host while
+every page still loads. `node scripts/check-site-hosts.mjs` fails if they
+disagree. Everything outside the code that holds an address is listed in
+`docs/domain-checklist.md`. Outside the repo: today's
 `.env.deploy.production` becomes `.env.deploy.uat`, a new
 `.env.deploy.production` holds the new project's values, and
 `node scripts/deploy.mjs --env uat --secrets` gives the UAT Worker its
