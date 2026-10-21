@@ -1,150 +1,152 @@
-# Planner handover — edition `276`, 2026-10-21
+# Planner handover — edition `285`, 2026-10-21
 
-**A delta, third edition in this shape — ~125 lines against `267`'s 131 and `258`'s 149.** The rules
-are in `.claude/skills/plan-day/SKILL.md` step 8: ceiling ~100 lines, 150 the limit, say what
-**changed**, promote durable facts once, cite `.plan-day.md` rather than reproducing it.
+**A delta, fourth edition in this shape.** Its rules are the skill's step 8 — say what **changed**,
+promote durable facts once, cite `.plan-day.md` rather than reproducing it.
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`** — if they
 disagree with this, they are right and this is stale. **Read first:** `CLAUDE.md` → the skill →
-`.plan-day.md` → this. **The next slug is `285`.**
+`.plan-day.md` → this. **The next slug is `294`.**
 
-> **Never carried forward: anything read from the repo.** Counts, migration numbers, PR numbers,
-> release state, candidates — **re-read every time, never diffed.** Short prose, fresh facts.
+> **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
+> release state, candidates. **Re-read every time, never diffed.**
 
 ---
 
-## What `267` asked for, and what happened
+## What `276` asked for, and what happened
 
-- **"Cite the skill and delete the two planning errors." DONE** — the column-DROP rule and the
-  read-the-whole-item rule are in the skill's step 3 and are not repeated here. That is this edition's
-  main saving, as `267` predicted.
 - **"Check for an open `planner-handover-*` PR first." HELD — checked, none. Keep it.**
-- **"Capture the actuals the moment a batch merges." HELD, fourth round.** Nine of nine measured;
+- **"Capture the actuals the moment a batch merges." HELD, fifth round.** Nine of nine measured;
   `get_usage` again answered for sessions with `isRunning: false`.
-- **"Brief the stream to run the allow-listed read-only script." FIRED, usefully** — `harness-reds`
-  ran `check-bills-roles.mjs` before and after, and that before/after is what made its finding
-  reviewable. `diets-sheet-schema` got the same shape.
-- **The `rm`-then-write trap: HELD for a fifth edition, now with a THIRD half** (skill, step 6).
-  `node -e` is no way round it: a single-quoted `node -e` holding `C:\Development` reached JS as
-  `C:Development` and the anchor silently rotted. **Promoted.**
-- **"The dial has never been varied." THIS IS THE ONE THAT CHANGED.**
+- **"Brief the stream to run the allow-listed read-only script." FIRED, usefully again** —
+  `orphans-landing-and-my-work` ran `check-menu-coverage.mjs` before and after, and that before/after
+  is what proved the hub finding below.
+- **The `rm`-then-write trap: HELD for a sixth edition** (skill, step 6). No new half this time.
+- **"Vary the dial again on a different shape." FIRED, AND THE PREMISE COLLAPSED** — see below.
+- **"The planner is now the main source of estimate error." STILL TRUE, and improving.** All three
+  misses were the planner's banding, not stream scope. **Three new band corrections went into the
+  skill's token section; they are not repeated here.**
 
-## The dial was varied, and the honest answer is "one reading, no finding"
+## `276` was too pessimistic — this was the best spread yet
 
-**`bills-and-groups-schema` ran `claude-opus-5-5` / `low`** — the first non-Sonnet reading in the
-table — at **137,455 against a 150–185k band, ~8% under**, for a two-file schema PR that closed a
-live permission and seeded a groups table.
+**Nine streams: six inside band, two under, one over, worst error +7%.** Figures in `.plan-day.md`.
 
-**Do not report that as "Opus is cheaper", and do not let the next round quote it as evidence.** That
-stream also had the tightest brief of its batch and `check-bills-roles.mjs` as a ready-made
-instrument — the same pair of confounds that made a planner wrongly credit **Sonnet** in batch 89,
-which `267` had to walk back. **Vary it again, on a different shape.**
+`267` claimed prescriptive briefs made every estimate hold; `276` walked it back to "they removed the
+large overruns, not all overruns". **`285`: the ±10% noise is now the whole of it, and what is left
+sits in the planner's bands.** Nothing about briefs or dials changed to achieve that — the bands are
+simply corrected from measurements each round. **Keep correcting them; the brief discipline is settled
+and does not need re-litigating.**
 
-**It took two attempts to get the reading.** The first time Lutan said mid-turn: *"Sorry I forgot to
-change the model."* `get_session` reported Sonnet, and that is what went in the table. **Recording the
-recommendation as the setting would have produced a false finding.** So: **ask him in the message
-where he opens the session, not in the plan he reads before it.**
+## THE DEFINING FAILURE: five items offered that were already built
 
-## `267`'s nine-of-nine did NOT repeat, and that is the correction to carry
+**Lutan caught four of the five himself**, and said, fairly: *"You seem to be struggling a bit today
+with working out the backlog."*
 
-**Nine streams: six under, three over, none over by more than 10%.** Figures are in `.plan-day.md`;
-**cited, not repeated.**
+The alert tile (#744/#746), the NFC name cards, `/donate` (c) appeals and the vet calendar had all
+shipped; the fifth was an item the planner **filed that morning** and a stream **closed that
+afternoon**. The cause was already in the skill's step 3 — **trust the decision files and the commits
+over an item's own status notes** — and the planner applied it selectively: right wherever it ran the
+greps, wrong wherever it read the prose and believed it.
 
-`267` concluded prescriptive briefs made every estimate hold. **Softer and truer: the briefs removed
-the LARGE overruns, not all overruns.** The old +50%/−39% swings are genuinely gone; ±10% noise
-remains. **All three overruns were the planner's estimating, not the streams' scope** — three
-different errors, all now in the skill's token section:
+**The fix is a STEP ZERO block in every brief, now in the skill (step 7)** — nine carried it for almost
+nothing, since the planner had already run those greps while choosing the item. **It also tells the
+stream that finding the work already done is a success, not a failure.**
 
-1. **A proof harness makes a schema PR dearer.** `diets-schema` was told the back-fill proof *was* the
-   deliverable, then priced as a single-file schema PR.
-2. **A brief asking for browser verification adds ~30k**, whatever the code shape. The quick win was
-   only a quick win until the brief told it to drive five screens.
-3. **"Schema PR with code" is not one band — it splits.** `diets-sheet-schema` came in **28% under**
-   230–285k, because that band came from *permissions* work across many call sites and this was a view
-   rewrite plus four **named** readers. **Ask how many readers the item names.**
+**Four backlog titles were rewritten in place.** Same shape every round — a PR ships, nobody rewrites
+the title. **Budget for it.**
 
-**The planner is now the main source of estimate error, which is progress** — stream scope is no
-longer the variable; the bands are.
+## Its mirror image, which cost two filed items
 
-## A merged PR is not proof its item is closed — read the commit
+**Work recorded only as a sub-note inside another item is invisible and cannot be ticked.** Dropping
+the dead `role_home_tiles` had **no item at all**. Folding `public_adoption_updates` into
+`is_public_drive_file` was one sentence at the end of an item **whose title says a person's check is
+all that is left**. Both had to be filed before they could be scheduled. **In the skill now (step 3):
+read the tails for FOLLOW-UPS as well as answers, and file them as their own items.**
 
-#806 was titled *"Rule: no scratch output above the repo"*. Its item's "Done when" needed the rule in
-`CLAUDE.md` **and** `.local/` in `.gitignore`. The commit touched `CLAUDE.md`, a decision file and a
-test plan; both greps came back empty. **Two of three clauses never shipped — and because this repo is
-public, the missing one was the clause stopping a folder from being committed.** Promoted into the
-skill's step 3; **one `git log -1 --name-only` per "done" claim is the whole cost.** The remainder was
-folded into batch 3 and has landed.
+## The hub-and-leaf finding, the one worth carrying
 
-**Three backlog titles were wrong today and all three were fixed in place.** Note the shape: every one
-was a PR that shipped while nobody rewrote the title. **The planner is the only reader who checks, so
-budget for it every round.**
+*Menu-removal orphans 1 of 6* named **12 rows**. The stream closed **51**, and the gate went **66 →
+15**. No over-reach: `/operations` and `/management` are **landing pages listing many pages**, so
+making them reachable as tiles made everything they list reachable, and the Volunteer went to zero.
 
-## Two corrections the planner made to itself mid-round
+**The planner quoted the item's 12 without asking what kind of page each orphan was.** In the skill
+now: **ask of any count whether these are leaves or doorways.**
 
-- **The counter read 12 for three batches of three. Lutan caught it.** Re-planning a batch is not a
-  stream. **Promoted into step 6** with what does and does not count.
-- **"Cut `0.39.0` before batch 3" was WRONG and was withdrawn.** #809 put the diets app half on `main`
-  **unreleasable** — the Feed Special Diets sheet still read legacy columns, so a Diabetic recipe was
-  invisible and unchoosable at intake. **General lesson: a merged PR is not a releasable PR, and the
-  planner should not advise on release timing without checking what `main` can actually ship.**
+**Why it matters beyond arithmetic:** the gate is far closer than anyone thought, and **the remaining
+15 are job pages mapping onto the four unwritten orphan reports** — now the **critical path** to
+finishing the cards programme, not one errand of six.
+
+## The dial experiment is over: you do not control the dial
+
+Recommended Sonnet for batch 2 — **all three ran Opus**. Recommended Fable for two report-only streams
+— **both ran Sonnet**, leaving Fable at **0% all day**. Lutan sets the dials himself, as is his right.
+**Recommend, never plan around it; read `get_session` and record what actually ran.** Across nine
+streams (four Opus, five Sonnet, no Fable) **shape and brief quality moved the numbers far more than
+the model, and there is still no model finding worth the name.** In the skill now, replacing "vary one
+dial per batch" as a plan.
+
+## A coordination lesson — about who, not how, so not in the skill
+
+**Two sessions retitled `docs/backlog.md` at once.** A "Backlog item review" session's wholesale pass
+**superseded all four of the planner's retitles in tighter wording, keeping every fact** — better than
+the planner's, but duplicated, and the next `git merge backlog` **conflicted** because each side had
+ticked one of the two items #815 closed. **So check whether a backlog-review session is running before
+spending effort on retitles:** the planner's job is to **find** stale titles, not to rewrite them all.
 
 ## Where things stand — re-read 2026-10-21, not carried
 
 | | |
 |---|---|
-| `main` | `ff9186fd` |
+| `main` | `5ce57149` |
 | `backlog` | in sync |
-| Dev database | 243 applied, 243 files, zero drift both ways |
-| Next free migration | `0243` |
-| Open backlog items | 83 |
+| Next free migration | `0246` |
+| Open backlog items | 77 |
 | Open PRs | none, before this one |
-| Release | `0.38.2` shipped today; `unreleased` carries **five** lines. **`0.39.0` is NOT cut — the release manager's**, and the diets gate is now lifted |
-| Production | **behind by `0236`–`0242`.** `docs/release-procedure.md` §5 catches it before any deploy, so **no backlog item** |
-| Leftover worktrees | one (`planner-handover-267`, free). The three batch-3 folders are **HELD** by their sessions — ask, do not tear down |
+| Menu-coverage gate | **15 unexplained orphans** — "the menu cannot go yet" |
+| Release | `0.38.2` newest; **`0.39.0` NOT cut, `unreleased` now carries NINE lines.** The release manager's |
+| Leftover worktrees | the round's nine, all `HELD` by their sessions — **ask, do not tear down**; `done <slug>` once he closes them |
 | Workstreams since handover | **9** — three batches of three. `.plan-day.md` carries the arithmetic |
 
-**The round's nine:** #802–#804, #807–#809, #810–#812, all merged. **#806 was an unplanned tenth
-stream**, named here because it is the one that shipped half a rule.
+**The round's nine:** #814–#816, #817–#819, #820–#822, all merged.
 
-## One thing for the release manager, not a backlog item
+## For the release manager
 
-**#807 narrowed a permission and wrote no release note.** A visiting vet who has been using the bills
-inbox will find it closed, and nothing in `unreleased` says so. The stream was briefed to judge it and
-did. **Flagged for the `0.39.0` cut to confirm, not to overturn** — it is the shape Lutan cares about,
-a change that is invisible until someone hits it.
+- **`unreleased` has gone from five lines to nine**, so `0.39.0` has substance: the Donors list, diets
+  as recipes, two assistant sentences, tile groups, the My tasks tile, the Home panel's retirement.
+- **The alert-mail item now reads *deployed to production*** — that job of Lutan's is done; what is
+  left is a real test alert turning the tile green.
+- **#807 narrowed a permission with no release note** (carried from `276`): a visiting vet who used the
+  bills inbox will find it closed. **For the cut to confirm, not to overturn.**
 
 ## Rulings worth not re-deriving — cited, not summarised
 
-- **A visiting vet must not use the bills inbox:**
-  `docs/decisions/2026-10-21-harness-reds-volunteer-and-bills.md`. The check already expected refused,
-  so the fix was the permission, not the expectation.
-- **The home screen is the role's cards, and the panel is gone:** #812's decision file, which also
-  records `2026-10-19-role-home-tiles-panel.md` as superseded. **`role_home_tiles` (`0225`) is now
-  DEAD BUT NOT DROPPED**, deliberately, so the drop can be verified against a working `main`.
-- **A diet is a recipe of ingredients:** `docs/decisions/2026-10-21-diets-app-half.md` and #811's file.
-  All three design questions were answered 2026-10-21 and are recorded on the item.
+- **Donors get their own supporters list, NOT a contact type** — Lutan, 2026-10-21. `Donor` is not
+  returning to `contact_type`, so the old item's two-migration enum dance does not apply.
+- **The dry-run and acceptance family is PARKED** until every card and function is operational — Lutan,
+  2026-10-21. Recorded on the item; **do not schedule it.**
+- **The menu cannot come off while the coverage script is non-zero** — he asked directly, and the
+  answer is the script, not an opinion.
 
 ## Next round's candidates
 
 The next chat plans; this is only where the board points. **`.plan-day.md` carries the reasoning.**
 
-1. **`production-rehearsal`** — **first in line, and displaced twice already.** It blocks the cutover
-   and needs its own migration, and both times a release-gating item took the batch's slot. **Do not
-   displace it a third time without saying so to him.** He creates a throwaway Supabase project inside
-   the work; **do not list it as waiting on him.**
-2. **The diets cleanup drop** — part (3) of the recipes item, applicable only now that #811 has merged.
-   **Grep `supabase/migrations/` for every column name before pricing it** (the `frequency_id` lesson).
-3. **Drop `role_home_tiles`**, dead since #812. Same two-stage shape; folds with (2).
-4. **The tile-groups app half** — `role_groups` (`0241`) is seeded and read by nothing.
-5. **The six menu-orphan reports** — **chats, not workstreams**, and they do not count toward the tally.
-6. **The five acceptance role passes** — blocked on the sign-off ground rules. One role per stream.
+1. **The four remaining orphan reports (2, 3, 5, 6 of 6)** — **chats, not workstreams** (his ruling):
+   read-only, to his Desktop, no branch or PR, not counted in the tally. **Now the critical path.**
+   Check whether 2 and 3 were written or merely dropped — they left Next up.
+2. **The orphan build that follows**, then **`menu-removal`** once the gate reaches zero.
+3. **`production-rehearsal`** — **displaced THREE times**, blocks the domain cutover, **not waiting on
+   Lutan** (he makes a throwaway Supabase project inside the work). **Do not displace it a fourth time
+   without saying so to him.**
+4. **Run the app on its own user on the Pi** — buildable, then he re-runs setup.
+5. **`/donate` (d), online card payment** — only if the customer asks; #821's paper now exists for him
+   and the Director to choose from.
 
 ## Writing the next one
 
-**The rules are in the skill, step 8.** Offer it; never on an ambiguous yes, and **read step 6's counting rules before writing a number.**
+**The rules are in the skill, step 8.** Offer it; never on an ambiguous yes, and **read step 6's
+counting rules before writing a number** — a batch counts once, at setup, however often it is
+re-planned. Branch, worktree, test plan, PR, then **merge it yourself on green CI** — never a gate.
+This one is `claude/planner-handover-285`, after #813 (`276`) and #800.
 
-Branch, worktree, test plan, PR — then **merge it yourself once CI is green**, and never present it as
-a gate. This one is `claude/planner-handover-276`, after #800 (`267`) and #790.
-
-**What could go next time:** the three estimating errors are now in the skill — **cite it and delete
-them**, about fifteen lines. The dial paragraph stays only until a second non-Sonnet reading exists.
+**What could go next time:** the five-already-built section shrinks to two lines citing the skill's
+STEP ZERO block once it has proved itself, and the dial paragraph goes entirely — a skill rule now.

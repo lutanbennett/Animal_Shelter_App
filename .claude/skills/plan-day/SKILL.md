@@ -113,6 +113,26 @@ note:
   with it:** that second failure grepped the constant the item named, which
   was real, while the fix sat on another code path. Ask whether the behaviour
   the item describes still happens, not whether the code it names still exists.
+- **AND THE MIRROR FAULT: work recorded only as a sub-note of another item is
+  invisible, and cannot be ticked.** Added 2026-10-21, after two such gaps were
+  found in one round. Dropping the dead `role_home_tiles` table had **no item at
+  all**. Folding `public_adoption_updates` into `is_public_drive_file` existed
+  only as a sentence at the end of *Show adoption updates to the public*, **whose
+  title says a person trying the publish form is all that is left** — so every
+  reader who skims titles saw a finished item, and there was nothing to tick.
+  Both had to be filed by the planner before they could be scheduled. **So read
+  the tails for FOLLOW-UPS as well as for answers, and file what you find as its
+  own item on the `backlog` branch.** A follow-up buried in a parent is work the
+  backlog cannot see.
+- **When an orphan or a gap is a HUB, closing it closes everything under it —
+  price and predict accordingly.** Added 2026-10-21. *Menu-removal orphans 1 of 6*
+  named **12 rows**; the stream closed **51**, and `check-menu-coverage.mjs` went
+  **66 to 15**. No over-reach — `/operations` and `/management` are **landing
+  pages that list many pages**, so making them reachable as tiles made everything
+  they list reachable, and the Volunteer went to zero orphans. The planner quoted
+  the item's 12 without asking **what kind of page each orphan was**. **Ask of any
+  count: are these leaves, or doorways?** It costs one look and it changes the
+  advice you give about how close the gate is.
 - **Who does it** — Claude-buildable, or user-driven (physical setup like
   the Pi, dashboard clicking, a guided walkthrough, "decide with the
   user" as the main content). User-driven items are reminders, not
@@ -394,6 +414,27 @@ all of it went on merging `main`, filling a test plan and opening the PR at
 dearest.** Hence the stop-and-hand-over rule in step 7.
 
 
+**THREE BAND CORRECTIONS FROM 2026-10-21, a round of nine where six landed inside,
+two under and one over, and the worst error was +7%.** The best spread yet, on the
+same brief discipline edition `276` identified.
+
+- **A schema PR with NOTHING LEFT TO DISCOVER costs barely more than the floor:
+  ~110-140k.** `supporters-list-schema` came in at **111,834** against a 140-165k
+  band and against every schema PR measured before it (139k-284k). Its brief
+  **forbade all `src/` work** and **handed it the exact `donations` column list**,
+  so it had nothing to find out. That is a BRIEF effect, not a model effect. Use
+  the higher schema bands only where the stream must still work out its own shape.
+- **The quick-win floor is confirmed.** `consumer-header-directories` landed at
+  **110,653** — the band's bottom edge, barely over the ~85k floor — for a 1-2 file
+  script fix whose answer was already written on the item. **Do not quote a quick
+  win above ~170k.**
+- **"A fourth instance of a settled pattern" is the WRONG FRAME when the item says
+  the thing needs its own card.** `assistant-return-from-carer` went **+7%**, the
+  round's only overrun. Its item said *"the return needs an enclosure and its own
+  card"* — a new field, its own validation and a new card is not a repeat of an
+  existing intent. The +30k browser allowance was right; the base was too low.
+  **Read what the item says makes it different before pricing it as a repeat.**
+
 ### Model and effort
 
 **Two dials, and they do not behave the same way.** **Model** changes the
@@ -433,6 +474,22 @@ batch** and let the table accumulate.
 batch's lowest-risk stream is the real mitigation, and *Weekly · Fable*
 sitting unused is worth spending on the backlog's Fable items rather than
 letting it expire.
+
+**STOP DESIGNING DIAL EXPERIMENTS. YOU DO NOT CONTROL THE DIAL.** Added 2026-10-21,
+and it retires the "vary one dial per batch" instruction above as a *plan*. That
+round recommended Sonnet for batch 2 and **all three streams ran Opus**; it
+recommended Fable for two report-only streams and **both ran Sonnet**, so the Fable
+window sat at **0% all day**. Lutan sets the dials in each session's model menu, as
+is his right, and he has also simply forgotten to change one (edition `276`).
+
+So: **recommend, never plan around it.** Name the dial you would pick and why, then
+**read `get_session` and record what actually ran** — the figure belongs to the
+setting, not the recommendation. **Never compute a finding from a recommendation**;
+that was edition `276`'s warning and 2026-10-21 proved it three times over.
+Across nine streams that day — four Opus, five Sonnet, no Fable — **shape and brief
+quality moved the numbers far more than the model did, and there is still no model
+finding worth the name.** Keep recording; stop promising comparisons you cannot
+deliver.
 
 ### NEVER BLOCK HIS PAID USAGE — a hard rule, not a preference
 
@@ -632,6 +689,47 @@ clearly that the PR is still to open *is* the handover.
 two coexist: finish the work and open the PR *unless* you were told to stop and
 the session is already large.
 
+
+### And every brief OPENS with a STEP ZERO: prove it is not already built
+
+Added 2026-10-21, the round where **five items were offered to Lutan as workstreams
+and all five had already shipped.** He caught four of them himself — the alert tile
+(#744/#746), the NFC name cards, `/donate` (c) appeals, and the vet calendar — and
+said, fairly, *"You seem to be struggling a bit today with working out the backlog."*
+The fifth was an item the planner **filed that morning** and a stream **closed that
+afternoon**.
+
+The cause is in step 3 already: **trust the decision files and the commits over an
+item's own status notes.** The planner did it selectively. So the check now also
+belongs with the streams, because a stream reads its brief before it reads anything
+else, and it is the last line of defence.
+
+Put this directly after the finish-line and STOP blocks, with the greps filled in
+for that stream, and with whatever the planner has already verified written in:
+
+```markdown
+## STEP ZERO, BEFORE ANY CODE: prove this is not already built
+
+Five items were offered as workstreams on 2026-10-21 and **all five were already shipped**, because
+the planner trusted the items' prose over the decision files and the commits. Do not repeat it.
+Before writing anything:
+
+1. <the one grep that tests THIS stream's premise>
+2. `ls docs/decisions/ | grep -i <subject>` and `git log -S "<a distinctive symbol>" --oneline | head`
+3. Read the file the work lands in and confirm with your own eyes that the gap is still there.
+
+**What the planner already verified, so you start from evidence rather than from scratch:** <paste it>
+
+**If your checks show it has already landed, STOP and say so** in your last message, with the commit
+or decision file that did it. Do not build it again, and do not open a PR. **That is a successful
+outcome for this stream, not a failure.**
+```
+
+**Write the planner's own evidence into it.** Nine briefs carried this on 2026-10-21
+and it cost almost nothing, because the planner had already done the greps while
+choosing the item — the block is mostly a paste of work already done. **A stream
+that starts from facts does not spend its first turns re-deriving them**, which is
+part of why that round's estimates held.
 
 **And the planner's own half of this, in step 2:** read `worktree.mjs list`'s
 **`ahead`** column against the open PRs every run. **Ahead with no PR is
