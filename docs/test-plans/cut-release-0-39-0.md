@@ -134,7 +134,7 @@ ALL CHECKS PASSED
 - [ ] Existing rows still read correctly — n/a: no migration in this PR
 - [ ] Constraints and defaults exercised against real rows — n/a: no migration in this PR
 - [ ] Down-migration written — n/a: no migration in this PR
-- [ ] Production apply plan stated — n/a for this PR; the release's plan for all seven is in section 8
+- [ ] Production apply plan stated — n/a: this PR carries no migration. The release's plan for all seven is in section 8
 
 ## 4. Functional checks
 
@@ -202,7 +202,7 @@ each role sees**, which is the thing this change can alter.
 - [ ] Deployed to test — deferred: release manager
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: release manager, against `docs/release-smoke-test.md`
 - [ ] Timezone-sensitive behaviour proved — **n/a: the only date in this change is the entry's own `date: "2026-10-21"`, a display string.** No logic derives "today" from it; ordering is by version, not date
-- [ ] Boundary or banding change — n/a for this PR beyond the version ordering asserted in section 2. **The release does ship bands** — the portion-multiplier plausibility limits in `src/lib/diets/plausible.test.mjs` — but they belong to `#809` and its own plan
+- [ ] Boundary or banding change — n/a: this PR touches no threshold, band, retry window or cutoff; its one ordering boundary is the version bump asserted in section 2. **The release does ship bands** — the portion-multiplier plausibility limits in `src/lib/diets/plausible.test.mjs` — but they belong to `#809` and its own plan
 - [x] **Evidence pasted into this plan is the tool's actual output, unedited** — the `gates:` lines, the whole verification block, the dry-run extract and the predicted-warning list are as printed
 - [ ] Public pages re-checked after a cache purge — deferred: release manager. **And note what it cannot cover:** `PUBLIC_SITE` is `locked` on both environments, so an anonymous request to any public page gets the staff-testing gate. `0245` adds a public story Drive file to `/adopt`, which **no visitor can reach** for the same reason — seventh release running
 
@@ -215,7 +215,7 @@ each role sees**, which is the thing this change can alter.
 ### Migration ordering
 
 - [x] **Does this PR contain both a migration and code that reads it?** **No** — this PR carries no migration. **But the release as a whole does, and this is the release where it matters most:** `0239`/`0242` and the diets app code that reads recipes all ship here, and `0243` **drops** the columns the old app writes. So the order is not conventional — it is load-bearing, and it is stated below
-- [ ] `--dry-run` against production run and clean — **run before the cut; exit 0, and it reports two files FAILED.** Quoted and explained below, because a red dry-run normally means do not apply and here it means the opposite
+- [x] `--dry-run` against production run and clean — **run before the cut; exit 0, and it reports two files FAILED.** Ticked because it was genuinely run and its exit code read from the command, not through a pipe. Quoted and explained below, because a red dry-run normally means do not apply and here it means the opposite
 - [x] **For a destructive or rewriting migration: a production backup exists and is fresh.** `0243_dead_schema_drop.sql` drops `diet_types.daily_qty_small/_medium/_large`, `diet_types.is_standard`, `resident_diets.diet_type_id` and `resident_diets.daily_quantity`, plus `role_home_tiles` and five functions/triggers. **Not relying on the 03:00 nightly backup**: a fresh one was taken on the Pi with the cron job's own command, **`lannacare-production-2026-10-21T1406Z.dump.age`**, 1.32 MB, encrypted for one recipient, uploaded to Drive and kept at `~/backups/lannacare` (16 kept). Taken from the Pi rather than this machine because `BACKUP_GOOGLE_OAUTH_*` is deliberately not in `.env.deploy.production` — `backup.mjs --env production` refuses here and names exactly that, which is the designed behaviour and not a fault
 - [x] **Apply plan stated:** all seven to `dbkodyyxxhtygxcxmfcu` (production), from the **main checkout**, **after the merge and the pull and before either Worker deploy**, in file order `0239` → `0245`, with `--status` then `--dry-run` first and `--status` plus `--drift production` after
 
