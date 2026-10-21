@@ -94,19 +94,6 @@ function bigDietWarning(formData: FormData, fields: ParsedDiet, t: Dictionary): 
 }
 
 /**
- * The old column the Feed Special Diets view still joins on (special_diet_list,
- * 0140): the ingredient that carries the diet's own name, which is every diet that
- * existed before recipes. A diet made since has none, and stays off that list until
- * the view reads recipes (docs/decisions/2026-10-21-diets-app-half.md).
- */
-async function legacyDietTypeId(supabase: Awaited<ReturnType<typeof createClient>>, dietId: string): Promise<string | null> {
-  const { data: diet } = await supabase.from("diets").select("name").eq("id", dietId).maybeSingle<{ name: string }>();
-  if (!diet) return null;
-  const { data: type } = await supabase.from("picker_diet_types").select("id").eq("name", diet.name).maybeSingle<{ id: string }>();
-  return type?.id ?? null;
-}
-
-/**
  * Records a diet for a resident and returns to the Diet tab. The deceased
  * lock (0026 via 0051) rejects the insert for a closed record, which the
  * page refuses to show anyway.
@@ -127,7 +114,6 @@ export async function createDiet(_state: DietFormState, formData: FormData): Pro
   const { error } = await supabase.from("resident_diets").insert({
     resident_id: residentId,
     diet_id: fields.dietId,
-    diet_type_id: await legacyDietTypeId(supabase, fields.dietId),
     start_date: fields.startDate,
     end_date: fields.endDate,
     meals_per_day: fields.mealsPerDay,
@@ -164,7 +150,6 @@ export async function updateDiet(_state: DietFormState, formData: FormData): Pro
     .from("resident_diets")
     .update({
       diet_id: fields.dietId,
-      diet_type_id: await legacyDietTypeId(supabase, fields.dietId),
       start_date: fields.startDate,
       end_date: fields.endDate,
       meals_per_day: fields.mealsPerDay,

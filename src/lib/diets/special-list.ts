@@ -5,7 +5,7 @@ import { roundsFor, type RoundKey } from "@/lib/rounds/suggest";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
-/** A row of `special_diet_list` (0140). */
+/** A row of `special_diet_list` (0140, one per ingredient since 0242). */
 type Row = {
   resident_diet_id: string;
   resident_id: string;
@@ -27,6 +27,15 @@ type Row = {
   daily_quantity: number | string | null;
   notes: string | null;
   round_keys: string[] | null;
+  ingredient_name: string;
+  ingredient_name_th: string | null;
+};
+
+export type DietIngredient = {
+  name: string;
+  nameTh: string | null;
+  unit: string;
+  dailyQuantity: number | null;
 };
 
 export type SpecialDiet = {
@@ -34,10 +43,9 @@ export type SpecialDiet = {
   name: string;
   /** Display only (0166); the page picks the language. */
   nameTh: string | null;
-  unit: string;
   mealsPerDay: number | null;
-  /** The whole day's amount; null when neither the resident nor the type's size default has one. */
-  dailyQuantity: number | null;
+  /** The recipe's ingredients, each the whole day's amount at this resident's size times their portion. */
+  ingredients: DietIngredient[];
   /** Where the diet is given, in day order; empty when no meal is ticked. */
   rounds: RoundKey[];
   notes: string | null;
@@ -74,8 +82,8 @@ export type SpecialDietList = {
 const natural = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
 
 /**
- * Feed Special Diets (docs/decisions/2026-10-04-medical-jobs-app.md): every current diet whose
- * type is not the standard one (`diet_types.is_standard = false`, Lutan 2026-10-04), by zone then
+ * Feed Special Diets (docs/decisions/2026-10-04-medical-jobs-app.md): every current diet that
+ * is not the standard one (`diets.is_standard = false`; recipes since 0242), by zone then
  * enclosure, for one meal. One read of `special_diet_list`, never `diet_types` or `residents`:
  * the view is what the Head of Medical may see (no cost, stock or reorder column).
  *
@@ -90,7 +98,7 @@ export async function loadSpecialDiets(supabase: Supabase, round: RoundKey): Pro
     supabase
       .from("special_diet_list")
       .select(
-        "resident_diet_id, resident_id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th, zone_colour, diet_type_id, diet_name, diet_unit, meals_per_day, daily_quantity, notes, round_keys, diet_name_th",
+        "resident_diet_id, resident_id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th, zone_colour, diet_type_id, diet_name, diet_unit, meals_per_day, daily_quantity, notes, round_keys, diet_name_th, ingredient_name, ingredient_name_th",
       )
       .returns<Row[]>(),
     // The shelter's order of zones and enclosures (Settings), for the groups below.
@@ -119,16 +127,24 @@ export async function loadSpecialDiets(supabase: Supabase, round: RoundKey): Pro
           diets: [],
         },
       };
-    entry.resident.diets.push({
-      residentDietId: row.resident_diet_id,
-      name: row.diet_name,
-      nameTh: row.diet_name_th,
+    const ingredient: DietIngredient = {
+      name: row.ingredient_name,
+      nameTh: row.ingredient_name_th,
       unit: row.diet_unit,
-      mealsPerDay: row.meals_per_day,
       dailyQuantity: quantity != null && Number.isFinite(quantity) ? quantity : null,
-      rounds,
-      notes: row.notes?.trim() || null,
-    });
+    };
+    const existing = entry.resident.diets.find((x) => x.residentDietId === row.resident_diet_id);
+    if (existing) existing.ingredients.push(ingredient);
+    else
+      entry.resident.diets.push({
+        residentDietId: row.resident_diet_id,
+        name: row.diet_name,
+        nameTh: row.diet_name_th,
+        mealsPerDay: row.meals_per_day,
+        ingredients: [ingredient],
+        rounds,
+        notes: row.notes?.trim() || null,
+      });
     byResident.set(row.resident_id, entry);
   }
 

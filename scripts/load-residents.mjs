@@ -558,7 +558,7 @@ const calls = rows.map(
     p_new_origin_name => ${q(row.origin)},
     p_weight_kg => ${num(row.weightKg)},
     p_size => ${cast(row.size, "resident_size")},
-    p_diet_type_id => ${q(row.dietId)}::uuid,
+    p_diet_id => (select d.id from diets d join diet_types t on t.name = d.name where t.id = ${q(row.dietId)}::uuid),
     p_good_with_dogs => ${cast(row.goodWithDogs, "compatibility")},
     p_good_with_cats => ${cast(row.goodWithCats, "compatibility")},
     p_good_with_children => ${cast(row.goodWithChildren, "compatibility")},

@@ -152,7 +152,7 @@ function buildReview(
         { label: f.weightKg, value: v("weightKg") },
         { label: f.bloodTestInterval, value: v("bloodTestIntervalMonths") },
         { label: f.microchipNumber, value: v("microchipNumber") },
-        { label: f.startingDiet, value: v("dietTypeId") },
+        { label: f.startingDiet, value: v("dietId") },
       ],
     },
     {
@@ -578,15 +578,15 @@ export function IntakeForm({
               <MicrochipFields number={chip} />
             </div>
             <div className="flex flex-col gap-1">
-              <label htmlFor="dietTypeId" className="text-sm font-medium text-muted">
+              <label htmlFor="dietId" className="text-sm font-medium text-muted">
                 {t.residents.new.fields.startingDiet}
               </label>
               {/* Mandatory, preselected with the standard (0087). With no
                   standard flagged the placeholder shows and `required`
                   forces a choice. */}
               <select
-                id="dietTypeId"
-                name="dietTypeId"
+                id="dietId"
+                name="dietId"
                 defaultValue={standardDietId ?? ""}
                 required
                 className={inputClass}
