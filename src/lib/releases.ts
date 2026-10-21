@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Assistant: you can now record a vaccination by typing it, for example \"Panda had rabies today\" or \"vaccinate Panda\". The assistant shows a card with the resident, the vaccines (tick more than one) and the date; press Confirm and it is saved the same way as on the Immunizations page.",
   "Clinic visits: cancelled visits are no longer counted in a resident's visit total, and now sit in their own folded Cancelled section at the bottom of the Clinic visits page, with the reason if one was given. The archive PDF lists them under Cancelled visits too.",
 ];
 
