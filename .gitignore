@@ -53,3 +53,7 @@ appsheet-export/
 # The saved three-batch plan in the main checkout (/plan-day). Local
 # day-scoped state that lets the next run resume instead of re-planning.
 .plan-day.md
+
+# Files to keep with the project but never commit (local notes, one-off reports, data exports).
+# The repo is public: anything with production or personal data says so in its name.
+.local/
