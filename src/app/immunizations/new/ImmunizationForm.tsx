@@ -10,6 +10,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import { ZoneSelectFrame } from "@/components/ZoneName";
 import { recordImmunizations } from "./actions";
+import { scanCardStrings } from "@/app/medical/scan-card-strings";
 import { DateInput } from "@/components/DateInput";
 
 export type ResidentOption = {
@@ -19,6 +20,7 @@ export type ResidentOption = {
   current_status: string | null;
   zone_id: string | null;
   enclosure_id: string | null;
+  code?: string | null;
 };
 
 export type ImmunizationTypeOption = {
@@ -193,6 +195,7 @@ export function ImmunizationForm({
             selectedIds={selectedResidentIds}
             onChange={setSelectedResidentIds}
             triggerLabel={t.immunizations.selectResidents}
+            scanStrings={scanCardStrings(t)}
           />
           {selectedResidentIds.map((id) => (
             <input key={id} type="hidden" name="residentIds" value={id} />
