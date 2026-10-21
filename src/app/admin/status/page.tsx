@@ -221,6 +221,7 @@ async function Health({ t, locale }: { t: T; locale: Locale }) {
   const mail = r.releaseMail.facts;
   const backup = r.backup.facts;
   const origin = r.origin.facts;
+  const cron = r.cronJobs.facts;
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -315,6 +316,17 @@ async function Health({ t, locale }: { t: T; locale: Locale }) {
               ? x.origin.ok({ host: origin.host })
               : x.origin.fallback({ host: origin.host })}
         </p>
+      </Tile>
+
+      <Tile title={x.cronJobs.title} result={r.cronJobs} t={t} locale={locale}>
+        {!cron ? (
+          <p>{x.cronJobs.fail}</p>
+        ) : (
+          cron.jobs.map((j) => {
+            const when = j.lastRanAt ? formatDateTime(j.lastRanAt, locale) : "";
+            return <p key={j.name}>{j.problem === null ? x.cronJobs.ok({ name: j.name, when }) : x.cronJobs[j.problem]({ name: j.name, when })}</p>;
+          })
+        )}
       </Tile>
     </div>
   );
