@@ -102,6 +102,13 @@ note:
   2026-10-07 this cost four streams in two batches: three on a public-site
   redesign built 2026-09-26, and one on a deceased-archive gap fixed
   2026-09-24 whose item still read "still open: gap 4" eight days later.
+  **AND A MERGED PR IS NOT PROOF ITS ITEM IS CLOSED — read the COMMIT, not the title.**
+  Added 2026-10-21. PR #806 was titled *"Rule: no scratch output above the repo"* and its item's
+  "Done when" required the rule in `CLAUDE.md` **and** `.local/` in `.gitignore`. `git log --name-only`
+  showed it touched `CLAUDE.md`, a decision file and a test plan; `grep "\.local/" CLAUDE.md` and
+  `grep "^\.local" .gitignore` both returned **nothing**. So two of the rule's three clauses never
+  shipped, and because this repo is **public**, the clause that did not ship was the one protecting a
+  folder from being committed. **One `git log -1 --name-only` per "done" claim is the whole cost.**
   **Testing the item's claim is not the same as finding a line that agrees
   with it:** that second failure grepped the constant the item named, which
   was real, while the fix sat on another code path. Ask whether the behaviour
@@ -205,9 +212,16 @@ neither "just write it" nor "`rm` then write" works. **What works: Write the new
 text into the scratchpad, then `cat <scratch> > .plan-day.md`** — a redirect is
 an ordinary write, not a delete. Same trick for `docs/planner-handover.md`, and
 for small amendments prefer a node `replace()` over rewriting the file, with a
-guard that exits non-zero when the anchor string is missing. **A heredoc in a
-chained Bash command is not a third option: backticks and apostrophes in this
+guard that exits non-zero when the anchor string is missing. **A heredoc in a chained Bash command is not a third option: backticks and apostrophes in this
 prose break the shell parse** — that failed on 2026-10-21.
+
+**AND `node -e` IS NOT A FOURTH OPTION WHERE THE TEXT HOLDS A WINDOWS PATH.** Added 2026-10-21.
+A single-quoted `node -e` script containing `C:\\Development` reached node as `C:\Development`, where
+JS read `\D` as an escape and the anchor silently became `C:Development` — the replacement then failed
+its own guard. It fails *loudly* only because the guard exists; **without a guard it would have
+matched nothing and reported success.** **Write the amendment script to the scratchpad with the Write
+tool and run it by path.** Same reason `node -e` also mangles `/c/...` style paths given to
+`readFileSync`: inside node, use `C:/...`.
 
 It holds the date planned, and per batch a status (`pending` /
 `set up <when>` / `merged`) and its three items with slug, bold title,
@@ -219,6 +233,14 @@ merged on a later run once its PRs are in.
 
 Keep a line `Workstreams since handover: <n> (last handover <date>)`: add
 the batch's stream count when you set it up.
+
+**ADD IT WHEN YOU SET THE BATCH UP, AND ONLY THEN. Re-planning a batch is not a stream.**
+Added 2026-10-21, after this counter read **12** for a round of **three batches of three** — Lutan
+caught it. Batch 3 was counted twice: once when it was re-planned mid-round at his request, and again
+when its worktrees were made. **A batch contributes to the counter exactly once, at setup**, however
+many times it is re-planned, re-scoped or swapped first. Two neighbouring rules, same place: **a
+release's own PRs are not workstreams** (the cut and the record), but **an unplanned stream that
+shipped a PR is one** — say so explicitly rather than quietly folding it in or leaving it out.
 
 Keep a `slug | model | effort | scale | estimated | actual` table: the
 estimate when a batch is set up, the actual when step 2 reads it. Writing
@@ -285,7 +307,8 @@ Two axes that genuinely do cost, both measured 2026-10-20:
 | **Creates a new surface people submit data through** | **200–270k** | 235,561 |
 | Builds an instrument / transport path from nothing | **250–320k** | 286,350 — **one reading only, and nothing since has belonged in it. Do not widen a stream into this row because its behaviour sounds new** |
 | Quick win | 110–170k | 1–3 files; screenshots cost far less than first assumed. **Left as written on Lutan's ruling, 2026-10-11** — the planner had been quoting 130–200k while both measured quick wins (129,320 · 135,901) sat *inside* this band. **The band was right and the quoting was high. Do not reopen it** |
-| Schema PR | **~140–155k single-file · 230–285k with code** | measured 6×: `cashflow-forecast-function` 139,791 · `drop-leftovers-schema` 143,030 (three unrelated items in one file) · `receipt-issuer-server-side` 143,678 · `map-rooms-schema` 151,273 · `role-floor-schema` 231,297 · `perm-functions-schema` 284,248 |
+| Schema PR, single file | **~140–155k** | measured 6×: `cashflow-forecast-function` 139,791 · `drop-leftovers-schema` 143,030 (three unrelated items in one file) · `receipt-issuer-server-side` 143,678 · `map-rooms-schema` 151,273 · `role-floor-schema` 231,297 · `perm-functions-schema` 284,248 |
+| **Schema PR with code — SPLITS, do not quote one band** | **160–185k** a view or function rewrite plus a named handful of readers · **230–285k** permissions work across many call sites | Corrected 2026-10-21. `diets-sheet-schema` rewrote `special_diet_list`, changed `record_intake` and moved **four named app files** onto recipes: banded 230–285k off the two readings below and came in at **166,331, 28% UNDER.** Those two readings (`role-floor-schema`, `perm-functions-schema`) were **permissions** changes rippling through many call sites, which is a different job. **Ask how many readers the item NAMES**: a named handful is the lower band |
 | Medium | **170–290k** | 5–15 files, browser checks, both dictionaries. Measured: `residents-list-sort` 166,843 · `vaccine-stock-forecast` 188,913 · `perm-policy-cleanup` 206,567 · `who-does-what-edit` 210,888 · `place-order-settings` 282,082 |
 | Large | **340–460k** | rebuilt pages, many files, or a whole-system read. Measured: `perm-drop-enum` 352,802 · `medications-diets-split` 361,651 · `fable-architecture-review` 448,294 (**fable-5-1 at `xhigh` — two dials, not comparable**) · `who-does-what-view` 449,014 |
 
@@ -332,6 +355,15 @@ So the questions are now three, in this order:
    thousands of expensive ones, each returning a page into the context.
 3. **Must it merely read a lot?** Cheap. Do not widen (the `silent-empty-reads`
    correction above).
+
+**A BRIEF THAT ASKS FOR REAL BROWSER VERIFICATION ADDS ~30k, WHATEVER THE CODE SHAPE IS.**
+Added 2026-10-21. `assistant-immunization` was a third instance of a settled pattern — two intent
+modules already existed — so it was banded 120–145k as the batch's quick win. **Its brief also told it
+to drive the browser**: type the sentence, see the card, correct a field, press Confirm, check the
+record landed. It came in at **160,205, ~10% over.** The code was a quick win; the verification was
+not. **The live-interaction axis applies to the BRIEF, not only to the item** — a handful of real
+screens is tens of thousands of tokens, and the planner is the one who put them there. So when you
+write "verify it in the browser" into a brief, **widen the band in the same breath.**
 
 **A WALK OF N ITEMS × M ROLES IS A PROGRAMME, NOT A WORKSTREAM.** Do not brief
 one. Split it into finishable units — one role per stream for the acceptance
