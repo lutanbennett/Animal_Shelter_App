@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { buildIconSvg, type IconStyle } from "@/lib/home-icons/svg";
 import { iconFileStem, type CatalogueIcon } from "@/lib/home-icons/catalogue-shared";
 
@@ -38,6 +38,8 @@ export function IconLibrary({ icons, labels: h }: { icons: CatalogueIcon[]; labe
   const [style, setStyle] = useState<IconStyle>("dark");
   const [showName, setShowName] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
+  const [origin, setOrigin] = useState("");
+  useEffect(() => setOrigin(window.location.origin), []);
 
   const pill = (on: boolean) =>
     `rounded border px-3 py-1.5 text-sm ${on ? "border-primary bg-primary text-primary-foreground" : "border-border text-foreground"}`;
@@ -57,7 +59,7 @@ export function IconLibrary({ icons, labels: h }: { icons: CatalogueIcon[]; labe
       <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {icons.map((icon) => {
           const preview = buildIconSvg({ inner: icon.inner, label: icon.label, showName, style, size: 180 });
-          const url = typeof window === "undefined" ? icon.path : window.location.origin + icon.path;
+          const url = origin + icon.path;
           return (
             <li key={icon.path} className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3">
               {/* eslint-disable-next-line @next/next/no-img-element -- an in-page SVG data URL */}
