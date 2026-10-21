@@ -49,6 +49,16 @@ export type SiteContent = {
   about_photo_drive_file_id: string | null;
   about_photo_alt: string | null;
   about_photo_alt_th: string | null;
+  /** The trust block (0237): registration line, Thai address, and the Donate split. */
+  registration_text: string | null;
+  registration_text_th: string | null;
+  contact_address_th: string | null;
+  gift_split_year: number | null;
+  gift_split_unit: "percent" | "baht" | null;
+  gift_split_food: number | string | null;
+  gift_split_vet: number | string | null;
+  gift_split_sterilisation: number | string | null;
+  gift_split_running: number | string | null;
 };
 
 export const SITE_CONTENT_COLUMNS =
