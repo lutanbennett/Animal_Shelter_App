@@ -42,9 +42,13 @@ export function declaredConsumers(sql) {
  * One path's state against the release assumed live and origin/main.
  * `read(ref, path)` returns the file's text, or null when it is not there.
  * live: identical at both. absent-at-release / absent-on-main / differs: not
- * provably live. "differs" can be an unrelated edit; it is reported as unknown.
+ * provably live. "directory": a directory cannot be compared this way. "differs" can be an unrelated edit; it is reported as unknown.
  */
 export function consumerState(path, { releaseRef, read }) {
+  // `git show <ref>:<dir>/` prints a tree listing with the ref in its first line,
+  // so two refs always differ, and it holds only names, so an edited file would
+  // not show. Say so rather than compare.
+  if (path.endsWith("/")) return "directory";
   const atRelease = read(releaseRef, path);
   const onMain = read("origin/main", path);
   if (onMain === null) return "absent-on-main";
@@ -72,6 +76,7 @@ export function consumerReport(files, { release, read }) {
       const why = {
         "absent-on-main": "is not on origin/main at all",
         "absent-at-release": `does not exist in release ${release.version}`,
+        directory: "is a directory, which this check cannot compare (declare the files under it to get a live/not-live answer)",
         differs: `differs from release ${release.version}, so it may or may not already read this`,
       }[s];
       warnings.push(`${name}: declared consumer ${path} ${why}.`);
