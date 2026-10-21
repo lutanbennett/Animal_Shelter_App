@@ -31,7 +31,7 @@
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — #807, all 9 checks passing on `a9aa7cf4` (seen via the PR bar, 2026-10-21)
 
 ## 3. Schema and data — *skip if no migration*
 
