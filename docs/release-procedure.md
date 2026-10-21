@@ -372,6 +372,10 @@ effect on the **next** deploy, not the one that ships it — the script checks o
 new ref over the file bash is already executing. On a release that changes it, run
 its checks by hand (`docs/releases/2026-10-18.md`, Defect 1).
 
+### Home screen icons — Claude does this, after the Worker deploys
+
+`node scripts/sync-home-icons.mjs --env production` redraws every card's icon from the route registry and replaces the files in the shared Drive folder "Home screen icons" (8 images a card, about 350 files, a few minutes). Run it once per release, after the deploys, so the folder matches the cards that are now live. It deletes nothing; a re-run leaves no duplicates. `--local <folder>` draws the images without touching Drive. Lutan does nothing. If it fails, say so in the record and carry on: the app page still draws icons in the browser, only the shared folder is out of date.
+
 ### When a Pi build is killed
 
 If one clone builds and its twin does not on the same machine, run `du -sh .next .next/cache node_modules` on both **before** theorising about the machine. A bloated `.next/cache` (4.4 GB on 2026-10-19) starves the build; `deploy-pi.sh` now removes it above 1 GB. A failed build prints a boxed `DEPLOY FAILED` banner and exits 1; a deploy also fails if `/api/version` does not show the new version.
