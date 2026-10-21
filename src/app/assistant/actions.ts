@@ -11,7 +11,11 @@ import {
 import { recordWeight } from "@/lib/weight/record";
 import { recordResidentDeath } from "@/lib/placements/deceased";
 import { recordImmunizations } from "@/app/immunizations/new/actions";
-import { rehomeResident, type RehomeKind } from "@/lib/placements/rehome";
+import {
+  rehomeResident,
+  returnResidentToShelter,
+  type RehomeKind,
+} from "@/lib/placements/rehome";
 import { archiveDeceasedResident } from "@/lib/archive/archive-deceased-resident";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -308,6 +312,39 @@ export async function assistantRehome(
         kind: input.rehomeKind,
         carerId: input.carerId,
         newCarer: null,
+        date: input.date,
+        notes: stamp(t, input.request),
+      });
+      return "error" in result ? result : { ok: true as const, id: "" };
+    },
+    () => {
+      revalidatePath("/residents");
+      revalidatePath(`/residents/${input.residentId}`);
+      revalidatePath(`/residents/${input.residentId}/housing`);
+      revalidatePath("/enclosures", "layout");
+      revalidatePath("/adopt", "layout");
+      revalidatePath("/");
+      revalidatePath("/assistant");
+    },
+    "placement_history",
+  );
+}
+
+/**
+ * Same helper as /residents/[id]/rehome/return. It ends whoever is caring
+ * for the resident now, so no carer is passed: the one a sentence named is
+ * only shown on the card.
+ */
+export async function assistantReturnFromCarer(
+  input: WriteInput<{ residentId: string; enclosureId: string; date: string }>,
+): Promise<AssistantResult> {
+  return runWrite(
+    "carer-return",
+    input,
+    async (supabase, t) => {
+      const result = await returnResidentToShelter(supabase, t, {
+        residentId: input.residentId,
+        enclosureId: input.enclosureId,
         date: input.date,
         notes: stamp(t, input.request),
       });

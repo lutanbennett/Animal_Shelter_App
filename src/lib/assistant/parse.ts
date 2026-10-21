@@ -17,6 +17,8 @@
  *     admission, and it is the one sentence that must never be misread;
  *   - immunization after death and rehome, before the hospital and
  *     bookings: "had rabies at the vet" is a vaccine, not a visit;
+ *   - the carer return before rehome: "came back from foster" is a
+ *     return, and rehome declines any sentence that says "back";
  *   - rehome before the hospital and bookings, whose words it may share;
  *   - hospital before clinic, because a "vet hospital" is not a booking;
  *   - the return before the admission, because "back from hospital" is
@@ -30,6 +32,7 @@ import { dueIntent, whereIntent, whoIntent } from "./intents/lookups";
 import { hospitalIntent, hospitalReturnIntent } from "./intents/hospital";
 import { deathIntent } from "./intents/death";
 import { rehomeIntent } from "./intents/rehome";
+import { carerReturnIntent } from "./intents/carer-return";
 import { immunizationIntent } from "./intents/immunization";
 import { weightIntent } from "./intents/weight";
 import { clinicIntent } from "./intents/clinic";
@@ -41,6 +44,7 @@ export const INTENT_PARSERS: readonly IntentParser[] = [
   whoIntent,
   dueIntent,
   deathIntent,
+  carerReturnIntent,
   rehomeIntent,
   immunizationIntent,
   hospitalReturnIntent,

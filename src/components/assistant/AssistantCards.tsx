@@ -25,11 +25,13 @@ import type {
   ClinicVisitDraft,
   WeightDraft,
   ImmunizationDraft,
+  CarerReturnDraft,
 } from "@/lib/assistant/types";
 import {
   assistantRecordDeath,
   assistantRehome,
   assistantRecordImmunization,
+  assistantReturnFromCarer,
   assistantBookClinicVisit,
   assistantLogWeight,
   assistantMove,
@@ -38,6 +40,7 @@ import {
 } from "@/app/assistant/actions";
 import { assistantInputClass as inputClass } from "./AssistantInput";
 import { immunizationStrings } from "@/lib/assistant/immunization-strings";
+import { carerReturnStrings } from "@/lib/assistant/carer-return-strings";
 import { DateInput } from "@/components/DateInput";
 
 /**
@@ -1105,6 +1108,98 @@ function RehomeCard({ ctx, draft }: { ctx: CardContext; draft: RehomeDraft }) {
   );
 }
 
+function CarerReturnCard({ ctx, draft }: { ctx: CardContext; draft: CarerReturnDraft }) {
+  const { t, locale } = useI18n();
+  const a = t.assistant;
+  const s = carerReturnStrings(locale);
+  const [residentId, setResidentId] = useState(draft.residentId ?? "");
+  const [enclosureId, setEnclosureId] = useState(draft.enclosureId ?? "");
+  const [date, setDate] = useState(draft.date ?? viewerToday());
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
+  const target = ctx.enclosures.find((e) => e.id === enclosureId) ?? null;
+  const carer = ctx.carers.find((c) => c.id === draft.carerId) ?? null;
+  const chrome = useCardChrome(ctx, !!residentId);
+  // Said here rather than only at Confirm; the helper refuses it either way.
+  const withCarer = !resident || resident.status === "Fostered" || resident.status === "Adopted";
+
+  function confirm() {
+    if (!resident || !target || !date) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await assistantReturnFromCarer({
+        residentId: resident.id,
+        enclosureId: target.id,
+        date,
+        request: ctx.request,
+        draft: { ...draft, residentId: resident.id, enclosureId: target.id, date },
+      });
+      if ("error" in result) return setError(result.error);
+      ctx.onSettle({
+        kind: "done",
+        message: s.done(
+          `${resident.name} (${resident.code})`,
+          placeName(locale, target.name, target.name_th),
+        ),
+        residentId: resident.id,
+      });
+    });
+  }
+
+  return (
+    <Card
+      title={s.title}
+      summary={s.summary(
+        resident ? `${resident.name} (${resident.code})` : a.unknown,
+        target ? placeName(locale, target.name, target.name_th) : a.unknown,
+        date ? formatDate(date, locale) : a.unknown,
+      )}
+      hint={
+        !withCarer
+          ? s.notWithCarer
+          : draft.carerName
+            ? s.unknownCarer(draft.carerName)
+            : !target
+              ? s.pickEnclosure
+              : chrome.hint
+      }
+      hintTone={chrome.hintTone}
+      error={error}
+      pending={pending}
+      canConfirm={!!resident && !!target && !!date && withCarer}
+      notesStamp={chrome.notesStamp}
+      onConfirm={confirm}
+      onCancel={() => ctx.onSettle({ kind: "cancelled" })}
+    >
+      <ResidentField
+        ctx={ctx}
+        idPrefix="carer-return"
+        residentId={residentId}
+        onChange={setResidentId}
+      />
+      <ResidentIdentity resident={resident} line={a.rehome.who} />
+      {carer && <p className="text-sm text-muted">{s.fromCarer(carer.name)}</p>}
+      <EnclosurePicker
+        zones={ctx.zones}
+        enclosures={ctx.enclosures}
+        value={enclosureId}
+        onChange={setEnclosureId}
+        required
+        idPrefix={`carer-return-${ctx.turnId}`}
+      />
+      <DateField
+        id={`carer-return-${ctx.turnId}-date`}
+        label={a.fields.date}
+        value={date}
+        onChange={setDate}
+        max={viewerToday()}
+      />
+    </Card>
+  );
+}
+
 function ImmunizationCard({ ctx, draft }: { ctx: CardContext; draft: ImmunizationDraft }) {
   const { t, locale } = useI18n();
   const a = t.assistant;
@@ -1216,6 +1311,8 @@ export function AssistantCard({ ctx, draft }: { ctx: CardContext; draft: Draft }
       return <DeathCard ctx={ctx} draft={draft} />;
     case "rehome":
       return <RehomeCard ctx={ctx} draft={draft} />;
+    case "carer-return":
+      return <CarerReturnCard ctx={ctx} draft={draft} />;
     case "immunization":
       return <ImmunizationCard ctx={ctx} draft={draft} />;
     default:
