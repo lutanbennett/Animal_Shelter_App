@@ -1,15 +1,14 @@
 # Planner handover — edition `285`, 2026-10-21
 
-**A delta, fourth edition in this shape — ~130 lines against `276`'s ~125 and `267`'s 131.** The rules
-are in `.claude/skills/plan-day/SKILL.md` step 8: ceiling ~100 lines, 150 the limit, say what
-**changed**, promote durable facts once, cite `.plan-day.md` rather than reproducing it.
+**A delta, fourth edition in this shape.** Its rules are the skill's step 8 — say what **changed**,
+promote durable facts once, cite `.plan-day.md` rather than reproducing it.
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`** — if they
 disagree with this, they are right and this is stale. **Read first:** `CLAUDE.md` → the skill →
 `.plan-day.md` → this. **The next slug is `294`.**
 
-> **Never carried forward: anything read from the repo.** Counts, migration numbers, PR numbers,
-> release state, candidates — **re-read every time, never diffed.** Short prose, fresh facts.
+> **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
+> release state, candidates. **Re-read every time, never diffed.**
 
 ---
 
@@ -48,12 +47,12 @@ afternoon**. The cause was already in the skill's step 3 — **trust the decisio
 over an item's own status notes** — and the planner applied it selectively: right wherever it ran the
 greps, wrong wherever it read the prose and believed it.
 
-**The fix is a STEP ZERO block in every brief, now in the skill (step 7).** Nine briefs carried it for
-almost nothing, because the planner had already done those greps while choosing the item. **It also
-tells the stream that finding the work already done is a success, not a failure.**
+**The fix is a STEP ZERO block in every brief, now in the skill (step 7)** — nine carried it for almost
+nothing, since the planner had already run those greps while choosing the item. **It also tells the
+stream that finding the work already done is a success, not a failure.**
 
-**Four backlog titles were rewritten in place.** The shape recurs every round: a PR shipped and nobody
-rewrote the title. **Budget for it.**
+**Four backlog titles were rewritten in place.** Same shape every round — a PR ships, nobody rewrites
+the title. **Budget for it.**
 
 ## Its mirror image, which cost two filed items
 
@@ -73,8 +72,8 @@ making them reachable as tiles made everything they list reachable, and the Volu
 now: **ask of any count whether these are leaves or doorways.**
 
 **Why it matters beyond arithmetic:** the gate is far closer than anyone thought, and **the remaining
-15 are job pages mapping exactly onto the four unwritten orphan reports.** Those read-only chats are
-now the **critical path** to finishing the cards programme, not one errand of six.
+15 are job pages mapping onto the four unwritten orphan reports** — now the **critical path** to
+finishing the cards programme, not one errand of six.
 
 ## The dial experiment is over: you do not control the dial
 
@@ -87,13 +86,11 @@ dial per batch" as a plan.
 
 ## A coordination lesson — about who, not how, so not in the skill
 
-**Two sessions retitled `docs/backlog.md` at once.** The planner rewrote four stale titles; a "Backlog
-item review" session then ran a wholesale pass that **superseded all four in tighter wording, keeping
-every fact** — better than the planner's, but duplicated effort, and the next `git merge backlog`
-**conflicted** because each side had ticked one of the two items #815 closed.
-
-**Before spending effort on backlog retitles, check whether a backlog-review session is running.** The
-planner's job is to **find** stale titles, not necessarily to rewrite them all.
+**Two sessions retitled `docs/backlog.md` at once.** A "Backlog item review" session's wholesale pass
+**superseded all four of the planner's retitles in tighter wording, keeping every fact** — better than
+the planner's, but duplicated, and the next `git merge backlog` **conflicted** because each side had
+ticked one of the two items #815 closed. **So check whether a backlog-review session is running before
+spending effort on retitles:** the planner's job is to **find** stale titles, not to rewrite them all.
 
 ## Where things stand — re-read 2026-10-21, not carried
 
@@ -111,33 +108,31 @@ planner's job is to **find** stale titles, not necessarily to rewrite them all.
 
 **The round's nine:** #814–#816, #817–#819, #820–#822, all merged.
 
-## For the release manager, not backlog items
+## For the release manager
 
-- **`unreleased` has gone from five lines to nine**, so `0.39.0` has real substance: the Donors list,
-  diets as recipes, two assistant sentences, tile groups, the My tasks tile, the Home screen panel's
-  retirement.
+- **`unreleased` has gone from five lines to nine**, so `0.39.0` has substance: the Donors list, diets
+  as recipes, two assistant sentences, tile groups, the My tasks tile, the Home panel's retirement.
 - **The alert-mail item now reads *deployed to production*** — that job of Lutan's is done; what is
   left is a real test alert turning the tile green.
-- **#807 narrowed a permission with no release note** (carried from `276`, still true). A visiting vet
-  who used the bills inbox will find it closed. **For the cut to confirm, not to overturn.**
+- **#807 narrowed a permission with no release note** (carried from `276`): a visiting vet who used the
+  bills inbox will find it closed. **For the cut to confirm, not to overturn.**
 
 ## Rulings worth not re-deriving — cited, not summarised
 
-- **Donors get their own supporters list, NOT a contact type** — Lutan, 2026-10-21, in two messages.
-  `Donor` is not returning to `contact_type`, so the two-migration enum dance the old item text
-  described does not apply. Recorded on the item.
-- **The dry-run and acceptance family is PARKED** until the cards work is complete and every card and
-  function is operational — Lutan, 2026-10-21. Recorded on the item; **do not schedule it.**
-- **The menu cannot come off while the coverage script is non-zero.** He asked directly; the answer is
-  the script, not an opinion.
+- **Donors get their own supporters list, NOT a contact type** — Lutan, 2026-10-21. `Donor` is not
+  returning to `contact_type`, so the old item's two-migration enum dance does not apply.
+- **The dry-run and acceptance family is PARKED** until every card and function is operational — Lutan,
+  2026-10-21. Recorded on the item; **do not schedule it.**
+- **The menu cannot come off while the coverage script is non-zero** — he asked directly, and the
+  answer is the script, not an opinion.
 
 ## Next round's candidates
 
 The next chat plans; this is only where the board points. **`.plan-day.md` carries the reasoning.**
 
 1. **The four remaining orphan reports (2, 3, 5, 6 of 6)** — **chats, not workstreams** (his ruling):
-   read-only, report to his Desktop, no branch or PR, and they do not count toward the tally. **Now the
-   critical path.** Check whether 2 and 3 were written or merely dropped — they left Next up.
+   read-only, to his Desktop, no branch or PR, not counted in the tally. **Now the critical path.**
+   Check whether 2 and 3 were written or merely dropped — they left Next up.
 2. **The orphan build that follows**, then **`menu-removal`** once the gate reaches zero.
 3. **`production-rehearsal`** — **displaced THREE times**, blocks the domain cutover, **not waiting on
    Lutan** (he makes a throwaway Supabase project inside the work). **Do not displace it a fourth time
@@ -150,9 +145,8 @@ The next chat plans; this is only where the board points. **`.plan-day.md` carri
 
 **The rules are in the skill, step 8.** Offer it; never on an ambiguous yes, and **read step 6's
 counting rules before writing a number** — a batch counts once, at setup, however often it is
-re-planned. Branch, worktree, test plan, PR — then **merge it yourself once CI is green**, and never
-present it as a gate. This one is `claude/planner-handover-285`, after #813 (`276`) and #800.
+re-planned. Branch, worktree, test plan, PR, then **merge it yourself on green CI** — never a gate.
+This one is `claude/planner-handover-285`, after #813 (`276`) and #800.
 
 **What could go next time:** the five-already-built section shrinks to two lines citing the skill's
-STEP ZERO block once that block has proved itself over a round, and the dial paragraph can go
-entirely — it is a skill rule now, with nothing left to vary.
+STEP ZERO block once it has proved itself, and the dial paragraph goes entirely — a skill rule now.
