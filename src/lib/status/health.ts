@@ -288,7 +288,60 @@ export async function checkOrigin(): Promise<CheckOutcome<OriginFacts>> {
   return { state: "ok", facts: { host, status: res.status } };
 }
 
+/** Every pg_cron job this system relies on. Add the next one here and it is watched by construction. */
+export const EXPECTED_CRON_JOBS = ["purge-assistant-actions"] as const;
+
+/** One missed night is not an incident; two is. */
+const CRON_STALE_HOURS = 48;
+
+export type CronJobFact = {
+  name: string;
+  problem: "missing" | "inactive" | "failed" | "neverRun" | "stale" | null;
+  lastRanAt: string | null;
+  /** pg_cron's return message for the last run (for the purge, its select result); null if it never ran. */
+  lastMessage: string | null;
+};
+export type CronJobsFacts = { jobs: CronJobFact[] };
+
+type CronRow = {
+  jobname: string;
+  job_exists: boolean;
+  active: boolean | null;
+  last_status: string | null;
+  last_started_at: string | null;
+  last_message: string | null;
+};
+
+/**
+ * Reads scheduled_job_status (0238). Red: a job that is not installed, is switched off, or whose last
+ * run failed. Amber: installed but never run, or last run more than 48 hours ago. A job that ran and
+ * deleted nothing is a normal night: only the run's status counts, never its row count.
+ */
+export async function checkCronJobs(): Promise<CheckOutcome<CronJobsFacts>> {
+  const { data, error } = await createAdminClient().rpc("scheduled_job_status", { p_names: [...EXPECTED_CRON_JOBS] });
+  if (error) return { state: "fail", error: error.message };
+  const rows = (data ?? []) as CronRow[];
+  const jobs: CronJobFact[] = EXPECTED_CRON_JOBS.map((name) => {
+    const r = rows.find((x) => x.jobname === name);
+    const base = { name, lastRanAt: r?.last_started_at ?? null, lastMessage: r?.last_message ?? null };
+    if (!r || !r.job_exists) return { ...base, problem: "missing" as const };
+    if (r.active === false) return { ...base, problem: "inactive" as const };
+    if (!r.last_status) return { ...base, problem: "neverRun" as const };
+    if (r.last_status === "failed") return { ...base, problem: "failed" as const };
+    const age = r.last_started_at ? Date.now() - Date.parse(r.last_started_at) : Infinity;
+    return { ...base, problem: age > CRON_STALE_HOURS * 3_600_000 ? ("stale" as const) : null };
+  });
+  const facts = { jobs };
+  const red = jobs.filter((j) => j.problem === "missing" || j.problem === "inactive" || j.problem === "failed");
+  if (red.length) {
+    const why = (p: CronJobFact["problem"]) => (p === "missing" ? "not installed" : p === "inactive" ? "switched off" : "last run failed");
+    return { state: "fail", error: red.map((j) => j.name + ": " + why(j.problem)).join("; "), facts };
+  }
+  return { state: jobs.some((j) => j.problem) ? "warn" : "ok", facts };
+}
+
 export type HealthReport = {
+  cronJobs: CheckResult<CronJobsFacts>;
   database: CheckResult<DatabaseFacts>;
   drive: CheckResult<DriveFacts>;
   migrations: CheckResult<MigrationFacts>;
@@ -306,7 +359,7 @@ export type HealthCheckKey = keyof HealthReport;
  * minute-old copy.
  */
 export async function runHealthChecks(): Promise<HealthReport> {
-  const [database, drive, migrations, release, releaseMail, backup, origin] = await Promise.all([
+  const [database, drive, migrations, release, releaseMail, backup, origin, cronJobs] = await Promise.all([
     runCheck(checkDatabase, 5_000),
     runCheck(checkDrive),
     runCheck(checkMigrations, 5_000),
@@ -314,8 +367,9 @@ export async function runHealthChecks(): Promise<HealthReport> {
     runCheck(checkReleaseMail),
     runCheck(checkBackup),
     runCheck(checkOrigin, 6_000),
+    runCheck(checkCronJobs, 5_000),
   ]);
-  return { database, drive, migrations, release, releaseMail, backup, origin };
+  return { database, drive, migrations, release, releaseMail, backup, origin, cronJobs };
 }
 
 /** The page's view: the same checks, cached for a minute. */

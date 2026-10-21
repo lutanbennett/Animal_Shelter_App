@@ -1314,6 +1314,22 @@ const en = {
           fallback: (v: { host: string | number }) =>
             `The Pi at ${v.host} isn't answering: pages are being served from the Worker fallback.`,
         },
+        cronJobs: {
+          title: "Nightly database jobs",
+          ok: (v: { name: string | number; when: string | number }) =>
+            `${v.name}: last ran ${v.when}.`,
+          missing: (v: { name: string | number; when: string | number }) =>
+            `${v.name} is not installed in this database. Old assistant requests are being kept, not deleted.`,
+          inactive: (v: { name: string | number; when: string | number }) =>
+            `${v.name} is switched off. Old assistant requests are being kept, not deleted.`,
+          failed: (v: { name: string | number; when: string | number }) =>
+            `${v.name} failed on its last run (${v.when}). Old assistant requests may not be deleted.`,
+          neverRun: (v: { name: string | number; when: string | number }) =>
+            `${v.name} is installed but has not run yet.`,
+          stale: (v: { name: string | number; when: string | number }) =>
+            `${v.name} last ran ${v.when}, more than 2 days ago.`,
+          fail: "Couldn't read the nightly jobs.",
+        },
       },
       usage: {
         signIns: {

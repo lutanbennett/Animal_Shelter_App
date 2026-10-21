@@ -99,6 +99,7 @@ const TITLES: Record<HealthCheckKey, string> = {
   releaseMail: en.admin.status.tiles.releaseMail.title,
   backup: en.admin.status.tiles.backup.title,
   origin: en.admin.status.tiles.origin.title,
+  cronJobs: en.admin.status.tiles.cronJobs.title,
 };
 
 const CHECK_KEYS = Object.keys(TITLES) as HealthCheckKey[];
@@ -116,6 +117,8 @@ const isRed = (key: HealthCheckKey, report: HealthReport) =>
 
 /** What a person can do about a red check, appended to its line in the mail. */
 const ADVICE: Partial<Record<HealthCheckKey, string>> = {
+  cronJobs:
+    "A nightly database job is not running, so old assistant requests may not be deleted, against what the privacy page promises. First check: node scripts/check-cron-job.mjs --env production.",
   origin:
     "Public pages still load (the Worker serves them); signing in and saving may be failing. First checks: is the Pi powered and on the network (power, router, cable), then cloudflared on it. The Pi serves production and test, so both are affected.",
 };
