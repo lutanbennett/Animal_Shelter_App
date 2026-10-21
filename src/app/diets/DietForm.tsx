@@ -8,25 +8,22 @@ import { useKeptForm } from "@/lib/use-kept-form";
 import { createDiet, updateDiet } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { dietUnitLabel, sizeLabel } from "@/lib/i18n/enum-labels";
-import {
-  defaultDailyQuantity,
-  formatQuantity,
-  type DietTypeOption,
-} from "@/lib/diets/options";
+import { formatQuantity } from "@/lib/diets/options";
+import { lineAmount, type DietOption } from "@/lib/diets/recipes";
 import { todayIso } from "@/lib/format";
 import { OptionalDateInput } from "@/components/OptionalDateInput";
 import { DateInput } from "@/components/DateInput";
 
-export type { DietTypeOption };
+export type { DietOption };
 
 /** The columns the edit page loads to prefill the form. */
 export type DietInitial = {
   id: string;
-  diet_type_id: string;
+  diet_id: string;
   start_date: string;
   end_date: string | null;
   meals_per_day: number;
-  daily_quantity: number | null;
+  portion_factor: number | null;
   notes: string | null;
 };
 
@@ -43,7 +40,7 @@ export function DietForm({
   residentId,
   residentDisplayName,
   residentSize,
-  dietTypes,
+  diets,
   initial = null,
   cancelHref,
 }: {
@@ -51,7 +48,7 @@ export function DietForm({
   residentId: string;
   residentDisplayName: string;
   residentSize: string | null;
-  dietTypes: DietTypeOption[];
+  diets: DietOption[];
   initial?: DietInitial | null;
   cancelHref: string;
 }) {
@@ -61,20 +58,24 @@ export function DietForm({
   );
   const { t } = useI18n();
 
-  const [dietTypeId, setDietTypeId] = useState(initial?.diet_type_id ?? "");
+  const [dietPick, setDietPick] = useState(initial?.diet_id ?? "");
   const [startDate, setStartDate] = useState(initial?.start_date ?? todayIso());
   const [endDate, setEndDate] = useState(initial?.end_date ?? "");
 
-  const selectedType = dietTypes.find((type) => type.id === dietTypeId);
-  const unit = selectedType ? dietUnitLabel(t, selectedType.unit) : null;
-  const quantityHint = selectedType
-    ? residentSize
-      ? t.diets.dailyQuantityHint(
-          formatQuantity(defaultDailyQuantity(selectedType, residentSize)),
-          unit ?? selectedType.unit,
-          sizeLabel(t, residentSize),
+  const selected = diets.find((diet) => diet.id === dietPick);
+  // "1.5 cup chicken, 1 cup kibble" at the resident's size (Medium when unset).
+  const recipeText = selected
+    ? selected.lines
+        .map(
+          (line) =>
+            `${formatQuantity(lineAmount(line, residentSize))} ${line.servingUnit ?? dietUnitLabel(t, line.unit)} ${line.ingredient}`,
         )
-      : t.diets.dailyQuantityNoSize
+        .join(", ")
+    : null;
+  const quantityHint = selected
+    ? residentSize
+      ? t.diets.dailyQuantityHint(recipeText ?? "", sizeLabel(t, residentSize))
+      : `${t.diets.dailyQuantityNoSize} ${recipeText ?? ""}`
     : null;
 
   return (
@@ -85,25 +86,25 @@ export function DietForm({
       <p className="text-sm text-muted">{t.diets.forResident(residentDisplayName)}</p>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="dietTypeId" className="text-sm font-medium text-muted">
+        <label htmlFor="dietPick" className="text-sm font-medium text-muted">
           {t.diets.dietType} <span className="text-danger">*</span>
         </label>
         <select
-          id="dietTypeId"
-          name="dietTypeId"
+          id="dietPick"
+          name="dietPick"
           required
-          value={dietTypeId}
-          onChange={(e) => setDietTypeId(e.target.value)}
+          value={dietPick}
+          onChange={(e) => setDietPick(e.target.value)}
           className={inputClass}
         >
           <option value="">{t.diets.selectDietType}</option>
-          {dietTypes.map((type) => (
-            <option key={type.id} value={type.id}>
-              {type.name}
+          {diets.map((diet) => (
+            <option key={diet.id} value={diet.id}>
+              {diet.name}
             </option>
           ))}
         </select>
-        {dietTypes.length === 0 && (
+        {diets.length === 0 && (
           <p className="text-xs text-danger">{t.diets.noDietTypes}</p>
         )}
       </div>
@@ -127,21 +128,22 @@ export function DietForm({
         </div>
 
         <div className="flex flex-col gap-1">
-          <label htmlFor="dailyQuantity" className="text-sm font-medium text-muted">
+          <label htmlFor="portionFactor" className="text-sm font-medium text-muted">
             {t.diets.dailyQuantity}
           </label>
           <div className="flex items-center gap-2">
             <input
-              id="dailyQuantity"
-              name="dailyQuantity"
+              id="portionFactor"
+              name="portionFactor"
               type="number"
               inputMode="decimal"
               min="0"
               step="any"
-              defaultValue={initial?.daily_quantity ?? ""}
+              defaultValue={initial?.portion_factor ?? ""}
+              placeholder="1"
               className={`${inputClass} w-full`}
             />
-            {unit && <span className="shrink-0 text-sm text-muted">{unit}</span>}
+            <span className="shrink-0 text-sm text-muted">×</span>
           </div>
           {quantityHint && <p className="text-xs text-muted">{quantityHint}</p>}
         </div>
@@ -203,7 +205,7 @@ export function DietForm({
 
       <div className="flex items-center gap-4">
         <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save}
-          disabled={pending || dietTypes.length === 0}>
+          disabled={pending || diets.length === 0}>
           {pending ? t.diets.saving : mode === "create" ? t.diets.saveButton : t.common.saveChanges}
         </ActionButton>
         <Link href={cancelHref} className="text-sm text-muted hover:text-foreground">

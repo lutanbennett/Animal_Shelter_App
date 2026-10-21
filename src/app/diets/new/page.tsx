@@ -3,7 +3,7 @@ import { BackLink } from "@/components/BackLink";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { loadDietTypeOptions } from "@/lib/diets/options";
+import { loadDietOptions } from "@/lib/diets/recipes";
 import { DietForm } from "../DietForm";
 import { loadDietResident } from "../resident";
 
@@ -29,7 +29,7 @@ export default async function NewDietPage(props: PageProps<"/diets/new">) {
   const supabase = await createClient();
   const [resident, dietTypes] = await Promise.all([
     loadDietResident(supabase, residentId),
-    loadDietTypeOptions(supabase, locale),
+    loadDietOptions(supabase, locale),
   ]);
 
   if (!resident) {
@@ -77,7 +77,7 @@ export default async function NewDietPage(props: PageProps<"/diets/new">) {
         residentId={residentId}
         residentDisplayName={resident.displayName}
         residentSize={resident.size}
-        dietTypes={dietTypes.data ?? []}
+        diets={dietTypes.data ?? []}
         cancelHref={tabHref}
       />
     </main>

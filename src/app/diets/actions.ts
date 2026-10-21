@@ -31,11 +31,11 @@ function revalidateResidentPages(residentId: string) {
 }
 
 type ParsedDiet = {
-  dietTypeId: string;
+  dietId: string;
   startDate: string;
   endDate: string | null;
   mealsPerDay: number;
-  dailyQuantity: number | null;
+  portionFactor: number | null;
   notes: string | null;
 };
 
@@ -44,8 +44,8 @@ type ParsedDiet = {
  * date / count checks (0051) so a stale form can't slip past them.
  */
 function parseDietFields(formData: FormData, t: Dictionary): { error: string } | { fields: ParsedDiet } {
-  const dietTypeId = str(formData, "dietTypeId");
-  if (!dietTypeId) return { error: t.diets.errors.selectDietType };
+  const dietId = str(formData, "dietPick");
+  if (!dietId) return { error: t.diets.errors.selectDietType };
 
   const startDate = str(formData, "startDate");
   if (!startDate) return { error: t.diets.errors.enterStartDate };
@@ -60,22 +60,22 @@ function parseDietFields(formData: FormData, t: Dictionary): { error: string } |
     return { error: t.diets.errors.mealsPositive };
   }
 
-  const quantityRaw = str(formData, "dailyQuantity");
-  let dailyQuantity: number | null = null;
+  const quantityRaw = str(formData, "portionFactor");
+  let portionFactor: number | null = null;
   if (quantityRaw) {
-    dailyQuantity = Number(quantityRaw);
-    if (!Number.isFinite(dailyQuantity) || dailyQuantity <= 0) {
+    portionFactor = Number(quantityRaw);
+    if (!Number.isFinite(portionFactor) || portionFactor <= 0) {
       return { error: t.diets.errors.quantityPositive };
     }
   }
 
   return {
     fields: {
-      dietTypeId,
+      dietId,
       startDate,
       endDate,
       mealsPerDay,
-      dailyQuantity,
+      portionFactor,
       notes: str(formData, "notes"),
     },
   };
@@ -87,20 +87,9 @@ function parseDietFields(formData: FormData, t: Dictionary): { error: string } |
  * must not pass silently; a warning rather than a hard limit, so a genuinely
  * big eater can still be saved.
  */
-async function bigDietWarning(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  formData: FormData,
-  fields: ParsedDiet,
-  t: Dictionary,
-): Promise<DietFormState> {
+function bigDietWarning(formData: FormData, fields: ParsedDiet, t: Dictionary): DietFormState {
   if (formData.get("confirmBig") === "on") return undefined;
-  const { data } = await supabase
-    .from("picker_diet_types")
-    .select("daily_qty_small, daily_qty_medium, daily_qty_large")
-    .eq("id", fields.dietTypeId)
-    .maybeSingle();
-  if (!data) return undefined;
-  const why = implausibleDiet({ mealsPerDay: fields.mealsPerDay, dailyQuantity: fields.dailyQuantity, type: data });
+  const why = implausibleDiet({ mealsPerDay: fields.mealsPerDay, portionFactor: fields.portionFactor });
   return why ? { error: t.diets.errors.bigDiet, confirm: true } : undefined;
 }
 
@@ -120,15 +109,15 @@ export async function createDiet(_state: DietFormState, formData: FormData): Pro
   const { fields } = parsed;
 
   const supabase = await createClient();
-  const big = await bigDietWarning(supabase, formData, fields, t);
+  const big = bigDietWarning(formData, fields, t);
   if (big) return big;
   const { error } = await supabase.from("resident_diets").insert({
     resident_id: residentId,
-    diet_type_id: fields.dietTypeId,
+    diet_id: fields.dietId,
     start_date: fields.startDate,
     end_date: fields.endDate,
     meals_per_day: fields.mealsPerDay,
-    daily_quantity: fields.dailyQuantity,
+    portion_factor: fields.portionFactor,
     notes: fields.notes,
   });
   if (error) return databaseFailure("diets.write", error, t.common);
@@ -155,16 +144,16 @@ export async function updateDiet(_state: DietFormState, formData: FormData): Pro
   const { fields } = parsed;
 
   const supabase = await createClient();
-  const big = await bigDietWarning(supabase, formData, fields, t);
+  const big = bigDietWarning(formData, fields, t);
   if (big) return big;
   const { data, error } = await supabase
     .from("resident_diets")
     .update({
-      diet_type_id: fields.dietTypeId,
+      diet_id: fields.dietId,
       start_date: fields.startDate,
       end_date: fields.endDate,
       meals_per_day: fields.mealsPerDay,
-      daily_quantity: fields.dailyQuantity,
+      portion_factor: fields.portionFactor,
       notes: fields.notes,
     })
     .eq("id", dietId)

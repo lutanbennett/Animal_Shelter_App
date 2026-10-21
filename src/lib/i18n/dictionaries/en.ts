@@ -4857,17 +4857,17 @@ const en = {
     noResidentSelected:
       "Open this from a resident's Diet page so the diet is recorded against the right resident.",
     residentNotFound: "Resident not found.",
-    couldntLoadDietTypes: "Couldn't load diet types",
-    noDietTypes: "No diet types have been set up yet — an admin adds them under Settings → Diets.",
+    couldntLoadDietTypes: "Couldn't load diets",
+    noDietTypes: "No diets have been set up yet — an admin adds them under Settings → Diets.",
     forResident: (name: string) => `For ${name}`,
     dietType: "Diet",
     selectDietType: "Select a diet",
     mealsPerDay: "Meals a day",
-    dailyQuantity: "Daily quantity",
-    dailyQuantityHint: (quantity: string, unit: string, size: string) =>
-      `Leave blank for the ${size} default of ${quantity} ${unit} a day; enter a figure to override it for this resident.`,
+    dailyQuantity: "Portion (multiplier)",
+    dailyQuantityHint: (recipe: string, size: string) =>
+      `Leave blank for the full recipe. For a ${size} animal that is: ${recipe}. Enter 0.75 for three-quarters, 1.25 for a quarter more.`,
     dailyQuantityNoSize:
-      "Leave blank to use the diet's Medium default — set the resident's size on their details page for the right one.",
+      "Leave blank for the full recipe. Amounts shown are for a Medium animal — set the resident's size on their details page for the right ones.",
     startDate: "Start date",
     endDate: "End date",
     endDateHint: "Leave blank if ongoing.",
@@ -4882,9 +4882,9 @@ const en = {
       missingDiet: "Missing diet.",
       selectDietType: "Select a diet.",
       mealsPositive: "Meals a day must be a whole number greater than zero.",
-      bigDiet: "That is a lot of food for one day. Check the meals and the daily amount. If it is right, tick the box below and save again.",
+      bigDiet: "That is a lot of food for one day. Check the meals and the portion. If it is right, tick the box below and save again.",
       confirmBig: "Yes, this amount is right",
-      quantityPositive: "Daily quantity must be a number greater than zero.",
+      quantityPositive: "The portion must be a number greater than zero (1 is the full recipe).",
       enterStartDate: "Enter a start date.",
       invalidStartDate: "Invalid start date.",
       invalidEndDate: "Invalid end date.",
@@ -5665,9 +5665,8 @@ const en = {
       noCurrentDiets: "No current diet.",
       unknownDietType: "Unknown diet",
       mealsPerDay: (n: number) => `${n} meal${n === 1 ? "" : "s"} a day`,
-      dailyQuantity: (quantity: string, unit: string) => `${quantity} ${unit} a day`,
-      dailyQuantityDefault: (quantity: string, unit: string, size: string) =>
-        `${quantity} ${unit} a day (${size} default)`,
+      portion: (factor: string) => `${factor}× portion`,
+      recipeFor: (size: string) => `${size} size`,
     },
     picker: {
       selectResidents: "Select residents",

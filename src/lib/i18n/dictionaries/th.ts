@@ -4723,11 +4723,11 @@ const th: Dictionary = {
     dietType: "อาหาร",
     selectDietType: "เลือกอาหาร",
     mealsPerDay: "จำนวนมื้อต่อวัน",
-    dailyQuantity: "ปริมาณต่อวัน",
-    dailyQuantityHint: (quantity: string, unit: string, size: string) =>
-      `เว้นว่างเพื่อใช้ค่าเริ่มต้นขนาด${size} คือ ${quantity} ${unit} ต่อวัน หรือกรอกตัวเลขเพื่อกำหนดเฉพาะสัตว์ตัวนี้`,
+    dailyQuantity: "สัดส่วน (ตัวคูณ)",
+    dailyQuantityHint: (recipe: string, size: string) =>
+      `เว้นว่างเพื่อใช้สูตรเต็ม สำหรับสัตว์ขนาด${size} คือ: ${recipe} กรอก 0.75 สำหรับสามส่วนสี่ หรือ 1.25 เพื่อเพิ่มอีกหนึ่งส่วนสี่`,
     dailyQuantityNoSize:
-      "เว้นว่างเพื่อใช้ค่าเริ่มต้นขนาดกลางของอาหารนี้ — กำหนดขนาดตัวของสัตว์ในหน้ารายละเอียดเพื่อให้ได้ค่าที่ถูกต้อง",
+      "เว้นว่างเพื่อใช้สูตรเต็ม ปริมาณที่แสดงเป็นของสัตว์ขนาดกลาง — กำหนดขนาดตัวของสัตว์ในหน้ารายละเอียดเพื่อให้ได้ค่าที่ถูกต้อง",
     startDate: "วันที่เริ่ม",
     endDate: "วันที่สิ้นสุด",
     endDateHint: "เว้นว่างไว้หากยังใช้ต่อเนื่อง",
@@ -4744,7 +4744,7 @@ const th: Dictionary = {
       mealsPositive: "จำนวนมื้อต่อวันต้องเป็นจำนวนเต็มที่มากกว่าศูนย์",
       bigDiet: "อาหารต่อวันดูมากผิดปกติ โปรดตรวจสอบจำนวนมื้อและปริมาณ หากถูกต้องแล้ว ให้ติ๊กช่องด้านล่างแล้วบันทึกอีกครั้ง",
       confirmBig: "ใช่ ปริมาณนี้ถูกต้อง",
-      quantityPositive: "ปริมาณต่อวันต้องเป็นตัวเลขที่มากกว่าศูนย์",
+      quantityPositive: "สัดส่วนต้องเป็นตัวเลขที่มากกว่าศูนย์ (1 คือสูตรเต็ม)",
       enterStartDate: "กรอกวันที่เริ่ม",
       invalidStartDate: "วันที่เริ่มไม่ถูกต้อง",
       invalidEndDate: "วันที่สิ้นสุดไม่ถูกต้อง",
@@ -5482,9 +5482,8 @@ const th: Dictionary = {
       noCurrentDiets: "ไม่มีอาหารปัจจุบัน",
       unknownDietType: "ไม่ทราบชนิดอาหาร",
       mealsPerDay: (n: number) => `วันละ ${n} มื้อ`,
-      dailyQuantity: (quantity: string, unit: string) => `${quantity} ${unit} ต่อวัน`,
-      dailyQuantityDefault: (quantity: string, unit: string, size: string) =>
-        `${quantity} ${unit} ต่อวัน (ค่าเริ่มต้นขนาด${size})`,
+      portion: (factor: string) => `สัดส่วน ${factor} เท่า`,
+      recipeFor: (size: string) => `ขนาด${size}`,
     },
     picker: {
       selectResidents: "เลือกสัตว์",

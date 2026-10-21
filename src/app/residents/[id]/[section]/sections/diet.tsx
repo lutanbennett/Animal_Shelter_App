@@ -1,10 +1,10 @@
 import { formatDate, todayIso } from "@/lib/format";
-import { localLabel } from "@/lib/translations/labels";
 import { dietUnitLabel, sizeLabel } from "@/lib/i18n/enum-labels";
 import { can } from "@/lib/permissions/can";
 import { RecordRowActions } from "@/components/RecordRowActions";
 import { endDietToday } from "@/app/diets/actions";
-import { defaultDailyQuantity, formatQuantity } from "@/lib/diets/options";
+import { formatQuantity } from "@/lib/diets/options";
+import { lineAmount, loadDietOptions } from "@/lib/diets/recipes";
 import { ActionLink } from "@/components/ActionLink";
 import { SECTION_ICONS } from "@/components/hub-icons";
 import type { SectionContext } from "./types";
@@ -12,31 +12,26 @@ import { Placeholder, RecordList } from "./shared";
 
 export async function renderDietSection(ctx: SectionContext): Promise<React.ReactNode> {
   const { id, resident, isDeceased, perms, t, locale, supabase } = ctx;
-  const { data, error } = await supabase
-    .from("resident_diets")
-    .select(
-      "id, start_date, end_date, meals_per_day, daily_quantity, notes, diet_types:picker_diet_types(name, name_th, unit, daily_qty_small, daily_qty_medium, daily_qty_large)",
-    )
-    .eq("resident_id", id)
-    .order("start_date", { ascending: false })
-    .returns<
-      {
-        id: string;
-        start_date: string;
-        end_date: string | null;
-        meals_per_day: number;
-        daily_quantity: number | null;
-        notes: string | null;
-        diet_types: {
-          name: string;
-          name_th: string | null;
-          unit: string;
-          daily_qty_small: number;
-          daily_qty_medium: number;
-          daily_qty_large: number;
-        } | null;
-      }[]
-    >();
+  const [{ data, error }, recipes] = await Promise.all([
+    supabase
+      .from("resident_diets")
+      .select("id, diet_id, start_date, end_date, meals_per_day, portion_factor, notes")
+      .eq("resident_id", id)
+      .order("start_date", { ascending: false })
+      .returns<
+        {
+          id: string;
+          diet_id: string;
+          start_date: string;
+          end_date: string | null;
+          meals_per_day: number;
+          portion_factor: number | null;
+          notes: string | null;
+        }[]
+      >(),
+    loadDietOptions(supabase, locale),
+  ]);
+  const dietById = new Map((recipes.data ?? []).map((d) => [d.id, d]));
   // Current = still running today (including one dated to start later);
   // past = its end date has passed. A closed record (deceased) has no
   // current diets whatever the dates say.
@@ -47,23 +42,26 @@ export async function renderDietSection(ctx: SectionContext): Promise<React.Reac
     : rows.filter((row) => !row.end_date || row.end_date >= today);
   const past = rows.filter((row) => !current.includes(row));
   const renderDiet = (row: (typeof rows)[number], isCurrent: boolean) => {
-    const type = row.diet_types;
-    const unit = type ? dietUnitLabel(t, type.unit) : "";
-    const quantity = type
-      ? row.daily_quantity != null
-        ? t.residents.sections.dailyQuantity(formatQuantity(row.daily_quantity), unit)
-        : t.residents.sections.dailyQuantityDefault(
-            formatQuantity(defaultDailyQuantity(type, resident.size)),
-            unit,
-            sizeLabel(t, resident.size ?? "Medium"),
-          )
-      : null;
+    const diet = dietById.get(row.diet_id);
+    const name = diet?.name ?? t.residents.sections.unknownDietType;
+    const factor = row.portion_factor != null && row.portion_factor !== 1 ? row.portion_factor : null;
+    // What goes in the bowl: every ingredient at this resident's size, times the portion.
+    const recipe = diet?.lines.map((line) => {
+      const amount = lineAmount(line, resident.size) * (factor ?? 1);
+      return `${formatQuantity(amount)} ${line.servingUnit ?? dietUnitLabel(t, line.unit)} ${line.ingredient}`;
+    });
+    const quantity = [
+      recipe && recipe.length > 0 ? `${t.residents.sections.recipeFor(sizeLabel(t, resident.size ?? "Medium"))}: ${recipe.join(", ")}` : null,
+      factor != null ? t.residents.sections.portion(formatQuantity(factor)) : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
     return (
       <div className="flex flex-col gap-1">
         <div className="flex items-start justify-between gap-3">
           <div className="flex flex-col">
             <span className="font-medium">
-              {(type ? localLabel(locale, type.name, type.name_th) : t.residents.sections.unknownDietType)}
+              {name}
             </span>
             <span className="text-xs text-muted">
               {[t.residents.sections.mealsPerDay(row.meals_per_day), quantity]
@@ -89,7 +87,7 @@ export async function renderDietSection(ctx: SectionContext): Promise<React.Reac
         {!isDeceased && can(perms, "medical.diet") && (
           <RecordRowActions
             editHref={`/diets/${row.id}/edit`}
-            subject={`${(type ? localLabel(locale, type.name, type.name_th) : t.residents.sections.unknownDietType)} · ${formatDate(row.start_date, locale)}`}
+            subject={`${name} · ${formatDate(row.start_date, locale)}`}
             endToday={
               isCurrent && row.start_date <= today
                 ? endDietToday.bind(null, id, row.id)
