@@ -10,6 +10,7 @@ import {
 } from "@/lib/placements/hospital";
 import { recordWeight } from "@/lib/weight/record";
 import { recordResidentDeath } from "@/lib/placements/deceased";
+import { recordImmunizations } from "@/app/immunizations/new/actions";
 import { rehomeResident, type RehomeKind } from "@/lib/placements/rehome";
 import { archiveDeceasedResident } from "@/lib/archive/archive-deceased-resident";
 import { can } from "@/lib/permissions/can";
@@ -322,6 +323,37 @@ export async function assistantRehome(
       revalidatePath("/assistant");
     },
     "placement_history",
+  );
+}
+
+/**
+ * Same action as /immunizations/new (one resident, one or more vaccines),
+ * handed the same FormData the form would send.
+ */
+export async function assistantRecordImmunization(
+  input: WriteInput<{ residentId: string; immunizationTypeIds: string[]; date: string }>,
+): Promise<AssistantResult> {
+  return runWrite(
+    "immunization",
+    input,
+    async (_supabase, t) => {
+      const form = new FormData();
+      form.append("residentIds", input.residentId);
+      for (const id of input.immunizationTypeIds) form.append("immunizationTypeIds", id);
+      form.append("dateAdministered", input.date);
+      form.append("notes", stamp(t, input.request));
+      const result = await recordImmunizations(undefined, form);
+      if (!result || "error" in result) {
+        return { error: result?.error ?? t.assistant.notAuthorized };
+      }
+      return { ok: true as const, id: result.records[0]?.id ?? "" };
+    },
+    () => {
+      revalidatePath(`/residents/${input.residentId}`);
+      revalidatePath("/immunizations", "layout");
+      revalidatePath("/");
+    },
+    "immunization_records",
   );
 }
 
