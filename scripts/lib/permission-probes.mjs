@@ -195,6 +195,7 @@ export const NO_DB_PROBE = {
   "placement.death_withdraw": undefined, // probed above; kept out of this list on purpose
   "projects.publish": undefined,
   "stock.purchasing": "a page over medication_forecast / diet_forecast, which read what stock.medications and stock.diets probes already cover",
+  "maintenance.bills": "maintenance_bills and the job-cost view are probed for every role by scripts/check-bills-roles.mjs (it needs a job, a bill and an attachment fixture the parity fixtures do not build), so the cell is covered there, not here",
   "stock.usage": "a page over stock_counts and stock_receipts, covered by the stock.delivery and stock.count probes",
   "system.status": "status_alert_runs is not granted to authenticated at all, Admin included: the page reads it with the service role, so the database has no per-role statement to test",
   "reports.dashboard": "a page that reads tables other activities own; it has no table",
