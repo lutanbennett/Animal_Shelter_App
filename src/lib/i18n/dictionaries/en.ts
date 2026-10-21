@@ -258,6 +258,14 @@ const en = {
   },
 
   /** The footer on every public page. */
+  trustBlock: {
+    giftHeading: "Where your gift goes",
+    giftYear: "Our figures for {year}",
+    food: "Food",
+    vet: "Vet care",
+    sterilisation: "Sterilisation drives",
+    running: "Running the shelter",
+  },
   publicFooter: {
     visitingHours: "Visiting hours",
     contact: "Contact us",
@@ -1972,6 +1980,21 @@ const en = {
         contactLine: "LINE",
         contactLineHint: "Type the id exactly as LINE shows it: with the @ for an Official Account (@lannacare), without it for a personal id (lannacare). Or paste a full add-friend link.",
         contactAddress: "Address",
+        contactAddressTh: "Address in Thai",
+        contactAddressThHint: "Shown in the footer for visitors reading in Thai. Leave blank to show the English address.",
+        registration: "Registration",
+        registrationHint: "e.g. \"Registered foundation no. 1234/2560, since 2017\". Shown under the address in the footer and on the About page. Leave blank to hide.",
+        giftSplitHeading: "Where your gift goes",
+        giftSplitHint: "Fill in once a year from the cashflow page. All four lines and the year are needed to show the block on the Donate page; leave everything blank to hide it.",
+        giftSplitYear: "Year",
+        giftSplitUnit: "Shown as",
+        giftSplitPercent: "Percent",
+        giftSplitBaht: "Baht",
+        giftSplitFood: "Food",
+        giftSplitVet: "Vet care",
+        giftSplitSterilisation: "Sterilisation drives",
+        giftSplitRunning: "Running the shelter",
+        giftSplitInvalid: "Where your gift goes: give the year, choose percent or baht, and fill in all four lines with numbers (percent can not be over 100).",
         contactMapUrl: "Map link",
         contactMapUrlDead:
           "Google says that link doesn't exist any more. In Google Maps, find the place, tap Share, copy the link and paste it here.",

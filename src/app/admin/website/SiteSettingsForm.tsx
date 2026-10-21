@@ -159,6 +159,7 @@ export function SiteSettingsForm({ content }: { content: SiteContent }) {
       {pair("tagline", s.tagline, s.taglineHint)}
       {pair("hero_alt", s.heroAlt, s.heroAltHint)}
       {pair("visiting_hours", s.visitingHours, s.visitingHoursHint, 3)}
+      {pair("registration_text", s.registration, s.registrationHint)}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1 text-sm font-medium text-muted">
@@ -199,6 +200,16 @@ export function SiteSettingsForm({ content }: { content: SiteContent }) {
             defaultValue={content.contact_address ?? ""}
             className={inputClass}
           />
+        </label>
+        <label className="flex flex-col gap-1 text-sm font-medium text-muted">
+          {s.contactAddressTh}
+          <input
+            name="contact_address_th"
+            lang="th"
+            defaultValue={content.contact_address_th ?? ""}
+            className={inputClass}
+          />
+          <span className="text-xs font-normal">{s.contactAddressThHint}</span>
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium text-muted sm:col-span-2">
           {s.contactMapUrl}
@@ -268,6 +279,38 @@ export function SiteSettingsForm({ content }: { content: SiteContent }) {
           </span>
         </label>
       </div>
+
+      <fieldset className="flex flex-col gap-3">
+        <legend className="text-sm font-medium text-muted">{s.giftSplitHeading}</legend>
+        <p className="text-xs text-muted">{s.giftSplitHint}</p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <label className="flex flex-col gap-1 text-xs text-muted">
+            {s.giftSplitYear}
+            <input name="gift_split_year" inputMode="numeric" defaultValue={content.gift_split_year ?? ""} className={inputClass} />
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-muted">
+            {s.giftSplitUnit}
+            <select name="gift_split_unit" defaultValue={content.gift_split_unit ?? ""} className={inputClass}>
+              <option value=""></option>
+              <option value="percent">{s.giftSplitPercent}</option>
+              <option value="baht">{s.giftSplitBaht}</option>
+            </select>
+          </label>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {([
+            ["gift_split_food", s.giftSplitFood, content.gift_split_food],
+            ["gift_split_vet", s.giftSplitVet, content.gift_split_vet],
+            ["gift_split_sterilisation", s.giftSplitSterilisation, content.gift_split_sterilisation],
+            ["gift_split_running", s.giftSplitRunning, content.gift_split_running],
+          ] as const).map(([name, label, value]) => (
+            <label key={name} className="flex flex-col gap-1 text-xs text-muted">
+              {label}
+              <input name={name} inputMode="decimal" defaultValue={value == null ? "" : Number(value)} className={inputClass} />
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <ContactChannelPicker
         stored={content.preferred_channels}
