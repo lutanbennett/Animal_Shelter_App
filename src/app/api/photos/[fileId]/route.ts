@@ -162,18 +162,7 @@ export async function GET(
   );
   if (publicError) return notFound();
 
-  // A ticked adoption update's photo (0214), asked of the view as the caller, so an untick or
-  // a hidden or deceased animal stops it being public the moment the database says so.
-  // is_public_drive_file is not widened: this stream carries no migration.
-  let isPublicStory = false;
-  if (!isPublic) {
-    const { count, error: storyError } = await supabase
-      .from("public_adoption_updates")
-      .select("id", { count: "exact", head: true })
-      .eq("drive_file_id", fileId);
-    isPublicStory = !storyError && (count ?? 0) > 0;
-  }
-  const isPublicFile = isPublic === true || isPublicStory;
+  const isPublicFile = isPublic === true;
 
   if (!isPublicFile) {
     if (!(await canSeeInternalFile(supabase, fileId)) && !(await isMemeTheCallerMaySee(supabase, fileId))) {
