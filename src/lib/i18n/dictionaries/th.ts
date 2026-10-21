@@ -235,6 +235,14 @@ const th: Dictionary = {
     metaTitle: "Lanna Care for Animals — ศูนย์ช่วยเหลือสุนัขและแมว แม่วาง เชียงใหม่",
   },
 
+  trustBlock: {
+    giftHeading: "เงินบริจาคของคุณไปที่ไหน",
+    giftYear: "ตัวเลขของเราปี {year}",
+    food: "อาหาร",
+    vet: "การรักษาสัตว์",
+    sterilisation: "โครงการทำหมัน",
+    running: "ค่าดำเนินการศูนย์พักพิง",
+  },
   publicFooter: {
     visitingHours: "เวลาเปิดให้เยี่ยมชม",
     contact: "ติดต่อเรา",
@@ -991,6 +999,7 @@ const th: Dictionary = {
       },
       cols: { when: "เมื่อ", who: "ใคร", what: "ทำอะไร", record: "รายการ", fields: "ช่อง" },
       unknownUser: "ไม่รู้จักบัญชีนี้",
+      viaCalendar: "ผ่าน Google Calendar",
       unnamedRecord: "(ไม่มีชื่อ)",
       deletedResident: "(สัตว์ตัวนี้ถูกลบแล้ว)",
       onlyTimestamp: "เฉพาะเวลาที่แก้ไขล่าสุด",
@@ -1062,6 +1071,13 @@ const th: Dictionary = {
       periodDays: (v: { days: string | number }) =>
         `${v.days} วัน`,
       unavailable: "นับไม่ได้ในขณะนี้",
+      calendarChanges: {
+        heading: "เปลี่ยนจากปฏิทินใน 7 วันที่ผ่านมา",
+        none: "สัปดาห์นี้ไม่มีนัดหมายที่ถูกย้ายหรือยกเลิกจาก Google Calendar",
+        moved: "ย้ายนัด",
+        cancelled: "ยกเลิก (ตั้งกลับเป็นนัดหมายได้)",
+        fail: "อ่านรายการไม่ได้",
+      },
       accessRequests: {
         heading: "คำขอเข้าใช้งาน",
         title: "รอการอนุมัติเข้าใช้งาน",
@@ -1893,6 +1909,21 @@ const th: Dictionary = {
         contactLine: "LINE",
         contactLineHint: "พิมพ์ไอดีตามที่ LINE แสดง: มี @ สำหรับบัญชีทางการ (@lannacare) ไม่มี @ สำหรับไอดีส่วนตัว (lannacare) หรือวางลิงก์เพิ่มเพื่อนแบบเต็ม",
         contactAddress: "ที่อยู่",
+        contactAddressTh: "ที่อยู่ภาษาไทย",
+        contactAddressThHint: "แสดงในส่วนท้ายสำหรับผู้เข้าชมที่อ่านภาษาไทย เว้นว่างเพื่อแสดงที่อยู่ภาษาอังกฤษ",
+        registration: "การจดทะเบียน",
+        registrationHint: "เช่น \"มูลนิธิจดทะเบียนเลขที่ 1234/2560 ตั้งแต่ปี 2560\" แสดงใต้ที่อยู่ในส่วนท้ายและในหน้าเกี่ยวกับเรา เว้นว่างเพื่อซ่อน",
+        giftSplitHeading: "เงินบริจาคของคุณไปที่ไหน",
+        giftSplitHint: "กรอกปีละครั้งจากหน้ากระแสเงินสด ต้องกรอกครบทั้งสี่บรรทัดและปีจึงจะแสดงในหน้าบริจาค เว้นว่างทั้งหมดเพื่อซ่อน",
+        giftSplitYear: "ปี",
+        giftSplitUnit: "แสดงเป็น",
+        giftSplitPercent: "เปอร์เซ็นต์",
+        giftSplitBaht: "บาท",
+        giftSplitFood: "อาหาร",
+        giftSplitVet: "การรักษาสัตว์",
+        giftSplitSterilisation: "โครงการทำหมัน",
+        giftSplitRunning: "ค่าดำเนินการศูนย์พักพิง",
+        giftSplitInvalid: "เงินบริจาคของคุณไปที่ไหน: ใส่ปี เลือกเปอร์เซ็นต์หรือบาท และกรอกตัวเลขให้ครบสี่บรรทัด (เปอร์เซ็นต์ต้องไม่เกิน 100)",
         contactMapUrlDead:
           "Google แจ้งว่าลิงก์นี้ไม่มีอยู่แล้ว เปิด Google Maps ค้นหาสถานที่ กด แชร์ คัดลอกลิงก์ แล้ววางที่นี่",
         contactMapUrl: "ลิงก์แผนที่",

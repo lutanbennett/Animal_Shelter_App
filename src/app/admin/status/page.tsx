@@ -7,6 +7,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { getWaitingAccessRequests } from "@/lib/status/access-requests";
 import { checkCalendar } from "@/lib/clinics/calendar-sync";
 import { getDriveClient } from "@/lib/google/drive";
+import { loadCalendarChanges } from "@/lib/status/calendar-changes";
 import { checkAlerts } from "@/lib/status/alerts";
 import { getHealthReport } from "@/lib/status/health";
 import { type CheckResult, type CheckState, runCheck } from "@/lib/status/run";
@@ -58,6 +59,13 @@ export default async function SystemStatusPage(props: PageProps<"/admin/status">
         <h2 className="text-lg font-semibold text-foreground">{s.accessRequests.heading}</h2>
         <Suspense fallback={<p className="text-sm text-muted">{s.checking}</p>}>
           <AccessRequests t={t} locale={locale} />
+        </Suspense>
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold text-foreground">{s.calendarChanges.heading}</h2>
+        <Suspense fallback={<p className="text-sm text-muted">{s.checking}</p>}>
+          <CalendarChanges t={t} locale={locale} />
         </Suspense>
       </section>
 
@@ -318,6 +326,27 @@ async function Health({ t, locale }: { t: T; locale: Locale }) {
  * step-up on Settings → Security (src/lib/auth/access-requests.ts). The link
  * goes there and the step-up comes first as usual.
  */
+async function CalendarChanges({ t, locale }: { t: T; locale: Locale }) {
+  const c = t.admin.status.calendarChanges;
+  const data = await loadCalendarChanges();
+  if (!data) return <p className="text-sm text-muted">{c.fail}</p>;
+  if (!data.length) return <p className="text-sm text-muted">{c.none}</p>;
+  return (
+    <ul className="flex flex-col gap-2 text-sm">
+      {data.map((v) => (
+        <li key={v.id} className="rounded border border-border bg-surface p-3">
+          <Link href={`/clinic-visits/${v.id}`} className="font-medium text-primary hover:underline">
+            {v.residents?.name ?? "—"} · {v.clinics?.name ?? "—"} · {formatDate(v.appointment_date, locale)}
+          </Link>
+          <p className="text-muted">
+            {v.calendar_change_kind === "cancelled" ? c.cancelled : c.moved} · {formatDateTime(v.calendar_changed_at, locale)}
+          </p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 async function AccessRequests({ t, locale }: { t: T; locale: Locale }) {
   const r = await getWaitingAccessRequests();
   const a = t.admin.status.accessRequests;

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { preferredChannels, talkChannels } from "@/lib/site/channels";
-import { loadSiteContent, socialLinks, visitingHoursLines, type SiteContent } from "@/lib/site/content";
+import { loadSiteContent, pairedText, socialLinks, visitingHoursLines, type SiteContent } from "@/lib/site/content";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { FacebookIcon } from "@/components/FacebookIcon";
 import { InstagramIcon } from "@/components/InstagramIcon";
@@ -39,6 +39,8 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
     hasPublicFriends(),
   ]);
   const hours = visitingHoursLines(locale, site);
+  const address = pairedText(locale, site?.contact_address, site?.contact_address_th);
+  const registration = pairedText(locale, site?.registration_text, site?.registration_text_th);
   const social = socialLinks(site);
   // Contact us in the shelter's order (LINE first unless they chose
   // otherwise); Instagram is a follow link below unless they chose it.
@@ -61,9 +63,14 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
       <div className="mx-auto grid w-full max-w-[1312px] gap-10 sm:grid-cols-2 lg:grid-cols-4">
         <div className="flex flex-col gap-2.5">
           <span className="font-display text-xl font-bold">{t.home.footerOrgName}</span>
-          {site?.contact_address && (
+          {address && (
             <span className="whitespace-pre-line leading-relaxed text-site-on-footer-soft">
-              {site.contact_address}
+              {address}
+            </span>
+          )}
+          {registration && (
+            <span className="whitespace-pre-line text-sm leading-relaxed text-site-on-footer-soft">
+              {registration}
             </span>
           )}
           {site?.contact_map_url && (
