@@ -22,7 +22,7 @@
 ## 2. Automated gates
 
 - [x] `node scripts/gates.mjs` — result recorded in the PR
-- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
+- [x] CI green on the PR — 9 of 9 checks seen green on #817
 
 ## 3. Schema and data
 
