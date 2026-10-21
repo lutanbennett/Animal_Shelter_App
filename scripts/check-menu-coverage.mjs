@@ -60,7 +60,9 @@ for (const c of CHROME) if (!proved(c.file, c.needle)) stale.push(`chrome ${c.pa
 for (const d of DEEP) if (!proved(d.file, d.needle)) stale.push(`deep ${d.page}: "${d.needle}" not in ${d.file}`);
 
 const roles = await sql(`select id, key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails from roles where archived_at is null order by key`);
-const cards = await sql(`select r.key, c.card, c.position from role_cards c join roles r on r.id = c.role_id order by r.key, c.position`);
+const cards = await sql(`select r.key, c.card, c.position, c.group_id from role_cards c join roles r on r.id = c.role_id order by r.key, c.position`);
+// Groups on a role's home (0241): a card inside one is reached through the group's doorway tile.
+const groupRows = await sql(`select r.key, g.id, g.name, g.icon from role_groups g join roles r on r.id = g.role_id order by r.key, g.position, g.name`);
 const cells = await sql(`select r.key, p.activity, p.level from role_permissions p join roles r on r.id = p.role_id order by r.key, p.activity`);
 
 // Pages outside the registry that a role can open, with the test its own page applies (tiles.ts OUTSIDE_REGISTRY, NavLinks).
@@ -99,9 +101,15 @@ for (const role of roles) {
 
   // How the role gets in: its home tiles. Nothing redirects away from the home any more (2026-10-18): roles.home_path
   // is not read, and a clinic login lands on its tiles like everyone else, not on /appointments.
-  const tiles = homeTilesFor(perms, t, 0, held).map((x) => x.href);
+  const rows = cards.filter((c) => c.key === role.key);
+  const groups = groupRows.filter((g) => g.key === role.key).map((g) => ({ id: g.id, label: g.name, icon: g.icon, cards: rows.filter((c) => c.group_id === g.id).map((c) => c.card).filter(isCardKey) }));
+  const drawn = homeTilesFor(perms, t, 0, { cards: held, groups });
   const entries = new Map(); // page -> how
-  for (const h of tiles) entries.set(h, "a tile on the home");
+  for (const x of drawn) {
+    if (!x.inside) entries.set(x.href, "a tile on the home");
+    // A card in a group is reachable through the group's tile; the group's page draws exactly these (cardTilesFor).
+    for (const y of x.inside ?? []) if (!entries.has(y.href)) entries.set(y.href, `the "${x.label}" group on the home`);
+  }
   for (const c of CHROME) if (proved(c.file, c.needle) && (!c.needs || can(perms, c.needs))) entries.set(c.page, c.what);
 
   // Spread: landings read their own tile lists, deep pages hang off a parent. Repeat to a fixed point.
@@ -129,6 +137,8 @@ for (const role of roles) {
     if (via) console.log(`    ok       ${p.padEnd(34)} via ${via}`);
     else console.log(`    ${accepted(p) ? "ACCEPTED" : "ORPHAN  "} ${p.padEnd(34)} ${label.get(p) ?? ""}${accepted(p) ? ` — ${accepted(p).reason}` : ""}`);
   }
+  const inGroups = groups.reduce((n, g) => n + g.cards.length, 0);
+  if (inGroups) console.log(`    ${inGroups} card(s) inside ${groups.length} group(s) on the home`);
   summary.push({ role: role.key, exercised: held.length > 0 ? "cards" : "NO CARDS", total: all.length, orphans: orphans.length, unexplained: bad.length });
 }
 

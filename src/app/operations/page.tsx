@@ -3,6 +3,7 @@ import { requireAnyPageIn } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { SectionTiles, type SectionTile } from "@/components/SectionTiles";
+import { landingGroupTiles, leadWith } from "@/lib/home/landing";
 
 /**
  * Operations → its landing page: a tile per page of daily work
@@ -33,12 +34,14 @@ export default async function OperationsPage() {
   const { perms } = await requireAnyPageIn("operations");
   const { t } = await getT();
 
-  const tiles: SectionTile[] = TILES.flatMap(({ href, description }) => {
+  const listed: SectionTile[] = TILES.flatMap(({ href, description }) => {
     const route = routeFor(href);
     return route && canOpen(perms, route)
       ? [{ href, label: route.label(t), description: description(t), icon: route.icon }]
       : [];
   });
+  // The role's Operations group leads, in its order (src/lib/home/landing.ts); the rest of the list follows.
+  const tiles = leadWith(listed, await landingGroupTiles(perms, "operations", t), (x) => ({ href: x.href, label: x.label, description: "", icon: x.icon }));
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-4 md:p-6">

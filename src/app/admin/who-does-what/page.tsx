@@ -49,13 +49,17 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
   const names = new Map(roles.map((r) => [r.key, roleName(r, t, locale)]));
 
   const admin = createAdminClient();
-  const [{ data: cardRows, error: cardsError }, { data: extraRows, error: extrasError }, { data: roleRow }, { data: cellRows }] = await Promise.all([
-    admin.from("role_cards").select("card, position").eq("role_id", role?.id ?? "").order("position"),
+  const [{ data: cardRows, error: cardsError }, { data: extraRows, error: extrasError }, { data: roleRow }, { data: cellRows }, { data: groupRows, error: groupsError }] = await Promise.all([
+    admin.from("role_cards").select("card, position, group_id").eq("role_id", role?.id ?? "").order("position"),
     admin.from("role_extras").select("activity, level, why").eq("role_id", role?.id ?? ""),
     admin.from("roles").select("key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails").eq("id", role?.id ?? "").maybeSingle(),
     admin.from("role_permissions").select("activity, level").eq("role_id", role?.id ?? ""),
+    admin.from("role_groups").select("id, name, name_th, icon").eq("role_id", role?.id ?? "").order("position").order("name"),
   ]);
-  if (cardsError || extrasError) throw new Error(`Who does what: ${(cardsError ?? extrasError)?.message}`);
+  if (cardsError || extrasError || groupsError) throw new Error(`Who does what: ${(cardsError ?? extrasError ?? groupsError)?.message}`);
+  // Groups on the role's home (0241): where a card shows, never what it gives.
+  const groupOf = new Map((cardRows ?? []).map((r) => [r.card as string, (r.group_id as string | null) ?? null]));
+  const groups = (groupRows ?? []).map((g) => ({ id: g.id as string, label: (locale === "th" && (g.name_th as string)) || (g.name as string), icon: g.icon as string }));
 
   // Who approves photos right now, asked as the database asks it (0222): live, not Admin, holding the activity.
   const { data: approverRows, error: approverError } = await admin
@@ -100,6 +104,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
     includes: CARDS[k].includes.map((x) => label(x)).join(", "),
     href: href({ card: k }) + "#card-detail",
     blocked: needsApprover(k) && approvers.length === 0 ? c.needsApprover : undefined,
+    group: groupOf.get(k) ?? null,
   });
 
   const activityName = (key: ActivityKey) => w.activities[key];
@@ -236,6 +241,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
           locked={isAdmin && !canEdit}
           verifyHref={TWO_STEP_PATH}
           held={held.map(tileOf)}
+          groups={groups}
           library={library.map(tileOf)}
         />
       )}

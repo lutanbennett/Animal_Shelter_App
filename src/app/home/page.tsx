@@ -50,7 +50,7 @@ export default async function HomePage() {
 
   const { t, locale } = await getT();
   const urgent = await loadUrgentCounts(supabase, perms, user.id);
-  const groups = homeGroupsForRoles(perms, t, await countBillsWaiting(supabase, perms), await loadCardsByRole(perms.roles), {
+  const groups = homeGroupsForRoles(perms, t, await countBillsWaiting(supabase, perms), await loadCardsByRole(perms.roles, locale), {
     my: urgent.total,
     maintenance: urgent.maintenance,
     photosWaiting: await countPhotosWaiting(supabase, perms),

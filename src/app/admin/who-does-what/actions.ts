@@ -9,6 +9,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { ACTIVITIES, isActivityKey } from "@/lib/permissions/catalogue";
 import { bundleJson, isCardKey, type CardKey } from "@/lib/permissions/cards";
 import { checkChange } from "@/lib/permissions/prerequisites";
+import { isGroupIconKey } from "@/lib/home/group-icons";
 
 /**
  * Settings → Who does what: give a role a card, take one away, reorder them, and keep or drop its extras.
@@ -53,6 +54,17 @@ async function currentCards(supabase: Supabase, roleId: string): Promise<CardKey
     .returns<{ card: string; position: number }[]>();
   if (error) return null;
   return (data ?? []).map((r) => r.card).filter(isCardKey);
+}
+
+/** Which group each held card sits in (0241); a card on the home directly is absent. */
+async function cardGroups(supabase: Supabase, roleId: string): Promise<Map<CardKey, string> | null> {
+  const { data, error } = await supabase
+    .from("role_cards")
+    .select("card, group_id")
+    .eq("role_id", roleId)
+    .returns<{ card: string; group_id: string | null }[]>();
+  if (error) return null;
+  return new Map((data ?? []).filter((r) => r.group_id && isCardKey(r.card)).map((r) => [r.card as CardKey, r.group_id as string]));
 }
 
 function done(): ActionResult {
@@ -110,8 +122,15 @@ export async function moveCard(roleKey: string, card: string, direction: "up" | 
     if (!g.ok) return g;
     const cards = await currentCards(g.supabase, g.roleId);
     if (!cards) return { ok: false, error: t.common.somethingWentWrong("cards") };
+    const groupOf = await cardGroups(g.supabase, g.roleId);
+    if (!groupOf) return { ok: false, error: t.common.somethingWentWrong("cards") };
+    // Up and down move a card among its neighbours in the same place: on the home, or inside the same group. The swap
+    // is still of two places in the one order the role keeps, so set_role_cards() sees the same kind of change as before.
     const i = cards.indexOf(card as CardKey);
-    const j = direction === "up" ? i - 1 : i + 1;
+    const same = (k: CardKey) => (groupOf.get(k) ?? null) === (groupOf.get(card as CardKey) ?? null);
+    const step = direction === "up" ? -1 : 1;
+    let j = i + step;
+    while (j >= 0 && j < cards.length && !same(cards[j])) j += step;
     if (i < 0 || j < 0 || j >= cards.length) return done();
     [cards[i], cards[j]] = [cards[j], cards[i]];
     const r = await apply(g.supabase, g.roleId, cards, "whoDoesWhat.moveCard", t);
@@ -167,5 +186,104 @@ export async function addExtra(roleKey: string, activity: string, level: number,
     if (error) return databaseFailure("whoDoesWhat.addExtra", error, t.common);
     const r = await apply(g.supabase, g.roleId, cards, "whoDoesWhat.addExtra", t);
     return r.ok ? done() : r;
+  });
+}
+
+/*
+ * Groups on a role's home (role_groups, 0241): a doorway tile that opens a page of the cards inside it.
+ * docs/decisions/2026-10-21-tile-groups-app.md
+ *
+ * A GROUP GRANTS NOTHING, so none of these calls set_role_cards(): they write role_groups and role_cards.group_id only,
+ * and role_permissions cannot change. Same rules as the cards (Admin, at the authenticator-app step), enforced again by
+ * the tables' own policies, since these run as the admin's own session. The trigger of 0241 refuses a card put in another
+ * role's group, so a hand-made call cannot cross roles either.
+ */
+type GroupRow = { id: string; position: number };
+
+async function currentGroups(supabase: Supabase, roleId: string): Promise<GroupRow[] | null> {
+  const { data, error } = await supabase
+    .from("role_groups")
+    .select("id, position")
+    .eq("role_id", roleId)
+    .order("position")
+    .order("name")
+    .returns<GroupRow[]>();
+  return error ? null : (data ?? []);
+}
+
+export async function addGroup(roleKey: string, name: string, nameTh: string, icon: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("whoDoesWhat.addGroup", t.common.somethingWentWrong, async () => {
+    const c = t.admin.whoDoesWhat.groups;
+    const g = await guard(t, roleKey);
+    if (!g.ok) return g;
+    const en = name.trim();
+    const th = nameTh.trim();
+    if (!en || !th) return { ok: false, error: c.namesNeeded };
+    if (!isGroupIconKey(icon)) return { ok: false, error: t.common.somethingWentWrong("icon") };
+    const groups = await currentGroups(g.supabase, g.roleId);
+    if (!groups) return { ok: false, error: t.common.somethingWentWrong("groups") };
+    const position = groups.reduce((m, x) => Math.max(m, x.position + 1), 0);
+    const { error } = await g.supabase.from("role_groups").insert({ role_id: g.roleId, name: en, name_th: th, icon, position });
+    if (error?.code === "23505") return { ok: false, error: c.nameTaken };
+    if (error) return databaseFailure("whoDoesWhat.addGroup", error, t.common);
+    return done();
+  });
+}
+
+/** Remove a group. Its cards go back onto the home (the foreign key's on delete set null); the role keeps every card. */
+export async function removeGroup(roleKey: string, groupId: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("whoDoesWhat.removeGroup", t.common.somethingWentWrong, async () => {
+    const g = await guard(t, roleKey);
+    if (!g.ok) return g;
+    const { error } = await g.supabase.from("role_groups").delete().eq("role_id", g.roleId).eq("id", groupId);
+    if (error) return databaseFailure("whoDoesWhat.removeGroup", error, t.common);
+    return done();
+  });
+}
+
+export async function moveGroup(roleKey: string, groupId: string, direction: "up" | "down"): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("whoDoesWhat.moveGroup", t.common.somethingWentWrong, async () => {
+    const g = await guard(t, roleKey);
+    if (!g.ok) return g;
+    const groups = await currentGroups(g.supabase, g.roleId);
+    if (!groups) return { ok: false, error: t.common.somethingWentWrong("groups") };
+    const i = groups.findIndex((x) => x.id === groupId);
+    const j = direction === "up" ? i - 1 : i + 1;
+    if (i < 0 || j < 0 || j >= groups.length) return done();
+    [groups[i], groups[j]] = [groups[j], groups[i]];
+    // Renumber from 0, so two seeded groups that shared a position (or a gap) end up in a clean order.
+    for (const [position, x] of groups.entries()) {
+      if (x.position === position) continue;
+      const { error } = await g.supabase.from("role_groups").update({ position }).eq("id", x.id).eq("role_id", g.roleId);
+      if (error) return databaseFailure("whoDoesWhat.moveGroup", error, t.common);
+    }
+    return done();
+  });
+}
+
+/** Put a held card in a group, or back on the home (groupId null). Only where it shows changes; what it gives does not. */
+export async function setCardGroup(roleKey: string, card: string, groupId: string | null): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("whoDoesWhat.setCardGroup", t.common.somethingWentWrong, async () => {
+    const g = await guard(t, roleKey);
+    if (!g.ok) return g;
+    if (!isCardKey(card)) return { ok: false, error: t.common.somethingWentWrong("card") };
+    if (groupId !== null) {
+      const groups = await currentGroups(g.supabase, g.roleId);
+      if (!groups) return { ok: false, error: t.common.somethingWentWrong("groups") };
+      if (!groups.some((x) => x.id === groupId)) return { ok: false, error: t.admin.whoDoesWhat.edit.noSuchRole };
+    }
+    const { data, error } = await g.supabase
+      .from("role_cards")
+      .update({ group_id: groupId })
+      .eq("role_id", g.roleId)
+      .eq("card", card)
+      .select("card");
+    if (error) return databaseFailure("whoDoesWhat.setCardGroup", error, t.common);
+    if (!data?.length) return { ok: false, error: t.admin.whoDoesWhat.groups.notHeld };
+    return done();
   });
 }

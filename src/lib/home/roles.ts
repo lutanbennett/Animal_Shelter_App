@@ -3,6 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isCardKey, type CardKey } from "@/lib/permissions/cards";
 import { parsePermissions, type Permissions } from "@/lib/permissions/can";
+import type { Locale } from "@/lib/i18n/locales";
+import type { RoleCards, RoleGroup } from "@/lib/home/tiles";
 
 /**
  * The roles Admin can open the home of, and one role's permissions to draw it with.
@@ -54,22 +56,55 @@ export async function loadRolePermissions(supabase: SupabaseClient, roleKey: str
   });
 }
 
-/** The cards of each of these roles (a login may hold several, 0196), by role key. */
-export async function loadCardsByRole(roleKeys: readonly string[]): Promise<Record<string, CardKey[]>> {
+/** The cards and groups of each of these roles (a login may hold several, 0196), by role key. */
+export async function loadCardsByRole(roleKeys: readonly string[], locale: Locale): Promise<Record<string, RoleCards>> {
   const keys = [...new Set(roleKeys)];
-  return Object.fromEntries(await Promise.all(keys.map(async (key) => [key, await loadRoleCards(key)] as const)));
+  return Object.fromEntries(await Promise.all(keys.map(async (key) => [key, await loadRoleCards(key, locale)] as const)));
+}
+
+type GroupRow = { id: string; name: string; name_th: string; icon: string; position: number };
+const groupLabel = (g: GroupRow, locale: Locale) => (locale === "th" && g.name_th) || g.name;
+
+/**
+ * The cards a role has, in the order its home shows them, and its groups (0241) with the cards in each. role_cards and
+ * role_groups are Admin-only to read (0194, 0241), but a role's own people need their own home, so this reads them with
+ * the service role, for one role key already settled by the caller (the signed-in person's own role, or the role Admin
+ * is previewing). Nothing else of either table leaves here.
+ */
+export async function loadRoleCards(roleKey: string, locale: Locale): Promise<RoleCards> {
+  const admin = createAdminClient();
+  const { data: role } = await admin.from("roles").select("id").eq("key", roleKey).maybeSingle();
+  if (!role) return { cards: [], groups: [] };
+  const [{ data, error }, { data: groupRows, error: groupError }] = await Promise.all([
+    admin.from("role_cards").select("card, group_id").eq("role_id", role.id).order("position").returns<{ card: string; group_id: string | null }[]>(),
+    admin.from("role_groups").select("id, name, name_th, icon, position").eq("role_id", role.id).order("position").order("name").returns<GroupRow[]>(),
+  ]);
+  if (error) throw new Error(`Home cards: could not read role_cards: ${error.message}`);
+  if (groupError) throw new Error(`Home cards: could not read role_groups: ${groupError.message}`);
+  const rows = (data ?? []).filter((r) => isCardKey(r.card)) as { card: CardKey; group_id: string | null }[];
+  const groups: RoleGroup[] = (groupRows ?? []).map((g) => ({
+    id: g.id,
+    label: groupLabel(g, locale),
+    icon: g.icon,
+    cards: rows.filter((r) => r.group_id === g.id).map((r) => r.card),
+  }));
+  return { cards: rows.map((r) => r.card), groups };
 }
 
 /**
- * The cards a role has, in the order its home shows them. role_cards is Admin-only to read (0194), but a role's
- * own people need their own home, so this reads it with the service role, for one role key already settled by the
- * caller (the signed-in person's own role, or the role Admin is previewing). Nothing else of the table leaves here.
+ * One group and the key of the role it belongs to, for the group's own page; null if there is no such group. Read with
+ * the service role for the same reason as above; the page decides whether the reader may see it.
  */
-export async function loadRoleCards(roleKey: string): Promise<CardKey[]> {
+export async function loadGroup(id: string, locale: Locale): Promise<{ roleKey: string; group: RoleGroup } | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const admin = createAdminClient();
-  const { data: role } = await admin.from("roles").select("id").eq("key", roleKey).maybeSingle();
-  if (!role) return [];
-  const { data, error } = await admin.from("role_cards").select("card").eq("role_id", role.id).order("position");
-  if (error) throw new Error(`Home cards: could not read role_cards: ${error.message}`);
-  return (data ?? []).map((r) => r.card as string).filter(isCardKey);
+  const { data: g } = await admin
+    .from("role_groups")
+    .select("id, name, name_th, icon, position, roles!inner(key)")
+    .eq("id", id)
+    .maybeSingle<GroupRow & { roles: { key: string } }>();
+  if (!g) return null;
+  const home = await loadRoleCards(g.roles.key, locale);
+  const group = home.groups.find((x) => x.id === id);
+  return group ? { roleKey: g.roles.key, group } : null;
 }

@@ -9,6 +9,7 @@
  * contract.
  */
 import { Receipt, Sparkles, UserPlus, type LucideIcon } from "lucide-react";
+import { groupIcon } from "@/lib/home/group-icons";
 import { canUseBills } from "@/lib/bills/access";
 import { NAV_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -33,7 +34,25 @@ export type HomeTile = {
   icon: LucideIcon;
   /** A count shown on the tile (bills waiting), when there is one to show. */
   badge?: string;
+  /** A group's doorway tile (role_groups, 0241): the tiles behind it. A group grants nothing, so these are drawn
+   * exactly as they would be on the home, by cardTile() against the same permissions. */
+  inside?: HomeTile[];
 };
+
+/**
+ * A group on a role's home (0241): a doorway tile that opens a page of the cards inside it. `label` is already in the
+ * reader's language; `cards` are the role's own cards. Presentation only: it grants nothing.
+ */
+export type RoleGroup = { id: string; label: string; icon: string; cards: readonly CardKey[] };
+
+/** A role's cards (every one, in order) and the groups some of them sit in. */
+export type RoleCards = { cards: readonly CardKey[]; groups: readonly RoleGroup[] };
+
+/** Where a group's page lives; the home's doorway tile opens it. */
+export const groupHref = (id: string) => `/home/group/${id}`;
+
+const asRoleCards = (home: readonly CardKey[] | RoleCards | undefined): RoleCards | undefined =>
+  !home ? undefined : "cards" in home ? (home as RoleCards) : { cards: home as readonly CardKey[], groups: [] };
 
 /**
  * Hand-chosen order for the default roles (§8 point 3), after the two leading tiles. A path not
@@ -116,12 +135,21 @@ export function isSubsumed(key: CardKey, held: readonly CardKey[], perms: Permis
   return held.some((o) => o !== key && cardOpens(CARDS[o], clinical) === cardOpens(CARDS[key], clinical) && includedCards(o).includes(key));
 }
 
-export function cardTilesFor(held: readonly CardKey[], perms: Permissions, t: Dictionary, billsWaiting?: number): HomeTile[] {
-  return held.flatMap((key) => {
-    const subsumed = isSubsumed(key, held, perms);
-    const tile = subsumed ? null : cardTile(key, perms, t, billsWaiting);
-    return tile ? [tile] : [];
+export function cardTilesFor(held: readonly CardKey[], perms: Permissions, t: Dictionary, billsWaiting?: number, groups: readonly RoleGroup[] = []): HomeTile[] {
+  const tilesOf = (keys: readonly CardKey[]) =>
+    keys.flatMap((key) => {
+      const tile = isSubsumed(key, held, perms) ? null : cardTile(key, perms, t, billsWaiting);
+      return tile ? [tile] : [];
+    });
+  const grouped = new Set(groups.flatMap((g) => g.cards));
+  // A group is one tile after the loose cards, in the groups' own order. A group whose cards draw nothing for this role
+  // is not shown: an empty doorway would open nothing. The seeded groups (0241) start empty, which is how every home
+  // stays exactly as it was until someone puts a card in one.
+  const doors = groups.flatMap((g) => {
+    const inside = tilesOf(held.filter((key) => g.cards.includes(key)));
+    return inside.length > 0 ? [{ href: groupHref(g.id), label: g.label, icon: groupIcon(g.icon), inside }] : [];
   });
+  return [...tilesOf(held.filter((key) => !grouped.has(key))), ...doors];
 }
 
 /**
@@ -133,22 +161,25 @@ function withApprovalTile(tiles: HomeTile[], t: Dictionary, waiting: number): Ho
   const badge = waiting > 0 ? { badge: t.photoApproval.tileWaiting(waiting) } : {};
   // A home built from the registry already drew the tile (without a number); put the number on it.
   if (tiles.some((x) => x.href === "/photos/approve")) return tiles.map((x) => (x.href === "/photos/approve" ? { ...x, ...badge } : x));
+  // Inside a group: the number goes on that tile, behind the doorway, not on a second tile on the home.
+  if (tiles.some((x) => x.inside?.some((y) => y.href === "/photos/approve"))) return tiles.map((x) => (x.inside ? { ...x, inside: withApprovalTile(x.inside, t, waiting) } : x));
   const route = routeFor("/photos/approve");
   if (!route) return tiles;
   return [...tiles, { href: route.path, label: route.label(t), icon: route.icon, ...badge }];
 }
 
 /** Put the due-today counts on the tiles they belong to: My tasks carries the total, Maintenance its share. */
-function withCounts(drawn: HomeTile[], t: Dictionary, counts?: TileCounts): HomeTile[] {
+export function withCounts(drawn: HomeTile[], t: Dictionary, counts?: TileCounts): HomeTile[] {
   if (!counts) return drawn;
   const tiles = counts.photosWaiting === undefined ? drawn : withApprovalTile(drawn, t, counts.photosWaiting);
   return tiles.map((tile) => {
+    if (tile.inside) return { ...tile, inside: withCounts(tile.inside, t, { ...counts, photosWaiting: undefined }) };
     const n = tile.href === "/my" ? counts.my : tile.href === "/maintenance" ? counts.maintenance : undefined;
     return n && n > 0 && !tile.badge ? { ...tile, badge: t.my.navBadge(n) } : tile;
   });
 }
 
-export function homeTilesFor(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[], counts?: TileCounts): HomeTile[] {
+export function homeTilesFor(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[] | RoleCards, counts?: TileCounts): HomeTile[] {
   return withCounts(homeTilesBase(perms, t, billsWaiting, cards), t, counts);
 }
 
@@ -163,7 +194,7 @@ export function homeTilesForRoles(
   perms: Permissions,
   t: Dictionary,
   billsWaiting: number | undefined,
-  cardsByRole: Readonly<Record<string, readonly CardKey[]>>,
+  cardsByRole: Readonly<Record<string, readonly CardKey[] | RoleCards>>,
   counts?: TileCounts,
 ): HomeTile[] {
   const seen = new Set<string>();
@@ -194,7 +225,7 @@ export function homeGroupsForRoles(
   perms: Permissions,
   t: Dictionary,
   billsWaiting: number | undefined,
-  cardsByRole: Readonly<Record<string, readonly CardKey[]>>,
+  cardsByRole: Readonly<Record<string, readonly CardKey[] | RoleCards>>,
   counts?: TileCounts,
 ): HomeGroup[] {
   const keys = perms.roles.length > 0 ? perms.roles : [perms.role.key];
@@ -208,8 +239,9 @@ export function homeGroupsForRoles(
     .filter((g, i) => i === 0 || g.tiles.length > 0);
 }
 
-function homeTilesBase(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[]): HomeTile[] {
-  if (cards && cards.length > 0) return cardTilesFor(cards, perms, t, billsWaiting);
+function homeTilesBase(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[] | RoleCards): HomeTile[] {
+  const home = asRoleCards(cards);
+  if (home && home.cards.length > 0) return cardTilesFor(home.cards, perms, t, billsWaiting, home.groups);
 
   // A role that is given jobs (src/lib/permissions/jobs.ts) shows its jobs, one tile each, and
   // nothing else: that is what "a home of named jobs" means. A job whose bundle the role's cells

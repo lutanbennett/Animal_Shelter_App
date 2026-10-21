@@ -4,6 +4,7 @@ import { WHO_DOES_WHAT_PATH, opensWhoDoesWhat } from "@/lib/permissions/who-does
 import { requireAnyPageIn } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { SectionTiles, type SectionTile } from "@/components/SectionTiles";
+import { landingGroupTiles, leadWith } from "@/lib/home/landing";
 import { CONTACT_ICONS, NAV_ICONS, SECTION_ICONS, CLINIC_ICONS } from "@/components/hub-icons";
 
 /**
@@ -119,12 +120,14 @@ export default async function ManagementPage() {
       icon: Grid3x3,
     },
   ];
-  const tiles = allTiles.filter((tile) => {
+  const listed = allTiles.filter((tile) => {
     // Not a registered page: Who does what opens for Admin and Management, not on an activity.
     if (tile.href === WHO_DOES_WHAT_PATH) return opensWhoDoesWhat(perms);
     const route = routeFor(tile.href);
     return !!route && canOpen(perms, route);
   });
+  // The role's Management group leads, in its order (src/lib/home/landing.ts); the rest of the list follows.
+  const tiles = leadWith(listed, await landingGroupTiles(perms, "management", t), (x) => ({ href: x.href, label: x.label, description: "", icon: x.icon }));
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
