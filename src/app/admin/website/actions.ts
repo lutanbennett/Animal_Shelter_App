@@ -139,6 +139,42 @@ export async function updateSiteContent(
       ...new Set(text("preferred_channels").split(",").map((c) => c.trim()).filter(isContactChannel)),
     ];
 
+    // "Where your gift goes" (0237): all or nothing, so the Donate page never
+    // shows half a table. Blank everywhere clears it.
+    const giftFields = ["food", "vet", "sterilisation", "running"] as const;
+    const giftRaw = giftFields.map((k) => text(`gift_split_${k}`));
+    const giftYear = text("gift_split_year");
+    const giftUnit = text("gift_split_unit");
+    const giftAny = Boolean(giftYear || giftRaw.some(Boolean));
+    let gift: Record<string, number | string | null> = {
+      gift_split_year: null,
+      gift_split_unit: null,
+      gift_split_food: null,
+      gift_split_vet: null,
+      gift_split_sterilisation: null,
+      gift_split_running: null,
+    };
+    if (giftAny) {
+      const year = Number(giftYear);
+      const amounts = giftRaw.map((v) => Number(v.replace(/,/g, "")));
+      if (
+        !Number.isInteger(year) || year < 2000 || year > 2100 ||
+        (giftUnit !== "percent" && giftUnit !== "baht") ||
+        giftRaw.some((v) => !v) || amounts.some((n) => !Number.isFinite(n) || n < 0) ||
+        (giftUnit === "percent" && amounts.some((n) => n > 100))
+      ) {
+        return refuse(s.giftSplitInvalid);
+      }
+      gift = {
+        gift_split_year: year,
+        gift_split_unit: giftUnit,
+        gift_split_food: amounts[0],
+        gift_split_vet: amounts[1],
+        gift_split_sterilisation: amounts[2],
+        gift_split_running: amounts[3],
+      };
+    }
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -155,6 +191,10 @@ export async function updateSiteContent(
         visiting_hours_th: optional("visiting_hours_th"),
         contact_email: optional("contact_email"),
         contact_address: optional("contact_address"),
+        contact_address_th: optional("contact_address_th"),
+        registration_text: optional("registration_text"),
+        registration_text_th: optional("registration_text_th"),
+        ...gift,
         contact_phone: optional("contact_phone"),
         contact_line: optional("contact_line"),
         preferred_channels: preferred,

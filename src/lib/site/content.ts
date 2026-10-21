@@ -52,7 +52,7 @@ export type SiteContent = {
 };
 
 export const SITE_CONTENT_COLUMNS =
-  "hero_drive_file_id, hero_alt, hero_alt_th, tagline, tagline_th, contact_email, contact_address, contact_phone, contact_line, contact_map_url, facebook_url, instagram_url, messenger_url, whatsapp_number, x_url, visiting_hours, visiting_hours_th, featured_resident_id, preferred_channels, donate_photo_drive_file_id, donate_photo_alt, donate_photo_alt_th, foster_photo_drive_file_id, foster_photo_alt, foster_photo_alt_th, volunteer_photo_drive_file_id, volunteer_photo_alt, volunteer_photo_alt_th, about_photo_drive_file_id, about_photo_alt, about_photo_alt_th";
+  "hero_drive_file_id, hero_alt, hero_alt_th, tagline, tagline_th, contact_email, contact_address, contact_phone, contact_line, contact_map_url, facebook_url, instagram_url, messenger_url, whatsapp_number, x_url, visiting_hours, visiting_hours_th, featured_resident_id, preferred_channels, donate_photo_drive_file_id, donate_photo_alt, donate_photo_alt_th, foster_photo_drive_file_id, foster_photo_alt, foster_photo_alt_th, volunteer_photo_drive_file_id, volunteer_photo_alt, volunteer_photo_alt_th, about_photo_drive_file_id, about_photo_alt, about_photo_alt_th, registration_text, registration_text_th, contact_address_th, gift_split_year, gift_split_unit, gift_split_food, gift_split_vet, gift_split_sterilisation, gift_split_running";
 
 export async function loadSiteContent(
   supabase: SupabaseClient,
@@ -149,6 +149,15 @@ export function socialLinks(
     messenger: messenger.ok ? messenger.url : null,
     whatsapp: whatsapp.ok && whatsapp.number ? `https://wa.me/${whatsapp.number}` : null,
   };
+}
+
+/** The four-line "Where your gift goes" block, or null unless all four shares and a year are set. */
+export function giftSplit(content: SiteContent | null) {
+  if (!content?.gift_split_year || !content.gift_split_unit) return null;
+  const raw = [content.gift_split_food, content.gift_split_vet, content.gift_split_sterilisation, content.gift_split_running];
+  if (raw.some((v) => v == null)) return null;
+  const [food, vet, sterilisation, running] = raw.map(Number);
+  return { year: content.gift_split_year, unit: content.gift_split_unit, food, vet, sterilisation, running };
 }
 
 /** Visiting hours as lines, one per day or range. */
