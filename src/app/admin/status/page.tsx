@@ -7,6 +7,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { getWaitingAccessRequests } from "@/lib/status/access-requests";
 import { checkCalendar } from "@/lib/clinics/calendar-sync";
 import { getDriveClient } from "@/lib/google/drive";
+import { loadCalendarChanges } from "@/lib/status/calendar-changes";
 import { checkAlerts } from "@/lib/status/alerts";
 import { getHealthReport } from "@/lib/status/health";
 import { type CheckResult, type CheckState, runCheck } from "@/lib/status/run";
@@ -327,16 +328,9 @@ async function Health({ t, locale }: { t: T; locale: Locale }) {
  */
 async function CalendarChanges({ t, locale }: { t: T; locale: Locale }) {
   const c = t.admin.status.calendarChanges;
-  const since = new Date(Date.now() - 7 * 86400_000).toISOString();
-  const { data, error } = await (await createClient())
-    .from("clinic_visits")
-    .select("id, appointment_date, calendar_changed_at, calendar_change_kind, residents(name), clinics(name)")
-    .gt("calendar_changed_at", since)
-    .order("calendar_changed_at", { ascending: false })
-    .limit(50)
-    .returns<{ id: string; appointment_date: string; calendar_changed_at: string; calendar_change_kind: string; residents: { name: string } | null; clinics: { name: string } | null }[]>();
-  if (error) return <p className="text-sm text-muted">{c.fail}</p>;
-  if (!data?.length) return <p className="text-sm text-muted">{c.none}</p>;
+  const data = await loadCalendarChanges();
+  if (!data) return <p className="text-sm text-muted">{c.fail}</p>;
+  if (!data.length) return <p className="text-sm text-muted">{c.none}</p>;
   return (
     <ul className="flex flex-col gap-2 text-sm">
       {data.map((v) => (
