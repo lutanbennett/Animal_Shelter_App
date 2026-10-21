@@ -471,9 +471,6 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
           </p>
         )}
 
-        {section("medication", medItems)}
-        {section("diet", dietItems)}
-
         <section className="flex flex-col gap-3" aria-labelledby="purchasing-list">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 id="purchasing-list" className="text-lg font-semibold text-foreground">
@@ -514,6 +511,15 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
           )}
           <p className="text-xs text-muted print:hidden">{p.note}</p>
         </section>
+
+        <div className="flex flex-col gap-6 print:hidden">
+          <div>
+            <h2 className="text-xl font-semibold text-foreground">{p.workingHeading}</h2>
+            <p className="text-sm text-muted">{p.workingIntro}</p>
+          </div>
+          {section("medication", medItems)}
+          {section("diet", dietItems)}
+        </div>
       </div>
     </main>
   );
