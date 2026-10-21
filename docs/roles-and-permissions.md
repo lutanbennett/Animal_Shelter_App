@@ -378,6 +378,10 @@ Admin is shown for completeness; it is never stored (§6).
 | `translations.view` | See the public text's translations | Y/N | Y | Y | Y | – | – | – | Read only; added by `0154` to replace `sees_all_translations()`. Translating stays `translations.manage`. Also reads `label_translations()` (`0166`), but the page is `translations.manage`'s |
 | `donation.receipt` | Issue a donation receipt | Y/N | Y | Y | – | – | – | – | Added by `0168` (Lutan, 2026-10-09): Management too, because the Director issues receipts from her phone by day on a Management login. Covers recording the gift, issuing, voiding and re-issuing; `donations`, `donation_lines`, `donation_receipts`, `issue_donation_receipt()` |
 | `appeal.run` | Run a fundraising appeal for a sick resident | Y/N | Y | – | – | – | – | Added by `0210` (the appeals schema half): Admin only for now, delegated later in Settings; no card on purpose (the card set is fixed). `appeals`, `appeal_photos`, `donations.designation_appeal_id` |
+| `appeal.medical_photo` | Put a wound or medical photo into a public appeal | Y/N | Y | – | – | – | – | – | Added by `0216`: Admin only until Settings grants it; no seeded cell |
+| `photos.shelter_add` | File a resident photo into the SHELTER folder, and nowhere else | Y/N | Y | – | – | – | – | – | Added by `0217`: no seeded cell |
+| `social.library` | The social-media library (memes and shares) | E/R | E | – | – | – | – | – | Added by `0223`: Admin only until Settings grants it; no seeded cell |
+| `photos.approve` | Approve photos waiting to be published | Y/N | Y | Y | – | – | – | – | Added by `0224` (Lutan, 2026-10-19): Management seeded with it, held only by the Approve photos card |
 
 Not in the table, because nobody sets them (§6): signing in and out, a forgotten
 password, changing your own password, the language switch, the manual, the
