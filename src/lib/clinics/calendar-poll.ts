@@ -93,7 +93,7 @@ async function apply(event: GEvent, origin: string | null, result: PollResult): 
     const notes = [visit.notes, CANCELLED_NOTE].filter(Boolean).join("\n");
     const { error } = await db
       .from("clinic_visits")
-      .update({ status: "cancelled", notes, calendar_event_id: null, calendar_etag: null })
+      .update({ status: "cancelled", notes, cancel_reason: CANCELLED_NOTE, calendar_changed_at: new Date().toISOString(), calendar_change_kind: "cancelled", calendar_event_id: null, calendar_etag: null })
       .eq("id", visit.id);
     if (error) return;
     result.cancelled += 1;
@@ -105,7 +105,7 @@ async function apply(event: GEvent, origin: string | null, result: PollResult): 
   }
   const { error } = await db
     .from("clinic_visits")
-    .update({ appointment_date: new Date(event.start!.dateTime!).toISOString() })
+    .update({ appointment_date: new Date(event.start!.dateTime!).toISOString(), calendar_changed_at: new Date().toISOString(), calendar_change_kind: "moved" })
     .eq("id", visit.id);
   if (error) {
     // e.g. 0107: a visit with prescriptions linked cannot move past today.
