@@ -4,7 +4,7 @@
 |---|---|
 | Feature | Cancelled visits counted apart from real ones; archive PDFs |
 | Backlog item | `docs/backlog.md` → Clinic visits: cancelled visits are counted as visits |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/cancelled-visits-and-archive` @ `C:\Development\Animal_Shelter_cancelled-visits-and-archive` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3002` |
 | PR | opened after this commit |
 | Tested by / date | Claude, 2026-10-21 |
