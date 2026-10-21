@@ -194,6 +194,7 @@ const en = {
       approvePhotos: "Approve photos",
       runAppeals: "Run fundraising appeals",
       memeLibrary: "Meme library",
+      myTasks: "My tasks",
     },
   },
 
@@ -853,6 +854,7 @@ const en = {
           approve_photos: "Look at the resident photos that are waiting, approve the ones that can go on the website, and remove one that should not be seen. It does not let the role change a resident's record.",
           run_appeals: "Start, publish and close appeals for sick residents, and see how much each has raised.",
           meme_library: "Browse the shelter's memes, add one, record where and when each was posted, and archive one. Memes are never on the website.",
+          my_tasks: "See and tick off the recurring tasks assigned to this person, with how many are due today or overdue. It does not show anyone else's tasks or let the role set tasks up.",
         },
       },
       title: "Who does what",
