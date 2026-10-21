@@ -1044,8 +1044,50 @@ const en = {
     diets: {
       title: "Diets",
       subtitle:
-        "The food list staff pick from when recording a resident's diet. Each diet has a unit and the daily amount for a small, medium and large animal — a resident's own record can override the amount. A diet can't be deleted while a resident's record uses it. Prices, stock and the food forecast are on Management → Diet stock.",
+        "A diet is a recipe: the ingredients that go into one day's serve for a small, medium and large animal. Staff pick a diet when recording what a resident eats; Purchasing orders the ingredients, not the diet. Ingredients are the things you buy and count (kibble, chicken, rice) — add them below the diets. A diet can't be deleted while a resident's record uses it. Prices, stock and the food forecast are on Management → Diet stock.",
       stockLink: "Diet stock",
+      ingredientsTitle: "Ingredients",
+      ingredientsHint:
+        "What is bought and counted: each has a unit, and can have other units such as a cup (set under Units below) so a recipe can say \"1.5 cup\" while stock is counted in kg.",
+      recipes: {
+        title: "Diets",
+        none: "No diets yet.",
+        noStandard: "No diet is marked Standard yet, so no resident is shown as being on a special diet.",
+        createTitle: "Add a diet",
+        name: "Name",
+        namePlaceholder: "e.g. Diabetic",
+        notes: "Notes",
+        add: "Add diet",
+        created: (name: string) => `Added ${name}. Now add its ingredients.`,
+        noIngredients: "No ingredients yet — this diet adds nothing to the forecast until you add some.",
+        ingredient: "Ingredient",
+        servingUnit: "Measured in",
+        ownUnit: (unit: string) => `${unit} (the ingredient's own unit)`,
+        small: "Small",
+        medium: "Medium",
+        large: "Large",
+        perDay: "Amount in one day's serve",
+        addIngredient: "Add ingredient",
+        pickIngredient: "Choose an ingredient",
+        allUsed: "Every ingredient is already in this diet.",
+        saveLine: "Save",
+        removeLine: "Remove",
+        residents: (n: number) => (n === 1 ? "1 resident record" : `${n} resident records`),
+        makeStandard: "Make Standard",
+        standardConfirm: (name: string, current: string | null) =>
+          current
+            ? `Make ${name} the Standard diet? ${current} stops being Standard. Special-diet markers on enclosure cards follow Standard.`
+            : `Make ${name} the Standard diet? Residents on any other diet will show a special-diet marker on enclosure cards.`,
+        deleteConfirm: (name: string) => `Delete ${name}? This cannot be undone.`,
+        errors: {
+          nameRequired: "Enter a name for the diet.",
+          nameTaken: "A diet with that name already exists.",
+          inUse: (n: number) => `Can't delete: ${n} resident diet record${n === 1 ? " uses" : "s use"} it. A diet that has been recorded is part of the resident's history.`,
+          lastLineInUse: "Can't remove the last ingredient of a diet residents are on — add the replacement first.",
+          amountsInvalid: "Enter an amount greater than zero for small, medium and large.",
+          pickIngredient: "Choose an ingredient.",
+        },
+      },
     },
     recentChanges: {
       title: "Recent changes",
@@ -3549,12 +3591,15 @@ const en = {
         noneDue: "None",
         forecastTotal: "Total cost",
         forecastNote:
-          "Counted from today, for residents living at the shelter: each current diet's daily quantity (the resident's own figure, else the diet's default for their size — Medium when no size is set) on every day of the window, at the diet's cost per unit. Fostered, adopted and deceased residents aren't counted.",
+          "Counted from today, for residents living at the shelter: each current diet's recipe, one line per ingredient (the amount for the resident's size — Medium when no size is set — times their portion), on every day of the window, at each ingredient's cost per unit. Fostered, adopted and deceased residents aren't counted.",
         residents: "Records",
         dietCount: (n: number) => `${n} record${n === 1 ? "" : "s"}`,
         noDiets: "No diets yet.",
+        recipes: "In diets",
+        inDiets: (n: number) => (n === 0 ? "Not in a diet" : n === 1 ? "1 diet" : `${n} diets`),
+        noIngredients: "No ingredients yet.",
       },
-      deleteConfirm: (name: string) => `Delete diet "${name}"? This can't be undone.`,
+      deleteConfirm: (name: string) => `Delete ingredient "${name}"? This can't be undone.`,
       createdDiet: (name: string) => `Created diet "${name}".`,
       standard: {
         badge: "Standard",
@@ -3572,7 +3617,9 @@ const en = {
         costInvalid: "Cost must be zero or more.",
         quantitiesInvalid: "Enter a daily quantity greater than zero for each size.",
         hasDiets: (n: number) =>
-          `This diet is on ${n} resident record${n === 1 ? "" : "s"} and can't be deleted — end or change those first.`,
+          `This ingredient is named on ${n} older resident record${n === 1 ? "" : "s"} and can't be deleted.`,
+        inRecipes: (n: number) =>
+          `This ingredient is in ${n} diet${n === 1 ? "" : "s"} and can't be deleted — take it out of ${n === 1 ? "that diet" : "those diets"} first.`,
       },
     },
     medications: {

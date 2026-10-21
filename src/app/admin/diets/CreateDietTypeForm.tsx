@@ -53,30 +53,6 @@ export function CreateDietTypeForm() {
       </div>
 
       <div className="flex flex-wrap items-end gap-3">
-        <span className="w-full text-sm font-medium text-muted">{m.createForm.quantities}</span>
-        {(
-          [
-            ["dailyQtySmall", m.createForm.small],
-            ["dailyQtyMedium", m.createForm.medium],
-            ["dailyQtyLarge", m.createForm.large],
-          ] as const
-        ).map(([name, label]) => (
-          <div key={name} className="flex flex-col gap-1">
-            <label htmlFor={`diet-${name}`} className="text-xs text-muted">
-              {label}
-            </label>
-            <input
-              id={`diet-${name}`}
-              name={name}
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="any"
-              required
-              className={`${inputClass} w-28`}
-            />
-          </div>
-        ))}
         <div className="flex flex-1 flex-col gap-1">
           <label htmlFor="diet-notes" className="text-xs text-muted">
             {m.createForm.notes}
