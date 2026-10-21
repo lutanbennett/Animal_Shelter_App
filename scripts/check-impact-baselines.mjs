@@ -1,11 +1,10 @@
 // impact-baselines (0156): constraints, the computed total, the audit trail and who may write, read under each
-// role's own JWT. Against DEV only. The migration file itself is run INSIDE the transaction, which is always rolled
-// back, so this works before and after 0156 is applied.
+// role's own JWT. Against DEV only, in one transaction that is always rolled back. It asserts the LIVE schema: 0156 is no
+// longer replayed, because a later migration redefined public_impact_figures (docs/decisions/2026-10-02-replay-or-assert-live.md, rule 1).
 //
 //   node scripts/check-impact-baselines.mjs            (from the repo root; dev only)
 //   node scripts/check-impact-baselines.mjs --verbose
 import { join } from "node:path";
-import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
 
@@ -15,7 +14,6 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const migration = readFileSync(join(process.cwd(), "supabase/migrations/0156_impact_baselines.sql"), "utf8");
 // No staff principal: 0173 retired Staff and a live staff login can no longer be made.
 const REAL = ["admin", "management", "volunteer", "doctor"];
 const ID = Object.fromEntries(REAL.map((p) => [p, randomUUID()]));
@@ -40,7 +38,6 @@ add("admin", "dup_key", "insert into impact_baselines (key, label) values ('anim
 
 const harness = `
 begin;
-${migration}
 -- The figures on dev are real now (set 2026-10-01). "Seeded rows are unset" held only on apply day
 -- (rule 4, docs/decisions/2026-10-02-replay-or-assert-live.md), so put every figure back to unset
 -- INSIDE this transaction; the rollback restores the real values. The probes below then test the
@@ -132,7 +129,8 @@ begin
   reset role;
   insert into res select 'sweep', 'view_columns_extra', count(*) from information_schema.columns
    where table_schema = 'public' and table_name = 'public_impact_figures'
-     and column_name not in ('key', 'label', 'label_th', 'baseline_count', 'baseline_date', 'live_count', 'total');
+     -- since_year: added to the view by 0204, deliberately public (it is the year printed beside the figure)
+     and column_name not in ('key', 'label', 'label_th', 'baseline_count', 'baseline_date', 'live_count', 'total', 'since_year');
 end $anon$;
 do $o$ begin raise exception 'HARNESS-RESULT %', (select json_agg(row_to_json(res)) from res); end $o$;
 rollback;`;
