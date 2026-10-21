@@ -74,20 +74,28 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  "Donations: there is now a Donors list under Management → Donations → Donors. Add a donor there or straight from the donation form, and each donor's page shows every gift they have made and the total. Donors are kept apart from Contacts.",
-  "Feed Special Diets and the diet sheet now show every ingredient in a diet at the dog's size, with the amount per meal, and a diet you made in Settings → Diets (such as Diabetic) appears there. When you take a new resident in, you can now choose any diet you have made.",
-  "Diets are now recipes. Under Settings → Diets an admin can list the ingredients in a diet, with how much of each goes into one day's serve for a small, medium and large animal, measured in cups or any unit set up for that ingredient. Purchasing, the food forecast, Cashflow and stock usage then work from each ingredient (kibble, chicken, rice) instead of treating the whole diet as one product. A resident's diet form now has a Portion multiplier (0.75 for three-quarters) in place of a daily amount. Until a diet is given more than one ingredient, it behaves exactly as before.",
-  "Assistant: you can now record a vaccination by typing it, for example \"Panda had rabies today\" or \"vaccinate Panda\". The assistant shows a card with the resident, the vaccines (tick more than one) and the date; press Confirm and it is saved the same way as on the Immunizations page.",
-  "Clinic visits: cancelled visits are no longer counted in a resident's visit total, and now sit in their own folded Cancelled section at the bottom of the Clinic visits page, with the reason if one was given. The archive PDF lists them under Cancelled visits too.",
-  "Settings → Who does what: the separate Home screen panel is gone. A role's home screen is now set only by its cards: add, remove or reorder a card on the board and that role's home changes with it. To put a page on a role's home, give the role the card for that page.",
-  "Settings → Who does what: Admin can now put a role's cards into groups, such as Operations or Management. A group is one tile on that role's home that opens a page of the cards inside it, so a crowded phone home becomes a few doorways. Drag a card into a group, or use the Where it shows list beside it on a phone. Nothing changes on anyone's home until a card is put in a group, and a group never gives anyone more than their cards already do.",
-  "Home screen: if you have recurring tasks, your home now has a My tasks tile showing how many are due today or overdue. If your role can open Operations or Management, those are tiles on your home too, so you no longer need the left-hand menu to reach them.",
-  "Assistant: type \"Panda came back from foster\" (or \"back from Khun Noi\") to bring a fostered or adopted resident back into the shelter. The card asks which enclosure they come back to, and only a carer already on the list is recognised; nobody new is added. The Asking the assistant page of the manual now also explains the vaccination sentences.",
-];
+export const unreleased: ReleaseNote[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.39.0",
+    date: "2026-10-21",
+    title:
+      "Diets are recipes, a Donors list, and role home screens in groups",
+    major: true,
+    notes: [
+    "Donations: there is now a Donors list under Management → Donations → Donors. Add a donor there or straight from the donation form, and each donor's page shows every gift they have made and the total. Donors are kept apart from Contacts.",
+    "Feed Special Diets and the diet sheet now show every ingredient in a diet at the dog's size, with the amount per meal, and a diet you made in Settings → Diets (such as Diabetic) appears there. When you take a new resident in, you can now choose any diet you have made.",
+    "Diets are now recipes. Under Settings → Diets an admin can list the ingredients in a diet, with how much of each goes into one day's serve for a small, medium and large animal, measured in cups or any unit set up for that ingredient. Purchasing, the food forecast, Cashflow and stock usage then work from each ingredient (kibble, chicken, rice) instead of treating the whole diet as one product. A resident's diet form now has a Portion multiplier (0.75 for three-quarters) in place of a daily amount. Until a diet is given more than one ingredient, it behaves exactly as before.",
+    "Assistant: you can now record a vaccination by typing it, for example \"Panda had rabies today\" or \"vaccinate Panda\". The assistant shows a card with the resident, the vaccines (tick more than one) and the date; press Confirm and it is saved the same way as on the Immunizations page.",
+    "Clinic visits: cancelled visits are no longer counted in a resident's visit total, and now sit in their own folded Cancelled section at the bottom of the Clinic visits page, with the reason if one was given. The archive PDF lists them under Cancelled visits too.",
+    { text: "Settings → Who does what: the separate Home screen panel is gone. A role's home screen is now set only by its cards: add, remove or reorder a card on the board and that role's home changes with it. To put a page on a role's home, give the role the card for that page.", roles: ["admin"] },
+    { text: "Settings → Who does what: Admin can now put a role's cards into groups, such as Operations or Management. A group is one tile on that role's home that opens a page of the cards inside it, so a crowded phone home becomes a few doorways. Drag a card into a group, or use the Where it shows list beside it on a phone. Nothing changes on anyone's home until a card is put in a group, and a group never gives anyone more than their cards already do.", roles: ["admin"] },
+    "Home screen: if you have recurring tasks, your home now has a My tasks tile showing how many are due today or overdue. If your role can open Operations or Management, those are tiles on your home too, so you no longer need the left-hand menu to reach them.",
+    "Assistant: type \"Panda came back from foster\" (or \"back from Khun Noi\") to bring a fostered or adopted resident back into the shelter. The card asks which enclosure they come back to, and only a carer already on the list is recognised; nobody new is added. The Asking the assistant page of the manual now also explains the vaccination sentences.",
+    ],
+  },
   {
     version: "0.38.2",
     date: "2026-10-21",
