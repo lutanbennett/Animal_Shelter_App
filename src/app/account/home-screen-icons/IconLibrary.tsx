@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { buildIconSvg, type IconStyle } from "@/lib/home-icons/svg";
 import { iconFileStem, type CatalogueIcon } from "@/lib/home-icons/catalogue-shared";
 
@@ -38,8 +38,12 @@ export function IconLibrary({ icons, labels: h }: { icons: CatalogueIcon[]; labe
   const [style, setStyle] = useState<IconStyle>("dark");
   const [showName, setShowName] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
-  const [origin, setOrigin] = useState("");
-  useEffect(() => setOrigin(window.location.origin), []);
+  // "" on the server and while hydrating, the site address after, so the two renders agree.
+  const origin = useSyncExternalStore(
+    () => () => {},
+    () => window.location.origin,
+    () => "",
+  );
 
   const pill = (on: boolean) =>
     `rounded border px-3 py-1.5 text-sm ${on ? "border-primary bg-primary text-primary-foreground" : "border-border text-foreground"}`;
@@ -62,7 +66,6 @@ export function IconLibrary({ icons, labels: h }: { icons: CatalogueIcon[]; labe
           const url = origin + icon.path;
           return (
             <li key={icon.path} className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3">
-              {/* eslint-disable-next-line @next/next/no-img-element -- an in-page SVG data URL */}
               <img
                 alt={icon.label}
                 width={90}
