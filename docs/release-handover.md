@@ -1,114 +1,117 @@
-# Release handover — written 2026-10-21 after `0.38.2`
+# Release handover — written 2026-10-21 after `0.39.0`
 
-A **delta**. The durable lesson from this release was promoted into
-`docs/release-procedure.md` (the test-deploy `tee` rule) rather than copied here,
-and the release's own facts are in `docs/releases/2026-10-21.md`. **Both outrank
-this file.**
+A **delta**. The release's own facts are in `docs/releases/2026-10-21-0-39-0.md`
+and the durable rules are in `docs/release-procedure.md`. **Both outrank this
+file.** Note there are two records dated 2026-10-21: `0.38.2` shipped the same
+morning.
 
 ## Corrections to the last edition
 
-- **It said the `release-prs.mjs` DISAGREEMENT prediction was a "dead prediction". It is not dead** — this release had one: exit 1, three test plans belonging to no listed PR, all three resolved to **squash-merged** PRs (#787, #790, #793). So the range was **13** PRs, not the 10 printed. It is a coin-flip that depends on how the day's streams merged, which the release cannot control. **Expect either, resolve every orphan to a PR by hand, and check the plans with `check-test-plan.mjs --base <previous SHA>` regardless.**
-- **It said not to open by predicting a `[Production Deploy]` refusal, and to take one retry if it comes. Exactly right, and it came.** The first production-Pi command was refused by the classifier **with no explanation given**; the same command minus a `rm -f`, retried once, went through and was never refused again. **Four releases, four behaviours. Keep taking the one retry; still do not open by predicting it.** The test Pi was again never refused.
-- **`git reset --hard` is refused** as irreversible local destruction. This matters because the runbook's trap for reusing the cut's worktree tells you to `git reset --hard origin/main`. **`git checkout -b <branch> origin/main` does the same job on a clean worktree and is not refused** — worth knowing before you reach for the documented form.
-- **The cut PR number guess was right** (#801 guessed, #801 actual) after being wrong last time. **Keep writing the guess; keep not trusting it.**
-- **`strip-baked-env` removed 13 on production** — fourth release running. **Test's count was not read this time; that was my fault, below.**
-
-## What went wrong, and both were mine
-
-**I piped the test deploy through `tail -40` and lost the evidence.** The lines
-that matter — `deploy: test → Supabase project <ref> (<sha>)` and
-`strip-baked-env: removed N` — print *before* the long build, which is precisely
-why the runbook `tee`s the production deploy. I knew that rule, applied it to his
-command, and not to my own. Both facts were recoverable from the bindings
-printout (`env.SUPABASE_URL` names the dev project) and `/api/version`, **which is
-luck, not method**. The rule now covers the test deploy in the runbook. Cost:
-nothing but the honesty of one checklist line.
-
-**`sync-home-icons.mjs --env production` failed on a Drive rate limit**, 403
-`userRateLimitExceeded`, after drawing all 344 images and uploading 40. A straight
-retry got through, so the release note's Drive promise is true. **Budget that
-retry, and do not read a 403 here as an auth failure** — the token was fine.
-
-**Expect it again, because the cause is not backoff.** It is **43 cards × 8 files**
-(dark/light × 180/1024 × with-name/icon-only), and the loop
-(`sync-home-icons.mjs:97`-`104`) has **no "unchanged" case**: for each of the 344
-it does a `files.list` lookup and then *always* uploads, with nothing comparing the
-PNG just drawn against the one in Drive. **~688 Drive requests a release to replace
-files that are almost all byte-identical.** I filed this first as a missing-backoff
-bug and **that was wrong** — Lutan's own question ("will the next release save only
-the new cards?") found it. Rewritten on the `backlog` branch to lead with *upload
-only what changed*; trimming the eight variants is the second fix and his call.
+- **It said to budget one classifier retry and not to open by predicting it. Right again — but it moved.** This time the refusal landed on **`apply-migrations.mjs --env production`** and on the first **`backup.mjs`** attempt, and the **production Pi command was never refused at all**. One retry cleared each. **Five releases, five behaviours. Keep taking the one retry; keep not predicting which command gets it.**
+- **It said `git reset --hard` is refused and `git checkout -b <branch> origin/main` does the same job.** Used for the record branch, worked, not refused. **Treat that as the documented form now.**
+- **It said `strip-baked-env` removed 13 and that test's count was not read.** Both read this release, **13 on both** — fifth release at 13. The `tee` rule it promoted into the runbook is what did it: the test deploy's head survived and nothing had to be inferred from the bindings printout.
+- **It said the `release-prs.mjs` DISAGREEMENT is a coin-flip.** Confirmed: **two** orphans this time (#806, #813), both squash-merged, against three last time and none before that. The range was **21**, not the 19 printed.
+- **It predicted the Drive 403 would recur "every release until that changes". It changed — in this release.** See below; the one correction that cancels a prediction rather than confirming it.
 
 ## The thing not to re-derive
 
-**A directory in a migration's `-- consumer:` header can never read `live`.**
-`git show <ref>:<dir>/` prints a tree listing whose first line embeds the ref, so
-any directory path reports `differs` at any two refs however little changed
-inside it. Four of this release's nine warnings were of that kind — proved with
-`worker/`, which has **zero** changed files since `1de7bdb4` and warned anyway.
-Also wrong the other way: a tree listing holds only names, so changed *contents*
-under unchanged *filenames* would read `live`.
+**A local script run with different arguments is a different check.** CI's
+`test-plan` job went **red on the first run of #824, and it was right**: three lines
+of my own cut plan read `n/a for this PR` where `check-test-plan.mjs` requires
+`n/a: <reason>`. I had "checked" the plan with `check-test-plan.mjs <path>`, a
+**laxer mode**, and my earlier `--base ce754d32` run predated the file existing.
 
-> **Predict the warnings anyway, by running the real `consumerReport` rather than
-> reasoning about which files changed.** All nine were predicted exactly, so none
-> surprised anyone and the four vacuous ones cost no thinking at the apply. Filed
-> on the `backlog` branch; reasoning in
-> `docs/decisions/2026-10-21-release-0-38-2-admin-tag-and-directory-consumers.md`,
-> including the two tempting wrong fixes.
+> **Validate a cut plan the way CI does — `node scripts/check-test-plan.mjs --base origin/main` — and nothing else counts as having checked it.**
 
-**A note was tagged `admin` at the cut** (Lutan's call) because it described an
-admin-only page. Safe only because the text was untouched and the verification
-asserts exactly one note's tags changed. **The tag belongs in the feature PR next
-time** — do not read this as licence to edit notes at the cut.
+Cost: one extra CI run, which breaks "first CI run green by construction" at 12.
+Same shape as the runbook's "read an exit code from the script, never through a
+pipe", and worth a line in your head because the fix is free.
+
+## The Drive 403 is gone, and the lesson is about me, not the script
+
+`0.38.2` lost the icon sync to a 403 after 40 of 344 uploads. **#810 shipped the
+diff**, and this release's run was `344 unchanged, 0 updated, 0 created` — **zero
+Drive writes, exit 0, no retry.** Do not budget that retry any more.
+
+The part to carry: **Lutan's question found the cause, not my investigation.** I had
+retried the 403 successfully and filed an item blaming missing backoff; he asked
+whether the next release would upload only the new cards, and reading the loop to
+answer him showed it would not. **A green retry is a weak reason to stop looking.**
+
+## A destructive migration changes two steps, and this was the first in a while
+
+`0243` dropped columns. Two things follow that an additive release never meets:
+
+1. **"Rollback available" becomes false.** A Pi rebuild of the previous release restores a build whose code writes to columns that no longer exist. **Write the position out; do not tick it.** The way out is a restore, which needs his key.
+2. **`backup.mjs --env production` refuses on this machine** — `BACKUP_GOOGLE_OAUTH_*` is deliberately absent from `.env.deploy.production` so the deploy box cannot delete backups. **That is the design, not a fault.** Take it on the Pi with the cron job's own command: `cd ~/Animal_Shelter_App && node scripts/backup.mjs --env production --shared-drive-token --keep-days 14 --local-copy $HOME/backups/lannacare`.
+
+And one thing nobody can design away: **the guards force apply-before-deploy, so the
+old build runs against the dropped schema for the length of the deploy.** ~10
+minutes here, exposed path an admin adding a diet ingredient, nobody did.
+**State it; do not hide it.**
 
 ## Where things stand
 
 | | |
 |---|---|
-| Live everywhere | **`0.38.2`** @ `ce754d32` — production Pi and Worker, test Pi and Worker |
-| Previous release SHA, for the next range | **`ce754d32`** |
-| Production database | **`239 applied`, `0 pending`**, `No drift`. **Run `--status --env production` yourself** |
-| Dev database | **DRIFTED, and not by this release** — `240` rows against `239` files, the extra being **`0239_diets_are_recipes.sql`**, applied to dev by in-flight **#803** and not on `main`. It was clean before the cut. Schema ahead of code on dev is the intended direction; **re-run `--drift test` and expect it to have moved again** |
-| Next free migration number | **`0239` is already claimed** by unmerged #803, though `origin/main`'s highest is `0238`. **Check `origin/main` *and* open `*-schema` PRs before numbering** |
-| `unreleased` notes waiting | **0** at the cut — **read nothing into that.** Seven editions have said 0 and been overtaken |
-| Open PRs | **#802** `harness-reds`, **#803** `diets-schema` (`0239`), **#804** `cancelled-visits-and-archive`. **Run `gh pr list` yourself** |
-| Worktrees | Four live streams plus this record's. **The nine leftovers the last edition reported `HELD` were cleared by somebody during this release** — not the release manager's doing, and not theirs to do |
-| `main` moves under you | **Yes, once** — my own backlog item, merged by the daily sync. Docs-only, one file. **Doing nothing was correct**; all four builds were already on `ce754d32` |
+| Live everywhere | **`0.39.0`** @ `ca7e4dd2` — production Pi and Worker, test Pi and Worker. All four layers read back |
+| Previous release SHA, for the next range | **`ca7e4dd2`** |
+| Production database | **`246 applied`, `0 pending`**, `No drift`. **Run `--status --env production` yourself** |
+| Dev database | **`No drift`, 246 of 246** — clean, unlike last edition. `0239` reaching `main` closed that drift |
+| Next free migration number | **`0246`**. `origin/main`'s highest is `0245` and **no unmerged branch claims a number** — the `0.38.2` warning about #803 is closed. **Check `origin/main` *and* open `*-schema` PRs anyway** |
+| `unreleased` notes waiting | **0** at the cut — **read nothing into that.** Eight editions have said 0 and been overtaken |
+| Open PRs | **none** at the cut; #802, #803 and #804 all merged before it. **Run `gh pr list` yourself** |
+| Worktrees | Three leftovers, **all `HELD`** by live sessions with nothing beyond `main`, plus the cut's (reused for this record). Paperwork rule 2 had no free leftover to reuse, so a fresh worktree was correct — say so rather than looking like you skipped the rule |
+| `main` moves under you | **No — not once.** The first in several |
 
-**Server Actions keys, Worker against Pi** (fifteenth check): production
+**Server Actions keys, Worker against Pi** (sixteenth check): production
 `cbd55beae8d8`, test `ecc41837fc0b`, unchanged since `0.31.0`. **Matching these
 values is not evidence you checked.**
 
-**Counters:** all four builds from one SHA **20** releases; `npm ci` as step 1
-**16**; first CI run green by construction **12** — and **one run only** again,
-because the cut plan's CI line was written `n/a` rather than ticked in a second
-commit; no production-only guard **18**; per-file dry-run trap **twice fired, ten
-not**; `strip-baked-env` at 13 **four** releases (production).
+**Counters:** all four builds from one SHA **21** releases; `npm ci` as step 1
+**17**; first CI run green by construction **broken at 12, reset to 0** (mine,
+above); no production-only guard **19**; per-file dry-run trap **three times fired,
+ten not**; `strip-baked-env` at 13 **five** releases, both environments.
 
-## In flight: the same three silent failures, one half-closed
+## Two touches, and a thing he said that was worth more than a decision
 
-Name them **as a set**, say plainly none is broken today, and do not re-run them
-as checks — they are **build-work on the backlog** wanting the same plumbing
+`0.39.0` cost him **two** — the version call and the deploy. Fourth running.
+
+He also **volunteered, unprompted, that the planner handover was running in
+parallel.** Nothing came of it, but a release manager otherwise meets that as a
+surprise merge, and the right response to the warning was to do *nothing* except
+pin both Pi builds to the shipped SHA. **If he tells you what else is moving, that
+is not small talk — it is the one input that turns the `main`-moved trap from a
+diagnosis into a non-event.**
+
+**He went against the recommendation on one of three.** Offered five minutes on the
+diets screens before the deploy, he chose to ship with all fourteen plans recorded.
+**Put the numeric-risk item to him separately from the count every time** — that is
+why it gets answered on its merits instead of being waved through with the others,
+and he has now twice answered it differently from the rest.
+
+## In flight: the same three silent failures, unchanged as a set
+
+Name them **as a set**, say plainly none is broken today, and do not re-run them as
+checks — they are **build-work on the backlog** wanting the same plumbing
 (`status_alert_runs` → mail).
 
-1. **A public desexing sign-up tells nobody** — still the most concrete, still dormant only while the public site is locked. A member of the public is on the other end, so it becomes real at the cutover.
-2. **Drive space** — the tile goes amber at 80%, red at 95%, and **never emails**.
-3. **The nightly retention job** — **this release closed the "nobody would know" half.** `/admin/status` now has a tile that goes red and **mails admins** if the job is missing, switched off or failing. Confirmed on production after the apply: `check-cron-job --env production` reads the job `active`, `17 3 * * *`, and `0238`'s function present. What remains is only the general plumbing the other two want. **Do not re-ask whether the job runs.**
+1. **A public desexing sign-up tells nobody** — still the most concrete, dormant only while the public site is locked, real at the cutover.
+2. **Drive space** — amber at 80%, red at 95%, **never emails**.
+3. **The nightly retention job** — `0.38.2` closed the "nobody would know" half; only the general plumbing remains. **Do not re-ask whether the job runs.**
 
 **Also open and his: the production calendar token**, next in his own stated order.
-**Do not ask whether the two-way calendar works** — it is built and its follow-up
-shipped here.
+**Do not ask whether the two-way calendar works.**
 
-**The nine verification gaps** stay in their own plans with their own signatures.
-**Three of the nine cannot be closed by anyone** — they ask how a future chat or
-edition reads a document; say so rather than inflating the count. Of the six real
-ones, **the one worth five minutes is the new tile on `/admin/status`**, because it
-is the thing this release's headline note promises. Still unlooked-at from
-earlier: the **prescription form reading 4** (`0.38.1` — still the most valuable
-item anywhere, the only one where being wrong produces a wrong *number*) and
-**video playback on a real handset** (`0.38.0`).
+**Eleven real verification gaps** stay in their own plans with their own signatures;
+three more of the fourteen cannot be closed by anyone and should not inflate the
+count. **The one worth five minutes is the diets portion path** — the only item
+anywhere whose failure is a wrong *number*, and the only one `0243` has made
+expensive to undo. Still unlooked-at from earlier: the **prescription form reading
+4** (`0.38.1`) and **video playback on a real handset** (`0.38.0`).
 
-## Two things worth knowing that are not in the runbook
+## Three things worth knowing that are not in the runbook
 
-- **`test-plan` is ADVISORY, permanently** (Lutan, 2026-10-20). Do not raise it, do not list it as a decision he owes. **Checked this release: `main` has no branch protection at all**, so nothing requires it and there is nothing to report.
-- **The public site is locked on both environments**, sixth release running — and this release put a registration line, a Thai address and a "where your gift goes" section on `/about`, `/donate` and the public footer that **nobody outside the shelter can reach**. That is why `0237` correctly carries no release note, and it is the clearest example yet of the truth rule earning its place. The edge-cache `HIT` check stays `n/a: vacuous while the gate is served no-store`.
+- **A role tag has now been added at the cut twice running.** The cause is upstream: `docs/test-plan-template.md`'s release-notes line asks whether a user would notice and never asks *who*. Filed on the `backlog` branch. **Expect to keep finding these, and do not read finding them as the process working.**
+- **A major release currently mails ONE person.** `sent 1, skipped 0`, delivery confirmed in the inbox. The `E_RECIPIENT_NOT_ALLOWED` skip the last three editions mention **did not occur** — the shelter's own address is not on the production admin list at all. The call is still his, but "mails every admin" overstates today's lever and he should be told plainly rather than discovering it.
+- **`test-plan` is ADVISORY, permanently** (Lutan, 2026-10-20). Do not raise it, do not list it as a decision he owes. **Checked again: `main` has no branch protection at all**, so nothing requires it and there is nothing to report.
