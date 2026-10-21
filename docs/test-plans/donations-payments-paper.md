@@ -6,7 +6,7 @@
 |---|---|
 | Feature | Donations and payments options paper |
 | Backlog item | `docs/backlog.md` → A unique QR code per donation that records itself (paper only) |
-| Branch / worktree | `claude/FEATURE` @ `C:\Development\Animal_Shelter_FEATURE` |
+| Branch / worktree | `claude/donations-payments-paper` @ `C:\Development\Animal_Shelter_donations-payments-paper` |
 | Dev server | not used: documentation only |
 | PR | opened after this commit |
 | Tested by / date | Claude, 2026-10-21 |
