@@ -4,7 +4,6 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Nfc } from "lucide-react";
 import type { ScanCardStrings } from "./scan-card-strings";
-import type { PickableResident } from "@/lib/medical/residents";
 import { residentCodeFrom } from "@/lib/tags/links";
 import type { CardWaitJob } from "@/lib/residents/card-wait";
 import { startCardWait, stopCardWait } from "./scan-actions";
@@ -46,10 +45,10 @@ function textsOf(records: NdefRecordLike[]): string[] {
 }
 
 /** The one resident a card's records name, or why none: nothing readable, or not in the list. */
-export function residentForCard(
+export function residentForCard<R extends ScannableResident>(
   texts: string[],
-  residents: PickableResident[],
-): { resident: PickableResident } | { problem: "unreadable" | "unknown" } {
+  residents: R[],
+): { resident: R } | { problem: "unreadable" | "unknown" } {
   const codes = texts.map((x) => residentCodeFrom(x)).filter((c): c is string => !!c);
   if (codes.length === 0) return { problem: "unreadable" };
   for (const code of codes) {
@@ -59,7 +58,10 @@ export function residentForCard(
   return { problem: "unknown" };
 }
 
-export function ScanCardButton({
+/** All a scan needs of a resident: the picker's own rows (PickableResident, ResidentOption) both fit. */
+export type ScannableResident = { id: string; code?: string | null };
+
+export function ScanCardButton<R extends ScannableResident>({
   strings: p,
   base,
   residents,
@@ -69,8 +71,8 @@ export function ScanCardButton({
   strings: ScanCardStrings;
   /** Where a found resident opens when the picker is a plain page: `${base}?resident=<id>`. */
   base: string;
-  residents: PickableResident[];
-  onFound?: (r: PickableResident) => void;
+  residents: R[];
+  onFound?: (r: R) => void;
   /** The job a waiting marker names where there is no Web NFC (iPhone). Without it there, no button. */
   job?: CardWaitJob;
 }) {
