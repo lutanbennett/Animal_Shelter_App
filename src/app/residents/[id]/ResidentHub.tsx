@@ -377,7 +377,7 @@ export function ResidentHub({
     ? t.residents.hub.vetNext(formatDate(upcoming[0].appointment_date, locale))
     : overdue.length > 0
       ? t.residents.hub.vetPastDue
-      : t.residents.hub.vetTotalVisits(clinicVisits.length);
+      : t.residents.hub.vetTotalVisits(clinicVisits.filter((a) => a.status !== "cancelled").length);
 
   // Prescriptions
   const today = todayIso(new Date(now));

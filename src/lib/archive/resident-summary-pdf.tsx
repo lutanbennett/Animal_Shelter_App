@@ -441,7 +441,7 @@ function ResidentSummaryDocument({
           <Table
             columns={["Date", "Clinic / doctor", "Status", "Reason / notes"]}
             widths={["13%", "22%", "13%", "52%"]}
-            rows={record.appointments.map((appointment) => [
+            rows={record.appointments.filter((a) => a.status !== "cancelled").map((appointment) => [
               day(appointment.appointmentDate),
               join([appointment.clinicName, appointment.doctorName], " · "),
               appointment.status,
@@ -450,6 +450,24 @@ function ResidentSummaryDocument({
             empty="No clinic visits recorded."
           />
         </Section>
+
+        {record.appointments.some((a) => a.status === "cancelled") && (
+          <Section title="Cancelled visits">
+            <Table
+              columns={["Date", "Clinic / doctor", "Status", "Reason / notes"]}
+              widths={["13%", "22%", "13%", "52%"]}
+              rows={record.appointments
+                .filter((a) => a.status === "cancelled")
+                .map((appointment) => [
+                  day(appointment.appointmentDate),
+                  join([appointment.clinicName, appointment.doctorName], " · "),
+                  appointment.status,
+                  join([appointment.reason, appointment.notes], " · "),
+                ])}
+              empty=""
+            />
+          </Section>
+        )}
 
         <Section title="Prescriptions">
           <Table

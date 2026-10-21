@@ -394,7 +394,7 @@ export function renderResidentIndexHtml(
       "Clinic visits",
       table(
         ["Date", "Clinic / doctor", "Status", "Reason / notes"],
-        record.appointments.map((appointment) => [
+        record.appointments.filter((a) => a.status !== "cancelled").map((appointment) => [
           esc(day(appointment.appointmentDate)),
           escOrDash(join([appointment.clinicName, appointment.doctorName])),
           esc(appointment.status),
@@ -403,6 +403,27 @@ export function renderResidentIndexHtml(
         "No clinic visits recorded.",
       ),
     )}
+
+    ${
+      record.appointments.some((a) => a.status === "cancelled")
+        ? section(
+            "appointments-cancelled",
+            "Cancelled visits",
+            table(
+              ["Date", "Clinic / doctor", "Status", "Reason / notes"],
+              record.appointments
+                .filter((a) => a.status === "cancelled")
+                .map((appointment) => [
+                  esc(day(appointment.appointmentDate)),
+                  escOrDash(join([appointment.clinicName, appointment.doctorName])),
+                  esc(appointment.status),
+                  escOrDash(join([appointment.reason, appointment.notes])),
+                ]),
+              "",
+            ),
+          )
+        : ""
+    }
 
     ${section(
       "prescriptions",

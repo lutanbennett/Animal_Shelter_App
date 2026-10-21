@@ -52,6 +52,7 @@ export default async function ClinicDoctorsPage(
       .select("doctor_id, appointment_date")
       .eq("clinic_id", id)
       .not("doctor_id", "is", null)
+      .neq("status", "cancelled")
       .returns<{ doctor_id: string; appointment_date: string }[]>(),
   ]);
 
