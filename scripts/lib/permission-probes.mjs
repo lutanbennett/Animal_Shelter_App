@@ -56,7 +56,7 @@ export const PROBES = [
     activity: "resident.record", level: "edit", sql: `delete from residents where id = $BARE`,
     expect: ["admin"],
   },
-  { activity: "resident.register", level: "edit", fn: true, sql: `select record_intake('Probe pup', current_date, p_diet_type_id => $DIET)` },
+  { activity: "resident.register", level: "edit", fn: true, sql: `select record_intake('Probe pup', current_date, p_diet_id => (select id from diets limit 1))` },
   { activity: "resident.microchip", level: "edit", scoped: true, fn: true, sql: `select set_resident_microchip($R, '981000000000001', null)` },
   { activity: "resident.adoption_news", level: "edit", scoped: true, sql: `insert into adoption_updates (resident_id, received_on, channel) values ($R, current_date, 'visit')` },
   { activity: "resident.adoption_news", level: "edit", scoped: true, sql: `delete from adoption_updates where resident_id = $R` },

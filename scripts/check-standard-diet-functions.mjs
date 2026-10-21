@@ -146,7 +146,7 @@ begin
   if v like 'ERR%' then raise exception 'FAIL G: intake with a diet gave %', v; end if;
   v_res := v::uuid;
   select count(*) into v_n from resident_diets
-   where resident_id = v_res and diet_type_id = v_std and start_date = shelter_today() - 2 and end_date is null;
+   where resident_id = v_res and diet_id = (select id from diets where name = (select name from diet_types where id = v_std)) and start_date = shelter_today() - 2 and end_date is null;
   if v_n <> 1 then raise exception 'FAIL G: % diet row(s) for the new resident', v_n; end if;
   v_report := v_report || 'G management intake with a diet: resident + one diet row from intake date | ';
 

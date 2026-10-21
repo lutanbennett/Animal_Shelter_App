@@ -58,9 +58,9 @@ export async function recordIntake(
     }
 
     // A diet is mandatory (the form preselects the standard); record_intake
-    // refuses a missing one too (0090).
-    const dietTypeId = str(formData, "dietTypeId");
-    if (!dietTypeId) {
+    // refuses a missing one too (0242).
+    const dietId = str(formData, "dietId");
+    if (!dietId) {
       return { ok: false, error: t.residents.new.errors.dietRequired };
     }
 
@@ -121,7 +121,7 @@ export async function recordIntake(
       p_new_origin_name: str(formData, "newOriginName"),
       p_weight_kg: weightKg,
       p_size: size,
-      p_diet_type_id: dietTypeId,
+      p_diet_id: dietId,
       p_blood_test_interval_months: bloodTestIntervalMonths,
       ...prefixed(readAdoptionProfile(formData)),
     });

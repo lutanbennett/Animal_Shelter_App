@@ -80,7 +80,7 @@ begin
   join roles ro on ro.key = v.role_key;
   select id into v_res from record_intake(
     p_name => 'Harness audit undo', p_intake_date => date '2026-08-01', p_weight_kg => 10,
-    p_diet_type_id => (select id from diet_types order by is_standard desc nulls last limit 1));
+    p_diet_id => (select id from diets order by is_standard desc nulls last limit 1));
   insert into harness values ('admin', v_admin), ('mgmt', v_mgmt), ('res', v_res);
 end $setup$;
 

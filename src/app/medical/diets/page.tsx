@@ -51,16 +51,22 @@ export default async function SpecialDietsPage(props: PageProps<"/medical/diets"
 
   const dietRow = (diet: SpecialDiet) => {
     const meals = diet.mealsPerDay && diet.mealsPerDay > 0 ? diet.mealsPerDay : null;
-    const perMeal = diet.dailyQuantity != null && meals ? diet.dailyQuantity / meals : diet.dailyQuantity;
-    const unit = dietUnitLabel(t, diet.unit);
-    const amount = perMeal != null ? `${number(perMeal)} ${unit}` : d.amountMissing;
     return (
       <li key={diet.residentDietId} className="flex flex-col gap-1">
         <p className="break-words text-lg font-medium text-foreground">{localLabel(locale, diet.name, diet.nameTh)}</p>
-        <span className="flex flex-wrap items-center gap-x-2 gap-y-1" role="group" aria-label={d.amountPicture(amount)}>
-          <Utensils aria-hidden className="h-8 w-8 shrink-0 text-foreground" />
-          <span className="break-words text-xl font-semibold text-foreground">{amount}</span>
-        </span>
+        <ul className="flex flex-col gap-1">
+          {diet.ingredients.map((ing) => {
+            const perMeal = ing.dailyQuantity != null && meals ? ing.dailyQuantity / meals : ing.dailyQuantity;
+            const amount = perMeal != null ? `${number(perMeal)} ${dietUnitLabel(t, ing.unit)}` : d.amountMissing;
+            return (
+              <li key={ing.name} className="flex flex-wrap items-center gap-x-2 gap-y-1" aria-label={d.amountPicture(amount)}>
+                <Utensils aria-hidden className="h-6 w-6 shrink-0 text-foreground" />
+                <span className="break-words text-xl font-semibold text-foreground">{amount}</span>
+                <span className="break-words text-lg text-foreground">{localLabel(locale, ing.name, ing.nameTh)}</span>
+              </li>
+            );
+          })}
+        </ul>
         {diet.rounds.length > 0 ? (
           <div className="mt-1">
             <RoundStrip rounds={diet.rounds} names={d.rounds} label={d.eatsAt(roundsText(diet.rounds))} />
