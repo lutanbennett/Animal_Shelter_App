@@ -14,6 +14,8 @@ import {
 } from "@/lib/donations/donations";
 import { RECEIPT_COUNTRIES } from "@/lib/donations/issuer";
 import { recordDonation } from "../actions";
+import { createSupporter } from "../donors/actions";
+import type { SupporterRow } from "@/lib/donations/supporters";
 import { DateInput } from "@/components/DateInput";
 
 export type AppealOption = { id: string; title: string; residentName: string; target: number; raised: number; status: string };
@@ -31,6 +33,7 @@ const labelClass = "text-sm font-medium text-muted";
  */
 export function DonationForm({
   contacts,
+  supporters: initialSupporters = [],
   residents,
   residentsFailed = false,
   today,
@@ -38,6 +41,8 @@ export function DonationForm({
   presetAppealId = "",
 }: {
   contacts: DonorContact[];
+  /** Live (unarchived) donors from the supporters list. */
+  supporters?: SupporterRow[];
   residents: ResidentOption[];
   residentsFailed?: boolean;
   today: string;
@@ -51,10 +56,15 @@ export function DonationForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [supporters, setSupporters] = useState(initialSupporters);
+  const [adding, setAdding] = useState(false);
+  const [newDonor, setNewDonor] = useState({ name: "", email: "", phone: "", line: "", note: "" });
+  const [addError, setAddError] = useState<string | null>(null);
   const [fields, setFields] = useState<DonationFields>({
     receivedOn: today,
     donorName: "",
     contactId: "",
+    supporterId: "",
     donorEmail: "",
     donorPhone: "",
     donorLine: "",
@@ -80,11 +90,36 @@ export function DonationForm({
     setFields((p) => ({
       ...p,
       contactId: id,
+      supporterId: id ? "" : p.supporterId,
       donorName: c ? c.name : p.donorName,
       donorEmail: c?.email ?? (c ? "" : p.donorEmail),
       donorPhone: c?.phone ?? (c ? "" : p.donorPhone),
       donorLine: c?.line_id ?? (c ? "" : p.donorLine),
     }));
+  }
+
+  function applySupporter(s: SupporterRow | undefined) {
+    setFields((p) => ({
+      ...p,
+      supporterId: s ? s.id : "",
+      contactId: s ? "" : p.contactId,
+      donorName: s ? s.name : p.donorName,
+      donorEmail: s ? (s.email ?? "") : p.donorEmail,
+      donorPhone: s ? (s.phone ?? "") : p.donorPhone,
+      donorLine: s ? (s.line ?? "") : p.donorLine,
+    }));
+  }
+
+  function addDonor() {
+    setAddError(null);
+    startTransition(async () => {
+      const r = await createSupporter(newDonor);
+      if (!r.ok) return setAddError(r.error);
+      setSupporters((p) => [...p, r.supporter]);
+      applySupporter(r.supporter);
+      setAdding(false);
+      setNewDonor({ name: "", email: "", phone: "", line: "", note: "" });
+    });
   }
 
   function save() {
@@ -111,6 +146,35 @@ export function DonationForm({
     >
       <fieldset className="flex flex-col gap-3 rounded border border-border bg-surface p-4">
         <legend className="px-1 text-base font-semibold text-foreground">{f.donor}</legend>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="dn-supporter" className={labelClass}>{f.supporter}</label>
+          <select id="dn-supporter" value={fields.supporterId} onChange={(e) => applySupporter(supporters.find((x) => x.id === e.target.value))} className={inputClass}>
+            <option value="">{f.supporterNone}</option>
+            {supporters.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+          <span className="text-xs text-muted">{f.supporterHint}</span>
+          {!adding ? (
+            <button type="button" onClick={() => setAdding(true)} className="min-h-11 self-start rounded border border-border px-4 text-sm text-foreground hover:bg-surface-hover">
+              {f.supporterAdd}
+            </button>
+          ) : (
+            <div className="flex flex-col gap-2 rounded border border-border bg-background p-3">
+              <input aria-label={f.donorName} placeholder={f.donorName} value={newDonor.name} onChange={(e) => setNewDonor((p) => ({ ...p, name: e.target.value }))} className={inputClass} lang="und" />
+              <div className="grid gap-2 sm:grid-cols-3">
+                <input aria-label={f.email} placeholder={f.email} type="email" inputMode="email" value={newDonor.email} onChange={(e) => setNewDonor((p) => ({ ...p, email: e.target.value }))} className={inputClass} />
+                <input aria-label={f.phone} placeholder={f.phone} type="tel" value={newDonor.phone} onChange={(e) => setNewDonor((p) => ({ ...p, phone: e.target.value }))} className={inputClass} />
+                <input aria-label={f.line} placeholder={f.line} value={newDonor.line} onChange={(e) => setNewDonor((p) => ({ ...p, line: e.target.value }))} className={inputClass} />
+              </div>
+              {addError && <p role="alert" className="text-sm text-danger">{addError}</p>}
+              <div className="flex gap-2">
+                <button type="button" disabled={pending} onClick={addDonor} className="min-h-11 rounded bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary-hover disabled:opacity-60">{f.supporterAddSave}</button>
+                <button type="button" onClick={() => { setAdding(false); setAddError(null); }} className="min-h-11 rounded border border-border px-4 text-sm text-foreground hover:bg-surface-hover">{f.supporterAddCancel}</button>
+              </div>
+            </div>
+          )}
+        </div>
         {contacts.length > 0 && (
           <div className="flex flex-col gap-1">
             <label htmlFor="dn-contact" className={labelClass}>{f.contact}</label>

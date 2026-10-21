@@ -5,6 +5,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { todayIso } from "@/lib/format";
 import { requirePermission } from "@/lib/permissions/require";
 import { loadRaised, loadStaffAppeals } from "@/lib/appeals/staff";
+import { SUPPORTER_COLUMNS, type SupporterRow } from "@/lib/donations/supporters";
 import { DonationForm, type AppealOption, type DonorContact } from "./DonationForm";
 
 /**
@@ -20,7 +21,7 @@ export default async function NewDonationPage(props: PageProps<"/management/dona
   const d = t.donations;
 
   const supabase = await createClient();
-  const [contacts, residents] = await Promise.all([
+  const [contacts, supporters, residents] = await Promise.all([
     // Contacts this login cannot read come back empty, and the picker simply hides.
     supabase
       .from("contacts")
@@ -28,6 +29,7 @@ export default async function NewDonationPage(props: PageProps<"/management/dona
       .is("archived_at", null)
       .order("name")
       .returns<DonorContact[]>(),
+    supabase.from("supporters").select(SUPPORTER_COLUMNS).is("archived_at", null).order("name").returns<SupporterRow[]>(),
     // Status lives in the view, not on residents (0001). Residents who have died
     // stay in the list: a gift in memory of one is recordable, and the row shows
     // the status so nobody picks one by accident (Lutan, 2026-10-10).
@@ -42,6 +44,7 @@ export default async function NewDonationPage(props: PageProps<"/management/dona
   // this picker reading a column residents does not have.
   if (contacts.error) console.error("donation form: contact list failed", contacts.error);
   if (residents.error) console.error("donation form: resident list failed", residents.error);
+  if (supporters.error) console.error("donation form: donor list failed", supporters.error);
   // Appeals still taking gifts. A login without appeal.run reads none (RLS), and the form says so. A failed read
   // must not look like "no appeals", so it is logged and the form gets an empty list with the same sentence.
   let appealOptions: AppealOption[] = [];
@@ -70,7 +73,7 @@ export default async function NewDonationPage(props: PageProps<"/management/dona
         <h1 className="text-2xl font-semibold text-foreground">{d.form.newTitle}</h1>
         <p className="text-sm text-muted">{d.form.newSubtitle}</p>
       </div>
-      <DonationForm contacts={contacts.data ?? []} residents={residentOptions} residentsFailed={!!residents.error} today={todayIso()} appeals={appealOptions} presetAppealId={presetAppealId} />
+      <DonationForm contacts={contacts.data ?? []} supporters={supporters.data ?? []} residents={residentOptions} residentsFailed={!!residents.error} today={todayIso()} appeals={appealOptions} presetAppealId={presetAppealId} />
     </main>
   );
 }

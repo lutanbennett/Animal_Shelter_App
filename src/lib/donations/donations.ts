@@ -22,6 +22,8 @@ export type DonationFields = {
   receivedOn: string;
   donorName: string;
   contactId: string;
+  /** A donor from the supporters list (0244). A gift names a contact or a supporter, never both. */
+  supporterId: string;
   donorEmail: string;
   donorPhone: string;
   donorLine: string;
@@ -42,6 +44,7 @@ export type DonationRow = {
   received_on: string;
   donor_name: string;
   contact_id: string | null;
+  supporter_id: string | null;
   donor_email: string | null;
   donor_phone: string | null;
   donor_line: string | null;
@@ -75,6 +78,7 @@ export type DonationReceiptRow = {
 /** Why a form is refused; the form maps each to words from the dictionary. */
 export type DonationProblem =
   | "donorName"
+  | "donorBoth"
   | "receivedOn"
   | "futureDate"
   | "method"
@@ -93,6 +97,7 @@ export type CleanDonation = {
   received_on: string;
   donor_name: string;
   contact_id: string | null;
+  supporter_id: string | null;
   donor_email: string | null;
   donor_phone: string | null;
   donor_line: string | null;
@@ -180,12 +185,16 @@ export function checkDonation(
   }
 
   const contactId = trimmed(f.contactId);
+  const supporterId = trimmed(f.supporterId);
+  // A gift from a contact is not also a gift from a supporter: one record names the donor.
+  if (contactId && supporterId) return { ok: false, problem: "donorBoth" };
   return {
     ok: true,
     donation: {
       received_on: f.receivedOn,
       donor_name: donorName,
       contact_id: contactId && UUID.test(contactId) ? contactId : null,
+      supporter_id: supporterId && UUID.test(supporterId) ? supporterId : null,
       donor_email: email,
       donor_phone: trimmed(f.donorPhone),
       donor_line: trimmed(f.donorLine),
