@@ -81,6 +81,7 @@ export const unreleased: ReleaseNote[] = [
   "Clinic visits: cancelled visits are no longer counted in a resident's visit total, and now sit in their own folded Cancelled section at the bottom of the Clinic visits page, with the reason if one was given. The archive PDF lists them under Cancelled visits too.",
   "Settings → Who does what: the separate Home screen panel is gone. A role's home screen is now set only by its cards: add, remove or reorder a card on the board and that role's home changes with it. To put a page on a role's home, give the role the card for that page.",
   "Settings → Who does what: Admin can now put a role's cards into groups, such as Operations or Management. A group is one tile on that role's home that opens a page of the cards inside it, so a crowded phone home becomes a few doorways. Drag a card into a group, or use the Where it shows list beside it on a phone. Nothing changes on anyone's home until a card is put in a group, and a group never gives anyone more than their cards already do.",
+  "Assistant: type \"Panda came back from foster\" (or \"back from Khun Noi\") to bring a fostered or adopted resident back into the shelter. The card asks which enclosure they come back to, and only a carer already on the list is recognised; nobody new is added. The Asking the assistant page of the manual now also explains the vaccination sentences.",
 ];
 
 /** Newest first. */
