@@ -215,6 +215,15 @@ for small amendments prefer a node `replace()` over rewriting the file, with a
 guard that exits non-zero when the anchor string is missing. **A heredoc in a chained Bash command is not a third option: backticks and apostrophes in this
 prose break the shell parse** — that failed on 2026-10-21.
 
+**THIS SKILL FILE IS CRLF AND `docs/planner-handover.md` IS LF. Normalise before matching.**
+Added 2026-10-21 **because it recurred.** Edition `267` hit it, fixed it, and recorded it — in its own
+**test plan's defect table**, where no future session reads it. Forty minutes later the next edition
+hit the identical wall: every multi-line anchor against this file failed, with no useful error, because
+the anchors were written with `\n`. **Read, `split('\r\n').join('\n')`, edit, then write back with
+`\r\n` if it was CRLF.** And the general rule this proves: **a trap worth not repeating goes in this
+skill or `CLAUDE.md`, never only in a test plan or a handover** — the defect table is a record of what
+happened, not a place anyone looks before acting.
+
 **AND `node -e` IS NOT A FOURTH OPTION WHERE THE TEXT HOLDS A WINDOWS PATH.** Added 2026-10-21.
 A single-quoted `node -e` script containing `C:\\Development` reached node as `C:\Development`, where
 JS read `\D` as an escape and the anchor silently became `C:Development` — the replacement then failed
