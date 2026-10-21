@@ -147,6 +147,12 @@ const en = {
     coveringUntil: (date: string) => `Covering until ${date}`,
     pageTitle: "Home",
     subtitle: "Tap a job to start it.",
+    /** A group's own page (role_groups, 0241): the cards behind a doorway tile on the home. */
+    group: {
+      back: "Back to home",
+      emptyTitle: "Nothing in this group yet",
+      empty: "Nothing in this group opens for this role. Admin puts cards in a group on Who does what.",
+    },
     /** The heading over Admin's switch. */
     switchLabel: "Open the home screen for",
     /** Settings is Admin's own home, listed first in the switch. */
@@ -743,6 +749,25 @@ const en = {
         noPermissions: "its permissions",
         alreadyHas: "That tile is already on this home screen.",
         lastTile: "A role needs at least one tile. Add another before removing the last.",
+      },
+      /** Groups on a role's home (role_groups, 0241): a doorway tile that opens a page of the cards inside it. */
+      groups: {
+        onHome: "On the home screen",
+        intro: "A group is one tile on the home that opens a page of the cards inside it. It only changes where a card shows; it gives nothing.",
+        empty: "No cards in this group yet. A group with no cards does not show on the home.",
+        addHeading: "Add a group",
+        name: "Name (English)",
+        nameTh: "Name (Thai)",
+        icon: "Icon",
+        iconNames: { operations: "Clipboard", management: "Briefcase", folder: "Folder", animals: "Paw", medical: "Heart", people: "People", repairs: "Spanner", shelter: "House" },
+        add: "Add group",
+        removeFor: (g: string) => `Remove the group ${g} (its cards go back on the home)`,
+        moveUpFor: (g: string) => `Move the group ${g} up`,
+        moveDownFor: (g: string) => `Move the group ${g} down`,
+        placeFor: (card: string) => `Where ${card} shows`,
+        namesNeeded: "Give the group a name in both English and Thai.",
+        nameTaken: "This role already has a group with that name.",
+        notHeld: "This role does not have that card.",
       },
       cardsView: {
         subtitle:

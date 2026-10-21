@@ -45,7 +45,7 @@ export default async function RoleHomePage(props: PageProps<"/home/[role]">) {
   if (!perms || !listed) notFound();
 
   const name = (locale === "th" && listed.nameTh) || listed.name;
-  const tiles = homeTilesFor(perms, t, await countBillsWaiting(supabase, perms), await loadRoleCards(roleKey), {
+  const tiles = homeTilesFor(perms, t, await countBillsWaiting(supabase, perms), await loadRoleCards(roleKey, locale), {
     photosWaiting: await countPhotosWaiting(supabase, perms),
   });
 
