@@ -113,6 +113,12 @@ two or three at once; more than that and merging becomes the bottleneck.
    forbids them and points here instead, so this is the mechanism we
    have, and it needs the belt-and-braces above.
 
+   **Never write scratch output above the repo.** Worktrees are siblings under
+   `C:\Development\`, so `> ../gates-x.out` or `| tee ../clean.log` lands loose in
+   that folder, outside every repo, where nothing cleans it. On 2026-10-21 four
+   such files (`clean.log`, `gates-*.out`/`.txt`, 18–20 Oct) were found there. Send
+   logs to your scratchpad directory; nothing in the repo writes to `..`.
+
    **Do not hand the bulk of a task to a long background agent.** Work
    in short foreground batches instead. A foreground command that fails
    gives you an error; a background agent that dies gives you silence,
