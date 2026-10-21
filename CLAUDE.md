@@ -118,6 +118,13 @@ two or three at once; more than that and merging becomes the bottleneck.
    that folder, outside every repo, where nothing cleans it. On 2026-10-21 four
    such files (`clean.log`, `gates-*.out`/`.txt`, 18–20 Oct) were found there. Send
    logs to your scratchpad directory; nothing in the repo writes to `..`.
+   Where things *do* go: **Claude's working files** in the session scratchpad;
+   **files a person will open or forward** on Lutan's Desktop (`OneDriveDesktop`);
+   **files to keep with the project but never commit** (local notes, one-off reports,
+   data exports) in the gitignored `.local/` folder of the main checkout. The repo
+   is public, so anything holding production or personal data says so in its file
+   name. Nothing is ever written to `C:Development` itself, which holds only
+   checkouts.
 
    **Do not hand the bulk of a task to a long background agent.** Work
    in short foreground batches instead. A foreground command that fails
