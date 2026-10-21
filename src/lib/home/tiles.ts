@@ -90,12 +90,6 @@ const OUTSIDE_REGISTRY: Record<string, { icon: LucideIcon; open: (p: Permissions
   "/assistant": { icon: Sparkles, open: (p) => can(p, "assistant.ask") },
 };
 
-/** The pages a saved tile may name that are not in the route registry, with the word the home shows for each. */
-export const OUTSIDE_PATHS = Object.keys(OUTSIDE_REGISTRY);
-export function outsideLabel(path: string, t: Dictionary): string {
-  return path === "/residents" ? t.nav.residents : path === "/bills" ? t.bills.tile.title : t.appHome.cards.assistant;
-}
-
 /** Whether a role's tile for this card can be drawn: its page opens for the role AND its cells cover the bundle. */
 export function cardTile(key: CardKey, perms: Permissions, t: Dictionary, billsWaiting?: number): HomeTile | null {
   const card = CARDS[key];
@@ -131,31 +125,6 @@ export function cardTilesFor(held: readonly CardKey[], perms: Permissions, t: Di
 }
 
 /**
- * The home an Admin chose for a role (role_home_tiles, 0225): its pages in the order saved, one tile each. A tile is
- * only ever drawn for a page the role may open NOW (a removed cell hides the tile, it never grants anything), and a
- * page named twice is one tile. The word on a tile is the card's when a card the role covers opens that page (so the
- * 2IC's Stocktaking says Stocktaking, not the page title), else the page's own.
- */
-export function savedTilesFor(paths: readonly string[], perms: Permissions, t: Dictionary, billsWaiting?: number): HomeTile[] {
-  const seen = new Set<string>();
-  return paths.flatMap((path) => {
-    if (seen.has(path)) return [];
-    seen.add(path);
-    const outside = OUTSIDE_REGISTRY[path];
-    const route = routeFor(path);
-    const icon = outside?.icon ?? route?.icon;
-    const opens = outside ? outside.open(perms) : route ? canOpen(perms, route) : false;
-    if (!icon || !opens) return [];
-    const card = (Object.keys(CARDS) as CardKey[]).find(
-      (k) => cardOpens(CARDS[k], perms.scopes.clinical) === path && CARDS[k].bundle.every((b) => (b.level ? can(perms, b.activity, b.level) : can(perms, b.activity))),
-    );
-    const label = card ? CARDS[card].label(t) : outside ? outsideLabel(path, t) : route!.label(t);
-    const badge = path === "/bills" && billsWaiting ? { badge: t.bills.tile.waiting(billsWaiting) } : {};
-    return [{ href: path, label, icon, ...badge }];
-  });
-}
-
-/**
  * Photos to approve belongs to an activity, not to a role or a card: whoever may publish (the database's own test
  * for approving) gets the tile and the number waiting, whatever their home is built from. A count of undefined
  * means this login may not approve, so nothing is added.
@@ -179,8 +148,8 @@ function withCounts(drawn: HomeTile[], t: Dictionary, counts?: TileCounts): Home
   });
 }
 
-export function homeTilesFor(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[], counts?: TileCounts, saved?: readonly string[]): HomeTile[] {
-  return withCounts(homeTilesBase(perms, t, billsWaiting, cards, saved), t, counts);
+export function homeTilesFor(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[], counts?: TileCounts): HomeTile[] {
+  return withCounts(homeTilesBase(perms, t, billsWaiting, cards), t, counts);
 }
 
 /**
@@ -196,13 +165,12 @@ export function homeTilesForRoles(
   billsWaiting: number | undefined,
   cardsByRole: Readonly<Record<string, readonly CardKey[]>>,
   counts?: TileCounts,
-  savedByRole: Readonly<Record<string, readonly string[]>> = {},
 ): HomeTile[] {
   const seen = new Set<string>();
   const tiles: HomeTile[] = [];
   for (const key of perms.roles.length > 0 ? perms.roles : [perms.role.key]) {
     const asRole: Permissions = { ...perms, role: { ...perms.role, key } };
-    for (const tile of homeTilesBase(asRole, t, billsWaiting, cardsByRole[key], savedByRole[key])) {
+    for (const tile of homeTilesBase(asRole, t, billsWaiting, cardsByRole[key])) {
       if (seen.has(tile.href)) continue;
       seen.add(tile.href);
       tiles.push(tile);
@@ -228,12 +196,11 @@ export function homeGroupsForRoles(
   billsWaiting: number | undefined,
   cardsByRole: Readonly<Record<string, readonly CardKey[]>>,
   counts?: TileCounts,
-  savedByRole: Readonly<Record<string, readonly string[]>> = {},
 ): HomeGroup[] {
   const keys = perms.roles.length > 0 ? perms.roles : [perms.role.key];
   const raw = keys.map((key) => {
     const asRole: Permissions = { ...perms, role: { ...perms.role, key } };
-    return { roleKey: key, tiles: homeTilesBase(asRole, t, billsWaiting, cardsByRole[key], savedByRole[key]) };
+    return { roleKey: key, tiles: homeTilesBase(asRole, t, billsWaiting, cardsByRole[key]) };
   });
   const addPhotosRedundant = keys.length > 1 && raw.some((g) => g.tiles.some((x) => x.href === "/medical/photos"));
   return raw
@@ -241,9 +208,7 @@ export function homeGroupsForRoles(
     .filter((g, i) => i === 0 || g.tiles.length > 0);
 }
 
-function homeTilesBase(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[], saved?: readonly string[]): HomeTile[] {
-  // A role Admin has chosen tiles for shows those; a role with none keeps the home it is derived (0225).
-  if (saved && saved.length > 0) return savedTilesFor(saved, perms, t, billsWaiting);
+function homeTilesBase(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[]): HomeTile[] {
   if (cards && cards.length > 0) return cardTilesFor(cards, perms, t, billsWaiting);
 
   // A role that is given jobs (src/lib/permissions/jobs.ts) shows its jobs, one tile each, and

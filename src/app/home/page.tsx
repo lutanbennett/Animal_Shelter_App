@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { refuseFor } from "@/lib/auth/require-role";
 import { loadPermissions } from "@/lib/permissions/load";
 import { deviceFrom } from "@/lib/home/device";
-import { listHomeRoles, loadCardsByRole, loadHomeTilesByRole } from "@/lib/home/roles";
+import { listHomeRoles, loadCardsByRole } from "@/lib/home/roles";
 import { homeGroupsForRoles } from "@/lib/home/tiles";
 import { loadUrgentCounts } from "@/lib/my-tasks/urgent";
 import { countBillsWaiting } from "@/lib/bills/waiting";
@@ -54,7 +54,7 @@ export default async function HomePage() {
     my: urgent.total,
     maintenance: urgent.maintenance,
     photosWaiting: await countPhotosWaiting(supabase, perms),
-  }, await loadHomeTilesByRole(perms.roles));
+  });
 
   const tiles = groups.flatMap((g) => g.tiles);
   const held = groups.length > 1 ? await loadHeldRoles(user.id) : [];
