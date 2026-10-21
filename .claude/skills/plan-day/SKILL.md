@@ -759,7 +759,7 @@ context exists — offer to do it; (2) then start a fresh chat for the next
 `/plan-day`. Reset the counter to 0 with today's date once the handover is
 written. Why: `docs/decisions/2026-10-08-planner-handover-counter.md`.
 
-### THE HANDOVER IS A DELTA, AND IT HAS A CEILING
+### THE HANDOVER IS A DELTA, AND IT HAS A LENGTH TARGET
 
 **Lutan, 2026-10-20: *"can you just do a delta change to the handover? that's
 what the release handover does now"*, and *"this rule should only be for your
@@ -767,9 +767,37 @@ stream and the release stream — just for the handover documents."*** The relea
 side has had this since the same day (`docs/release-procedure.md`, "The paperwork
 has a time budget too", rule 4). This is the planner's half of it.
 
-**Aim for about 100 lines and treat 150 as the limit.** The edition of 2026-10-20
-ran to roughly 400, and by its own author's measurement the writing — not the
-worktree, not CI, not the merge — was the largest single cost of producing it.
+**Aim for about 100 lines. 150 IS A TARGET, NOT A HARD GATE — DECIDED 2026-10-21
+by Lutan: "let's make it a target not a hard gate".** The edition of 2026-10-20 ran
+to roughly 400, and by its own author's measurement the writing — not the worktree,
+not CI, not the merge — was the largest single cost of producing it. **That cost is
+what the number is for, and it is still real.** What changed is only what happens
+when an edition lands a little over.
+
+**Why he was asked, and why the answer is right.** Four editions running missed the
+figure on their first write — `258` claimed 147 at 151, `267` claimed 104 at 131,
+`276` claimed ~125 at 164, `285` claimed ~130 at 170 — and each then spent
+*several round-trips* trimming. `285` stopped at **152** and recorded the overshoot
+as an accepted defect rather than chase two more lines. **The binding constraint is
+the first draft's length, not the ceiling**, and trimming passes are the most
+expensive possible place to spend the budget the number exists to protect: a
+same-line-count substitution costs a round-trip and saves nothing.
+
+**So, in practice:**
+
+- **Write the content first and the stated figure last**, measured with `wc -l`.
+  Four editions stated a number they had not measured. That is the habit to fix.
+- **Under ~150: say nothing about length.** It is working.
+- **A little over — say up to about 160 — is FINE. Ship it.** Do not open a
+  trimming pass, do not record a defect, and do not apologise for it in the
+  document.
+- **Well over, say 200 or more, is a signal to CUT CONTENT, not to reword.** Ask
+  which sections are repeating the repo, repeating `.plan-day.md`, or re-explaining
+  a fact that should have been promoted into this skill. **Promotion is the real
+  lever on length; wordsmithing is not.**
+- **Never trade accuracy for the number.** A fact that belongs in the handover stays
+  in it. The three rules below, and the "never carried forward" block, outrank the
+  line count every time.
 
 Three rules, mirroring the release handover's shape:
 
