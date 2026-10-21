@@ -103,6 +103,14 @@ checks — they are **build-work on the backlog** wanting the same plumbing
 **Also open and his: the production calendar token**, next in his own stated order.
 **Do not ask whether the two-way calendar works.**
 
+**One of the eleven gaps paid out within the hour.** Lutan could not add a group on
+Who does what — the `tile-groups-app` plan's own `pending:` line, filed on the
+`backlog` branch with a diagnosis (an invisible error message, and the Thai name
+being required). **Not a migration fault.** Recorded as a correction inside the
+record. **Do not read it as the ship-with-gaps decision being wrong** — it is that
+decision costing exactly what it was understood to cost, and it is the strongest
+available argument for the diets item below.
+
 **Eleven real verification gaps** stay in their own plans with their own signatures;
 three more of the fourteen cannot be closed by anyone and should not inflate the
 count. **The one worth five minutes is the diets portion path** — the only item

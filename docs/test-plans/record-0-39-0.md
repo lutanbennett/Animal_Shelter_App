@@ -122,6 +122,17 @@ lesson is named once here and not recopied: nothing needed promoting into the ru
 
 - [x] **Rollback position stated, including what it does not cover.** For two markdown files the rollback is `git revert` of this PR, with no deploy and no database effect — nothing reads them at runtime. **What it does not cover, and this is the point:** reverting it would not un-ship `0.39.0`, which is live at `ca7e4dd2` on all four surfaces. It would only destroy the record of how that happened, which is strictly worse than leaving a flawed record in place and correcting it in the next edition — the practice the runbook already prescribes for a record overtaken by events
 
+## Addendum, 2026-10-21: the record was corrected after it merged
+
+This plan covers the correction commit as well as the original record, because the
+two are the same piece of paperwork and a second plan for two edited paragraphs
+would be the fault paperwork rule 3 exists to prevent.
+
+- [x] **Why it was corrected rather than left:** within the hour of the record merging, Lutan reported that he could not add a group on Who does what — the `tile-groups-app` plan's own `pending:` line, and one of the fourteen gaps shipped on his decision. The runbook requires a record that is overtaken to say so; a record reading as though nothing moved is worth less than one that corrects itself
+- [x] **The claim was checked, not relayed:** production holds `0241 role_groups` and every other file (`apply-migrations.mjs --status --env production`: `246 applied, 0 pending`), so a missing table is ruled out and the correction says so. The suspected cause (an error drawn at the top of the board, far from the Add group form, plus a required Thai name) is another session's diagnosis and is **labelled as suspected rather than confirmed**, because I did not drive it myself
+- [x] **What the correction deliberately does NOT claim:** that the release note is false (the feature and its schema shipped), or that the ship-with-gaps decision was wrong. It says the gap paid out where the plan said nobody had looked, which is the decision costing what it was understood to cost
+- [x] Same two files, same branch lineage, documents only — no gate, no deploy, no database effect
+
 ## Defects found
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
