@@ -1,6 +1,6 @@
 # Diets made of ingredients — design note
 
-Status: **proposal, for Lutan to answer in a line or two** (2026-10-21). Nothing is built.
+Status: **approved 2026-10-21 (#791); all three questions answered below.** Schema PR in progress.
 Next: a schema PR, then the app PR (backlog item *Diets made of ingredients*).
 
 ## The problem in one paragraph
