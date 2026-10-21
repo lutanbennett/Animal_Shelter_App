@@ -38,7 +38,8 @@ export type NewCardKey =
   | "add_photos"
   | "approve_photos"
   | "run_appeals"
-  | "meme_library";
+  | "meme_library"
+  | "my_tasks";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -185,6 +186,11 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
     bundle: [{ activity: "social.library", level: "edit" }],
     opens: "/memes",
   },
+  // Card twenty-six (2026-10-21, Lutan's ruling on menu-removal orphans 1 of 6): do the recurring tasks assigned to me, and
+  // nothing else. recurring.do_own is what /my reads and what record_recurring_job() enforces as own only; it gives no
+  // other person's tasks and no way to set tasks up. The tile is drawn for ANY role holding recurring.do_own, whichever card
+  // or extra gave it (tiles.ts, landingTiles), so the five roles that open /my have it today without a data change.
+  my_tasks: { includes: [], bundle: [{ activity: "recurring.do_own" }], opens: "/my" },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */
@@ -206,6 +212,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   approve_photos: (t) => t.appHome.cards.approvePhotos,
   run_appeals: (t) => t.appHome.cards.runAppeals,
   meme_library: (t) => t.appHome.cards.memeLibrary,
+  my_tasks: (t) => t.appHome.cards.myTasks,
 };
 
 export const CARDS: Record<CardKey, Card> = {

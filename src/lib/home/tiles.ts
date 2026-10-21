@@ -16,7 +16,7 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "@/lib/permissions/can";
 import { CARDS, cardOpens, includedCards, type CardKey } from "@/lib/permissions/cards";
 import { jobsOfRole } from "@/lib/permissions/jobs";
-import { canOpen, routeFor, routesFor, type RouteEntry } from "@/lib/permissions/routes";
+import { canOpen, opensAnyIn, routeFor, routesFor, type RouteEntry } from "@/lib/permissions/routes";
 
 /** Counts shown on tiles (what the left menu's badge showed): due today or overdue. */
 export type TileCounts = {
@@ -107,6 +107,7 @@ const OUTSIDE_REGISTRY: Record<string, { icon: LucideIcon; open: (p: Permissions
   "/residents": { icon: NAV_ICONS.residents, open: (p) => p.role.opensApp },
   "/bills": { icon: Receipt, open: canUseBills },
   "/assistant": { icon: Sparkles, open: (p) => can(p, "assistant.ask") },
+  "/my": { icon: NAV_ICONS.my, open: (p) => can(p, "recurring.do_own") },
 };
 
 /** Whether a role's tile for this card can be drawn: its page opens for the role AND its cells cover the bundle. */
@@ -239,9 +240,24 @@ export function homeGroupsForRoles(
     .filter((g, i) => i === 0 || g.tiles.length > 0);
 }
 
+/**
+ * The three pages the left menu used to be the only way into (Lutan, 2026-10-20, menu-removal orphans 1 of 6): My tasks
+ * for whoever holds recurring.do_own (the menu's own test), and the Operations and Management landings for whoever may
+ * open one page in them (opensAnyIn, the landing's own guard). Added after a card home's tiles, never twice: a role given
+ * the My tasks card draws it as a card. Fixed pages for now; whether they become Admin-built groups is a separate item.
+ */
+function landingTiles(drawn: HomeTile[], perms: Permissions, t: Dictionary): HomeTile[] {
+  const has = (href: string) => drawn.some((x) => x.href === href || x.inside?.some((y) => y.href === href));
+  const extra: HomeTile[] = [];
+  if (can(perms, "recurring.do_own") && !has("/my")) extra.push({ href: "/my", label: t.nav.my, icon: NAV_ICONS.my });
+  if (opensAnyIn(perms, "operations") && !has("/operations")) extra.push({ href: "/operations", label: t.nav.shelterOperations, icon: NAV_ICONS.shelterOperations });
+  if (opensAnyIn(perms, "management") && !has("/management")) extra.push({ href: "/management", label: t.nav.management, icon: NAV_ICONS.management });
+  return [...drawn, ...extra];
+}
+
 function homeTilesBase(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[] | RoleCards): HomeTile[] {
   const home = asRoleCards(cards);
-  if (home && home.cards.length > 0) return cardTilesFor(home.cards, perms, t, billsWaiting, home.groups);
+  if (home && home.cards.length > 0) return landingTiles(cardTilesFor(home.cards, perms, t, billsWaiting, home.groups), perms, t);
 
   // A role that is given jobs (src/lib/permissions/jobs.ts) shows its jobs, one tile each, and
   // nothing else: that is what "a home of named jobs" means. A job whose bundle the role's cells
