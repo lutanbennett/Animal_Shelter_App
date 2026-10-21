@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { preferredChannels, talkChannels } from "@/lib/site/channels";
 import { loadSiteContent, pairedText, socialLinks, visitingHoursLines, type SiteContent } from "@/lib/site/content";
+import { staffLoginHref } from "@/lib/site-hosts";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { FacebookIcon } from "@/components/FacebookIcon";
 import { InstagramIcon } from "@/components/InstagramIcon";
@@ -174,7 +175,7 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
           )}
           <div className="flex flex-wrap gap-x-4 pt-4 lg:mt-auto">
             <Link href="/privacy" className={smallLink}>{t.privacy.nav}</Link>
-            <Link href="/login" className={smallLink}>{f.staffLogin}</Link>
+            <a href={staffLoginHref()} className={smallLink}>{f.staffLogin}</a>
           </div>
         </div>
       </div>
