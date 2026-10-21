@@ -24,7 +24,7 @@ const FROM_NAME_RE =
   /(?<![a-z])from\s+(.+?)(?=\s+(?:today|yesterday|on|to|into|in|this|last)(?![a-z])|[.,!?]|$)/i;
 /** "foster with", "the adopter", ... said before the name, or instead of one. */
 const CARER_PREFIX_RE =
-  /^(?:(?:the|her|his|their)\s+)?(?:foster|fostering|adoption|adopter|carer)(?:\s+(?:home|care|family))?(?:\s+(?:with|at))?\s*/i;
+  /^(?:(?:the|her|his|their)\s+)?(?:fostering|foster|adoption|adopter|carer)(?:\s+(?:home|care|family))?(?:\s+(?:with|at))?\s*/i;
 /** A person said by title: "Khun Somchai", "Mrs Lee", "คุณสมชาย". */
 const TITLE_RE = /(?<![a-z])(khun|mr|mrs|ms|miss|p'|auntie|uncle)(?![a-z])|คุณ|พี่|ป้า|ลุง/i;
 
