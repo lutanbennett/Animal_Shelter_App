@@ -9,10 +9,11 @@ import { DIET_UNITS, type DietUnit } from "@/lib/i18n/enum-labels";
 import { loadPermissions } from "@/lib/permissions/load";
 import { canEditItemSettings } from "@/lib/permissions/item-settings";
 
-// Settings → Diets: the option-list half (name, unit, per-size daily
-// quantities, notes, the standard diet, add and delete). Cost, reorder lead,
-// safety stock and counts stay in /management/diets/actions.ts, which can no
-// longer change any of these.
+// Settings → Diets, the ingredient half (diet_types, 0239): name, unit, notes,
+// add and delete. The recipes that use them are in ./recipe-actions.ts. Cost,
+// reorder lead, safety stock and counts stay in /management/diets/actions.ts.
+// An ingredient's old per-size quantities and standard flag are no longer
+// read by anything; the columns stay until the cleanup migration.
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -24,9 +25,6 @@ export type DietDefinitionFields = {
   /** Empty: Thai readers see the English (0166). */
   nameTh: string;
   unit: string;
-  dailyQtySmall: string;
-  dailyQtyMedium: string;
-  dailyQtyLarge: string;
   notes: string;
 };
 
@@ -34,9 +32,6 @@ type DietDefinitionRow = {
   name: string;
   name_th: string | null;
   unit: DietUnit;
-  daily_qty_small: number;
-  daily_qty_medium: number;
-  daily_qty_large: number;
   notes: string | null;
 };
 
@@ -60,8 +55,7 @@ function revalidateDietPages() {
   revalidatePath("/management/diets");
   revalidatePath("/management/purchasing");
   revalidatePath("/management/cashflow");
-  // The diet form's picker, the intake form, the stocktake sheet, the
-  // delivery form and the hub's diet_types(name) embeds read this table too.
+  // The recipe editor, the stocktake sheet and the delivery form read this table too.
   revalidatePath("/diets/new");
   revalidatePath("/residents", "layout");
   revalidatePath("/stocktake");
@@ -78,9 +72,6 @@ function fieldsFromForm(formData: FormData): DietDefinitionFields {
     name: get("name"),
     nameTh: get("nameTh"),
     unit: get("unit"),
-    dailyQtySmall: get("dailyQtySmall"),
-    dailyQtyMedium: get("dailyQtyMedium"),
-    dailyQtyLarge: get("dailyQtyLarge"),
     notes: get("notes"),
   };
 }
@@ -96,27 +87,33 @@ function parseFields(
   const unit = optional(fields.unit);
   if (!isDietUnit(unit)) return { error: e.unitInvalid };
 
-  const quantities = [fields.dailyQtySmall, fields.dailyQtyMedium, fields.dailyQtyLarge].map(
-    (value) => Number(optional(value) ?? ""),
-  );
-  if (quantities.some((q) => !Number.isFinite(q) || q <= 0)) {
-    return { error: e.quantitiesInvalid };
-  }
-
   return {
     row: {
       name,
       name_th: optional(fields.nameTh),
       unit,
-      daily_qty_small: quantities[0],
-      daily_qty_medium: quantities[1],
-      daily_qty_large: quantities[2],
       notes: optional(fields.notes),
     },
   };
 }
 
-/** A new diet costs 0 (the column's default) until Management → Diet stock prices it. */
+/**
+ * The 0239 bridge gives every new ingredient a same-named one-ingredient diet
+ * for the old app. Nothing needs that now, and it would put "Chicken" in every
+ * diet picker, so undo it: remove this ingredient's line from that diet and the
+ * diet itself when it is left empty and no resident is on it. Goes with the
+ * bridge in the cleanup migration.
+ */
+async function dropBridgeRecipe(supabase: Awaited<ReturnType<typeof createClient>>, ingredientId: string, name: string) {
+  const { data: diet } = await supabase.from("diets").select("id").eq("name", name).maybeSingle<{ id: string }>();
+  if (!diet) return;
+  await supabase.from("diet_ingredients").delete().eq("diet_id", diet.id).eq("diet_type_id", ingredientId);
+  const lines = await supabase.from("diet_ingredients").select("diet_type_id", { count: "exact", head: true }).eq("diet_id", diet.id);
+  const residents = await supabase.from("resident_diets").select("id", { count: "exact", head: true }).eq("diet_id", diet.id);
+  if ((lines.count ?? 1) === 0 && (residents.count ?? 1) === 0) await supabase.from("diets").delete().eq("id", diet.id);
+}
+
+/** A new ingredient costs 0 (the column's default) until Management → Diet stock prices it. */
 export async function createDietType(
   _state: DietTypeFormState,
   formData: FormData,
@@ -129,8 +126,14 @@ export async function createDietType(
     if (parsed.error !== undefined) return refuse(parsed.error);
 
     const supabase = await createClient();
-    const { error } = await supabase.from("diet_types").insert(parsed.row);
+    // daily_qty_* are NOT NULL and unread now (a recipe holds the amounts); 1 satisfies the check.
+    const { data: created, error } = await supabase
+      .from("diet_types")
+      .insert({ ...parsed.row, daily_qty_small: 1, daily_qty_medium: 1, daily_qty_large: 1 })
+      .select("id")
+      .single<{ id: string }>();
     if (error) return refuse(error.message);
+    await dropBridgeRecipe(supabase, created.id, parsed.row.name);
 
     revalidateDietPages();
     return { ok: true, success: t.management.diets.createdDiet(parsed.row.name) };
@@ -158,36 +161,18 @@ export async function updateDietDefinition(id: string, fields: DietDefinitionFie
   });
 }
 
-/**
- * Makes this diet type the standard. set_standard_diet (0090) clears the
- * old row and sets the new one in one transaction — the partial unique
- * index is checked row by row, so it has to be two statements in that
- * order, and supabase-js can't wrap two updates in a transaction.
- */
-export async function setStandardDietType(id: string): Promise<ActionResult> {
-  const { t } = await getT();
-  return runAction("diets.setStandardDietType", t.common.somethingWentWrong, async () => {
-    const refused = await refusal();
-    if (refused) return refused;
-    const supabase = await createClient();
-    const { error } = await supabase.rpc("set_standard_diet", { p_diet_type_id: id });
-    if (error) return refuse(error.message);
-    revalidateDietPages();
-    // Special-diet markers on the enclosure cards read the flag.
-    revalidatePath("/enclosures", "layout");
-    return { ok: true };
-  });
-}
-
 export async function deleteDietType(id: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("diets.deleteDietType", t.common.somethingWentWrong, async () => {
     const refused = await refusal();
     if (refused) return refused;
-    // resident_diets.diet_type_id has no cascade: a diet that has ever been
-    // recorded is part of a resident's history. Say so instead of surfacing
-    // the foreign-key error.
+    // An ingredient in a diet, or one a resident's old record still names, is
+    // part of what was fed and bought. Say so instead of surfacing the
+    // foreign-key error.
     const supabase = await createClient();
+    const inDiets = await supabase.from("diet_ingredients").select("diet_id", { count: "exact", head: true }).eq("diet_type_id", id);
+    if (inDiets.error) return refuse(inDiets.error.message);
+    if ((inDiets.count ?? 0) > 0) return refuse(t.management.diets.errors.inRecipes(inDiets.count ?? 0));
     const { count, error: countError } = await supabase
       .from("resident_diets")
       .select("id", { count: "exact", head: true })

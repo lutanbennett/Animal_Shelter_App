@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Diets are now recipes. Under Settings → Diets an admin can list the ingredients in a diet, with how much of each goes into one day's serve for a small, medium and large animal, measured in cups or any unit set up for that ingredient. Purchasing, the food forecast, Cashflow and stock usage then work from each ingredient (kibble, chicken, rice) instead of treating the whole diet as one product. A resident's diet form now has a Portion multiplier (0.75 for three-quarters) in place of a daily amount. Until a diet is given more than one ingredient, it behaves exactly as before.",
   "Assistant: you can now record a vaccination by typing it, for example \"Panda had rabies today\" or \"vaccinate Panda\". The assistant shows a card with the resident, the vaccines (tick more than one) and the date; press Confirm and it is saved the same way as on the Immunizations page.",
   "Clinic visits: cancelled visits are no longer counted in a resident's visit total, and now sit in their own folded Cancelled section at the bottom of the Clinic visits page, with the reason if one was given. The archive PDF lists them under Cancelled visits too.",
 ];

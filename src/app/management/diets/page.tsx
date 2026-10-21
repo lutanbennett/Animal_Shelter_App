@@ -100,7 +100,7 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
     supabase
       .from("diet_types")
       .select(
-        "id, name, name_th, unit, is_standard, cost_per_unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock, sort_order",
+        "id, name, name_th, unit, cost_per_unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock, sort_order",
       )
       // The cupboard order (0161), as the stocktake sheet walks it; name breaks a tie.
       .order("sort_order", { nullsFirst: false })
@@ -154,7 +154,7 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
     return {
       id: type.id,
       name: localLabel(locale, type.name, type.name_th),
-      is_standard: type.is_standard,
+      is_standard: false,
       unit: type.unit,
       cost_per_unit: Number(type.cost_per_unit),
       shownCost: price.value ?? 0,

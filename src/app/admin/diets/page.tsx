@@ -10,17 +10,14 @@ import { canEditItemSettings } from "@/lib/permissions/item-settings";
 import { requirePermission } from "@/lib/permissions/require";
 import { CreateDietTypeForm } from "./CreateDietTypeForm";
 import { DietTypesTable, type DietDefinitionRow } from "./DietTypesTable";
+import { RecipesPanel, type RecipeIngredient, type RecipeRow } from "./RecipesPanel";
 
-type DietTypeQueryRow = Omit<DietDefinitionRow, "diet_count" | "daily_qty_small" | "daily_qty_medium" | "daily_qty_large"> & {
-  daily_qty_small: number | string;
-  daily_qty_medium: number | string;
-  daily_qty_large: number | string;
-};
+type DietTypeQueryRow = Omit<DietDefinitionRow, "recipe_count" | "record_count">;
 
 /**
- * Settings → Diets: the food list as the diet form's picker offers it — name,
- * unit, the daily quantity for each size, notes, the standard diet and the
- * units each is bought and counted in. Split from Management on 2026-10-08
+ * Settings → Diets: the diets (recipes of ingredients, 0239) and the
+ * ingredients they are made of — name, unit, notes and the units each is
+ * bought and counted in. Split from Management on 2026-10-08
  * (docs/decisions/2026-10-07-management-settings-split.md); the stock half,
  * with cost, counts and the food forecast, is /management/diets.
  *
@@ -32,28 +29,72 @@ export default async function DietSettingsPage() {
   if (!canEditItemSettings(perms, "diet")) refuseFor(perms);
   const { t } = await getT();
 
-  const [typesResult, dietsResult, conversions] = await Promise.all([
+  const [typesResult, recipesResult, linesResult, residentDietsResult, conversions] = await Promise.all([
     supabase
       .from("diet_types")
-      .select("id, name, name_th, unit, daily_qty_small, daily_qty_medium, daily_qty_large, notes, is_standard")
+      .select("id, name, name_th, unit, notes")
       .order("name")
       .returns<DietTypeQueryRow[]>(),
+    supabase
+      .from("diets")
+      .select("id, name, name_th, notes, is_standard")
+      .order("name")
+      .returns<{ id: string; name: string; name_th: string | null; notes: string | null; is_standard: boolean }[]>(),
+    supabase
+      .from("diet_ingredients")
+      .select("diet_id, diet_type_id, serving_unit, qty_small, qty_medium, qty_large")
+      .returns<
+        {
+          diet_id: string;
+          diet_type_id: string;
+          serving_unit: string | null;
+          qty_small: number | string;
+          qty_medium: number | string;
+          qty_large: number | string;
+        }[]
+      >(),
     // One row per resident diet is cheap at shelter scale and gives the
     // reference counts that gate the delete buttons.
-    supabase.from("resident_diets").select("diet_type_id").returns<{ diet_type_id: string }[]>(),
+    supabase
+      .from("resident_diets")
+      .select("diet_id, diet_type_id")
+      .returns<{ diet_id: string; diet_type_id: string | null }[]>(),
     loadConversions(supabase, "diet"),
   ]);
 
-  const counts = new Map<string, number>();
-  for (const row of dietsResult.data ?? []) {
-    counts.set(row.diet_type_id, (counts.get(row.diet_type_id) ?? 0) + 1);
+  const recordsByDiet = new Map<string, number>();
+  const recordsByType = new Map<string, number>();
+  for (const row of residentDietsResult.data ?? []) {
+    recordsByDiet.set(row.diet_id, (recordsByDiet.get(row.diet_id) ?? 0) + 1);
+    if (row.diet_type_id) recordsByType.set(row.diet_type_id, (recordsByType.get(row.diet_type_id) ?? 0) + 1);
+  }
+  const recipeCounts = new Map<string, number>();
+  for (const line of linesResult.data ?? []) {
+    recipeCounts.set(line.diet_type_id, (recipeCounts.get(line.diet_type_id) ?? 0) + 1);
   }
   const dietTypes: DietDefinitionRow[] = (typesResult.data ?? []).map((type) => ({
     ...type,
-    daily_qty_small: Number(type.daily_qty_small),
-    daily_qty_medium: Number(type.daily_qty_medium),
-    daily_qty_large: Number(type.daily_qty_large),
-    diet_count: counts.get(type.id) ?? 0,
+    recipe_count: recipeCounts.get(type.id) ?? 0,
+    record_count: recordsByType.get(type.id) ?? 0,
+  }));
+  const ingredients: RecipeIngredient[] = dietTypes.map((type) => ({
+    id: type.id,
+    name: type.name,
+    unit: type.unit,
+    servingUnits: (conversions.data[type.id] ?? []).map((c) => c.unit),
+  }));
+  const recipes: RecipeRow[] = (recipesResult.data ?? []).map((recipe) => ({
+    ...recipe,
+    resident_count: recordsByDiet.get(recipe.id) ?? 0,
+    lines: (linesResult.data ?? [])
+      .filter((line) => line.diet_id === recipe.id)
+      .map((line) => ({
+        ingredientId: line.diet_type_id,
+        servingUnit: line.serving_unit,
+        small: Number(line.qty_small),
+        medium: Number(line.qty_medium),
+        large: Number(line.qty_large),
+      })),
   }));
 
   const m = t.management.diets;
@@ -79,18 +120,17 @@ export default async function DietSettingsPage() {
             {m.couldntLoad}: {typesResult.error.message}
           </p>
         )}
-        {dietsResult.error && (
+        {(recipesResult.error ?? linesResult.error ?? residentDietsResult.error) && (
           <p className="text-sm text-danger">
-            {m.couldntLoadUsage}: {dietsResult.error.message}
+            {m.couldntLoadUsage}: {(recipesResult.error ?? linesResult.error ?? residentDietsResult.error)?.message}
           </p>
         )}
 
+        <RecipesPanel recipes={recipes} ingredients={ingredients} />
+
         <section className="flex flex-col gap-4">
-          {typesResult.data && !dietTypes.some((type) => type.is_standard) && (
-            <p className="rounded border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-foreground">
-              {m.standard.none}
-            </p>
-          )}
+          <h2 className="text-lg font-semibold text-foreground">{s.ingredientsTitle}</h2>
+          <p className="text-sm text-muted">{s.ingredientsHint}</p>
           <CreateDietTypeForm />
           <DietTypesTable dietTypes={dietTypes} />
         </section>

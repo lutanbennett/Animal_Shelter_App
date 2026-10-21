@@ -1,5 +1,6 @@
 import "server-only";
-import { defaultDailyQuantity, formatQuantity } from "@/lib/diets/options";
+import { formatQuantity } from "@/lib/diets/options";
+import { lineAmount, loadDietOptions } from "@/lib/diets/recipes";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { dateToYymm, dateToYyyymmdd } from "@/lib/google/drive-client";
 import {
@@ -282,15 +283,9 @@ type DietRow = {
   start_date: string;
   end_date: string | null;
   meals_per_day: number;
-  daily_quantity: number | null;
+  diet_id: string;
+  portion_factor: number | null;
   notes: string | null;
-  diet_types: {
-    name: string;
-    unit: string;
-    daily_qty_small: number;
-    daily_qty_medium: number;
-    daily_qty_large: number;
-  } | null;
 };
 
 type PrescriptionRow = {
@@ -411,7 +406,7 @@ export async function loadResidentArchiveRecord(
     supabase
       .from("resident_diets")
       .select(
-        "id, start_date, end_date, meals_per_day, daily_quantity, notes, diet_types:picker_diet_types(name, unit, daily_qty_small, daily_qty_medium, daily_qty_large)",
+        "id, diet_id, start_date, end_date, meals_per_day, portion_factor, notes",
       )
       .eq("resident_id", residentId)
       .order("start_date", { ascending: false })
@@ -464,6 +459,7 @@ export async function loadResidentArchiveRecord(
   if (!residentRow) throw new Error("Resident not found.");
 
   const placementRows = placementsResult.data ?? [];
+  const recipes = new Map(((await loadDietOptions(supabase, "en")).data ?? []).map((d) => [d.id, d]));
   const bloodTestRows = bloodTestsResult.data ?? [];
   const procedureRows = proceduresResult.data ?? [];
 
@@ -558,15 +554,17 @@ export async function loadResidentArchiveRecord(
       notes: row.notes,
     })),
     diets: (dietsResult.data ?? []).map((row) => {
-      const type = row.diet_types;
-      const quantity =
-        row.daily_quantity ?? (type ? defaultDailyQuantity(type, residentRow.size) : null);
+      const diet = recipes.get(row.diet_id);
+      const factor = row.portion_factor ?? 1;
+      // What goes in the bowl for this resident's size, one line per ingredient.
+      const bowl = diet?.lines
+        .map((line) => `${formatQuantity(lineAmount(line, residentRow.size) * factor)} ${line.servingUnit ?? line.unit} ${line.ingredient}`)
+        .join(", ");
       return {
         id: row.id,
-        dietTypeName: type?.name ?? null,
+        dietTypeName: diet?.name ?? null,
         mealsPerDay: row.meals_per_day,
-        dailyQuantity:
-          quantity != null ? `${formatQuantity(quantity)} ${type?.unit ?? ""} a day`.trim() : null,
+        dailyQuantity: bowl ? `${bowl} a day` : null,
         startDate: row.start_date,
         endDate: row.end_date,
         notes: row.notes,

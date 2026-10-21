@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { loadDietTypeOptions } from "@/lib/diets/options";
+import { loadDietOptions } from "@/lib/diets/recipes";
 import { DietForm, type DietInitial } from "../../DietForm";
 import { loadDietResident } from "../../resident";
 
@@ -17,7 +17,7 @@ export default async function EditDietPage(props: PageProps<"/diets/[id]/edit">)
 
   const { data: rows, error } = await supabase
     .from("resident_diets")
-    .select("id, resident_id, diet_type_id, start_date, end_date, meals_per_day, daily_quantity, notes")
+    .select("id, resident_id, diet_id, start_date, end_date, meals_per_day, portion_factor, notes")
     .eq("id", id)
     .limit(1)
     .returns<(DietInitial & { resident_id: string })[]>();
@@ -27,7 +27,7 @@ export default async function EditDietPage(props: PageProps<"/diets/[id]/edit">)
 
   const [resident, dietTypes] = await Promise.all([
     loadDietResident(supabase, diet.resident_id),
-    loadDietTypeOptions(supabase, locale),
+    loadDietOptions(supabase, locale),
   ]);
   if (!resident) notFound();
 
@@ -66,7 +66,7 @@ export default async function EditDietPage(props: PageProps<"/diets/[id]/edit">)
         residentId={diet.resident_id}
         residentDisplayName={resident.displayName}
         residentSize={resident.size}
-        dietTypes={dietTypes.data ?? []}
+        diets={dietTypes.data ?? []}
         initial={diet}
         cancelHref={tabHref}
       />

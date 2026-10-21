@@ -1,9 +1,7 @@
 /** More meals than this in a day is almost certainly a slipped finger. */
 export const MAX_PLAUSIBLE_MEALS = 8;
-/** A daily amount above this many times the type's biggest default is flagged. */
-export const MAX_QUANTITY_RATIO = 3;
-
-type Defaults = { daily_qty_small: number; daily_qty_medium: number; daily_qty_large: number };
+/** A portion factor above this is flagged: three times the recipe is a typo far more often than a dog. */
+export const MAX_PORTION_FACTOR = 3;
 
 /**
  * Why a diet looks like a typo, or null when it looks ordinary. A warning the
@@ -12,13 +10,9 @@ type Defaults = { daily_qty_small: number; daily_qty_medium: number; daily_qty_l
  */
 export function implausibleDiet(d: {
   mealsPerDay: number;
-  dailyQuantity: number | null;
-  type: Defaults;
+  portionFactor: number | null;
 }): "meals" | "quantity" | null {
   if (d.mealsPerDay > MAX_PLAUSIBLE_MEALS) return "meals";
-  if (d.dailyQuantity != null) {
-    const biggest = Math.max(Number(d.type.daily_qty_small), Number(d.type.daily_qty_medium), Number(d.type.daily_qty_large));
-    if (biggest > 0 && d.dailyQuantity > biggest * MAX_QUANTITY_RATIO) return "quantity";
-  }
+  if (d.portionFactor != null && d.portionFactor > MAX_PORTION_FACTOR) return "quantity";
   return null;
 }

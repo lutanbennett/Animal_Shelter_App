@@ -89,7 +89,7 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
       .returns<ItemQueryRow[]>(),
     supabase
       .from("stock_diet_types")
-      .select("id, name, name_th, unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock, is_standard")
+      .select("id, name, name_th, unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock")
       .order("name")
       .returns<ItemQueryRow[]>(),
     // Archived too: an old delivery still names its supplier.
@@ -191,7 +191,7 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
         others,
         kind,
         unitLabel: kind === "medication" ? doseUnitLabel(t, r.unit) : dietUnitLabel(t, r.unit),
-        isStandard: r.is_standard ?? false,
+        isStandard: false,
         pack: purchase ? { unit: localLabel(locale, purchase.unit, purchase.unitTh), basePer: purchase.basePer } : null,
         supplierId: suppliers.get(r.id) ?? null,
         leadDays: r.reorder_lead_days,
