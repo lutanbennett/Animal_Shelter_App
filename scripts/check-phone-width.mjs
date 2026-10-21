@@ -172,6 +172,8 @@ const PAGES = [
   "/management/cashflow/fixed-outgoings",
   "/management/donations",
   "/management/donations/new",
+  "/management/donations/donors",
+  "/management/donations/donors/new",
   "/management/medication-list",
   "/management/recurring-jobs",
   "/management/shelter-friends",

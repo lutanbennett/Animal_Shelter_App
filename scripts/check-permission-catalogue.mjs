@@ -244,6 +244,9 @@ const PINNED = {
   "/projects/[id]": { guards: ['requirePermission("projects.folders", "read")'], decides: ["projects.folders", "projects.publish", "translations.manage"] },
   // A donation's own page is the receipt: issuing it is the yes/no activity, and nothing else.
   "/management/donations/[id]": { guards: ['requirePermission("donation.receipt")'], decides: [] },
+  "/management/donations/donors": { guards: ['requirePermission("donation.receipt")'], decides: [] },
+  "/management/donations/donors/new": { guards: ['requirePermission("donation.receipt")'], decides: [] },
+  "/management/donations/donors/[id]": { guards: ['requirePermission("donation.receipt")'], decides: [] },
   // Sponsorship drives (0210). The gifts on an appeal's page are read only by a login that may also read donations.
   "/management/desexing-drives/new": { guards: ['requirePermission("website.content")'], decides: [] },
   "/management/desexing-drives/[id]": { guards: ['requirePermission("website.content")'], decides: [] },
