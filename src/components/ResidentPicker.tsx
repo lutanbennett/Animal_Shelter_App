@@ -7,12 +7,17 @@ import { statusLabel } from "@/lib/i18n/enum-labels";
 import { ActionButton } from "@/components/ActionButton";
 import { RowActionButton } from "@/components/RowAction";
 import { ACTION_ICONS } from "@/components/hub-icons";
+import { ScanCardButton } from "@/app/medical/ScanCardButton";
+import type { ScanCardStrings } from "@/app/medical/scan-card-strings";
+import { residentCodeFrom } from "@/lib/tags/links";
 
 export type ResidentOption = {
   id: string;
   name: string;
   thai_name: string | null;
   current_status: string | null;
+  /** R-code; lets the search and Scan card find the resident from a name card. */
+  code?: string | null;
 };
 
 function residentLabel(r: ResidentOption) {
@@ -36,12 +41,15 @@ export function ResidentPicker({
   onChange,
   triggerLabel,
   single = false,
+  scanStrings,
 }: {
   residents: ResidentOption[];
   selectedIds: string[];
   onChange: (ids: string[]) => void;
   triggerLabel?: string;
   single?: boolean;
+  /** Offer Scan card (Web NFC, Android) in the list. Never offered where a page load would lose the form. */
+  scanStrings?: ScanCardStrings;
 }) {
   const { t } = useI18n();
   const resolvedTriggerLabel = triggerLabel ?? t.residents.picker.selectResidents;
@@ -58,6 +66,9 @@ export function ResidentPicker({
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return residents;
+    // A whole R-code, card link or id finds exactly that resident, never a near one.
+    const code = residentCodeFrom(search);
+    if (code) return residents.filter((r) => r.id.toLowerCase() === code || (r.code ?? "").toLowerCase() === code.toLowerCase());
     return residents.filter(
       (r) =>
         r.name.toLowerCase().includes(term) ||
@@ -79,6 +90,11 @@ export function ResidentPicker({
       else next.add(id);
       return next;
     });
+  }
+
+  function scanned(r: ResidentOption) {
+    setSearch("");
+    setPending((prev) => (single ? new Set([r.id]) : new Set(prev).add(r.id)));
   }
 
   function confirm() {
@@ -163,6 +179,10 @@ export function ResidentPicker({
                 onChange={(e) => setSearch(e.target.value)}
                 className="rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
               />
+
+              {scanStrings && (
+                <ScanCardButton strings={scanStrings} base="" residents={residents} onFound={scanned} />
+              )}
 
               {!single && (
                 <p className="text-xs text-muted">

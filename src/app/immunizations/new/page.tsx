@@ -39,7 +39,7 @@ export default async function NewImmunizationPage(
       supabase
         .from("resident_list_view")
         .select(
-          "resident_id, name, thai_name, current_status, zone_id, enclosure_id",
+          "resident_id, resident_code, name, thai_name, current_status, zone_id, enclosure_id",
         )
         .or(NOT_DECEASED)
         .order("name"),
@@ -62,6 +62,7 @@ export default async function NewImmunizationPage(
       current_status: r.current_status,
       zone_id: r.zone_id,
       enclosure_id: r.enclosure_id,
+      code: r.resident_code,
     }),
   );
 

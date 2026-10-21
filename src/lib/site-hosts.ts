@@ -62,6 +62,15 @@ export function publicUrl(path = "/", env: Record<string, string | undefined> = 
   return h ? `https://${h}${path}` : null;
 }
 
+/**
+ * Where "Staff login" on a public page points: the app address's /login when the
+ * addresses are split (an absolute link, so no redirect hop on every click),
+ * otherwise the relative path, which is already the right address.
+ */
+export function staffLoginHref(env: Record<string, string | undefined> = process.env): string {
+  return (isSplit(env) && appUrl("/login", env)) || "/login";
+}
+
 /** Whether the two addresses differ, i.e. the system is split. */
 export function isSplit(env: Record<string, string | undefined> = process.env): boolean {
   const a = appHost(env);

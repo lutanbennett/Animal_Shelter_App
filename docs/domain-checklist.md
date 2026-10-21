@@ -81,3 +81,9 @@ does not change with it.** Work through it top to bottom, once per move.
 
 `uat` block in `wrangler.jsonc`: `APP_HOST` and `PUBLIC_HOST` (the UAT host),
 `routes`, then Supabase redirect URLs and Google redirect URIs for it, as in B.
+
+## D. Outstanding by hand (Lutan)
+
+1. **Supabase, live project, Authentication → SMTP settings:** change *Sender name* from
+   `Lanna Care UAT` to `Lanna Care`. The sender address stays `noreply@lannacare.org`.
+   Then send a password reset to yourself and check the wording reads as ours.

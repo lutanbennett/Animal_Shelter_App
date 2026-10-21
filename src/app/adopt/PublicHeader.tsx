@@ -3,6 +3,7 @@ import Link from "next/link";
 import { loadSessionRole } from "@/lib/auth/app-access";
 import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/next-path";
 import { getT } from "@/lib/i18n/get-t";
+import { staffLoginHref } from "@/lib/site-hosts";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { createClient } from "@/lib/supabase/server";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
@@ -87,6 +88,9 @@ export async function PublicHeader({
   ]);
   // Staff get "Open the app". A public viewer (src/lib/auth/app-access.ts)
   // is a visitor here with nothing to open — only a way to sign out. A
+  // Signed-in states: with the addresses split (docs/decisions/2026-10-21-domain-split-followups.md)
+  // a public-address visitor has no session, so `staff`/`user` can only be true while one
+  // address serves everything. Kept, not removed: that is today's state everywhere.
   // visitor who isn't signed in sees neither here: Staff login is in the footer and, on a phone, the menu.
   const staff = user ? (await loadSessionRole(supabase))?.opensApp === true : false;
   const n = t.publicNav;
@@ -175,12 +179,12 @@ export async function PublicHeader({
   // or Donate. Laptops keep the footer link, which is a short scroll there.
   const mobileAccount =
     account ?? (
-      <Link
-        href="/login"
+      <a
+        href={staffLoginHref()}
         className="flex min-h-11 items-center whitespace-nowrap text-[15px] font-semibold text-site-ink-muted underline-offset-4 hover:text-site-ink hover:underline"
       >
         {t.publicFooter.staffLogin}
-      </Link>
+      </a>
     );
 
   const hours = visitingHoursLines(locale, site);
