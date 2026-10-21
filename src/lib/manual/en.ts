@@ -146,6 +146,17 @@ const manual: Manual = {
           ],
         },
         {
+          id: "home-screen-icons",
+          title: "Putting a card on your phone's home screen",
+          steps: [
+            "Tap your name at the top right, then Home screen icons. You see one picture for each page you can open, drawn the same as its card, with the page's address under it.",
+            "Choose Dark or Light, and With name or Icon only, to suit your home screen. The pictures change straight away.",
+            "Tap Save 1024 px (the sharpest) or Save 180 px under the card you want. On an iPhone choose Save Image to put it in Photos.",
+            "On the iPhone, open the Shortcuts app, tap + to make a shortcut, add Open URLs, and paste the page address from the icon's card (tap Copy address). Tap the shortcut's name, then Add to Home Screen. Tap the small icon beside the name, choose Choose Photo, and pick the picture you saved. Tap Add.",
+            "Icons for every card are also kept in a shared Google Drive folder (Open the shared folder in Google Drive, at the top of the page). It is refreshed at each release, so a new card's icon appears there once the card does.",
+          ],
+        },
+        {
           id: "print-manual",
           title: "Printing this manual",
           path: "Manual → Print this as a PDF",

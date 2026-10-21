@@ -71,6 +71,7 @@ const en = {
     accountMenu: "Account menu",
     signedInAs: "Signed in as",
     yourProfile: "Your name and password",
+    homeScreenIcons: "Home screen icons",
     devBadge: "Dev",
     devBadgeTitle: "Dev database — this is not the live site",
     uatBadge: "UAT",
@@ -600,6 +601,24 @@ const en = {
   },
 
   account: {
+    homeIcons: {
+      title: "Home screen icons",
+      intro: "One picture for each page you can open, drawn the same as its card. Save one to your phone, then use it as the picture on a Shortcut or put it on the home screen.",
+      driveLink: "Open the shared folder in Google Drive",
+      driveHint: "The folder holds every card's icon, in both sizes. It is refreshed at each release.",
+      styleLabel: "Colours",
+      dark: "Dark",
+      light: "Light",
+      nameLabel: "Name under the icon",
+      withName: "With name",
+      iconOnly: "Icon only",
+      save180: "Save 180 px",
+      save1024: "Save 1024 px",
+      address: "Page address",
+      copy: "Copy address",
+      copied: "Copied",
+      none: "You have no pages that can be put on a home screen.",
+    },
     name: {
       heading: "Your name",
       hint: "Shown in the header and wherever your login is named. Leave it empty to show your email address instead.",

@@ -356,6 +356,7 @@ const EXEMPT = {
   },
   "/no-access": { why: `The refusal page every guard sends to. It must open for a person with no permission, or a refusal loops. ${APP}` },
   "/account/password": { why: `Changing your own password: every signed-in login must be able to, and the proxy sends one on a temporary password nowhere else. Asks only for a user.` },
+  "/account/home-screen-icons": { why: `Pictures for the pages this login can open, to put on a phone home screen. Any signed-in login may have them; the list is routesFor(perms), so it shows only the pages that login already opens. Asks only for a user.` },
   "/home": { why: `The dispatcher every app role lands on: sends each to its configured home, or shows the tiles homeTilesFor(perms) derives from the registry, so every tile is a page E pins. Refuses a role that does not open the app. ${APP}` },
   "/my": {
     why: `A person's own task list; each list in it is loaded only behind can() for its activity, so the page shows nothing a role may not see. ${APP}`,

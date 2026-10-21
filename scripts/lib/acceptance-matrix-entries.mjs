@@ -121,6 +121,15 @@ export const ENTRIES = {
       expect: "The screen turns light at once and stays light on every page and on the second device; all text is easy to read. Pick Dark to go back.",
     },
   ],
+  "home-screen-icons": [
+    {
+      activity: "Put a card on your phone's home screen",
+      device: "phone",
+      audience: "signedin",
+      do: "Tap your name at the top right, then Home screen icons. Tap Save 1024 px under Residents, then make an iPhone Shortcut that opens the page address shown there and use the saved picture as its icon.",
+      expect: "Each page you can open has an icon drawn like its card, with its address beside it. The saved picture matches the card, and the shortcut opens that page. Pages you cannot open are not listed.",
+    },
+  ],
   "print-manual": [
     {
       activity: "Print the manual as a PDF",

@@ -90,6 +90,14 @@ export function AccountMenu({
             {t.header.yourProfile}
           </Link>
           <Link
+            href="/account/home-screen-icons"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="rounded py-1 text-foreground underline hover:text-primary"
+          >
+            {t.header.homeScreenIcons}
+          </Link>
+          <Link
             href="/manual"
             role="menuitem"
             onClick={() => setOpen(false)}
