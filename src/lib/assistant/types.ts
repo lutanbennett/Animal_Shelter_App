@@ -57,6 +57,7 @@ export type Intent =
   | "weight"
   | "death"
   | "rehome"
+  | "carer-return"
   | "immunization"
   | "where"
   | "who"
@@ -71,6 +72,7 @@ export const WRITE_INTENTS: readonly Intent[] = [
   "weight",
   "death",
   "rehome",
+  "carer-return",
   "immunization",
 ];
 
@@ -138,6 +140,18 @@ export type RehomeDraft = {
   date: string | null;
 };
 
+export type CarerReturnDraft = {
+  kind: "carer-return";
+  residentId: string | null;
+  /** An existing carer the sentence named; shown on the card, never written. */
+  carerId: string | null;
+  /** The name said after "from" when it matched no carer; null otherwise. */
+  carerName: string | null;
+  /** Where they come back to; null until the person picks one. */
+  enclosureId: string | null;
+  date: string | null;
+};
+
 export type ImmunizationDraft = {
   kind: "immunization";
   residentId: string | null;
@@ -164,6 +178,7 @@ export type Draft =
   | WeightDraft
   | DeathDraft
   | RehomeDraft
+  | CarerReturnDraft
   | ImmunizationDraft
   | WhereDraft
   | WhoDraft
