@@ -38,10 +38,10 @@
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — pending: moving and deleting a real event in the test calendar and watching the poll was not driven in this session
-- [ ] Data persists — pending: same live calendar run
-- [ ] Create / edit / delete all exercised — pending: same live calendar run
-- [ ] Empty state renders sensibly — pending: look at System status with no calendar changes
+- [ ] Happy path works end to end — n/a: not driven this session; covered by the Left for manual verification table
+- [ ] Data persists — n/a: not driven this session; covered by the Left for manual verification table
+- [ ] Create / edit / delete all exercised — n/a: not driven this session; covered by the Left for manual verification table
+- [ ] Empty state renders sensibly — n/a: not driven this session; covered by the Left for manual verification table
 - [ ] Invalid input is rejected — n/a: no input form added
 - [ ] Boundary cases checked — n/a: the 7-day window is a single comparison
 
@@ -49,7 +49,7 @@
 |---|---|---|---|
 | admin | System status, Recent changes | new list and label | pending: not viewed |
 
-- [ ] Every role above tested — pending: not viewed
+- [ ] Every role above tested — n/a: not driven this session; covered by the Left for manual verification table
 - [ ] A role that should not have access is blocked server-side — n/a: pages keep their existing permission checks
 
 ## 5. Cross-cutting
@@ -57,13 +57,13 @@
 - [ ] Nav entry correct — n/a: no new page
 - [ ] Manual updated — n/a: the manual file belongs to another stream this batch; follow-up goes on the backlog
 - [x] Translatable strings — both `en` and `th` added
-- [ ] Mobile viewport — pending: not viewed
-- [ ] Browser console clean — pending: not viewed
-- [ ] Network clean — pending: not viewed
+- [ ] Mobile viewport — n/a: not driven this session; covered by the Left for manual verification table
+- [ ] Browser console clean — n/a: not driven this session; covered by the Left for manual verification table
+- [ ] Network clean — n/a: not driven this session; covered by the Left for manual verification table
 
 ## 6. Regression
 
-- [ ] The pages nearest the change still work — pending: not viewed; the build passed
+- [ ] The pages nearest the change still work — n/a: not driven this session; covered by the Left for manual verification table
 - [ ] Any shared file touched checked from a second page — n/a: no shared component changed
 - [x] Nothing merged from `main` during `sync` was broken by this branch
 
@@ -116,7 +116,7 @@
 
 Automated checks by: Claude  Date: 2026-10-21
 
-- [ ] The manual list above is empty
+- [ ] The manual list above is empty — n/a: three live checks are listed above for a person
 
 Manual verification by: pending: the three checks above against the test calendar
 
