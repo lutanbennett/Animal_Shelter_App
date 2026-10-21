@@ -132,7 +132,7 @@ export default async function ResidentPage(
       .returns<PrescriptionRow[]>(),
     supabase
       .from("resident_diets")
-      .select("id, start_date, end_date, diet_types:picker_diet_types(name, name_th)")
+      .select("id, start_date, end_date, diet_types:diets(name, name_th)")
       .eq("resident_id", id)
       .order("start_date", { ascending: false })
       .returns<DietRow[]>(),

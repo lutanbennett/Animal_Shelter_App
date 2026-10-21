@@ -229,7 +229,7 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
   }
   const windowList = [...windows.values()];
 
-  const [medPlans, dietPlans, prescriptionsResult, dietsResult, placementsResult] = await Promise.all([
+  const [medPlans, dietPlans, prescriptionsResult, dietsResult, recipeLinesResult, placementsResult] = await Promise.all([
     Promise.all(
       windowList.map((w) =>
         supabase.rpc("medication_forecast", { p_from: w.from, p_to: w.to }),
@@ -245,8 +245,10 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
       .returns<Assignment[]>(),
     supabase
       .from("resident_diets")
-      .select("item_id:diet_type_id, resident_id, start_date, end_date")
-      .returns<Assignment[]>(),
+      .select("diet_id, resident_id, start_date, end_date")
+      .returns<{ diet_id: string; resident_id: string; start_date: string; end_date: string | null }[]>(),
+    // A diet is a recipe (0239): a resident on it is "on" every ingredient in it.
+    supabase.from("diet_ingredients").select("diet_id, diet_type_id").returns<{ diet_id: string; diet_type_id: string }[]>(),
     // When each departed resident's current placement began — the day they
     // were adopted, fostered or died. current_placement is the open row.
     supabase
@@ -290,9 +292,20 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
         return EXCLUDED[kind].includes(s.current_status) && date ? [[s.resident_id, date] as const] : [];
       }),
     );
+  const ingredientsOf = new Map<string, string[]>();
+  for (const line of recipeLinesResult.data ?? []) {
+    ingredientsOf.set(line.diet_id, [...(ingredientsOf.get(line.diet_id) ?? []), line.diet_type_id]);
+  }
   const assignments: Record<Kind, Assignment[]> = {
     medication: prescriptionsResult.data ?? [],
-    diet: dietsResult.data ?? [],
+    diet: (dietsResult.data ?? []).flatMap((row) =>
+      (ingredientsOf.get(row.diet_id) ?? []).map((item_id) => ({
+        item_id,
+        resident_id: row.resident_id,
+        start_date: row.start_date,
+        end_date: row.end_date,
+      })),
+    ),
   };
 
   // The newest history row per item, to know when `to` is the latest count.
