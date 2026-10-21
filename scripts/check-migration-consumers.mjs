@@ -71,4 +71,10 @@ try { git(["rev-parse", "--verify", "origin/main"]); rel = assumedLiveRelease(gi
 check("live release resolves from origin/main's package.json", rel === null ? true : /^\d+\.\d+\.\d+$/.test(rel.version) && /^[0-9a-f]{40}$/.test(rel.ref), JSON.stringify(rel));
 console.log(rel ? `     (live assumed: ${rel.version} @ ${rel.ref.slice(0, 7)})` : "     (no origin/main here - lookup not exercised)");
 
+const dir = consumerReport([f("0004_d.sql", "-- consumer: worker/")], { release, read: (ref, path) => (path === "worker/" ? `tree ${ref}:worker/
+
+index.ts
+` : null) });
+check("a directory is reported as its own state, not differs", dir.warnings.length === 1 && dir.warnings[0].includes("is a directory"), JSON.stringify(dir));
+
 process.exit(failures ? 1 : 0);
