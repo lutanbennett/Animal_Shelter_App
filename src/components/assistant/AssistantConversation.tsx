@@ -75,6 +75,7 @@ export function AssistantConversation({
       })),
       clinics: context.clinics,
       carers: context.carers,
+      immunizationTypes: context.immunizationTypes,
     }),
     [context],
   );
@@ -251,6 +252,7 @@ function TurnReply({
             enclosures: context.enclosures,
             clinics: context.clinics,
             carers: context.carers,
+            immunizationTypes: context.immunizationTypes,
             doctors: context.doctors,
             candidates: turn.parsed.residentCandidates,
             onSettle: (outcome) => onSettle(turn, outcome),

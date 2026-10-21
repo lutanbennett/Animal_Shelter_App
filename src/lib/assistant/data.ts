@@ -22,6 +22,8 @@ export type AssistantResident = {
   hospitalPreviousEnclosureId: string | null;
 };
 
+export type AssistantImmunizationType = { id: string; name: string; nameTh: string | null };
+
 export type AssistantClinic = { id: string; name: string };
 
 export type AssistantContext = {
@@ -31,6 +33,8 @@ export type AssistantContext = {
   clinics: AssistantClinic[];
   /** Carers not archived: the foster / adopt card matches against these. */
   carers: CarerOption[];
+  /** The vaccines the immunization card offers. */
+  immunizationTypes: AssistantImmunizationType[];
   /** Each clinic's active doctors, for the clinic card's optional Doctor field. */
   doctors: DoctorNamesByClinic;
   /** assistant.ask: the assistant opens at all (the doctor's role is external, 0070). */
@@ -59,7 +63,7 @@ type ListRow = {
 export function emptyAssistantContext(
   error: string | null = null,
 ): AssistantContext {
-  return { residents: [], zones: [], enclosures: [], clinics: [], carers: [], doctors: {}, canAsk: false, canWrite: false, error };
+  return { residents: [], zones: [], enclosures: [], clinics: [], carers: [], immunizationTypes: [], doctors: {}, canAsk: false, canWrite: false, error };
 }
 
 /**
@@ -84,7 +88,7 @@ export async function loadAssistantContext(
   supabase: SupabaseClient,
   perms: Permissions,
 ): Promise<AssistantContext> {
-  const [listResult, clinicsResult, options, doctors, carerResult] = await Promise.all([
+  const [listResult, clinicsResult, options, doctors, carerResult, typesResult] = await Promise.all([
     supabase
       .from("resident_list_view")
       .select(
@@ -101,6 +105,11 @@ export async function loadAssistantContext(
     loadEnclosureOptions(supabase),
     loadDoctorNamesByClinic(supabase),
     loadCarerOptions(supabase),
+    supabase
+      .from("picker_immunization_types")
+      .select("id, name, name_th")
+      .order("name")
+      .returns<{ id: string; name: string; name_th: string | null }[]>(),
   ]);
 
   const rows = listResult.data ?? [];
@@ -159,6 +168,7 @@ export async function loadAssistantContext(
     enclosures: options.enclosures,
     clinics: clinicsResult.data ?? [],
     carers: carerResult.carers,
+    immunizationTypes: (typesResult.data ?? []).map((ty) => ({ id: ty.id, name: ty.name, nameTh: ty.name_th })),
     doctors,
     canAsk: true,
     canWrite: can(perms, "assistant.record"),
@@ -167,6 +177,7 @@ export async function loadAssistantContext(
       clinicsResult.error?.message ??
       photosResult.error?.message ??
       stateResult.error?.message ??
+      typesResult.error?.message ??
       options.error,
   };
 }

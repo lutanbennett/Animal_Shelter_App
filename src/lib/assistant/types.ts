@@ -28,6 +28,8 @@ export type ParserClinic = { id: string; name: string };
 
 export type ParserCarer = { id: string; name: string };
 
+export type ParserImmunizationType = { id: string; name: string; nameTh: string | null };
+
 /** Everything a parser may match a sentence against. */
 export type ParseContext = {
   residents: ParserResident[];
@@ -35,6 +37,8 @@ export type ParseContext = {
   clinics: ParserClinic[];
   /** Existing carers only: a new one is never created from a sentence. */
   carers: ParserCarer[];
+  /** The vaccines /immunizations/new offers. */
+  immunizationTypes: ParserImmunizationType[];
   /** The person's own clock, so "tomorrow" is tomorrow where they are. */
   now: Date;
 };
@@ -53,6 +57,7 @@ export type Intent =
   | "weight"
   | "death"
   | "rehome"
+  | "immunization"
   | "where"
   | "who"
   | "due";
@@ -66,6 +71,7 @@ export const WRITE_INTENTS: readonly Intent[] = [
   "weight",
   "death",
   "rehome",
+  "immunization",
 ];
 
 export function isWriteIntent(intent: Intent): boolean {
@@ -132,6 +138,14 @@ export type RehomeDraft = {
   date: string | null;
 };
 
+export type ImmunizationDraft = {
+  kind: "immunization";
+  residentId: string | null;
+  /** Every vaccine the sentence named; empty when it named none. */
+  immunizationTypeIds: string[];
+  date: string | null;
+};
+
 export type WhereDraft = { kind: "where"; residentId: string | null };
 
 export type WhoDraft = { kind: "who"; enclosureId: string | null };
@@ -150,6 +164,7 @@ export type Draft =
   | WeightDraft
   | DeathDraft
   | RehomeDraft
+  | ImmunizationDraft
   | WhereDraft
   | WhoDraft
   | DueDraft;
