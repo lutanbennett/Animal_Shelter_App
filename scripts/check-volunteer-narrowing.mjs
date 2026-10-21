@@ -80,7 +80,9 @@ const CASES = [
   READ("stock_counts"), READ("stock_receipts"), READ("item_unit_conversions"),
   READ("recurring_jobs"), READ("recurring_job_assignees"), READ("recurring_job_occurrences"), READ("recurring_job_occurrence_assignees"),
   // the assistant and the translations
-  READ("assistant_actions"), READ("translations"),
+  READ("assistant_actions"), // 0184: map_rooms_translations_read admits any signed-in user to approved map_rooms rows (room names on the map), so the
+  // volunteer reads those on purpose; every other table_name is still refused.
+  READ("translations", "table_name <> 'map_rooms'"),
   // the views that excluded only doctors
   READ("current_placement"), READ("resident_current_state"), READ("immunization_compliance"),
   READ("immunization_duplicate_check"), READ("translation_queue"), READ("resident_list_view"),
@@ -311,8 +313,8 @@ if (result.policies !== null) failures.push(`policies that still name the volunt
 else lines.push("  ok    no policy names the volunteer (0153)");
 // RE-BASELINED 2026-10-11 (role-floor-schema, 0179): sees_all_residents() and sees_all_contacts() ask the role's own scope now, not legacy_role.
 // reassign_recurring_job() and record_attachment() changed with 0178 (perm-functions-schema): the first no longer names the role, the second does.
-if (result.functions !== "has_app_access,has_shelter_floor,record_attachment") failures.push(`functions that still say 'volunteer': ${result.functions}; expected only has_app_access (may sign in), has_shelter_floor (0149, a refusal that no policy asks since 0179) and record_attachment (0178)`);
-else lines.push("  ok    only has_app_access() (may sign in), has_shelter_floor() (a refusal no policy asks) and record_attachment() (0178) still say 'volunteer'");
+if (result.functions !== "is_public_drive_file,on_volunteer_floor") failures.push(`functions that still say 'volunteer': ${result.functions}; expected only is_public_drive_file (names the volunteer_photo_drive_file_id column, 0201) and on_volunteer_floor (0196, the floor itself). has_app_access, has_shelter_floor and record_attachment no longer say it`);
+else lines.push("  ok    only is_public_drive_file() (a column name) and on_volunteer_floor() (the floor) still say 'volunteer'");
 
 if (verbose) console.log(lines.join("\n") + "\n");
 console.log(`${CASES.length} removed rights, each under the volunteer's own JWT: ${refused} refused.`);
