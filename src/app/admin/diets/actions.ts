@@ -97,22 +97,6 @@ function parseFields(
   };
 }
 
-/**
- * The 0239 bridge gives every new ingredient a same-named one-ingredient diet
- * for the old app. Nothing needs that now, and it would put "Chicken" in every
- * diet picker, so undo it: remove this ingredient's line from that diet and the
- * diet itself when it is left empty and no resident is on it. Goes with the
- * bridge in the cleanup migration.
- */
-async function dropBridgeRecipe(supabase: Awaited<ReturnType<typeof createClient>>, ingredientId: string, name: string) {
-  const { data: diet } = await supabase.from("diets").select("id").eq("name", name).maybeSingle<{ id: string }>();
-  if (!diet) return;
-  await supabase.from("diet_ingredients").delete().eq("diet_id", diet.id).eq("diet_type_id", ingredientId);
-  const lines = await supabase.from("diet_ingredients").select("diet_type_id", { count: "exact", head: true }).eq("diet_id", diet.id);
-  const residents = await supabase.from("resident_diets").select("id", { count: "exact", head: true }).eq("diet_id", diet.id);
-  if ((lines.count ?? 1) === 0 && (residents.count ?? 1) === 0) await supabase.from("diets").delete().eq("id", diet.id);
-}
-
 /** A new ingredient costs 0 (the column's default) until Management → Diet stock prices it. */
 export async function createDietType(
   _state: DietTypeFormState,
@@ -126,14 +110,8 @@ export async function createDietType(
     if (parsed.error !== undefined) return refuse(parsed.error);
 
     const supabase = await createClient();
-    // daily_qty_* are NOT NULL and unread now (a recipe holds the amounts); 1 satisfies the check.
-    const { data: created, error } = await supabase
-      .from("diet_types")
-      .insert({ ...parsed.row, daily_qty_small: 1, daily_qty_medium: 1, daily_qty_large: 1 })
-      .select("id")
-      .single<{ id: string }>();
+    const { error } = await supabase.from("diet_types").insert(parsed.row);
     if (error) return refuse(error.message);
-    await dropBridgeRecipe(supabase, created.id, parsed.row.name);
 
     revalidateDietPages();
     return { ok: true, success: t.management.diets.createdDiet(parsed.row.name) };
@@ -166,19 +144,13 @@ export async function deleteDietType(id: string): Promise<ActionResult> {
   return runAction("diets.deleteDietType", t.common.somethingWentWrong, async () => {
     const refused = await refusal();
     if (refused) return refused;
-    // An ingredient in a diet, or one a resident's old record still names, is
-    // part of what was fed and bought. Say so instead of surfacing the
+    // An ingredient in a diet is part of what was fed and
+    // bought. Say so instead of surfacing the
     // foreign-key error.
     const supabase = await createClient();
     const inDiets = await supabase.from("diet_ingredients").select("diet_id", { count: "exact", head: true }).eq("diet_type_id", id);
     if (inDiets.error) return refuse(inDiets.error.message);
     if ((inDiets.count ?? 0) > 0) return refuse(t.management.diets.errors.inRecipes(inDiets.count ?? 0));
-    const { count, error: countError } = await supabase
-      .from("resident_diets")
-      .select("id", { count: "exact", head: true })
-      .eq("diet_type_id", id);
-    if (countError) return refuse(countError.message);
-    if ((count ?? 0) > 0) return refuse(t.management.diets.errors.hasDiets(count ?? 0));
 
     const { error } = await supabase.from("diet_types").delete().eq("id", id);
     if (error) return refuse(error.message);
