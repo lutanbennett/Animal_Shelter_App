@@ -6,7 +6,7 @@
 |---|---|
 | Feature | Make the assistant-retention job report on itself |
 | Backlog item | `docs/backlog.md` → Make the assistant-retention job report on itself |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/retention-job-report` @ `C:\Development\Animal_Shelter_retention-job-report` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | opened after this commit |
 | Tested by / date | Claude / 2026-10-21 |
@@ -209,11 +209,11 @@ Automated checks by: Claude  Date: 2026-10-21
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
+has looked and explicitly asks in chat; the line then says so, e.g. `a name —
+confirmed in chat; line written by Claude at their request  Date: the date`.
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
+- a name and a date — a person looked. The date is required here.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
@@ -243,7 +243,7 @@ Manual verification by: pending: Lutan to look at the tile on /admin/status (row
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [x] Checklist pasted into the PR
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — n/a: the release manager reads this at release time
 
 Result: pass
 
