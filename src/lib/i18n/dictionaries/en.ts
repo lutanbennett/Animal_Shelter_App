@@ -1064,6 +1064,7 @@ const en = {
       },
       cols: { when: "When", who: "Who", what: "What", record: "Record", fields: "Fields" },
       unknownUser: "Unknown login",
+      viaCalendar: "Via Google Calendar",
       unnamedRecord: "(no name)",
       deletedResident: "(resident since deleted)",
       onlyTimestamp: "Only the last-edited time",
@@ -1136,6 +1137,13 @@ const en = {
       periodDays: (v: { days: string | number }) =>
         `${v.days} days`,
       unavailable: "Couldn't count this just now.",
+      calendarChanges: {
+        heading: "Changed from the calendar in the last 7 days",
+        none: "Nothing was moved or cancelled from Google Calendar this week.",
+        moved: "Moved",
+        cancelled: "Cancelled (can be set back to scheduled)",
+        fail: "Could not read the list.",
+      },
       accessRequests: {
         heading: "Access requests",
         title: "Waiting for access",

@@ -127,6 +127,8 @@ export type AuditEntry = {
   at: string;
   /** Archive / restore are updates that only flipped archived_at (0124). */
   kind: "added" | "edited" | "deleted" | "archived" | "restored";
+  /** Made by the calendar poll, not a person: calendar_changed_at moved (0236). */
+  viaCalendar: boolean;
   /** Names of the columns an edit changed; never values. */
   changed: string[];
   /** The record's own name, for the tables that have one. */
@@ -190,6 +192,7 @@ function toEntry(raw: RawRow): AuditEntry {
     at: r.at,
     kind: kindOf(r.op, r.old_row, r.new_row, changed),
     changed,
+    viaCalendar: table === "clinic_visits" && r.op === "UPDATE" && r.actor === null && changed.includes("calendar_changed_at"),
     name:
       table === "residents" || table === "contacts" || table === "roles"
         ? str(image.name)

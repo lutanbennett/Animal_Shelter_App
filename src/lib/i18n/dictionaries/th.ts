@@ -972,6 +972,7 @@ const th: Dictionary = {
       },
       cols: { when: "เมื่อ", who: "ใคร", what: "ทำอะไร", record: "รายการ", fields: "ช่อง" },
       unknownUser: "ไม่รู้จักบัญชีนี้",
+      viaCalendar: "ผ่าน Google Calendar",
       unnamedRecord: "(ไม่มีชื่อ)",
       deletedResident: "(สัตว์ตัวนี้ถูกลบแล้ว)",
       onlyTimestamp: "เฉพาะเวลาที่แก้ไขล่าสุด",
@@ -1043,6 +1044,13 @@ const th: Dictionary = {
       periodDays: (v: { days: string | number }) =>
         `${v.days} วัน`,
       unavailable: "นับไม่ได้ในขณะนี้",
+      calendarChanges: {
+        heading: "เปลี่ยนจากปฏิทินใน 7 วันที่ผ่านมา",
+        none: "สัปดาห์นี้ไม่มีนัดหมายที่ถูกย้ายหรือยกเลิกจาก Google Calendar",
+        moved: "ย้ายนัด",
+        cancelled: "ยกเลิก (ตั้งกลับเป็นนัดหมายได้)",
+        fail: "อ่านรายการไม่ได้",
+      },
       accessRequests: {
         heading: "คำขอเข้าใช้งาน",
         title: "รอการอนุมัติเข้าใช้งาน",

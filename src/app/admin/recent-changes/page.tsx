@@ -220,7 +220,7 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
                       {formatDateTime(e.at, locale)}
                     </td>
                     <td data-label={s.cols.who} className="px-3 py-2 block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] lg:table-cell lg:before:hidden">
-                      {e.actor ? (actorLabel.get(e.actor) ?? s.unknownUser) : s.filters.system}
+                      {e.actor ? (actorLabel.get(e.actor) ?? s.unknownUser) : e.viaCalendar ? s.viaCalendar : s.filters.system}
                     </td>
                     <td data-label={s.cols.what} className="px-3 py-2 font-medium text-foreground block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] lg:table-cell lg:before:hidden">{s.kinds[e.kind]}</td>
                     <td data-label={s.cols.record} className="px-3 py-2 block before:block before:text-xs before:font-medium before:text-muted before:content-[attr(data-label)] lg:table-cell lg:before:hidden">
