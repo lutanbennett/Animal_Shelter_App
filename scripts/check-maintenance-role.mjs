@@ -47,7 +47,9 @@ const probes = [
   ["maintenance", `select 1 from maintenance where id = '${JOB}'`, WITH_HM],
   ["maintenance_assignees", `select 1 from maintenance_assignees where maintenance_id = '${JOB}'`, WITH_HM],
   ["translations of a job", `select 1 from translations where table_name = 'maintenance' and row_id = '${JOB}'`, WITH_HM],
-  ["translations of anything else", `select 1 from translations where table_name <> 'maintenance'`, "hm-zero"],
+  // map_rooms is excluded on purpose: 0184 B lets anyone with app access read the APPROVED translations of the facility
+  // map's rooms (map_rooms_translations_read), so every role reaches them and they say nothing about her job reach.
+  ["translations of anything else", `select 1 from translations where table_name not in ('maintenance', 'map_rooms')`, "hm-zero"],
   ["zones", `select 1 from zones where id = '${ZONE}'`, "hm-one"],
   ["enclosures", `select 1 from enclosures where id = '${ENC}'`, "hm-one"],
   ["app_users", `select 1 from app_users limit 1`, "hm-one"],
@@ -83,7 +85,7 @@ const probes = [
   ["insert placement", `insert into placement_history (resident_id, placement_type, start_date) values ('${R}', 'SendToHospital', now() + interval '1 minute')`, "hm-zero"],
   // her own recurring tasks
   ["mark my recurring task done", `select record_recurring_job('${RJ_MINE}', current_date, 'done')`, { ...NONE, hm: 1, admin: 1, management: 1 }],
-  ["mark another's recurring task done", `select record_recurring_job('${RJ_OTHER}', current_date, 'done')`, { ...NONE, admin: 1, management: 1, doctor: 1 }], // the doctor is its assignee; she is not,
+  ["mark another's recurring task done", `select record_recurring_job('${RJ_OTHER}', current_date, 'done')`, { ...NONE, admin: 1, management: 1 }], // the doctor is its assignee but holds no recurring.do_own (paper §4: Vet “–”; C11: vets are never offered as assignees), so is refused like her; she is not its assignee
 ];
 
 const lines = [];

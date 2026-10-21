@@ -42,6 +42,23 @@ check_backlog() {
   return 0
 }
 
+# The backlog branch only ever touches docs/backlog.md (CLAUDE.md, "The backlog
+# branch"). The daily `git merge backlog && git push` reaches main with no PR, no
+# CI and no review, so any other file committed there rides along unchecked: a
+# CLAUDE.md rule did on 2026-10-07 and a misfiled line on 2026-10-19. Pure git, no
+# node, so it is fast and has little to crash; if the branch name or the diff
+# cannot be read it lets the commit through.
+check_backlog_branch() {
+  [ "$(git symbolic-ref --short -q HEAD 2>/dev/null)" = "backlog" ] || return 0
+  others=$(git diff --cached --name-only --no-renames 2>/dev/null | grep -v -x "docs/backlog.md")
+  [ -z "$others" ] && return 0
+  echo "pre-commit: refused. The backlog branch may only change docs/backlog.md, because it reaches main with no PR, no CI and no review. Staged:" >&2
+  echo "$others" | sed 's/^/  /' >&2
+  echo "Unstage them (git restore --staged <file>) and put that change on a claude/<feature> branch with a PR." >&2
+  return 1
+}
+
 check_migrations || exit 1
+check_backlog_branch || exit 1
 check_backlog || exit 1
 exit 0

@@ -6,7 +6,7 @@
 // What it holds:
 //   vocabulary   three rounds, lunch is medication-only, food is morning + evening
 //   back-fill    every real frequency, prescription and diet on dev has the rounds its schedule owes,
-//                so no existing prescription falls in no round; nothing reads none or mismatch
+//                so no existing prescription falls in no round (whether anything reads none or mismatch on real data is no longer asserted: apply-day claim)
 //   defaults     a new frequency, prescription or diet is given rounds (1 -> morning,
 //                2 -> morning + evening, 3 -> all, interval -> morning, as needed -> none); a changed
 //                schedule re-defaults; a hand-ticked set survives an unrelated edit
@@ -110,8 +110,10 @@ begin
     (select bool_and(for_medication) and not bool_or(for_food) filter (where key = 'lunch') and bool_and(for_food) filter (where key <> 'lunch') from rounds));
 
   -- back-fill
-  perform pg_temp.t('back-fill: no frequency reads none or mismatch', not exists (select 1 from frequency_round_status where status <> 'ok'),
-    (select string_agg(label || '=' || status, ', ') from frequency_round_status where status <> 'ok'));
+  -- Dropped 2026-10-21: "no real frequency, prescription or diet reads none or mismatch" is an apply-day claim (rule 4 of
+  -- docs/decisions/2026-10-02-replay-or-assert-live.md). Staff have since entered a 4-a-day frequency ("Every 6 hours") and a
+  -- diet the view rightly flags, and that is the view working. What none and mismatch MEAN is still asserted below on rows
+  -- this harness makes (insert / visible / prescription / diet sections).
   perform pg_temp.t('back-fill: Once daily -> morning', pg_temp.keys((select id from frequency where label = 'Once daily')) = 'morning');
   perform pg_temp.t('back-fill: Twice daily -> morning+evening', pg_temp.keys((select id from frequency where label = 'Twice daily')) = 'morning+evening');
   perform pg_temp.t('back-fill: Three times daily -> all three', pg_temp.keys((select id from frequency where label = 'Three times daily')) = 'morning+lunch+evening');
@@ -125,10 +127,6 @@ begin
                    and not exists (select 1 from prescription_rounds pr where pr.prescription_id = p.id)),
     (select count(*)::text from prescriptions p join frequency f on f.id = p.frequency_id where (f.doses_per_day is not null or f.interval_count is not null)
         and not exists (select 1 from prescription_rounds pr where pr.prescription_id = p.id)));
-  perform pg_temp.t('back-fill: no current prescription reads none or mismatch', not exists (select 1 from prescription_round_status where status <> 'ok'),
-    (select count(*)::text from prescription_round_status where status <> 'ok'));
-  perform pg_temp.t('back-fill: no current diet reads none or mismatch', not exists (select 1 from resident_diet_round_status where status <> 'ok'),
-    (select count(*)::text from resident_diet_round_status where status <> 'ok'));
   perform pg_temp.t('back-fill: every two-meal diet is morning+evening',
     not exists (select 1 from resident_diets d where d.meals_per_day = 2 and pg_temp.dkeys(d.id) <> 'morning+evening'));
 
