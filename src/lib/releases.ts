@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "System status has a new tile for the nightly database job that deletes old assistant requests. It goes red, and admins are emailed, if the job is missing, switched off or failing, and amber if it has not run for two days.",
   "Home screen icons: tap your name, then Home screen icons, to save a picture for each page you can open, drawn like its card, to use on an iPhone Shortcut or the home screen. Every card's icon is also kept in a shared Google Drive folder.",
 ];
 
