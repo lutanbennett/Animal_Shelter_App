@@ -35,8 +35,6 @@ const migration = applied ? "" : readFileSync(fileArg ?? join(root, "supabase/mi
 
 // "role probe: before -> after", each agreed (decision file §4). Anything else that moves is a failure.
 const EXPECTED = new Set([
-  // Settings -> Diets is Admin-only in the app since 2026-10-08; the function still let Management in.
-  "management set_standard_diet: ok -> Not authorized to change the standard diet.",
   // A 2IC may record a death but the Drive filing was refused. Lutan agreed the gain in chat, 2026-10-11.
   "second_in_command record_deceased_archive: Not authorized to archive a deceased resident. -> ok",
   // The enum let every doctor in; no doctor has recurring.do_own and the app never offers My jobs to one.
@@ -65,7 +63,6 @@ async function sql(query) {
 const idq = await sql(`select json_build_object(
   'med', (select id from medication order by id limit 1),
   'diet', (select id from diet_types order by id limit 1),
-  'std', (select id from diet_types where is_standard limit 1),
   'job', (select j.id from recurring_jobs j order by j.id limit 1),
   'jobday', (select d::date from recurring_jobs j, generate_series(current_date, current_date + 120, '1 day') d
               where j.id = (select id from recurring_jobs order by id limit 1)
@@ -94,7 +91,6 @@ const PROBES = {
   record_stocktake: `select count(*) from record_stocktake('[]'::jsonb, '[]'::jsonb)`,
   "record_stock_correction medication": `select count(*) from (select record_stock_correction('medication', ${L(ids.med)}, null)) x`,
   "record_stock_correction diet_type": `select count(*) from (select record_stock_correction('diet_type', ${L(ids.diet)}, null)) x`,
-  set_standard_diet: `select count(*) from (select set_standard_diet(${L(ids.std)})) x`,
   record_recurring_job: `select count(*) from (select record_recurring_job(${L(ids.job)}, ${L(ids.jobday)}, null)) x`,
   "reassign_recurring_job none": `select count(*) from (select reassign_recurring_job(${L(ids.job)}, ${L(ids.jobday)}, '{}')) x`,
   "reassign_recurring_job people": `select count(*) from (select reassign_recurring_job(${L(ids.job)}, ${L(ids.jobday)}, array[${L(ids.uDoctor)}, ${L(ids.uVol)}]::uuid[])) x`,

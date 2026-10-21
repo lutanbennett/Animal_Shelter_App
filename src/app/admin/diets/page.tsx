@@ -57,20 +57,21 @@ export default async function DietSettingsPage() {
     // reference counts that gate the delete buttons.
     supabase
       .from("resident_diets")
-      .select("diet_id, diet_type_id")
-      .returns<{ diet_id: string; diet_type_id: string | null }[]>(),
+      .select("diet_id")
+      .returns<{ diet_id: string }[]>(),
     loadConversions(supabase, "diet"),
   ]);
 
   const recordsByDiet = new Map<string, number>();
-  const recordsByType = new Map<string, number>();
   for (const row of residentDietsResult.data ?? []) {
     recordsByDiet.set(row.diet_id, (recordsByDiet.get(row.diet_id) ?? 0) + 1);
-    if (row.diet_type_id) recordsByType.set(row.diet_type_id, (recordsByType.get(row.diet_type_id) ?? 0) + 1);
   }
   const recipeCounts = new Map<string, number>();
+  // Resident records that reach an ingredient through a recipe that uses it.
+  const recordsByType = new Map<string, number>();
   for (const line of linesResult.data ?? []) {
     recipeCounts.set(line.diet_type_id, (recipeCounts.get(line.diet_type_id) ?? 0) + 1);
+    recordsByType.set(line.diet_type_id, (recordsByType.get(line.diet_type_id) ?? 0) + (recordsByDiet.get(line.diet_id) ?? 0));
   }
   const dietTypes: DietDefinitionRow[] = (typesResult.data ?? []).map((type) => ({
     ...type,
