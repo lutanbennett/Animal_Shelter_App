@@ -15,6 +15,8 @@
  *   - the lookups first, so "where is Panda going" is a question, not a move;
  *   - death next: "Bella died at the hospital" is a death, not an
  *     admission, and it is the one sentence that must never be misread;
+ *   - immunization after death and rehome, before the hospital and
+ *     bookings: "had rabies at the vet" is a vaccine, not a visit;
  *   - rehome before the hospital and bookings, whose words it may share;
  *   - hospital before clinic, because a "vet hospital" is not a booking;
  *   - the return before the admission, because "back from hospital" is
@@ -28,6 +30,7 @@ import { dueIntent, whereIntent, whoIntent } from "./intents/lookups";
 import { hospitalIntent, hospitalReturnIntent } from "./intents/hospital";
 import { deathIntent } from "./intents/death";
 import { rehomeIntent } from "./intents/rehome";
+import { immunizationIntent } from "./intents/immunization";
 import { weightIntent } from "./intents/weight";
 import { clinicIntent } from "./intents/clinic";
 import { moveIntent } from "./intents/move";
@@ -39,6 +42,7 @@ export const INTENT_PARSERS: readonly IntentParser[] = [
   dueIntent,
   deathIntent,
   rehomeIntent,
+  immunizationIntent,
   hospitalReturnIntent,
   hospitalIntent,
   weightIntent,

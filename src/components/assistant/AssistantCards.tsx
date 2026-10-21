@@ -11,7 +11,7 @@ import { driveImageUrl } from "@/lib/google/drive-client";
 import { placeName } from "@/lib/enclosures/names";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
 import { EnclosurePicker } from "@/components/EnclosurePicker";
-import type { AssistantClinic, AssistantResident } from "@/lib/assistant/data";
+import type { AssistantClinic, AssistantImmunizationType, AssistantResident } from "@/lib/assistant/data";
 import { isoLocal } from "@/lib/assistant/text";
 import { doctorNameCore, type DoctorNamesByClinic } from "@/lib/clinics/doctors";
 import type { CarerOption } from "@/lib/contacts/carers";
@@ -24,10 +24,12 @@ import type {
   MoveDraft,
   ClinicVisitDraft,
   WeightDraft,
+  ImmunizationDraft,
 } from "@/lib/assistant/types";
 import {
   assistantRecordDeath,
   assistantRehome,
+  assistantRecordImmunization,
   assistantBookClinicVisit,
   assistantLogWeight,
   assistantMove,
@@ -35,6 +37,7 @@ import {
   assistantSendToHospital,
 } from "@/app/assistant/actions";
 import { assistantInputClass as inputClass } from "./AssistantInput";
+import { immunizationStrings } from "@/lib/assistant/immunization-strings";
 import { DateInput } from "@/components/DateInput";
 
 /**
@@ -62,6 +65,8 @@ export type CardContext = {
   clinics: AssistantClinic[];
   /** Carers the foster / adopt card may choose from. */
   carers: CarerOption[];
+  /** The vaccines the immunization card may tick. */
+  immunizationTypes: AssistantImmunizationType[];
   /** Each clinic's active doctors, offered on the clinic card. */
   doctors: DoctorNamesByClinic;
   /** Residents the name could have meant, when it could have meant several. */
@@ -1100,6 +1105,101 @@ function RehomeCard({ ctx, draft }: { ctx: CardContext; draft: RehomeDraft }) {
   );
 }
 
+function ImmunizationCard({ ctx, draft }: { ctx: CardContext; draft: ImmunizationDraft }) {
+  const { t, locale } = useI18n();
+  const a = t.assistant;
+  const s = immunizationStrings(locale);
+  const [residentId, setResidentId] = useState(draft.residentId ?? "");
+  const [typeIds, setTypeIds] = useState<string[]>(draft.immunizationTypeIds);
+  const [date, setDate] = useState(draft.date ?? viewerToday());
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
+  const chosen = ctx.immunizationTypes.filter((ty) => typeIds.includes(ty.id));
+  const label = (ty: AssistantImmunizationType) => (locale === "th" && ty.nameTh) || ty.name;
+  const chrome = useCardChrome(ctx, !!residentId);
+
+  function toggle(id: string) {
+    setTypeIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
+  function confirm() {
+    if (!resident || chosen.length === 0 || !date) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await assistantRecordImmunization({
+        residentId: resident.id,
+        immunizationTypeIds: chosen.map((ty) => ty.id),
+        date,
+        request: ctx.request,
+        draft: {
+          ...draft,
+          residentId: resident.id,
+          immunizationTypeIds: chosen.map((ty) => ty.id),
+          date,
+        },
+      });
+      if ("error" in result) return setError(result.error);
+      ctx.onSettle({
+        kind: "done",
+        message: s.done(`${resident.name} (${resident.code})`, chosen.map(label).join(", ")),
+        residentId: resident.id,
+      });
+    });
+  }
+
+  return (
+    <Card
+      title={s.title}
+      summary={s.summary(
+        resident ? `${resident.name} (${resident.code})` : a.unknown,
+        chosen.length ? chosen.map(label).join(", ") : a.unknown,
+        date ? formatDate(date, locale) : a.unknown,
+      )}
+      hint={chosen.length === 0 ? s.typeMissing : chrome.hint}
+      hintTone={chrome.hintTone}
+      error={error}
+      pending={pending}
+      canConfirm={!!resident && chosen.length > 0 && !!date}
+      notesStamp={chrome.notesStamp}
+      onConfirm={confirm}
+      onCancel={() => ctx.onSettle({ kind: "cancelled" })}
+    >
+      <ResidentField
+        ctx={ctx}
+        idPrefix="immunization"
+        residentId={residentId}
+        onChange={setResidentId}
+      />
+      <fieldset className="flex flex-col gap-1">
+        <legend className="text-sm font-medium text-muted">
+          {s.typesLabel} <span className="text-danger">*</span>
+        </legend>
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          {ctx.immunizationTypes.map((ty) => (
+            <label key={ty.id} className="flex items-center gap-2 text-sm text-foreground">
+              <input
+                type="checkbox"
+                checked={typeIds.includes(ty.id)}
+                onChange={() => toggle(ty.id)}
+              />
+              {label(ty)}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <DateField
+        id={`immunization-${ctx.turnId}-date`}
+        label={a.fields.date}
+        value={date}
+        onChange={setDate}
+        max={viewerToday()}
+      />
+    </Card>
+  );
+}
+
 export function AssistantCard({ ctx, draft }: { ctx: CardContext; draft: Draft }) {
   switch (draft.kind) {
     case "move":
@@ -1116,6 +1216,8 @@ export function AssistantCard({ ctx, draft }: { ctx: CardContext; draft: Draft }
       return <DeathCard ctx={ctx} draft={draft} />;
     case "rehome":
       return <RehomeCard ctx={ctx} draft={draft} />;
+    case "immunization":
+      return <ImmunizationCard ctx={ctx} draft={draft} />;
     default:
       // The lookups never reach a card; they are answered inline.
       return null;
