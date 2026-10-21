@@ -295,8 +295,18 @@ does not mail, and neither does test (`RELEASE_MAIL_ENV` is `""` there).
 ### Worker, test — Claude runs this
 
 ```bash
-npm run deploy:test
+node scripts/deploy.mjs --env test | tee deploy-test-<version>.log
 ```
+
+**`tee` it, and never pipe it through `tail`.** The production deploy above is
+`tee`'d because the lines worth reading print *before* the long build; that is
+equally true of the test deploy, and `0.38.2` lost them by running
+`node scripts/deploy.mjs --env test | tail -40`. `tail` discards exactly the head
+of the log that matters — the `deploy: test → Supabase project <ref> (<sha>)` line
+and `strip-baked-env: removed N` — so the record had to say that test's count was
+never read. Both facts were recoverable from the bindings printout and
+`/api/version`, which is luck rather than method. `tee` passes the status through
+and keeps the whole log; `tail` costs a ten-minute rerun to recover one line.
 
 ### The Pi — Claude runs this
 
