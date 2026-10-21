@@ -65,9 +65,14 @@ export default async function DonationsPage(props: PageProps<"/management/donati
         <BackLink href="/management">{t.management.landing.title}</BackLink>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-semibold text-foreground">{d.title}</h1>
-          <Link href="/management/donations/new" className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover">
-            {d.record}
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href="/management/donations/donors" className="rounded border border-border px-4 py-2 text-sm text-foreground hover:bg-surface">
+              {d.donorsLink}
+            </Link>
+            <Link href="/management/donations/new" className="rounded bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover">
+              {d.record}
+            </Link>
+          </div>
         </div>
         <p className="text-sm text-muted">{d.subtitle}</p>
       </div>
