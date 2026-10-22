@@ -8,6 +8,9 @@ import { formatDate, todayIso } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { visitDate } from "@/lib/clinics/linkable";
 import { loadShelterVisits, shelterTime } from "@/lib/clinics/shelter-visits";
+import { calendarConfigured } from "@/lib/clinics/calendar-sync";
+import { listToConfirm } from "@/lib/clinics/calendar-import";
+import { ConfirmList } from "./ConfirmList";
 import { VetVisitsView, type VisitRow } from "./VetVisitsView";
 
 /**
@@ -70,6 +73,21 @@ export default async function VetVisitsPage() {
           </div>
         )}
       </div>
+      {toConfirm?.error && (
+        <p className="text-sm text-danger">
+          {v.confirm.couldntRead}: {toConfirm.error}
+        </p>
+      )}
+      {toConfirm && (
+        <ConfirmList
+          t={t}
+          locale={locale}
+          items={toConfirm.items}
+          clinics={toConfirm.refs.clinics}
+          liveResidents={toConfirm.refs.residents.filter((r) => r.status !== "Deceased" && r.status !== "Adopted")}
+          photos={photos}
+        />
+      )}
       {error && (
         <p className="text-sm text-danger">
           {v.couldntLoad}: {error}

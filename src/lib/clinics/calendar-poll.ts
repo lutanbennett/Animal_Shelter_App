@@ -3,12 +3,15 @@ import { adminEmails, send } from "@/lib/status/alerts";
 import { getAppEnv } from "@/lib/app-env";
 import { decideChange, isOtherEnvironment } from "./calendar-change";
 import { calendarConfigured, calendarFetch, errorText } from "./calendar-sync";
+import { importNewEvent } from "./calendar-import";
 
 /**
  * The calendar's half of the two-way sync: the Worker's 15-minute cron asks Google only for what
  * changed since last time (events.list with a syncToken, kept in calendar_sync_state) and applies it.
  *
- *  - only events the app made are looked at (they are the visits' calendar_event_id);
+ *  - events the app made are the visits' calendar_event_id. Any other new event is offered to calendar-import.ts,
+ *    which makes a visit only when the title names exactly one clinic and one live resident per name, and
+ *    otherwise leaves it for the confirm list (docs/decisions/2026-10-22-visits-from-google-calendar.md);
  *  - a moved event sets the visit's time to the event's new start; end, title and description edits
  *    are ignored and put back by the app's next sync;
  *  - a deleted event cancels the visit (never deletes it), noted "Cancelled from Google Calendar",
@@ -104,7 +107,11 @@ async function apply(event: GEvent, origin: string | null, result: PollResult): 
     .limit(1)
     .returns<Visit[]>();
   const visit = data?.[0];
-  if (!visit) return; // not an event the app made
+  if (!visit) {
+    // Not an event the app made: the Director's own entry, if it reads as one clear visit.
+    if (await importNewEvent(event, origin)) result.imported += 1;
+    return;
+  }
   const tagged = await taggedEnv(event);
   if (isOtherEnvironment(tagged, getAppEnv())) return; // another system's event: not ours to cancel or move
   const decision = decideChange(event, visit);
@@ -145,7 +152,7 @@ async function apply(event: GEvent, origin: string | null, result: PollResult): 
 }
 
 export async function pollCalendarChanges(origin: string | null): Promise<PollResult> {
-  const result: PollResult = { configured: calendarConfigured(), moved: 0, cancelled: 0, clashes: 0 };
+  const result: PollResult = { configured: calendarConfigured(), moved: 0, cancelled: 0, imported: 0, clashes: 0 };
   if (!result.configured) return result;
   const db = createAdminClient();
   const calendarId = process.env.GOOGLE_CALENDAR_ID ?? "";
