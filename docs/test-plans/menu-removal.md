@@ -11,7 +11,7 @@
 | PR | this PR |
 | Tested by / date | Claude, 2026-10-22 |
 | Carries a migration? | no |
-| Tested at SHA | __SHA__ |
+| Tested at SHA | fdf6b8ef |
 
 ## 1. Scope and risk
 
@@ -27,7 +27,7 @@
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ```
-__GATES__
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 Coverage script re-run by me on dev (`check-menu-coverage.mjs`): all seven roles 0 orphans; "No unexplained orphans."
