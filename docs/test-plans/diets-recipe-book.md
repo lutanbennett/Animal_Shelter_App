@@ -187,7 +187,7 @@ section 8's.
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | On a real phone, as the Director would use it: add a Diabetic diet with four ingredients, add a cup to an ingredient, and read the Standard card's medium total (expect 4 cups on data that has kibble, chicken and rice) | Settings → Diets |
+| 1 | On a real phone, as the Director would use it: add a Diabetic diet with four ingredients, add a cup to an ingredient, and read the Standard card's medium total (expect 4 cups on data that has kibble, chicken and rice) | Settings → Diets  **— DONE 2026-10-22, Lutan, on test during the `0.39.1` release** |
 | 2 | Purchasing's To buy figures are the same as before the redesign (this stream changed no code Purchasing reads; only the diets screens and their actions) | Management → Purchasing |
 | 3 | The Thai wording reads naturally (written by Claude, not read by a Thai speaker) | Settings → Diets in Thai |
 
@@ -214,7 +214,7 @@ The items in **Left for manual verification** above. Signed only by the person w
 
 - [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <re — n/a: the manual list is not empty, so this is left for the person who looks
 
-Manual verification by: pending: the three items under Left for manual verification — a person on a real phone, Purchasing before and after, and the Thai wording
+Manual verification by: pending: items 2 and 3 only — Purchasing before and after, and the Thai wording. **Item 1 is CLOSED: Lutan checked the recipe book on `test.lannacare.org` during the `0.39.1` release and reported it working — confirmed in chat; line written by Claude at his request**  Date: 2026-10-22
 
 ### Result
 
