@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Settings → Who does what: adding a group now needs only an English name (the Thai name is optional, and the English one shows in Thai until you add it). The result, \"Added: …\" or the reason it was refused, now appears right under the Add group button, and the button stays off until there is a name.", roles: ["admin"] },
   "Purchasing: on a laptop, the To buy list now comes first, straight under the period choice, and the working-out tables for medicines and food sit below it under \"How these were worked out\".",
 ];
 
