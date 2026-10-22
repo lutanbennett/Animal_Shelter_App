@@ -31,7 +31,7 @@ Result: pending
 
 0. Sign in with `--cards record_weight`. The home screen shows the **Record Weight** tile (or the tile of a card that includes it).
 1. Open `/medical/weight`: it loads.
-2. **TODO:** Weight. Do it on a disposable record named `walk-record_weight`. Question: where should this write show afterwards (which page, which row)?
+2. **Do:** Weight. Use a disposable record named `walk-record_weight`. **Read-back:** the list shows "Saved: <name>, <kg>", and opening that resident on /medical/weight reads "Last time: <kg>, <date>" and "Today already has <kg>" (one weight per resident per day; a second save replaces it).
 3. **See:** A resident's details, housing and history (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
@@ -43,7 +43,7 @@ Result: pending
 
 0. Sign in with `--cards add_medical_photos`. The home screen shows the **Add Medical Photos** tile (or the tile of a card that includes it).
 1. Open `/medical/photos`: it loads.
-2. **TODO:** Add a photo to a resident. Do it on a disposable record named `walk-add_medical_photos`. Question: where should this write show afterwards (which page, which row)?
+2. **Do:** Add a photo to a resident. Use a disposable record named `walk-add_medical_photos`. **Read-back:** the page counts the photo as added; it is filed in the resident's Medical folder, never on the website, and this card cannot look at it again, so also confirm it on the resident's record with a login that holds a record card.
 3. **See:** A resident's details, housing and history (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
@@ -137,7 +137,7 @@ Result: pending
 7. **TODO:** Send to hospital and bring back. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
 8. **TODO:** Foster, adopt, return to the shelter. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
 9. **TODO:** Record a death. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
-10. **TODO:** Add a photo to a resident. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
+10. **Do:** Add a photo to a resident. Use a disposable record named `walk-residents`. **Read-back:** the page counts the photo as added; it is filed in the resident's Medical folder, never on the website, and this card cannot look at it again, so also confirm it on the resident's record with a login that holds a record card.
 11. **TODO:** Refile or remove a photo, choose the profile photo. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
 12. **TODO:** Put a resident's photo on the public website. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
 13. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
@@ -156,7 +156,7 @@ Result: pending
 4. **TODO:** Blood tests and their reports. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
 5. **TODO:** Prescriptions: what should be given. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
 6. **TODO:** Immunizations. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
-7. **TODO:** Weight. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
+7. **Do:** Weight. Use a disposable record named `walk-medical_records`. **Read-back:** the list shows "Saved: <name>, <kg>", and opening that resident on /medical/weight reads "Last time: <kg>, <date>" and "Today already has <kg>" (one weight per resident per day; a second save replaces it).
 8. **TODO:** A resident's diet. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
 9. **TODO:** Remove a medical record entered by mistake, and restore it. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
 10. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.

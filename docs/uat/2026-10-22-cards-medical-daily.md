@@ -49,3 +49,21 @@ The full Weight section `/residents/<id>/weight` is **refused** to this card (`/
 | 4 Refused: `/operations/medication-list` | pass | `/no-access`. |
 
 **TODO answer.** The photo is filed in the resident's Drive **Medical** folder and recorded as an attachment (`record_attachment()`, 0140). It never reaches the website. On the card itself the only read-back is a count ("N added") on the same page. The page says outright: "You can add photos here but not look at them again. Management can see them on the resident's record." So the read-back belongs on the resident's record, seen with a different login. Still untried: an actual upload and the record-side check.
+
+## feed_special_diets: PASS
+
+| Step | Result | Note |
+|---|---|---|
+| 0 Home shows tile | not separately checked | Signed in and went straight to `/medical/diets`; `/home` tile checked on card 1 only. |
+| 1 Open `/medical/diets` | pass | Loads: today's date, Morning / Evening, residents by enclosure with diet, amount and meal times. |
+| 2 Diet visible, read only | pass | Page says nothing is ticked off or recorded; the only controls are the two meal links. |
+| 3 Resident details/housing visible, read only | pass | Name, Thai name and enclosure shown on each diet; no edit controls. |
+| 4 Refused: `/operations/medication-list` | pass | `/no-access`. |
+
+## Findings
+
+1. **Shared sign-in (the planner's open question).** Three streams can share one machine, but not cleanly. `dev-signin.mjs --remove` deletes **every** `dev-signin-` login on dev, not just the caller's, and each run recreates the login with a new user id, so the older cookie stops working. I was signed out twice mid-walk. **I did not run `--remove`** at the end, because it would delete the other streams' live logins; my four logins (`dev-signin-cards-9b1db576`, `8e866d7e`, `818748c6`, `f9763f07`) are left for whoever finishes last to remove. Suggest `--remove` take a `--cards` filter or only remove its own.
+2. **Step 0 says "home screen", the app lands on `/home`.** `/my` is empty for a one-card login. Nothing wrong with the app; worth saying in the step.
+3. **First page hit is slow on dev** (10 to 15 s), and a page that shows only the header is still loading. Cost me several waits.
+4. **Two TODOs answered in the generator** (`medical.weight`, `photos.resident_add` in `scripts/gen-card-walkthrough.mjs`). The photo one is from the page and the route, not from an upload (the pane cannot attach a file).
+5. **No card failed.** Nothing filed on the backlog branch.
