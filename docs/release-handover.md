@@ -1,125 +1,150 @@
-# Release handover — written 2026-10-22 after `0.39.1`
+# Release handover — written 2026-10-22 after `0.39.2`
 
-A **delta**. The release's own facts are in `docs/releases/2026-10-22-0-39-1.md`
+A **delta**. The release's own facts are in `docs/releases/2026-10-22-0-39-2.md`
 and the durable rules are in `docs/release-procedure.md`. **Both outrank this
 file.**
 
 ## Corrections to the last edition
 
-- **It said to keep taking the one classifier retry and not to predict which command gets it. Right for a sixth time, and it moved again** — this release the refusal landed on a **read-only `ssh` reading the Pi build logs**, while the migration apply and the Pi deploy both went through untouched. One retry cleared it. **Six releases, six behaviours. That advice is now as well-tested as anything in here.**
-- **It said `strip-baked-env` had read 13 for five releases.** It read **14** this time, both environments. **Not drift and not a regression:** the two extra names are `GOOGLE_CALENDAR_REFRESH_TOKEN` and `GOOGLE_CALENDAR_ID`, new to the deploy. A counter that has not moved in five releases is one you stop reading — **when it moves, read the log's own list, which accounts for it exactly.**
-- **It said "first CI run green by construction" was broken at 12 and reset to 0. It is back to 1**, because its lesson was applied rather than admired: the cut plan was validated with `check-test-plan.mjs --base origin/main`, the way CI runs it. **That rule earned its place; keep it.**
-- **It said the production calendar token was his, and next in his own stated order. It is DONE** — the values are on the Worker as of this release. What replaces it is smaller: **one real vet visit booked on production and seen in the calendar.**
-- **It said the `release-prs.mjs` DISAGREEMENT is a coin-flip.** Confirmed again: **one** orphan this time (#826, squash-merged), against two, three and none before. **Four releases, four answers.**
+- **It said to keep taking the one classifier retry, and that six releases had shown six behaviours. The retry FAILED this time** — twice refused as `[Secret-Store Writes]` on an `ssh` append, after a read-only `ssh` to the same file had succeeded. **Seven releases, seven behaviours.** The advice still holds — take the one retry, do not predict which command gets it — but it now gains: **be ready for it not to work, and have the handover written.** Confirm nothing reached disk by re-reading the target, never from the refusal text.
+- **It said `strip-baked-env` had moved off 13 to 14, and to read the log's list when a counter moves.** It read **14** again, both environments, same list. **A counter that moves once and then holds is the normal shape** — the move was the two calendar names joining the deploy, exactly as recorded, not the start of drift.
+- **It said "first CI run green by construction" was back to 1.** It is **2**, earned the same way: `check-test-plan.mjs --base origin/main` rejected an `n/a for this PR:` where the checker requires `n/a:`. **Validate the way CI validates** — a ten-second fix instead of a CI cycle.
+- **It said the `release-prs.mjs` DISAGREEMENT is a coin-flip, four releases four answers. This time there were ZERO orphans and it exited 0.** Five releases, five answers. **A clean run is not evidence the script improved** — it depends on how the day's streams happened to merge.
+- **It said his open item was one real vet visit booked on production.** Still open and still the right ask — but **as of this release the Pi can see the calendar too**, so the screens will now tell the truth about it. They would not have before.
 
-## The thing not to re-derive, and it cost him two round trips
+## The thing not to re-derive, and it nearly shipped two false notes
 
-**`deploy.mjs --env production --secrets` cannot be used on this machine, and the
-refusal's own suggested remedy is dangerous.**
+**Each Pi clone keeps its own hand-maintained, gitignored `.env.deploy.production`.
+A value added to this machine's copy for the Worker does not reach the Pi.**
 
-Four Drive secrets (`GOOGLE_OAUTH_CLIENT_ID`, `_SECRET`, `_REFRESH_TOKEN`,
-`GOOGLE_DRIVE_ROOT_FOLDER_ID`) resolve only from `.env.local`, so the fallthrough
-guard refuses `--secrets` **every time**. It offers `--allow-dev-fallthrough`.
-Taking that would overwrite four secrets production already holds correctly with
-**dev** values — including the Drive folder id that decides where resident photos
-are written.
+`0.39.1` put `GOOGLE_CALENDAR_REFRESH_TOKEN` and `GOOGLE_CALENDAR_ID` on the
+Worker and nothing updated the Pi's values file, so `write-env.mjs` — which writes
+a `PI_OPTIONAL` name **only when it is present in the file it loads** — silently
+omitted both. `calendarConfigured()` was therefore **false on the box that serves
+production**, while the poll and sweep, which run *in the Worker*, worked
+correctly behind it.
 
-> **To add a secret to production: push only the missing ones, then deploy.**
-> `scripts/push-calendar-secrets.mjs` is the worked example — it refuses anything
-> not coming from `.env.deploy.production` and never prints a value. Check what is
-> actually missing first with `wrangler secret list --env production`; this
-> release found production holding nine of eleven. **Push before the deploy, so
-> the deploy re-tags the Worker and the Release tile never goes amber.**
+Two of this release's six notes would have gone live false: the "Calendar entries
+to confirm" list would never have appeared, and every coming visit would have said
+the calendar was switched off. **The data was right and the app said it was off**,
+which is the worst shape a fault can take.
 
-**The wider lesson, and the one I would keep if I could keep only one.** I handed
-over `--secrets` having confirmed the two calendar values were in the production
-overlay. That was true and it was the wrong thing to check: **I verified the
-change I was making, not the command I was typing.** Then the script I wrote to
-fix it sat untracked in the **main checkout**, so the next attempt was refused by
-the clean-tree guard. Two refusals, fifteen minutes, both mine, on a release that
-was otherwise clean.
+> **The test Pi held all four, so no check on `test.lannacare.org` could ever have
+> seen it.** This class of fault is invisible to test by construction. When a
+> release note depends on a runtime value, **check it in every runtime that
+> renders it** — and the Pi is what users see; the Worker is only the fallback.
 
-What worked on the third attempt, and what to do every time: **read the guard's
-source, enumerate every condition it tests, run each against the live state, and
-print the answers before writing the command out.** Under a minute. And note
-`CLAUDE.md` forbids scratch output *above* the repo — this is the neighbouring
-case: **a file written inside the main checkout blocks every guarded deploy.**
+Check by name, never by value:
 
-## The wrong-number gap closed, and the mechanism is worth protecting
+```bash
+ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && grep -oE "^GOOGLE_[A-Z_]+" .env.production.local | sort -u'
+```
 
-The diets portion path — the only item anywhere whose failure is a wrong *number*
-rather than a visible fault — **is closed.** Lutan checked the recipe book on test
-himself and reported it working, after first saying he would leave it to a later
-release.
+Recorded as `docs/decisions/2026-10-22-pi-keeps-its-own-secrets-file.md`. Note that
+`docs/decisions/2026-10-22-vet-calendar-on-production.md` says the Pi's file "is
+regenerated by `deploy-pi.sh`" — **true, and the wrong conclusion was drawn from
+it.** A correct sentence you reason from wrongly is more dangerous than a wrong one.
 
-**Put the numeric-risk item to him separately from the count, every time.** It has
-now been answered differently from the rest three times. He said no, then did it
-anyway twenty minutes later; he would not have had the chance if it had been
-bundled into "nine plans await a person". **And name it concretely** — *four
-ingredients, read the Standard card, expect 4 cups* is a gap a person closes in
-five minutes. *"The diets screens need checking"* is not.
+**How it was found, and this is the method to repeat:** check the release-note
+truth rule **forwards** on every note before cutting — ask what each note needs in
+order to be true, then read the live system for it, rather than assuming that the
+features having merged made it so. Three plans listed "the Pi app process holds the
+four calendar env values" as a `pending:` item for a person; it is a read-only
+check, so it was done rather than handed over. **A `pending:` item you can close
+yourself is not a handover.**
 
-Recorded on `docs/test-plans/diets-recipe-book.md` as item 1 only, at his explicit
-request and marked as written by me on his behalf. Items 2 and 3 stay `pending:` —
-**he did not claim those and they must not be inferred.**
+## Probe a handover command before you hand it over
 
-## A role tag at the cut, three releases running — and the obvious tag was wrong
+Last edition's biggest lesson was *verify the command, not just the change*. It was
+applied, and it caught something no amount of careful reading would have.
 
-The Settings → Diets note needed one. The page is at `/admin/diets`, so the
-obvious tag is `["admin"]`, and **that would have hidden it from the doctors who
-can open the page**: the route is gated on `reference.types`, which
-`src/lib/permissions/fixed-for-now.ts` grants to the **doctor** box too.
+The fix piped two lines from a Windows file into `ssh`. A probe with a **harmless
+string** into `/tmp` on the Pi showed PowerShell had prepended bytes
+`357 273 277` — a **UTF-8 BOM** — to the piped stdin. That would have corrupted the
+first variable's **name**, so the append would have succeeded, reported nothing
+wrong, and the Pi still would not have held the value. **The fix would have
+appeared to work and the notes would have stayed false.** `tr -d '\r'`, which is
+the obvious guard, does not remove a BOM.
 
-**Read the permission source, not the URL.** Expect to tag another note next
-release; the upstream cause is already filed on the `backlog` branch.
+Corrected to `tr -d '\r\357\273\277'`, re-probed clean, and it worked first time.
+**When a handover command moves text from Windows into a Unix file, probe it with a
+throwaway value first. The failure mode is not an error, it is silence.**
+
+Also kept from last edition: the deploy guard's four conditions were enumerated
+from source and each run against the live state, printed as a table before the
+command was written — plus `git check-ignore` on the `tee` log, since an untracked
+file in the main checkout is what refused his deploy last release.
+
+## Hand both of his commands over in one message
+
+He was given the Pi fix and the Worker deploy together, ordered, and ran them back
+to back without waiting. **Nothing was lost**: they do not block each other, and
+only *my* Pi build depended on the first. **Repeat this shape** — two interruptions
+for two independent commands is a cost the process imposes for no reason.
+
+## No role tag at this cut, ending a three-release run
+
+A narrowing tag on the three Vet visits notes *was* available —
+`/upcoming-visits` needs `medical.visits` at shelter-wide scope and refuses a
+clinic login. **It was not taken**, because the code says who is *refused* but not
+whether the **2IC** holds that grant: that is data, not source, and a wrong tag
+hides a note from someone who needs it. Put to Lutan in one line; he chose
+untagged, the safe direction. Note 6's `["admin"]` was **verified** rather than
+inherited — its mail goes to `adminEmails()`, which selects that role and nobody
+else. **Read the permission source, and where it cannot answer, ask rather than
+assert.**
 
 ## Where things stand
 
 | | |
 |---|---|
-| Live everywhere | **`0.39.1`** @ `654619c4` — production Pi and Worker, test Pi and Worker. All four read back after the Worker landed |
-| Previous release SHA, for the next range | **`654619c4`** |
-| Production database | **`247 applied`, `0 pending`**, `No drift`. **Run `--status --env production` yourself** |
-| Dev database | **`No drift`, 247 of 247** — clean, second release running |
-| Next free migration number | **`0247`**. `origin/main`'s highest is `0246`. **Check `origin/main` *and* open `*-schema` PRs anyway** |
-| `unreleased` notes waiting | **0** at the cut — **read nothing into that.** Nine editions have said 0 and been overtaken |
+| Live everywhere | **`0.39.2`** @ `6764913d` — production Pi and Worker, test Pi and Worker. All four read back after the Worker landed |
+| Previous release SHA, for the next range | **`6764913d`** |
+| Production database | **`248 applied`, `0 pending`**, `No drift`. **Run `--status --env production` yourself** |
+| Dev database | **`No drift`, 248 of 248** — clean, third release running |
+| Next free migration number | **`0248`**. `origin/main`'s highest is `0247`. **Check `origin/main` *and* open `*-schema` PRs anyway** |
+| `unreleased` notes waiting | **0** at the cut — **read nothing into that.** Ten editions have said 0 and been overtaken |
 | Open PRs | **none** at the cut. **Run `gh pr list` yourself** |
-| Worktrees | Ten, nine `HELD` by live sessions with nothing beyond `main`. The cut reused the one `free` leftover and the record reused it again, so paperwork rule 2 was satisfied twice without a fresh `npm ci` |
-| `main` moves under you | **No — not once.** Second release running |
+| Worktrees | Five, three `HELD` by live sessions with nothing beyond `main`. The cut reused the one `free` leftover and the record reused it again, so paperwork rule 2 was satisfied twice without a fresh `npm ci`. **Two husks remain**: `calendar-production-note`, `planner-handover-294` |
+| `main` moves under you | **No — not once.** Third release running |
 
-**Server Actions keys, Worker against Pi** (seventeenth check): production
+**Server Actions keys, Worker against Pi** (eighteenth check): production
 `cbd55beae8d8`, test `ecc41837fc0b`, unchanged since `0.31.0`. **Matching these
-values is not evidence you checked.**
+values is not evidence you checked** — what is, is each Pi printing `the build in
+.next.new carries that key`.
 
-**Counters:** all four builds from one SHA **22** releases; `npm ci` as step 1
-**18**; first CI run green by construction **1** (reset by `0.39.0`, earned back);
-no production-only guard **20**; per-file dry-run trap **three fired, eleven
-not** — this release's "not" is weak, since only one file was pending so it could
-not fire; `strip-baked-env` **14**, first move off 13 in five releases.
+**Counters:** all four builds from one SHA **23** releases; `npm ci` as step 1
+**19**; first CI run green by construction **2**; no production-only guard **21**;
+per-file dry-run trap **three fired, twelve not** — this release's "not" is weak
+again, one pending file only; `strip-baked-env` **14**, held.
+
+**One tool flake, recorded because it reads like a failure:**
+`apply-migrations.mjs --drift production` printed `No drift` and then **exited 127**
+on a libuv teardown assertion; a re-run exited 0, same verdict. **"The check
+passed" and "the command exited 0" are different statements** — say which you have.
 
 ## In flight: the same three silent failures, unchanged as a set
 
-Name them **as a set**, say plainly none is broken today, and do not re-run them
-as checks — they are **build-work on the backlog** wanting the same plumbing
-(`status_alert_runs` → mail).
+Name them **as a set**, say plainly none is broken today, and do not re-run them as
+checks — they are **build-work on the backlog** wanting the same plumbing
+(`status_alert_runs` → mail): the public desexing sign-up that tells nobody (real at
+the cutover, dormant while the site is locked); Drive space, amber at 80%, red at
+95%, and **never** emailing; the nightly retention job's general plumbing.
 
-1. **A public desexing sign-up tells nobody** — still the most concrete, dormant only while the public site is locked, real at the cutover.
-2. **Drive space** — amber at 80%, red at 95%, **never emails**.
-3. **The nightly retention job** — only the general plumbing remains. **Do not re-ask whether the job runs.**
-
-**Eight verification gaps, down from eleven, and the dangerous one is gone.** What
-is left is ordinary: browser checks on Purchasing, Who does what and the menu
-tiles; the Pi service-user steps in `docs/pi-hosting.md`, which are his; the
-throwaway-project run for `migrations-all-history`. **Still unlooked-at from
-earlier: the prescription form reading 4** (`0.38.1`) **and video playback on a
-real handset** (`0.38.0`) — both now older than the gap that just closed.
+**Nine verification gaps**, up one from eight, and the new one is the most concrete
+thing on the list: **that the "Calendar entries to confirm" list actually renders on
+`/upcoming-visits`.** The four values are confirmed present on the Pi; whether the
+screen shows them is five minutes signed in. The rest are ordinary — browser checks
+on Purchasing, Who does what and the menu tiles; the Pi service-user steps in
+`docs/pi-hosting.md`, which are his; the throwaway-project run for
+`migrations-all-history`. **Still unlooked-at from earlier: the prescription form
+reading 4** (`0.38.1`) **and video playback on a real handset** (`0.38.0`).
 
 **His, and his only open one: book one real vet visit on production and see it in
-"Lanna Care: vet visits".** Do not ask whether the two-way calendar works in
-general — the token is on, the sweep is bound, and that single booking is what is
-left.
+"Lanna Care: vet visits".** The token is on, the sweep is bound, and the Pi can now
+see the calendar. That single booking is what is left.
 
 ## Two things that are not in the runbook
 
-- **A major release currently mails ONE person**, and this release did not mail at all. The `E_RECIPIENT_NOT_ALLOWED` skip older editions mention has not occurred for two releases — the shelter's own address is not on the production admin list. **Tell him plainly when the major call comes up**; "mails every admin" overstates today's lever.
+- **A major release currently mails ONE person.** Three releases running with no mail at all, and the `E_RECIPIENT_NOT_ALLOWED` skip older editions mention has not occurred in that time — the shelter's own address is not on the production admin list. **Tell him plainly when the major call comes up**; "mails every admin" overstates today's lever and makes the choice a false one.
 - **`test-plan` is ADVISORY, permanently** (Lutan, 2026-10-20). Do not raise it, do not list it as a decision he owes. **Checked again: `main` has no branch protection at all.**
