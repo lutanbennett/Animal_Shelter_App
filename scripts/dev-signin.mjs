@@ -2,7 +2,9 @@
 //
 //   node scripts/dev-signin.mjs <role> [--port N]     print the snippet that signs the browser in
 //   node scripts/dev-signin.mjs --cards a,b [--port N] the same, for a login holding EXACTLY these cards and nothing else
-//   node scripts/dev-signin.mjs --remove               delete every dev-signin login (and card-scoped role) this script made
+//   node scripts/dev-signin.mjs --remove <role>        delete only that role's login (a roles.key, or a dev_signin_cards_<hash> key)
+//   node scripts/dev-signin.mjs --remove --cards a,b   delete only the login and throwaway role for exactly those cards
+//   node scripts/dev-signin.mjs --remove all           delete every dev-signin login (and card-scoped role), signing every stream out
 //
 // --cards (docs/card-walkthrough.md; docs/decisions/2026-10-22-card-walkthrough-generated.md): the cards are card keys from
 // src/lib/permissions/cards.ts. The script makes one throwaway role per set of cards (key dev_signin_cards_<hash>), hands it the
@@ -54,10 +56,25 @@ async function allUsers() {
 }
 
 const args = process.argv.slice(2);
+const cardRoleKey = (list) => CARD_ROLE_PREFIX + createHash("sha1").update([...new Set(list)].sort().join(",")).digest("hex").slice(0, 8);
+const loginEmail = (role) => `${PREFIX}${role.startsWith(CARD_ROLE_PREFIX) ? role.slice(CARD_ROLE_PREFIX.length) : role}${DOMAIN}`.replace(/_/g, "-");
 if (args.includes("--remove")) {
+  // Other streams share this project and hold their own logins: removing is always by name, never a blanket sweep by default.
+  const rmIdx = args.indexOf("--remove");
+  const rmCards = args.indexOf("--cards");
+  const named = args[rmIdx + 1] && !args[rmIdx + 1].startsWith("--") ? args[rmIdx + 1] : null;
+  let target = null; // null = everything (only via "all")
+  if (rmCards >= 0) {
+    const list = (args[rmCards + 1] ?? "").split(",").map((k) => k.trim()).filter(Boolean);
+    if (!list.length) throw new Error("--cards needs a comma-separated list of card keys");
+    target = cardRoleKey(list);
+  } else if (named && named !== "all") target = named;
+  else if (!named) throw new Error("--remove needs a role, --cards a,b, or the word all (all signs every other stream out)");
   const cardRoles = await service.from("roles").select("id, key").like("key", `${CARD_ROLE_PREFIX}%`);
   if (cardRoles.error) throw cardRoles.error;
-  const mine = (await allUsers()).filter((u) => u.email?.startsWith(PREFIX) && u.email.endsWith(DOMAIN));
+  if (target) cardRoles.data = cardRoles.data.filter((r) => r.key === target);
+  const wantEmail = target ? loginEmail(target) : null;
+  const mine = (await allUsers()).filter((u) => u.email?.startsWith(PREFIX) && u.email.endsWith(DOMAIN) && (!wantEmail || u.email === wantEmail));
   for (const u of mine) {
     await service.from("user_roles").delete().eq("user_id", u.id);
     const { error } = await service.auth.admin.deleteUser(u.id);
@@ -91,11 +108,14 @@ if (cardsArg) {
   cardKeys = [...new Set(cardsArg.split(",").map((k) => k.trim()).filter(Boolean))];
   const bad = cardKeys.filter((k) => !isCardKey(k));
   if (!cardKeys.length || bad.length) throw new Error(`not card keys: ${bad.join(", ") || "(none given)"}. Cards: ${CARD_KEYS.join(", ")}`);
-  role = CARD_ROLE_PREFIX + createHash("sha1").update([...cardKeys].sort().join(",")).digest("hex").slice(0, 8);
-  // Same shape as the throwaway role in check-cards-schema.mjs: opens the app, sees who and where, clinical scope "any".
+  role = cardRoleKey(cardKeys);
+  // Resident scope "all", clinical scope "any". "who_and_where" was the first choice and was wrong: it is on_volunteer_floor(),
+  // so /residents/[id] redirects the login to /r/[id] and no card could reach the resident hub. The cards decide what the login
+  // can do; the scope only decides which residents it sees (docs/decisions/2026-10-22-card-logins-get-a-real-scope.md).
   const { error: upErr } = await service.from("roles").upsert(
-    { key: role, name: `Dev sign-in: ${cardKeys.join(", ")}`.slice(0, 120), kind: "custom", opens_app: true, home_path: "/home", scope_residents: "who_and_where", scope_clinical: "any", sees_login_emails: false },
-    { onConflict: "key", ignoreDuplicates: true },
+    { key: role, name: `Dev sign-in: ${cardKeys.join(", ")}`.slice(0, 120), kind: "custom", opens_app: true, home_path: "/home", scope_residents: "all", scope_clinical: "any", sees_login_emails: false },
+    // No ignoreDuplicates: a throwaway role made by an older run (who_and_where) is corrected on the next run.
+    { onConflict: "key" },
   );
   if (upErr) throw upErr;
   const { data: made, error: madeErr } = await service.from("roles").select("id").eq("key", role).single();
@@ -108,7 +128,7 @@ const { data: roleRow, error: roleErr } = await service.from("roles").select("id
 if (roleErr) throw roleErr;
 if (!roleRow) throw new Error(`no role with key "${role}"`);
 
-const email = `${PREFIX}${cardKeys ? role.replace(/_/g, "-").replace(/^dev-signin-/, "") : role}${DOMAIN}`;
+const email = loginEmail(role);
 const password = randomBytes(18).toString("base64url");
 let user = (await allUsers()).find((u) => u.email === email);
 if (user) {
