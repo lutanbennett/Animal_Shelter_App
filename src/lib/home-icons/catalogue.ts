@@ -1,5 +1,8 @@
 import type { ReactElement } from "react";
-import { ROUTES, type RouteEntry } from "@/lib/permissions/routes";
+import { ROUTES, routeFor, routesFor, type RouteEntry } from "@/lib/permissions/routes";
+import { CARDS, type CardKey } from "@/lib/permissions/cards";
+import type { Permissions } from "@/lib/permissions/can";
+import { OUTSIDE_REGISTRY, cardTile } from "@/lib/home/tiles";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { CatalogueIcon } from "./catalogue-shared";
 
@@ -33,14 +36,37 @@ function iconInner(icon: RouteEntry["icon"]): string {
   return shapes((root.props as { children?: unknown } | undefined)?.children);
 }
 
-/** One icon per page in the route registry (first entry wins for a shared path), drawn from the registry's own icon. */
-export function iconCatalogue(t: Dictionary, routes: readonly RouteEntry[] = ROUTES): CatalogueIcon[] {
+type Page = { path: string; label: string; icon: RouteEntry["icon"] };
+
+function toIcons(pages: Iterable<Page>): CatalogueIcon[] {
   const seen = new Set<string>();
   const out: CatalogueIcon[] = [];
-  for (const r of routes) {
-    if (seen.has(r.path)) continue;
-    seen.add(r.path);
-    out.push({ path: r.path, label: r.label(t), inner: iconInner(r.icon) });
+  for (const p of pages) {
+    if (seen.has(p.path)) continue;
+    seen.add(p.path);
+    out.push({ path: p.path, label: p.label, inner: iconInner(p.icon) });
   }
   return out;
+}
+
+/** Every page a card opens, with the card's own label and the icon its tile uses (outside-registry pages included). */
+function cardPages(t: Dictionary): Page[] {
+  return Object.values(CARDS).flatMap((card) =>
+    [card.opens, card.opensAny ?? card.opens].flatMap((path) => {
+      const icon = (OUTSIDE_REGISTRY as Partial<typeof OUTSIDE_REGISTRY>)[path]?.icon ?? routeFor(path)?.icon;
+      return icon ? [{ path, label: card.label(t), icon }] : [];
+    }),
+  );
+}
+
+/**
+ * One icon per page: the route registry first (first entry wins for a shared path, so file names already in the
+ * shared Drive folder stay put), then every page a card opens that the registry does not hold (Bills, Residents,
+ * Assistant, My tasks), so every tile on a home has an icon. Pass a viewer's permissions to keep only the pages
+ * they can open; pass none for the full set (the Drive sync).
+ */
+export function iconCatalogue(t: Dictionary, perms?: Permissions): CatalogueIcon[] {
+  const registry: Page[] = (perms ? routesFor(perms) : ROUTES).map((r) => ({ path: r.path, label: r.label(t), icon: r.icon }));
+  const cards = perms ? Object.keys(CARDS).flatMap((key) => cardTile(key as CardKey, perms, t) ?? []).map((x) => ({ path: x.href, label: x.label, icon: x.icon })) : cardPages(t);
+  return toIcons([...registry, ...cards]);
 }

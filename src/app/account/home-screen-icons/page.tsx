@@ -11,7 +11,7 @@ import { IconLibrary } from "./IconLibrary";
 /**
  * Account → Home screen icons: a picture for each page this login can open, drawn from the route
  * registry exactly as its card is, to save to a phone for a Shortcut. Open to any signed-in login:
- * it shows only the pages routesFor() gives them. The full set for every card sits in a shared
+ * it shows only the pages they can open. The full set for every card sits in a shared
  * Drive folder that scripts/sync-home-icons.mjs refreshes at each release.
  */
 export default async function HomeScreenIconsPage() {
@@ -23,7 +23,7 @@ export default async function HomeScreenIconsPage() {
 
   const { t } = await getT();
   const perms = await loadPermissions();
-  const icons = iconCatalogue(t, routesFor(perms));
+  const icons = perms ? iconCatalogue(t, perms) : [];
   const driveUrl = await findDriveFolderUrl();
   const h = t.account.homeIcons;
 
