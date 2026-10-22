@@ -12,7 +12,7 @@ import { opensWhoDoesWhat, WHO_DOES_WHAT_PATH } from "@/lib/permissions/who-does
 import { parsePermissions } from "@/lib/permissions/can";
 import { cardTile, isSubsumed } from "@/lib/home/tiles";
 import { getT } from "@/lib/i18n/get-t";
-import { AddExtraForm, CardButton } from "./CardControls";
+import { AddExtraForm, CardButton, ShowMenuToggle } from "./CardControls";
 import { CardBoard } from "./CardBoard";
 import { loadRoles, roleName } from "./roles";
 
@@ -52,7 +52,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
   const [{ data: cardRows, error: cardsError }, { data: extraRows, error: extrasError }, { data: roleRow }, { data: cellRows }, { data: groupRows, error: groupsError }] = await Promise.all([
     admin.from("role_cards").select("card, position, group_id").eq("role_id", role?.id ?? "").order("position"),
     admin.from("role_extras").select("activity, level, why").eq("role_id", role?.id ?? ""),
-    admin.from("roles").select("key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails").eq("id", role?.id ?? "").maybeSingle(),
+    admin.from("roles").select("key, name, kind, opens_app, home_path, show_menu, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails").eq("id", role?.id ?? "").maybeSingle(),
     admin.from("role_permissions").select("activity, level").eq("role_id", role?.id ?? ""),
     admin.from("role_groups").select("id, name, name_th, icon").eq("role_id", role?.id ?? "").order("position").order("name"),
   ]);
@@ -244,6 +244,21 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
           groups={groups}
           library={library.map(tileOf)}
         />
+      )}
+
+      {role && (
+        <section aria-labelledby="menu-h" className="flex flex-col gap-3">
+          <h2 id="menu-h" className="text-lg font-semibold text-foreground">
+            {c.menuHeading}
+          </h2>
+          <p className="text-sm text-muted [overflow-wrap:anywhere]">{c.menuIntro}</p>
+          <p className="text-sm text-foreground">{c.menuNow(roleRow?.show_menu !== false)}</p>
+          {canEdit ? (
+            <ShowMenuToggle roleKey={role.key} show={roleRow?.show_menu !== false} onLabel={c.menuOn} offLabel={c.menuOff} />
+          ) : (
+            isAdmin && <p className="text-xs text-muted">{c.menuLocked}</p>
+          )}
+        </section>
       )}
 
       {role && (

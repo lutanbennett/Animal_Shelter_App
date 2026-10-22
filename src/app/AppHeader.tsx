@@ -9,6 +9,8 @@ import { AssistantPanel } from "@/components/assistant/AssistantPanel";
 import { SignOutButton } from "./login/SignOutButton";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { MobileNavToggle } from "./MobileNavToggle";
+import { showMenuForLogin } from "@/lib/menu/show-menu";
+import { Home } from "lucide-react";
 import { AccountMenu } from "./AccountMenu";
 import { userNameOf } from "@/lib/auth/user-name";
 import { roleKeyLabel } from "@/lib/i18n/enum-labels";
@@ -22,6 +24,8 @@ export async function AppHeader() {
   // The assistant opens from here so it is reachable from every screen,
   // including the phone. The doctor role does not get it (0070).
   const perms = await loadPermissions();
+  // Tiles-only roles have no menu to open; the header carries a Home button instead.
+  const showMenu = !perms?.role.opensApp || (await showMenuForLogin());
 
   // Name · role, so two logins with the same first name (or one person's
   // three test accounts) still read differently. The role is its display
@@ -64,7 +68,19 @@ export async function AppHeader() {
         />
       )}
       <div className="flex items-center gap-3">
-        <MobileNavToggle />
+        {showMenu ? (
+          <MobileNavToggle />
+        ) : (
+          <Link
+            href="/home"
+            aria-label={t.nav.home}
+            data-action="HeaderButton"
+            className="-ml-2 flex h-11 min-w-11 shrink-0 items-center justify-center gap-1.5 rounded px-2 text-sm font-medium text-foreground hover:bg-surface-hover"
+          >
+            <Home aria-hidden="true" className="h-5 w-5" />
+            <span>{t.nav.home}</span>
+          </Link>
+        )}
         {/* The logo is the way to the public website (it left the nav
             2026-09-22). New tab, because staff are mid-task when they
             click it. */}
