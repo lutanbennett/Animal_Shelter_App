@@ -512,6 +512,35 @@ function cmdLaunch(args) {
   writeLaunch(repo, { quiet: args.includes("--quiet") });
 }
 
+/**
+ * Every claude/* branch, local or on origin, that no worktree holds, with what
+ * it would cost to lose it. Report only: 'list' never deletes anything.
+ */
+function unheldBranches(trees) {
+  const held = new Set(trees.map((t) => t.branch));
+  const names = new Set();
+  for (const ref of [`refs/heads/${BRANCH_PREFIX}`, `refs/remotes/origin/${BRANCH_PREFIX}`]) {
+    const out = tryGit(["for-each-ref", "--format=%(refname)", ref]) ?? "";
+    for (const r of out.split("\n").filter(Boolean)) names.add(r.replace(/^refs\/(heads|remotes\/origin)\//, ""));
+  }
+  const local = new Set((tryGit(["for-each-ref", "--format=%(refname:short)", `refs/heads/${BRANCH_PREFIX}`]) ?? "").split("\n"));
+  return [...names]
+    .filter((n) => !held.has(n))
+    .sort()
+    .map((name) => {
+      const ref = local.has(name) ? name : `origin/${name}`;
+      const where = !local.has(name) ? "origin only" : tryGit(["rev-parse", "--verify", "-q", `origin/${name}`]) ? "local+origin" : "local only";
+      const ahead = tryGit(["rev-list", "--count", ref, "--not", "origin/main"]) ?? "?";
+      const p = mergeProof(ref);
+      let state;
+      if (p.kind === "merged") state = "merged - safe to clear";
+      else if (p.kind === "squashed") state = `squash-merged (PR #${p.pr}) - safe to clear`;
+      else if (p.kind === "extra") state = `UNMERGED WORK: PR ${p.pr} merged but ${p.commits} commit(s) are not in main - DO NOT TOUCH`;
+      else state = `NO MERGED PR, ${ahead} commit(s) main lacks - DO NOT TOUCH, unsubmitted work`;
+      return { name, where, state };
+    });
+}
+
 /** The 'state' cell for a branch that is ahead of main: finished, or work that would be lost. */
 function proofState(branch, ahead) {
   if (!branch.startsWith(BRANCH_PREFIX) || ahead === "-" || ahead === "0") return "";
@@ -578,6 +607,20 @@ function cmdList() {
     console.log("      HELD by <process> / bare HELD = something we cannot place (a terminal, editor, or a brief handle from");
     console.log("      git or an indexer that is gone on the next run): look before tearing it down.");
     console.log("      free = nothing has it open right now. A session can still attach a moment later.");
+  }
+
+  // A folder that no longer carries its own name is how a husk happened: cleanup
+  // by name missed it (2026-10-21, the 267 folder reused for record-0-38-2).
+  const odd = trees.filter((t) => !t.main && t.branch.startsWith(BRANCH_PREFIX) && path.basename(t.dir).toLowerCase() !== (FOLDER_PREFIX + t.branch.slice(BRANCH_PREFIX.length)).toLowerCase());
+  if (odd.length) {
+    console.log("\nFolder name does not match its branch (cleanup by name will miss these):");
+    for (const t of odd) console.log(`  ${path.basename(t.dir)}  holds  ${t.branch}`);
+  }
+
+  const loose = unheldBranches(trees);
+  if (loose.length) {
+    console.log("\nBranches with no worktree (report only; list never deletes):");
+    for (const b of loose) console.log(`  ${b.name}  [${b.where}]  ${b.state}`);
   }
 
   const orphans = husks(trees);

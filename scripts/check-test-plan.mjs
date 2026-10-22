@@ -137,6 +137,16 @@ try {
 }
 const before = new Set(unreleasedLines(baseReleases));
 const added = unreleasedLines(headReleases).filter((l) => !before.has(l));
+// Advisory only: a new note that names an admin-only place but carries no `roles`
+// shows to every live role. A wrong tag hides a note from the people it is for,
+// which is the worse error, so this warns and never fails
+// (docs/decisions/2026-10-22-release-note-audience-question.md).
+const unreleasedBlock = headReleases.match(/export const unreleased\b[^=]*=\s*\[([\s\S]*?)\];/)?.[1] ?? "";
+const taggedTexts = new Set(
+  [...unreleasedBlock.matchAll(/\{\s*text\s*:\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)\s*,\s*roles\b/g)].map((m) => m[1].slice(1, -1)),
+);
+const ADMIN_ONLY_NOTE = /Settings\s*(?:→|->)|\/admin\b|\bAdmin-only\b|\bonly (?:an )?admins?\b/i;
+const untaggedAdminNotes = added.filter((l) => !taggedTexts.has(l) && ADMIN_ONLY_NOTE.test(l));
 const visible = touched.filter((f) => USER_VISIBLE.some((p) => p.test(f)));
 
 // A sign-off PR records a check made after the feature merged — the deployed
@@ -422,6 +432,11 @@ const releaseNote =
   visible.length && added.length === 0 && releaseNa.length
     ? `\nNo release note, on the plan's word (touches ${shown}):\n` + releaseNa.map((r) => `  ${r}`).join("\n")
     : "";
+const audienceNote = untaggedAdminNotes.length
+  ? "\nWarning (not a failure): a new `unreleased` note names an admin-only place but has no `roles`, so every role will see it. " +
+    "If only some roles can open that page, tag it `{ text, roles: [...] }`:\n" +
+    untaggedAdminNotes.map((t) => `  "${t.length > 90 ? t.slice(0, 90) + "…" : t}"`).join("\n")
+  : "";
 const releaseFromNote = releaseFrom.length
   ? "\nSign-off PR: release-notes tick checked against the merge that introduced the plan:\n" +
     releaseFrom.map((r) => `  ${r}`).join("\n")
@@ -447,7 +462,7 @@ if (problems.length) {
     console.error("\nAwaiting a person (not a defect — nobody has looked yet):");
     for (const a of awaiting) console.error(`  ${a}`);
   }
-  console.error(deferredNote + releaseNote + releaseFromNote);
+  console.error(deferredNote + releaseNote + releaseFromNote + audienceNote);
   console.error("\nEvery line is ticked, `n/a: <reason>`, or — in the pre-production gate — `deferred: <owner>`.");
   process.exit(1);
 }
@@ -462,7 +477,7 @@ if (problems.length) {
 if (awaiting.length) {
   console.log(`check-test-plan: the plan is complete and correct, and ${awaiting.length} item(s) await a person:\n`);
   for (const a of awaiting) console.log(`  ${a}`);
-  console.log(deferredNote + releaseNote + releaseFromNote);
+  console.log(deferredNote + releaseNote + releaseFromNote + audienceNote);
   console.log("\nNothing to fix. A person still has to look and sign before this ships.");
   process.exit(0);
 }
