@@ -93,6 +93,16 @@ reports and a six-way split into one ruling and one stream.
 
 ---
 
+## And the brief block had gone stale against the checklist it exists to help pass
+
+Found while filling **this** handover's own test plan. The brief's test-plan block told streams to
+tick the CI line in a follow-up commit; **the template changed on 2026-10-20 to forbid that**,
+because a new HEAD means a new run, so the tick **invalidates its own evidence** and every PR paid
+**two CI cycles** to transcribe what GitHub already records. **Corrected in the skill**, along with
+the general rule: **when a brief quotes a checklist, the checklist is the authority** — nothing tells
+you when a quoted rule goes stale, so check it against `docs/test-plan-template.md` when you write a
+brief.
+
 ## Where things stand — re-read 2026-10-22, not carried
 
 | | |

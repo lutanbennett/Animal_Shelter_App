@@ -584,11 +584,26 @@ Append this to every `.brief.md`, changed only where a stream genuinely differs:
   needs to look — that is a legitimate state, it reports as *awaiting*, and it is
   not a failure.
 
-**One follow-up commit IS legitimate, and only one.** The template's CI line
-cannot be true in the commit that creates the PR, so leave it
-`n/a: not yet — the PR does not exist at this commit` on the first push and tick
-it once you have **seen** the run go green. **Do not pre-tick it** — a green you
-have not seen is the exact failure the checklist exists to prevent.
+**THE CI LINE IS NEVER TICKED. LEAVE IT `n/a` AND DO NOT COME BACK TO IT.**
+Corrected 2026-10-22: this block told streams to tick it in a follow-up commit,
+and **the template changed on 2026-10-20 to forbid exactly that** — so the brief
+has been contradicting the checklist it is meant to help pass. Write
+`n/a: not yet — the PR does not exist at this commit` and **leave it there.**
+The reasoning is on the template line itself: a follow-up commit **invalidates
+its own evidence**, because a new HEAD means a new run, so every PR was paying
+**two full CI cycles** to transcribe a result GitHub already records permanently
+against the commit. **Do not pre-tick it either.**
+
+**What replaces it is a MERGE step, not a checklist line:** before merging, read
+the run for your current HEAD (`gh run view <id> --json status,conclusion,headSha`)
+and **confirm `headSha` matches**. Merging on an older run's strength merges a
+commit whose CI never finished.
+
+**And the general lesson, which is why this correction is worth its space:** a
+brief block that quotes a checklist goes stale when the checklist changes, and
+nothing tells you. **When you write a brief, the template is the authority** —
+if this block and `docs/test-plan-template.md` disagree, the template is right
+and this is out of date. Fix it here when you notice.
 
 **A red `test-plan` is always someone's mistake to fix.** It is never noise and
 never "nobody has signed yet" — a correct-but-unsigned plan exits 0 by design. So
