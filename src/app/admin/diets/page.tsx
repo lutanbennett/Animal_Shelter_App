@@ -1,158 +1,101 @@
-import { ActionLink } from "@/components/ActionLink";
+import Link from "next/link";
 import { Boxes } from "lucide-react";
+import { ActionLink } from "@/components/ActionLink";
 import { getT } from "@/lib/i18n/get-t";
-import { LargerScreenNotice } from "@/components/LargerScreenNotice";
-import { UnitsPanel } from "@/components/UnitsPanel";
 import { dietUnitLabel } from "@/lib/i18n/enum-labels";
-import { loadConversions } from "@/lib/units-server";
 import { refuseFor } from "@/lib/auth/require-role";
 import { canEditItemSettings } from "@/lib/permissions/item-settings";
 import { requirePermission } from "@/lib/permissions/require";
-import { CreateDietTypeForm } from "./CreateDietTypeForm";
-import { DietTypesTable, type DietDefinitionRow } from "./DietTypesTable";
-import { RecipesPanel, type RecipeIngredient, type RecipeRow } from "./RecipesPanel";
-
-type DietTypeQueryRow = Omit<DietDefinitionRow, "recipe_count" | "record_count">;
+import { amountText, loadRecipeBook } from "@/lib/diets/recipe-book";
+import { AddDietButton } from "./AddButtons";
+import { DietTabs } from "./DietTabs";
 
 /**
- * Settings → Diets: the diets (recipes of ingredients, 0239) and the
- * ingredients they are made of — name, unit, notes and the units each is
- * bought and counted in. Split from Management on 2026-10-08
- * (docs/decisions/2026-10-07-management-settings-split.md); the stock half,
- * with cost, counts and the food forecast, is /management/diets.
+ * Settings → Diets, the recipe book: a card for each diet (a recipe of ingredients, 0239). Tap a
+ * card for that diet's own page. The ingredients themselves are on the other tab. Split from one
+ * long page on 2026-10-22 (docs/decisions/2026-10-22-diets-recipe-book.md); the stock half, with
+ * cost, counts and the food forecast, is /management/diets.
  *
- * Admin only (item-settings.ts). The Director's, at her desk: the
- * desktop-only notice stands.
+ * Admin only (item-settings.ts). Built for a phone first: the Director opens it there.
  */
 export default async function DietSettingsPage() {
   const { supabase, perms } = await requirePermission("reference.types");
   if (!canEditItemSettings(perms, "diet")) refuseFor(perms);
   const { t } = await getT();
+  const book = await loadRecipeBook(supabase);
 
-  const [typesResult, recipesResult, linesResult, residentDietsResult, conversions] = await Promise.all([
-    supabase
-      .from("diet_types")
-      .select("id, name, name_th, unit, notes")
-      .order("name")
-      .returns<DietTypeQueryRow[]>(),
-    supabase
-      .from("diets")
-      .select("id, name, name_th, notes, is_standard")
-      .order("name")
-      .returns<{ id: string; name: string; name_th: string | null; notes: string | null; is_standard: boolean }[]>(),
-    supabase
-      .from("diet_ingredients")
-      .select("diet_id, diet_type_id, serving_unit, qty_small, qty_medium, qty_large")
-      .returns<
-        {
-          diet_id: string;
-          diet_type_id: string;
-          serving_unit: string | null;
-          qty_small: number | string;
-          qty_medium: number | string;
-          qty_large: number | string;
-        }[]
-      >(),
-    // One row per resident diet is cheap at shelter scale and gives the
-    // reference counts that gate the delete buttons.
-    supabase
-      .from("resident_diets")
-      .select("diet_id")
-      .returns<{ diet_id: string }[]>(),
-    loadConversions(supabase, "diet"),
-  ]);
-
-  const recordsByDiet = new Map<string, number>();
-  for (const row of residentDietsResult.data ?? []) {
-    recordsByDiet.set(row.diet_id, (recordsByDiet.get(row.diet_id) ?? 0) + 1);
-  }
-  const recipeCounts = new Map<string, number>();
-  // Resident records that reach an ingredient through a recipe that uses it.
-  const recordsByType = new Map<string, number>();
-  for (const line of linesResult.data ?? []) {
-    recipeCounts.set(line.diet_type_id, (recipeCounts.get(line.diet_type_id) ?? 0) + 1);
-    recordsByType.set(line.diet_type_id, (recordsByType.get(line.diet_type_id) ?? 0) + (recordsByDiet.get(line.diet_id) ?? 0));
-  }
-  const dietTypes: DietDefinitionRow[] = (typesResult.data ?? []).map((type) => ({
-    ...type,
-    recipe_count: recipeCounts.get(type.id) ?? 0,
-    record_count: recordsByType.get(type.id) ?? 0,
-  }));
-  const ingredients: RecipeIngredient[] = dietTypes.map((type) => ({
-    id: type.id,
-    name: type.name,
-    unit: type.unit,
-    servingUnits: (conversions.data[type.id] ?? []).map((c) => c.unit),
-  }));
-  const recipes: RecipeRow[] = (recipesResult.data ?? []).map((recipe) => ({
-    ...recipe,
-    resident_count: recordsByDiet.get(recipe.id) ?? 0,
-    lines: (linesResult.data ?? [])
-      .filter((line) => line.diet_id === recipe.id)
-      .map((line) => ({
-        ingredientId: line.diet_type_id,
-        servingUnit: line.serving_unit,
-        small: Number(line.qty_small),
-        medium: Number(line.qty_medium),
-        large: Number(line.qty_large),
-      })),
-  }));
-
-  const m = t.management.diets;
   const s = t.admin.diets;
+  const byId = new Map(book.ingredients.map((i) => [i.id, i]));
+  const standard = book.recipes.some((r) => r.isStandard);
 
   return (
-    <main className="flex flex-1 flex-col gap-8 p-6">
+    <main className="flex flex-1 flex-col gap-5 p-4 md:p-6">
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{s.title}</h1>
         <p className="text-sm text-muted">{s.subtitle}</p>
-        {/*
-          The page's actions row. The cupboard-order screen (batch 73, diet_types.sort_order from
-          0161) gets its link here, beside the way back to the stock half.
-        */}
         <div className="mt-3 flex flex-wrap gap-2">
           <ActionLink href="/management/diets" label={s.stockLink} icon={Boxes} iconOnlyOnMobile={false} />
         </div>
       </div>
 
-      <LargerScreenNotice>
-        {typesResult.error && (
-          <p className="text-sm text-danger">
-            {m.couldntLoad}: {typesResult.error.message}
-          </p>
-        )}
-        {(recipesResult.error ?? linesResult.error ?? residentDietsResult.error) && (
-          <p className="text-sm text-danger">
-            {m.couldntLoadUsage}: {(recipesResult.error ?? linesResult.error ?? residentDietsResult.error)?.message}
-          </p>
-        )}
+      <DietTabs active="diets" />
 
-        <RecipesPanel recipes={recipes} ingredients={ingredients} />
+      {book.error && <p className="text-sm text-danger">{t.management.diets.couldntLoad}: {book.error}</p>}
+      {!standard && book.recipes.length > 0 && (
+        <p className="rounded border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-foreground">{s.recipes.noStandard}</p>
+      )}
 
-        <section className="flex flex-col gap-4">
-          <h2 className="text-lg font-semibold text-foreground">{s.ingredientsTitle}</h2>
-          <p className="text-sm text-muted">{s.ingredientsHint}</p>
-          <CreateDietTypeForm />
-          <DietTypesTable dietTypes={dietTypes} />
-        </section>
+      <div>
+        <AddDietButton />
+      </div>
 
-        {conversions.error && (
-          <p className="text-sm text-danger">
-            {t.units.title}: {conversions.error}
-          </p>
-        )}
-        <UnitsPanel
-          kind="diet"
-          mode="conversions"
-          items={dietTypes.map((type) => ({
-            id: type.id,
-            name: type.name,
-            baseUnit: dietUnitLabel(t, type.unit),
-            conversions: conversions.data[type.id] ?? [],
-            costPerBase: null,
-          }))}
-        />
-      </LargerScreenNotice>
+      {book.recipes.length === 0 && <p className="text-sm text-muted">{s.recipes.none}</p>}
+      <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {book.recipes.map((recipe) => {
+          const serve = recipe.lines
+            .map((line) => {
+              const ingredient = byId.get(line.ingredientId);
+              if (!ingredient) return null;
+              return `${amountText(line.medium, line.servingUnit, dietUnitLabel(t, ingredient.unit))} ${ingredient.name}`;
+            })
+            .filter(Boolean)
+            .join(" · ");
+          return (
+            <li key={recipe.id}>
+              <Link
+                href={`/admin/diets/${recipe.id}`}
+                className="flex h-full flex-col gap-2 rounded border border-border bg-surface p-4 hover:border-primary"
+              >
+                <span className="flex flex-wrap items-center gap-2 text-lg font-semibold text-foreground">
+                  {recipe.name}
+                  {recipe.isStandard && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs font-medium">
+                      <span aria-hidden>★</span>
+                      {t.management.diets.standard.badge}
+                    </span>
+                  )}
+                </span>
+                {recipe.nameTh && (
+                  <span lang="th" className="text-sm text-foreground">
+                    {recipe.nameTh}
+                  </span>
+                )}
+                <span className="text-sm text-foreground">
+                  {serve ? (
+                    <>
+                      <span className="text-muted">{s.book.cardServe} </span>
+                      {serve}
+                    </>
+                  ) : (
+                    <span className="text-warning">{s.book.cardNoIngredients}</span>
+                  )}
+                </span>
+                <span className="mt-auto text-xs text-muted">{s.book.cardResidents(recipe.residentsNow)}</span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
     </main>
   );
 }

@@ -17,7 +17,7 @@ import { canEditItemSettings } from "@/lib/permissions/item-settings";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
-export type DietTypeFormState = ActionResult<{ success: string }> | undefined;
+export type DietTypeFormState = ActionResult<{ success: string; id: string }> | undefined;
 
 /** The option-list columns of a diet type, as strings from a form or a row editor. */
 export type DietDefinitionFields = {
@@ -51,7 +51,7 @@ async function refusal() {
 }
 
 function revalidateDietPages() {
-  revalidatePath("/admin/diets");
+  revalidatePath("/admin/diets", "layout");
   revalidatePath("/management/diets");
   revalidatePath("/management/purchasing");
   revalidatePath("/management/cashflow");
@@ -110,11 +110,11 @@ export async function createDietType(
     if (parsed.error !== undefined) return refuse(parsed.error);
 
     const supabase = await createClient();
-    const { error } = await supabase.from("diet_types").insert(parsed.row);
+    const { data, error } = await supabase.from("diet_types").insert(parsed.row).select("id").single<{ id: string }>();
     if (error) return refuse(error.message);
 
     revalidateDietPages();
-    return { ok: true, success: t.management.diets.createdDiet(parsed.row.name) };
+    return { ok: true, success: t.management.diets.createdDiet(parsed.row.name), id: data.id };
   });
 }
 
