@@ -9,7 +9,8 @@
 //
 //   node scripts/pi/write-env.mjs [--env production|uat|test]
 
-import { writeFileSync } from "node:fs";
+import { writeFileSync, chmodSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { loadEnv, parseEnvArg, projectRef } from "../lib/env.mjs";
@@ -90,4 +91,17 @@ const lines = [
   `PHOTO_CACHE_DIR=${join(homedir(), name === "test" ? "photo-cache-test" : "photo-cache")}`,
 ];
 writeFileSync(".env.production.local", lines.join("\n") + "\n", { mode: 0o600 });
+// The service runs as its own user (docs/decisions/2026-10-22-pi-app-own-user.md) and reads this
+// file through its group. Rewriting the file resets that, so hand it over again every time. Before
+// setup has made the group there is nothing to hand over to, and the file stays 0600.
+{
+  const group = name === "test" ? "lannacare-test" : "lannacare-app";
+  try {
+    execFileSync("getent", ["group", group], { stdio: "ignore" });
+    execFileSync("chgrp", [group, ".env.production.local"]);
+    chmodSync(".env.production.local", 0o640);
+  } catch {
+    console.log(`write-env: group ${group} not usable yet; .env.production.local stays 0600 (setup.sh makes the group).`);
+  }
+}
 console.log(`write-env: .env.production.local → ${name} (Supabase ${projectRef(env)}, site https://${publicHost})`);

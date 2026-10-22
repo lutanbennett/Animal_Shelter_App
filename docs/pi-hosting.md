@@ -262,9 +262,9 @@ on the Pi" rule no longer holds, so:
   is exposed to the internet directly. The exposure is a compromised app, not an open port.
 - The dump folder is `0700` and each dump `0600`, outside the repo (`backup.mjs` refuses a
   folder inside it), so nothing the app serves can reach it.
-- **Known limit:** the app service and the backup run as the same user, so a compromised
+- **Was a known limit (closed 2026-10-22):** the app service and the backup ran as the same user, so a compromised
   app process could read the dumps and the env files anyway. Splitting the app onto its
-  own user is the next step if the threat model needs it; it is not done.
+  own user is now done (2026-10-22), see "Moving the app to its own user".
 - **Drive stays the off-site copy.** The Pi is in the same house as the origin it
   protects; a flood or theft takes both.
 
@@ -456,3 +456,57 @@ process can read.
   `SUPABASE_DB_URL` is set, and a failed backup writes only to `~/backups/backup.log`.
   Set `SUPABASE_DB_URL` in `.env.deploy.production`, run the backup by hand, confirm a new
   dump appeared, and only then delete the token line from every file. Then rotate the token.
+
+## Moving the app to its own user (one time, on the Pi)
+
+Until 2026-10-22 the app ran as your own user, the same one that owns the backups. Now it
+runs as `lannacare-app` (production) and `lannacare-test` (test): accounts that cannot log
+in, own nothing but the two small caches, and can read only the built site and their own
+settings file. Nothing changes for visitors. You do this once; it can be repeated safely.
+
+**Do the test copy first, then production.** Open a terminal on the Pi (ssh in, as usual).
+
+1. Update the test copy and run its setup:
+
+   ```bash
+   cd ~/Animal_Shelter_App_test && git fetch origin && git reset --hard origin/main && ./scripts/pi/setup-test.sh
+   ```
+
+   It asks for your password a few times. Near the end you should see
+   `lanna-care-test runs as lannacare-test and answers`. If you see
+   `did not come up ... Putting the previous arrangement back`, the test site is back as it
+   was; send the lines printed above that message to Claude and stop.
+
+2. Check test still works: open `https://test.lannacare.org` and sign in.
+
+3. Then production, the same way:
+
+   ```bash
+   cd ~/Animal_Shelter_App && git fetch origin && git reset --hard origin/main && ./scripts/pi/setup.sh <tunnel-id>
+   ```
+
+   You should see `lanna-care runs as lannacare-app and answers`. The site is down for a
+   few seconds while it restarts. It stops with a message, and leaves the old arrangement
+   running, if `.env.local` is in the production folder: move it off the Pi and run it again.
+
+4. Check it: open `https://lannacare.org`, then run
+   `ps -o user= -p $(systemctl show -p MainPID --value lanna-care)` — it should print
+   `lannacare-app`. This proves the site still works *and* who it runs as:
+
+   ```bash
+   sudo -u lannacare-app ls ~/backups/lannacare
+   ```
+
+   should say `Permission denied`. That is the whole point.
+
+5. Log out of the Pi and back in once, so your login joins the new groups (the next
+   `deploy-pi.sh` needs this to clear the app's build cache).
+
+**What the app can and cannot read now.** It cannot open `~/backups` (the encrypted dumps),
+`.env.deploy.production`, your ssh keys or anything else in your home. It still holds what it
+must to run: the settings file it is given (`.env.production.local`, which carries the
+database service key and, for now, the Google Drive token the backup borrows). Both are
+readable by the app. See `docs/decisions/2026-10-22-pi-app-own-user.md`.
+
+**Going back:** `sudo sed -i 's/^User=.*/User=lutan/;/^Group=/d' /etc/systemd/system/lanna-care.service && sudo systemctl daemon-reload && sudo systemctl restart lanna-care`
+(same for `lanna-care-test`). The app reads fine as you; only the protection is lost.

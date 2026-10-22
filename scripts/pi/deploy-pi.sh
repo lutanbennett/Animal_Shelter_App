@@ -26,7 +26,7 @@
 # earlier step failed) fetches the served stylesheet and compares it with the build
 # (scripts/pi/check-assets.mjs). The restart itself takes a second or two, during
 # which the Worker's fallback answers (worker/index.mjs). Run from the repo root as
-# the user the service runs as. See docs/decisions/2026-10-18-pi-deploy-safety.md.
+# the deploy user (not the service user, which only reads the result). See docs/decisions/2026-10-18-pi-deploy-safety.md.
 set -euo pipefail
 # Absolute path and original arguments, kept for the re-exec below (this script cd's, and
 # the argument loop shifts them away).

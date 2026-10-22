@@ -87,7 +87,24 @@ export function UnitsPanel({
   );
 }
 
-function ItemUnits({ kind, mode, item }: { kind: ItemKind; mode: UnitsPanelMode; item: UnitsPanelItem }) {
+/**
+ * One item's units. `plain` is for a page about a single ingredient (Settings → Diets): it drops
+ * the "base unit" and "factor" wording for "1 cup weighs about 0.1 kg", and `open` shows the list
+ * without the fold.
+ */
+export function ItemUnits({
+  kind,
+  mode,
+  item,
+  plain = false,
+  open: startOpen = false,
+}: {
+  kind: ItemKind;
+  mode: UnitsPanelMode;
+  item: UnitsPanelItem;
+  plain?: boolean;
+  open?: boolean;
+}) {
   const { t, locale } = useI18n();
   const confirm = useConfirm();
   const u = t.units;
@@ -135,11 +152,11 @@ function ItemUnits({ kind, mode, item }: { kind: ItemKind; mode: UnitsPanelMode;
   };
 
   return (
-    <details className="group px-4 py-3 text-sm">
+    <details className="group px-4 py-3 text-sm" open={startOpen || undefined}>
       <summary className="flex cursor-pointer flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <span className="font-medium text-foreground">{item.name}</span>
         <span className="text-xs text-muted">
-          {u.baseUnit(item.baseUnit)} · {u.summary(item.conversions.length)}
+          {plain ? u.summary(item.conversions.length) : `${u.baseUnit(item.baseUnit)} · ${u.summary(item.conversions.length)}`}
         </span>
       </summary>
 
@@ -151,6 +168,7 @@ function ItemUnits({ kind, mode, item }: { kind: ItemKind; mode: UnitsPanelMode;
             editingId === c.id ? (
               <li key={c.id}>
                 <ConversionForm
+                  plain={plain}
                   base={item.baseUnit}
                   fields={fields}
                   set={set}
@@ -163,7 +181,7 @@ function ItemUnits({ kind, mode, item }: { kind: ItemKind; mode: UnitsPanelMode;
             ) : (
               <li key={c.id} className="flex flex-wrap items-center justify-between gap-2">
                 <span className="flex flex-wrap items-center gap-2 text-foreground">
-                  {u.oneIs(localLabel(locale, c.unit, c.unitTh), formatQuantity(c.basePer), item.baseUnit)}
+                  {(plain ? u.oneAbout : u.oneIs)(localLabel(locale, c.unit, c.unitTh), formatQuantity(c.basePer), item.baseUnit)}
                   {c.isPurchase && <Badge>{c.isDefaultPurchase ? u.defaultBadge : u.purchaseBadge}</Badge>}
                   {c.isCount && <Badge>{u.countBadge}</Badge>}
                   {c.note && <span className="text-xs text-muted">{c.note}</span>}
@@ -193,6 +211,7 @@ function ItemUnits({ kind, mode, item }: { kind: ItemKind; mode: UnitsPanelMode;
 
         {mode === "price" ? null : editingId === "new" ? (
           <ConversionForm
+            plain={plain}
             base={item.baseUnit}
             fields={fields}
             set={set}
@@ -265,6 +284,7 @@ function Badge({ children }: { children: React.ReactNode }) {
 }
 
 function ConversionForm({
+  plain,
   base,
   fields,
   set,
@@ -273,6 +293,7 @@ function ConversionForm({
   onSave,
   onCancel,
 }: {
+  plain: boolean;
   base: string;
   /** Editing the size that is the usual one now: it can only be handed on by ticking another. */
   wasDefault: boolean;
@@ -306,7 +327,7 @@ function ConversionForm({
           />
         </label>
         <label className="flex flex-col gap-1 text-xs text-muted">
-          {u.factor(base)}
+          {plain ? u.factorPlain(base) : u.factor(base)}
           <input
             type="number"
             min={0}

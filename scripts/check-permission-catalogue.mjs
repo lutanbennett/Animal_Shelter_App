@@ -320,6 +320,10 @@ const PINNED = {
   // it yet and adding one needs a migration. opensWhoDoesWhat() is the one place that says so.
   "/admin/who-does-what": { guards: ["if (!opensWhoDoesWhat(perms)) refuseFor(perms)"], decides: [] },
   "/admin/who-does-what/details": { guards: ["if (!opensWhoDoesWhat(perms)) refuseFor(perms)"], decides: [] },
+  // Settings → Diets, the recipe book (diets-recipe-book): the same two guards as /admin/diets, one per screen.
+  "/admin/diets/[id]": { guards: ['requirePermission("reference.types")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },
+  "/admin/diets/ingredients": { guards: ['requirePermission("reference.types")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },
+  "/admin/diets/ingredients/[id]": { guards: ['requirePermission("reference.types")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },
   "/bills": { guards: ["if (!canUseBills(perms)) refuseFor(perms)"], decides: ["stock.delivery", "medical.visits", "maintenance.bills"] },
 };
 
