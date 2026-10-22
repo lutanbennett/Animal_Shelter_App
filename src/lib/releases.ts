@@ -74,15 +74,24 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  { text: "Home screens: Management and the 2IC now have tiles for Record Weight, Add Medical Photos and Feed Special Diets; Management has a Bills tile; the Head of Maintenance and Head of Medical have View residents.", roles: ["management", "second_in_command", "head_of_maintenance", "head_of_medical"] },
-  { text: "Settings → Who does what: adding a group now needs only an English name (the Thai name is optional, and the English one shows in Thai until you add it). The result, \"Added: …\" or the reason it was refused, now appears right under the Add group button, and the button stays off until there is a name.", roles: ["admin"] },
-  "Clinic visits: vet visits are now written to the shelter's Google Calendar, \"Lanna Care: vet visits\", on the live site. Booking, moving or cancelling a visit updates the calendar, and moving or cancelling the event in Google Calendar updates the visit.",  "Purchasing: on a laptop, the To buy list now comes first, straight under the period choice, and the working-out tables for medicines and food sit below it under \"How these were worked out\".",
-  "Settings → Diets is now a recipe book. Diets and Ingredients are separate tabs; each diet is a card showing what goes in for a medium dog, and tapping it opens its own page, where Add ingredient is a small form and a total shows what one day's serve adds up to. Each ingredient has its own page too, with its measures (1 cup weighs about 120 g) and the diets that use it.",
-];
+export const unreleased: ReleaseNote[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.39.1",
+    date: "2026-10-22",
+    title:
+      "Vet visits in Google Calendar, Diets as a recipe book, and more home tiles",
+    major: false,
+    notes: [
+    { text: "Home screens: Management and the 2IC now have tiles for Record Weight, Add Medical Photos and Feed Special Diets; Management has a Bills tile; the Head of Maintenance and Head of Medical have View residents.", roles: ["management", "second_in_command", "head_of_maintenance", "head_of_medical"] },
+    { text: "Settings → Who does what: adding a group now needs only an English name (the Thai name is optional, and the English one shows in Thai until you add it). The result, \"Added: …\" or the reason it was refused, now appears right under the Add group button, and the button stays off until there is a name.", roles: ["admin"] },
+    "Clinic visits: vet visits are now written to the shelter's Google Calendar, \"Lanna Care: vet visits\", on the live site. Booking, moving or cancelling a visit updates the calendar, and moving or cancelling the event in Google Calendar updates the visit.",
+    "Purchasing: on a laptop, the To buy list now comes first, straight under the period choice, and the working-out tables for medicines and food sit below it under \"How these were worked out\".",
+    { text: "Settings → Diets is now a recipe book. Diets and Ingredients are separate tabs; each diet is a card showing what goes in for a medium dog, and tapping it opens its own page, where Add ingredient is a small form and a total shows what one day's serve adds up to. Each ingredient has its own page too, with its measures (1 cup weighs about 120 g) and the diets that use it.", roles: ["admin", "doctor"] },
+    ],
+  },
   {
     version: "0.39.0",
     date: "2026-10-21",
