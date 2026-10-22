@@ -134,9 +134,15 @@ export function pluralUnit(unit: string, qty: number): string {
   return qty !== 1 && /^[a-z]{3,}$/.test(unit) && !unit.endsWith("s") ? `${unit}s` : unit;
 }
 
-/** "1.5 cups", "200 g". `ownLabel` is the translated label of the ingredient's own unit. */
+/** The unit word for an amount: "cups", "can", "g". `ownLabel` is the translated label of the ingredient's own unit. */
+export function unitText(qty: number, servingUnit: string | null, ownLabel: string): string {
+  // The dictionary labels its own units "can(s)"; in a sentence that is "can" or "cans".
+  return servingUnit ? pluralUnit(servingUnit, qty) : ownLabel.replace("(s)", qty === 1 ? "" : "s");
+}
+
+/** "1.5 cups", "200 g". */
 export function amountText(qty: number, servingUnit: string | null, ownLabel: string): string {
-  return `${formatQuantity(qty)} ${servingUnit ? pluralUnit(servingUnit, qty) : ownLabel}`;
+  return `${formatQuantity(qty)} ${unitText(qty, servingUnit, ownLabel)}`;
 }
 
 /**

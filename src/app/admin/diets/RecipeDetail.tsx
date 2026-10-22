@@ -9,7 +9,7 @@ import { RowActionButton } from "@/components/RowAction";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { dietUnitLabel } from "@/lib/i18n/enum-labels";
 import { formatQuantity } from "@/lib/diets/options";
-import { SIZES, totalText, type BookIngredient, type BookRecipe, type Size } from "@/lib/diets/recipe-book";
+import { SIZES, totalText, unitText, type BookIngredient, type BookRecipe, type Size } from "@/lib/diets/recipe-book";
 import {
   deleteRecipe,
   removeRecipeLine,
@@ -297,7 +297,7 @@ export function RecipeDetail({
           {recipe.lines.map((line) => {
             const ingredient = byId.get(line.ingredientId);
             if (!ingredient) return null;
-            const unit = line.servingUnit ?? ownLabel(ingredient.unit);
+            const unit = unitText(line.medium, line.servingUnit, ownLabel(ingredient.unit));
             return (
               <li key={line.ingredientId} className="flex items-center justify-between gap-3 py-3">
                 <div className="flex flex-col">

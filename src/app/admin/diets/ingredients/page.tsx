@@ -58,7 +58,7 @@ export default async function IngredientsPage() {
                 )}
               </span>
               <span className="flex flex-col items-end text-xs text-muted">
-                <span>{s.ingredientBook.boughtBy(dietUnitLabel(t, ingredient.unit))}</span>
+                <span>{s.ingredientBook.boughtBy(dietUnitLabel(t, ingredient.unit).replace("(s)", ""))}</span>
                 <span>{s.ingredientBook.usedIn(dietsUsing.get(ingredient.id) ?? 0)}</span>
               </span>
             </Link>

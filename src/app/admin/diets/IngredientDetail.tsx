@@ -75,7 +75,7 @@ export function IngredientDetail({
             {ingredient.nameTh}
           </span>
         )}
-        <span className="text-sm text-muted">{i.boughtBy(ownLabel)}</span>
+        <span className="text-sm text-muted">{i.boughtBy(ownLabel.replace("(s)", ""))}</span>
       </div>
 
       <section className="flex flex-col gap-3 rounded border border-border bg-surface p-4">
