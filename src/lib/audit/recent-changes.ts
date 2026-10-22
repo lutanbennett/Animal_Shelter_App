@@ -192,7 +192,12 @@ function toEntry(raw: RawRow): AuditEntry {
     at: r.at,
     kind: kindOf(r.op, r.old_row, r.new_row, changed),
     changed,
-    viaCalendar: table === "clinic_visits" && r.op === "UPDATE" && r.actor === null && changed.includes("calendar_changed_at"),
+    viaCalendar:
+      table === "clinic_visits" &&
+      r.actor === null &&
+      ((r.op === "UPDATE" && changed.includes("calendar_changed_at")) ||
+        // a visit made from an entry typed into Google Calendar (calendar-import.ts) carries this note
+        (r.op === "INSERT" && typeof image.notes === "string" && image.notes.includes("Created from Google Calendar"))),
     name:
       table === "residents" || table === "contacts" || table === "roles"
         ? str(image.name)

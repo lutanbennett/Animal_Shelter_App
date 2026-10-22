@@ -8,6 +8,9 @@ import { formatDate, todayIso } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { visitDate } from "@/lib/clinics/linkable";
 import { loadShelterVisits, shelterTime } from "@/lib/clinics/shelter-visits";
+import { calendarConfigured } from "@/lib/clinics/calendar-sync";
+import { listToConfirm } from "@/lib/clinics/calendar-import";
+import { ConfirmList } from "./ConfirmList";
 import { VetVisitsView, type VisitRow } from "./VetVisitsView";
 
 /**
@@ -26,6 +29,12 @@ export default async function VetVisitsPage() {
   const v = t.shelterVisits;
   const { visits, error } = await loadShelterVisits(supabase);
   const today = todayIso();
+  // Entries typed into the shelter calendar that did not read as one clear visit (calendar-import.ts), for whoever
+  // books visits and only where the calendar is switched on.
+  const toConfirm = can(perms, "visit.book") && calendarConfigured() ? await listToConfirm() : null;
+  const confirmIds = [...new Set((toConfirm?.items ?? []).flatMap((i) => i.decision.matches.flatMap((m) => m.candidates.map((r) => r.id))))];
+  const photoRows = confirmIds.length ? ((await supabase.from("residents").select("id, profile_photo_drive_file_id").in("id", confirmIds)).data ?? []) : [];
+  const photos: Record<string, string | null> = Object.fromEntries(photoRows.map((r: { id: string; profile_photo_drive_file_id: string | null }) => [r.id, r.profile_photo_drive_file_id]));
 
   const rows: VisitRow[] = visits.map((visit) => {
     const r = visit.residents;
@@ -70,6 +79,21 @@ export default async function VetVisitsPage() {
           </div>
         )}
       </div>
+      {toConfirm?.error && (
+        <p className="text-sm text-danger">
+          {v.confirm.couldntRead}: {toConfirm.error}
+        </p>
+      )}
+      {toConfirm && (
+        <ConfirmList
+          t={t}
+          locale={locale}
+          items={toConfirm.items}
+          clinics={toConfirm.refs.clinics}
+          liveResidents={toConfirm.refs.residents.filter((r) => r.status !== "Deceased" && r.status !== "Adopted")}
+          photos={photos}
+        />
+      )}
       {error && (
         <p className="text-sm text-danger">
           {v.couldntLoad}: {error}
