@@ -195,6 +195,20 @@ jobs:
           node-version: 22
       - run: node scripts/check-cards-count.mjs
 
+  # The card walkthrough (docs/card-walkthrough.md) is generated from cards.ts: fails when a card has no steps or the
+  # file is out of date. Reads only the repo, like cards-count (docs/decisions/2026-10-22-card-walkthrough-generated.md).
+  card-walkthrough:
+    needs: changes
+    if: needs.changes.outputs.docs-only != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - run: node scripts/check-card-walkthrough.mjs
+
   # Known-vulnerable production dependencies, reported, not enforced. Red on
   # this job would learn to be ignored: npm audit routinely reports things
   # nobody can act on today (an advisory with no fixed release, a chain that
