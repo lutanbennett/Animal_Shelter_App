@@ -52,6 +52,7 @@ export type PollResult = {
   configured: boolean;
   moved: number;
   cancelled: number;
+  imported: number;
   clashes: number;
   note?: string;
 };

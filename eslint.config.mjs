@@ -51,6 +51,7 @@ const eslintConfig = defineConfig([
       "src/lib/status/access-requests.ts",
       "src/lib/clinics/calendar-sync.ts",
       "src/lib/clinics/calendar-poll.ts",
+      "src/lib/clinics/calendar-import.ts",
       "src/lib/status/alerts.ts",
       "src/lib/status/health.ts",
       "src/lib/status/usage.ts",

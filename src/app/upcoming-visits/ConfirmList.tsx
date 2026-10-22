@@ -72,7 +72,7 @@ export function ConfirmList({
                           <label key={r.id} className="flex w-28 cursor-pointer flex-col items-center gap-1 rounded-md border border-border p-2 text-center has-[:checked]:border-primary has-[:checked]:bg-background">
                             <input type="radio" name={`pick-${i}`} value={r.id} required defaultChecked={m.candidates.length === 1} className="sr-only" />
                             <span className="relative flex h-16 w-16 items-center justify-center overflow-hidden rounded-md bg-background">
-                              {photos[r.id] ? <Image src={driveImageUrl(photos[r.id]!, 200)} alt="" fill sizes="64px" className="object-cover" /> : <PawPrint className="h-8 w-8 text-muted" aria-hidden />}
+                              {photos[r.id] ? <Image src={driveImageUrl(photos[r.id]!, 160)} alt="" fill sizes="64px" className="object-cover" /> : <PawPrint className="h-8 w-8 text-muted" aria-hidden />}
                             </span>
                             <span className="break-words text-sm font-semibold">{r.name}</span>
                             {r.code && <span className="text-xs text-muted">{r.code}</span>}

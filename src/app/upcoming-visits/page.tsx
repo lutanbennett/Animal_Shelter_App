@@ -29,6 +29,12 @@ export default async function VetVisitsPage() {
   const v = t.shelterVisits;
   const { visits, error } = await loadShelterVisits(supabase);
   const today = todayIso();
+  // Entries typed into the shelter calendar that did not read as one clear visit (calendar-import.ts), for whoever
+  // books visits and only where the calendar is switched on.
+  const toConfirm = can(perms, "visit.book") && calendarConfigured() ? await listToConfirm() : null;
+  const confirmIds = [...new Set((toConfirm?.items ?? []).flatMap((i) => i.decision.matches.flatMap((m) => m.candidates.map((r) => r.id))))];
+  const photoRows = confirmIds.length ? ((await supabase.from("residents").select("id, profile_photo_drive_file_id").in("id", confirmIds)).data ?? []) : [];
+  const photos: Record<string, string | null> = Object.fromEntries(photoRows.map((r: { id: string; profile_photo_drive_file_id: string | null }) => [r.id, r.profile_photo_drive_file_id]));
 
   const rows: VisitRow[] = visits.map((visit) => {
     const r = visit.residents;
