@@ -16,7 +16,8 @@
 // were once changed by hand (docs/decisions/2026-10-16-hand-edited-columns-
 // restated.md). apply-migrations --drift compares which *files* ran; this
 // compares what the files actually produced. Uses SUPABASE_ACCESS_TOKEN, which
-// must be able to see both projects.
+// must be able to see both projects, or set REHEARSAL_SUPABASE_ACCESS_TOKEN
+// for the --against side when that project is under another account.
 //
 // Defaults ignore the `schema_migrations` bookkeeping table. Views, functions
 // and policies are not compared here; columns are what the app's SQL breaks on.
@@ -58,7 +59,7 @@ const SQL = `
   where table_schema = 'public' and table_name <> 'schema_migrations'
   order by table_name, column_name`;
 
-async function columns(ref) {
+async function columns(ref, token) {
   const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
@@ -74,7 +75,9 @@ async function columns(ref) {
 }
 
 console.log(`Comparing ${leftRef} (${envName}) with ${rightRef}`);
-const [left, right] = await Promise.all([columns(leftRef), columns(rightRef)]);
+// A project under another Supabase account needs its own token (the rehearsal project does).
+const rightToken = (againstRef && env.REHEARSAL_SUPABASE_ACCESS_TOKEN) || token;
+const [left, right] = await Promise.all([columns(leftRef, token), columns(rightRef, rightToken)]);
 
 const lines = [];
 for (const k of [...new Set([...left.keys(), ...right.keys()])].sort()) {
