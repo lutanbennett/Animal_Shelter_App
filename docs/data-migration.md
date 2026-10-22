@@ -1,5 +1,7 @@
 # Migrating the AppSheet data
 
+> **HISTORICAL, 2026-10-22.** `scripts/appsheet-export.mjs` and `scripts/import-appsheet.mjs` were deleted: AppSheet is retired and the cutover moves live data by dump and restore from the project that becomes UAT, not by import (`docs/decisions/2026-10-22-from-zero-rehearsal-and-schema-drift.md`). The Scripts and Runbook sections below describe the 2026-09-22 migration and are not a cutover procedure. The scripts are in git history before this change.
+
 How the shelter's records move from the legacy AppSheet / Google Sheets
 system into this app. Two scripts do the work; this page records what
 they do to the data and why, and the runbook for cutover.
