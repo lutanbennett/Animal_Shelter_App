@@ -11,7 +11,7 @@
 | PR | opened from this branch after this plan passes the checker |
 | Tested by / date | Claude (planner session) / 2026-10-22 |
 | Carries a migration? | no |
-| Tested at SHA | `87560d87` |
+| Tested at SHA | `6adcaaab` |
 
 ## 1. Scope and risk
 
@@ -41,7 +41,7 @@ indistinguishable from one that passed.
 - [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so write it `n/a: not yet — the PR does not exist at this commit` and **leave it there.** Changed 2026-10-20: ticking it in a follow-up commit used to be the rule, and that commit **invalidated its own evidence** — a new HEAD means a new run, so every PR in this repository paid two full CI cycles to transcribe a result GitHub already records permanently against the commit. A tick here attests to nothing a reader can check better by looking at the PR. **What must still happen, and is a merge step rather than a checklist line: before merging, read the run for your current HEAD (`gh run view <id> --json status,conclusion,headSha`) and confirm its `headSha` matches.** Merging on an older run's strength merges a commit whose CI never finished. **Do not pre-tick this line either** — a green you have not seen is the exact failure this checklist exists to prevent — n/a: not yet — the PR does not exist at this commit
 
 ```
-=== gates: build exited 0 after 109s
+=== gates: build exited 0 after 41s
 
 gates: typecheck=0 lint=0 test=0 build=0
 ```
