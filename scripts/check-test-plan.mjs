@@ -482,4 +482,4 @@ if (awaiting.length) {
   process.exit(0);
 }
 
-console.log(`check-test-plan: ok — ${changed.join(", ")}${deferredNote}${releaseNote}${releaseFromNote}`);
+console.log(`check-test-plan: ok — ${changed.join(", ")}${deferredNote}${releaseNote}${releaseFromNote}${audienceNote}`);
