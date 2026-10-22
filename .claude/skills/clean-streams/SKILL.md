@@ -47,6 +47,22 @@ normally on a **detached HEAD**, so they hold no branch. `worktree.mjs list` doe
 worktree's branch outlives the folder, so these pile up with nothing pointing at them. `done` never
 sees them because there is no folder to look up.
 
+**(c) Folders under `.claude/worktrees/` that git no longer knows.** An app-cut worktree whose
+registration was pruned leaves its folder (often with `node_modules`/`.next`) behind, and it appears in
+neither `git worktree list` nor `worktree.mjs list`. Two survived this way and cost 1 GB (2026-10-22).
+Find them:
+
+```
+ls C:/Development/Animal_Shelter_App/.claude/worktrees
+git -C C:/Development/Animal_Shelter_App worktree list --porcelain
+```
+
+A folder in the first list whose path is not in the second is one of these. **Report it and ask:**
+show its size and the date of its newest file, and compare its files against `main` before saying
+nothing is lost. Delete only on the user's yes. Loose `Animal_Shelter_*` folders under
+`C:/Development` that git does not know are husks, which `worktree.mjs list` already prints and
+`worktree.mjs done <name>` clears.
+
 ### Sorting these, and the test that matters
 
 **The principle is the same as step 2's and it does not bend: the question is whether the branch's
