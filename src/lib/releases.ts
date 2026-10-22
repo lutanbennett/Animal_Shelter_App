@@ -74,7 +74,9 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "Account → Home screen icons now has an icon for every tile on your home screen, including Bills, Assistant and My tasks, which were missing.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [
