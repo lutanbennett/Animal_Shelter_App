@@ -22,3 +22,8 @@ export function decideChange(event: Ev, visit: V): "ignore" | "own" | "clash" | 
   if (new Date(start).getTime() === new Date(visit.appointment_date).getTime()) return "ignore";
   return changedInApp ? "clash" : "move";
 }
+
+/** An event carrying a different environment's tag. No tag (an older event) is not "other": the visit lookup already tied it to this database. */
+export function isOtherEnvironment(tag: string | undefined, mine: string): boolean {
+  return tag !== undefined && tag !== mine;
+}

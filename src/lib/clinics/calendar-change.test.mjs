@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { decideChange } from "./calendar-change.ts";
+import { decideChange, isOtherEnvironment } from "./calendar-change.ts";
 
 const visit = (o = {}) => ({
   appointment_date: "2026-10-20T09:30:00+07:00",
@@ -23,3 +23,9 @@ test("changed in the app too: the app wins", () => {
   assert.equal(decideChange({ etag: "e2", status: "cancelled" }, v), "clash");
 });
 test("a completed visit is not changed", () => assert.equal(decideChange({ etag: "e2", status: "cancelled" }, visit({ status: "completed" })), "ignore"));
+
+test("another environment's tag is not ours to act on; no tag or our own tag is", () => {
+  assert.equal(isOtherEnvironment("dev", "production"), true);
+  assert.equal(isOtherEnvironment("production", "production"), false);
+  assert.equal(isOtherEnvironment(undefined, "production"), false);
+});
