@@ -62,7 +62,7 @@ export async function loadCardsByRole(roleKeys: readonly string[], locale: Local
   return Object.fromEntries(await Promise.all(keys.map(async (key) => [key, await loadRoleCards(key, locale)] as const)));
 }
 
-type GroupRow = { id: string; name: string; name_th: string; icon: string; position: number };
+type GroupRow = { id: string; name: string; name_th: string | null; icon: string; position: number };
 const groupLabel = (g: GroupRow, locale: Locale) => (locale === "th" && g.name_th) || g.name;
 
 /**

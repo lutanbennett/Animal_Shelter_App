@@ -219,12 +219,12 @@ export async function addGroup(roleKey: string, name: string, nameTh: string, ic
     if (!g.ok) return g;
     const en = name.trim();
     const th = nameTh.trim();
-    if (!en || !th) return { ok: false, error: c.namesNeeded };
+    if (!en) return { ok: false, error: c.namesNeeded };
     if (!isGroupIconKey(icon)) return { ok: false, error: t.common.somethingWentWrong("icon") };
     const groups = await currentGroups(g.supabase, g.roleId);
     if (!groups) return { ok: false, error: t.common.somethingWentWrong("groups") };
     const position = groups.reduce((m, x) => Math.max(m, x.position + 1), 0);
-    const { error } = await g.supabase.from("role_groups").insert({ role_id: g.roleId, name: en, name_th: th, icon, position });
+    const { error } = await g.supabase.from("role_groups").insert({ role_id: g.roleId, name: en, name_th: th || null, icon, position });
     if (error?.code === "23505") return { ok: false, error: c.nameTaken };
     if (error) return databaseFailure("whoDoesWhat.addGroup", error, t.common);
     return done();

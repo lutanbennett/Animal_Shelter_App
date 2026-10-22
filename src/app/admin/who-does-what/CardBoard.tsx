@@ -275,7 +275,7 @@ export function CardBoard({
               </section>
             );
           })}
-          {canEdit && <AddGroupForm roleKey={roleKey} pending={pending} run={run} />}
+          {canEdit && <AddGroupForm roleKey={roleKey} pending={pending} onAdded={() => router.refresh()} />}
         </section>
         <section aria-labelledby="add-h" className={`flex min-w-0 flex-col gap-3 md:order-1 ${zone("library")}`} onDragOver={allow("library")} onDragLeave={() => setOver(null)} onDrop={dropOnLibrary}>
           <h2 id="add-h" className="text-lg font-semibold text-foreground">
@@ -295,11 +295,14 @@ export function CardBoard({
   );
 }
 
-function AddGroupForm({ roleKey, pending, run }: { roleKey: string; pending: boolean; run: (steps: Step[]) => void }) {
+function AddGroupForm({ roleKey, pending, onAdded }: { roleKey: string; pending: boolean; onAdded: () => void }) {
   const { t } = useI18n();
   const gc = t.admin.whoDoesWhat.groups;
   const [name, setName] = useState("");
   const [nameTh, setNameTh] = useState("");
+  const [busy, startAdd] = useTransition();
+  // The result is drawn under the button that caused it: the board-wide error sits above the cards, out of sight from here.
+  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
   const [icon, setIcon] = useState<string>(GROUP_ICON_KEYS[0]);
   const field = "min-h-11 w-full rounded-md border border-border bg-background px-2 py-2 text-sm text-foreground";
   return (
@@ -309,16 +312,18 @@ function AddGroupForm({ roleKey, pending, run }: { roleKey: string; pending: boo
         className="flex max-w-xl flex-col gap-2"
         onSubmit={(e) => {
           e.preventDefault();
-          run([
-            async () => {
-              const r = await addGroup(roleKey, name, nameTh, icon);
-              if (r.ok) {
-                setName("");
-                setNameTh("");
-              }
-              return r;
-            },
-          ]);
+          if (!name.trim()) return;
+          const added = name.trim();
+          setResult(null);
+          startAdd(async () => {
+            const r = await addGroup(roleKey, name, nameTh, icon);
+            if (r.ok) {
+              setName("");
+              setNameTh("");
+              setResult({ ok: true, text: gc.added(added) });
+              onAdded();
+            } else setResult({ ok: false, text: r.error });
+          });
         }}
       >
         <label className="flex flex-col gap-1 text-foreground">
@@ -328,6 +333,7 @@ function AddGroupForm({ roleKey, pending, run }: { roleKey: string; pending: boo
         <label className="flex flex-col gap-1 text-foreground">
           {gc.nameTh}
           <input value={nameTh} onChange={(e) => setNameTh(e.target.value)} lang="th" className={field} />
+          <span className="text-xs text-muted">{gc.nameThOptional}</span>
         </label>
         <label className="flex flex-col gap-1 text-foreground">
           {gc.icon}
@@ -339,9 +345,11 @@ function AddGroupForm({ roleKey, pending, run }: { roleKey: string; pending: boo
             ))}
           </select>
         </label>
-        <button type="submit" disabled={pending} className="min-h-11 self-start rounded-md border border-primary bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60">
+        <button type="submit" disabled={pending || busy || !name.trim()} className="min-h-11 self-start rounded-md border border-primary bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60">
           {gc.add}
         </button>
+        {!name.trim() && <p className="text-sm text-muted">{gc.nameNeeded}</p>}
+        {result && (<p role={result.ok ? "status" : "alert"} className={`text-sm [overflow-wrap:anywhere] ${result.ok ? "text-foreground" : "text-danger"}`}>{result.text}</p>)}
       </form>
     </details>
   );
