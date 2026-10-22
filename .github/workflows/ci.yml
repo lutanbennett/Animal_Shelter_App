@@ -217,7 +217,25 @@ jobs:
         with:
           node-version: 22
           cache: npm
-      - run: npm run audit:prod
+      # npm audit has no timeout of its own and has hung on the registry for
+      # the whole job (PR #836: killed after 5 min, no output at all). So: 90 s
+      # a try, one retry, and "could not reach the registry" is a warning, not
+      # a red. Red is reserved for an actual finding, which still fails the
+      # step; continue-on-error above still stops it blocking a merge.
+      - name: npm audit (production dependencies)
+        run: |
+          for attempt in 1 2; do
+            set +e
+            timeout 90 npm run audit:prod 2>&1 | tee audit.log
+            code=${PIPESTATUS[0]}
+            set -e
+            if [ "$code" -eq 0 ]; then exit 0; fi
+            # A finding: npm printed its summary. Fail, and do not retry.
+            if grep -qE "^found [0-9]+ vulnerabilit|vulnerabilities$|Severity:" audit.log; then exit "$code"; fi
+            echo "attempt $attempt inconclusive (exit $code, no advisory output)"
+          done
+          echo "::warning title=npm audit inconclusive::Could not reach the registry; no advisory was read. This is not a finding."
+          exit 0
 
   # The public tier of the test database must read the public_* views and
   # nothing else: no write through them, no other table, view or function

@@ -393,8 +393,8 @@ console.log(`  ${rawRows.length} row(s) read, ${rows.length} to load, ${held.len
 if (ignoredColumns.length) console.log(`  columns ignored: ${ignoredColumns.join(", ")}`);
 
 // Everything past here talks to the database, and process.exit() trips a libuv
-// assertion on Windows while fetch still holds a socket (the same note is on
-// import-appsheet.mjs). So the rest sets process.exitCode and returns instead.
+// assertion on Windows while fetch still holds a socket (the same note was on
+// the retired AppSheet importer). So the rest sets process.exitCode and returns instead.
 await run();
 
 async function run() {
