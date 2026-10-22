@@ -823,6 +823,44 @@ every time.
 `npm audit fix --force` — it is free to move a dependency backwards across a major version.
 ```
 
+### WHEN THE PLANNER TOUCHES PRODUCTION ITSELF: three rules, all learned in one morning
+
+Added 2026-10-22. On that day the planner diagnosed a live calendar fault for Lutan, and **asserted
+three things it had not verified.** His words were *"This is really bad"* and *"This is a complete
+disaster"*, and in two of the three he was right. None of this was a briefing gap or a dial: it was
+the planner acting directly on production data and speaking with more confidence than its evidence
+carried. The planner does this work often — it is the one role that reads production — so the rules
+belong here.
+
+1. **VERIFY AGAINST THE FIELD THE CODE ACTUALLY READS, AND QUOTE THE LINE.** A script deleted four
+   events from the shelter's real calendar after a guard that checked
+   `extendedProperties.private.visitId` and refused anything carrying one. **The code matches on
+   `clinic_visits.calendar_event_id`** — an event made by an older build has no `visitId` and is
+   still tracked, so the guard was reading a field with no bearing on the question. The planner had
+   written *"nothing will be cancelled, nobody will be emailed"*; a cancellation email arrived
+   minutes later. **Before a destructive step, name the field or query the code uses, read that line,
+   and say which line you read.** A guard that tests the wrong property is worse than no guard,
+   because it is reported as safety.
+2. **A MEASUREMENT HAS A TIMESTAMP; A FACT DOES NOT. DO NOT PROMOTE ONE INTO THE OTHER.** The test
+   and production calendar ids were compared and found identical, and that result was repeated as
+   current forty minutes later — by which time a stream had separated them, **exactly as it had been
+   asked to.** Nothing was wrong with the check. What was wrong was restating it without its clock.
+   **Say "identical when I read it at HH:MM", and re-read before relying on it**, especially while
+   streams you set up are editing the very thing you measured.
+3. **WHEN YOU SAY A FEATURE WORKS, SAY WHAT ITS VISIBLE LATENCY IS.** Lutan was told the calendar was
+   safe to work in. He added six appointments, saw nothing appear, and reported the feature as
+   broken. It was not broken — the quarter-hourly sweep had not run yet, and nobody had told him
+   there was a sweep. **"It works" with no latency attached invites exactly that, and the person
+   loses confidence in the feature and in you.** One clause is enough: *"it appears within fifteen
+   minutes"*.
+
+**And the habit that limits the damage of all three: when an incident ends, the findings go onto the
+backlog in the same session.** Every measurement from that morning lived only in the chat for about
+an hour, while the backlog carried an item saying the cause was *"not yet confirmed"* with four
+candidate causes, two already ruled out. A stream briefed from that item would have re-diagnosed a
+settled bug. **Rewrite the item with the evidence, mark the superseded guesses in place, and only
+then brief anyone.**
+
 ## 8. Finish
 
 One line per stream: folder, port, and that the session should be opened
