@@ -273,7 +273,7 @@ Hand it over **with a `tee`**, because the lines worth reading print before a
 three-minute build and scroll out of the terminal buffer:
 
 ```bash
-node scripts/deploy.mjs --env production | tee deploy-<version>.log
+mkdir -p .local && node scripts/deploy.mjs --env production | tee .local/deploy-<version>.log
 ```
 
 The `deploy: production → Supabase project dbkodyyxxhtygxcxmfcu (<sha>)` line
@@ -295,7 +295,7 @@ does not mail, and neither does test (`RELEASE_MAIL_ENV` is `""` there).
 ### Worker, test — Claude runs this
 
 ```bash
-node scripts/deploy.mjs --env test | tee deploy-test-<version>.log
+mkdir -p .local && node scripts/deploy.mjs --env test | tee .local/deploy-test-<version>.log
 ```
 
 **`tee` it, and never pipe it through `tail`.** The production deploy above is

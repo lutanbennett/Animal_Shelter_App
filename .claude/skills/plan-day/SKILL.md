@@ -54,6 +54,7 @@ node C:/Development/Animal_Shelter_App/scripts/check-backlog-sections.mjs   # st
 git -C C:/Development/Animal_Shelter_App push
 git -C C:/Development/Animal_Shelter_Backlog merge --ff-only main
 git -C C:/Development/Animal_Shelter_Backlog push
+node C:/Development/Animal_Shelter_App/scripts/worktree.mjs clean   # prunes the Turbopack cache if over 3 GB; refuses (say so, carry on) while next runs there
 ```
 
 (`check-backlog-sections` run from the main checkout reads **`main`'s** copy of `docs/backlog.md`, not the backlog worktree's — if you just edited the other folder, a stale count is expected until the merge above has brought it in.)

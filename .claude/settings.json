@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node scripts/worktree.mjs clean)",
+      "Bash(node scripts/worktree.mjs clean --dry-run)",
+      "Bash(node C:/Development/Animal_Shelter_App/scripts/worktree.mjs clean)",
+      "Bash(node C:/Development/Animal_Shelter_App/scripts/worktree.mjs clean --dry-run)"
+    ]
+  }
+}

@@ -31,9 +31,15 @@
 //       (never overridden), or if a process holds the folder (--stop-servers
 //       ends the dev servers it can identify there and tries again). Also
 //       clears a husk: a leftover folder of that name git has forgotten.
+//   node scripts/worktree.mjs clean [--max-gb N] [--dry-run]
+//       Turbopack's build cache (.next/cache) and dev cache (.next/dev) only ever
+//       grow (Next has an on/off switch for them, no size limit). Remove both in
+//       THIS checkout when together they exceed N GB (default 3), printing each
+//       folder's size before and the total after. Never .next whole, never
+//       anything else; refuses while a next dev/build process is running here.
 
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, copyFileSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, copyFileSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -790,6 +796,60 @@ function cmdDone(args) {
   console.log(`done — folder removed, worktree unregistered, ${branch} gone locally and on origin`);
 }
 
+// ------------------------------------------------------------- clean
+
+const CACHE_DIRS = [path.join(".next", "cache"), path.join(".next", "dev")];
+const GB = 1024 ** 3;
+
+/** Bytes under dir, counting files only and never following links. */
+function dirBytes(dir) {
+  let total = 0;
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) total += dirBytes(p);
+    else if (e.isFile()) total += statSync(p).size;
+  }
+  return total;
+}
+
+const gb = (n) => `${(n / GB).toFixed(2)} GB`;
+
+function cmdClean(args) {
+  const dry = args.includes("--dry-run");
+  const i = args.indexOf("--max-gb");
+  const maxGb = i >= 0 ? Number(args[i + 1]) : 3;
+  if (!(maxGb >= 0)) fail("--max-gb needs a number of gigabytes");
+
+  const targets = CACHE_DIRS.map((rel) => ({ rel, dir: path.join(repo, rel) })).filter((t) => existsSync(t.dir));
+  for (const t of targets) t.bytes = dirBytes(t.dir);
+  const before = targets.reduce((n, t) => n + t.bytes, 0);
+  for (const t of targets) console.log(`  ${t.rel.padEnd(12)} ${gb(t.bytes)}`);
+  console.log(`clean: ${gb(before)} of build cache in ${repo} (limit ${maxGb} GB)`);
+  if (before <= maxGb * GB) return console.log("clean: under the limit, nothing removed");
+
+  // A running next holds files in these folders, and Windows will not delete
+  // a locked directory — say so now rather than half-way through.
+  const flat = (s) => s.replaceAll("/", "\\").replace(/\\+/g, "\\").replace("\\.bin\\..\\", "\\").toLowerCase();
+  const nextDir = `${flat(repo)}\\node_modules\\next\\`;
+  const busy = (holders([repo]).get(repo) ?? []).filter((p) => flat(p.cmd).includes(nextDir));
+  if (busy.length) {
+    const pids = busy.map((p) => "pid " + p.pid).join(", ");
+    fail(`not cleaning: next is running here (${pids}). Stop it and run this again.`);
+  }
+  if (dry) return console.log("clean: --dry-run, nothing removed");
+
+  for (const t of targets) {
+    try {
+      rmSync(t.dir, { recursive: true, force: true, maxRetries: 3, retryDelay: 200 });
+    } catch (e) {
+      fail(`could not remove ${t.dir}: ${e.message}`);
+    }
+    if (existsSync(t.dir)) fail(`${t.dir} still exists after removal`);
+    console.log(`  removed ${t.rel} (${gb(t.bytes)})`);
+  }
+  console.log(`clean: freed ${gb(before)}; the next build refills the cache and is slower once`);
+}
+
 // ---------------------------------------------------------------- main
 
 const [cmd, ...rest] = process.argv.slice(2);
@@ -800,6 +860,7 @@ switch (cmd) {
   case "list": cmdList(); break;
   case "launch": cmdLaunch(rest); break;
   case "done": cmdDone(rest); break;
+  case "clean": cmdClean(rest); break;
   default: {
     const lines = readFileSync(fileURLToPath(import.meta.url), "utf8").split("\n");
     const end = lines.findIndex((l) => l.startsWith("import "));
