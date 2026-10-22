@@ -385,14 +385,14 @@ So the questions are now three, in this order:
 3. **Must it merely read a lot?** Cheap. Do not widen (the `silent-empty-reads`
    correction above).
 
-**SUSPENDED 2026-10-22 — DO NOT ADD THIS ALLOWANCE UNTIL STREAMS CAN SIGN IN TO DEV.** The
-rule below is not wrong, but it prices work that is currently **not happening**. Two streams in
-two days were asked to verify in the browser and **could not get a signed-in session**:
-`purchasing-to-buy-first` recorded its whole check as `pending`, and `who-does-what-add-group`
-**carried an explicit sign-in block and still failed**, marking sixteen lines *"not driven in a
-browser"*. Both came in **under** band as a result. There is a backlog item to establish a
-working route; **until it ships, band browser-verifying streams as if the check will land on
-Lutan, and say so in the brief.** Restore the allowance when a stream can actually sign in.
+**RESTORED 2026-10-22 — STREAMS CAN NOW SIGN IN TO DEV, BUT THIS IS UNPROVEN BY A SECOND STREAM.**
+`scripts/dev-signin.mjs` makes a disposable login for a named role and signs the browser pane in with
+no password and no Redirect URL (`CLAUDE.md` → "Getting a signed-in dev session"). It was proven
+once, by the stream that wrote it. **Treat the allowance below as live again, but check the first
+batch that uses it: did the stream actually drive the browser, or write `pending: no signed-in session`
+again?** Put one line in the brief — *"sign in with `node scripts/dev-signin.mjs <role> --port <yours>`;
+steps in CLAUDE.md"* — and **do not** write the old block (ask for a Redirect URL, find a password):
+that route never worked. It is aal1 only; if the brief's page needs the 2-step, say so in the brief.
 
 **A BRIEF THAT ASKS FOR REAL BROWSER VERIFICATION ADDS ~30k, WHATEVER THE CODE SHAPE IS.**
 Added 2026-10-21. `assistant-immunization` was a third instance of a settled pattern — two intent

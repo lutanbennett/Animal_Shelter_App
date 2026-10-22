@@ -34,14 +34,14 @@
 // (0001's immutability trigger, and the app has no "delete a placement"
 // action), so removing history that never happened can only be done here.
 // Everything runs as one transaction through the Management API — the same
-// route apply-migrations.mjs and import-appsheet.mjs use — with assertions
+// route apply-migrations.mjs uses — with assertions
 // at the end, so a wrong plan leaves the database untouched. Re-running
 // after a successful run is a no-op.
 
 import { loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
 
 // Placement days are read in the shelter's timezone: the migrated rows are
-// stamped 00:00+07 (import-appsheet.mjs), so a 1 June placement is 31 May in
+// stamped 00:00+07 (the retired AppSheet import), so a 1 June placement is 31 May in
 // UTC and "is this the June foster?" has to be asked in Bangkok time.
 const SHELTER_TZ = "Asia/Bangkok";
 

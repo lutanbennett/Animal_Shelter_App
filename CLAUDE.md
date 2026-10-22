@@ -290,6 +290,37 @@ before pushing.
 Everything merged up to `f32f2c1` (PRs #51–#54) is the agreed baseline and
 predates the rule.
 
+## Getting a signed-in dev session (for the browser check)
+
+**Decided 2026-10-22 (`docs/decisions/2026-10-22-dev-signin-route.md`).** Two streams in two days
+reported "no signed-in session"; the fix is a script, not a request to anyone. Follow it before you
+write a single `pending: no signed-in session` line, because that line is now a fault, not a state.
+
+1. Start your dev server on your own port (`preview_start` with `name: "dev"`).
+2. `node scripts/dev-signin.mjs <role> --port <your port>` — `<role>` is a `roles.key` (`admin`,
+   `management`, `doctor`, `volunteer`, `second_in_command`, `head_of_medical`, …; `staff` is retired).
+   It keeps one disposable login per role on the dev project (`dev-signin-<role>@example.invalid`),
+   gives it a fresh random password it never prints, and prints a one-line snippet.
+3. Paste that snippet into `javascript_tool` on `http://localhost:<port>`. It sets the session
+   cookies and goes to `/my`. The header then shows `dev-signin-<role>@example.invalid · <Role>`.
+4. To test another role, run the script again and paste again. `node scripts/dev-signin.mjs --remove`
+   deletes every login it made.
+
+What this does **not** need: no password from anyone (`DEV_TEST_USER_PASSWORD` stays unread), no
+Google button, and **no `/auth/callback` Redirect URL** — password sign-in never leaves the app, which
+is why the old "ask for your port to be added" step was a dead end. Nothing about dev's auth is relaxed.
+
+Know its limits, and say so in the test plan when they bite:
+
+- **The session is aal1 (password only).** Pages that demand the second step redirect to it. Proven
+  reachable at aal1 on 2026-10-22: `/management/purchasing`, `/admin/who-does-what`, `/admin/diets`,
+  `/admin/security`. If a page you changed does not open, write down which page and what it asked for.
+- **The snippet holds a live dev session token.** Never paste it into a PR, a test plan or a commit.
+- **Cookies belong to `localhost`, not to a port**, so every dev server in that browser shares one
+  signed-in role at a time. Run the script again to switch.
+- **The dev database is shared by every stream**, so what you write is visible to the others.
+- The cookie lasts 50 minutes. If a page sends you to `/login`, run the script again.
+
 ## A red `audit` check is not a blocker, and never has been
 
 CI's `audit` job (`npm run audit:prod`) reports known-vulnerable
