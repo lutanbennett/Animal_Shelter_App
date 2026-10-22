@@ -3020,6 +3020,8 @@ const en = {
       neverCountedBanner: (n: number) =>
         `${n} item${n === 1 ? "" : "s"} ${n === 1 ? "has" : "have"} never been counted, so ${n === 1 ? "it is" : "they are"} listed assuming none on the shelf.`,
       stocktakeLink: "Count them in a stocktake",
+      workingHeading: "How these were worked out",
+      workingIntro: "The sum behind each item, for when you want to check it.",
       sections: { medication: "Medicines", diet: "Food" },
       standardBadge: "Standard diet",
       table: { item: "Item", working: "The working", buy: "Buy" },
