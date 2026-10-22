@@ -37,3 +37,15 @@ Used the existing dev test resident `Capwarn Test 0924` (R-0079): this card cann
 The full Weight section `/residents/<id>/weight` is **refused** to this card (`/no-access`): that is by design, it belongs to the record cards.
 
 **Cookie jar finding (for the planner).** Signed out twice during this card, about 5 minutes apart ("you were signed out because you haven't used the app for a while"). The login's user id changed each time I re-ran the script, so the script recreates the login. I did not run `--remove`, so either another stream did, or an idle timeout fired. Not proven which.
+
+## add_medical_photos: PASS (1 TODO answered from the app, not exercised)
+
+| Step | Result | Note |
+|---|---|---|
+| 0 Home shows tile | pass | Signed in and landed on `/medical/photos` directly; tile not separately re-checked. |
+| 1 Open `/medical/photos` | pass | Picker loads (Scan card, name search, residents by enclosure). |
+| 2 TODO: Add a photo | **answered, NOT performed** | The browser pane cannot attach a file, and an upload writes to the real Drive folder. Answer read from the page and `src/app/api/medical/residents/[id]/photos/route.ts`: see below. Page reached for `Capwarn Test 0924` shows "Take a photo" and "Choose from phone". |
+| 3 Resident details read only | pass | `/r/<id>` shows photo, code, size, housing and an "Add Medical Photos" button; no edit controls. |
+| 4 Refused: `/operations/medication-list` | pass | `/no-access`. |
+
+**TODO answer.** The photo is filed in the resident's Drive **Medical** folder and recorded as an attachment (`record_attachment()`, 0140). It never reaches the website. On the card itself the only read-back is a count ("N added") on the same page. The page says outright: "You can add photos here but not look at them again. Management can see them on the resident's record." So the read-back belongs on the resident's record, seen with a different login. Still untried: an actual upload and the record-side check.
