@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Clinic visits: vet visits are now written to the shelter's Google Calendar, \"Lanna Care: vet visits\", on the live site. Booking, moving or cancelling a visit updates the calendar, and moving or cancelling the event in Google Calendar updates the visit.",
   "Purchasing: on a laptop, the To buy list now comes first, straight under the period choice, and the working-out tables for medicines and food sit below it under \"How these were worked out\".",
 ];
 
