@@ -29,6 +29,10 @@ export type EnclosureOption = {
  * Lifecycle pseudo-enclosures (Hospital, Fostered, …) are excluded — they
  * are entered through their own placement types, never by "moving" there.
  *
+ * Reads the picker views (0248), not the tables, so a login that may register or
+ * move a resident gets its lists without holding facility.enclosures. The views
+ * leave the Lifecycle zone out themselves.
+ *
  * Counts are tallied from resident_list_view in the request, the same way
  * /enclosures does (see docs/decisions.md, "Enclosure browser").
  *
@@ -38,14 +42,12 @@ export type EnclosureOption = {
 export async function loadEnclosureOptions(supabase: SupabaseClient) {
   const [zonesResult, enclosuresResult, residentsResult] = await Promise.all([
     supabase
-      .from("zones")
+      .from("picker_zones")
       .select("id, name, name_th, sort_order, colour")
-      .neq("name", SYSTEM_ZONE)
       .returns<(ZoneOption & { sort_order: number | null })[]>(),
     supabase
-      .from("enclosures")
-      .select("id, name, name_th, zone_id, capacity, sort_order, zones!inner(name)")
-      .neq("zones.name", SYSTEM_ZONE)
+      .from("picker_enclosures")
+      .select("id, name, name_th, zone_id, capacity, sort_order")
       .returns<
         {
           id: string;

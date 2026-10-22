@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Registering a resident now works for a login that has only the Residents card. Before, the last step of Register resident stopped with \"Something went wrong\", and the Arrival step's list of zones was empty.",
   "Vet visits: the shelter calendar entry for a visit now shows the reason (a Reason line under the clinic and resident), so anyone reading the calendar can see why the dog is going. It appears within a minute of booking or editing, and entries already in the calendar gain it within 15 minutes after the update. The visit's notes are still never sent.",
   "Vet visits: booking from Vet visits (or Appointments, or a clinic's page) now brings you back to that page when you save, so you can book several in a row without going back through the resident. Booking from a resident still returns to that resident.",
 ];
