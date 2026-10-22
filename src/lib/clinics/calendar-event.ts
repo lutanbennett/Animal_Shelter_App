@@ -29,12 +29,15 @@ export type CalendarVisit = {
   residentName: string;
   clinicName: string;
   appointmentDate: string;
+  /** Why the visit was booked. Shown in the entry; the notes never are. */
+  reason?: string | null;
 };
 
 /**
  * The Google Calendar event for one visit, the way the Director types them by hand:
  * "Novel - Blackie", the visit's time, one hour. The description carries the resident's name, the
- * clinic, the time and two addresses, and nothing medical: not the reason, not the notes. The links
+ * clinic, the reason (when there is one), the time and two addresses; never the notes
+ * (docs/decisions/2026-10-22-vet-calendar-shows-the-reason.md). The links
  * are built from `origin` (the app's own address), never a written-in host; with none, they are left out.
  */
 export function buildCalendarEvent(v: CalendarVisit, origin: string | null, env: AppEnv) {
@@ -42,6 +45,8 @@ export function buildCalendarEvent(v: CalendarVisit, origin: string | null, env:
   if (Number.isNaN(start.getTime())) return null;
   const end = new Date(start.getTime() + CALENDAR_ENTRY_MINUTES * 60_000);
   const lines = [`Vet visit: ${v.residentName} at ${v.clinicName}`];
+  const reason = v.reason?.replace(/\s+/g, " ").trim();
+  if (reason) lines.push(`Reason: ${reason}`);
   if (origin) {
     lines.push(`Visit: ${new URL(`/residents/${v.residentId}/clinic-visits`, origin).toString()}`);
     lines.push(`Resident's record: ${new URL(`/residents/${v.residentId}`, origin).toString()}`);

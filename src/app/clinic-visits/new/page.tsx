@@ -4,6 +4,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { localLabel } from "@/lib/translations/labels";
 import { NOT_DECEASED } from "@/lib/residents/status";
 import { loadDoctorNamesByClinic } from "@/lib/clinics/doctors";
+import { bookingReturnPath } from "@/lib/clinics/booking-return";
 import { loadClinicScope } from "@/lib/clinics/scope";
 import { ClinicVisitForm, type ResidentOption, type ClinicOption } from "./ClinicVisitForm";
 
@@ -100,6 +101,7 @@ export default async function NewClinicVisitPage(
             ? clinicIdParam
             : ""
         }
+        returnTo={bookingReturnPath(searchParams.from) ?? ""}
       />
     </main>
   );

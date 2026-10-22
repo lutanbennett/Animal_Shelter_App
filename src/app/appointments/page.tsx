@@ -41,7 +41,7 @@ export default async function AppointmentsPage() {
         </div>
         {can(perms, "visit.book") && (
           <div>
-            <ActionLink href="/clinic-visits/new" label={t.vetVisits.bookAppointment} icon={CLINIC_ICONS.visits} variant="primary" iconOnlyOnMobile={false} />
+            <ActionLink href="/clinic-visits/new?from=/appointments" label={t.vetVisits.bookAppointment} icon={CLINIC_ICONS.visits} variant="primary" iconOnlyOnMobile={false} />
           </div>
         )}
       </div>

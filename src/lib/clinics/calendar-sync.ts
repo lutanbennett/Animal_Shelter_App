@@ -78,6 +78,7 @@ type Row = {
   id: string;
   resident_id: string;
   appointment_date: string;
+  reason: string | null;
   status: string;
   archived_at: string | null;
   calendar_event_id: string | null;
@@ -88,7 +89,7 @@ type Row = {
 };
 
 const COLUMNS =
-  "id, resident_id, appointment_date, status, archived_at, calendar_event_id, calendar_synced_at, calendar_out_of_date_at, residents(name), clinics(name)";
+  "id, resident_id, appointment_date, reason, status, archived_at, calendar_event_id, calendar_synced_at, calendar_out_of_date_at, residents(name), clinics(name)";
 
 export type SyncOutcome = "created" | "updated" | "deleted" | "unchanged" | "failed" | "off";
 
@@ -140,6 +141,7 @@ async function syncRow(row: Row, origin: string | null): Promise<SyncOutcome> {
         residentName: row.residents!.name,
         clinicName: row.clinics!.name,
         appointmentDate: row.appointment_date,
+        reason: row.reason,
       },
       origin,
       getAppEnv(),

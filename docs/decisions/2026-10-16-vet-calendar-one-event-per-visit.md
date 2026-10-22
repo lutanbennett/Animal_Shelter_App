@@ -19,7 +19,8 @@ earlier clinic-day text was superseded and not built; the schema (0207) already 
   Drive photo uploads cannot be taken down by it. `GOOGLE_CALENDAR_ID` is a setting.
 - **Location is the clinic's name**: the clinics table holds no address (name, Thai name, contact info).
 - **Privacy**: description = resident name, clinic, two links built from the site origin (never a written
-  host). No reason, no notes. The links need a signed-in login; signed-out requests redirect to /login.
+  host). No reason, no notes (SUPERSEDED 2026-10-22 for the reason only: it is now shown, see
+  `2026-10-22-vet-calendar-shows-the-reason.md`; the notes stay out). The links need a signed-in login; signed-out requests redirect to /login.
 - **Known gap**: hard-deleting a visit row (no screen does; a resident cascade or SQL) leaves its event,
   because there is no row left for the sweep to find. Not fixed here: it would need a migration.
 - **Not built**: a one-page medical summary (filed for Lutan to decide); the `.ics` feed item is not
