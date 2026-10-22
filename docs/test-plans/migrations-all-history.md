@@ -131,7 +131,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Run `node scripts/apply-migrations.mjs --all-history --env <throwaway>` on an empty free project | Lutan, with a throwaway project |
+| 1 | End-to-end run of `--all-history` on an empty free project (skipped 2026-10-22 at Lutan's instruction: the only throwaway project still held all 247 migrations and could not be reset) | Lutan, when a fresh throwaway exists |
 
 ## Sign-off
 
@@ -144,7 +144,7 @@ Automated checks by: Claude  Date: 2026-10-22
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the one item is the end-to-end run, skipped on 2026-10-22 at Lutan's instruction, so it is pending, not checked
 
 Manual verification by: pending: the end-to-end run on a throwaway project
 
