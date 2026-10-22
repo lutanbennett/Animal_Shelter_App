@@ -103,7 +103,7 @@ const CURATED_HOME: Record<string, (perms: Permissions, t: Dictionary, billsWait
  * Pages a card opens that are not in the route registry, each with the test its own page uses (the same three
  * the derived home special-cases above). Everything else a card opens is a registry entry, tested by canOpen().
  */
-const OUTSIDE_REGISTRY: Record<string, { icon: LucideIcon; open: (p: Permissions) => boolean }> = {
+export const OUTSIDE_REGISTRY: Record<string, { icon: LucideIcon; open: (p: Permissions) => boolean }> = {
   "/residents": { icon: NAV_ICONS.residents, open: (p) => p.role.opensApp },
   "/bills": { icon: Receipt, open: canUseBills },
   "/assistant": { icon: Sparkles, open: (p) => can(p, "assistant.ask") },
