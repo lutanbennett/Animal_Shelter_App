@@ -1,6 +1,6 @@
 # systemd unit for the TEST instance on the Pi — installed by
 # scripts/pi/setup-test.sh as /etc/systemd/system/lanna-care-test.service
-# (WorkingDirectory and User are rewritten to the real ones there).
+# (WorkingDirectory and the user are rewritten to the real ones there).
 #
 # A copy of lanna-care.service with three differences that matter:
 #   - WorkingDirectory is the TEST clone (~/Animal_Shelter_App_test), never the
@@ -15,17 +15,28 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=__USER__
+User=__SVC_USER__
+Group=__SVC_USER__
+UMask=0002
 WorkingDirectory=__REPO__
 Environment=NODE_ENV=production
 Environment=PORT=3001
-ExecStart=/usr/bin/npm run start -- --port 3001 --hostname 127.0.0.1
+ExecStart=__REPO__/node_modules/.bin/next start --port 3001 --hostname 127.0.0.1
 Restart=always
 RestartSec=3
 Nice=10
 CPUWeight=50
 MemoryMax=900M
 TimeoutStopSec=15
+# Own user (docs/decisions/2026-10-22-pi-app-own-user.md): it reads the build and its env file,
+# writes only the two caches below, and cannot open the deploy user's backups or deploy secrets.
+# The "+" runs as root and hands the build cache over after each deploy swaps in a fresh one.
+ExecStartPre=+/bin/sh -c 'mkdir -p __REPO__/.next/cache && chown -R __SVC_USER__:__SVC_USER__ __REPO__/.next/cache && chmod -R g+rwX __REPO__/.next/cache'
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=__REPO__/.next/cache __PHOTO_CACHE__
 
 [Install]
 WantedBy=multi-user.target

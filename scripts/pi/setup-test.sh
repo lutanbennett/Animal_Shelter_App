@@ -42,13 +42,13 @@ node scripts/pi/check-no-forbidden.mjs
 node scripts/pi/write-env.mjs --env test
 nice -n 10 npm run build
 
-echo "== 2. systemd: lanna-care-test.service"
-sed -e "s|__USER__|$RUN_USER|g" -e "s|__REPO__|$REPO|g" scripts/pi/lanna-care-test.service \
-  | sudo tee /etc/systemd/system/lanna-care-test.service >/dev/null
-sudo systemctl daemon-reload
-sudo systemctl enable --now lanna-care-test
-sleep 3
-curl -fsS -o /dev/null -H "Host: test.lannacare.org" -H "x-origin-key: $(grep -s "^ORIGIN_KEY=" .env.production.local | cut -d= -f2-)" http://127.0.0.1:3001/ && echo "test app answers on :3001"
+echo "== 2. systemd: lanna-care-test.service, running as its own user"
+source scripts/pi/service-lib.sh
+SVC_USER=lannacare-test
+ensure_service_user "$SVC_USER"
+node scripts/pi/write-env.mjs --env test
+prepare_service_files "$SVC_USER" "$REPO" "$HOME/photo-cache-test" yes
+install_unit scripts/pi/lanna-care-test.service lanna-care-test "$SVC_USER" "$REPO" "$HOME/photo-cache-test"   http://127.0.0.1:3001/ test.lannacare.org "$(grep -s "^ORIGIN_KEY=" .env.production.local | cut -d= -f2-)"
 
 echo
 echo "Still to do (docs/pi-hosting.md, 'Test on the same Pi'): cloudflared tunnel route dns <tunnel> test-pi.lannacare.org,"
