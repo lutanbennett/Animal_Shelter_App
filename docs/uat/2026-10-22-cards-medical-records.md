@@ -2,7 +2,9 @@
 
 Dev, port 3006, 375 px. Login made with `node scripts/dev-signin.mjs --cards medical_records --port 3006`.
 
-## `medical_records` — BLOCKED at step 2 (harness fault, not yet a verdict on the card)
+## `medical_records` — FAIL at step 2 (decided by Lutan, 2026-10-22)
+
+**Verdict:** opening a resident page is all-or-nothing. A card that grants only medical edit must let its holder open the resident page and use the medical sections, without being able to edit name, location or other details. Today it cannot, so the card fails. This is a card/permission-model failure, not just a script quirk.
 
 | step | result | note |
 |---|---|---|
@@ -16,9 +18,7 @@ Dev, port 3006, 375 px. Login made with `node scripts/dev-signin.mjs --cards med
 creates every card role with `scope_residents: "who_and_where"`. So **no card login made by the script can ever open a
 full resident record**, whatever the card grants. The card's bundle has no way to set scope.
 
-**Open question for Lutan:** is the fix in the script (make the role scope follow the card, e.g. full when the card
-includes `view_residents` for record work), or in the card model (a card that grants medical edit should imply full
-residents scope)? Left undecided; nothing was changed.
+**Still to choose (Lutan):** whether the holder sees the rest of the record read-only, or only the medical sections. Nothing was changed.
 
 ## `book_clinic_visits` — not run
 
