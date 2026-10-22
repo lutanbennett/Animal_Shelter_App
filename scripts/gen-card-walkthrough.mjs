@@ -23,6 +23,8 @@ export const READBACK = {
   "recurring.do_own": "the task shows as done (or skipped) on /my after a reload",
   "resident.register": "the new resident shows in /residents",
   "placement.move": "the resident's page shows the new enclosure",
+  "medical.weight": "the list shows \"Saved: <name>, <kg>\", and opening that resident on /medical/weight reads \"Last time: <kg>, <date>\" and \"Today already has <kg>\" (one weight per resident per day; a second save replaces it)",
+  "photos.resident_add": "the page counts the photo as added; it is filed in the resident's Medical folder, never on the website, and this card cannot look at it again, so also confirm it on the resident's record with a login that holds a record card",
 };
 
 // The two tiles on the home screen that are not cards of their own (tiles.ts). Each opens the page of the card named.
