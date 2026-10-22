@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminEmails, send } from "@/lib/status/alerts";
-import { decideChange } from "./calendar-change";
+import { getAppEnv } from "@/lib/app-env";
+import { decideChange, isOtherEnvironment } from "./calendar-change";
 import { calendarConfigured, calendarFetch, errorText } from "./calendar-sync";
 
 /**
@@ -12,6 +13,9 @@ import { calendarConfigured, calendarFetch, errorText } from "./calendar-sync";
  *    are ignored and put back by the app's next sync;
  *  - a deleted event cancels the visit (never deletes it), noted "Cancelled from Google Calendar",
  *    and the admins are told so a slip of the thumb is noticed;
+ *  - an event tagged with ANOTHER environment is never acted on: while two systems can see one calendar,
+ *    each must leave the other's deletions and moves alone. An event with no tag (made before the tag
+ *    existed) is still acted on, because it matched a visit in this database;
  *  - a change that is the app's own (same etag as the one it recorded) is ignored;
  *  - changed in the app AND the calendar since the last sync: the app wins, the calendar is put back
  *    by the sweep, and the clash is left on the visit (calendar_error) for someone to look at;
@@ -25,6 +29,7 @@ type GEvent = {
   id: string;
   status?: string;
   etag?: string;
+  extendedProperties?: { private?: { env?: string; visitId?: string } };
   start?: { dateTime?: string; date?: string };
 };
 
@@ -58,14 +63,35 @@ function describe(v: Visit): string {
   return `${v.clinics?.name ?? "Vet"} - ${v.residents?.name ?? "a resident"} on ${when}`;
 }
 
+/** "[DEV] " before the subject, nothing for production, so a test alert never reads as a live one. */
+const envPrefix = (env: string) => (env === "production" ? "" : `[${env.toUpperCase()}] `);
+
 async function tellAdmins(origin: string, subject: string, line: string): Promise<void> {
   try {
     const to = await adminEmails();
     if (!to.length) return;
-    const text = `${line}\n\nIt is a change made in the shelter calendar, picked up by Lanna Care. If this was a mistake, open the visit and set it back to scheduled.`;
+    const env = getAppEnv();
+    subject = `${envPrefix(env)}${subject}`;
+    const text = `${line}\n\nIt is a change made in the shelter calendar, picked up by the ${env} Lanna Care system (${origin}). If this was a mistake, open the visit and set it back to scheduled.`;
     await send({ subject, text, html: `<p>${line.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</p><p>${text.split("\n\n")[1]}</p>` }, to, origin);
   } catch {
     // the cancellation stands; a mail that cannot go is not a reason to undo it
+  }
+}
+
+/**
+ * The environment an event says it came from. A deleted event usually reaches the poll as just an id and
+ * a status, so for those the event is asked for by id; if Google will not say, the answer is "unknown".
+ */
+async function taggedEnv(event: GEvent): Promise<string | undefined> {
+  const direct = event.extendedProperties?.private?.env;
+  if (direct || event.status !== "cancelled") return direct;
+  try {
+    const res = await calendarFetch(`/events/${encodeURIComponent(event.id)}`);
+    if (!res.ok) return undefined;
+    return ((await res.json()) as GEvent).extendedProperties?.private?.env;
+  } catch {
+    return undefined;
   }
 }
 
@@ -79,6 +105,8 @@ async function apply(event: GEvent, origin: string | null, result: PollResult): 
     .returns<Visit[]>();
   const visit = data?.[0];
   if (!visit) return; // not an event the app made
+  const tagged = await taggedEnv(event);
+  if (isOtherEnvironment(tagged, getAppEnv())) return; // another system's event: not ours to cancel or move
   const decision = decideChange(event, visit);
   if (decision === "ignore" || decision === "own") return;
   if (decision === "clash") {

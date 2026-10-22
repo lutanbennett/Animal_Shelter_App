@@ -21,7 +21,6 @@ export type VisitRow = {
   day: string;
   time: string;
   /** Null unless the visit is still Scheduled. */
-  calendarUrl: string | null;
 };
 
 type Labels = {
@@ -29,7 +28,7 @@ type Labels = {
   today: string; tomorrow: string; overdue: string; overdueHint: string; earlier: string;
   allClinics: string; clinicFilter: string; showCompleted: string; showCancelled: string;
   hideOverdue: string; showOverdue: string; empty: string; emptyDay: string;
-  previous: string; next: string; openResident: string; edit: string; view: string; addToCalendar: string; calendarNote: string; fallbackReason: string;
+  previous: string; next: string; openResident: string; edit: string; view: string; fallbackReason: string;
   noPhoto: string; weekOf: string; weekdays: string[];
   status: Record<string, string>;
 };
@@ -135,11 +134,6 @@ export function VetVisitsView({
           <Link href={`/clinic-visits/${r.id}/edit`} className="text-xs font-medium text-primary hover:underline">
             {labels.edit}
           </Link>
-          {r.calendarUrl && (
-            <a href={r.calendarUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-primary hover:underline">
-              {labels.addToCalendar}
-            </a>
-          )}
         </div>
       </div>
     </li>
@@ -277,7 +271,6 @@ export function VetVisitsView({
           </button>
         </p>
       )}
-      <p className="text-xs text-muted">{labels.calendarNote}</p>
       {view === "list" ? list() : calendar()}
     </div>
   );

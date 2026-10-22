@@ -74,7 +74,11 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "Vet visits: the Add to Google Calendar link is gone. It made a separate copy in the calendar each time it was pressed, and that copy never followed the visit. Every booked visit already goes into the shelter calendar by itself.",
+  "Clinic visits: each coming visit now says whether it is in the shelter calendar, still waiting (and when it will be sent), or whether the calendar is not switched on in this app.",
+  { text: "Calendar: each entry now records which system made it, so a test system can never cancel or move a live visit by acting on the live calendar. The email sent when a visit is cancelled in Google Calendar now says which system it came from.", roles: ["admin"] },
+];
 
 /** Newest first. */
 export const releases: Release[] = [

@@ -8,8 +8,6 @@ import { formatDate, todayIso } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { visitDate } from "@/lib/clinics/linkable";
 import { loadShelterVisits, shelterTime } from "@/lib/clinics/shelter-visits";
-import { googleCalendarUrl } from "@/lib/clinics/calendar-link";
-import { getSiteOrigin } from "@/lib/site-origin";
 import { VetVisitsView, type VisitRow } from "./VetVisitsView";
 
 /**
@@ -28,7 +26,6 @@ export default async function VetVisitsPage() {
   const v = t.shelterVisits;
   const { visits, error } = await loadShelterVisits(supabase);
   const today = todayIso();
-  const origin = await getSiteOrigin();
 
   const rows: VisitRow[] = visits.map((visit) => {
     const r = visit.residents;
@@ -48,13 +45,6 @@ export default async function VetVisitsPage() {
       appointmentDate: visit.appointment_date,
       day,
       time: shelterTime(visit.appointment_date),
-      calendarUrl: googleCalendarUrl({
-        status: visit.status,
-        appointmentDate: visit.appointment_date,
-        title: v.calendarTitle(r?.name ?? v.unknownResident, clinicName),
-        details: `${v.calendarDetails(visit.reason ?? v.fallbackReason)}${origin ? ` ${new URL(`/residents/${visit.resident_id}/clinic-visits`, origin).toString()}` : ""}`,
-        location: clinicName === "—" ? null : clinicName,
-      }),
     };
   });
 
@@ -97,7 +87,7 @@ export default async function VetVisitsPage() {
           allClinics: v.allClinics, clinicFilter: v.clinicFilter, showCompleted: v.showCompleted,
           showCancelled: v.showCancelled, hideOverdue: v.hideOverdue, showOverdue: v.showOverdue,
           empty: v.empty, emptyDay: v.emptyDay, previous: v.previous, next: v.next, openResident: v.openResident,
-          edit: v.edit, view: t.vetVisits.record.view, addToCalendar: v.addToCalendar, calendarNote: v.calendarNote, fallbackReason: v.fallbackReason, noPhoto: v.noPhoto, weekOf: v.weekOf,
+          edit: v.edit, view: t.vetVisits.record.view, fallbackReason: v.fallbackReason, noPhoto: v.noPhoto, weekOf: v.weekOf,
           weekdays: v.weekdays, status: v.status,
         }}
         overdueHiddenTemplate={v.overdueHidden(999999)}
