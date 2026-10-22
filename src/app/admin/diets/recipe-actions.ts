@@ -13,7 +13,7 @@ import { canEditItemSettings } from "@/lib/permissions/item-settings";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
-export type RecipeFormState = ActionResult<{ success: string }> | undefined;
+export type RecipeFormState = ActionResult<{ success: string; id: string }> | undefined;
 
 export type RecipeFields = { name: string; nameTh: string; notes: string };
 export type RecipeLineFields = {
@@ -37,7 +37,7 @@ async function refusal() {
 }
 
 function revalidateRecipePages() {
-  revalidatePath("/admin/diets");
+  revalidatePath("/admin/diets", "layout");
   revalidatePath("/management/diets");
   revalidatePath("/management/purchasing");
   revalidatePath("/management/cashflow");
@@ -67,14 +67,18 @@ export async function createRecipe(_state: RecipeFormState, formData: FormData):
     const name = optional(formData.get("name"));
     if (!name) return refuse(e.nameRequired);
     const supabase = await createClient();
-    const { error } = await supabase.from("diets").insert({
-      name,
-      name_th: optional(formData.get("nameTh")),
-      notes: optional(formData.get("notes")),
-    });
+    const { data, error } = await supabase
+      .from("diets")
+      .insert({
+        name,
+        name_th: optional(formData.get("nameTh")),
+        notes: optional(formData.get("notes")),
+      })
+      .select("id")
+      .single<{ id: string }>();
     if (error) return refuse(error.code === "23505" ? e.nameTaken : error.message);
     revalidateRecipePages();
-    return { ok: true, success: t.admin.diets.recipes.created(name) };
+    return { ok: true, success: t.admin.diets.recipes.created(name), id: data.id };
   });
 }
 

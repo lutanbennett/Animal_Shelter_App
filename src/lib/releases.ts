@@ -77,6 +77,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 export const unreleased: ReleaseNote[] = [
   { text: "Settings → Who does what: adding a group now needs only an English name (the Thai name is optional, and the English one shows in Thai until you add it). The result, \"Added: …\" or the reason it was refused, now appears right under the Add group button, and the button stays off until there is a name.", roles: ["admin"] },
   "Purchasing: on a laptop, the To buy list now comes first, straight under the period choice, and the working-out tables for medicines and food sit below it under \"How these were worked out\".",
+  "Settings → Diets is now a recipe book. Diets and Ingredients are separate tabs; each diet is a card showing what goes in for a medium dog, and tapping it opens its own page, where Add ingredient is a small form and a total shows what one day's serve adds up to. Each ingredient has its own page too, with its measures (1 cup weighs about 120 g) and the diets that use it.",
 ];
 
 /** Newest first. */
