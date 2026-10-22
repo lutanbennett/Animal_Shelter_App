@@ -385,6 +385,15 @@ So the questions are now three, in this order:
 3. **Must it merely read a lot?** Cheap. Do not widen (the `silent-empty-reads`
    correction above).
 
+**SUSPENDED 2026-10-22 — DO NOT ADD THIS ALLOWANCE UNTIL STREAMS CAN SIGN IN TO DEV.** The
+rule below is not wrong, but it prices work that is currently **not happening**. Two streams in
+two days were asked to verify in the browser and **could not get a signed-in session**:
+`purchasing-to-buy-first` recorded its whole check as `pending`, and `who-does-what-add-group`
+**carried an explicit sign-in block and still failed**, marking sixteen lines *"not driven in a
+browser"*. Both came in **under** band as a result. There is a backlog item to establish a
+working route; **until it ships, band browser-verifying streams as if the check will land on
+Lutan, and say so in the brief.** Restore the allowance when a stream can actually sign in.
+
 **A BRIEF THAT ASKS FOR REAL BROWSER VERIFICATION ADDS ~30k, WHATEVER THE CODE SHAPE IS.**
 Added 2026-10-21. `assistant-immunization` was a third instance of a settled pattern — two intent
 modules already existed — so it was banded 120–145k as the batch's quick win. **Its brief also told it
@@ -575,11 +584,26 @@ Append this to every `.brief.md`, changed only where a stream genuinely differs:
   needs to look — that is a legitimate state, it reports as *awaiting*, and it is
   not a failure.
 
-**One follow-up commit IS legitimate, and only one.** The template's CI line
-cannot be true in the commit that creates the PR, so leave it
-`n/a: not yet — the PR does not exist at this commit` on the first push and tick
-it once you have **seen** the run go green. **Do not pre-tick it** — a green you
-have not seen is the exact failure the checklist exists to prevent.
+**THE CI LINE IS NEVER TICKED. LEAVE IT `n/a` AND DO NOT COME BACK TO IT.**
+Corrected 2026-10-22: this block told streams to tick it in a follow-up commit,
+and **the template changed on 2026-10-20 to forbid exactly that** — so the brief
+has been contradicting the checklist it is meant to help pass. Write
+`n/a: not yet — the PR does not exist at this commit` and **leave it there.**
+The reasoning is on the template line itself: a follow-up commit **invalidates
+its own evidence**, because a new HEAD means a new run, so every PR was paying
+**two full CI cycles** to transcribe a result GitHub already records permanently
+against the commit. **Do not pre-tick it either.**
+
+**What replaces it is a MERGE step, not a checklist line:** before merging, read
+the run for your current HEAD (`gh run view <id> --json status,conclusion,headSha`)
+and **confirm `headSha` matches**. Merging on an older run's strength merges a
+commit whose CI never finished.
+
+**And the general lesson, which is why this correction is worth its space:** a
+brief block that quotes a checklist goes stale when the checklist changes, and
+nothing tells you. **When you write a brief, the template is the authority** —
+if this block and `docs/test-plan-template.md` disagree, the template is right
+and this is out of date. Fix it here when you notice.
 
 **A red `test-plan` is always someone's mistake to fix.** It is never noise and
 never "nobody has signed yet" — a correct-but-unsigned plan exits 0 by design. So
@@ -745,6 +769,59 @@ On a resume, re-read the backlog item **fresh** when writing the brief.
 It may have been reworded or reprioritised on the `backlog` branch since
 the plan was saved: the saved plan holds the ordering, the backlog holds
 the task.
+
+### A MITIGATION YOU WROTE INTO A BRIEF IS A HYPOTHESIS, NOT A FIX
+
+Added 2026-10-22, and it is the planner's single most repeatable error. `purchasing-to-buy-first`
+could not sign in to dev, so its browser check fell to Lutan. The planner diagnosed a briefing
+gap, **wrote a sign-in block into the next batch's briefs, and recorded the problem as solved.**
+`who-does-what-add-group` carried that block and **failed in exactly the same way** — the cause
+was structural, not a briefing gap, and a day had been spent on the wrong diagnosis.
+
+**So: when you add a block, a grep, a boundary or an escape to a brief because something went
+wrong, that is an experiment. Check the next round whether it FIRED.** The handover's habit of
+listing every warning as *fired, held or closed* is what caught this in one round instead of
+three — **so do that for your own mitigations too, not only for the previous edition's.**
+
+**And never write the fix up as settled in the same breath as discovering the fault.** Say what
+you changed and that you will check it.
+
+### WHERE A RULE LIVES: if a stream meets it before reading it, it belongs in the BRIEF
+
+Added 2026-10-22, after **Lutan was asked about a failed `audit` check five times in five minutes
+across three streams.** Every stream's advice — ignore it — was **correct**, and `CLAUDE.md`
+documents the red-`audit` rule at length. **The briefs did not repeat it**, so each stream met a
+red check cold and escalated rather than reading. That is the same shape as the test-plan checker,
+whose block exists for the same reason after his 2026-10-12 complaint.
+
+**The test: does a fresh session hit the situation before it has read the relevant paragraph?**
+If yes, the rule belongs in the brief, however well `CLAUDE.md` covers it. A rule in `CLAUDE.md`
+alone is read *eventually*; a rule in the brief is read *first*.
+
+**Append this to every `.brief.md`, beside the test-plan block:**
+
+```markdown
+## A red `audit` check CANNOT block your merge — do not wait on it, and do not ask about it
+
+`audit` is `continue-on-error: true`. It **cannot fail a CI run and cannot block a merge** —
+verified across 30 pull-request runs. If it is the only red on your PR, **there is nothing to wait
+for.**
+
+What it asks of you, and all it asks: **read the advisory in the job log**, establish whether the
+flaw is reachable in this app, and **write what you concluded in the PR**. Fix it only if the fix
+is not worse than the finding.
+
+**If there is NO advisory in the log, the job was inconclusive, not red for a reason.** It has been
+seen to hang on the registry for five minutes and be terminated, with no output at all — the same
+job passes in ten seconds elsewhere. **Say in the PR that the audit was inconclusive and carry on.**
+
+**Do not ask Lutan about a red `audit`** unless it is red *and* an advisory names something
+reachable. He was asked five times in five minutes on 2026-10-22, and the answer was the same
+every time.
+
+**Never** change either audit workflow to make the red go away, and **never** run
+`npm audit fix --force` — it is free to move a dependency backwards across a major version.
+```
 
 ## 8. Finish
 
