@@ -113,7 +113,7 @@ brief.
 | Open backlog items | 71 |
 | Open PRs | **#831** only — conflicted on `releases.ts`, resolved and gates-clean, CI running |
 | Menu-coverage gate | **ZERO. "No unexplained orphans."** `menu-removal` is buildable |
-| Release | `0.39.0` shipped; **`0.40.0` not cut, `unreleased` carries four lines** |
+| Release | `0.39.0` shipped; **`0.40.0` not cut, `unreleased` carries FIVE notes** (counted in the file, not inferred) |
 | Leftover worktrees | the round's nine, mostly `HELD` by their sessions — **ask, do not tear down** |
 | Workstreams since handover | **10** — three batches of three, plus one unplanned stream that shipped a PR |
 
@@ -121,8 +121,10 @@ brief.
 
 ## For the release manager
 
-- **`unreleased` has four lines** — the Purchasing reorder, the Diets recipe book, the Who does what
-  group fix and the home-screen tiles, plus #831's vet-calendar production note once it merges.
+- **`unreleased` has five notes**, all merged: the home-screen tiles, the Who does what group fix,
+  the vet calendar going live on production (#831), the Purchasing reorder, and the Diets recipe
+  book. **Three carry `roles` tags and two are plain strings** — the two plain ones are shown to
+  every live role, which is the thing the new audience question in the template exists to catch.
 - **Two of those notes describe UI fixes nobody has verified on a screen** (see the defining
   finding). **Worth knowing before the cut**, not a reason to hold it.
 - **The menu gate is at zero**, so `menu-removal` may land before the cut. It is a visible change for
