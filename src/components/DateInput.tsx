@@ -76,32 +76,38 @@ export function DateInput({ value, defaultValue, onChange, className, name, min,
         className={`min-w-0 flex-1 ${className ?? ""}`}
       />
       {name && <input type="hidden" name={name} value={iso} disabled={disabled} />}
-      <input
-        ref={picker}
-        type="date"
-        tabIndex={-1}
-        aria-hidden
-        min={min}
-        max={max}
-        value={iso}
-        onChange={(e) => commit(isoToDmy(e.target.value))}
-        className="sr-only"
-      />
-      <button
-        type="button"
-        disabled={disabled}
-        aria-label="Open calendar"
-        onClick={() => {
-          try {
-            picker.current?.showPicker();
-          } catch {
-            visible.current?.focus();
-          }
-        }}
-        className="shrink-0 rounded border border-border bg-surface p-2 text-muted hover:text-foreground disabled:opacity-50"
-      >
-        <CalendarDays size={18} aria-hidden />
-      </button>
+      {/* The native date input sits over the button, full size and invisible (opacity 0,
+          never sr-only or display:none): on iPhone Safari a tap must land on the real input
+          for the date wheel to open, and showPicker() on a hidden one does nothing without
+          throwing. Desktop browsers only open from a script, so click calls showPicker there. */}
+      <span className="relative shrink-0">
+        <span
+          aria-hidden
+          className={`block rounded border border-border bg-surface p-2 text-muted ${disabled ? "opacity-50" : "hover:text-foreground"}`}
+        >
+          <CalendarDays size={18} aria-hidden />
+        </span>
+        <input
+          ref={picker}
+          type="date"
+          tabIndex={-1}
+          aria-label="Open calendar"
+          disabled={disabled}
+          min={min}
+          max={max}
+          value={iso}
+          onChange={(e) => commit(isoToDmy(e.target.value))}
+          onClick={() => {
+            if (window.matchMedia("(pointer: coarse)").matches) return;
+            try {
+              picker.current?.showPicker();
+            } catch {
+              visible.current?.focus();
+            }
+          }}
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-default"
+        />
+      </span>
     </span>
   );
 }

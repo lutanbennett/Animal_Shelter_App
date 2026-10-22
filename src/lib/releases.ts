@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Dates: the calendar button beside a date box now opens the date picker on an iPhone. It did nothing before. Typing a date still works as it did.",
   "Account → Home screen icons now has an icon for every tile on your home screen, including Bills, Assistant and My tasks, which were missing.",
   "Vet visits: the Add to Google Calendar link is gone. It made a separate copy in the calendar each time it was pressed, and that copy never followed the visit. Every booked visit already goes into the shelter calendar by itself.",
   "Clinic visits: each coming visit now says whether it is in the shelter calendar, still waiting (and when it will be sent), or whether the calendar is not switched on in this app.",
