@@ -824,7 +824,7 @@ const en = {
         menuIntro: "Off, this role sees tiles only: no menu down the side, and a Home button at the top. Admin always keeps the menu. Turn it back on here at any time; no release is needed.",
         menuOn: "Show the menu",
         menuOff: "Tiles only",
-        menuNow: (on: boolean) => (on ? "Now: this role sees the menu." : "Now: this role sees tiles only."),
+        menuNow: (on: boolean): string => (on ? "Now: this role sees the menu." : "Now: this role sees tiles only."),
         menuLocked: "Verify with the authenticator app to change this.",
         alsoHeading: "Also allowed",
         alsoIntro: "Single things this role can do that no card gives. Each says why.",
