@@ -15,6 +15,12 @@
 //       # apply pending files in order and stop AFTER that one; the rest are
 //       # listed as deliberately left. For a file whose header says to apply it
 //       # only once the new app is live. Refuses a name that is not pending.
+//   node scripts/apply-migrations.mjs --all-history --env production
+//       # build a FRESH project from 0001. Skips the grants check for files
+//       # numbered 0077 and below only (they predate the 2026-09-24 grants
+//       # rule; 0077 is the catch-up grant) — everything after is still checked.
+//       # Whether those early objects end up with the right grants is NOT
+//       # verified by this (docs/decisions/2026-10-22-all-history-flag.md).
 //   node scripts/apply-migrations.mjs --baseline 0027_prescriptions.sql
 //       # mark every file up to and including that one as applied WITHOUT
 //       # running it — for a database that was migrated by hand before this
@@ -73,6 +79,13 @@ const { name: envName, rest: args } = parseEnvArg(argv);
 const statusOnly = args.includes("--status");
 const drift = args.includes("--drift");
 const dryRun = args.includes("--dry-run");
+const allHistory = args.includes("--all-history");
+// Same cut-off as LAST_EXEMPT in check-migration-grants.mjs; keep the two in step.
+const GRANTS_RULE_STARTS_AFTER = 77;
+if (allHistory && (statusOnly || drift || args.includes("--baseline"))) {
+  console.error("--all-history goes with an apply or --dry-run, not --status, --drift or --baseline.");
+  process.exit(2);
+}
 const baselineIndex = args.indexOf("--baseline");
 const baseline = baselineIndex >= 0 ? args[baselineIndex + 1] : null;
 if (baselineIndex >= 0 && !baseline) {
@@ -333,10 +346,19 @@ try {
 // was re-run some fifteen minutes later — while lint on its own branch was
 // already refusing the file (docs/decisions/2026-10-07-public-views-overnight.md).
 // A dry-run still runs, so the SQL can be tried, but nothing is applied.
-if (pending.length) {
+// --all-history exempts only the files that predate the rule (see top of file).
+const grantChecked = allHistory
+  ? pending.filter((name) => Number(name.match(/^(\d+)_/)?.[1] ?? Infinity) > GRANTS_RULE_STARTS_AFTER)
+  : pending;
+if (allHistory) {
+  console.log(
+    `--all-history: grants check skipped for ${pending.length - grantChecked.length} file(s) numbered ${String(GRANTS_RULE_STARTS_AFTER).padStart(4, "0")} or below; ${grantChecked.length} still checked.`,
+  );
+}
+if (grantChecked.length) {
   const grants = spawnSync(
     process.execPath,
-    [join("scripts", "check-migration-grants.mjs"), ...pending.map((name) => join(MIGRATIONS_DIR, name))],
+    [join("scripts", "check-migration-grants.mjs"), ...grantChecked.map((name) => join(MIGRATIONS_DIR, name))],
     { encoding: "utf8" },
   );
   if (grants.status !== 0) {
