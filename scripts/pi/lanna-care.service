@@ -1,5 +1,5 @@
 # systemd unit for the app on the Pi — installed by scripts/pi/setup.sh as
-# /etc/systemd/system/lanna-care.service (WorkingDirectory and User are
+# /etc/systemd/system/lanna-care.service (WorkingDirectory and the user are
 # rewritten to the real ones there). `next start` on port 3000, reached
 # only through cloudflared (scripts/pi/cloudflared-config.yml); nothing
 # listens on the internet.
@@ -10,16 +10,27 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=__USER__
+User=__SVC_USER__
+Group=__SVC_USER__
+UMask=0002
 WorkingDirectory=__REPO__
 Environment=NODE_ENV=production
 Environment=PORT=3000
-ExecStart=/usr/bin/npm run start -- --port 3000 --hostname 127.0.0.1
+ExecStart=__REPO__/node_modules/.bin/next start --port 3000 --hostname 127.0.0.1
 Restart=always
 RestartSec=3
 # A wedged render should not take the box with it.
 MemoryMax=1500M
 TimeoutStopSec=15
+# Own user (docs/decisions/2026-10-22-pi-app-own-user.md): it reads the build and its env file,
+# writes only the two caches below, and cannot open the deploy user's backups or deploy secrets.
+# The "+" runs as root and hands the build cache over after each deploy swaps in a fresh one.
+ExecStartPre=+/bin/sh -c 'mkdir -p __REPO__/.next/cache && chown -R __SVC_USER__:__SVC_USER__ __REPO__/.next/cache && chmod -R g+rwX __REPO__/.next/cache'
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=__REPO__/.next/cache __PHOTO_CACHE__
 
 [Install]
 WantedBy=multi-user.target

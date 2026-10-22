@@ -10,7 +10,8 @@
 # holds the Supabase token that must never be on the Pi) into the repo root (never commit it), and have the tunnel's credentials JSON from
 # `cloudflared tunnel create` (or the dashboard) ready for step 4.
 #
-# Idempotent — re-run after a change to the unit or the tunnel config.
+# Idempotent — re-run after a change to the unit or the tunnel config. On a Pi set up before
+# 2026-10-22 it also moves the app from your user to lannacare-app (docs/pi-hosting.md, "Moving the app to its own user").
 set -euo pipefail
 # Never run as root: this script already calls sudo for the steps that need it, and
 # running all of it under sudo leaves node_modules, .next and the env file root-owned
@@ -82,13 +83,16 @@ npm ci --no-audit --no-fund
 node scripts/pi/write-env.mjs --env production
 npm run build
 
-echo "== 4. systemd: lanna-care.service"
-sed -e "s|__USER__|$RUN_USER|g" -e "s|__REPO__|$REPO|g" scripts/pi/lanna-care.service \
-  | sudo tee /etc/systemd/system/lanna-care.service >/dev/null
-sudo systemctl daemon-reload
-sudo systemctl enable --now lanna-care
-sleep 3
-curl -fsS -o /dev/null -H "Host: lannacare.org" -H "x-origin-key: $(grep -s "^ORIGIN_KEY=" .env.production.local | cut -d= -f2-)" http://127.0.0.1:3000/ && echo "app answers on :3000"
+echo "== 4. systemd: lanna-care.service, running as its own user"
+# The app runs as lannacare-app, not as you: it can read the build and its env file and write its
+# caches, and cannot open your backups or .env.deploy.production. If the new arrangement does not
+# come up, the old unit is put back (scripts/pi/service-lib.sh).
+source scripts/pi/service-lib.sh
+SVC_USER=lannacare-app
+ensure_service_user "$SVC_USER"
+node scripts/pi/write-env.mjs --env production   # again, now the group exists, so the service can read it
+prepare_service_files "$SVC_USER" "$REPO" "$HOME/photo-cache" no
+install_unit scripts/pi/lanna-care.service lanna-care "$SVC_USER" "$REPO" "$HOME/photo-cache"   http://127.0.0.1:3000/ lannacare.org "$(grep -s "^ORIGIN_KEY=" .env.production.local | cut -d= -f2-)"
 
 echo "== 5. cloudflared as a service"
 sudo mkdir -p /etc/cloudflared
@@ -116,7 +120,7 @@ echo "== 7. Daily database backup (03:00 Bangkok time)"
 # Needs postgresql-client-17 and .env.deploy.production with BACKUP_AGE_RECIPIENT (docs/pi-hosting.md, Backups on this Pi).
 # --shared-drive-token: interim, the app's Drive token (Lutan, 2026-10-13); drop it once BACKUP_GOOGLE_OAUTH_* exists on the Pi.
 # Removes dumps older than 14 days, never the newest five, and nothing unless the day's upload succeeded.
-mkdir -p "$HOME/backups/lannacare"
+mkdir -p "$HOME/backups/lannacare" && chmod 700 "$HOME/backups" "$HOME/backups/lannacare"   # closed to the app user (own-user split)
 BACKUP_CRON="0 3 * * * cd $HOME/Animal_Shelter_App && node scripts/backup.mjs --env production --shared-drive-token --keep-days 14 --local-copy $HOME/backups/lannacare >> $HOME/backups/backup.log 2>&1"
 ( crontab -l 2>/dev/null | grep -v 'scripts/backup.mjs' ; echo "$BACKUP_CRON" ) | crontab -
 crontab -l | grep 'scripts/backup.mjs'
