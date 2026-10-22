@@ -7,6 +7,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { getSiteOrigin } from "@/lib/site-origin";
+import { bookingReturnPath } from "@/lib/clinics/booking-return";
 import { syncPendingVisits } from "@/lib/clinics/calendar-sync";
 import { loadClinicScope, scopeAllowsClinic } from "@/lib/clinics/scope";
 
@@ -74,9 +75,11 @@ export async function bookClinicVisit(
   // this sends whatever is out of date (calendar-sync.ts), which is these visits.
   await syncPendingVisits((await getSiteOrigin())?.origin ?? null);
 
-  // Back to what was booked: one resident's clinic visits, or the residents
-  // list a bulk booking was started from. Never "/", the public website.
+  // Back to the list the booking started from, when it said so and it is a page we know (booking-return.ts).
+  // Otherwise: one resident's clinic visits, or the residents list a bulk booking was started from.
+  // Never "/", the public website.
   redirect(
-    residentIds.length === 1 ? `/residents/${residentIds[0]}/clinic-visits` : "/residents",
+    bookingReturnPath(formData.get("from")) ??
+      (residentIds.length === 1 ? `/residents/${residentIds[0]}/clinic-visits` : "/residents"),
   );
 }

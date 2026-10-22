@@ -292,7 +292,7 @@ export function ClinicHub({
           )}
           {canBook && (
             <div className="pt-1">
-              <ActionLink href={`/clinic-visits/new?clinicId=${clinic.id}`} label={t.vetVisits.bookAppointment} icon={CLINIC_ICONS.visits} variant="primary" iconOnlyOnMobile={false} />
+              <ActionLink href={`/clinic-visits/new?clinicId=${clinic.id}&from=/clinics/${clinic.id}`} label={t.vetVisits.bookAppointment} icon={CLINIC_ICONS.visits} variant="primary" iconOnlyOnMobile={false} />
             </div>
           )}
           {canManage && (

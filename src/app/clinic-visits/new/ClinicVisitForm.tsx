@@ -31,6 +31,7 @@ export function ClinicVisitForm({
   doctorNamesByClinic,
   preselectedResidentIds,
   preselectedClinicId,
+  returnTo,
 }: {
   residents: ResidentOption[];
   clinics: ClinicOption[];
@@ -41,6 +42,8 @@ export function ClinicVisitForm({
   preselectedResidentIds: string[];
   /** From a clinic's page; ignored unless it is one of `clinics` (a doctor's own). */
   preselectedClinicId: string;
+  /** A page from the known list (booking-return.ts) to go back to after saving; "" for the usual place. */
+  returnTo: string;
 }) {
   const [state, onSubmit, pending] = useKeptForm(bookClinicVisit, undefined);
   const { t } = useI18n();
@@ -59,6 +62,7 @@ export function ClinicVisitForm({
 
   return (
     <form onSubmit={onSubmit} className="flex max-w-3xl flex-col gap-6">
+      {returnTo && <input type="hidden" name="from" value={returnTo} />}
       <div className="flex flex-col gap-2">
         <label className="text-sm font-medium text-muted">
           {t.vetVisits.residentsLabel}
