@@ -6,6 +6,7 @@ import { todayIso } from "@/lib/format";
 import { countMyUrgentAccessRequests } from "@/lib/my-tasks/access-requests";
 import { countMyUrgentMaintenance } from "@/lib/my-tasks/maintenance";
 import { countMyUrgentRecurring } from "@/lib/my-tasks/recurring";
+import { showMenuForLogin } from "@/lib/menu/show-menu";
 import { NavLinks } from "./NavLinks";
 
 export async function NavPane() {
@@ -21,6 +22,9 @@ export async function NavPane() {
   // A public viewer reaches an app-chrome page only to change a temporary
   // password; a menu of pages it would be bounced from is no use to it.
   if (!perms?.role.opensApp) return null;
+
+  // Tiles only for a role whose Show the menu setting is off (Admin always keeps it).
+  if (!(await showMenuForLogin())) return null;
 
   // Whether the menu offers a registered page: the same question its guard asks.
   const opens = (path: string) => {

@@ -287,3 +287,20 @@ export async function setCardGroup(roleKey: string, card: string, groupId: strin
     return done();
   });
 }
+
+/**
+ * Show the menu, yes or no, for one role (0247). The column is written by the admin's own session, so roles' own rules
+ * (Admin at the authenticator-app step) enforce it and audit_roles logs the flip. guard() above refuses Admin and the
+ * public viewer, which never lose the menu.
+ */
+export async function setShowMenu(roleKey: string, show: boolean): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("whoDoesWhat.setShowMenu", t.common.somethingWentWrong, async () => {
+    const g = await guard(t, roleKey);
+    if (!g.ok) return g;
+    const { error } = await g.supabase.from("roles").update({ show_menu: show }).eq("id", g.roleId);
+    if (error) return databaseFailure("whoDoesWhat.setShowMenu", error, t.common);
+    revalidatePath("/", "layout");
+    return done();
+  });
+}
