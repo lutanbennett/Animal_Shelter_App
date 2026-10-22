@@ -10,8 +10,6 @@ import { ACTION_ICONS, PLACEMENT_ICONS, SECTION_ICONS } from "@/components/hub-i
 import { RowActionLink } from "@/components/RowAction";
 import { availablePlacementActions } from "@/lib/placements/available";
 import type { SectionContext } from "./types";
-import { googleCalendarUrl } from "@/lib/clinics/calendar-link";
-import { getSiteOrigin } from "@/lib/site-origin";
 import { calendarConfigured } from "@/lib/clinics/calendar-sync";
 import { retryCalendarSync } from "@/app/clinic-visits/calendar-actions";
 import { RecordList } from "./shared";
@@ -88,26 +86,17 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
         >()
     : { data: [] };
   const today = todayIso();
-  const origin = await getSiteOrigin();
   const sv = t.shelterVisits;
-  const calendarUrl = (row: { status: string; appointment_date: string; reason: string | null; clinics: { name: string; name_th: string | null } | null }) => {
-    const clinicName = row.clinics ? localLabel(locale, row.clinics.name, row.clinics.name_th) : "";
-    return googleCalendarUrl({
-      status: row.status,
-      appointmentDate: row.appointment_date,
-      title: sv.calendarTitle(resident.name, clinicName || "—"),
-      details: `${sv.calendarDetails(row.reason ?? sv.fallbackReason)}${origin ? ` ${new URL(`/residents/${id}/clinic-visits`, origin).toString()}` : ""}`,
-      location: clinicName || null,
-    });
-  };
-  // A booked visit to come that the shelter calendar does not match yet (Google down, or just booked).
+  // Where a booked visit to come stands with the shelter calendar: not switched on in this app (checked in
+  // the app that served this page, which is the one that served the booking), waiting (Google down, or
+  // just booked; the 15-minute sweep sends it), or matching.
   const calendarOn = calendarConfigured();
-  const notInCalendar = (row: { status: string; appointment_date: string; calendar_synced_at: string | null; calendar_out_of_date_at: string | null }) =>
-    calendarOn &&
-    row.status === "scheduled" &&
-    visitDate(row) >= today &&
-    (!row.calendar_synced_at || (row.calendar_out_of_date_at !== null && row.calendar_out_of_date_at > row.calendar_synced_at));
-  const anyCalendar = (data ?? []).some((row) => calendarUrl(row) !== null);
+  const calendarState = (row: { status: string; appointment_date: string; calendar_synced_at: string | null; calendar_out_of_date_at: string | null }): "off" | "waiting" | "sent" | null => {
+    if (row.status !== "scheduled" || visitDate(row) < today) return null;
+    if (!calendarOn) return "off";
+    const waiting = !row.calendar_synced_at || (row.calendar_out_of_date_at !== null && row.calendar_out_of_date_at > row.calendar_synced_at);
+    return waiting ? "waiting" : "sent";
+  };
   // A visit can end with the resident admitted; offer that on each record
   // unless they're already in hospital, adopted out, or gone.
   const canSendToHospital = availablePlacementActions(
@@ -147,18 +136,18 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
             {row.cost != null && ` · ${formatBaht(Number(row.cost), locale)}`}
           </span>
           <div className="flex flex-wrap justify-end gap-2">
-            {notInCalendar(row) && can(perms, "medical.visits") && (
-              <form action={retryCalendarSync} className="flex items-center gap-2">
+            {/* Says when the entry reaches the shelter calendar, so a silent failure never looks like a working feature. */}
+            {calendarState(row) === "off" && <span className="text-xs text-muted">{sv.calendarOff}</span>}
+            {calendarState(row) === "sent" && <span className="text-xs text-muted">{sv.inCalendar}</span>}
+            {calendarState(row) === "waiting" && (
+              <form action={retryCalendarSync} className="flex flex-wrap items-center justify-end gap-2">
                 <input type="hidden" name="visitId" value={row.id} />
                 <input type="hidden" name="residentId" value={id} />
                 <span className="text-xs text-muted">{sv.notInCalendar}</span>
-                <button type="submit" className="text-xs font-medium text-primary hover:underline">{sv.retryCalendar}</button>
+                {can(perms, "medical.visits") && (
+                  <button type="submit" className="text-xs font-medium text-primary hover:underline">{sv.retryCalendar}</button>
+                )}
               </form>
-            )}
-            {calendarUrl(row) && (
-              <a href={calendarUrl(row)!} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-primary hover:underline">
-                {sv.addToCalendar}
-              </a>
             )}
             {!isDeceased && (
               <>
@@ -245,7 +234,6 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
           />
         </div>
       )}
-      {anyCalendar && <p className="text-xs text-muted">{sv.calendarNote}</p>}
       <RecordList rows={mainVisits} empty={t.residents.sections.empty.vetAppointments} render={renderRow} />
       {cancelledVisits.length > 0 && (
         <details className="rounded-lg border border-border bg-surface">

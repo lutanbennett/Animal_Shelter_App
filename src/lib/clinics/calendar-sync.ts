@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { todayIso } from "@/lib/format";
-import { buildCalendarEvent } from "./calendar-event";
+import { getAppEnv } from "@/lib/app-env";
+import { buildCalendarEvent, calendarEventIdFor } from "./calendar-event";
 
 /**
  * Vet visits into the shelter's Google Calendar, one event per visit
@@ -141,6 +142,7 @@ async function syncRow(row: Row, origin: string | null): Promise<SyncOutcome> {
         appointmentDate: row.appointment_date,
       },
       origin,
+      getAppEnv(),
     );
     if (!event) throw new Error("The visit's date could not be read.");
     if (row.calendar_event_id) {
@@ -157,7 +159,15 @@ async function syncRow(row: Row, origin: string | null): Promise<SyncOutcome> {
         throw new Error(`Calendar update failed (${res.status}): ${await errorText(res)}`);
       }
     }
-    const res = await calendarFetch("/events", { method: "POST", body: JSON.stringify(event) });
+    // The id is ours, derived from the visit (calendar-event.ts): two writers racing, or a create whose
+    // id never got saved, meet a 409 here instead of making a second event.
+    const eventId = calendarEventIdFor(row.id, getAppEnv());
+    let res = await calendarFetch("/events", { method: "POST", body: JSON.stringify({ ...event, id: eventId }) });
+    if (res.status === 409) {
+      // The visit already has its event (made a moment ago by another writer, or deleted by hand: Google
+      // keeps a deleted event's id, so this also brings it back). Bring it up to date and claim it.
+      res = await calendarFetch(`/events/${eventId}`, { method: "PATCH", body: JSON.stringify({ ...event, status: "confirmed" }) });
+    }
     if (!res.ok) throw new Error(`Calendar create failed (${res.status}): ${await errorText(res)}`);
     const created = (await res.json()) as { id?: string; etag?: string; updated?: string };
     if (!created.id) throw new Error("Calendar create returned no event id.");
@@ -192,6 +202,29 @@ export async function syncVisitToCalendar(visitId: string, origin: string | null
   }
 }
 
+export const CALENDAR_OFF_NOTE = "The calendar is not switched on in this app, so this visit has not been sent.";
+
+/**
+ * "No error" used to mean both "all well" and "the calendar is not switched on here". Say the second one
+ * on the visits it affects, so a booking that silently went nowhere shows why. Only calendar columns are
+ * written, which the 0207 trigger does not treat as a change. Cleared by the next successful sync.
+ */
+async function markCalendarOff(db: ReturnType<typeof createAdminClient>): Promise<void> {
+  try {
+    await db
+      .from("clinic_visits")
+      .update({ calendar_error: CALENDAR_OFF_NOTE })
+      .is("calendar_synced_at", null)
+      .is("calendar_event_id", null)
+      .is("calendar_error", null)
+      .eq("status", "scheduled")
+      .is("archived_at", null)
+      .gte("appointment_date", new Date(`${todayIso()}T00:00:00+07:00`).toISOString());
+  } catch {
+    // a note that cannot be written is not a reason to fail a booking
+  }
+}
+
 export type SweepResult = { configured: boolean; synced: number; failed: number; remaining: number };
 
 /**
@@ -200,8 +233,11 @@ export type SweepResult = { configured: boolean; synced: number; failed: number;
  * alone). Called straight after a booking or edit, and by the Worker's cron as the safety net.
  */
 export async function syncPendingVisits(origin: string | null, limit = SWEEP_BATCH): Promise<SweepResult> {
-  if (!calendarConfigured()) return { configured: false, synced: 0, failed: 0, remaining: 0 };
   const db = createAdminClient();
+  if (!calendarConfigured()) {
+    await markCalendarOff(db);
+    return { configured: false, synced: 0, failed: 0, remaining: 0 };
+  }
   try {
     const todayStart = new Date(`${todayIso()}T00:00:00+07:00`).toISOString();
     const [stale, neverSent] = await Promise.all([
