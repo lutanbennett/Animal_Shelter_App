@@ -41,15 +41,13 @@ nothing about it needs revisiting.
 
 Worth not re-deriving: **two of the three are not reachable here, measured rather
 than argued.** `/_next/image` returns **404 on both live sites** (the Pis run real
-Next, so this is not a Workers-only claim) and `"use cache"` appears nowhere in
-`src/` or `worker/`. The remaining one is a Server Actions **DoS**.
+Next, so this is not a Workers-only claim) and `"use cache"` appears nowhere. The
+remaining one is a Server Actions **DoS**.
 
-**The planner reached the same verdict independently** from the `audit` job on #863
-while this release was deploying, and filed the bump as a backlog item under
-*Security* with the reachability written out. So **do not write a second decision
-file**, and do not meet this red next release as though it were new — it is
-scheduled work. `next@16.4.2` is outside the exact `16.3.8` pin, so it is a stream
-with its own gates and its own four-build check, never a drive-by on a release cut.
+**The planner reached the same verdict independently** from #863's `audit` job and
+filed the bump under *Security* with the reachability written out. So **do not
+write a second decision file**, and do not meet this red next release as though it
+were new — it is scheduled work, a stream with its own gates, never a drive-by.
 
 ## The one thing to change about how you hand the deploy over
 
@@ -126,16 +124,14 @@ space, amber at 80% and red at 95%, that never emails; the nightly retention job
 general plumbing.
 
 **One verification gap closed by running something rather than handing it over.**
-Note 1 needed a Residents-card-only login to register a resident, which the
-`residents-card-intake` plan had left `pending:` for a person.
-`scripts/dev-signin.mjs --cards residents` makes exactly that login, so it was
-driven: 18 zones where the note says the list was empty, and Register succeeded.
-**The screen then said "No current diet recorded" while the review step had
-promised one** — the row was read back from the database (it is there) and the
-hub's read path checked in code: `resident_diets` is read under the caller's own
-RLS, so that is the card's permission boundary, not a lost write. **Chase the thing
-that looks wrong; the answer is often "correct, for a reason you had not
-established".**
+Note 1 needed a Residents-card-only login to register a resident, left `pending:`
+for a person by the `residents-card-intake` plan. `scripts/dev-signin.mjs --cards
+residents` makes exactly that login, so it was driven: 18 zones where the note
+says the list was empty, and Register succeeded. The hub then said **"No current
+diet recorded"** while the review step had promised one — the row is in the
+database, and `resident_diets` is read under the caller's own RLS, so that is the
+card's boundary, not a lost write. **Chase what looks wrong; the answer is often
+"correct, for a reason you had not established".**
 
 **Still unlooked-at from earlier: the prescription form reading 4** (`0.38.1`) **and
 video playback on a real handset** (`0.38.0`). One new item for a person: as a
