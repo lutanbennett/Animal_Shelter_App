@@ -78,17 +78,30 @@ call **both** `mcp__ccd_session_mgmt__get_usage` (for `context.tokensUsed`) and
 three against the slug in `.plan-day.md` (step 6). If usage reports
 `unavailable`, write `unmeasured`, never a guess.
 
-**THERE IS NO RACE: BOTH CALLS WORK ON AN IDLE SESSION.** Corrected 2026-10-23,
-and it retires a prescription two editions got wrong. Editions `294` and `303`
-each recorded that the dial could not be read because every session was
-`isRunning: false` by the time `/plan-day` ran, and each prescribed "read the
-dial while the session is still live". **That was never the problem.**
-`get_session` serves `model` and `effort` from session **metadata** and
-`get_usage` serves `context.tokensUsed`, both for an idle session exactly as
-well as a live one — nine of nine streams were read this way on 2026-10-22, all
-idle. **What was lost on those two rounds was lost to not calling the tool.** So
-do not sequence the round around it, and do not report a dial as unreadable
-because a session has gone quiet: call it and see.
+**THE TWO CALLS HAVE DIFFERENT LIFETIMES, AND ONLY ONE OF THEM EXPIRES.**
+Written 2026-10-23, **corrected the same day after the first version of this
+paragraph cost three readings within the hour.** Get this right; it is the whole
+reason actuals go missing.
+
+- **`get_session` → `model` and `effort` is pure metadata and NEVER expires.**
+  It answers for a live session, an idle one, and an **archived** one. There is
+  no reason to ever record a dial as unread.
+- **`get_usage` → `context.tokensUsed` needs the session's Claude Code PROCESS
+  to be alive.** It does **not** need the session to be mid-turn: nine of nine
+  streams were read on 2026-10-22 with every one showing `isRunning: false`.
+  But once the process has exited it returns `status: "unavailable"`, and
+  **archiving guarantees that** — the tool says so outright ("an archived one
+  never has one").
+
+**So the axis is process alive vs process gone, NOT live vs idle**, and the
+practical rule is: **capture the figures at the first `/plan-day` after the
+batch merges, before the sessions are archived.** Editions `294` and `303` each
+prescribed "read the dial while the session is still live", which is wrong about
+the mechanism — a quiet session reads fine — but was reaching for something real.
+**An over-correction is how this paragraph went wrong the first time:** it said
+"there is no race", a planner believed it, batch 3 was auto-archived on merge,
+and all three figures were lost. Write `unmeasured` when that happens, never a
+guess, and never a figure reconstructed from a neighbour.
 
 **A FIGURE FROM A STREAM THAT STOPPED EARLY IS NOT A BAND READING. Record it,
 mark it `blocked`, and keep it out of the bands.** Added 2026-10-23 after the
