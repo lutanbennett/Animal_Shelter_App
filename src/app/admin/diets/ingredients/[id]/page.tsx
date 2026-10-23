@@ -20,7 +20,7 @@ export default async function IngredientPage(props: PageProps<"/admin/diets/ingr
   const usedBy: UsedBy[] = [];
   for (const recipe of book.recipes) {
     const line = recipe.lines.find((l) => l.ingredientId === id);
-    if (line) usedBy.push({ dietId: recipe.id, dietName: recipe.name, line });
+    if (line) usedBy.push({ dietId: recipe.id, dietName: recipe.name, servings: recipe.servings, line });
   }
 
   return (

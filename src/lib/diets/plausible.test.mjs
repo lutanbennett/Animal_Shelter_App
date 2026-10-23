@@ -16,3 +16,10 @@ test("many meals alone, or a huge portion alone, is caught", () => {
   assert.ok(implausibleDiet({ mealsPerDay: 12, portionFactor: 1 }));
   assert.ok(implausibleDiet({ mealsPerDay: 2, portionFactor: 30 }));
 });
+
+import { implausibleServings } from "./plausible.ts";
+test("servings: the defaults and a generous Large pass, a slipped finger is caught", () => {
+  assert.equal(implausibleServings({ small: 1, medium: 1.5, large: 2 }), false);
+  assert.equal(implausibleServings({ small: 1, medium: 1.5, large: 2.5 }), false);
+  assert.equal(implausibleServings({ small: 1, medium: 1.5, large: 20 }), true);
+});

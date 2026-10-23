@@ -1,6 +1,6 @@
 import type { createClient } from "@/lib/supabase/server";
 import { todayIso } from "@/lib/format";
-import { formatQuantity } from "@/lib/diets/options";
+import { formatAmount, dayAmount, type DietServings } from "@/lib/diets/servings";
 import { groupConversions, CONVERSION_COLUMNS, type ConversionRow, type UnitConversion } from "@/lib/units";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
@@ -21,9 +21,8 @@ export type BookLine = {
   ingredientId: string;
   /** Null: the amounts are in the ingredient's own unit. */
   servingUnit: string | null;
-  small: number;
-  medium: number;
-  large: number;
+  /** The amount in ONE serving (0250). */
+  qtyPerServing: number;
 };
 
 export type BookRecipe = {
@@ -32,6 +31,8 @@ export type BookRecipe = {
   nameTh: string | null;
   notes: string | null;
   isStandard: boolean;
+  /** Servings a small, medium and large dog gets in a day. */
+  servings: DietServings;
   lines: BookLine[];
   /** Residents on it today. */
   residentsNow: number;
@@ -48,14 +49,21 @@ export type RecipeBook = {
 };
 
 type TypeRow = { id: string; name: string; name_th: string | null; unit: string; notes: string | null };
-type DietRow = { id: string; name: string; name_th: string | null; notes: string | null; is_standard: boolean };
+type DietRow = {
+  id: string;
+  name: string;
+  name_th: string | null;
+  notes: string | null;
+  is_standard: boolean;
+  servings_small: number | string;
+  servings_medium: number | string;
+  servings_large: number | string;
+};
 type LineRow = {
   diet_id: string;
   diet_type_id: string;
   serving_unit: string | null;
-  qty_small: number | string;
-  qty_medium: number | string;
-  qty_large: number | string;
+  qty_per_serving: number | string | null;
 };
 type ResidentDietRow = { diet_id: string; resident_id: string; start_date: string; end_date: string | null };
 
@@ -63,10 +71,10 @@ type ResidentDietRow = { diet_id: string; resident_id: string; start_date: strin
 export async function loadRecipeBook(supabase: Supabase): Promise<RecipeBook> {
   const [types, diets, lines, residentDiets, conversions] = await Promise.all([
     supabase.from("diet_types").select("id, name, name_th, unit, notes").order("name").returns<TypeRow[]>(),
-    supabase.from("diets").select("id, name, name_th, notes, is_standard").order("name").returns<DietRow[]>(),
+    supabase.from("diets").select("id, name, name_th, notes, is_standard, servings_small, servings_medium, servings_large").order("name").returns<DietRow[]>(),
     supabase
       .from("diet_ingredients")
-      .select("diet_id, diet_type_id, serving_unit, qty_small, qty_medium, qty_large")
+      .select("diet_id, diet_type_id, serving_unit, qty_per_serving")
       .returns<LineRow[]>(),
     supabase.from("resident_diets").select("diet_id, resident_id, start_date, end_date").returns<ResidentDietRow[]>(),
     supabase
@@ -109,6 +117,7 @@ export async function loadRecipeBook(supabase: Supabase): Promise<RecipeBook> {
       nameTh: diet.name_th,
       notes: diet.notes,
       isStandard: diet.is_standard,
+      servings: { small: Number(diet.servings_small), medium: Number(diet.servings_medium), large: Number(diet.servings_large) },
       residentsNow: current.get(diet.id)?.size ?? 0,
       records: records.get(diet.id) ?? 0,
       lines: (lines.data ?? [])
@@ -116,9 +125,7 @@ export async function loadRecipeBook(supabase: Supabase): Promise<RecipeBook> {
         .map((line) => ({
           ingredientId: line.diet_type_id,
           servingUnit: line.serving_unit,
-          small: Number(line.qty_small),
-          medium: Number(line.qty_medium),
-          large: Number(line.qty_large),
+          qtyPerServing: Number(line.qty_per_serving ?? 0),
         })),
     })),
     recordsByIngredient,
@@ -142,7 +149,7 @@ export function unitText(qty: number, servingUnit: string | null, ownLabel: stri
 
 /** "1.5 cups", "200 g". */
 export function amountText(qty: number, servingUnit: string | null, ownLabel: string): string {
-  return `${formatQuantity(qty)} ${unitText(qty, servingUnit, ownLabel)}`;
+  return `${formatAmount(qty)} ${unitText(qty, servingUnit, ownLabel)}`;
 }
 
 /**
@@ -152,6 +159,7 @@ export function amountText(qty: number, servingUnit: string | null, ownLabel: st
  */
 export function totalText(
   lines: BookLine[],
+  servings: DietServings,
   size: Size,
   ingredientUnit: (ingredientId: string) => string,
   ownLabel: (unit: string) => string,
@@ -161,7 +169,7 @@ export function totalText(
     const own = ingredientUnit(line.ingredientId);
     const key = line.servingUnit ?? `\u0000${own}`;
     const entry = totals.get(key) ?? { servingUnit: line.servingUnit, own, qty: 0 };
-    entry.qty += line[size];
+    entry.qty += dayAmount(line.qtyPerServing, servings, size === "small" ? "Small" : size === "large" ? "Large" : "Medium");
     totals.set(key, entry);
   }
   if (totals.size === 0) return null;
