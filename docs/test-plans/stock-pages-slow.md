@@ -11,7 +11,7 @@
 | PR | pending |
 | Tested by / date | Claude / 2026-10-23 |
 | Carries a migration? | no |
-| Tested at SHA | `HEADSHA` |
+| Tested at SHA | `49fa3451` |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,7 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 test=0 build=0`:
 
 ```
-GATES_LINE
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
