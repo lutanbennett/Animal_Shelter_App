@@ -20,6 +20,7 @@ import { landingGroupTiles, leadWith } from "@/lib/home/landing";
 const TILES: { href: string; description: (t: Dictionary) => string }[] = [
   { href: "/enclosures", description: (t) => t.operations.landing.tiles.enclosures },
   { href: "/operations/medication-list", description: (t) => t.operations.landing.tiles.medicationList },
+  { href: "/operations/feeding-list", description: (t) => t.operations.landing.tiles.feedingList },
   { href: "/maintenance", description: (t) => t.operations.landing.tiles.maintenance },
   { href: "/stocktake", description: (t) => t.operations.landing.tiles.stocktake },
   { href: "/deliveries", description: (t) => t.operations.landing.tiles.deliveries },

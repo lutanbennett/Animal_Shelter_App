@@ -129,16 +129,16 @@ Result: pending
 
 0. Sign in with `--cards residents`. The home screen shows the **Residents** tile (or the tile of a card that includes it).
 1. Open `/residents`: it loads.
-2. **TODO:** A resident's details, housing and history. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
+2. **Do:** A resident's details, housing and history. Use a disposable record named `walk-residents`. **Read-back:** the hub (/residents/<id>) shows the new name, Thai name and bio at once; the housing and history are on /residents/<id>/housing (answered 2026-10-23).
 3. **Do:** Register a new resident (intake). Use a disposable record named `walk-residents`. **Read-back:** the new resident shows in /residents.
-4. **TODO:** Record or correct a microchip number. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
-5. **TODO:** News from an adopter. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
+4. **Do:** Record or correct a microchip number. Use a disposable record named `walk-residents`. **Read-back:** the number shows in the hub's header with a Correct button; a corrected number shows there straight away. Intake asks for it too, on step 3 (answered 2026-10-23).
+5. **Do:** News from an adopter. Use a disposable record named `walk-residents`. **Read-back:** only an adopted resident has the control: /residents/<id>/adoption-updates lists the new update first, with its date and channel (LINE, Facebook, Email, Visit); text marked staff only is never published (answered 2026-10-23).
 6. **Do:** Move a resident to another enclosure. Use a disposable record named `walk-residents`. **Read-back:** the resident's page shows the new enclosure.
 7. **TODO:** Send to hospital and bring back. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
 8. **TODO:** Foster, adopt, return to the shelter. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
 9. **TODO:** Record a death. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
 10. **Do:** Add a photo to a resident. Use a disposable record named `walk-residents`. **Read-back:** the page counts the photo as added; it is filed in the resident's Medical folder, never on the website, and this card cannot look at it again, so also confirm it on the resident's record with a login that holds a record card.
-11. **TODO:** Refile or remove a photo, choose the profile photo. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
+11. **Do:** Refile or remove a photo, choose the profile photo. Use a disposable record named `walk-residents`. **Read-back:** tap the photo on /residents/<id>/photos: Move to folder changes the folder its tile reads (Medical to Foster read "Foster · <date>"), Remove photo and Current profile photo sit beside it (answered 2026-10-23).
 12. **TODO:** Put a resident's photo on the public website. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
 13. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
@@ -152,13 +152,13 @@ Result: pending
 0. Sign in with `--cards medical_records`. The home screen shows the **Medical records** tile (or the tile of a card that includes it).
 1. Open `/residents`: it loads.
 2. **TODO:** Vet visits and how they went. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
-3. **TODO:** Procedures and their files. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
-4. **TODO:** Blood tests and their reports. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
-5. **TODO:** Prescriptions: what should be given. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
-6. **TODO:** Immunizations. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
+3. **Do:** Procedures and their files. Use a disposable record named `walk-medical_records`. **Read-back:** the resident's Procedures page (/residents/<id>/procedures) lists it with the type, where it was done, the date and the note; files are attached from the same row (answered 2026-10-23).
+4. **Do:** Blood tests and their reports. Use a disposable record named `walk-medical_records`. **Read-back:** the resident's Blood Tests page (/residents/<id>/blood-tests) lists it with the type, date and results note, and "No files attached yet" until a scan is added (answered 2026-10-23).
+5. **Do:** Prescriptions: what should be given. Use a disposable record named `walk-medical_records`. **Read-back:** the resident's Prescriptions page (/residents/<id>/prescriptions) lists it under Current with the dose, how often and the start date; it also appears on /operations/medication-list (answered 2026-10-23).
+6. **Do:** Immunizations. Use a disposable record named `walk-medical_records`. **Read-back:** the form shows a table straight after saving (resident, immunization, administered, next due). The Add all in zone and enclosure pickers are empty for a card-only login (answered 2026-10-23).
 7. **Do:** Weight. Use a disposable record named `walk-medical_records`. **Read-back:** the list shows "Saved: <name>, <kg>", and opening that resident on /medical/weight reads "Last time: <kg>, <date>" and "Today already has <kg>" (one weight per resident per day; a second save replaces it).
-8. **TODO:** A resident's diet. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
-9. **TODO:** Remove a medical record entered by mistake, and restore it. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
+8. **Do:** A resident's diet. Use a disposable record named `walk-medical_records`. **Read-back:** the resident's Diet page (/residents/<id>/diet) lists it under Current with meals a day and the amounts at the resident's size (answered 2026-10-23).
+9. **Do:** Remove a medical record entered by mistake, and restore it. Use a disposable record named `walk-medical_records`. **Read-back:** Remove, with an optional reason, on any medical row: the row leaves the list and the chart and the page reads "1 removed hidden"; Show removed lists it with Restore, which brings it back (done on a weight entry; answered 2026-10-23).
 10. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
@@ -305,7 +305,7 @@ Result: pending
 0. Sign in with `--cards approve_photos`. The home screen shows the **Approve photos** tile (or the tile of a card that includes it).
 1. Open `/photos/approve`: it loads.
 2. **TODO:** Approve or remove the photos waiting in Photos to approve. Do it on a disposable record named `walk-approve_photos`. Question: where should this write show afterwards (which page, which row)?
-3. **TODO:** Refile or remove a photo, choose the profile photo. Do it on a disposable record named `walk-approve_photos`. Question: where should this write show afterwards (which page, which row)?
+3. **Do:** Refile or remove a photo, choose the profile photo. Use a disposable record named `walk-approve_photos`. **Read-back:** tap the photo on /residents/<id>/photos: Move to folder changes the folder its tile reads (Medical to Foster read "Foster · <date>"), Remove photo and Current profile photo sit beside it (answered 2026-10-23).
 4. **See:** A resident's details, housing and history (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 5. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
