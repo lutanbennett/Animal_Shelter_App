@@ -130,11 +130,13 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
   const supplierName = new Map(suppliers.map((s) => [s.id, s.name]));
   const itemName = new Map([...medications, ...diets].map((i) => [i.id, localLabel(locale, i.name, i.name_th)]));
   const receipts = receiptsResult.data ?? [];
-  const billPhotos = await loadBillPhotos(supabase, "stock_receipt", receipts.map((r) => r.id));
-  const recorders = await loadAppUsersById(
-    supabase,
-    receipts.flatMap((r) => (r.recorded_by ? [r.recorded_by] : [])),
-  );
+  const [billPhotos, recorders] = await Promise.all([
+    loadBillPhotos(supabase, "stock_receipt", receipts.map((r) => r.id)),
+    loadAppUsersById(
+      supabase,
+      receipts.flatMap((r) => (r.recorded_by ? [r.recorded_by] : [])),
+    ),
+  ]);
 
   const formProps = {
     initialKind,

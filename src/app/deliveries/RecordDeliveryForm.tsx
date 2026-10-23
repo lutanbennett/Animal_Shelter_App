@@ -2,7 +2,7 @@
 
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { localLabel } from "@/lib/translations/labels";
 import { localizedValidity } from "@/lib/i18n/validity";
@@ -62,6 +62,7 @@ export function RecordDeliveryForm({
   fromBill?: string | null;
   billCost?: string;
 }) {
+  const formId = useId();
   const { t, locale } = useI18n();
   const d = t.deliveries;
   const f = d.form;
@@ -200,7 +201,7 @@ export function RecordDeliveryForm({
       {lines.map((line, index) => {
         const quantityOk = parseDeliveryQuantity(line.quantity).ok;
         const label = unitLabelOf(line.unit);
-        const id = `delivery-line-${line.key}`;
+        const id = `${formId}-line-${index}`;
         return (
           <fieldset key={line.key} className="flex flex-col gap-3 rounded border border-border p-3">
             {lines.length > 1 && <legend className="px-1 text-sm font-semibold text-foreground">{f.sizeN(index + 1)}</legend>}
