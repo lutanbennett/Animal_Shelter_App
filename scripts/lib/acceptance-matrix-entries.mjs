@@ -959,6 +959,20 @@ export const ENTRIES = {
       expect: "The round you tapped stays selected whatever the clock says. The list shows, per zone and then per enclosure, each medicine and how many doses to bag, and anything with no round set is called out rather than left out.",
     },
   ],
+  "feeding-list": [
+    {
+      activity: "Read how much food each zone needs for a meal",
+      device: "phone",
+      do: "Operations → Feeding list. Tap Morning or Evening for the meal you are making, then scroll down the page.",
+      expect: "Each zone shows one block per diet, the Standard diet first and each special diet in its own block, with how many dogs it is for and the total of every ingredient for that one meal. The meal you tapped stays selected whatever the clock says. Nothing is ticked off and the page does not slide sideways.",
+    },
+    {
+      activity: "Plate each dog's meal",
+      device: "phone",
+      do: "Open the Feeding list, pick the meal, then tap Plate by dog.",
+      expect: "Enclosure by enclosure, each dog shows its photo, name and exactly what it gets in this one meal; a dog with a portion other than 1 says so.",
+    },
+  ],
   "manage-diets": [
     {
       activity: "Add a diet and read the food forecast",

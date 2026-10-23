@@ -255,6 +255,17 @@ export const ROUTES: readonly RouteEntry[] = [
     scope: { clinical: "any" },
   },
   {
+    path: "/operations/feeding-list",
+    activity: "medical.diet",
+    level: "read",
+    icon: Utensils,
+    label: (t) => t.nav.feedingList,
+    device: "any",
+    menu: false,
+    // Same audience as /medical/diets: the diet rows are for a login that sees every clinic (sees_all_clinical(), 0140).
+    scope: { clinical: "any" },
+  },
+  {
     path: "/medical/weight",
     activity: "medical.weight",
     icon: Scale,
