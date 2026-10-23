@@ -16,12 +16,11 @@ no inherited work**, which has not been true for two releases.
 before you cut anything**, because it concerns what the dogs are fed.
 
 **And re-measure this section rather than trusting it.** Last edition's START HERE
-said the `0.39.3` Worker gap was "one command"; by the next morning it was **no
-command at all** — `main` had moved 11 PRs, `deploy.mjs` refuses while `unreleased`
-has lines (it had three), and two migrations were pending. `deploy.mjs` takes **no
-`--ref`**, so `c0bdf272` could not be built at all. **A handover's facts have a shelf
-life of hours.** Run `git diff --stat <last SHA>..HEAD`, `gh pr list`,
-`--status --env production` and the live `/api/version` before acting on any of it.
+called the `0.39.3` Worker gap "one command"; by morning it was **none** — `main` had
+moved 11 PRs, `deploy.mjs` refuses while `unreleased` has lines (it had three), two
+migrations were pending, and `deploy.mjs` takes **no `--ref`**. **A handover's facts
+have a shelf life of hours.** Run `git diff --stat <last SHA>..HEAD`, `gh pr list`,
+`--status --env production` and the live `/api/version` first.
 
 ## The one finding that outranks everything else here
 
@@ -99,7 +98,8 @@ in any worktree you reuse. **No guard would have caught it**: the gates do not r
 | Production database | **`251 applied`, `0 pending`**, `No drift`, 0 each way. **Run it yourself** |
 | Dev database | **`No drift`, 251 of 251** — clean, fifth release running |
 | Next free migration number | **`0251`**. **Check `origin/main` *and* open `*-schema` PRs anyway** |
-| `unreleased` and open PRs | 0 notes at the cut; **#876 merged mid-release and `main` moved four more times.** Twelve editions have said 0 and been overtaken — **run `gh pr list` yourself** |
+| `unreleased` and open PRs | 0 notes at the cut; **#876 merged mid-release and `main` moved four more times.** Twelve editions have said 0 and been overtaken — **run `gh pr list` yourself.** As this is written, **#878 `claude/feature-review` is open and its worktree is HELD** (see below) |
+| Backlog | **Folded into `main` and fast-forwarded** after the release: `main`, `origin/main`, `backlog` and `origin/backlog` all at `3e7fa943`. The two items this release filed are visible on `main`, including the FOR LUTAN diets one |
 | Worktrees | The cut reused `Animal_Shelter_vet-visit-booking-polish` for its **third** release, and the record reused it again. **Its folder name does not match its branch**, so cleanup by name will miss it |
 
 **Counters:** all four builds from one SHA **1**; `npm ci` as step 1 **21** (and
@@ -126,6 +126,16 @@ table**, which gives them a second home nothing closes.
 on dev, alongside 11 passing checks. The benign reading — a diet whose servings were
 edited, which is allowed by design — is **plausible and unverified**. Do not promote
 it to a conclusion without measuring it.
+
+**A security rebuild has started, and it will shape what you cut next.** Lutan,
+2026-10-23: the feature list is **step 1 of rebuilding security from the ground up**,
+with **all hard-coded role settings to come out** and the card walkthrough runs **on
+hold** meanwhile. #878 (`claude/feature-review`, paper only — `docs/features.md`, a
+decision file and its test plan) is the first PR. **It was green and mergeable but
+left unmerged on purpose**: its worktree was `HELD`, so the session owning it was
+still working, and its test plan refers to a printable PDF for Lutan's review that
+may not have been delivered yet. **Not a release manager's PR to merge** — ask that
+session or Lutan.
 
 **Still unlooked-at: the prescription form reading 4** (`0.38.1`) **and video
 playback on a real handset** (`0.38.0`).
