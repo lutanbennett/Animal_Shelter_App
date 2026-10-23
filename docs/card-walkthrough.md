@@ -84,7 +84,7 @@ Result: pending
 
 0. Sign in with `--cards do_stocktaking`. The home screen shows the **Do Stocktaking** tile (or the tile of a card that includes it).
 1. Open `/stocktake`: it loads.
-2. **TODO:** Count the stock. Do it on a disposable record named `walk-do_stocktaking`. Question: where should this write show afterwards (which page, which row)?
+2. **Do:** Count the stock. Use a disposable record named `walk-do_stocktaking`. **Read-back:** type a count, tap Save, then Review and save and Save 1 count; the same /stocktake page then reads "Last count <n> ... counted today" on that item. A stocktake has no free-text name, so the walk- label cannot be used. The stock figure and history on /management/medications is where it should also show, but a card-only login is refused there (answered 2026-10-23).
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
@@ -95,7 +95,7 @@ Result: pending
 
 0. Sign in with `--cards do_purchasing`. The home screen shows the **Do the Purchasing** tile (or the tile of a card that includes it).
 1. Open `/management/purchasing`: it loads.
-2. **TODO:** Work out what to buy. Do it on a disposable record named `walk-do_purchasing`. Question: where should this write show afterwards (which page, which row)?
+2. **Do:** Work out what to buy. Use a disposable record named `walk-do_purchasing`. **Read-back:** nothing is written: the page is a shopping list for 1 week, 2 weeks or 1 month, with Print and Download CSV, and the app does not place the order. Confirm it lists what is short and names the items never counted. It can take about a minute to appear on first load (answered 2026-10-23).
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
@@ -106,7 +106,7 @@ Result: pending
 
 0. Sign in with `--cards record_delivery`. The home screen shows the **Record a Delivery** tile (or the tile of a card that includes it).
 1. Open `/deliveries`: it loads.
-2. **TODO:** Record a delivery. Do it on a disposable record named `walk-record_delivery`. Question: where should this write show afterwards (which page, which row)?
+2. **Do:** Record a delivery. Use a disposable record named `walk-record_delivery`. **Read-back:** it is the first row of Recent deliveries on /deliveries after the save (six steps: what arrived, item, amount, day, details, check). It does not change the stock count; usage on /management/stock-usage and the forecast on /management/purchasing read it, and a card-only login is refused there (answered 2026-10-23).
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
