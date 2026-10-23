@@ -32,6 +32,7 @@ function UnitRowItem({ unit }: { unit: UnitTableRow }) {
     setNameTh(unit.nameTh ?? "");
     setForIngredients(unit.forIngredients);
     setForMedicines(unit.forMedicines);
+    setMessage(null);
     setEditing(false);
   }
 
@@ -48,7 +49,9 @@ function UnitRowItem({ unit }: { unit: UnitTableRow }) {
   }
 
   async function toggleArchived() {
-    if (!unit.archived && !(await confirm({ body: s.archiveConfirm(unit.name) }))) return;
+    // A unit still in use is refused by the action, which names the rows: no point asking first.
+    const inUse = unit.ingredientCount + unit.medicineCount > 0;
+    if (!unit.archived && !inUse && !(await confirm({ body: s.archiveConfirm(unit.name) }))) return;
     setMessage(null);
     startTransition(async () => {
       const result = await setUnitArchived(unit.id, !unit.archived);
@@ -116,7 +119,10 @@ function UnitRowItem({ unit }: { unit: UnitTableRow }) {
             </>
           ) : (
             <>
-              <ActionButton icon={ACTION_ICONS.edit} compact disabled={isPending} onClick={() => setEditing(true)}>
+              <ActionButton icon={ACTION_ICONS.edit} compact disabled={isPending} onClick={() => {
+                  setMessage(null);
+                  setEditing(true);
+                }}>
                 {t.common.edit}
               </ActionButton>
               <ActionButton icon={unit.archived ? ACTION_ICONS.restore : ACTION_ICONS.archive} compact disabled={isPending} onClick={toggleArchived}>
