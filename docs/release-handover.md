@@ -90,11 +90,8 @@ carries that key`, which is the evidence rather than the matching values.
 ## Promoted out of this file
 
 **"An empty `unreleased` is not proof that nothing user-visible shipped"** — the lesson
-`0.39.5` was made of, since this release existed *entirely* to publish a note #882 had
-correctly withheld under the release-note truth rule. It is durable, so per paperwork
-rule 4 it now lives in **`docs/release-procedure.md` step 4** rather than being recopied
-here each edition. Read it there before your next cut; expect the shape again while the
-security rebuild lands schema and code in separate PRs.
+`0.39.5` was made of — now lives in **`docs/release-procedure.md` step 4**, per paperwork
+rule 4. Read it there before your next cut.
 
 ## In flight and open
 
@@ -104,14 +101,23 @@ in the record — no Dev badge, both sign-ins, `/residents`, a resident hub, the
 no session has; and **book one real vet visit on production and see it in "Lanna Care: vet
 visits."**
 
-**Two of #882's items remain, both narrowed rather than merely deferred.** *The Who does
-what toggle* — add the Operations card, see the tile appear, remove it, see it go —
-**cannot be done at aal1**: the page opens and lists the cards, but the buttons say *"To
-give or remove cards, verify with your authenticator app first"* and dragging is off. It
-needs the authenticator. Its *effect* was verified from the other end: `0251`'s seeded
-cards do draw their tiles on all five roles, read on the deployed test build. *The Thai
-wording of the two new cards* needs a Thai reader — but both have real Thai strings in
-`th.ts`, so it is phrasing, not a missing translation.
+**Both of #882's manual items are now CLOSED by Lutan, within the hour of the deploy.**
+Written in rather than left to be re-raised, which is what this file is for.
+
+- *The Who does what toggle* — **done on production**, Lutan 2026-10-23: *"I have removed and added the operations and management tiles from profiles on production"*. This is the item no session could do: the page opens at aal1 but the buttons demand the authenticator app (*"To give or remove cards, verify with your authenticator app first"*) and dragging is off. **It needed him, he did it, and it works.** Its effect had already been verified from the other end — `0251`'s seeded cards draw their tiles on all five roles, read on the deployed test build.
+- *The Thai wording of the two new cards* — **fine**, Lutan 2026-10-23: *"yes the Thai wording is fine"*. Both cards had real Thai strings in `th.ts` (`งานปฏิบัติการ`, `การจัดการ`), so this was only ever phrasing, and the phrasing passed.
+
+**One thing this release could NOT establish, and it is a live gap rather than a loose
+end.** Exercising that toggle on production means production's `role_cards` may no longer
+match what `0251` seeded. `0251` deliberately granted Operations and Management to
+**nobody** ("drop operations from every role... same with Management"), and both the record
+and the table above were written on that basis. **Whether any role was left holding either
+card is NOT established.** He was asked in one line and answered the Thai question
+instead, so this is recorded as unknown rather than inferred — the diets lesson, and the
+Home Assistant disk size before that. **No session can read it**: every script that would
+is hard-locked to the dev project, and those guards were left alone. **So do not repeat
+"no role holds either" as current.** Ask him, or read `/admin/who-does-what` with the
+authenticator, before anything depends on it.
 
 **The security rebuild continues and still shapes what to cut.** #882 was the quick patch
 Lutan chose; **all hard-coded role settings are still to come out** (`JOBS_OF_ROLE`,
