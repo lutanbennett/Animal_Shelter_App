@@ -16,3 +16,11 @@ export function implausibleDiet(d: {
   if (d.portionFactor != null && d.portionFactor > MAX_PORTION_FACTOR) return "quantity";
   return null;
 }
+
+/** More servings than this in a day is flagged: a dog eating five times a serving is a typo far more often than a dog. */
+export const MAX_PLAUSIBLE_SERVINGS = 5;
+
+/** True when any size's servings look like a typo (a warning to confirm past, like the rest of this file). */
+export function implausibleServings(s: { small: number; medium: number; large: number }): boolean {
+  return Math.max(s.small, s.medium, s.large) > MAX_PLAUSIBLE_SERVINGS;
+}

@@ -8,7 +8,7 @@ import { useKeptForm } from "@/lib/use-kept-form";
 import { createDiet, updateDiet } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { dietUnitLabel, sizeLabel } from "@/lib/i18n/enum-labels";
-import { formatQuantity } from "@/lib/diets/options";
+import { formatAmount } from "@/lib/diets/servings";
 import { lineAmount, type DietOption } from "@/lib/diets/recipes";
 import { todayIso } from "@/lib/format";
 import { OptionalDateInput } from "@/components/OptionalDateInput";
@@ -68,7 +68,7 @@ export function DietForm({
     ? selected.lines
         .map(
           (line) =>
-            `${formatQuantity(lineAmount(line, residentSize))} ${line.servingUnit ?? dietUnitLabel(t, line.unit)} ${line.ingredient}`,
+            `${formatAmount(lineAmount(line, residentSize))} ${line.servingUnit ?? dietUnitLabel(t, line.unit)} ${line.ingredient}`,
         )
         .join(", ")
     : null;

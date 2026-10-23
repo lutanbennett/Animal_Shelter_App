@@ -8,12 +8,14 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { dietUnitLabel } from "@/lib/i18n/enum-labels";
-import { formatQuantity } from "@/lib/diets/options";
-import { SIZES, totalText, unitText, type BookIngredient, type BookRecipe, type Size } from "@/lib/diets/recipe-book";
+import { implausibleServings } from "@/lib/diets/plausible";
+import { dayAmount, formatAmount } from "@/lib/diets/servings";
+import { SIZES, amountText, totalText, unitText, type BookIngredient, type BookRecipe, type Size } from "@/lib/diets/recipe-book";
 import {
   deleteRecipe,
   removeRecipeLine,
   saveRecipeLine,
+  saveServings,
   setStandardRecipe,
   updateRecipe,
   type RecipeLineFields,
@@ -21,9 +23,9 @@ import {
 import { Sheet, sheetInputClass } from "./Sheet";
 
 const labelClass = "flex flex-col gap-1 text-sm font-medium text-muted";
-const EMPTY_LINE: RecipeLineFields = { ingredientId: "", servingUnit: "", small: "", medium: "", large: "" };
+const EMPTY_LINE: RecipeLineFields = { ingredientId: "", servingUnit: "", qty: "" };
 
-/** The small form behind Add ingredient and a line's Edit: the ingredient, how it is measured, three amounts. */
+/** The small form behind Add ingredient and a line's Edit: the ingredient, how it is measured, the amount in one serving. */
 function LineSheet({
   open,
   dietId,
@@ -69,21 +71,6 @@ function LineSheet({
     });
   }
 
-  const amount = (key: Size, label: string) => (
-    <label className={labelClass}>
-      {label}
-      <input
-        value={fields[key]}
-        onChange={(e) => set(key)(e.target.value)}
-        type="number"
-        inputMode="decimal"
-        min="0"
-        step="any"
-        className={sheetInputClass}
-      />
-    </label>
-  );
-
   return (
     <Sheet open={open} title={editing ? b.editLineTitle(editing.name) : b.addLineTitle(dietName)} onClose={close}>
       <div className="flex flex-col gap-3">
@@ -125,11 +112,18 @@ function LineSheet({
               <span className="text-xs font-normal">{b.measureHint}</span>
             </label>
             <p className="text-sm text-muted">{b.amountsHint}</p>
-            <div className="grid grid-cols-3 gap-2">
-              {amount("small", r.small)}
-              {amount("medium", r.medium)}
-              {amount("large", r.large)}
-            </div>
+            <label className={labelClass}>
+              {b.amountPerServing}
+              <input
+                value={fields.qty}
+                onChange={(e) => set("qty")(e.target.value)}
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="any"
+                className={sheetInputClass}
+              />
+            </label>
             {message && <p className="text-sm text-danger">{message}</p>}
             <div className="flex gap-2">
               <ActionButton icon={ACTION_ICONS.save} variant="primary" disabled={pending} onClick={save}>
@@ -191,6 +185,59 @@ function RenameSheet({ open, recipe, onClose }: { open: boolean; recipe: BookRec
         </div>
       </div>
     </Sheet>
+  );
+}
+
+/** The diet's servings by size: how many servings a Small, Medium and Large dog gets in a day. */
+function ServingsEditor({ recipe }: { recipe: BookRecipe }) {
+  const { t } = useI18n();
+  const confirm = useConfirm();
+  const b = t.admin.diets.book;
+  const r = t.admin.diets.recipes;
+  const [fields, setFields] = useState({
+    small: formatAmount(recipe.servings.small),
+    medium: formatAmount(recipe.servings.medium),
+    large: formatAmount(recipe.servings.large),
+  });
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
+  const [pending, startTransition] = useTransition();
+  const labels: Record<Size, string> = { small: r.small, medium: r.medium, large: r.large };
+  async function save() {
+    setMessage(null);
+    const typed = { small: Number(fields.small), medium: Number(fields.medium), large: Number(fields.large) };
+    if (implausibleServings(typed) && !(await confirm({ body: b.servingsConfirm }))) return;
+    startTransition(async () => {
+      const result = await saveServings(recipe.id, fields);
+      setMessage(result.ok ? { ok: true, text: b.servingsSaved } : { ok: false, text: result.error });
+    });
+  }
+  return (
+    <section className="flex flex-col gap-3 rounded border border-border bg-surface p-4">
+      <h2 className="text-lg font-semibold text-foreground">{b.servingsTitle}</h2>
+      <p className="text-sm text-muted">{b.servingsHint}</p>
+      <div className="grid grid-cols-3 gap-2">
+        {SIZES.map((size) => (
+          <label key={size} className={labelClass}>
+            {labels[size]}
+            <input
+              value={fields[size]}
+              onChange={(e) => setFields((prev) => ({ ...prev, [size]: e.target.value }))}
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="any"
+              className={sheetInputClass}
+            />
+          </label>
+        ))}
+      </div>
+      {message && <p className={message.ok ? "text-sm text-muted" : "text-sm text-danger"}>{message.text}</p>}
+      <div>
+        <ActionButton icon={ACTION_ICONS.save} disabled={pending} onClick={save}>
+          {b.servingsSave}
+        </ActionButton>
+      </div>
+    </section>
   );
 }
 
@@ -297,13 +344,21 @@ export function RecipeDetail({
           {recipe.lines.map((line) => {
             const ingredient = byId.get(line.ingredientId);
             if (!ingredient) return null;
-            const unit = unitText(line.medium, line.servingUnit, ownLabel(ingredient.unit));
+            const own = ownLabel(ingredient.unit);
+            const perDay = (size: string) => dayAmount(line.qtyPerServing, recipe.servings, size);
             return (
               <li key={line.ingredientId} className="flex items-center justify-between gap-3 py-3">
                 <div className="flex flex-col">
-                  <span className="font-medium text-foreground">{ingredient.name}</span>
+                  <span className="font-medium text-foreground">
+                    {amountText(line.qtyPerServing, line.servingUnit, own)} {ingredient.name}
+                  </span>
                   <span className="text-sm text-muted">
-                    {b.lineAmounts(formatQuantity(line.small), formatQuantity(line.medium), formatQuantity(line.large), unit)}
+                    {b.lineDay(
+                      formatAmount(perDay("Small")),
+                      formatAmount(perDay("Medium")),
+                      formatAmount(perDay("Large")),
+                    )}{" "}
+                    {unitText(perDay("Medium"), line.servingUnit, own)}
                   </span>
                 </div>
                 <div className="flex shrink-0 gap-2">
@@ -334,13 +389,18 @@ export function RecipeDetail({
         {message && <p className="text-sm text-danger">{message}</p>}
       </section>
 
+      <ServingsEditor
+        key={`servings-${recipe.servings.small}-${recipe.servings.medium}-${recipe.servings.large}`}
+        recipe={recipe}
+      />
+
       <section className="flex flex-col gap-1 rounded border border-border bg-surface p-4">
         <h2 className="text-lg font-semibold text-foreground">{b.totalTitle}</h2>
         {SIZES.map((size) => (
           <p key={size} className={size === "medium" ? "font-medium text-foreground" : "text-sm text-muted"}>
             {b.total(
               sizeLabel[size],
-              totalText(recipe.lines, size, (id) => byId.get(id)?.unit ?? "g", ownLabel) ?? b.totalNone,
+              totalText(recipe.lines, recipe.servings, size, (id) => byId.get(id)?.unit ?? "g", ownLabel) ?? b.totalNone,
             )}
           </p>
         ))}
@@ -358,7 +418,7 @@ export function RecipeDetail({
       />
       {editing && editingLine && (
         <LineSheet
-          key={`edit-${editing.id}-${editingLine.small}-${editingLine.medium}-${editingLine.large}-${editingLine.servingUnit}`}
+          key={`edit-${editing.id}-${editingLine.qtyPerServing}-${editingLine.servingUnit}`}
           open
           dietId={recipe.id}
           dietName={recipe.name}
@@ -367,9 +427,7 @@ export function RecipeDetail({
           initial={{
             ingredientId: editing.id,
             servingUnit: editingLine.servingUnit ?? "",
-            small: formatQuantity(editingLine.small),
-            medium: formatQuantity(editingLine.medium),
-            large: formatQuantity(editingLine.large),
+            qty: formatAmount(editingLine.qtyPerServing),
           }}
           onClose={() => setEditingId(null)}
         />

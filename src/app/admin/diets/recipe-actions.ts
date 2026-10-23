@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadPermissions } from "@/lib/permissions/load";
 import { canEditItemSettings } from "@/lib/permissions/item-settings";
+import type { DietServings } from "@/lib/diets/servings";
 
 // Settings → Diets, the recipe half (0239): a diet is a recipe of ingredients
 // (diet_types). Ingredients, stock and prices stay in ./actions.ts and
@@ -20,10 +21,11 @@ export type RecipeLineFields = {
   ingredientId: string;
   /** "" = the ingredient's own unit. */
   servingUnit: string;
-  small: string;
-  medium: string;
-  large: string;
+  /** The amount in ONE serving (0250). */
+  qty: string;
 };
+
+export type ServingsFields = { small: string; medium: string; large: string };
 
 function optional(value: FormDataEntryValue | string | null | undefined) {
   const trimmed = typeof value === "string" ? value.trim() : "";
@@ -137,7 +139,34 @@ export async function deleteRecipe(id: string): Promise<ActionResult> {
   });
 }
 
-/** Adds the ingredient to the recipe or changes its amounts (one line per ingredient). */
+/**
+ * The columns the database forecast still reads (0239's diet_forecast reads qty_small/medium/large until a
+ * cleanup migration moves it to qty_per_serving). The app owns the truth in qty_per_serving and keeps these
+ * equal to qty_per_serving x servings, so the forecast and the sheets can never disagree.
+ */
+function derivedAmounts(qtyPerServing: number, servings: DietServings) {
+  return {
+    qty_per_serving: qtyPerServing,
+    qty_small: qtyPerServing * servings.small,
+    qty_medium: qtyPerServing * servings.medium,
+    qty_large: qtyPerServing * servings.large,
+  };
+}
+
+async function loadServings(supabase: Supabase, dietId: string) {
+  const { data, error } = await supabase
+    .from("diets")
+    .select("servings_small, servings_medium, servings_large")
+    .eq("id", dietId)
+    .single<{ servings_small: number | string; servings_medium: number | string; servings_large: number | string }>();
+  if (error || !data) return { servings: null, error: error?.message ?? "" };
+  return {
+    servings: { small: Number(data.servings_small), medium: Number(data.servings_medium), large: Number(data.servings_large) },
+    error: null,
+  };
+}
+
+/** Adds the ingredient to the recipe or changes its amount per serving (one line per ingredient). */
 export async function saveRecipeLine(dietId: string, fields: RecipeLineFields): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.admin.diets.recipes.errors;
@@ -145,21 +174,57 @@ export async function saveRecipeLine(dietId: string, fields: RecipeLineFields): 
     const refused = await refusal();
     if (refused) return refused;
     if (!fields.ingredientId) return refuse(e.pickIngredient);
-    const [small, medium, large] = [fields.small, fields.medium, fields.large].map((v) => Number(optional(v) ?? ""));
-    if ([small, medium, large].some((q) => !Number.isFinite(q) || q <= 0)) return refuse(e.amountsInvalid);
+    const qty = Number(optional(fields.qty) ?? "");
+    if (!Number.isFinite(qty) || qty <= 0) return refuse(e.amountsInvalid);
     const supabase = await createClient();
+    const { servings, error: servingsError } = await loadServings(supabase, dietId);
+    if (!servings) return refuse(servingsError ?? "");
     // A serving unit with no conversion is refused by a trigger (0239) with a plain message.
     const { error } = await supabase.from("diet_ingredients").upsert(
       {
         diet_id: dietId,
         diet_type_id: fields.ingredientId,
         serving_unit: optional(fields.servingUnit),
-        qty_small: small,
-        qty_medium: medium,
-        qty_large: large,
+        ...derivedAmounts(qty, servings),
       },
       { onConflict: "diet_id,diet_type_id" },
     );
+    if (error) return refuse(error.message);
+    revalidateRecipePages();
+    return { ok: true };
+  });
+}
+
+/** Sets how many servings a small, medium and large dog gets in a day, then re-derives every line. */
+export async function saveServings(dietId: string, fields: ServingsFields): Promise<ActionResult> {
+  const { t } = await getT();
+  const e = t.admin.diets.recipes.errors;
+  return runAction("diets.saveServings", t.common.somethingWentWrong, async () => {
+    const refused = await refusal();
+    if (refused) return refused;
+    const [small, medium, large] = [fields.small, fields.medium, fields.large].map((v) => Number(optional(v) ?? ""));
+    if ([small, medium, large].some((q) => !Number.isFinite(q) || q <= 0)) return refuse(e.servingsInvalid);
+    const servings = { small, medium, large };
+    const supabase = await createClient();
+    const lines = await supabase
+      .from("diet_ingredients")
+      .select("diet_type_id, serving_unit, qty_per_serving")
+      .eq("diet_id", dietId)
+      .returns<{ diet_type_id: string; serving_unit: string | null; qty_per_serving: number | string | null }[]>();
+    if (lines.error) return refuse(lines.error.message);
+    // Lines first, diet last: a failure part-way leaves the shown servings unchanged and the page says so.
+    for (const line of lines.data ?? []) {
+      const { error } = await supabase
+        .from("diet_ingredients")
+        .update(derivedAmounts(Number(line.qty_per_serving), servings))
+        .eq("diet_id", dietId)
+        .eq("diet_type_id", line.diet_type_id);
+      if (error) return refuse(error.message);
+    }
+    const { error } = await supabase
+      .from("diets")
+      .update({ servings_small: small, servings_medium: medium, servings_large: large })
+      .eq("id", dietId);
     if (error) return refuse(error.message);
     revalidateRecipePages();
     return { ok: true };

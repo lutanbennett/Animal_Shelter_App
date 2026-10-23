@@ -76,6 +76,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   "A login with the Medical records card (or a Head of Medical / second-in-command role) can now open a resident's whole page. The medical sections can be added to; the name, housing, intake and history show but cannot be changed. The Residents list also stops offering buttons a login cannot use.",
+  {
+    text: "Diets are now written as one serving. In Settings → Diets, each ingredient has a single Amount per serving instead of three amounts, and each diet has a Servings by size row (Small 1, Medium 1.5, Large 2 to start with, changeable per diet). A serving is one day's food, so a Medium dog on a diet of 0.5 cup kibble gets 0.75 cup a day. The feeding list shows each meal's amount with the day's total beside it, and amounts such as 0.375 cup are shown in full instead of being rounded.",
+    roles: ["admin", "management", "head_of_medical", "second_in_command", "doctor"],
+  },
 ];
 
 /** Newest first. */
