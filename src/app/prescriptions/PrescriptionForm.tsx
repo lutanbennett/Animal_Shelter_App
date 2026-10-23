@@ -9,7 +9,8 @@ import { useKeptForm } from "@/lib/use-kept-form";
 import { createPrescription, updatePrescription } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, todayIso } from "@/lib/format";
-import { DOSE_UNITS, doseUnitLabel } from "@/lib/i18n/enum-labels";
+import { doseUnitLabel } from "@/lib/i18n/enum-labels";
+import { UnitSelect } from "@/components/UnitSelect";
 import { describeSchedule, type FrequencySchedule } from "@/lib/prescriptions/frequency";
 import { defaultRoundKeys, showsRoundTicks, tickVerdict } from "@/lib/prescriptions/rounds";
 import {
@@ -209,19 +210,14 @@ export function PrescriptionForm({
               >
                 {t.prescriptions.newMedicationUnit}
               </label>
-              <select
+              <UnitSelect
+                list="medicines"
                 id="newMedicationUnit"
                 name="newMedicationUnit"
                 value={newMedicationUnit}
                 onChange={(e) => setNewMedicationUnit(e.target.value)}
                 className={inputClass}
-              >
-                {DOSE_UNITS.map((unit) => (
-                  <option key={unit} value={unit}>
-                    {doseUnitLabel(t, unit)}
-                  </option>
-                ))}
-              </select>
+              />
               <p className="text-xs text-muted">
                 {t.prescriptions.newMedicationUnitHint}
               </p>

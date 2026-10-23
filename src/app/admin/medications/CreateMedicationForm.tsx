@@ -3,7 +3,7 @@
 import { useKeptForm } from "@/lib/use-kept-form";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { DOSE_UNITS, doseUnitLabel } from "@/lib/i18n/enum-labels";
+import { UnitSelect } from "@/components/UnitSelect";
 import { createMedication } from "./actions";
 
 /** Name and unit only: the price, reorder lead and safety stock are set on Management → Medication stock. */
@@ -45,19 +45,14 @@ export function CreateMedicationForm() {
         <label htmlFor="medication-unit" className="text-sm font-medium text-muted">
           {m.createForm.unit}
         </label>
-        <select
+        <UnitSelect
+          list="medicines"
           id="medication-unit"
           name="doseUnit"
           required
           defaultValue="tablet"
           className="w-40 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
-        >
-          {DOSE_UNITS.map((unit) => (
-            <option key={unit} value={unit}>
-              {doseUnitLabel(t, unit)}
-            </option>
-          ))}
-        </select>
+        />
         <span className="text-xs text-muted">{m.createForm.unitHint}</span>
       </div>
       <button

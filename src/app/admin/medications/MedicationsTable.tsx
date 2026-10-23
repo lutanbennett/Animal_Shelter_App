@@ -4,7 +4,8 @@ import { ActionButton } from "@/components/ActionButton";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { DOSE_UNITS, doseUnitLabel } from "@/lib/i18n/enum-labels";
+import { doseUnitLabel } from "@/lib/i18n/enum-labels";
+import { UnitSelect } from "@/components/UnitSelect";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
 import { deleteMedication, mergeMedication, updateMedicationDefinition } from "./actions";
@@ -138,18 +139,14 @@ function MedicationRowItem({
         </td>
         <td className="px-4 py-2">
           {editing ? (
-            <select
+            <UnitSelect
+              list="medicines"
+              current={medication.dose_unit}
               value={doseUnit}
               onChange={(e) => setDoseUnit(e.target.value)}
               aria-label={m.table.unit}
               className={`${inputClass} min-w-32`}
-            >
-              {DOSE_UNITS.map((unit) => (
-                <option key={unit} value={unit}>
-                  {doseUnitLabel(t, unit)}
-                </option>
-              ))}
-            </select>
+            />
           ) : (
             <span className="text-muted">{doseUnitLabel(t, medication.dose_unit)}</span>
           )}

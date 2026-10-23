@@ -8,7 +8,8 @@ import { useConfirm } from "@/components/ConfirmProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ItemUnits } from "@/components/UnitsPanel";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { DIET_UNITS, dietUnitLabel } from "@/lib/i18n/enum-labels";
+import { dietUnitLabel } from "@/lib/i18n/enum-labels";
+import { UnitSelect } from "@/components/UnitSelect";
 import { dayAmount, type DietServings } from "@/lib/diets/servings";
 import { amountText, type BookIngredient, type BookLine } from "@/lib/diets/recipe-book";
 import { deleteDietType, updateDietDefinition, type DietDefinitionFields } from "./actions";
@@ -91,13 +92,13 @@ export function IngredientDetail({
         </label>
         <label className={labelClass}>
           {i.countedIn}
-          <select value={fields.unit} onChange={(e) => set("unit")(e.target.value)} className={sheetInputClass}>
-            {DIET_UNITS.map((u) => (
-              <option key={u} value={u}>
-                {dietUnitLabel(t, u)}
-              </option>
-            ))}
-          </select>
+          <UnitSelect
+            list="ingredients"
+            current={ingredient.unit}
+            value={fields.unit}
+            onChange={(e) => set("unit")(e.target.value)}
+            className={sheetInputClass}
+          />
         </label>
         <label className={labelClass}>
           {m.createForm.notes}

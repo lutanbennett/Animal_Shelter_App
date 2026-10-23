@@ -7,7 +7,8 @@ import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
-import { DOSE_UNITS, type DoseUnit } from "@/lib/i18n/enum-labels";
+import { loadUnitList } from "@/lib/unit-list-server";
+import { usableUnit } from "@/lib/unit-list";
 import { parseSchedule, sameSchedule, scheduleLabel, type FrequencySchedule } from "@/lib/prescriptions/frequency";
 import { todayIso } from "@/lib/format";
 
@@ -95,10 +96,10 @@ type ParsedPrescription = {
  * string or the parsed values; the database repeats the date / dose checks
  * (0027) so a stale form can't slip past them.
  */
-function parsePrescriptionFields(
+async function parsePrescriptionFields(
   formData: FormData,
   t: Dictionary,
-): { error: string } | { fields: ParsedPrescription } {
+): Promise<{ error: string } | { fields: ParsedPrescription }> {
   const startDate = str(formData, "startDate");
   if (!startDate) return { error: t.prescriptions.errors.enterStartDate };
   if (!isoDate(startDate)) return { error: t.prescriptions.errors.invalidStartDate };
@@ -124,7 +125,7 @@ function parsePrescriptionFields(
   if (!medicationId && !newMedicationName) {
     return { error: t.prescriptions.errors.selectMedication };
   }
-  if (!medicationId && !DOSE_UNITS.includes(newMedicationUnit as DoseUnit)) {
+  if (!medicationId && !usableUnit(await loadUnitList(), "medicines", newMedicationUnit)) {
     return { error: t.prescriptions.errors.newMedicationUnit };
   }
 
@@ -249,7 +250,7 @@ export async function createPrescription(
   const residentId = str(formData, "residentId");
   if (!residentId) return { error: t.prescriptions.errors.missingResident };
 
-  const parsed = parsePrescriptionFields(formData, t);
+  const parsed = await parsePrescriptionFields(formData, t);
   if ("error" in parsed) return parsed;
   const { fields } = parsed;
 
@@ -295,7 +296,7 @@ export async function updatePrescription(
   const prescriptionId = str(formData, "prescriptionId");
   if (!prescriptionId) return { error: t.prescriptions.errors.missingPrescription };
 
-  const parsed = parsePrescriptionFields(formData, t);
+  const parsed = await parsePrescriptionFields(formData, t);
   if ("error" in parsed) return parsed;
   const { fields } = parsed;
 

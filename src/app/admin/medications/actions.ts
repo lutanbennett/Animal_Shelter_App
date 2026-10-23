@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { runAction, type ActionResult } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { DOSE_UNITS, type DoseUnit } from "@/lib/i18n/enum-labels";
+import { loadUnitList } from "@/lib/unit-list-server";
+import { usableUnit } from "@/lib/unit-list";
 import { loadPermissions } from "@/lib/permissions/load";
 import { canEditItemSettings } from "@/lib/permissions/item-settings";
 
@@ -28,8 +29,9 @@ function optional(value: FormDataEntryValue | string | null | undefined) {
   return trimmed ? trimmed : null;
 }
 
-function isDoseUnit(value: string | null): value is DoseUnit {
-  return value != null && DOSE_UNITS.includes(value as DoseUnit);
+/** Settings → Units is the list (0252): live, and tagged for medicines. The write-time trigger refuses the same. */
+async function medicineUnit(value: string | null) {
+  return usableUnit(await loadUnitList(), "medicines", value)?.name ?? null;
 }
 
 async function refusal() {
@@ -71,8 +73,8 @@ export async function createMedication(
     if (refused) return refused;
     const name = optional(formData.get("name"));
     if (!name) return refuse(t.management.medications.errors.nameRequired);
-    const doseUnit = optional(formData.get("doseUnit"));
-    if (!isDoseUnit(doseUnit)) return refuse(t.management.medications.errors.unitInvalid);
+    const doseUnit = await medicineUnit(optional(formData.get("doseUnit")));
+    if (!doseUnit) return refuse(t.management.medications.errors.unitInvalid);
 
     const supabase = await createClient();
     const { error } = await supabase.from("medication").insert({ name, name_th: optional(formData.get("nameTh")), dose_unit: doseUnit });
@@ -98,8 +100,8 @@ export async function updateMedicationDefinition(
     if (refused) return refused;
     const name = optional(fields.name);
     if (!name) return refuse(t.management.medications.errors.nameRequired);
-    const doseUnit = optional(fields.doseUnit);
-    if (!isDoseUnit(doseUnit)) return refuse(t.management.medications.errors.unitInvalid);
+    const doseUnit = await medicineUnit(optional(fields.doseUnit));
+    if (!doseUnit) return refuse(t.management.medications.errors.unitInvalid);
 
     const supabase = await createClient();
     const { error } = await supabase.from("medication").update({ name, name_th: optional(fields.nameTh), dose_unit: doseUnit }).eq("id", id);

@@ -12,6 +12,7 @@ import { ConfirmProvider } from "@/components/ConfirmProvider";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import { HydrationMark } from "./HydrationMark";
+import { loadUnitList } from "@/lib/unit-list-server";
 import { EARLY_SUBMIT_GUARD } from "@/lib/early-submit-guard";
 import "./globals.css";
 
@@ -57,6 +58,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
+  const units = await loadUnitList();
   // The person's colour theme, from their own user_metadata, rendered into
   // the HTML so the first paint is already theirs (src/lib/theme/themes.ts).
   // Signed out — the login page, the public site — is always the default.
@@ -73,7 +75,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <script dangerouslySetInnerHTML={{ __html: EARLY_SUBMIT_GUARD }} />
         <HydrationMark />
-        <I18nProvider locale={locale}>
+        <I18nProvider locale={locale} units={units}>
           <ConfirmProvider>
           <OfflineBanner />
           <MobileNavProvider>

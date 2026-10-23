@@ -11,6 +11,8 @@ import { driveImageUrl } from "@/lib/google/drive-client";
 import { loadFeedingList } from "@/lib/diets/feeding-list";
 import type { DietBlock, FedDog } from "@/lib/diets/feeding-build";
 import { formatAmount } from "@/lib/diets/servings";
+import { unitLabel } from "@/lib/i18n/enum-labels";
+import { isCountUnit } from "@/lib/unit-list";
 import { roundsFor, suggestRound, type RoundKey } from "@/lib/rounds/suggest";
 import { refuseFor } from "@/lib/auth/require-role";
 import { requirePermission } from "@/lib/permissions/require";
@@ -69,7 +71,8 @@ export default async function FeedingListPage(props: PageProps<"/operations/feed
             <li key={l.ingredientId + l.unit} className="flex items-baseline justify-between gap-3">
               <span className="min-w-0 break-words text-lg text-foreground">{l.name}</span>
               <span className="shrink-0 text-xl font-semibold text-foreground">
-                {formatAmount(l.total)} <span className="text-base font-medium">{l.unit}</span>
+                {formatAmount(l.total)}{" "}
+                {!isCountUnit(l.unit) && <span className="text-base font-medium">{unitLabel(t, l.unit)}</span>}
               </span>
             </li>
           ))}
@@ -111,7 +114,8 @@ export default async function FeedingListPage(props: PageProps<"/operations/feed
           <li key={l.ingredientId + l.unit} className="flex items-baseline justify-between gap-3">
             <span className="min-w-0 break-words text-lg text-foreground">{l.name}</span>
             <span className="shrink-0 text-xl font-semibold text-foreground">
-              {formatAmount(l.amount)} <span className="text-base font-medium">{l.unit}</span>
+              {formatAmount(l.amount)}{" "}
+              {!isCountUnit(l.unit) && <span className="text-base font-medium">{unitLabel(t, l.unit)}</span>}
             </span>
           </li>
         ))}

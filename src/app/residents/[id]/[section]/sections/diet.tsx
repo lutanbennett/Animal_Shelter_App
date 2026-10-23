@@ -4,6 +4,7 @@ import { can } from "@/lib/permissions/can";
 import { RecordRowActions } from "@/components/RecordRowActions";
 import { endDietToday } from "@/app/diets/actions";
 import { formatQuantity } from "@/lib/diets/options";
+import { withUnit } from "@/lib/unit-list";
 import { lineAmount, loadDietOptions } from "@/lib/diets/recipes";
 import { ActionLink } from "@/components/ActionLink";
 import { SECTION_ICONS } from "@/components/hub-icons";
@@ -48,7 +49,7 @@ export async function renderDietSection(ctx: SectionContext): Promise<React.Reac
     // What goes in the bowl: every ingredient at this resident's size, times the portion.
     const recipe = diet?.lines.map((line) => {
       const amount = lineAmount(line, resident.size) * (factor ?? 1);
-      return `${formatQuantity(amount)} ${line.servingUnit ?? dietUnitLabel(t, line.unit)} ${line.ingredient}`;
+      return `${withUnit(formatQuantity(amount), line.servingUnit ?? dietUnitLabel(t, line.unit))} ${line.ingredient}`;
     });
     const quantity = [
       recipe && recipe.length > 0 ? `${t.residents.sections.recipeFor(sizeLabel(t, resident.size ?? "Medium"))}: ${recipe.join(", ")}` : null,
