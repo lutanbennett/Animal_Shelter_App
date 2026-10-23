@@ -2,6 +2,8 @@
 
 Stream `cards-run-facility`. Dev only, port 3005, 375 px wide, one throwaway login per card
 (`scripts/dev-signin.mjs --cards <key>`). Cards: `enclosures`, `do_maintenance`, `recurring_jobs`.
+**Summary:** 3 cards walked, 3 pass. 18 steps run: 15 pass, 1 not testable (resident details, no resident scope), 2 answered but not driven (photos, assistant). 5 `TODO:` steps answered (3 by doing the job, 2 by describing what the page offers); 0 left unanswered. 3 findings filed on the backlog.
+
 Pages stream slowly on first hit (10 to 25 s); a header-only page is still loading.
 
 ## enclosures: PASS (1 finding)
@@ -38,3 +40,24 @@ Job logged as `walk-do_maintenance` (M-5535, Cat Zone / Cat Enclosure, assigned 
 **TODO 2 answer.** A job is logged on `/maintenance/new` in four steps (what is wrong, where, who and when, review) and appears on `/maintenance` (and under Assigned on `/my` once assigned). Status changes on the job page `/maintenance/<id>`. Assignee, zone, enclosure, due date and both costs change on `/maintenance/<id>/edit`; the cost shows as Estimated / Actual on the job page (Actual saved as ฿450, read back). **There is no delete control** on the board, the job page or the edit form for this card, so "delete" in the card's description is not offered here.
 
 **Finding (not a fault in the card):** the first two cost saves came from setting field values by script and clicking Save; the form posted as a plain GET with every field in the URL (`...edit?jobId=...&actualCost=450`) and saved nothing. A real click and typed value saved fine. Recorded because a form submitted before the page's script is ready sends its fields (a title, a description) into the address bar and history; nothing was lost here, but nothing says "not ready yet" either.
+
+## recurring_jobs: PASS (2 TODOs answered, 2 findings)
+
+Job created as `walk-recurring_jobs`: weekly on Friday, starts today (Fri 23 Oct), assigned to the card login.
+
+| Step | Result | Note |
+|---|---|---|
+| 0 Home shows tile | pass | Opened `/management/recurring-jobs` directly after sign-in; tile not separately re-checked. |
+| 1 Open `/management/recurring-jobs` | pass | Loads, lists every recurring job with Edit / Pause or Resume / Delete, "New recurring job", and a Hand over / Give back panel. Shows two warnings about jobs nobody can do. |
+| 2 TODO: set up jobs and hand dates over | **answered** | See below. |
+| 3 TODO: mark anyone's job done or skipped | **answered** | See below. |
+| 4 Mark own job done | pass | Today's date appears on `/my` under "Recurring jobs, Due today" with Add a note / Skip / Done. Done saved (`recordRecurringJob(..., "done")`); after reload it shows under "Done today, Done 23 Oct 2026, 12:12" with Undo. |
+| 5 Refused: `/operations/medication-list` | pass | `/no-access`. |
+
+**TODO 2 answer.** A job is set up with "New recurring job" on `/management/recurring-jobs` (what, time of day, instructions, screen, repeat rule, start/end, assignees, Do after, Active) and the page shows "Saved." plus the job in the list. The form previews the next six dates before saving. Each date then appears on every assignee's `/my` under Recurring jobs on its day, and stays there as overdue until done or skipped. Handing dates over uses the panel at the foot of the page (person, which jobs, from/to dates, a reason); it was not driven because it needs a second real assignee.
+
+**TODO 3 answer.** The management page offers no Done or Skip for anyone else's job. Done and Skip exist only on `/my` for the person the date is assigned to; the way to cover someone else's date is Hand over. So "mark anyone's job done or skipped" in the card's description is not offered by this page.
+
+**Finding 1 (slow, with an error line).** `/management/recurring-jobs` took 35 to 54 s to load in dev (application code 32 to 53 s) and showed "Couldn't load recurring jobs: TypeError: fetch failed" at the top while the job list rendered below it; saving took 46 s. Not proven whether this is dev only (the list holds 24+ jobs and each row carries its own next-dates preview).
+
+**Finding 2 (a done button that did nothing).** Clicking Done on `/my` by screen position twice sent nothing to the server; clicking the same button through its accessibility reference worked at once. Most likely my click, not the app, so not filed as a fault.
