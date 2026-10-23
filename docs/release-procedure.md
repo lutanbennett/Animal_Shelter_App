@@ -238,6 +238,26 @@ the way CI runs it, and know the two things it catches every time:**
 - **A reason must follow `n/a:` immediately.** `n/a: there is no band here` passes;
   `n/a as a banding change, because …` reads fine to a person and fails.
 
+**An empty `unreleased` is not proof that nothing user-visible shipped.** Promoted
+here from `0.39.5`'s handover, because that release existed *entirely* to publish a
+note that had been deliberately withheld. `unreleased` was `[]` at the cut, which
+normally means nothing a user would notice — and there it would have been false:
+#882 changed the first screen every signed-in person lands on. #882 wrote its
+release-notes line as `n/a` **correctly**, citing
+`docs/decisions/2026-10-11-release-note-truth-rule.md`: no note may promise users a
+change works while a manual step is still open, and `0251`, which seeded the
+replacement cards, was not yet on production. That rule says the note goes in the PR
+that **closes** the step — so the cut PR published it, and the migration went on
+before the deploy, so the note was true the moment it became visible.
+
+**So when `unreleased` is empty, do not conclude "nothing visible".** Check whether
+any PR in the range wrote `n/a` on its release-notes line for a step this release
+closes; grepping the range's test plans for that line is a minute's work. An empty
+note list otherwise looks exactly like a release in which nothing visible shipped,
+which is the failure `docs/decisions.md` records on 2026-09-24. **Expect this shape
+again while the security rebuild runs**, since it lands schema and code in separate
+PRs by design.
+
 **If anything in the entry changes after the gates run — even a role tag — re-run
 the gates and the comparison.** The tempting assumption is that a data-only edit
 cannot break a build.
