@@ -197,6 +197,9 @@ for (const r of ROUTES) {
 // the edit page's form only renders when can(perms, "resident.record") is true is still read by a
 // person (the decision file lists every one).
 const FULL = "requireFullResident()";
+// The hub and the record tabs also open for a who-and-where login holding a medical edit (0249); every other
+// resident page keeps FULL, which refuses it.
+const FULL_OR_MEDICAL_CARD = 'requireFullResident(undefined, "read", { allowMedicalCard: true })';
 const PINNED = {
   // Add and edit pages under a registered list. Every one writes, so every one is at Edit.
   "/residents/new": { guards: ['requirePermission("resident.register")'], decides: [] },
@@ -264,7 +267,7 @@ const PINNED = {
   // body's can(), which the page asks before it renders the form.
   // The record hub: a who-and-where login is redirected to /r/ before this guard (redirect() is not
   // a guard, so it is not listed), and every control on it that writes asks can().
-  "/residents/[id]": { guards: [FULL], decides: ["placement.death", "placement.death_withdraw", "translations.manage", "resident.microchip", "resident.adoption_news", "appeal.run"] },
+  "/residents/[id]": { guards: [FULL_OR_MEDICAL_CARD], decides: ["placement.death", "placement.death_withdraw", "translations.manage", "resident.microchip", "resident.adoption_news", "appeal.run", "medical.diet", "medical.immunizations", "medical.visits", "medical.prescriptions", "medical.weight", "medical.procedures"] },
   "/residents/[id]/edit": { guards: [FULL], decides: ["resident.record"] },
   "/residents/[id]/move": { guards: [FULL], decides: ["placement.move"] },
   "/residents/[id]/hospital": { guards: [FULL], decides: ["placement.hospital"] },
@@ -286,7 +289,7 @@ const PINNED = {
   // A record tab: the tab's own medical activity at Read, from the page's SECTION_READS (pinned
   // below), on top of the record. Its writes are per row, on the tab's add/edit pages above.
   "/residents/[id]/[section]": {
-    guards: ["requireFullResident(SECTION_READS[section])"],
+    guards: ['requireFullResident(SECTION_READS[section], "read", { allowMedicalCard: true })'],
     inDir: "src/app/residents/[id]/[section]/sections",
     decides: ["medical.archive", "medical.visits", "medical.prescriptions", "medical.diet", "medical.weight", "photos.approve", "photos.resident_manage", "resident.adoption_news", "resident.microchip", "social.library"],
     table: {
@@ -381,7 +384,7 @@ const EXEMPT = {
   "/management/medication-list": { why: "Not a page any more: a redirect to /operations/medication-list (which E pins), kept for old links. Renders nothing." },
   "/residents": {
     why: `The residents list, which every app role reads at least as who-and-where (§5, 0134): the page reads resident_who_and_where for that login and resident_list_view otherwise, and RLS decides the rows. Registering from a chip search is behind can(resident.register). ${APP}`,
-    decides: ["resident.register"],
+    decides: ["resident.register", "resident.record:read", "visit.book", "medical.immunizations"],
   },
 };
 
@@ -455,7 +458,7 @@ for (const p of [...Object.keys(PINNED), ...Object.keys(EXEMPT)]) {
 // resident.record, so the guard ahead of its redirect would turn the volunteer's card into no-access.
 {
   const hub = stripComments(readFileSync(join(appDir, "residents/[id]/page.tsx"), "utf8"));
-  const redirectAt = hub.search(/readsWhoAndWhereOnly\(\)\)\s*redirect\(/);
+  const redirectAt = hub.search(/readsWhoAndWhereOnly\(\)\)\s*(&&\s*!\(await mayOpenResidentRecord\(\)\)\)\s*)?redirect\(/);
   const guardAt = hub.search(/\brequireFullResident\(/);
   eq("F /residents/[id] sends a who-and-where login to /r/ before its guard", redirectAt >= 0 && redirectAt < guardAt, true);
 }

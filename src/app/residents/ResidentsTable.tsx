@@ -48,6 +48,7 @@ export function ResidentsTable({
   sortLinks,
   exportHref,
   exportFilename,
+  actions = { register: true, logImmunizations: true, bookVisit: true, download: true },
 }: {
   residents: ResidentRow[];
   /** A volunteer's list (who and where): no selecting, no booking, no new resident, no card link, no pencil. */
@@ -62,6 +63,8 @@ export function ResidentsTable({
   exportHref: string;
   /** The name that download will save under, so the page can say where it went. */
   exportFilename: string;
+  /** Which of the list's buttons this login may use; each target page refuses the rest, so they are not offered. */
+  actions?: { register: boolean; logImmunizations: boolean; bookVisit: boolean; download: boolean };
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -217,8 +220,8 @@ export function ResidentsTable({
         </p>
         {!limited && (
         <div className="grid w-full grid-cols-2 gap-2 md:ml-auto md:flex md:w-auto md:justify-end">
-          {downloadLink}
-          <ActionLink
+          {actions.download && downloadLink}
+          {actions.logImmunizations && <ActionLink
             href={immunizationHref}
             iconOnlyOnMobile={false}
             label={
@@ -227,8 +230,8 @@ export function ResidentsTable({
                 : t.residents.list.logImmunizations
             }
             icon={SECTION_ICONS.immunizations}
-          />
-          <ActionLink
+          />}
+          {actions.bookVisit && <ActionLink
             href={bookingHref}
             iconOnlyOnMobile={false}
             label={
@@ -237,17 +240,17 @@ export function ResidentsTable({
                 : t.residents.list.bookVetVisit
             }
             icon={SECTION_ICONS["clinic-visits"]}
-          />
-          <ActionLink
+          />}
+          {actions.register && <ActionLink
             href="/residents/new"
             iconOnlyOnMobile={false}
             label={t.residents.list.newResident}
             icon={PawPrint}
             variant="primary"
-          />
+          />}
         </div>
         )}
-        {limited && <div className="ml-auto flex gap-2">{downloadLink}</div>}
+        {limited && actions.download && <div className="ml-auto flex gap-2">{downloadLink}</div>}
       </div>
       {!limited && dropped > 0 && (
         <p role="status" className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground">
