@@ -5,12 +5,20 @@ Stream `cards-rerun-blocked`. Dev only, port 3011, 375 px wide, one throwaway lo
 Disposable record: **Capwarn Test 0924** (R-0079), an existing dev test resident. These cards cannot register a
 resident, so no `walk-` record could be made for the first two; every row written carries a `walk-<card>` note.
 
-**Summary:** SUMMARY-PLACEHOLDER
+**Summary:** 3 cards walked, **0 pass**. 31 steps run: 22 pass, 7 fail, 2 not a card fault (a wrong
+expectation, a missing control); 1 step not walked. 10 of the 15 `TODO:` steps answered by doing the job (the other 5:
+vet visits, hospital, foster/adopt, death, publish a photo). 6 findings, filed as 4 backlog items.
 
-**Headline: the earlier blockage is gone.** `/residents/<id>` no longer redirects a card login to the name card.
-The `medical_records` login opens the full resident page, and its medical sections open and save. What the run
-found instead is **a different, shared fault**: the booking and visit forms offer no clinics to a card login, so
-the two cards whose job involves a clinic visit cannot do it (finding A).
+| card | result | steps | the old blocker |
+|---|---|---|---|
+| `medical_records` | **FAIL** (1 step: vet visits) | 13 run, 11 pass | **gone**: opens the full page, every medical section saves |
+| `book_clinic_visits` | **FAIL** (its one job) | 5 steps, 2 pass, 2 fail, 1 not walked | **gone**: lists and the resident's visits page load |
+| `residents` | **FAIL** (4 steps: move, hospital, foster/adopt, death) | 14 run, 9 pass | **gone**: the hub opens with every control it should have |
+
+**Headline: the earlier blockage is gone, on all three cards.** `/residents/<id>` no longer redirects a card login
+to the name card, and what the two earlier records could not reach now runs. What the run found instead are **two
+different shared faults, both of one shape: a read the card does not hold** (finding A: the clinic list; finding E:
+the enclosures behind every lifecycle write). They affect the cards' own jobs, not the redirect.
 
 Pages stream slowly on first hit (10 to 25 s); a header-only page is still loading, not broken.
 
@@ -38,6 +46,18 @@ what is wrong.
 **D. `/appointments` refuses the login holding `book_clinic_visits`.** The card's `opens` is `/appointments`
 (`cards.ts:115`) but a shelter-staff login is meant to use `/upcoming-visits` (`opensAny`). The walkthrough says so;
 the home tile for this card would need to point at the right one. `/upcoming-visits` itself loads.
+
+**E. A `residents` login cannot move, hospitalise, foster/adopt or record the death of a resident (card gap, the
+same shape as A).** `0248` fixed intake and the place pickers, not the writes. Move: the picker lists Blue
+Enclosure 3, then Save says *That enclosure no longer exists* (`src/lib/placements/move.ts:53` reads the
+`enclosures` table, unreadable without `facility.enclosures:read`). Hospital, Foster and Death say *The
+Hospital / Fostered / Deceased status enclosure is missing from this database* (the Lifecycle enclosures, same
+policy). Nothing was written. One backlog item.
+
+**F. Photo notes in the walkthrough are wrong for `residents` (generator).** Step 10 says this card cannot look
+at the photo again; it can (tile with a Profile tag, folder and date). Step 12 (public website) has no control
+on the photos page: the viewer offers Mark as posted (social), Remove, Current profile photo and Move to
+folder. Filed with C and D as one generator item.
 
 ## `medical_records`: the headline card (blocker gone; step 2 fails on finding A)
 
@@ -77,3 +97,52 @@ sees it empty (`0152`/`0189`/`0223`); adoption updates likewise (`0144`). The pa
 
 **Earlier blockage: GONE** for this card as well: the visits list and the resident's visits page load. The card
 fails on its own job, for a different reason.
+
+## `residents`: FAIL (finding E; the old blocker is gone)
+
+Disposable record: **walk-residents** (R-5431), registered in step 3. It is left in dev, as the walkthrough
+asks. It stayed alive (no death could be recorded) and now carries one photo in the Foster folder.
+
+| step | result | note |
+|---|---|---|
+| 0 sign in | pass | `Dev sign-in: residents` |
+| 1 `/residents` loads | pass | the list offers "New resident (intake)" and no medical buttons (#872 holds for this login) |
+| 2 details, housing, history | **answered, pass** | `/edit` saved a Thai name and a bio; the hub shows "walk-residents (วอล์ค)" and the bio at once. Housing history is on `/housing`. |
+| 3 register a resident | **pass** | six steps, Review, "Register resident" opened the new hub (R-5431, Unassigned, chip shown). **The 2026-10-22 failure is fixed by `0248`.** Zone picker lists zones. |
+| 4 microchip | **answered, pass** | entered at intake (step 3 of the wizard); "Correct" on the hub changed it to …002, shown at once |
+| 5 adopter news | **answered, pass** | needs an adopted resident (mine could not become one, see 8). On Storytest Adopted, "Add update" saved a LINE note, listed first on `/adoption-updates`. |
+| 6 move enclosure | **FAIL** | E: picker works, Save says *That enclosure no longer exists* |
+| 7 hospital | **FAIL, not answered** | E: *The Hospital status enclosure is missing from this database* |
+| 8 foster / adopt | **FAIL, not answered** | E: *The Fostered status enclosure is missing from this database* (carer name filled; nothing written) |
+| 9 record a death | **FAIL, not answered** | E: *The Deceased status enclosure is missing from this database* (after the confirm step) |
+| 10 add a photo | pass | Medical folder, upload "Done", the page counts it ("Not posted yet (1)") and shows the tile with a Profile tag. **The note that this card cannot see it again is wrong** (F). |
+| 11 refile / remove / profile | **answered, pass** | tap the photo: Move to folder (Medical to Foster read "Foster · 23 Oct 2026"), Remove photo and Current profile photo sit beside it. Remove was not pressed. |
+| 12 publish on the website | **not answerable** | no such control for this card (F). The page says Foster-folder photos "can appear on the public website". |
+| 13 refused `/operations/medication-list` | pass | `/no-access` |
+
+**Earlier blockage: GONE.** The earlier record lost steps 2 and 4 to 12 to the redirect; every one of them now
+runs. Steps 7, 8 and 9 now fail for a reason unconnected to the redirect, and they were never reachable before.
+
+**Not established:** the hub reads "No current diet recorded" for walk-residents, although the wizard's Health
+step has a diet picker. Whether the choice was saved, or this login cannot read diets, was not checked (the
+Medical records login was not pointed at this record).
+
+## `TODO:` steps answered
+
+Answered by doing the job, into `scripts/gen-card-walkthrough.mjs` and regenerated (`docs/card-walkthrough.md`):
+`resident.record`, `resident.microchip`, `resident.adoption_news`, `photos.resident_manage`, and the six medical
+ones (`medical.procedures`, `blood_tests`, `prescriptions`, `immunizations`, `diet`, `archive`). **Left
+unanswered, none guessed:** `medical.visits` (A), `placement.hospital`, `placement.rehome`, `placement.death` (E),
+`photos.resident_publish` (F).
+
+## Cookie sharing
+
+One browser, one signed-in role at a time, as the brief warned. No page showed a card the current login did not
+hold. The sign-in script was re-run per card; `--remove` was **not** run.
+
+## Filed on the backlog (branch `backlog`)
+
+Four items: lifecycle writes for the `residents` card (E); the clinic list for the two visit cards (A); dead-end
+links on the resident page and visit list (B); four wrong steps in the walkthrough generator (C, D, F).
+
+Release-notes line: n/a: a test run, nothing a shelter user would notice changed.
