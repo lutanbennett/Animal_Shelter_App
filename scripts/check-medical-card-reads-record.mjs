@@ -7,7 +7,7 @@
 // For each role a throwaway login is made, given that role as its main role, and what it can read of
 // `residents` and `placement_history` is counted as that login (role authenticated) BEFORE and AFTER the
 // migration text runs. Expected: head_of_medical, second_in_command and a card-only login holding a medical
-// edit go from 0 to all; the volunteer and head_of_maintenance stay at 0 (0134); doctor and management are
+// edit go from 0 to all (when run after the file is applied for real, before is already all); the volunteer and head_of_maintenance stay at 0 (0134); doctor and management are
 // identical before and after; and no new reader can change a resident.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -96,8 +96,8 @@ const check = (cond, what, detail) => {
 const total = get("all_residents"), totalPh = get("all_placements");
 console.log(`${total} residents, ${totalPh} placement rows in dev`);
 for (const role of ["head_of_medical", "second_in_command"]) {
-  check(get(`before_res_${role}`) === "0" && get(`after_res_${role}`) === total, `${role} gains the resident read`, `${get(`before_res_${role}`)} -> ${get(`after_res_${role}`)}`);
-  check(get(`before_ph_${role}`) === "0" && get(`after_ph_${role}`) === totalPh, `${role} gains the placement history read`, `${get(`before_ph_${role}`)} -> ${get(`after_ph_${role}`)}`);
+  check(["0", total].includes(get(`before_res_${role}`)) && get(`after_res_${role}`) === total, `${role} gains the resident read`, `${get(`before_res_${role}`)} -> ${get(`after_res_${role}`)}`);
+  check(["0", totalPh].includes(get(`before_ph_${role}`)) && get(`after_ph_${role}`) === totalPh, `${role} gains the placement history read`, `${get(`before_ph_${role}`)} -> ${get(`after_ph_${role}`)}`);
   check(get(`after_upd_${role}`) === "0", `${role} still cannot change a resident`);
 }
 for (const role of ["volunteer", "head_of_maintenance"]) {
