@@ -55,6 +55,31 @@ async function allUsers() {
   }
 }
 
+// "Database error deleting user" says nothing. The usual cause is a row the login created (created_by, uploaded_by, ...)
+// in a table whose foreign key to auth.users does not cascade, so name those tables and counts. It only reads.
+async function whatHolds(userId) {
+  const sql = `do $held$ declare r record; n int; out text = ''; begin
+    for r in select c.conrelid::regclass::text t, a.attname col from pg_constraint c
+      join pg_attribute a on a.attrelid = c.conrelid and a.attnum = any(c.conkey)
+      where c.contype = 'f' and c.confrelid = 'auth.users'::regclass and c.confdeltype not in ('c', 'n') loop
+      execute format('select count(*) from %s where %I = %L', r.t, r.col, '${userId}') into n;
+      if n > 0 then out = out || r.t || '.' || r.col || ' (' || n || ' row(s)); '; end if;
+    end loop;
+    raise exception 'HOLDS %', out; end $held$`;
+  try {
+    const res = await fetch(`https://api.supabase.com/v1/projects/${projectRef(env)}/database/query`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ query: sql }),
+    });
+    let msg = ""; try { msg = JSON.parse(await res.text()).message ?? ""; } catch {}
+    const m = /HOLDS ([^\n]*)/.exec(msg);
+    return m && m[1].trim() ? `  still referenced by: ${m[1].trim()}\n  Those are dev rows this login created while you tested; delete or reassign them, then run --remove again.` : "  no foreign-key references found; the cause is something else (a trigger on auth.users?)";
+  } catch (e) {
+    return `  could not look up what holds it: ${e.message}`;
+  }
+}
+
 const args = process.argv.slice(2);
 const cardRoleKey = (list) => CARD_ROLE_PREFIX + createHash("sha1").update([...new Set(list)].sort().join(",")).digest("hex").slice(0, 8);
 const loginEmail = (role) => `${PREFIX}${role.startsWith(CARD_ROLE_PREFIX) ? role.slice(CARD_ROLE_PREFIX.length) : role}${DOMAIN}`.replace(/_/g, "-");
@@ -79,6 +104,7 @@ if (args.includes("--remove")) {
     await service.from("user_roles").delete().eq("user_id", u.id);
     const { error } = await service.auth.admin.deleteUser(u.id);
     console.log(`${error ? "FAILED" : "removed"} ${u.email}${error ? `: ${error.message}` : ""}`);
+    if (error) console.log(await whatHolds(u.id));
   }
   // After the logins: a role with a login on it is refused deletion. role_cards and role_permissions go first, by hand.
   for (const r of cardRoles.data) {
@@ -95,7 +121,7 @@ const portIdx = args.indexOf("--port");
 const cardsIdx = args.indexOf("--cards");
 const cardsArg = cardsIdx >= 0 ? args[cardsIdx + 1] : null;
 if (cardsIdx >= 0 && (!cardsArg || cardsArg.startsWith("--"))) throw new Error("--cards needs a comma-separated list of card keys");
-const positional = args.find((a, i) => !a.startsWith("--") && i !== portIdx + 1 && i !== cardsIdx + 1);
+const positional = args.find((a, i) => !a.startsWith("--") && i !== (portIdx >= 0 ? portIdx + 1 : -1) && i !== (cardsIdx >= 0 ? cardsIdx + 1 : -1));
 let role = positional;
 if (cardsArg && positional) throw new Error("give a role or --cards, not both");
 if (!role && !cardsArg) throw new Error("usage: node scripts/dev-signin.mjs <role> [--port N]   |   --cards a,b [--port N]   |   --remove");
