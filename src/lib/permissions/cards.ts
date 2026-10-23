@@ -39,7 +39,9 @@ export type NewCardKey =
   | "approve_photos"
   | "run_appeals"
   | "meme_library"
-  | "my_tasks";
+  | "my_tasks"
+  | "operations_landing"
+  | "management_landing";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -188,9 +190,14 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   },
   // Card twenty-six (2026-10-21, Lutan's ruling on menu-removal orphans 1 of 6): do the recurring tasks assigned to me, and
   // nothing else. recurring.do_own is what /my reads and what record_recurring_job() enforces as own only; it gives no
-  // other person's tasks and no way to set tasks up. The tile is drawn for ANY role holding recurring.do_own, whichever card
-  // or extra gave it (tiles.ts, landingTiles), so the five roles that open /my have it today without a data change.
+  // other person's tasks and no way to set tasks up. The tile is drawn only for a role that has been given this card.
   my_tasks: { includes: [], bundle: [{ activity: "recurring.do_own" }], opens: "/my" },
+  // Cards twenty-seven and twenty-eight (2026-10-23, Lutan: a role's home is only what he gives it on Who does what): the Operations
+  // and Management landings as cards. Each grants NOTHING (empty bundle): the tile is drawn only when the role's own cells already open
+  // a page in the section (OUTSIDE_REGISTRY in tiles.ts, opensAnyIn), so giving the card never widens what a role may do. Before this
+  // the code added these tiles by itself; now Admin gives and takes them like any other card.
+  operations_landing: { includes: [], bundle: [], opens: "/operations" },
+  management_landing: { includes: [], bundle: [], opens: "/management" },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */
@@ -213,6 +220,8 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   run_appeals: (t) => t.appHome.cards.runAppeals,
   meme_library: (t) => t.appHome.cards.memeLibrary,
   my_tasks: (t) => t.appHome.cards.myTasks,
+  operations_landing: (t) => t.appHome.cards.operationsLanding,
+  management_landing: (t) => t.appHome.cards.managementLanding,
 };
 
 export const CARDS: Record<CardKey, Card> = {

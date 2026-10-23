@@ -20,8 +20,8 @@ test("two roles: two groups, main first, a shared tile in each", () => {
   const perms = union(["add_photos", "contacts"], ["main", "cover"]);
   const groups = homeGroupsForRoles(perms, en, undefined, { main: ["add_photos"], cover: ["add_photos", "contacts"] });
   assert.deepEqual(groups.map((g) => g.roleKey), ["main", "cover"]);
-  // Landing tiles follow the union's cells (landingTiles): Add photos opens Operations, the cover's Contacts opens Management.
-  assert.deepEqual(groups[0].tiles.map((x) => x.href), ["/photos/add", "/operations", "/management"]);
+  // A home is only its cards: no Operations or Management tile unless a landing card was given.
+  assert.deepEqual(groups[0].tiles.map((x) => x.href), ["/photos/add"]);
   assert.ok(groups[1].tiles.some((x) => x.href === "/photos/add"));
   assert.ok(groups[1].tiles.length > 1);
 });

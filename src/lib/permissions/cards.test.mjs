@@ -5,8 +5,8 @@ import { JOBS, JOBS_OF_ROLE, bundleOfRole } from "./jobs.ts";
 import { ACTIVITIES } from "./catalogue.ts";
 import { ROUTES } from "./routes.ts";
 
-test("the agreed set is twenty-six cards, the eight jobs among them", () => {
-  assert.equal(CARD_KEYS.length, 26);
+test("the agreed set is twenty-eight cards, the eight jobs among them", () => {
+  assert.equal(CARD_KEYS.length, 28);
   for (const k of Object.keys(JOBS)) assert.ok(CARDS[k], k);
 });
 
@@ -30,7 +30,7 @@ test("includes are real cards and never loop", () => {
 test("a card's tile opens a page in the registry", () => {
   const paths = new Set(ROUTES.map((r) => r.path));
   const pages = CARD_KEYS.flatMap((k) => [CARDS[k].opens, CARDS[k].opensAny ?? CARDS[k].opens]);
-  const unknown = pages.filter((p) => !paths.has(p) && !["/residents", "/bills", "/assistant", "/my"].includes(p));
+  const unknown = pages.filter((p) => !paths.has(p) && !["/residents", "/bills", "/assistant", "/my", "/operations", "/management"].includes(p));
   assert.deepEqual(unknown, []);
 });
 

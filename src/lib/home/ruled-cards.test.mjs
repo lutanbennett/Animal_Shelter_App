@@ -1,5 +1,5 @@
-// The six pages ruled on 2026-10-21 (menu-removal orphans 2, 3, 5 and 6): the named roles are shown the tile without the
-// Director ticking a card; any other role is not; and a tile is drawn only when the role's cells cover the card, so nothing is granted.
+// The extra cards once hard-coded per role key (RULED_CARDS, ruled 2026-10-21) are gone (Lutan, 2026-10-23): a role key earns
+// no tile. Those roles get the tiles only if their cards on Who does what say so; the list Lutan ticks seeds them as data.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { homeTilesFor } from "./tiles.ts";
@@ -13,34 +13,16 @@ const as = (key, permissions) =>
     scopes: { residents: "all", clinical: "any", contacts: "all", photos: "all", sees_login_emails: false },
     permissions,
   });
-const hrefs = (p, cards = ["assistant"]) => homeTilesFor(p, en, 0, cards).map((x) => x.href);
+const cells = { "resident.record": 1, "medical.weight": 2, "medical.diet": 1, "photos.resident_add": 2, "maintenance.bills": 2 };
+const hrefs = (p, cards) => homeTilesFor(p, en, 0, cards).map((x) => x.href);
 
-test("head of maintenance and head of medical get View residents", () => {
-  for (const key of ["head_of_maintenance", "head_of_medical"]) {
-    assert.ok(hrefs(as(key, { "resident.record": 1 })).includes("/residents"), key);
+test("no role key gets a tile its cards do not name", () => {
+  for (const key of ["head_of_maintenance", "head_of_medical", "management", "second_in_command"]) {
+    assert.deepEqual(hrefs(as(key, cells), ["view_residents"]), ["/residents"], key);
   }
-  assert.ok(!hrefs(as("volunteer", { "resident.record": 1 })).includes("/residents"));
 });
 
-test("management and the 2IC get the three medical job tiles when their cells cover them", () => {
-  const cells = { "resident.record": 1, "medical.weight": 2, "medical.diet": 1, "photos.resident_add": 2 };
-  for (const key of ["management", "second_in_command"]) {
-    const h = hrefs(as(key, cells));
-    for (const p of ["/medical/weight", "/medical/diets", "/medical/photos"]) assert.ok(h.includes(p), key + " " + p);
-  }
-  // No cells, no tile: the rule draws a tile, it never grants.
-  const none = hrefs(as("management", { "resident.record": 1 }));
-  for (const p of ["/medical/weight", "/medical/diets", "/medical/photos"]) assert.ok(!none.includes(p), p);
-});
-
-test("Bills is Management's only", () => {
-  const cells = { "resident.record": 1, "maintenance.bills": 2 };
-  assert.ok(hrefs(as("management", cells)).includes("/bills"));
-  assert.ok(!hrefs(as("second_in_command", cells)).includes("/bills"));
-});
-
-test("a held card is not drawn twice", () => {
-  const cells = { "resident.record": 1 };
-  const n = homeTilesFor(as("head_of_medical", cells), en, 0, ["view_residents"]).filter((x) => x.href === "/residents").length;
-  assert.equal(n, 1);
+test("the same tiles come back when the card is given, and only then", () => {
+  const h = hrefs(as("management", cells), ["view_residents", "bills", "record_weight"]);
+  assert.deepEqual(h, ["/residents", "/bills", "/medical/weight"]);
 });

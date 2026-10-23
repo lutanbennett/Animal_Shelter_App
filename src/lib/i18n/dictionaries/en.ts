@@ -196,6 +196,8 @@ const en = {
       runAppeals: "Run fundraising appeals",
       memeLibrary: "Meme library",
       myTasks: "My tasks",
+      operationsLanding: "Operations",
+      managementLanding: "Management",
     },
   },
 
@@ -865,6 +867,8 @@ const en = {
           run_appeals: "Start, publish and close appeals for sick residents, and see how much each has raised.",
           meme_library: "Browse the shelter's memes, add one, record where and when each was posted, and archive one. Memes are never on the website.",
           my_tasks: "See and tick off the recurring tasks assigned to this person, with how many are due today or overdue. It does not show anyone else's tasks or let the role set tasks up.",
+          operations_landing: "A tile for the Operations page, which lists the Operations pages this role can open. It gives no access of its own: a role sees only the pages its other settings already allow.",
+          management_landing: "A tile for the Management page, which lists the Management pages this role can open. It gives no access of its own: a role sees only the pages its other settings already allow.",
         },
       },
       title: "Who does what",
