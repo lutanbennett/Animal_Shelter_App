@@ -75,19 +75,28 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  {
-    text: "New page: Operations → Feeding list. Pick Morning or Evening and it adds up, for each zone, how much of every ingredient that meal needs, diet by diet (special diets are never mixed into the Standard batch), so the person cooking no longer adds it up by hand. A second tab, Plate by dog, shows what each dog gets, enclosure by enclosure. It is a list to read: nothing is ticked or saved.",
-    roles: ["admin", "management", "second_in_command", "head_of_medical"],
-  },
-  "A login with the Medical records card (or a Head of Medical / second-in-command role) can now open a resident's whole page. The medical sections can be added to; the name, housing, intake and history show but cannot be changed. The Residents list also stops offering buttons a login cannot use.",
-  {
-    text: "Diets are now written as one serving. In Settings → Diets, each ingredient has a single Amount per serving instead of three amounts, and each diet has a Servings by size row (Small 1, Medium 1.5, Large 2 to start with, changeable per diet). A serving is one day's food, so a Medium dog on a diet of 0.5 cup kibble gets 0.75 cup a day. The feeding list shows each meal's amount with the day's total beside it, and amounts such as 0.375 cup are shown in full instead of being rounded.",
-    roles: ["admin", "management", "head_of_medical", "second_in_command", "doctor"],
-  },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.39.4",
+    date: "2026-10-23",
+    title:
+      "A feeding list for the kitchen, diets by the serving, and the resident page for medical cards",
+    major: false,
+    notes: [
+      {
+        text: "New page: Operations → Feeding list. Pick Morning or Evening and it adds up, for each zone, how much of every ingredient that meal needs, diet by diet (special diets are never mixed into the Standard batch), so the person cooking no longer adds it up by hand. A second tab, Plate by dog, shows what each dog gets, enclosure by enclosure. It is a list to read: nothing is ticked or saved.",
+        roles: ["admin", "management", "second_in_command", "head_of_medical"],
+      },
+      "A login with the Medical records card (or a Head of Medical / second-in-command role) can now open a resident's whole page. The medical sections can be added to; the name, housing, intake and history show but cannot be changed. The Residents list also stops offering buttons a login cannot use.",
+      {
+        text: "Diets are now written as one serving. In Settings → Diets, each ingredient has a single Amount per serving instead of three amounts, and each diet has a Servings by size row (Small 1, Medium 1.5, Large 2 to start with, changeable per diet). A serving is one day's food, so a Medium dog on a diet of 0.5 cup kibble gets 0.75 cup a day. The feeding list shows each meal's amount with the day's total beside it, and amounts such as 0.375 cup are shown in full instead of being rounded.",
+        roles: ["admin", "management", "head_of_medical", "second_in_command", "doctor"],
+      },
+    ],
+  },
   {
     version: "0.39.3",
     date: "2026-10-23",
