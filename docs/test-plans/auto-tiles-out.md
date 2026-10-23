@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **URGENT, LIVE ON PRODUCTION: the Volunteer home shows an Operations tile nobody chose** (left open: the quick patch is this PR; the full hard-coding sweep is the rebuild) |
 | Branch / worktree | `claude/auto-tiles-out` @ `C:\Development\Animal_Shelter_auto-tiles-out` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3016` |
-| PR | to be filled when opened |
+| PR | #882 |
 | Tested by / date | Claude / 2026-10-23 |
 | Carries a migration? | no — its seed is `0251`, merged in #881 and applied to dev |
 | Tested at SHA | tip of `claude/auto-tiles-out` after sync with `origin/main` |
@@ -29,7 +29,7 @@
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR — deferred: checked on the PR before merging; that is the one line this plan cannot honestly tick until CI has run
+- [x] CI green on the PR — every check on #882 passed (card-walkthrough after regenerating `docs/card-walkthrough.md`); `test-plan` was red only for this line; read from `gh pr checks 882`
 
 ## 3. Schema and data — *skip if no migration*
 
