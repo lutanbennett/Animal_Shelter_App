@@ -60,8 +60,9 @@ const probes = [
   ["medication_list_residents", `select 1 from medication_list_residents where id = '${R}'`, READ_ALL],
   // the floor: nothing else
   ["medication", `select 1 from medication limit 1`, { ...STAFF_UP, doctor: 1 }],
-  ["residents", `select 1 from residents where id = '${R}'`, OWN_CLINIC],
-  ["resident_list_view", `select 1 from resident_list_view where resident_id = '${R}'`, OWN_CLINIC],
+  // 0249: a who_and_where role holding a medical.* edit (her medical.weight, level 2) may read the resident record
+  ["residents", `select 1 from residents where id = '${R}'`, OWN_CLINIC_AND_HOM],
+  ["resident_list_view", `select 1 from resident_list_view where resident_id = '${R}'`, OWN_CLINIC_AND_HOM],
   ["weight", `select 1 from weight where resident_id = '${R}'`, OWN_CLINIC_AND_HOM],
   ["clinic_visits", `select 1 from clinic_visits where resident_id = '${R}'`, OWN_CLINIC],
   ["procedures", `select 1 from procedures where resident_id = '${R}'`, null],
@@ -70,7 +71,8 @@ const probes = [
   ["assistant_actions", `select 1 from assistant_actions limit 1`, "hom-zero"],
   ["contacts", `select 1 from contacts limit 1`, "hom-zero"],
   // who and where is still the volunteer view's, and still works for this role (borrowed rights)
-  ["resident_who_and_where", `select 1 from resident_who_and_where where id = '${R}'`, { ...NONE, hom: 1, volunteer: 1 }],
+  // 0192: the volunteer floor and any role that reads every resident, so admin and management too
+  ["resident_who_and_where", `select 1 from resident_who_and_where where id = '${R}'`, { ...NONE, hom: 1, volunteer: 1, admin: 1, management: 1 }],
   // columns the list views must not carry
   ["price column on the medicine view", `select cost_per_unit from medication_list_medications limit 1`, "error"],
   ["stock column on the medicine view", `select stock_on_hand from medication_list_medications limit 1`, "error"],
