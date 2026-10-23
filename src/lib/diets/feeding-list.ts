@@ -41,7 +41,7 @@ const num = (v: Num) => (v == null ? null : Number.isFinite(Number(v)) ? Number(
  */
 export async function loadFeedingList(supabase: Supabase, round: RoundKey, locale: Locale): Promise<FeedingList> {
   const today = todayIso();
-  const [diets, lines, ingredients, residentDiets, dietRounds, residents, states, enclosures, zones, order] =
+  const [diets, lines, ingredients, residentDiets, dietRounds, residents, states, enclosures, zones, placements, order] =
     await Promise.all([
       supabase
         .from("diets")
@@ -85,6 +85,14 @@ export async function loadFeedingList(supabase: Supabase, round: RoundKey, local
         .from("zones")
         .select("id, name, name_th, colour")
         .returns<{ id: string; name: string; name_th: string | null; colour: string | null }[]>(),
+      // Where residents live, as the medication list reads it (0136). A login that cannot open resident
+      // records (the Head of Medical) gets nothing from resident_current_state but everything from here.
+      supabase
+        .from("medication_list_residents")
+        .select("id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th, zone_colour")
+        .returns<
+          { id: string; current_status: string | null; enclosure_id: string | null; enclosure_name: string | null; enclosure_name_th: string | null; zone_name: string | null; zone_name_th: string | null; zone_colour: string | null }[]
+        >(),
       loadPlaceOrder(supabase),
     ]);
 
@@ -98,6 +106,7 @@ export async function loadFeedingList(supabase: Supabase, round: RoundKey, local
     states.error?.message ??
     enclosures.error?.message ??
     zones.error?.message ??
+    placements.error?.message ??
     null;
   const empty = { dogs: [], blocks: [] };
   if (error) return { today, round, zones: [], apart: empty, error };
@@ -138,28 +147,38 @@ export async function loadFeedingList(supabase: Supabase, round: RoundKey, local
   const stateById = new Map((states.data ?? []).map((s) => [s.resident_id, s]));
   const enclosureById = new Map((enclosures.data ?? []).map((e) => [e.id, e]));
   const zoneById = new Map((zones.data ?? []).map((z) => [z.id, z]));
+  const viewById = new Map((placements.data ?? []).map((p) => [p.id, p]));
 
   const dogs: FeedingDog[] = [];
   for (const rd of residentDiets.data ?? []) {
     const r = residentById.get(rd.resident_id);
+    const view = viewById.get(rd.resident_id);
     const state = stateById.get(rd.resident_id);
-    if (!r || state?.current_status === "Deceased" || state?.current_status === "Adopted") continue;
+    const status = view?.current_status ?? state?.current_status ?? null;
+    if (!r || status === "Deceased" || status === "Adopted") continue;
     const enclosure = state?.current_enclosure_id ? enclosureById.get(state.current_enclosure_id) : undefined;
     const zone = enclosure ? zoneById.get(enclosure.zone_id) : undefined;
+    let place: FeedingDog["place"] = null;
+    if (status === "Resident") {
+      if (view?.enclosure_name && view.zone_name)
+        place = {
+          zone: { name: view.zone_name, nameTh: view.zone_name_th, colour: view.zone_colour },
+          enclosure: { id: view.enclosure_id, name: view.enclosure_name, nameTh: view.enclosure_name_th },
+        };
+      else if (enclosure && zone)
+        place = {
+          zone: { name: zone.name, nameTh: zone.name_th, colour: zone.colour },
+          enclosure: { id: enclosure.id, name: enclosure.name, nameTh: enclosure.name_th },
+        };
+    }
     dogs.push({
       id: r.id,
       name: r.name,
       thaiName: r.thai_name,
       photoFileId: r.profile_photo_drive_file_id,
       size: r.size,
-      status: state?.current_status ?? null,
-      place:
-        enclosure && zone && state?.current_status === "Resident"
-          ? {
-              zone: { name: zone.name, nameTh: zone.name_th, colour: zone.colour },
-              enclosure: { id: enclosure.id, name: enclosure.name, nameTh: enclosure.name_th },
-            }
-          : null,
+      status,
+      place,
       dietId: rd.diet_id,
       mealsPerDay: rd.meals_per_day,
       portionFactor: num(rd.portion_factor),
