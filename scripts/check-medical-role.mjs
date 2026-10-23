@@ -25,7 +25,8 @@ const { loadEnv, projectRef } = await import(pathToFileURL(join(process.cwd(), "
 const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
-const { bundleOfRole } = await import(pathToFileURL(join(process.cwd(), "src/lib/permissions/jobs.ts")).href);
+const { loadCards } = await import(pathToFileURL(join(process.cwd(), "scripts/lib/load-cards.mjs")).href);
+const { bundleOfCards } = await loadCards();
 
 const lit = (id) => `'${id}'::uuid`;
 const P = ["hom", "admin", "management", "volunteer", "doctor", "norole"];
@@ -60,8 +61,9 @@ const probes = [
   ["medication_list_residents", `select 1 from medication_list_residents where id = '${R}'`, READ_ALL],
   // the floor: nothing else
   ["medication", `select 1 from medication limit 1`, { ...STAFF_UP, doctor: 1 }],
-  ["residents", `select 1 from residents where id = '${R}'`, OWN_CLINIC],
-  ["resident_list_view", `select 1 from resident_list_view where resident_id = '${R}'`, OWN_CLINIC],
+  // 0249: a who_and_where role holding a medical.* edit (her medical.weight, level 2) may read the resident record
+  ["residents", `select 1 from residents where id = '${R}'`, OWN_CLINIC_AND_HOM],
+  ["resident_list_view", `select 1 from resident_list_view where resident_id = '${R}'`, OWN_CLINIC_AND_HOM],
   ["weight", `select 1 from weight where resident_id = '${R}'`, OWN_CLINIC_AND_HOM],
   ["clinic_visits", `select 1 from clinic_visits where resident_id = '${R}'`, OWN_CLINIC],
   ["procedures", `select 1 from procedures where resident_id = '${R}'`, null],
@@ -70,7 +72,8 @@ const probes = [
   ["assistant_actions", `select 1 from assistant_actions limit 1`, "hom-zero"],
   ["contacts", `select 1 from contacts limit 1`, "hom-zero"],
   // who and where is still the volunteer view's, and still works for this role (borrowed rights)
-  ["resident_who_and_where", `select 1 from resident_who_and_where where id = '${R}'`, { ...NONE, hom: 1, volunteer: 1 }],
+  // 0192: the volunteer floor and any role that reads every resident, so admin and management too
+  ["resident_who_and_where", `select 1 from resident_who_and_where where id = '${R}'`, { ...NONE, hom: 1, volunteer: 1, admin: 1, management: 1 }],
   // columns the list views must not carry
   ["price column on the medicine view", `select cost_per_unit from medication_list_medications limit 1`, "error"],
   ["stock column on the medicine view", `select stock_on_hand from medication_list_medications limit 1`, "error"],
@@ -132,6 +135,7 @@ end $run$;
 do $role$ begin
   insert into res select 'role', 'row', 0 where exists (select 1 from roles where key = 'head_of_medical' and kind = 'custom' and opens_app and name_th is not null and archived_at is null);
   insert into res select 'role', 'cell:' || rp.activity || ':' || rp.level, 0 from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'head_of_medical';
+  insert into res select 'role', 'card:' || rc.card, 0 from role_cards rc join roles r on r.id = rc.role_id where r.key = 'head_of_medical';
 end $role$;
 do $o$ begin raise exception 'HARNESS-RESULT %', (select json_agg(row_to_json(res)) from res); end $o$;
 rollback;`;
@@ -179,7 +183,10 @@ for (const [name, , exp] of probes) {
 
 if (get("role", "row") === 0) pass("role row: custom, borrows volunteer, opens the app, has a Thai name"); else fail("role row head_of_medical missing or wrong shape");
 const have = new Map(rows.filter((r) => r.who === "role" && r.tbl.startsWith("cell:")).map((r) => r.tbl.split(":").slice(1)).map(([a, l]) => [a, Number(l)]));
-const want = new Map([...bundleOfRole("head_of_medical")].map(([a, l]) => [a, l === "edit" ? 2 : 1]));
+// RE-BASELINED 2026-10-23: a role's powers come from its cards (role_cards), set on the roles screen, so the expected
+// bundle is the expansion of the cards the role HOLDS, not a fixed list of four jobs. Still exact: a power with no card fails.
+const heldCards = rows.filter((r) => r.who === "role" && r.tbl.startsWith("card:")).map((r) => r.tbl.slice(5));
+const want = new Map([...bundleOfCards(heldCards)].map(([a, l]) => [a, l === "edit" ? 2 : 1]));
 for (const [a, l] of AHEAD) if (!want.has(a)) want.set(a, l);
 // RE-BASELINED 2026-10-11 (role-floor-schema, 0179): moving a resident is None on the who-and-where floor.
 want.delete("placement.move");
@@ -188,5 +195,5 @@ if (same) pass(`bundle: role_permissions = the union of its jobs and the draft's
 else fail(`bundle: role_permissions ${JSON.stringify([...have])} differ from jobs.ts ${JSON.stringify([...want])}`);
 
 console.log(`\n${ok} checks held, ${fails} failed.`);
-console.log(fails ? "RESULT: RED" : "RESULT: GREEN (the Head of Medical reads the list and nothing else; the cells and jobs.ts agree)");
+console.log(fails ? "RESULT: RED" : "RESULT: GREEN (the Head of Medical reads the list and nothing else; her powers are exactly those of the cards she holds)");
 process.exitCode = fails ? 1 : 0;
