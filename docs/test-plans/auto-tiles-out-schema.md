@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **URGENT, LIVE ON PRODUCTION: the Volunteer home shows an Operations tile nobody chose** (left open: the app half is the next PR) |
 | Branch / worktree | `claude/auto-tiles-out-schema` @ `C:\Development\Animal_Shelter_auto-tiles-out-schema` |
 | Dev server | not started — no UI surface in this PR |
-| PR | to be filled when opened |
+| PR | #881 |
 | Tested by / date | Claude / 2026-10-23 |
 | Carries a migration? | yes — `0251_seed_cards_for_removed_automatic_tiles.sql` |
 | Tested at SHA | tip of `claude/auto-tiles-out-schema` (cut from `origin/main` `96b4ba8b`) |
@@ -28,7 +28,7 @@
 ```
 gates: typecheck=0 lint=0 test=0 build=0
 ```
-- [ ] CI green on the PR — deferred: read from the PR before merging
+- [x] CI green on the PR — every check on #881 passed except `test-plan`, which was red only for this line; read from `gh pr checks 881`
 
 ## 3. Schema and data
 
