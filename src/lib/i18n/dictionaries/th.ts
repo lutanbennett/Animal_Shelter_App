@@ -7147,14 +7147,8 @@ const th: Dictionary = {
     size: { Small: "เล็ก", Medium: "กลาง", Large: "ใหญ่" },
     compatibility: { Yes: "ได้", No: "ไม่ได้", Unknown: "ยังไม่ทราบ" },
     energyLevel: { Low: "ต่ำ", Medium: "ปานกลาง", High: "สูง" },
-    dietUnit: {
-      g: "กรัม",
-      ml: "มล.",
-      can: "กระป๋อง",
-      sachet: "ซอง",
-      cup: "ถ้วย",
-      portion: "ส่วน",
-    },
+    /** Unit of measure -> what to print. The units table fills it in per request (getT, I18nProvider); empty here. */
+    unitNames: {} as Record<string, string>,
     appointmentStatus: {
       scheduled: "นัดหมายแล้ว",
       completed: "เสร็จสิ้นแล้ว",
@@ -7170,19 +7164,6 @@ const th: Dictionary = {
     },
     mandatory: { mandatory: "จำเป็น", optional: "ไม่บังคับ" },
     photoFolder: { Shelter: "ศูนย์พักพิง", Medical: "การแพทย์", Foster: "อุปถัมภ์ชั่วคราว", Adoption: "รับเลี้ยง" },
-    doseUnit: {
-      tablet: "เม็ด",
-      capsule: "แคปซูล",
-      ml: "มล.",
-      mg: "มก.",
-      g: "ก.",
-      mcg: "มคก.",
-      IU: "IU",
-      drop: "หยด",
-      sachet: "ซอง",
-      application: "ครั้งที่ทา",
-      dose: "โดส",
-    },
   },
   // การทำหมัน (0233): คำบนหน้าสาธารณะ วันที่ ราคา และเงื่อนไขเป็นข้อมูลที่ศูนย์พักพิงกรอกเอง ไม่เขียนไว้ที่นี่
   desexing: {

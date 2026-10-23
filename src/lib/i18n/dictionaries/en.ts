@@ -7408,14 +7408,8 @@ const en = {
     size: { Small: "Small", Medium: "Medium", Large: "Large" },
     compatibility: { Yes: "Yes", No: "No", Unknown: "Not yet known" },
     energyLevel: { Low: "Low", Medium: "Medium", High: "High" },
-    dietUnit: {
-      g: "g",
-      ml: "ml",
-      can: "can(s)",
-      sachet: "sachet(s)",
-      cup: "cup(s)",
-      portion: "portion(s)",
-    },
+    /** Unit of measure -> what to print. The units table fills it in per request (getT, I18nProvider); empty here. */
+    unitNames: {} as Record<string, string>,
     appointmentStatus: {
       scheduled: "scheduled",
       completed: "completed",
@@ -7433,19 +7427,6 @@ const en = {
     /** medication.dose_unit — what one unit of a medication is. */
     /** Photo folders: stored (and named in Drive) in English, shown in the reader's language. */
     photoFolder: { Shelter: "Shelter", Medical: "Medical", Foster: "Foster", Adoption: "Adoption" },
-    doseUnit: {
-      tablet: "tablet(s)",
-      capsule: "capsule(s)",
-      ml: "ml",
-      mg: "mg",
-      g: "g",
-      mcg: "mcg",
-      IU: "IU",
-      drop: "drop(s)",
-      sachet: "sachet(s)",
-      application: "application(s)",
-      dose: "dose(s)",
-    },
   },
   // Desexing drives (0233): the public page's words. The shelter's own dates, prices and
   // eligibility are data typed in Management, never written here.

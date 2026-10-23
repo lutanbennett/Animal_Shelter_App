@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { DIET_UNITS, dietUnitLabel } from "@/lib/i18n/enum-labels";
+import { UnitSelect } from "@/components/UnitSelect";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { createDietType } from "./actions";
 import { createRecipe } from "./recipe-actions";
@@ -102,13 +102,7 @@ export function AddIngredientButton() {
           </label>
           <label className={labelClass}>
             {i.countedIn}
-            <select name="unit" required defaultValue="g" className={sheetInputClass}>
-              {DIET_UNITS.map((unit) => (
-                <option key={unit} value={unit}>
-                  {dietUnitLabel(t, unit)}
-                </option>
-              ))}
-            </select>
+            <UnitSelect list="ingredients" name="unit" required defaultValue="g" className={sheetInputClass} />
             <span className="text-xs font-normal">{i.countedInHint}</span>
           </label>
           <label className={labelClass}>

@@ -5,7 +5,8 @@ import { runAction, type ActionResult } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
-import { DIET_UNITS, type DietUnit } from "@/lib/i18n/enum-labels";
+import { loadUnitList } from "@/lib/unit-list-server";
+import { usableUnit } from "@/lib/unit-list";
 import { loadPermissions } from "@/lib/permissions/load";
 import { canEditItemSettings } from "@/lib/permissions/item-settings";
 
@@ -31,17 +32,13 @@ export type DietDefinitionFields = {
 type DietDefinitionRow = {
   name: string;
   name_th: string | null;
-  unit: DietUnit;
+  unit: string;
   notes: string | null;
 };
 
 function optional(value: FormDataEntryValue | string | null | undefined) {
   const trimmed = typeof value === "string" ? value.trim() : "";
   return trimmed ? trimmed : null;
-}
-
-function isDietUnit(value: string | null): value is DietUnit {
-  return value != null && DIET_UNITS.includes(value as DietUnit);
 }
 
 async function refusal() {
@@ -77,15 +74,17 @@ function fieldsFromForm(formData: FormData): DietDefinitionFields {
 }
 
 /** Validates the fields and returns the row to write, or an error message. */
-function parseFields(
+async function parseFields(
   fields: DietDefinitionFields,
   t: Dictionary,
-): { error: string; row?: never } | { row: DietDefinitionRow; error?: never } {
+): Promise<{ error: string; row?: never } | { row: DietDefinitionRow; error?: never }> {
   const e = t.management.diets.errors;
   const name = optional(fields.name);
   if (!name) return { error: e.nameRequired };
-  const unit = optional(fields.unit);
-  if (!isDietUnit(unit)) return { error: e.unitInvalid };
+  // Settings → Units is the list (0252). The write-time trigger refuses the same things; this says it in words.
+  // A row saved unchanged on a unit since archived still saves: the trigger lets an untouched value through.
+  const unit = usableUnit(await loadUnitList(), "ingredients", optional(fields.unit))?.name ?? null;
+  if (!unit) return { error: e.unitInvalid };
 
   return {
     row: {
@@ -106,7 +105,7 @@ export async function createDietType(
   return runAction("diets.createDietType", t.common.somethingWentWrong, async () => {
     const refused = await refusal();
     if (refused) return refused;
-    const parsed = parseFields(fieldsFromForm(formData), t);
+    const parsed = await parseFields(fieldsFromForm(formData), t);
     if (parsed.error !== undefined) return refuse(parsed.error);
 
     const supabase = await createClient();
@@ -128,7 +127,7 @@ export async function updateDietDefinition(id: string, fields: DietDefinitionFie
   return runAction("diets.updateDietDefinition", t.common.somethingWentWrong, async () => {
     const refused = await refusal();
     if (refused) return refused;
-    const parsed = parseFields(fields, t);
+    const parsed = await parseFields(fields, t);
     if (parsed.error !== undefined) return refuse(parsed.error);
 
     const supabase = await createClient();

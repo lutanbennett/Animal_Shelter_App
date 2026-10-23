@@ -51,13 +51,17 @@ export function energyLevelLabel(t: Dictionary, value: string | null | undefined
   return enumLabel(t.enums.energyLevel, value);
 }
 
-/** diet_types.unit — what a diet is bought and served in (0051). */
-export const DIET_UNITS = ["g", "ml", "can", "sachet", "cup", "portion"] as const;
-export type DietUnit = (typeof DIET_UNITS)[number];
-
-export function dietUnitLabel(t: Dictionary, value: string | null | undefined) {
-  return enumLabel(t.enums.dietUnit, value);
+/**
+ * A unit of measure's name for the reader (diet_types.unit, medication.dose_unit: the stored name, 0252).
+ * The names come from the units table through getT / I18nProvider; one the table no longer lists prints as
+ * stored. The two labels below are the same lookup, kept so the call sites read as what they are.
+ */
+export function unitLabel(t: Dictionary, value: string | null | undefined) {
+  if (!value) return value ?? "";
+  return t.enums.unitNames[value.trim().toLowerCase()] ?? value;
 }
+
+export const dietUnitLabel = unitLabel;
 
 export function appointmentStatusLabel(
   t: Dictionary,
@@ -93,26 +97,7 @@ export function photoFolderLabel(t: Dictionary, value: string | null | undefined
   return enumLabel(t.enums.photoFolder, value);
 }
 
-export function doseUnitLabel(t: Dictionary, value: string | null | undefined) {
-  return enumLabel(t.enums.doseUnit, value);
-}
-
-/** The medication.dose_unit vocabulary, in the order the form offers it. */
-export const DOSE_UNITS = [
-  "tablet",
-  "capsule",
-  "ml",
-  "mg",
-  "g",
-  "mcg",
-  "IU",
-  "drop",
-  "sachet",
-  "application",
-  "dose",
-] as const;
-
-export type DoseUnit = (typeof DOSE_UNITS)[number];
+export const doseUnitLabel = unitLabel;
 
 /**
  * "2 tablet(s)", "500 ml" — a prescription's dose in its medication's unit.

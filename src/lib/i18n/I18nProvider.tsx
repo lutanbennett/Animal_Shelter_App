@@ -3,8 +3,9 @@
 import { createContext, use, useContext, useMemo, type ReactNode } from "react";
 import type { Dictionary } from "./dictionaries/en";
 import type { Locale } from "./locales";
+import { unitNameMap, type UnitRow } from "@/lib/unit-list";
 
-type I18nContextValue = { locale: Locale; t: Dictionary };
+type I18nContextValue = { locale: Locale; t: Dictionary; units: UnitRow[] };
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
@@ -33,13 +34,19 @@ function loadDictionary(locale: Locale) {
 
 export function I18nProvider({
   locale,
+  units,
   children,
 }: {
   locale: Locale;
+  /** The units table (Settings → Units), read once by the layout: forms offer from it, labels print from it. */
+  units: UnitRow[];
   children: ReactNode;
 }) {
-  const t = use(loadDictionary(locale));
-  const value = useMemo(() => ({ locale, t }), [locale, t]);
+  const dictionary = use(loadDictionary(locale));
+  const value = useMemo(() => {
+    const t = { ...dictionary, enums: { ...dictionary.enums, unitNames: unitNameMap(units, locale) } };
+    return { locale, t, units };
+  }, [locale, dictionary, units]);
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 
