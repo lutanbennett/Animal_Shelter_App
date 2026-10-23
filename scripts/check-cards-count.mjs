@@ -1,4 +1,4 @@
-// The code half of check-cards-schema.mjs, with no database: cards.ts has exactly the twenty-six agreed cards (the 26th, My tasks, asked for by Lutan 2026-10-20), every
+// The code half of check-cards-schema.mjs, with no database: cards.ts has exactly the twenty-eight agreed cards (the 26th, My tasks, asked for by Lutan 2026-10-20), every
 // card's bundle names an activity the catalogue has, and every card it includes is a card. check-cards-schema.mjs needs the
 // dev token, so CI cannot run it and nobody learns the set has drifted; this reads only cards.ts and catalogue.ts.
 // The same assertion stays, unrelaxed, in check-cards-schema.mjs (docs/decisions/2026-10-16-cards-count-in-ci.md).
@@ -31,7 +31,7 @@ for (const k of CARD_KEYS) {
   for (const e of CARDS[k].bundle) if (!known.has(e.activity)) fail(`card ${k} names an activity the catalogue lacks: ${e.activity}`);
   for (const i of CARDS[k].includes) if (!CARDS[i]) fail(`card ${k} includes ${i}, which is not a card`);
 }
-if (CARD_KEYS.length !== 26) fail(`the agreed set is twenty-six cards; cards.ts has ${CARD_KEYS.length}`);
-else if (!failed) console.log("ok   cards.ts has the twenty-six agreed cards, all naming real activities");
+if (CARD_KEYS.length !== 28) fail(`the agreed set is twenty-eight cards; cards.ts has ${CARD_KEYS.length}`);
+else if (!failed) console.log("ok   cards.ts has the twenty-eight agreed cards, all naming real activities");
 
 process.exit(failed ? 1 : 0);
