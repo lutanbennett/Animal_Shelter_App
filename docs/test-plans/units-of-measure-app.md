@@ -146,7 +146,7 @@ Automated checks by: Claude  Date: 2026-10-23
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the two rows above
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: two rows are still waiting for a person, so this is left unticked and the signature below says pending
 
 Manual verification by: pending: Thai wording and the management and doctor role check
 
