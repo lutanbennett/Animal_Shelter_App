@@ -19,8 +19,8 @@ import {
   type TimeOfDay,
 } from "@/lib/recurring-jobs/rule";
 import type { RecurringJob } from "@/lib/recurring-jobs/queries";
-import { canDoJob, jobIsRestricted, rolesForJob, type Eligibility } from "@/lib/recurring-jobs/eligibility";
-import { previewRecurrence, saveRecurringJob } from "./actions";
+import { canDoJob, jobIsRestricted, needKey, needsForLinks, rolesForJob, type Eligibility } from "@/lib/recurring-jobs/eligibility";
+import { eligibilityForLink, previewRecurrence, saveRecurringJob } from "./actions";
 import { OptionalDateInput } from "@/components/OptionalDateInput";
 import { DateInput } from "@/components/DateInput";
 
@@ -50,7 +50,7 @@ export function RecurringJobForm({
   job,
   team,
   people,
-  eligibility,
+  eligibility: pageEligibility,
   otherJobs,
   onDone,
 }: {
@@ -130,12 +130,34 @@ export function RecurringJobForm({
   const linkPath =
     linkChoice === "none" ? "" : linkChoice === "other" ? linkOther : LINK_PRESETS[linkChoice as keyof typeof LINK_PRESETS];
 
+  // The page only asked about the pages jobs already link to; a link chosen here that none uses is
+  // asked for on its own (a few calls) and kept. Until it arrives nobody is filtered out: saving
+  // checks it again on the server regardless.
+  const [fetched, setFetched] = useState<Eligibility>({});
+  const eligibility: Eligibility = { ...pageEligibility, ...fetched };
+  // Roles in play, by key: the people offered and anyone already on the job.
+  const roleKeys = [...new Set([...people.flatMap((p) => p.roles ?? [p.role]), ...team.flatMap((m) => m.roles ?? (m.role ? [m.role] : []))])];
+  const roleKeysKey = roleKeys.join(",");
+  const linkKnown = needsForLinks([linkPath]).every((need) => needKey(need) in eligibility);
+  useEffect(() => {
+    if (linkKnown) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const result = await eligibilityForLink(linkPath, roleKeysKey ? roleKeysKey.split(",") : []);
+      if (!cancelled && result.ok) setFetched((prev) => ({ ...prev, ...result.eligibility }));
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [linkKnown, linkPath, roleKeysKey]);
+
   // Everyone whose role can do the work on the job's page (eligibility.ts):
   // never a doctor, and a volunteer is not offered maintenance. Anyone already
   // on the job who can't — given it before this filter, or the link has just
   // changed — or who has since left stays listed and flagged, so they can be
   // taken off rather than silently kept. Saving refuses the first kind.
-  const eligible = (role: string | readonly string[] | null | undefined) => canDoJob(role, linkPath, eligibility);
+  const eligible = (role: string | readonly string[] | null | undefined) => !linkKnown || canDoJob(role, linkPath, eligibility);
   type Option = TeamMember & { cannotDo: boolean };
   const options: Option[] = [
     ...people
@@ -154,9 +176,7 @@ export function RecurringJobForm({
         cannotDo: !m.archived && !eligible(m.roles ?? m.role),
       })),
   ];
-  // Roles in play, by key: the people offered and anyone already on the job.
-  const roleKeys = [...new Set([...people.flatMap((p) => p.roles ?? [p.role]), ...team.flatMap((m) => m.roles ?? (m.role ? [m.role] : []))])];
-  const restricted = jobIsRestricted(linkPath, eligibility, roleKeys);
+  const restricted = linkKnown && jobIsRestricted(linkPath, eligibility, roleKeys);
 
   function toggle<T>(set: Set<T>, value: T): Set<T> {
     const next = new Set(set);

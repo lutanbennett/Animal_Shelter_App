@@ -13,7 +13,7 @@ import {
   type RecurrenceRule,
   type TimeOfDay,
 } from "@/lib/recurring-jobs/rule";
-import { ASSIGNABLE_KEY_FILTER, canDoJob, needsForLinks } from "@/lib/recurring-jobs/eligibility";
+import { ASSIGNABLE_KEY_FILTER, canDoJob, needsForLinks, type Eligibility } from "@/lib/recurring-jobs/eligibility";
 import { withHeldRoles } from "@/lib/auth/held-roles";
 import { loadEligibility } from "@/lib/recurring-jobs/eligibility-load";
 import { appUserLabel, type AppUser } from "@/lib/auth/app-users";
@@ -102,6 +102,24 @@ export async function previewRecurrence(
       typeof value === "string" ? value : String(Object.values(value as Record<string, unknown>)[0]),
     );
     return { ok: true, dates };
+  });
+}
+
+/**
+ * The database's answer for the page a job would link to, for these role keys: what the form needs when
+ * the link is changed to a page no existing job uses. One page is a few calls, not the whole registry.
+ */
+export async function eligibilityForLink(
+  linkPath: string,
+  roleKeys: string[],
+): Promise<ActionResult<{ eligibility: Eligibility }>> {
+  const { t } = await getT();
+  return runAction("recurringJobs.eligibilityForLink", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "recurring.manage")) return refuse(t.management.errors.managementAccessRequired);
+    const supabase = await createClient();
+    const { eligibility, error } = await loadEligibility(supabase, roleKeys, needsForLinks([linkPath]));
+    if (error) return refuse(error);
+    return { ok: true, eligibility };
   });
 }
 
