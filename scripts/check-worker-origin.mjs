@@ -208,7 +208,7 @@ async function through(host, method, extraEnv = {}) {
   const { readFileSync } = await import("node:fs");
   const proxy = readFileSync(new URL("../src/proxy.ts", import.meta.url), "utf8");
   check("src/proxy.ts calls originKeyRefuses before updateSession",
-    proxy.includes("originKeyRefuses(") && proxy.indexOf("originKeyRefuses(") < proxy.indexOf("return updateSession"));
+    proxy.includes("originKeyRefuses(") && proxy.indexOf("updateSession(") > 0 && proxy.indexOf("originKeyRefuses(") < proxy.indexOf("updateSession("));
   const { PI_OPTIONAL } = await import("./lib/runtime-config.mjs");
   check("the Pi's env file carries ORIGIN_KEY", PI_OPTIONAL.includes("ORIGIN_KEY"));
 }
