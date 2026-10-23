@@ -212,7 +212,7 @@ Automated checks by: Claude  Date: 2026-10-23
 
 The items in **Left for manual verification** above. Claude drove every screen at 375 px, but this line is for a person: it is left pending rather than signed on Lutan's behalf.
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: three open rows above, for a person to look at
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not empty, three items are pending (see the pending signature below)
 
 Manual verification by: pending: three rows above for a person to look at
 
