@@ -1,149 +1,139 @@
-# Release handover — written 2026-10-23 after `0.39.3`
+# Release handover — written 2026-10-23 after `0.39.4`
 
-A **delta**. The release's own facts are in `docs/releases/2026-10-23-0-39-3.md`
+A **delta**. The release's own facts are in `docs/releases/2026-10-23-0-39-4.md`
 and the durable rules are in `docs/release-procedure.md`. **Both outrank this
 file.**
 
-## START HERE: `0.39.3` is PAUSED, and you finish it before you cut anything
+## START HERE: nothing is pending, and re-measure that before you trust it
 
-**The production Worker was never deployed.** Three of four builds are live at
-`c0bdf272` — production Pi, test Pi, test Worker — and the **production Worker
-fallback is still `0.39.2` @ `6764913d`**. Users have had `0.39.3` throughout,
-because the Pi serves production; the gap is invisible until the Pi is
-unavailable, at which point visitors would silently get an old build. Lutan was
-out on the road and **chose to pause** rather than run it from there.
+**`0.39.4` is complete.** All four builds are on **`e077f45b`** — production Pi, test
+Pi, test Worker, production Worker — and `0.39.3`'s Worker gap is closed. The two
+steps it deferred both ran, in the required order: the calendar `Reason:` back-fill
+(5 visits marked, **after** the Worker deploy) and `sync-home-icons`. So **there is
+no inherited work**, which has not been true for two releases.
 
-**Do these two, in this order, before your own cut:**
+**One thing is outstanding and it is Lutan's** — next section. **Ask him about it
+before you cut anything**, because it concerns what the dogs are fed.
 
-```bash
-node scripts/deploy.mjs --env production | tee .local/deploy-0.39.3.log
-node scripts/resend-calendar-reasons.mjs --env production --apply
-```
+**And re-measure this section rather than trusting it.** Last edition's START HERE
+said the `0.39.3` Worker gap was "one command"; by the next morning it was **no
+command at all** — `main` had moved 11 PRs, `deploy.mjs` refuses while `unreleased`
+has lines (it had three), and two migrations were pending. `deploy.mjs` takes **no
+`--ref`**, so `c0bdf272` could not be built at all. **A handover's facts have a shelf
+life of hours.** Run `git diff --stat <last SHA>..HEAD`, `gh pr list`,
+`--status --env production` and the live `/api/version` before acting on any of it.
 
-**(1) is his**, nothing may be building in the main checkout when you hand it over
-(see the pre-handover check below), and it will build from whatever `main`'s tip
-then is — fine, and to be *recorded* rather than hidden.
+## The one finding that outranks everything else here
 
-**(2) is yours, and the order is not cosmetic.** `0.39.3`'s note 2 promises that
-entries *already* in the calendar gain a `Reason:` line within 15 minutes, and
-**that is not true on production yet**: the sweep runs inside the **Worker's own
-bundled app** (`worker/index.mjs`, `await openNext.fetch(…)` — `STATUS_ALERT_SITE`
-only builds the `Request` and is never fetched over the network), so it is
-`0.39.2` code. **Run (2) before (1) and the old sweep rewrites every entry without
-the Reason line and clears the out-of-date flag**, destroying the result and the
-evidence together. It was left unrun for exactly that reason.
+**`0.39.4` can quietly feed the dogs less, and that is an accepted decision rather
+than a bug.** `0250` back-fills `qty_per_serving` from the **Small** amount, and the
+app computes medium as `small × 1.5`, large as `small × 2`. A diet entered as
+**1 : 2 : 3** therefore drops: on dev, **8 of 10 ingredient lines** are 1 : 2 : 3, so
+Diabetic green beans for a medium dog reads **45 g where it read 60 g**.
 
-**Note 2's first half IS true**: booking or editing writes the entry from a server
-action, which runs in the app on the Pi. No mail went out, so the untrue half is
-visible only to someone reading `/releases`. Also deferred with the pause:
-`sync-home-icons.mjs --env production`; no note here concerns icons.
+**Lutan was asked before any deploy and chose *"deploy now, I will fix diets
+after"*.** The remedy is per diet and takes seconds: **Settings → Diets → the diet →
+*Servings by size* → 1 / 2 / 3** restores the old amounts exactly. Filed as a FOR
+LUTAN backlog item. **Ask him whether he has done it.** Until he has, the kitchen's
+feeding list shows reduced amounts and nothing on screen says so.
+
+**Which production diets are affected was never established**, and is recorded as not
+established: all five diets scripts are hard-locked to the dev project, and that
+guard was left alone rather than worked around. **Do not assume dev's 8-of-10 shape
+is production's.**
+
+**And the safeguard is mute.** `0250` ends with a `do $report$` raising a NOTICE per
+out-of-proportion line — *"Each is Lutan's call"* — but `apply-migrations.mjs` goes
+through the Management API, **which drops notice output**. The production apply
+printed `applying 0250 … ok` and nothing else. Backlog item filed. **Generalise it:
+any migration relying on a NOTICE to tell a person something is invisible through
+this path.** If you need to tell someone, write a check, not a notice.
+
+**The wider lesson, and it is the useful one:** every gate passed — four local gates,
+ten CI checks, a clean `--dry-run`, and a backup gate that correctly read `n/a`
+because `0250` genuinely is additive. **Additive in the database is not the same as
+harmless to the animals.** It was found by reading the migration, which nothing
+required.
 
 ## Corrections to the last edition
 
-- **It said to take the one classifier retry and be ready for it not to work. The retry WORKED — and what was refused was a READ**: a `tail` of a local `.log` file came back `[Production Deploy]`, and the same content read fine through the `Grep` tool. **Eight releases, eight behaviours.** When a refusal names something you are plainly not doing, **try a different tool before concluding anything**, and never record a refused read as a gap you could not close.
-- **It said `release-prs.mjs` is a coin-flip, five releases five answers. This time: exit 1, ONE orphan** — **#854**, squash-merged, so no `Merge pull request #N` subject to key on; found in one `gh pr list --search`. **Six releases, six answers.**
-- **It said "first CI run green by construction" was 2. It is 3**, third release running, and `check-test-plan.mjs --base origin/main` caught **two** faults before CI saw them. Both are now written into the runbook so they stop recurring.
-- **It said `strip-baked-env` read 14 and held. It read 14 again on test**, same list including both calendar names — "moved once then held" confirmed as the normal shape. Production's was never read, that deploy not having completed.
-- **It said the Pi could now see the calendar. Re-confirmed**: all four `GOOGLE_*` names present in `.env.production.local` after `deploy-pi.sh` regenerated it, checked **by name** with the command the last edition left. **Last release's fix survives a redeploy.**
+- **It said the red `audit` was settled and not to re-derive it. It is now GREEN**, passing in 14s: the `next@16.4.2` bump (#869) merged inside this release, so all three advisories are gone. The planner's backlog item closed by shipping. Nothing to carry.
+- **It said `release-prs.mjs` was six releases, six answers. Seven: exit 1, one orphan, #865**, squash-merged — **the same shape as #854.** Two consecutive identical failures is the signal to teach the script the squash case rather than hand-resolve a third. Read it **without a pipe**: `| tail` reports `tail`'s exit code, and the first run printed a DISAGREEMENT above a misleading `EXIT=0`.
+- **It said `strip-baked-env` read 14 on test and production's was never read. Production reads 14 too**, same list including both calendar names. "Moved once then held" is now confirmed on both environments.
+- **It said to take the one classifier retry. Twice, both cleared, and one was again a READ**: `| tee` on the production apply was refused with no explanation and the **bare command ran**; `--status --env production` was refused as `[Production Deploy]` and ran through **PowerShell**. **Ninth release, ninth behaviour**, cost nothing either time.
+- **It said the "all four builds from one SHA" counter was broken and reset to 0. It is 1** — this release genuinely managed all four.
 
-## Three things were wrong in the documents, and are now fixed in them
+## New: a third way to read nothing and believe it
 
-Not in the software — in the instructions. **The runbook's own handover command
-could not have run in his shell** (`mkdir -p .local && node …`: neither `&&` nor
-`mkdir -p` exists in PowerShell 5.1, so it would have run *neither* half), sitting
-a few paragraphs below where that same document names the `&&` trap. **The gates
-were described as three when there are four.** And **the two `check-test-plan`
-catches every cut hits** are now written into `release-procedure.md` step 4
-instead of being rediscovered.
+**PowerShell's `tee` writes UTF-16**, so every plain `grep` of the production deploy
+log returns **nothing** on a 30 KB log that plainly contains the lines. Read it with
+`Get-Content … | Select-String`. **Keep the `tee`** — it is what saves the pre-build
+lines — but know you cannot `grep` the result. The runbook's existing "grep the
+project ref, not the arrow" advice is a symptom of the same cause, not a separate
+quirk. The test deploy, run with a plain `>` redirect, greps fine in Bash: **two logs
+of one release, two tools.**
 
-**The lesson: when a document's instruction is wrong, fix the document.** All three
-had been worked around silently before, which is why they were still there.
+With the `git show <rev>:<path>` trap in `CLAUDE.md` and the `| tail` exit-code trap
+above, that is **three** ways this shell hands back an empty result that looks like
+an answer. **Treat a silent zero as unproven, never as a finding.**
 
-**The red `audit` is already settled — do not re-derive it.** A real finding, three
-`next` advisories, one critical; it **did not hold the release** and the run still
-concluded `success`. Two of the three are **not reachable here, measured**
-(`/_next/image` 404s on both live sites, `"use cache"` appears nowhere); the third
-is a Server Actions DoS. **The planner reached the same verdict independently** and
-filed `next@16.4.2` under *Security*, so write no second decision file.
+## `npm ci` twice, and paperwork rule 2 needs a caveat
 
-## The one thing to change about how you hand the deploy over
+Rule 2 reuses a free leftover worktree to avoid a four-minute `npm ci`. **It saved
+nothing**: the leftover was 71 commits behind and the range contains the Next bump,
+so it had `next` **16.3.8** against a `package.json` saying **16.4.2** — the `0.28.0`
+asymmetry, in the worktree this time.
 
-**Never hand over the production deploy while anything is building in the main
-checkout.** I started the test Worker deploy there and handed Lutan the production
-command before it had finished; Next refuses a second build in one checkout, so
-his died a minute in on `Another next build process is already running`.
-
-The collision is already in `release-procedure.md` ("two builds in one worktree
-collide"). **Knowing the trap did not help, because I never checked the
-precondition** — the same shape as the document faults above. So, concretely:
-before the handover, `Get-Process node` returns nothing **and** your own test
-deploy has *exited*, not merely printed its last interesting line.
-
-**One mistake, three consequences**: his wasted run, the lost "one SHA" property
-(by the second attempt `main` had moved), and the unfinished release — he was on
-the road by the time it could be re-run.
-
-## `main` moved mid-release, and doing nothing was right for the Pis
-
-Three commits between the cut and the record — a `plan-day` skill fix and two
-backlog commits, **nothing in `src/`, `worker/` or `supabase/`**. Both Pi builds
-stayed pinned `--ref c0bdf272`, both logs carry
-`deploy-pi: restarting under the script from c0bdf272`, and no Pi was rebuilt:
-`0.38.1`'s lesson applied rather than re-learned.
-
-**But it has a sting for the Worker.** `deploy.mjs` requires `HEAD == origin/main`
-and takes **no `--ref`**, so once `main` moves after a cut there is no supported way
-to build the Worker from the release SHA — it ships the moved tip or waits for a
-quiet `main`. Here the gap was three docs; **had they touched `src/`, it would have
-been a real decision. Check the diff rather than assuming cosmetic.**
+**The caveat:** reuse saves the install only when **no dependency changed inside the
+release range**. Check `require('next/package.json').version` against `package.json`
+in any worktree you reuse. **No guard would have caught it**: the gates do not read
+`node_modules`, and unlike `0.28.0` no deploy guard inspects a worktree.
 
 ## Where things stand
 
 | | |
 |---|---|
-| Live | **`0.39.3`** @ `c0bdf272` — production Pi, test Pi, test Worker |
-| Production Worker | **`0.39.2` @ `6764913d` — outstanding.** See START HERE. **Verify it yourself rather than taking any report**: it was reported deployed and was not. `wrangler deployments list --env production` had `v0.39.2` as its newest; cache-bypassed `/api/releases/current` answered `0.39.2` with `x-lanna-served-by: worker` |
-| Previous release SHA, for the next range | **`c0bdf272`** — the cut's merge commit, regardless of which SHA the Worker ends up built from |
-| Production database | **`249 applied`, `0 pending`**. **Run `--status --env production` yourself** |
-| Dev database | **`No drift`, 249 of 249**, exit 0 — clean, fourth release running |
-| Next free migration number | **`0249`**. **Check `origin/main` *and* open `*-schema` PRs anyway** |
-| `unreleased` and open PRs | **0 notes, no open PRs** at the cut — **read nothing into either.** Eleven editions have said 0 and been overtaken; **run `gh pr list` yourself** |
-| Worktrees | The cut reused the one `free` leftover (`Animal_Shelter_vet-visit-booking-polish`) and the record reused it again — rule 2 satisfied twice, no `npm ci`. **Its folder name does not match its branch**, so cleanup by name will miss it |
+| Live | **`0.39.4`** @ `e077f45b` — **all four builds**, production Worker included |
+| Production Worker | **`0.39.4`**, version `f4714abf`, tagged `v0.39.4`. Verified three ways: `wrangler deployments list`, the deploy log's `Current Version ID`, and a cache-bypassed `/api/releases/current` answering `0.39.4` with `x-lanna-served-by: worker` |
+| Previous release SHA, for the next range | **`e077f45b`** |
+| Production database | **`251 applied`, `0 pending`**, `No drift`, 0 each way. **Run it yourself** |
+| Dev database | **`No drift`, 251 of 251** — clean, fifth release running |
+| Next free migration number | **`0251`**. **Check `origin/main` *and* open `*-schema` PRs anyway** |
+| `unreleased` and open PRs | 0 notes at the cut; **#876 merged mid-release and `main` moved four more times.** Twelve editions have said 0 and been overtaken — **run `gh pr list` yourself** |
+| Worktrees | The cut reused `Animal_Shelter_vet-visit-booking-polish` for its **third** release, and the record reused it again. **Its folder name does not match its branch**, so cleanup by name will miss it |
 
-**Counters:** all four builds from one SHA — **BROKEN after 23, reset to 0**: only
-three builds exist, and a counter kept by rounding is worth nothing.
-`npm ci` as step 1 **20**; first CI run green by construction **3**;
-no production-only guard **22**; `strip-baked-env` **15**, held at 14 (test only
-— production's was never read).
-
-**Server Actions keys** (nineteenth check): test `ecc41837fc0b`, unchanged since
-`0.31.0`, and each Pi printed `the build in .next.new carries that key`.
-**Matching the values is not evidence you checked** — the Pi's own line is.
-Production's Worker key was not read, that deploy not having completed.
+**Counters:** all four builds from one SHA **1**; `npm ci` as step 1 **21** (and
+**twice** this release); first CI run green by construction **4** (10 of 10 first
+run); no production-only guard **23**; `strip-baked-env` **16**, held at 14 on
+**both** environments. **Server Actions keys** (twentieth check): production
+`cbd55beae8d8`, test `ecc41837fc0b` — and each Pi printed `the build in .next.new
+carries that key`, which is the evidence rather than the matching values.
 
 ## In flight and open
 
 **The same three silent failures, unchanged as a set.** None is broken today and
-none is a check to re-run — they are build-work on the backlog wanting the same
-plumbing (`status_alert_runs` → mail): the public desexing sign-up that tells
-nobody; Drive space, amber at 80% and red at 95%, that never emails; the nightly
-retention job's plumbing.
+none is a check to re-run — build-work wanting the same `status_alert_runs` → mail
+plumbing: the public desexing sign-up that tells nobody; Drive space, amber at 80%
+and red at 95%, that never emails; the nightly retention job's plumbing.
 
-**One gap closed by running something rather than handing it over.** Note 1's
-`pending:` item needed a Residents-card-only login, and
-`scripts/dev-signin.mjs --cards residents` makes exactly that: 18 zones where the
-note says the list was empty, and Register succeeded. **A `pending:` item you can
-run is not a handover.** The hub then showed no diet where the review promised one
-— the row is in the database, read under the caller's own RLS, so it is the card's
-boundary, not a lost write. **Chase what looks wrong; the answer is often "correct,
-for a reason you had not established".**
+**Six of this release's test plans are `pending:` a person**, shipped as recorded
+gaps on Lutan's decision — all "go and look at a screen" items, none able to fail
+quietly. Listed in the record. **Do not copy them into a future cut plan's own
+table**, which gives them a second home nothing closes.
 
-**For a person:** as a clinic login, book from `/appointments` and confirm you land
-back there (note 3's other half). **Still unlooked-at: the prescription form reading
-4** (`0.38.1`) **and video playback on a real handset** (`0.38.0`).
+**One red recorded as unresolved rather than explained away:**
+`check-diets-per-serving-schema.mjs` fails `servings default to 1 / 1.5 / 2 - got 1`
+on dev, alongside 11 passing checks. The benign reading — a diet whose servings were
+edited, which is allowed by design — is **plausible and unverified**. Do not promote
+it to a conclusion without measuring it.
 
-**His, and his only open one: book one real vet visit on production and see it in
-"Lanna Care: vet visits."** Today's grooming also asks him to share that calendar
-with the Director.
+**Still unlooked-at: the prescription form reading 4** (`0.38.1`) **and video
+playback on a real handset** (`0.38.0`).
 
-**Moved to `release-procedure.md`** (unchanged, both re-checked): "a major release mails one person", "`test-plan` is advisory, permanently".
+**His, and his only open ones: the diet *Servings by size* fix above**, and **book
+one real vet visit on production and see it in "Lanna Care: vet visits."** Today's
+grooming also asks him to share that calendar with the Director.
+
+**Moved to `release-procedure.md`** (unchanged, both re-checked): "a major release
+mails one person", "`test-plan` is advisory, permanently". **The first earned its
+keep this release** — stating it plainly changed Lutan's answer from major to minor.
