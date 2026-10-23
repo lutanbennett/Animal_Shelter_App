@@ -406,6 +406,38 @@ judgement — it was banded ~250–400k on exactly the reasoning above and
 count?" but "must it build the instrument?" Reading is cheap; building
 the instrument is not.
 
+### A WALKTHROUGH RUN STREAM HAS A MEASURED RATE: the floor plus ~9.8k PER NUMBERED STEP
+
+Added 2026-10-23 after the first round where **all nine streams were measured**. Three completed run
+streams, all `claude-sonnet-5-5` / `low`, agree to within 2%:
+
+| stream | numbered steps | actual | work above the ~88k floor | per step |
+|---|---|---|---|---|
+| `cards-run-stock` | 12 | 205,025 | 117k | **9,752** |
+| `cards-run-facility` | 18 | 265,830 | 178k | **9,879** |
+| `cards-rerun-blocked` | 31 | 388,315 | 300k | **9,687** |
+
+**So band a run stream at `88k + 9.8k x steps`, and trust it** — it is the most reliable estimator
+in this file. The older 6.1k-per-step reading (`cards-run-medical-daily`, 209,385) is the outlier
+and must not be quoted alone.
+
+**THE ONE WAY TO GET THIS WRONG IS TO COUNT THE STEPS FROM THE ITEM'S PROSE.** `cards-rerun-blocked`
+was banded 230-300k off the item's **TODO count** — "`residents` 9 TODOs, `medical_records` 8", so
+"~17 TODO-heavy steps". **It ran 31 numbered steps and came in at 388,315, 29% over.** Apply the rate
+to 31 and it predicts **392k** — **within 1% of what it actually cost.** The rate was never wrong;
+the step count was.
+
+**So count the steps from `docs/card-walkthrough.md`, with one command, every time:**
+
+```
+awk -v c="<card name>" 'BEGIN{p=0} $0 ~ "^## " {p=(index($0,c)>0)} p && /^[0-9]+\./{n++} END{print n+0}' docs/card-walkthrough.md
+```
+
+A `TODO:` is **one line inside one step**, not a step. A card with 4 steps and 1 TODO is 4 steps.
+This same command, run at batch 2 setup, caught a six-card group at 25 steps (~335k) and got it split
+into two finishable threes, both of which then landed inside their bands. **It is the cheapest
+high-value command in this skill.**
+
 **THE THIRD AXIS, AND THE ONE THAT COST THE MOST: HOW MANY LIVE
 INTERACTIONS?** Added 2026-10-18 after `fable-acceptance-dry-run` was banded
 300–460k and reached **819,980 at about 35% done** before Lutan stopped it. By
