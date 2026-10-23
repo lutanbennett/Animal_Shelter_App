@@ -115,6 +115,7 @@ const en = {
     vets: "Clinics",
     medications: "Medications",
     medicationList: "Medication list",
+    feedingList: "Feeding list",
     diets: "Diets",
     medicationStock: "Medication stock",
     dietStock: "Diet stock",
@@ -2816,6 +2817,8 @@ const en = {
         contacts: "Look up a carer, volunteer or supplier, and call or message them.",
         medicationList:
           "Who needs what medicine today, in walking order, with a photo of each animal and of each box. A list to read; nothing to tap.",
+        feedingList:
+          "What each zone's food batch needs for the morning or evening meal, diet by diet, and what each dog is plated. A list to read; nothing to tap.",
       },
     },
   },
@@ -3195,6 +3198,39 @@ const en = {
       noEnclosure: "No enclosure recorded",
       carryNote:
         "Without signal in the kennels, open this list at the office first and carry it round.",
+    },
+    feedingList: {
+      title: "Feeding list",
+      subtitle:
+        "What each zone's batch needs for one meal, diet by diet, and what each dog is plated. A list to read: nothing here is ticked off or recorded.",
+      today: (date: string) => `Today, ${date}`,
+      couldntLoad: "Couldn't load the feeding list",
+      empty: "No one is fed in this round.",
+      roundLabel: "Which meal are you doing?",
+      suggested: "Suggested for this time of day. Tap the other if you are preparing a different meal.",
+      rounds: { morning: "Morning", evening: "Evening" } as Record<string, string>,
+      viewBatch: "Batch for each zone",
+      viewDogs: "Plate by dog",
+      batchHeading: (round: string) => `To make for the ${round} meal`,
+      batchIntro:
+        "Each zone's total for this one meal, diet by diet. Special diets are never mixed into the Standard batch.",
+      dogsHeading: (round: string) => `To plate for the ${round} meal`,
+      dogsIntro: "What each dog gets in this one meal, enclosure by enclosure.",
+      dogCount: (n: number) => (n === 1 ? "1 dog" : `${n} dogs`),
+      standardTag: "Standard",
+      byEnclosure: "By enclosure",
+      photoAlt: (name: string) => `Photo of ${name}`,
+      noPhoto: "No photo",
+      noRoundTag: "No meal set on this diet",
+      noRoundNote:
+        "These dogs' diets have no meal ticked, so they are counted in every meal. Ask Management to set one.",
+      noLines: "This diet has no ingredients yet.",
+      apartHeading: "Not in a zone today",
+      apartNote:
+        "In hospital, fostered, out in the community, or with no enclosure on record. Counted here so they are not missed.",
+      portionTag: (factor: string) => `Portion ${factor}`,
+      carryNote:
+        "Amounts are exact sums, shown to up to three decimals. Without signal in the kennels, open this list at the office first and carry it round.",
     },
     stockUsage: {
       title: "Stock between counts",

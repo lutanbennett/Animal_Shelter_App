@@ -1724,6 +1724,28 @@ const manual: Manual = {
           ],
         },
         {
+          id: "feeding-list",
+          title: "The feeding list",
+          roles: ["admin", "management"],
+          path: "Operations → Feeding list",
+          intro:
+            "How much food to make for each zone for one meal, and what each dog is plated, built for a phone in the kitchen. It is for reading: nothing on it is ticked off, and the app does not record that a meal was fed.",
+          steps: [
+            "Open Operations from the menu and tap Feeding list. Tap Morning or Evening for the meal you are making. The page suggests one from the time of day, but it never decides for you. There is no lunch, because food is only given morning and evening.",
+            "On Batch for each zone, every zone has one block per diet: the Standard diet first, then each special diet with its own block. Each block says how many dogs it is for and lists every ingredient with the total for this one meal, in the ingredient's own unit (for example 6 cups kibble, 9 eggs, 600 g chicken). Make that much for the zone.",
+            "Tap By enclosure under a zone to see the same totals for each enclosure, if you plate one enclosure at a time.",
+            "Plate by dog shows, enclosure by enclosure, each dog with its photo and exactly what it gets in this meal. A dog with a portion other than 1 shows it (for example Portion 0.75) and is already counted at that portion.",
+            "A dog is counted from its diet: its size (Small, Medium or Large) sets how many servings of the diet it gets in a day, its portion adjusts that, and the day is split across its meals. Amounts are added up exactly and only rounded for display, so a zone's total can show a fraction such as 1.125 cups.",
+            "A dog in hospital, fostered, out in the community or with no enclosure is listed at the end under Not in a zone today, so no one thinks they were missed. A diet with no meal ticked is counted in both meals and flagged in red.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "There is nothing to tap and nothing is saved. To change what a dog eats, edit its diet on the resident's page; to change a recipe, use Settings → Diets. If the kennels have no signal, open the list at the office first and carry it round.",
+            },
+          ],
+        },
+        {
           id: "stocktake",
           title: "Doing a stocktake",
           roles: ["admin", "management"],
