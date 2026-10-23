@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-26 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+28 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -342,6 +342,26 @@ Result: pending
 1. Open `/my`: it loads.
 2. **Do:** Mark your own recurring jobs done or skipped. Use a disposable record named `walk-my_tasks`. **Read-back:** the task shows as done (or skipped) on /my after a reload.
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Operations (`operations_landing`)
+
+- Opens: `/operations`
+
+0. Sign in with `--cards operations_landing`. The home screen shows the **Operations** tile (or the tile of a card that includes it).
+1. Open `/operations`: it loads.
+2. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Management (`management_landing`)
+
+- Opens: `/management`
+
+0. Sign in with `--cards management_landing`. The home screen shows the **Management** tile (or the tile of a card that includes it).
+1. Open `/management`: it loads.
+2. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
