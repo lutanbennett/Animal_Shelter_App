@@ -6,7 +6,7 @@
 //   node scripts/check-home-screens-live.mjs [http://localhost:<port>] [--keep <file>]
 //   node scripts/check-home-screens-live.mjs --cleanup <file>
 //
-// It makes one throwaway login per default role (admin, management, staff, volunteer, doctor), signed
+// It makes one throwaway login per default role (admin, management, head_of_maintenance, volunteer, doctor), signed
 // in with a password only. Each is deleted at the end, whatever happened, unless --keep names a file:
 // then their session cookies and ids are written there (outside git) so a browser can be pointed at
 // them, and --cleanup <file> deletes them later. Exits 0 when every expectation held.
@@ -92,7 +92,7 @@ const made = [];
 const kept = {};
 try {
   const cookies = {};
-  for (const role of ["admin", "management", "staff", "volunteer", "doctor"]) {
+  for (const role of ["admin", "management", "head_of_maintenance", "volunteer", "doctor"]) {
     const email = `harness-home-${role}-${tag}@example.invalid`;
     const { data, error } = await service.auth.admin.createUser({ email, password, email_confirm: true });
     if (error) throw error;
@@ -115,12 +115,12 @@ try {
   const mgmt = await page("/home/management", cookies.admin.header, IPHONE);
   expect(mgmt.status === 200, `Admin opens /home/management (${mgmt.status})`);
   expect(tilesIn(mgmt.html).length > 0, `the Management home has tiles (${tilesIn(mgmt.html).join(" ")})`);
-  expect(has(mgmt.html, "/admin") && has(mgmt.html, "/home/staff") && has(mgmt.html, "/home/volunteer"), "the switch lists Settings and the other roles");
+  expect(has(mgmt.html, "/admin") && has(mgmt.html, "/home/head_of_maintenance") && has(mgmt.html, "/home/volunteer"), "the switch lists Settings and the other roles");
   expect(!has(mgmt.html, "/home/admin") && !has(mgmt.html, "/home/public_viewer"), "the switch lists neither Admin nor the public viewer");
   const settings = await page("/admin", cookies.admin.header, WINDOWS);
   expect(settings.status === 200 && has(settings.html, "/home/management"), "Settings has the switch too");
-  const staffHome = await page("/home/staff", cookies.admin.header, IPHONE);
-  expect(staffHome.status === 200 && onHome(staffHome.html, "/stocktake"), "Admin sees the staff home, with Stocktake on it");
+  const staffHome = await page("/home/head_of_maintenance", cookies.admin.header, IPHONE);
+  expect(staffHome.status === 200 && onHome(staffHome.html, "/maintenance"), "Admin sees the Head of Maintenance home, with Maintenance on it");
   const doctorHome = await page("/home/doctor", cookies.admin.header, IPHONE);
   expect(doctorHome.status === 200 && onHome(doctorHome.html, "/appointments"), "Admin sees the doctor home, with Appointments on it");
   const noSuch = await page("/home/no_such_role", cookies.admin.header, IPHONE);
@@ -131,8 +131,8 @@ try {
   expect(goes(adminHome, "/admin"), "/home/admin goes to Settings");
 
   console.log("Nobody but Admin opens another role's home");
-  for (const role of ["management", "staff", "volunteer", "doctor"]) {
-    for (const target of ["/home/management", "/home/staff", `/home/${role}`]) {
+  for (const role of ["management", "head_of_maintenance", "volunteer", "doctor"]) {
+    for (const target of ["/home/management", "/home/head_of_maintenance", `/home/${role}`]) {
       const r = await page(target, cookies[role].header, IPHONE);
       expect(goes(r, "/no-access") && !r.html.includes("min-h-28"), `${role} opening ${target} is refused (${r.status} → ${r.location})`);
     }
@@ -143,15 +143,15 @@ try {
   console.log("Each role lands on its own home");
   const m = await page("/home", cookies.management.header, IPHONE);
   expect(m.status === 200 && onHome(m.html, "/residents") && onHome(m.html, "/management/recurring-jobs") && !onHome(m.html, "/admin/zones"), `management: tiles, no Settings page (${tilesIn(m.html).join(" ")})`);
-  expect(!has(m.html, "/home/staff"), "management has no switch");
-  const s = await page("/home", cookies.staff.header, IPHONE);
-  expect(s.status === 200 && onHome(s.html, "/stocktake") && onHome(s.html, "/maintenance"), `staff: Stocktake and Maintenance (${tilesIn(s.html).join(" ")})`);
-  expect(!onHome(s.html, "/management/recurring-jobs") && !onHome(s.html, "/appointments"), "staff: none of Management's pages, no appointments");
+  expect(!has(m.html, "/home/head_of_maintenance"), "management has no switch");
+  const s = await page("/home", cookies.head_of_maintenance.header, IPHONE);
+  expect(s.status === 200 && onHome(s.html, "/maintenance"), `head of maintenance: Maintenance (${tilesIn(s.html).join(" ")})`);
+  expect(!onHome(s.html, "/management/recurring-jobs") && !onHome(s.html, "/appointments"), "head of maintenance: none of Management's pages, no appointments");
   const v = await page("/home", cookies.volunteer.header, IPHONE);
   expect(v.status === 200 && onHome(v.html, "/residents") && onHome(v.html, "/enclosures"), `volunteer: Residents and Enclosures (${tilesIn(v.html).join(" ")})`);
   expect(!onHome(v.html, "/management/recurring-jobs"), "volunteer: not Management's pages");
   const vt = await page("/home", cookies.doctor.header, IPHONE);
-  expect(goes(vt, "/appointments"), `doctor: lands on Appointments (${vt.status} → ${vt.location})`);
+  expect(vt.status === 200 && onHome(vt.html, "/appointments"), `doctor: a home with Appointments on it (${tilesIn(vt.html).join(" ")})`);
   const out = await page("/home", "", IPHONE);
   expect((out.location ?? "").startsWith("/login"), `signed out: sent to sign in (${out.status} → ${out.location})`);
 } finally {
