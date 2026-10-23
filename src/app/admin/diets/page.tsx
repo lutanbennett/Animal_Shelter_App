@@ -7,6 +7,7 @@ import { refuseFor } from "@/lib/auth/require-role";
 import { canEditItemSettings } from "@/lib/permissions/item-settings";
 import { requirePermission } from "@/lib/permissions/require";
 import { amountText, loadRecipeBook } from "@/lib/diets/recipe-book";
+import { dayAmount } from "@/lib/diets/servings";
 import { AddDietButton } from "./AddButtons";
 import { DietTabs } from "./DietTabs";
 
@@ -56,7 +57,7 @@ export default async function DietSettingsPage() {
             .map((line) => {
               const ingredient = byId.get(line.ingredientId);
               if (!ingredient) return null;
-              return `${amountText(line.medium, line.servingUnit, dietUnitLabel(t, ingredient.unit))} ${ingredient.name}`;
+              return `${amountText(dayAmount(line.qtyPerServing, recipe.servings, "Medium"), line.servingUnit, dietUnitLabel(t, ingredient.unit))} ${ingredient.name}`;
             })
             .filter(Boolean)
             .join(" · ");

@@ -1,10 +1,11 @@
 import type { createClient } from "@/lib/supabase/server";
 import type { Locale } from "@/lib/i18n/locales";
 import { localLabel } from "@/lib/translations/labels";
+import { dayAmount, type DietServings } from "@/lib/diets/servings";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
-/** One ingredient line of a recipe: amounts for one day's serve (0239). */
+/** One ingredient line of a recipe: the amount in ONE serving (0250), with the day's amount per size worked out. */
 export type RecipeLine = {
   ingredientId: string;
   ingredient: string;
@@ -12,6 +13,9 @@ export type RecipeLine = {
   unit: string;
   /** A serving unit such as "cup"; null means the amounts are in `unit`. */
   servingUnit: string | null;
+  /** The amount in one serving, in servingUnit (or the ingredient's own unit). */
+  qtyPerServing: number;
+  /** The whole day's amount for a dog of each size (qtyPerServing x the diet's servings), unrounded. */
   small: number;
   medium: number;
   large: number;
@@ -22,6 +26,7 @@ export type DietOption = {
   id: string;
   name: string;
   isStandard: boolean;
+  servings: DietServings;
   lines: RecipeLine[];
 };
 
@@ -46,20 +51,28 @@ export async function loadDietOptions(supabase: Supabase, locale: Locale) {
   const [diets, lines, ingredients] = await Promise.all([
     supabase
       .from("diets")
-      .select("id, name, name_th, is_standard")
+      .select("id, name, name_th, is_standard, servings_small, servings_medium, servings_large")
       .order("name")
-      .returns<{ id: string; name: string; name_th: string | null; is_standard: boolean }[]>(),
+      .returns<
+        {
+          id: string;
+          name: string;
+          name_th: string | null;
+          is_standard: boolean;
+          servings_small: number | string;
+          servings_medium: number | string;
+          servings_large: number | string;
+        }[]
+      >(),
     supabase
       .from("diet_ingredients")
-      .select("diet_id, diet_type_id, serving_unit, qty_small, qty_medium, qty_large")
+      .select("diet_id, diet_type_id, serving_unit, qty_per_serving")
       .returns<
         {
           diet_id: string;
           diet_type_id: string;
           serving_unit: string | null;
-          qty_small: number | string;
-          qty_medium: number | string;
-          qty_large: number | string;
+          qty_per_serving: number | string | null;
         }[]
       >(),
     supabase
@@ -69,19 +82,28 @@ export async function loadDietOptions(supabase: Supabase, locale: Locale) {
   ]);
 
   const ingredientById = new Map((ingredients.data ?? []).map((i) => [i.id, i]));
+  const servingsByDiet = new Map<string, DietServings>(
+    (diets.data ?? []).map((d) => [
+      d.id,
+      { small: Number(d.servings_small), medium: Number(d.servings_medium), large: Number(d.servings_large) },
+    ]),
+  );
   const linesByDiet = new Map<string, RecipeLine[]>();
   for (const row of lines.data ?? []) {
     const ingredient = ingredientById.get(row.diet_type_id);
-    if (!ingredient) continue;
+    const servings = servingsByDiet.get(row.diet_id);
+    if (!ingredient || !servings) continue;
+    const qtyPerServing = Number(row.qty_per_serving ?? 0);
     const list = linesByDiet.get(row.diet_id) ?? [];
     list.push({
       ingredientId: row.diet_type_id,
       ingredient: localLabel(locale, ingredient.name, ingredient.name_th),
       unit: ingredient.unit,
       servingUnit: row.serving_unit,
-      small: Number(row.qty_small),
-      medium: Number(row.qty_medium),
-      large: Number(row.qty_large),
+      qtyPerServing,
+      small: dayAmount(qtyPerServing, servings, "Small"),
+      medium: dayAmount(qtyPerServing, servings, "Medium"),
+      large: dayAmount(qtyPerServing, servings, "Large"),
     });
     linesByDiet.set(row.diet_id, list);
   }
@@ -91,6 +113,7 @@ export async function loadDietOptions(supabase: Supabase, locale: Locale) {
         id: d.id,
         name: localLabel(locale, d.name, d.name_th),
         isStandard: d.is_standard,
+        servings: servingsByDiet.get(d.id)!,
         lines: (linesByDiet.get(d.id) ?? []).sort((a, b) => a.ingredient.localeCompare(b.ingredient)),
       }))
     : null;

@@ -9,13 +9,14 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 import { ItemUnits } from "@/components/UnitsPanel";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { DIET_UNITS, dietUnitLabel } from "@/lib/i18n/enum-labels";
+import { dayAmount, type DietServings } from "@/lib/diets/servings";
 import { amountText, type BookIngredient, type BookLine } from "@/lib/diets/recipe-book";
 import { deleteDietType, updateDietDefinition, type DietDefinitionFields } from "./actions";
 import { sheetInputClass } from "./Sheet";
 
 const labelClass = "flex flex-col gap-1 text-sm font-medium text-muted";
 
-export type UsedBy = { dietId: string; dietName: string; line: BookLine };
+export type UsedBy = { dietId: string; dietName: string; servings: DietServings; line: BookLine };
 
 /** One ingredient's own page: its details, the ways it is measured, and the diets that use it. */
 export function IngredientDetail({
@@ -140,12 +141,12 @@ export function IngredientDetail({
           <p className="text-sm text-muted">{i.usedByNone}</p>
         ) : (
           <ul className="flex flex-col divide-y divide-border">
-            {usedBy.map(({ dietId, dietName, line }) => (
+            {usedBy.map(({ dietId, dietName, servings, line }) => (
               <li key={dietId} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
                 <Link href={`/admin/diets/${dietId}`} className="font-medium text-primary hover:underline">
                   {dietName}
                 </Link>
-                <span className="text-muted">{i.usedByLine(amountText(line.medium, line.servingUnit, ownLabel))}</span>
+                <span className="text-muted">{i.usedByLine(amountText(dayAmount(line.qtyPerServing, servings, "Medium"), line.servingUnit, ownLabel))}</span>
               </li>
             ))}
           </ul>

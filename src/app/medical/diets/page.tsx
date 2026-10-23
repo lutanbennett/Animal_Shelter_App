@@ -47,7 +47,7 @@ export default async function SpecialDietsPage(props: PageProps<"/medical/diets"
     locale === "th" && r.thaiName?.trim() ? r.thaiName.trim() : r.name;
   const secondName = (r: DietResident) =>
     locale === "th" && r.thaiName?.trim() ? r.name : r.thaiName?.trim() || null;
-  const number = (n: number) => String(Number(n.toFixed(2)));
+  const number = (n: number) => String(Number(n.toFixed(3)));
 
   const dietRow = (diet: SpecialDiet) => {
     const meals = diet.mealsPerDay && diet.mealsPerDay > 0 ? diet.mealsPerDay : null;
@@ -58,10 +58,16 @@ export default async function SpecialDietsPage(props: PageProps<"/medical/diets"
           {diet.ingredients.map((ing) => {
             const perMeal = ing.dailyQuantity != null && meals ? ing.dailyQuantity / meals : ing.dailyQuantity;
             const amount = perMeal != null ? `${number(perMeal)} ${dietUnitLabel(t, ing.unit)}` : d.amountMissing;
+            // A serving is one day's food, so the day's total sits beside the per-meal amount.
+            const perDay =
+              meals && meals > 1 && ing.dailyQuantity != null
+                ? d.perDayTotal(`${number(ing.dailyQuantity)} ${dietUnitLabel(t, ing.unit)}`)
+                : null;
             return (
               <li key={ing.name} className="flex flex-wrap items-center gap-x-2 gap-y-1" aria-label={d.amountPicture(amount)}>
                 <Utensils aria-hidden className="h-6 w-6 shrink-0 text-foreground" />
                 <span className="break-words text-xl font-semibold text-foreground">{amount}</span>
+                {perDay && <span className="text-sm text-muted">({perDay})</span>}
                 <span className="break-words text-lg text-foreground">{localLabel(locale, ing.name, ing.nameTh)}</span>
               </li>
             );
