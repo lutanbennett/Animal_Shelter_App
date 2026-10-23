@@ -63,6 +63,13 @@ check("--keep 3 with two dumps removes nothing", p.remove.length === 0);
 p = planPrune(set(0, 7, 14), { uploadConfirmed: false, keep: 1, now: NOW });
 check("--keep without a confirmed upload removes nothing", p.remove.length === 0);
 
+// Two files with one name (Drive allows it; a retry inside one minute makes it): a twin past the floor must not
+// get the protected one trashed. This is what the random check below tripped over about once in a dozen runs.
+p = planPrune([...set(15, 16, 17, 18, 19), nameAt(19), nameAt(20)], opts);
+check("a twin of a protected name past the floor is not removed", !p.remove.includes(nameAt(19)) && p.remove.join() === nameAt(20), p.remove.join());
+p = planPrune([...set(0, 1, 2), nameAt(3), nameAt(3), nameAt(3)], { uploadConfirmed: true, keep: 4, now: NOW });
+check("--keep 4 with the fourth name tripled removes nothing of it", !p.remove.includes(nameAt(3)), p.remove.join());
+
 // The newest five always survive, over many random lists.
 let violations = 0;
 for (let i = 0; i < 2000; i++) {

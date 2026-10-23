@@ -372,13 +372,13 @@ begin
   -- since 0147 a login past the role gate without the clinics.doctors cell is refused (Staff was this probe until
   -- 0173 retired it; now the clerk); management merges
   n := pg_temp.try(clerk, format('select merge_doctors(%L, %L)', dz, v_new));
-  if n <> -4 then raise exception 'HARNESS-FAIL G: the clerk merged doctors: %', n; end if;
+  if n not in (-1,-4) then raise exception 'HARNESS-FAIL G: the clerk merged doctors: %', n; end if;
   n := pg_temp.try(mgmt, format('select merge_doctors(%L, %L)', dz, v_new));
   if n <> 1 then raise exception 'HARNESS-FAIL G: merging identical names across clinics gave %', n; end if;
   if (select count(*) from doctor_clinics where doctor_id = v_new) <> 2
      or not exists (select 1 from clinic_visits where clinic_id = c and doctor_id = v_new) then
     raise exception 'HARNESS-FAIL G: identical-name merge did not leave one person at B and C with the visit'; end if;
-  v_report := v_report || 'G: cross-clinic merge moves links, visits and login; management refused on a login, the clerk (no doctors cell) refused, two logins refused | ';
+  v_report := v_report || 'G: cross-clinic merge moves links, visits and login; management refused on a login, the clerk (no doctors cell) refused by the function gate (0178), two logins refused | ';
 
   ----------------------------------------------------------------- H
   if exists (select 1 from information_schema.columns where table_name = 'user_roles' and column_name = 'clinic_id') then

@@ -35,9 +35,13 @@ export function planPrune(names, { uploadConfirmed, keep, keepDays, now }) {
   const floor = keepDays !== undefined ? MIN_KEPT : 1;
   const cutoff = keepDays !== undefined ? now.getTime() - keepDays * 86_400_000 : null;
   const remove = [];
+  // Protect by NAME, not position: Drive allows two files with one name (a retry inside the same minute) and the
+  // caller trashes by name, so a twin of a protected dump sitting past the floor would take the protected one with it.
+  const protectedNames = new Set(dumps.slice(0, Math.max(floor, keep ?? 0)));
   dumps.forEach((name, i) => {
     if (i < floor) return; // the newest few, whatever their age
     if (keep !== undefined && i < keep) return;
+    if (protectedNames.has(name)) return;
     if (cutoff !== null) {
       const t = dumpTime(name);
       if (t === null || t.getTime() >= cutoff) return; // unreadable name, or young enough
