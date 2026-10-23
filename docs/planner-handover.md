@@ -1,154 +1,149 @@
-# Planner handover — edition `312`, 2026-10-23
+# Planner handover — edition `321`, 2026-10-23
 
-**A delta, seventh edition in this shape.** Its rules are the skill's step 8 — say what **changed**,
+**A delta, eighth edition in this shape.** Its rules are the skill's step 8 — say what **changed**,
 promote durable facts once, cite `.plan-day.md` rather than reproducing it.
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`** — if they
 disagree with this, they are right and this is stale. **Read first:** `CLAUDE.md` → the skill →
-`.plan-day.md` → this. **The next slug is `321`.**
+`.plan-day.md` → this. **The next slug is `330`.**
 
 > **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
 > release state, candidates. **Re-read every time, never diffed.**
 
 ---
 
-## What `303` asked for, and what happened
+## What `312` asked for, and what happened
 
-- **"Check for an open `planner-handover-*` PR first." HELD** — checked, none.
-- **"Capture the actuals the moment a batch merges." HELD, and nine of nine measured.**
-- **The STEP ZERO block: HELD, third round.** Nothing already-built was offered.
-- **The `rm`-then-write trap: HELD for a ninth edition.** `cat <scratch> > .plan-day.md` worked three
-  times.
-- **The sign-in gap and the +30k browser allowance: CLOSED. Two confirming rounds, stop testing it**
-  and simply add the 30k whenever a brief asks for browser work. The paragraph can go next edition.
-- **The `audit` block: CLOSED.** Lutan was not asked once in nine streams, second round running.
-  Delete the paragraph.
-- **"The board is thin, and the next round should say so." TRUE, AND IT STOPPED MATTERING.** The
-  buildable pool was **four items**, batch 1 consumed all four, and batches 2 and 3 were filled
-  entirely by the card walkthrough — which then **filed six new items of its own.** A walkthrough is
-  not only verification; it is the cheapest backlog generator we have.
-- **"You do not control the dial." CLOSED — AND THE PREVIOUS DIAGNOSIS WAS WRONG.** See below.
-
-## THE DIAL: two editions prescribed a fix for a problem that did not exist
-
-`294` and `303` both recorded that the dial could not be read because every session was
-`isRunning: false` by the time `/plan-day` ran, and both prescribed *"read the dial while the session
-is still live."*
-
-**`get_session` returns `model` and `effort` from session metadata, and `get_usage` returns
-`context.tokensUsed`, for an IDLE session exactly as well as a live one.** All nine readings this
-round were taken with every session idle. **There is no race.** What was lost on those two rounds was
-lost to not calling the tool.
-
-**Promoted into the skill (step 2), so no future edition carries it.** Nine of nine dials read:
-**all `claude-sonnet-5-5` / `low`**, the first full round where recommendation and setting matched
-throughout. That still yields **no model finding** — one dial setting is not a comparison — but it
-does mean the figures below all belong to the same configuration.
+- **"Capture actuals before the sessions are archived." HELD — and this is the first round where
+  ALL NINE were measured.** Read at the first `/plan-day` after each batch merged. The lost-figures
+  problem is closed; the practice is in the skill's step 2 and needs no further defence.
+- **"Drop the dial paragraph." DONE — it is gone from this edition.** Nine of nine ran
+  `claude-sonnet-5-5` / `low` and matched the recommendation every time. **That is still not a model
+  finding** and I have stopped implying one is coming.
+- **"The sign-in and `audit` paragraphs are closed; delete them." DONE.** Neither returned.
+- **"A blocked stream's figure is not a band reading." HELD, and it earned its place twice** —
+  `cards-run-facility` and `cards-rerun-blocked` both overran, and in both cases I read the UAT
+  record first to confirm they had **completed** before letting the figure near a band. Both had.
+- **STEP ZERO: HELD, fourth round.** Nothing already-built was offered.
+- **The `cat <scratch> > file` trick: HELD for a tenth edition.**
 
 ---
 
-## THE DEFINING FINDING: a blocked stream's token figure is not a band reading
+## THE DEFINING FINDING: the run-stream rate is solid, and I was feeding it the wrong number
 
-The most important number this round is one I **threw away**.
+**Promoted into the skill**, so no future edition carries it: a walkthrough run stream costs
+**the ~88k floor plus ~9.8k per numbered step**, measured three times this round and agreeing to
+within 2%.
 
-The three card-walkthrough run streams came in at **177,977 · 137,783 · 209,385** against a
-190–250k band — two under, one inside. Written up as *"the band held"*, which is what the shape
-invites, it would have been **false**. Two of the three were **blocked**: `medical_records` stopped
-at step 2 of 11 and `residents` lost steps 2 and 4–12. They were cheap because they could not
-proceed, not because the work was small.
+The reason it matters is the failure attached to it. **`cards-rerun-blocked` was banded 230–300k and
+came in at 388,315 — 29% over, the round's worst error.** I had banded it off the item's **TODO
+count** ("`residents` 9, `medical_records` 8" → "~17 TODO-heavy steps"). **It ran 31 numbered
+steps.** Apply the measured rate to 31 and it predicts **392k, within 1% of the truth.**
 
-**Only `cards-run-medical-daily` completed** — four cards, all passing, two TODOs answered — and
-**209,385 against weight 22 is the single honest run-stream reading we have.**
+**So the estimator was never wrong. The input was.** A `TODO:` is one line inside one step, not a
+step — and the one command that settles it is now written into the skill. The same command, run at
+batch 2 setup, caught a six-card group at 25 steps (~335k), got it **split into two finishable
+threes**, and both landed inside their bands. **It is the cheapest high-value command in the loop.**
 
-**Promoted into the skill's token-estimates section**, because the failure generalises beyond runs:
-**a stream that stopped early is not evidence about estimating.** Record the figure, mark it
-`blocked`, and leave it out of the bands. The temptation is strongest exactly when the numbers look
-good.
+**The general shape, and it is the third time in four editions:** when a stream overruns, the first
+suspect is the brief or the planner's arithmetic, never the dials.
 
-## The mitigation rule fired for a third time, and one of the two was mine
+## Nine measured: six inside, three over, and the two other overruns explained
 
-The skill's *a mitigation you wrote into a brief is a hypothesis* caught both inside one round:
+`.plan-day.md` carries the table. What it means:
 
-1. **The card-scoped login was structurally wrong.** `dev-signin.mjs` stamped every card role
-   `scope_residents: "who_and_where"`, so no card login could open a full resident record whatever
-   the card granted. I had written it into `303`'s successor plan as the thing that made the
-   walkthrough possible, having exercised it on two cards that never touched a resident page.
-2. **`--remove` deletes every stream's login, not its own** — and **I put "run `--remove` when you
-   finish" into all three briefs.** One stream was signed out twice mid-card. The cross-stream
-   collision I asked streams to watch for was one I had created.
+- **`kitchen-batch-sheet` +11% (255,301 against 170–230k).** It shipped **14 files** — a page, two
+  new library modules, a test, both dictionaries, the manual, routes, the acceptance matrix and a
+  release note. That is an ordinary **medium** (170–290k), and 255,301 sits inside it. **I narrowed
+  a band below the measured range for the shape**, which is a planner error and not a surprise
+  about the work.
+- **`cards-run-facility` +6%** was the first honest run-stream reading and is what produced the rate.
 
-**The lesson that is new, and worth the space:** both were in *tooling I wrote into the briefs*,
-not in the items. **A brief is code you are shipping to three sessions at once**, and its faults
-arrive three times simultaneously. Exercise a tool on the hardest case before briefing it, not the
-easiest.
+## A REAL CONFLICT, AND I NEARLY RESOLVED IT THE LAZY WAY
 
-## Two things I refused to guess, and both refusals were right
+`git merge backlog` conflicted on `docs/backlog.md` for the first time in this loop. The PR side had
+ticked three items as batch 3 merged; **the backlog side carried a ruling of Lutan's made after
+those PRs opened** — the card walkthrough is now **HELD behind simplifying the card set** — plus the
+new item that ruling refers to.
 
-- **Whether the real vet login hits the resident-page redirect.** It cannot be answered from the
-  migrations: `0179` set `who_and_where` `where legacy_role = 'volunteer'`, and **`roles.legacy_role`
-  was dropped on 2026-10-11**. A plausible-sounding answer was available and would have been
-  worthless. The live `roles` table is the only source, and `card-login-fix` reads it.
-- **Whether the Pi lacked the calendar values this morning.** All four names are present and the
-  service restarted after the file was written — but the write destroyed the evidence of the earlier
-  state, so *"today's release supplied them"* is a **consistent explanation, not a measurement.**
-  That distinction is written onto the item.
+**Neither side had both, and `--ours` or `--theirs` would each have silently destroyed something
+that matters:** the round's ticks, or a decision of his. Resolved by keeping all of it, with the
+hold written into the walkthrough item's **title as well as its body** — the skill's "answering a
+decision on a backlog item" rule, which exists because a false block is silent.
 
-## The planner error this round: a release state carried out of `.plan-day.md`
+**The lesson worth carrying: a backlog conflict is a signal that Lutan changed his mind while the
+streams were running, not a formatting nuisance.** Read both sides fully before resolving.
 
-I told Lutan `0.40.0` was uncut with six notes waiting, and asked him to choose major or minor.
-**`0.39.2` had been cut and recorded hours earlier and `unreleased` was empty.** He corrected me:
-*"everything has already been released"*.
+## WHAT THIS CHANGES FOR THE NEXT ROUND — read this before planning
 
-This is step 7's rule 2 — *a measurement has a timestamp; a fact does not* — **in a third costume**
-(a calendar id, then a release state). The "never carried forward" block at the top of this document
-lists release state explicitly **and I read past it.** The block is not the fix; reading the repo is.
+**The card walkthrough is HELD** (Lutan, 2026-10-23): the card set is about to be simplified, so
+walking a card that may be merged tests it twice. **Until the new set is chosen, walk only cards
+unlikely to change**; after it, **re-generate `docs/card-walkthrough.md`** from the new set and walk
+what changed.
 
----
+**So the three run groups `.plan-day.md` lists as next round's candidates are mostly on hold**, and
+the candidate list in it is stale on exactly this point. **Do not plan `cards-run-money`,
+`cards-run-contacts-and-comms` or `cards-run-content` without re-reading the walkthrough item
+first.** The new item above it — a plain list of every feature, then a card proposal he chooses from
+— is the work that unblocks them, and its first step is Claude-buildable now.
 
-## Where things stand — re-read 2026-10-23, not carried
+## The re-run's verdict, because it is easy to misread as a failure
 
-| | |
-|---|---|
-| `main` | past #854–#859 |
-| Round | **nine streams in three batches**, all merged |
-| Card walkthrough | 26 cards; **9 walked — 6 pass, 1 fail, 2 blocked**; 17 not yet walked |
-| Batch 3 | set up and running: `card-login-fix`, `residents-card-intake`, `medical-card-resident-page` |
-| Open PRs at writing | none but this one |
-| Release | `0.39.2` shipped; `unreleased` has #856's line and will gain two more |
-| CI | **eight** jobs since #855 (`card-walkthrough`) |
+**The old blocker is gone on all three cards.** `/residents/<id>` no longer redirects a card login,
+and everything the two earlier records could not reach now runs. `0249` plus #872 worked.
+
+**And all three cards still FAIL on their own jobs** — 0 of 3 pass, 31 steps, 7 failures, 6 findings,
+4 items filed. Two shared faults, both the same shape: **a read the card does not hold** (the clinic
+list; the enclosures behind every lifecycle write). **That is a successful run**, and the item's
+title should not be read as the fix having failed.
+
+## My own mitigations — fired, held, or to be dropped
+
+- **"The Next advisories belong to one stream; do not escalate." NEVER EXERCISED, and I am saying so
+  rather than claiming a win.** `audit` went green the moment #869 merged, so no later stream met a
+  red one. **Untested, not successful.** It costs nothing to keep; **drop the claim if the next round
+  does not test it either.**
+- **"Do NOT run `dev-signin.mjs --remove`." HELD across all six streams that used logins.** No
+  sign-out interruption reported. Strong enough now to stop watching.
+- **"Count the actual steps before banding a run group." FIRED, and then I failed to apply it to my
+  own worst estimate.** Hence the promotion into the skill rather than a note here.
+- **"Re-run `check-medical-role.mjs` before reasoning about it." FIRED, and it was right.** The
+  recorded RED predated `0249`. The stream found **five** failures, not three, and **none was an app
+  fault** — the resident reads were widened on purpose by `0249` and `0192`. The script is now
+  **GREEN at 88 checks**, four checks were wired into CI, and the sweep is recorded. **A guess I
+  refused to promote into a finding turned out to be the right call.**
 
 ## For the release manager
 
-- **Nothing is waiting to be cut right now.** `0.39.2` went out on 2026-10-22 and batch 3's notes
-  are not in yet. **Re-read `unreleased`; do not take a count from here.**
-- **Two of batch 3's three are user-visible fixes** — registering a resident failing for some
-  logins, and the medical card not opening a resident page. They read as fixes, not features.
-- **One production confirmation is outstanding and is Lutan's:** a real vet booking reaching the
-  calendar without waiting for the sweep.
+- **Nothing is cut yet, and this round's nine PRs (#867–#875) are all merged.** `unreleased` has
+  gained lines from #871, #872 and #873. **Re-read it; do not take a count from here.**
+- **Three user-visible changes to describe:** the Medical records card now opens a resident record,
+  diets are entered as one amount per serving, and Operations has a **Feeding list** giving each
+  zone's batch for a meal.
+- **One thing to check by hand before any production deploy, per `CLAUDE.md`:** every PR in the
+  release has a completed checklist. Nine PRs is more than usual.
 
 ## Rulings worth not re-deriving — cited, not summarised
 
+- **The card walkthrough is HELD behind card simplification** — Lutan, 2026-10-23. On the item, in
+  both title and body. **This is the newest and most consequential ruling on the board.**
 - **The Medical records card opens the FULL resident page with the rest READ-ONLY** — Lutan,
-  2026-10-22. Medical sections editable; name, location, intake, history visible but not editable.
-  His reasoning: judging a medical record needs the history around it. On the item, with the
-  superseded question marked in place.
-- **A card walkthrough comes before the role walkthrough** — Lutan, 2026-10-22, unchanged.
+  2026-10-22. **Now built end to end** and run.
+- **A serving is ONE DAY's food; no rounding rule; keep the arithmetic exact to the total** —
+  Lutan, 2026-10-22. **Now built end to end**, and the Feeding list sums on it.
 - **`test-plan` is ADVISORY permanently.** Do not raise it; do not list it as a decision he owes.
 
 ## Next round's candidates
 
-The next chat plans; this is only where the board points. **`.plan-day.md` carries the reasoning and
-the card groupings.**
+The next chat plans; this is only where the board points, and **the hold above reshapes it.**
 
-1. **The four remaining card groups** — facility, stock-and-money, contacts-and-comms, content —
-   now that the login can reach a resident page. `.plan-day.md` has them weighted.
-2. **A re-run of the three cards batch 2 could not walk** (`residents` 9 TODOs, `medical_records`
-   8 TODOs, `book_clinic_visits`). **Not free: most of a stream on its own.**
-3. **`check-medical-role.mjs` is red and wired into neither CI nor gates** — filed this round, not
-   diagnosed. Two of its three failures touch the same scope mechanism; a stale harness from the
-   `legacy_role` drop is plausible. It carries a broader question: **which other `check-*.mjs`
-   scripts report to nobody?**
-4. **Whatever batch 3 files.** All three are in the permission model, so expect findings.
+1. **The feature list, then the card proposal** — the item the hold depends on. Step 1 is
+   Claude-buildable now and unblocks everything else.
+2. **The recurring-jobs page takes 35–54 s and shows `TypeError: fetch failed`** — the most
+   user-visible thing this round filed.
+3. **The two shared reads the re-run found** — the clinic list and the enclosures behind lifecycle
+   writes. Both are permission work, both filed.
+4. **Maintenance jobs cannot be deleted by anyone.**
 5. **Raise HSTS to a year** — one line, **not before 2026-11-08**.
 
 ## Writing the next one
@@ -156,8 +151,8 @@ the card groupings.**
 **The rules are in the skill, step 8.** Offer it; never on an ambiguous yes, and **read step 6's
 counting rules before writing a number** — a batch counts once, at setup. Branch, worktree, test
 plan, PR, then **merge it yourself on green CI** — never a gate. This one is
-`claude/planner-handover-312`, after #848 (`303`) and #838.
+`claude/planner-handover-321`, after #863 (`312`) and #848.
 
-**What could go next time:** the sign-in and `audit` paragraphs are both closed and should simply be
-deleted. The dial paragraph is now closed too — it survives here only to retire the wrong
-prescription two editions left behind, and **the next edition should drop it entirely.**
+**What could go next time:** the dial paragraph is gone and should stay gone. The `--remove` warning
+has held six times and can be dropped. **Keep the backlog-conflict lesson** until a second conflict
+proves it understood.
