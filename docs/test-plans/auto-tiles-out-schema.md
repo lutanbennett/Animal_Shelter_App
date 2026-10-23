@@ -23,7 +23,11 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — branch cut from `origin/main` `96b4ba8b` minutes earlier, nothing to merge
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` — GATES_PENDING
+- [x] `node scripts/gates.mjs` ends green, exit codes read from its own output:
+
+```
+gates: typecheck=0 lint=0 test=0 build=0
+```
 - [ ] CI green on the PR — deferred: read from the PR before merging
 
 ## 3. Schema and data
