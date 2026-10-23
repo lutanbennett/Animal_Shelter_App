@@ -1,5 +1,6 @@
 import type { createClient } from "@/lib/supabase/server";
 import { todayIso } from "@/lib/format";
+import { isCountUnit } from "@/lib/unit-list";
 import { formatAmount, dayAmount, type DietServings } from "@/lib/diets/servings";
 import { groupConversions, CONVERSION_COLUMNS, type ConversionRow, type UnitConversion } from "@/lib/units";
 
@@ -143,13 +144,14 @@ export function pluralUnit(unit: string, qty: number): string {
 
 /** The unit word for an amount: "cups", "can", "g". `ownLabel` is the translated label of the ingredient's own unit. */
 export function unitText(qty: number, servingUnit: string | null, ownLabel: string): string {
-  // The dictionary labels its own units "can(s)"; in a sentence that is "can" or "cans".
-  return servingUnit ? pluralUnit(servingUnit, qty) : ownLabel.replace("(s)", qty === 1 ? "" : "s");
+  const unit = servingUnit ? pluralUnit(servingUnit, qty) : ownLabel.replace("(s)", qty === 1 ? "" : "s");
+  // "each" counts things: Egg 1.5, not "1.5 each Egg" (2026-10-23, docs/decisions/2026-10-23-units-of-measure-app.md).
+  return isCountUnit(unit) ? "" : unit;
 }
 
 /** "1.5 cups", "200 g". */
 export function amountText(qty: number, servingUnit: string | null, ownLabel: string): string {
-  return `${formatAmount(qty)} ${unitText(qty, servingUnit, ownLabel)}`;
+  return `${formatAmount(qty)} ${unitText(qty, servingUnit, ownLabel)}`.trim();
 }
 
 /**

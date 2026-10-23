@@ -9,6 +9,7 @@ import { createDiet, updateDiet } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { dietUnitLabel, sizeLabel } from "@/lib/i18n/enum-labels";
 import { formatAmount } from "@/lib/diets/servings";
+import { withUnit } from "@/lib/unit-list";
 import { lineAmount, type DietOption } from "@/lib/diets/recipes";
 import { todayIso } from "@/lib/format";
 import { OptionalDateInput } from "@/components/OptionalDateInput";
@@ -68,7 +69,7 @@ export function DietForm({
     ? selected.lines
         .map(
           (line) =>
-            `${formatAmount(lineAmount(line, residentSize))} ${line.servingUnit ?? dietUnitLabel(t, line.unit)} ${line.ingredient}`,
+            `${withUnit(formatAmount(lineAmount(line, residentSize)), line.servingUnit ?? dietUnitLabel(t, line.unit))} ${line.ingredient}`,
         )
         .join(", ")
     : null;

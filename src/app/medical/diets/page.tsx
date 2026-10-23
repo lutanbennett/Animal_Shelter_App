@@ -5,6 +5,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { dietUnitLabel } from "@/lib/i18n/enum-labels";
+import { withUnit } from "@/lib/unit-list";
 import { statusLabel } from "@/lib/i18n/enum-labels";
 import { placeName } from "@/lib/enclosures/names";
 import { localLabel } from "@/lib/translations/labels";
@@ -57,11 +58,11 @@ export default async function SpecialDietsPage(props: PageProps<"/medical/diets"
         <ul className="flex flex-col gap-1">
           {diet.ingredients.map((ing) => {
             const perMeal = ing.dailyQuantity != null && meals ? ing.dailyQuantity / meals : ing.dailyQuantity;
-            const amount = perMeal != null ? `${number(perMeal)} ${dietUnitLabel(t, ing.unit)}` : d.amountMissing;
+            const amount = perMeal != null ? withUnit(number(perMeal), dietUnitLabel(t, ing.unit)) : d.amountMissing;
             // A serving is one day's food, so the day's total sits beside the per-meal amount.
             const perDay =
               meals && meals > 1 && ing.dailyQuantity != null
-                ? d.perDayTotal(`${number(ing.dailyQuantity)} ${dietUnitLabel(t, ing.unit)}`)
+                ? d.perDayTotal(withUnit(number(ing.dailyQuantity), dietUnitLabel(t, ing.unit)))
                 : null;
             return (
               <li key={ing.name} className="flex flex-wrap items-center gap-x-2 gap-y-1" aria-label={d.amountPicture(amount)}>

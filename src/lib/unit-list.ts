@@ -65,6 +65,8 @@ export function unitNameMap(units: UnitRow[], locale: string): Record<string, st
  * An amount with its unit. "each" counts things rather than measuring them, so "2.25 each" reads as just
  * "2.25" (Egg 2.25) — the ingredient's own name already says what is counted.
  */
+export const isCountUnit = (unitLabel: string) => unitKey(unitLabel) === "each";
+
 export function withUnit(amount: string | number, unitLabel: string): string {
-  return unitKey(unitLabel) === "each" ? `${amount}` : `${amount} ${unitLabel}`.trim();
+  return isCountUnit(unitLabel) ? `${amount}` : `${amount} ${unitLabel}`.trim();
 }
