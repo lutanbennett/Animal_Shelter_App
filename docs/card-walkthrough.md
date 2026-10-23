@@ -67,13 +67,13 @@ Result: pending
 
 0. Sign in with `--cards do_maintenance`. The home screen shows the **Do Maintenance** tile (or the tile of a card that includes it).
 1. Open `/maintenance`: it loads.
-2. **TODO:** Maintenance jobs: log, change, assign, cost, delete. Do it on a disposable record named `walk-do_maintenance`. Question: where should this write show afterwards (which page, which row)?
+2. **Do:** Maintenance jobs: log, change, assign, cost, delete. Use a disposable record named `walk-do_maintenance`. **Read-back:** the job is on /maintenance (and on /my once assigned); status is changed on /maintenance/<id>, and assignee, zone, due date and the Estimated / Actual cost on /maintenance/<id>/edit (the cost reads back on the job page). No delete control is offered to this card.
 3. **Do:** Move a job on: in progress, blocked, completed. Use a disposable record named `walk-do_maintenance`. **Read-back:** the job sits in its new column on /maintenance after a reload.
 4. **Do:** Mark your own recurring jobs done or skipped. Use a disposable record named `walk-do_maintenance`. **Read-back:** the task shows as done (or skipped) on /my after a reload.
 5. **See:** A resident's details, housing and history (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 6. **See:** Enclosures and zones (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-7. **TODO:** Add and remove a job's photos. Do it on a disposable record named `walk-do_maintenance`. Question: where should this write show afterwards (which page, which row)?
-8. **TODO:** Ask the assistant a question. Do it on a disposable record named `walk-do_maintenance`. Question: where should this write show afterwards (which page, which row)?
+7. **Do:** Add and remove a job's photos. Use a disposable record named `walk-do_maintenance`. **Read-back:** the job page /maintenance/<id> counts the photo under Before (the problem as found) or After (the finished work).
+8. **Do:** Ask the assistant a question. Use a disposable record named `walk-do_maintenance`. **Read-back:** the answer shows in the assistant panel opened by the Assistant button in the header, and writes no row to any page.
 9. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
@@ -199,8 +199,8 @@ Result: pending
 
 0. Sign in with `--cards recurring_jobs`. The home screen shows the **Recurring jobs** tile (or the tile of a card that includes it).
 1. Open `/management/recurring-jobs`: it loads.
-2. **TODO:** Set up recurring jobs and hand dates over. Do it on a disposable record named `walk-recurring_jobs`. Question: where should this write show afterwards (which page, which row)?
-3. **TODO:** Mark anyone's recurring job done or skipped. Do it on a disposable record named `walk-recurring_jobs`. Question: where should this write show afterwards (which page, which row)?
+2. **Do:** Set up recurring jobs and hand dates over. Use a disposable record named `walk-recurring_jobs`. **Read-back:** the job shows in the list on /management/recurring-jobs with "Saved.", and each date appears on every assignee's /my on its day. Hand over is the panel at the foot of that page.
+3. **Do:** Mark anyone's recurring job done or skipped. Use a disposable record named `walk-recurring_jobs`. **Read-back:** this page has no Done or Skip for someone else's date: those exist on /my for the assignee only, and the way to cover another person's date is Hand over (answered 2026-10-23).
 4. **Do:** Mark your own recurring jobs done or skipped. Use a disposable record named `walk-recurring_jobs`. **Read-back:** the task shows as done (or skipped) on /my after a reload.
 5. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
@@ -268,7 +268,7 @@ Result: pending
 
 0. Sign in with `--cards assistant`. The home screen shows the **Assistant** tile (or the tile of a card that includes it).
 1. Open `/assistant`: it loads.
-2. **TODO:** Ask the assistant a question. Do it on a disposable record named `walk-assistant`. Question: where should this write show afterwards (which page, which row)?
+2. **Do:** Ask the assistant a question. Use a disposable record named `walk-assistant`. **Read-back:** the answer shows in the assistant panel opened by the Assistant button in the header, and writes no row to any page.
 3. **TODO:** Record something through the assistant. Do it on a disposable record named `walk-assistant`. Question: where should this write show afterwards (which page, which row)?
 4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 

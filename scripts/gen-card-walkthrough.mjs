@@ -20,6 +20,11 @@ import { loadCards } from "./lib/load-cards.mjs";
 export const READBACK = {
   "visit.book": "the visit shows on that resident's page and in the shelter's list of visits (/upcoming-visits)",
   "maintenance.progress": "the job sits in its new column on /maintenance after a reload",
+  "maintenance.jobs": "the job is on /maintenance (and on /my once assigned); status is changed on /maintenance/<id>, and assignee, zone, due date and the Estimated / Actual cost on /maintenance/<id>/edit (the cost reads back on the job page). No delete control is offered to this card",
+  "maintenance.photos": "the job page /maintenance/<id> counts the photo under Before (the problem as found) or After (the finished work)",
+  "assistant.ask": "the answer shows in the assistant panel opened by the Assistant button in the header, and writes no row to any page",
+  "recurring.manage": "the job shows in the list on /management/recurring-jobs with \"Saved.\", and each date appears on every assignee's /my on its day. Hand over is the panel at the foot of that page",
+  "recurring.do_any": "this page has no Done or Skip for someone else's date: those exist on /my for the assignee only, and the way to cover another person's date is Hand over (answered 2026-10-23)",
   "recurring.do_own": "the task shows as done (or skipped) on /my after a reload",
   "resident.register": "the new resident shows in /residents",
   "placement.move": "the resident's page shows the new enclosure",
