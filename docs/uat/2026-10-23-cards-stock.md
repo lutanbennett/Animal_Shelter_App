@@ -24,3 +24,23 @@ The page that should show it next, the stock figure and history on `/management/
 read-back there could not be checked.
 
 **Finding.** The top menu offers Residents and Operations, which this card does not grant.
+
+## do_purchasing: PASS (1 TODO answered, 1 finding)
+
+This page writes nothing, so there is no `walk-do_purchasing` row to make.
+
+| Step | Result | Note |
+|---|---|---|
+| 0 Home shows tile | pass | Signed in straight to `/management/purchasing`; the tile was not separately re-checked. |
+| 1 Open `/management/purchasing` | pass | **Slow: about 60 to 70 s** before content appeared (server log said 3 s per request; header only until then). Then 1 week / 2 weeks / 1 month, a "Not counted yet (22)" warning, Medicines (6) and Food (5) lists. |
+| 2 TODO: work out what to buy | **answered** | See below. |
+| 3 Refused: `/operations/medication-list` | pass | `/no-access`. |
+
+**TODO 2 answer.** Nothing is saved: this is a shopping list for the period chosen, with Print and
+Download CSV, and "The app does not place the order". There is no row to find afterwards. The page
+reads the counts from the stocktake, and links back with "Count them in a stocktake". The 22 never
+counted items are named so nobody trusts "nothing to buy". The AMC 500 count of 40 saved in the
+stocktake card is not on the buy list, which fits 40 being enough, but the working was not opened
+to confirm.
+
+**Finding.** The page took about a minute to show anything on first load (see step 1).
