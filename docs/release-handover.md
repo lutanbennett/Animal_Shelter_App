@@ -1,150 +1,152 @@
-# Release handover — written 2026-10-22 after `0.39.2`
+# Release handover — written 2026-10-23 after `0.39.3`
 
-A **delta**. The release's own facts are in `docs/releases/2026-10-22-0-39-2.md`
+A **delta**. The release's own facts are in `docs/releases/2026-10-23-0-39-3.md`
 and the durable rules are in `docs/release-procedure.md`. **Both outrank this
 file.**
 
 ## Corrections to the last edition
 
-- **It said to keep taking the one classifier retry, and that six releases had shown six behaviours. The retry FAILED this time** — twice refused as `[Secret-Store Writes]` on an `ssh` append, after a read-only `ssh` to the same file had succeeded. **Seven releases, seven behaviours.** The advice still holds — take the one retry, do not predict which command gets it — but it now gains: **be ready for it not to work, and have the handover written.** Confirm nothing reached disk by re-reading the target, never from the refusal text.
-- **It said `strip-baked-env` had moved off 13 to 14, and to read the log's list when a counter moves.** It read **14** again, both environments, same list. **A counter that moves once and then holds is the normal shape** — the move was the two calendar names joining the deploy, exactly as recorded, not the start of drift.
-- **It said "first CI run green by construction" was back to 1.** It is **2**, earned the same way: `check-test-plan.mjs --base origin/main` rejected an `n/a for this PR:` where the checker requires `n/a:`. **Validate the way CI validates** — a ten-second fix instead of a CI cycle.
-- **It said the `release-prs.mjs` DISAGREEMENT is a coin-flip, four releases four answers. This time there were ZERO orphans and it exited 0.** Five releases, five answers. **A clean run is not evidence the script improved** — it depends on how the day's streams happened to merge.
-- **It said his open item was one real vet visit booked on production.** Still open and still the right ask — but **as of this release the Pi can see the calendar too**, so the screens will now tell the truth about it. They would not have before.
+- **It said to take the one classifier retry and be ready for it not to work. This time the retry WORKED — and what was refused was a READ.** A `tail` of a local `.log` file in the main checkout came back `[Production Deploy]`. Not a write, not the Pi, not a secret: a file read. The same content came back immediately through the `Grep` tool. **Eight releases, eight behaviours.** The advice gains: when a refusal names something you are plainly not doing, **try a different tool before concluding anything**, and never record a refused read as a gap you could not close.
+- **It said `release-prs.mjs`'s DISAGREEMENT is a coin-flip, five releases five answers. This time: exit 1, ONE orphan** — **#854**, squash-merged, so it carried no `Merge pull request #N` subject to key on. Resolved by hand in one call (`gh pr list --state merged --search`). **Six releases, six answers.** Still unpredictable; still resolve every orphan by hand.
+- **It said "first CI run green by construction" was 2. It is 3**, earned the same way for the third release running: `check-test-plan.mjs --base origin/main` caught **two** faults before CI saw them. Validating the way CI validates is the highest-yield minute in a release.
+- **It said `strip-baked-env` read 14 and held. It read 14 again**, both environments, same list including both calendar names. **Counter 15, and "moved once then held" is confirmed** as the normal shape rather than the start of drift.
+- **It said his one open item was a real vet visit booked on production, and that the Pi could now see the calendar.** Both still true, and **the Pi half was re-confirmed this release**: all four `GOOGLE_*` names present in `.env.production.local` after `deploy-pi.sh` regenerated it, checked **by name** with the command the last edition left. Last release's fix survives a redeploy.
 
-## The thing not to re-derive, and it nearly shipped two false notes
+## Two faults in the runbook itself, both now fixed in it
 
-**Each Pi clone keeps its own hand-maintained, gitignored `.env.deploy.production`.
-A value added to this machine's copy for the Worker does not reach the Pi.**
+This was the class of problem this release turned up — not anything about the software.
 
-`0.39.1` put `GOOGLE_CALENDAR_REFRESH_TOKEN` and `GOOGLE_CALENDAR_ID` on the
-Worker and nothing updated the Pi's values file, so `write-env.mjs` — which writes
-a `PI_OPTIONAL` name **only when it is present in the file it loads** — silently
-omitted both. `calendarConfigured()` was therefore **false on the box that serves
-production**, while the poll and sweep, which run *in the Worker*, worked
-correctly behind it.
+- **The handover command in `release-procedure.md` could not have run in his shell.** It read `mkdir -p .local && node scripts/deploy.mjs …`: `&&` is not a statement separator in PowerShell 5.1 and `mkdir -p` is not a PowerShell flag, so it would have parse-errored and run **neither** half. It sat a few paragraphs below where the same document names the `&&` trap, and below its own standing rule about not handing over an unverified command. **It survived because release managers fixed it silently on the way past instead of fixing the source.** Now one line, with the `.local` precondition checked rather than assumed.
+- **There are FOUR gates, not three.** `gates.mjs` ends `typecheck=0 lint=0 test=0 build=0`; a `test` gate sits between lint and build. `release-procedure.md` and `CLAUDE.md` both said "typecheck, lint, build" — three of four, which invites pasting a closing line nobody read. Both corrected.
 
-Two of this release's six notes would have gone live false: the "Calendar entries
-to confirm" list would never have appeared, and every coming visit would have said
-the calendar was switched off. **The data was right and the app said it was off**,
-which is the worst shape a fault can take.
+**The lesson to carry: when a document's instruction is wrong, fix the document.**
+A silent local workaround leaves the next session to find it again, and this one
+had been found and worked around repeatedly without ever being written down.
 
-> **The test Pi held all four, so no check on `test.lannacare.org` could ever have
-> seen it.** This class of fault is invisible to test by construction. When a
-> release note depends on a runtime value, **check it in every runtime that
-> renders it** — and the Pi is what users see; the Worker is only the fallback.
+## A cut PR cannot tick the release-notes line
 
-Check by name, never by value:
+New, and it recurs every release. `check-test-plan.mjs` holds that line to the
+diff: a tick requires `unreleased` to have **gained** a line. A cut's whole purpose
+is to **empty** `unreleased`, so the honest state on a cut plan is `n/a: <why>`,
+and a tick there is a claim the diff contradicts. Same run, second catch: a reason
+must follow `n/a:` **immediately**, so `n/a as a banding change` fails where
+`n/a: there is no band …` passes.
 
-```bash
-ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && grep -oE "^GOOGLE_[A-Z_]+" .env.production.local | sort -u'
-```
+## The red `audit`, and two readings that agreed
 
-Recorded as `docs/decisions/2026-10-22-pi-keeps-its-own-secrets-file.md`. Note that
-`docs/decisions/2026-10-22-vet-calendar-on-production.md` says the Pi's file "is
-regenerated by `deploy-pi.sh`" — **true, and the wrong conclusion was drawn from
-it.** A correct sentence you reason from wrongly is more dangerous than a wrong one.
+`audit` went red with a real finding — three `next` advisories, one critical.
+**It did not hold the release, and the CI run still concluded `success`**, which is
+`continue-on-error` behaving exactly as `CLAUDE.md` describes. The rule worked;
+nothing about it needs revisiting.
 
-**How it was found, and this is the method to repeat:** check the release-note
-truth rule **forwards** on every note before cutting — ask what each note needs in
-order to be true, then read the live system for it, rather than assuming that the
-features having merged made it so. Three plans listed "the Pi app process holds the
-four calendar env values" as a `pending:` item for a person; it is a read-only
-check, so it was done rather than handed over. **A `pending:` item you can close
-yourself is not a handover.**
+Worth not re-deriving: **two of the three are not reachable here, measured rather
+than argued.** `/_next/image` returns **404 on both live sites** (the Pis run real
+Next, so this is not a Workers-only claim) and `"use cache"` appears nowhere in
+`src/` or `worker/`. The remaining one is a Server Actions **DoS**.
 
-## Probe a handover command before you hand it over
+**The planner reached the same verdict independently** from the `audit` job on #863
+while this release was deploying, and filed the bump as a backlog item under
+*Security* with the reachability written out. So **do not write a second decision
+file**, and do not meet this red next release as though it were new — it is
+scheduled work. `next@16.4.2` is outside the exact `16.3.8` pin, so it is a stream
+with its own gates and its own four-build check, never a drive-by on a release cut.
 
-Last edition's biggest lesson was *verify the command, not just the change*. It was
-applied, and it caught something no amount of careful reading would have.
+## The one thing to change about how you hand the deploy over
 
-The fix piped two lines from a Windows file into `ssh`. A probe with a **harmless
-string** into `/tmp` on the Pi showed PowerShell had prepended bytes
-`357 273 277` — a **UTF-8 BOM** — to the piped stdin. That would have corrupted the
-first variable's **name**, so the append would have succeeded, reported nothing
-wrong, and the Pi still would not have held the value. **The fix would have
-appeared to work and the notes would have stayed false.** `tr -d '\r'`, which is
-the obvious guard, does not remove a BOM.
+**Never hand over the production deploy while anything is building in the main
+checkout.** I started the test Worker deploy there and handed Lutan the production
+command before it finished; Next refuses a second build in one checkout, so his
+died about a minute in on `Another next build process is already running` and cost
+him a second run.
 
-Corrected to `tr -d '\r\357\273\277'`, re-probed clean, and it worked first time.
-**When a handover command moves text from Windows into a Unix file, probe it with a
-throwaway value first. The failure mode is not an error, it is silence.**
+The collision is already in `release-procedure.md` ("two builds in one worktree
+collide"). **Knowing the trap did not help, because I never checked the
+precondition** — which is the same shape as the two runbook faults above: the
+failure was not ignorance, it was handing over a command without reading what had
+to be true for it. So, concretely, before the handover: `Get-Process node` returns
+nothing, and your own test deploy has **exited**, not merely printed its last
+interesting line.
 
-Also kept from last edition: the deploy guard's four conditions were enumerated
-from source and each run against the live state, printed as a table before the
-command was written — plus `git check-ignore` on the `tee` log, since an untracked
-file in the main checkout is what refused his deploy last release.
+**It also costs the "one SHA" property**, because by the time the second attempt
+runs, `main` may have moved — which is exactly what happened. One avoidable
+mistake, two recorded consequences.
 
-## Hand both of his commands over in one message
+## `main` moved mid-release, and doing nothing was right (for the Pis)
 
-He was given the Pi fix and the Worker deploy together, ordered, and ran them back
-to back without waiting. **Nothing was lost**: they do not block each other, and
-only *my* Pi build depended on the first. **Repeat this shape** — two interruptions
-for two independent commands is a cost the process imposes for no reason.
-
-## No role tag at this cut, ending a three-release run
-
-A narrowing tag on the three Vet visits notes *was* available —
-`/upcoming-visits` needs `medical.visits` at shelter-wide scope and refuses a
-clinic login. **It was not taken**, because the code says who is *refused* but not
-whether the **2IC** holds that grant: that is data, not source, and a wrong tag
-hides a note from someone who needs it. Put to Lutan in one line; he chose
-untagged, the safe direction. Note 6's `["admin"]` was **verified** rather than
-inherited — its mail goes to `adminEmails()`, which selects that role and nobody
-else. **Read the permission source, and where it cannot answer, ask rather than
-assert.**
+Three commits landed between the cut and the record: a `plan-day` skill fix and two
+backlog commits. **Nothing in `src/`, `worker/` or `supabase/`.** Both Pi builds
+were pinned `--ref c0bdf272` and both logs carry
+`deploy-pi: restarting under the script from c0bdf272`; his deploy log names
+`c0bdf272` in its first lines. **All four builds on one SHA with no action taken** —
+`0.38.1`'s lesson applied rather than re-learned.
 
 ## Where things stand
 
 | | |
 |---|---|
-| Live everywhere | **`0.39.2`** @ `6764913d` — production Pi and Worker, test Pi and Worker. All four read back after the Worker landed |
-| Previous release SHA, for the next range | **`6764913d`** |
-| Production database | **`248 applied`, `0 pending`**, `No drift`. **Run `--status --env production` yourself** |
-| Dev database | **`No drift`, 248 of 248** — clean, third release running |
-| Next free migration number | **`0248`**. `origin/main`'s highest is `0247`. **Check `origin/main` *and* open `*-schema` PRs anyway** |
-| `unreleased` notes waiting | **0** at the cut — **read nothing into that.** Ten editions have said 0 and been overtaken |
+| Live | **`0.39.3`** — production Pi, test Pi and test Worker all at `c0bdf272`. **The production Worker is the exception**: see the row below |
+| Production Worker | **Was still `0.39.2` when this was written.** The Pi serves production, so users had the release throughout; the Worker is the fallback. The deploy is Lutan's one command and his first attempt failed (my fault, below) |
+| Previous release SHA, for the next range | **`c0bdf272`** — the cut's merge commit, regardless of which SHA the Worker ends up built from |
+| Production database | **`249 applied`, `0 pending`**. **Run `--status --env production` yourself** |
+| Dev database | **`No drift`, 249 of 249**, exit 0 — clean, fourth release running |
+| Next free migration number | **`0249`**. **Check `origin/main` *and* open `*-schema` PRs anyway** |
+| `unreleased` notes waiting | **0** at the cut — **read nothing into that.** Eleven editions have said 0 and been overtaken |
 | Open PRs | **none** at the cut. **Run `gh pr list` yourself** |
-| Worktrees | Five, three `HELD` by live sessions with nothing beyond `main`. The cut reused the one `free` leftover and the record reused it again, so paperwork rule 2 was satisfied twice without a fresh `npm ci`. **Two husks remain**: `calendar-production-note`, `planner-handover-294` |
-| `main` moves under you | **No — not once.** Third release running |
+| Worktrees | The cut reused the one `free` leftover (`Animal_Shelter_vet-visit-booking-polish`) and the record reused it again, so paperwork rule 2 was satisfied twice with no `npm ci`. **Its folder name does not match its branch**, so cleanup by name will miss it |
+| `main` moves under you | **Yes, three commits** — docs and a skill only (above) |
 
-**Server Actions keys, Worker against Pi** (eighteenth check): production
-`cbd55beae8d8`, test `ecc41837fc0b`, unchanged since `0.31.0`. **Matching these
-values is not evidence you checked** — what is, is each Pi printing `the build in
-.next.new carries that key`.
+**Counters:** all four builds from one SHA — **BROKEN after 23**, and reset to
+**0**. Three of the four are `c0bdf272`; the production Worker could only be
+rebuilt from `origin/main`'s moved tip, because `deploy.mjs` requires
+`HEAD == origin/main` and has no `--ref`. The three commits between them are a
+skill file and two docs —
+`git diff --stat c0bdf272..5df88838 -- src/ worker/ supabase/ package.json
+package-lock.json` is **empty**, so the artifact is identical in substance — but
+the property as stated is no longer true, and a counter kept by rounding is worth
+nothing. `npm ci` as step 1 **20**; first CI run green by construction **3**;
+no production-only guard **22**; `strip-baked-env` **15**, held at 14.
 
-**Counters:** all four builds from one SHA **23** releases; `npm ci` as step 1
-**19**; first CI run green by construction **2**; no production-only guard **21**;
-per-file dry-run trap **three fired, twelve not** — this release's "not" is weak
-again, one pending file only; `strip-baked-env` **14**, held.
+**The guard has no escape hatch for this, and that is worth knowing before you
+need it.** Once `main` moves after a cut, there is no supported way to build the
+Worker from the release SHA. The Pis take `--ref`; the Worker does not. So either
+the Worker ships the moved tip, or it waits for a quiet `main` — and if the moved
+commits had touched `src/`, this release would have had a real decision to make
+rather than a bookkeeping one. **Check the diff before assuming it is cosmetic.**
 
-**One tool flake, recorded because it reads like a failure:**
-`apply-migrations.mjs --drift production` printed `No drift` and then **exited 127**
-on a libuv teardown assertion; a re-run exited 0, same verdict. **"The check
-passed" and "the command exited 0" are different statements** — say which you have.
+**Server Actions keys** (nineteenth check): test `ecc41837fc0b`, unchanged since
+`0.31.0`, and each Pi printed `the build in .next.new carries that key`.
+**Matching the values is not evidence you checked** — the Pi's own line is.
 
 ## In flight: the same three silent failures, unchanged as a set
 
 Name them **as a set**, say plainly none is broken today, and do not re-run them as
 checks — they are **build-work on the backlog** wanting the same plumbing
-(`status_alert_runs` → mail): the public desexing sign-up that tells nobody (real at
-the cutover, dormant while the site is locked); Drive space, amber at 80%, red at
-95%, and **never** emailing; the nightly retention job's general plumbing.
+(`status_alert_runs` → mail): the public desexing sign-up that tells nobody; Drive
+space, amber at 80% and red at 95%, that never emails; the nightly retention job's
+general plumbing.
 
-**Nine verification gaps**, up one from eight, and the new one is the most concrete
-thing on the list: **that the "Calendar entries to confirm" list actually renders on
-`/upcoming-visits`.** The four values are confirmed present on the Pi; whether the
-screen shows them is five minutes signed in. The rest are ordinary — browser checks
-on Purchasing, Who does what and the menu tiles; the Pi service-user steps in
-`docs/pi-hosting.md`, which are his; the throwaway-project run for
-`migrations-all-history`. **Still unlooked-at from earlier: the prescription form
-reading 4** (`0.38.1`) **and video playback on a real handset** (`0.38.0`).
+**One verification gap closed by running something rather than handing it over.**
+Note 1 needed a Residents-card-only login to register a resident, which the
+`residents-card-intake` plan had left `pending:` for a person.
+`scripts/dev-signin.mjs --cards residents` makes exactly that login, so it was
+driven: 18 zones where the note says the list was empty, and Register succeeded.
+**The screen then said "No current diet recorded" while the review step had
+promised one** — the row was read back from the database (it is there) and the
+hub's read path checked in code: `resident_diets` is read under the caller's own
+RLS, so that is the card's permission boundary, not a lost write. **Chase the thing
+that looks wrong; the answer is often "correct, for a reason you had not
+established".**
+
+**Still unlooked-at from earlier: the prescription form reading 4** (`0.38.1`) **and
+video playback on a real handset** (`0.38.0`). One new item for a person: as a
+clinic login, book from `/appointments` and confirm you land back there — note 3's
+other half.
 
 **His, and his only open one: book one real vet visit on production and see it in
-"Lanna Care: vet visits".** The token is on, the sweep is bound, and the Pi can now
-see the calendar. That single booking is what is left.
+"Lanna Care: vet visits".** Unchanged. Today's backlog grooming also asks him to
+share that calendar with the Director.
 
 ## Two things that are not in the runbook
 
-- **A major release currently mails ONE person.** Three releases running with no mail at all, and the `E_RECIPIENT_NOT_ALLOWED` skip older editions mention has not occurred in that time — the shelter's own address is not on the production admin list. **Tell him plainly when the major call comes up**; "mails every admin" overstates today's lever and makes the choice a false one.
+- **A major release currently mails ONE person**, four releases running with no mail at all. **Tell him plainly when the major call comes up**; "mails every admin" overstates today's lever and makes the choice a false one.
 - **`test-plan` is ADVISORY, permanently** (Lutan, 2026-10-20). Do not raise it, do not list it as a decision he owes. **Checked again: `main` has no branch protection at all.**

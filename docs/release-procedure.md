@@ -208,9 +208,15 @@ every note carried across unchanged, nothing lost, nothing invented,
 `package.json` equals the newest entry, the file order still matches
 `compareVersions`, and the notes render with no `[object Object]` or `undefined`.
 
-Then `node scripts/gates.mjs` (must end `typecheck=0 lint=0 build=0`),
+Then `node scripts/gates.mjs` (must end `typecheck=0 lint=0 test=0 build=0`),
 `node scripts/check-release-guards.mjs`, a filled-in
 `docs/test-plans/cut-release-<version>.md`, `gh pr create`, CI green, merge.
+
+**There are four gates, not three.** A `test` gate runs between `lint` and
+`build`, and the closing line is `typecheck=0 lint=0 test=0 build=0`. Several
+documents in this repository — this one included, until 2026-10-23 — describe it
+as "typecheck, lint, build", which is three of four and invites a release manager
+to paste a closing line they did not actually read. Read all four numbers.
 
 **If anything in the entry changes after the gates run — even a role tag — re-run
 the gates and the comparison.** The tempting assumption is that a data-only edit
@@ -273,8 +279,23 @@ Hand it over **with a `tee`**, because the lines worth reading print before a
 three-minute build and scroll out of the terminal buffer:
 
 ```bash
-mkdir -p .local && node scripts/deploy.mjs --env production | tee .local/deploy-<version>.log
+node scripts/deploy.mjs --env production | tee .local/deploy-<version>.log
 ```
+
+**Hand over that one line and nothing more.** This example read
+`mkdir -p .local && node scripts/deploy.mjs …` until 2026-10-23, and **it could
+not have run in his shell**: `&&` is not a statement separator in Windows
+PowerShell 5.1 and `mkdir -p` is not a PowerShell flag, so it would have failed
+to parse and run *neither* half. That is this document's own standing rule — do
+not hand Lutan a command you have not confirmed runs in his shell — broken by the
+document itself, in the one command it exists to get right, a few paragraphs above
+where it names the `&&` trap explicitly. It survived this long because each
+release manager fixed it silently on the way past instead of fixing it here.
+
+`.local/` already exists by then: the release manager's own test deploy creates
+it, and it is gitignored (`.gitignore:59`). Confirm rather than assume —
+`ls -d .local` and `git check-ignore -v .local/deploy-<version>.log` — since an
+untracked file in the main checkout is what refused his deploy on `0.38.2`.
 
 The `deploy: production → Supabase project dbkodyyxxhtygxcxmfcu (<sha>)` line
 was missed for this reason on `0.15.0`, `0.15.1` and `0.16.0` — three releases
