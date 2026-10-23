@@ -9,7 +9,7 @@ import {
   loadRecurringJobs,
   type OccurrenceRow,
 } from "@/lib/recurring-jobs/queries";
-import { ASSIGNABLE_KEY_FILTER, canDoJob } from "@/lib/recurring-jobs/eligibility";
+import { ASSIGNABLE_KEY_FILTER, canDoJob, needsForLinks } from "@/lib/recurring-jobs/eligibility";
 import { withHeldRoles } from "@/lib/auth/held-roles";
 import { loadEligibility } from "@/lib/recurring-jobs/eligibility-load";
 import { RecurringJobsView, type JobSummary, type PersonOption, type CoveredDate, type RecordEntry } from "./RecurringJobsView";
@@ -85,6 +85,8 @@ export default async function RecurringJobsPage() {
     role: users.get(id)?.role_key ?? null,
     roles: users.get(id)?.role_keys ?? [],
   });
+  // Only the pages jobs already link to are asked about here (the form asks for the one it is showing, via
+  // eligibilityForLink): every page for every role was ~600 calls and 25 s.
   // May each role in play do the page a job links to? role_can() (0133), asked in keys because a
   // configured role's enum value is a borrowed one (0146): the people who can be picked, plus anyone
   // already on a job or its cover, so a stranded one is judged by their own role too.
@@ -95,7 +97,11 @@ export default async function RecurringJobsPage() {
       ...[...users.values()].flatMap((user) => user.role_keys ?? [user.role_key]),
     ]),
   ];
-  const eligibilityResult = await loadEligibility(supabase, roleKeys);
+  const eligibilityResult = await loadEligibility(
+    supabase,
+    roleKeys,
+    needsForLinks(jobs.map((job) => job.link_path)),
+  );
   // Someone who can still sign in but whose role cannot open the job's page:
   // given it before the picker filtered, or the link changed since. Shown as a
   // problem here rather than left to fail on their My tasks.
