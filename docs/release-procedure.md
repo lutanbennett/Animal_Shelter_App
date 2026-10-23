@@ -106,6 +106,14 @@ moved.
 
 ---
 
+## Two standing facts, promoted here so they stop being recopied
+
+Both appeared in every handover edition for several releases, which is the signal
+that they belong in the runbook instead (paperwork rule 4).
+
+- **A major release currently mails ONE person.** The shelter's own address is not on the production admin list, so "mails every admin" overstates the lever and makes the major-versus-minor choice a false one. **Tell him plainly when the call comes up.** Several releases running have sent no mail at all, and the `E_RECIPIENT_NOT_ALLOWED` skip older editions mention has not recurred in that time.
+- **`test-plan` is ADVISORY, permanently** (Lutan, 2026-10-20: *"we will NOT make this mandatory it stays as advisory"*). Do not raise it, and do not list it as a decision he owes. **If you find branch protection requiring it, say so rather than assuming it was intended** — as of 2026-10-23, `main` has no branch protection at all.
+
 ## 0. Read the last release's record first
 
 **Before anything else, read `docs/releases/<most recent>.md` end to end.** It is
@@ -208,9 +216,27 @@ every note carried across unchanged, nothing lost, nothing invented,
 `package.json` equals the newest entry, the file order still matches
 `compareVersions`, and the notes render with no `[object Object]` or `undefined`.
 
-Then `node scripts/gates.mjs` (must end `typecheck=0 lint=0 build=0`),
+Then `node scripts/gates.mjs` (must end `typecheck=0 lint=0 test=0 build=0`),
 `node scripts/check-release-guards.mjs`, a filled-in
 `docs/test-plans/cut-release-<version>.md`, `gh pr create`, CI green, merge.
+
+**There are four gates, not three.** A `test` gate runs between `lint` and
+`build`, and the closing line is `typecheck=0 lint=0 test=0 build=0`. Several
+documents in this repository — this one included, until 2026-10-23 — describe it
+as "typecheck, lint, build", which is three of four and invites a release manager
+to paste a closing line they did not actually read. Read all four numbers.
+
+**Validate the cut plan with `node scripts/check-test-plan.mjs --base origin/main`,
+the way CI runs it, and know the two things it catches every time:**
+
+- **A cut PR cannot tick the release-notes line.** The checker holds that line to
+  the diff and a tick requires `unreleased` to have *gained* a line — while a
+  cut's entire purpose is to **empty** it. The honest state on every cut plan is
+  `n/a: <why>`, and a tick there is a claim the diff contradicts. This is not a
+  quirk to work around; it recurs on every release, and it has now cost two of
+  them a correction.
+- **A reason must follow `n/a:` immediately.** `n/a: there is no band here` passes;
+  `n/a as a banding change, because …` reads fine to a person and fails.
 
 **If anything in the entry changes after the gates run — even a role tag — re-run
 the gates and the comparison.** The tempting assumption is that a data-only edit
@@ -273,8 +299,23 @@ Hand it over **with a `tee`**, because the lines worth reading print before a
 three-minute build and scroll out of the terminal buffer:
 
 ```bash
-mkdir -p .local && node scripts/deploy.mjs --env production | tee .local/deploy-<version>.log
+node scripts/deploy.mjs --env production | tee .local/deploy-<version>.log
 ```
+
+**Hand over that one line and nothing more.** This example read
+`mkdir -p .local && node scripts/deploy.mjs …` until 2026-10-23, and **it could
+not have run in his shell**: `&&` is not a statement separator in Windows
+PowerShell 5.1 and `mkdir -p` is not a PowerShell flag, so it would have failed
+to parse and run *neither* half. That is this document's own standing rule — do
+not hand Lutan a command you have not confirmed runs in his shell — broken by the
+document itself, in the one command it exists to get right, a few paragraphs above
+where it names the `&&` trap explicitly. It survived this long because each
+release manager fixed it silently on the way past instead of fixing it here.
+
+`.local/` already exists by then: the release manager's own test deploy creates
+it, and it is gitignored (`.gitignore:59`). Confirm rather than assume —
+`ls -d .local` and `git check-ignore -v .local/deploy-<version>.log` — since an
+untracked file in the main checkout is what refused his deploy on `0.38.2`.
 
 The `deploy: production → Supabase project dbkodyyxxhtygxcxmfcu (<sha>)` line
 was missed for this reason on `0.15.0`, `0.15.1` and `0.16.0` — three releases

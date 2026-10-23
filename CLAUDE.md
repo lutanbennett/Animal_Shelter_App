@@ -59,7 +59,7 @@ two or three at once; more than that and merging becomes the bottleneck.
    read as CONFLICTING/DIRTY, so CI never ran on the second PR opened.
 4. **Finish: the merge train.** When a feature is done and verified:
    `node scripts/worktree.mjs sync` (merges `origin/main` in), then
-   `node scripts/gates.mjs` (typecheck, lint, build; prints each exit code), then open the PR
+   `node scripts/gates.mjs` (typecheck, lint, test, build — four gates; prints each exit code), then open the PR
    with `gh pr create` (signed in as the user; fall back to GitHub in the
    user's Chrome if `gh` is missing). CI runs the
    same three checks. Once the user says so, merge it — **except for a
