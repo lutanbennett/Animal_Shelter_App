@@ -442,6 +442,15 @@ export const ROUTES: readonly RouteEntry[] = [
     menu: false,
   },
   {
+    // Settings → Units (0252): the units of measure ingredients and medicines are counted in.
+    path: "/admin/units",
+    activity: "reference.types",
+    icon: SECTION_ICONS.diet,
+    label: (t) => t.nav.units,
+    device: "any",
+    menu: false,
+  },
+  {
     path: "/admin/frequencies",
     activity: "reference.types",
     icon: SECTION_ICONS.prescriptions,

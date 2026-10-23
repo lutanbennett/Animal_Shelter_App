@@ -112,6 +112,7 @@ const en = {
     procedureTypes: "Procedure Types",
     bloodTestTypes: "Blood Test Types",
     frequencies: "Frequencies",
+    units: "Units",
     vets: "Clinics",
     medications: "Medications",
     medicationList: "Medication list",
@@ -1064,6 +1065,8 @@ const en = {
           "The \"how often\" choices a prescription picks from, and the schedule the medication forecast counts for each.",
         medications:
           "The medication list prescriptions are written from: names, units, merging duplicates, and the units each is bought and counted in.",
+        units:
+          "The units of measure an ingredient or a medicine is counted in. Add one, such as each for eggs, and the forms offer it straight away.",
         diets:
           "The food list staff pick from: names, units, the daily amount for each size, the standard diet, and the units each is bought and counted in.",
         security:
@@ -2026,6 +2029,55 @@ const en = {
           `This type is on ${n} procedure${n === 1 ? "" : "s"} and can't be deleted — procedures are part of the residents' medical records. Merge it into another type instead.`,
         mergeSelf: "Choose a different procedure type to merge into.",
         mergeFailed: "Merge failed.",
+      },
+    },
+    units: {
+      title: "Units of measure",
+      subtitle:
+        "What an ingredient or a medicine is counted in: grams, cans, tablets, each. Add one here and it shows in the forms straight away. Ingredients offer the units marked Ingredients or Both; medicines offer Medicines or Both.",
+      couldntLoad: "Couldn't load the units",
+      couldntLoadUsage: "Couldn't load where the units are used",
+      noUnits: "No units yet.",
+      table: {
+        name: "Unit",
+        usedFor: "Offered for",
+        inUse: "In use",
+        actions: "Actions",
+        archivedBadge: "Archived",
+        usage: (ingredients: number, medicines: number) => {
+          const parts: string[] = [];
+          if (ingredients > 0) parts.push(`${ingredients} ingredient${ingredients === 1 ? "" : "s"}`);
+          if (medicines > 0) parts.push(`${medicines} medicine${medicines === 1 ? "" : "s"}`);
+          return parts.length > 0 ? parts.join(", ") : "Nothing yet";
+        },
+      },
+      tags: { ingredients: "Ingredients", medicines: "Medicines", both: "Both" },
+      createForm: {
+        name: "Unit",
+        namePlaceholder: "e.g. each, kg, pouch",
+        nameHint: "As it should read after a number: 1 each, 50 g.",
+        usedFor: "Offered for",
+        addButton: "Add unit",
+      },
+      created: (name: string) => `Added the unit "${name}".`,
+      archiveButton: "Archive",
+      restoreButton: "Restore",
+      archiveConfirm: (name: string) =>
+        `Archive "${name}"? It stays on anything already using it, but is no longer offered for new items.`,
+      archiveNote: "Archive a unit nothing uses any more. A unit still on an ingredient or medicine can't be archived.",
+      renameNote:
+        "A unit that an ingredient or medicine is already measured in can't be renamed, because every amount saved against it would then mean something else (50 g must never become 50 kg). Add the new unit, move the items to it, and archive the old one. The Thai name can always be changed.",
+      errors: {
+        nameRequired: "Enter the unit's name.",
+        nameTaken: (name: string) => `There is already a unit called "${name}".`,
+        notFound: "That unit no longer exists. Refresh the page.",
+        renameInUse: (name: string, where: string) =>
+          `"${name}" can't be renamed: it is the unit of ${where}. Renaming would change what every amount saved against it means. Add the new unit, move those items to it, then archive "${name}".`,
+        archiveInUse: (name: string, where: string) =>
+          `"${name}" can't be archived: it is still the unit of ${where}. Move those to another unit first.`,
+        untagInUse: (name: string, list: string, where: string) =>
+          `"${name}" can't stop being offered for ${list}: it is still the unit of ${where}.`,
+        tagRequired: "Choose what the unit is offered for.",
       },
     },
     frequencies: {

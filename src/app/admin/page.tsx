@@ -96,6 +96,13 @@ export default async function AdminPage() {
       phoneNote: t.largerScreen.tileLabel,
     },
     {
+      href: "/admin/units",
+      label: t.nav.units,
+      description: t.admin.landing.tiles.units,
+      icon: SECTION_ICONS.diet,
+      phoneNote: t.largerScreen.tileLabel,
+    },
+    {
       href: "/admin/security",
       label: t.nav.security,
       description: t.admin.landing.tiles.security,
