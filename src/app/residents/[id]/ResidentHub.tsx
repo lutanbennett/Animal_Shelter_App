@@ -175,6 +175,8 @@ export function ResidentHub({
   dateOfDeath,
   causeOfDeath,
   archive,
+  readOnlyExceptMedical,
+  medicalEdit,
   canRecordDeath,
   canUndoDeath,
   canManageTranslations,
@@ -213,6 +215,10 @@ export function ResidentHub({
    * restore didn't finish.
    */
   archive: DeceasedArchive;
+  /** The Medical records card (0249): the record is shown whole, but name, location, intake and history offer no edit. */
+  readOnlyExceptMedical: boolean;
+  /** Which medical sections this login may add to (can(...,"edit")); the buttons follow it, as the pages do. */
+  medicalEdit: Record<"diet" | "immunizations" | "visits" | "prescriptions" | "weight" | "procedures", boolean>;
   /** Admin/staff, the roles that may record a death (and retry an archive). */
   canRecordDeath: boolean;
   /** Admin only: may withdraw a death recorded in error (and retry its Drive restore). */
@@ -321,8 +327,9 @@ export function ResidentHub({
   }
   // Which placement actions apply depends on the lifecycle status — see
   // availablePlacementActions() for the table.
-  const housingActions: StatCardAction[] = availablePlacementActions(
-    isDeceased ? "Deceased" : currentStatus,
+  const housingActions: StatCardAction[] = (readOnlyExceptMedical
+    ? []
+    : availablePlacementActions(isDeceased ? "Deceased" : currentStatus)
   ).map((key) => ({
     href: `${base}${PLACEMENT_ACTION_PATHS[key]}`,
     label: t.residents.hub.placementActions[key],
@@ -332,8 +339,8 @@ export function ResidentHub({
   // Nothing can be added to a dead resident's medical record — the database
   // rejects it (migration 0026), so the buttons that would try are dropped
   // rather than left to fail.
-  const medicalActions = (actions: StatCardAction[]) =>
-    isDeceased ? [] : actions;
+  const medicalActions = (section: keyof typeof medicalEdit, actions: StatCardAction[]) =>
+    isDeceased || !medicalEdit[section] ? [] : actions;
 
   // Immunizations — we can only tell "recorded" vs "missing mandatory type"
   // today; due-date/interval tracking isn't in the data model yet (see
@@ -503,7 +510,7 @@ export function ResidentHub({
               </span>
               {/* After death the edit page offers only the bio and photos
                   (0052); record-death is never offered twice. */}
-              {(
+              {!readOnlyExceptMedical && (
                 <Link
                   href={`${base}/edit`}
                   title={t.residents.hub.editResident}
@@ -714,7 +721,7 @@ export function ResidentHub({
               detail={dietDetail}
               tone={currentDiets.length > 0 ? "success" : "neutral"}
               href={`${base}/diet`}
-              actions={medicalActions([
+              actions={medicalActions("diet", [
                 {
                   href: `/diets/new?residentId=${resident.id}`,
                   label: t.residents.hub.addDiet,
@@ -821,7 +828,7 @@ export function ResidentHub({
               detail={immunizationDetail}
               tone={immunizationTone}
               href={`${base}/immunizations`}
-              actions={medicalActions([
+              actions={medicalActions("immunizations", [
                 {
                   href: `/immunizations/new?residentId=${resident.id}`,
                   label: t.residents.sections.logImmunization,
@@ -835,7 +842,7 @@ export function ResidentHub({
               detail={visitDetail}
               tone={visitTone}
               href={`${base}/clinic-visits`}
-              actions={medicalActions([
+              actions={medicalActions("visits", [
                 {
                   href: `/clinic-visits/new?residentId=${resident.id}`,
                   label: t.residents.sections.bookVetVisit,
@@ -849,7 +856,7 @@ export function ResidentHub({
               detail={prescriptionDetail}
               tone={prescriptionTone}
               href={`${base}/prescriptions`}
-              actions={medicalActions([
+              actions={medicalActions("prescriptions", [
                 {
                   href: `/prescriptions/new?residentId=${resident.id}`,
                   label: t.residents.hub.addPrescription,
@@ -863,7 +870,7 @@ export function ResidentHub({
               detail={weightDetail}
               tone="neutral"
               href={`${base}/weight`}
-              actions={medicalActions([
+              actions={medicalActions("weight", [
                 {
                   href: `/weight/new?residentId=${resident.id}`,
                   label: t.residents.sections.logWeight,
@@ -884,7 +891,7 @@ export function ResidentHub({
               }
               tone="neutral"
               href={`${base}/procedures`}
-              actions={medicalActions([
+              actions={medicalActions("procedures", [
                 {
                   href: `/procedures/new?residentId=${resident.id}`,
                   label: t.residents.sections.logProcedure,

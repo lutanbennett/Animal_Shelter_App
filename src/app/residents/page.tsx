@@ -63,6 +63,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   // A volunteer reads who and where and nothing else of a resident (0134): no chip search, no
   // chip filter, and the list comes from `resident_who_and_where`.
   const limited = await readsWhoAndWhereOnly();
+  const perms = await loadPermissions();
 
   // A chip scanner types 15 digits and presses Enter. An exact match goes
   // straight to that resident whatever the place, zone or deceased filters
@@ -434,6 +435,13 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
         sort={sort}
         sortLinks={sortLinks}
         exportHref={exportHref}
+        actions={{
+          register: can(perms, "resident.register"),
+          logImmunizations: can(perms, "medical.immunizations", "edit"),
+          bookVisit: can(perms, "visit.book"),
+          // The export route's own rule: the limited list may always be downloaded, the full one needs a read of the record.
+          download: limited || can(perms, "resident.record", "read"),
+        }}
         exportFilename={exportFilename({ ...filters, showAll, noChip }, 0)}
       />
     </main>

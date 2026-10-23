@@ -63,7 +63,8 @@ export default async function ResidentSectionPage(
     t.residents.sections.titles as Record<string, string | undefined>
   )[section];
   if (!title) notFound();
-  await requireFullResident(SECTION_READS[section]);
+  // The Medical records card opens the medical tabs and, read-only, housing, photos and adoption news.
+  await requireFullResident(SECTION_READS[section], "read", { allowMedicalCard: true });
   const SectionIcon = SECTION_ICONS[section as HubSection];
 
   const supabase = await createClient();
