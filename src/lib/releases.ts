@@ -75,6 +75,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "The Recurring jobs page now opens in a few seconds instead of taking half a minute or more, and no longer shows \"Couldn't load recurring jobs: fetch failed\" above the list. Saving a job was slow for the same reason and is quicker too.",
+    roles: ["admin", "management", "second_in_command"],
+  },
 ];
 
 /** Newest first. */
