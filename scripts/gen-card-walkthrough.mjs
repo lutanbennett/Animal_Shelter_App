@@ -18,6 +18,9 @@ import { loadCards } from "./lib/load-cards.mjs";
 // Where a write shows up. Only activities whose read-back is certain from the app's own wording are listed;
 // the check fails if a key here is not in the catalogue.
 export const READBACK = {
+  "stock.count": "type a count, tap Save, then Review and save and Save 1 count; the same /stocktake page then reads \"Last count <n> ... counted today\" on that item. A stocktake has no free-text name, so the walk- label cannot be used. The stock figure and history on /management/medications is where it should also show, but a card-only login is refused there (answered 2026-10-23)",
+  "stock.purchasing": "nothing is written: the page is a shopping list for 1 week, 2 weeks or 1 month, with Print and Download CSV, and the app does not place the order. Confirm it lists what is short and names the items never counted. It can take about a minute to appear on first load (answered 2026-10-23)",
+  "stock.delivery": "it is the first row of Recent deliveries on /deliveries after the save (six steps: what arrived, item, amount, day, details, check). It does not change the stock count; usage on /management/stock-usage and the forecast on /management/purchasing read it, and a card-only login is refused there (answered 2026-10-23)",
   "visit.book": "the visit shows on that resident's page and in the shelter's list of visits (/upcoming-visits)",
   "maintenance.progress": "the job sits in its new column on /maintenance after a reload",
   "maintenance.jobs": "the job is on /maintenance (and on /my once assigned); status is changed on /maintenance/<id>, and assignee, zone, due date and the Estimated / Actual cost on /maintenance/<id>/edit (the cost reads back on the job page). No delete control is offered to this card",
