@@ -1,17 +1,17 @@
-| Tested at SHA | 9d4419ab || Carries a migration? | no || Tested by / date | Claude / 2026-10-23 || PR | see the PR for this branch || Dev server | not used (harness work) || Branch / worktree | `claude/check-scripts-doctor-triage` @ `C:DevelopmentAnimal_Shelter_check-scripts-doctor-triage` || Backlog item | `docs/backlog.md` → Triage the check scripts that are red today || Feature | Triage of five check scripts (doctor harnesses, worker-origin, backup-prune) |# Test plan: doctor harness triage
+| Tested at SHA | 9d4419ab |
 
 ## Header
 
 | | |
 |---|---|
-| Feature | |
-| Backlog item | `docs/backlog.md` → |
-| Branch / worktree | `claude/check-scripts-doctor-triage` @ `C:DevelopmentAnimal_Shelter_check-scripts-doctor-triage` |
-| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
-| PR | |
-| Tested by / date | |
-| Carries a migration? | yes / no |
-| Tested at SHA | |
+| Feature | Triage of five check scripts (doctor harnesses, worker-origin, backup-prune) |
+| Backlog item | `docs/backlog.md` → Triage the check scripts that are red today |
+| Branch / worktree | `claude/check-scripts-doctor-triage` @ the sibling worktree folder |
+| Dev server | not used (harness work) |
+| PR | this branch's PR |
+| Tested by / date | Claude / 2026-10-23 |
+| Carries a migration? | no |
+| Tested at SHA | 9d4419ab |
 
 ## 1. Scope and risk
 
