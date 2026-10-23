@@ -2,7 +2,7 @@
 
 Stream `cards-run-stock`. Dev only, port 3009, 375 px wide, one throwaway login per card
 (`scripts/dev-signin.mjs --cards <key>`). Cards: `do_stocktaking`, `do_purchasing`, `record_delivery`.
-**Summary:** 3 cards walked, 3 pass. 12 steps run, all pass (2 with a slow first load). 3 `TODO:` steps answered by doing the job (2 of 3 read-backs on a later page not reachable by a card-only login); 0 left unanswered. 5 findings filed on the backlog.
+**Summary:** 3 cards walked, 3 pass. 12 steps run, all pass (2 with a slow first load). 3 `TODO:` steps answered by doing the job (2 of 3 read-backs on a later page not reachable by a card-only login); 0 left unanswered. 5 findings, filed as 3 backlog items.
 
 Pages stream slowly on first hit (10 to 25 s); a header-only page is still loading.
 
