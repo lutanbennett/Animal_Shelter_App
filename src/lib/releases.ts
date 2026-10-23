@@ -80,6 +80,15 @@ export const unreleased: ReleaseNote[] = [
 /** Newest first. */
 export const releases: Release[] = [
   {
+    version: "0.39.5",
+    date: "2026-10-23",
+    title: "A role's home is only the cards it has been given",
+    major: false,
+    notes: [
+      "A role's home screen now shows only the cards that role has actually been given in Settings → Who does what. Before, the app added the Operations, Management and My tasks tiles by itself, which is why a role could show an Operations tile nobody had granted it. The tiles people still need — My tasks, View residents, Bills, Feed special diets, Add medical photos and Record weight — are now ordinary cards on the roles that had them, so Who does what lists every tile on a home and can take any of them away. Operations and Management are no longer on any role's home. Nobody's access changed, only which shortcuts appear: a page a login could open before, it can still open from the menu.",
+    ],
+  },
+  {
     version: "0.39.4",
     date: "2026-10-23",
     title:
