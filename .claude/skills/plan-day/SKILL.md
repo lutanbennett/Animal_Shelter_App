@@ -71,13 +71,36 @@ leftovers to `done` — but only if `held` says `free`. A `HELD` worktree
 has a session or a process in it; name it and ask rather than tearing it
 down. List any husks it prints so the user can clear them.
 
-**Capture actuals now — this is the only chance.** For each worktree whose
-PR has merged and whose session is still running, find the session in
-`mcp__ccd_session_mgmt__list_sessions` (match on its folder) and call
-`mcp__ccd_session_mgmt__get_usage` with that `session_id`; record
-`context.tokensUsed` against the slug in `.plan-day.md` (step 6). Once a
-session closes the figure is gone; if it reports `unavailable`, write
-`unmeasured`, never a guess.
+**Capture the actuals now.** For each worktree whose PR has merged, find the
+session in `mcp__ccd_session_mgmt__list_sessions` (match on its folder), then
+call **both** `mcp__ccd_session_mgmt__get_usage` (for `context.tokensUsed`) and
+`mcp__ccd_session_mgmt__get_session` (for `model` and `effort`), and record all
+three against the slug in `.plan-day.md` (step 6). If usage reports
+`unavailable`, write `unmeasured`, never a guess.
+
+**THERE IS NO RACE: BOTH CALLS WORK ON AN IDLE SESSION.** Corrected 2026-10-23,
+and it retires a prescription two editions got wrong. Editions `294` and `303`
+each recorded that the dial could not be read because every session was
+`isRunning: false` by the time `/plan-day` ran, and each prescribed "read the
+dial while the session is still live". **That was never the problem.**
+`get_session` serves `model` and `effort` from session **metadata** and
+`get_usage` serves `context.tokensUsed`, both for an idle session exactly as
+well as a live one — nine of nine streams were read this way on 2026-10-22, all
+idle. **What was lost on those two rounds was lost to not calling the tool.** So
+do not sequence the round around it, and do not report a dial as unreadable
+because a session has gone quiet: call it and see.
+
+**A FIGURE FROM A STREAM THAT STOPPED EARLY IS NOT A BAND READING. Record it,
+mark it `blocked`, and keep it out of the bands.** Added 2026-10-23 after the
+round that nearly got this wrong. Three card-walkthrough run streams came in at
+177,977 · 137,783 · 209,385 against a 190–250k band — two under, one inside,
+which reads as *the band held*. It did not: **two of the three were blocked**
+(one stopped at step 2 of 11), so they were cheap because they could not
+proceed, not because the work was small. Only the third completed, and it alone
+is evidence. **The temptation is strongest exactly when the numbers look good**,
+because an under-run is the shape of a well-estimated stream and the shape of a
+stream that never ran. **Read what the stream actually delivered before you let
+its figure touch a band.**
 
 ## 3. Read the backlog
 
@@ -285,6 +308,9 @@ recommendations applied to nothing). Reading a recommendation as the
 setting produces a false finding.
 
 ### Token estimates (provisional — revise from the actuals)
+
+**BEFORE ANY OF THIS: a figure only counts if the stream FINISHED.** See step 2
+— a blocked stream's number is not evidence about estimating.
 
 **START HERE: AN ORDINARY WELL-BRIEFED STREAM COSTS ABOUT 128k, WHATEVER IT IS.**
 Promoted into this file 2026-10-21 from the handover edition that measured it, so
