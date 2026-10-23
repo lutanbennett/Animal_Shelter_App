@@ -1726,7 +1726,7 @@ const manual: Manual = {
         {
           id: "feeding-list",
           title: "The feeding list",
-          roles: ["admin", "management", "second_in_command", "head_of_medical"],
+          roles: ["admin", "management"],
           path: "Operations → Feeding list",
           intro:
             "How much food to make for each zone for one meal, and what each dog is plated, built for a phone in the kitchen. It is for reading: nothing on it is ticked off, and the app does not record that a meal was fed.",
