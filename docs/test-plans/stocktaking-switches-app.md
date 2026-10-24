@@ -90,7 +90,7 @@ Driven on dev against real rows. The switch was set with the service role (the d
 - [x] Backlog item ticked in `docs/backlog.md` on this branch
 - [x] Non-obvious design choices added as a new file in `docs/decisions/` — `2026-10-24-stocktaking-switches-app.md`, including why safety stock is left out while OFF
 - [ ] `README.md` still accurate — n/a: the README does not mention stocktaking or Purchasing
-- [x] **Release notes.** `unreleased` has a line for admins and management; nothing outstanding — no deploy or hand edit stands between this and a user, and both switches default ON so the app behaves as before until an Admin turns one off
+- [ ] **Release notes.** — n/a: this was correctly **ticked** when the plan was written (#903, `0589201`): `unreleased` then held a line for admins and management, nothing was outstanding, no deploy or hand edit stood between it and a user, and both switches default ON so the app behaved as before until an Admin turned one off. **That note shipped in `0.40.1` and now lives in `releases`, not `unreleased`**, so no later diff can ever satisfy the tick again — and this PR adds a signature only. Untick-with-reason is therefore the honest state, exactly as it is on a cut PR, and the original tick stands in git history
 - [x] Commit messages say why, not just what
 - [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** The OFF figures were read from the running pages and from the real `purchaseRow()`, not argued
 

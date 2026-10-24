@@ -90,7 +90,7 @@ Driven on dev. The dev sign-in is aal1, so the board opened read-only (the page 
 - [x] Backlog item ticked in `docs/backlog.md` on this branch
 - [x] Non-obvious design choices added as a new file in `docs/decisions/` — `2026-10-24-who-does-what-features-app.md`
 - [ ] `README.md` still accurate — n/a: the README does not describe Who does what's board
-- [x] **Release notes.** `unreleased` has a line for admins; nothing outstanding — no hand step stands between this and a user (production needs `0255` applied, which the release does)
+- [ ] **Release notes.** — n/a: this was correctly **ticked** when the plan was written (#906, `e1d9c63`): `unreleased` then held a line for admins, nothing was outstanding, and the one hand step it named — `0255` applied to production — **was done by the release, before either deploy**, so the note was true the moment it became visible. **That note shipped in `0.40.1` and now lives in `releases`, not `unreleased`**, so no later diff can ever satisfy the tick again — and this PR adds a signature only. Untick-with-reason is therefore the honest state, exactly as it is on a cut PR, and the original tick stands in git history
 - [x] Commit messages say why, not just what
 - [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** The 28-once count and the unsorted case were read off the running page
 
