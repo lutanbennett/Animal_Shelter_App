@@ -4,6 +4,7 @@
 //   node scripts/dev-signin.mjs --cards a,b [--port N] the same, for a login holding EXACTLY these cards and nothing else
 //   node scripts/dev-signin.mjs --remove <role>        delete only that role's login (a roles.key, or a dev_signin_cards_<hash> key)
 //   node scripts/dev-signin.mjs --remove --cards a,b   delete only the login and throwaway role for exactly those cards
+//   node scripts/dev-signin.mjs --remove <role> --clear-held   also delete the test clinic visits / bulk batches that login created, when those are all that hold it
 //   node scripts/dev-signin.mjs --remove all           delete every dev-signin login (and card-scoped role), signing every stream out
 //
 // --cards (docs/card-walkthrough.md; docs/decisions/2026-10-22-card-walkthrough-generated.md): the cards are card keys from
@@ -57,7 +58,12 @@ async function allUsers() {
 
 // "Database error deleting user" says nothing. The usual cause is a row the login created (created_by, uploaded_by, ...)
 // in a table whose foreign key to auth.users does not cascade, so name those tables and counts. It only reads.
-async function whatHolds(userId) {
+// Dev-only test rows a login leaves behind that --clear-held may delete. Order matters: visits before the bulk batch they
+// point at. Both are leaf tables (nothing references them), so deleting a throwaway login's rows takes nothing else with it.
+// Any other table that holds the login stays a refusal that names it: that is real work, not test residue.
+const CLEARABLE = ["clinic_visits", "bulk_appointments"];
+
+async function whatHolds(userId, { raw = false } = {}) {
   const sql = `do $held$ declare r record; n int; out text = ''; begin
     for r in select c.conrelid::regclass::text t, a.attname col from pg_constraint c
       join pg_attribute a on a.attrelid = c.conrelid and a.attnum = any(c.conkey)
@@ -74,6 +80,7 @@ async function whatHolds(userId) {
     });
     let msg = ""; try { msg = JSON.parse(await res.text()).message ?? ""; } catch {}
     const m = /HOLDS ([^\n]*)/.exec(msg);
+    if (raw) return m ? m[1].trim() : "";
     return m && m[1].trim() ? `  still referenced by: ${m[1].trim()}\n  Those are dev rows this login created while you tested; delete or reassign them, then run --remove again.` : "  no foreign-key references found; the cause is something else (a trigger on auth.users?)";
   } catch (e) {
     return `  could not look up what holds it: ${e.message}`;
@@ -102,6 +109,18 @@ if (args.includes("--remove")) {
   const mine = (await allUsers()).filter((u) => u.email?.startsWith(PREFIX) && u.email.endsWith(DOMAIN) && (!wantEmail || u.email === wantEmail));
   for (const u of mine) {
     await service.from("user_roles").delete().eq("user_id", u.id);
+    if (args.includes("--clear-held")) {
+      // "table.col (n row(s)); ..." -> only when every holder is a CLEARABLE table, so nothing real is deleted on the way.
+      const held = [...(await whatHolds(u.id, { raw: true })).matchAll(/(\S+)\.(\S+) \((\d+) row/g)].map((m) => ({ table: m[1], col: m[2] }));
+      const other = held.filter((h) => !CLEARABLE.includes(h.table));
+      if (other.length) console.log(`not clearing ${u.email}: also held by ${other.map((h) => h.table + "." + h.col).join(", ")}, which is not test residue`);
+      else {
+        for (const t of CLEARABLE) for (const h of held.filter((x) => x.table === t)) {
+          const { error } = await service.from(t).delete().eq(h.col, u.id);
+          console.log(`${error ? "FAILED clearing" : "cleared"} ${t}.${h.col} for ${u.email}${error ? `: ${error.message}` : ""}`);
+        }
+      }
+    }
     const { error } = await service.auth.admin.deleteUser(u.id);
     console.log(`${error ? "FAILED" : "removed"} ${u.email}${error ? `: ${error.message}` : ""}`);
     if (error) console.log(await whatHolds(u.id));

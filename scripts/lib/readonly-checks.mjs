@@ -75,6 +75,74 @@ export const CHECKS = {
       : ["Every line is in proportion."],
     failed: (rows) => rows.length > 0,
   },
+  "role-cards-coverage": {
+    asks: "For each role: which held card needs access the role does not have, and which activity at which level is missing? (After the card-grants release this must print nothing.)",
+    // TEMPORARY SHAPE: the grants are a literal built from cards.ts (scripts/lib/card-bundles.mjs). Read card_grants instead once it exists.
+    sql: `with g(card, activity, level) as (values ${expectedGrantsSql()})
+      select coalesce(json_agg(json_build_object('role', r.key, 'card', c.card, 'activity', g.activity,
+          'need', g.level, 'have', coalesce(p.level, 0)) order by r.key, c.card, g.activity), '[]'::json)
+      from roles r join role_cards c on c.role_id = r.id join g on g.card = c.card
+        left join role_permissions p on p.role_id = r.id and p.activity = g.activity
+      where r.kind <> 'fixed' and coalesce(p.level, 0) < g.level`,
+    render: (rows) => rows.length
+      ? rows.map((x) => `${x.role}: card ${x.card} needs ${x.activity} at ${x.need === 2 ? "edit/yes" : "read"}, role has ${["none", "read", "edit/yes"][x.have]}`)
+      : ["Every held card is covered by its role's access."],
+    failed: (rows) => rows.length > 0,
+  },
+  "cards-union": {
+    asks: "For each role: are its permission cells exactly the union of its cards and extras? (Lists cells nothing backs, and backed access the role lacks.)",
+    // TEMPORARY SHAPE: same literal as role-cards-coverage.
+    sql: `with g(card, activity, level) as (values ${expectedGrantsSql()}),
+      want as (select x.role_id, x.activity, max(x.level) as level
+        from (select c.role_id, g.activity, g.level from role_cards c join g on g.card = c.card
+              union all select e.role_id, e.activity, e.level from role_extras e) x group by x.role_id, x.activity)
+      select coalesce(json_agg(json_build_object('role', r.key,
+          'unbacked', coalesce((select json_agg(p.activity order by p.activity) from role_permissions p
+            where p.role_id = r.id and not exists (select 1 from want w where w.role_id = r.id and w.activity = p.activity and w.level >= p.level)), '[]'::json),
+          'unapplied', coalesce((select json_agg(w.activity order by w.activity) from want w
+            where w.role_id = r.id and not exists (select 1 from role_permissions p where p.role_id = r.id and p.activity = w.activity and p.level >= w.level)), '[]'::json))
+        order by r.key), '[]'::json)
+      from roles r where r.kind <> 'fixed'`,
+    render: (rows) => rows.map((x) => x.unbacked.length + x.unapplied.length === 0
+      ? `${x.role}: exactly the union of its cards and extras`
+      : `${x.role}: ${x.unbacked.length} cells no card or extra backs (${x.unbacked.join(", ") || "-"}); ${x.unapplied.length} backed but missing (${x.unapplied.join(", ") || "-"})`),
+    failed: (rows) => rows.some((x) => x.unbacked.length + x.unapplied.length > 0),
+  },
+  "fault-residents-lifecycle": {
+    asks: "Which roles hold the Residents card or a placement cell but not facility.enclosures at read? (They cannot move, hospitalise, foster/adopt or record a death: the enclosure lookup is refused.)",
+    sql: `select coalesce(json_agg(json_build_object('role', r.key,
+        'residents_card', exists (select 1 from role_cards c where c.role_id = r.id and c.card = 'residents'),
+        'placement_cells', coalesce((select json_agg(p.activity order by p.activity) from role_permissions p where p.role_id = r.id and p.activity like 'placement.%'), '[]'::json),
+        'enclosures_read', exists (select 1 from role_permissions p where p.role_id = r.id and p.activity = 'facility.enclosures' and p.level >= 1)) order by r.key), '[]'::json)
+      from roles r where r.kind <> 'fixed'
+        and (exists (select 1 from role_cards c where c.role_id = r.id and c.card = 'residents')
+          or exists (select 1 from role_permissions p where p.role_id = r.id and p.activity like 'placement.%'))`,
+    render: (rows) => rows.length
+      ? rows.map((x) => `${x.role}: Residents card ${x.residents_card ? "held" : "not held"}, ${x.placement_cells.length} placement cells, enclosures read ${x.enclosures_read ? "yes" : "NO - BLOCKED"}`)
+      : ["No role holds the Residents card or a placement cell."],
+    failed: (rows) => rows.some((x) => !x.enclosures_read),
+  },
+  "fault-clinic-visit-save": {
+    asks: "Which roles hold a card or cell that books or saves a clinic visit (Book clinic visits, Medical records, visit.book) but not clinics.list? (The clinic list is empty and the field is required.)",
+    sql: `select coalesce(json_agg(json_build_object('role', r.key,
+        'cards', coalesce((select json_agg(c.card order by c.card) from role_cards c where c.role_id = r.id and c.card in ('book_clinic_visits', 'medical_records')), '[]'::json),
+        'visit_book', exists (select 1 from role_permissions p where p.role_id = r.id and p.activity = 'visit.book'),
+        'clinics_list', exists (select 1 from role_permissions p where p.role_id = r.id and p.activity = 'clinics.list' and p.level >= 1)) order by r.key), '[]'::json)
+      from roles r where r.kind <> 'fixed'
+        and (exists (select 1 from role_cards c where c.role_id = r.id and c.card in ('book_clinic_visits', 'medical_records'))
+          or exists (select 1 from role_permissions p where p.role_id = r.id and p.activity = 'visit.book'))`,
+    render: (rows) => rows.length
+      ? rows.map((x) => `${x.role}: cards ${x.cards.join(", ") || "(none)"}, visit.book ${x.visit_book ? "yes" : "no"}, clinics.list ${x.clinics_list ? "yes" : "NO - BLOCKED"}`)
+      : ["No role holds a clinic-visit card or cell."],
+    failed: (rows) => rows.some((x) => !x.clinics_list),
+  },
+  "fault-maintenance-delete": {
+    asks: "Which roles hold the Do Maintenance card, whose maintenance jobs nobody can delete? (Every holder is affected: no delete control exists.)",
+    sql: `select coalesce(json_agg(json_build_object('role', r.key) order by r.key), '[]'::json)
+      from roles r where r.kind <> 'fixed' and exists (select 1 from role_cards c where c.role_id = r.id and c.card = 'do_maintenance')`,
+    render: (rows) => rows.length ? rows.map((x) => `${x.role}: holds Do Maintenance`) : ["No role holds the Do Maintenance card."],
+    failed: (rows) => rows.length > 0,
+  },
 };
 
 /** Wrap one check in a read-only transaction. The result rides out in an exception message, as the harnesses do. */
