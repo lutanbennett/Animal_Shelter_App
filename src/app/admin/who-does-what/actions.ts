@@ -6,17 +6,15 @@ import { hasAdminRole } from "@/lib/auth/require-admin";
 import { hasTwoStep } from "@/lib/auth/two-step";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { ACTIVITIES, isActivityKey } from "@/lib/permissions/catalogue";
-import { bundleJson, isCardKey, type CardKey } from "@/lib/permissions/cards";
-import { checkChange } from "@/lib/permissions/prerequisites";
+import { isCardKey, type CardKey } from "@/lib/permissions/cards";
 import { isGroupIconKey } from "@/lib/home/group-icons";
 
 /**
- * Settings → Who does what: give a role a card, take one away, reorder them, and keep or drop its extras.
+ * Settings → Who does what: give a role a card, take one away, and reorder them.
  * docs/decisions/2026-10-14-who-does-what-cards-page.md
  *
- * Every change goes through the one database call of 0194, set_role_cards(), handed the bundle cards.ts computes
- * (includes and all), which recomputes role_permissions as the union of the cards and the extras. It runs as the
+ * Every change goes through the one database call of 0194, set_role_cards(), handed the role's cards and nothing
+ * else: the database holds what each card requires (card_grants, 0257) and recomputes role_permissions from it. It runs as the
  * admin's own session, so role_cards' and role_permissions' own rules (Admin, at the authenticator-app step) are the
  * enforcement and the change reaches audit_log through the tables' triggers. The checks here answer in words first and
  * hold the fixed rules of docs/roles-and-permissions.md §6 on the server, so a hand-made call fares no better than the page:
@@ -75,7 +73,7 @@ function done(): ActionResult {
 }
 
 async function apply(supabase: Supabase, roleId: string, cards: CardKey[], where: string, t: Dict): Promise<ActionResult> {
-  const { error } = await supabase.rpc("set_role_cards", { p_role: roleId, p_cards: cards, p_bundle: bundleJson(cards) });
+  const { error } = await supabase.rpc("set_role_cards", { p_role: roleId, p_cards: cards });
   // The two photo-approver refusals (0221, 0222) are written for the person reading them; show them as they are. Any other
   // check failure keeps the generic words, so a constraint name never reaches the browser.
   if (error?.code === "23514" && /approve photos/i.test(error.message ?? "") && /^(Give a role|This is the last role)/.test(error.message ?? "")) {
@@ -94,8 +92,6 @@ export async function addCard(roleKey: string, card: string): Promise<ActionResu
     const cards = await currentCards(g.supabase, g.roleId);
     if (!cards) return { ok: false, error: t.common.somethingWentWrong("cards") };
     if (cards.includes(card)) return { ok: false, error: t.admin.whoDoesWhat.cardsView.alreadyHas };
-    // Extras the new card also gives are kept, not dropped: the page hides them while a card covers them, and they
-    // are still there, so removing the card later takes away only what the card gave, never what was granted singly.
     const r = await apply(g.supabase, g.roleId, [...cards, card], "whoDoesWhat.addCard", t);
     return r.ok ? done() : r;
   });
@@ -109,7 +105,7 @@ export async function removeCard(roleKey: string, card: string): Promise<ActionR
     const cards = await currentCards(g.supabase, g.roleId);
     if (!cards) return { ok: false, error: t.common.somethingWentWrong("cards") };
     if (!cards.includes(card as CardKey)) return done();
-    // What another remaining card (or an extra) still gives stays: the bundle handed in is the union of the cards that remain.
+    // What another remaining card still gives stays: the database recomputes the union of the cards that remain.
     const r = await apply(g.supabase, g.roleId, cards.filter((c) => c !== card), "whoDoesWhat.removeCard", t);
     return r.ok ? done() : r;
   });
@@ -134,57 +130,6 @@ export async function moveCard(roleKey: string, card: string, direction: "up" | 
     if (i < 0 || j < 0 || j >= cards.length) return done();
     [cards[i], cards[j]] = [cards[j], cards[i]];
     const r = await apply(g.supabase, g.roleId, cards, "whoDoesWhat.moveCard", t);
-    return r.ok ? done() : r;
-  });
-}
-
-/** Take away one extra: the role loses that activity unless a card gives it. */
-export async function removeExtra(roleKey: string, activity: string): Promise<ActionResult> {
-  const { t } = await getT();
-  return runAction("whoDoesWhat.removeExtra", t.common.somethingWentWrong, async () => {
-    const g = await guard(t, roleKey);
-    if (!g.ok) return g;
-    if (!isActivityKey(activity)) return { ok: false, error: t.common.somethingWentWrong("activity") };
-    const cards = await currentCards(g.supabase, g.roleId);
-    if (!cards) return { ok: false, error: t.common.somethingWentWrong("cards") };
-    const { error } = await g.supabase.from("role_extras").delete().eq("role_id", g.roleId).eq("activity", activity);
-    if (error) return databaseFailure("whoDoesWhat.removeExtra", error, t.common);
-    const r = await apply(g.supabase, g.roleId, cards, "whoDoesWhat.removeExtra", t);
-    return r.ok ? done() : r;
-  });
-}
-
-/** Give one activity that no card gives, with the reason. A prerequisite (prerequisites.ts) must already hold. */
-export async function addExtra(roleKey: string, activity: string, level: number, why: string): Promise<ActionResult> {
-  const { t } = await getT();
-  return runAction("whoDoesWhat.addExtra", t.common.somethingWentWrong, async () => {
-    const w = t.admin.whoDoesWhat;
-    const g = await guard(t, roleKey);
-    if (!g.ok) return g;
-    if (!isActivityKey(activity)) return { ok: false, error: t.common.somethingWentWrong("activity") };
-    const kind = ACTIVITIES.find((a) => a.key === activity)?.kind;
-    if (!(kind === "yesno" ? [2] : [1, 2]).includes(level)) return { ok: false, error: t.common.somethingWentWrong("level") };
-    const reason = why.trim();
-    if (!reason) return { ok: false, error: w.cardsView.extraWhyNeeded };
-    const cards = await currentCards(g.supabase, g.roleId);
-    if (!cards) return { ok: false, error: t.common.somethingWentWrong("cards") };
-
-    const { data: cellRows, error: readError } = await g.supabase
-      .from("role_permissions")
-      .select("activity, level")
-      .eq("role_id", g.roleId)
-      .returns<{ activity: string; level: number }[]>();
-    if (readError) return databaseFailure("whoDoesWhat.addExtra", readError, t.common);
-    const cells = new Map((cellRows ?? []).map((c) => [c.activity, Number(c.level)]));
-    const refusal = checkChange((a) => cells.get(a) ?? 0, activity, level);
-    if (!refusal.ok) {
-      const rule = refusal.rule;
-      return { ok: false, error: refusal.kind === "needs" ? w.edit.needs[rule.id] : w.edit.neededBy[rule.id] };
-    }
-
-    const { error } = await g.supabase.from("role_extras").upsert({ role_id: g.roleId, activity, level, why: reason }, { onConflict: "role_id,activity" });
-    if (error) return databaseFailure("whoDoesWhat.addExtra", error, t.common);
-    const r = await apply(g.supabase, g.roleId, cards, "whoDoesWhat.addExtra", t);
     return r.ok ? done() : r;
   });
 }

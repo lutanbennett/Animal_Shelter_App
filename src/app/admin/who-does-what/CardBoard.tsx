@@ -23,7 +23,7 @@ import { addGroup, moveGroup, removeGroup, setCardFeature, setCardGroup } from "
  * one box per group. A card is dragged into a box, or placed with the "Where it shows" list beside it (the phone's way);
  * Up and Down move it among the cards in the same box. A group changes where a card shows and nothing else.
  */
-export type Tile = { key: string; label: string; description: string; includes: string; href: string; warn?: boolean;
+export type Tile = { key: string; label: string; description: string; includes: string; href: string; warn?: string;
   /** Why this card cannot be given yet (it needs another role's card first); shown beside a disabled +. */
   blocked?: string;
   /** The group this held card sits in; null or absent = on the home directly. */
@@ -163,7 +163,7 @@ export function CardBoard({
         <span className="text-sm font-semibold text-foreground [overflow-wrap:anywhere]">{tl.label}</span>
         <span className="line-clamp-2 text-xs text-muted [overflow-wrap:anywhere]">{tl.description}</span>
         {tl.includes && <span className="text-xs text-muted [overflow-wrap:anywhere]">{c.includesNote(tl.includes)}</span>}
-        {tl.warn && <span className="text-xs font-medium text-danger [overflow-wrap:anywhere]">{c.noTile}</span>}
+        {tl.warn && <span className="text-xs font-medium text-danger [overflow-wrap:anywhere]">{tl.warn}</span>}
       </Link>
       {locked && (
         <div className="flex flex-wrap gap-1">

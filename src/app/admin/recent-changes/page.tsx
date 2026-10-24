@@ -101,6 +101,8 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
             e.table === "role_home_tiles" ||
             e.table === "features" ||
             e.table === "card_features" ||
+            e.table === "card_grants" ||
+            e.table === "card_includes" ||
             e.table === "role_extras" ||
             e.table === "impact_baselines" ||
             e.table === "donation_channels"
