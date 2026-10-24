@@ -5,8 +5,8 @@
 | | |
 |---|---|
 | Feature | `worktree.mjs done` refuses a folder that holds a different branch |
-| Backlog item | `docs/backlog.md` → **`worktree.mjs done <name>` can delete a DIFFERENT worktree** (ticked) |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Backlog item | `docs/backlog.md` → **`worktree.mjs done NAME` can delete a DIFFERENT worktree** (ticked) |
+| Branch / worktree | `claude/worktree-tooling-fixes` @ `C:\Development\Animal_Shelter_worktree-tooling-fixes` |
 | Dev server | not started — no UI surface |
 | PR | opened from this branch |
 | Tested by / date | Claude / 2026-10-24 |
@@ -203,11 +203,11 @@ Automated checks by: Claude  Date: 2026-10-24
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
+has looked and explicitly asks in chat; the line then says so, e.g. `a name —
+confirmed in chat; line written by Claude at their request  Date: a date`.
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
+- `a name and a date` — a person looked. The date is required here.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
