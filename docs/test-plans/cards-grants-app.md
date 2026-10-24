@@ -11,7 +11,7 @@
 | PR | pending: number assigned when opened |
 | Tested by / date | Claude / 2026-10-24 |
 | Carries a migration? | no |
-| Tested at SHA | `SHA_PLACEHOLDER` |
+| Tested at SHA | `5e64c3b1` |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,9 @@
 - [x] `node scripts/gates.mjs` ends with all gates 0. Exit codes read directly from the script's own output:
 
 ```
-GATES_PLACEHOLDER
+=== gates: build exited 0 after 60s
+
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
