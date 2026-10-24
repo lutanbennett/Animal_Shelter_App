@@ -133,7 +133,8 @@ begin
       end loop;
     end loop;
   end loop;
-  perform pg_temp.eq('A count', v_checked::text, '600');
+  -- Derived, not a literal: the catalogue grows (60 -> 66 activities) and a literal went stale each time. 5 roles x activities x read/edit.
+  perform pg_temp.eq('A count', v_checked::text, (5 * (select count(*) from permission_activities) * 2)::text);
   -- the four "answers no" cases, from a caller who is allowed to ask
   perform pg_temp.eq('A missing cell', pg_temp.q(v_admin, 'role_can(''volunteer'', ''stock.purchasing'', ''edit'')'), 'false');
   perform pg_temp.eq('A unknown activity', pg_temp.q(v_admin, 'role_can(''management'', ''no.such_activity'', ''read'')'), 'false');
@@ -148,7 +149,7 @@ begin
   perform pg_temp.eq('A default level is edit', pg_temp.q(v_admin, 'role_can(''management'', ''stock.count'')'), 'true');
   perform pg_temp.eq('A read-only cell is no for edit', pg_temp.q(v_admin, 'role_can(''volunteer'', ''resident.record'', ''edit'')'), 'false');
   perform pg_temp.eq('A read-only cell is yes for read', pg_temp.q(v_admin, 'role_can(''volunteer'', ''resident.record'', ''read'')'), 'true');
-  v_report := v_report || 'A: 600 answers equal has_permission() under each role''s own login; missing cell, unknown activity, archived role, no-role person, unknown key, nulls, mistyped level all no | ';
+  v_report := v_report || 'A: every role x activity x level answer equals has_permission() under each role''s own login; missing cell, unknown activity, archived role, no-role person, unknown key, nulls, mistyped level all no | ';
 
   -- B: Admin.
   perform pg_temp.eq('B admin unknown activity', pg_temp.q(v_admin, 'role_can(''admin'', ''no.such_activity'', ''edit'')'), 'true');
