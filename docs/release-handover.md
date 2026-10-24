@@ -11,15 +11,27 @@ from **one SHA**, `254cd948`, and the code-identity check is clean. Both databas
 **257 of 257** with `No drift`, and `0254`, `0255` and `0256` all went on before either
 deploy.
 
-**Two things are open and both are Lutan's**, both shipping as a stated gap on his explicit
-decision: pressing the **Stocktaking switches** (`/admin/stocktaking`) and the **Features
-panel** (`/admin/who-does-what`), and reading the Thai lines on each. Both pages demand
-2-step verification, so no session can reach them. **Also his: the ten production sign-in
-checks were NOT done for this build** and are recorded as not done, not ticked.
+**The two items that shipped as a stated gap are CLOSED.** Lutan did both on 2026-10-24,
+within the hour of the release: the **Stocktaking switches** and the **Features panel** both
+work, **and the Thai reads correctly** — asked as a separate question, because "working" could
+have meant the buttons alone. Both plans are signed in his name at his explicit request, each
+signature stating its own scope.
 
-**Re-measure before trusting any of it.** `main` did not move during this release, which is
-unusual and is luck rather than method. Run `git diff --stat 254cd948..HEAD`, `gh pr list`,
-`--status --env production` and the live `/api/version` first.
+**But three rows of those two tables are still open, and one of them matters.**
+`who-does-what` item 2 — *move a card, then check a second role shows it in the same section* —
+has been run by nobody, and it is the check that would catch the feature grouping being stored
+per-role instead of once for every role, which is exactly what the release note promises. The
+other two are `who-does-what` item 3 (**a decision**, not a check: where four guessed cards
+belong) and `stocktaking` item 3 (on a real phone). **Do not read "both tested and working" as
+closing those**; the record says why.
+
+**Also his, and NOT done: the ten production sign-in checks** for this build. Recorded as not
+done, not ticked — `0.40.0`'s were done by him and that does not carry to a different build.
+
+**Re-measure before trusting any of it.** `main` did not move *during* the release, which is
+luck rather than method, and it has since moved twice — a backlog grooming and this sign-off.
+Run `git diff --stat 254cd948..HEAD`, `gh pr list`, `--status --env production` and the live
+`/api/version` first.
 
 ## The handover's standing list of unreadable production facts is EMPTY
 

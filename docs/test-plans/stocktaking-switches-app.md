@@ -90,7 +90,7 @@ Driven on dev against real rows. The switch was set with the service role (the d
 - [x] Backlog item ticked in `docs/backlog.md` on this branch
 - [x] Non-obvious design choices added as a new file in `docs/decisions/` — `2026-10-24-stocktaking-switches-app.md`, including why safety stock is left out while OFF
 - [ ] `README.md` still accurate — n/a: the README does not mention stocktaking or Purchasing
-- [x] **Release notes.** `unreleased` has a line for admins and management; nothing outstanding — no deploy or hand edit stands between this and a user, and both switches default ON so the app behaves as before until an Admin turns one off
+- [ ] **Release notes.** — n/a: this was correctly **ticked** when the plan was written (#903, `0589201`): `unreleased` then held a line for admins and management, nothing was outstanding, no deploy or hand edit stood between it and a user, and both switches default ON so the app behaved as before until an Admin turned one off. **That note shipped in `0.40.1` and now lives in `releases`, not `unreleased`**, so no later diff can ever satisfy the tick again — and this PR adds a signature only. Untick-with-reason is therefore the honest state, exactly as it is on a cut PR, and the original tick stands in git history
 - [x] Commit messages say why, not just what
 - [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** The OFF figures were read from the running pages and from the real `purchaseRow()`, not argued
 
@@ -138,9 +138,9 @@ Driven on dev against real rows. The switch was set with the service role (the d
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Signed in with the authenticator app, switch food off and on from the Settings button; the figure on Purchasing moves, and the button says what happened | Settings → Stocktaking (aal2; the dev sign-in cannot reach it) |
-| 2 | The Thai wording of the new lines reads naturally | Purchasing, Diet stock, Stocktake, Settings → Stocktaking with ไทย selected |
-| 3 | Settings → Stocktaking on a real phone | Settings → Stocktaking |
+| 1 | **DONE 2026-10-24 by Lutan** — signed in with the authenticator app, switch food off and on from the Settings button; the figure on Purchasing moves, and the button says what happened | Settings → Stocktaking (aal2; the dev sign-in cannot reach it) |
+| 2 | **DONE 2026-10-24 by Lutan** — the Thai wording of the new lines reads naturally | Purchasing, Diet stock, Stocktake, Settings → Stocktaking with ไทย selected |
+| 3 | **STILL OPEN** — Settings → Stocktaking on a real phone | Settings → Stocktaking |
 
 ## Sign-off
 
@@ -153,9 +153,17 @@ Automated checks by: Claude  Date: 2026-10-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty, so only the person who looked may tick it; the signature below is pending
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: items 1 and 2 were checked by Lutan on 2026-10-24; **item 3 (a real phone) was not**, so this line stays unticked rather than being ticked on a partial pass
 
-Manual verification by: pending: Lutan to use the Settings → Stocktaking button with the authenticator app and read the Thai lines
+**Lutan looked at this screen on 2026-10-24 and said so in chat, and he explicitly asked for
+the plan to be signed in his name.** `CLAUDE.md` permits that only on both of those conditions,
+and requires the line to say so — which is what the signature below does. **The scope was
+confirmed with him before anything was ticked**, because "working" could have meant the button
+alone: asked directly whether the Thai lines read correctly too, he answered that they do. That
+question is the same one `0.40.0` recorded needing, when "sign ins done" could have meant two of
+ten lines.
+
+Manual verification by: Lutan Bennett — items 1 and 2 only, confirmed in chat 2026-10-24 (the switch works from the Settings button and the Thai reads naturally); item 3, Settings → Stocktaking on a real phone, remains unchecked and is NOT signed for  Date: 2026-10-24
 
 ### Result
 
