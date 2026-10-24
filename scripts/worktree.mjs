@@ -619,8 +619,8 @@ function cmdList() {
   // by name missed it (2026-10-21, the 267 folder reused for record-0-38-2).
   const odd = trees.filter((t) => !t.main && t.branch.startsWith(BRANCH_PREFIX) && path.basename(t.dir).toLowerCase() !== (FOLDER_PREFIX + t.branch.slice(BRANCH_PREFIX.length)).toLowerCase());
   if (odd.length) {
-    console.log("\nFolder name does not match its branch (cleanup by name will miss these):");
-    for (const t of odd) console.log(`  ${path.basename(t.dir)}  holds  ${t.branch}`);
+    console.log("\nFolder name does not match its branch. Clean these up by BRANCH name; the folder name would be refused:");
+    for (const t of odd) console.log(`  ${path.basename(t.dir)}  holds  ${t.branch}  ->  done ${t.branch.slice(BRANCH_PREFIX.length)}`);
   }
 
   const loose = unheldBranches(trees);
@@ -705,6 +705,21 @@ function cmdDone(args) {
   const dir = tree?.dir ?? folderFor(trees, name);
   if (dir.toLowerCase() === repo.toLowerCase()) fail("run this from another worktree (the main checkout is simplest)");
 
+  // The folder found by name can be a live worktree of a DIFFERENT branch (a release reuses a
+  // leftover folder and rebranches it). Deleting it would destroy that work while removing an
+  // unrelated branch, so no flag gets past this (2026-10-23: done auto-tiles-out reached the
+  // release manager's live worktree and offered --force).
+  if (!tree) {
+    const other = trees.find((t) => !t.main && t.dir.toLowerCase() === dir.toLowerCase());
+    if (other) {
+      const hint = other.branch.startsWith(BRANCH_PREFIX) ? `run 'done ${other.branch.slice(BRANCH_PREFIX.length)}'` : "remove it by hand if it is finished";
+      fail(
+        `${dir} is a live worktree, but it holds ${other.branch}, not ${branch}.\n` +
+          `Nothing was deleted. If you meant that work, ${hint}. --force does not override this.`,
+      );
+    }
+  }
+
   // Whether the branch is merged and pushed is judged against origin, so a
   // stale view of origin is not good enough to delete anything on.
   if (tryGit(["fetch", "-q", "--prune", "origin"]) === null) fail("could not fetch origin — cannot tell what is merged or pushed; try again when online");
@@ -746,7 +761,11 @@ function cmdDone(args) {
     // output is deleted without being asked.
     const other = readdirSync(dir).filter((e) => !BUILD_OUTPUT.includes(e));
     if (other.length) {
-      fail(`${dir} is not a git repo any more, so its contents cannot be checked for uncommitted work:\n  ${other.join(", ")}\n(--force to delete it anyway)`);
+      fail(
+        isRepo
+          ? `no worktree is registered for ${name}, but ${dir} is a git folder, so its contents cannot be matched to a branch:\n  ${other.join(", ")}\n(--force to delete it anyway)`
+          : `${dir} is not a git repo any more, so its contents cannot be checked for uncommitted work:\n  ${other.join(", ")}\n(--force to delete it anyway)`,
+      );
     }
   }
   if (!tree && !exists && !folderThere && !git(["ls-remote", "--heads", "origin", branch], { quiet: true })) {
