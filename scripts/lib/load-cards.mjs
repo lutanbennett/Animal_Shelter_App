@@ -1,6 +1,6 @@
 // Loads the card catalogue (cards.ts, catalogue.ts, English dictionary) into plain node, for the card walkthrough
 // scripts. The .ts files import "./jobs" and "@/…" without extensions, as Next allows; plain node needs a resolver hook
-// (the same one check-cards-count.mjs and check-cards-schema.mjs register).
+// (the same one check-cards-count.mjs and check-card-grants.mjs register).
 import { join } from "node:path";
 import { register } from "node:module";
 import { pathToFileURL } from "node:url";

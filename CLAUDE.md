@@ -7,6 +7,42 @@ its own git worktree, on its own branch, with its own dev server. These
 rules keep `main`, GitHub and the dev database in step while two or three
 features are built in parallel; follow them without being asked.
 
+## Hard-coded security is forbidden
+
+**Lutan, 2026-10-24, after saying it several times elsewhere:** *"Hard coded security in the system
+is forbidden."* *"The only thing that can give permissions to do something in the system has to be a
+card — no exceptions."* And, the rule in full:
+
+> *"A role is a placeholder that gets no permissions until a card is assigned.*
+> *The cards assigned will define page access and read write permissions.*
+> *It's that simple and there are to be zero exceptions to this rule."*
+>
+> *"New cards will be created for specific activities."*
+
+- **Forbidden:** any code or column that grants or denies the ability to do something, other than a
+  card. A role is exactly the set of cards it holds. Nothing keyed by role may change what a card
+  does, or whether it shows.
+- **The test:** does it grant or deny the ability to do something, or decide whether a card shows?
+  Then it must be a card. Does it only decide layout or ordering (the order roles are listed on an
+  admin screen)? Then it is not security.
+- **No card for the activity?** Create one. Never write "but there is no card for this" and add a
+  fallback.
+- **A card applies the access that lets its activity be performed.** It is not a requirement list
+  checked against the role, and there must be no state in which a card does nothing.
+  The `role-cards-coverage` check (#911, `scripts/lib/readonly-checks.mjs`) asks "does any role
+  hold a card that does nothing?" The answer must always be none. **It does not pass yet:** on
+  2026-10-24 production named four roles.
+- **Why it matters:** `cardTile()` in `src/lib/home/tiles.ts` re-checks a card against access the
+  card itself applied, and lets the page rules veto it; the tile then silently isn't drawn, with no
+  message and no record. That is how faults "come out of nowhere".
+- **The existing ones are a known debt, not permission.** They are listed in
+  `docs/hard-coded-security-registry.json` and ratcheted by `node scripts/check-hard-coded-security.mjs`
+  (its own CI job, `hard-coded-security`, which blocks). **The count may only go down.** The check
+  cannot spot a new *kind* of rule nobody has named, so that is on you
+  (`docs/decisions/2026-10-24-hard-coded-security-ratchet.md`).
+- **If a hard-coded rule blocks your work:** record it in `docs/card-access-faults.md` (from `claude/cards-grants-app`; if it is not on `main` yet, say so in your PR), raise it,
+  and do not patch around it or add another.
+
 ## Where am I?
 
 First thing in any session: `git rev-parse --show-toplevel` and

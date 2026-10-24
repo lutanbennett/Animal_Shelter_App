@@ -6,13 +6,14 @@ import { refuseFor } from "@/lib/auth/require-role";
 import { loadPermissions } from "@/lib/permissions/load";
 import { ACTIVITIES, type ActivityKey } from "@/lib/permissions/catalogue";
 import { APPROVE_ACTIVITY, approverNames, needsApprover } from "@/lib/permissions/approvers";
-import { CARDS, CARD_KEYS, bundleOfCards, includedCards, isCardKey, type CardKey } from "@/lib/permissions/cards";
+import { CARDS, CARD_KEYS, isCardKey, type CardKey } from "@/lib/permissions/cards";
+import { includedBy, loadCardGrants } from "@/lib/permissions/card-grants";
 import { TWO_STEP_PATH, hasTwoStep } from "@/lib/auth/two-step";
 import { opensWhoDoesWhat, WHO_DOES_WHAT_PATH } from "@/lib/permissions/who-does-what";
 import { parsePermissions } from "@/lib/permissions/can";
-import { cardTile, isSubsumed } from "@/lib/home/tiles";
+import { isSubsumed, tileBlock } from "@/lib/home/tiles";
 import { getT } from "@/lib/i18n/get-t";
-import { AddExtraForm, CardButton, ShowMenuToggle } from "./CardControls";
+import { CardButton, ShowMenuToggle } from "./CardControls";
 import { CardBoard } from "./CardBoard";
 import { FeaturesPanel } from "./FeaturesPanel";
 import { loadRoles, roleName } from "./roles";
@@ -25,7 +26,7 @@ import { loadRoles, roleName } from "./roles";
  * docs/decisions/2026-10-14-who-does-what-cards-page.md
  *
  * The page changes how access is described and assigned, not who has what: role_permissions stays the table the
- * database checks, recomputed as the union of the cards and the extras by set_role_cards() (0194).
+ * database checks, recomputed by the database as the union of the role's cards' grants (card_grants, 0257); what a card gives is read from there.
  * Admin gives and removes cards, behind the authenticator-app step; Management sees the same and cannot change it
  * (actions.ts holds the rules on the server). The tables are read with the service role after the guard (see roles.ts).
  */
@@ -50,16 +51,16 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
   const names = new Map(roles.map((r) => [r.key, roleName(r, t, locale)]));
 
   const admin = createAdminClient();
-  const [{ data: cardRows, error: cardsError }, { data: extraRows, error: extrasError }, { data: roleRow }, { data: cellRows }, { data: groupRows, error: groupsError }, { data: featureRows, error: featuresError }, { data: cardFeatureRows, error: cardFeaturesError }] = await Promise.all([
+  const [grants, { data: cardRows, error: cardsError }, { data: roleRow }, { data: cellRows }, { data: groupRows, error: groupsError }, { data: featureRows, error: featuresError }, { data: cardFeatureRows, error: cardFeaturesError }] = await Promise.all([
+    loadCardGrants(admin),
     admin.from("role_cards").select("card, position, group_id").eq("role_id", role?.id ?? "").order("position"),
-    admin.from("role_extras").select("activity, level, why").eq("role_id", role?.id ?? ""),
     admin.from("roles").select("key, name, kind, opens_app, home_path, show_menu, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails").eq("id", role?.id ?? "").maybeSingle(),
     admin.from("role_permissions").select("activity, level").eq("role_id", role?.id ?? ""),
     admin.from("role_groups").select("id, name, name_th, icon").eq("role_id", role?.id ?? "").order("position").order("name"),
     admin.from("features").select("id, name, name_th, position").order("position").order("name"),
     admin.from("card_features").select("card, feature_id"),
   ]);
-  const loadError = cardsError ?? extrasError ?? groupsError ?? featuresError ?? cardFeaturesError;
+  const loadError = cardsError ?? groupsError ?? featuresError ?? cardFeaturesError;
   if (loadError) throw new Error(`Who does what: ${loadError.message}`);
   // Features (0255): sections of the Available column. A card with no row, a null feature, or a feature that is gone is Not yet sorted.
   const features = (featureRows ?? []).map((x) => ({ id: x.id as string, name: x.name as string, nameTh: (x.name_th as string | null) ?? "", label: (locale === "th" && (x.name_th as string)) || (x.name as string) }));
@@ -98,18 +99,23 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
         permissions: Object.fromEntries((cellRows ?? []).map((x) => [x.activity as string, x.level as number])),
       })
     : null;
-  const noTile = (k: CardKey) => !!rolePerms && !isSubsumed(k, held, rolePerms) && !cardTile(k, rolePerms, t);
-  const stoodForBy = (k: CardKey) => (rolePerms && isSubsumed(k, held, rolePerms) ? held.find((o) => o !== k && includedCards(o).includes(k)) : undefined);
+  const noTile = (k: CardKey) => (rolePerms && !isSubsumed(k, held, rolePerms) ? tileBlock(k, rolePerms) : null);
+  const stoodForBy = (k: CardKey) => (rolePerms && isSubsumed(k, held, rolePerms) ? held.find((o) => o !== k && includedBy(grants, o).includes(k)) : undefined);
   const library = CARD_KEYS.filter((k) => !held.includes(k)).reverse(); // newest cards are added last, so they lead
   const label = (k: CardKey) => CARDS[k].label(t);
   const describe = (k: CardKey) => c.description[k];
 
+  const warningFor = (k: CardKey) => {
+    const block = noTile(k);
+    return block ? c.noTile(block.page, block.rule) : undefined;
+  };
+
   const tileOf = (k: CardKey) => ({
-    warn: held.includes(k) && noTile(k),
+    warn: held.includes(k) ? warningFor(k) : undefined,
     key: k,
     label: label(k),
     description: describe(k),
-    includes: CARDS[k].includes.map((x) => label(x)).join(", "),
+    includes: (grants.includes.get(k) ?? []).map((x) => label(x)).join(", "),
     href: href({ card: k }) + "#card-detail",
     blocked: needsApprover(k) && approvers.length === 0 ? c.needsApprover : undefined,
     group: groupOf.get(k) ?? null,
@@ -126,19 +132,6 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
     const q = new URLSearchParams({ role: role?.key ?? "", ...extra });
     return `${WHO_DOES_WHAT_PATH}?${q.toString()}`;
   };
-
-  // "Also allowed" is what no held card gives. An extra a held card already covers stays stored (so removing that
-  // card takes away only what it gave) but is not listed while the card covers it.
-  const given = bundleOfCards(held);
-  const extras = (extraRows ?? [])
-    .map((e) => ({ activity: e.activity as ActivityKey, level: Number(e.level), why: e.why as string }))
-    .filter((e) => {
-      const have = given.get(e.activity);
-      return !(have === "edit" || (have === "read" && e.level === 1));
-    });
-  const extraOptions = ACTIVITIES.filter((a) => !extras.some((e) => e.activity === a.key))
-    .sort((x, y) => x.sort - y.sort)
-    .map((a) => ({ key: a.key as string, label: activityName(a.key as ActivityKey), kind: a.kind }));
 
 
   return (
@@ -197,10 +190,10 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
             </Link>
           </div>
           <p className="text-sm text-foreground [overflow-wrap:anywhere]">{describe(cardParam)}</p>
-          {CARDS[cardParam].includes.length > 0 && (
+          {(grants.includes.get(cardParam) ?? []).length > 0 && (
             <p className="text-sm text-foreground">
               {c.includes}:{" "}
-              {includedCards(cardParam).map((k, i) => (
+              {includedBy(grants, cardParam).map((k, i) => (
                 <span key={k}>
                   {i > 0 && ", "}
                   <Link href={href({ card: k })} className="font-medium text-primary underline">
@@ -214,7 +207,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
             <p className="text-sm font-semibold text-foreground">{c.gives}</p>
             <p className="text-xs text-muted">{c.givesNote}</p>
             <ul className="mt-1 flex list-disc flex-col gap-1 pl-5 text-sm text-foreground">
-              {CARDS[cardParam].bundle.map((b) => (
+              {(grants.own.get(cardParam) ?? []).map((b) => (
                 <li key={b.activity} className="[overflow-wrap:anywhere]">
                   {activityName(b.activity)}: <span className="font-semibold">{word(kindOf.get(b.activity), b.level === "read" ? 1 : 2)}</span>
                 </li>
@@ -230,7 +223,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
           {held.includes(cardParam) && stoodForBy(cardParam) && (
             <p className="text-sm text-foreground">{c.shownAsPart(label(stoodForBy(cardParam)!))}</p>
           )}
-          {held.includes(cardParam) && noTile(cardParam) && <p role="alert" className="text-sm font-medium text-danger">{c.noTile}</p>}
+          {held.includes(cardParam) && warningFor(cardParam) && <p role="alert" className="text-sm font-medium text-danger">{warningFor(cardParam)}</p>}
           {canEdit &&
             (held.includes(cardParam) ? (
               <CardButton op={{ kind: "remove", roleKey: role.key, card: cardParam }} label={c.remove} ariaLabel={c.removeFor(label(cardParam))} danger />
@@ -274,44 +267,6 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
             <ShowMenuToggle roleKey={role.key} show={roleRow?.show_menu !== false} onLabel={c.menuOn} offLabel={c.menuOff} />
           ) : (
             isAdmin && <p className="text-xs text-muted">{c.menuLocked}</p>
-          )}
-        </section>
-      )}
-
-      {role && (
-        <section aria-labelledby="also-h" className="flex flex-col gap-3">
-          <h2 id="also-h" className="text-lg font-semibold text-foreground">
-            {c.alsoHeading}
-          </h2>
-          <p className="text-sm text-muted [overflow-wrap:anywhere]">{c.alsoIntro}</p>
-          {extras.length === 0 ? (
-            <p className="text-sm text-foreground">{c.noExtras}</p>
-          ) : (
-            <ul className="flex flex-col gap-2">
-              {extras
-                .sort((a, b) => (ACTIVITIES.find((x) => x.key === a.activity)?.sort ?? 0) - (ACTIVITIES.find((x) => x.key === b.activity)?.sort ?? 0))
-                .map((e) => (
-                  <li key={e.activity} className="flex flex-col gap-1 rounded-lg border border-border bg-surface p-3 text-sm">
-                    <span className="font-semibold text-foreground [overflow-wrap:anywhere]">
-                      {activityName(e.activity)}: {word(kindOf.get(e.activity), e.level)}
-                    </span>
-                    <span className="text-muted [overflow-wrap:anywhere]">
-                      {c.extraWhy}: {e.why}
-                    </span>
-                    {canEdit && (
-                      <div>
-                        <CardButton op={{ kind: "removeExtra", roleKey: role.key, activity: e.activity }} label={c.extraRemove} ariaLabel={c.extraRemoveFor(activityName(e.activity))} danger />
-                      </div>
-                    )}
-                  </li>
-                ))}
-            </ul>
-          )}
-          {canEdit && extraOptions.length > 0 && (
-            <details className="text-sm">
-              <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-foreground">{c.extraAddHeading}</summary>
-              <AddExtraForm roleKey={role.key} options={extraOptions} />
-            </details>
           )}
         </section>
       )}

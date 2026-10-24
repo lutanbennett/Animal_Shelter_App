@@ -112,11 +112,25 @@ export const OUTSIDE_REGISTRY: Record<string, { icon: LucideIcon; open: (p: Perm
   "/management": { icon: NAV_ICONS.management, open: (p) => opensAnyIn(p, "management") },
 };
 
-/** Whether a role's tile for this card can be drawn: its page opens for the role AND its cells cover the bundle. */
+/**
+ * Why a held card draws no tile: the page it opens, and the rule that is NOT a card which refuses it. A role's cells are
+ * exactly the union of its cards' grants (0257), so a card whose page is refused is refused by one of these hard-coded
+ * rules (routes.ts page activities and scopes, OUTSIDE_REGISTRY, roles.opens_app). Null when the page opens.
+ */
+export function tileBlock(key: CardKey, perms: Permissions): { page: string; rule: string } | null {
+  const page = cardOpens(CARDS[key], perms.scopes.clinical);
+  const outside = OUTSIDE_REGISTRY[page];
+  if (outside) return outside.open(perms) ? null : { page, rule: `the OUTSIDE_REGISTRY test for ${page} (src/lib/home/tiles.ts)` };
+  const route = routeFor(page);
+  if (!route) return { page, rule: `${page} is in neither the page registry (routes.ts) nor OUTSIDE_REGISTRY` };
+  if (canOpen(perms, route)) return null;
+  if (route.scope && perms.scopes.clinical !== route.scope.clinical) return { page, rule: `routes.ts: ${page} opens only for clinical scope "${route.scope.clinical}"` };
+  return { page, rule: `routes.ts: ${page} needs ${route.activity} at ${route.level}${route.alsoActivity ? ` (or ${route.alsoActivity})` : ""}` };
+}
+
+/** Whether a role's tile for this card can be drawn: its page opens for the role. What the card gives is the database's business. */
 export function cardTile(key: CardKey, perms: Permissions, t: Dictionary, billsWaiting?: number): HomeTile | null {
   const card = CARDS[key];
-  const covered = card.bundle.every((b) => (b.level ? can(perms, b.activity, b.level) : can(perms, b.activity)));
-  if (!covered) return null;
   const page = cardOpens(card, perms.scopes.clinical);
   const outside = OUTSIDE_REGISTRY[page];
   const route = routeFor(page);

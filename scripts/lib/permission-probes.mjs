@@ -199,7 +199,7 @@ export const NO_DB_PROBE = {
   "appeal.medical_photo": "the guard on appeal_photos (0216) is exercised by scripts/check-appeal-medical-photos.mjs; the paper gives no non-Admin role a cell, which check-permission-tables.mjs H compares",
   "photos.shelter_add": "the one folder rule in the attachments insert policy (0217) is exercised by scripts/check-photo-approval.mjs; the cell itself is compared by check-permission-tables.mjs H",
   "social.library": "a page over memes and social shares, exercised by scripts/check-social-shares-schema.mjs; the cell is compared by check-permission-tables.mjs H",
-  "photos.approve": "the approver guard (0224) is exercised by scripts/check-cards-schema.mjs and check-home-cards.mjs; the Management cell is compared by check-permission-tables.mjs H",
+  "photos.approve": "the approver guard (0224) is exercised by scripts/check-card-grants.mjs and check-home-cards.mjs; the Management cell is compared by check-permission-tables.mjs H",
   "stock.usage": "a page over stock_counts and stock_receipts, covered by the stock.delivery and stock.count probes",
   "system.status": "status_alert_runs is not granted to authenticated at all, Admin included: the page reads it with the service role, so the database has no per-role statement to test",
   "reports.dashboard": "a page that reads tables other activities own; it has no table",
