@@ -18,6 +18,7 @@ import {
 import { PublicHeader } from "../../adopt/PublicHeader";
 import { PublicFooter } from "../../adopt/PublicFooter";
 import { AppealView } from "../AppealView";
+import { requirePageVisible } from "@/lib/public-page-access";
 
 // The raised figure is read live and says when it was last updated.
 export const dynamic = "force-dynamic";
@@ -70,6 +71,7 @@ export async function generateMetadata(props: PageProps<"/appeals/[id]">): Promi
 }
 
 export default async function AppealPage(props: PageProps<"/appeals/[id]">) {
+  await requirePageVisible("appeals");
   const { id } = await props.params;
   const supabase = await createClient();
   const { t, locale } = await getT();

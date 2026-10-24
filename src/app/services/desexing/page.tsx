@@ -9,6 +9,7 @@ import { loadPublicDrives, type PublicDrive } from "@/lib/desexing/public";
 import { PublicHeader } from "../../adopt/PublicHeader";
 import { PublicFooter } from "../../adopt/PublicFooter";
 import { SignupForm } from "./SignupForm";
+import { requirePageVisible } from "@/lib/public-page-access";
 
 // Places left are read live; never baked at build time.
 export const dynamic = "force-dynamic";
@@ -48,6 +49,7 @@ const hhmm = (v: string | null) => (v ? v.slice(0, 5) : null);
  * public_desexing_drives only (0233).
  */
 export default async function DesexingDrivesPage() {
+  await requirePageVisible("desexing");
   const supabase = await createClient();
   const { t, locale } = await getT();
   const [drives, content] = await Promise.all([loadPublicDrives(supabase), loadSiteContent(supabase)]);

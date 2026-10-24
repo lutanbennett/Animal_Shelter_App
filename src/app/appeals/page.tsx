@@ -11,6 +11,7 @@ import { appealProgress, loadPublicAppeals } from "@/lib/appeals/public";
 import { PublicHeader } from "../adopt/PublicHeader";
 import { PublicFooter } from "../adopt/PublicFooter";
 import { AppealCard } from "./AppealCard";
+import { requirePageVisible } from "@/lib/public-page-access";
 
 // The raised figures are read live; never baked at build time.
 export const dynamic = "force-dynamic";
@@ -47,6 +48,7 @@ const wrap = "mx-auto w-full max-w-6xl px-5 lg:px-8";
  * Drafts never reach this page (public_appeals leaves them out in SQL).
  */
 export default async function AppealsPage() {
+  await requirePageVisible("appeals");
   const supabase = await createClient();
   const { t, locale } = await getT();
   const [appeals, content] = await Promise.all([loadPublicAppeals(supabase), loadSiteContent(supabase)]);

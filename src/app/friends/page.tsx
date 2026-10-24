@@ -11,6 +11,7 @@ import { staffDraftFriends } from "@/lib/shelter-friends/staff-drafts";
 import { FriendCard } from "@/components/FriendCard";
 import { PublicHeader } from "../adopt/PublicHeader";
 import { PublicFooter } from "../adopt/PublicFooter";
+import { requirePageVisible } from "@/lib/public-page-access";
 
 /**
  * Open Graph for /friends. The first Friend's logo is the share image when
@@ -66,6 +67,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * signed-in staff only, of drafts that are why the page looks empty.
  */
 export default async function FriendsPage() {
+  await requirePageVisible("friends");
   const supabase = await createClient();
   const { t, locale } = await getT();
   const f = t.shelterFriends;

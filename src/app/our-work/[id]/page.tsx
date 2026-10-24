@@ -26,6 +26,7 @@ import { PublicFooter } from "../../adopt/PublicFooter";
 import { ProjectCard } from "../ProjectCard";
 import { StoryGallery, type StoryPhoto } from "./StoryGallery";
 import { HelpUsDoMore } from "../HelpUsDoMore";
+import { requirePageVisible } from "@/lib/public-page-access";
 
 /**
  * Open Graph tags so a story pasted into Facebook or LINE previews with
@@ -79,6 +80,7 @@ export async function generateMetadata(
 export default async function PublicProjectPage(
   props: PageProps<"/our-work/[id]">,
 ) {
+  await requirePageVisible("our-work");
   const { id } = await props.params;
   const supabase = await createClient();
   const [{ t, locale }, origin] = await Promise.all([getT(), getSiteOrigin()]);

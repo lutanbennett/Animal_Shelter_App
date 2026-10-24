@@ -37,7 +37,7 @@ export type PublicPage = {
   href: string;
   /** The page's name, as the footer and the Donate button use it. */
   label: (t: Dictionary) => string;
-  /** Home and Privacy: recorded now, acted on by the Admin → Website switches. */
+  /** Home and Privacy: no switch, and the database refuses them in the hidden record (0256). */
   neverHidden?: boolean;
   /** In the header and phone menu. `group` omitted = a top-level link. */
   menu?: {
@@ -187,4 +187,39 @@ export function footerPages(column: "help" | "foot"): PublicPage[] {
   return PUBLIC_PAGES.filter((p) => p.footer?.column === column).sort(
     (a, b) => a.footer!.order - b.footer!.order,
   );
+}
+
+/**
+ * Which pages are hidden (docs/decisions/2026-10-25-hiding-public-pages.md). The record is
+ * `site_content.hidden_public_pages`: `page:<key>` for one page, `section:<group>` for a whole
+ * menu group (0256). Everything that links to a page or lists it asks `isPageHidden` here, so a
+ * hidden page leaves every place at once and nothing writes the check a second time.
+ */
+export type HiddenPages = ReadonlySet<string>;
+
+export const pageEntry = (key: PublicSection) => `page:${key}`;
+export const sectionEntry = (group: PublicMenuGroup) => `section:${group}`;
+
+export function hiddenPagesOf(list: readonly string[] | null | undefined): HiddenPages {
+  return new Set(list ?? []);
+}
+
+/** Hidden on its own, or because the section it sits in is hidden. Home and Privacy never are. */
+export function isPageHidden(key: PublicSection, hidden: HiddenPages): boolean {
+  const page = PUBLIC_PAGES.find((p) => p.key === key);
+  if (!page || page.neverHidden) return false;
+  if (hidden.has(pageEntry(key))) return true;
+  const group = page.menu?.group;
+  return group !== undefined && hidden.has(sectionEntry(group));
+}
+
+/**
+ * The list entries the Admin screen may store and the database accepts (0256's check): every
+ * page that can be hidden, and every menu group.
+ */
+export function hideableEntries(): string[] {
+  return [
+    ...PUBLIC_MENU_GROUPS.map((g) => sectionEntry(g.key)),
+    ...PUBLIC_PAGES.filter((p) => !p.neverHidden).map((p) => pageEntry(p.key)),
+  ];
 }

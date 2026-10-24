@@ -5,7 +5,7 @@ import { AvailableBadge } from "@/components/AvailableBadge";
 import { EmptyPhoto } from "@/components/EmptyPhoto";
 import { GalleryTile } from "./GalleryTile";
 import Link from "next/link";
-import { pageHref } from "@/lib/public-pages";
+import { hiddenPagesOf, isPageHidden, pageHref, type PublicSection } from "@/lib/public-pages";
 import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
@@ -173,6 +173,11 @@ export default async function WelcomePage() {
   // No friends (or a failed query): no band, rather than an empty thank-you.
   const friends = friendsResult.friends.slice(0, FRIENDS_SHOWN);
 
+  // A page switched off in Admin → Website is not linked from here, and a block that exists only
+  // to lead to it goes too (docs/decisions/2026-10-25-hiding-public-pages.md).
+  const hidden = hiddenPagesOf(content?.hidden_public_pages);
+  const shown = (key: PublicSection) => !isPageHidden(key, hidden);
+
   const gallery = photosResult.data ?? [];
   const tagline = pairedText(locale, content?.tagline, content?.tagline_th);
   const heroAlt = pairedText(locale, content?.hero_alt, content?.hero_alt_th);
@@ -195,6 +200,8 @@ export default async function WelcomePage() {
       .returns<FeaturedResident[]>();
     featured = data?.[0] ?? null;
   }
+  // The featured card leads to the resident's page under /adopt.
+  if (!shown("adopt")) featured = null;
   // The mockup's one-line hook: the hook line staff write on Edit resident
   // (0094), as the resident page shows it. While that is blank, which is
   // most residents, the bio's first paragraph, cut to a line or two.
@@ -221,12 +228,14 @@ export default async function WelcomePage() {
   const h = t.home.howToHelp;
   // "Help with their care" → /donate, or → /appeals while one is asking: the
   // card promises only what the page delivers (review §6.2, 2026-10-14).
+  const careHref =
+    openAppeals.length > 0 && shown("appeals") ? pageHref("appeals") : shown("donate") ? pageHref("donate") : null;
   const helpCards = [
-    { key: "adopt", href: pageHref("adopt"), ...h.adopt },
-    { key: "care", href: openAppeals.length > 0 ? pageHref("appeals") : pageHref("donate"), ...h.care },
-    { key: "foster", href: pageHref("foster"), ...h.foster },
-    { key: "volunteer", href: pageHref("volunteer"), ...h.volunteer },
-  ];
+    shown("adopt") && { key: "adopt", href: pageHref("adopt"), ...h.adopt },
+    careHref && { key: "care", href: careHref, ...h.care },
+    shown("foster") && { key: "foster", href: pageHref("foster"), ...h.foster },
+    shown("volunteer") && { key: "volunteer", href: pageHref("volunteer"), ...h.volunteer },
+  ].filter((card): card is Exclude<typeof card, false | null> => !!card);
   const sf = t.shelterFriends.homeStrip;
   // What the site is, for search engines: schema.org AnimalShelter from the
   // same row the footer shows (public site review 2026-10-13, §8.2).
@@ -259,20 +268,24 @@ export default async function WelcomePage() {
             {tagline || t.home.heroLead}
           </p>
           <div className="flex flex-wrap gap-4 pt-2">
-            <Link
-              href={pageHref("adopt")}
-              className="spring-lift flex h-14 items-center rounded-full bg-site-ink px-[30px] text-lg font-bold text-site-paper hover:bg-site-ink-soft"
-            >
-              {t.home.meetAnimals}
-            </Link>
+            {shown("adopt") && (
+              <Link
+                href={pageHref("adopt")}
+                className="spring-lift flex h-14 items-center rounded-full bg-site-ink px-[30px] text-lg font-bold text-site-paper hover:bg-site-ink-soft"
+              >
+                {t.home.meetAnimals}
+              </Link>
+            )}
             {/* Straight to the ways to give. "Give monthly" comes back when
                 DonorBox has a monthly link (review §6.2, 2026-10-14). */}
-            <Link
-              href="/donate#ways-to-give"
-              className="spring-lift flex h-14 items-center rounded-full border-2 border-site-action px-[30px] text-lg font-bold text-site-action hover:border-site-action-hover hover:text-site-action-hover"
-            >
-              {t.home.helpFeedThem}
-            </Link>
+            {shown("donate") && (
+              <Link
+                href="/donate#ways-to-give"
+                className="spring-lift flex h-14 items-center rounded-full border-2 border-site-action px-[30px] text-lg font-bold text-site-action hover:border-site-action-hover hover:text-site-action-hover"
+              >
+                {t.home.helpFeedThem}
+              </Link>
+            )}
           </div>
         </div>
         {content?.hero_drive_file_id && (
@@ -289,7 +302,7 @@ export default async function WelcomePage() {
         )}
       </section>
 
-      {openAppeals.length > 0 && (
+      {openAppeals.length > 0 && shown("appeals") && (
         <section aria-labelledby="appeals-strip-heading" className={`${wrap} pb-12`}>
           <div data-reveal className="flex flex-col gap-6 rounded-[20px] bg-site-sand p-6 sm:p-10">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
@@ -342,7 +355,7 @@ export default async function WelcomePage() {
         </section>
       )}
 
-      {friends.length > 0 && (
+      {friends.length > 0 && shown("friends") && (
         <section aria-labelledby="shelter-friends-heading" className={`${wrap} pt-14`}>
           <div data-reveal className="flex flex-col gap-6 rounded-[20px] bg-site-sand p-6 sm:p-10">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between lg:gap-10">
@@ -360,12 +373,14 @@ export default async function WelcomePage() {
               {/* What being a Friend means and how to join; still no sign-up
                   form — the page's contact card is how a business gets in
                   touch (docs/decisions.md, 2026-09-26 and 2026-09-27). */}
-              <Link
-                href={pageHref("friends-join")}
-                className="spring-lift flex h-[52px] shrink-0 items-center self-start rounded-full bg-site-ink px-[26px] text-[17px] font-bold text-site-paper hover:bg-site-ink-soft lg:self-auto"
-              >
-                {sf.become}
-              </Link>
+              {shown("friends-join") && (
+                <Link
+                  href={pageHref("friends-join")}
+                  className="spring-lift flex h-[52px] shrink-0 items-center self-start rounded-full bg-site-ink px-[26px] text-[17px] font-bold text-site-paper hover:bg-site-ink-soft lg:self-auto"
+                >
+                  {sf.become}
+                </Link>
+              )}
             </div>
             {/* A logo (and its name underneath) where there's a logo, just
                 the name where there isn't — each a way into that friend's
@@ -402,16 +417,18 @@ export default async function WelcomePage() {
                   </Link>
                 </li>
               ))}
-              <li>
-                {/* action-hover, not action: terracotta text on the sand
-                    band is 4.46:1, just under AA (decisions.md, part 1). */}
-                <Link
-                  href={pageHref("friends-join")}
-                  className="spring-lift flex h-28 items-center justify-center rounded-[14px] border-2 border-dashed border-site-action p-2 text-center text-[15px] font-bold text-site-action-hover hover:bg-site-paper"
-                >
-                  {sf.yourBusiness}
-                </Link>
-              </li>
+              {shown("friends-join") && (
+                <li>
+                  {/* action-hover, not action: terracotta text on the sand
+                      band is 4.46:1, just under AA (decisions.md, part 1). */}
+                  <Link
+                    href={pageHref("friends-join")}
+                    className="spring-lift flex h-28 items-center justify-center rounded-[14px] border-2 border-dashed border-site-action p-2 text-center text-[15px] font-bold text-site-action-hover hover:bg-site-paper"
+                  >
+                    {sf.yourBusiness}
+                  </Link>
+                </li>
+              )}
             </ul>
             <Link href={pageHref("friends")} className={`${textLink} self-start text-site-action-hover`}>
               {sf.seeAll} &rarr;
@@ -420,34 +437,36 @@ export default async function WelcomePage() {
         </section>
       )}
 
-      <section
-        aria-labelledby="how-to-help-heading"
-        className={`${wrap} flex flex-col gap-7 pt-16 lg:pt-[72px]`}
-      >
-        <div data-reveal className="flex flex-col gap-2">
-          <h2 id="how-to-help-heading" className={sectionHeading}>
-            {h.heading}
-          </h2>
-          <p className="text-lg text-site-ink-soft">{h.subtitle}</p>
-        </div>
-        <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {helpCards.map((card) => (
-            <li key={card.key} className="flex">
-              <Link
-                href={card.href}
-                data-reveal
-                className="spring-lift group flex flex-1 flex-col gap-2.5 rounded-2xl border border-site-line bg-site-paper p-7 hover:border-site-line-strong"
-              >
-                <span className="font-display text-2xl font-bold text-site-ink">{card.title}</span>
-                <span className="text-base leading-normal text-site-ink-soft">{card.body}</span>
-                <span className="mt-auto pt-1.5 font-bold text-site-action group-hover:text-site-action-hover group-hover:underline">
-                  {card.cta} &rarr;
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {helpCards.length > 0 && (
+        <section
+          aria-labelledby="how-to-help-heading"
+          className={`${wrap} flex flex-col gap-7 pt-16 lg:pt-[72px]`}
+        >
+          <div data-reveal className="flex flex-col gap-2">
+            <h2 id="how-to-help-heading" className={sectionHeading}>
+              {h.heading}
+            </h2>
+            <p className="text-lg text-site-ink-soft">{h.subtitle}</p>
+          </div>
+          <ul className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {helpCards.map((card) => (
+              <li key={card.key} className="flex">
+                <Link
+                  href={card.href}
+                  data-reveal
+                  className="spring-lift group flex flex-1 flex-col gap-2.5 rounded-2xl border border-site-line bg-site-paper p-7 hover:border-site-line-strong"
+                >
+                  <span className="font-display text-2xl font-bold text-site-ink">{card.title}</span>
+                  <span className="text-base leading-normal text-site-ink-soft">{card.body}</span>
+                  <span className="mt-auto pt-1.5 font-bold text-site-action group-hover:text-site-action-hover group-hover:underline">
+                    {card.cta} &rarr;
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section
         className={`${wrap} grid gap-10 py-16 lg:pb-20 lg:pt-[72px] ${
@@ -518,14 +537,20 @@ export default async function WelcomePage() {
               ))}
             </div>
           )}
-          <div className="flex flex-col items-start gap-1">
-            <Link href={pageHref("about")} className={`${textLink} self-start text-site-action`}>
-              {t.home.readMoreAbout} &rarr;
-            </Link>
-            <Link href={pageHref("our-work")} className={`${textLink} self-start text-site-action`}>
-              {t.home.seeOurWork} &rarr;
-            </Link>
-          </div>
+          {(shown("about") || shown("our-work")) && (
+            <div className="flex flex-col items-start gap-1">
+              {shown("about") && (
+                <Link href={pageHref("about")} className={`${textLink} self-start text-site-action`}>
+                  {t.home.readMoreAbout} &rarr;
+                </Link>
+              )}
+              {shown("our-work") && (
+                <Link href={pageHref("our-work")} className={`${textLink} self-start text-site-action`}>
+                  {t.home.seeOurWork} &rarr;
+                </Link>
+              )}
+            </div>
+          )}
         </div>
       </section>
 

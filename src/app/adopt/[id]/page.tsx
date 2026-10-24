@@ -32,6 +32,7 @@ import { PublicHeader } from "../PublicHeader";
 import { PublicFooter } from "../PublicFooter";
 import { ResidentCard } from "../ResidentCard";
 import { PhotoGallery } from "./PhotoGallery";
+import { requirePageVisible } from "@/lib/public-page-access";
 
 /** The page's reading column; lines up with the header's edges on a phone. */
 const column = "mx-auto w-full max-w-3xl px-5 lg:px-8";
@@ -106,6 +107,7 @@ export async function generateMetadata(
 export default async function PublicResidentPage(
   props: PageProps<"/adopt/[id]">,
 ) {
+  await requirePageVisible("adopt");
   const { id } = await props.params;
   const supabase = await createClient();
   const { t, locale } = await getT();

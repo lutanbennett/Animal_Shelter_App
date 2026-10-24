@@ -18,6 +18,7 @@ import { PublicFooter } from "./PublicFooter";
 import { ResidentCard, type ResidentCardRow } from "./ResidentCard";
 import { HappyEndings, type RecentAdoption } from "./HappyEndings";
 import { loadStoryResidentIds } from "@/lib/adoption-updates/public";
+import { requirePageVisible } from "@/lib/public-page-access";
 
 export async function generateMetadata(): Promise<Metadata> {
   const [supabase, { t, locale }, origin] = await Promise.all([
@@ -66,6 +67,7 @@ function param(value: string | string[] | undefined): string | null {
 export default async function AdoptPage(props: PageProps<"/adopt">) {
   const searchParams = await props.searchParams;
   await showcaseAdoptPause(searchParams);
+  await requirePageVisible("adopt");
   const supabase = await createClient();
   const { t, locale } = await getT();
   const signedIn = Boolean((await supabase.auth.getUser()).data.user);

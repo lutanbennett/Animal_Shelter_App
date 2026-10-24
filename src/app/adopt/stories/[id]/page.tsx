@@ -9,6 +9,7 @@ import { speciesLabel } from "@/lib/i18n/enum-labels";
 import { BackLink } from "../../BackLink";
 import { PublicHeader } from "../../PublicHeader";
 import { PublicFooter } from "../../PublicFooter";
+import { requirePageVisible } from "@/lib/public-page-access";
 
 /**
  * /adopt/stories/<resident id>: the news and photos an adopter agreed to share
@@ -34,6 +35,7 @@ export async function generateMetadata(props: PageProps<"/adopt/stories/[id]">):
 }
 
 export default async function SuccessStoriesPage(props: PageProps<"/adopt/stories/[id]">) {
+  await requirePageVisible("adopt");
   const { id } = await props.params;
   const [{ t }, stories] = await Promise.all([getT(), load(id)]);
   if (!stories) notFound();
