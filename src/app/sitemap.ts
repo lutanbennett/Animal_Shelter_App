@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { isPublicSiteLocked } from "@/lib/public-site";
+import { sitemapPages } from "@/lib/public-pages";
 import { getSiteOrigin } from "@/lib/site-origin";
 
 // PUBLIC_SITE is a Worker var read at request time (src/lib/public-site.ts),
@@ -41,20 +42,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // The static public pages, the home page first; /adopt#how-to-adopt is a
   // fragment of /adopt and so not listed twice.
-  const pages: MetadataRoute.Sitemap = [
-    { url: abs("/"), changeFrequency: "weekly", priority: 1 },
-    { url: abs("/adopt"), changeFrequency: "daily", priority: 0.9 },
-    { url: abs("/appeals"), changeFrequency: "daily", priority: 0.8 },
-    { url: abs("/services/desexing"), changeFrequency: "weekly", priority: 0.6 },
-    { url: abs("/our-work"), changeFrequency: "weekly", priority: 0.8 },
-    { url: abs("/donate"), changeFrequency: "monthly", priority: 0.8 },
-    { url: abs("/foster"), changeFrequency: "monthly", priority: 0.6 },
-    { url: abs("/volunteer"), changeFrequency: "monthly", priority: 0.6 },
-    { url: abs("/adopt/international"), changeFrequency: "monthly", priority: 0.5 },
-    { url: abs("/friends"), changeFrequency: "monthly", priority: 0.5 },
-    { url: abs("/friends/join"), changeFrequency: "yearly", priority: 0.3 },
-    { url: abs("/privacy"), changeFrequency: "yearly", priority: 0.1 },
-  ];
+  const pages: MetadataRoute.Sitemap = sitemapPages().map((page) => ({
+    url: abs(page.href),
+    changeFrequency: page.sitemap.changeFrequency,
+    priority: page.sitemap.priority,
+  }));
 
   const animals: MetadataRoute.Sitemap = (residents.data ?? []).map((r) => ({
     url: abs(`/adopt/${r.id}`),
