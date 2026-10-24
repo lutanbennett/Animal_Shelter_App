@@ -195,6 +195,21 @@ jobs:
           node-version: 22
       - run: node scripts/check-cards-count.mjs
 
+  # Hard-coded security is forbidden (CLAUDE.md). Ratchets the known mechanisms in docs/hard-coded-security-registry.json: fails
+  # when a count rises. No continue-on-error: a red that cannot fail gets ignored. Cannot see a new KIND of rule nobody has named.
+  # Judges the tree, so PRs and main (docs/decisions/2026-10-24-hard-coded-security-ratchet.md).
+  hard-coded-security:
+    needs: changes
+    if: needs.changes.outputs.docs-only != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - run: node scripts/check-hard-coded-security.mjs
+
   # The card walkthrough (docs/card-walkthrough.md) is generated from cards.ts: fails when a card has no steps or the
   # file is out of date. Reads only the repo, like cards-count (docs/decisions/2026-10-22-card-walkthrough-generated.md).
   card-walkthrough:
