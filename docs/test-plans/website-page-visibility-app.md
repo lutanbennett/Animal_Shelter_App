@@ -149,7 +149,7 @@ Automated checks by: Claude  Date: 2026-10-25
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the phone-width and Thai look at the new panel
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the one item (phone width and Thai wording) is still with a person, recorded as pending on the signature below
 
 Manual verification by: pending: the phone-width and Thai look at the new panel
 
