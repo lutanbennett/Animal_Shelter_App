@@ -150,6 +150,20 @@ note:
   with it:** that second failure grepped the constant the item named, which
   was real, while the fix sat on another code path. Ask whether the behaviour
   the item describes still happens, not whether the code it names still exists.
+- **`check-backlog-sections.mjs` TESTS AN ITEM'S POSITION, NOT WHETHER ITS SUBJECT MATCHES ITS
+  SECTION — and nothing tests whether a finding was filed on the right item at all. That gap is
+  the planner's to close, every run.** Added 2026-10-24, after three instances in one round, **all
+  of which the checker passed**: (1) two items — a check-script triage and a permissions guard —
+  were appended at the bottom of `## Fundraising`, above `## Completed` so the checker was happy,
+  and invisible to anyone reading Security or Architecture; (2) the `worktree.mjs done` fault was
+  recorded **twice**, once as its own item and once appended as "(4)" to the dev sign-in item whose
+  title mentioned nothing of it — and the appended copy had the **better** diagnosis, so the
+  duplicate could not simply be deleted; (3) a stream triaged five of 52 red harnesses and the item
+  was ticked **wholesale**, leaving the other 47 with nothing on the board. **So each run, for every
+  item a stream touched, ask three things: is it in the right SECTION, is this the right ITEM for
+  what was recorded, and does the tick cover everything the item claimed?** A ticked item whose
+  work is only partly done is the same invisibility fault as one filed below `## Completed`, and
+  costs more because it reads as finished.
 - **AND THE MIRROR FAULT: work recorded only as a sub-note of another item is
   invisible, and cannot be ticked.** Added 2026-10-21, after two such gaps were
   found in one round. Dropping the dead `role_home_tiles` table had **no item at
@@ -161,6 +175,15 @@ note:
   the tails for FOLLOW-UPS as well as for answers, and file what you find as its
   own item on the `backlog` branch.** A follow-up buried in a parent is work the
   backlog cannot see.
+- **WHEN AN ITEM QUOTES A COUNT, ASK WHICH DATABASE IT CAME FROM. A DEV COUNT PRESENTED AS LUTAN'S
+  DECISION IS A FALSE BLOCK.** Added 2026-10-24. The diets item said eight ingredient lines were out
+  of proportion and that **each was his call**, and it sat as a blocker across two editions on that
+  basis. The eight were **dev test data and were never his.** Run against production,
+  `scripts/check-diets-proportion.mjs --env production` returned **one** line; he answered it in a
+  single message and a re-run returned **zero**. **Most counts a stream writes down come from dev,
+  because dev is where it worked** — so a count attached to a decision is worth one command before it
+  is put to him, and the cheapest thing shipped that round was the script that made the production
+  count readable at all.
 - **When an orphan or a gap is a HUB, closing it closes everything under it —
   price and predict accordingly.** Added 2026-10-21. *Menu-removal orphans 1 of 6*
   named **12 rows**; the stream closed **51**, and `check-menu-coverage.mjs` went
@@ -374,6 +397,7 @@ Two axes that genuinely do cost, both measured 2026-10-20:
 | Replacing an existing screen | **155–200k** | 169,220 |
 | Reads very widely and edits many call sites | **185–250k** | 200,612 — **reading widely is cheap; editing many call sites is what cost** |
 | **Creates a new surface people submit data through** | **200–270k** | 235,561 |
+| **A new surface that ALSO DELETES what it replaces** | **260–330k** | 290,888 — `units-of-measure-app` (2026-10-23), banded 200–270k and **+8% over**. A Settings CRUD screen, **plus** eight call sites moved onto the table, **plus** deleting the two hard-coded lists and their dictionary entries, **plus** both dictionaries, the manual and real browser checks. **The wide deletion is a SECOND job, not a detail of the first** — ask whether the new surface retires something, and if it does, use this row rather than the one above |
 | Builds an instrument / transport path from nothing | **250–320k** | 286,350 — **one reading only, and nothing since has belonged in it. Do not widen a stream into this row because its behaviour sounds new** |
 | Quick win | 110–170k | 1–3 files; screenshots cost far less than first assumed. **Left as written on Lutan's ruling, 2026-10-11** — the planner had been quoting 130–200k while both measured quick wins (129,320 · 135,901) sat *inside* this band. **The band was right and the quoting was high. Do not reopen it** |
 | Schema PR, single file | **~140–155k** | measured 6×: `cashflow-forecast-function` 139,791 · `drop-leftovers-schema` 143,030 (three unrelated items in one file) · `receipt-issuer-server-side` 143,678 · `map-rooms-schema` 151,273 · `role-floor-schema` 231,297 · `perm-functions-schema` 284,248 |
@@ -499,6 +523,18 @@ dearest.** Hence the stop-and-hand-over rule in step 7.
 two under and one over, and the worst error was +7%.** The best spread yet, on the
 same brief discipline edition `276` identified.
 
+- **BUT "nothing left to discover" DOES NOT COVER "must prove it broke nothing", and a
+  PERMISSIONS schema PR carries about +30k of proof.** Added 2026-10-24.
+  `doctor-clinic-scope-schema` came in at **163,471 against 120–155k, +5%** on a fix written out
+  on the item line by line — the policies named, the clause to add named, the shape to copy named.
+  What the band missed is that it had to prove **Management, Admin and Head of Medical still pass**,
+  re-run three harnesses and write a `begin … rollback` harness demonstrating the refusal. **That
+  proof is the point of a permissions change**, so never band one as if the fix were the whole job.
+  Related, same round: `units-of-measure-schema` had its `src/` work forbidden and its column list
+  handed to it, and still landed **mid-band (143,881) rather than near the floor**, because it had
+  to propose the unit tags, judge that `kg` is a conversion unit, and design a write-only
+  validation so existing rows survive. **So "nothing left to discover" is about what the stream
+  must DECIDE, not merely which files it may touch.**
 - **A schema PR with NOTHING LEFT TO DISCOVER costs barely more than the floor:
   ~110-140k.** `supporters-list-schema` came in at **111,834** against a 140-165k
   band and against every schema PR measured before it (139k-284k). Its brief
@@ -925,6 +961,18 @@ belong here.
    there was a sweep. **"It works" with no latency attached invites exactly that, and the person
    loses confidence in the feature and in you.** One clause is enough: *"it appears within fifteen
    minutes"*.
+
+4. **RUN THE COMMAND AN ITEM NAMES. You are the only role that can, and leaving it unrun leaves a
+   security question open for nothing.** Added 2026-10-24. `check-scripts-doctor-triage` found that a
+   doctor login could create bulk bookings at any clinic and read and write every clinic visit's
+   attachments, **bills included** — against `0220`'s own header saying a doctor never reads a bill.
+   It filed this properly, wrote **"Production: NOT ESTABLISHED"**, and named the exact command that
+   would settle it, because **a stream in a worktree cannot read production and is right to say so.**
+   The planner ran it: `0230` was applied, so **the fault was LIVE on production**, and a filed item
+   became the next batch's first stream within the hour. **So before planning anything, scan the items
+   a stream just filed for a named-but-unrun production check, and run it.** The same applies to any
+   item whose status is a question the main checkout can answer — `--status --env production` settles
+   "is this live?" in one line.
 
 **And the habit that limits the damage of all three: when an incident ends, the findings go onto the
 backlog in the same session.** Every measurement from that morning lived only in the chat for about
