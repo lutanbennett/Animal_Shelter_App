@@ -208,6 +208,25 @@ records the decision as "confirmed in chat by Lutan"; `0.15.0` did not ask, and
 he raised it. Ask it together with anything else the cut needs from him (a note's
 wording, a role tag), in one round rather than three.
 
+**Ask about the EMAIL, never about "major or minor".** Promoted here after `0.40.1`,
+where the ambiguity nearly sent the wrong release. The two words mean different
+things to the two sides of the conversation:
+
+- In Lutan's usage, **"minor" is the middle-number bump** — `0.39.5 → 0.40.0` — and that release **mailed**.
+- In this repo, the `major` boolean means **"worth an email"**, not semver major, and `0.40.0 → 0.40.1` is the last-number bump that mails **nobody**.
+
+So "minor" fits both `0.41.0` *with* mail and `0.40.1` *without* it, and a session
+offering the words as options will get an answer it cannot interpret. `0.40.0`'s cut
+plan named this trap in writing, and **it still nearly bit the very next release**,
+because the fault is in the question rather than in the data — which is why naming it
+in a handover was not enough and it lives here now.
+
+**Put it to him with the words removed:** *should this release email you?*, naming what
+the email would contain and that it cannot be unsent once the production deploy runs.
+Then derive the version and the `major` flag from his answer, and assert both in the cut
+(the absence-plus-presence pair below). On `0.40.1` that second question took one round
+trip and settled it.
+
 **Verify the cut mechanically — do not read it over.** A cut's one real failure
 mode is losing or altering a note, and that is invisible to every gate. Compare
 the new entry against `origin/main:src/lib/releases.ts` note by note and assert:
