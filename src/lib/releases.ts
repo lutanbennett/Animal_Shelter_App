@@ -75,19 +75,28 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "Record a delivery no longer ignores your first taps while the page is still loading, and the page opens a little faster.",
-  {
-    text: "Units of measure are now a list you keep yourself, under Settings → Units. Add a unit (such as each, so an egg can be counted in eggs), give it a Thai name, and choose whether it is offered for ingredients, medicines or both. The ingredient and medicine forms offer exactly that list. A unit that an ingredient or medicine is already measured in can't be renamed or archived, and the page says which ones use it. Where a recipe counts things by the each, it now reads simply \"Egg 1\" rather than \"1 each Egg\".",
-    roles: ["admin"],
-  },
-  {
-    text: "The Recurring jobs page now opens in a few seconds instead of taking half a minute or more, and no longer shows \"Couldn't load recurring jobs: fetch failed\" above the list. Saving a job was slow for the same reason and is quicker too.",
-    roles: ["admin", "management", "second_in_command"],
-  },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.40.0",
+    date: "2026-10-24",
+    title:
+      "Units you keep yourself, and two pages that were slow",
+    major: true,
+    notes: [
+      "Record a delivery no longer ignores your first taps while the page is still loading, and the page opens a little faster.",
+      {
+        text: "Units of measure are now a list you keep yourself, under Settings → Units. Add a unit (such as each, so an egg can be counted in eggs), give it a Thai name, and choose whether it is offered for ingredients, medicines or both. The ingredient and medicine forms offer exactly that list. A unit that an ingredient or medicine is already measured in can't be renamed or archived, and the page says which ones use it. Where a recipe counts things by the each, it now reads simply \"Egg 1\" rather than \"1 each Egg\".",
+        roles: ["admin"],
+      },
+      {
+        text: "The Recurring jobs page now opens in a few seconds instead of taking half a minute or more, and no longer shows \"Couldn't load recurring jobs: fetch failed\" above the list. Saving a job was slow for the same reason and is quicker too.",
+        roles: ["admin", "management", "second_in_command"],
+      },
+    ],
+  },
   {
     version: "0.39.5",
     date: "2026-10-23",
