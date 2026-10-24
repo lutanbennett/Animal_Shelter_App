@@ -21,10 +21,13 @@ export function StockOnHandCell({
   countValue,
   onCountChange,
   inPurchaseUnit,
+  stocktakingOff = false,
   as = "td",
 }: {
   /** "div" on a card (Management → Medication stock, Diet stock); "td" in a table row. */
   as?: "td" | "div";
+  /** The area's Stocktaking switch is OFF: no count is shown, and "Not counted" is true of everything so it is not said. */
+  stocktakingOff?: boolean;
   figures: StockFigures;
   reading: StockReading;
   /** Already translated. */
@@ -58,6 +61,14 @@ export function StockOnHandCell({
           />
           <span className="text-xs text-muted">{s.countLabel(unit)}</span>
         </div>
+      </Cell>
+    );
+  }
+
+  if (stocktakingOff) {
+    return (
+      <Cell className={cellClass}>
+        <span className="text-muted">{s.stocktakingOffShort}</span>
       </Cell>
     );
   }
@@ -119,11 +130,14 @@ export function DaysOfStockCell({
   editing,
   leadDaysValue,
   onLeadDaysChange,
-  safety,
+  safety: safetyEdit,
+  stocktakingOff = false,
   as = "td",
 }: {
   /** As StockOnHandCell. */
   as?: "td" | "div";
+  /** As StockOnHandCell. Days of stock and the reorder flag need a count, and safety stock is not used while OFF. */
+  stocktakingOff?: boolean;
   figures: StockFigures;
   reading: StockReading;
   /** The row's Edit mode — the lead time is edited with the item's other details. */
@@ -136,6 +150,7 @@ export function DaysOfStockCell({
   const s = t.management.stock;
   const Cell = as;
   const cellClass = as === "td" ? "px-4 py-2" : undefined;
+  const safety = stocktakingOff ? undefined : safetyEdit;
 
   if (editing) {
     return (
@@ -185,6 +200,19 @@ export function DaysOfStockCell({
             </>
           )}
         </div>
+      </Cell>
+    );
+  }
+
+  if (stocktakingOff) {
+    return (
+      <Cell className={cellClass}>
+        <span className="text-muted">—</span>
+        {figures.reorder_lead_days != null && (
+          <div className="mt-1 text-xs text-muted">
+            <span>{s.leadTime(figures.reorder_lead_days)}</span>
+          </div>
+        )}
       </Cell>
     );
   }

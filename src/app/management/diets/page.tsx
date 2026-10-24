@@ -15,6 +15,7 @@ import { loadConversions, loadDeliveryCosts } from "@/lib/units-server";
 import { loadReceipts } from "@/lib/management/receipts-server";
 import { receivedSinceCount } from "@/lib/management/purchasing";
 import { requirePermission } from "@/lib/permissions/require";
+import { loadStocktakingSwitches } from "@/lib/management/stocktaking-switches";
 import { canEditItemSettings } from "@/lib/permissions/item-settings";
 import { moveDietType } from "./actions";
 
@@ -51,6 +52,7 @@ type ForecastRow = {
 export default async function DietStockPage(props: PageProps<"/management/diets">) {
   const { supabase, perms } = await requirePermission("stock.diets");
   const { t, locale } = await getT();
+  const switches = await loadStocktakingSwitches(supabase);
   const searchParams = await props.searchParams;
 
   // ?view=order: the cupboard order on a screen of its own, one job per
@@ -251,7 +253,8 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
             to={custom && "window" in custom ? custom.window.to : ""}
             invalid={custom != null && "invalid" in custom}
           />
-          <DietStockCards dietTypes={dietTypes} forecastHeadings={forecastHeadings} />
+          {!switches.food && <p className="text-sm text-foreground">{t.management.stock.stocktakingOff}</p>}
+          <DietStockCards dietTypes={dietTypes} forecastHeadings={forecastHeadings} stocktaking={switches.food} />
           <p className="text-xs text-muted">{m.table.forecastNote}</p>
           <p className="text-xs text-muted">{t.management.stock.note}</p>
         </section>

@@ -105,13 +105,21 @@ export type PurchaseInput = {
   safetyStock: number | null;
   /** Base units in one purchase unit; null = no pack known. */
   packBase: number | null;
+  /**
+   * The area's Stocktaking switch (stocktaking-switches.ts). Default ON. While OFF,
+   * nothing is assumed in stock and no safety stock is added: buy the period's use.
+   */
+  stocktaking?: boolean;
 };
 
 export type PurchaseRow = {
   id: string;
   name: string;
-  /** "notCounted": nothing on the shelf is assumed, so the whole need is bought. */
-  state: "notCounted" | "ok";
+  /**
+   * "notCounted": nothing on the shelf is assumed, so the whole need is bought.
+   * "off": the area's Stocktaking switch is OFF; the same sum, but true of every item, so it carries no tag.
+   */
+  state: "notCounted" | "off" | "ok";
   counted: number | null;
   countedAt: string | null;
   countedDaysAgo: number | null;
@@ -136,7 +144,38 @@ const round6 = (n: number) => Math.round(n * 1e6) / 1e6;
 /** Up to 2 places: 2.301 → 2.31, never down. The epsilon stops 2.3 → 2.31. */
 const ceil2 = (n: number) => Math.ceil(n * 100 - 1e-9) / 100;
 
+function roundToPacks(shortfall: number, packBase: number | null) {
+  if (shortfall > 0 && packBase != null && packBase > 0) {
+    const packs = Math.ceil(shortfall / packBase - 1e-9);
+    return { packs, buy: round6(packs * packBase) };
+  }
+  return { packs: null, buy: shortfall > 0 ? ceil2(shortfall) : shortfall };
+}
+
 export function purchaseRow(input: PurchaseInput, now: number = Date.now()): PurchaseRow {
+  if (input.stocktaking === false) {
+    // Counting is switched off for this area: every item is as good as empty, and a safety margin
+    // added every period would grow the cupboard each cycle, so the need is the period's use alone.
+    const needed = round6(input.usedInWindow);
+    return {
+      id: input.id,
+      name: input.name,
+      windowDays: input.windowDays,
+      periodUse: input.usedInWindow,
+      safetyStock: null,
+      needed,
+      state: "off",
+      counted: null,
+      countedAt: null,
+      countedDaysAgo: null,
+      stale: false,
+      usedSince: 0,
+      receivedSince: 0,
+      expected: null,
+      shortfall: needed,
+      ...roundToPacks(needed, input.packBase),
+    };
+  }
   const safety = input.safetyStock != null && input.safetyStock > 0 ? input.safetyStock : 0;
   const needed = round6(input.usedInWindow + safety);
   const base = {
@@ -148,13 +187,7 @@ export function purchaseRow(input: PurchaseInput, now: number = Date.now()): Pur
     needed,
   };
 
-  const rounded = (shortfall: number) => {
-    if (shortfall > 0 && input.packBase != null && input.packBase > 0) {
-      const packs = Math.ceil(shortfall / input.packBase - 1e-9);
-      return { packs, buy: round6(packs * input.packBase) };
-    }
-    return { packs: null, buy: shortfall > 0 ? ceil2(shortfall) : shortfall };
-  };
+  const rounded = (shortfall: number) => roundToPacks(shortfall, input.packBase);
 
   if (input.counted == null) {
     // Never counted: assume none on the shelf, so the whole need is bought.

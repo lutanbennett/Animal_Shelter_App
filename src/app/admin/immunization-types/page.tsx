@@ -7,12 +7,14 @@ import {
 } from "./ImmunizationTypesTable";
 import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { requirePermission } from "@/lib/permissions/require";
+import { loadStocktakingSwitches } from "@/lib/management/stocktaking-switches";
 
 export default async function ImmunizationTypesPage() {
   await requirePermission("reference.types");
   const { t } = await getT();
 
   const supabase = await createClient();
+  const switches = await loadStocktakingSwitches(supabase);
   // cost is numeric(12, 2); PostgREST normally sends a JSON number but can
   // send a string, so it is normalised once here.
   const { data, error } = await supabase
@@ -49,7 +51,7 @@ export default async function ImmunizationTypesPage() {
         )}
 
         <CreateImmunizationTypeForm />
-        <ImmunizationTypesTable immunizationTypes={immunizationTypes} />
+        <ImmunizationTypesTable immunizationTypes={immunizationTypes} stocktaking={switches.medical} />
       </LargerScreenNotice>
     </main>
   );

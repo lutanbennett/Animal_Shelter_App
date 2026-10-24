@@ -8,6 +8,7 @@ import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { type StocktakeItem, type StocktakeKind } from "@/lib/management/stocktake";
 import { CONVERSION_COLUMNS, groupConversions, type ConversionRow, type EnteredLine } from "@/lib/units";
 import { StocktakeSheet } from "./StocktakeSheet";
+import { loadStocktakingSwitches } from "@/lib/management/stocktaking-switches";
 
 type StockRow = {
   id: string;
@@ -37,21 +38,29 @@ export default async function StocktakePage(props: PageProps<"/stocktake">) {
 
   const { t, locale } = await getT();
   const searchParams = await props.searchParams;
-  const initialTab: StocktakeKind = searchParams.tab === "diets" ? "diet" : "medication";
+  const switches = await loadStocktakingSwitches(supabase);
+  // A switched-off area is not listed (docs/decisions/2026-10-24-stocktaking-switches-app.md).
+  const wanted: StocktakeKind = searchParams.tab === "diets" ? "diet" : "medication";
+  const initialTab: StocktakeKind =
+    wanted === "diet" && !switches.food ? "medication" : wanted === "medication" && !switches.medical ? "diet" : wanted;
 
   const [medicationResult, dietResult, conversionsResult, lastCountsResult] = await Promise.all([
-    supabase
-      .from("stock_medications")
-      .select("id, name, name_th, unit:dose_unit, stock_on_hand, stock_counted_at, label_drive_file_id")
-      .order("sort_order", { nullsFirst: false })
-      .order("name")
-      .returns<StockRow[]>(),
-    supabase
-      .from("stock_diet_types")
-      .select("id, name, name_th, unit, stock_on_hand, stock_counted_at")
-      .order("sort_order", { nullsFirst: false })
-      .order("name")
-      .returns<StockRow[]>(),
+    switches.medical
+      ? supabase
+          .from("stock_medications")
+          .select("id, name, name_th, unit:dose_unit, stock_on_hand, stock_counted_at, label_drive_file_id")
+          .order("sort_order", { nullsFirst: false })
+          .order("name")
+          .returns<StockRow[]>()
+      : Promise.resolve({ data: [] as StockRow[], error: null }),
+    switches.food
+      ? supabase
+          .from("stock_diet_types")
+          .select("id, name, name_th, unit, stock_on_hand, stock_counted_at")
+          .order("sort_order", { nullsFirst: false })
+          .order("name")
+          .returns<StockRow[]>()
+      : Promise.resolve({ data: [] as StockRow[], error: null }),
     supabase.from("item_unit_conversions").select(CONVERSION_COLUMNS).returns<ConversionRow[]>(),
     // The latest count of each item, for the sizes it was made in (Same as last time repeats them).
     supabase
@@ -110,8 +119,19 @@ export default async function StocktakePage(props: PageProps<"/stocktake">) {
         </p>
       )}
 
+      {!switches.medical && switches.food && (
+        <p className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground">{s.switchedOff.medication}</p>
+      )}
+      {!switches.food && switches.medical && (
+        <p className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground">{s.switchedOff.diet}</p>
+      )}
+      {!switches.food && !switches.medical && (
+        <p className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground">{s.switchedOff.both}</p>
+      )}
+
       <StocktakeSheet
         initialTab={initialTab}
+        switches={switches}
         items={{
           medication: (medicationResult.data ?? []).map(toItem((u) => doseUnitLabel(t, u))),
           diet: (dietResult.data ?? []).map(toItem((u) => dietUnitLabel(t, u))),

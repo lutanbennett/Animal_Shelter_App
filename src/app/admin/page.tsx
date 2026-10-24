@@ -103,6 +103,12 @@ export default async function AdminPage() {
       phoneNote: t.largerScreen.tileLabel,
     },
     {
+      href: "/admin/stocktaking",
+      label: t.nav.stocktaking,
+      description: t.admin.landing.tiles.stocktaking,
+      icon: SECTION_ICONS.diet,
+    },
+    {
       href: "/admin/security",
       label: t.nav.security,
       description: t.admin.landing.tiles.security,
@@ -128,7 +134,7 @@ export default async function AdminPage() {
     },
   ];
   const tiles = allTiles.filter((tile) => {
-    if (tile.href === "/admin/security") return perms.isAdmin;
+    if (tile.href === "/admin/security" || tile.href === "/admin/stocktaking") return perms.isAdmin;
     if (tile.href === WHO_DOES_WHAT_PATH) return opensWhoDoesWhat(perms);
     const route = routeFor(tile.href);
     return !!route && canOpen(perms, route);

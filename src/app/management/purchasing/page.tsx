@@ -12,6 +12,7 @@ import { CsvDownloadButton } from "@/components/CsvDownloadButton";
 import { PrintButton } from "@/components/PrintButton";
 import { PurchasingPhone, type PhoneItem } from "./PurchasingPhone";
 import { loadConversions } from "@/lib/units-server";
+import { loadStocktakingSwitches, switchFor } from "@/lib/management/stocktaking-switches";
 import { defaultUnit } from "@/lib/units";
 import { loadPricedReceipts, loadReceipts } from "@/lib/management/receipts-server";
 import { STOCK_RATE_DAYS } from "@/lib/management/stock";
@@ -81,7 +82,8 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
   const period = parsePeriod(searchParams.days);
   const includeLead = parseIncludeLead(searchParams.lead);
 
-  const [medResult, dietResult, vendorsResult] = await Promise.all([
+  const [switches, medResult, dietResult, vendorsResult] = await Promise.all([
+    loadStocktakingSwitches(supabase),
     supabase
       .from("stock_medications")
       .select("id, name, name_th, unit:dose_unit, stock_on_hand, stock_counted_at, reorder_lead_days, safety_stock")
@@ -173,6 +175,7 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
         receivedSince: received.get(r.id) ?? 0,
         safetyStock: r.safety_stock == null ? null : Number(r.safety_stock),
         packBase: purchase?.basePer ?? null,
+        stocktaking: switchFor(switches, kind),
       });
       // The usual size is the main answer above; the others are the same need in the sizes on special.
       const others =
@@ -220,6 +223,11 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
   }));
   const groups = groupBySupplier(lines);
   const notCounted = [...medItems, ...dietItems].filter((i) => i.row.state === "notCounted");
+  // Which areas are switched off, named once above the list; the rows say it too.
+  const offAreas = [
+    ...(switches.food ? [] : [t.management.stock.areaFood]),
+    ...(switches.medical ? [] : [t.management.stock.areaMedical]),
+  ];
 
   const csv = toCsv([
     [p.csv.supplier, p.csv.kind, p.csv.item, p.csv.buy, p.csv.unit, p.csv.inBase, p.csv.baseUnit],
@@ -261,6 +269,14 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
       return (
         <div className="flex flex-col gap-1">
           <span className="font-medium text-warning">{p.working.neverCounted}</span>
+          <span className="text-xs">{needLine}</span>
+        </div>
+      );
+    }
+    if (r.state === "off") {
+      return (
+        <div className="flex flex-col gap-1">
+          <span>{p.working.switchedOff}</span>
           <span className="text-xs">{needLine}</span>
         </div>
       );
@@ -434,6 +450,7 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
             }),
           )}
           lines={lines}
+          offAreas={offAreas}
           csv={csv}
           period={period}
           includeLead={includeLead}
@@ -461,6 +478,12 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
           </Link>
         </div>
         <p className="text-xs text-muted print:hidden">{p.leadHint}</p>
+
+        {offAreas.length > 0 && (
+          <p className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground print:hidden">
+            {p.switchedOffNote(offAreas.join(" / "))}
+          </p>
+        )}
 
         {notCounted.length > 0 && (
           <p className="rounded border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-foreground print:hidden">

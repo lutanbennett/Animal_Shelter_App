@@ -35,12 +35,15 @@ export async function VaccineStockSection({
   headings,
   t,
   locale,
+  stocktaking,
 }: {
   supabase: Awaited<ReturnType<typeof createClient>>;
   windows: ForecastWindow[];
   headings: string[];
   t: ReturnType<typeof getDictionary>;
   locale: Locale;
+  /** The medical Stocktaking switch. OFF: no doses are assumed held, and "Not counted" is not said. */
+  stocktaking: boolean;
 }) {
   const v = t.management.vaccines;
   const today = todayIso();
@@ -93,7 +96,7 @@ export async function VaccineStockSection({
   });
 
   const rows = (typesResult.data ?? []).map((type) => {
-    const stock = type.stock_on_hand == null ? null : Number(type.stock_on_hand);
+    const stock = !stocktaking ? 0 : type.stock_on_hand == null ? null : Number(type.stock_on_hand);
     const overdue = overdueBy.get(type.id) ?? 0;
     return {
       id: type.id,
@@ -139,7 +142,9 @@ export async function VaccineStockSection({
               <tr key={row.id}>
                 <td className="px-4 py-2 text-foreground">{row.name}</td>
                 <td className="px-4 py-2">
-                  {row.stock == null ? (
+                  {!stocktaking ? (
+                    <span className="text-muted">{t.management.stock.stocktakingOffShort}</span>
+                  ) : row.stock == null ? (
                     <span className="text-muted">{v.notCounted}</span>
                   ) : (
                     <>
