@@ -1,142 +1,146 @@
-# Release handover — written 2026-10-23 after `0.39.5`
+# Release handover — written 2026-10-24 after `0.40.0`
 
-A **delta**. The release's own facts are in `docs/releases/2026-10-23-0-39-5.md`
+A **delta**. The release's own facts are in `docs/releases/2026-10-24-0-40-0.md`
 and the durable rules are in `docs/release-procedure.md`. **Both outrank this
 file.**
 
-## START HERE: nothing pending blocks a cut, and re-measure that anyway
+## START HERE
 
-**`0.39.5` is complete.** All four builds are on **`55a23450`** — production Pi, test
-Pi, production Worker, test Worker — which is **two releases running** with all four in
-step. Both databases read 252 of 252 with `No drift`. `0251` went on before both
-deploys, which was this release's one ordering requirement. **No inherited work.**
+**`0.40.0` is complete and it MAILED** — the first release in six to do so. One person,
+delivered and verified in the inbox, not merely `sent 1`. All four builds serve `0.40.0`,
+both databases read **254 of 254** with `No drift`, and `0252` and `0253` went on before
+either deploy. **No inherited work.**
 
-**And re-measure rather than trusting the table below.** This edition is written minutes
-after the deploy, and `main` already moved **once mid-release** — a backlog grooming merge
-landed between the cut's merge and the production deploy. That one was harmless, and it
-was *read* rather than assumed (`docs/backlog.md` only, no code), but two editions running
-have now been overtaken within the hour. Run `git diff --stat 55a23450..HEAD`,
-`gh pr list`, `--status --env production` and the live `/api/version` before believing any
-of this.
+**Re-measure before trusting any of it.** `main` moved **twice during this release** — a
+backlog grooming between the cut's merge and the Worker deploy, a planner handover between
+the Worker deploy and the Pi build. Run `git diff --stat 9cdb4af2..HEAD`, `gh pr list`,
+`--status --env production` and the live `/api/version` first.
 
-## The one finding worth acting on before your next verification round
+## The SHA counter is RETIRED — do not carry it forward
 
-**`node scripts/dev-signin.mjs <role>` — the form `CLAUDE.md` documents — always fails,**
-and has since `a5ba4761`. `scripts/dev-signin.mjs:99` picks the positional argument with
-`i !== cardsIdx + 1`; when `--cards` is absent `cardsIdx` is `-1`, so the filter excludes
-index **0**, which is exactly where the role sits. Both `dev-signin.mjs admin` and
-`dev-signin.mjs admin --port 3003` throw the script's **own usage error**.
+**Lutan decided it this release, 2026-10-24: "Check for identical code only."** The rule is now
+in `docs/release-procedure.md` → *"Check the code is identical, not that the SHAs match"*.
+**Stop reporting "all four builds from one SHA" and stop carrying its counter.**
 
-**Workaround: put the flag first** — `dev-signin.mjs --port 3003 admin` works, and was
-used throughout this release.
+What prompted it: this release's four builds came from **three** SHAs — test `f2a691e3`,
+production Worker `82666a58`, production Pi `9cdb4af2` — and **not one difference was
+application code**. Other sessions merged paperwork PRs inside the deploy window, and each Pi
+build checks out the current tip, so the property measured how quiet other sessions happened to
+be. The Pi was deliberately **not** rebuilt to tidy the number.
 
-**Why this is more than a typo.** `CLAUDE.md` elevated this script to *the* route
-specifically so `pending: no signed-in session` would count as a fault rather than a
-state. A command that fails with its own usage message reads as *your* mistake, so the
-natural response is to re-read the arguments and give up, not to suspect the script. That
-is a strong candidate for why streams kept reporting no session after the route was
-supposedly settled on 2026-10-22. **The fix is one line**
-(`cardsIdx >= 0 ? cardsIdx + 1 : -1`, same for `portIdx`). Filed on `backlog` with two
-neighbours: `check-home-screens-live.mjs` **cannot run at all** — it still asks for the
-`staff` role, retired by `0173`, so the database refuses it and it exits 1 having checked
-nothing, and it is not in CI, which is why nobody noticed — and
-`dev-signin.mjs --remove admin` fails repeatably with `Database error deleting user`, so
-`--remove` cannot be trusted to have left nothing behind.
+**What you run instead**, for each pair of SHAs the release built from:
 
-## Two ways to get a confident wrong answer, both mine, both this release
+```bash
+git diff --name-only <tested sha>..<deployed sha> | grep -vE '^(docs/|\.claude/)'
+```
 
-Recorded because neither produced an error. Each produced an **answer**.
+Empty means the served application code is identical — sound however many SHAs appear in
+`/api/version`. **Any line means stop**: untested code is on a production box. On `0.40.0` all
+three pairs came back clean. **It stays quiet when only documents differ and fails when code
+differs**, which is the case that always mattered.
 
-**A whole-page text search counted sidebar nav links as home tiles**, and so reported the
-Operations tile present on *every* role — the release having failed. It was matching the
-**menu**, which keeps those links by design. Scoping to the home grid gave the truth: no
-role has the tile. **The dangerous direction — a false red invites a rollback.**
+**It does not license rebuilding a Pi to chase a SHA** — the existing trap about reading what is
+deploying still stands.
 
-**A `pgrep -f "deploy-pi.sh"` waiter matched its own command line**, so the loop could
-never exit; it sat "waiting" minutes after the deploy had finished. The same shape as the
-`| tail` exit-code and PowerShell UTF-16 traps, and now the **fourth** way this
-environment hands back a non-answer that looks like one.
+## Stopping a background call does not stop what it started elsewhere
+
+**An orphaned process from `0.39.5` was still running on the Pi, 13 hours later**: the
+self-matching `while pgrep -f "deploy-pi.sh"; do sleep 10; done` waiter that release already
+recorded as a fault. `TaskStop` killed the **local ssh client**; the **remote shell kept
+going**. Killed this release (pid 79127).
+
+**Two things follow.** A `ssh host 'setsid nohup … &'` command outlives the tool call that
+launched it, so anything left looping on the Pi stays looping — check `pgrep -af` there when a
+release ends. And it **actively misled this release**: a correctly written
+`pgrep -f "[d]eploy-pi.sh"` (bracket trick, so it cannot self-match) reported **"STILL
+BUILDING"** because it matched *that stale process*, not its own command line. The bracket
+trick works; a stale twin defeats it anyway.
+
+## A third way to read a working release as broken
+
+**I nearly filed `/deliveries` as hung**, on DOM evidence that its content sat in a
+`display: none` parent while a spinner had shown for **79 seconds**. A screenshot showed a
+perfectly working page. Two traps compounded: **`performance.now()` counts from when the TAB
+opened**, not the navigation, so "79 s" was just the tab's age; and an **`innerText` readiness
+check** catches a brief loading state and reads exactly like a hang (`body.innerText` returned
+55 characters while a hidden `<main>` already held 2,739).
+
+**Second time in two days** a weak signal pointed at a working release being broken — the first
+was counting sidebar nav links as home tiles. **Both times the fix was to look at the page
+rather than reason about the DOM. Take the screenshot first.**
 
 ## Corrections to the last edition
 
-- **It said #878 was open and "not a release manager's PR to merge". It merged** at 10:57 on 2026-10-23, inside this release's range, as paper only. Nothing was needed from the release manager after all.
-- **It said the diets *Servings by size* fix was outstanding and his. Done** — Lutan in chat, 2026-10-23: *"Yes I have corrected the diets"*. Ticked on `backlog` **with the title rewritten**, not merely ticked, because an item still headed "FOR LUTAN, AFTER `0.39.4` DEPLOYS" goes on reading as open to anything that skims. **Recorded as his confirmation, not a measured check**: the diets scripts are locked to dev, so *which* production diets had been affected stays **not established**.
-- **It said the "all four builds from one SHA" counter was 1. It is 2.**
-- **It said `release-prs.mjs` was seven releases, seven answers, the last an orphan from a squash. Eighth: clean** — 5 PRs, exit 0, and it checked the 6 added migration/test-plan files against the list with no orphan. Still read it **without a pipe**.
-- **It said to expect a classifier refusal and take the one retry. Tenth release, none at all** — the production apply, both drift reads, `wrangler deployments list` and the purge each ran first time.
+- **It said both of #882's manual items were closed and that was the end of it.** True, and #886 then **fixed two of the three `dev-signin` faults filed the same day** — `dev-signin.mjs <role>`, the documented form, now works (confirmed by running it). The backlog item was retitled to say only part (3) remains. **Filed from a verification round, fixed by a stream, verified in the next release.**
+- **It said `worktree.mjs done` "offers `--force` on a false premise". The planner found worse:** because `done` resolves the folder by name but the branch by branch, **`done <orphan branch name>` can target a LIVE worktree** — on 2026-10-23 the folder holding this session's own release branch. `--force` would have destroyed it mid-release *and* deleted an unrelated branch. Now its own `## Architecture` item. **Never `--force` `done` on a folder whose name does not match its branch**; a release creates that state routinely.
+- **It said `audit` was green with nothing to carry. It is RED again** — `body-parser` and `undici`. **Not reachable; fix nothing.** Read `docs/decisions/2026-10-24-audit-body-parser-undici-not-reachable.md` rather than re-deriving it; the short version is that the 21 MB deployed bundle has **0** matches for either, and the undici "fix" moves wrangler **backwards**.
+- **It said `strip-baked-env` was held at 14 on both environments. Still 14**, third consecutive release.
 
 ## Where things stand
 
 | | |
 |---|---|
-| Live | **`0.39.5`** @ `55a23450` — **all four builds**, production Worker included |
-| Production Worker | **`0.39.5`**, version `d0b60726`, tagged `v0.39.5`. Verified three ways: `wrangler deployments list` at 100%, the deploy log's `Current Version ID`, and a cache-bypassed `/api/releases/current` answering `0.39.5` with `x-lanna-served-by: worker` |
-| Previous release SHA, for the next range | **`55a23450`** |
-| Production database | **`252 applied, 0 pending`**, `No drift`, 0 each way. **Run it yourself** |
-| Dev database | **`No drift`, 252 of 252** — clean, sixth release running |
-| Next free migration number | **`0252`**. **Check `origin/main` *and* open `*-schema` PRs anyway** |
-| `unreleased` and open PRs | 0 notes at the cut — **and that nearly hid the whole release, see below.** Thirteen editions have said 0 and been overtaken: **run `gh pr list` yourself** |
-| Backlog | Two edits this release, both on the `backlog` branch where they belong: the diets step closed, the dev sign-in faults filed. **Not yet folded into `main`** — that is `/plan-day`'s daily step |
-| Worktrees | The cut's worktree was removed by another session's cleanup **mid-release** (correctly — its branch had merged, and it broke nothing). The record reused `Animal_Shelter_auto-tiles-out`, whose **folder name does not match its branch**, so cleanup by name will miss it |
+| Live | **`0.40.0`** — production Pi `9cdb4af2`, production Worker `b3007932` tagged `v0.40.0` (from `82666a58`), both test builds from `f2a691e3` |
+| Previous release SHA, for the next range | **`9cdb4af2`** (the production Pi's, the build users are served) |
+| Production database | **`254 applied, 0 pending`**, `No drift`. **Run it yourself** |
+| Dev database | **`No drift`, 254 of 254** |
+| Next free migration number | **`0254`**. **Check `origin/main` *and* open `*-schema` PRs anyway** |
+| The mail | **Sent AND delivered.** One recipient, `skipped 0`, all three notes correct in the inbox. `[UAT]` prefix in the subject is current production behaviour while the app is pre-1.0 |
+| `unreleased` and open PRs | 0 at the cut; `main` moved twice during the release. **Run `gh pr list` yourself** |
+| Backlog | Nothing needed folding at step 1 (`main..backlog` empty — yesterday's notes were already merged overnight) |
+| Worktrees | The cut's worktree was reused for the record, per paperwork rule 2, after checking `next` matched `package.json` |
 
-**Counters:** all four builds from one SHA **2**; `npm ci` as step 1 **22** — and the
-reuse caveat earned its keep, the record worktree being reused without an install after
-checking `require('next/package.json').version` against `package.json`; first CI run green
-by construction **5** (10 of 10); no production-only guard **24**; `strip-baked-env`
-**17**, held at 14 on **both** environments. **Server Actions keys** (twenty-first check):
-production `cbd55beae8d8`, test `ecc41837fc0b` — each Pi printing `the build in .next.new
-carries that key`, which is the evidence rather than the matching values.
+**Counters:** all four builds from one SHA **0** (reset, see above); `npm ci` as step 1 **23**,
+and done in the **main checkout** this time, which `0.39.5` skipped; first CI run green by
+construction **6** (9 of 10, `audit` red by design); no production-only guard **25**;
+`strip-baked-env` **18**, at **14** on both environments. **Server Actions keys** (twenty-second
+check): production `cbd55beae8d8`, test `ecc41837fc0b`.
 
-## Promoted out of this file
+## A growing class of production facts no session can read
 
-**"An empty `unreleased` is not proof that nothing user-visible shipped"** — the lesson
-`0.39.5` was made of — now lives in **`docs/release-procedure.md` step 4**, per paperwork
-rule 4. Read it there before your next cut.
+Worth naming, because it is now three releases running and it shapes what "verified" can mean.
+
+**Every script that would answer these is hard-locked to the dev project**, and those guards
+have been left alone each time rather than worked around:
+
+- **Which production diets were affected** by `0250`'s per-serving back-fill (`0.39.4`) — still not established, and Lutan has since edited them by hand.
+- **Whether any production role holds the Operations or Management card** after he exercised the toggle (`0.39.5`) — recorded as not established.
+- **Whether the doctor role has `0230`'s medical cells on production** (#890, this release) — all **eight** doctor/medical check scripts refuse a non-dev project.
+
+**DECIDED, 2026-10-24: yes, have a read-only production check script.** Filed on `backlog`;
+the constraints are in `docs/decisions/2026-10-24-read-only-production-checks.md` and matter
+more than the item — read-only *by construction*, allow-listed named checks, and **not** built
+by loosening the existing dev-only guards one script at a time. **Until it exists those three
+facts stay "not established", and the guards stay alone.**
 
 ## In flight and open
 
-**His, and his only open ones:** the **ten production sign-in checks** listed individually
-in the record — no Dev badge, both sign-ins, `/residents`, a resident hub, the dashboard,
-`/admin` and its Drive line, nav, console — none able to fail quietly, all behind a login
-no session has; and **book one real vet visit on production and see it in "Lanna Care: vet
-visits."**
+**His, and his only open ones:** the **ten production sign-in checks** listed individually in
+the record, all behind a login no session has; **the Thai wording of the new Units screen**
+(`/admin/units` in Thai) — the one genuine `pending: a person` left from this release's PRs;
+and **book one real vet visit on production and see it in "Lanna Care: vet visits."**
 
-**Both of #882's manual items are now CLOSED by Lutan, within the hour of the deploy.**
-Written in rather than left to be re-raised, which is what this file is for.
+**A paperwork fault to be aware of rather than chase:** #890's plan is signed
+`pending: the production 0230 status check above`, and its *Left for manual verification* table
+is **empty** — the item is nowhere written down, so nobody can act on it, and the check itself
+is in the class above. Reported in the record.
 
-- *The Who does what toggle* — **done on production**, Lutan 2026-10-23: *"I have removed and added the operations and management tiles from profiles on production"*. This is the item no session could do: the page opens at aal1 but the buttons demand the authenticator app (*"To give or remove cards, verify with your authenticator app first"*) and dragging is off. **It needed him, he did it, and it works.** Its effect had already been verified from the other end — `0251`'s seeded cards draw their tiles on all five roles, read on the deployed test build.
-- *The Thai wording of the two new cards* — **fine**, Lutan 2026-10-23: *"yes the Thai wording is fine"*. Both cards had real Thai strings in `th.ts` (`งานปฏิบัติการ`, `การจัดการ`), so this was only ever phrasing, and the phrasing passed.
+**The security rebuild continues and still shapes what to cut.** All hard-coded role settings
+are still to come out (`JOBS_OF_ROLE`, `CURATED_HOME`, `OUTSIDE_REGISTRY`, `FIXED_FOR_NOW`,
+role-key ordering, the no-cards fallback home), with the card walkthrough runs **on hold**.
+Lutan, 2026-10-24: **card sections by feature goes first in the next plan**.
 
-**One thing this release could NOT establish, and it is a live gap rather than a loose
-end.** Exercising that toggle on production means production's `role_cards` may no longer
-match what `0251` seeded. `0251` deliberately granted Operations and Management to
-**nobody** ("drop operations from every role... same with Management"), and both the record
-and the table above were written on that basis. **Whether any role was left holding either
-card is NOT established.** He was asked in one line and answered the Thai question
-instead, so this is recorded as unknown rather than inferred — the diets lesson, and the
-Home Assistant disk size before that. **No session can read it**: every script that would
-is hard-locked to the dev project, and those guards were left alone. **So do not repeat
-"no role holds either" as current.** Ask him, or read `/admin/who-does-what` with the
-authenticator, before anything depends on it.
-
-**The security rebuild continues and still shapes what to cut.** #882 was the quick patch
-Lutan chose; **all hard-coded role settings are still to come out** (`JOBS_OF_ROLE`,
-`CURATED_HOME`, `OUTSIDE_REGISTRY`, `FIXED_FOR_NOW`, role-key ordering, and the fallback
-home a role with no cards gets), with the card walkthrough runs **on hold** meanwhile.
-`check-menu-coverage.mjs` on dev went from 25 to 107 unexplained orphans **by design** —
-each is a card for Lutan to give or not, and none was acted on.
-
-**Carried unchanged, nothing new to say and nothing to re-run:** the same three silent
-failures as a set (the public desexing sign-up, Drive space thresholds, the retention
-job — all three wanting the same `status_alert_runs` → mail plumbing), and the two
-unlooked-at items, the prescription form reading 4 (`0.38.1`) and video playback on a real
-handset (`0.38.0`).
+**Carried unchanged, nothing new to say:** the same three silent failures as a set (the public
+desexing sign-up, Drive space thresholds, the retention job — all wanting the same
+`status_alert_runs` → mail plumbing), and the two unlooked-at items, the prescription form
+reading 4 (`0.38.1`) and video playback on a real handset (`0.38.0`).
 
 **One red still unresolved rather than explained away:**
 `check-diets-per-serving-schema.mjs` fails `servings default to 1 / 1.5 / 2 - got 1` on dev
-alongside 11 passing checks. The benign reading — a diet whose servings were edited, which
-is allowed by design — is **plausible and still unverified**, and Lutan has now edited
-production diets too, which makes the dev reading no easier to interpret, not easier.
+alongside 11 passing checks. Still **plausible and unverified**, and Lutan's hand edits to
+production diets make the dev reading no easier to interpret.
 
-**Moved to `release-procedure.md`** (unchanged, re-checked): "a major release mails one
-person", "`test-plan` is advisory, permanently".
+**Watch, do not act:** OpenNext `Failed to copy` errors on the test Worker build rose from
+**one** to **three** (`age-encryption`, `color-string`, `data-uri-to-buffer`). Non-fatal — the
+build bundled, uploaded and exited 0 — and not seen on the production build. A count that
+keeps rising may eventually drop something that matters.

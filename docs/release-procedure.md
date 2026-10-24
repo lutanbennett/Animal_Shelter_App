@@ -655,6 +655,39 @@ re-run `check-assets.mjs` on the Pi. And **believe a red `check-assets`**: it wa
 right and the session was wrong, on a release that shipped a change to that very
 script.
 
+### Check the code is identical, not that the SHAs match
+
+**Lutan's decision, 2026-10-24: "Check for identical code only."** This replaces the
+"all four builds from one SHA" property, which is **retired** — stop reporting it and
+stop carrying its counter.
+
+Why it was retired: on `0.40.0` the four builds came from **three** SHAs, and not one
+difference was application code. A backlog grooming merged between the cut and the
+Worker deploy; a planner handover merged between the Worker deploy and the Pi build.
+Each Pi build checks out the current tip, so it cannot help picking up whatever landed.
+**The property therefore measured how quiet other sessions happened to be, which a
+release manager cannot control, and `deploy.mjs` takes no `--ref` to pin against.**
+
+**What to assert instead**, for each pair of SHAs the release actually built from:
+
+```bash
+git diff --name-only <tested sha>..<deployed sha> | grep -vE '^(docs/|\.claude/)'
+```
+
+**Empty output means the served application code is identical**, and the release is
+sound however many SHAs appear in `/api/version`. **Any line means stop** — something
+outside documentation is in one build and not another, which is untested code on a
+production box, and that is a real finding rather than a counter.
+
+Two things this gets right that SHA-equality did not. It **stays quiet when only
+documents differ**, which is the common case and never mattered. And it **fails when
+code differs**, which is the case that always mattered and which SHA-equality caught
+only by also crying wolf. Record the SHAs and the diff result in the release record,
+not a streak.
+
+**It does not license rebuilding a Pi to chase a SHA.** The trap above stands: when
+`main` moves, read what is deploying. If the diff is clean, there is nothing to do.
+
 **The zone purge covers `test.lannacare.org` as well as `lannacare.org`.** They
 are one Cloudflare zone, so `purge-cache.mjs --env production` clears both.
 `purge-cache.mjs --env test` **refuses with exit 2** — `CLOUDFLARE_ZONE_ID` and
