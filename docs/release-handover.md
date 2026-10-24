@@ -6,10 +6,17 @@ file.**
 
 ## START HERE
 
-**`0.40.0` is complete and it MAILED** — the first release in six to do so. One person,
-delivered and verified in the inbox, not merely `sent 1`. All four builds serve `0.40.0`,
-both databases read **254 of 254** with `No drift`, and `0252` and `0253` went on before
-either deploy. **No inherited work.**
+**`0.40.0` is complete, fully signed off, and it MAILED** — the first release in six to do so.
+One person, delivered and verified in the inbox, not merely `sent 1`. All four builds serve
+`0.40.0` and **the served application code is confirmed identical across all three SHAs they
+were built from** (the check that replaced the retired SHA counter — next section). Both
+databases read **254 of 254** with `No drift`, and `0252` and `0253` went on before either
+deploy.
+
+**Nothing is inherited and nothing in the record is pending a person.** The ten production
+sign-in checks were done by Lutan on 2026-10-24 and the checklist is closed. **Two things
+remain, both his and neither blocking:** the Thai wording of the new Units screen, and booking
+one real vet visit on production to see it in the calendar.
 
 **Re-measure before trusting any of it.** `main` moved **twice during this release** — a
 backlog grooming between the cut's merge and the Worker deploy, a planner handover between
@@ -42,32 +49,19 @@ differs**, which is the case that always mattered.
 **It does not license rebuilding a Pi to chase a SHA** — the existing trap about reading what is
 deploying still stands.
 
-## Stopping a background call does not stop what it started elsewhere
+## Two traps that cost this release time (the record has both in full)
 
-**An orphaned process from `0.39.5` was still running on the Pi, 13 hours later**: the
-self-matching `while pgrep -f "deploy-pi.sh"; do sleep 10; done` waiter that release already
-recorded as a fault. `TaskStop` killed the **local ssh client**; the **remote shell kept
-going**. Killed this release (pid 79127).
+**`TaskStop` does not stop what a tool call started on another machine.** `0.39.5`'s
+self-matching waiter was **still looping on the Pi 13 hours later** — the local ssh client was
+killed, the remote shell was not. **Check `pgrep -af` on the Pi when a release ends.** It also
+defeated a correctly written bracket-trick `pgrep` this release, by being the process it
+matched: the trick works, a stale twin beats it anyway.
 
-**Two things follow.** A `ssh host 'setsid nohup … &'` command outlives the tool call that
-launched it, so anything left looping on the Pi stays looping — check `pgrep -af` there when a
-release ends. And it **actively misled this release**: a correctly written
-`pgrep -f "[d]eploy-pi.sh"` (bracket trick, so it cannot self-match) reported **"STILL
-BUILDING"** because it matched *that stale process*, not its own command line. The bracket
-trick works; a stale twin defeats it anyway.
-
-## A third way to read a working release as broken
-
-**I nearly filed `/deliveries` as hung**, on DOM evidence that its content sat in a
-`display: none` parent while a spinner had shown for **79 seconds**. A screenshot showed a
-perfectly working page. Two traps compounded: **`performance.now()` counts from when the TAB
-opened**, not the navigation, so "79 s" was just the tab's age; and an **`innerText` readiness
-check** catches a brief loading state and reads exactly like a hang (`body.innerText` returned
-55 characters while a hidden `<main>` already held 2,739).
-
-**Second time in two days** a weak signal pointed at a working release being broken — the first
-was counting sidebar nav links as home tiles. **Both times the fix was to look at the page
-rather than reason about the DOM. Take the screenshot first.**
+**Take the screenshot before believing the DOM.** `/deliveries` was nearly filed as hung on DOM
+evidence; it was working perfectly. **`performance.now()` counts from when the TAB opened**, not
+the navigation, and an `innerText` readiness check reads a brief loading state exactly like a
+hang. **Second time in two days** a weak signal pointed at a working release being broken — the
+first was counting sidebar nav links as home tiles. **Both times, looking at the page fixed it.**
 
 ## Corrections to the last edition
 
@@ -115,10 +109,16 @@ facts stay "not established", and the guards stay alone.**
 
 ## In flight and open
 
-**His, and his only open ones:** the **ten production sign-in checks** listed individually in
-the record, all behind a login no session has; **the Thai wording of the new Units screen**
-(`/admin/units` in Thai) — the one genuine `pending: a person` left from this release's PRs;
-and **book one real vet visit on production and see it in "Lanna Care: vet visits."**
+**The ten production sign-in checks are DONE** — Lutan, 2026-10-24: *"sign ins done"*, all ten,
+**scope confirmed with him before anything was ticked**, because "sign ins" could have meant only
+the two sign-in lines out of the ten and a tick that does not match what someone looked at is
+worse than no tick (`CLAUDE.md`). So `0.40.0` has **nothing left pending a person** except the
+two below. The record's checklist is fully closed.
+
+**His, and his only open ones now:** **the Thai wording of the new Units screen**
+(`/admin/units` in Thai) — the one genuine `pending: a person` from this release's PRs, and
+phrasing only, since both cards have real Thai strings; and **book one real vet visit on
+production and see it in "Lanna Care: vet visits."**
 
 **A paperwork fault to be aware of rather than chase:** #890's plan is signed
 `pending: the production 0230 status check above`, and its *Left for manual verification* table
