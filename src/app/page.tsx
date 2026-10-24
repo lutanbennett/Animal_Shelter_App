@@ -5,6 +5,7 @@ import { AvailableBadge } from "@/components/AvailableBadge";
 import { EmptyPhoto } from "@/components/EmptyPhoto";
 import { GalleryTile } from "./GalleryTile";
 import Link from "next/link";
+import { pageHref } from "@/lib/public-pages";
 import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
@@ -221,10 +222,10 @@ export default async function WelcomePage() {
   // "Help with their care" → /donate, or → /appeals while one is asking: the
   // card promises only what the page delivers (review §6.2, 2026-10-14).
   const helpCards = [
-    { key: "adopt", href: "/adopt", ...h.adopt },
-    { key: "care", href: openAppeals.length > 0 ? "/appeals" : "/donate", ...h.care },
-    { key: "foster", href: "/foster", ...h.foster },
-    { key: "volunteer", href: "/volunteer", ...h.volunteer },
+    { key: "adopt", href: pageHref("adopt"), ...h.adopt },
+    { key: "care", href: openAppeals.length > 0 ? pageHref("appeals") : pageHref("donate"), ...h.care },
+    { key: "foster", href: pageHref("foster"), ...h.foster },
+    { key: "volunteer", href: pageHref("volunteer"), ...h.volunteer },
   ];
   const sf = t.shelterFriends.homeStrip;
   // What the site is, for search engines: schema.org AnimalShelter from the
@@ -259,7 +260,7 @@ export default async function WelcomePage() {
           </p>
           <div className="flex flex-wrap gap-4 pt-2">
             <Link
-              href="/adopt"
+              href={pageHref("adopt")}
               className="spring-lift flex h-14 items-center rounded-full bg-site-ink px-[30px] text-lg font-bold text-site-paper hover:bg-site-ink-soft"
             >
               {t.home.meetAnimals}
@@ -302,7 +303,7 @@ export default async function WelcomePage() {
                 <p className="max-w-2xl text-[17px] leading-normal text-site-ink-soft">{t.appeals.strip.lead}</p>
               </div>
               <Link
-                href="/appeals"
+                href={pageHref("appeals")}
                 className="spring-lift flex h-[52px] shrink-0 items-center self-start rounded-full bg-site-action px-[26px] text-[17px] font-bold text-site-on-action hover:bg-site-action-hover lg:self-auto"
               >
                 {t.appeals.strip.cta}
@@ -360,7 +361,7 @@ export default async function WelcomePage() {
                   form — the page's contact card is how a business gets in
                   touch (docs/decisions.md, 2026-09-26 and 2026-09-27). */}
               <Link
-                href="/friends/join"
+                href={pageHref("friends-join")}
                 className="spring-lift flex h-[52px] shrink-0 items-center self-start rounded-full bg-site-ink px-[26px] text-[17px] font-bold text-site-paper hover:bg-site-ink-soft lg:self-auto"
               >
                 {sf.become}
@@ -405,14 +406,14 @@ export default async function WelcomePage() {
                 {/* action-hover, not action: terracotta text on the sand
                     band is 4.46:1, just under AA (decisions.md, part 1). */}
                 <Link
-                  href="/friends/join"
+                  href={pageHref("friends-join")}
                   className="spring-lift flex h-28 items-center justify-center rounded-[14px] border-2 border-dashed border-site-action p-2 text-center text-[15px] font-bold text-site-action-hover hover:bg-site-paper"
                 >
                   {sf.yourBusiness}
                 </Link>
               </li>
             </ul>
-            <Link href="/friends" className={`${textLink} self-start text-site-action-hover`}>
+            <Link href={pageHref("friends")} className={`${textLink} self-start text-site-action-hover`}>
               {sf.seeAll} &rarr;
             </Link>
           </div>
@@ -518,10 +519,10 @@ export default async function WelcomePage() {
             </div>
           )}
           <div className="flex flex-col items-start gap-1">
-            <Link href="/about" className={`${textLink} self-start text-site-action`}>
+            <Link href={pageHref("about")} className={`${textLink} self-start text-site-action`}>
               {t.home.readMoreAbout} &rarr;
             </Link>
-            <Link href="/our-work" className={`${textLink} self-start text-site-action`}>
+            <Link href={pageHref("our-work")} className={`${textLink} self-start text-site-action`}>
               {t.home.seeOurWork} &rarr;
             </Link>
           </div>

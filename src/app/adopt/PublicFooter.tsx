@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { preferredChannels, talkChannels } from "@/lib/site/channels";
 import { loadSiteContent, pairedText, socialLinks, visitingHoursLines, type SiteContent } from "@/lib/site/content";
+import { footerPages } from "@/lib/public-pages";
 import { staffLoginHref } from "@/lib/site-hosts";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { FacebookIcon } from "@/components/FacebookIcon";
@@ -140,18 +141,11 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
 
         <div className="flex flex-col">
           <span className={`${heading} pb-1`}>{f.help}</span>
-          <Link href="/" className={footerLink}>{t.publicNav.home}</Link>
-          <Link href="/adopt" className={footerLink}>{t.adopt.adoptNav}</Link>
-          <Link href="/adopt/international" className={footerLink}>{t.adopt.internationalNav}</Link>
-          <Link href="/foster" className={footerLink}>{t.adopt.fosterNav}</Link>
-          <Link href="/volunteer" className={footerLink}>{t.adopt.volunteerNav}</Link>
-          {showFriends && (
-            <Link href="/friends" className={footerLink}>{t.shelterFriends.navLabel}</Link>
-          )}
-          <Link href="/friends/join" className={footerLink}>{t.publicNav.becomeFriend}</Link>
-          <Link href="/donate" className={footerLink}>{t.adopt.donateNav}</Link>
-          <Link href="/appeals" className={footerLink}>{t.appeals.navLabel}</Link>
-          <Link href="/services/desexing" className={footerLink}>{t.desexing.navLabel}</Link>
+          {footerPages("help")
+            .filter((page) => page.key !== "friends" || showFriends)
+            .map((page) => (
+              <Link key={page.key} href={page.href} className={footerLink}>{page.label(t)}</Link>
+            ))}
         </div>
 
         <div className="flex flex-col">
@@ -174,7 +168,9 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
             </>
           )}
           <div className="flex flex-wrap gap-x-4 pt-4 lg:mt-auto">
-            <Link href="/privacy" className={smallLink}>{t.privacy.nav}</Link>
+            {footerPages("foot").map((page) => (
+              <Link key={page.key} href={page.href} className={smallLink}>{page.label(t)}</Link>
+            ))}
             <a href={staffLoginHref()} className={smallLink}>{f.staffLogin}</a>
           </div>
         </div>

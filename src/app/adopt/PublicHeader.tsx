@@ -10,6 +10,7 @@ import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { hasLiveAppeals } from "@/lib/appeals/public";
 import { preferredChannels, talkChannels } from "@/lib/site/channels";
 import { loadSiteContent, socialLinks, visitingHoursLines } from "@/lib/site/content";
+import { PUBLIC_MENU_GROUPS, PUBLIC_PAGES, type PublicPage, type PublicSection } from "@/lib/public-pages";
 import { LanguageSwitcher } from "../LanguageSwitcher";
 import { SignOutButton } from "../login/SignOutButton";
 import {
@@ -23,19 +24,7 @@ import {
 import { NavTrail } from "./BackLink";
 import { SpringMotion } from "./SpringMotion";
 
-export type PublicSection =
-  | "home"
-  | "adopt"
-  | "our-work"
-  | "foster"
-  | "volunteer"
-  | "donate"
-  | "friends"
-  | "friends-join"
-  | "adopt-international"
-  | "appeals"
-  | "desexing"
-  | "about";
+export type { PublicSection };
 
 /**
  * One step of the trail under the header. No `href` on the last (the page the
@@ -95,71 +84,51 @@ export async function PublicHeader({
   const staff = user ? (await loadSessionRole(supabase))?.opensApp === true : false;
   const n = t.publicNav;
 
-  const link = (key: PublicSection, href: string, label: string): PublicNavLink => ({
-    key,
-    href,
-    label,
-    current: key === current,
+  // The menu comes from the one list of pages (src/lib/public-pages.ts): groups in
+  // their order, a top-level link where it stands among them. Two pages carry a
+  // rule the list cannot: Appeals is always listed (with none live it follows
+  // Donate, and /appeals says nothing is open), Shelter Friends only once there is
+  // someone to thank (or while the visitor is on /friends, so the page stays
+  // marked), and Donate's entry ("care") is there only while no appeal is live
+  // — with one, the Appeals entry is the sponsorship page.
+  const pageLink = (page: PublicPage, navKey?: string): PublicNavLink => ({
+    key: navKey ?? page.key,
+    href: page.href,
+    label: (page.menu?.label ?? page.label)(t),
+    current: page.key === current,
   });
-  const allEntries: PublicNavEntry[] = [
-    // The animals, and adopting one from abroad (Lutan, 2026-09-27): an
-    // international adoption is adoption, not a service.
-    {
-      kind: "group",
-      key: "adopt",
-      label: t.adopt.adoptNav,
-      links: [
-        link("adopt", "/adopt", n.meetResidents),
-        link("adopt-international", "/adopt/international", t.adopt.internationalNav),
-      ],
-    },
-    {
-      kind: "group",
-      key: "get-involved",
-      label: n.getInvolved,
-      links: [
-        link("foster", "/foster", t.adopt.fosterNav),
-        link("volunteer", "/volunteer", t.adopt.volunteerNav),
-        // While an appeal is live (or the visitor is on one) this entry is the
-        // sponsorship page; with none it stays the Donate page, which says how
-        // to give, and is never marked current, because Donate is.
-        // Appeals is always reachable: with none live it follows Donate, and
-        // /appeals then says nothing is open and points back to giving.
-        ...(liveAppeals || current === "appeals"
-          ? [link("appeals", "/appeals", t.appeals.navLabel)]
-          : [
-              { key: "care" as const, href: "/donate", label: n.care, current: false },
-              link("appeals", "/appeals", t.appeals.navLabel),
-            ]),
-        // Shelter Friends is listed once there is someone to thank — or
-        // while the visitor is on /friends itself, so the page stays marked.
-        ...(showFriends || current === "friends"
-          ? [link("friends", "/friends", t.shelterFriends.navLabel)]
-          : []),
-        // A way for a business to help, so here rather than under Services
-        // (Lutan, 2026-09-27) — and always, since it is how the first
-        // Friend arrives.
-        link("friends-join", "/friends/join", n.becomeFriend),
-      ],
-    },
-    // What the shelter offers the public, as opposed to ways to help it
-    // (Lutan, 2026-09-27). Desexing drives are its first entry (2026-10-19);
-    // a group with no links is still left out below.
-    {
-      kind: "group",
-      key: "services",
-      label: n.services,
-      links: [link("desexing", "/services/desexing", t.desexing.navLabel)],
-    },
-    { kind: "link", link: link("our-work", "/our-work", t.adopt.ourWorkNav) },
-    // The About page (0206): who we are, where, and how to visit. The footer
-    // is still where the contact details live, on every page.
-    { kind: "link", link: link("about", "/about", n.about) },
-  ];
+  const showAppeals = liveAppeals || current === "appeals";
+  const menuPages = PUBLIC_PAGES.filter((p) => {
+    if (!p.menu) return false;
+    if (p.key === "donate") return !showAppeals;
+    if (p.key === "friends") return showFriends || current === "friends";
+    return true;
+  });
+  const allEntries: PublicNavEntry[] = [];
+  for (const page of menuPages) {
+    const group = page.menu?.group;
+    if (!group) {
+      allEntries.push({ kind: "link", link: pageLink(page) });
+      continue;
+    }
+    let entry = allEntries.find((e) => e.kind === "group" && e.key === group);
+    if (!entry) {
+      const heading = PUBLIC_MENU_GROUPS.find((g) => g.key === group)!;
+      entry = { kind: "group", key: group, label: heading.label(t), links: [] };
+      allEntries.push(entry);
+    }
+    if (entry.kind === "group") {
+      // "care" is never the current page: Donate is, through the button beside the menu.
+      entry.links.push(
+        page.key === "donate" ? { ...pageLink(page, page.menu?.navKey), current: false } : pageLink(page),
+      );
+    }
+  }
   // A group with nothing in it is left out rather than shown as an empty menu.
   const entries = allEntries.filter((entry) => entry.kind === "link" || entry.links.length > 0);
-  const donate = link("donate", "/donate", t.adopt.donateNav);
-  const home: PublicNavLink = { key: "home", href: "/", label: n.home, current: current === "home" };
+  const donatePage = PUBLIC_PAGES.find((p) => p.key === "donate")!;
+  const donate: PublicNavLink = { ...pageLink(donatePage, "donate"), label: donatePage.label(t) };
+  const home: PublicNavLink = pageLink(PUBLIC_PAGES.find((p) => p.key === "home")!);
 
   const account = user ? (
     staff ? (
