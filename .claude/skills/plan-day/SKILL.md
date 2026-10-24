@@ -93,6 +93,15 @@ reason actuals go missing.
   **archiving guarantees that** — the tool says so outright ("an archived one
   never has one").
 
+**AND THE PARAMETER IS `session_id`, NOT `sessionId`. GET THIS WRONG AND THE TOOL SILENTLY REPORTS
+YOUR OWN CONTEXT.** Added 2026-10-24, after it nearly put three fabricated actuals into
+`.plan-day.md`. Both tools take `session_id`; passing `sessionId` is not an error — the unknown key is
+ignored, the parameter defaults to `"self"`, and the call returns **the planner's own window** with
+`status: "ok"`. The two reads differed by 762 tokens, which is just the planner's session growing
+between them, and that is exactly what three plausible stream figures look like. **The tell is
+`context.session`: it echoes back either the session id you asked for or the literal `"self"`.** Read
+that field on every call and refuse any figure whose `session` is not the id you passed.
+
 **So the axis is process alive vs process gone, NOT live vs idle**, and the
 practical rule is: **capture the figures at the first `/plan-day` after the
 batch merges, before the sessions are archived.** Editions `294` and `303` each
