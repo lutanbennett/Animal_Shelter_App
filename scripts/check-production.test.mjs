@@ -28,3 +28,11 @@ test("a caller cannot supply SQL: an unknown check name is refused", () => {
   assert.throws(() => buildQuery("select 1"));
   assert.throws(() => buildQuery("constructor"));
 });
+
+test("the expected grants come from cards.ts and only plain keys reach SQL", async () => {
+  const { expectedGrants, expectedGrantsSql } = await import("./lib/card-bundles.mjs");
+  const g = expectedGrants();
+  assert.ok(g.some((r) => r.card === "my_tasks" && r.activity === "recurring.do_own" && r.level === 2));
+  assert.ok(g.some((r) => r.card === "residents" && r.activity === "resident.record" && r.level === 2));
+  assert.match(expectedGrantsSql(), /^\('[a-z_]+','[a-z_.]+',[12]\)(,\('[a-z_]+','[a-z_.]+',[12]\))*$/);
+});
