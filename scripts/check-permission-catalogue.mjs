@@ -315,6 +315,8 @@ const PINNED = {
   // and seeing another role's home screen.
   "/admin/security": { guards: ["requireAdminUser()"], decides: [] },
   "/admin/security/verify": { guards: ["requireAdminUser()"], decides: [] },
+  // Settings → Stocktaking (stocktaking-switches-app): the two ON/OFF switches. Admin at 2-step, like Security.
+  "/admin/stocktaking": { guards: ["requireAdminUser()"], decides: [] },
   "/home/[role]": { guards: ["if (!mine?.isAdmin) refuseFor(mine)"], decides: [] },
   // A group on a role's home (0241): for whoever holds the group's role, or Admin; anyone else gets "not found". It
   // grants nothing: its tiles are cardTilesFor()'s, drawn against the reader's own cells, and each page guards itself.
