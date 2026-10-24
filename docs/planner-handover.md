@@ -1,169 +1,174 @@
-# Planner handover — edition `330`, 2026-10-24
+# Planner handover — edition `339`, 2026-10-24
 
-**A delta, ninth edition in this shape.** Its rules are the skill's step 8 — say what **changed**,
+**A delta, tenth edition in this shape.** Its rules are the skill's step 8 — say what **changed**,
 promote durable facts once, cite `.plan-day.md` rather than reproducing it.
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`** — if they
 disagree with this, they are right and this is stale. **Read first:** `CLAUDE.md` → the skill →
-`.plan-day.md` → this. **The next slug is `339`.**
+`.plan-day.md` → this. **The next slug is `348`.**
 
 > **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
 > release state, candidates. **Re-read every time, never diffed.**
 
 ---
 
-## What `321` asked for, and what happened
+## What `330` asked for, and what happened
 
-- **"The card walkthrough is HELD; do not plan the three run groups without re-reading the item."
-  HELD, and it did its job** — none of `cards-run-money`, `-contacts-and-comms` or `-content` was
-  planned. Still held behind the card simplification. **Keep this warning; it is the one that stops
-  a whole batch of wasted work.**
-- **"The feature list, then the card proposal, is what unblocks them." HALF MOVED.** Step 1 shipped
-  (#878) before this round began. **Step 2 still waits on Lutan's mark-up**, and it is still the
-  highest-leverage thing on the board. Unchanged in nine streams.
-- **"The recurring-jobs page is the most user-visible thing filed." DONE, and see the finding
-  below** — it is the reason this edition exists.
-- **"The two shared reads, and maintenance-job deletes." STILL HELD** with the rebuild. Not
-  re-offered, correctly.
-- **"The run-stream rate (floor + ~9.8k per step)." NOT EXERCISED.** No run streams ran, because
-  the walkthrough is held. **The rate is untested since it was promoted into the skill — say so
-  rather than treating three readings as settled.**
-- **"The Next advisories belong to one stream; do not escalate." NEVER TESTED AGAIN, so the claim
-  is now DROPPED**, exactly as `321` said to do if this round did not test it. `audit` stayed green.
-- **"Do NOT run `dev-signin.mjs --remove`." VINDICATED, then RETIRED.** It turns out `--remove` was
-  genuinely broken — the item proved it in code — so the warning had been right for a reason nobody
-  knew. #886 then fixed the script at root. **Drop the warning; the bug is gone.**
-- **STEP ZERO: HELD, fifth round.** Nothing already-built was offered.
-- **The `cat <scratch> > file` trick: HELD for an eleventh edition.** `rm` is still refused.
+- **"Check whether the next performance stream adopts the item's framing." UNTESTED** — no
+  performance streams in these nine. Carry it.
+- **"Count the actual steps before banding a run group." UNTESTED again** — the walkthrough is still
+  held. Second edition running; carry it, but stop expecting it.
+- **"Keep the backlog-conflict lesson." FIRED, then held.** Batch 1's merge conflicted and was
+  resolved by hand; batch 2's and batch 3's were clean. **It has earned its place — keep it.**
+- **Its candidate list was accurate** — `0254`, the features table and the harness sweep all shipped.
+- **One thing it got wrong:** it listed *"the 47 red harnesses — a decision, not a stream"* as
+  pending. **Lutan answered it on 2026-10-24 and batch 1 merged the same day.** The real population
+  is **140 dev harnesses, 58 red, 48 remaining** (#900's measured table), not the 109/52 quoted for
+  days beforehand.
 
----
+## THE DEFINING FINDING, AND IT IS MINE: I gave Lutan an INFERENCE as a reading, and he acted on it
 
-## THE DEFINING FINDING: a performance item's stated cause is a HYPOTHESIS, and briefing a stream to adopt it is a planning error
+At batch 2 setup I told him the Doctor-cells fault was **live on production** and attached a standing
+caution not to touch that row. **The whole chain was inferred:** `0230` is applied to production →
+`0230` writes cells straight into `role_permissions` → therefore production carries dev's broken
+state. Every step true; **the conclusion false.**
 
-**Promoted into the skill**, so no future edition carries it.
+**#901 — the read-only production check Lutan had pulled forward into that same batch — disproved it
+within the hour.** Production holds **13 cells, 5 cards, 9 extras**, all 13 of `0230`'s cells present,
+against dev's **14 / 3 / 1**. A card save had already happened there and **nothing was stripped**;
+production had diverged from dev because the roles screen was used on it.
 
-`recurring-jobs-slow`'s item blamed per-row next-date work across 24+ jobs. **Measured, the date
-function is cheap.** The real cost was **`role_can()` called 627 times in one request** — 33 pages ×
-19 roles, through `loadEligibility` — and the `TypeError: fetch failed` was the same burst exhausting
-sockets. **21–32 s became ~4 s** (#887, `docs/decisions/2026-10-23-recurring-jobs-slow.md`, which
-opens by saying the item's guess was wrong — the most useful line in it).
+Three things to take from it, in order of what they cost:
 
-**The brief is why it was found.** It said *confirm or refute rather than adopt*. Had it said "fix
-the date calculations", the stream would have optimised something already cheap and reported
-success.
+1. **"Verify against the field the code actually reads" binds the PLANNER HARDEST, because nobody
+   checks the planner.** A stream's claim meets a reviewer, CI and a test plan. Mine went straight to
+   Lutan as advice, with a behavioural instruction attached.
+2. **An inference has no timestamp, so nothing will ever correct it.** The skill's rule 2 read from
+   the other end: a measurement decays visibly and invites a re-read; a derived claim just sits there
+   sounding true. **If you cannot name the command you ran, do not state it to him as fact** — say
+   "not established", for which the backlog already has a convention.
+3. **It was caught only because the capability existed**, and it existed because he swapped that
+   stream in *on the strength of my wrong claim*. **The planner's unverifiable assertions are exactly
+   what a read-only production check is for. Reach for it first.**
 
-**So every performance brief now carries that wording, and the planner must not pre-commit a cause
-it has not measured.** `stock-pages-slow` was briefed the same way, with the `role_can` burst
-offered explicitly as **a lead, not a diagnosis**, because its symptom differed (server ~3 s, screen
-blank 60–70 s). It found its own cause.
+Corrected on the item and in its title (`7207d177`), with the one thing still genuinely unestablished
+named: whether production's cells are **exactly** the union of cards and extras. `doctor-cells` tests
+presence, `role-cells` counts, **neither tests the union**, and the harness that does refuses
+production by design. **Follow-up on the item: a `cards-union` check**, one entry in
+`scripts/lib/readonly-checks.mjs`.
 
-**And the planner's own half: I checked whether that burst existed elsewhere, and it did not.**
-`loadEligibility` is confined to recurring-jobs; `my-tasks/recurring.ts` already asks only about the
-reader's own role. **Recorded as a dead end so nobody re-derives it** — testing the claim beats
-grepping for a line that agrees with it.
+## THE OTHER FINDING: a browser MATRIX costs ~5k per screen-state — the flat ~30k is for about SIX
 
-## THE OTHER FINDING: a filed item said "Production: NOT ESTABLISHED" and named the command. I ran it
+**The round's only overrun, +26%, and the cause is arithmetic, not judgement.** The skill's
+`assistant-immunization` reading says a brief asking for real browser verification adds ~30k whatever
+the code shape — **measured on a handful of screens.** I then wrote a brief asking for four switch
+combinations across six screens at two widths: **about 24 screen-states, priced at ~30k.**
 
-`check-scripts-doctor-triage` (#890) found **two genuine permission faults** — a doctor able to book
-at any clinic and to read and write every clinic visit's attachments, **bills included**, against
-`0220`'s own header saying a doctor never reads a bill. **`0230` is applied to production, so it was
-LIVE**, and that turned a filed item into batch 3's first stream within the hour. `0253` closes it.
+Subtract the non-browser work (~15 call sites plus a small Settings surface — the 185–250k row, so
+~210k) from the actual **327,032** and the matrix cost **~117k, about 5k a state.**
 
-**Promoted into the skill** (the planner-touches-production rules) so no future edition carries it: a
-stream in a worktree cannot read production and is right to say so; **the planner can, and must.**
+**So count the states and multiply.** Same shape as the walkthrough rate (`88k + 9.8k × steps`) and
+**the same failure mode: the rate was never wrong, the count was.** Batch 3's #7 carries ~10 states at
+this rate and is the test; promote it into the skill's band table once a second reading confirms it.
 
-## The diets ruling was never an eight-line ask — PROMOTED into the skill, step 3
+## Two band facts, recorded in `.plan-day.md` rather than repeated here
 
-The item said eight lines were out of proportion and each was his call. **Production had one.** He
-answered it in a single message and a re-run returned zero, so **the diets forecast migration is now
-unblocked** and, because the check passes, **it changes no production figure.** The durable rule —
-*when an item quotes a count, ask which database it came from* — is in the skill now. **Its title also
-had to be rewritten**, because it still read as though a ruling were owed, which is the false-block
-shape that cost him being asked three times over `assistant-retention`.
+- **"Nothing left to discover" now reaches DESIGN jobs.** #901 was banded 170–220k because it had to
+  design a mechanism, and came in at **141,813**: the brief had pre-decided its constraints, handed it
+  the gap analysis and named its first check. **Keep the higher band only where the stream must choose
+  its own constraints.**
+- **A measurement trap, PROMOTED into the skill (step 2):** `get_usage`/`get_session` take
+  **`session_id`, not `sessionId`**; the wrong key silently returns the planner's own context with
+  `status: "ok"`. It nearly put three fabricated actuals in the plan. **The skill now says to read
+  `context.session` on every call.**
 
-## Backlog hygiene — PROMOTED into the skill, step 3
+## Nine measured: seven inside or under, one over, one at the edge
 
-**Three faults in one round, all of which `check-backlog-sections.mjs` PASSED**: two items filed in
-the wrong section, one fault recorded on two different items, and 47 harnesses left with no item
-after their parent was ticked wholesale. All three fixed. **The checker tests position, not subject
-fit, and nothing tests whether a finding was filed on the right item** — so the skill now carries the
-three questions to ask of every item a stream touched. **Do not re-derive this here.**
+Figures, dials and bands are in `.plan-day.md`'s measurement table — **cited, not reproduced.** All
+nine **completed and opened their own PRs**, so every figure is band evidence: batch 1 three for three
+inside, batch 2 one over and two under, batch 3 live.
 
-## Eight measured: six inside, two over, worst +8%
+**Every stream ran `sonnet-5-5` / `low`, matching the recommendation for the first time in three
+rounds** — and there is still **no model finding worth the name.** Brief quality moved these numbers;
+the dials did not. Keep recording; keep not promising comparisons.
 
-`.plan-day.md` carries the table. **All eight ran `claude-sonnet-5-5` / `low`, matching the
-recommendation every time** — the second round running. **Still no model finding, and I have stopped
-implying one is coming.** The two unplanned streams that shipped before this round (#878, #881/#882)
-are **`unmeasured`**: archived with their worktrees reused before a figure could be read.
+## File ownership broke twice — the cause is STRUCTURAL, so fix the split, not the stream
 
-**Two band corrections, both mine, both now PROMOTED into the skill's band table** — a new surface
-that **also deletes what it replaces** is 260–330k (not 200–270k), and **"nothing left to discover"
-does not cover "must prove it broke nothing"**: a permissions schema PR carries about +30k of proof,
-and a schema PR still lands mid-band when it must DECIDE things even with its files fixed and its
-columns handed to it. **Cited, not restated.**
+Both breaches were in `scripts/`, both declared in the PR, neither collided. #903 had to edit
+`check-permission-catalogue.mjs` and `scripts/lib/acceptance-matrix-entries.mjs` because **they refuse
+a new page or manual topic that is not registered, so lint fails without them.**
 
-## My own mitigations — fired, held, or to be dropped
+**That is an ownership split that ignored a hard dependency, not a discipline failure.** Written into
+batch 3's #7 as files it owns. **General form: before assigning a directory to one stream, ask which
+files every OTHER stream is structurally forced to touch.**
 
-- **"Carry the `dev-signin` workaround in the brief." FIRED, and it closed a diagnosis I had got
-  wrong.** On 2026-10-22 I diagnosed a briefing gap and wrote a sign-in block into briefs; the next
-  stream failed identically, because the cause was structural. This round both briefs carried the
-  **specific** workaround, **neither stream wrote `pending: no signed-in session`**, and #886 fixed
-  the bug at root. **The difference was finding the cause in the code rather than guessing at it.**
-- **"Cap the half with a genuine unknown." FIRED.** #886's brief told it to report rather than grow
-  if `--remove` needed more than a contained fix. It did exactly that.
-- **"Count the actual steps before banding a run group." UNTESTED this round** — no run streams.
-- **NEW, to check next round:** every performance brief now says *confirm or refute rather than
-  adopt*, and names any offered cause as a lead. **Check whether the next performance stream still
-  adopts the item's framing anyway.**
+## My own mitigations — fired, held, or retired
+
+- **"Give #901 a live first check and make it print the answers." FIRED, and it corrected me.** The
+  strongest mitigation result yet recorded here. **RETIRED — nothing further to check.**
+- **"Tell the schema half to note, not tick." FIRED**, third round holding. #902's item reads
+  `SCHEMA HALF DONE … this item stays open: the app half`.
+- **"Tell the stream to put shared dev state back." FIRED.** #903 flipped both switches back on, said
+  so, and reproduced the pre-change figures.
+- **"Put the settled answer where a stream will look." FIRED.** #903 did not ask about safety stock.
+- **CARRIED: STEP ZERO with the planner's evidence pasted in.** Seven rounds, held every time.
+- **NEW:** #7 is told `AUDITED_TABLES` is the deliverable most likely to be forgotten, because the
+  feature works without it. **If a sentence is not enough, it must become a checker.** Batch 3's other
+  new mitigations are in `.plan-day.md`.
 
 ## For the release manager
 
-- **`0.40.0` is CUT (#894) and NOT deployed.** `unreleased` is emptied into it — **re-read the
-  entry; do not take a count from here.**
-- **TWO migrations are pending on production, and the order matters:**
-  - **`0252`** (units of measure) **must be applied BEFORE the app deploy** — #891 shipped code that
-    reads the `units` table, and the Units screen and both the ingredient and medicine forms hit a
-    missing table otherwise. Same trap as `0251`. The file carries a consumer header, so
-    `apply-migrations` warns.
-  - **`0253`** is the **live security fix**. Until it is applied, a doctor can write outside their own
-    clinic on production. **It is database-only — no Worker deploy needed to close it.**
-- **By this project's own numbering a middle-number bump is a MAJOR release**, which mails every
-  admin and cannot be undone. **That decision is Lutan's, not the release manager's** — confirm he
-  made it rather than inferring it from the version.
-- **Nine PRs in this release.** Confirm by hand that each has a completed checklist.
+- **`0.40.0` is DEPLOYED and mailed, fully signed off**, and `0253` — last edition's live security fix
+  — **is applied to production.** Both closed.
+- **Re-read what is pending yourself; do not take a count from here.** Whatever was pending and
+  whatever `unreleased` held when this was written **will have moved.**
+- **A release is the natural step once batch 3 merges**, which adds the features screen's note.
+- **Three things wait on Lutan from #903**, in its test plan's *Left for manual verification* table:
+  the Settings → Stocktaking button at aal2, the Thai wording, the page on a real phone. **None blocks
+  a release.**
+- **A middle-number bump is a MAJOR release by this project's numbering**, mails every admin and cannot
+  be undone. **That decision is Lutan's** — confirm he made it rather than inferring it.
 
 ## Rulings worth not re-deriving — cited, not summarised
 
-- **The card walkthrough is HELD behind card simplification** — Lutan, 2026-10-23. Still the most
-  consequential ruling on the board, and still waiting on his mark-up.
-- **Kidney Support: 1 can per serving, servings 0.5 / 1 / 1.5** — Lutan, 2026-10-23. **A large dog
-  therefore gets 1.5 cans a day where the old columns said 2**; he was told, in case he meant only to
-  clear the warning.
-- **A serving is ONE DAY's food; no rounding rule** — Lutan, 2026-10-22. Built and summing.
+- **The card and role walkthroughs are both HELD** behind the security rebuild — Lutan, 2026-10-23.
+  Still the most consequential ruling on the board.
+- **Build the features table on today's 13 names** — Lutan, 2026-10-24: *"Yes build it now as it will
+  help me in completing the PDF."* **Closed; do not re-ask it.**
+- **Sweep the red harnesses in a bounded batch, permissions first** — Lutan, 2026-10-24. **Closed, and
+  `330` was wrong to list it as pending.**
+- **Kidney Support: 1 can per serving, servings 0.5 / 1 / 1.5**; **a serving is ONE DAY's food** —
+  Lutan, 2026-10-22/23.
 - **`test-plan` is ADVISORY permanently.** Do not raise it; do not list it as a decision he owes.
 
 ## Next round's candidates
 
-The next chat plans; this is only where the board points.
+The next chat plans; this is only where the board points. **Batch 3 is live as you read this** — check
+whether it merged before planning anything.
 
-1. **The diets forecast migration (`0254`)** — **now fully unblocked**, and lower-risk than it reads:
-   because the proportion check passes, it **changes no production figure**. Then the cleanup
-   migration dropping `qty_small/medium/large` and `0250`'s bridge.
-2. **Group Who does what's Available cards by feature, features as data** — Lutan filed it himself
-   on 2026-10-24. Schema then app, **and it carries one question for him**: build on today's 13
-   feature names, or wait for his mark-up.
-3. **The feature-list mark-up → step 2** — his, and still the biggest lever.
-4. **The 47 red harnesses** — a decision about how to sweep them, not a stream.
+1. **Batch 4 is already priced in `.plan-day.md`:** #9 `diets-columns-drop` (slot `0257`, a
+   view-and-function rewrite *before* the drop, **not** a single-file schema PR) and #11
+   `website-page-visibility-app`, which is **large** — a new surface that also retires four
+   hand-maintained link lists. **Do not let it be priced as "the app half of a small schema PR".**
+2. **The feature-list mark-up → steps 2 and 3 of the rebuild** — his, still the biggest lever, unmoved
+   in twelve streams. **The features table and screen were built so that acting on it is a few clicks.**
+3. **Add a named check per held security fault** to `check-production.mjs`. Seven items are held behind
+   the rebuild, three of them real faults, each carrying *"if it blocks a live role on production,
+   raise it with Lutan"* — **now answerable, and a planning question, not his.**
+4. **48 red harnesses remain**, in bounded batches, permissions first. Approved; just schedule it.
 5. **Raise HSTS to a year** — one line, **not before 2026-11-08**.
+
+**The buildable pool is thin and it is not a backlog fault:** 24 Public website and Fundraising items
+wait on the Director and contain no code. **#10/#11 are the exception** — the one pair needing nothing
+from her, and he marked it *wanted before go-live*.
 
 ## Writing the next one
 
 **The rules are in the skill, step 8.** Offer it; never on an ambiguous yes, and **read step 6's
 counting rules before writing a number** — a batch counts once, at setup, however often it is
 re-planned. Branch, worktree, test plan, PR, then **merge it yourself on green CI** — never a gate.
-This one is `claude/planner-handover-330`, after #876 (`321`) and #863.
+This one is `claude/planner-handover-339`, after #895 (`330`) and #876.
 
-**What could go next time:** the `--remove` warning and the Next-advisories claim are both gone and
-should stay gone. **Keep the backlog-conflict lesson** from `321` — it was not tested this round
-either, so it has not yet earned removal. **Keep the two band corrections above until a second
-reading confirms each.**
+**What could go next time:** the performance-framing and run-group warnings have sat untested for two
+editions — **drop them if a third round does not exercise them.** **Keep** the inference lesson and the
+browser-matrix rate until each has a second reading; the backlog-conflict lesson has fired and stays.
