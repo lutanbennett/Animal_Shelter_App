@@ -74,19 +74,27 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
-  {
-    text: "Settings → Stocktaking now has two switches, one for food and one for medicines and vaccines. While one is off, Purchasing shows the full need for the period for that area (nothing is assumed to be in stock, and no safety stock is added), \"Never counted\" is not shown for it, and the Stocktake page leaves it out. Switch it back on when the shelter is ready to count; nothing already counted is lost.",
-    roles: ["admin", "management"],
-  },
-  {
-    text: "Settings → Who does what: the Add a card list is now grouped by feature (Resident information, Medical information and so on), each section opening and closing, with a Not yet sorted section for any card without a feature. A new Features panel lets Admin rename the features in English and Thai, reorder, add and delete them, and move a card to another feature, the same for every role. None of this changes what anyone can do.",
-    roles: ["admin"],
-  },
-];
+export const unreleased: ReleaseNote[] = [];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.40.1",
+    date: "2026-10-24",
+    title:
+      "Two Stocktaking switches, and cards grouped by feature",
+    major: false,
+    notes: [
+      {
+        text: "Settings → Stocktaking now has two switches, one for food and one for medicines and vaccines. While one is off, Purchasing shows the full need for the period for that area (nothing is assumed to be in stock, and no safety stock is added), \"Never counted\" is not shown for it, and the Stocktake page leaves it out. Switch it back on when the shelter is ready to count; nothing already counted is lost.",
+        roles: ["admin", "management"],
+      },
+      {
+        text: "Settings → Who does what: the Add a card list is now grouped by feature (Resident information, Medical information and so on), each section opening and closing, with a Not yet sorted section for any card without a feature. A new Features panel lets Admin rename the features in English and Thai, reorder, add and delete them, and move a card to another feature, the same for every role. None of this changes what anyone can do.",
+        roles: ["admin"],
+      },
+    ],
+  },
   {
     version: "0.40.0",
     date: "2026-10-24",
