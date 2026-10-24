@@ -137,10 +137,10 @@ Driven on dev. The dev sign-in is aal1, so the board opened read-only (the page 
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Verified with the authenticator app: add a feature, rename it in English and Thai, move it up and down, move a card into it, delete it, and see its card under Not yet sorted | Settings → Who does what → Features |
-| 2 | Move a card, then pick a second role: the card is in the same section there | Settings → Who does what |
-| 3 | Move the four guessed cards if they belong elsewhere: Donations and receipts, Add medical photos, and the two landing pages | Settings → Who does what |
-| 4 | The Thai wording of the new lines reads naturally | Who does what with ไทย selected |
+| 1 | **DONE 2026-10-24 by Lutan** — verified with the authenticator app: add a feature, rename it in English and Thai, move it up and down, move a card into it, delete it, and see its card under Not yet sorted | Settings → Who does what → Features |
+| 2 | **STILL OPEN** — move a card, then pick a second role: the card is in the same section there | Settings → Who does what |
+| 3 | **STILL OPEN, and it is a decision rather than a check** — move the four guessed cards if they belong elsewhere: Donations and receipts, Add medical photos, and the two landing pages | Settings → Who does what |
+| 4 | **DONE 2026-10-24 by Lutan** — the Thai wording of the new lines reads naturally | Who does what with ไทย selected |
 
 ## Sign-off
 
@@ -153,9 +153,22 @@ Automated checks by: Claude  Date: 2026-10-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty, so only the person who looked may tick it; the signature below is pending
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: items 1 and 4 were checked by Lutan on 2026-10-24; **items 2 and 3 were not**, so this line stays unticked rather than being ticked on a partial pass
 
-Manual verification by: pending: Lutan to use the Features panel with the authenticator app and read the Thai lines
+**Lutan looked at this screen on 2026-10-24 and said so in chat, and he explicitly asked for
+the plan to be signed in his name.** `CLAUDE.md` permits that only on both of those conditions,
+and requires the line to say so — which is what the signature below does. **The scope was
+confirmed with him before anything was ticked**: asked directly whether the Thai lines read
+correctly as well as the panel working, he answered that they do.
+
+**What is deliberately not signed.** Item 2 (move a card, then check a second role shows it in
+the same section) is a real check nobody has run — it is the one that would catch the feature
+grouping being stored per-role instead of once for every role, which is exactly what the release
+note promises. Item 3 is not a check at all but a **decision** about where four guessed cards
+belong, and only Lutan can make it. Neither is covered by "both tested and working", so neither
+is ticked.
+
+Manual verification by: Lutan Bennett — items 1 and 4 only, confirmed in chat 2026-10-24 (the Features panel adds, renames in both languages, reorders, moves a card and deletes; the Thai reads naturally); items 2 and 3 remain open and are NOT signed for  Date: 2026-10-24
 
 ### Result
 
