@@ -26,7 +26,6 @@ const { loadEnv, projectRef } = await import(pathToFileURL(join(process.cwd(), "
 const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
-const { bundleOfRole } = await import(pathToFileURL(join(process.cwd(), "src/lib/permissions/jobs.ts")).href);
 
 const lit = (id) => `'${id}'::uuid`;
 const P = ["sic", "po", "co", "dl", "admin", "management", "volunteer", "doctor", "norole"];
@@ -181,6 +180,7 @@ end $cmp$;
 do $role$ begin
   insert into res select 'role', 'row', 0 where exists (select 1 from roles where key = 'second_in_command' and kind = 'custom' and opens_app and name_th is not null and archived_at is null);
   insert into res select 'role', 'cell:' || rp.activity || ':' || rp.level, 0 from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'second_in_command';
+  insert into res select 'role', 'card:' || rc.card, 0 from role_cards rc join roles r on r.id = rc.role_id where r.key = 'second_in_command';
   insert into res select 'role', 'diet-forecast-has-no-cost', 0 where not exists (select 1 from pg_proc where proname = 'stock_diet_forecast' and pg_get_function_result(oid) ilike '%cost%');
 end $role$;
 do $o$ begin raise exception 'HARNESS-RESULT %', (select json_agg(row_to_json(res)) from res); end $o$;
@@ -231,23 +231,15 @@ else console.log("NOTE  the dev forecasts are empty, so the comparison above pro
 if (get("role", "row") === 0) pass("role row: custom, borrows volunteer, opens the app, has a Thai name"); else fail("role row second_in_command missing or wrong shape");
 if (get("role", "diet-forecast-has-no-cost") === 0) pass("stock_diet_forecast() returns no cost column"); else fail("stock_diet_forecast() returns a cost column");
 const have = new Map(rows.filter((r) => r.who === "role" && r.tbl.startsWith("cell:")).map((r) => r.tbl.split(":").slice(1)).map(([a, l]) => [a, Number(l)]));
-const want = new Map([...bundleOfRole("second_in_command")].map(([a, l]) => [a, l === "edit" ? 2 : 1]));
-// RE-BASELINED 2026-10-06 (director-draft-apply): the cells beyond her jobs are the Director's ticks, draft 2
-const { cellsFor } = await import(pathToFileURL(join(process.cwd(), "src/lib/roles-draft/resolve.ts")).href);
-const { ACTIVITIES } = await import(pathToFileURL(join(process.cwd(), "src/lib/permissions/catalogue.ts")).href);
-const { readFileSync } = await import("node:fs");
-const DRAFT = JSON.parse(readFileSync(join(process.cwd(), "src/lib/roles-draft/draft-2.json"), "utf8"));
-for (const c of cellsFor(DRAFT, "second_in_command", Object.fromEntries(ACTIVITIES.map((a) => [a.key, a.kind])))) want.set(c.activity, Math.max(want.get(c.activity) ?? 0, c.level));
-// RE-BASELINED 2026-10-11 (role-floor-schema, 0179): the draft ticked resident-changing boxes the 2IC cannot use on the
-// who-and-where floor (roles-and-permissions.md line 1386) and a contact change the Director withheld (0155); they are now None,
-// resident.record is Read, and deleting a job is her own box. contacts.browse (0155) was already outside this comparison.
-for (const a of ["resident.adoption_news", "placement.move", "placement.hospital", "placement.rehome", "placement.death", "contacts.directory", "contacts.add"]) want.delete(a);
-want.set("resident.record", 1);
-want.set("maintenance.delete", 2);
-want.set("contacts.browse", 2);
+// RE-BASELINED 2026-10-24 (activity-lists-from-cards-only): a role's powers come from its cards (role_cards), so the expected
+// bundle is the expansion of the cards she HOLDS. It was jobs.ts plus a draft file minus a hand-written list of activities,
+// which went stale whenever a card was ticked on the roles screen. Still exact: a power with no card fails.
+const heldCards = rows.filter((r) => r.who === "role" && r.tbl.startsWith("card:")).map((r) => r.tbl.slice(5));
+const { bundleOfCards } = await import(pathToFileURL(join(process.cwd(), "src/lib/permissions/cards.ts")).href);
+const want = new Map([...bundleOfCards(heldCards)].map(([a, l]) => [a, l === "edit" ? 2 : 1]));
 const same = have.size === want.size && [...want].every(([a, l]) => have.get(a) === l);
-if (same) pass(`bundle: role_permissions = the union of its jobs and the draft's cells (${[...want.keys()].join(", ")})`);
-else fail(`bundle: role_permissions ${JSON.stringify([...have])} differ from jobs.ts ${JSON.stringify([...want])}`);
+if (same) pass(`bundle: role_permissions = the union of her cards' bundles (${[...want.keys()].join(", ")}), from her cards: ${heldCards.join(", ")}`);
+else fail(`bundle: role_permissions ${JSON.stringify([...have])} differ from her cards ${JSON.stringify([...want])}`);
 
 console.log(`\n${ok} checks held, ${fails} failed.`);
 console.log(fails ? "RESULT: RED" : "RESULT: GREEN (the 2IC runs the four screens and nothing else; each stock cell stands alone; the cells and jobs.ts agree)");
