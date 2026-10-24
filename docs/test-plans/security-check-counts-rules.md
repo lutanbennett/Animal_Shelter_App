@@ -6,7 +6,7 @@
 |---|---|
 | Feature | Hard-coded security check counts code, not mentions |
 | Backlog item | `docs/backlog.md` → n/a: urgent fix to unblock `main`; no item (brief `.brief.md`) |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/security-check-counts-rules` @ `C:/Development/Animal_Shelter_security-check-counts-rules` |
 | Dev server | n/a: not used |
 | PR | pending at this commit |
 | Tested by / date | Claude / 2026-10-24 |
@@ -209,11 +209,11 @@ Automated checks by: Claude  Date: 2026-10-24
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
+confirmed in chat; the line then says so.
+
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
+- A person looked: their name and a date.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
