@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { isActivityKey, type ActivityKey, type Level } from "./catalogue";
 import { isCardKey, type CardKey } from "./cards";
 
@@ -11,7 +11,7 @@ import { isCardKey, type CardKey } from "./cards";
  * Read fresh on every call, never kept in memory: an Admin edit must show on the next page load, and a stale copy is the
  * one way this screen could disagree with the database. A failed read throws; it never falls back to the seed, because a
  * screen that quietly shows the seed while the database says otherwise is the fault this removes.
- * Server only (service role, after the page's own guard, like the rest of Who does what).
+ * The caller passes the client (the page's service-role one, after its own guard, like the rest of Who does what), so this file never reaches for the service role itself.
  */
 export type CardGrants = {
   /** A card's own activities at the level it needs, not counting what its included cards give. */
@@ -20,8 +20,7 @@ export type CardGrants = {
   includes: ReadonlyMap<CardKey, readonly CardKey[]>;
 };
 
-export async function loadCardGrants(): Promise<CardGrants> {
-  const admin = createAdminClient();
+export async function loadCardGrants(admin: SupabaseClient): Promise<CardGrants> {
   const [g, i] = await Promise.all([
     admin.from("card_grants").select("card, activity, level"),
     admin.from("card_includes").select("card, included_card"),

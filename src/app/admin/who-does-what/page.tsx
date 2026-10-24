@@ -52,7 +52,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
 
   const admin = createAdminClient();
   const [grants, { data: cardRows, error: cardsError }, { data: roleRow }, { data: cellRows }, { data: groupRows, error: groupsError }, { data: featureRows, error: featuresError }, { data: cardFeatureRows, error: cardFeaturesError }] = await Promise.all([
-    loadCardGrants(),
+    loadCardGrants(admin),
     admin.from("role_cards").select("card, position, group_id").eq("role_id", role?.id ?? "").order("position"),
     admin.from("roles").select("key, name, kind, opens_app, home_path, show_menu, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails").eq("id", role?.id ?? "").maybeSingle(),
     admin.from("role_permissions").select("activity, level").eq("role_id", role?.id ?? ""),
