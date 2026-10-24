@@ -1197,6 +1197,22 @@ export const ENTRIES = {
       expect: "That resident is featured on the home page.",
     },
   ],
+  "website-hide-pages": [
+    {
+      activity: "Hide a public page, then show it again",
+      needs: "website.content",
+      device: "desktop",
+      do: "Open Settings → Website → Pages, press Hide beside Desexing drives, wait up to ten minutes, then open the public site signed out. Press Show to bring it back.",
+      expect: "The page is gone from the menu, the footer and the sitemap, and its address shows Not found. After Show it is all back. Home and Privacy have no switch.",
+    },
+    {
+      activity: "Check a hidden page before switching it on",
+      needs: "website.content",
+      device: "desktop",
+      do: "While signed in as someone who can edit the website, open the address of a hidden page.",
+      expect: "The page opens with a bar saying This page is hidden from the public. A volunteer's login sees Not found at the same address.",
+    },
+  ],
   "zones-enclosures": [
     {
       activity: "Add a zone and an enclosure",

@@ -175,7 +175,8 @@ export function PublicMobileMenu({
   home: PublicNavLink;
   /** The logo and short name, as the header shows them. */
   brand: ReactNode;
-  donate: PublicNavLink;
+  /** Null while the Donate page is hidden (docs/decisions/2026-10-25-hiding-public-pages.md). */
+  donate: PublicNavLink | null;
   languageLabel: string;
   language: ReactNode;
   talk: {
@@ -278,14 +279,16 @@ export function PublicMobileMenu({
           <div className="flex h-[68px] shrink-0 items-center justify-between gap-2 border-b border-site-line px-4">
             {brand}
             <div className="flex items-center gap-2">
-              <Link
-                href={donate.href}
-                aria-current={donate.current ? "page" : undefined}
-                onClick={close}
-                className="flex h-11 items-center rounded-full bg-site-action px-[18px] text-base font-bold text-site-on-action hover:bg-site-action-hover"
-              >
-                {donate.label}
-              </Link>
+              {donate && (
+                <Link
+                  href={donate.href}
+                  aria-current={donate.current ? "page" : undefined}
+                  onClick={close}
+                  className="flex h-11 items-center rounded-full bg-site-action px-[18px] text-base font-bold text-site-on-action hover:bg-site-action-hover"
+                >
+                  {donate.label}
+                </Link>
+              )}
               <button
                 ref={closeButton}
                 type="button"

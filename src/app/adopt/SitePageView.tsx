@@ -15,6 +15,7 @@ import { SiteBody } from "@/components/SiteBody";
 import { PublicPhoto } from "@/components/PublicPhoto";
 import { PublicHeader, type PublicSection } from "./PublicHeader";
 import { PublicFooter } from "./PublicFooter";
+import { requirePageVisible } from "@/lib/public-page-access";
 
 /**
  * /foster, /volunteer and /donate are the same page with a different
@@ -102,6 +103,7 @@ export async function SitePageView({
    */
   afterIntro?: ReactNode;
 }) {
+  await requirePageVisible(section);
   const supabase = await createClient();
   const { t, locale } = await getT();
   const [page, content, showFriends] = await Promise.all([

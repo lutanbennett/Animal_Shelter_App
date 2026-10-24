@@ -18,6 +18,7 @@ import { DonationChannels } from "./DonationChannels";
 import { CHANNEL_COLUMNS, type DonationChannelRow } from "@/lib/site/donation-channels";
 import { WebsiteTabs } from "./WebsiteTabs";
 import { PagesAccordion } from "./PagesAccordion";
+import { PageVisibility } from "./PageVisibility";
 import { PublishedProjects, type PublishedProjectRow } from "./PublishedProjects";
 import Link from "next/link";
 import { requirePermission } from "@/lib/permissions/require";
@@ -191,6 +192,7 @@ export default async function WebsitePage({
             ),
             pages: (
               <>
+              <PageVisibility hiddenPages={content.hidden_public_pages} />
               <PagePhotos
                 photos={{
                   donate: { fileId: content.donate_photo_drive_file_id, alt: content.donate_photo_alt, altTh: content.donate_photo_alt_th },

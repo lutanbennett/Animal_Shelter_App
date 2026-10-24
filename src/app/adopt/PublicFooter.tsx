@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { preferredChannels, talkChannels } from "@/lib/site/channels";
 import { loadSiteContent, pairedText, socialLinks, visitingHoursLines, type SiteContent } from "@/lib/site/content";
-import { footerPages } from "@/lib/public-pages";
+import { footerPages, hiddenPagesOf, isPageHidden } from "@/lib/public-pages";
 import { staffLoginHref } from "@/lib/site-hosts";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { FacebookIcon } from "@/components/FacebookIcon";
@@ -40,6 +40,7 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
     content === undefined ? createClient().then(loadSiteContent) : content,
     hasPublicFriends(),
   ]);
+  const hidden = hiddenPagesOf(site?.hidden_public_pages);
   const hours = visitingHoursLines(locale, site);
   const address = pairedText(locale, site?.contact_address, site?.contact_address_th);
   const registration = pairedText(locale, site?.registration_text, site?.registration_text_th);
@@ -142,7 +143,7 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
         <div className="flex flex-col">
           <span className={`${heading} pb-1`}>{f.help}</span>
           {footerPages("help")
-            .filter((page) => page.key !== "friends" || showFriends)
+            .filter((page) => !isPageHidden(page.key, hidden) && (page.key !== "friends" || showFriends))
             .map((page) => (
               <Link key={page.key} href={page.href} className={footerLink}>{page.label(t)}</Link>
             ))}

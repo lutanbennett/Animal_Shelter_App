@@ -42,6 +42,7 @@ import {
 import { driveErrorMessage } from "@/lib/google/drive-errors";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+import { hideableEntries } from "@/lib/public-pages";
 
 export type SiteContentFormState = ActionResult<{ success: string }> | undefined;
 
@@ -59,6 +60,46 @@ function revalidateWebsitePages() {
   revalidatePath("/donate");
   revalidatePath("/adopt/international");
   revalidatePath("/friends/join");
+}
+
+/**
+ * Switch a public page, or a whole menu section, off or on (0256's hidden_public_pages; the
+ * entries are `page:<key>` and `section:<group>`). One entry at a time, read and written
+ * back, so two editors switching different pages do not undo each other. Only the people who
+ * can already change Admin → Website; the database also refuses Home, Privacy and any typo,
+ * and records the change in Recent changes. Visitors see it within about ten minutes (the
+ * edge cache); there is no purge on save (docs/decisions/2026-10-25-hiding-public-pages.md).
+ */
+export async function setPublicPageHidden(entry: string, hide: boolean): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("website.setPublicPageHidden", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!hideableEntries().includes(entry)) return refuse(t.admin.website.visibility.errors.unknown);
+
+    const supabase = await createClient();
+    const { data, error: readError } = await supabase
+      .from("site_content")
+      .select("hidden_public_pages")
+      .eq("id", true)
+      .limit(1)
+      .returns<{ hidden_public_pages: string[] }[]>();
+    if (readError) return refuse(readError.message);
+    const current = data?.[0]?.hidden_public_pages ?? [];
+    const next = hide ? [...new Set([...current, entry])] : current.filter((e) => e !== entry);
+
+    if (next.length !== current.length) {
+      const { error } = await supabase.from("site_content").update({ hidden_public_pages: next }).eq("id", true);
+      if (error) return refuse(error.message);
+    }
+
+    revalidateWebsitePages();
+    revalidatePath("/about");
+    revalidatePath("/appeals");
+    revalidatePath("/friends");
+    revalidatePath("/services/desexing");
+    revalidatePath("/sitemap.xml");
+    return { ok: true };
+  });
 }
 
 /**

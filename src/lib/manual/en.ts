@@ -2126,6 +2126,31 @@ const manual: Manual = {
           },
         },
         {
+          id: "website-hide-pages",
+          title: "Website: hiding a page",
+          roles: ["admin", "management"],
+          activity: "website.content",
+          path: "Settings → Website → Pages",
+          steps: [
+            "At the top of the Pages tab, Pages on the website lists every public page under its menu section (Adopt, Get involved, Services), then the pages that have no section (Our work, About). Each page and each section has a Hide or Show button, and a line saying what a visitor will see.",
+            "Hide a page and it leaves the menu, the phone menu and the footer; the home page stops linking to it (a block that only leads to that page goes too); it leaves the sitemap that search engines read; and its address shows the ordinary Not found page to everyone who is not signed in as someone who can edit the website. Nothing is deleted: Show brings it back as it was.",
+            "Hide a whole section and every page in it goes, with the section's menu heading. Show the section again and the pages come back, except any you also hid by themselves. A page hidden only because of its section says so.",
+            "Home and Privacy have no switch and are always on: Privacy is what the Google sign-in screen links to. Hiding the Donate page also removes the Donate button from the top of every page.",
+            "You can still open a hidden page while signed in as someone who can edit the website. A bar at the top says This page is hidden from the public, so you can check it before you switch it on. Anyone else, including a volunteer's login, sees Not found.",
+            "A hidden Desexing drives page also refuses a sign-up that arrives some other way, so nobody can enrol in a drive nobody can see.",
+          ],
+          callouts: [
+            {
+              kind: "warning",
+              text: "A change can take up to ten minutes to show for visitors, because the website keeps a copy of each page for a short while. Switching a page off and checking it straight away on another device may still show it for a few minutes.",
+            },
+            {
+              kind: "tip",
+              text: "Shelter Friends and Appeals also hide themselves when there is nobody to thank or nothing to ask for. That is separate: this switch hides them whatever is in them.",
+            },
+          ],
+        },
+        {
           id: "zones-enclosures",
           title: "Zones and enclosures",
           roles: ["admin"],

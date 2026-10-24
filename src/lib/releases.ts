@@ -75,6 +75,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "Settings → Website → Pages now has Pages on the website: a Hide / Show switch for each public page and for each menu section (Adopt, Get involved, Services). A hidden page leaves the menu, the footer, the home page and the sitemap, and its address shows Not found to visitors; you can still open it while signed in, under a bar saying it is hidden, to check it before you switch it on. Home and Privacy cannot be hidden. A change can take up to ten minutes to show for visitors, because the website keeps a copy of each page for a short while.",
+    roles: ["admin", "management"],
+  },
   { text: "Admin: Settings → Who does what no longer has an Also allowed part. A role now does exactly what its cards give, so there is nothing left to list there. When a card is held but its tile cannot show, the warning now names the page and the fixed rule that stops it.", roles: ["admin"] },
 ];
 

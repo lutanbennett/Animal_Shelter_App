@@ -10,7 +10,15 @@ import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { hasLiveAppeals } from "@/lib/appeals/public";
 import { preferredChannels, talkChannels } from "@/lib/site/channels";
 import { loadSiteContent, socialLinks, visitingHoursLines } from "@/lib/site/content";
-import { PUBLIC_MENU_GROUPS, PUBLIC_PAGES, type PublicPage, type PublicSection } from "@/lib/public-pages";
+import {
+  hiddenPagesOf,
+  isPageHidden,
+  PUBLIC_MENU_GROUPS,
+  PUBLIC_PAGES,
+  type PublicPage,
+  type PublicSection,
+} from "@/lib/public-pages";
+import { canSeeHiddenPages } from "@/lib/public-page-access";
 import { LanguageSwitcher } from "../LanguageSwitcher";
 import { SignOutButton } from "../login/SignOutButton";
 import {
@@ -83,6 +91,10 @@ export async function PublicHeader({
   // visitor who isn't signed in sees neither here: Staff login is in the footer and, on a phone, the menu.
   const staff = user ? (await loadSessionRole(supabase))?.opensApp === true : false;
   const n = t.publicNav;
+  // Hidden pages (Admin → Website) leave the menu, the Donate button included. A website editor
+  // who is looking at a hidden page is told so, because only they can get here.
+  const hidden = hiddenPagesOf(site?.hidden_public_pages);
+  const showHiddenBanner = !!current && isPageHidden(current, hidden) && (await canSeeHiddenPages());
 
   // The menu comes from the one list of pages (src/lib/public-pages.ts): groups in
   // their order, a top-level link where it stands among them. Two pages carry a
@@ -99,7 +111,7 @@ export async function PublicHeader({
   });
   const showAppeals = liveAppeals || current === "appeals";
   const menuPages = PUBLIC_PAGES.filter((p) => {
-    if (!p.menu) return false;
+    if (!p.menu || isPageHidden(p.key, hidden)) return false;
     if (p.key === "donate") return !showAppeals;
     if (p.key === "friends") return showFriends || current === "friends";
     return true;
@@ -127,7 +139,9 @@ export async function PublicHeader({
   // A group with nothing in it is left out rather than shown as an empty menu.
   const entries = allEntries.filter((entry) => entry.kind === "link" || entry.links.length > 0);
   const donatePage = PUBLIC_PAGES.find((p) => p.key === "donate")!;
-  const donate: PublicNavLink = { ...pageLink(donatePage, "donate"), label: donatePage.label(t) };
+  const donate: PublicNavLink | null = isPageHidden("donate", hidden)
+    ? null
+    : { ...pageLink(donatePage, "donate"), label: donatePage.label(t) };
   const home: PublicNavLink = pageLink(PUBLIC_PAGES.find((p) => p.key === "home")!);
 
   const account = user ? (
@@ -209,6 +223,11 @@ export async function PublicHeader({
 
   return (
     <header data-public-site className="border-b border-site-line bg-site-paper font-site text-site-ink">
+      {showHiddenBanner && (
+        <p role="note" className="bg-site-sand px-4 py-2 text-center text-[15px] font-semibold text-site-ink">
+          {n.hiddenBanner}
+        </p>
+      )}
       <div className="mx-auto flex h-[68px] w-full max-w-[1440px] items-center justify-between gap-4 px-4 lg:h-[88px] lg:px-8 xl:px-16">
         <SpringMotion />
         <NavTrail />
@@ -236,23 +255,27 @@ export async function PublicHeader({
         <div className="hidden items-center gap-5 lg:flex">
           <LanguageSwitcher tone="site" />
           {account}
-          <Link
-            href={donate.href}
-            aria-current={donate.current ? "page" : undefined}
-            className={`${donateClass} h-12 px-[26px] text-[17px]`}
-          >
-            {donate.label}
-          </Link>
+          {donate && (
+            <Link
+              href={donate.href}
+              aria-current={donate.current ? "page" : undefined}
+              className={`${donateClass} h-12 px-[26px] text-[17px]`}
+            >
+              {donate.label}
+            </Link>
+          )}
         </div>
 
         <div className="flex items-center gap-2 lg:hidden">
-          <Link
-            href={donate.href}
-            aria-current={donate.current ? "page" : undefined}
-            className={`${donateClass} h-11 px-[18px] text-base`}
-          >
-            {donate.label}
-          </Link>
+          {donate && (
+            <Link
+              href={donate.href}
+              aria-current={donate.current ? "page" : undefined}
+              className={`${donateClass} h-11 px-[18px] text-base`}
+            >
+              {donate.label}
+            </Link>
+          )}
           <PublicMobileMenu
             entries={entries}
             home={home}

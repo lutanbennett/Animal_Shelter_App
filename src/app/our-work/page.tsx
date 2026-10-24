@@ -12,6 +12,7 @@ import { PublicHeader } from "../adopt/PublicHeader";
 import { PublicFooter } from "../adopt/PublicFooter";
 import { ProjectCard } from "./ProjectCard";
 import { HelpUsDoMore } from "./HelpUsDoMore";
+import { requirePageVisible } from "@/lib/public-page-access";
 
 /** Share tags like /adopt's — this page had none (public site review 2026-10-13, §8.2). */
 export async function generateMetadata(): Promise<Metadata> {
@@ -55,6 +56,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * for categories that have a story, in the shelter's category order.
  */
 export default async function OurWorkPage(props: PageProps<"/our-work">) {
+  await requirePageVisible("our-work");
   const searchParams = await props.searchParams;
   const category = parseCategoryParam(searchParams.category);
   const supabase = await createClient();

@@ -302,6 +302,8 @@ const en = {
     home: "Home",
     /** aria-label of the trail under the header: Home › Adopt › Panda. */
     breadcrumb: "Breadcrumb",
+    /** Over a hidden page, shown only to someone who can edit the website. */
+    hiddenBanner: "This page is hidden from the public. You can see it because you can edit the website.",
     /** The name beside the logo on a phone, where the full one doesn't fit. */
     shortName: "Lanna Care",
     getInvolved: "Get involved",
@@ -2414,6 +2416,30 @@ const en = {
           notFound: "That way to give no longer exists. Reload the page.",
           qrPromptpayOnly: "Only a PromptPay way has a QR picture.",
         },
+      },
+      visibility: {
+        heading: "Pages on the website",
+        subtitle:
+          "Switch a page, or a whole section, off to take it off the website until you are ready. Nothing is deleted: switch it on again and it comes back as it was. Home and Privacy have no switch because they are always on.",
+        delay:
+          "A change can take up to ten minutes to show for visitors, because the website keeps a copy of each page for a short while.",
+        otherPages: "Pages with no section",
+        sectionAll: "Section",
+        alwaysOn: "Always on",
+        shown: "Shown",
+        hidden: "Hidden",
+        hiddenBySection: "Hidden by its section",
+        show: "Show",
+        hide: "Hide",
+        pageShownNote: "Visitors see it in the menu and the footer, and can open it.",
+        pageHiddenNote:
+          "Visitors cannot find it, and its address shows Not found. You can still open it while signed in, to check it.",
+        pageHiddenBySectionNote:
+          "Hidden because its whole section is hidden. Show the section to bring it back, unless you have also hidden it here.",
+        sectionShownNote: "Every page in this section that is not hidden on its own is shown, under the section's menu heading.",
+        sectionHiddenNote: "Every page in this section is hidden, and so is its menu heading.",
+        homeNote: "The home page links only to pages that are shown.",
+        errors: { unknown: "That page is not one that can be switched." },
       },
       pages: {
         heading: "Pages",
@@ -7585,6 +7611,7 @@ const en = {
       thanks: "Thank you. We have your sign-up and will be in touch to confirm.",
     },
     errors: {
+      pageHidden: "Sign-ups are not open right now.",
       drive: "Please choose a drive.",
       ownerName: "Please enter your name.",
       contact: "Please give a phone number or an email.",
