@@ -85,6 +85,9 @@ for (const line of paper.slice(start + 2)) {
   expected.length = 0;
   expected.push(...kept, ...cellsFor(draft, "volunteer", Object.fromEntries(ACTIVITIES.map((a) => [a.key, a.kind]))).map((c) => `('volunteer', '${c.activity}', ${c.level})`));
 }
+// RE-BASELINED 2026-10-24: Management holds the Add Shelter Photos card (Lutan ruled it 2026-10-21, menu-orphans 6 of 6; its bundle is
+// photos.shelter_add at 2), which the paper table never listed. Card in, cell out: the cell is expected, not drift.
+expected.push("('management', 'photos.shelter_add', 2)", "('doctor', 'photos.shelter_add', 2)"); // the same ruling gave it to the Doctor, Head of Medical and 2IC
 if (activityCount !== 66) throw new Error(`expected 66 activities in §4, parsed ${activityCount}`);
 
 const sql = `
@@ -237,13 +240,13 @@ begin
   -- residents list, who and where, the map and its enclosures read, own recurring jobs, the assistant). The DOCTOR stays at the
   -- paper's 13 and is checked with eq_known(): the draft gives doctors only the microchip (2 cells) and Lutan said doctors are on hold,
   -- so the paper and the draft genuinely disagree. That is recorded, not flattened: the run stays RED until someone decides.
-  for t in select unnest(array['management:57', 'staff:38', 'volunteer:4', 'admin:0', 'public_viewer:0']) loop
+  for t in select unnest(array['management:58', 'staff:38', 'volunteer:4', 'admin:0', 'public_viewer:0']) loop
     perform pg_temp.eq('A cells ' || split_part(t, ':', 1),
       (select count(*) from role_permissions rp join roles r on r.id = rp.role_id where r.key = split_part(t, ':', 1))::text,
       split_part(t, ':', 2));
   end loop;
   perform pg_temp.eq_known('A cells doctor (paper 13, draft gives the microchip only)',
-    (select count(*) from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'doctor')::text, '13');
+    (select count(*) from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'doctor')::text, '14'); -- 14 since 2026-10-24: the paper's 13 plus photos.shelter_add (Add Shelter Photos card)
   perform pg_temp.eq('A yesno cells at level 2', (select count(*) from role_permissions rp join permission_activities a on a.key = rp.activity where a.kind = 'yesno' and rp.level <> 2)::text, '0');
   perform pg_temp.eq('A requires all empty', (select count(*) from permission_activities where requires <> '[]'::jsonb)::text, '0');
   perform pg_temp.eq('A real logins have role_id', (select count(*) from user_roles where role_id is null)::text, '0');
@@ -325,7 +328,7 @@ begin
     end loop;
   end loop;
   perform pg_temp.eq('H answers checked', v_checked::text, '792');
-  perform pg_temp.eq('H expected cells', (select count(*) from harness_expected)::text, '112'); -- 112 since 0224 (photos.approve, one Management cell; 0216, 0217, 0223, 0224 are in the paper's §4 from 2026-10-21). Was 111, commented 114 since 0189 (maintenance.bills, one Management cell; paper row fixed 2026-10-13). Was 113: 110 on the paper (0163 gave Management website.content; 0169 community.outings and 0168 donation.receipt one Management cell each); the volunteer is 5 under the draft. Measured on dev after 0168/0169 were applied, 2026-10-09
+  perform pg_temp.eq('H expected cells', (select count(*) from harness_expected)::text, '114'); -- 114 since 2026-10-24 (+ photos.shelter_add for Management and the Doctor, the Add Shelter Photos card); 112 since 0224 (photos.approve, one Management cell; 0216, 0217, 0223, 0224 are in the paper's §4 from 2026-10-21). Was 111, commented 114 since 0189 (maintenance.bills, one Management cell; paper row fixed 2026-10-13). Was 113: 110 on the paper (0163 gave Management website.content; 0169 community.outings and 0168 donation.receipt one Management cell each); the volunteer is 5 under the draft. Measured on dev after 0168/0169 were applied, 2026-10-09
   v_report := v_report || 'H: 792 answers, six roles x 66 activities x read and edit, equal the paper''s §4 table | ';
 
   n := pg_temp.try(null, format('insert into role_permissions (role_id, activity, level) values (%L, ''stock.count'', 2)', v_role_admin), 'aal1', 'service_role');
