@@ -74,7 +74,12 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  {
+    text: "Settings → Website → Pages now has Pages on the website: a Hide / Show switch for each public page and for each menu section (Adopt, Get involved, Services). A hidden page leaves the menu, the footer, the home page and the sitemap, and its address shows Not found to visitors; you can still open it while signed in, under a bar saying it is hidden, to check it before you switch it on. Home and Privacy cannot be hidden. A change can take up to ten minutes to show for visitors, because the website keeps a copy of each page for a short while.",
+    roles: ["admin", "management"],
+  },
+];
 
 /** Newest first. */
 export const releases: Release[] = [
