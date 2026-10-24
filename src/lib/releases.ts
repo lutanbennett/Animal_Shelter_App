@@ -75,6 +75,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "Settings → Stocktaking now has two switches, one for food and one for medicines and vaccines. While one is off, Purchasing shows the full need for the period for that area (nothing is assumed to be in stock, and no safety stock is added), \"Never counted\" is not shown for it, and the Stocktake page leaves it out. Switch it back on when the shelter is ready to count; nothing already counted is lost.",
+    roles: ["admin", "management"],
+  },
 ];
 
 /** Newest first. */
