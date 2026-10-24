@@ -139,7 +139,7 @@ Automated checks by: Claude  Date: 2026-10-24
 
 ### Manual verification
 
-- [ ] The manual list has been looked at by a person
+- [ ] The manual list has been looked at by a person — n/a: nobody has looked yet; the sign-off line below says it is pending Lutan
 
 Manual verification by: pending: Lutan to glance at the public site, desktop and phone width
 
