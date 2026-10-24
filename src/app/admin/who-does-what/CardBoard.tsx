@@ -9,7 +9,7 @@ import { RowActionButton } from "@/components/RowAction";
 import type { ActionResult } from "@/lib/action-result";
 import { GROUP_ICON_KEYS, groupIcon } from "@/lib/home/group-icons";
 import { runCardOp, type CardOp } from "./CardControls";
-import { addGroup, moveGroup, removeGroup, setCardGroup } from "./actions";
+import { addGroup, moveGroup, removeGroup, setCardFeature, setCardGroup } from "./actions";
 
 /**
  * The cards board: the role's cards in home-screen order, and every card it does not hold beside them. A laptop can drag
@@ -27,7 +27,11 @@ export type Tile = { key: string; label: string; description: string; includes: 
   /** Why this card cannot be given yet (it needs another role's card first); shown beside a disabled +. */
   blocked?: string;
   /** The group this held card sits in; null or absent = on the home directly. */
-  group?: string | null };
+  group?: string | null;
+  /** The feature (0255) this card is filed under, for every role; null or absent = Not yet sorted. */
+  feature?: string | null };
+
+export type BoardFeature = { id: string; label: string };
 
 export type BoardGroup = { id: string; label: string; icon: string };
 
@@ -39,6 +43,7 @@ export function CardBoard({
   held,
   library,
   groups = [],
+  features = [],
   canEdit,
   locked = false,
   verifyHref,
@@ -48,6 +53,8 @@ export function CardBoard({
   held: Tile[];
   library: Tile[];
   groups?: BoardGroup[];
+  /** The features in their order (0255); the Available cards are sectioned by them. */
+  features?: BoardFeature[];
   canEdit: boolean;
   /** An admin who has not verified: the board is read-only, so say why where the buttons would be. */
   locked?: boolean;
@@ -56,6 +63,7 @@ export function CardBoard({
   const { t } = useI18n();
   const c = t.admin.whoDoesWhat.cardsView;
   const gc = t.admin.whoDoesWhat.groups;
+  const fc = t.admin.whoDoesWhat.features;
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +73,13 @@ export function CardBoard({
   const q = query.trim().toLowerCase();
   const match = (x: Tile) => !q || `${x.label} ${x.description}`.toLowerCase().includes(q);
   const shownLibrary = library.filter(match);
+  // The Available cards by feature, in the features' order, then Not yet sorted. Every card lands in exactly one section: one
+  // whose feature is not in the list (or is null) is unsorted, so nothing vanishes. An empty section is not drawn.
+  const known = new Set(features.map((ft) => ft.id));
+  const sections = [
+    ...features.map((ft) => ({ id: ft.id as string | null, label: ft.label, tiles: shownLibrary.filter((x) => x.feature === ft.id) })),
+    { id: null as string | null, label: fc.unsorted, tiles: shownLibrary.filter((x) => !x.feature || !known.has(x.feature)) },
+  ].filter((sec) => sec.tiles.length > 0);
 
   // The places a held card can be: the home itself (id null), then each group in its order.
   const places: { id: string | null; label: string; icon?: string }[] = [{ id: null, label: gc.onHome }, ...groups];
@@ -171,6 +186,21 @@ export function CardBoard({
                 onClick={() => cardOps([{ kind: "add", roleKey, card: tl.key }])}
               />
               {tl.blocked && <span className="min-w-0 self-center text-xs text-muted [overflow-wrap:anywhere]">{tl.blocked}</span>}
+              <select
+                aria-label={fc.featureFor(tl.label)}
+                title={fc.featureFor(tl.label)}
+                value={tl.feature ?? ""}
+                disabled={pending}
+                onChange={(e) => run([() => setCardFeature(tl.key, e.target.value || null)])}
+                className="min-h-11 min-w-0 max-w-full rounded-md border border-border bg-background px-2 text-sm text-foreground"
+              >
+                <option value="">{fc.unsorted}</option>
+                {features.map((ft) => (
+                  <option key={ft.id} value={ft.id}>
+                    {ft.label}
+                  </option>
+                ))}
+              </select>
             </>
           ) : (
             <>
@@ -287,7 +317,17 @@ export function CardBoard({
           ) : shownLibrary.length === 0 ? (
             <p className="text-sm text-muted">{c.noMatch}</p>
           ) : (
-            <ul className="grid grid-cols-2 gap-3 md:grid-cols-1 xl:grid-cols-2">{shownLibrary.map((l) => tile(l, "library", 0, 0))}</ul>
+            <div className="flex flex-col gap-3">
+              {sections.map((sec) => (
+                <details key={sec.id ?? "unsorted"} open className="rounded-lg border border-border bg-background p-3">
+                  <summary className="min-h-11 cursor-pointer py-2.5 text-base font-semibold text-foreground [overflow-wrap:anywhere]">
+                    {sec.label} <span className="text-sm font-normal text-muted">({fc.sectionCount(sec.tiles.length)})</span>
+                  </summary>
+                  {sec.id === null && <p className="mb-2 text-xs text-muted">{fc.unsortedNote}</p>}
+                  <ul className="grid grid-cols-2 gap-3 md:grid-cols-1 xl:grid-cols-2">{sec.tiles.map((l) => tile(l, "library", 0, 0))}</ul>
+                </details>
+              ))}
+            </div>
           )}
         </section>
       </div>

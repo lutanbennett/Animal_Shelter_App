@@ -14,6 +14,7 @@ import { cardTile, isSubsumed } from "@/lib/home/tiles";
 import { getT } from "@/lib/i18n/get-t";
 import { AddExtraForm, CardButton, ShowMenuToggle } from "./CardControls";
 import { CardBoard } from "./CardBoard";
+import { FeaturesPanel } from "./FeaturesPanel";
 import { loadRoles, roleName } from "./roles";
 
 /**
@@ -49,14 +50,21 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
   const names = new Map(roles.map((r) => [r.key, roleName(r, t, locale)]));
 
   const admin = createAdminClient();
-  const [{ data: cardRows, error: cardsError }, { data: extraRows, error: extrasError }, { data: roleRow }, { data: cellRows }, { data: groupRows, error: groupsError }] = await Promise.all([
+  const [{ data: cardRows, error: cardsError }, { data: extraRows, error: extrasError }, { data: roleRow }, { data: cellRows }, { data: groupRows, error: groupsError }, { data: featureRows, error: featuresError }, { data: cardFeatureRows, error: cardFeaturesError }] = await Promise.all([
     admin.from("role_cards").select("card, position, group_id").eq("role_id", role?.id ?? "").order("position"),
     admin.from("role_extras").select("activity, level, why").eq("role_id", role?.id ?? ""),
     admin.from("roles").select("key, name, kind, opens_app, home_path, show_menu, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails").eq("id", role?.id ?? "").maybeSingle(),
     admin.from("role_permissions").select("activity, level").eq("role_id", role?.id ?? ""),
     admin.from("role_groups").select("id, name, name_th, icon").eq("role_id", role?.id ?? "").order("position").order("name"),
+    admin.from("features").select("id, name, name_th, position").order("position").order("name"),
+    admin.from("card_features").select("card, feature_id"),
   ]);
-  if (cardsError || extrasError || groupsError) throw new Error(`Who does what: ${(cardsError ?? extrasError ?? groupsError)?.message}`);
+  const loadError = cardsError ?? extrasError ?? groupsError ?? featuresError ?? cardFeaturesError;
+  if (loadError) throw new Error(`Who does what: ${loadError.message}`);
+  // Features (0255): sections of the Available column. A card with no row, a null feature, or a feature that is gone is Not yet sorted.
+  const features = (featureRows ?? []).map((x) => ({ id: x.id as string, name: x.name as string, nameTh: (x.name_th as string | null) ?? "", label: (locale === "th" && (x.name_th as string)) || (x.name as string) }));
+  const featureIds = new Set(features.map((x) => x.id));
+  const featureOf = new Map((cardFeatureRows ?? []).map((r) => [r.card as string, r.feature_id && featureIds.has(r.feature_id as string) ? (r.feature_id as string) : null]));
   // Groups on the role's home (0241): where a card shows, never what it gives.
   const groupOf = new Map((cardRows ?? []).map((r) => [r.card as string, (r.group_id as string | null) ?? null]));
   const groups = (groupRows ?? []).map((g) => ({ id: g.id as string, label: (locale === "th" && (g.name_th as string)) || (g.name as string), icon: g.icon as string }));
@@ -105,6 +113,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
     href: href({ card: k }) + "#card-detail",
     blocked: needsApprover(k) && approvers.length === 0 ? c.needsApprover : undefined,
     group: groupOf.get(k) ?? null,
+    feature: featureOf.get(k) ?? null,
   });
 
   const activityName = (key: ActivityKey) => w.activities[key];
@@ -243,8 +252,16 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
           held={held.map(tileOf)}
           groups={groups}
           library={library.map(tileOf)}
+          features={features.map((x) => ({ id: x.id, label: x.label }))}
         />
       )}
+
+      <FeaturesPanel
+        features={features}
+        cards={CARD_KEYS.map((k) => ({ key: k, label: label(k), feature: featureOf.get(k) ?? null }))}
+        canEdit={canEdit}
+        locked={isAdmin && !canEdit}
+      />
 
       {role && (
         <section aria-labelledby="menu-h" className="flex flex-col gap-3">
