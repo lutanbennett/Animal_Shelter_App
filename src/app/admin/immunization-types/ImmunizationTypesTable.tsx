@@ -24,8 +24,10 @@ export type ImmunizationTypeRow = {
 
 function ImmunizationTypeRowItem({
   immunizationType,
+  stocktaking,
 }: {
   immunizationType: ImmunizationTypeRow;
+  stocktaking: boolean;
 }) {
   const { t, locale } = useI18n();
   const confirm = useConfirm();
@@ -211,7 +213,8 @@ function ImmunizationTypeRowItem({
               className="w-24 rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary"
             />
           ) : immunizationType.stock_on_hand == null ? (
-            <span className="text-muted">{t.admin.immunizationTypes.table.notCounted}</span>
+            // With the medical Stocktaking switch OFF, "not counted" is true of everything and says nothing.
+            <span className="text-muted">{stocktaking ? t.admin.immunizationTypes.table.notCounted : "—"}</span>
           ) : (
             <span className="text-foreground">{immunizationType.stock_on_hand}</span>
           )}
@@ -279,8 +282,11 @@ function ImmunizationTypeRowItem({
 
 export function ImmunizationTypesTable({
   immunizationTypes,
+  stocktaking,
 }: {
   immunizationTypes: ImmunizationTypeRow[];
+  /** The medical Stocktaking switch (stocktaking-switches.ts). */
+  stocktaking: boolean;
 }) {
   const { t } = useI18n();
 
@@ -312,6 +318,7 @@ export function ImmunizationTypesTable({
             <ImmunizationTypeRowItem
               key={immunizationType.id}
               immunizationType={immunizationType}
+              stocktaking={stocktaking}
             />
           ))}
           {immunizationTypes.length === 0 && (

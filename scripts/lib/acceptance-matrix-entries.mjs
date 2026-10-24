@@ -1115,6 +1115,14 @@ export const ENTRIES = {
   ],
 
   // ── Settings (admin) ─────────────────────────────────────────────────────
+  "stocktaking-switches": [
+    {
+      activity: "Switch stocktaking off or on for food, or for medicines and vaccines",
+      device: "desktop",
+      do: "Open Settings, then Stocktaking, and sign in with your authenticator app if asked. Switch food off, then look at Purchasing, then switch it back on.",
+      expect: "While food is off, food lines on Purchasing show the whole need for the period with no safety stock and no Never counted tag, and Stocktake leaves food out. Medicines are unchanged. Switching food on brings the old counts back.",
+    },
+  ],
   security: [
     {
       activity: "Create a user and pass on the temporary password",

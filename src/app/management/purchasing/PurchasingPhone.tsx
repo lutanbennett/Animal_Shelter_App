@@ -43,6 +43,7 @@ const q = (n: number) => formatQuantity(Math.round(n * 100) / 100);
 export function PurchasingPhone({
   items,
   lines,
+  offAreas,
   csv,
   period,
   includeLead,
@@ -50,6 +51,8 @@ export function PurchasingPhone({
 }: {
   items: PhoneItem[];
   lines: ShoppingLine[];
+  /** The areas whose Stocktaking switch is OFF, already named for this locale. */
+  offAreas: string[];
   csv: string;
   period: number;
   includeLead: boolean;
@@ -85,6 +88,12 @@ export function PurchasingPhone({
           ))}
         </div>
       </div>
+
+      {offAreas.length > 0 && (
+        <p className="rounded border border-border bg-surface p-4 text-sm text-foreground">
+          {p.switchedOffNote(offAreas.join(" / "))}
+        </p>
+      )}
 
       {notCounted.length > 0 && (
         <div className="flex flex-col gap-2 rounded border border-warning/40 bg-warning/10 p-4">
@@ -189,7 +198,9 @@ export function PurchasingPhone({
                                       <span className="text-sm text-muted">
                                         {i.row.state === "notCounted"
                                           ? s.shelfAssumed(q(i.row.needed), i.unitLabel)
-                                          : i.row.expected != null && i.row.expected > 0
+                                          : i.row.state === "off"
+                                            ? s.shelfOff(q(i.row.needed), i.unitLabel)
+                                            : i.row.expected != null && i.row.expected > 0
                                             ? s.shelf(q(i.row.expected), q(i.row.needed), i.unitLabel)
                                             : s.shelfNone(q(i.row.needed), i.unitLabel)}
                                       </span>
@@ -269,6 +280,7 @@ function Working({ item, includeLead, period }: { item: PhoneItem; includeLead: 
   return (
     <div className="flex flex-col gap-2 pb-1 text-sm text-muted">
       {r.state === "notCounted" && <p className="font-medium text-foreground">{w.neverCounted}</p>}
+      {r.state === "off" && <p className="font-medium text-foreground">{w.switchedOff}</p>}
       {r.state === "ok" && r.counted != null && (
         <p>
           {w.counted(q(r.counted), u, item.countedOn ?? "", r.countedDaysAgo ?? 0)}

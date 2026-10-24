@@ -26,6 +26,7 @@ import {
   type StocktakeKind,
 } from "@/lib/management/stocktake";
 import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
+import type { StocktakingSwitches } from "@/lib/management/stocktaking-switches";
 import { saveStocktake } from "./actions";
 import { StocktakeCards } from "./StocktakeCards";
 import { SizeCounter, describeLines } from "./SizeCounter";
@@ -99,9 +100,12 @@ function countedDaysAgo(item: StocktakeItem): number {
 export function StocktakeSheet({
   items: initialItems,
   initialTab,
+  switches,
 }: {
   items: Items;
   initialTab: StocktakeKind;
+  /** Which areas are being counted; a switched-off area has no tab and no items. */
+  switches: StocktakingSwitches;
 }) {
   const { t, locale } = useI18n();
   const s = t.stocktake;
@@ -289,7 +293,7 @@ export function StocktakeSheet({
   return (
     <div className="flex flex-col gap-4">
       <div role="tablist" aria-label={s.title} className="grid grid-cols-2 gap-2 sm:flex">
-        {KINDS.map((kind) => {
+        {KINDS.filter((kind) => (kind === "diet" ? switches.food : switches.medical)).map((kind) => {
           const n = tabCount(kind);
           return (
             <button

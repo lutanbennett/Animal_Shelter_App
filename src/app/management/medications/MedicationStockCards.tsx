@@ -73,9 +73,11 @@ const inputClass =
 function MedicationCard({
   medication,
   forecastHeadings,
+  stocktaking,
 }: {
   medication: MedicationStockRow;
   forecastHeadings: string[];
+  stocktaking: boolean;
 }) {
   const { t, locale } = useI18n();
   const confirm = useConfirm();
@@ -197,6 +199,7 @@ function MedicationCard({
             figures={medication.stock}
             reading={medication.stockReading}
             unit={unit}
+            stocktakingOff={!stocktaking}
             counting={mode === "count"}
             countValue={count}
             onCountChange={setCount}
@@ -209,6 +212,7 @@ function MedicationCard({
             as="div"
             figures={medication.stock}
             reading={medication.stockReading}
+            stocktakingOff={!stocktaking}
             editing={mode === "edit"}
             leadDaysValue={leadDays}
             onLeadDaysChange={setLeadDays}
@@ -280,10 +284,12 @@ function MedicationCard({
       <div className="flex flex-wrap gap-2">
         {mode === "view" ? (
           <>
-            <ActionButton icon={ACTION_ICONS.count} variant="primary" disabled={isPending} onClick={openCount}>
-              {s.count}
-            </ActionButton>
-            <ActionButton icon={ACTION_ICONS.edit} disabled={isPending} onClick={openEdit}>
+            {stocktaking && (
+              <ActionButton icon={ACTION_ICONS.count} variant="primary" disabled={isPending} onClick={openCount}>
+                {s.count}
+              </ActionButton>
+            )}
+            <ActionButton icon={ACTION_ICONS.edit} variant={stocktaking ? undefined : "primary"} disabled={isPending} onClick={openEdit}>
               {m.stockCard.editPrice}
             </ActionButton>
             <ActionButton
@@ -339,8 +345,11 @@ function MedicationCard({
 export function MedicationStockCards({
   medications,
   forecastHeadings,
+  stocktaking,
 }: {
   medications: MedicationStockRow[];
+  /** The medical Stocktaking switch (stocktaking-switches.ts). */
+  stocktaking: boolean;
   /** One heading per forecast window, in the order the rows' forecast arrays use. */
   forecastHeadings: string[];
 }) {
@@ -351,7 +360,12 @@ export function MedicationStockCards({
   return (
     <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
       {medications.map((medication) => (
-        <MedicationCard key={medication.id} medication={medication} forecastHeadings={forecastHeadings} />
+        <MedicationCard
+          key={medication.id}
+          medication={medication}
+          forecastHeadings={forecastHeadings}
+          stocktaking={stocktaking}
+        />
       ))}
     </ul>
   );

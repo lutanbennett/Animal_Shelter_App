@@ -15,6 +15,7 @@ import { loadConversions, loadDeliveryCosts } from "@/lib/units-server";
 import { loadReceipts } from "@/lib/management/receipts-server";
 import { receivedSinceCount } from "@/lib/management/purchasing";
 import { requirePermission } from "@/lib/permissions/require";
+import { loadStocktakingSwitches } from "@/lib/management/stocktaking-switches";
 import { canEditItemSettings } from "@/lib/permissions/item-settings";
 import { moveMedication } from "./actions";
 import { VaccineStockSection } from "./VaccineStockSection";
@@ -54,6 +55,7 @@ type ForecastRow = {
 export default async function MedicationStockPage(props: PageProps<"/management/medications">) {
   const { supabase, perms } = await requirePermission("stock.medications");
   const { t, locale } = await getT();
+  const switches = await loadStocktakingSwitches(supabase);
   const searchParams = await props.searchParams;
 
   // ?view=order: the cupboard order on a screen of its own, one job per
@@ -262,12 +264,24 @@ export default async function MedicationStockPage(props: PageProps<"/management/
             to={custom && "window" in custom ? custom.window.to : ""}
             invalid={custom != null && "invalid" in custom}
           />
-          <MedicationStockCards medications={medications} forecastHeadings={forecastHeadings} />
+          {!switches.medical && <p className="text-sm text-foreground">{t.management.stock.stocktakingOff}</p>}
+          <MedicationStockCards
+            medications={medications}
+            forecastHeadings={forecastHeadings}
+            stocktaking={switches.medical}
+          />
           <p className="text-xs text-muted">{m.table.forecastNote}</p>
           <p className="text-xs text-muted">{t.management.stock.note}</p>
         </section>
 
-        <VaccineStockSection supabase={supabase} windows={windows} headings={forecastHeadings} t={t} locale={locale} />
+        <VaccineStockSection
+          supabase={supabase}
+          windows={windows}
+          headings={forecastHeadings}
+          t={t}
+          locale={locale}
+          stocktaking={switches.medical}
+        />
 
         {conversions.error && (
           <p className="text-sm text-danger">

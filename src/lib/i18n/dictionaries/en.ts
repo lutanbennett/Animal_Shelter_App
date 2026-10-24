@@ -98,6 +98,7 @@ const en = {
     website: "Website",
     security: "Security",
     systemStatus: "System status",
+    stocktaking: "Stocktaking",
     recentChanges: "Recent changes",
     whoDoesWhat: "Who does what",
     enclosures: "Enclosures",
@@ -1071,6 +1072,8 @@ const en = {
           "The food list staff pick from: names, units, the daily amount for each size, the standard diet, and the units each is bought and counted in.",
         security:
           "Sign-in accounts, roles and access requests. Needs your authenticator app (2-step verification). Also pinned to the bottom of the menu.",
+        stocktaking:
+          "Turn stocktaking on or off for food, and for medicines and vaccines, separately. Needs your authenticator app (2-step verification).",
         systemStatus:
           "Whether the database, photo storage, migrations, release mail, backups and the Pi are healthy, and how much the app is being used.",
         recentChanges:
@@ -1513,6 +1516,34 @@ const en = {
               `Not set on this computer: ${v.names} missing from ${v.file}.`,
           },
         },
+      },
+    },
+    stocktaking: {
+      title: "Stocktaking",
+      subtitle:
+        "Switch stocktaking on for an area when the shelter is ready to count it. Until then the purchasing list shows the full need for the period. Nothing already counted is deleted: the counts come back when you switch it on.",
+      food: {
+        title: "Food",
+        what: "Diet ingredients: Management → Diet stock, their lines on Purchasing, and their counts.",
+      },
+      medical: {
+        title: "Medicines and vaccines",
+        what: "Medications and vaccines: Management → Medication stock and the vaccine section, their lines on Purchasing, and their counts.",
+      },
+      on: "On",
+      off: "Off",
+      turnOn: "Switch on",
+      turnOff: "Switch off",
+      saving: "Saving…",
+      saved: (area: string, on: boolean) => `Stocktaking for ${area} is now ${on ? "on" : "off"}.`,
+      whenOff:
+        "While it is off: every forecast assumes nothing is in stock, so Purchasing lists the full need for the period; no safety stock is added; \"Not counted\" is not shown; Stocktake leaves the area out. Recording a delivery works as normal.",
+      whenOn:
+        "While it is on: counts, days of stock, safety stock and \"Not counted\" work as usual. The counts you made before are used again.",
+      errors: {
+        adminOnly: "Only an Admin can change this.",
+        twoStep: "Sign in with your authenticator app (2-step verification) to change this.",
+        unknownArea: "That switch does not exist.",
       },
     },
     security: {
@@ -2555,6 +2586,11 @@ const en = {
       "Count every medication and diet in one go, then save once. Every count saved together gets the same time.",
     couldntLoad: "Couldn't load the stock list",
     tabs: { medication: "Medications", diet: "Food" },
+    switchedOff: {
+      medication: "Counting medicines and vaccines is switched off, so they are not listed here.",
+      diet: "Counting food is switched off, so it is not listed here.",
+      both: "Stocktaking is switched off, so there is nothing to count.",
+    },
     searchLabel: "Search the list",
     searchPlaceholder: "Search by name",
     blankHint:
@@ -3088,6 +3124,10 @@ const en = {
     },
     stock: {
       stocktakeLink: "Stocktake: count everything in one go",
+      stocktakingOff: "Stocktaking is switched off — figures assume nothing is in stock.",
+      stocktakingOffShort: "Stocktaking off",
+      areaFood: "food",
+      areaMedical: "medicines and vaccines",
       deliveriesLink: "Record a delivery",
       order: {
         link: "Cupboard order",
@@ -3148,6 +3188,8 @@ const en = {
       neverCountedBanner: (n: number) =>
         `${n} item${n === 1 ? "" : "s"} ${n === 1 ? "has" : "have"} never been counted, so ${n === 1 ? "it is" : "they are"} listed assuming none on the shelf.`,
       stocktakeLink: "Count them in a stocktake",
+      switchedOffNote: (areas: string) =>
+        `Stocktaking is switched off for ${areas}. Those lines assume nothing is in stock and add no safety stock, so you see the full need for the period.`,
       workingHeading: "How these were worked out",
       workingIntro: "The sum behind each item, for when you want to check it.",
       sections: { medication: "Medicines", diet: "Food" },
@@ -3165,6 +3207,7 @@ const en = {
         withLead: (period: number, lead: number) => ` (${period} + ${lead} lead time)`,
         safety: (quantity: string) => ` + ${quantity} safety stock`,
         neverCounted: "Never counted — assuming none on the shelf, so the whole need is bought until it is counted",
+        switchedOff: "Stocktaking is switched off — assuming none on the shelf, so the whole need is bought",
         stale: (days: number) => `Counted ${days} days ago — probably out of date, count it again`,
       },
       cantTell: "Can't tell — count it first",
@@ -3211,6 +3254,7 @@ const en = {
         notCountedBodyZeroOnly: "Nobody has counted these, so we cannot tell what is on the shelf. Count them to get a real figure.",
         notCountedZero: (names: string) => `Not on the list below, but do not trust "nothing to buy" until they are counted: ${names}`,
         shelfAssumed: (needed: string, unit: string) => `Never counted, assuming none on the shelf. Needed: ${needed} ${unit}.`,
+        shelfOff: (needed: string, unit: string) => `Stocktaking is off, assuming none on the shelf. Needed: ${needed} ${unit}.`,
         countThem: "Count them",
         buy: "Buy",
         theWorking: "The working",

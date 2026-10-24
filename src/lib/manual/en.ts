@@ -1834,6 +1834,21 @@ const manual: Manual = {
           ],
         },
         {
+          id: "stocktaking-switches",
+          title: "Stock: what the Stocktaking switches do",
+          roles: ["admin"],
+          path: "Settings → Stocktaking",
+          intro:
+            "Two switches, one for food and one for medicines and vaccines, that you turn on when the shelter is ready to count that area. Until then the stock figures are not trusted, so the app stops pretending to know them. Each is turned on or off on its own, so you can start with one without the other.",
+          steps: [
+            "Open Settings and tap Stocktaking. Sign in with your authenticator app when asked: only an Admin with 2-step verification can change these, and nobody else is shown the page. Under Food or Medicines and vaccines, tap Switch off or Switch on. The change is saved at once.",
+            "While an area is off: every forecast for it assumes nothing is in stock, so Purchasing lists the full need for the period (an item with 50 counted still shows the whole period's use as its shortfall); no safety stock is added to any line, because adding it every period would buy the safety margin again and again and the cupboard would grow each cycle; and Not counted and Never counted appear nowhere for that area, since with counting off they would be true of everything. A line at the top of the page says which areas are off.",
+            "On Management → Medication stock and → Diet stock the In stock figure reads Stocktaking off, Days of stock shows a dash and the Count button is hidden. The vaccine table assumes no doses are held. The Stocktake page lists only the areas that are on, with a line saying the other is switched off. The Do Stocktaking tile stays on Home; if both areas are off, its page just says there is nothing to count.",
+            "Record a delivery works exactly as before while an area is off, and the deliveries stay listed, so delivery history and prices keep building for the day counting starts.",
+            "Switching an area back on brings its counts back as they were: nothing is deleted while it is off. Safety stock, days of stock and Not counted work as usual again.",
+          ],
+        },
+        {
           id: "deliveries",
           title: "Recording a delivery",
           roles: ["admin", "management"],

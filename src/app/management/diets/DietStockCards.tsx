@@ -62,7 +62,15 @@ const inputClass =
  * price and reorder. The name, unit, sizes and the standard diet are
  * changed under Settings → Diets.
  */
-function DietCard({ dietType, forecastHeadings }: { dietType: DietStockRow; forecastHeadings: string[] }) {
+function DietCard({
+  dietType,
+  forecastHeadings,
+  stocktaking,
+}: {
+  dietType: DietStockRow;
+  forecastHeadings: string[];
+  stocktaking: boolean;
+}) {
   const { t, locale } = useI18n();
   const m = t.management.diets;
   const s = t.management.stock;
@@ -166,6 +174,7 @@ function DietCard({ dietType, forecastHeadings }: { dietType: DietStockRow; fore
             figures={dietType.stock}
             reading={dietType.stockReading}
             unit={unit}
+            stocktakingOff={!stocktaking}
             counting={mode === "count"}
             countValue={count}
             onCountChange={setCount}
@@ -178,6 +187,7 @@ function DietCard({ dietType, forecastHeadings }: { dietType: DietStockRow; fore
             as="div"
             figures={dietType.stock}
             reading={dietType.stockReading}
+            stocktakingOff={!stocktaking}
             editing={mode === "edit"}
             leadDaysValue={leadDays}
             onLeadDaysChange={setLeadDays}
@@ -248,10 +258,12 @@ function DietCard({ dietType, forecastHeadings }: { dietType: DietStockRow; fore
       <div className="flex flex-wrap gap-2">
         {mode === "view" ? (
           <>
-            <ActionButton icon={ACTION_ICONS.count} variant="primary" disabled={isPending} onClick={openCount}>
-              {s.count}
-            </ActionButton>
-            <ActionButton icon={ACTION_ICONS.edit} disabled={isPending} onClick={openEdit}>
+            {stocktaking && (
+              <ActionButton icon={ACTION_ICONS.count} variant="primary" disabled={isPending} onClick={openCount}>
+                {s.count}
+              </ActionButton>
+            )}
+            <ActionButton icon={ACTION_ICONS.edit} variant={stocktaking ? undefined : "primary"} disabled={isPending} onClick={openEdit}>
               {m.stockCard.editPrice}
             </ActionButton>
           </>
@@ -284,8 +296,11 @@ function DietCard({ dietType, forecastHeadings }: { dietType: DietStockRow; fore
 export function DietStockCards({
   dietTypes,
   forecastHeadings,
+  stocktaking,
 }: {
   dietTypes: DietStockRow[];
+  /** The food Stocktaking switch (stocktaking-switches.ts). */
+  stocktaking: boolean;
   /** One heading per forecast window, in the order the rows' forecast arrays use. */
   forecastHeadings: string[];
 }) {
@@ -299,7 +314,7 @@ export function DietStockCards({
     <div className="flex flex-col gap-3">
       <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {dietTypes.map((dietType) => (
-          <DietCard key={dietType.id} dietType={dietType} forecastHeadings={forecastHeadings} />
+          <DietCard key={dietType.id} dietType={dietType} forecastHeadings={forecastHeadings} stocktaking={stocktaking} />
         ))}
       </ul>
       <dl className="flex flex-col gap-1 rounded border border-border bg-surface p-4 text-sm">
