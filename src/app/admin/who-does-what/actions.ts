@@ -304,3 +304,118 @@ export async function setShowMenu(roleKey: string, show: boolean): Promise<Actio
     return done();
   });
 }
+
+/*
+ * Features (features and card_features, 0255): the areas the Available cards are sectioned by. Names, order and each
+ * card's feature are DATA Admin edits; a card's feature is one mapping for every role, because it lives on the card, not
+ * on a role. NONE of this grants or removes anything: role_cards and role_permissions are not touched.
+ * docs/decisions/2026-10-24-who-does-what-features-app.md
+ *
+ * Admin at the authenticator-app step, as above; the tables' own policies enforce it again. "Not yet sorted" is a card with
+ * no card_features row or a null feature_id, so deleting a feature (on delete set null) unsorts its cards and loses none.
+ */
+async function featureGuard(t: Dict): Promise<{ ok: false; error: string } | { ok: true; supabase: Supabase }> {
+  const w = t.admin.whoDoesWhat.edit;
+  if (!(await hasAdminRole())) return { ok: false, error: w.adminOnly };
+  if (!(await hasTwoStep())) return { ok: false, error: w.twoStepRequired };
+  return { ok: true, supabase: await createClient() };
+}
+
+type FeatureRow = { id: string; position: number };
+
+async function currentFeatures(supabase: Supabase): Promise<FeatureRow[] | null> {
+  const { data, error } = await supabase.from("features").select("id, position").order("position").order("name").returns<FeatureRow[]>();
+  return error ? null : (data ?? []);
+}
+
+/** A stable handle from the English name; the table wants lower-case letters, digits and underscores, starting with a letter. */
+function featureKey(name: string, taken: Set<string>): string {
+  const base = name.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 40);
+  const start = /^[a-z]/.test(base) ? base : `feature_${base}`.replace(/_+$/, "");
+  let key = start;
+  for (let n = 2; taken.has(key); n++) key = `${start}_${n}`;
+  return key;
+}
+
+export async function addFeature(name: string, nameTh: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("whoDoesWhat.addFeature", t.common.somethingWentWrong, async () => {
+    const c = t.admin.whoDoesWhat.features;
+    const g = await featureGuard(t);
+    if (!g.ok) return g;
+    const en = name.trim();
+    const th = nameTh.trim();
+    if (!en) return { ok: false, error: c.namesNeeded };
+    if (en.length > 80 || th.length > 80) return { ok: false, error: c.tooLong };
+    const { data, error: readError } = await g.supabase.from("features").select("key, position").returns<{ key: string; position: number }[]>();
+    if (readError) return databaseFailure("whoDoesWhat.addFeature", readError, t.common);
+    const position = (data ?? []).reduce((m, x) => Math.max(m, x.position + 1), 1);
+    const key = featureKey(en, new Set((data ?? []).map((x) => x.key)));
+    const { error } = await g.supabase.from("features").insert({ key, name: en, name_th: th || null, position });
+    if (error) return databaseFailure("whoDoesWhat.addFeature", error, t.common);
+    return done();
+  });
+}
+
+export async function renameFeature(id: string, name: string, nameTh: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("whoDoesWhat.renameFeature", t.common.somethingWentWrong, async () => {
+    const c = t.admin.whoDoesWhat.features;
+    const g = await featureGuard(t);
+    if (!g.ok) return g;
+    const en = name.trim();
+    const th = nameTh.trim();
+    if (!en) return { ok: false, error: c.namesNeeded };
+    if (en.length > 80 || th.length > 80) return { ok: false, error: c.tooLong };
+    const { data, error } = await g.supabase.from("features").update({ name: en, name_th: th || null }).eq("id", id).select("id");
+    if (error) return databaseFailure("whoDoesWhat.renameFeature", error, t.common);
+    if (!data?.length) return { ok: false, error: c.notFound };
+    return done();
+  });
+}
+
+export async function moveFeature(id: string, direction: "up" | "down"): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("whoDoesWhat.moveFeature", t.common.somethingWentWrong, async () => {
+    const g = await featureGuard(t);
+    if (!g.ok) return g;
+    const features = await currentFeatures(g.supabase);
+    if (!features) return { ok: false, error: t.common.somethingWentWrong("features") };
+    const i = features.findIndex((x) => x.id === id);
+    const j = direction === "up" ? i - 1 : i + 1;
+    if (i < 0 || j < 0 || j >= features.length) return done();
+    [features[i], features[j]] = [features[j], features[i]];
+    // Renumber from 1, so a gap or two equal positions end up in a clean order.
+    for (const [n, x] of features.entries()) {
+      if (x.position === n + 1) continue;
+      const { error } = await g.supabase.from("features").update({ position: n + 1 }).eq("id", x.id);
+      if (error) return databaseFailure("whoDoesWhat.moveFeature", error, t.common);
+    }
+    return done();
+  });
+}
+
+/** Delete a feature. Its cards become Not yet sorted (on delete set null): none is lost and no role's access changes. */
+export async function removeFeature(id: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("whoDoesWhat.removeFeature", t.common.somethingWentWrong, async () => {
+    const g = await featureGuard(t);
+    if (!g.ok) return g;
+    const { error } = await g.supabase.from("features").delete().eq("id", id);
+    if (error) return databaseFailure("whoDoesWhat.removeFeature", error, t.common);
+    return done();
+  });
+}
+
+/** Put a card under a feature, or back in Not yet sorted (featureId null). The one mapping is shared by every role. */
+export async function setCardFeature(card: string, featureId: string | null): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("whoDoesWhat.setCardFeature", t.common.somethingWentWrong, async () => {
+    const g = await featureGuard(t);
+    if (!g.ok) return g;
+    if (!isCardKey(card)) return { ok: false, error: t.common.somethingWentWrong("card") };
+    const { error } = await g.supabase.from("card_features").upsert({ card, feature_id: featureId }, { onConflict: "card" });
+    if (error) return databaseFailure("whoDoesWhat.setCardFeature", error, t.common);
+    return done();
+  });
+}

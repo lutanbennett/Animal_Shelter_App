@@ -37,6 +37,9 @@ export const AUDITED_TABLES = [
   "role_extras",
   // Which pages a role shows as tiles on its home, in order (0225).
   "role_home_tiles",
+  // The areas of the system and the feature each card serves (0255): Who does what, Features panel.
+  "features",
+  "card_features",
 ] as const;
 export type AuditedTable = (typeof AUDITED_TABLES)[number];
 
