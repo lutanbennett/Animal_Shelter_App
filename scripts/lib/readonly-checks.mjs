@@ -9,6 +9,8 @@
 //
 // Adding a check = adding an entry here. Results are counts, keys and names of settings, never residents or people.
 
+import { expectedGrantsSql } from "./card-bundles.mjs";
+
 const FORBIDDEN = /\b(insert|update|delete|truncate|drop|alter|create|grant|revoke|copy|call|do|vacuum|reindex|set|nextval|setval|pg_terminate_backend|pg_cancel_backend)\b/i;
 
 /** Throws unless `sql` is one SELECT/WITH statement with no write keyword. Quoted strings are ignored. */
