@@ -11,7 +11,7 @@
 | PR | opened after this commit |
 | Tested by / date | Claude, 2026-10-24 |
 | Carries a migration? | yes, 0255 |
-| Tested at SHA | SHA_HERE |
+| Tested at SHA | 47cf07e6 |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,7 @@
 - [x] `node scripts/gates.mjs` ends clean:
 
 ```
-GATES_HERE
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
