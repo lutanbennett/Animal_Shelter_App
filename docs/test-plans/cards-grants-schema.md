@@ -150,7 +150,7 @@ Automated checks by: Claude  Date: 2026-10-24
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: item 1 is for after the production apply
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: its one item can only be checked after the production apply
 
 Manual verification by: pending: Lutan, after the production apply
 
