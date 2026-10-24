@@ -74,7 +74,9 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  { text: "Admin: Settings → Who does what no longer has an Also allowed part. A role now does exactly what its cards give, so there is nothing left to list there. When a card is held but its tile cannot show, the warning now names the page and the fixed rule that stops it.", roles: ["admin"] },
+];
 
 /** Newest first. */
 export const releases: Release[] = [

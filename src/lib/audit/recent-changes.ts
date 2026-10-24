@@ -40,6 +40,9 @@ export const AUDITED_TABLES = [
   // The areas of the system and the feature each card serves (0255): Who does what, Features panel.
   "features",
   "card_features",
+  // What each card requires, and which cards include which (0257): Who does what reads these, the database recomputes every role from them.
+  "card_grants",
+  "card_includes",
 ] as const;
 export type AuditedTable = (typeof AUDITED_TABLES)[number];
 
@@ -212,6 +215,10 @@ function toEntry(raw: RawRow): AuditEntry {
               ? str(image.activity)
             : table === "role_cards"
               ? str(image.card)
+            : table === "card_grants"
+              ? [str(image.card), str(image.activity)].filter(Boolean).join(": ") || null
+            : table === "card_includes"
+              ? [str(image.card), str(image.included_card)].filter(Boolean).join(" includes ") || null
             : table === "role_home_tiles"
               ? str(image.path)
               : null,
