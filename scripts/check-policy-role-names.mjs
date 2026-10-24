@@ -46,8 +46,13 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 export const OWNERS = {};
 
 // "table.policy" -> why its scope function needs no cell beside it (or why the walk misreads it). Each entry is
-// printed every run. Empty on 2026-10-08: all 41 policies calling one were ANDed with a cell.
-export const SCOPE_DELIBERATE = {};
+// printed every run. Empty on 2026-10-08: all 41 policies calling one were ANDed with a cell. The four attachments policies joined it with 0253 (triaged 2026-10-24).
+export const SCOPE_DELIBERATE = {
+  "attachments.attachments_delete_perm": "the clinic_visit arm ANDs bill_owner_can() (0189: has_permission('medical.visits'), read or edit) with sees_all_clinical(); the walk sees bill_owner_can() as a plain function and cannot credit the cell inside it. Every other arm is guarded directly. 0253 marked these four `-- scope-fn: deliberate` for the static twin, check-new-policy-role-names.mjs.",
+  "attachments.attachments_insert_perm": "the clinic_visit arm ANDs bill_owner_can() (0189: has_permission('medical.visits'), read or edit) with sees_all_clinical(); the walk sees bill_owner_can() as a plain function and cannot credit the cell inside it. Every other arm is guarded directly. 0253 marked these four `-- scope-fn: deliberate` for the static twin, check-new-policy-role-names.mjs.",
+  "attachments.attachments_select_perm": "the clinic_visit arm ANDs bill_owner_can() (0189: has_permission('medical.visits'), read or edit) with sees_all_clinical(); the walk sees bill_owner_can() as a plain function and cannot credit the cell inside it. Every other arm is guarded directly. 0253 marked these four `-- scope-fn: deliberate` for the static twin, check-new-policy-role-names.mjs.",
+  "attachments.attachments_update_perm": "the clinic_visit arm ANDs bill_owner_can() (0189: has_permission('medical.visits'), read or edit) with sees_all_clinical(); the walk sees bill_owner_can() as a plain function and cannot credit the cell inside it. Every other arm is guarded directly. 0253 marked these four `-- scope-fn: deliberate` for the static twin, check-new-policy-role-names.mjs.",
+};
 
 const TEXT = "(coalesce(qual, '') || coalesce(with_check, ''))";
 const query = `
