@@ -31,7 +31,7 @@ export async function signUpForDrive(fields: SignupFields): Promise<ActionResult
     // While Desexing drives is hidden (the page, or its Services section) the page shows Not found;
     // the form's action is reachable on its own, so it refuses too. A failed read is not "shown".
     const site = await loadSiteContent(anon);
-    if (!site) return refuse(t.common.somethingWentWrong);
+    if (!site) return refuse(t.common.somethingWentWrong("desexing.signup"));
     if (isPageHidden("desexing", hiddenPagesOf(site.hidden_public_pages))) return refuse(t.desexing.errors.pageHidden);
 
     const { error } = await anon.from("desexing_drive_signups").insert(checked.signup);

@@ -235,7 +235,7 @@ export default async function WelcomePage() {
     careHref && { key: "care", href: careHref, ...h.care },
     shown("foster") && { key: "foster", href: pageHref("foster"), ...h.foster },
     shown("volunteer") && { key: "volunteer", href: pageHref("volunteer"), ...h.volunteer },
-  ].filter((card): card is Exclude<typeof card, false | null> => !!card);
+  ].filter((card) => card !== false && card !== null) as { key: string; href: string; title: string; body: string; cta: string }[];
   const sf = t.shelterFriends.homeStrip;
   // What the site is, for search engines: schema.org AnimalShelter from the
   // same row the footer shows (public site review 2026-10-13, §8.2).
