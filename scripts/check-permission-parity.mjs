@@ -94,6 +94,11 @@ if (Object.keys(cells).length !== 66) throw new Error(`expected 66 activities in
   for (const c of cellsFor(draft, "volunteer", Object.fromEntries(ACTIVITIES.map((x) => [x.key, x.kind])))) cells[c.activity].volunteer = c.level;
 }
 
+// RE-BASELINED 2026-10-24: the Add Shelter Photos card (ruled 2026-10-21, menu-orphans 6 of 6) gives Management and the Doctor
+// photos.shelter_add at 2, a cell the paper never listed. Card in, cell out: expected, not drift.
+cells["photos.shelter_add"].management = 2;
+cells["photos.shelter_add"].doctor = 2;
+
 // Deliberately flip a cell to prove the check can fail.
 const flip = process.env.PARITY_FLIP;
 if (flip) {
@@ -230,7 +235,9 @@ begin
   insert into placement_history (resident_id, placement_type, start_date) values (${lit(F.DEAD)}, 'Deceased', now() - interval '1 day');
   insert into contacts (id, name, type) values (${lit(F.CONTACT)}, 'Harness contact', 'Vendor'), (${lit(F.CARER)}, 'Harness carer', 'Carer');
   insert into shelter_friends (id, contact_id) values (${lit(F.FRIEND)}, ${lit(F.CONTACT)});
-  insert into diet_types (id, name, daily_qty_small, daily_qty_medium, daily_qty_large) values (${lit(F.DIET)}, 'Harness diet', 1, 1, 1);
+  -- 2026-10-24: diet_types (the ingredients; the stock.diets probes) lost daily_qty_*; a resident's diet is now a row of diets (0090 onwards), same id
+  insert into diet_types (id, name) values (${lit(F.DIET)}, 'Harness diet');
+  insert into diets (id, name) values (${lit(F.DIET)}, 'Harness diet');
   -- the immunization probe names this type rather than looking one up: what a role can look up is not what it is probing
   insert into immunization_types (id, name, interval_months) values (${lit(F.IMM_TYPE)}, 'Harness immunization type', 12);
   insert into maintenance (id, title, zone_id) values (${lit(F.JOB)}, 'Harness job', ${lit(F.ZONE)});
@@ -248,7 +255,7 @@ begin
   insert into procedures (resident_id, date, procedure_type_id) select id, current_date, (select id from procedure_types limit 1) from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
   insert into prescriptions (resident_id, medication_id, start_date) select id, (select id from medication order by id limit 1), current_date from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
   insert into immunization_records (resident_id, immunization_type_id, date_administered) select id, (select id from immunization_types limit 1), current_date from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
-  insert into resident_diets (resident_id, diet_type_id, start_date) select id, ${lit(F.DIET)}, current_date - 1 from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
+  insert into resident_diets (resident_id, diet_id, start_date) select id, ${lit(F.DIET)}, current_date - 1 from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
   insert into adoption_updates (resident_id, received_on, channel) select id, current_date, 'visit' from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
   insert into attachments (owner_type, owner_id, drive_file_id, file_name, sub_folder) select 'resident', id, 'harness-' || id, 'x.jpg', 'Medical' from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
 end $setup$;

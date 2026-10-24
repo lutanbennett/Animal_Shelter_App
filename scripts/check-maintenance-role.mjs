@@ -78,7 +78,7 @@ const probes = [
   ["prescriptions", `select 1 from prescriptions where resident_id = '${R}'`, "hm-zero"],
   ["medication", `select 1 from medication limit 1`, "hm-zero"],
   ["diet_types", `select 1 from diet_types limit 1`, "hm-zero"],
-  ["attachments", `select 1 from attachments limit 1`, { ...WITH_HM, doctor: 1 }], // her own maintenance.photos cell reads a job's attachments (0152); RE-BASELINED 2026-10-20: a doctor reads the reports on visits at its own clinic (0220), scoped to that owner type
+  ["attachments", `select 1 from attachments limit 1`, { ...WITH_HM, doctor: 0 }], // RE-BASELINED 2026-10-24: doctor 1 -> 0. The 1 was a clinic_visit attachment at ANOTHER clinic, which bill_owner_can() let any doctor read; 0253 closed that (visit attachments need sees_all_clinical(); a doctor gets only reports at its own clinic, 0220), and this harness doctor has no own-clinic visit. Older note: her own maintenance.photos cell reads a job's attachments (0152); RE-BASELINED 2026-10-20: a doctor reads the reports on visits at its own clinic (0220), scoped to that owner type
   ["stock_counts", `select 1 from stock_counts limit 1`, "hm-zero"],
   ["contacts", `select 1 from contacts limit 1`, "hm-zero"],
   ["assistant_actions", `select 1 from assistant_actions limit 1`, "hm-zero"],

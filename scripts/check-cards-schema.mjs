@@ -188,6 +188,9 @@ begin
 
   -- photo-approver guard (0221). Start from "nobody approves": clear that cell everywhere in this rolled-back transaction.
   delete from role_permissions where activity = 'photos.approve';
+  -- 2026-10-24: the guard also counts who holds Add resident photos, and since the 2026-10-21 ruling four real roles do (2IC, Doctor,
+  -- Head of Medical, Management). Start from "nobody adds either", so the cases below test the guard and not today's roles grid.
+  delete from role_cards where card = 'add_photos';
   declare
     v_mgmt uuid; v_third uuid; v_vol uuid;
   begin

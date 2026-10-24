@@ -217,6 +217,8 @@ begin
       
     union all select table_name || '.' || column_name from information_schema.columns
      where table_schema = 'public' and column_name ~ 'vet'
+       -- 2026-10-24: gift_split_vet (0237) is the public trust block's share of gifts spent on veterinary care, not the retired role name
+       and column_name <> 'gift_split_vet'
       
     union all select conname from pg_constraint where connamespace = 'public'::regnamespace and conname ~ 'vet'
     union all select tgname from pg_trigger where not tgisinternal and tgname ~ 'vet'

@@ -145,7 +145,8 @@ begin
   insert into harness_out values
     ('C read own resident''s translation', pg_temp.val(d, format(
        'select count(*) from translations where table_name = ''residents'' and row_id = %L', pg_temp.hid('res'))), '1'),
-    ('C read other tables'' translations', pg_temp.val(d, 'select count(*) from translations where table_name <> ''residents'''), '0');
+    -- 0184: approved map_rooms translations are readable by anyone map_rooms_read admits, a doctor included; everything else stays closed
+    ('C read other tables'' translations', pg_temp.val(d, 'select count(*) from translations where table_name <> ''residents'' and not (table_name = ''map_rooms'' and status = ''approved'')'), '0');
   -- D
   insert into harness_out values
     ('D doctor sees itself', pg_temp.val(d, format('select count(*) from app_users where id = %L', d)), '1'),

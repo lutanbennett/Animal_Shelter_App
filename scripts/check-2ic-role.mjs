@@ -74,12 +74,14 @@ const probes = [
   ["change a delivery", `update stock_receipts set note = 'probe' where id = (select id from stock_receipts limit 1)`, who()],  // 0145 (C8): a wrong delivery is deleted and recorded again; 0191's update policy stays for the bills inbox but 0235's trigger refuses any change except cost
   ["put a cost on a delivery (bills inbox)", `update stock_receipts set cost = 1 where id = (select id from stock_receipts limit 1)`, DELIVERERS], // 0191/0235: the one legitimate edit
   // her limits: nothing outside the whiteboard
-  ["residents", `select 1 from residents where id = '${R}'`, ONLY_SIC],
-  ["resident_list_view", `select 1 from resident_list_view where resident_id = '${R}'`, ONLY_SIC],
+  // RE-BASELINED 2026-10-24 (0249, a deliberate change): a who_and_where role holding a medical.* edit reads the resident record, and her
+  // cards give her medical.weight, diet, prescriptions and immunizations at edit. Same reason check-medical-role.mjs was re-baselined.
+  ["residents", `select 1 from residents where id = '${R}'`, SIC_ONE],
+  ["resident_list_view", `select 1 from resident_list_view where resident_id = '${R}'`, SIC_ONE],
   // RE-BASELINED 2026-10-06 (director-draft-apply): the draft ticks row 17 (weights) and 15 (prescribe) for the 2IC
   ["weight", `select 1 from weight where resident_id = '${R}'`, SIC_ONE],
   ["prescriptions", `select 1 from prescriptions where resident_id = '${R}'`, SIC_ONE],
-  ["attachments", `select 1 from attachments limit 1`, who("sic", "dl", "doctor", ...OLD)], // RE-BASELINED 2026-10-07 (0152): her maintenance.photos cell reads a job's attachments. RE-BASELINED 2026-10-20: dl reads a delivery's photos (0189 bill_owner_can: stock_receipt needs stock.delivery) and a doctor reads the reports on visits at its own clinic (0220); both policies are scoped to those owner types, so neither reaches other attachments
+  ["attachments", `select 1 from attachments limit 1`, who("sic", "dl", ...OLD)], // RE-BASELINED 2026-10-24: doctor dropped, 0253 stopped a doctor reading other clinics' visit attachments (it was the 1). Older notes: RE-BASELINED 2026-10-07 (0152): her maintenance.photos cell reads a job's attachments. RE-BASELINED 2026-10-20: dl reads a delivery's photos (0189 bill_owner_can: stock_receipt needs stock.delivery) and a doctor reads the reports on visits at its own clinic (0220); both policies are scoped to those owner types, so neither reaches other attachments
   ["assistant_actions", `select 1 from assistant_actions limit 1`, ONLY_SIC],
   ["insert placement", `insert into placement_history (resident_id, placement_type, start_date) values ('${R}', 'SendToHospital', now() + interval '1 minute')`, ONLY_SIC],
   ["delete a job", `delete from maintenance where id = '${JOB}'`, who("sic", ...OLD)], // RE-BASELINED 2026-10-11 (0179): maintenance.delete, which the 2IC holds and the Head of Maintenance does not
@@ -180,6 +182,7 @@ end $cmp$;
 do $role$ begin
   insert into res select 'role', 'row', 0 where exists (select 1 from roles where key = 'second_in_command' and kind = 'custom' and opens_app and name_th is not null and archived_at is null);
   insert into res select 'role', 'cell:' || rp.activity || ':' || rp.level, 0 from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'second_in_command';
+  insert into res select 'role', 'extra:' || e.activity || ':' || e.level, 0 from role_extras e join roles r on r.id = e.role_id where r.key = 'second_in_command';
   insert into res select 'role', 'card:' || rc.card, 0 from role_cards rc join roles r on r.id = rc.role_id where r.key = 'second_in_command';
   insert into res select 'role', 'diet-forecast-has-no-cost', 0 where not exists (select 1 from pg_proc where proname = 'stock_diet_forecast' and pg_get_function_result(oid) ilike '%cost%');
 end $role$;
@@ -235,8 +238,11 @@ const have = new Map(rows.filter((r) => r.who === "role" && r.tbl.startsWith("ce
 // bundle is the expansion of the cards she HOLDS. It was jobs.ts plus a draft file minus a hand-written list of activities,
 // which went stale whenever a card was ticked on the roles screen. Still exact: a power with no card fails.
 const heldCards = rows.filter((r) => r.who === "role" && r.tbl.startsWith("card:")).map((r) => r.tbl.slice(5));
-const { bundleOfCards } = await import(pathToFileURL(join(process.cwd(), "src/lib/permissions/cards.ts")).href);
+const { loadCards } = await import(pathToFileURL(join(process.cwd(), "scripts/lib/load-cards.mjs")).href);
+const { bundleOfCards } = await loadCards();
 const want = new Map([...bundleOfCards(heldCards)].map(([a, l]) => [a, l === "edit" ? 2 : 1]));
+// Her extras (role_extras, 0194) are powers no card gives; role_permissions is cards + extras, as check-cards-schema.mjs holds.
+for (const [a, l] of rows.filter((r) => r.who === "role" && r.tbl.startsWith("extra:")).map((r) => r.tbl.split(":").slice(1))) want.set(a, Math.max(want.get(a) ?? 0, Number(l)));
 const same = have.size === want.size && [...want].every(([a, l]) => have.get(a) === l);
 if (same) pass(`bundle: role_permissions = the union of her cards' bundles (${[...want.keys()].join(", ")}), from her cards: ${heldCards.join(", ")}`);
 else fail(`bundle: role_permissions ${JSON.stringify([...have])} differ from her cards ${JSON.stringify([...want])}`);
