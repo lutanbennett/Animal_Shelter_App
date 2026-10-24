@@ -30,6 +30,7 @@ create policy bulk_appointments_delete_perm on bulk_appointments for delete to a
   using ((select has_permission('visit.book')) and (select sees_all_clinical()));
 
 drop policy if exists attachments_select_perm on attachments;
+-- scope-fn: deliberate — the clinic_visit arm ANDs bill_owner_can() (medical.visits via has_permission) with sees_all_clinical(); every other arm is unchanged from 0189.
 create policy attachments_select_perm on attachments for select to authenticated
   using (
     case owner_type
@@ -44,6 +45,7 @@ create policy attachments_select_perm on attachments for select to authenticated
   );
 
 drop policy if exists attachments_insert_perm on attachments;
+-- scope-fn: deliberate — the clinic_visit arm ANDs bill_owner_can() (medical.visits via has_permission) with sees_all_clinical(); every other arm is unchanged from 0189.
 create policy attachments_insert_perm on attachments for insert to authenticated
   with check (
     case owner_type
@@ -58,6 +60,7 @@ create policy attachments_insert_perm on attachments for insert to authenticated
   );
 
 drop policy if exists attachments_update_perm on attachments;
+-- scope-fn: deliberate — the clinic_visit arm ANDs bill_owner_can() (medical.visits via has_permission) with sees_all_clinical(); every other arm is unchanged from 0189.
 create policy attachments_update_perm on attachments for update to authenticated
   using (
     case owner_type
@@ -83,6 +86,7 @@ create policy attachments_update_perm on attachments for update to authenticated
   );
 
 drop policy if exists attachments_delete_perm on attachments;
+-- scope-fn: deliberate — the clinic_visit arm ANDs bill_owner_can() (medical.visits via has_permission) with sees_all_clinical(); every other arm is unchanged from 0189.
 create policy attachments_delete_perm on attachments for delete to authenticated
   using (
     case owner_type

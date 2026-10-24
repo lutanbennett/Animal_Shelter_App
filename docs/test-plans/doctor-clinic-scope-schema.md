@@ -36,7 +36,7 @@
 - [x] Existing rows still read correctly after the change — no data touched; own-clinic harnesses pass
 - [x] **Constraints and defaults exercised against real rows** in a begin/rollback harness — `check-doctor-clinic-scope.mjs`: doctor refused at other clinic on bulk insert/update/delete and on visit attachments (bill and report, all four commands); admin and management still read and write. Result HARNESS-OK
 - [x] Down-migration written, or the reason one is not needed is stated — header names the restore: 0147 bulk and 0189 attachments policies
-- [ ] Production apply plan stated for the release manager — pending: Lutan applies 0253 to production; production is affected until then
+- [ ] Production apply plan stated for the release manager — n/a: no release manager step; Lutan applies 0253 to production himself, stated in the PR and decision file
 
 ## 4. Functional checks
 
@@ -148,7 +148,7 @@ Manual verification by: n/a: no UI surface
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — n/a: the PR body links it
-- [ ] Handed to the production release manager — pending: Lutan applies 0253 to production
+- [ ] Handed to the production release manager — n/a: Lutan applies 0253 to production himself
 
 Result: pass
 
