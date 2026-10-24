@@ -241,7 +241,7 @@ const heldCards = rows.filter((r) => r.who === "role" && r.tbl.startsWith("card:
 const { loadCards } = await import(pathToFileURL(join(process.cwd(), "scripts/lib/load-cards.mjs")).href);
 const { bundleOfCards } = await loadCards();
 const want = new Map([...bundleOfCards(heldCards)].map(([a, l]) => [a, l === "edit" ? 2 : 1]));
-// Her extras (role_extras, 0194) are powers no card gives; role_permissions is cards + extras, as check-cards-schema.mjs holds.
+// Her extras (role_extras, 0194) are powers no card gives; role_permissions is cards + extras, as check-cards-schema.mjs held until 0257 (role_extras no longer counts; check-card-grants.mjs holds it now).
 for (const [a, l] of rows.filter((r) => r.who === "role" && r.tbl.startsWith("extra:")).map((r) => r.tbl.split(":").slice(1))) want.set(a, Math.max(want.get(a) ?? 0, Number(l)));
 const same = have.size === want.size && [...want].every(([a, l]) => have.get(a) === l);
 if (same) pass(`bundle: role_permissions = the union of her cards' bundles (${[...want.keys()].join(", ")}), from her cards: ${heldCards.join(", ")}`);

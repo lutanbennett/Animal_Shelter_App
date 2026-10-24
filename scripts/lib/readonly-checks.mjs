@@ -9,7 +9,6 @@
 //
 // Adding a check = adding an entry here. Results are counts, keys and names of settings, never residents or people.
 
-import { expectedGrantsSql } from "./card-bundles.mjs";
 
 const FORBIDDEN = /\b(insert|update|delete|truncate|drop|alter|create|grant|revoke|copy|call|do|vacuum|reindex|set|nextval|setval|pg_terminate_backend|pg_cancel_backend)\b/i;
 
@@ -77,8 +76,9 @@ export const CHECKS = {
   },
   "role-cards-coverage": {
     asks: "For each role: which held card needs access the role does not have, and which activity at which level is missing? (After the card-grants release this must print nothing.)",
-    // TEMPORARY SHAPE: the grants are a literal built from cards.ts (scripts/lib/card-bundles.mjs). Read card_grants instead once it exists.
-    sql: `with g(card, activity, level) as (values ${expectedGrantsSql()})
+    // Reads card_grants and card_includes (0257): each held card with everything it includes. Before 0257 is applied to a database
+    // this reports a missing table, which is the same finding: that database has no copy of what a card requires.
+    sql: `with g(card, activity, level) as (select c0.card, cg.activity, max(cg.level) from (select distinct card from role_cards) c0 cross join lateral card_closure(array[c0.card]) cl join card_grants cg on cg.card = cl.card group by c0.card, cg.activity)
       select coalesce(json_agg(json_build_object('role', r.key, 'card', c.card, 'activity', g.activity,
           'need', g.level, 'have', coalesce(p.level, 0)) order by r.key, c.card, g.activity), '[]'::json)
       from roles r join role_cards c on c.role_id = r.id join g on g.card = c.card
@@ -90,12 +90,11 @@ export const CHECKS = {
     failed: (rows) => rows.length > 0,
   },
   "cards-union": {
-    asks: "For each role: are its permission cells exactly the union of its cards and extras? (Lists cells nothing backs, and backed access the role lacks.)",
-    // TEMPORARY SHAPE: same literal as role-cards-coverage.
-    sql: `with g(card, activity, level) as (values ${expectedGrantsSql()}),
-      want as (select x.role_id, x.activity, max(x.level) as level
-        from (select c.role_id, g.activity, g.level from role_cards c join g on g.card = c.card
-              union all select e.role_id, e.activity, e.level from role_extras e) x group by x.role_id, x.activity)
+    asks: "For each role: are its permission cells exactly the union of its cards' grants? (Lists cells no card backs, and backed access the role lacks.) role_extras no longer counts (0257).",
+    // Reads card_grants and card_includes, like role-cards-coverage.
+    sql: `with g(card, activity, level) as (select c0.card, cg.activity, max(cg.level) from (select distinct card from role_cards) c0 cross join lateral card_closure(array[c0.card]) cl join card_grants cg on cg.card = cl.card group by c0.card, cg.activity),
+      want as (select c.role_id, g.activity, max(g.level) as level
+        from role_cards c join g on g.card = c.card group by c.role_id, g.activity)
       select coalesce(json_agg(json_build_object('role', r.key,
           'unbacked', coalesce((select json_agg(p.activity order by p.activity) from role_permissions p
             where p.role_id = r.id and not exists (select 1 from want w where w.role_id = r.id and w.activity = p.activity and w.level >= p.level)), '[]'::json),
@@ -104,8 +103,8 @@ export const CHECKS = {
         order by r.key), '[]'::json)
       from roles r where r.kind <> 'fixed'`,
     render: (rows) => rows.map((x) => x.unbacked.length + x.unapplied.length === 0
-      ? `${x.role}: exactly the union of its cards and extras`
-      : `${x.role}: ${x.unbacked.length} cells no card or extra backs (${x.unbacked.join(", ") || "-"}); ${x.unapplied.length} backed but missing (${x.unapplied.join(", ") || "-"})`),
+      ? `${x.role}: exactly the union of its cards`
+      : `${x.role}: ${x.unbacked.length} cells no card backs (${x.unbacked.join(", ") || "-"}); ${x.unapplied.length} backed but missing (${x.unapplied.join(", ") || "-"})`),
     failed: (rows) => rows.some((x) => x.unbacked.length + x.unapplied.length > 0),
   },
   "fault-residents-lifecycle": {

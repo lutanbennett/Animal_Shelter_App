@@ -20,7 +20,7 @@ const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/l
 const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
-// cards.ts imports "./jobs" and "@/…" without extensions, as Next allows; plain node needs a resolver hook (as check-cards-schema.mjs).
+// cards.ts imports "./jobs" and "@/…" without extensions, as Next allows; plain node needs a resolver hook (as check-cards-count.mjs).
 const srcUrl = pathToFileURL(join(root, "src") + "/").href;
 register(
   "data:text/javascript," +
