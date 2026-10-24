@@ -79,10 +79,7 @@ declare
   v_own uuid := gen_random_uuid();
   v_other uuid := gen_random_uuid();
 begin
-  select id into v_res from record_intake(
-    p_name => 'Harness archive roles', p_intake_date => date '2026-08-01', p_weight_kg => 10,
-    p_diet_id => (select id from diets order by is_standard desc nulls last limit 1));
-  insert into harness values ('res', v_res), ('mgmt', v_mgmt), ('doctor', v_doctor), ('vol', v_vol),
+  insert into harness values ('mgmt', v_mgmt), ('doctor', v_doctor), ('vol', v_vol),
     ('own', v_own), ('other', v_other);
 
   insert into clinics (id, name) values (v_own, 'Harness own clinic'),
@@ -99,6 +96,13 @@ begin
   join roles ro on ro.key = v.role_key;
   -- 0127: a doctor login's clinic is its linked doctor's (doctor_clinics links it, 0172)
   with d as (insert into doctors (name, user_id) values ('Harness doctor', v_doctor) returning id) insert into doctor_clinics (clinic_id, doctor_id) select v_own, id from d;
+  -- 0248: record_intake asks has_permission('resident.register'), so it needs a login. Run it as the Management login, then drop the claims.
+  perform set_config('request.jwt.claims', json_build_object('sub', v_mgmt, 'role', 'authenticated', 'aal', 'aal1')::text, true);
+  select id into v_res from record_intake(
+    p_name => 'Harness archive roles', p_intake_date => date '2026-08-01', p_weight_kg => 10,
+    p_diet_id => (select id from diets order by is_standard desc nulls last limit 1));
+  perform set_config('request.jwt.claims', '', true);
+  insert into harness values ('res', v_res);
 end $setup$;
 
 do $h$
