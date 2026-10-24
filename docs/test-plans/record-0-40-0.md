@@ -22,7 +22,9 @@ blocker out of bookkeeping.
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the backlog item asked for — the `0.40.0` record, the handover rewritten as a delta, and a decision file recording why the red `audit` was not acted on; no backlog item, this is step 8
-- [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs) — exactly four, all documentation: `docs/releases/2026-10-24-0-40-0.md` (new), `docs/release-handover.md` (rewritten), `docs/decisions/2026-10-24-audit-body-parser-undici-not-reachable.md` (new) and this plan. **No code of any kind.** The decision is a new file per the convention, so two streams can never touch the same path
+- [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs) — **six, all documentation.** `docs/releases/2026-10-24-0-40-0.md` (new), `docs/release-handover.md` (rewritten), `docs/release-procedure.md` (one new section), `docs/decisions/2026-10-24-audit-body-parser-undici-not-reachable.md` (new), `docs/decisions/2026-10-24-read-only-production-checks.md` (new) and this plan. **No code of any kind.** Both decisions are new files per the convention, so two streams can never touch the same path
+
+  **It grew from four to six mid-PR, and deliberately.** Lutan answered the two questions this release raised while the PR was open: *"Check for identical code only"* and *"Yes keep the read only production check script."* The handover said those were "not a release manager's call, so not made here" — **leaving that standing after he had answered would have been the exact stale-pending fault `CLAUDE.md` warns about**, so the answers went into this PR rather than a later one. One of them is a durable rule and therefore belongs in `release-procedure.md`, not the handover (paperwork rule 4)
 - [x] Roles affected identified — **none.** Nothing here is reachable by any role; `docs/` is not served
 - [x] Anything explicitly **out of scope** written down — the record does not re-verify the ten feature PRs; each has its own plan and the record cites their results. **Three things are deliberately recorded as NOT established rather than resolved**: which production diets `0250` affected, whether any production role holds the Operations or Management card, and whether the doctor role has `0230`'s cells on production. All three need scripts that are hard-locked to dev, and **those guards were left alone rather than worked around**
 
@@ -34,17 +36,17 @@ blocker out of bookkeeping.
 
 ```
 === gates: typecheck — npm run typecheck
-=== gates: typecheck exited 0 after 8s
+=== gates: typecheck exited 0 after 7s
 === gates: lint — npm run lint
-=== gates: lint exited 0 after 75s
+=== gates: lint exited 0 after 68s
 === gates: test — npm test
 === gates: test exited 0 after 15s
 === gates: build — npm run build
-=== gates: build exited 0 after 40s
+=== gates: build exited 0 after 38s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-**The handover was trimmed after this run started** (141 lines to 139), which is markdown only. Said plainly because a documents-only PR skips the heavy CI jobs, so these local gates are the only ones that run. Checked rather than assumed on the previous release: no gate parses `release-handover.md` or the release records - the only scripts naming them classify paths (`check-docs-only.mjs` and its test) or read assets.
+**The gates were run twice, and this is the second run — the one that covers the final tree.** The first run (`typecheck=0 lint=0 test=0 build=0` likewise) was made before Lutan answered this release's two open questions, which added `docs/release-procedure.md` and a second decision file. Rather than paste the earlier block with a caveat about edits made after it, the gates were simply re-run over everything. **That matters here specifically because a documents-only PR skips the heavy CI jobs** (`check-docs-only.mjs`: `docs-only: true … the heavy jobs will skip; test-plan still runs`), so these local gates are the only ones that run and there is no second pass to catch a late edit.
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -65,7 +67,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] Create / edit / delete all exercised — n/a: a release record is written once; a later release writes its own file. The handover is rewritten each release by design, and this edition replaces `0.39.5`'s
 - [ ] Empty state renders sensibly — n/a: no UI
 - [x] Invalid input is rejected with a readable message, not a crash — the applicable guard is `scripts/check-test-plan.mjs`, which rejects a release record filed under `docs/test-plans/` so that a release record can never satisfy a feature's gate. This record is under `docs/releases/`, and the checker validates this plan instead
-- [x] Boundary cases checked — the handover's **line ceiling** is the one that applies: rule 4 sets ~100 and treats 150 as the limit. **Measured: 141 as first written, trimmed to 139** by compressing the two passages that restated what the record and the decision file already hold. **Reported honestly as inside the limit but not the ~100 it asks for** — the content is findings rather than padding, and cutting a finding to hit a line count would be the wrong trade
+- [x] Boundary cases checked — the handover's **line ceiling** is the one that applies: rule 4 sets ~100 and treats 150 as the limit. **Measured at each stage rather than once: 141 as first written, trimmed to 139, then 152 after Lutan's two decisions were written in — over the limit — and trimmed to 146.** The breach was caught by re-measuring after the edits instead of assuming the earlier figure still held; the fix was to compress the "facts no session can read" passage, which its own decision file now holds in full. **Reported honestly as inside the limit but not the ~100 it asks for** — the content is findings, and cutting a finding to hit a line count would be the wrong trade
 
 ### Role access matrix
 
@@ -94,7 +96,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 ## 7. Documentation
 
 - [ ] Backlog item ticked in `docs/backlog.md` **on this branch** — n/a: recording a release closes no backlog item. **Nothing needed folding at step 1 either** (`git log --oneline main..backlog` was empty)
-- [x] Non-obvious design choices added as a new file in `docs/decisions/` — **yes, and this is the one a future session will actually need**: `2026-10-24-audit-body-parser-undici-not-reachable.md` records why two high advisories were judged unreachable and why no fix was applied, including the measurement (0 matches in the 21 MB deployed bundle) and the three conditions that would change the conclusion. `CLAUDE.md` requires exactly this for a red `audit`, so the next session does not start over
+- [x] Non-obvious design choices added as a new file in `docs/decisions/` — **two of them.** `2026-10-24-audit-body-parser-undici-not-reachable.md` records why two high advisories were judged unreachable and why no fix was applied, including the measurement (0 matches in the 21 MB deployed bundle) and the three conditions that would change the conclusion — `CLAUDE.md` requires exactly this for a red `audit`. And `2026-10-24-read-only-production-checks.md` records Lutan's decision to have a read-only production check **with its constraints**, which are the reason it needs a decision file rather than just a backlog line: read-only *by construction*, allow-listed named checks rather than arbitrary SQL, and **explicitly not built by loosening the existing dev-only guards one script at a time**. Building it is a feature stream's work and is filed on `backlog`, not done here
 - [x] `README.md` still accurate — unchanged; it names no version
 - [ ] **Release notes.** Would a shelter user notice this change? — n/a: nobody outside this repository reads a record, a handover or a decision file, and nothing a user sees changed. The notes users did notice shipped in #894 and are live on `/releases` **and in their inbox**
 - [x] Commit messages say why, not just what — the record commit states what shipped, that the mail was delivered and verified, which counter reset and why it is not the software's fault, and what was found

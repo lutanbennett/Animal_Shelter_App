@@ -16,25 +16,31 @@ backlog grooming between the cut's merge and the Worker deploy, a planner handov
 the Worker deploy and the Pi build. Run `git diff --stat 9cdb4af2..HEAD`, `gh pr list`,
 `--status --env production` and the live `/api/version` first.
 
-## The counter that reset, and why it is not your fault
+## The SHA counter is RETIRED — do not carry it forward
 
-**"All four builds from one SHA" went from 2 to 0.** This release's four builds came from
-**three** SHAs: test from `f2a691e3`, production Worker from `82666a58`, production Pi from
-`9cdb4af2`.
+**Lutan decided it this release, 2026-10-24: "Check for identical code only."** The rule is now
+in `docs/release-procedure.md` → *"Check the code is identical, not that the SHAs match"*.
+**Stop reporting "all four builds from one SHA" and stop carrying its counter.**
 
-**Every difference is documentation**, measured not assumed: `docs/backlog.md`, then
-`.claude/skills/plan-day/SKILL.md` plus `docs/planner-handover.md` and a test plan. **The
-served application code is byte-identical across all four.** The Pi was deliberately **not**
-rebuilt at an older SHA to tidy the number.
+What prompted it: this release's four builds came from **three** SHAs — test `f2a691e3`,
+production Worker `82666a58`, production Pi `9cdb4af2` — and **not one difference was
+application code**. Other sessions merged paperwork PRs inside the deploy window, and each Pi
+build checks out the current tip, so the property measured how quiet other sessions happened to
+be. The Pi was deliberately **not** rebuilt to tidy the number.
 
-**The cause is other sessions merging paperwork PRs inside the deploy window**, and each Pi
-build checks out the current tip. **So the counter now measures something a release manager
-cannot control.** `deploy.mjs` takes no `--ref`; `deploy-pi.sh` does. Three honest options,
-none taken here because it is not a release manager's call: pin the Pi builds with
-`--ref <release sha>`, ask streams to hold paperwork merges during a deploy, or **retire the
-counter** and assert what actually matters — that the application code is identical, which is
-a diff rather than a SHA comparison. **Do not keep reporting it as a streak; it will keep
-breaking for reasons that have nothing to do with the software.**
+**What you run instead**, for each pair of SHAs the release built from:
+
+```bash
+git diff --name-only <tested sha>..<deployed sha> | grep -vE '^(docs/|\.claude/)'
+```
+
+Empty means the served application code is identical — sound however many SHAs appear in
+`/api/version`. **Any line means stop**: untested code is on a production box. On `0.40.0` all
+three pairs came back clean. **It stays quiet when only documents differ and fails when code
+differs**, which is the case that always mattered.
+
+**It does not license rebuilding a Pi to chase a SHA** — the existing trap about reading what is
+deploying still stands.
 
 ## Stopping a background call does not stop what it started elsewhere
 
@@ -101,10 +107,11 @@ have been left alone each time rather than worked around:
 - **Whether any production role holds the Operations or Management card** after he exercised the toggle (`0.39.5`) — recorded as not established.
 - **Whether the doctor role has `0230`'s medical cells on production** (#890, this release) — all **eight** doctor/medical check scripts refuse a non-dev project.
 
-**So an increasing share of verification can only be done by Lutan**, and each release records
-one more "not established". That is the honest state, not a complaint — but it is a question
-worth putting to him: whether a **read-only** production check script is worth having, given
-every existing one refuses by design. **Do not work around the guards to answer it.**
+**DECIDED, 2026-10-24: yes, have a read-only production check script.** Filed on `backlog`;
+the constraints are in `docs/decisions/2026-10-24-read-only-production-checks.md` and matter
+more than the item — read-only *by construction*, allow-listed named checks, and **not** built
+by loosening the existing dev-only guards one script at a time. **Until it exists those three
+facts stay "not established", and the guards stay alone.**
 
 ## In flight and open
 
