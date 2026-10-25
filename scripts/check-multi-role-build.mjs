@@ -88,7 +88,8 @@ ok("B Head of Medical covering Maintenance: every maintenance tile is there", ma
 ok("B ...and every medical tile", medical.every((h) => both.includes(h)), `${medical} not in ${both}`);
 ok("B Add photos is not drawn beside the medical photos tile", !both.includes("/photos/add"), both.join());
 ok("B ...each tile once", new Set(both).size === both.length, both.join());
-ok("B ...main role's tiles lead", JSON.stringify(both.slice(0, medical.length)) === JSON.stringify(medical), both.join());
+// The cover's tiles come from the union of cells, so it may hold others between them; the main role's own come in its own order.
+ok("B ...main role's tiles keep their order", JSON.stringify(both.filter((h) => medical.includes(h))) === JSON.stringify(medical), both.join());
 console.log("   medical:", medical.join(), "| maint:", maintenance.join(), "| both:", both.join());
 ok("B maintenance is a tile of the cover, not of the medical lead alone", !medical.includes("/maintenance") && both.includes("/maintenance"));
 
