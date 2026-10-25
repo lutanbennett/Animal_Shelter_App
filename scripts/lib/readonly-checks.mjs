@@ -60,20 +60,6 @@ export const CHECKS = {
       : r.missing.length ? [`MISSING ${r.missing.length} of 13: ${r.missing.join(", ")}`] : ["All 13 doctor cells are present."],
     failed: (r) => !r.role_exists || r.missing.length > 0,
   },
-  "diets-proportion": {
-    asks: "Which diet ingredient lines have Medium/Large amounts out of proportion to Small?",
-    sql: `select coalesce(json_agg(json_build_object('diet', d.name, 'ingredient', dt.name,
-        's', di.qty_small, 'm', di.qty_medium, 'l', di.qty_large,
-        'want_m', round(d.servings_medium / d.servings_small * di.qty_small, 3),
-        'want_l', round(d.servings_large / d.servings_small * di.qty_small, 3)) order by d.name, dt.name), '[]'::json)
-      from diet_ingredients di join diets d on d.id = di.diet_id join diet_types dt on dt.id = di.diet_type_id
-      where abs(di.qty_medium - d.servings_medium / d.servings_small * di.qty_small) > 0.005
-         or abs(di.qty_large - d.servings_large / d.servings_small * di.qty_small) > 0.005`,
-    render: (rows) => rows.length
-      ? rows.map((x) => `${x.diet} / ${x.ingredient}: Small ${Number(x.s)}, Medium ${Number(x.m)} (would be ${Number(x.want_m)}), Large ${Number(x.l)} (would be ${Number(x.want_l)})`)
-      : ["Every line is in proportion."],
-    failed: (rows) => rows.length > 0,
-  },
   "role-cards-coverage": {
     asks: "For each role: which held card needs access the role does not have, and which activity at which level is missing? (After the card-grants release this must print nothing.)",
     // Reads card_grants and card_includes (0257): each held card with everything it includes. Before 0257 is applied to a database

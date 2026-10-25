@@ -149,8 +149,7 @@ export async function saveRecipeLine(dietId: string, fields: RecipeLineFields): 
     const qty = Number(optional(fields.qty) ?? "");
     if (!Number.isFinite(qty) || qty <= 0) return refuse(e.amountsInvalid);
     const supabase = await createClient();
-    // qty_small/medium/large are no longer written: the forecast moved to qty_per_serving in 0254 and special_diet_list
-    // in 0258, so nothing reads them and a later migration drops them. A serving unit with no conversion is refused by a trigger (0239).
+    // A serving unit with no conversion is refused by a trigger (0239).
     const { error } = await supabase.from("diet_ingredients").upsert(
       {
         diet_id: dietId,
