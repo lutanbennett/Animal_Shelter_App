@@ -1238,6 +1238,7 @@ const en = {
         card_features: "Card's feature",
         card_grants: "What a card gives",
         card_includes: "Card included in another",
+        site_content: "Website settings",
         role_extras: "Extra permission",
       },
       kinds: {

@@ -43,6 +43,8 @@ export const AUDITED_TABLES = [
   // What each card requires, and which cards include which (0257): Who does what reads these, the database recomputes every role from them.
   "card_grants",
   "card_includes",
+  // The website settings row (0254, 0256): hiding or showing a public page, and the Stocktaking switches. Its own trigger writes the audit rows.
+  "site_content",
 ] as const;
 export type AuditedTable = (typeof AUDITED_TABLES)[number];
 
