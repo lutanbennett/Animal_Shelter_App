@@ -6,7 +6,7 @@
 |---|---|
 | Feature | Card report: PDF generator, plus the driven pass of `view_residents` and `residents` |
 | Backlog item | `docs/backlog.md` → RERUN EVERY CARD TEST (stays open: 2 of 29) |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/card-report-residents` @ `C:\Development\Animal_Shelter_card-report-residents` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | opened after this commit |
 | Tested by / date | Claude, 2026-10-25 |
