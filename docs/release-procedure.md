@@ -313,6 +313,40 @@ following it is what opens the window. **Merge, pull, apply, deploy, in that
 order**, and confirm `git status -sb` says neither ahead nor behind before the
 apply rather than after it.
 
+### Snapshot what the migration will change, before applying it
+
+Promoted here after `0.40.2`, where the lesson was learned and half-missed in the
+same release. **A migration that rewrites rows rather than adding columns needs a
+before-picture, and the picture has to be of the thing it moves.**
+
+`0257_card_grants.sql` recomputed every production role's `role_permissions` and
+deleted anything that came from no card - on Lutan's ruling, and correctly. Its
+own header promises a per-role `NOTICE` listing what was added and removed, and
+calls that list *"the record of what to give back"*. **Two things then went
+wrong, and neither is specific to that file:**
+
+- **`RAISE NOTICE` output does not come back.** `apply-migrations.mjs` reaches
+  Supabase through the Management API, which returns statement results only. So a
+  migration's own narration of what it changed is **not** a capturable record,
+  however clearly the file promises one. Do not plan to rely on it.
+- **The snapshot taken was of the wrong table.** `check-production.mjs role-cards`
+  was run before the apply - but `0257` does not change which **cards** a role
+  holds, it changes which **cells** it has. `role-cells` was the one to take, and
+  without it only one role's loss could be itemised afterwards.
+
+So, before applying anything that rewrites rather than adds: **run the read-only
+check that covers the table the migration writes, and keep its output.** For
+anything touching roles or permissions that is `node scripts/check-production.mjs
+role-cells` **and** `role-cards`, which take seconds together. Then re-run both
+afterwards and put both in the record. `cards-union` and `role-cards-coverage` are
+the after-checks that say whether the rebuild is self-consistent; they cannot tell
+you what was lost, because by then it is gone.
+
+**The general form, worth keeping even when the next case looks different:**
+reading production rather than reasoning about it is the rule `0.40.1` established
+- and this release obeyed it and still came away with a gap, because it read the
+wrong thing. **Read the table the change actually writes.**
+
 ## 6. Deploy
 
 Deploy **test first** where the release allows it. Check what is on test before
