@@ -35,6 +35,22 @@ card — no exceptions."* And, the rule in full:
 - **Why it matters:** `cardTile()` in `src/lib/home/tiles.ts` re-checks a card against access the
   card itself applied, and lets the page rules veto it; the tile then silently isn't drawn, with no
   message and no record. That is how faults "come out of nowhere".
+- **The scope of the rule: Admin sits OUTSIDE the card system.** Lutan, 2026-10-25, asked directly: *"I am happy for
+  admin access = all to be hard coded."* and, deciding its shape: *"It should sit outside the card system."* The rule governs how a
+  role's access is derived from its cards. Admin's access is derived from nothing and Admin is not a participant in that system, so
+  "zero exceptions" stays literally true *within* it. The invariant, in his words: *"Admin always has access to everything. No
+  matter what cards exist or don't exist."* `src/lib/permissions/can.ts:67` (`if (perms.isAdmin) return true;`, keyed on
+  `roles.is_admin`) satisfies that because it answers before looking at a single cell or card. Admin holds no cards (production,
+  2026-10-25), so removing it would lock the only administrator out of Settings → Who does what, the screen needed to give Admin
+  cards again: a one-way door. Three things follow, and they close off the three wrong turns:
+  - **Admin is never given cards**, not to satisfy the rule, not to make a check pass, not as tidying. Giving Admin every card would
+    NOT satisfy the invariant: the day a card is added, Admin would silently lack it. The plan to card-up Admin and then delete the
+    bypass is superseded and must not be revived.
+  - **Admin is not debt.** It is not a mechanism, carries no baseline, and is never counted down. It is recorded as
+    `outsideTheCardSystem` in `docs/hard-coded-security-registry.json`, which the check ignores on purpose.
+  - **It is not a precedent.** It is `can.ts:67` and `roles.is_admin`, Admin only, all-or-nothing. Nothing else gets to sit
+    outside the card system by citing it.
+  Settled. Do not re-open it and never put it to him again.
 - **The existing ones are a known debt, not permission.** They are listed in
   `docs/hard-coded-security-registry.json` and ratcheted by `node scripts/check-hard-coded-security.mjs`
   (its own CI job, `hard-coded-security`, which blocks). **The count may only go down.** The check

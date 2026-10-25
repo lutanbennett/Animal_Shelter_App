@@ -27,7 +27,7 @@ const imp = (p) => import(pathToFileURL(join(root, p)).href);
 const { homeTilesFor, homeTilesForRoles } = await imp("src/lib/home/tiles.ts");
 const { ACTIVITIES } = await imp("src/lib/permissions/catalogue.ts");
 const { parsePermissions } = await imp("src/lib/permissions/can.ts");
-const { bundleOfRole } = await imp("src/lib/permissions/jobs.ts");
+const { bundleOfRole } = await imp("scripts/lib/test-role-jobs.mjs");
 const { canDoJob } = await imp("src/lib/recurring-jobs/eligibility.ts");
 const { audiencesOf } = await imp("src/lib/manual/audience.ts");
 const { isForTopic } = await imp("src/lib/manual/for-topic.ts");
@@ -80,7 +80,8 @@ console.log(`     single-role homes hashed: before ${hash(before)} after ${hash(
 ok("A the single-role hashes are identical", hash(before) === hash(after));
 
 // ---- B ----
-const medical = hrefs(homeTilesFor(permsFor("head_of_medical"), t, undefined, undefined));
+// Add photos is redundant beside Medical photos in a cover (homeTilesForRoles drops it), so it is not compared.
+const medical = hrefs(homeTilesFor(permsFor("head_of_medical"), t, undefined, undefined)).filter((h) => h !== "/photos/add");
 const maintenance = hrefs(homeTilesFor(permsFor("head_of_maintenance"), t, undefined, undefined));
 const both = hrefs(homeTilesForRoles(permsFor("head_of_medical", "head_of_maintenance"), t, undefined, {}));
 ok("B Head of Medical covering Maintenance: every maintenance tile is there", maintenance.every((h) => both.includes(h)), `${maintenance} not in ${both}`);

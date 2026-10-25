@@ -165,11 +165,11 @@ Result: pending
 
 ## Book clinic visits (`book_clinic_visits`)
 
-- Opens: `/appointments` (shelter staff, whose clinical scope is "any": `/upcoming-visits`)
+- Opens: `/upcoming-visits`
 - Also gives: View residents (`view_residents`) (walked under its own heading)
 
 0. Sign in with `--cards book_clinic_visits`. The home screen shows the **Book clinic visits** tile (or the tile of a card that includes it).
-1. Open `/appointments` (and `/upcoming-visits` for the shelter-staff case): it loads.
+1. Open `/upcoming-visits`: it loads.
 2. **Do:** Book a vet visit. Use a disposable record named `walk-book_clinic_visits`. **Read-back:** the visit shows on that resident's page and in the shelter's list of visits (/upcoming-visits).
 3. **See:** Vet visits and how they went (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.

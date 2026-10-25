@@ -31,7 +31,7 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 const { homeTilesFor } = await imp("src/lib/home/tiles.ts");
 const { isCardKey } = await imp("src/lib/permissions/cards.ts");
-const { parsePermissions, can } = await imp("src/lib/permissions/can.ts");
+const { parsePermissions, can, entersApp } = await imp("src/lib/permissions/can.ts");
 const { ROUTES, canOpen, opensAnyIn } = await imp("src/lib/permissions/routes.ts");
 const { CHROME, LANDINGS, DEEP, ACCEPTED } = await imp("scripts/lib/menu-coverage-declared.mjs");
 const lang = process.argv.includes("--lang=th") ? "th" : "en";
@@ -59,7 +59,7 @@ const stale = [];
 for (const c of CHROME) if (!proved(c.file, c.needle)) stale.push(`chrome ${c.page}: "${c.needle}" not in ${c.file}`);
 for (const d of DEEP) if (!proved(d.file, d.needle)) stale.push(`deep ${d.page}: "${d.needle}" not in ${d.file}`);
 
-const roles = await sql(`select id, key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails from roles where archived_at is null order by key`);
+const roles = await sql(`select id, key, name, kind, home_path, sees_login_emails from roles where archived_at is null order by key`);
 const cards = await sql(`select r.key, c.card, c.position, c.group_id from role_cards c join roles r on r.id = c.role_id order by r.key, c.position`);
 // Groups on a role's home (0241): a card inside one is reached through the group's doorway tile.
 const groupRows = await sql(`select r.key, g.id, g.name, g.icon from role_groups g join roles r on r.id = g.role_id order by r.key, g.position, g.name`);
@@ -67,26 +67,26 @@ const cells = await sql(`select r.key, p.activity, p.level from role_permissions
 
 // Pages outside the registry that a role can open, with the test its own page applies (tiles.ts OUTSIDE_REGISTRY, NavLinks).
 const OUTSIDE = [
-  { path: "/residents", open: (p) => p.role.opensApp },
+  { path: "/residents", open: (p) => can(p, "resident.record", "read") },
   { path: "/my", open: (p) => can(p, "recurring.do_own") },
   { path: "/bills", open: (p) => can(p, "maintenance.bills") },
   { path: "/assistant", open: (p) => can(p, "assistant.ask") },
-  { path: "/manual", open: (p) => p.role.opensApp },
-  { path: "/releases", open: (p) => p.role.opensApp },
-  { path: "/account/password", open: (p) => p.role.opensApp },
+  { path: "/manual", open: (p) => can(p, "resident.record", "read") },
+  { path: "/releases", open: (p) => can(p, "resident.record", "read") },
+  { path: "/account/password", open: (p) => can(p, "resident.record", "read") },
 ];
 
 let unexplained = 0;
 const summary = [];
 for (const role of roles) {
-  if (role.key === "admin" || !role.opens_app) continue;
+  if (role.key === "admin" || role.kind === "fixed") continue;
   if (only && role.key !== only) continue;
   const rc = cells.filter((c) => c.key === role.key);
   const held = cards.filter((c) => c.key === role.key).map((c) => c.card).filter(isCardKey);
   const perms = parsePermissions({
-    role: { key: role.key, name: role.name, name_th: null, kind: role.kind, opens_app: role.opens_app, home_path: role.home_path },
+    role: { key: role.key, name: role.name, name_th: null, kind: role.kind, home_path: role.home_path },
     is_admin: false,
-    scopes: { residents: role.scope_residents, clinical: role.scope_clinical, contacts: role.scope_contacts, photos: role.scope_photos, sees_login_emails: role.sees_login_emails },
+    scopes: { sees_login_emails: role.sees_login_emails },
     permissions: Object.fromEntries(rc.map((c) => [c.activity, c.level])),
   });
 

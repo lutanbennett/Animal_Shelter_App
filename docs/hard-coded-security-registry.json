@@ -4,21 +4,102 @@
   "rule": "A role is a placeholder that gets no permissions until a card is assigned. The cards assigned will define page access and read write permissions. It's that simple and there are to be zero exceptions to this rule. (Lutan, 2026-10-24)",
   "note": "Counts are lines in src/**/*.ts(x) matching `pattern`, taken from origin/main at baselineCommit. They may only go down. Read by scripts/check-hard-coded-security.mjs and, later, by the Hidden security screen. cards-grants-app was changing src/lib/permissions/cards.ts at the same time: if a count disagrees because it landed first, merge origin/main and re-baseline downward. Since 2026-10-24 (docs/decisions/2026-10-24-ratchet-counts-rules-not-mentions.md) a count is of CODE: comments are blanked before matching and the functions under diagnostics are blanked too; baselines were re-measured that way, downward only.",
   "diagnostics": [
-    { "id": "tile-block", "file": "src/lib/home/tiles.ts", "function": "tileBlock", "reason": "tileBlock() evaluates the existing rules (OUTSIDE_REGISTRY, routes.ts) only to REPORT which one refused a held card, so the Who-does-what screen can name it. It creates no rule and grants or denies nothing. Surfacing hidden security is the point (Lutan: \"I can't fix it if I can't see it\"). The exemption is by function, not by file or directory: a rule added anywhere else in tiles.ts, or in src/lib/permissions/, is still counted. Added with #915 cards-grants-app." }
+    {
+      "id": "tile-block",
+      "file": "src/lib/home/tiles.ts",
+      "function": "tileBlock",
+      "reason": "tileBlock() evaluates the existing rules (OUTSIDE_REGISTRY, routes.ts) only to REPORT which one refused a held card, so the Who-does-what screen can name it. It creates no rule and grants or denies nothing. Surfacing hidden security is the point (Lutan: \"I can't fix it if I can't see it\"). The exemption is by function, not by file or directory: a rule added anywhere else in tiles.ts, or in src/lib/permissions/, is still counted. Added with #915 cards-grants-app."
+    }
   ],
   "survivesTheTest": [
-    { "what": "The order roles are listed on an admin screen", "why": "ordering only; nothing keyed by it changes what a card does or whether it shows" }
+    {
+      "what": "The order roles are listed on an admin screen",
+      "why": "ordering only; nothing keyed by it changes what a card does or whether it shows"
+    }
   ],
   "mechanisms": [
-    { "id": "roles-opens-app", "name": "roles.opens_app", "where": "src/lib/home/tiles.ts (and the role column)", "effect": "denies, at the broadest scope; also gates /residents", "cardDerived": false, "pattern": "opens_app|opensApp", "anchor": "opensApp", "anchorFile": "src/lib/home/tiles.ts", "baseline": 30 },
-    { "id": "roles-scope-clinical", "name": "roles.scope_clinical", "where": "src/lib/permissions/cards.ts cardOpens()", "effect": "denies / silently redirects: the same card sends two roles to two different pages", "cardDerived": false, "pattern": "scope_clinical|cardOpens", "anchor": "cardOpens", "anchorFile": "src/lib/permissions/cards.ts", "baseline": 8 },
-    { "id": "roles-scope-people", "name": "roles.scope_residents / scope_contacts / scope_photos", "where": "columns on the role; src/lib/permissions/fixed-for-now.ts says Read is narrower than it looks", "effect": "denies", "cardDerived": false, "pattern": "scope_residents|scope_contacts|scope_photos", "anchor": "scope_residents", "anchorFile": "src/lib/permissions/fixed-for-now.ts", "baseline": 6 },
-    { "id": "can-use-bills", "name": "canUseBills", "where": "src/lib/bills/access.ts", "effect": "first line denies on scopes.clinical === own_clinic; the activity checks after it are fine", "cardDerived": "partly", "pattern": "canUseBills", "anchor": "export function canUseBills", "anchorFile": "src/lib/bills/access.ts", "baseline": 11 },
-    { "id": "page-rules", "name": "page rules (route registry)", "where": "src/lib/permissions/routes.ts", "effect": "denies: a role can hold everything a card requires and still find the page shut. Each page names one activity; the page set moves onto the card (Lutan: the cards assigned define page access)", "cardDerived": "it is the map", "pattern": "^\\s*path: \"/", "files": ["src/lib/permissions/routes.ts"], "anchor": "export type RouteEntry", "anchorFile": "src/lib/permissions/routes.ts", "baseline": 45, "note": "The planner's brief counted 55; this file has 45 path entries at the baseline commit. Recorded as found." },
-    { "id": "jobs-of-role", "name": "JOBS_OF_ROLE", "where": "src/lib/permissions/jobs.ts", "effect": "GRANTS access from a role-keyed list in code with no card involved. Also mixes in tile layout: UNSEPARATED, not split here", "cardDerived": false, "pattern": "JOBS_OF_ROLE", "anchor": "export const JOBS_OF_ROLE", "anchorFile": "src/lib/permissions/jobs.ts", "baseline": 2 },
-    { "id": "outside-registry", "name": "OUTSIDE_REGISTRY", "where": "src/lib/home/tiles.ts", "effect": "denies for /residents, /bills, /operations, /management; /assistant and /my already follow the rule (4 of 6 do not)", "cardDerived": "2 of 6", "pattern": "OUTSIDE_REGISTRY", "anchor": "export const OUTSIDE_REGISTRY", "anchorFile": "src/lib/home/tiles.ts", "baseline": 4 },
-    { "id": "curated-home", "name": "CURATED_HOME", "where": "src/lib/home/tiles.ts", "effect": "a hand-written home screen keyed by role key decides which tiles appear: the role defines whether a card is shown, the direction Lutan ruled out", "cardDerived": false, "pattern": "CURATED_HOME", "anchor": "const CURATED_HOME", "anchorFile": "src/lib/home/tiles.ts", "baseline": 2 },
-    { "id": "card-tile-silent-drop", "name": "cardTile() silent drop", "where": "src/lib/home/tiles.ts cardTile()", "effect": "re-checks the card against access the card itself applied (covered), then gives the page rules a veto (!icon || !opens); either way the tile is silently not drawn. Likely a very cheap removal; whether anything else depends on it is NOT ESTABLISHED", "cardDerived": false, "pattern": "if \\(!covered\\) return null|if \\(!icon \\|\\| !opens\\) return null", "anchor": "export function cardTile", "anchorFile": "src/lib/home/tiles.ts", "baseline": 1 },
-    { "id": "opens-any-in", "name": "opensAnyIn", "where": "src/lib/permissions/routes.ts", "effect": "not independent: any route in the section the role can open, so it inherits page-rules. Tracked, not counted as a mechanism", "derivedFrom": "page-rules", "cardDerived": false, "pattern": "opensAnyIn", "anchor": "export function opensAnyIn", "anchorFile": "src/lib/permissions/routes.ts", "baseline": 10 }
-  ]
+    {
+      "id": "roles-scope-people",
+      "name": "roles.scope_residents / scope_contacts / scope_photos",
+      "where": "columns on the role; src/lib/permissions/fixed-for-now.ts says Read is narrower than it looks",
+      "effect": "REMOVED 2026-10-25 (claude/remove-hidden-security-invisible-failures): no app code reads these three columns any more. The database still does (sees_all_residents(), sees_all_contacts(), the contact and photo views); that half is the follow-on schema PR.",
+      "cardDerived": true,
+      "pattern": "scope_residents|scope_contacts|scope_photos",
+      "anchor": "scope_residents",
+      "anchorFile": "src/lib/permissions/fixed-for-now.ts",
+      "baseline": 0
+    },
+    {
+      "id": "can-use-bills",
+      "name": "canUseBills",
+      "where": "src/lib/bills/access.ts",
+      "effect": "REMOVED 2026-10-25: the scopes.clinical === own_clinic clause is gone; what remains is three card-derived activity checks (stock.delivery, medical.visits at edit, maintenance.bills). The baseline counts callers of the function, which is not a rule.",
+      "cardDerived": true,
+      "pattern": "canUseBills",
+      "anchor": "export function canUseBills",
+      "anchorFile": "src/lib/bills/access.ts",
+      "baseline": 11
+    },
+    {
+      "id": "page-rules",
+      "name": "page rules (route registry)",
+      "where": "src/lib/permissions/routes.ts",
+      "effect": "NOT a breach, corrected 2026-10-25. A page rule says 'this page needs activity X at level L'; whether a role holds X is can() over role_permissions, which since 0257 the database computes from card_grants alone. The only non-card test inside routes.ts was route.scope (the role's clinical column), removed in this PR. Every entry now consults card-derived permissions only. The count is the number of pages, not the number of rules.",
+      "cardDerived": true,
+      "pattern": "^\\s*path: \"/",
+      "files": [
+        "src/lib/permissions/routes.ts"
+      ],
+      "anchor": "export type RouteEntry",
+      "anchorFile": "src/lib/permissions/routes.ts",
+      "baseline": 45,
+      "note": "The planner's brief counted 55; this file has 45 path entries at the baseline commit. Recorded as found."
+    },
+    {
+      "id": "outside-registry",
+      "name": "OUTSIDE_REGISTRY",
+      "where": "src/lib/home/tiles.ts",
+      "effect": "All six pages now obey the rule (REMOVED 2026-10-25): /residents asks resident.record at read, /bills asks canUseBills (card-derived), /operations and /management ask opensAnyIn (card-derived); /assistant and /my were already correct and untouched.",
+      "cardDerived": true,
+      "pattern": "OUTSIDE_REGISTRY",
+      "anchor": "export const OUTSIDE_REGISTRY",
+      "anchorFile": "src/lib/home/tiles.ts",
+      "baseline": 4
+    },
+    {
+      "id": "card-tile-silent-drop",
+      "name": "cardTile() silent drop",
+      "where": "src/lib/home/tiles.ts cardTile()",
+      "effect": "REMOVED 2026-10-25: cardTile() still draws no tile for a page the role cannot open (a tile would invent access), but cardsWithoutTile() names every such card and the home says so in plain words. Nothing is dropped silently.",
+      "cardDerived": true,
+      "pattern": "if \\(!covered\\) return null|if \\(!icon \\|\\| !opens\\) return null",
+      "anchor": "export function cardTile",
+      "anchorFile": "src/lib/home/tiles.ts",
+      "baseline": 0
+    },
+    {
+      "id": "opens-any-in",
+      "name": "opensAnyIn",
+      "where": "src/lib/permissions/routes.ts",
+      "effect": "NOT a breach, corrected 2026-10-25: any route in the section the role can open, so it inherits canOpen(), which is card-derived once route.scope is gone. Tracked, not counted as a mechanism.",
+      "derivedFrom": "page-rules",
+      "cardDerived": true,
+      "pattern": "opensAnyIn",
+      "anchor": "export function opensAnyIn",
+      "anchorFile": "src/lib/permissions/routes.ts",
+      "baseline": 10
+    }
+  ],
+  "outsideTheCardSystem": {
+    "what": "Admin: access to everything, hard-coded. src/lib/permissions/can.ts returns true for a login whose roles.is_admin is set before it looks at any cell or card.",
+    "anchor": "src/lib/permissions/can.ts:67 (if (perms.isAdmin) return true;)",
+    "why": "Lutan, 2026-10-25, asked directly: \"I am happy for admin access = all to be hard coded.\" and \"It should sit outside the card system.\" The invariant: \"Admin always has access to everything. No matter what cards exist or don't exist.\" Measured on production 2026-10-25: Admin holds NO cards, so that one line is the only source of Admin's access; removing it would lock the only administrator out of Settings > Who does what, the screen needed to give Admin cards again. A one-way door.",
+    "rules": [
+      "Admin is outside the card system, not an exception inside it.",
+      "Admin is never given cards.",
+      "It is not debt: no baseline, no count, never ratcheted.",
+      "It is not a precedent: Admin only, all-or-nothing."
+    ],
+    "counted": false
+  }
 }
