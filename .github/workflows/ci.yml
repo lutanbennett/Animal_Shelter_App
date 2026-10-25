@@ -178,7 +178,7 @@ jobs:
       - run: node scripts/pi/check-self-update.mjs
 
   # The twenty-one cards: cards.ts has exactly the agreed set and every card names
-  # a real activity. The code half of check-cards-schema.mjs, which needs the dev
+  # a real activity. The code half of check-card-grants.mjs, which needs the dev
   # token and so cannot run here (check-cards-count.mjs reads only cards.ts and
   # catalogue.ts). Fails honestly — no continue-on-error. "Advisory" means only
   # that it is not a required check in branch protection, which is Lutan's call
