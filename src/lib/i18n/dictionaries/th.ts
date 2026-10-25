@@ -1144,6 +1144,7 @@ const th: Dictionary = {
         card_features: "ฟีเจอร์ของการ์ด",
         card_grants: "สิ่งที่การ์ดให้",
         card_includes: "การ์ดที่รวมอยู่ในอีกใบ",
+        site_content: "การตั้งค่าเว็บไซต์",
         role_extras: "สิทธิ์เพิ่มเติม",
       },
       kinds: {

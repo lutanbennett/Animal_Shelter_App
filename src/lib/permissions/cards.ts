@@ -12,7 +12,7 @@
  * ADDING CARD TWENTY-SEVEN is one entry in NEW_CARDS below, its key in NewCardKey, its title in NEW_CARD_LABEL
  * and in appHome.cards in both dictionaries. Nothing else lists the cards: the eight jobs are cards by being
  * in JOBS, and the database holds no copy of a bundle (set_role_cards() is handed the bundle this file
- * computes). check-cards-schema.mjs fails if what the database holds for a role ever differs from what this
+ * computes). check-card-grants.mjs fails if what the database holds for a role ever differs from what this
  * file says its cards give.
  *
  * Pure and client-safe.

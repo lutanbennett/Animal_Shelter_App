@@ -80,6 +80,7 @@ export const unreleased: ReleaseNote[] = [
     roles: ["admin", "management"],
   },
   { text: "Admin: Settings → Who does what no longer has an Also allowed part. A role now does exactly what its cards give, so there is nothing left to list there. When a card is held but its tile cannot show, the warning now names the page and the fixed rule that stops it.", roles: ["admin"] },
+  { text: "Admin → Recent changes now shows when someone shows or hides a public website page.", roles: ["admin", "management"] },
 ];
 
 /** Newest first. */
