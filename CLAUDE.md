@@ -19,6 +19,22 @@ card — no exceptions."* And, the rule in full:
 >
 > *"New cards will be created for specific activities."*
 
+- **THE SCOPE OF THE RULE: Admin sits OUTSIDE the card system.** Lutan, 2026-10-25: *"I am happy for
+  admin access = all to be hard coded"*, *"It should sit outside the card system"*, *"Admin always
+  has access to everything"*, *"No matter what cards exist or don't exist."* The rule governs how a
+  role's access is **derived from its cards**; Admin's is derived from nothing and Admin is not a
+  participant, so *"zero exceptions"* stays literally true **within** the card system. The bypass is
+  the `perms.isAdmin` short-circuit in `src/lib/permissions/can.ts` and, in the database,
+  `has_permission()`'s `r.key = 'admin'` (`0196_multi_role_logins.sql`). **Four things follow, each
+  closing off a wrong turn:** **(1) Admin is never given cards** — not to satisfy the rule, not to
+  make a check pass, not as tidying. **(2) Admin is not debt** — no entry in `mechanisms[]`, no
+  baseline, never ratcheted down. **(3) It is not a precedent** — Admin only, all-or-nothing;
+  nothing else sits outside the card system by citing it. **(4) Do not reimplement it as "Admin
+  holds every card"** — the short-circuit returns true *before* reading any cell, which is what *"no
+  matter what cards exist"* requires; a card-shaped version silently fails the day a card is added.
+  **Removing it would lock the shelter out:** Admin holds no cards on production, and Settings → Who
+  does what is the screen you would need in order to give it any. **Settled. Never put it to him
+  again.**
 - **Forbidden:** any code or column that grants or denies the ability to do something, other than a
   card. A role is exactly the set of cards it holds. Nothing keyed by role may change what a card
   does, or whether it shows.

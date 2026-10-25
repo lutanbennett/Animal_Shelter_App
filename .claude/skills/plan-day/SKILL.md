@@ -124,6 +124,19 @@ because an under-run is the shape of a well-estimated stream and the shape of a
 stream that never ran. **Read what the stream actually delivered before you let
 its figure touch a band.**
 
+**AND A THIRD WAY A FIGURE IS WORTHLESS: THE WINDOW WAS RESET MID-SESSION.** Added
+2026-10-25. `get_usage` reports what the session is holding **now**, not what it spent, so a session
+that compacted or was cleared reports a remainder. `website-page-visibility-app` came in at
+**122,802 against a 200-270k band** - a 39% under-run, and **exactly the shape of a well-estimated
+stream.** It was not one: it ran **nearly three hours, the longest of its batch**, and its `Messages`
+category was **24,580**. A session that shipped 1,126 lines across 34 files, drove a browser and wrote
+a 164-line test plan did not do it in 24k of messages. **The test is two numbers side by side:
+`Messages` against elapsed time, and against the diff.** A floor-sized `Messages` on a long session
+means the figure is a remainder. Record it as `not a reading` and keep it out of the bands - banking
+it would have taught the next planner that a new public surface with switches costs 123k, less than a
+schema PR with nothing to discover. **Dead process, blocked stream, reset window: three ways, one
+habit. A figure is evidence only once you know what the stream actually did.**
+
 ## 3. Read the backlog
 
 `C:/Development/Animal_Shelter_App/docs/backlog.md`, open items only
@@ -202,6 +215,16 @@ note:
   the item's 12 without asking **what kind of page each orphan was**. **Ask of any
   count: are these leaves, or doorways?** It costs one look and it changes the
   advice you give about how close the gate is.
+- **A HOLD IS A RULE, NOT A LIST. Test every candidate against the hold's REASON, not against its
+  membership.** Added 2026-10-25, after scheduling an eighth item of a kind seven items were already
+  held for. The board held seven items *"with the security rebuild"*, each carrying the reason:
+  *"the rebuild redraws every role's cards, so fixing today's bundle now would be done twice."* The
+  planner read that list the same morning, reported it as *"seven items, nothing here is a decision he
+  owes"*, and then scheduled a harness sweep in which **seven of ten harnesses tested the very model
+  being removed** - and one, `check-perm-convert-residents`, **demanded that every resident policy
+  consult `roles.scope_residents`**, a column on the removal list, so making it green would have
+  **added** hard-coded security. Lutan caught it: *"why are we doing harness-sweep-batch-2 if we are
+  removing all hidden security."* **Reading the held list is not the same as applying it.**
 - **Who does it** — Claude-buildable, or user-driven (physical setup like
   the Pi, dashboard clicking, a guided walkthrough, "decide with the
   user" as the main content). User-driven items are reminders, not
@@ -227,6 +250,35 @@ note:
 - **Size** — a quick win, a day, or more.
 
 ## 4. Choose — nine items, in three batches
+
+### WHEN AN INSTRUCTION IS ABSOLUTE, BRIEF THE WHOLE JOB AS ONE STREAM. DO NOT SLICE IT AND DO NOT
+### OFFER HIM AN ORDER.
+
+**Added 2026-10-25, the day it cost the most.** Lutan's rule arrived as *"zero exceptions"* and
+*"REMOVE all hard coded security NOW"*. Within a day the planner had turned it into a *Hidden
+security screen*, then a cheapest-first removal, then an `AskUserQuestion` offering **four orderings**
+to choose between. He said it four times, finishing with *"No more little bit here and then fix some
+other stuff I want it all gone right now"* and *"I don't know why it's taken so long for you to
+understand my instruction."*
+
+**Offering a choice feels like deference and reads as delay.** Three specific traps, all sprung that
+day:
+
+- **Do not build a VIEWER for the thing he wants removed.** *"I can't fix it if I can't see it"* is a
+  complaint that the list is not written down - **not a request for a UI.** It was answered by a
+  registry file and a blocking check; a screen would have been a fourth copy of one list, and would
+  have made the debt something the app *displays and manages* rather than something being deleted.
+  His words when he killed it: *"Why are we building a hidden security screen? There should be no
+  hidden security."*
+- **Do not schedule adjacent work beside it.** See the hold rule in step 3.
+- **MEASURE THE JOB BEFORE PRICING IT AS A PROGRAMME.** The planner called the 45 page rules *"the
+  big one, it will want new cards created"* and built three batches around that. One read of
+  `canOpen()` showed the activity half was **already card-derived** since `0257`, and the breach was
+  **seven `route.scope` entries**. No new cards, no migration, one PR. **A job that looks like a
+  programme is worth one hour of reading before it becomes a plan.**
+
+**If it is genuinely too big for one session, that is a fact to state in the brief with a
+stop-and-hand-over rule - not a reason to pre-chop it on his behalf.**
 
 Rules, in order:
 
@@ -886,6 +938,19 @@ On a resume, re-read the backlog item **fresh** when writing the brief.
 It may have been reworded or reprioritised on the `backlog` branch since
 the plan was saved: the saved plan holds the ordering, the backlog holds
 the task.
+
+### A HANDOFF WRITTEN IN STREAM A'S PR IS INVISIBLE TO STREAM B. IT MUST BE IN B'S BRIEF.
+
+Added 2026-10-25. Batch 2 told #5 to *ask* rather than edit the file #4 owned - and that half worked,
+there was no collision. **But #5, finding one job genuinely belonged to #4, wrote it into its own
+completion note as a job for #4 - and `site_content` was never on #4's brief, so #4 added its own two
+tables and not that one, entirely fairly.** The piece then landed inside a **ticked** item, which is
+the invisible-work fault at its purest: nobody reads a ticked item, and nobody re-asks for a job they
+believe was assigned to someone else. A website editor now hides a public page, it is written to
+`audit_log`, and Recent changes does not show it.
+
+**So when you tell one stream that something belongs to another, put it in the OTHER stream's brief
+in the same breath** - and if that brief is already written, the work is a backlog item, not a note.
 
 ### A MITIGATION YOU WROTE INTO A BRIEF IS A HYPOTHESIS, NOT A FIX
 
