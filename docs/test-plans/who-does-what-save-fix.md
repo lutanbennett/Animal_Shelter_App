@@ -132,7 +132,7 @@ Automated checks by: Claude  Date: 2026-10-25
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: Lutan's one click-through above
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: one click-through (add, remove, move a card with the authenticator step) is left for Lutan, so this cannot be ticked yet
 
 Manual verification by: pending: the card save click-through, which needs the authenticator step
 
@@ -140,7 +140,7 @@ Manual verification by: pending: the card save click-through, which needs the au
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — n/a: the plan is in the PR as a file
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — n/a: not yet — the PR is not merged and a patch release is still to be cut
 
 Result: pass
 
