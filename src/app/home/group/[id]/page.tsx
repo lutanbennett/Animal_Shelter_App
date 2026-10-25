@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { refuseFor } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
+import { entersApp } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { loadGroup, loadRoleCards, loadRolePermissions } from "@/lib/home/roles";
 import { cardTilesFor, groupHref, withCounts } from "@/lib/home/tiles";
@@ -29,7 +30,7 @@ export default async function GroupPage(props: PageProps<"/home/group/[id]">) {
   if (!user) redirect("/login");
 
   const mine = await loadPermissions();
-  if (!mine?.role.opensApp) refuseFor(mine);
+  if (!mine || !entersApp(mine)) refuseFor(mine);
 
   const { t, locale } = await getT();
   const found = await loadGroup(id, locale);

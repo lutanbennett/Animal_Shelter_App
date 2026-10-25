@@ -25,8 +25,7 @@ export async function loadRoles(): Promise<Role[]> {
     .from("roles")
     .select("id, key, name, name_th, kind")
     .is("archived_at", null)
-    .eq("opens_app", true)
-    .neq("key", "admin");
+    .neq("kind", "fixed");
   if (error) throw new Error(`Who does what: ${error.message}`);
   return (data ?? [])
     .map((r) => ({ id: r.id as string, key: r.key as string, name: r.name as string, nameTh: (r.name_th as string | null) ?? null, kind: r.kind as string }))

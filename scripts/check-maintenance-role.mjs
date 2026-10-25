@@ -25,7 +25,7 @@ const { loadEnv, projectRef } = await import(pathToFileURL(join(process.cwd(), "
 const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
-const { bundleOfRole } = await import(pathToFileURL(join(process.cwd(), "src/lib/permissions/jobs.ts")).href);
+const { bundleOfRole } = await import(pathToFileURL(join(process.cwd(), "scripts/lib/test-role-jobs.mjs")).href);
 
 const lit = (id) => `'${id}'::uuid`;
 const P = ["hm", "admin", "management", "volunteer", "doctor", "norole"];

@@ -14,7 +14,6 @@ import { formatAmount } from "@/lib/diets/servings";
 import { unitLabel } from "@/lib/i18n/enum-labels";
 import { isCountUnit } from "@/lib/unit-list";
 import { roundsFor, suggestRound, type RoundKey } from "@/lib/rounds/suggest";
-import { refuseFor } from "@/lib/auth/require-role";
 import { requirePermission } from "@/lib/permissions/require";
 
 /**
@@ -29,9 +28,8 @@ import { requirePermission } from "@/lib/permissions/require";
  * rounded once, here, when printed (formatAmount). Opens for medical.diet Read, as /medical/diets does.
  */
 export default async function FeedingListPage(props: PageProps<"/operations/feeding-list">) {
-  const { perms } = await requirePermission("medical.diet", "read");
+  await requirePermission("medical.diet", "read");
   // The diet rows are for a login that sees every clinic (0140); a doctor would get an empty page.
-  if (perms.scopes.clinical !== "any") refuseFor(perms);
   const { t, locale } = await getT();
   const f = t.management.feedingList;
 

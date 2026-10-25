@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import { can, parsePermissions } from "./can.ts";
 
 const person = (cells, isAdmin = false) => ({
-  role: { key: "x", name: "X", nameTh: null, opensApp: true, homePath: null },
+  role: { key: "x", name: "X", nameTh: null, homePath: null },
   isAdmin,
-  scopes: { residents: "all", clinical: "any", contacts: "full", photos: "all", seesLoginEmails: false },
+  scopes: { seesLoginEmails: false },
   cells,
 });
 
@@ -85,8 +85,7 @@ test("parsePermissions: is_admin is true only for literal true", () => {
   }
 });
 
-test("parsePermissions: sees_login_emails and opens_app are true only for literal true", () => {
-  const p = parsePermissions({ role: { key: "a", name: "A", opens_app: "true" }, scopes: { sees_login_emails: 1 } });
-  assert.equal(p.role.opensApp, false);
+test("parsePermissions: sees_login_emails is true only for literal true", () => {
+  const p = parsePermissions({ role: { key: "a", name: "A" }, scopes: { sees_login_emails: 1 } });
   assert.equal(p.scopes.seesLoginEmails, false);
 });

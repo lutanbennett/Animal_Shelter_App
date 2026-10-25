@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getT } from "@/lib/i18n/get-t";
 import { getAppEnv } from "@/lib/app-env";
-import { can } from "@/lib/permissions/can";
+import { can, entersApp } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { AssistantPanel } from "@/components/assistant/AssistantPanel";
 import { SignOutButton } from "./login/SignOutButton";
@@ -25,7 +25,7 @@ export async function AppHeader() {
   // including the phone. The doctor role does not get it (0070).
   const perms = await loadPermissions();
   // Tiles-only roles have no menu to open; the header carries a Home button instead.
-  const showMenu = !perms?.role.opensApp || (await showMenuForLogin());
+  const showMenu = !entersApp(perms) || (await showMenuForLogin());
 
   // Name · role, so two logins with the same first name (or one person's
   // three test accounts) still read differently. The role is its display

@@ -2,7 +2,6 @@ import { ActionLink } from "@/components/ActionLink";
 import { CLINIC_ICONS } from "@/components/hub-icons";
 import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
-import { refuseFor } from "@/lib/auth/require-role";
 import { getT } from "@/lib/i18n/get-t";
 import { formatDate, todayIso } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
@@ -24,7 +23,6 @@ import { VetVisitsView, type VisitRow } from "./VetVisitsView";
  */
 export default async function VetVisitsPage() {
   const { supabase, perms } = await requirePermission("medical.visits", "read");
-  if (perms.scopes.clinical !== "any") refuseFor(perms);
   const { t, locale } = await getT();
   const v = t.shelterVisits;
   const { visits, error } = await loadShelterVisits(supabase);

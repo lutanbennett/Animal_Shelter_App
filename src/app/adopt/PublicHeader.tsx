@@ -89,7 +89,7 @@ export async function PublicHeader({
   // a public-address visitor has no session, so `staff`/`user` can only be true while one
   // address serves everything. Kept, not removed: that is today's state everywhere.
   // visitor who isn't signed in sees neither here: Staff login is in the footer and, on a phone, the menu.
-  const staff = user ? (await loadSessionRole(supabase))?.opensApp === true : false;
+  const staff = user ? (await loadSessionRole(supabase))?.entersApp === true : false;
   const n = t.publicNav;
   // Hidden pages (Admin → Website) leave the menu, the Donate button included. A website editor
   // who is looking at a hidden page is told so, because only they can get here.

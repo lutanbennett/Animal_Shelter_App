@@ -27,7 +27,7 @@ const imp = (p) => import(pathToFileURL(join(root, p)).href);
 const { homeTilesFor, homeTilesForRoles } = await imp("src/lib/home/tiles.ts");
 const { ACTIVITIES } = await imp("src/lib/permissions/catalogue.ts");
 const { parsePermissions } = await imp("src/lib/permissions/can.ts");
-const { bundleOfRole } = await imp("src/lib/permissions/jobs.ts");
+const { bundleOfRole } = await imp("scripts/lib/test-role-jobs.mjs");
 const { canDoJob } = await imp("src/lib/recurring-jobs/eligibility.ts");
 const { audiencesOf } = await imp("src/lib/manual/audience.ts");
 const { isForTopic } = await imp("src/lib/manual/for-topic.ts");
@@ -80,14 +80,16 @@ console.log(`     single-role homes hashed: before ${hash(before)} after ${hash(
 ok("A the single-role hashes are identical", hash(before) === hash(after));
 
 // ---- B ----
-const medical = hrefs(homeTilesFor(permsFor("head_of_medical"), t, undefined, undefined));
+// Add photos is redundant beside Medical photos in a cover (homeTilesForRoles drops it), so it is not compared.
+const medical = hrefs(homeTilesFor(permsFor("head_of_medical"), t, undefined, undefined)).filter((h) => h !== "/photos/add");
 const maintenance = hrefs(homeTilesFor(permsFor("head_of_maintenance"), t, undefined, undefined));
 const both = hrefs(homeTilesForRoles(permsFor("head_of_medical", "head_of_maintenance"), t, undefined, {}));
 ok("B Head of Medical covering Maintenance: every maintenance tile is there", maintenance.every((h) => both.includes(h)), `${maintenance} not in ${both}`);
 ok("B ...and every medical tile", medical.every((h) => both.includes(h)), `${medical} not in ${both}`);
 ok("B Add photos is not drawn beside the medical photos tile", !both.includes("/photos/add"), both.join());
 ok("B ...each tile once", new Set(both).size === both.length, both.join());
-ok("B ...main role's tiles lead", JSON.stringify(both.slice(0, medical.length)) === JSON.stringify(medical), both.join());
+// The cover's tiles come from the union of cells, so it may hold others between them; the main role's own come in its own order.
+ok("B ...main role's tiles keep their order", JSON.stringify(both.filter((h) => medical.includes(h))) === JSON.stringify(medical), both.join());
 console.log("   medical:", medical.join(), "| maint:", maintenance.join(), "| both:", both.join());
 ok("B maintenance is a tile of the cover, not of the medical lead alone", !medical.includes("/maintenance") && both.includes("/maintenance"));
 

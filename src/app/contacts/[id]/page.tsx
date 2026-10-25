@@ -21,19 +21,7 @@ export default async function ContactPage(props: PageProps<"/contacts/[id]">) {
   // open ones (end_date null) are the residents living with them now; the
   // rest is their history. One query covers both.
   const [contactResult, placementsResult, friendResult] = await Promise.all([
-    // The contacts scope says which view of the address book this role reads (0126).
-    perms.scopes.contacts === "name_phone"
-      ? supabase
-          .from("volunteer_contacts")
-          .select("id, name, phone")
-          .eq("id", id)
-          .limit(1)
-          .returns<{ id: string; name: string; phone: string | null }[]>()
-          .then((r) => ({
-            ...r,
-            data: r.data?.map(toVolunteerContact) as VolunteerContact[] | null,
-          }))
-      : supabase
+    supabase
           .from("contacts")
           .select(CONTACT_COLUMNS)
           .eq("id", id)

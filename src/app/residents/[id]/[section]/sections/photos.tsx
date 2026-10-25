@@ -22,7 +22,7 @@ export async function renderPhotosSection(ctx: SectionContext): Promise<React.Re
   // Where each photo has been posted on social media (0223). One query for the grid, owner_type pinned inside.
   const shares = await loadPhotoShares(supabase, (photos ?? []).map((p) => p.id));
   // The same test the table's policies make: photos.resident_manage, and a role that sees all residents.
-  const canMarkPosted = can(perms, "photos.resident_manage") && perms?.scopes.residents === "all";
+  const canMarkPosted = can(perms, "photos.resident_manage");
   return (
     <div className="flex flex-col gap-6">
       {waiting > 0 && can(perms, "photos.approve") && (

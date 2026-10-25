@@ -64,7 +64,7 @@ function findActivityLabels(node) {
 
 /** Steps for one card: the ones its own bundle gives, then the refusal. Numbered by the caller. */
 export function stepsFor(card, cat) {
-  const { CARDS, CARD_KEYS, ACTIVITIES, labels, cardOpens } = cat;
+  const { CARDS, CARD_KEYS, ACTIVITIES, labels } = cat;
   const kind = Object.fromEntries(ACTIVITIES.map((a) => [a.key, a.kind]));
   const steps = [];
   const own = `walk-${card.key}`;
@@ -84,12 +84,12 @@ export function stepsFor(card, cat) {
   }
   // The point of a one-card login: a page this card does not give must be refused, not quietly opened.
   const given = new Set([card.key, ...(card.includes ?? [])]);
-  const mine = cardOpens(card, "own_clinic");
+  const mine = card.opens;
   // /residents and /my open for every role that opens the app (the floor, 0134), so they prove nothing as a refusal.
   const open = new Set(["/residents", "/my"]);
-  const other = CARD_KEYS.map((k) => CARDS[k]).find((c) => !given.has(c.key) && !open.has(cardOpens(c, "own_clinic")) && cardOpens(c, "own_clinic") !== mine);
+  const other = CARD_KEYS.map((k) => CARDS[k]).find((c) => !given.has(c.key) && !open.has(c.opens) && c.opens !== mine);
   if (other) {
-    steps.push(`**Refused:** open \`${cardOpens(other, "own_clinic")}\` (the page of **${other.label(cat.en)}**, which this login does not hold). Expect a refusal or redirect, not the page.`);
+    steps.push(`**Refused:** open \`${other.opens}\` (the page of **${other.label(cat.en)}**, which this login does not hold). Expect a refusal or redirect, not the page.`);
   }
   return steps;
 }
@@ -116,14 +116,13 @@ export async function buildWalkthrough(root = process.cwd()) {
   );
   for (const key of CARD_KEYS) {
     const card = CARDS[key];
-    const opens = cardOpens(card, "own_clinic");
-    const any = cardOpens(card, "any");
-    out.push(`## ${card.label(en)} (\`${key}\`)`, "");
-    out.push(`- Opens: \`${opens}\`${any !== opens ? ` (shelter staff, whose clinical scope is "any": \`${any}\`)` : ""}`);
+    const opens = card.opens;
+        out.push(`## ${card.label(en)} (\`${key}\`)`, "");
+    out.push("- Opens: `" + opens + "`");
     if (card.includes.length) out.push(`- Also gives: ${card.includes.map((k) => `${CARDS[k].label(en)} (\`${k}\`)`).join(", ")} (walked under its own heading)`);
     if (card.requiresCardSomewhere?.length) out.push(`- Needs some other role to hold: ${card.requiresCardSomewhere.map((k) => `\`${k}\``).join(", ")} before this card can be given`);
     out.push("", `0. Sign in with \`--cards ${key}\`. The home screen shows the **${card.label(en)}** tile (or the tile of a card that includes it).`);
-    out.push(`1. Open \`${opens}\`${any !== opens ? ` (and \`${any}\` for the shelter-staff case)` : ""}: it loads.`);
+    out.push("1. Open `" + opens + "`: it loads.");
     stepsFor(card, cat).forEach((s, i) => out.push(`${i + 2}. ${s}`));
     out.push("", "Result: pending", "");
   }

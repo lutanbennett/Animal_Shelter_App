@@ -4,7 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { placeName } from "@/lib/enclosures/names";
-import { refuseFor } from "@/lib/auth/require-role";
 import { requirePermission } from "@/lib/permissions/require";
 import { loadOneResident, loadPickableResidents } from "@/lib/medical/residents";
 import { ResidentPicker } from "../ResidentPicker";
@@ -21,8 +20,7 @@ import { BackLink } from "@/components/BackLink";
  * implying a gallery.
  */
 export default async function AddMedicalPhotosPage(props: PageProps<"/medical/photos">) {
-  const { perms } = await requirePermission("photos.resident_add");
-  if (perms.scopes.clinical !== "any") refuseFor(perms);
+  await requirePermission("photos.resident_add");
   const { t, locale } = await getT();
   const p = t.medicalJobs.photos;
   const sp = await props.searchParams;

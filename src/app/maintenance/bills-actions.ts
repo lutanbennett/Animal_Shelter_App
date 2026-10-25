@@ -13,7 +13,7 @@ export type BillDetails = { amount: string; date: string; note: string };
 /** Management's only (maintenance.bills); the database asks the same question, this is the polite refusal. */
 async function mayBill(): Promise<boolean> {
   const perms = await loadPermissions();
-  return !!perms && perms.scopes.clinical !== "own_clinic" && can(perms, "maintenance.bills");
+  return !!perms && can(perms, "maintenance.bills");
 }
 
 function revalidate(jobId: string) {

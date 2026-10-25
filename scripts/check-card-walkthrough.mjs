@@ -15,7 +15,7 @@ let failed = 0;
 const fail = (m) => { failed++; console.log(`FAIL ${m}`); };
 
 const cat = await loadCards(root);
-const { CARDS, CARD_KEYS, ACTIVITIES, cardOpens } = cat;
+const { CARDS, CARD_KEYS, ACTIVITIES } = cat;
 cat.labels = {};
 
 const known = new Set(ACTIVITIES.map((a) => a.key));
@@ -23,7 +23,7 @@ for (const k of Object.keys(READBACK)) if (!known.has(k)) fail(`READBACK names $
 for (const t of NON_CARD_TILES) {
   const c = CARDS[t.coveredBy];
   if (!c) fail(`the ${t.label} tile points at card ${t.coveredBy}, which is gone`);
-  else if (cardOpens(c, "own_clinic") !== t.href) fail(`the ${t.label} tile opens ${t.href}, but card ${t.coveredBy} opens ${cardOpens(c, "own_clinic")}`);
+  else if (c.opens !== t.href) fail(`the ${t.label} tile opens ${t.href}, but card ${t.coveredBy} opens ${c.opens}`);
 }
 for (const k of CARD_KEYS) {
   if (stepsFor(CARDS[k], cat).length === 0) fail(`card ${k} has no steps: its bundle is empty and no other card's page exists to refuse`);

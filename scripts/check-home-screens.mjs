@@ -82,14 +82,15 @@ for (const [role, perms] of Object.entries(roles)) {
   const tiles = homeTilesFor(perms, t);
   const hrefs = tiles.map((x) => x.href);
   eq(`B ${role}: no tile twice, none without a word`, [new Set(hrefs).size === hrefs.length, tiles.every((x) => x.label)], [true, true]);
-  eq(`B ${role}: every tile is a registered page, My tasks or Residents`, hrefs.filter((h) => !registered.has(h) && h !== "/my" && h !== "/residents" && h !== "/residents/new"), []);
+  eq(`B ${role}: every tile is a registered page, My tasks or Residents`, hrefs.filter((h) => !registered.has(h) && h !== "/my" && h !== "/residents" && h !== "/residents/new" && h !== "/bills"), []);
   eq(`B ${role}: no tile has a record id in it`, hrefs.filter((h) => h.includes("[")), []);
   eq(`B ${role}: every registered tile opens for the role`, hrefs.filter((h) => registered.has(h) && !canOpen(perms, ROUTES.find((r) => r.path === h))), []);
   eq(`B ${role}: the labels are one word each (no two tiles read alike)`, new Set(tiles.map((x) => x.label)).size, tiles.length);
   eq(`C ${role}: Residents is on the home`, hrefs.includes("/residents"), true);
   eq(`C ${role}: no Settings page (a role's home is its tasks)`, hrefs.filter((h) => h.startsWith("/admin/")), []);
 }
-eq("C Management's phone home is the whiteboard's: recurring jobs, intake, residents, then my tasks", homeTilesFor(roles.management, t).map((x) => x.href).filter((h) => h !== "/my"), ["/management/recurring-jobs", "/residents/new", "/residents"]);
+// Management's home was hand-written (CURATED_HOME) until 2026-10-25; it is derived from its cells like every other role's.
+eq("C Management's home is derived: Recurring jobs and Residents are there because its cells open them", [homeTilesFor(roles.management, t).some((x) => x.href === "/management/recurring-jobs"), homeTilesFor(roles.management, t).some((x) => x.href === "/residents")], [true, true]);
 // R5 (management-role): Management is the template role, not a configured one, and her screen is keyed on
 // that key. The property the screen was built for is that a role edited in Settings loses a tile rather than
 // getting one that refuses, so each cell is taken away in turn.
@@ -103,10 +104,9 @@ const mgmtWithout = (...gone) => {
   return parsePermissions({ role: { key: "management", name: "Management", opens_app: true }, is_admin: false, scopes: {}, permissions: cells });
 };
 const hrefsOf = (p) => homeTilesFor(p, t).map((x) => x.href);
-eq("C Management without recurring.manage loses Recurring jobs only", hrefsOf(mgmtWithout("recurring.manage")), ["/residents/new", "/residents", "/my"]);
-eq("C Management without resident.register loses Intake only", hrefsOf(mgmtWithout("resident.register")), ["/management/recurring-jobs", "/residents", "/my"]);
-eq("C Management without recurring.do_own loses My tasks only", hrefsOf(mgmtWithout("recurring.do_own")), ["/management/recurring-jobs", "/residents/new", "/residents"]);
-eq("C Management with all three taken away still has Residents", hrefsOf(mgmtWithout("recurring.manage", "resident.register", "recurring.do_own")), ["/residents"]);
+eq("C Management without recurring.manage loses Recurring jobs", hrefsOf(mgmtWithout("recurring.manage")).includes("/management/recurring-jobs"), false);
+eq("C Management without recurring.do_own loses My tasks", hrefsOf(mgmtWithout("recurring.do_own")).includes("/my"), false);
+eq("C Management without resident.record loses Residents", hrefsOf(mgmtWithout("resident.record")).includes("/residents"), false);
 // 2026-10-06 (home-screen-belongs-to-a-role): a home is a property of the role, and a role a shelter makes has
 // no curated one. Given Management's exact cells under another key it gets the derived home: every tile a page
 // its cells open, Residents there, no Settings, and not the four-tile screen. Take a cell away and the tile goes.
@@ -132,15 +132,15 @@ const shelterMade = (gone = []) => {
   ], [[], true, true, []]);
   eq("C a shelter-made role without recurring.manage loses Recurring jobs", hrefsOf(shelterMade(["recurring.manage"])).includes("/management/recurring-jobs"), false);
   eq("C a shelter-made role without recurring.do_own loses My tasks", hrefsOf(shelterMade(["recurring.do_own"])).includes("/my"), false);
-  eq("C a shelter-made role with every cell taken away still has Residents", hrefsOf(shelterMade(ACTIVITIES.map((a) => a.key))), ["/residents"]);
+  eq("C a shelter-made role with every cell taken away has no tiles", hrefsOf(shelterMade(ACTIVITIES.map((a) => a.key))), []);
   eq("C a shelter-made role that is not Management is not given Intake as a tile (it is the curated screen's)", hrefs.includes("/residents/new"), false);
 }
 // Staff's home (stocktake, maintenance, deliveries) went with the role (0173).
-eq("C a doctor's home is its appointments, and nobody else is offered them", [
+eq("C Appointments is offered to whoever holds medical.visits, by cell and not by role", [
   homeTilesFor(roles.doctor, t).some((x) => x.href === "/appointments"),
   homeTilesFor(roles.volunteer, t).some((x) => x.href === "/appointments"),
   homeTilesFor(roles.management, t).some((x) => x.href === "/appointments"),
-], [true, false, false]);
+], [true, false, true]);
 eq("C a doctor has no tasks tile", homeTilesFor(roles.doctor, t).some((x) => x.href === "/my"), false);
 // No seeded role reads Contacts without editing it since 0134 took the address book from the volunteer, so the
 // read-only case is a role built for the purpose: one cell. Since 0155 (q6/q7) the pages ask contacts.browse, not contacts.directory.
@@ -176,8 +176,7 @@ const settingsOnly = parsePermissions({
   permissions: { "reference.types": 2 },
 });
 eq("D a role holding only a Settings activity still has a home", homeTilesFor(settingsOnly, t).some((x) => x.href.startsWith("/admin/")), true);
-eq("D a role holding nothing has only Residents", homeTilesFor(parsePermissions({ role: { key: "x", name: "X", opens_app: true }, scopes: {}, permissions: {} }), t).map((x) => x.href), ["/residents"]);
-eq("D a role that does not open the app has no tiles", homeTilesFor(parsePermissions({ role: { key: "x", name: "X", opens_app: false }, scopes: {}, permissions: {} }), t).length, 0);
+eq("D a role holding nothing has no tiles: a role is a placeholder until a card is assigned", homeTilesFor(parsePermissions({ role: { key: "x", name: "X" }, scopes: {}, permissions: {} }), t).map((x) => x.href), []);
 
 console.log(fails ? `\n${fails} FAILED` : "\nall ok");
 process.exitCode = fails ? 1 : 0;

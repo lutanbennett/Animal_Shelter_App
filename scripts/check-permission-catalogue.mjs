@@ -320,7 +320,7 @@ const PINNED = {
   "/home/[role]": { guards: ["if (!mine?.isAdmin) refuseFor(mine)"], decides: [] },
   // A group on a role's home (0241): for whoever holds the group's role, or Admin; anyone else gets "not found". It
   // grants nothing: its tiles are cardTilesFor()'s, drawn against the reader's own cells, and each page guards itself.
-  "/home/group/[id]": { guards: ["if (!mine?.role.opensApp) refuseFor(mine)"], decides: [] },
+  "/home/group/[id]": { guards: ["if (!mine || !entersApp(mine)) refuseFor(mine)"], decides: [] },
   // Who does what (who-does-what-view): Admin and Management, by the backlog item; no activity exists for
   // it yet and adding one needs a migration. opensWhoDoesWhat() is the one place that says so.
   "/admin/who-does-what": { guards: ["if (!opensWhoDoesWhat(perms)) refuseFor(perms)"], decides: [] },

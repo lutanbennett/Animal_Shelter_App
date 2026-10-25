@@ -54,7 +54,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
   const [grants, { data: cardRows, error: cardsError }, { data: roleRow }, { data: cellRows }, { data: groupRows, error: groupsError }, { data: featureRows, error: featuresError }, { data: cardFeatureRows, error: cardFeaturesError }] = await Promise.all([
     loadCardGrants(admin),
     admin.from("role_cards").select("card, position, group_id").eq("role_id", role?.id ?? "").order("position"),
-    admin.from("roles").select("key, name, kind, opens_app, home_path, show_menu, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails").eq("id", role?.id ?? "").maybeSingle(),
+    admin.from("roles").select("key, name, kind, home_path, show_menu, sees_login_emails").eq("id", role?.id ?? "").maybeSingle(),
     admin.from("role_permissions").select("activity, level").eq("role_id", role?.id ?? ""),
     admin.from("role_groups").select("id, name, name_th, icon").eq("role_id", role?.id ?? "").order("position").order("name"),
     admin.from("features").select("id, name, name_th, position").order("position").order("name"),
@@ -93,14 +93,14 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
   // card (Residents) already stands for it. A card with neither is the one that silently shows nothing.
   const rolePerms = roleRow
     ? parsePermissions({
-        role: { key: roleRow.key, name: roleRow.name, name_th: null, kind: roleRow.kind, opens_app: roleRow.opens_app, home_path: roleRow.home_path },
+        role: { key: roleRow.key, name: roleRow.name, name_th: null, kind: roleRow.kind, home_path: roleRow.home_path },
         is_admin: false,
-        scopes: { residents: roleRow.scope_residents, clinical: roleRow.scope_clinical, contacts: roleRow.scope_contacts, photos: roleRow.scope_photos, sees_login_emails: roleRow.sees_login_emails },
+        scopes: { sees_login_emails: roleRow.sees_login_emails },
         permissions: Object.fromEntries((cellRows ?? []).map((x) => [x.activity as string, x.level as number])),
       })
     : null;
-  const noTile = (k: CardKey) => (rolePerms && !isSubsumed(k, held, rolePerms) ? tileBlock(k, rolePerms) : null);
-  const stoodForBy = (k: CardKey) => (rolePerms && isSubsumed(k, held, rolePerms) ? held.find((o) => o !== k && includedBy(grants, o).includes(k)) : undefined);
+  const noTile = (k: CardKey) => (rolePerms && !isSubsumed(k, held) ? tileBlock(k, rolePerms) : null);
+  const stoodForBy = (k: CardKey) => (rolePerms && isSubsumed(k, held) ? held.find((o) => o !== k && includedBy(grants, o).includes(k)) : undefined);
   const library = CARD_KEYS.filter((k) => !held.includes(k)).reverse(); // newest cards are added last, so they lead
   const label = (k: CardKey) => CARDS[k].label(t);
   const describe = (k: CardKey) => c.description[k];

@@ -32,14 +32,14 @@ async function guard(t: Dict, roleKey: string): Promise<{ ok: false; error: stri
   const supabase = await createClient();
   const { data } = await supabase
     .from("roles")
-    .select("id, kind, opens_app")
+    .select("id, kind")
     .eq("key", roleKey)
     .is("archived_at", null)
     .limit(1)
-    .returns<{ id: string; kind: string; opens_app: boolean }[]>();
+    .returns<{ id: string; kind: string }[]>();
   const role = data?.[0];
   // Admin and the public viewer are kind 'fixed': a rule, not a column (§6 rules 1 and 4).
-  if (!role || role.kind === "fixed" || !role.opens_app) return { ok: false, error: w.noSuchRole };
+  if (!role || role.kind === "fixed") return { ok: false, error: w.noSuchRole };
   return { ok: true, supabase, roleId: role.id };
 }
 

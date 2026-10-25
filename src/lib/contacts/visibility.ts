@@ -1,20 +1,11 @@
 import { can, type Permissions } from "@/lib/permissions/can";
 
 /**
- * Which relation a session reads the address book through (0126, 0170). It is
- * asked of the role's contacts scope (`perms.scopes.contacts`, seeded by 0132)
- * and of the contacts.browse cell, not of the role's name:
- *
- * - `full` with contacts.browse (Management, Admin) reads the `contacts` table;
- * - `full` without it (staff) reads `picker_contacts` (id, name, type,
- *   archived_at): staff name and pick contacts but never read their phone,
- *   email or address (0170, findings C9 and C10);
- * - `name_type` (a doctor) reads `doctor_contacts` (id, name, type);
- * - `name_phone` (a volunteer, the 2IC) reads `volunteer_contacts` (id, name, phone).
- *
- * The base-table read policy answers only contacts.browse, so a query that
- * names `contacts` returns nothing for anyone else. An unknown scope reads the
- * narrowest view, never the table.
+ * Which relation a session reads the address book through (0126, 0170), asked of the contacts.browse cell and nothing
+ * else: a holder reads the `contacts` table; everyone else reads `picker_contacts` (id, name, type, archived_at). The
+ * database still narrows some roles below that by a role column (volunteer_contacts, doctor_contacts, sees_all_contacts());
+ * where it does, the read comes back empty or refused and that is a row in docs/card-access-faults.md, not a case handled
+ * here. Name_phone and name_type scopes no longer pick a view.
  *
  * Use it for the embeds that only want a name (`carer:${relation}(name)`):
  * PostgREST follows the foreign key through the view. A page that needs more
@@ -23,10 +14,7 @@ import { can, type Permissions } from "@/lib/permissions/can";
 export type ContactRelation = "contacts" | "picker_contacts" | "doctor_contacts" | "volunteer_contacts";
 
 export function contactRelation(perms: Permissions | null | undefined): ContactRelation {
-  const scope = perms?.scopes.contacts;
-  if (scope === "full") return can(perms, "contacts.browse") ? "contacts" : "picker_contacts";
-  if (scope === "name_phone") return "volunteer_contacts";
-  return "doctor_contacts";
+  return can(perms, "contacts.browse") ? "contacts" : "picker_contacts";
 }
 
 /**

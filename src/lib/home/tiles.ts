@@ -8,14 +8,13 @@
  * app). A record-scoped page is never here: the registry does not hold one, and that is the
  * contract.
  */
-import { Receipt, Sparkles, UserPlus, type LucideIcon } from "lucide-react";
+import { Receipt, Sparkles, type LucideIcon } from "lucide-react";
 import { groupIcon } from "@/lib/home/group-icons";
 import { canUseBills } from "@/lib/bills/access";
 import { NAV_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "@/lib/permissions/can";
-import { CARDS, cardOpens, includedCards, type CardKey } from "@/lib/permissions/cards";
-import { jobsOfRole } from "@/lib/permissions/jobs";
+import { CARDS, includedCards, type CardKey } from "@/lib/permissions/cards";
 import { canOpen, opensAnyIn, routeFor, routesFor, type RouteEntry } from "@/lib/permissions/routes";
 
 /** Counts shown on tiles (what the left menu's badge showed): due today or overdue. */
@@ -77,34 +76,11 @@ function billsTile(perms: Permissions, t: Dictionary, billsWaiting: number | und
   return [{ href: "/bills", label: t.bills.tile.title, icon: Receipt, ...(billsWaiting ? { badge: t.bills.tile.waiting(billsWaiting) } : {}) }];
 }
 
-function managementDay(perms: Permissions, t: Dictionary, billsWaiting?: number): HomeTile[] {
-  const tiles: HomeTile[] = [];
-  const recurring = routeFor("/management/recurring-jobs");
-  if (recurring && canOpen(perms, recurring)) tiles.push({ href: recurring.path, label: recurring.label(t), icon: recurring.icon });
-  if (can(perms, "resident.register")) tiles.push({ href: "/residents/new", label: t.appHome.intake, icon: UserPlus });
-  if (perms.role.opensApp) tiles.push({ href: "/residents", label: t.nav.residents, icon: NAV_ICONS.residents });
-  if (can(perms, "recurring.do_own")) tiles.push({ href: "/my", label: t.nav.my, icon: NAV_ICONS.my });
-  return tiles;
-}
-
 /**
- * Curated homes: a role whose phone screen is chosen, not derived. This is the whole list, and it
- * is keyed on the role's key on purpose (docs/decisions/2026-10-06-home-screen-belongs-to-a-role.md):
- * a home is a property of the role, and a role a shelter creates has none until someone curates
- * one, so it gets the derived home below, which already shows a tile only for a page its cells open.
- * Not `roles.home_path`, which names one page and cannot say "these four tiles"; not a job list,
- * which Management's cells are wider than.
- */
-const CURATED_HOME: Record<string, (perms: Permissions, t: Dictionary, billsWaiting?: number) => HomeTile[]> = {
-  management: managementDay,
-};
-
-/**
- * Pages a card opens that are not in the route registry, each with the test its own page uses (the same three
- * the derived home special-cases above). Everything else a card opens is a registry entry, tested by canOpen().
+ * Pages a card opens that are not in the route registry, each with the test its own page uses . Everything else a card opens is a registry entry, tested by canOpen().
  */
 export const OUTSIDE_REGISTRY: Record<string, { icon: LucideIcon; open: (p: Permissions) => boolean }> = {
-  "/residents": { icon: NAV_ICONS.residents, open: (p) => p.role.opensApp },
+  "/residents": { icon: NAV_ICONS.residents, open: (p) => can(p, "resident.record", "read") },
   "/bills": { icon: Receipt, open: canUseBills },
   "/assistant": { icon: Sparkles, open: (p) => can(p, "assistant.ask") },
   "/my": { icon: NAV_ICONS.my, open: (p) => can(p, "recurring.do_own") },
@@ -113,32 +89,42 @@ export const OUTSIDE_REGISTRY: Record<string, { icon: LucideIcon; open: (p: Perm
 };
 
 /**
- * Why a held card draws no tile: the page it opens, and the rule that is NOT a card which refuses it. A role's cells are
+ * Why a held card draws no tile: the page it opens, and what is missing for it. A role's cells are
  * exactly the union of its cards' grants (0257), so a card whose page is refused is refused by one of these hard-coded
- * rules (routes.ts page activities and scopes, OUTSIDE_REGISTRY, roles.opens_app). Null when the page opens.
+ * activities (routes.ts page rules, OUTSIDE_REGISTRY), because the role has not been given the access that opens it. Null when the page opens.
  */
 export function tileBlock(key: CardKey, perms: Permissions): { page: string; rule: string } | null {
-  const page = cardOpens(CARDS[key], perms.scopes.clinical);
+  const page = CARDS[key].opens;
   const outside = OUTSIDE_REGISTRY[page];
-  if (outside) return outside.open(perms) ? null : { page, rule: `the OUTSIDE_REGISTRY test for ${page} (src/lib/home/tiles.ts)` };
+  if (outside) return outside.open(perms) ? null : { page, rule: `${page} needs an activity this role does not hold (src/lib/home/tiles.ts)` };
   const route = routeFor(page);
   if (!route) return { page, rule: `${page} is in neither the page registry (routes.ts) nor OUTSIDE_REGISTRY` };
   if (canOpen(perms, route)) return null;
-  if (route.scope && perms.scopes.clinical !== route.scope.clinical) return { page, rule: `routes.ts: ${page} opens only for clinical scope "${route.scope.clinical}"` };
   return { page, rule: `routes.ts: ${page} needs ${route.activity} at ${route.level}${route.alsoActivity ? ` (or ${route.alsoActivity})` : ""}` };
 }
 
 /** Whether a role's tile for this card can be drawn: its page opens for the role. What the card gives is the database's business. */
 export function cardTile(key: CardKey, perms: Permissions, t: Dictionary, billsWaiting?: number): HomeTile | null {
   const card = CARDS[key];
-  const page = cardOpens(card, perms.scopes.clinical);
-  const outside = OUTSIDE_REGISTRY[page];
-  const route = routeFor(page);
-  const icon = outside?.icon ?? route?.icon;
-  const opens = outside ? outside.open(perms) : route ? canOpen(perms, route) : false;
-  if (!icon || !opens) return null;
+  const page = card.opens;
+  // No tile for a page the role cannot open: a tile would invent access. The card is not lost from sight, though:
+  // cardsWithoutTile() names it and the home says so.
+  if (tileBlock(key, perms)) return null;
+  const icon = OUTSIDE_REGISTRY[page]?.icon ?? routeFor(page)?.icon;
+  if (!icon) return null;
   const badge = page === "/bills" && billsWaiting ? { badge: t.bills.tile.waiting(billsWaiting) } : {};
   return { href: page, label: card.label(t), icon, ...badge };
+}
+
+/**
+ * The held cards that draw no tile, each with the page and what it lacks: what the home says out loud so that a card which
+ * opens nothing is never silent. A card another held card includes (View residents under Residents) is not listed.
+ */
+export function cardsWithoutTile(held: readonly CardKey[], perms: Permissions): { key: CardKey; page: string; rule: string }[] {
+  return held.flatMap((key) => {
+    const block = isSubsumed(key, held) ? null : tileBlock(key, perms);
+    return block ? [{ key, ...block }] : [];
+  });
 }
 
 /**
@@ -147,15 +133,14 @@ export function cardTile(key: CardKey, perms: Permissions, t: Dictionary, billsW
  * second one. Roles with no cards get the derived home below, as a role a shelter creates always did.
  */
 /** A card another held card includes and shares its page with (View residents under Residents) draws no tile of its own. */
-export function isSubsumed(key: CardKey, held: readonly CardKey[], perms: Permissions): boolean {
-  const clinical = perms.scopes.clinical;
-  return held.some((o) => o !== key && cardOpens(CARDS[o], clinical) === cardOpens(CARDS[key], clinical) && includedCards(o).includes(key));
+export function isSubsumed(key: CardKey, held: readonly CardKey[]): boolean {
+  return held.some((o) => o !== key && CARDS[o].opens === CARDS[key].opens && includedCards(o).includes(key));
 }
 
 export function cardTilesFor(held: readonly CardKey[], perms: Permissions, t: Dictionary, billsWaiting?: number, groups: readonly RoleGroup[] = []): HomeTile[] {
   const tilesOf = (keys: readonly CardKey[]) =>
     keys.flatMap((key) => {
-      const tile = isSubsumed(key, held, perms) ? null : cardTile(key, perms, t, billsWaiting);
+      const tile = isSubsumed(key, held) ? null : cardTile(key, perms, t, billsWaiting);
       return tile ? [tile] : [];
     });
   const grouped = new Set(groups.flatMap((g) => g.cards));
@@ -260,33 +245,6 @@ function homeTilesBase(perms: Permissions, t: Dictionary, billsWaiting?: number,
   const home = asRoleCards(cards);
   if (home && home.cards.length > 0) return cardTilesFor(home.cards, perms, t, billsWaiting, home.groups);
 
-  // A role that is given jobs (src/lib/permissions/jobs.ts) shows its jobs, one tile each, and
-  // nothing else: that is what "a home of named jobs" means. A job whose bundle the role's cells
-  // do not cover, or whose page it may not open, draws no tile rather than a tile that refuses.
-  const jobs = jobsOfRole(perms.role.key);
-  if (jobs.length > 0) {
-    // Add photos (photo first, then the resident) is not a job of its own: any role with jobs that holds
-    // photos.resident_add gets the tile after its jobs. The Head of Medical has Add Medical Photos already.
-    const addPhotos = routeFor("/photos/add");
-    const extra: HomeTile[] =
-      addPhotos && canOpen(perms, addPhotos) && !jobs.some((j) => j.opens === "/medical/photos")
-        ? [{ href: addPhotos.path, label: addPhotos.label(t), icon: addPhotos.icon }]
-        : [];
-    return [...jobs.flatMap((job) => {
-      const route = routeFor(job.opens);
-      const covered = job.bundle.every((b) => (b.level ? can(perms, b.activity, b.level) : can(perms, b.activity)));
-      return route && covered && canOpen(perms, route)
-        ? [{ href: route.path, label: job.label(t), icon: route.icon }]
-        : [];
-    }), ...extra, ...billsTile(perms, t, billsWaiting)];
-  }
-
-  // The Director's daytime screen (the whiteboard's Management column, 2026-10-03): a few big tiles on a
-  // phone, not every page Management can open. Clinic visits, medical records and a resident's details are
-  // tabs on a resident, so they are reached through the Residents tile and need no tile of their own.
-  const curated = CURATED_HOME[perms.role.key];
-  if (curated) return curated(perms, t, billsWaiting);
-
   let routes = routesFor(perms).filter((r) => r.device !== "desk");
   // Settings pages are Admin's night home (/admin), not a role's tasks; a role that holds only
   // those still gets a home rather than an empty one.
@@ -320,6 +278,6 @@ function homeTilesBase(perms: Permissions, t: Dictionary, billsWaiting?: number,
 
   const lead: HomeTile[] = [];
   if (can(perms, "recurring.do_own")) lead.push({ href: "/my", label: t.nav.my, icon: NAV_ICONS.my });
-  if (perms.role.opensApp) lead.push({ href: "/residents", label: t.nav.residents, icon: NAV_ICONS.residents });
+  if (can(perms, "resident.record", "read")) lead.push({ href: "/residents", label: t.nav.residents, icon: NAV_ICONS.residents });
   return [...lead, ...fromRegistry.filter((x) => !lead.some((l) => l.label === x.label)), ...billsTile(perms, t, billsWaiting)];
 }

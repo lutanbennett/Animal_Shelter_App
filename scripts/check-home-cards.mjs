@@ -35,7 +35,7 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 const { cardTilesFor } = await imp("src/lib/home/tiles.ts");
-const { CARDS, CARD_KEYS, bundleOfCards, cardOpens, includedCards, isCardKey } = await imp("src/lib/permissions/cards.ts");
+const { CARDS, CARD_KEYS, bundleOfCards, includedCards, isCardKey } = await imp("src/lib/permissions/cards.ts");
 const { routeFor, canOpen } = await imp("src/lib/permissions/routes.ts");
 const { parsePermissions } = await imp("src/lib/permissions/can.ts");
 const en = (await imp("src/lib/i18n/dictionaries/en.ts")).default;
@@ -57,29 +57,25 @@ const fail = (m) => { failed++; console.log(`FAIL ${m}`); };
 const ok = (m) => console.log(`ok   ${m}`);
 
 // 5: every card, at every clinical scope (needs no database row: the bundle is the card's own).
-const synthetic = (key, clinical) =>
+const synthetic = (key) =>
   parsePermissions({
     role: { key: "check_" + key, name: key, name_th: null, kind: "custom", opens_app: true, home_path: null },
     is_admin: false,
-    scopes: { residents: "all", clinical, contacts: "all", photos: "all", sees_login_emails: false },
+    scopes: { sees_login_emails: false },
     permissions: Object.fromEntries([...bundleOfCards([key])].map(([a, l]) => [a, l === "edit" ? 2 : 1])),
   });
-// A card whose page the shelter's own staff run (a medical job) is checked at "any" only; one that opens a clinic
-// login's page (/appointments) is for a clinic login too, so it is checked at both. Nothing else can be refused by scope.
-for (const clinical of ["any", "own_clinic"]) {
-  for (const key of CARD_KEYS) {
-    const page = cardOpens(CARDS[key], clinical);
-    const route = routeFor(page);
-    const serves = routeFor(CARDS[key].opens)?.scope?.clinical === "own_clinic" ? ["any", "own_clinic"] : ["any"];
-    if (!serves.includes(clinical) || (!route?.scope && !CARDS[key].opensAny)) continue;
-    const perms = synthetic(key, clinical);
-    const tile = cardTilesFor([key], perms, en, 0)[0];
-    if (!canOpen(perms, route) || !tile) fail(`card ${key} at clinical scope "${clinical}": its tile opens ${page}, which a role holding the card cannot open (add or fix its opensAny)`);
-    else ok(`card ${key} at clinical scope "${clinical}": opens ${page}`);
-  }
+// A card opens one page for every role that holds it. A synthetic role holding only that card's bundle must get its tile when the page
+// is a registered one; a card whose page its own bundle does not open is a fault in the card, and it is reported here, not hidden.
+for (const key of CARD_KEYS) {
+  const route = routeFor(CARDS[key].opens);
+  if (!route) continue;
+  const perms = synthetic(key);
+  const tile = cardTilesFor([key], perms, en, 0)[0];
+  if (!canOpen(perms, route) || !tile) fail(`card ${key}: its tile opens ${CARDS[key].opens}, which a role holding only the card cannot open`);
+  else ok(`card ${key}: opens ${CARDS[key].opens}`);
 }
 
-const roles = await sql(`select id, key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails from roles where archived_at is null order by key`);
+const roles = await sql(`select id, key, name, kind, home_path, sees_login_emails from roles where archived_at is null order by key`);
 const cards = await sql(`select r.key, c.card, c.position from role_cards c join roles r on r.id = c.role_id order by r.key, c.position`);
 const cells = await sql(`select r.key, p.activity, p.level from role_permissions p join roles r on r.id = p.role_id order by r.key, p.activity`);
 
@@ -111,9 +107,9 @@ for (const role of roles) {
   const held = cards.filter((c) => c.key === role.key).map((c) => c.card).filter(isCardKey);
   if (held.length === 0) continue;
   const perms = parsePermissions({
-    role: { key: role.key, name: role.name, name_th: null, kind: role.kind, opens_app: role.opens_app, home_path: role.home_path },
+    role: { key: role.key, name: role.name, name_th: null, kind: role.kind, home_path: role.home_path },
     is_admin: false,
-    scopes: { residents: role.scope_residents, clinical: role.scope_clinical, contacts: role.scope_contacts, photos: role.scope_photos, sees_login_emails: role.sees_login_emails },
+    scopes: { sees_login_emails: role.sees_login_emails },
     permissions: Object.fromEntries(rolesCells.map((c) => [c.activity, c.level])),
   });
   for (const [lang, t] of [["en", en], ["th", th]]) {

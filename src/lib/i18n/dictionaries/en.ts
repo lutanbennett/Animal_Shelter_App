@@ -164,6 +164,8 @@ const en = {
     viewing: (role: string) =>
       `This is the ${role} home screen, as the ${role} role sees it. You are signed in as Admin.`,
     emptyTitle: "Nothing here yet",
+    cardsNoPageTitle: "Cards that open no page for you",
+    cardsNoPage: (cards: string) => `You hold these cards, but the page each one opens is not open to you yet: ${cards}. Tell an administrator; the card is missing some of the access its page needs.`,
     empty: "This role has no jobs on its home screen yet. They appear when the role is given something to do.",
     /** A job's name, in the Director's words: the tile a role with jobs sees (src/lib/permissions/jobs.ts). */
     /** The Director's Intake tile: registering a new resident (the whiteboard's Management column). */

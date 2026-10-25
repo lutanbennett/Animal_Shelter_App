@@ -26,7 +26,7 @@ const { loadEnv, projectRef } = await import(pathToFileURL(join(process.cwd(), "
 const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
-const { bundleOfRole } = await import(pathToFileURL(join(process.cwd(), "src/lib/permissions/jobs.ts")).href);
+const { bundleOfRole } = await import(pathToFileURL(join(process.cwd(), "scripts/lib/test-role-jobs.mjs")).href);
 
 // Cells a migration grants ahead of the screen that turns them into a job. Empty since batch 47: all three
 // of 0140's cells are now jobs in jobs.ts, so bundleOfRole() carries them. Add one here only if a cell lands first.

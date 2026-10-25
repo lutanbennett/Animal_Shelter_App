@@ -20,7 +20,6 @@ export type Permissions = {
     key: string;
     name: string;
     nameTh: string | null;
-    opensApp: boolean;
     homePath: string | null;
   };
   /**
@@ -32,15 +31,21 @@ export type Permissions = {
   /** Admin's column is a rule, not data (§6): true answers yes to every known activity. */
   isAdmin: boolean;
   scopes: {
-    residents: string;
-    clinical: string;
-    contacts: string;
-    photos: string;
     seesLoginEmails: boolean;
   };
   /** No entry means None. Only keys the catalogue knows are ever put here. */
   cells: Readonly<Partial<Record<ActivityKey, 1 | 2>>>;
 };
+
+/**
+ * Whether this login is inside the app at all: Admin, or a role that holds at least one cell, which is to say one card
+ * that gives something. A role is a placeholder until a card is assigned, so a role with no cards is not in the app; there
+ * is no column that switches a role on or off. Admin sits outside the card system (CLAUDE.md, "Hard-coded security is forbidden").
+ */
+export function entersApp(perms: Permissions | null | undefined): boolean {
+  if (!perms) return false;
+  return perms.isAdmin || Object.keys(perms.cells).length > 0;
+}
 
 /**
  * Fails closed. Every one of these answers false, never true and never a
@@ -91,16 +96,11 @@ export function parsePermissions(raw: unknown): Permissions | null {
       key: role.key,
       name: role.name,
       nameTh: typeof role.name_th === "string" ? role.name_th : null,
-      opensApp: role.opens_app === true,
       homePath: typeof role.home_path === "string" ? role.home_path : null,
     },
     roles: Array.isArray(r.roles) && r.roles.every((k) => typeof k === "string") && r.roles.length > 0 ? (r.roles as string[]) : [role.key],
     isAdmin: r.is_admin === true,
     scopes: {
-      residents: String(scopes.residents ?? "all"),
-      clinical: String(scopes.clinical ?? "any"),
-      contacts: String(scopes.contacts ?? "full"),
-      photos: String(scopes.photos ?? "all"),
       seesLoginEmails: scopes.sees_login_emails === true,
     },
     cells,
