@@ -73,7 +73,9 @@ function done(): ActionResult {
 }
 
 async function apply(supabase: Supabase, roleId: string, cards: CardKey[], where: string, t: Dict): Promise<ActionResult> {
-  const { error } = await supabase.rpc("set_role_cards", { p_role: roleId, p_cards: cards });
+  // p_bundle is ignored by the database since 0257 (access now comes from card_grants) but the function still declares it
+  // with no default, so leaving it out is PGRST202 "function not found" on every save (0.40.2). Drop it with the input.
+  const { error } = await supabase.rpc("set_role_cards", { p_role: roleId, p_cards: cards, p_bundle: null });
   // The two photo-approver refusals (0221, 0222) are written for the person reading them; show them as they are. Any other
   // check failure keeps the generic words, so a constraint name never reaches the browser.
   if (error?.code === "23514" && /approve photos/i.test(error.message ?? "") && /^(Give a role|This is the last role)/.test(error.message ?? "")) {
