@@ -182,7 +182,6 @@ end $cmp$;
 do $role$ begin
   insert into res select 'role', 'row', 0 where exists (select 1 from roles where key = 'second_in_command' and kind = 'custom' and opens_app and name_th is not null and archived_at is null);
   insert into res select 'role', 'cell:' || rp.activity || ':' || rp.level, 0 from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'second_in_command';
-  insert into res select 'role', 'extra:' || e.activity || ':' || e.level, 0 from role_extras e join roles r on r.id = e.role_id where r.key = 'second_in_command';
   insert into res select 'role', 'card:' || rc.card, 0 from role_cards rc join roles r on r.id = rc.role_id where r.key = 'second_in_command';
   insert into res select 'role', 'diet-forecast-has-no-cost', 0 where not exists (select 1 from pg_proc where proname = 'stock_diet_forecast' and pg_get_function_result(oid) ilike '%cost%');
 end $role$;
@@ -241,8 +240,6 @@ const heldCards = rows.filter((r) => r.who === "role" && r.tbl.startsWith("card:
 const { loadCards } = await import(pathToFileURL(join(process.cwd(), "scripts/lib/load-cards.mjs")).href);
 const { bundleOfCards } = await loadCards();
 const want = new Map([...bundleOfCards(heldCards)].map(([a, l]) => [a, l === "edit" ? 2 : 1]));
-// Her extras (role_extras, 0194) are powers no card gives; role_permissions is cards + extras, as check-cards-schema.mjs held until 0257 (role_extras no longer counts; check-card-grants.mjs holds it now).
-for (const [a, l] of rows.filter((r) => r.who === "role" && r.tbl.startsWith("extra:")).map((r) => r.tbl.split(":").slice(1))) want.set(a, Math.max(want.get(a) ?? 0, Number(l)));
 const same = have.size === want.size && [...want].every(([a, l]) => have.get(a) === l);
 if (same) pass(`bundle: role_permissions = the union of her cards' bundles (${[...want.keys()].join(", ")}), from her cards: ${heldCards.join(", ")}`);
 else fail(`bundle: role_permissions ${JSON.stringify([...have])} differ from her cards ${JSON.stringify([...want])}`);

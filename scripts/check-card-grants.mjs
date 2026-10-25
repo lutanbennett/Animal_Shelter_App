@@ -7,7 +7,7 @@
 //      role the union of its cards' grants (includes and all, worked out here, not by the database) is EXACTLY its
 //      role_permissions. Admin and the public viewer hold no cards and no cells.
 //   2  the triggers, on throwaway roles: a card given by a DIRECT insert into role_cards grants its access; a card taken away by
-//      a direct delete removes it; adding or deleting a card_grants row changes every holder at once; role_extras does not
+//      a direct delete removes it; adding or deleting a card_grants row changes every holder at once
 //      count; a card that includes another gives that one's access too; the fixed roles' cells do not move and Admin still has a
 //      login; and the two photo-approver refusals of set_role_cards (0221/0222/0224) still refuse, with their messages.
 import { join } from "node:path";
@@ -144,13 +144,6 @@ begin
     raise exception 'ASSERT deleting a card_grants row left the access behind';
   end if;
 
-  -- role_extras no longer counts
-  insert into role_extras (role_id, activity, level, why) values (c, 'stock.count', 2, 'harness');
-  insert into role_cards (role_id, card, position) values (c, 'view_residents', 2);
-  if exists (select 1 from role_permissions where role_id = c and activity = 'stock.count') then
-    raise exception 'ASSERT a role_extras row still counts';
-  end if;
-
   -- a card taken away by a direct delete takes its access with it
   delete from role_cards where role_id = a and card = 'residents';
   if exists (select 1 from role_permissions where role_id = a and activity = 'placement.move') then
@@ -164,7 +157,7 @@ begin
   delete from role_cards where role_id in (a, b, c);
 
   begin
-    perform set_role_cards(a, array['add_photos'], null);
+    perform set_role_cards(a, array['add_photos']);
     raise exception 'ASSERT add_photos was given while nobody approves';
   exception when check_violation then
     get stacked diagnostics v_msg = message_text;
@@ -172,14 +165,14 @@ begin
   end;
 
   -- approve + add together is allowed (this role approves after the call), and a second role may then add photos
-  perform set_role_cards(a, array['approve_photos', 'add_photos'], null);
+  perform set_role_cards(a, array['approve_photos', 'add_photos']);
   if not exists (select 1 from role_permissions where role_id = a and activity = 'photos.approve') then
     raise exception 'ASSERT approve_photos did not give photos.approve';
   end if;
-  perform set_role_cards(b, array['add_photos'], null);
+  perform set_role_cards(b, array['add_photos']);
 
   begin
-    perform set_role_cards(a, array[]::text[], null);
+    perform set_role_cards(a, array[]::text[]);
     raise exception 'ASSERT the last approver was taken away while roles still add photos';
   exception when check_violation then
     get stacked diagnostics v_msg = message_text;
@@ -189,18 +182,12 @@ begin
   -- a retired role does not count as an approver
   update roles set archived_at = now() where id = a;
   begin
-    perform set_role_cards(c, array['add_photos'], null);
+    perform set_role_cards(c, array['add_photos']);
     raise exception 'ASSERT a retired role was counted as an approver';
   exception when check_violation then
     null;
   end;
   update roles set archived_at = null where id = a;
-
-  -- p_bundle is ignored: a caller handing a wide bundle gains nothing
-  perform set_role_cards(c, array['my_tasks'], '[{"activity":"stock.count","level":2}]'::jsonb);
-  if exists (select 1 from role_permissions where role_id = c and activity = 'stock.count') then
-    raise exception 'ASSERT set_role_cards still took the bundle from its caller';
-  end if;
 
   select count(*) into v_n from role_permissions p join roles r on r.id = p.role_id where r.kind = 'fixed';
   if v_n <> 0 then raise exception 'ASSERT fixed roles hold % cells after', v_n; end if;
@@ -211,7 +198,7 @@ rollback;
 
 try {
   await sql(block);
-  pass("direct insert grants; direct delete removes; card_grants changes reach every holder; includes flow; role_extras ignored; bundle ignored");
+  pass("direct insert grants; direct delete removes; card_grants changes reach every holder; includes flow");
   pass("the photo-approver guards still refuse (no approver; last approver; retired role), and Admin is untouched and has a login");
 } catch (e) {
   fail(String(e.message ?? e).split("\n")[0]);
