@@ -13,7 +13,7 @@ import {
   type RecurrenceRule,
   type TimeOfDay,
 } from "@/lib/recurring-jobs/rule";
-import { ASSIGNABLE_KEY_FILTER, canDoJob, needsForLinks, type Eligibility } from "@/lib/recurring-jobs/eligibility";
+import { canDoJob, needsForLinks, type Eligibility } from "@/lib/recurring-jobs/eligibility";
 import { withHeldRoles } from "@/lib/auth/held-roles";
 import { loadEligibility } from "@/lib/recurring-jobs/eligibility-load";
 import { appUserLabel, type AppUser } from "@/lib/auth/app-users";
@@ -166,7 +166,6 @@ async function setAssignees(supabase: Supabase, jobId: string, userIds: string[]
       .from("app_users")
       .select("id")
       .in("id", add)
-      .not("role_key", "in", ASSIGNABLE_KEY_FILTER)
       .is("archived_at", null)
       .returns<{ id: string }[]>();
     if (error) return error.message;
@@ -192,7 +191,7 @@ async function setAssignees(supabase: Supabase, jobId: string, userIds: string[]
 
 /**
  * The people in `userIds` who can still sign in but whose role cannot do a
- * job linking to `linkPath` (eligibility.ts) — a doctor on a stocktake. The
+ * job linking to `linkPath` (eligibility.ts) — a volunteer on a maintenance job. The
  * database would take them (0095 checks only that a login is live staff),
  * so this is the check, run before anything is written. Archived logins
  * are the stranded warning's business.

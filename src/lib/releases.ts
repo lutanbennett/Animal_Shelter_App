@@ -74,7 +74,9 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  { text: "Recurring jobs: the Assigned to list now shows everyone who can sign in, doctors included, instead of leaving them out by role name. A job that links to a page is still only offered to people whose role can open that page; a job with no link can be given to anyone.", roles: ["admin", "management"] },
+];
 
 /** Newest first. */
 export const releases: Release[] = [
