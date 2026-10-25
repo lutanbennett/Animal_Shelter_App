@@ -411,11 +411,18 @@ worse than the finding. Then write what you concluded on the PR and in
 `docs/decisions/2026-10-01-next-og-advisory-handled-as-routine.md` and
 `docs/decisions/2026-10-07-sharp-override.md`.
 
-Two standing rules. **Do not change either audit workflow** to make the red go
-away: the PR job and the daily `advisories.yml` disagree about failing on
-purpose by design (`ci.yml`: "Do not 'tidy' the two to match";
-`docs/decisions/2026-10-02-scheduled-audit-fails-on-purpose.md`), and that was
-proposed and rejected on 2026-10-06. **Do not run `npm audit fix --force`**: it
+**Scope changed 2026-10-25 (Lutan; `docs/decisions/2026-10-25-audit-on-releases-not-every-pr.md`).** The PR `audit` job now
+runs only on a PR that changes `package.json` or `package-lock.json`; on any other PR it shows **skipped**, which is
+not a pass. The advisory check someone acts on is a step in every production release (`docs/release-procedure.md`,
+"Audit the production dependencies"), with the daily `advisories.yml` run between. He asked *"If the audit check
+always fails in a CI and is ignored is it actually adding value?"* and chose this. Everything above about a red
+`audit` on a PR that does run it still holds.
+
+Two standing rules. **Do not change `advisories.yml`, and do not change the PR job's `continue-on-error`, timeout
+or retry, to make the red go away**: the PR job and the daily `advisories.yml` disagree about failing on purpose by
+design (`ci.yml`: "Do not 'tidy' the two to match"; `docs/decisions/2026-10-02-scheduled-audit-fails-on-purpose.md`),
+and hiding the red was proposed and rejected on 2026-10-06. (Scoping *when* the PR job runs is the 2026-10-25 change
+above, not that.) **Do not run `npm audit fix --force`**: it
 is free to move a dependency *backwards* across a major version, and on
 2026-10-07 the only fix it offered was dragging the entire Cloudflare build and
 deploy chain back to `wrangler@4.15.2`.
