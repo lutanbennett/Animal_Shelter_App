@@ -24,3 +24,7 @@ Lutan's framing, 2026-10-25: compare each card's advertised function with the wi
 ## Not done
 
 Photo upload and recurring-job completion on `do_maintenance` (no file chooser, no assigned task); `/management/medications` driven for `do_stocktaking` itself (driven for `record_delivery`, which holds the same kind of single cell); the resident-page and visit-list links that belong to `medical_records` and `book_clinic_visits` (the first half's cards, backlog finding left open on purpose). The dev database had already taken migration `0261` from `role-extras-drop`, which removed `set_role_cards`' `p_bundle`, so this branch's `dev-signin.mjs` could not make logins; an unmodified copy of that stream's script was run instead (it is tooling and was not edited here).
+
+## Which dev schema, and proof the logins held what was assumed
+
+Tested against dev **with `0261` applied** (from the unmerged `role-extras-drop` branch; `main` is at `0260`). `check-card-grants.mjs` was green at the start and the logins were read back from `role_cards` / `role_permissions` after the walk: one card each, with the cells listed under the read-back note in the fault log. So "sees nothing" for the two landings is the card (0 cells), not a failed assignment.
