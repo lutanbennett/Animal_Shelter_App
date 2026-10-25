@@ -156,8 +156,8 @@ begin
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id)
     select u.id, ro.id from (values ${[["admin", "admin"], ["management", "management"], ["volunteer", "volunteer"], ["vet", "doctor"]].map(([p, r]) => `('${r}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
-  insert into roles (key, name, kind, scope_residents, scope_clinical, scope_photos) values
-    ${roleRows.map(([k, l, s]) => `('harness_ps_${k}', 'Harness ${k}', 'custom', '${l === "volunteer" ? "who_and_where" : "all"}', 'any', '${s}')`).join(",\n    ")};
+  insert into roles (key, name, kind) values
+    ${roleRows.map(([k, l, s]) => `('harness_ps_${k}', 'Harness ${k}', 'custom')`).join(",\n    ")};
   insert into role_permissions (role_id, activity, level)
     select r.id, v.act, v.lvl from roles r join (values ${Object.entries(CELLS).flatMap(([k, cs]) => cs.map(([a, l]) => `('harness_ps_${k}', '${a}', ${l})`)).join(",")}) as v(rk, act, lvl) on r.key = v.rk;
   insert into user_roles (user_id, role_id)

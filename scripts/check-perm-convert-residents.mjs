@@ -125,14 +125,13 @@ begin
   insert into user_roles (user_id, role_id)
     select u.id, ro.id from (values ${[["admin", "admin"], ["management", "management"], ["volunteer", "volunteer"], ["vet", "doctor"]].map(([p, r]) => `('${r}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
   -- custom roles: two on the volunteer floor (scope who_and_where, as the Heads and the 2IC), four above it
-  insert into roles (key, name, kind, scope_residents) values
-    -- 0179: the volunteer floor is now a scope of its own (who_and_where), not a borrowed enum
-    ('harness_pcr_vol_read', 'Harness vol read', 'custom', 'who_and_where'),
-    ('harness_pcr_vol_edit', 'Harness vol edit', 'custom', 'who_and_where'),
-    ('harness_pcr_st_read',  'Harness staff read', 'custom', 'all'),
-    ('harness_pcr_st_edit',  'Harness staff edit', 'custom', 'all'),
-    ('harness_pcr_st_move',  'Harness staff move', 'custom', 'all'),
-    ('harness_pcr_scoped',   'Harness scoped', 'custom', 'own_clinic');
+  insert into roles (key, name, kind) values
+    ('harness_pcr_vol_read', 'Harness vol read', 'custom'),
+    ('harness_pcr_vol_edit', 'Harness vol edit', 'custom'),
+    ('harness_pcr_st_read',  'Harness staff read', 'custom'),
+    ('harness_pcr_st_edit',  'Harness staff edit', 'custom'),
+    ('harness_pcr_st_move',  'Harness staff move', 'custom'),
+    ('harness_pcr_scoped',   'Harness scoped', 'custom');
   insert into role_permissions (role_id, activity, level)
     select r.id, a.key,
            case when r.key in ('harness_pcr_vol_read', 'harness_pcr_st_read') then 1 else 2 end
@@ -186,9 +185,6 @@ do $sweep$ begin
      and (coalesce(qual,'') || coalesce(with_check,'')) !~ 'SELECT has_permission';
   insert into res select 'sweep', 'perm_policies', 'count', count(*) from pg_policies
    where schemaname = 'public' and tablename in (${tableList}) and policyname like '%\\_perm';
-  insert into res select 'sweep', 'perm_without_scope', 'count', count(*) from pg_policies
-   where schemaname = 'public' and tablename in (${tableList}) and policyname like '%\\_perm'
-     and (coalesce(qual,'') || coalesce(with_check,'')) !~ 'sees_all_residents';
 end $sweep$;
 do $o$ begin raise exception 'HARNESS-RESULT %', (select json_agg(row_to_json(res)) from res); end $o$;
 rollback;`;
@@ -250,7 +246,6 @@ const sweep = (k) => get("sweep", k, "count");
 if (sweep("names_mgmt_or_staff") === 0) pass("no policy on these tables names management or staff"); else fail(`${sweep("names_mgmt_or_staff")} policy(ies) still name management or staff`);
 if (sweep("bare_has_permission") === 0) pass("every new policy wraps has_permission() in (select ...)"); else fail(`${sweep("bare_has_permission")} policy(ies) call has_permission() bare`);
 if (sweep("perm_policies") === 10) pass("10 new policies (3 + 3 + 4)"); else fail(`expected 10 *_perm policies, found ${sweep("perm_policies")}`);
-if (sweep("perm_without_scope") === 0) pass("every new policy also asks sees_all_residents()"); else fail(`${sweep("perm_without_scope")} policy(ies) do not ask sees_all_residents()`);
 console.log(`\n${ok} checks held, ${fails} failed.`);
 console.log(fails ? "RESULT: RED" : "RESULT: GREEN (the three resident tables answer as the cells say; the volunteer floor and scoped roles see nothing; vets unchanged)");
 process.exitCode = fails ? 1 : 0;

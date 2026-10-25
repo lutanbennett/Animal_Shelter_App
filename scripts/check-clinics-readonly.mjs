@@ -144,7 +144,7 @@ begin
   select string_agg(policyname || ':' || cmd, ', ') into v_bad
   from pg_policies
   where schemaname = 'public' and tablename = 'clinics' and cmd <> 'SELECT'
-    and (coalesce(qual, '') || coalesce(with_check, '')) ~ ('is_clinic_login|''doctor''|current_user_clinic_ids');
+    and (coalesce(qual, '') || coalesce(with_check, '')) ~ ('''doctor''|current_user_clinic_ids');
   if v_bad is not null then raise exception 'HARNESS-FAIL C: doctor write policy on clinics: %', v_bad; end if;
   if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'clinics'
                   and policyname = 'doctor_read_clinics' and cmd = 'SELECT') then

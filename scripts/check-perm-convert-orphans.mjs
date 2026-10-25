@@ -136,8 +136,8 @@ begin
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id)
     select u.id, ro.id from (values ${REAL.map((p) => `('${APP_ROLE[p] ?? p}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
-  insert into roles (key, name, kind, scope_residents) values
-    ${Object.keys(CUSTOM).map((c) => `('harness_pco_${c}', 'Harness ${c}', 'custom', 'all')`).join(",\n    ")};
+  insert into roles (key, name, kind) values
+    ${Object.keys(CUSTOM).map((c) => `('harness_pco_${c}', 'Harness ${c}', 'custom')`).join(",\n    ")};
   insert into role_permissions (role_id, activity, level)
     select r.id, v.act, v.lvl from roles r join (values
       ${Object.entries(CUSTOM).flatMap(([c, cells]) => cells.map(([a, l]) => `('harness_pco_${c}', '${a}', ${l})`)).join(",\n      ")}
@@ -145,7 +145,7 @@ begin
   ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id)
   select ${lit(ID[c])}, id from roles where key = 'harness_pco_${c}';`).join("\n  ")}
   -- staff: the archived Staff role's cells on a custom role (0173), so the login keeps exactly what Staff held
-  insert into roles (key, name, kind, scope_residents) values ('harness_pco_staff', 'Harness staff', 'custom', 'all');
+  insert into roles (key, name, kind) values ('harness_pco_staff', 'Harness staff', 'custom');
   insert into role_permissions (role_id, activity, level)
     select (select id from roles where key = 'harness_pco_staff'), rp.activity, rp.level
       from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';

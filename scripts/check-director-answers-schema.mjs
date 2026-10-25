@@ -89,8 +89,8 @@ begin
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id)
     select u.id, ro.id from (values ${REAL.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
-  insert into roles (key, name, kind, scope_residents, scope_contacts) values
-    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_das_${c}', 'Harness ${c}', 'custom', '${d.floor === "volunteer" ? "who_and_where" : "all"}', '${d.scope ?? "full"}')`).join(",\n    ")};
+  insert into roles (key, name, kind) values
+    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_das_${c}', 'Harness ${c}', 'custom')`).join(",\n    ")};
   insert into role_permissions (role_id, activity, level)
     select r.id, v.act, v.lvl from roles r join (values
       ${Object.entries(CUSTOM).flatMap(([c, d]) => d.cells.map(([a, l]) => `('harness_das_${c}', '${a}', ${l})`)).join(",\n      ")}
@@ -123,7 +123,6 @@ do $sweep$ begin
    where activity = 'contacts.browse' and role_id in (select id from roles where key in ('management', 'second_in_command'));
   insert into res select 'sweep', 'browse_wrong_holders', count(*) from role_permissions
    where activity = 'contacts.browse' and role_id in (select id from roles where key in ('staff', 'volunteer', 'doctor'));
-  insert into res select 'sweep', 'twoic_scope_name_phone', count(*) from roles where key = 'second_in_command' and scope_contacts = 'name_phone';
 end $sweep$;
 do $o$ begin raise exception 'HARNESS-RESULT %', (select json_agg(row_to_json(res)) from res); end $o$;
 rollback;`;

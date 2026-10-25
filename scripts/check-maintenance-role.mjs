@@ -147,7 +147,7 @@ ${lines.join("\n")}
 end $run$;
 
 do $role$ begin
-  insert into res select 'role', 'row', 0 where exists (select 1 from roles where key = 'head_of_maintenance' and kind = 'custom' and opens_app and name_th is not null and archived_at is null);
+  insert into res select 'role', 'row', 0 where exists (select 1 from roles where key = 'head_of_maintenance' and kind = 'custom' and name_th is not null and archived_at is null);
   insert into res select 'role', 'cell:' || rp.activity || ':' || rp.level, 0 from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'head_of_maintenance';
 end $role$;
 do $o$ begin raise exception 'HARNESS-RESULT %', (select json_agg(row_to_json(res)) from res); end $o$;

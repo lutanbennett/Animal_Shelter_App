@@ -13,13 +13,6 @@ import { DEFAULT_SIGNED_IN_PATH } from "./next-path";
  */
 export type SessionRole = { key: string; entersApp: boolean };
 
-/**
- * A login for testing the locked UAT/test sites as a visitor: it signs in,
- * which gets it past `PUBLIC_SITE: "locked"`, and then sees only the
- * public pages (docs/decisions.md, 2026-09-25).
- */
-export const PUBLIC_VIEWER_ROLE = "public_viewer";
-
 /** The signed-in login's role: its key, and whether it opens the app. Null when signed out or without a live role. */
 export async function loadSessionRole(supabase: SupabaseClient): Promise<SessionRole | null> {
   const { data } = await supabase.rpc("my_permissions");

@@ -471,6 +471,6 @@
     ],
     "listGrew": "The brief named eleven. Reading the LIVE definitions rather than grepping for create-or-replace found four more: holds_app_role() (which had already moved from roles.opens_app to r.key <> public_viewer), my_permissions(), photos_medical_only() and reassign_recurring_job(). sees_all_translations(), which the brief named, does not exist.",
     "measured": "No losses. Every measured change was a role reading MORE: the role columns sat beside a card check and only ever subtracted. 33 widenings across five roles, 103 surfaces unchanged, Admin unchanged on every surface. Held in docs/card-access-faults.md for Card review 2.",
-    "leftInPlace": "roles.scope_residents, scope_clinical, scope_contacts, scope_photos and opens_app still EXIST as columns. Nothing reads them for access. Dropping them reaches a dozen check scripts and is its own PR."
+    "leftInPlace": "Dropped by migration 0264 (2026-10-25) together with the seven stub functions: roles.scope_residents, scope_clinical, scope_contacts, scope_photos and opens_app no longer exist."
   }
 }

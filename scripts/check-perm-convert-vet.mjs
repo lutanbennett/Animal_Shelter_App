@@ -65,7 +65,7 @@ end $p$;
 `;
 const final = `
 do $f$
-declare diffs int; total int; vets int; agree int; s text; uidt text; nlogins int; is_doc boolean;
+declare diffs int; total int; vets int; s text;
 begin
   select count(*) into total from pg_temp.snap where phase = 'before';
   select count(*) into diffs from pg_temp.snap a full join pg_temp.snap b
@@ -75,17 +75,8 @@ begin
   select string_agg(format('%s %s %s: %s -> %s', a.key, a.tab, a.op, a.res, b.res), '; ') into s
     from pg_temp.snap a join pg_temp.snap b on b.phase = 'after' and a.uid = b.uid and a.tab = b.tab and a.op = b.op
    where a.phase = 'before' and a.res is distinct from b.res;
-  agree := 0; nlogins := 0;
-  for uidt in select distinct user_id::text from user_roles loop
-    nlogins := nlogins + 1;
-    is_doc := coalesce((select r.key from user_roles ur join roles r on r.id = ur.role_id where ur.user_id = uidt::uuid and ur.archived_at is null) = 'doctor', false);
-    perform set_config('request.jwt.claims', json_build_object('sub', uidt, 'role', 'authenticated')::text, true);
-    set local role authenticated;
-    if (select public.is_clinic_login()) = is_doc then agree := agree + 1; end if;
-    reset role;
-  end loop;
-  raise exception 'RESULT probes=% differences=% vet-nonzero-reads=% is_clinic_login-agrees=%/% diffs: %',
-    total, diffs, vets, agree, nlogins, coalesce(s, 'none');
+  raise exception 'RESULT probes=% differences=% vet-nonzero-reads=% diffs: %',
+    total, diffs, vets, coalesce(s, 'none');
 end $f$;
 `;
 
@@ -103,11 +94,11 @@ const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/qu
 });
 const body = await res.json();
 // The report is the exception's message: the only way out of a transaction that keeps nothing.
-const m = String(body?.message ?? "").match(/RESULT probes=(\d+) differences=(\d+) vet-nonzero-reads=(\d+) is_clinic_login-agrees=(\d+)\/(\d+) diffs: (.*)/);
+const m = String(body?.message ?? "").match(/RESULT probes=(\d+) differences=(\d+) vet-nonzero-reads=(\d+) diffs: (.*)/);
 if (!m) throw new Error(`harness did not report (${res.status}): ${JSON.stringify(body).slice(0, 800)}`);
-const [, probes, diffs, vetReads, agree, logins, list] = m;
-console.log(`${probes} probes, ${diffs} differences; doctors read rows on ${vetReads} table probes; is_clinic_login() agrees with the doctor role for ${agree}/${logins} logins`);
+const [, probes, diffs, vetReads, list] = m;
+console.log(`${probes} probes, ${diffs} differences; doctors read rows on ${vetReads} table probes`);
 if (Number(diffs)) console.log(`differences: ${list}`);
-const ok = Number(diffs) === 0 && Number(vetReads) > 0 && agree === logins;
+const ok = Number(diffs) === 0 && Number(vetReads) > 0;
 console.log(ok ? "\nRESULT: GREEN" : "\nRESULT: RED");
 process.exitCode = ok ? 0 : 1;

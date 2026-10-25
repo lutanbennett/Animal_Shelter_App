@@ -133,7 +133,7 @@ ${lines.join("\n")}
 end $run$;
 
 do $role$ begin
-  insert into res select 'role', 'row', 0 where exists (select 1 from roles where key = 'head_of_medical' and kind = 'custom' and opens_app and name_th is not null and archived_at is null);
+  insert into res select 'role', 'row', 0 where exists (select 1 from roles where key = 'head_of_medical' and kind = 'custom' and name_th is not null and archived_at is null);
   insert into res select 'role', 'cell:' || rp.activity || ':' || rp.level, 0 from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'head_of_medical';
   insert into res select 'role', 'card:' || rc.card, 0 from role_cards rc join roles r on r.id = rc.role_id where r.key = 'head_of_medical';
 end $role$;
