@@ -162,3 +162,87 @@ database; `lannacare.org` runs **production** (`dbkodyyxxhtygxcxmfcu`).
 | 1 | high | `enclosures` alone shows every enclosure as empty and a full one as "Space available" (0 / 5 for Cat Enclosure, which holds 5) | deferred: recorded in `docs/card-access-faults.md`; fixes wait for Lutan's review of the log |
 | 2 | high | `do_maintenance` has no delete control for a job, and reaches the whole resident record (list, spreadsheet export of all 94, resident pages) and every login's email | deferred: same log |
 | 3 | medium | `record_delivery` can delete any delivery, not only its own; `do_purchasing` has a link to a page it is refused; four cards offer a Residents menu entry that opens empty | deferred: same log || 1 | Read the five cards' reports and say whether the findings are right, above all the do_maintenance and enclosures ones | `docs/card-reports/` (do_maintenance, do_purchasing, do_stocktaking, record_delivery, enclosures) |
+
+## Left for manual verification
+
+Anything above that Claude could not honestly verify, listed here so it is a
+short, concrete handover rather than a vague "please check it". Empty is a valid
+answer when the change has no surface a person needs to look at.
+
+**Do not repeat a section 8 deploy-time check here.** Applying a migration,
+reading the deploy output, smoke-testing the deployed build and running
+`--drift production` all have their own state in section 8 — `deferred: <owner>` —
+which passes the checker and names who picks it up. Listing them again in this
+table gives them a second home that nothing ever closes: the check gets done at
+deploy time, section 8 is satisfied, and this row stays open for good. Five
+release-cut plans accumulated permanently-open rows exactly that way before it
+was noticed (2026-09-27).
+
+The test for whether something belongs here: **would a person have to go and look
+at it, separately from deploying?** A doctor's view of a page, a real phone, whether
+wording reads well — yes. Anything the deploy itself performs — no, that is
+section 8's.
+
+| # | What to check | Where |
+|---|---|---|
+| 1 | Read the five reports and say whether the findings are right, above all do_maintenance and enclosures | `docs/card-reports/` |
+
+## Sign-off
+
+Two signatures, because they certify different things and neither covers the
+other. A sign-off line that does not correspond to someone having actually
+looked is worse than no sign-off, because it turns an unknown into a false
+assurance.
+
+### Automated and scripted checks
+
+Gates, scripts, server-side behaviour, and any browser check that was actually
+driven rather than assumed. Signed by whoever ran them — Claude may sign this.
+
+- [x] Everything in this checklist that could be verified without human eyes was run, not assumed
+- [x] Nothing is ticked that was not actually executed
+
+Automated checks by: Claude  Date: 2026-10-25
+
+### Manual verification
+
+The items in **Left for manual verification** above. Signed by the person who
+looked. Claude never signs this line on someone else's behalf, unless that person
+has looked and explicitly asks in chat.
+Three valid states:
+
+- a name and a date — a person looked.
+- `n/a: <reason>` — there was nothing to look at.
+- `pending: <what is outstanding>` — the work is done and something genuinely
+  needs a person who has not got to it yet. **This does not fail the check**
+  (changed 2026-09-24): it is the normal state for most of a PR's life, and a
+  check that is permanently red is one people learn to filter. The checker prints
+  *awaiting manual verification: <what>* and exits 0, so the outstanding item is
+  on the record without drowning the signal. What still fails is a plan that is
+  missing, incomplete or self-contradictory. Use `pending:` rather than reaching
+  for `n/a` — green is no longer something you have to buy, and an `n/a` over a
+  real outstanding item is a false assurance about the one thing you could not
+  verify. **Nothing ships on a `pending:`** — the release manager's pre-deploy
+  pass is what holds that line, not CI.
+
+`n/a:` and `pending:` take **no `Date:` segment** — there is no date to record, so
+write the line and stop. A trailing `Date: —` is accepted too, since existing
+plans use it. A bare *name* with no date is still rejected, which is what stops an
+empty signature quietly passing.
+
+A red `test-plan` that says what it is waiting for is a red people act on. An
+illegible one is a red people learn to ignore.
+
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list below is not empty; only the person who looked may tick it
+
+Manual verification by: pending: Lutan to read the five reports once the whole set is built into the PDF
+
+### Result
+
+- [x] Open defects are either fixed or explicitly accepted above
+- [ ] Checklist pasted into the PR — n/a: pasted by the PR description when it is opened
+- [ ] Handed to the production release manager — n/a: nothing in this PR ships to users
+
+Result: pass with accepted defects
+
+Release manager acknowledgement: n/a: not a release
