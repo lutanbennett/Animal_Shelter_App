@@ -86,3 +86,24 @@ today. No card was created; his own remedy is *"I will be creating a new set of 
 clinic's residents; with it reading no role column, a doctor login reads every resident its cards allow. Per-login clinic
 links (`current_clinic_resident_ids()`) are untouched and are the right place to scope a vet, because they are per login,
 not per role — but nothing asks them any more. **This is the single most important thing for Card review 2 to settle.**
+
+---
+
+## Added 2026-10-25 by `claude/card-review-1-a` (Card review 1, first half: 10 `cards.ts` cards and 4 jobs)
+
+Each card judged on its own, whether or not any role holds it. Read from the wiring (bundle, page guard, RLS policy); nothing here was driven in a browser. Nothing was fixed and no card was proposed. Full table: `docs/decisions/2026-10-25-card-review-1-a.md`.
+
+| card | kind | what | missing / extra | production | read at |
+|---|---|---|---|---|---|
+| `medical_records` | not enough | cannot book a visit: `/clinic-visits/new` asks `visit.book` and `clinic_visits_insert_perm` asks it too (0182); the card holds only `medical.visits` | `visit.book` | not established | 2026-10-25 (`/clinic-visits/new/page.tsx:14`, 0182) |
+| `medical_records` | not enough | can open a visit to edit but the clinic dropdown is empty: `clinics` is readable only with `clinics.list` at read (0182) | `clinics.list` at read | not established | 2026-10-25 (`clinic-visits/[id]/edit/page.tsx:57`, 0182) |
+| `book_clinic_visits` | not enough | can open the booking form but cannot save: the required clinic list is empty, so the form has nothing to submit | `clinics.list` at read | not established | 2026-10-25 (`clinic-visits/new/page.tsx:46`, 0182) |
+| `book_clinic_visits` | not enough | cannot edit or complete a visit it booked: the edit page asks `medical.visits` at edit, the card gives read | `medical.visits` at edit (a judgement: the label says book, not edit) | not established | 2026-10-25 (`clinic-visits/[id]/edit/page.tsx:21`) |
+| `book_clinic_visits` | not enough | the list it opens (`/upcoming-visits`) shows the clinic as "—" on every row: it joins `clinics`, which RLS hides without `clinics.list` | `clinics.list` at read | not established | 2026-10-25 (`upcoming-visits/page.tsx:41`, 0182) |
+| `residents` | enough, now | register a resident: **CLOSED by 0248** (`record_intake` is `security definer` gated on `resident.register`; `picker_zones` / `picker_enclosures` also admit `placement.move`). Move, hospital and Arrival pickers closed the same way, so row 15 above is closed too. Not re-driven in a browser | n/a | n/a | 2026-10-25 (`0248`, `2026-10-22-residents-card-can-register.md`) |
+| `residents` | too much | bundle is 12 activities. Beyond the record and intake it reaches `placement.move`, `.hospital`, `.rehome`, `.death` (moving, hospitalising, rehoming, recording a death), `resident.microchip`, and `photos.resident_publish`, which puts a photo on the public website. The label does not name any of them | the card is the whole job; split is Card review 2's, Lutan's call | not established | 2026-10-25 (`cards.ts:70`) |
+| `contacts` | too much | label is Contacts; bundle also edits the clinic list (`clinics.list` edit), adds and removes doctors (`clinics.doctors`) and manages Shelter Friends (`friends.manage`) | `clinics.list`, `clinics.doctors`, `friends.manage`, `friends.view` | not established | 2026-10-25 (`cards.ts:110`) |
+| `recurring_jobs` | too much (judgement) | also holds `recurring.do_any`: the holder can mark anyone's task done, not only set tasks up | `recurring.do_any` | not established | 2026-10-25 (`cards.ts:123`) |
+| `view_residents`, `add_photos`, `approve_photos`, `administer_medication`, `record_weight`, `add_medical_photos`, `feed_special_diets` | too much | each says in its code comment that `resident.record` at read is "who and where, nothing more (0134)". Since 0259 it reads the **resident record itself** (101 of 101 on dev, see Kind 1 above). The comments are now false, and seven cards that need only a name and an enclosure read the whole record | a who-and-where read that is not the record (a card, not a role column) | not established | 2026-10-25 (`jobs.ts`, `cards.ts`, 0259) |
+| `view_residents`, `enclosures` | works only by accident | the resident list and occupancy read `resident_current_state` / `current_placement`, which since 0259 have **no card gate at all** (Kind 2 above). Without that hole these two cards would show nothing | the cards depend on views no card guards | not established | 2026-10-25 (0259) |
+| `administer_medication`, `feed_special_diets` | not established | the lists read frequency and rounds tables; their select policies were not found in 0148-0182, so whether `medical.prescriptions` at read reaches them is unsettled | read the policies, then a browser pass | not established | 2026-10-25 |
