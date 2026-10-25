@@ -109,7 +109,7 @@ create or replace view app_users with (security_barrier = true) as
     archived_at,
     role_key
    FROM private.app_users
-  WHERE (select private.works_with_logins());
+  WHERE private.has_app_access() AND (select private.works_with_logins());
 
 create or replace view current_placement as
  SELECT id,
@@ -125,7 +125,7 @@ create or replace view current_placement as
     created_by,
     created_at
    FROM private.current_placement
-  WHERE (select private.works_with_residents()) AND NOT on_volunteer_floor() AND (NOT COALESCE(( SELECT is_clinic_login() AS is_clinic_login), false) OR (resident_id IN ( SELECT current_doctor_resident_ids() AS current_doctor_resident_ids)));
+  WHERE private.has_app_access() AND (select private.works_with_residents()) AND NOT on_volunteer_floor() AND (NOT COALESCE(( SELECT is_clinic_login() AS is_clinic_login), false) OR (resident_id IN ( SELECT current_doctor_resident_ids() AS current_doctor_resident_ids)));
 
 create or replace view resident_current_state as
  SELECT resident_id,
@@ -139,7 +139,7 @@ create or replace view resident_current_state as
     is_deceased,
     date_of_death
    FROM private.resident_current_state
-  WHERE (select private.works_with_residents()) AND NOT on_volunteer_floor() AND (NOT COALESCE(( SELECT is_clinic_login() AS is_clinic_login), false) OR (resident_id IN ( SELECT current_doctor_resident_ids() AS current_doctor_resident_ids)));
+  WHERE private.has_app_access() AND (select private.works_with_residents()) AND NOT on_volunteer_floor() AND (NOT COALESCE(( SELECT is_clinic_login() AS is_clinic_login), false) OR (resident_id IN ( SELECT current_doctor_resident_ids() AS current_doctor_resident_ids)));
 
 create or replace view immunization_compliance as
  SELECT resident_id,
@@ -147,7 +147,7 @@ create or replace view immunization_compliance as
     immunization_type_id,
     immunization_type_name
    FROM private.immunization_compliance
-  WHERE (select private.works_with_immunizations()) AND NOT on_volunteer_floor() AND (NOT COALESCE(( SELECT is_clinic_login() AS is_clinic_login), false) OR (resident_id IN ( SELECT current_doctor_resident_ids() AS current_doctor_resident_ids)));
+  WHERE private.has_app_access() AND (select private.works_with_immunizations()) AND NOT on_volunteer_floor() AND (NOT COALESCE(( SELECT is_clinic_login() AS is_clinic_login), false) OR (resident_id IN ( SELECT current_doctor_resident_ids() AS current_doctor_resident_ids)));
 
 create or replace view immunization_duplicate_check as
  SELECT resident_id,
@@ -155,7 +155,7 @@ create or replace view immunization_duplicate_check as
     date_administered,
     count
    FROM private.immunization_duplicate_check
-  WHERE (select private.works_with_immunizations()) AND NOT on_volunteer_floor() AND (NOT COALESCE(( SELECT is_clinic_login() AS is_clinic_login), false) OR (resident_id IN ( SELECT current_doctor_resident_ids() AS current_doctor_resident_ids)));
+  WHERE private.has_app_access() AND (select private.works_with_immunizations()) AND NOT on_volunteer_floor() AND (NOT COALESCE(( SELECT is_clinic_login() AS is_clinic_login), false) OR (resident_id IN ( SELECT current_doctor_resident_ids() AS current_doctor_resident_ids)));
 
 create or replace view translation_queue as
  SELECT id,
@@ -177,7 +177,7 @@ create or replace view translation_queue as
     record_label,
     record_path
    FROM private.translation_queue
-  WHERE (select private.works_with_translations()) AND NOT on_volunteer_floor() AND (NOT COALESCE(( SELECT is_clinic_login() AS is_clinic_login), false) OR table_name <> 'residents'::text OR (row_id IN ( SELECT current_doctor_resident_ids() AS current_doctor_resident_ids)));
+  WHERE private.has_app_access() AND (select private.works_with_translations()) AND NOT on_volunteer_floor() AND (NOT COALESCE(( SELECT is_clinic_login() AS is_clinic_login), false) OR table_name <> 'residents'::text OR (row_id IN ( SELECT current_doctor_resident_ids() AS current_doctor_resident_ids)));
 
 -- The worst door: its gate was on_volunteer_floor() OR sees_all_residents(), constants false and true since 0259, so it read
 -- 'where true' and any login read every resident. The card check REPLACES them as the gate; the stubs themselves are left for
@@ -239,3 +239,7 @@ drop policy if exists app_read_translatable_fields on translatable_fields;
 create policy app_read_translatable_fields on translatable_fields for select using (
   (select has_permission('translations.view', 'read')) or (select has_permission('translations.manage', 'read'))
 );
+
+-- Grants, restated because the views are re-created: signed-in logins and the server, never anon (public_* views are the public site).
+grant select on app_users, current_placement, immunization_compliance, immunization_duplicate_check, resident_current_state,
+  translation_queue, resident_who_and_where to authenticated, service_role;
