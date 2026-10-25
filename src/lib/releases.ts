@@ -75,6 +75,10 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "Seeing which cards each role holds on Settings → Who does what is now a card of its own, called Who does what. Management has it, so nothing changes for them; any other role can be given it, and a role without it no longer sees the page.",
+    roles: ["admin", "management"],
+  },
   { text: "Recurring jobs: the Assigned to list now shows everyone who can sign in, doctors included, instead of leaving them out by role name. A job that links to a page is still only offered to people whose role can open that page; a job with no link can be given to anyone.", roles: ["admin", "management"] },
 ];
 

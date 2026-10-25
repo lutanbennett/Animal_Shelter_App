@@ -121,7 +121,7 @@ export default async function ManagementPage() {
     },
   ];
   const listed = allTiles.filter((tile) => {
-    // Not a registered page: Who does what opens for Admin and Management, not on an activity.
+    // Not a registered page: Who does what opens on the roles.view activity (the Who does what card), asked through its own function.
     if (tile.href === WHO_DOES_WHAT_PATH) return opensWhoDoesWhat(perms);
     const route = routeFor(tile.href);
     return !!route && canOpen(perms, route);

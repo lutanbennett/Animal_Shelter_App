@@ -114,6 +114,7 @@ export const ACTIVITIES = [
   { key: "photos.shelter_add", kind: "yesno", area: "photos", sort: 65, requires: [], probes: [] },
   { key: "social.library", kind: "level", area: "management", sort: 66, requires: [], probes: [] },
   { key: "photos.approve", kind: "yesno", area: "photos", sort: 67, requires: [], probes: [] },
+  { key: "roles.view", kind: "yesno", area: "settings", sort: 68, requires: [], probes: [] },
 ] as const satisfies readonly ActivityDef[];
 
 export type Activity = (typeof ACTIVITIES)[number];

@@ -13,7 +13,7 @@
  * rest, and Settings and Management landing pages with their areas.
  */
 
-import { Activity, Scissors, BadgeCheck, Camera, Laugh, ClipboardCheck, HandHeart, Coins, Globe, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
+import { Activity, Scissors, BadgeCheck, Camera, Laugh, ClipboardCheck, HandHeart, Coins, Globe, Grid3x3, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
 import { CONTACT_ICONS, ENCLOSURE_ICONS, NAV_ICONS, SECTION_ICONS, CLINIC_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "./can";
@@ -344,6 +344,16 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.nav.translations,
     device: "any",
     menu: false,
+  },
+  {
+    path: "/admin/who-does-what",
+    activity: "roles.view",
+    icon: Grid3x3,
+    label: (t) => t.nav.whoDoesWhat,
+    device: "any",
+    menu: false,
+    // Management opens it from its own landing (Lutan, 2026-10-10); Admin lists it on the Settings landing too.
+    section: "management",
   },
   {
     path: "/admin/website",

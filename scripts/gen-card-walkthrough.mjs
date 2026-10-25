@@ -31,6 +31,7 @@ export const READBACK = {
   "medical.immunizations": "the form shows a table straight after saving (resident, immunization, administered, next due). The Add all in zone and enclosure pickers are empty for a card-only login (answered 2026-10-23)",
   "medical.diet": "the resident's Diet page (/residents/<id>/diet) lists it under Current with meals a day and the amounts at the resident's size (answered 2026-10-23)",
   "medical.archive": "Remove, with an optional reason, on any medical row: the row leaves the list and the chart and the page reads \"1 removed hidden\"; Show removed lists it with Restore, which brings it back (done on a weight entry; answered 2026-10-23)",
+  "roles.view": "nothing is written: the page lists each role with the cards it holds, read only. Confirm it opens, shows the roles, and offers no Add, Remove or reorder control (that stays with Admin). Use the page itself, not a record named walk-who_does_what (2026-10-25)",
   "visit.book": "the visit shows on that resident's page and in the shelter's list of visits (/upcoming-visits)",
   "maintenance.progress": "the job sits in its new column on /maintenance after a reload",
   "maintenance.jobs": "the job is on /maintenance (and on /my once assigned); status is changed on /maintenance/<id>, and assignee, zone, due date and the Estimated / Actual cost on /maintenance/<id>/edit (the cost reads back on the job page). No delete control is offered to this card",

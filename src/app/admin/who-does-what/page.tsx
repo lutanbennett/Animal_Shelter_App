@@ -2,14 +2,14 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { refuseFor } from "@/lib/auth/require-role";
 import { loadPermissions } from "@/lib/permissions/load";
 import { ACTIVITIES, type ActivityKey } from "@/lib/permissions/catalogue";
 import { APPROVE_ACTIVITY, approverNames, needsApprover } from "@/lib/permissions/approvers";
 import { CARDS, CARD_KEYS, isCardKey, type CardKey } from "@/lib/permissions/cards";
 import { includedBy, loadCardGrants } from "@/lib/permissions/card-grants";
 import { TWO_STEP_PATH, hasTwoStep } from "@/lib/auth/two-step";
-import { opensWhoDoesWhat, WHO_DOES_WHAT_PATH } from "@/lib/permissions/who-does-what";
+import { requirePermission } from "@/lib/permissions/require";
+import { WHO_DOES_WHAT_PATH } from "@/lib/permissions/who-does-what";
 import { parsePermissions } from "@/lib/permissions/can";
 import { isSubsumed, tileBlock } from "@/lib/home/tiles";
 import { getT } from "@/lib/i18n/get-t";
@@ -37,7 +37,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const perms = await loadPermissions();
-  if (!opensWhoDoesWhat(perms)) refuseFor(perms);
+  await requirePermission("roles.view");
 
   const { t, locale } = await getT();
   const w = t.admin.whoDoesWhat;

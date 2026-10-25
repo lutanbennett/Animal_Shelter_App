@@ -202,6 +202,7 @@ const en = {
       myTasks: "My tasks",
       operationsLanding: "Operations",
       managementLanding: "Management",
+      whoDoesWhat: "Who does what",
     },
   },
 
@@ -892,6 +893,7 @@ const en = {
           meme_library: "Browse the shelter's memes, add one, record where and when each was posted, and archive one. Memes are never on the website.",
           my_tasks: "See and tick off the recurring tasks assigned to this person, with how many are due today or overdue. It does not show anyone else's tasks or let the role set tasks up.",
           operations_landing: "A tile for the Operations page, which lists the Operations pages this role can open. It gives no access of its own: a role sees only the pages its other settings already allow.",
+          who_does_what: "See which cards each role holds on Settings → Who does what. It is read only: changing a role's cards stays with Admin.",
           management_landing: "A tile for the Management page, which lists the Management pages this role can open. It gives no access of its own: a role sees only the pages its other settings already allow.",
         },
       },
@@ -1034,6 +1036,7 @@ const en = {
         "audit.view": "See who changed what",
         "audit.undo": "Undo a change",
         "system.status": "The system status page",
+        "roles.view": "See which cards each role holds on Who does what",
       },
       fixed: {
         clinicRule: {
