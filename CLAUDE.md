@@ -67,11 +67,21 @@ card — no exceptions."* And, the rule in full:
   - **It is not a precedent.** It is `can.ts:67` and `roles.is_admin`, Admin only, all-or-nothing. Nothing else gets to sit
     outside the card system by citing it.
   Settled. Do not re-open it and never put it to him again.
-- **The existing ones are a known debt, not permission.** They are listed in
-  `docs/hard-coded-security-registry.json` and ratcheted by `node scripts/check-hard-coded-security.mjs`
-  (its own CI job, `hard-coded-security`, which blocks). **The count may only go down.** The check
-  cannot spot a new *kind* of rule nobody has named, so that is on you
-  (`docs/decisions/2026-10-24-hard-coded-security-ratchet.md`).
+- **The target is zero, and the check asserts zero** (2026-10-25,
+  `docs/decisions/2026-10-25-no-coded-security-inventory.md`; it replaced the ratchet of
+  `2026-10-24-hard-coded-security-ratchet.md`). `node scripts/check-hard-coded-security.mjs` has no
+  baselines and counts no rules. It prints `no coded security outside the Admin bypass` only when none
+  is left, and otherwise `NOT CLEAN` with each surviving rule named first. Any read of a role by its key
+  or of a retired role column, any unrecorded service-role file or environment variable, and, in a
+  migration from `0262`, any policy not resolving through `has_permission()`/`is_admin()` or any
+  `security definer` function not calling a card or Admin function, **fails the build**
+  (its own CI job, `hard-coded-security`, which blocks). A rule that survives today is a *named record*
+  in `docs/hard-coded-security-registry.json` under `stillDecidesAccess` with a backlog item, never a
+  count; removing the rule means deleting its record in the same change. The counts of callers and
+  pages the old check printed are shown under their own heading as card-derived code, not as security.
+  What the check **cannot** see: the live database (it reads migration files; use
+  `node scripts/check-production.mjs`), a role rule written in a shape its patterns miss, whether a
+  service-role call site is guarded, and Cloudflare/Supabase Auth settings. That residue is on you.
 - **If a hard-coded rule blocks your work:** record it in `docs/card-access-faults.md` (from `claude/cards-grants-app`; if it is not on `main` yet, say so in your PR), raise it,
   and do not patch around it or add another.
 

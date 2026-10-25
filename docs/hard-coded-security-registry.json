@@ -500,7 +500,17 @@
   "database": {
     "scannedFrom": 262,
     "note": "The check reads migration files from this number on; everything before it was inventoried from the LIVE database on 2026-10-25 (see the decision file). A new policy that does not call has_permission() or is_admin(), a new security definer function that does not call has_permission(), is_admin() or role_can(), a read of a retired role column, or a grant to anon/public must be declared here with a reason, or become a card.",
-    "declared": []
+    "declared": [],
+    "stubs": [
+      "is_clinic_login",
+      "sees_all_residents",
+      "sees_all_clinical",
+      "sees_all_contacts",
+      "may_open_resident_record",
+      "on_volunteer_floor",
+      "photos_medical_only"
+    ],
+    "stubsNote": "Inert but present: these seven functions answer a constant (true, or false for is_clinic_login, on_volunteer_floor, photos_medical_only) and are still called by about 130 policy and view clauses (read from the live dev database 2026-10-25). Nothing reads a role column through them. Redefining one would bring a role rule back through a door the policies already open, so the check fails on it."
   },
   "databaseHalf": {
     "what": "The database no longer reads any role column to grant or deny anything (migration 0259, docs/decisions/2026-10-25-security-database-half.md).",

@@ -193,6 +193,9 @@ for (const mig of migFiles) {
     if (/\b(?:\w+\.)?roles\b[\s\S]{0,120}\.(?:key|kind|show_menu|home_path)\b|\br\.key\b/i.test(body) && !/is_admin|has_permission/i.test(name)) declare(mig, `function ${name} reads a role`, `function ${name} reads a role by key/kind`);
     if (definer && !trigger && !/has_permission\s*\(|is_admin\s*\(|role_can\s*\(/i.test(body)) declare(mig, `function ${name} definer`, `security definer function ${name} does not call has_permission(), is_admin() or role_can()`);
   }
+  for (const stub of registry.database?.stubs ?? []) {
+    if (new RegExp("create\\s+(?:or\\s+replace\\s+)?function\\s+(?:public\\.)?" + stub + "\\s*\\(", "i").test(sql)) declare(mig, `redefines stub ${stub}`, `redefines ${stub}(), which answers a constant today and is still called by policies; giving it a body would bring a rule back`);
+  }
   for (const m of sql.matchAll(/grant\s+[\w\s,]+\s+on\s+[\s\S]*?\s+to\s+(anon|public)\b/gi)) declare(mig, `grant to ${m[1].toLowerCase()}`, `grants to ${m[1]}, which needs no login at all`);
 }
 for (const k of declaredDb.keys()) if (!usedDb.has(k)) fail(`database.declared "${k}" matches nothing now. Delete the record.`);
