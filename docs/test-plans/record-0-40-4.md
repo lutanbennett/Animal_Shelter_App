@@ -29,7 +29,7 @@
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
-- [ ] CI green on the PR — deferred: read on the PR before merging; this plan is written before the PR exists
+- [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit. It is read on the PR before merging
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -72,7 +72,7 @@ the production apply — are recorded in the release file and were taken from pr
 - [x] Backlog item ticked — n/a in effect: no backlog item; nothing in `docs/backlog.md` is closed by writing a release record
 - [x] Non-obvious design choices: no new `docs/decisions/` file. The one deviation from the runbook this release made — verifying the test Pi before starting production's — is recorded **in the release file itself**, which is where a release's own choices belong; it changes no durable rule, so it does not warrant a decision file
 - [ ] `README.md` still accurate — n/a: nothing in `README.md` names the release record or the handover
-- [x] **Release notes.** `n/a: release paperwork. These two documents describe a release that has already shipped; no shelter user can see a release record or a handover, and this PR changes no code, page or string.`
+- [ ] **Release notes.** `n/a: release paperwork. These two documents describe a release that has already shipped; no shelter user can see a release record or a handover, and this PR changes no code, page or string.`
 - [x] Commit messages say why, not just what
 - [x] **Claims were measured, not reasoned.** The record's two load-bearing negative claims are each backed by a measurement rather than an argument: *this release did not cause the Doctor card loss* rests on `doctor-cells` reading **MISSING 12 of 13 identically before and after** the apply, and *the public site being closed is not a `0263` regression* rests on `/adopt` 307ing on **both** hosts plus `git diff --name-only` finding neither `public-site.ts` nor `public-paths.ts` in the range
 
