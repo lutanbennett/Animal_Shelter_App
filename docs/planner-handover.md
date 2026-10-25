@@ -1,174 +1,165 @@
-# Planner handover — edition `339`, 2026-10-24
+# Planner handover — edition `348`, 2026-10-25
 
-**A delta, tenth edition in this shape.** Its rules are the skill's step 8 — say what **changed**,
+**A delta, eleventh edition in this shape.** Rules are the skill's step 8 — say what **changed**,
 promote durable facts once, cite `.plan-day.md` rather than reproducing it.
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`** — if they
 disagree with this, they are right and this is stale. **Read first:** `CLAUDE.md` → the skill →
-`.plan-day.md` → this. **The next slug is `348`.**
+`.plan-day.md` → this. **The next slug is `357`.**
 
 > **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
 > release state, candidates. **Re-read every time, never diffed.**
 
 ---
 
-## What `330` asked for, and what happened
+## What `339` asked for, and what happened
 
-- **"Check whether the next performance stream adopts the item's framing." UNTESTED** — no
-  performance streams in these nine. Carry it.
-- **"Count the actual steps before banding a run group." UNTESTED again** — the walkthrough is still
-  held. Second edition running; carry it, but stop expecting it.
-- **"Keep the backlog-conflict lesson." FIRED, then held.** Batch 1's merge conflicted and was
-  resolved by hand; batch 2's and batch 3's were clean. **It has earned its place — keep it.**
-- **Its candidate list was accurate** — `0254`, the features table and the harness sweep all shipped.
-- **One thing it got wrong:** it listed *"the 47 red harnesses — a decision, not a stream"* as
-  pending. **Lutan answered it on 2026-10-24 and batch 1 merged the same day.** The real population
-  is **140 dev harnesses, 58 red, 48 remaining** (#900's measured table), not the 109/52 quoted for
-  days beforehand.
+- **"Never conclude 'the latest definition' from a `create or replace` grep." FIRED, and it was the
+  cheapest win of the round** — naming the live guards in the brief is what caught `0224`'s in-place
+  rewrite. **Keep it.**
+- **"Check whether #4 records the shape it chose for `cards.ts` on the database." FIRED** —
+  `docs/decisions/2026-10-24-cards-grants-app.md` exists and says why.
+- **"Is `AUDITED_TABLES` the deliverable most likely to be forgotten?" FIRED for #4** (`card_grants`
+  and `card_includes` are in) **and FAILED for the handoff** — see the dropped-handoff finding below.
+- **"Check PR state with `gh`, not the session list." FIRED AGAIN.** The app reported #916 as OPEN
+  when `gh` said MERGED. Third edition running; it has earned permanence.
+- **"Capture the actuals before archiving." FIRED** — four of five read while the processes were
+  alive. The fifth is the new figure-is-worthless case below.
+- **Its band discipline held: four of four measurable streams landed inside.** 235,169 · 149,754 ·
+  143,907 · 139,841, all `claude-sonnet-5-5` / `low`, all as recommended. **Dials matched the
+  recommendations for the first time in four rounds — do not read that as a model finding.**
+- **One thing `339` got wrong, and this edition must correct it loudly:** it carried the item's
+  framing that **the 45 page rules were "the big one" needing new cards.** They are almost certainly
+  not a breach at all. See below; it is the most expensive error of the round.
 
-## THE DEFINING FINDING, AND IT IS MINE: I gave Lutan an INFERENCE as a reading, and he acted on it
+---
 
-At batch 2 setup I told him the Doctor-cells fault was **live on production** and attached a standing
-caution not to touch that row. **The whole chain was inferred:** `0230` is applied to production →
-`0230` writes cells straight into `role_permissions` → therefore production carries dev's broken
-state. Every step true; **the conclusion false.**
+## THE DEFINING FINDING, AND IT IS MINE: I turned an absolute instruction into a plan with stages, four times
 
-**#901 — the read-only production check Lutan had pulled forward into that same batch — disproved it
-within the hour.** Production holds **13 cells, 5 cards, 9 extras**, all 13 of `0230`'s cells present,
-against dev's **14 / 3 / 1**. A card save had already happened there and **nothing was stripped**;
-production had diverged from dev because the roles screen was used on it.
+**Lutan's rule arrived 2026-10-24 as *"zero exceptions"*.** By the next afternoon I had turned it into
+a *Hidden security screen*, then a cheapest-first removal, then an `AskUserQuestion` offering him
+**four orderings to choose between**. He said it four times, ending with *"No more little bit here and
+then fix some other stuff I want it all gone right now"* and *"I don't know why it's taken so long for
+you to understand my instruction."*
 
-Three things to take from it, in order of what they cost:
+**He killed two streams himself, and both kills were right:**
 
-1. **"Verify against the field the code actually reads" binds the PLANNER HARDEST, because nobody
-   checks the planner.** A stream's claim meets a reviewer, CI and a test plan. Mine went straight to
-   Lutan as advice, with a behavioural instruction attached.
-2. **An inference has no timestamp, so nothing will ever correct it.** The skill's rule 2 read from
-   the other end: a measurement decays visibly and invites a re-read; a derived claim just sits there
-   sounding true. **If you cannot name the command you ran, do not state it to him as fact** — say
-   "not established", for which the backlog already has a convention.
-3. **It was caught only because the capability existed**, and it existed because he swapped that
-   stream in *on the strength of my wrong claim*. **The planner's unverifiable assertions are exactly
-   what a read-only production check is for. Reach for it first.**
+1. **The *Hidden security screen*** — *"Why are we building a hidden security screen? There should be
+   no hidden security."* It was redundant (the registry, the blocking check and `tileBlock()`'s
+   named-rule warning already showed the list) **and wrong in kind**: it would have made the debt
+   something the app *displays and manages* rather than something being deleted.
+2. **`harness-sweep-batch-2`** — *"would our time not be better spent actually removing the
+   security?"* Seven of its ten harnesses tested the model being removed, and one,
+   `check-perm-convert-residents`, **demands that every resident policy consult
+   `roles.scope_residents`** — a column on the removal list — so making it green would have **added**
+   hard-coded security.
 
-Corrected on the item and in its title (`7207d177`), with the one thing still genuinely unestablished
-named: whether production's cells are **exactly** the union of cards and extras. `doctor-cells` tests
-presence, `role-cells` counts, **neither tests the union**, and the harness that does refuses
-production by design. **Follow-up on the item: a `cards-union` check**, one entry in
-`scripts/lib/readonly-checks.mjs`.
+**All of these are now promoted into the skill** (step 2's figure rule, step 3's hold rule, step 4's
+absolute-instruction block, step 7's handoff rule). **Do not re-derive them from this document; it
+gets replaced.** The one-line version: **offering a choice feels like deference and reads as delay.**
 
-## THE OTHER FINDING: a browser MATRIX costs ~5k per screen-state — the flat ~30k is for about SIX
+## AND THE MEASUREMENT THAT SHOULD HAVE COME FIRST: the job is a fraction of the size I said
 
-**The round's only overrun, +26%, and the cause is arithmetic, not judgement.** The skill's
-`assistant-immunization` reading says a brief asking for real browser verification adds ~30k whatever
-the code shape — **measured on a handful of screens.** I then wrote a brief asking for four switch
-combinations across six screens at two widths: **about 24 screen-states, priced at ~30k.**
+`canOpen()` tests `route.scope` **before** the activity test; the activity half resolves through
+`role_permissions`, which **since `0257` the database computes from `card_grants` alone**. So the
+activity half of a page rule is **already card-derived**, and the breach inside `routes.ts` is
+**seven `route.scope` entries**, not 45 page rules. **No new cards, no migration, one PR.**
 
-Subtract the non-browser work (~15 call sites plus a small Settings surface — the 185–250k row, so
-~210k) from the actual **327,032** and the matrix cost **~117k, about 5k a state.**
+**A job that looks like a programme is worth one hour of reading before it becomes a plan.** Three
+batches were built on the unread assumption.
 
-**So count the states and multiply.** Same shape as the walkthrough rate (`88k + 9.8k × steps`) and
-**the same failure mode: the rate was never wrong, the count was.** Batch 3's #7 carries ~10 states at
-this rate and is the test; promote it into the skill's band table once a second reading confirms it.
+**Two of my own gap figures were wrong in the same area, and both are recorded on the item so nobody
+quotes them:** **32** pages "no card opens" (wrong method — it asked which cards *name* a page in
+`opens:`), then **10** (read `cards.ts` without `jobs.ts`). **`CARDS` is `NEW_CARDS` plus the jobs in
+`jobs.ts`** — read both, every time. **The answer is six.**
 
-## Two band facts, recorded in `.plan-day.md` rather than repeated here
+---
 
-- **"Nothing left to discover" now reaches DESIGN jobs.** #901 was banded 170–220k because it had to
-  design a mechanism, and came in at **141,813**: the brief had pre-decided its constraints, handed it
-  the gap analysis and named its first check. **Keep the higher band only where the stream must choose
-  its own constraints.**
-- **A measurement trap, PROMOTED into the skill (step 2):** `get_usage`/`get_session` take
-  **`session_id`, not `sessionId`**; the wrong key silently returns the planner's own context with
-  `status: "ok"`. It nearly put three fabricated actuals in the plan. **The skill now says to read
-  `context.session` on every call.**
+## WHAT LUTAN DECIDED, and none of it is to be re-opened
 
-## Nine measured: seven inside or under, one over, one at the edge
+- **ADMIN SITS OUTSIDE THE CARD SYSTEM.** *"I am happy for admin access = all to be hard coded"*, *"It
+  should sit outside the card system"*, *"Admin always has access to everything"*, *"No matter what
+  cards exist or don't exist."* **Now in `CLAUDE.md` as the scope of the rule rather than an exception
+  to it** — so *"zero exceptions"* stays true within the card system. Admin is never given cards, is
+  not debt, is not a precedent, and **must not be reimplemented as "Admin holds every card"** (the
+  short-circuit runs before any cell is read, which is what the ruling requires). **Never put it to
+  him again.**
+- **The release waits for batch 3.** Asked directly, he chose *after batch 3 merges*, with the cost
+  stated. The live Volunteer fault stays open until then — **his call, made with the facts.**
+- **The harness sweep is held**, with the reason on the item.
+- **`test-plan` stays advisory. A red `audit` cannot block.** Unchanged, and never his to re-answer.
 
-Figures, dials and bands are in `.plan-day.md`'s measurement table — **cited, not reproduced.** All
-nine **completed and opened their own PRs**, so every figure is band evidence: batch 1 three for three
-inside, batch 2 one over and two under, batch 3 live.
+## WHAT HE DID HIMSELF, and what it changes for you
 
-**Every stream ran `sonnet-5-5` / `low`, matching the recommendation for the first time in three
-rounds** — and there is still **no model finding worth the name.** Brief quality moved these numbers;
-the dials did not. Keep recording; keep not promising comparisons.
+**He put the Director on Admin on production**, so she is not blocked while the removal runs:
+*"she will not be impacted by 'can't do something'."* **Correct — both layers bypass**
+(`can.ts`'s `isAdmin`, and `has_permission()`'s `r.key = 'admin'`).
 
-## File ownership broke twice — the cause is STRUCTURAL, so fix the split, not the stream
+**Two consequences a planner must carry:**
 
-Both breaches were in `scripts/`, both declared in the PR, neither collided. #903 had to edit
-`check-permission-catalogue.mjs` and `scripts/lib/acceptance-matrix-entries.mjs` because **they refuse
-a new page or manual topic that is not registered, so lint fails without them.**
+- **It removes the release risk `339` would have flagged** — Management's extras stop counting when
+  `0257` applies, and that can no longer lock her out. **Deferred, not cancelled:** it still happens
+  to the Management role itself.
+- **IT ALSO HIDES THE THING THE CARD WORK EXISTS TO FIX.** With her on Admin, **nobody notices if
+  Management's cards are wrong, because she is bypassing them.** Management must be tested
+  deliberately with a Management login, never inferred from her working normally. **This is the
+  masking pattern arriving by a different door, and it is written onto both card-review items.**
 
-**That is an ownership split that ignored a hard dependency, not a discipline failure.** Written into
-batch 3's #7 as files it owns. **General form: before assigning a directory to one stream, ask which
-files every OTHER stream is structurally forced to touch.**
+**He was also right to narrow my 2-step caution:** the second step gates **three** pages — Security,
+Who does what, Stocktaking — **all Admin-only already**, so it stands in front of powers she is
+gaining, never anything she had. *"which she wasn't managing before anyway as a management role."*
 
-## My own mitigations — fired, held, or retired
+---
 
-- **"Give #901 a live first check and make it print the answers." FIRED, and it corrected me.** The
-  strongest mitigation result yet recorded here. **RETIRED — nothing further to check.**
-- **"Tell the schema half to note, not tick." FIRED**, third round holding. #902's item reads
-  `SCHEMA HALF DONE … this item stays open: the app half`.
-- **"Tell the stream to put shared dev state back." FIRED.** #903 flipped both switches back on, said
-  so, and reproduced the pre-change figures.
-- **"Put the settled answer where a stream will look." FIRED.** #903 did not ask about safety stock.
-- **CARRIED: STEP ZERO with the planner's evidence pasted in.** Seven rounds, held every time.
-- **NEW:** #7 is told `AUDITED_TABLES` is the deliverable most likely to be forgotten, because the
-  feature works without it. **If a sentence is not enough, it must become a checker.** Batch 3's other
-  new mitigations are in `.plan-day.md`.
+## THE ONE GAP IN THE BYPASS, and it is NOT ESTABLISHED
 
-## For the release manager
+**`sees_all_residents()` has no admin check** — it asks only `r.scope_residents = 'all'`, and the
+resident policies call it *beside* `has_permission()`. **So if the admin role's own `scope_residents`
+is not `all`, resident reads stay narrowed even for an Admin.** The read-only production checks
+(`role-cells`, `role-cards`) **do not list the admin role at all**, so its column values cannot be
+read with what exists. **Settle it on dev, or add the role columns to a read-only check.** The
+database half of the removal retires it for good.
 
-- **`0.40.0` is DEPLOYED and mailed, fully signed off**, and `0253` — last edition's live security fix
-  — **is applied to production.** Both closed.
-- **Re-read what is pending yourself; do not take a count from here.** Whatever was pending and
-  whatever `unreleased` held when this was written **will have moved.**
-- **A release is the natural step once batch 3 merges**, which adds the features screen's note.
-- **Three things wait on Lutan from #903**, in its test plan's *Left for manual verification* table:
-  the Settings → Stocktaking button at aal2, the Thai wording, the page on a real phone. **None blocks
-  a release.**
-- **A middle-number bump is a MAJOR release by this project's numbering**, mails every admin and cannot
-  be undone. **That decision is Lutan's** — confirm he made it rather than inferring it.
+## THE RELEASE HAS A PROVEN ORDERING CONSTRAINT — give this to the release manager verbatim
 
-## Rulings worth not re-deriving — cited, not summarised
+**Apply `0257` and `0258` to production BEFORE deploying the app.** Two independent reads, 2026-10-25:
+`role-cards-coverage` **cannot run** against production until `0257` lands (`42883: function
+card_closure(text[]) does not exist`), and `loadCardGrants()` **throws rather than falling back to the
+seed** — deliberately — so an app deploy ahead of the migration breaks Who does what for the Director.
+**Order: migrations → the check prints nothing → deploy.**
 
-- **The card and role walkthroughs are both HELD** behind the security rebuild — Lutan, 2026-10-23.
-  Still the most consequential ruling on the board.
-- **Build the features table on today's 13 names** — Lutan, 2026-10-24: *"Yes build it now as it will
-  help me in completing the PDF."* **Closed; do not re-ask it.**
-- **Sweep the red harnesses in a bounded batch, permissions first** — Lutan, 2026-10-24. **Closed, and
-  `330` was wrong to list it as pending.**
-- **Kidney Support: 1 can per serving, servings 0.5 / 1 / 1.5**; **a serving is ONE DAY's food** —
-  Lutan, 2026-10-22/23.
-- **`test-plan` is ADVISORY permanently.** Do not raise it; do not list it as a decision he owes.
+---
 
-## Next round's candidates
+## THE DROPPED HANDOFF, and the instructive part is that the mitigation half-worked
 
-The next chat plans; this is only where the board points. **Batch 3 is live as you read this** — check
-whether it merged before planning anything.
+Batch 2 told #5 to **ask** rather than edit the file #4 owned. **No collision — that half fired.** But
+#5 found a job that genuinely belonged to #4, wrote it into **its own completion note**, and
+`site_content` was **never on #4's brief** — so #4 added its own two tables and not that one, entirely
+fairly. **The piece then landed inside a ticked item**, which is invisible work at its purest. A
+website editor now hides a public page and Recent changes does not show it. **Filed, folded into a
+stream, and promoted into the skill.**
 
-1. **Batch 4 is already priced in `.plan-day.md`:** #9 `diets-columns-drop` (slot `0257`, a
-   view-and-function rewrite *before* the drop, **not** a single-file schema PR) and #11
-   `website-page-visibility-app`, which is **large** — a new surface that also retires four
-   hand-maintained link lists. **Do not let it be priced as "the app half of a small schema PR".**
-2. **The feature-list mark-up → steps 2 and 3 of the rebuild** — his, still the biggest lever, unmoved
-   in twelve streams. **The features table and screen were built so that acting on it is a few clicks.**
-3. **Add a named check per held security fault** to `check-production.mjs`. Seven items are held behind
-   the rebuild, three of them real faults, each carrying *"if it blocks a live role on production,
-   raise it with Lutan"* — **now answerable, and a planning question, not his.**
-4. **48 red harnesses remain**, in bounded batches, permissions first. Approved; just schedule it.
-5. **Raise HSTS to a year** — one line, **not before 2026-11-08**.
+## Still carried, unchanged
 
-**The buildable pool is thin and it is not a backlog fault:** 24 Public website and Fundraising items
-wait on the Director and contain no code. **#10/#11 are the exception** — the one pair needing nothing
-from her, and he marked it *wanted before go-live*.
+- **Model, effort, and which allowance to spend are his. Never block paid usage** — report, forecast,
+  then work.
+- **A release's cut and record PRs, and the two handover PRs, merge on green CI without asking.**
+- **A measurement has a timestamp; a fact does not.** This document is never a source for release
+  state, PR numbers, migration numbers or open counts.
+- **Never write scratch output above the repo.** `git show <rev>:<path>` still lies about dotted paths.
+- **`worktree.mjs done` refusing is information.** It refused the diets folder on 2026-10-25 and was
+  right: the branch held two finished commits. **`--force` would have discarded a morning's work.**
 
-## Writing the next one
+## NEXT ROUND POINTS AT
 
-**The rules are in the skill, step 8.** Offer it; never on an ambiguous yes, and **read step 6's
-counting rules before writing a number** — a batch counts once, at setup, however often it is
-re-planned. Branch, worktree, test plan, PR, then **merge it yourself on green CI** — never a gate.
-This one is `claude/planner-handover-339`, after #895 (`330`) and #876.
-
-**What could go next time:** the performance-framing and run-group warnings have sat untested for two
-editions — **drop them if a third round does not exercise them.** **Keep** the inference lesson and the
-browser-matrix rate until each has a second reading; the backlog-conflict lesson has fired and stays.
+1. **The removal PR** — all nine breaches, one PR, port 3010. Then the **database half** as its own
+   schema PR, whose scope that PR lists for you.
+2. **`diets-stop-writing-old-columns` is BUILT with no PR** (two commits, 2026-10-25 07:42). It needs
+   a session to open the PR and nothing else.
+3. **Then the release** — `0257` + `0258`, in the order above. Major vs minor and the deploy are his.
+4. **The two card reviews**, both filed as next up: do cards deliver what they advertise, and the
+   **six** missing Management/Operations cards (propose, do not create — each needs `card_grants`
+   rows, so building them is a schema PR after he approves the set).
+5. **Take Admin back off the Director** once Management's cards are in and she can do her whole job on
+   Management. The revert condition is on the item; **a temporary production access change with no
+   written trigger becomes permanent silently.**
