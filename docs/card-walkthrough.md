@@ -21,7 +21,7 @@ node scripts/dev-signin.mjs --cards <card key> --port <your port>
 1. Open `/operations/medication-list`: it loads.
 2. **See:** Prescriptions: what should be given (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 3. **See:** A resident's details, housing and history (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-4. **Refused:** open `/medical/weight` (the page of **Record Weight**, which this login does not hold). Expect a refusal or redirect, not the page.
+4. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -33,7 +33,7 @@ Result: pending
 1. Open `/medical/weight`: it loads.
 2. **Do:** Weight. Use a disposable record named `walk-record_weight`. **Read-back:** the list shows "Saved: <name>, <kg>", and opening that resident on /medical/weight reads "Last time: <kg>, <date>" and "Today already has <kg>" (one weight per resident per day; a second save replaces it).
 3. **See:** A resident's details, housing and history (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+4. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -43,9 +43,9 @@ Result: pending
 
 0. Sign in with `--cards add_medical_photos`. The home screen shows the **Add Medical Photos** tile (or the tile of a card that includes it).
 1. Open `/medical/photos`: it loads.
-2. **Do:** Add a photo to a resident. Use a disposable record named `walk-add_medical_photos`. **Read-back:** the page counts the photo as added; it is filed in the resident's Medical folder, never on the website, and this card cannot look at it again, so also confirm it on the resident's record with a login that holds a record card.
+2. **Do:** Add a photo to a resident. Use a disposable record named `walk-add_medical_photos`. **Read-back:** the page counts the photo as added; it is filed in the resident's Medical folder, never on the website; this card cannot look at it again, so also confirm it on the resident's record with a login that holds a record card.
 3. **See:** A resident's details, housing and history (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+4. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -57,7 +57,7 @@ Result: pending
 1. Open `/medical/diets`: it loads.
 2. **See:** A resident's diet (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 3. **See:** A resident's details, housing and history (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+4. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -74,7 +74,7 @@ Result: pending
 6. **See:** Enclosures and zones (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 7. **Do:** Add and remove a job's photos. Use a disposable record named `walk-do_maintenance`. **Read-back:** the job page /maintenance/<id> counts the photo under Before (the problem as found) or After (the finished work).
 8. **Do:** Ask the assistant a question. Use a disposable record named `walk-do_maintenance`. **Read-back:** the answer shows in the assistant panel opened by the Assistant button in the header, and writes no row to any page.
-9. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+9. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -118,7 +118,7 @@ Result: pending
 0. Sign in with `--cards view_residents`. The home screen shows the **View residents** tile (or the tile of a card that includes it).
 1. Open `/residents`: it loads.
 2. **See:** A resident's details, housing and history (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+3. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -137,10 +137,10 @@ Result: pending
 7. **TODO:** Send to hospital and bring back. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
 8. **TODO:** Foster, adopt, return to the shelter. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
 9. **TODO:** Record a death. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
-10. **Do:** Add a photo to a resident. Use a disposable record named `walk-residents`. **Read-back:** the page counts the photo as added; it is filed in the resident's Medical folder, never on the website, and this card cannot look at it again, so also confirm it on the resident's record with a login that holds a record card.
+10. **Do:** Add a photo to a resident. Use a disposable record named `walk-residents`. **Read-back:** the page counts the photo as added; it is filed in the resident's Medical folder, never on the website; it then shows on /residents/<id>/photos as a tile with its folder and date (a Profile tag if it is the profile photo).
 11. **Do:** Refile or remove a photo, choose the profile photo. Use a disposable record named `walk-residents`. **Read-back:** tap the photo on /residents/<id>/photos: Move to folder changes the folder its tile reads (Medical to Foster read "Foster · <date>"), Remove photo and Current profile photo sit beside it (answered 2026-10-23).
-12. **TODO:** Put a resident's photo on the public website. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
-13. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+12. **Do:** Put a resident's photo on the public website. Use a disposable record named `walk-residents`. **Read-back:** a photo is public once it is filed under Foster or Adoption rather than Medical (the Foster folder says it can appear on this resident's Adopt page): pick that folder when adding on /photos/add, or use Move to folder on /residents/<id>/photos. The controls on that page are Mark as posted (social), Remove, Current profile photo and Move to folder; there is no separate publish button.
+13. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -159,7 +159,7 @@ Result: pending
 7. **Do:** Weight. Use a disposable record named `walk-medical_records`. **Read-back:** the list shows "Saved: <name>, <kg>", and opening that resident on /medical/weight reads "Last time: <kg>, <date>" and "Today already has <kg>" (one weight per resident per day; a second save replaces it).
 8. **Do:** A resident's diet. Use a disposable record named `walk-medical_records`. **Read-back:** the resident's Diet page (/residents/<id>/diet) lists it under Current with meals a day and the amounts at the resident's size (answered 2026-10-23).
 9. **Do:** Remove a medical record entered by mistake, and restore it. Use a disposable record named `walk-medical_records`. **Read-back:** Remove, with an optional reason, on any medical row: the row leaves the list and the chart and the page reads "1 removed hidden"; Show removed lists it with Restore, which brings it back (done on a weight entry; answered 2026-10-23).
-10. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+10. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -172,7 +172,7 @@ Result: pending
 1. Open `/upcoming-visits`: it loads.
 2. **Do:** Book a vet visit. Use a disposable record named `walk-book_clinic_visits`. **Read-back:** the visit shows on that resident's page and in the shelter's list of visits (/upcoming-visits).
 3. **See:** Vet visits and how they went (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+4. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -294,7 +294,7 @@ Result: pending
 1. Open `/photos/add`: it loads.
 2. **TODO:** Add a resident's photo to the Shelter folder only (shown on the website once approved). Do it on a disposable record named `walk-add_photos`. Question: where should this write show afterwards (which page, which row)?
 3. **See:** A resident's details, housing and history (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+4. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -307,7 +307,7 @@ Result: pending
 2. **TODO:** Approve or remove the photos waiting in Photos to approve. Do it on a disposable record named `walk-approve_photos`. Question: where should this write show afterwards (which page, which row)?
 3. **Do:** Refile or remove a photo, choose the profile photo. Use a disposable record named `walk-approve_photos`. **Read-back:** tap the photo on /residents/<id>/photos: Move to folder changes the folder its tile reads (Medical to Foster read "Foster · <date>"), Remove photo and Current profile photo sit beside it (answered 2026-10-23).
 4. **See:** A resident's details, housing and history (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-5. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+5. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 

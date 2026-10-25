@@ -188,6 +188,32 @@ Never copy another plan's outstanding items into the cut plan's own
 **Left for manual verification** table — they belong to their plans and their
 signatures, and copying them gives them a second home that nothing closes.
 
+### Audit the production dependencies (every release, before any deploy)
+
+The PR `audit` job runs only on a PR that changes `package.json` or `package-lock.json`
+(Lutan, 2026-10-25; `docs/decisions/2026-10-25-audit-on-releases-not-every-pr.md`), so this
+is the step where the advisory check is made by someone who will act on it. A new advisory
+about a package that merged weeks ago is caught by the daily `advisories.yml` run within a
+day and, at the latest, here.
+
+On the release SHA (the main checkout, after the `npm ci` in step 1):
+
+```bash
+npm run audit:prod
+```
+
+- **Nothing high or critical** — fine; write "audit: clean" in the release record.
+- **A high or critical** — either it already has a decision file saying why it is not
+  reachable in this app (`docs/decisions/`; name it in the record), or **stop the release**
+  and fix it, then audit again. Do not carry on to the cut on the grounds that the PR check
+  is `continue-on-error`: that flag stops a *PR* being blocked, and this is not a PR.
+- **Inconclusive** (the registry timed out, no advisory printed) — run it once more; if it
+  is still silent, say "audit inconclusive" in the record rather than "clean".
+- Never `npm audit fix --force`: it can move a dependency backwards across a major
+  version (it offered to drag the Cloudflare chain back to `wrangler@4.15.2` on 2026-10-07).
+
+Record the result under "Before the deploy" in the release record.
+
 ## 4. Cut the release
 
 Its own small PR, from its own worktree — never in the main checkout:

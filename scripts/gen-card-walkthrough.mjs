@@ -42,7 +42,18 @@ export const READBACK = {
   "resident.register": "the new resident shows in /residents",
   "placement.move": "the resident's page shows the new enclosure",
   "medical.weight": "the list shows \"Saved: <name>, <kg>\", and opening that resident on /medical/weight reads \"Last time: <kg>, <date>\" and \"Today already has <kg>\" (one weight per resident per day; a second save replaces it)",
-  "photos.resident_add": "the page counts the photo as added; it is filed in the resident's Medical folder, never on the website, and this card cannot look at it again, so also confirm it on the resident's record with a login that holds a record card",
+  "photos.resident_add": "the page counts the photo as added; it is filed in the resident's Medical folder, never on the website",
+  "photos.resident_publish": "a photo is public once it is filed under Foster or Adoption rather than Medical (the Foster folder says it can appear on this resident's Adopt page): pick that folder when adding on /photos/add, or use Move to folder on /residents/<id>/photos. The controls on that page are Mark as posted (social), Remove, Current profile photo and Move to folder; there is no separate publish button",
+};
+
+// Added to the read-back of an activity when the card ALSO holds the activity that lets it look again (answered by hand:
+// a login holding photos.resident_manage sees the photo on /residents/<id>/photos). Without it the card cannot see its own write.
+const LOOK_AGAIN = {
+  "photos.resident_add": {
+    needs: "photos.resident_manage",
+    yes: "; it then shows on /residents/<id>/photos as a tile with its folder and date (a Profile tag if it is the profile photo)",
+    no: "; this card cannot look at it again, so also confirm it on the resident's record with a login that holds a record card",
+  },
 };
 
 // The two tiles on the home screen that are not cards of their own (tiles.ts). Each opens the page of the card named.
@@ -62,17 +73,26 @@ function findActivityLabels(node) {
   return null;
 }
 
+/** Every activity the card gives: its own bundle and, recursively, that of each card it includes. */
+function heldActivities(card, CARDS) {
+  const acts = new Set(card.bundle.map((b) => b.activity));
+  for (const k of card.includes ?? []) for (const a of heldActivities(CARDS[k], CARDS)) acts.add(a);
+  return acts;
+}
+
 /** Steps for one card: the ones its own bundle gives, then the refusal. Numbered by the caller. */
 export function stepsFor(card, cat) {
   const { CARDS, CARD_KEYS, ACTIVITIES, labels } = cat;
   const kind = Object.fromEntries(ACTIVITIES.map((a) => [a.key, a.kind]));
   const steps = [];
   const own = `walk-${card.key}`;
+  const held = heldActivities(card, CARDS);
   for (const { activity, level } of card.bundle) {
     const label = labels[activity] ?? activity;
     const writes = kind[activity] === "yesno" || level === "edit";
     if (writes) {
-      const back = READBACK[activity];
+      const look = LOOK_AGAIN[activity];
+      const back = READBACK[activity] && READBACK[activity] + (look ? (held.has(look.needs) ? look.yes : look.no) : "");
       steps.push(
         back
           ? `**Do:** ${label}. Use a disposable record named \`${own}\`. **Read-back:** ${back}.`
@@ -83,11 +103,21 @@ export function stepsFor(card, cat) {
     }
   }
   // The point of a one-card login: a page this card does not give must be refused, not quietly opened.
+  // A page is only a fair refusal if nothing this login holds (its own bundle, or that of a card it includes) is also in
+  // the other card's bundle: a card holding medical.prescriptions legitimately opens the medication list, whose card
+  // (Administer Medication) bundles the same activity. A card with no bundle (the two landing pages) opens for the floor.
   const given = new Set([card.key, ...(card.includes ?? [])]);
   const mine = card.opens;
   // /residents and /my open for every role that opens the app (the floor, 0134), so they prove nothing as a refusal.
   const open = new Set(["/residents", "/my"]);
-  const other = CARD_KEYS.map((k) => CARDS[k]).find((c) => !given.has(c.key) && !open.has(c.opens) && c.opens !== mine);
+  const other = CARD_KEYS.map((k) => CARDS[k]).find(
+    (c) =>
+      !given.has(c.key) &&
+      !open.has(c.opens) &&
+      c.opens !== mine &&
+      c.bundle.length > 0 &&
+      !c.bundle.some((b) => held.has(b.activity)),
+  );
   if (other) {
     steps.push(`**Refused:** open \`${other.opens}\` (the page of **${other.label(cat.en)}**, which this login does not hold). Expect a refusal or redirect, not the page.`);
   }

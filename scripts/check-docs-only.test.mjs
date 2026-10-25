@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { classify, isDocPath } from "./check-docs-only.mjs";
+import { classify, depsChanged, isDocPath } from "./check-docs-only.mjs";
 
 test("docs/ and root markdown are documents", () => {
   assert.equal(isDocPath("docs/release-handover.md"), true);
@@ -60,4 +60,15 @@ test("a migration alone is never docs-only", () => {
   // The case that matters most: 0231 narrowed a public view, and public-views is
   // one of the jobs this gate can skip.
   assert.equal(classify(["supabase/migrations/0231_public_photos_exclude_videos.sql"]).docsOnly, false);
+});
+
+test("the audit runs when the package list changed, or when we cannot tell", () => {
+  assert.equal(depsChanged(["src/app/page.tsx"]), false);
+  assert.equal(depsChanged(["docs/backlog.md", "scripts/deploy.mjs"]), false);
+  assert.equal(depsChanged(["package.json"]), true);
+  assert.equal(depsChanged(["src/a.ts", "package-lock.json"]), true);
+  // A nested package.json is not the package list.
+  assert.equal(depsChanged(["worker/package.json"]), false);
+  // An unreadable diff: audit anyway.
+  assert.equal(depsChanged([], false), true);
 });

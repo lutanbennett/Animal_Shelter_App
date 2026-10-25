@@ -41,6 +41,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       docs-only: ${{ steps.classify.outputs.docs-only }}
+      deps-changed: ${{ steps.classify.outputs.deps-changed }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -234,9 +235,16 @@ jobs:
   # are always someone's mistake to fix, this one's are not. Read the log on
   # the PR; act on a high or critical with a fix available. A daily run in
   # advisories.yml covers the days with no PR, and fails on purpose.
+  #
+  # Scoped 2026-10-25 (docs/decisions/2026-10-25-audit-on-releases-not-every-pr.md): it runs only on a PR that
+  # changes package.json or package-lock.json, because a PR that touches no dependency cannot change what the audit
+  # says, and a check that is red on most PRs and ignored is not adding value. The advisory check that someone acts
+  # on is the release step (docs/release-procedure.md, "Audit the production dependencies"), with the daily run
+  # between. A PR that skips this job shows it as SKIPPED, which is not a pass that checked something. The timeout,
+  # the retry and continue-on-error below are exactly as before. Do not "tidy" advisories.yml to match.
   audit:
     needs: changes
-    if: github.event_name == 'pull_request' && needs.changes.outputs.docs-only != 'true'
+    if: github.event_name == 'pull_request' && needs.changes.outputs.deps-changed == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     continue-on-error: true

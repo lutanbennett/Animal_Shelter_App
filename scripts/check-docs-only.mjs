@@ -35,6 +35,19 @@ export function isDocPath(path) {
   return /^[^/]+\.md$/.test(path);
 }
 
+/** The package list: the only change that can put a new dependency, or a new version of one, in front of `npm audit`. */
+export function isDependencyPath(path) {
+  return path === "package.json" || path === "package-lock.json";
+}
+
+/**
+ * Does this diff change the package list? Errs towards true (audit it) when the diff could not be read, like docsOnly
+ * errs towards false: a skipped audit that should have run is the only wrong answer.
+ */
+export function depsChanged(paths, readable = true) {
+  return !readable || paths.some(isDependencyPath);
+}
+
 /**
  * @returns {{ docsOnly: boolean, reason: string, paths: string[] }}
  */
@@ -66,16 +79,22 @@ function main() {
   const base = baseArg === -1 ? null : argv[baseArg + 1];
 
   let result;
+  let readable = false;
+  let changed = [];
   if (!base) {
     result = { docsOnly: false, reason: "no --base given (a push to main, or run by hand)", paths: [] };
   } else {
     try {
-      result = classify(changedFiles(base));
+      changed = changedFiles(base);
+      readable = changed.length > 0;
+      result = classify(changed);
     } catch (err) {
       result = { docsOnly: false, reason: `could not read the diff: ${err.message}`, paths: [] };
     }
   }
 
+  const deps = depsChanged(changed, readable);
+  console.log(`deps-changed: ${deps}`);
   console.log(`docs-only: ${result.docsOnly} — ${result.reason}`);
   for (const p of result.paths.slice(0, 20)) console.log(`  ${p}`);
   if (result.paths.length > 20) console.log(`  … and ${result.paths.length - 20} more`);
