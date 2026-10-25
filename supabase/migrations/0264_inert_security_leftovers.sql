@@ -620,7 +620,7 @@ $function$;
 CREATE OR REPLACE FUNCTION public.current_doctor_resident_ids()
  RETURNS SETOF uuid
  LANGUAGE sql
- STABLE SECURITY DEFINER
+ STABLE
  SET search_path TO 'public'
 AS $function$
   select current_clinic_resident_ids();
@@ -629,7 +629,7 @@ $function$;
 CREATE OR REPLACE FUNCTION public.current_user_clinic_ids()
  RETURNS uuid[]
  LANGUAGE sql
- STABLE SECURITY DEFINER
+ STABLE
  SET search_path TO 'public'
 AS $function$
   select '{}'::uuid[];
