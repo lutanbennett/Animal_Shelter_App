@@ -74,19 +74,11 @@ begin
   update public.user_roles set starts_on = null where user_id = v_user and role_id = v_mnt;
   if not public.has_permission(v_act) then raise exception 'FAIL 2 an open-ended extra role does not count'; end if;
 
-  -- 3. restrictions need every role restricted
-  delete from public.user_roles where user_id = v_user and not is_main;
-  update public.user_roles set role_id = v_doc where user_id = v_user and is_main;
-  if not public.is_clinic_login() or not public.photos_medical_only() then raise exception 'FAIL 3 a plain doctor is not restricted'; end if;
-  insert into public.user_roles (user_id, role_id, is_main) values (v_user, v_med, false);
-  if public.is_clinic_login() then raise exception 'FAIL 3 doctor + head still a clinic login'; end if;
-  if not public.sees_all_clinical() then raise exception 'FAIL 3 doctor + head does not see all clinical'; end if;
+  -- 3. (removed by 0264) restrictions need every role restricted: is_clinic_login(), photos_medical_only(), on_volunteer_floor()
+  -- and the sees_all_*() functions answered a constant since 0259, and were dropped. A role's reach is its cards.
   delete from public.user_roles where user_id = v_user and not is_main;
   update public.user_roles set role_id = v_vol where user_id = v_user and is_main;
-  if not public.on_volunteer_floor() then raise exception 'FAIL 3 a plain volunteer is not on the floor'; end if;
   insert into public.user_roles (user_id, role_id, is_main) values (v_user, v_mgt, false);
-  if public.on_volunteer_floor() then raise exception 'FAIL 3 volunteer + management still on the floor'; end if;
-  if not public.sees_all_residents() then raise exception 'FAIL 3 volunteer + management does not see all residents'; end if;
 
   -- 4. once in app_users
   select count(*) into v_n from private.app_users where id = v_user;

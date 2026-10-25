@@ -154,11 +154,9 @@ if (cardsArg) {
   const bad = cardKeys.filter((k) => !isCardKey(k));
   if (!cardKeys.length || bad.length) throw new Error(`not card keys: ${bad.join(", ") || "(none given)"}. Cards: ${CARD_KEYS.join(", ")}`);
   role = cardRoleKey(cardKeys);
-  // Resident scope "all", clinical scope "any". "who_and_where" was the first choice and was wrong: it is on_volunteer_floor(),
-  // so /residents/[id] redirects the login to /r/[id] and no card could reach the resident hub. The cards decide what the login
-  // can do; the scope only decides which residents it sees (docs/decisions/2026-10-22-card-logins-get-a-real-scope.md).
+  // The cards decide what the login can do. The role columns that once scoped it (opens_app, scope_*) were dropped by 0264.
   const { error: upErr } = await service.from("roles").upsert(
-    { key: role, name: `Dev sign-in: ${cardKeys.join(", ")}`.slice(0, 120), kind: "custom", opens_app: true, home_path: "/home", scope_residents: "all", scope_clinical: "any" },
+    { key: role, name: `Dev sign-in: ${cardKeys.join(", ")}`.slice(0, 120), kind: "custom", home_path: "/home" },
     // No ignoreDuplicates: a throwaway role made by an older run (who_and_where) is corrected on the next run.
     { onConflict: "key" },
   );

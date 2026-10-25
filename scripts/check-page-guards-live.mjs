@@ -75,7 +75,7 @@ try {
   // A configured role that opens the app, holds one unrelated cell and no resident.record,
   // and is not on the volunteer floor (scope_residents stays all).
   const { data: role, error: rErr } = await service.from("roles").insert({
-    key: `harness_norecord_${tag}`, name: `Harness no record ${tag}`, kind: "custom", opens_app: true, home_path: "/home",
+    key: `harness_norecord_${tag}`, name: `Harness no record ${tag}`, kind: "custom", home_path: "/home",
   }).select("id").single();
   if (rErr) throw rErr;
   customRoleId = role.id;

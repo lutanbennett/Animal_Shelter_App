@@ -185,8 +185,6 @@ async function run() {
     check(!error, `${login.name}: signs in with the temporary password the page showed`, error?.message);
     if (error) continue;
 
-    const { data: onFloor } = await ssr.rpc("on_volunteer_floor");
-    check(onFloor === (roles[login.key].scope_residents === "who_and_where"), `${login.name}: on_volunteer_floor() follows its scope_residents (${roles[login.key].scope_residents})`, String(onFloor));
     const { data: perms } = await ssr.rpc("my_permissions");
     check(perms?.role?.key === login.key, `${login.name}: my_permissions() names the role ${login.key}`, JSON.stringify(perms?.role));
     const want = await cellsOf(roles[login.key].id);
@@ -227,7 +225,7 @@ async function run() {
 // ---------------------------------------------------------------------------------------------------------
 
 async function rolesByKey() {
-  const { data, error } = await service.from("roles").select("id, key, name, name_th, scope_residents");
+  const { data, error } = await service.from("roles").select("id, key, name, name_th");
   if (error) throw new Error(`reading roles: ${error.message}`);
   return Object.fromEntries(data.map((r) => [r.key, r]));
 }

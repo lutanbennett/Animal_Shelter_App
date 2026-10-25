@@ -1,6 +1,5 @@
 import "server-only";
-import { cache } from "react";
-import { createClient } from "@/lib/supabase/server";
+import type { createClient } from "@/lib/supabase/server";
 import { refuseFor } from "@/lib/auth/require-role";
 import { can } from "@/lib/permissions/can";
 import type { Level, LevelKey } from "@/lib/permissions/catalogue";
@@ -13,30 +12,19 @@ import type { ResidentRow } from "@/app/residents/ResidentsTable";
  * of `residents` and of the views built on it away, so every page that reads a resident for a
  * volunteer reads this instead, and every page that needs more refuses.
  *
- * SINCE 0259 THIS IS ALWAYS FALSE. `on_volunteer_floor()` used to read `roles.scope_residents`; no role column may
- * decide access (CLAUDE.md, "Hard-coded security is forbidden"), so it reads none and nobody is confined to the view by
- * their role. A role reads as much of a resident as its cards give: the volunteer holds `view_residents`, which grants
- * `resident.record` at read, so it reads `residents` like everyone else. This function and its six callers are now dead
- * weight rather than a rule — removing them is a follow-up in docs/backlog.md, deliberately not done in 0259's PR.
+ * ALWAYS FALSE, AND IT NO LONGER ASKS THE DATABASE. `on_volunteer_floor()` used to read `roles.scope_residents`; no role
+ * column may decide access (CLAUDE.md, "Hard-coded security is forbidden"). It answered false from 0259 and 0264 dropped
+ * it. A role reads as much of a resident as its cards give: the volunteer holds `view_residents`, which grants
+ * `resident.record` at read, so it reads `residents` like everyone else. This function and the `limited` branches it
+ * feeds are dead weight rather than a rule; removing them is the follow-up in docs/backlog.md, not part of 0264.
  */
-export const readsWhoAndWhereOnly = cache(async (): Promise<boolean> => {
-  const supabase = await createClient();
-  const { data } = await supabase.rpc("on_volunteer_floor");
-  return data === true;
-});
+export const readsWhoAndWhereOnly = async (): Promise<boolean> => false;
 
 /**
- * May this login open the resident's whole record although it reads a resident as who-and-where? The
- * database's own answer (0249, may_open_resident_record()): true for a who_and_where role that holds an
- * edit of a medical.* activity (the Medical records card). Asked of the function, not re-derived here, so
- * the app and the read policies cannot drift apart. Read-only outside the medical sections: every write
- * policy still asks sees_all_residents().
+ * Only asked when readsWhoAndWhereOnly() is true, which it never is. `may_open_resident_record()` answered true and
+ * 0264 dropped it.
  */
-export const mayOpenResidentRecord = cache(async (): Promise<boolean> => {
-  const supabase = await createClient();
-  const { data } = await supabase.rpc("may_open_resident_record");
-  return data === true;
-});
+export const mayOpenResidentRecord = async (): Promise<boolean> => true;
 
 /** The hub is open for this login but only its medical sections are editable: a who-and-where role with a medical edit. */
 export async function opensRecordReadOnly(): Promise<boolean> {

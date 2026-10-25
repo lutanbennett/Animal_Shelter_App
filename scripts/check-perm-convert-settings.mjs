@@ -125,8 +125,8 @@ begin
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id)
     select u.id, ro.id from (values ${REAL.map((p) => `('${APP_ROLE[p] ?? p}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
-  insert into roles (key, name, kind, scope_residents, scope_contacts, opens_app) values
-    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_st_${c}', 'Harness ${c}', 'custom', '${d.floor === "volunteer" ? "who_and_where" : (d.scope ?? "own_clinic")}', 'full', ${d.opens ?? true})`).join(",\n    ")};
+  insert into roles (key, name, kind) values
+    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_st_${c}', 'Harness ${c}', 'custom')`).join(",\n    ")};
   insert into role_permissions (role_id, activity, level)
     select r.id, v.act, v.lvl from roles r join (values
       ${Object.entries(CUSTOM).flatMap(([c, d]) => d.cells.map(([a, l]) => `('harness_st_${c}', '${a}', ${l})`)).join(",\n      ")}

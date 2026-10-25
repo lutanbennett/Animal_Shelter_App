@@ -118,8 +118,8 @@ begin
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id)
     select u.id, ro.id from (values ${REAL.map((p) => `('${APP_ROLE[p] ?? p}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
-  insert into roles (key, name, kind, scope_residents, scope_contacts) values
-    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_ppl_${c}', 'Harness ${c}', 'custom', '${d.floor === "volunteer" ? "who_and_where" : "all"}', '${d.scope ?? "full"}')`).join(",\n    ")};
+  insert into roles (key, name, kind) values
+    ${Object.entries(CUSTOM).map(([c, d]) => `('harness_ppl_${c}', 'Harness ${c}', 'custom')`).join(",\n    ")};
   insert into role_permissions (role_id, activity, level)
     select r.id, v.act, v.lvl from roles r join (values
       ${Object.entries(CUSTOM).flatMap(([c, d]) => d.cells.map(([a, l]) => `('harness_ppl_${c}', '${a}', ${l})`)).join(",\n      ")}
@@ -151,9 +151,6 @@ do $sweep$ begin
    where schemaname = 'public' and tablename in (${tableList}) and policyname like '%\\_perm'
      and (coalesce(qual,'') || coalesce(with_check,'')) ~ 'has_permission'
      and (coalesce(qual,'') || coalesce(with_check,'')) !~ 'SELECT has_permission';
-  insert into res select 'sweep', 'contacts_scoped', 'count', count(*) from pg_policies
-   where schemaname = 'public' and tablename = 'contacts' and policyname like '%\\_perm'
-     and (coalesce(qual,'') || coalesce(with_check,'')) !~ 'sees_all_contacts';
   insert into res select 'sweep', 'perm_policies', 'count', count(*) from pg_policies
    where schemaname = 'public' and tablename in (${tableList}) and policyname like '%\\_perm';
 end $sweep$;
@@ -191,7 +188,6 @@ for (const [tbl] of Object.entries(T)) {
 const sweep = (k) => get("sweep", k, "count");
 if (sweep("names_mgmt_or_staff") === 0) pass("no policy on these tables names management or staff"); else fail(`${sweep("names_mgmt_or_staff")} policy(ies) still name management or staff`);
 if (sweep("bare_has_permission") === 0) pass("every new policy wraps has_permission() in (select ...)"); else fail(`${sweep("bare_has_permission")} policy(ies) call has_permission() bare`);
-if (sweep("contacts_scoped") === 0) pass("every contacts policy asks sees_all_contacts()"); else fail(`${sweep("contacts_scoped")} contacts policy(ies) do not ask sees_all_contacts()`);
 if (sweep("perm_policies") === 24) pass("24 *_perm policies"); else fail(`expected 24 *_perm policies, found ${sweep("perm_policies")}`);
 console.log(`\n${ok} checks held, ${fails} failed.`);
 console.log(fails ? "RESULT: RED" : "RESULT: GREEN (each table answers as its cell says; a role with no cell, or off the full contacts scope, gets nothing; the vet is unchanged)");

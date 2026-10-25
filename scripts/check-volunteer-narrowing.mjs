@@ -105,7 +105,6 @@ const CASES = [
 const WHO_AND_WHERE_COLUMNS = ["id", "name", "thai_name", "resident_code", "species", "sex", "profile_photo_drive_file_id", "current_status", "enclosure_id", "enclosure_name", "enclosure_name_th", "zone_id", "zone_name", "zone_name_th", "zone_colour"]; // zone_colour: 0162
 
 const RESTORE = {
-  weight: "create policy volunteer_read_weight on weight for select using ((select public.on_volunteer_floor()));",
   stocktake: `do $r$ begin execute replace(pg_get_functiondef('public.record_stocktake(jsonb,jsonb)'::regprocedure), '''staff'')', '''staff'', ''volunteer'')'); end $r$;`,
   translation_queue: `do $r$ begin execute 'create or replace view public.translation_queue as ' || replace(pg_get_viewdef('public.translation_queue'::regclass), '(NOT on_volunteer_floor()) AND ', ''); end $r$;`,
 };
@@ -313,8 +312,8 @@ if (result.policies !== null) failures.push(`policies that still name the volunt
 else lines.push("  ok    no policy names the volunteer (0153)");
 // RE-BASELINED 2026-10-11 (role-floor-schema, 0179): sees_all_residents() and sees_all_contacts() ask the role's own scope now, not legacy_role.
 // reassign_recurring_job() and record_attachment() changed with 0178 (perm-functions-schema): the first no longer names the role, the second does.
-if (result.functions !== "is_public_drive_file,on_volunteer_floor") failures.push(`functions that still say 'volunteer': ${result.functions}; expected only is_public_drive_file (names the volunteer_photo_drive_file_id column, 0201) and on_volunteer_floor (0196, the floor itself). has_app_access, has_shelter_floor and record_attachment no longer say it`);
-else lines.push("  ok    only is_public_drive_file() (a column name) and on_volunteer_floor() (the floor) still say 'volunteer'");
+if (result.functions !== "is_public_drive_file") failures.push(`functions that still say 'volunteer': ${result.functions}; expected only is_public_drive_file (names the volunteer_photo_drive_file_id column, 0201) and on_volunteer_floor (0196, the floor itself). has_app_access, has_shelter_floor and record_attachment no longer say it`);
+else lines.push("  ok    only is_public_drive_file() (a column name) still says 'volunteer'");
 
 if (verbose) console.log(lines.join("\n") + "\n");
 console.log(`${CASES.length} removed rights, each under the volunteer's own JWT: ${refused} refused.`);

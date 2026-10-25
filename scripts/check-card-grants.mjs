@@ -93,8 +93,8 @@ for (const role of roles) {
 if (!failed) pass(`all ${roles.filter((r) => r.kind !== "fixed").length} roles hold exactly what their cards require`);
 
 // ---- 2. the triggers and the guards, in a transaction that always rolls back
-const r = (n) => `insert into roles (key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos)
-  values ('harness_${n}', 'Harness ${n}', 'custom', true, '/home', 'who_and_where', 'any', 'name_type', 'all') returning id`;
+const r = (n) => `insert into roles (key, name, kind, home_path)
+  values ('harness_${n}', 'Harness ${n}', 'custom', '/home') returning id`;
 const block = `
 begin;
 do $h$

@@ -13,7 +13,7 @@
 //   1. the public card (public_resident_cards) answers with a row for every one of them: the
 //      floor nobody falls below, so the page never 404s on a resident that exists
 //   2. the landing, from src/lib/residents/card-landing.ts fed the inputs the page reads from
-//      the live database (on_volunteer_floor, my_permissions, the residents row), is exactly the
+//      the live database (my_permissions, the residents row), is exactly the
 //      expected one below
 //   3. a "full" landing really reads the resident row (the hub will not 404) and holds
 //      resident.record; a "public-plus" landing really reads the who-and-where row, except a doctor
@@ -62,8 +62,7 @@ begin
     select count(*) into card from public_resident_cards where id = '${R}';
     if p_anon then role_name := null; rec := null; vis := 0; wow := 0;
     else
-      role_name := case when on_volunteer_floor() then 'volunteer'
-                        else my_permissions() -> 'role' ->> 'key' end;
+      role_name := my_permissions() -> 'role' ->> 'key';
       rec := (my_permissions() -> 'permissions' ->> 'resident.record');
       if coalesce((my_permissions() ->> 'is_admin')::boolean, false) then rec := '2'; end if;
       select count(*) into vis from residents where id = '${R}';
@@ -137,8 +136,8 @@ for (const p of P) {
   const landing = cardLanding({
     appAccess: p !== "anon" && !!role && APP_ROLES.includes(role),
     readsRecord: reads,
-    // the volunteer floor: on_volunteer_floor(), as readsWhoAndWhereOnly() asks (named 'volunteer' above)
-    whoAndWhereOnly: role === "volunteer",
+    // readsWhoAndWhereOnly() is always false since 0259 (and 0264 dropped the function it used to ask)
+    whoAndWhereOnly: false,
     rowVisible: get(p, "visible") === "1",
   });
   if (landing === EXPECT[p]) pass(`${p}: lands on ${landing}`);
