@@ -115,14 +115,14 @@ the same time. **Say so in the record if you do it, as this one does.**
 
 ## In flight and open
 
-**The Doctor's twelve missing cells is now the most important open item** — see START HERE. Filed
-under *Security* with the new doctor cards as the remedy, but the drift itself wants explaining.
+**The Doctor's twelve missing cells is NOT an open item** — it is Lutan's card-by-card testing. No
+action, and specifically **not** restoring the cards. See START HERE and the decision file.
 
-**The "ten production sign-in checks are NOT done" claim is retired because it was wrong** — he signs
-into production as admin after each release. Three editions asserted otherwise on no evidence but a
-session's own inability to look. **Do not reinstate it**; see the decision file above. What is
-genuinely unknown is only whether the **card save on Who does what** has been exercised
-specifically — one question, not a standing item.
+**The "sign-in checks are NOT done" claim is retired because it was wrong** — he signs into
+production as admin after each release, and **the card save on Who does what is verified: the moving
+Doctor count IS the evidence**, since adding and removing cards there is how he tests. So the one
+check no session can perform has been performed repeatedly. **Do not reinstate either claim, and do
+not ask him again** (`docs/decisions/2026-10-25-doctor-is-the-test-role.md`).
 
 **Five `pending:` plans shipped as a stated gap** on Lutan's explicit decision, the same call he made
 for `0.40.3`, `0.40.2`, `0.40.1` and `0.15.0`. Listed in `docs/test-plans/cut-release-0-40-4.md` and

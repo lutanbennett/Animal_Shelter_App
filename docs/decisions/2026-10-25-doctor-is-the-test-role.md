@@ -33,9 +33,19 @@ each release. The claim rested on nothing but the absence of a session's record 
 **cannot** pass the authenticator step, so that absence was never evidence either way. It got written
 down as his omission and then inherited three times.
 
-What is honestly unknown is narrower and worth one question rather than a standing item: whether the
-**card save on Who does what** (add a card, remove one, move one) has been exercised specifically,
-since that is what one of `0.40.4`'s two release notes promises.
+## Nothing is left to decide or check. The red check IS the verification
+
+Asked whether the **card save on Who does what** had been exercised specifically — the one thing
+`0.40.4` was still unsure of, because it is what one of its two release notes promises — **Lutan,
+2026-10-25: *"Yes I have done that as evidenced by the change to the doctor role cards."***
+
+**That inverts the whole finding.** Adding and removing cards on Who does what is *how* he tests, so
+the moving Doctor count is not a worry sitting beside an unverified save — **it is the save working,
+on production, past the authenticator step.** The check a session cannot perform has been performed
+repeatedly, and the evidence was in the number this release first mistook for a fault.
+
+**So: never list the card save as an outstanding check, and never ask him whether it has been done.**
+Both were asked once, answered in a sentence, and are closed.
 
 ## Why this is a decision file and not a backlog item
 
