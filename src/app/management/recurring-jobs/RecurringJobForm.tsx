@@ -153,7 +153,7 @@ export function RecurringJobForm({
   }, [linkKnown, linkPath, roleKeysKey]);
 
   // Everyone whose role can do the work on the job's page (eligibility.ts):
-  // never a doctor, and a volunteer is not offered maintenance. Anyone already
+  // a volunteer is not offered maintenance. Anyone already
   // on the job who can't — given it before this filter, or the link has just
   // changed — or who has since left stays listed and flagged, so they can be
   // taken off rather than silently kept. Saving refuses the first kind.

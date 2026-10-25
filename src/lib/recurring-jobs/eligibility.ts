@@ -19,24 +19,11 @@ import { ROUTES } from "@/lib/permissions/routes";
  * registered (a landing opens for anyone who may open one of its pages), so
  * they are decided by "any of the pages under it"
  * (decisions/2026-10-04-permissions-sweep-rest.md). A path no rule matches —
- * no link at all, /residents, /my — can be done by any assignable role.
- *
- * Doctors are not assignable at all (Lutan, 2026-09-27): a doctor's work comes
- * from their clinic visits and the residents on them, not from the
- * shelter's routine, so no recurring job goes to one whatever it links to.
+ * no link at all, /residents, /my — can be done by any role.
  *
  * Pure and client-safe: the form filters its picker with it as the link
  * changes, and scripts/check-recurring-job-eligibility.mjs runs it.
  */
-
-/**
- * Who can be given a recurring job at all: everyone with app access (app_users lists no one else) but a
- * doctor. Asked of the login's role KEY (0146), not the enum it borrows (docs/decisions/2026-10-11-perm-role-lists.md).
- * Keys that are never assignable whatever they hold: a doctor's work comes from clinic visits, and a public viewer is not staff. */
-export const NEVER_ASSIGNABLE = ["doctor", "public_viewer"];
-
-/** PostgREST `not.in` list over app_users.role_key: everyone with app access but those. */
-export const ASSIGNABLE_KEY_FILTER = `(${NEVER_ASSIGNABLE.join(",")})`;
 
 /** The cell a page asks for: the activity its route registers, at the level that opens it. */
 export type Need = { activity: ActivityKey; level: Level };
@@ -110,14 +97,14 @@ function ruleFor(linkPath: string | null | undefined): Rule | null {
 /**
  * Can someone whose role KEY is `role` do a job that links to `linkPath`? `eligibility` is the database's answer for that
  * key. A person covering a second role holds several keys (held-roles.ts): they can do it when ANY of them can, the same
- * union the database enforces (0196). A never-assignable key (a doctor) is simply not counted.
+ * union the database enforces (0196).
  */
 export function canDoJob(
   role: string | readonly (string | null | undefined)[] | null | undefined,
   linkPath: string | null | undefined,
   eligibility: Eligibility,
 ): boolean {
-  const keys = (Array.isArray(role) ? role : [role]).filter((k): k is string => !!k && !NEVER_ASSIGNABLE.includes(k));
+  const keys = (Array.isArray(role) ? role : [role]).filter((k): k is string => !!k);
   if (keys.length === 0) return false;
   const rule = ruleFor(linkPath);
   if (!rule) return true;
