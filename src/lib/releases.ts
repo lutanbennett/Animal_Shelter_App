@@ -74,7 +74,12 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  {
+    text: "Seeing which cards each role holds on Settings → Who does what is now a card of its own, called Who does what. Management has it, so nothing changes for them; any other role can be given it, and a role without it no longer sees the page.",
+    roles: ["admin", "management"],
+  },
+];
 
 /** Newest first. */
 export const releases: Release[] = [
