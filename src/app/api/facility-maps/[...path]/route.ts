@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { loadPermissions } from "@/lib/permissions/load";
+import { can } from "@/lib/permissions/can";
 import { PLAN_OBJECT, readPlanImage } from "@/lib/facility-map/plan-store";
 
 /**
  * An uploaded facility plan image (docs/decisions/2026-10-08-facility-map-plans-uploaded.md), for
- * signed-in staff only — the same readers as `facility_maps` itself (0142: any signed-in login, never
- * anon). A signed-out request, or a login with no app access, gets the same 404 as a made-up name,
+ * signed-in staff only — the same readers as `facility_maps` itself (0263: the Enclosures card, facility.enclosures at read; never
+ * anon). A signed-out request, or a login without that card, gets the same 404 as a made-up name,
  * so nobody outside can tell a plan exists.
  *
  * Every upload has a name of its own, so a response is cached for a year in the viewer's browser
@@ -29,7 +30,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ pat
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user || !(await loadPermissions())) return notFound();
+  if (!user || !can(await loadPermissions(), "facility.enclosures", "read")) return notFound();
 
   const image = await readPlanImage(objectName);
   if (!image) return notFound();
