@@ -59,7 +59,7 @@ const stale = [];
 for (const c of CHROME) if (!proved(c.file, c.needle)) stale.push(`chrome ${c.page}: "${c.needle}" not in ${c.file}`);
 for (const d of DEEP) if (!proved(d.file, d.needle)) stale.push(`deep ${d.page}: "${d.needle}" not in ${d.file}`);
 
-const roles = await sql(`select id, key, name, kind, home_path, sees_login_emails from roles where archived_at is null order by key`);
+const roles = await sql(`select id, key, name, kind, home_path from roles where archived_at is null order by key`);
 const cards = await sql(`select r.key, c.card, c.position, c.group_id from role_cards c join roles r on r.id = c.role_id order by r.key, c.position`);
 // Groups on a role's home (0241): a card inside one is reached through the group's doorway tile.
 const groupRows = await sql(`select r.key, g.id, g.name, g.icon from role_groups g join roles r on r.id = g.role_id order by r.key, g.position, g.name`);
@@ -86,7 +86,6 @@ for (const role of roles) {
   const perms = parsePermissions({
     role: { key: role.key, name: role.name, name_th: null, kind: role.kind, home_path: role.home_path },
     is_admin: false,
-    scopes: { sees_login_emails: role.sees_login_emails },
     permissions: Object.fromEntries(rc.map((c) => [c.activity, c.level])),
   });
 

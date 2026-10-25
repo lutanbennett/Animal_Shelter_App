@@ -13,8 +13,11 @@ import type { ResidentRow } from "@/app/residents/ResidentsTable";
  * of `residents` and of the views built on it away, so every page that reads a resident for a
  * volunteer reads this instead, and every page that needs more refuses.
  *
- * The scope is the role's own `scope_residents = 'who_and_where'` (0179), and the view's gate asks the same thing
- * through `on_volunteer_floor()` (0180), so the app asks that function and not a role name.
+ * SINCE 0259 THIS IS ALWAYS FALSE. `on_volunteer_floor()` used to read `roles.scope_residents`; no role column may
+ * decide access (CLAUDE.md, "Hard-coded security is forbidden"), so it reads none and nobody is confined to the view by
+ * their role. A role reads as much of a resident as its cards give: the volunteer holds `view_residents`, which grants
+ * `resident.record` at read, so it reads `residents` like everyone else. This function and its six callers are now dead
+ * weight rather than a rule — removing them is a follow-up in docs/backlog.md, deliberately not done in 0259's PR.
  */
 export const readsWhoAndWhereOnly = cache(async (): Promise<boolean> => {
   const supabase = await createClient();

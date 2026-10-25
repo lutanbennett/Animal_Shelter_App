@@ -81,10 +81,10 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
     measured: true,
   },
   {
-    // §5 "how much of a resident": these roles read resident_who_and_where (0134), not residents. For the
-    // volunteer that is the design; for the three configured roles it is what Lutan asked (§7) but it is
-    // reached through roles.scope_residents = 'who_and_where' (0179, which sees_all_residents() now reads).
-    // Their own roles.scope_residents said 'all' until then. Either way the box's Read is narrower than it looks.
+    // §5 "how much of a resident": these roles used to read resident_who_and_where (0134), not residents, because a
+    // role column (0179, 0180) narrowed them below their own card. CLOSED BY 0259: no role column decides access, so
+    // the box's Read is now exactly what it says. Each of these roles holds view_residents, which grants
+    // resident.record at read, and reads the resident record itself.
     id: "whoAndWhere",
     boxes: {
       volunteer: ["resident.record"],

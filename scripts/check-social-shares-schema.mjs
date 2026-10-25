@@ -51,14 +51,14 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-shares-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(U[p])})`).join(",")}) as u(who, id);
 
-  insert into roles (key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails)
-    values ('harness_sh_editor', 'Harness editor', 'custom', true, '/home', 'all', 'any', 'name_type', 'all', false) returning id into v_ed;
-  insert into roles (key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails)
-    values ('harness_sh_reader', 'Harness reader', 'custom', true, '/home', 'all', 'any', 'name_type', 'all', false) returning id into v_rd;
-  insert into roles (key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails)
-    values ('harness_sh_photoman', 'Harness photoman', 'custom', true, '/home', 'all', 'any', 'name_type', 'all', false) returning id into v_pm;
-  insert into roles (key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails)
-    values ('harness_sh_nobody', 'Harness nobody', 'custom', true, '/home', 'all', 'any', 'name_type', 'all', false) returning id into v_no;
+  insert into roles (key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos)
+    values ('harness_sh_editor', 'Harness editor', 'custom', true, '/home', 'all', 'any', 'name_type', 'all') returning id into v_ed;
+  insert into roles (key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos)
+    values ('harness_sh_reader', 'Harness reader', 'custom', true, '/home', 'all', 'any', 'name_type', 'all') returning id into v_rd;
+  insert into roles (key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos)
+    values ('harness_sh_photoman', 'Harness photoman', 'custom', true, '/home', 'all', 'any', 'name_type', 'all') returning id into v_pm;
+  insert into roles (key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos)
+    values ('harness_sh_nobody', 'Harness nobody', 'custom', true, '/home', 'all', 'any', 'name_type', 'all') returning id into v_no;
 
   insert into role_permissions (role_id, activity, level) values
     (v_ed, 'social.library', 2), (v_ed, 'photos.resident_manage', 2), (v_ed, 'resident.record', 1),

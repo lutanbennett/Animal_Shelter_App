@@ -61,7 +61,6 @@ const synthetic = (key) =>
   parsePermissions({
     role: { key: "check_" + key, name: key, name_th: null, kind: "custom", opens_app: true, home_path: null },
     is_admin: false,
-    scopes: { sees_login_emails: false },
     permissions: Object.fromEntries([...bundleOfCards([key])].map(([a, l]) => [a, l === "edit" ? 2 : 1])),
   });
 // A card opens one page for every role that holds it. A synthetic role holding only that card's bundle must get its tile when the page
@@ -75,7 +74,7 @@ for (const key of CARD_KEYS) {
   else ok(`card ${key}: opens ${CARDS[key].opens}`);
 }
 
-const roles = await sql(`select id, key, name, kind, home_path, sees_login_emails from roles where archived_at is null order by key`);
+const roles = await sql(`select id, key, name, kind, home_path from roles where archived_at is null order by key`);
 const cards = await sql(`select r.key, c.card, c.position from role_cards c join roles r on r.id = c.role_id order by r.key, c.position`);
 const cells = await sql(`select r.key, p.activity, p.level from role_permissions p join roles r on r.id = p.role_id order by r.key, p.activity`);
 
@@ -109,7 +108,6 @@ for (const role of roles) {
   const perms = parsePermissions({
     role: { key: role.key, name: role.name, name_th: null, kind: role.kind, home_path: role.home_path },
     is_admin: false,
-    scopes: { sees_login_emails: role.sees_login_emails },
     permissions: Object.fromEntries(rolesCells.map((c) => [c.activity, c.level])),
   });
   for (const [lang, t] of [["en", en], ["th", th]]) {

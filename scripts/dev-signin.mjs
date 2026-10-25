@@ -158,7 +158,7 @@ if (cardsArg) {
   // so /residents/[id] redirects the login to /r/[id] and no card could reach the resident hub. The cards decide what the login
   // can do; the scope only decides which residents it sees (docs/decisions/2026-10-22-card-logins-get-a-real-scope.md).
   const { error: upErr } = await service.from("roles").upsert(
-    { key: role, name: `Dev sign-in: ${cardKeys.join(", ")}`.slice(0, 120), kind: "custom", opens_app: true, home_path: "/home", scope_residents: "all", scope_clinical: "any", sees_login_emails: false },
+    { key: role, name: `Dev sign-in: ${cardKeys.join(", ")}`.slice(0, 120), kind: "custom", opens_app: true, home_path: "/home", scope_residents: "all", scope_clinical: "any" },
     // No ignoreDuplicates: a throwaway role made by an older run (who_and_where) is corrected on the next run.
     { onConflict: "key" },
   );
