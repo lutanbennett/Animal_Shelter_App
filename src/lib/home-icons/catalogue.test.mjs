@@ -12,7 +12,6 @@ const as = (key, permissions) =>
   parsePermissions({
     role: { key, name: key, name_th: null, kind: "custom", opens_app: true, home_path: null },
     is_admin: false,
-    scopes: { residents: "all", clinical: "any", contacts: "all", photos: "all", sees_login_emails: false },
     permissions,
   });
 const paths = (p) => iconCatalogue(en, p).map((i) => i.path);

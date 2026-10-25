@@ -54,7 +54,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
   const [grants, { data: cardRows, error: cardsError }, { data: roleRow }, { data: cellRows }, { data: groupRows, error: groupsError }, { data: featureRows, error: featuresError }, { data: cardFeatureRows, error: cardFeaturesError }] = await Promise.all([
     loadCardGrants(admin),
     admin.from("role_cards").select("card, position, group_id").eq("role_id", role?.id ?? "").order("position"),
-    admin.from("roles").select("key, name, kind, home_path, show_menu, sees_login_emails").eq("id", role?.id ?? "").maybeSingle(),
+    admin.from("roles").select("key, name, kind, home_path, show_menu").eq("id", role?.id ?? "").maybeSingle(),
     admin.from("role_permissions").select("activity, level").eq("role_id", role?.id ?? ""),
     admin.from("role_groups").select("id, name, name_th, icon").eq("role_id", role?.id ?? "").order("position").order("name"),
     admin.from("features").select("id, name, name_th, position").order("position").order("name"),
@@ -95,7 +95,6 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
     ? parsePermissions({
         role: { key: roleRow.key, name: roleRow.name, name_th: null, kind: roleRow.kind, home_path: roleRow.home_path },
         is_admin: false,
-        scopes: { sees_login_emails: roleRow.sees_login_emails },
         permissions: Object.fromEntries((cellRows ?? []).map((x) => [x.activity as string, x.level as number])),
       })
     : null;

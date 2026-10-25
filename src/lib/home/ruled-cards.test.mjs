@@ -10,7 +10,6 @@ const as = (key, permissions) =>
   parsePermissions({
     role: { key, name: key, name_th: null, kind: "custom", opens_app: true, home_path: null },
     is_admin: false,
-    scopes: { residents: "all", clinical: "any", contacts: "all", photos: "all", sees_login_emails: false },
     permissions,
   });
 const cells = { "resident.record": 1, "medical.weight": 2, "medical.diet": 1, "photos.resident_add": 2, "maintenance.bills": 2 };

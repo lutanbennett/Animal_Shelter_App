@@ -131,10 +131,10 @@ begin
   insert into user_roles (user_id, role_id)
   select ${lit(ID.sic)}, id from roles where key = 'second_in_command';
   -- three roles that each hold ONE of her stock cells, to show the jobs stand alone
-  insert into roles (key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails)
-    values ('harness_po', 'Harness purchasing only', 'custom', true, '/home', 'who_and_where', 'any', 'name_type', 'medical_only', false),
-           ('harness_co', 'Harness count only', 'custom', true, '/home', 'who_and_where', 'any', 'name_type', 'medical_only', false),
-           ('harness_dl', 'Harness delivery only', 'custom', true, '/home', 'who_and_where', 'any', 'name_type', 'medical_only', false);
+  insert into roles (key, name, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos)
+    values ('harness_po', 'Harness purchasing only', 'custom', true, '/home', 'who_and_where', 'any', 'name_type', 'medical_only'),
+           ('harness_co', 'Harness count only', 'custom', true, '/home', 'who_and_where', 'any', 'name_type', 'medical_only'),
+           ('harness_dl', 'Harness delivery only', 'custom', true, '/home', 'who_and_where', 'any', 'name_type', 'medical_only');
   insert into role_permissions (role_id, activity, level)
     select r.id, c.activity, 2 from roles r join (values ('harness_po', 'stock.purchasing'), ('harness_co', 'stock.count'), ('harness_dl', 'stock.delivery')) as c(k, activity) on c.k = r.key;
   insert into user_roles (user_id, role_id)

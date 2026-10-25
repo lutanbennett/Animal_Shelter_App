@@ -24,15 +24,12 @@ export type Permissions = {
   };
   /**
    * Every role key this login holds today, main role first (my_permissions().roles, 0196). One entry for almost
-   * everyone; more while someone is covering. The cells and scopes below are already the union of them, so this
+   * everyone; more while someone is covering. The cells below are already the union of them, so this
    * is for the things that are keyed on a role rather than on a cell: a role's cards, its jobs, the manual's audience.
    */
   roles: readonly string[];
   /** Admin's column is a rule, not data (§6): true answers yes to every known activity. */
   isAdmin: boolean;
-  scopes: {
-    seesLoginEmails: boolean;
-  };
   /** No entry means None. Only keys the catalogue knows are ever put here. */
   cells: Readonly<Partial<Record<ActivityKey, 1 | 2>>>;
 };
@@ -85,7 +82,6 @@ export function parsePermissions(raw: unknown): Permissions | null {
   const r = raw as Record<string, unknown>;
   const role = r.role as Record<string, unknown> | null | undefined;
   if (!role || typeof role.key !== "string" || typeof role.name !== "string") return null;
-  const scopes = (r.scopes ?? {}) as Record<string, unknown>;
   const cells: Partial<Record<ActivityKey, 1 | 2>> = {};
   const given = r.permissions && typeof r.permissions === "object" ? (r.permissions as Record<string, unknown>) : {};
   for (const [key, level] of Object.entries(given)) {
@@ -100,9 +96,6 @@ export function parsePermissions(raw: unknown): Permissions | null {
     },
     roles: Array.isArray(r.roles) && r.roles.every((k) => typeof k === "string") && r.roles.length > 0 ? (r.roles as string[]) : [role.key],
     isAdmin: r.is_admin === true,
-    scopes: {
-      seesLoginEmails: scopes.sees_login_emails === true,
-    },
     cells,
   };
 }

@@ -12,7 +12,6 @@ const role = (permissions, key = "any_role") =>
   parsePermissions({
     role: { key, name: "x", name_th: null, kind: "custom", opens_app: true, home_path: null },
     is_admin: false,
-    scopes: { residents: "all", clinical: "any", contacts: "all", photos: "all", sees_login_emails: false },
     permissions,
   });
 

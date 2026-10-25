@@ -16,11 +16,12 @@
 --
 -- WHAT THIS DOES, and why it is shaped this way.
 --
--- In every one of those 108 policies the role-column predicate sits BESIDE a card check -- `has_permission('<activity>')
--- AND sees_all_residents()`, for instance. The card is already the grantor; the role column only ever SUBTRACTED from what
--- the card gave. So removing the hard-coded security means those predicates stop subtracting, and the card check beside
--- them becomes the whole decision. That is what this migration does, by redefining each predicate so it no longer reads a
--- role column -- which reaches all 108 policies and all 13 views at once, without rewriting them.
+-- In every one of those 108 policies the role-column predicate sits BESIDE a card check: the policy asks has_permission
+-- of its own activity, and then sees_all_residents() as well. The card is already the grantor; the role column only ever
+-- SUBTRACTED from what the card gave. So removing the hard-coded security means those predicates stop subtracting, and
+-- the card check beside them becomes the whole decision. That is what this migration does, by redefining each predicate
+-- so that it no longer reads a role column -- which reaches all 108 policies and all 13 views at once, without having to
+-- rewrite them.
 --
 -- Two things it deliberately does NOT do:
 --   * It does not replace a role column with a different card requirement (e.g. sees_all_residents() -> has_permission
@@ -45,7 +46,7 @@
 begin;
 
 -- 1. sees_all_residents() (scope_residents; 0144, 0179, 0196) -> no longer reads the role.
--- Called beside has_permission('<resident activity>') in every resident policy, so the card is now the whole decision.
+-- Called beside the resident activity has_permission check in every resident policy, so the card is now the whole decision.
 -- Admin keeps every resident record (92 current + 9 deceased on dev; 286 + 13 + 1 on production, read by Lutan 2026-10-25)
 -- because has_permission() answers true for Admin before it reads a cell.
 create or replace function public.sees_all_residents()

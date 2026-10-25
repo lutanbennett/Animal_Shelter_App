@@ -250,8 +250,8 @@ begin
   perform pg_temp.eq('A yesno cells at level 2', (select count(*) from role_permissions rp join permission_activities a on a.key = rp.activity where a.kind = 'yesno' and rp.level <> 2)::text, '0');
   perform pg_temp.eq('A requires all empty', (select count(*) from permission_activities where requires <> '[]'::jsonb)::text, '0');
   perform pg_temp.eq('A real logins have role_id', (select count(*) from user_roles where role_id is null)::text, '0');
-  perform pg_temp.eq('A scopes doctor', (select scope_residents || '/' || scope_clinical || '/' || scope_contacts || '/' || scope_photos || '/' || sees_login_emails from roles where key = 'doctor'), 'own_clinic/own_clinic/name_type/medical_only/false');
-  perform pg_temp.eq('A scopes volunteer', (select scope_contacts || '/' || sees_login_emails from roles where key = 'volunteer'), 'name_phone/false');
+  perform pg_temp.eq('A scopes doctor', (select scope_residents || '/' || scope_clinical || '/' || scope_contacts || '/' || scope_photos from roles where key = 'doctor'), 'own_clinic/own_clinic/name_type/medical_only');
+  perform pg_temp.eq('A scopes volunteer', (select scope_contacts from roles where key = 'volunteer'), 'name_phone');
   v_report := v_report || 'A: 6 roles, 66 activities, cells 57/38/13/4/0/0, every real login has a role_id | ';
 
   -- B: has_permission().

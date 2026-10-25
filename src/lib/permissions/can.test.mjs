@@ -85,7 +85,10 @@ test("parsePermissions: is_admin is true only for literal true", () => {
   }
 });
 
-test("parsePermissions: sees_login_emails is true only for literal true", () => {
-  const p = parsePermissions({ role: { key: "a", name: "A" }, scopes: { sees_login_emails: 1 } });
-  assert.equal(p.scopes.seesLoginEmails, false);
+test("parsePermissions: a role column handed in is ignored, whatever it says", () => {
+  // 0259 removed roles.sees_login_emails, the last role column the app parsed. Permissions carries cells and nothing
+  // keyed on a role, so an old my_permissions() payload still parses and its scopes are dropped on the floor.
+  const p = parsePermissions({ role: { key: "a", name: "A" }, scopes: { sees_login_emails: true, residents: "all" } });
+  assert.ok(p);
+  assert.equal("scopes" in p, false);
 });

@@ -11,7 +11,6 @@ const role = (permissions, key = "custom_x") =>
   parsePermissions({
     role: { key, name: "x", name_th: null, kind: "custom", opens_app: true, home_path: null },
     is_admin: false,
-    scopes: { residents: "all", clinical: "any", contacts: "all", photos: "all", sees_login_emails: false },
     permissions,
   });
 const hrefs = (tiles) => tiles.map((x) => x.href);

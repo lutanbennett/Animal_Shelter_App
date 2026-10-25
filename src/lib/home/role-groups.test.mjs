@@ -12,7 +12,6 @@ const union = (cards, roles) =>
     role: { key: roles[0], name: "x", name_th: null, kind: "custom", opens_app: true, home_path: null },
     roles,
     is_admin: false,
-    scopes: { residents: "all", clinical: "any", contacts: "all", photos: "all", sees_login_emails: false },
     permissions: Object.fromEntries([...bundleOfCards(cards)].map(([a, l]) => [a, l === "edit" ? 2 : 1])),
   });
 

@@ -35,7 +35,7 @@ export async function listHomeRoles(supabase: SupabaseClient): Promise<HomeRole[
 export async function loadRolePermissions(supabase: SupabaseClient, roleKey: string): Promise<Permissions | null> {
   const { data: role } = await supabase
     .from("roles")
-    .select("id, key, name, name_th, kind, home_path, sees_login_emails")
+    .select("id, key, name, name_th, kind, home_path")
     .eq("key", roleKey)
     .is("archived_at", null)
     .maybeSingle();
@@ -44,9 +44,6 @@ export async function loadRolePermissions(supabase: SupabaseClient, roleKey: str
   return parsePermissions({
     role: { key: role.key, name: role.name, name_th: role.name_th, kind: role.kind, home_path: role.home_path },
     is_admin: role.key === "admin",
-    scopes: {
-      sees_login_emails: role.sees_login_emails,
-    },
     permissions: Object.fromEntries((cells ?? []).map((c) => [c.activity, c.level])),
   });
 }
