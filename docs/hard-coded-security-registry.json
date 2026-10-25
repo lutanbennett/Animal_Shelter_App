@@ -1,8 +1,6 @@
 {
-  "baselineCommit": "cd933f43c7da6cdf3df96030b48903d0cef7ecd0",
-  "baselineDate": "2026-10-24",
   "rule": "A role is a placeholder that gets no permissions until a card is assigned. The cards assigned will define page access and read write permissions. It's that simple and there are to be zero exceptions to this rule. (Lutan, 2026-10-24)",
-  "note": "Counts are lines in src/**/*.ts(x) matching `pattern`, taken from origin/main at baselineCommit. They may only go down. Read by scripts/check-hard-coded-security.mjs and, later, by the Hidden security screen. cards-grants-app was changing src/lib/permissions/cards.ts at the same time: if a count disagrees because it landed first, merge origin/main and re-baseline downward. Since 2026-10-24 (docs/decisions/2026-10-24-ratchet-counts-rules-not-mentions.md) a count is of CODE: comments are blanked before matching and the functions under diagnostics are blanked too; baselines were re-measured that way, downward only. 2026-10-25 (claude/security-db-half, migration 0259): the roles-scope-people entry was REMOVED from this list, not reduced to zero — the database half deleted the last clauses that read roles.scope_residents / scope_contacts / scope_photos / scope_clinical / opens_app, and the three comments that anchored the entry now describe history rather than a live rule. Mechanisms went from 6 to 5. roles.sees_login_emails was dropped, column and plumbing together. Admin is unchanged and is still outsideTheCardSystem below.",
+  "how": "scripts/check-hard-coded-security.mjs asserts ZERO (docs/decisions/2026-10-25-no-coded-security-inventory.md). There are no baselines. stillDecidesAccess names each surviving rule (file + exact text) with a backlog item; while any is listed the check prints NOT CLEAN and never prints the clean line. notAccess says why a role read is not an access rule. A record whose text is gone fails the check until it is deleted.",
   "diagnostics": [
     {
       "id": "tile-block",
@@ -17,68 +15,6 @@
       "why": "ordering only; nothing keyed by it changes what a card does or whether it shows"
     }
   ],
-  "mechanisms": [
-    {
-      "id": "can-use-bills",
-      "name": "canUseBills",
-      "where": "src/lib/bills/access.ts",
-      "effect": "REMOVED 2026-10-25: the scopes.clinical === own_clinic clause is gone; what remains is three card-derived activity checks (stock.delivery, medical.visits at edit, maintenance.bills). The baseline counts callers of the function, which is not a rule.",
-      "cardDerived": true,
-      "pattern": "canUseBills",
-      "anchor": "export function canUseBills",
-      "anchorFile": "src/lib/bills/access.ts",
-      "baseline": 11
-    },
-    {
-      "id": "page-rules",
-      "name": "page rules (route registry)",
-      "where": "src/lib/permissions/routes.ts",
-      "effect": "NOT a breach, corrected 2026-10-25. A page rule says 'this page needs activity X at level L'; whether a role holds X is can() over role_permissions, which since 0257 the database computes from card_grants alone. The only non-card test inside routes.ts was route.scope (the role's clinical column), removed in this PR. Every entry now consults card-derived permissions only. The count is the number of pages, not the number of rules.",
-      "cardDerived": true,
-      "pattern": "^\\s*path: \"/",
-      "files": [
-        "src/lib/permissions/routes.ts"
-      ],
-      "anchor": "export type RouteEntry",
-      "anchorFile": "src/lib/permissions/routes.ts",
-      "baseline": 45,
-      "note": "The planner's brief counted 55; this file has 45 path entries at the baseline commit. Recorded as found."
-    },
-    {
-      "id": "outside-registry",
-      "name": "OUTSIDE_REGISTRY",
-      "where": "src/lib/home/tiles.ts",
-      "effect": "All six pages now obey the rule (REMOVED 2026-10-25): /residents asks resident.record at read, /bills asks canUseBills (card-derived), /operations and /management ask opensAnyIn (card-derived); /assistant and /my were already correct and untouched.",
-      "cardDerived": true,
-      "pattern": "OUTSIDE_REGISTRY",
-      "anchor": "export const OUTSIDE_REGISTRY",
-      "anchorFile": "src/lib/home/tiles.ts",
-      "baseline": 4
-    },
-    {
-      "id": "card-tile-silent-drop",
-      "name": "cardTile() silent drop",
-      "where": "src/lib/home/tiles.ts cardTile()",
-      "effect": "REMOVED 2026-10-25: cardTile() still draws no tile for a page the role cannot open (a tile would invent access), but cardsWithoutTile() names every such card and the home says so in plain words. Nothing is dropped silently.",
-      "cardDerived": true,
-      "pattern": "if \\(!covered\\) return null|if \\(!icon \\|\\| !opens\\) return null",
-      "anchor": "export function cardTile",
-      "anchorFile": "src/lib/home/tiles.ts",
-      "baseline": 0
-    },
-    {
-      "id": "opens-any-in",
-      "name": "opensAnyIn",
-      "where": "src/lib/permissions/routes.ts",
-      "effect": "NOT a breach, corrected 2026-10-25: any route in the section the role can open, so it inherits canOpen(), which is card-derived once route.scope is gone. Tracked, not counted as a mechanism.",
-      "derivedFrom": "page-rules",
-      "cardDerived": true,
-      "pattern": "opensAnyIn",
-      "anchor": "export function opensAnyIn",
-      "anchorFile": "src/lib/permissions/routes.ts",
-      "baseline": 10
-    }
-  ],
   "outsideTheCardSystem": {
     "what": "Admin: access to everything, hard-coded. src/lib/permissions/can.ts returns true for a login whose roles.is_admin is set before it looks at any cell or card.",
     "anchor": "src/lib/permissions/can.ts:67 (if (perms.isAdmin) return true;)",
@@ -90,6 +26,481 @@
       "It is not a precedent: Admin only, all-or-nothing."
     ],
     "counted": false
+  },
+  "stillDecidesAccess": [
+    {
+      "id": "who-does-what-by-role-key",
+      "file": "src/lib/permissions/who-does-what.ts",
+      "matches": [
+        "perms.roles.includes(\"management\")"
+      ],
+      "plain": "Management can open Settings → Who does what because the code asks for a role NAMED 'management', not because a card says so; the page then reads every role's cards with the service role.",
+      "backlog": "who-does-what-by-card",
+      "found": "2026-10-25"
+    },
+    {
+      "id": "never-assignable-by-role-key",
+      "file": "src/lib/recurring-jobs/eligibility.ts",
+      "matches": [
+        "NEVER_ASSIGNABLE",
+        "ASSIGNABLE_KEY_FILTER"
+      ],
+      "plain": "A login whose role is named 'doctor' or 'public_viewer' is never offered a recurring job, whatever cards it holds; the code asks for the role's name.",
+      "backlog": "never-assignable-by-card",
+      "found": "2026-10-25"
+    },
+    {
+      "id": "never-assignable-by-role-key",
+      "file": "src/lib/recurring-jobs/eligibility-load.ts",
+      "matches": [
+        "role !== \"doctor\""
+      ],
+      "plain": "A login whose role is named 'doctor' or 'public_viewer' is never offered a recurring job, whatever cards it holds; the code asks for the role's name.",
+      "backlog": "never-assignable-by-card",
+      "found": "2026-10-25"
+    },
+    {
+      "id": "never-assignable-by-role-key",
+      "file": "src/app/management/recurring-jobs/actions.ts",
+      "matches": [
+        "ASSIGNABLE_KEY_FILTER"
+      ],
+      "plain": "A login whose role is named 'doctor' or 'public_viewer' is never offered a recurring job, whatever cards it holds; the code asks for the role's name.",
+      "backlog": "never-assignable-by-card",
+      "found": "2026-10-25"
+    },
+    {
+      "id": "never-assignable-by-role-key",
+      "file": "src/app/management/recurring-jobs/page.tsx",
+      "matches": [
+        "ASSIGNABLE_KEY_FILTER"
+      ],
+      "plain": "A login whose role is named 'doctor' or 'public_viewer' is never offered a recurring job, whatever cards it holds; the code asks for the role's name.",
+      "backlog": "never-assignable-by-card",
+      "found": "2026-10-25"
+    },
+    {
+      "id": "never-assignable-by-role-key",
+      "file": "src/lib/auth/app-users.ts",
+      "matches": [
+        "ASSIGNABLE_KEY_FILTER"
+      ],
+      "plain": "A login whose role is named 'doctor' or 'public_viewer' is never offered a recurring job, whatever cards it holds; the code asks for the role's name.",
+      "backlog": "never-assignable-by-card",
+      "found": "2026-10-25"
+    }
+  ],
+  "notAccess": [
+    {
+      "file": "src/app/admin/security/actions.ts",
+      "matches": [
+        "role.key !== \"admin\"",
+        "role.key === \"admin\"",
+        ".eq(\"roles.key\", \"doctor\")",
+        ".from(\"roles\")"
+      ],
+      "kind": "admin-screen",
+      "reason": "Settings → Security is Admin-only and needs the authenticator app. These lines decide which logins a new admin may be set up for, that Admin and the public viewer cannot be an additional role (a database trigger says the same), and that a doctor record can only be linked to a login whose role is the doctor role. They guard identities on an Admin screen; none gives a card-only login anything."
+    },
+    {
+      "file": "src/app/admin/security/UsersTable.tsx",
+      "matches": [
+        "r.key !== \"admin\"",
+        "role !== \"admin\"",
+        "role === \"doctor\"",
+        "user.role === \"admin\""
+      ],
+      "kind": "admin-screen",
+      "reason": "Which buttons the Admin-only Security table draws for each login. The server actions behind it decide, and they are Admin-only."
+    },
+    {
+      "file": "src/app/admin/security/role-options.ts",
+      "matches": [
+        "key === \"public_viewer\"",
+        ".from(\"roles\")"
+      ],
+      "kind": "layout",
+      "reason": "The order roles are listed in the Security role picker; reading the role list to fill it."
+    },
+    {
+      "file": "src/app/admin/who-does-what/actions.ts",
+      "matches": [
+        ".from(\"roles\")",
+        "show_menu"
+      ],
+      "kind": "admin-screen",
+      "reason": "The Admin-only editing actions (Admin, aal2). Reading a role's id and kind, and saving the show-menu switch."
+    },
+    {
+      "file": "src/app/admin/who-does-what/page.tsx",
+      "matches": [
+        ".from(\"roles\")",
+        "show_menu",
+        "home_path"
+      ],
+      "kind": "admin-screen",
+      "reason": "Draws a role's board from the roles table with the service role, after the page's own gate. The gate itself is the first entry under stillDecidesAccess (Management by role key); what is drawn is the same for either viewer."
+    },
+    {
+      "file": "src/app/admin/who-does-what/roles.ts",
+      "matches": [
+        "r.key === \"management\"",
+        ".from(\"roles\")"
+      ],
+      "kind": "layout",
+      "reason": "The order roles are listed on the Who does what screen (management first, doctor last). Ordering only."
+    },
+    {
+      "file": "src/app/home/group/[id]/page.tsx",
+      "matches": [
+        "mine.roles.includes(roleKey)"
+      ],
+      "kind": "ownership",
+      "reason": "A group tile opens the page of a group on one of the roles the login HOLDS (Admin may preview any). It shows the login its own role's cards, drawn with its own permissions; it grants nothing."
+    },
+    {
+      "file": "src/app/home/page.tsx",
+      "matches": [
+        "r.key === \"management\""
+      ],
+      "kind": "layout",
+      "reason": "Which role's board the Admin desk view opens first. Admin only; ordering."
+    },
+    {
+      "file": "src/app/home/[role]/page.tsx",
+      "matches": [
+        "roleKey === \"admin\""
+      ],
+      "kind": "admin-screen",
+      "reason": "Admin's preview of another role's home: the Admin role has no board to preview, so it goes to /admin. The page is refused to everyone but Admin (`if (!mine?.isAdmin) refuseFor(mine)`)."
+    },
+    {
+      "file": "src/lib/home/roles.ts",
+      "matches": [
+        "key === \"management\"",
+        "role.key === \"admin\"",
+        "home_path",
+        ".from(\"roles\")"
+      ],
+      "kind": "layout",
+      "reason": "Lists roles for the Admin preview (management first), builds the Permissions the preview draws a role with, and reads a role's cards by its id."
+    },
+    {
+      "file": "src/lib/menu/show-menu.ts",
+      "matches": [
+        "show_menu",
+        ".from(\"roles\")"
+      ],
+      "kind": "menu",
+      "reason": "roles.show_menu decides whether a login sees the left-hand menu or tiles only. It does not close a page: every page still opens from its tile or its link. Set on Settings → Who does what. NOT access, but it changes what a card-only login SEES; listed so a card test is not surprised by it. Every role is true on dev today."
+    },
+    {
+      "file": "src/lib/permissions/approvers.ts",
+      "matches": [
+        "c.roleKey === \"admin\""
+      ],
+      "kind": "layout",
+      "reason": "Leaves the Admin role out of the list of 'who can approve photos' it prints, because Admin holds no cards. Display only."
+    },
+    {
+      "file": "src/lib/permissions/can.ts",
+      "matches": [
+        "homePath",
+        "home_path"
+      ],
+      "kind": "layout",
+      "reason": "A role's landing path is read into Permissions. Nothing redirects on it (src/app/home/page.tsx says so); the sign-in lands on /home."
+    },
+    {
+      "file": "src/lib/status/alerts.ts",
+      "matches": [
+        ".eq(\"roles.key\", \"admin\")"
+      ],
+      "kind": "admin-identity",
+      "reason": "Who the status-alert email goes to: the Admin logins. A recipient list, not an access rule."
+    },
+    {
+      "file": "src/lib/auth/app-access.ts",
+      "matches": [
+        "PUBLIC_VIEWER_ROLE"
+      ],
+      "kind": "layout",
+      "reason": "A constant naming the public viewer role. Nothing imports it (checked 2026-10-25), so it decides nothing. Delete it with the next change here."
+    },
+    {
+      "file": "src/app/manual/page.tsx",
+      "matches": [
+        "topic.roles?.includes"
+      ],
+      "kind": "documentation",
+      "reason": "Which manual topics are marked as written for the reader's role. Content marking in the manual, not access to anything."
+    },
+    {
+      "file": "src/lib/manual/manual-pdf.tsx",
+      "matches": [
+        "topic.roles?.includes"
+      ],
+      "kind": "documentation",
+      "reason": "The same marking in the printed manual."
+    }
+  ],
+  "serviceRoleSites": [
+    {
+      "file": "src/lib/supabase/admin.ts",
+      "for": "The one place the service-role client is made.",
+      "guard": "Server only (`server-only`); every caller below is named."
+    },
+    {
+      "file": "src/app/account/password/actions.ts",
+      "for": "Changes the signed-in person's own password and reads their sign-in methods.",
+      "guard": "The signed-in user from the session; verifies the current password first."
+    },
+    {
+      "file": "src/app/admin/recent-changes/page.tsx",
+      "for": "Reads the audit log and the names to show it.",
+      "guard": "requirePermission on the page."
+    },
+    {
+      "file": "src/app/admin/security/actions.ts",
+      "for": "Creates logins, changes roles, links doctors, writes app_metadata.",
+      "guard": "Admin and the authenticator app (aal2) on every action."
+    },
+    {
+      "file": "src/app/admin/security/page.tsx",
+      "for": "Lists logins and roles.",
+      "guard": "requireAdmin and the authenticator app."
+    },
+    {
+      "file": "src/app/admin/security/verify/actions.ts",
+      "for": "Opens or closes the authenticator set-up window.",
+      "guard": "Admin session; the 2-step flow."
+    },
+    {
+      "file": "src/app/admin/who-does-what/details/page.tsx",
+      "for": "Reads every role's cards and cells.",
+      "guard": "opensWhoDoesWhat (Admin or Management by role key: the first open rule)."
+    },
+    {
+      "file": "src/app/admin/who-does-what/page.tsx",
+      "for": "Reads every role's cards, groups and settings.",
+      "guard": "opensWhoDoesWhat (Admin or Management by role key: the first open rule)."
+    },
+    {
+      "file": "src/app/admin/who-does-what/roles.ts",
+      "for": "Lists roles for the board.",
+      "guard": "Called only from the two pages above."
+    },
+    {
+      "file": "src/app/api/calendar/sweep/route.ts",
+      "for": "Calendar sweep run by the Worker's cron.",
+      "guard": "A shared secret in the request, not a session."
+    },
+    {
+      "file": "src/app/api/residents/[id]/videos/finish/route.ts",
+      "for": "Records a finished video upload.",
+      "guard": "can(perms, ...) on the signed-in caller."
+    },
+    {
+      "file": "src/app/api/residents/[id]/videos/start/route.ts",
+      "for": "Starts a video upload.",
+      "guard": "can(perms, ...) on the signed-in caller."
+    },
+    {
+      "file": "src/app/api/status/alerts/route.ts",
+      "for": "Status alerts run by the Worker's cron.",
+      "guard": "A shared secret in the request, not a session."
+    },
+    {
+      "file": "src/lib/auth/held-roles.ts",
+      "for": "Reads which roles each login holds today (user_roles is Admin-only under RLS).",
+      "guard": "Called with a login list the caller already fetched through its own permissions."
+    },
+    {
+      "file": "src/lib/clinics/calendar-import.ts",
+      "for": "Imports vet visits from Google Calendar.",
+      "guard": "Called from the calendar sweep and from pages that ask can()."
+    },
+    {
+      "file": "src/lib/clinics/calendar-poll.ts",
+      "for": "Polls Google Calendar for moved or deleted visits.",
+      "guard": "Cron only."
+    },
+    {
+      "file": "src/lib/clinics/calendar-sync.ts",
+      "for": "Writes visits to Google Calendar.",
+      "guard": "Server actions that ask can(); cron secret for the sweep."
+    },
+    {
+      "file": "src/lib/facility-map/plan-store.ts",
+      "for": "Stores facility-map plan files.",
+      "guard": "Called from the facility-map editor actions, which ask can()."
+    },
+    {
+      "file": "src/lib/home/roles.ts",
+      "for": "Reads a role's cards and cells by role key for the Admin preview and the board.",
+      "guard": "Callers: Admin-only preview pages and the logins' own home."
+    },
+    {
+      "file": "src/lib/menu/show-menu.ts",
+      "for": "Reads roles.show_menu (roles is Admin-only under RLS).",
+      "guard": "Keys come from the login's own my_permissions()."
+    },
+    {
+      "file": "src/lib/status/access-requests.ts",
+      "for": "Counts logins waiting for a role.",
+      "guard": "Says nothing about who; readable by any signed-in login."
+    },
+    {
+      "file": "src/lib/status/alerts.ts",
+      "for": "Sends status alerts to the Admin logins.",
+      "guard": "Cron and Settings → System status."
+    },
+    {
+      "file": "src/lib/status/health.ts",
+      "for": "System health checks.",
+      "guard": "Settings → System status (system.status) and cron."
+    },
+    {
+      "file": "src/lib/status/usage.ts",
+      "for": "Usage figures for System status.",
+      "guard": "Settings → System status and a cron secret."
+    },
+    {
+      "file": "worker/index.mjs",
+      "for": "The Worker's scheduled jobs.",
+      "guard": "Runs from the Worker's own cron; no user session."
+    },
+    {
+      "file": "worker/release-mail.mjs",
+      "for": "Mails the release notice to every admin.",
+      "guard": "Worker only."
+    },
+    {
+      "file": "worker/translations.mjs",
+      "for": "Translates labels in the background.",
+      "guard": "Worker only."
+    }
+  ],
+  "serviceRoleHelpers": [],
+  "environment": [
+    {
+      "name": "PUBLIC_SITE",
+      "gates": "Whether the public website is open to strangers or locked behind sign-in on this Worker. Not a role or card rule."
+    },
+    {
+      "name": "ORIGIN_HOST",
+      "gates": "The Worker's origin host for the photo cache. Not a role or card rule."
+    },
+    {
+      "name": "ORIGIN_KEY",
+      "gates": "A shared secret between the Worker and the app for cron-only routes (calendar sweep, status alerts)."
+    },
+    {
+      "name": "NEXT_PUBLIC_SITE_URL",
+      "gates": "The public site's address for links and sitemaps."
+    },
+    {
+      "name": "NEXT_PUBLIC_SUPABASE_URL",
+      "gates": "Which Supabase project the app talks to."
+    },
+    {
+      "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "gates": "The public (anon) key for that project."
+    },
+    {
+      "name": "SUPABASE_SERVICE_ROLE_KEY",
+      "gates": "The service-role key; see serviceRoleSites."
+    },
+    {
+      "name": "GOOGLE_DRIVE_ROOT_FOLDER_ID",
+      "gates": "Which Drive folder holds photos and files."
+    },
+    {
+      "name": "GOOGLE_CALENDAR_ID",
+      "gates": "Which Google Calendar the vet visits sync to."
+    },
+    {
+      "name": "GOOGLE_CALENDAR_REFRESH_TOKEN",
+      "gates": "The credential for that calendar."
+    },
+    {
+      "name": "GOOGLE_OAUTH_CLIENT_ID",
+      "gates": "The Google sign-in and Drive client."
+    },
+    {
+      "name": "GOOGLE_OAUTH_CLIENT_SECRET",
+      "gates": "The Google client secret."
+    },
+    {
+      "name": "PHOTO_CACHE_DIR",
+      "gates": "Where the photo cache is kept (Pi)."
+    },
+    {
+      "name": "PHOTO_CACHE_MAX_MB",
+      "gates": "How big the photo cache may grow."
+    },
+    {
+      "name": "CLOUDFLARE_ANALYTICS_TOKEN",
+      "gates": "Reads site analytics for System status."
+    },
+    {
+      "name": "CLOUDFLARE_ZONE_ID",
+      "gates": "Which Cloudflare zone those analytics are for."
+    },
+    {
+      "name": "BUILD_VERSION",
+      "gates": "The release number shown in the footer and on System status."
+    },
+    {
+      "name": "BUILD_SHA",
+      "gates": "The commit shown on System status."
+    },
+    {
+      "name": "BUILD_MIGRATIONS",
+      "gates": "The migration count the build was made against, shown on System status."
+    },
+    {
+      "name": "NODE_ENV",
+      "gates": "Development versus production behaviour of Next.js itself."
+    },
+    {
+      "name": "SHOWCASE_LOADER_MS",
+      "gates": "A delay for the loading showcase page."
+    },
+    {
+      "name": "STATUS_ALERT_SIMULATE_FAIL",
+      "gates": "Makes a status alert fail on purpose, for testing the alert."
+    }
+  ],
+  "counters": [
+    {
+      "id": "can-use-bills",
+      "what": "callers of canUseBills (three card-derived activity checks)",
+      "pattern": "canUseBills"
+    },
+    {
+      "id": "page-rules",
+      "what": "pages registered in routes.ts (each opens on an activity)",
+      "pattern": "^\\s*path: \"/",
+      "files": [
+        "src/lib/permissions/routes.ts"
+      ]
+    },
+    {
+      "id": "outside-registry",
+      "what": "references to OUTSIDE_REGISTRY in tiles.ts",
+      "pattern": "OUTSIDE_REGISTRY"
+    },
+    {
+      "id": "opens-any-in",
+      "what": "callers of opensAnyIn (any page in a section the role can open)",
+      "pattern": "opensAnyIn"
+    }
+  ],
+  "database": {
+    "scannedFrom": 262,
+    "note": "The check reads migration files from this number on; everything before it was inventoried from the LIVE database on 2026-10-25 (see the decision file). A new policy that does not call has_permission() or is_admin(), a new security definer function that does not call has_permission(), is_admin() or role_can(), a read of a retired role column, or a grant to anon/public must be declared here with a reason, or become a card.",
+    "declared": []
   },
   "databaseHalf": {
     "what": "The database no longer reads any role column to grant or deny anything (migration 0259, docs/decisions/2026-10-25-security-database-half.md).",
