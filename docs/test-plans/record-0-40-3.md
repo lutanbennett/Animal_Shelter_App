@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → n/a: release bookkeeping is a step in `docs/release-procedure.md`, not a backlog item |
 | Branch / worktree | `claude/record-0-40-3` @ `C:\Development\Animal_Shelter_cut-release-0-40-2` — **the cut's own worktree, reused**, which is paperwork rule 2 |
 | Dev server | n/a: three markdown files, no page |
-| PR | opened after this commit; the number is filled in by the follow-up commit below |
+| PR | #933 |
 | Tested by / date | Claude Opus 5 (production release manager session) / 2026-10-25 |
 | Carries a migration? | **no** |
 | Tested at SHA | branched from `b02864e7`, the deployed SHA |
