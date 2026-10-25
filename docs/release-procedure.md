@@ -69,6 +69,38 @@ about it, which invents a blocker out of bookkeeping.
 start it as soon as the cut is merged and let the two run in parallel. `0.15.0`
 sat waiting on a handover that did not need to be sequential.
 
+**But never run the two WORKER deploys at once, and this is exactly what "do not
+idle" does not license.** Both `deploy.mjs --env test` and `deploy.mjs --env
+production` run `next build` in the **main checkout**, so starting one while the
+other is building kills the second in seconds:
+
+```
+⨯ Another next build process is already running.
+deploy: `npm run opennext:build` exited with 1
+```
+
+On `0.40.3` the release manager started the test deploy and handed Lutan the
+production command in the same message. His died, the Worker fallback sat a
+release behind for forty minutes, and **it cost him two extra touches on a
+release whose target is two** — the retry, and a second message after the retry
+had not happened. Users were never affected, because the Pi serves the app and
+was already on the new release; that is precisely why nobody noticed quickly.
+
+This document already warns *"Two builds in one worktree collide"* under Traps.
+That was written about `gates.mjs`, and the deploys are the same hazard in a
+place nobody thought to look. **So: the two Worker deploys are strictly
+sequential.** Deploy test, see it finish, then hand the production command over —
+or hand his over first and wait. **What genuinely parallelises is the Pi
+builds**, which build on the Pi and touch nothing in the main checkout.
+
+**And confirm a deploy from the Worker, never from "it finished".** A failed
+deploy also finishes. `0.40.3` was told "it looks like it has deployed" when it
+had not: the log's mtime was 40 minutes stale and byte-identical to the failed
+run, `/api/releases/current` still answered the old version, and the terminal
+showed the old stack trace above an idle prompt. Any one of those three settles
+it in seconds — `wrangler deployments list --env production` is the definitive
+one, and its `Version(s)` must match the deploy log's `Current Version ID`.
+
 ---
 
 ## The paperwork has a time budget too

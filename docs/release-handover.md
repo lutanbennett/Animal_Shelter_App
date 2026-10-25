@@ -1,133 +1,131 @@
-# Release handover — written 2026-10-25 after `0.40.2`
+# Release handover — written 2026-10-25 after `0.40.3`
 
-A **delta**. The release's own facts are in `docs/releases/2026-10-25-0-40-2.md` and the durable
+A **delta**. The release's own facts are in `docs/releases/2026-10-25-0-40-3.md` and the durable
 rules are in `docs/release-procedure.md`. **Both outrank this file.**
 
 ## START HERE
 
-**`0.40.2` is deployed, verified, and it correctly mailed nobody.** All four builds came from
-**one SHA**, `221c041b`, `main` never moved during the release, and the code-identity diff is
-`CLEAN`. Both databases read **259 of 259** with `No drift`, and `0257` and `0258` went on before
-any deploy.
+**`0.40.3` is deployed, verified, and it correctly mailed nobody.** All four builds came from one
+SHA, `b02864e7`, `main` never moved at any point, and the code-identity diff is `CLEAN`. Both
+databases read **262 of 262** with `No drift`, and `0259`, `0260` and `0261` all went on before any
+deploy.
 
-**But the release took something away, it is live now, and it is the first thing to deal with.**
-`0257` rebuilt every production role's access from its cards alone and removed anything that came
-from no card — exactly Lutan's 2026-10-24 ruling, confirmed again for this release. It worked:
-`cards-union` reports every role *"exactly the union of its cards"*, and **`role-cards-coverage`
-passes for the first time** — the check `CLAUDE.md` says must always come back empty and which was
-recorded as not passing on 2026-10-24. The Volunteer's My tasks is fixed.
+**Read the release's own fault first, because it is mine and it is the one thing to change:** the
+test Worker deploy and Lutan's production Worker deploy were started in the **same checkout** at the
+same time, collided over `next build`, and **his failed**. The Worker fallback sat a release behind
+for forty minutes and **he was asked twice more than the runbook allows.** Users were never affected —
+the Pi serves the app and was already on `0.40.3` — which is why it went unnoticed. **Promoted into
+`docs/release-procedure.md` as its own rule: the two Worker deploys are strictly sequential; only the
+Pi builds parallelise.** Do not re-derive this from "do not idle", which is what misled me.
 
-**The cost landed on the Doctor: 9 of the 13 cells `0230` gave it are gone.** In plain terms the vet
-cannot open or record medical records on production. Lutan's remedy, 2026-10-25: *"I will be creating
-a new set of doctor cards"* — filed on the backlog branch under **Security**, with the verification
-named. **Do not "fix" it by giving the Doctor the existing `residents` card**: it would recover two
-cells and also grant moving, hospitalising, rehoming and recording a death. And one of the nine,
-`reference.add_while_recording`, is granted by **no card at all** (it is in `fixed-for-now.ts`), so
-that one needs a card created, which takes the hard-coded-security count **down** rather than
-sideways.
+**`0259` took the last role-based rules out of the database, and nothing was lost.** This is the
+counterpart to `0.40.2`'s `0257`, and it went the other way: measured on dev, **33 widenings across
+five roles, no losses, Admin unchanged.** `role-cells` on production read **identical before and
+after**, role for role — because `0259` changes which *rows* a login may read, not which cells it
+holds. **The before-picture was taken of the right table this time**, which was `0.40.2`'s named gap.
 
-**Two things the last edition recorded as closed are re-opened by this release, by design.**
-`0.40.1`'s record closed #900's `pending:` by measuring all 13 doctor cells live on production, and
-on that basis the last handover declared its standing list of unreadable production facts **empty**.
-Nine of those cells are now gone. The measurement was correct when taken and is simply no longer
-true. **Do not re-close it from the `0.40.1` record.**
+**What it widened is the thing to watch:** six views now have **no card gate at all**
+(`current_placement`, `translation_queue`, `immunization_compliance`, `immunization_duplicate_check`,
+`resident_current_state`, `app_users`), so every login in the app reads them in full. No card was
+created to close that, on Lutan's instruction *"No creating cards just remove permissions"*. Held for
+Card review 2 and listed in `docs/card-access-faults.md`. **He was told plainly and chose to go
+ahead** — do not re-raise it as a surprise.
 
-**Re-measure before trusting any of this.** Run `git diff --stat 221c041b..HEAD`, `gh pr list`,
-`--status --env production`, `node scripts/check-production.mjs all` and the live `/api/version`.
+**Re-measure before trusting any of this.** `git diff --stat b02864e7..HEAD`, `gh pr list`,
+`--status --env production`, `node scripts/check-production.mjs all`, the live `/api/version`.
 
-## The method fault worth fixing before the next release of this shape
+## The question that came mid-release, and its answer
 
-**`0257` prints a per-role list of what was added and removed, its own header calls it *"the record
-of what to give back"*, and this release could not capture it.** `apply-migrations.mjs` reaches
-Supabase through the Management API, which returns statement results and **not `RAISE NOTICE`
-output**. The loss was established from two other directions — `doctor-cells` names all nine
-activities, `cards-union` proves no role keeps an unbacked cell — but **only the Doctor's loss is
-itemised**, because the before-picture taken was `role-cards`, which `0257` does not change, rather
-than `role-cells`, which it does.
+**Lutan asked, during the release, whether all role-based access is now gone. The honest answer was
+no, and the exception was found by measuring rather than recalling.**
 
-**The fix is one command, before the apply: `node scripts/check-production.mjs role-cells`.** Any
-future migration that rewrites `role_permissions` needs that snapshot first. `0.40.1`'s handover
-praised reading production rather than reasoning about it; this release read it, and still took the
-wrong snapshot. **Reading is not enough on its own — read the thing the change actually moves.**
+`opensWhoDoesWhat()` — `src/lib/permissions/who-does-what.ts:13` — grants Settings → Who does what
+from the role key `management`. It fails `CLAUDE.md`'s own test, it is **not** the Admin bypass, and
+**it is in none of the registry's five mechanisms**, so `check-hard-coded-security.mjs` passes
+without seeing it. That is exactly the blind spot
+`docs/decisions/2026-10-24-hard-coded-security-ratchet.md` says the ratchet has, found in the wild
+for the first time.
 
-`docs/test-plans/cards-grants-schema.md`'s outstanding row still asks for the list from `audit_log`.
-**That remains open and is not ticked.**
+Filed under *Security* on the `backlog` branch with the fix: create the activity and its card, hand it
+to Management **in the same change** or Management loses the page, and the hard-coded count goes
+**down**. Not patched mid-release, per `CLAUDE.md`. **When the next session is asked the same
+question, the answer is "the database half is done; one grant remains in the app, and it is this
+one."**
 
 ## Corrections to the last edition
 
-- **It said to expect three SHAs again, because `0.40.1`'s single SHA was other sessions' timing rather than method. Wrong twice over, in a useful direction: this release also came from ONE SHA, and `main` did not move at all** — `gh pr list` was empty throughout. Ten sessions were live in their worktrees and none merged anything. **Still do not treat it as method**, but two releases running suggests the merge traffic has genuinely quietened rather than that we got lucky twice.
-- **It said `audit` was red with `body-parser` and `undici` and nothing new. Still exactly that** — same two packages, same four advisory IDs, all in `docs/decisions/2026-10-24-audit-body-parser-undici-not-reachable.md`. **Fix nothing.** One practical note: **CI logs are not retrievable while the run is still in progress**, so `gh run view --log` returns nothing useful; run `npm audit --omit=dev --audit-level=high` locally instead, which is the same command the job runs.
-- **It said the OpenNext `Failed to copy` count held at three and to keep watching. Held at three again** — same three packages, and **zero** on the production build, as on the last two releases. Still watch, do not act.
-- **It said `strip-baked-env` was held at 14 for a fourth release. Fifth now**, same 14 names on both environments.
-- **It named the classifier refusing `apply-migrations.mjs --env production` as `0.40.1`'s one avoidable cost. It did not recur** — the apply ran first time, unprompted. Nothing to do; worth knowing the allow rule held this time.
-- **It listed `who-does-what` item 2 as the open check that matters. Unchanged, still run by nobody** — move a card, then check a second role shows it in the same section. It would catch the feature grouping being stored per-role, which is what `0.40.1`'s note promises.
+- **It said to re-measure the Doctor's nine cells rather than re-close them from the `0.40.1` record. Still exactly right, and still nine** — `doctor-cells` reports the same `MISSING 9 of 13` after this release. `0259` neither helped nor hurt it. **The new doctor cards remain the remedy and the most important open item.**
+- **It named running `check-production.mjs role-cells` before the apply as the one method fix. Done, and it paid for itself** — the before/after pair is what turns "nothing was lost" from an assurance into a measurement, and it took seconds. **Keep doing it for anything that rewrites rather than adds.**
+- **It said `audit` was red with `body-parser` and `undici` and nothing new. Unchanged** — same two packages, same four advisory IDs, all in `docs/decisions/2026-10-24-audit-body-parser-undici-not-reachable.md`. **Fix nothing.** New this release: the PR job showed **`skipping` even though the cut changes `package.json`**, so its gate is narrower than the decision's wording suggests. A skip is not a pass; the release-time `npm run audit:prod` is the check that counts, and it was run.
+- **It said the OpenNext `Failed to copy` count held at three and to keep watching. Held at three again** — same three packages on test, **zero** on production, as on the last three releases. Still watch, do not act.
+- **It said `strip-baked-env` was held at 14 for a fifth release. Sixth now**, same 14 names on both environments.
+- **It said `main` not moving was "not method, but two releases running". Three now** — `gh pr list` empty throughout and `b02864e7..origin/main` empty after the last build. Ten worktrees were live and none merged. **Still not method.**
+- **It listed `who-does-what` item 2 as the open check that matters. Unchanged, still run by nobody.** The card save click-through now matters more, because it is what this release's one note promises.
 
 ## Where things stand
 
 | | |
 |---|---|
-| Live | **`0.40.2`** — all four builds from `221c041b`; production Worker version `c351fdcc` tagged `v0.40.2`, test Worker `349ce695` |
-| Previous release SHA, for the next range | **`221c041b`** |
-| Production database | **`259 applied, 0 pending`**, `No drift`. **Run it yourself** |
-| Dev database | **`No drift`, 259 of 259** |
-| Next free migration number | **`0259`**. **Check `origin/main` *and* open `*-schema` PRs anyway** |
-| The mail | **None, correctly.** Both deploys printed `no major release new to <env> (was 0.40.1), so no email.` |
-| `unreleased` and open PRs | 0 at the cut, and `gh pr list` empty throughout the release. **Run it yourself** |
-| Backlog | Two commits folded in at step 1 (retiring the 2-step refusal for admins); `check-backlog-sections.mjs` ok |
-| Public site | **`PUBLIC_SITE=locked`**, read from the Pi this release. So the public-page and edge-cache-`HIT` checks are vacuous — **and note this release's headline note is a switch that hides public pages**, which is therefore only verifiable signed in |
-| Home screen icons | `51 cards, 408 images`, **`0 created`** — an independent confirmation from another direction that this release added no home-screen card, which is correct |
-| Worktrees | **Ten leftovers, all `HELD` by live sessions, all `nothing beyond main`.** Second release running that paid a four-minute `npm ci` for a fresh cut worktree. **Worth a `/clean-streams` round**; `HELD` means ask |
+| Live | **`0.40.3`** — all four builds from `b02864e7`; production Worker version `db93bdc2` tagged `v0.40.3`, test Worker `58f91a44` |
+| Previous release SHA, for the next range | **`b02864e7`** |
+| Production database | **`262 applied, 0 pending`**, `No drift`. **Run it yourself** |
+| Dev database | **`No drift`, 262 of 262** |
+| Next free migration number | **`0262`**. **Check `origin/main` *and* open `*-schema` PRs anyway** |
+| The mail | **None, correctly.** Both deploys printed `no major release new to <env> (was 0.40.2), so no email.` Five independent confirmations, one of them the rendered page: `0.40.0` shows a **Major** badge and `0.40.3` shows none |
+| `unreleased` and open PRs | 0 at the cut; `gh pr list` empty throughout. **Run it yourself** |
+| Backlog | Conflicted at step 1 and was resolved by **keeping both halves** — `main`'s completion ticks and Lutan's new binding card-review method. `check-backlog-sections.mjs` ok, 83 open items |
+| Public site | **`PUBLIC_SITE=locked`**, read from the Pi this release. The public-page and edge-cache-`HIT` checks are therefore vacuous |
+| Home screen icons | `51 cards, 408 images`, **`0 created`** — independent confirmation that this release added no home-screen card, which is correct |
+| Worktrees | Still about ten leftovers, most `HELD` by live sessions. **This release paid no `npm ci`** — it reused a free leftover for the cut and then the record, under paperwork rule 2, breaking a run of three releases that each paid four minutes. **Do that again**, and a `/clean-streams` round is still worth it |
 
-**Counters:** `npm ci` as step 1 **25**; first CI run green by construction **8**; no production-only
-guard **27**; `strip-baked-env` **20**, at **14**, fifth consecutive release. **Server Actions keys**
-(twenty-fourth check): production `cbd55beae8d8`, test `ecc41837fc0b`, unchanged across three
-releases, each Pi printing that its own build carries its key. **Releases that mailed: 1 in the last
-eight.**
+**Counters:** `npm ci` as step 1 **26**; first CI run green by construction **9**; no production-only
+guard **28**; `strip-baked-env` **21**, at **14**, sixth consecutive release. **Server Actions keys**
+(twenty-fifth check): production `cbd55beae8d8`, test `ecc41837fc0b`, unchanged across four releases.
+**Releases that mailed: 1 in the last nine.**
 
-## The third touch, and why it was not a fault
+## Touches: four, and two were avoidable
 
-**Lutan was asked three times: the mail, the production Worker deploy, and whether to pause when
-`0257`'s cost to the Doctor was established.** The runbook's target is two, and a third is to be
-recorded as an avoidable cost — but **this one was not avoidable and should not be read as one.**
-`0.40.1`'s third was a classifier refusal on a step assigned to Claude. This one was a quietly
-failing change to what the vet can do, found mid-release, and `docs/release-procedure.md`'s own rule
-is that such a change is named separately and put to him rather than absorbed. He chose to carry on
-and fix it after. **A future release manager meeting the same shape should ask again.**
+Lutan was asked for **the mail decision**, **the `0259` access-widening decision** and **the
+production Worker deploy** — the first and third are the runbook's allowed two, and the second is
+required by its own rule that a quietly-changing access decision is named separately and put to him
+rather than absorbed. **Then twice more, because of my collision.** Unlike `0.40.2`'s third touch,
+which was genuinely unavoidable, these had a one-line fix and are now a rule.
 
-**The mail question cost one round trip and the trap did not bite**, because step 4's promoted rule
-was followed literally: the words "major" and "minor" never appeared in the question, only whether
-the release should email him. That rule is now proven on the release after the one that motivated it.
+**One thing to copy rather than re-derive:** when he said "it looks like it has deployed", it had not.
+Three cheap reads settled it — the log's mtime against the clock, `/api/releases/current`, and his
+terminal. **A failed deploy also finishes.** Confirm from `wrangler deployments list`, and match its
+version against the deploy log's `Current Version ID`.
 
 ## In flight and open
 
-**The security rebuild continues and `0257` is the biggest single step it has taken.** With
-`role-cards-coverage` passing and every role exactly its cards, what remains is the hard-coded role
-settings still to come out (`JOBS_OF_ROLE`, `CURATED_HOME`, `OUTSIDE_REGISTRY`, `FIXED_FOR_NOW`,
-role-key ordering, the no-cards fallback home) — and **the new doctor cards are now the first piece
-of that work with a user waiting on it.** The card walkthrough runs remain on hold.
+**The security rebuild's database half is finished.** `0257` made every role exactly its cards,
+`0259` removed the last role columns from 108 policies and 13 views, `0261` dropped `role_extras`.
+What remains is in the app: the five registry mechanisms, plus `opensWhoDoesWhat()` above, which is
+in none of them. **Card review 1 is the gate and Card review 2 is explicitly blocked behind it** by
+Lutan's ruling of 2026-10-25 — do not schedule review 2 early, and read its item fresh when the four
+gates are met.
 
-**Six `pending:` plans shipped as a stated gap on Lutan's explicit decision** (nine rows, listed in
-`docs/test-plans/cut-release-0-40-2.md`), on the same call he made for `0.40.1` and `0.15.0`. A
-seventh was closed by measurement: `hard-coded-security` is green on #913, read from its checks
-rather than inferred from the PR being merged — which would not have been sound, since `audit` is red
-on that same run.
+**Seven `pending:` plans shipped as a stated gap on Lutan's explicit decision**, the same call he made
+for `0.40.2`, `0.40.1` and `0.15.0`. Listed in `docs/test-plans/cut-release-0-40-3.md` and not ticked
+on anyone's behalf.
 
-**Also his, and NOT done: the ten production sign-in checks** for this build. Recorded as not done,
-not ticked. `0.40.1`'s were not done either.
+**Also his, and NOT done: the ten production sign-in checks.** The most valuable single one is the
+**card save on Who does what** — add a card, remove one, move one — because it is what this release's
+note promises and no session can pass the authenticator step. `0.40.1`'s and `0.40.2`'s were not done
+either.
 
-**Carried unchanged, nothing new to say:** `who-does-what` items 2 and 3 and `stocktaking` item 3
-(from `0.40.1`); the Thai wording of the Units screen and one real vet visit on production (from
-`0.40.0`); the same three silent failures as a set (public desexing sign-up, Drive space thresholds,
-the retention job — all wanting the same `status_alert_runs` → mail plumbing); and the two
-unlooked-at items, the prescription form reading 4 and video playback on a real handset.
+**Carried unchanged, nothing new to say:** the Doctor's nine cells and the new doctor cards;
+`who-does-what` items 2 and 3 and `stocktaking` item 3; the Thai wording of the Units screen and one
+real vet visit on production; the same three silent failures as a set (public desexing sign-up, Drive
+space thresholds, the retention job — all wanting the same `status_alert_runs` → mail plumbing); and
+the two unlooked-at items, the prescription form reading 4 and video playback on a real handset.
 
-**Two tooling faults filed rather than fixed mid-release:** the cut script is rewritten from scratch
-every release and hit the same CRLF fault for a second time (asks for `scripts/cut-release.mjs` with
-the eighteen cut assertions folded in), and `0257`'s `-- consumer:` header names a script renamed
-inside the same release. Both on the backlog branch, both one-liners, neither worth touching during a
-release.
+**Still filed rather than fixed, and still one-liners:** the cut script is rewritten from scratch every
+release (asks for `scripts/cut-release.mjs` with the cut assertions folded in — this release met the
+same CRLF hazard and worked around it again with a one-line `package.json` replacement), and `0257`'s
+stale `-- consumer:` header.
 
 **One red still unresolved rather than explained away:** `check-diets-per-serving-schema.mjs` fails
-`servings default to 1 / 1.5 / 2 - got 1` on dev. Carried from `0.40.1`, still plausible and
-unverified. `check-production.mjs diets-proportion` reports every production line in proportion,
-which is a neighbouring fact and not the same claim.
+`servings default to 1 / 1.5 / 2 - got 1` on dev. Carried from `0.40.1` and `0.40.2`, still plausible
+and unverified — and note `0260_diets_drop_old_amounts.sql` shipped here without changing it either
+way.
