@@ -30,7 +30,7 @@ register(
         return next(spec, ctx);
       }`),
 );
-const { canDoJob, rolesForJob, jobIsRestricted, NEVER_ASSIGNABLE, ASSIGNABLE_KEY_FILTER, JOB_NEEDS, needKey } = await import(
+const { canDoJob, rolesForJob, jobIsRestricted, JOB_NEEDS, needKey } = await import(
   pathToFileURL(join(process.cwd(), "src/lib/recurring-jobs/eligibility.ts")).href
 );
 
@@ -77,9 +77,6 @@ const wanted = [...new Set(ROUTES.map((r) => needKey({ activity: r.activity, lev
 eq("S1 the rules ask about exactly what the registry registers", [...JOB_NEEDS.map(needKey)].sort(), wanted.sort());
 eq("S1 the maintenance board's work is Edit although the page opens at Read", needKey(JOB_NEEDS.find((n) => n.activity === "maintenance.jobs")), "maintenance.jobs:edit");
 
-// Doctors are never given a recurring job (Lutan, 2026-09-27): their work comes
-// from clinic appointments.
-eq("the people a job can be given to are everyone with app access but a doctor (by role key)", [NEVER_ASSIGNABLE, ASSIGNABLE_KEY_FILTER], [["doctor", "public_viewer"], "(doctor,public_viewer)"]);
 const ALLK = [...ALL, CONFIGURED];
 
 // [label, link_path, roles that can do it]
@@ -112,11 +109,14 @@ eq("R2 not restricted: residents", jobIsRestricted("/residents", eligibility, RO
 eq("R3 not restricted: no link", jobIsRestricted(null, eligibility, ROLES), false);
 
 eq("V1 doctor, stocktake (Pass 0)", canDoJob("doctor", "/stocktake", eligibility), false);
-eq("V2 doctor, no link", canDoJob("doctor", null, eligibility), false);
-eq("V3 doctor, residents", canDoJob("doctor", "/residents", eligibility), false);
-eq("V4 doctor, a vaccination form", canDoJob("doctor", "/immunizations/new", eligibility), false);
+// No role is refused by name any more (docs/decisions/2026-10-25-never-assignable-by-card.md): a page that asks
+// for no cell asks for no card, so any login can be given it. A linked page is decided by the role's cells.
+eq("V2 doctor, no link: nothing to hold", canDoJob("doctor", null, eligibility), true);
+eq("V3 doctor, residents: nothing to hold", canDoJob("doctor", "/residents", eligibility), true);
+eq("V4 doctor, a vaccination form: no registered page, nothing to hold", canDoJob("doctor", "/immunizations/new", eligibility), true);
 eq("N1 no role", canDoJob(null, "/residents", eligibility), false);
-eq("N2 public viewer", canDoJob("public_viewer", null, eligibility), false);
+eq("N2 public viewer, no link: nothing to hold", canDoJob("public_viewer", null, eligibility), true);
+eq("N2b public viewer, stocktake: holds no cell", canDoJob("public_viewer", "/stocktake", eligibility), false);
 eq("N3 unknown role key, on a page that needs a cell", canDoJob("owner", "/stocktake", eligibility), false);
 
 // The bug this check exists for (backlog, "A configured role's rota eligibility", 2026-10-04): the 2IC's
@@ -143,7 +143,8 @@ eq("F3 asked only about volunteer: only volunteer", rolesForJob("/stocktake", { 
 // /operations, so /management is back to the table as written. /admin opens for Management since 0163 gave it
 // website.content Edit (docs/decisions/2026-10-08-management-website-content.md). Listed here, so the drift is on the
 // record rather than a red that has been failing since (found on a clean main, 2026-10-05).
-const MOVED_BY_CELLS = { "canDoJob(/admin)": { management: true } };
+// The 2026-10-25 removal of the by-name refusal: /residents asks for no cell, so a doctor and a public viewer pass it.
+const MOVED_BY_CELLS = { "canDoJob(/admin)": { management: true }, "canDoJob(/residents)": { doctor: true, public_viewer: true } };
 const fixture = JSON.parse(readFileSync(join(process.cwd(), "scripts/fixtures/legacy-predicates.json"), "utf8"));
 for (const [id, table] of Object.entries(fixture).filter(([id]) => id.startsWith("canDoJob("))) {
   const link = id.slice("canDoJob(".length, -1);

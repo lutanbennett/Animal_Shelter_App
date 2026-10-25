@@ -21,9 +21,8 @@ export async function loadEligibility(
   roles: readonly (string | null | undefined)[],
   needs: readonly Need[] = JOB_NEEDS,
 ): Promise<{ eligibility: Eligibility; error: string | null }> {
-  // `roles` are role keys. A doctor is never assignable (canDoJob says no first), so it is not asked;
-  // an unknown key is asked and answered "no" by role_can().
-  const asked = [...new Set(roles)].filter((role): role is string => !!role && role !== "doctor" && role !== "public_viewer");
+  // `roles` are role keys; an unknown key is asked and answered "no" by role_can().
+  const asked = [...new Set(roles)].filter((role): role is string => !!role);
   const asks = needs.flatMap((need) => asked.map((role) => ({ need, role })));
   const answers: { need: Need; role: string; yes: boolean; error: string | null }[] = [];
   for (let i = 0; i < asks.length; i += CONCURRENCY) {

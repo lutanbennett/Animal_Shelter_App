@@ -27,59 +27,7 @@
     ],
     "counted": false
   },
-  "stillDecidesAccess": [
-    {
-      "id": "never-assignable-by-role-key",
-      "file": "src/lib/recurring-jobs/eligibility.ts",
-      "matches": [
-        "NEVER_ASSIGNABLE",
-        "ASSIGNABLE_KEY_FILTER"
-      ],
-      "plain": "A login whose role is named 'doctor' or 'public_viewer' is never offered a recurring job, whatever cards it holds; the code asks for the role's name.",
-      "backlog": "never-assignable-by-card",
-      "found": "2026-10-25"
-    },
-    {
-      "id": "never-assignable-by-role-key",
-      "file": "src/lib/recurring-jobs/eligibility-load.ts",
-      "matches": [
-        "role !== \"doctor\""
-      ],
-      "plain": "A login whose role is named 'doctor' or 'public_viewer' is never offered a recurring job, whatever cards it holds; the code asks for the role's name.",
-      "backlog": "never-assignable-by-card",
-      "found": "2026-10-25"
-    },
-    {
-      "id": "never-assignable-by-role-key",
-      "file": "src/app/management/recurring-jobs/actions.ts",
-      "matches": [
-        "ASSIGNABLE_KEY_FILTER"
-      ],
-      "plain": "A login whose role is named 'doctor' or 'public_viewer' is never offered a recurring job, whatever cards it holds; the code asks for the role's name.",
-      "backlog": "never-assignable-by-card",
-      "found": "2026-10-25"
-    },
-    {
-      "id": "never-assignable-by-role-key",
-      "file": "src/app/management/recurring-jobs/page.tsx",
-      "matches": [
-        "ASSIGNABLE_KEY_FILTER"
-      ],
-      "plain": "A login whose role is named 'doctor' or 'public_viewer' is never offered a recurring job, whatever cards it holds; the code asks for the role's name.",
-      "backlog": "never-assignable-by-card",
-      "found": "2026-10-25"
-    },
-    {
-      "id": "never-assignable-by-role-key",
-      "file": "src/lib/auth/app-users.ts",
-      "matches": [
-        "ASSIGNABLE_KEY_FILTER"
-      ],
-      "plain": "A login whose role is named 'doctor' or 'public_viewer' is never offered a recurring job, whatever cards it holds; the code asks for the role's name.",
-      "backlog": "never-assignable-by-card",
-      "found": "2026-10-25"
-    }
-  ],
+  "stillDecidesAccess": [],
   "notAccess": [
     {
       "file": "src/app/admin/security/actions.ts",

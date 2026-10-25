@@ -5,7 +5,7 @@
 //
 //   A  a login with ONE role gets exactly the home homeTilesFor() always gave it (hashed, per default role)
 //   B  a login with two roles gets both homes, once each tile, main role's first
-//   C  canDoJob() counts every role a person holds, and a doctor key never counts
+//   C  canDoJob() counts every role a person holds, and a doctor key counts like any other (by its cells, never by its name)
 //   D  the manual reads a covering person as both audiences
 import { createHash } from "node:crypto";
 import { join } from "node:path";
@@ -97,7 +97,7 @@ ok("B maintenance is a tile of the cover, not of the medical lead alone", !medic
 const MAINT = "/maintenance";
 ok("C a person holding both can", canDoJob(["head_of_medical", "head_of_maintenance"], MAINT, { "maintenance.jobs:edit": ["head_of_maintenance"] }));
 ok("C a person holding only the first cannot", !canDoJob(["head_of_medical"], MAINT, { "maintenance.jobs:edit": ["head_of_maintenance"] }));
-ok("C a doctor key never counts", !canDoJob(["doctor"], MAINT, { "maintenance.jobs:edit": ["doctor"] }));
+ok("C a doctor key counts exactly when it holds the cell", canDoJob(["doctor"], MAINT, { "maintenance.jobs:edit": ["doctor"] }) && !canDoJob(["doctor"], MAINT, { "maintenance.jobs:edit": ["volunteer"] }));
 ok("C no roles, no job", !canDoJob([], MAINT, {}));
 
 // ---- D ----
