@@ -34,8 +34,8 @@ begin
   insert into res values ('sizes_found', (v_s is not null and v_m is not null and v_l is not null)::text);
   insert into diets (name, servings_small, servings_medium, servings_large) values ('ZZ proof servings', 1, 1.5, 2.5) returning id into v_diet;
   select coalesce(quantity, 0) into v_before from diet_forecast(date '2026-10-19', date '2026-10-25') where diet_type_id = v_ing;
-  insert into diet_ingredients (diet_id, diet_type_id, qty_per_serving, qty_small, qty_medium, qty_large)
-    values (v_diet, v_ing, 50, 50 * 1, 50 * 1.5, 50 * 2.5);
+  insert into diet_ingredients (diet_id, diet_type_id, qty_per_serving)
+    values (v_diet, v_ing, 50);
   insert into resident_diets (resident_id, diet_id, start_date, end_date) values
     (v_s, v_diet, date '2026-10-19', date '2026-10-25'),
     (v_m, v_diet, date '2026-10-19', date '2026-10-25');

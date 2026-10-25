@@ -51,8 +51,8 @@ begin
   insert into diet_types (name, unit, cost_per_unit) values ('H-kibble', 'g', 0.05) returning id into v_k;
   insert into item_unit_conversions (item_kind, diet_type_id, unit, base_units_per) values ('diet_type', v_k, 'cup', 100);
   insert into diets (name) values ('H-exact') returning id into v_diet;
-  insert into diet_ingredients (diet_id, diet_type_id, serving_unit, qty_small, qty_medium, qty_large)
-    values (v_diet, v_k, 'cup', 2, 3, 4);
+  insert into diet_ingredients (diet_id, diet_type_id, serving_unit, qty_per_serving)
+    values (v_diet, v_k, 'cup', 2);
   update resident_diets set diet_id = v_diet, start_date = least(start_date, v_from) where id = rd.id;
   insert into fx select v_diet, v_k, rd.id, v_from, v_from + 9,
     (select coalesce(size::text, 'Medium') from residents where id = rd.resident_id), coalesce(rd.portion_factor, 1);
