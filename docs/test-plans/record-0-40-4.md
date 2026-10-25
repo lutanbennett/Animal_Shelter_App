@@ -18,7 +18,7 @@
 - [x] One sentence: records what `0.40.4` deployed, applied and measured, and rewrites the handover as a delta for the next release manager
 - [x] Touched: `docs/releases/2026-10-25-0-40-4.md` (new), `docs/release-handover.md` (rewritten), `docs/test-plans/record-0-40-4.md` (this file)
 - [x] Roles affected: none — no code, no schema, no permission change
-- [x] Out of scope: the Doctor-role card loss (recorded, remedy is a separate Security item); the five `pending:` plans (shipped as a stated gap on Lutan's decision); `check-diets-per-serving-schema.mjs`
+- [x] Out of scope: the Doctor role's card count (recorded, and **not** a fault — it is Lutan's card-by-card testing, so there is no remedy to own); the five `pending:` plans (shipped as a stated gap on Lutan's decision); `check-diets-per-serving-schema.mjs`
 
 ## 2. Automated gates
 
@@ -74,7 +74,7 @@ the production apply — are recorded in the release file and were taken from pr
 - [ ] `README.md` still accurate — n/a: nothing in `README.md` names the release record or the handover
 - [ ] **Release notes.** `n/a: release paperwork. These two documents describe a release that has already shipped; no shelter user can see a release record or a handover, and this PR changes no code, page or string.`
 - [x] Commit messages say why, not just what
-- [x] **Claims were measured, not reasoned.** The record's two load-bearing negative claims are each backed by a measurement rather than an argument: *this release did not cause the Doctor card loss* rests on `doctor-cells` reading **MISSING 12 of 13 identically before and after** the apply, and *the public site being closed is not a `0263` regression* rests on `/adopt` 307ing on **both** hosts plus `git diff --name-only` finding neither `public-site.ts` nor `public-paths.ts` in the range
+- [x] **Claims were measured, not reasoned.** The record's two load-bearing negative claims are each backed by a measurement rather than an argument: *this release did not change the Doctor's cards* rests on `doctor-cells` reading **MISSING 12 of 13 identically before and after** the apply, and *the public site being closed is not a `0263` regression* rests on `/adopt` 307ing on **both** hosts plus `git diff --name-only` finding neither `public-site.ts` nor `public-paths.ts` in the range. **And where a measurement could not supply the cause, the record now says so instead of inferring one** — its first draft explained the Doctor count as unidentified drift, which was wrong and was corrected by asking Lutan
 
 ## 8. Pre-production gate
 

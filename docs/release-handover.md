@@ -32,21 +32,21 @@ six roles are byte-identical before and after; `cards-union` and `role-cards-cov
 all seven. Independent confirmation: `sync-home-icons.mjs` went from `51 cards` to `52 cards` with
 **8 created**, agreeing that exactly one card was added.
 
-**Read the release's one real finding, because it is nobody's change and it is getting worse:** the
-**Doctor role holds one card where `0.40.3` recorded five**, so `doctor-cells` reports **MISSING 12 of
-13** against that record's 9. **Identical before and after today's apply**, which is what proves this
-release did not cause it. It has now drifted twice, by a route nobody has identified. **Find out
-*how* it is changing, not just restore the cards** — a role losing cards silently between releases is
-the same class of fault as the tile that silently is not drawn.
+**`doctor-cells` red is EXPECTED and is not a fault — read
+`docs/decisions/2026-10-25-doctor-is-the-test-role.md` before concluding anything from it.** Lutan is
+using Doctor as his test role, one card at a time, so `MISSING 12 of 13` is his work in progress.
+**Never restore the Doctor's cards and never edit the check.** Report the number, change nothing.
 
 **Re-measure before trusting any of this.** `git diff --stat 2374d15d..HEAD`, `gh pr list`,
 `--status --env production`, `node scripts/check-production.mjs all`, the live `/api/version`.
 
 ## Corrections to the last edition
 
-- **It said the Doctor's nine cells were "still exactly nine" and to re-measure rather than re-close
-  from the record. The method was right and it is what caught this: now twelve.** Keep re-measuring,
-  and note the number is moving.
+- **It said the Doctor's nine cells were "still exactly nine", that the new doctor cards were "the
+  most important open item", and to re-measure rather than re-close from the record. Re-measuring was
+  right — but the conclusion drawn from it was wrong, and so was the last three editions'.** It is
+  twelve now because **Lutan is using Doctor as his test role**, not because anything is broken. See
+  START HERE. **Carry it as his work, never as an open item.**
 - **It said `opensWhoDoesWhat()` was one hard-coded grant in none of the registry's five mechanisms,
   and that the answer to "is role-based access gone?" was "the database half is done; one grant
   remains in the app." That answer is now out of date. Both halves are done.** The grant is a card.
@@ -118,11 +118,11 @@ the same time. **Say so in the record if you do it, as this one does.**
 **The Doctor's twelve missing cells is now the most important open item** — see START HERE. Filed
 under *Security* with the new doctor cards as the remedy, but the drift itself wants explaining.
 
-**Also his, and NOT done: the ten production sign-in checks.** The most valuable single one is still
-the **card save on Who does what** — add a card, remove one, move one — because it is what one of this
-release's two notes promises, and no session can pass the authenticator step. `0.40.1`, `0.40.2` and
-`0.40.3` were not done either. **Four releases is long enough that it should be raised as its own
-item rather than carried in a handover.**
+**The "ten production sign-in checks are NOT done" claim is retired because it was wrong** — he signs
+into production as admin after each release. Three editions asserted otherwise on no evidence but a
+session's own inability to look. **Do not reinstate it**; see the decision file above. What is
+genuinely unknown is only whether the **card save on Who does what** has been exercised
+specifically — one question, not a standing item.
 
 **Five `pending:` plans shipped as a stated gap** on Lutan's explicit decision, the same call he made
 for `0.40.3`, `0.40.2`, `0.40.1` and `0.15.0`. Listed in `docs/test-plans/cut-release-0-40-4.md` and
