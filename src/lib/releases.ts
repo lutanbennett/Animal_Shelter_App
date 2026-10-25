@@ -74,15 +74,22 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
+export const unreleased: ReleaseNote[] = [];
+
+/** Newest first. */
+export const releases: Release[] = [
+  {
+    version: "0.40.3",
+    date: "2026-10-25",
+    title: "Giving a role a card works again",
+    major: false,
+    notes: [
   {
     text: "Giving a role a card, taking one away, or moving one up or down on Settings → Who does what works again. Since 0.40.2 every one of those showed Something went wrong and saved nothing.",
     roles: ["admin"],
   },
-];
-
-/** Newest first. */
-export const releases: Release[] = [
+    ],
+  },
   {
     version: "0.40.2",
     date: "2026-10-25",
