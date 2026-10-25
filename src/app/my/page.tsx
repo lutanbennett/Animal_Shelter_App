@@ -5,7 +5,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { todayIso } from "@/lib/format";
 import { DEFAULT_SIGNED_IN_PATH } from "@/lib/auth/next-path";
 import { TWO_STEP_PATH, getAssuranceLevel } from "@/lib/auth/two-step";
-import { can } from "@/lib/permissions/can";
+import { can, entersApp } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { loadMyAccessRequestTasks } from "@/lib/my-tasks/access-requests";
 import { loadMyMaintenanceTasks } from "@/lib/my-tasks/maintenance";
@@ -35,14 +35,12 @@ export default async function MyPage() {
     supabase.auth.getUser(),
     loadPermissions(),
   ]);
-  // Tasks are shelter operations, which a clinic login has none of: its home is its tiles (the scope, not the role name).
-  if (perms?.scopes.clinical === "own_clinic") redirect(DEFAULT_SIGNED_IN_PATH);
   const userId = auth.user?.id;
 
   const sections: MyTaskSection[] = userId
     ? await Promise.all([
         ...(perms?.isAdmin ? [loadMyAccessRequestTasks(t)] : []),
-        ...(perms?.role.opensApp ? [loadMyRecurringTasks(supabase, userId, perms.roles, t, today)] : []),
+        ...(perms && entersApp(perms) ? [loadMyRecurringTasks(supabase, userId, perms.roles, t, today)] : []),
         ...(can(perms, "maintenance.jobs", "read")
           ? [loadMyMaintenanceTasks(supabase, userId, can(perms, "maintenance.progress"), t, locale)]
           : []),

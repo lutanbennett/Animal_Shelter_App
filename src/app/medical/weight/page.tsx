@@ -5,7 +5,6 @@ import { getT } from "@/lib/i18n/get-t";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { formatDate, formatWeightKg, todayIso } from "@/lib/format";
 import { placeName } from "@/lib/enclosures/names";
-import { refuseFor } from "@/lib/auth/require-role";
 import { requirePermission } from "@/lib/permissions/require";
 import { loadOneResident, loadPickableResidents, matchesQuery } from "@/lib/medical/residents";
 import { loadWeighFirst } from "@/lib/medical/weigh-first";
@@ -30,8 +29,7 @@ import { BackLink } from "@/components/BackLink";
  * docs/decisions/2026-10-16-weigh-these-first.md.
  */
 export default async function RecordWeightPage(props: PageProps<"/medical/weight">) {
-  const { perms } = await requirePermission("medical.weight");
-  if (perms.scopes.clinical !== "any") refuseFor(perms);
+  await requirePermission("medical.weight");
   const { t, locale } = await getT();
   const w = t.medicalJobs.weight;
   const sp = await props.searchParams;

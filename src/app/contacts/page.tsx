@@ -25,18 +25,7 @@ export default async function ContactsPage(props: PageProps<"/contacts">) {
   // needs the carer's number, not their address or notes. Open placements
   // give each carer their "N in care" badge.
   const [contactsResult, placementsResult, friendsResult] = await Promise.all([
-    // The contacts scope says which view of the address book this role reads (0126).
-    perms.scopes.contacts === "name_phone"
-      ? supabase
-          .from("volunteer_contacts")
-          .select("id, name, phone")
-          .order("name")
-          .returns<{ id: string; name: string; phone: string | null }[]>()
-          .then((r) => ({
-            ...r,
-            data: r.data?.map(toVolunteerContact) as VolunteerContact[] | null,
-          }))
-      : supabase
+    supabase
           .from("contacts")
           .select(CONTACT_COLUMNS)
           .order("name")

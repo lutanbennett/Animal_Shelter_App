@@ -1,17 +1,17 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { parsePermissions } from "@/lib/permissions/can";
+import { entersApp, parsePermissions } from "@/lib/permissions/can";
 import { isPublicPath } from "@/lib/public-paths";
 import { DEFAULT_SIGNED_IN_PATH } from "./next-path";
 
 /**
- * Whether a role opens the app is the role's own `opens_app` (roles, 0132), read through my_permissions():
- * the same answer private.has_app_access() gives the database. Everything else a session can be — signed
+ * Whether a login is in the app is entersApp() on its permissions, read through my_permissions(): Admin, or a role
+ * that holds at least one card's access. No column switches a role on or off. Everything else a session can be — signed
  * out, archived or never given a role (null here), or `public_viewer` (0085) — sees the public website and
  * nothing more. This replaced APP_ACCESS_ROLES / hasAppAccess, a list of enum values that still named
  * `staff` (retired by 0173) and knew a configured role only by the enum it borrows
  * (docs/decisions/2026-10-11-perm-role-lists.md).
  */
-export type SessionRole = { key: string; opensApp: boolean };
+export type SessionRole = { key: string; entersApp: boolean };
 
 /**
  * A login for testing the locked UAT/test sites as a visitor: it signs in,
@@ -24,7 +24,7 @@ export const PUBLIC_VIEWER_ROLE = "public_viewer";
 export async function loadSessionRole(supabase: SupabaseClient): Promise<SessionRole | null> {
   const { data } = await supabase.rpc("my_permissions");
   const perms = parsePermissions(data);
-  return perms ? { key: perms.role.key, opensApp: perms.role.opensApp } : null;
+  return perms ? { key: perms.role.key, entersApp: entersApp(perms) } : null;
 }
 
 /**
@@ -35,7 +35,7 @@ export async function loadSessionRole(supabase: SupabaseClient): Promise<Session
  * a resident card scanned on the locked site still opens after sign-in.
  */
 export function signedInLandingPath(role: SessionRole | null, next: string | null): string {
-  if (role?.opensApp) return next ?? DEFAULT_SIGNED_IN_PATH;
+  if (role?.entersApp) return next ?? DEFAULT_SIGNED_IN_PATH;
   if (next && isPublicPath(new URL(next, "http://x").pathname)) return next;
   return "/";
 }

@@ -1,5 +1,4 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { loadPermissions } from "@/lib/permissions/load";
 
 /**
  * Which clinics this session may record a clinic visit against. The
@@ -26,10 +25,10 @@ export type ClinicScope =
   | { kind: "unlinked" };
 
 export async function loadClinicScope(supabase: SupabaseClient): Promise<ClinicScope> {
-  if ((await loadPermissions())?.scopes.clinical !== "own_clinic") return { kind: "any" };
+  // Whose visits these are comes from the login's own clinic links (current_user_clinic_ids), not from a column on its role.
   const { data } = await supabase.rpc("current_user_clinic_ids");
   const clinicIds = Array.isArray(data) ? (data as string[]) : [];
-  if (clinicIds.length === 0) return { kind: "unlinked" };
+  if (clinicIds.length === 0) return { kind: "any" };
 
   const { data: userData } = await supabase.auth.getUser();
   let doctorName: string | null = null;

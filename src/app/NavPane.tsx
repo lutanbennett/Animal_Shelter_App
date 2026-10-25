@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { can } from "@/lib/permissions/can";
+import { can, entersApp } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { canOpen, opensAnyIn, routeFor } from "@/lib/permissions/routes";
 import { todayIso } from "@/lib/format";
@@ -21,7 +21,7 @@ export async function NavPane() {
 
   // A public viewer reaches an app-chrome page only to change a temporary
   // password; a menu of pages it would be bounced from is no use to it.
-  if (!perms?.role.opensApp) return null;
+  if (!perms || !entersApp(perms)) return null;
 
   // Tiles only for a role whose Show the menu setting is off (Admin always keeps it).
   if (!(await showMenuForLogin())) return null;

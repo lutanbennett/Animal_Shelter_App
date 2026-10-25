@@ -49,12 +49,6 @@ export type RouteEntry = {
    * for a page under /operations, /management or /admin that sits where its URL says.
    */
   section?: Section;
-  /**
-   * A scope the page also requires, beside the activity: shelter staff may hold the activity and
-   * still be refused (a doctor's appointments). canOpen() honours it, so routesFor() never offers a
-   * tile the page would refuse. Only the clinical scope has a page gated by it today.
-   */
-  scope?: { clinical: "own_clinic" | "any" };
 };
 
 /** The three sections with a landing page of tiles (Lutan, 2026-10-08). */
@@ -69,11 +63,10 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.nav.appointments,
     device: "any",
     menu: false,
-    scope: { clinical: "own_clinic" },
   },
   {
-    // The shelter-wide view of every booked visit, for whoever books them (the Director). The
-    // scope is the opposite of /appointments: that page is for a clinic login, this one refuses it.
+    // The shelter-wide view of every booked visit, for whoever books them (the Director). Who
+    // sees which visits is the database's answer, not this entry's.
     path: "/upcoming-visits",
     activity: "medical.visits",
     level: "read",
@@ -82,7 +75,6 @@ export const ROUTES: readonly RouteEntry[] = [
     device: "any",
     menu: false,
     section: "operations",
-    scope: { clinical: "any" },
   },
   {
     path: "/stocktake",
@@ -250,9 +242,6 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.nav.medicationList,
     device: "any",
     menu: false,
-    // A doctor holds the cell but reads only its own clinic's residents, which the list's views do
-    // not carry (sees_all_clinical(), 0136): the page would open empty, so it is not offered.
-    scope: { clinical: "any" },
   },
   {
     path: "/operations/feeding-list",
@@ -262,8 +251,6 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.nav.feedingList,
     device: "any",
     menu: false,
-    // Same audience as /medical/diets: the diet rows are for a login that sees every clinic (sees_all_clinical(), 0140).
-    scope: { clinical: "any" },
   },
   {
     path: "/medical/weight",
@@ -272,9 +259,6 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.appHome.jobs.recordWeight,
     device: "any",
     menu: false,
-    // A phone page for the Head of Medical, who cannot open /residents/...: it reads who-and-where.
-    // A doctor holds the cell but would find an empty picker (sees_all_clinical(), 0135).
-    scope: { clinical: "any" },
   },
   {
     path: "/medical/photos",
@@ -283,8 +267,6 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.appHome.jobs.addMedicalPhotos,
     device: "any",
     menu: false,
-    // Reads who-and-where and medical_photo_residents, both for a login that sees every clinic.
-    scope: { clinical: "any" },
   },
   {
     // Photo first, then the resident (docs/decisions/2026-10-12-photo-first-tagging.md). Open to anyone
@@ -314,8 +296,6 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.appHome.jobs.feedSpecialDiets,
     device: "any",
     menu: false,
-    // special_diet_list rows are for a login that sees every clinic (sees_all_clinical(), 0140).
-    scope: { clinical: "any" },
   },
   {
     path: "/management/medications",
@@ -478,7 +458,6 @@ export const ROUTES: readonly RouteEntry[] = [
 
 /** Whether `perms` opens this entry. */
 export function canOpen(perms: Permissions | null | undefined, route: RouteEntry): boolean {
-  if (route.scope && perms?.scopes.clinical !== route.scope.clinical) return false;
   if (route.alsoActivity && can(perms, route.alsoActivity as LevelKey)) return true;
   return can(perms, route.activity as LevelKey, route.level);
 }

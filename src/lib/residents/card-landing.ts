@@ -13,7 +13,7 @@
 export type CardLanding = "public" | "public-plus" | "full";
 
 export type CardTapInput = {
-  /** Signed in and the role opens the app (roles.opens_app). */
+  /** Signed in and the login is in the app (entersApp). */
   appAccess: boolean;
   /** can(perms, "resident.record", "read"). */
   readsRecord: boolean;

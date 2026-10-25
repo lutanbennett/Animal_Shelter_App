@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { CARDS, CARD_KEYS, bundleOfCards, includedCards, cardOpens } from "./cards.ts";
-import { JOBS, JOBS_OF_ROLE, bundleOfRole } from "./jobs.ts";
+import { CARDS, CARD_KEYS, bundleOfCards, includedCards } from "./cards.ts";
+import { JOBS, bundleOfJobs } from "./jobs.ts";
 import { ACTIVITIES } from "./catalogue.ts";
 import { ROUTES } from "./routes.ts";
 
@@ -29,7 +29,7 @@ test("includes are real cards and never loop", () => {
 
 test("a card's tile opens a page in the registry", () => {
   const paths = new Set(ROUTES.map((r) => r.path));
-  const pages = CARD_KEYS.flatMap((k) => [CARDS[k].opens, CARDS[k].opensAny ?? CARDS[k].opens]);
+  const pages = CARD_KEYS.flatMap((k) => [CARDS[k].opens]);
   const unknown = pages.filter((p) => !paths.has(p) && !["/residents", "/bills", "/assistant", "/my", "/operations", "/management"].includes(p));
   assert.deepEqual(unknown, []);
 });
@@ -45,7 +45,7 @@ test("levels flow down: Residents gives everything View residents does, and more
 });
 
 test("the eight jobs as cards give what the jobs give", () => {
-  for (const [role, jobs] of Object.entries(JOBS_OF_ROLE)) assert.deepEqual(bundleOfCards(jobs), bundleOfRole(role), role);
+  for (const key of Object.keys(JOBS)) assert.deepEqual(bundleOfCards([key]), bundleOfJobs([key]), key);
 });
 
 test("Enclosures is narrow: Read on the enclosures and nothing of maintenance", () => {
@@ -56,8 +56,7 @@ test("Management is not handed a power it does not hold: Residents leaves death 
   assert.ok(!bundleOfCards(["residents"]).has("placement.death_withdraw"));
 });
 
-test("Book clinic visits opens the clinic login's page for a clinic login and the shelter's list for everyone else", () => {
-  assert.equal(cardOpens(CARDS.book_clinic_visits, "own_clinic"), "/appointments");
-  assert.equal(cardOpens(CARDS.book_clinic_visits, "any"), "/upcoming-visits");
-  assert.equal(cardOpens(CARDS.contacts, "any"), CARDS.contacts.opens);
+test("a card opens one page, the same for every role that holds it", () => {
+  assert.equal(CARDS.book_clinic_visits.opens, "/upcoming-visits");
+  assert.ok(!("opensAny" in CARDS.book_clinic_visits));
 });

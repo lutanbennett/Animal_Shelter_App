@@ -124,7 +124,7 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname !== PASSWORD_CHANGE_PATH
   ) {
     const role = await loadSessionRole(supabase);
-    if (!role?.opensApp) {
+    if (!role?.entersApp) {
       const url = request.nextUrl.clone();
       url.search = "";
       if (role) {

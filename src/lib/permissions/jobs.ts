@@ -133,27 +133,11 @@ export const JOBS: Record<JobKey, Job> = {
   },
 };
 
-/**
- * Which jobs a configured role is given, by the role's key. The role's `role_permissions` rows
- * are the union of these bundles. A role not listed here has no jobs and its home is derived
- * from its cells, as every role's was before.
- */
-export const JOBS_OF_ROLE: Readonly<Record<string, readonly JobKey[]>> = {
-  head_of_medical: ["administer_medication", "record_weight", "add_medical_photos", "feed_special_diets"],
-  head_of_maintenance: ["do_maintenance"],
-  // The whiteboard's three tiles plus a delivery (P1). Her maintenance is the Head of Maintenance's job.
-  second_in_command: ["do_stocktaking", "do_purchasing", "record_delivery", "do_maintenance"],
-};
-
-export function jobsOfRole(roleKey: string): readonly Job[] {
-  return (JOBS_OF_ROLE[roleKey] ?? []).map((k) => JOBS[k]);
-}
-
-/** The union of a role's jobs: each activity once, at the highest level any job asks. */
-export function bundleOfRole(roleKey: string): Map<ActivityKey, Level> {
+/** The union of some jobs' bundles: each activity once, at the highest level any job asks. Which jobs a role holds is data (role_cards), never a list here. */
+export function bundleOfJobs(keys: readonly JobKey[]): Map<ActivityKey, Level> {
   // A yes/no activity is held at "edit" (cell 2), the way role_permissions stores a Yes.
   const union = new Map<ActivityKey, Level>();
-  for (const job of jobsOfRole(roleKey)) {
+  for (const job of keys.map((k) => JOBS[k])) {
     for (const { activity, level = "edit" } of job.bundle) {
       if (union.get(activity) !== "edit") union.set(activity, level);
     }

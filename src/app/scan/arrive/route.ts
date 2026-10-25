@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user || (await loadSessionRole(supabase))?.opensApp !== true) return plain;
+  if (!user || (await loadSessionRole(supabase))?.entersApp !== true) return plain;
 
   const path = CARD_WAIT_JOBS[job];
   const route = routeFor(path);

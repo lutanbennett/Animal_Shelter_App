@@ -153,6 +153,8 @@ const th: Dictionary = {
     viewing: (role: string) =>
       `นี่คือหน้าหลักของบทบาท ${role} ตามที่บทบาทนั้นเห็น คุณเข้าสู่ระบบในฐานะผู้ดูแลระบบ`,
     emptyTitle: "ยังไม่มีอะไรที่นี่",
+    cardsNoPageTitle: "การ์ดที่ยังเปิดหน้าไม่ได้",
+    cardsNoPage: (cards: string) => `คุณมีการ์ดเหล่านี้ แต่หน้าของแต่ละใบยังไม่เปิดให้คุณ: ${cards} โปรดแจ้งผู้ดูแลระบบ การ์ดยังขาดสิทธิ์บางอย่างที่หน้านั้นต้องใช้`,
     empty: "บทบาทนี้ยังไม่มีงานบนหน้าหลัก งานจะปรากฏเมื่อบทบาทนี้ได้รับมอบหมายหน้าที่",
     /** A job's name, in the Director's words: the tile a role with jobs sees (src/lib/permissions/jobs.ts). */
     /** The Director's Intake tile: registering a new resident (the whiteboard's Management column). */

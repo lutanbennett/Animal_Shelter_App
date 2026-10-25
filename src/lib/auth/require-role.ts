@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { type Permissions } from "@/lib/permissions/can";
+import { entersApp, type Permissions } from "@/lib/permissions/can";
 
 /**
  * The app page that says "you do not have access to this" — where a
@@ -14,8 +14,8 @@ export const NO_ACCESS_PATH = "/no-access";
  * Refuses a request whose permissions are already loaded. A role that opens the app gets the no-access page
  * (inside the app, with its menu); anyone else — a public viewer, or no live role — gets the public home page,
  * which is right for them and only them. What decides whether someone is in the app is the role's own
- * `opensApp` (docs/decisions/2026-10-04-medical-jobs-app.md), never a list of role names.
+ * cards: entersApp() (docs/decisions/2026-10-04-medical-jobs-app.md), never a list of role names.
  */
 export function refuseFor(perms: Permissions | null | undefined): never {
-  redirect(perms?.role.opensApp ? NO_ACCESS_PATH : "/");
+  redirect(entersApp(perms) ? NO_ACCESS_PATH : "/");
 }

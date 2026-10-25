@@ -27,7 +27,7 @@ export default async function AddPhotosPage() {
   // The folders come from the login (photoCategoriesFor), never from this page: a login that may file in Shelter
   // only has one folder and so no choice to make; Management keeps all four; the Head of Medical keeps Medical.
   const shelterOnly = categories.length === 1 && categories[0] === "Shelter";
-  const route = shelterOnly ? "shelter" : categories.length === 1 && perms.scopes.clinical === "any" ? "medical" : "staff";
+  const route = shelterOnly ? "shelter" : categories.length === 1 ? "medical" : "staff";
   // What this login files into Shelter waits for Management (0217's trigger decides; this only says so).
   const waits = shelterOnly && !can(perms, "photos.resident_publish");
 

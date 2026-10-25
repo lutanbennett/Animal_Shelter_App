@@ -85,7 +85,7 @@ export async function matchBillToJob(cardId: string, jobId: string, input: CardD
   const { t } = await getT();
   const e = t.bills.errors;
   const perms = await loadPermissions();
-  if (!perms || perms.scopes.clinical === "own_clinic" || !can(perms, "maintenance.bills")) {
+  if (!perms || !can(perms, "maintenance.bills")) {
     return { ok: false, error: e.notAuthorized };
   }
   const amount = parseBahtAmount(input.amount);

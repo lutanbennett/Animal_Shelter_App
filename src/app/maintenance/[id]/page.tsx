@@ -25,7 +25,7 @@ export default async function MaintenanceJobPage(props: PageProps<"/maintenance/
   if (!job) notFound();
 
   // Bills and their amounts are Management's (maintenance.bills): for anyone else nothing is read.
-  const canBills = can(perms, "maintenance.bills") && perms.scopes.clinical !== "own_clinic";
+  const canBills = can(perms, "maintenance.bills");
   const { bills, cost } = canBills ? await loadJobBills(supabase, id) : { bills: [], cost: null };
 
   return (

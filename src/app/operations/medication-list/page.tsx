@@ -19,7 +19,6 @@ import {
 } from "@/lib/medication-list/load";
 import { buildPickList, type PickLine } from "@/lib/medication-list/pick";
 import { ROUND_KEYS, suggestRound, type RoundKey } from "@/lib/rounds/suggest";
-import { refuseFor } from "@/lib/auth/require-role";
 import { requirePermission } from "@/lib/permissions/require";
 
 /**
@@ -42,9 +41,8 @@ import { requirePermission } from "@/lib/permissions/require";
  * (docs/decisions/2026-10-04-medical-round-screens.md).
  */
 export default async function MedicationListPage(props: PageProps<"/operations/medication-list">) {
-  const { perms } = await requirePermission("medical.prescriptions", "read");
+  await requirePermission("medical.prescriptions", "read");
   // The list's views are for a login that sees every clinic (0136); a doctor would get an empty page.
-  if (perms.scopes.clinical !== "any") refuseFor(perms);
   const { t, locale } = await getT();
   const m = t.management.medicationList;
 

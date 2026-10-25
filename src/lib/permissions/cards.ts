@@ -55,21 +55,11 @@ export type Card = {
   /** The page the card's tile opens: a route in the registry. */
   opens: string;
   /**
-   * The page it opens instead for a role whose clinical scope is "any" (shelter staff), when `opens` is a clinic
-   * login's own page that they are refused. Read it through cardOpens(), never directly.
-   */
-  opensAny?: string;
-  /**
    * Cards that SOME OTHER role must hold before any role may be given this one (0221 enforces it in set_role_cards()).
    * Each name is satisfied by the cards in CARD_SATISFIED_BY, not only by itself.
    */
   requiresCardSomewhere?: readonly CardKey[];
 };
-
-/** The page this card's tile opens for a role with this clinical scope: one that role can open. */
-export function cardOpens(card: Pick<Card, "opens" | "opensAny">, clinical: string): string {
-  return clinical === "own_clinic" ? card.opens : (card.opensAny ?? card.opens);
-}
 
 type NewCard = Omit<Card, "key" | "label">;
 
@@ -113,9 +103,9 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   book_clinic_visits: {
     includes: ["view_residents"],
     bundle: [{ activity: "visit.book" }, { activity: "medical.visits", level: "read" }],
-    // /appointments is the clinic login's own page (refused to shelter roles); the shelter's list of visits is /upcoming-visits.
-    opens: "/appointments",
-    opensAny: "/upcoming-visits",
+    // One card, one page. It used to open /appointments for a clinic login and /upcoming-visits for everyone else, chosen by
+    // the role's clinical column; a card now opens the same page for every role that holds it (docs/decisions/2026-10-25-remove-hard-coded-security.md).
+    opens: "/upcoming-visits",
   },
   contacts: {
     includes: [],

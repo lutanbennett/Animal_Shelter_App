@@ -21,8 +21,7 @@ export async function listHomeRoles(supabase: SupabaseClient): Promise<HomeRole[
     .from("roles")
     .select("key, name, name_th, kind")
     .is("archived_at", null)
-    .eq("opens_app", true)
-    .neq("key", "admin")
+    .neq("kind", "fixed")
     .order("kind")
     .order("name");
   // No roles would read as "nobody can be previewed", not as a failed read (docs/decisions/2026-10-11-silent-empty-reads.md).
@@ -36,20 +35,16 @@ export async function listHomeRoles(supabase: SupabaseClient): Promise<HomeRole[
 export async function loadRolePermissions(supabase: SupabaseClient, roleKey: string): Promise<Permissions | null> {
   const { data: role } = await supabase
     .from("roles")
-    .select("id, key, name, name_th, kind, opens_app, home_path, scope_residents, scope_clinical, scope_contacts, scope_photos, sees_login_emails")
+    .select("id, key, name, name_th, kind, home_path, sees_login_emails")
     .eq("key", roleKey)
     .is("archived_at", null)
     .maybeSingle();
   if (!role) return null;
   const { data: cells } = await supabase.from("role_permissions").select("activity, level").eq("role_id", role.id);
   return parsePermissions({
-    role: { key: role.key, name: role.name, name_th: role.name_th, kind: role.kind, opens_app: role.opens_app, home_path: role.home_path },
+    role: { key: role.key, name: role.name, name_th: role.name_th, kind: role.kind, home_path: role.home_path },
     is_admin: role.key === "admin",
     scopes: {
-      residents: role.scope_residents,
-      clinical: role.scope_clinical,
-      contacts: role.scope_contacts,
-      photos: role.scope_photos,
       sees_login_emails: role.sees_login_emails,
     },
     permissions: Object.fromEntries((cells ?? []).map((c) => [c.activity, c.level])),

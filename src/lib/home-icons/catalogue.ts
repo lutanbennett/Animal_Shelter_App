@@ -52,7 +52,7 @@ function toIcons(pages: Iterable<Page>): CatalogueIcon[] {
 /** Every page a card opens, with the card's own label and the icon its tile uses (outside-registry pages included). */
 function cardPages(t: Dictionary): Page[] {
   return Object.values(CARDS).flatMap((card) =>
-    [card.opens, card.opensAny ?? card.opens].flatMap((path) => {
+    [card.opens].flatMap((path) => {
       const icon = (OUTSIDE_REGISTRY as Partial<typeof OUTSIDE_REGISTRY>)[path]?.icon ?? routeFor(path)?.icon;
       return icon ? [{ path, label: card.label(t), icon }] : [];
     }),

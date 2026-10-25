@@ -54,7 +54,7 @@ export async function renderAdoptionUpdatesSection(ctx: SectionContext): Promise
   // An adopter's photo can be posted too (0223): the badge shows here, and marking works for the same logins as Photos.
   const shares = await loadPhotoShares(supabase, photos.map((p) => p.id));
   // The same test the table's policies make: photos.resident_manage, and a role that sees all residents.
-  const canMarkPosted = can(perms, "photos.resident_manage") && perms?.scopes.residents === "all";
+  const canMarkPosted = can(perms, "photos.resident_manage");
   const canWrite =
     can(perms, "resident.adoption_news") && (adoptCountResult.count ?? 0) > 0;
   const a = t.adoptionUpdates;

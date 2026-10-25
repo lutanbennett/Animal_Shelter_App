@@ -2,13 +2,15 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { refuseFor } from "@/lib/auth/require-role";
+import { entersApp } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { deviceFrom } from "@/lib/home/device";
 import { listHomeRoles, loadCardsByRole } from "@/lib/home/roles";
-import { homeGroupsForRoles } from "@/lib/home/tiles";
+import { cardsWithoutTile, homeGroupsForRoles } from "@/lib/home/tiles";
 import { loadUrgentCounts } from "@/lib/my-tasks/urgent";
 import { countBillsWaiting } from "@/lib/bills/waiting";
 import { countPhotosWaiting } from "@/lib/photos/approval";
+import { CARDS } from "@/lib/permissions/cards";
 import { getT } from "@/lib/i18n/get-t";
 import { HomeTiles } from "@/components/HomeTiles";
 import { HomeGroups } from "@/components/HomeGroups";
@@ -37,7 +39,7 @@ export default async function HomePage() {
   if (!user) redirect("/login");
 
   const perms = await loadPermissions();
-  if (!perms?.role.opensApp) refuseFor(perms);
+  if (!perms || !entersApp(perms)) refuseFor(perms);
 
   if (perms.isAdmin) {
     const h = await headers();
@@ -50,13 +52,16 @@ export default async function HomePage() {
 
   const { t, locale } = await getT();
   const urgent = await loadUrgentCounts(supabase, perms, user.id);
-  const groups = homeGroupsForRoles(perms, t, await countBillsWaiting(supabase, perms), await loadCardsByRole(perms.roles, locale), {
+  const cardsByRole = await loadCardsByRole(perms.roles, locale);
+  const groups = homeGroupsForRoles(perms, t, await countBillsWaiting(supabase, perms), cardsByRole, {
     my: urgent.total,
     maintenance: urgent.maintenance,
     photosWaiting: await countPhotosWaiting(supabase, perms),
   });
 
   const tiles = groups.flatMap((g) => g.tiles);
+  // A held card whose page does not open for this login draws no tile; say so rather than leave it unmentioned.
+  const stuck = [...new Set(perms.roles.flatMap((key) => cardsWithoutTile(cardsByRole[key] ? ("cards" in cardsByRole[key] ? cardsByRole[key].cards : cardsByRole[key]) : [], perms).map((c) => CARDS[c.key].label(t))))];
   const held = groups.length > 1 ? await loadHeldRoles(user.id) : [];
   const views = groups.map((g) => {
     const r = held.find((h) => h.key === g.roleKey);
@@ -82,6 +87,12 @@ export default async function HomePage() {
         <section className="rounded-lg border border-border bg-surface p-4">
           <h2 className="font-semibold text-foreground">{t.appHome.emptyTitle}</h2>
           <p className="text-sm text-muted">{t.appHome.empty}</p>
+        </section>
+      )}
+      {stuck.length > 0 && (
+        <section className="rounded-lg border border-border bg-surface p-4">
+          <h2 className="font-semibold text-foreground">{t.appHome.cardsNoPageTitle}</h2>
+          <p className="text-sm text-muted">{t.appHome.cardsNoPage(stuck.join(", "))}</p>
         </section>
       )}
     </main>

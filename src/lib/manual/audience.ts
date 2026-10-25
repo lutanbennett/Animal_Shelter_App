@@ -1,4 +1,5 @@
 import type { SessionRole } from "@/lib/auth/app-access";
+import { entersApp, type Permissions } from "@/lib/permissions/can";
 import type { ManualRole } from "./types";
 
 /** Who the manual is written for: its four audiences. A tag on a topic, not a gate on anything. */
@@ -10,7 +11,7 @@ const MANUAL_AUDIENCES: readonly ManualRole[] = ["admin", "management", "doctor"
  * null — which sees everything — is a session that does not open the app (public viewer) or has no role.
  */
 export function asManualRole(role: SessionRole | null | undefined): ManualRole | null {
-  if (!role?.opensApp) return null;
+  if (!role?.entersApp) return null;
   return (MANUAL_AUDIENCES as readonly string[]).includes(role.key) ? (role.key as ManualRole) : "volunteer";
 }
 
@@ -19,8 +20,8 @@ export function asManualRole(role: SessionRole | null | undefined): ManualRole |
  * role is also shown that role's tagged topics. Main role's audience first. Empty for a session that does not open
  * the app, which `isForRole` reads as "sees everything".
  */
-export function audiencesOf(perms: { role: { opensApp: boolean }; roles: readonly string[] } | null | undefined): ManualRole[] {
-  if (!perms?.role.opensApp) return [];
+export function audiencesOf(perms: (Permissions & { roles: readonly string[] }) | null | undefined): ManualRole[] {
+  if (!perms || !entersApp(perms)) return [];
   const all = perms.roles.map((key) => ((MANUAL_AUDIENCES as readonly string[]).includes(key) ? (key as ManualRole) : "volunteer"));
   return [...new Set(all)];
 }
