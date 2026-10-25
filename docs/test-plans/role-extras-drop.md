@@ -128,7 +128,7 @@ Automated checks by: Claude  Date: 2026-10-25
 
 ### Manual verification
 
-- [ ] The manual list above is not empty, so only the person who looked may tick this
+- [ ] The manual list above is not empty — n/a: only the person who looked may tick this, and nobody has yet
 
 Manual verification by: pending: Lutan's authenticator-step card save and Recent changes look on Who does what
 
