@@ -34,7 +34,7 @@ export const CHECKS = {
     asks: "For each role: how many permission cells and cards does it hold? (Cells with no card behind them are stripped the next time that role's cards are saved.)",
     sql: `select coalesce(json_agg(json_build_object('role', r.key,
         'cells', (select count(*) from role_permissions p where p.role_id = r.id),
-        'cards', (select count(*) from role_cards c where c.role_id = r.id))) order by r.key), '[]'::json)
+        'cards', (select count(*) from role_cards c where c.role_id = r.id)) order by r.key), '[]'::json)
       from roles r where r.kind <> 'fixed'`,
     render: (rows) => rows.map((x) => `${x.role}: ${x.cells} cells, ${x.cards} cards`),
   },
