@@ -29,16 +29,6 @@
   },
   "stillDecidesAccess": [
     {
-      "id": "who-does-what-by-role-key",
-      "file": "src/lib/permissions/who-does-what.ts",
-      "matches": [
-        "perms.roles.includes(\"management\")"
-      ],
-      "plain": "Management can open Settings → Who does what because the code asks for a role NAMED 'management', not because a card says so; the page then reads every role's cards with the service role.",
-      "backlog": "who-does-what-by-card",
-      "found": "2026-10-25"
-    },
-    {
       "id": "never-assignable-by-role-key",
       "file": "src/lib/recurring-jobs/eligibility.ts",
       "matches": [

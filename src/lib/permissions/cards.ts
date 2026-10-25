@@ -41,7 +41,8 @@ export type NewCardKey =
   | "meme_library"
   | "my_tasks"
   | "operations_landing"
-  | "management_landing";
+  | "management_landing"
+  | "who_does_what";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -188,6 +189,9 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // the code added these tiles by itself; now Admin gives and takes them like any other card.
   operations_landing: { includes: [], bundle: [], opens: "/operations" },
   management_landing: { includes: [], bundle: [], opens: "/management" },
+  // Card twenty-nine (2026-10-25, Lutan: only a card gives an ability): see the roles grid on Settings -> Who does what. Read only; editing
+  // stays Admin at 2-step. Management is given it by 0262 so it keeps the page it had when the code asked for the role name.
+  who_does_what: { includes: [], bundle: [{ activity: "roles.view" }], opens: "/admin/who-does-what" },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */
@@ -212,6 +216,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   my_tasks: (t) => t.appHome.cards.myTasks,
   operations_landing: (t) => t.appHome.cards.operationsLanding,
   management_landing: (t) => t.appHome.cards.managementLanding,
+  who_does_what: (t) => t.appHome.cards.whoDoesWhat,
 };
 
 export const CARDS: Record<CardKey, Card> = {
