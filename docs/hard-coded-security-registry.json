@@ -158,14 +158,6 @@
       "reason": "Who the status-alert email goes to: the Admin logins. A recipient list, not an access rule."
     },
     {
-      "file": "src/lib/auth/app-access.ts",
-      "matches": [
-        "PUBLIC_VIEWER_ROLE"
-      ],
-      "kind": "layout",
-      "reason": "A constant naming the public viewer role. Nothing imports it (checked 2026-10-25), so it decides nothing. Delete it with the next change here."
-    },
-    {
       "file": "src/app/manual/page.tsx",
       "matches": [
         "topic.roles?.includes"
@@ -448,7 +440,7 @@
       "on_volunteer_floor",
       "photos_medical_only"
     ],
-    "stubsNote": "Inert but present: these seven functions answer a constant (true, or false for is_clinic_login, on_volunteer_floor, photos_medical_only) and are still called by about 130 policy and view clauses (read from the live dev database 2026-10-25). Nothing reads a role column through them. Redefining one would bring a role rule back through a door the policies already open, so the check fails on it."
+    "stubsNote": "GONE: migration 0264 (2026-10-25) dropped these seven functions, after rewriting every policy, view and function that called them (the stubs answered a constant, so no access changed). The list stays so the check still fails on any migration that creates one again."
   },
   "databaseHalf": {
     "what": "The database no longer reads any role column to grant or deny anything (migration 0259, docs/decisions/2026-10-25-security-database-half.md).",
