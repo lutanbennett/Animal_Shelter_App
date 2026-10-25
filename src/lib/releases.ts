@@ -74,16 +74,23 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [
+export const unreleased: ReleaseNote[] = [];
+
+/** Newest first. */
+export const releases: Release[] = [
+  {
+    version: "0.40.4",
+    date: "2026-10-25",
+    title: "A card for Who does what, and jobs can go to anyone who signs in",
+    major: false,
+    notes: [
   {
     text: "Seeing which cards each role holds on Settings → Who does what is now a card of its own, called Who does what. Management has it, so nothing changes for them; any other role can be given it, and a role without it no longer sees the page.",
     roles: ["admin", "management"],
   },
   { text: "Recurring jobs: the Assigned to list now shows everyone who can sign in, doctors included, instead of leaving them out by role name. A job that links to a page is still only offered to people whose role can open that page; a job with no link can be given to anyone.", roles: ["admin", "management"] },
-];
-
-/** Newest first. */
-export const releases: Release[] = [
+    ],
+  },
   {
     version: "0.40.3",
     date: "2026-10-25",
