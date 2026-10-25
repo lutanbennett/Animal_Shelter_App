@@ -3,7 +3,7 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 
 /**
  * The live roles Who does what shows, shared by the cards page and the Details grid.
- * roles, role_permissions, role_cards and role_extras are readable by Admin alone, and Management opens these
+ * roles, role_permissions and role_cards are readable by Admin alone, and Management opens these
  * pages too, so they are read with the service role after the page's guard. Nothing in them is secret: it is the
  * shelter's own role settings, which these two may see by the backlog item.
  */

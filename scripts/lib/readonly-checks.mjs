@@ -31,13 +31,12 @@ export const CHECKS = {
     render: (r) => [`${r.applied} migrations applied; the latest is ${r.latest}.`],
   },
   "role-cells": {
-    asks: "For each role: how many permission cells, cards and extras does it hold? (Cells with no card or extra behind them are stripped the next time that role's cards are saved.)",
+    asks: "For each role: how many permission cells and cards does it hold? (Cells with no card behind them are stripped the next time that role's cards are saved.)",
     sql: `select coalesce(json_agg(json_build_object('role', r.key,
         'cells', (select count(*) from role_permissions p where p.role_id = r.id),
-        'cards', (select count(*) from role_cards c where c.role_id = r.id),
-        'extras', (select count(*) from role_extras e where e.role_id = r.id)) order by r.key), '[]'::json)
+        'cards', (select count(*) from role_cards c where c.role_id = r.id)) order by r.key), '[]'::json)
       from roles r where r.kind <> 'fixed'`,
-    render: (rows) => rows.map((x) => `${x.role}: ${x.cells} cells, ${x.cards} cards, ${x.extras} extras`),
+    render: (rows) => rows.map((x) => `${x.role}: ${x.cells} cells, ${x.cards} cards`),
   },
   "role-cards": {
     asks: "Which cards does each role hold? (Answers 'does any role hold the Operations or Management card?'.)",
@@ -76,7 +75,7 @@ export const CHECKS = {
     failed: (rows) => rows.length > 0,
   },
   "cards-union": {
-    asks: "For each role: are its permission cells exactly the union of its cards' grants? (Lists cells no card backs, and backed access the role lacks.) role_extras no longer counts (0257).",
+    asks: "For each role: are its permission cells exactly the union of its cards' grants? (Lists cells no card backs, and backed access the role lacks.)",
     // Reads card_grants and card_includes, like role-cards-coverage.
     sql: `with g(card, activity, level) as (select c0.card, cg.activity, max(cg.level) from (select distinct card from role_cards) c0 cross join lateral card_closure(array[c0.card]) cl join card_grants cg on cg.card = cl.card group by c0.card, cg.activity),
       want as (select c.role_id, g.activity, max(g.level) as level

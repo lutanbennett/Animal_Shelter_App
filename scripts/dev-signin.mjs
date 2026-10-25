@@ -9,7 +9,7 @@
 //
 // --cards (docs/card-walkthrough.md; docs/decisions/2026-10-22-card-walkthrough-generated.md): the cards are card keys from
 // src/lib/permissions/cards.ts. The script makes one throwaway role per set of cards (key dev_signin_cards_<hash>), hands it the
-// cards through set_role_cards() with the bundle cards.ts computes, and signs in a login holding only that role. No extras, so a
+// cards through set_role_cards(), and signs in a login holding only that role. No extras, so a
 // card that silently leans on another card's permission fails for this login, not in front of a real person.
 
 // <role> is a roles.key (admin, management, staff, volunteer, ...). The script keeps ONE disposable
@@ -149,7 +149,7 @@ const port = portArg ?? readFileSync(join(root, ".port"), "utf8").trim();
 
 let cardKeys = null;
 if (cardsArg) {
-  const { CARD_KEYS, isCardKey, bundleJson } = await loadCards(root);
+  const { CARD_KEYS, isCardKey } = await loadCards(root);
   cardKeys = [...new Set(cardsArg.split(",").map((k) => k.trim()).filter(Boolean))];
   const bad = cardKeys.filter((k) => !isCardKey(k));
   if (!cardKeys.length || bad.length) throw new Error(`not card keys: ${bad.join(", ") || "(none given)"}. Cards: ${CARD_KEYS.join(", ")}`);
@@ -165,7 +165,7 @@ if (cardsArg) {
   if (upErr) throw upErr;
   const { data: made, error: madeErr } = await service.from("roles").select("id").eq("key", role).single();
   if (madeErr) throw madeErr;
-  const { error: setErr } = await service.rpc("set_role_cards", { p_role: made.id, p_cards: cardKeys, p_bundle: bundleJson(cardKeys) });
+  const { error: setErr } = await service.rpc("set_role_cards", { p_role: made.id, p_cards: cardKeys });
   if (setErr) throw setErr;
 }
 

@@ -32,9 +32,8 @@ export const AUDITED_TABLES = [
   "facility_maps",
   "roles",
   "role_permissions",
-  // Which cards a role has, and the single activities it holds beyond them (0194).
+  // Which cards a role has (0194).
   "role_cards",
-  "role_extras",
   // Which pages a role shows as tiles on its home, in order (0225).
   "role_home_tiles",
   // The areas of the system and the feature each card serves (0255): Who does what, Features panel.
@@ -213,7 +212,7 @@ function toEntry(raw: RawRow): AuditEntry {
           ? str(image.file_name)
           : table === "impact_baselines" || table === "donation_channels"
             ? str(image.label)
-            : table === "role_permissions" || table === "role_extras"
+            : table === "role_permissions"
               ? str(image.activity)
             : table === "role_cards"
               ? str(image.card)

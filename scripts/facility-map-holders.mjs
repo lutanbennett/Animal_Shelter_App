@@ -10,11 +10,9 @@ const env = loadEnv(envName);
 const ref = projectRef(env);
 const sql = `select r.key as role,
   (select level from role_permissions where role_id = r.id and activity = 'facility.map') as map_level,
-  (select level from role_permissions where role_id = r.id and activity = 'facility.enclosures') as enclosures_level,
-  exists (select 1 from role_extras where role_id = r.id and activity = 'facility.map') as map_is_an_extra
+  (select level from role_permissions where role_id = r.id and activity = 'facility.enclosures') as enclosures_level
   from roles r
   where exists (select 1 from role_permissions where role_id = r.id and activity = 'facility.map')
-     or exists (select 1 from role_extras where role_id = r.id and activity = 'facility.map')
   order by r.key`;
 const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
   method: "POST",
