@@ -1,7 +1,6 @@
 # Feature test plan
 
-Copy this file to the feature branch as `docs/test-plans/<feature>.md`, fill the
-header, and tick as you go.
+Filled in on `claude/planner-handover-357` for the planner handover, edition `357`.
 
 Every line must end up in one of three states, and CI checks this:
 
@@ -29,7 +28,7 @@ Never tick something you did not do, and never leave a line untouched. Anything
 that failed goes under **Defects**.
 
 **No merge without a signed-off checklist. No exceptions.** CI enforces it: a PR
-with no completed `docs/test-plans/<feature>.md` fails. Small changes are not
+with no completed test plan fails. Small changes are not
 exempt — they are simply fast, because most lines are honestly `n/a`. Writing the
 `n/a` reason *is* the check; that is what says someone looked at everything rather
 than at the happy path.
@@ -54,14 +53,14 @@ release manager before `npm run deploy:prod`.
 
 | | |
 |---|---|
-| Feature | |
-| Backlog item | `docs/backlog.md` → |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
-| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
-| PR | |
-| Tested by / date | |
-| Carries a migration? | yes / no |
-| Tested at SHA | `SHA_PLACEHOLDER` |
+| Feature | Planner handover, edition `357` |
+| Backlog item | n/a — the handover is the planner loop's own record, not a backlog item (`plan-day` skill, step 8) |
+| Branch / worktree | `claude/planner-handover-357` @ `C:\Development\Animal_Shelter_planner-handover-357` |
+| Dev server | not started — no application code is touched |
+| PR | opened from this branch |
+| Tested by / date | Claude Opus 5 (Daily Planner session) / 2026-10-25 |
+| Carries a migration? | no |
+| Tested at SHA | `5ce86ed9` |
 
 ## 1. Scope and risk
 
@@ -89,6 +88,12 @@ indistinguishable from one that passed.
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
 - [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so write it `n/a: not yet — the PR does not exist at this commit` and **leave it there.** Changed 2026-10-20: ticking it in a follow-up commit used to be the rule, and that commit **invalidated its own evidence** — a new HEAD means a new run, so every PR in this repository paid two full CI cycles to transcribe a result GitHub already records permanently against the commit. A tick here attests to nothing a reader can check better by looking at the PR. **What must still happen, and is a merge step rather than a checklist line: before merging, read the run for your current HEAD (`gh run view <id> --json status,conclusion,headSha`) and confirm its `headSha` matches.** Merging on an older run's strength merges a commit whose CI never finished. **Do not pre-tick this line either** — a green you have not seen is the exact failure this checklist exists to prevent — n/a: not yet — the PR does not exist at this commit
+
+```
+gates: typecheck=0 lint=0 test=0 build=0
+```
+
+`node scripts/worktree.mjs sync` reported `Already up to date.` and pushed the branch.
 
 ## 3. Schema and data — *skip if no migration*
 
@@ -244,20 +249,20 @@ assurance.
 Gates, scripts, server-side behaviour, and any browser check that was actually
 driven rather than assumed. Signed by whoever ran them — Claude may sign this.
 
-- [ ] Everything in this checklist that could be verified without human eyes was run, not assumed — deferred: production release manager
-- [ ] Nothing is ticked that was not actually executed — deferred: production release manager
+- [x] Everything in this checklist that could be verified without human eyes was run, not assumed
+- [x] Nothing is ticked that was not actually executed
 
-Automated checks by: <name>  Date: <yyyy-mm-dd>
+Automated checks by: Claude Opus 5 (Daily Planner session)  Date: 2026-10-25
 
 ### Manual verification
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
+has looked and explicitly asks in chat; the line then says so, naming them and
+recording that they confirmed it in chat.
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
+- A person's name with a date — a person looked. The date is required here.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
@@ -281,14 +286,14 @@ illegible one is a red people learn to ignore.
 
 - [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it — deferred: production release manager
 
-Manual verification by: <name>  Date: <yyyy-mm-dd>
+Manual verification by: n/a: there is nothing to look at — this PR changes one markdown file, `docs/planner-handover.md`, which no application code reads and no page renders. The gates are the whole of the evidence.
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above — deferred: production release manager
-- [ ] Checklist pasted into the PR — deferred: production release manager
-- [ ] Handed to the production release manager — deferred: production release manager
+- [x] Open defects are either fixed or explicitly accepted above
+- [ ] Checklist pasted into the PR — n/a: the plan is committed on the branch and linked from the PR body; pasting it would duplicate a file the PR already contains
+- [ ] Handed to the production release manager — n/a: a planner handover ships nothing and enters no release; by `CLAUDE.md` its PR merges on green CI without a hand-off
 
-Result: <pass | pass with accepted defects | fail>
+Result: pass
 
-Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
+Release manager acknowledgement: n/a: a planner handover enters no release
