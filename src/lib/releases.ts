@@ -89,18 +89,26 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  { text: "Recording a death is now its own card, Record a death, in the Medical group. Everyone who could record a death before has been given it, so nothing changes for them. The Residents card no longer includes it. On the Residents card, new photos now wait for approval instead of going straight to the website, and the Foster / adopt and Move forms can look up enclosures and carers (names only).", cards: ["residents", "record_death"] },
-  { text: "The Administer medication, Record weight, Add medical photos and Feed special diets cards now see only who each resident is and where they live, not the whole record, and the Do maintenance card no longer lists residents (the Enclosures page is what a maintenance job needs). The Residents list and its buttons can still be shown to these cards for now; they will show nothing or refuse. View residents keeps the full record and now shows the Enclosure column.", cards: ["administer_medication", "record_weight", "add_medical_photos", "feed_special_diets", "do_maintenance", "view_residents"] },
-  { text: "Only an Admin can delete a delivery now. The Record a delivery card still records deliveries; the Delete button may still show for a while and will not work.", cards: ["record_delivery"] },
-  "The Releases page now tags new notes by the cards you hold instead of by your role's name, so what you are shown no longer depends on what your shelter calls your role. A note for a card you do not hold is greyed under Show everything, and a note nobody has tagged is still shown to everyone. Notes from earlier releases read as they did.",
-  { text: "Who does what: the Features list (the areas the Available cards are grouped by) has moved to its own page, opened with the new Edit the features button at the top. The cards page is shorter, and the cards are still grouped the same way.", roles: ["admin", "management"] },
-  "A resident's hub now shows only the parts of the record your cards let you read. Someone who gives medication sees Prescriptions but no Blood tests, Procedures, Visits, Weight, Diet or Immunisations card, and no Medical heading if none of them is open to them. Before, a card they could not open still appeared and said \"0 · none\", which was untrue. If a part is missing that you need, ask an admin to give you the card for it.",
-  "The manual now opens on the topics for the cards you hold, and each topic says which cards give it. A 2IC, Head of Medical or Head of Maintenance is no longer shown the volunteer's manual, and a role called anything else gets its own. Show everything still lists the rest, greyed. A few topics are marked as not yet assigned to a card; they are shown to everyone until they are linked.",
-  { text: "System status: when the Pi's tile is grey, it now says that is also what the emergency switch looks like when the Pi is sick, and the Pi-down alert mail points at the written steps for getting sign-in back without the Pi.", roles: ["admin"] },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.40.5",
+    date: "2026-10-26",
+    title: "The manual, the resident hub and the release notes follow your cards",
+    major: false,
+    notes: [
+      { text: "Recording a death is now its own card, Record a death, in the Medical group. Everyone who could record a death before has been given it, so nothing changes for them. The Residents card no longer includes it. On the Residents card, new photos now wait for approval instead of going straight to the website, and the Foster / adopt and Move forms can look up enclosures and carers (names only).", cards: ["residents", "record_death"] },
+      { text: "The Administer medication, Record weight, Add medical photos and Feed special diets cards now see only who each resident is and where they live, not the whole record, and the Do maintenance card no longer lists residents (the Enclosures page is what a maintenance job needs). The Residents list and its buttons can still be shown to these cards for now; they will show nothing or refuse. View residents keeps the full record and now shows the Enclosure column.", cards: ["administer_medication", "record_weight", "add_medical_photos", "feed_special_diets", "do_maintenance", "view_residents"] },
+      { text: "Only an Admin can delete a delivery now. The Record a delivery card still records deliveries; the Delete button may still show for a while and will not work.", cards: ["record_delivery"] },
+      "The Releases page now tags new notes by the cards you hold instead of by your role's name, so what you are shown no longer depends on what your shelter calls your role. A note for a card you do not hold is greyed under Show everything, and a note nobody has tagged is still shown to everyone. Notes from earlier releases read as they did.",
+      { text: "Who does what: the Features list (the areas the Available cards are grouped by) has moved to its own page, opened with the new Edit the features button at the top. The cards page is shorter, and the cards are still grouped the same way.", roles: ["admin", "management"] },
+      "A resident's hub now shows only the parts of the record your cards let you read. Someone who gives medication sees Prescriptions but no Blood tests, Procedures, Visits, Weight, Diet or Immunisations card, and no Medical heading if none of them is open to them. Before, a card they could not open still appeared and said \"0 · none\", which was untrue. If a part is missing that you need, ask an admin to give you the card for it.",
+      "The manual now opens on the topics for the cards you hold, and each topic says which cards give it. A 2IC, Head of Medical or Head of Maintenance is no longer shown the volunteer's manual, and a role called anything else gets its own. Show everything still lists the rest, greyed. A few topics are marked as not yet assigned to a card; they are shown to everyone until they are linked.",
+      { text: "System status: when the Pi's tile is grey, it now says that is also what the emergency switch looks like when the Pi is sick, and the Pi-down alert mail points at the written steps for getting sign-in back without the Pi.", roles: ["admin"] },
+    ],
+  },
   {
     version: "0.40.4",
     date: "2026-10-25",
