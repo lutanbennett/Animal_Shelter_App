@@ -149,7 +149,7 @@ Automated checks by: Claude  Date: 2026-10-26
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the two rows above need Lutan after the cron fix and the production deploy
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not ticked, the two rows above are for a person and are pending on the signature line below
 
 Manual verification by: pending: the two rows above need Lutan after the cron fix and the production deploy
 
