@@ -5361,7 +5361,6 @@ const en = {
       search: "Search",
       searchPlaceholder: "Name, Thai name, other name or ID",
       /** A volunteer's list has no other names to search (0134). */
-      searchPlaceholderWhoAndWhere: "Name, Thai name or ID",
       scanChip: "Scan a chip",
       scanChipPlaceholder: "Scan or type 15 digits",
       chipNotFound: (digits: string) => `No resident has microchip ${digits}.`,

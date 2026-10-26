@@ -17,13 +17,11 @@ export type CardTapInput = {
   appAccess: boolean;
   /** can(perms, "resident.record", "read"). */
   readsRecord: boolean;
-  /** readsWhoAndWhereOnly(): the volunteer floor, which the 2IC and the Heads borrow (0134). */
-  whoAndWhereOnly: boolean;
   /** The `residents` row came back for this login (a doctor sees only their clinics', 0108). */
   rowVisible: boolean;
 };
 
 export function cardLanding(i: CardTapInput): CardLanding {
   if (!i.appAccess) return "public";
-  return i.readsRecord && !i.whoAndWhereOnly && i.rowVisible ? "full" : "public-plus";
+  return i.readsRecord && i.rowVisible ? "full" : "public-plus";
 }

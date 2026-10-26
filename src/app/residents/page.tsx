@@ -26,7 +26,6 @@ import {
 } from "@/lib/residents/list-view";
 import { nextSort, sortParams, SORT_KEYS, type ListSort, type SortKey } from "@/lib/residents/sort";
 import { PlaceZoneChips } from "@/components/PlaceZoneChips";
-import { asListRow, readsWhoAndWhereOnly, type WhoAndWhere } from "@/lib/residents/who-and-where";
 import { ResidentsTable, type ResidentRow } from "./ResidentsTable";
 import { ActionLink } from "@/components/ActionLink";
 import { ACTION_ICONS } from "@/components/hub-icons";
@@ -60,16 +59,13 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   const q = typeof searchParams.q === "string" ? searchParams.q.trim() : "";
 
   const supabase = await createClient();
-  // A volunteer reads who and where and nothing else of a resident (0134): no chip search, no
-  // chip filter, and the list comes from `resident_who_and_where`.
-  const limited = await readsWhoAndWhereOnly();
   const perms = await loadPermissions();
 
   // A chip scanner types 15 digits and presses Enter. An exact match goes
   // straight to that resident whatever the place, zone or deceased filters
   // say (RLS still limits a doctor to their clinic's residents); an unknown
   // chip offers a new resident. Anything else is the usual name search.
-  const chipQuery = limited ? null : chipFromSearch(q);
+  const chipQuery = chipFromSearch(q);
   if (chipQuery) {
     const { data: hit } = await supabase
       .from("residents")
@@ -81,7 +77,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   }
   const canRegister = chipQuery ? can(await loadPermissions(), "resident.register") : false;
 
-  const view = await resolveListView(supabase, searchParams, limited);
+  const view = await resolveListView(supabase, searchParams);
   const { sort, zones, physicalZones, enclosures, enclosuresIn, zoneIds, unallocated, enclosureId, showAll, noChip, status, chippedIds, filters } = view;
 
   // An old ?place= link, an off-site zone's own id or the Lifecycle zone's is read as the chips
@@ -142,7 +138,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
     ]),
   ) as Record<SortKey, string>;
 
-  const { table: listTable, idColumn } = listSource(limited);
+  const { table: listTable, idColumn } = listSource();
 
   // Counted in both modes: hidden, it is what the toggle would reveal; shown,
   // it says how many of the rows on screen are past animals.
@@ -164,7 +160,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   const [tagOrigin, clinicScope, residentsResult, deceased, statusMatches] = await Promise.all([
     getTagOrigin(),
     loadClinicScope(supabase),
-    listQuery(supabase, view, limited).returns<(ResidentRow | WhoAndWhere)[]>(),
+    listQuery(supabase, view).returns<ResidentRow[]>(),
     applyFilters(deceasedCountQuery, filters),
     Promise.all(
       hiddenStatuses.map(async (s) => {
@@ -173,7 +169,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
             .from(listTable as "resident_list_view")
             .select(idColumn, { count: "exact", head: true })
             .eq("current_status", s),
-          { q, zoneIds: [], offsiteZoneIds: [], enclosureId: "", chippedIds, status: null, unallocated: false, limited },
+          { q, zoneIds: [], offsiteZoneIds: [], enclosureId: "", chippedIds, status: null, unallocated: false },
         );
         return { status: s, count: count ?? 0 };
       }),
@@ -192,11 +188,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
       : null;
 
   const { error } = residentsResult;
-  // The who-and-where view names the id "id" and has no zone_internal; the zones read above has it.
-  const zoneInternal = new Map(zones.map((zone) => [zone.id, zone.internal as boolean | null]));
-  const residents: ResidentRow[] = inListOrder(view, residentsResult.data ?? []).map((row) =>
-    limited ? asListRow(row as WhoAndWhere, zoneInternal.get((row as WhoAndWhere).zone_id ?? "") ?? null) : (row as ResidentRow),
-  );
+  const residents: ResidentRow[] = inListOrder(view, residentsResult.data ?? []);
   // The download asks the server for this same list: the page's own query string, nothing re-derived.
   const exportParams = new URLSearchParams();
   for (const [key, value] of Object.entries(searchParams)) {
@@ -278,7 +270,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
         )}
       </div>
 
-      {!limited && <ScanChipBox />}
+      <ScanChipBox />
       {chipQuery && (
         <p className="flex flex-wrap items-center gap-3 rounded border border-border bg-surface px-3 py-2 text-sm text-foreground">
           {t.residents.list.chipNotFound(chipQuery)}
@@ -352,7 +344,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
               id="q"
               name="q"
               defaultValue={q}
-              placeholder={limited ? t.residents.list.searchPlaceholderWhoAndWhere : t.residents.list.searchPlaceholder}
+              placeholder={t.residents.list.searchPlaceholder}
               className="w-full rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 md:w-64"
             />
             <FocusSearch inputId="q" />
@@ -406,11 +398,9 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
                 {t.residents.list.statusFilter[s]}
               </Link>
             ))}
-          {!limited && (
             <Link href={noChipHref(!noChip)} className={toggleChip(noChip)}>
               {t.residents.list.noMicrochip}
             </Link>
-          )}
           {(q || zoneIds.length > 0 || unallocated || enclosureId || noChip || status) && (
             <Link
               href="/residents"
@@ -431,7 +421,6 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
       <ResidentsTable
         residents={residents}
         tagOrigin={tagOrigin}
-        limited={limited}
         sort={sort}
         sortLinks={sortLinks}
         exportHref={exportHref}
@@ -439,8 +428,8 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
           register: can(perms, "resident.register"),
           logImmunizations: can(perms, "medical.immunizations", "edit"),
           bookVisit: can(perms, "visit.book"),
-          // The export route's own rule: the limited list may always be downloaded, the full one needs a read of the record.
-          download: limited || can(perms, "resident.record", "read"),
+          // The export route's own rule: the file needs a read of the record.
+          download: can(perms, "resident.record", "read"),
         }}
         exportFilename={exportFilename({ ...filters, showAll, noChip }, 0)}
       />

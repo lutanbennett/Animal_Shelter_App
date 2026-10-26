@@ -176,7 +176,6 @@ export function ResidentHub({
   dateOfDeath,
   causeOfDeath,
   archive,
-  readOnlyExceptMedical,
   showTile,
   medicalEdit,
   canRecordDeath,
@@ -217,8 +216,6 @@ export function ResidentHub({
    * restore didn't finish.
    */
   archive: DeceasedArchive;
-  /** The Medical records card (0249): the record is shown whole, but name, location, intake and history offer no edit. */
-  readOnlyExceptMedical: boolean;
   /** Which parts of the record this login may read (section-reads.ts, the map the section pages use). A tile is drawn only when true; the group heading and phone tab go when none of its tiles is. */
   showTile: Record<HubSectionKey, boolean>;
   /** Which medical sections this login may add to (can(...,"edit")); the buttons follow it, as the pages do. */
@@ -333,10 +330,7 @@ export function ResidentHub({
   }
   // Which placement actions apply depends on the lifecycle status — see
   // availablePlacementActions() for the table.
-  const housingActions: StatCardAction[] = (readOnlyExceptMedical
-    ? []
-    : availablePlacementActions(isDeceased ? "Deceased" : currentStatus)
-  ).map((key) => ({
+  const housingActions: StatCardAction[] = availablePlacementActions(isDeceased ? "Deceased" : currentStatus).map((key) => ({
     href: `${base}${PLACEMENT_ACTION_PATHS[key]}`,
     label: t.residents.hub.placementActions[key],
     icon: PLACEMENT_ICONS[key],
@@ -516,7 +510,6 @@ export function ResidentHub({
               </span>
               {/* After death the edit page offers only the bio and photos
                   (0052); record-death is never offered twice. */}
-              {!readOnlyExceptMedical && (
                 <Link
                   href={`${base}/edit`}
                   title={t.residents.hub.editResident}
@@ -526,7 +519,6 @@ export function ResidentHub({
                   <Pencil aria-hidden="true" className="h-4 w-4" />
                   <span className="md:sr-only">{t.residents.hub.editResident}</span>
                 </Link>
-              )}
               {!isDeceased && canRecordDeath && (
                 <Link
                   href={`${base}/deceased`}

@@ -197,9 +197,6 @@ for (const r of ROUTES) {
 // the edit page's form only renders when can(perms, "resident.record") is true is still read by a
 // person (the decision file lists every one).
 const FULL = "requireFullResident()";
-// The hub and the record tabs also open for a who-and-where login holding a medical edit (0249); every other
-// resident page keeps FULL, which refuses it.
-const FULL_OR_MEDICAL_CARD = 'requireFullResident(undefined, "read", { allowMedicalCard: true })';
 const PINNED = {
   // Add and edit pages under a registered list. Every one writes, so every one is at Edit.
   "/residents/new": { guards: ['requirePermission("resident.register")'], decides: [] },
@@ -267,7 +264,7 @@ const PINNED = {
   // body's can(), which the page asks before it renders the form.
   // The record hub: a who-and-where login is redirected to /r/ before this guard (redirect() is not
   // a guard, so it is not listed), and every control on it that writes asks can().
-  "/residents/[id]": { guards: [FULL_OR_MEDICAL_CARD], decides: ["placement.death", "placement.death_withdraw", "translations.manage", "resident.microchip", "resident.adoption_news", "appeal.run", "medical.diet", "medical.immunizations", "medical.visits", "medical.prescriptions", "medical.weight", "medical.procedures"] },
+  "/residents/[id]": { guards: [FULL], decides: ["placement.death", "placement.death_withdraw", "translations.manage", "resident.microchip", "resident.adoption_news", "appeal.run", "medical.diet", "medical.immunizations", "medical.visits", "medical.prescriptions", "medical.weight", "medical.procedures"] },
   "/residents/[id]/edit": { guards: [FULL], decides: ["resident.record"] },
   "/residents/[id]/move": { guards: [FULL], decides: ["placement.move"] },
   "/residents/[id]/hospital": { guards: [FULL], decides: ["placement.hospital"] },
@@ -289,7 +286,7 @@ const PINNED = {
   // A record tab: the tab's own activity at Read, from SECTION_READS in src/lib/residents/section-reads.ts (pinned
   // below; the hub reads the same map to draw its tiles), on top of the record. Its writes are per row, on the tab's add/edit pages above.
   "/residents/[id]/[section]": {
-    guards: ['requireFullResident(sectionRead(section), "read", { allowMedicalCard: true })'],
+    guards: ['requireFullResident(sectionRead(section), "read")'],
     inDir: "src/app/residents/[id]/[section]/sections",
     decides: ["medical.archive", "medical.visits", "medical.prescriptions", "medical.diet", "medical.weight", "photos.approve", "photos.resident_manage", "resident.adoption_news", "resident.microchip", "social.library"],
     table: {
@@ -459,14 +456,6 @@ for (const { file, path } of pages) {
 }
 for (const p of [...Object.keys(PINNED), ...Object.keys(EXEMPT)]) {
   if (!pages.some((pg) => pg.path === p)) eq(`F ${p} STALE: listed but has no page.tsx`, "listed", "removed");
-}
-// The hub's order is the part a pin of its guards cannot see: a who-and-where login may hold no
-// resident.record, so the guard ahead of its redirect would turn the volunteer's card into no-access.
-{
-  const hub = stripComments(readFileSync(join(appDir, "residents/[id]/page.tsx"), "utf8"));
-  const redirectAt = hub.search(/readsWhoAndWhereOnly\(\)\)\s*(&&\s*!\(await mayOpenResidentRecord\(\)\)\)\s*)?redirect\(/);
-  const guardAt = hub.search(/\brequireFullResident\(/);
-  eq("F /residents/[id] sends a who-and-where login to /r/ before its guard", redirectAt >= 0 && redirectAt < guardAt, true);
 }
 eq("F every EXEMPT entry gives a reason", Object.entries(EXEMPT).filter(([, e]) => !e.why || e.why.length < 40).map(([p]) => p), []);
 console.log(

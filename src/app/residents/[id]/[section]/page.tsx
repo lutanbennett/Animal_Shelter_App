@@ -49,7 +49,7 @@ export default async function ResidentSectionPage(
   )[section];
   if (!title) notFound();
   // The Medical records card opens the medical tabs and, read-only, housing, photos and adoption news.
-  await requireFullResident(sectionRead(section), "read", { allowMedicalCard: true });
+  await requireFullResident(sectionRead(section), "read");
   const SectionIcon = SECTION_ICONS[section as HubSection];
 
   const supabase = await createClient();
