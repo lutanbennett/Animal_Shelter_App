@@ -327,6 +327,7 @@ const PINNED = {
   "/home/group/[id]": { guards: ["if (!mine || !entersApp(mine)) refuseFor(mine)"], decides: [] },
   // Who does what: Admin, or a role holding the Who does what card (roles.view, 0262). opensWhoDoesWhat() asks it in one place.
   "/admin/who-does-what/details": { guards: ["if (!opensWhoDoesWhat(perms)) refuseFor(perms)"], decides: [] },
+  "/admin/who-does-what/features": { guards: ["if (!opensWhoDoesWhat(perms)) refuseFor(perms)"], decides: [] },
   // Settings → Diets, the recipe book (diets-recipe-book): the same two guards as /admin/diets, one per screen.
   "/admin/diets/[id]": { guards: ['requirePermission("reference.types")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },
   "/admin/diets/ingredients": { guards: ['requirePermission("reference.types")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },

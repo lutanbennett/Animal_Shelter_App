@@ -68,6 +68,7 @@ async function cardGroups(supabase: Supabase, roleId: string): Promise<Map<CardK
 function done(): ActionResult {
   revalidatePath("/admin/who-does-what");
   revalidatePath("/admin/who-does-what/details");
+  revalidatePath("/admin/who-does-what/features");
   revalidatePath("/outreach");
   return { ok: true };
 }

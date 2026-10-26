@@ -15,14 +15,13 @@ import { isSubsumed, tileBlock } from "@/lib/home/tiles";
 import { getT } from "@/lib/i18n/get-t";
 import { CardButton, ShowMenuToggle } from "./CardControls";
 import { CardBoard } from "./CardBoard";
-import { FeaturesPanel } from "./FeaturesPanel";
 import { loadRoles, roleName } from "./roles";
 
 /**
  * Settings → Who does what: a role's cards. Each card is a tile on the person's home screen and the permissions
  * under it, so the Director gives "Residents" and not forty boxes. Tap a card to see exactly what it gives, in a
  * short list generated from src/lib/permissions/cards.ts (never typed by hand, so it cannot drift from the bundle).
- * The full 56-row grid is one tap away on /admin/who-does-what/details; it does not share this page.
+ * The full 56-row grid is one tap away on /admin/who-does-what/details, and the Features list on /admin/who-does-what/features; neither shares this page.
  * docs/decisions/2026-10-14-who-does-what-cards-page.md
  *
  * The page changes how access is described and assigned, not who has what: role_permissions stays the table the
@@ -140,9 +139,14 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
           <h1 className="text-2xl font-semibold text-foreground">{w.title}</h1>
           <p className="max-w-3xl text-sm text-muted [overflow-wrap:anywhere]">{c.subtitle}</p>
         </div>
-        <Link href={`${WHO_DOES_WHAT_PATH}/details`} className="inline-flex min-h-11 items-center rounded-md border border-border px-3 text-sm font-medium text-primary underline">
-          {c.detailsLink}
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`${WHO_DOES_WHAT_PATH}/details`} className="inline-flex min-h-11 items-center rounded-md border border-border px-3 text-sm font-medium text-primary underline">
+            {c.detailsLink}
+          </Link>
+          <Link href={`${WHO_DOES_WHAT_PATH}/features`} className="inline-flex min-h-11 items-center rounded-md border border-border px-3 text-sm font-medium text-primary underline">
+            {c.featuresLink}
+          </Link>
+        </div>
       </div>
 
       <section className="rounded-lg border border-border bg-surface p-4">
@@ -247,13 +251,6 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
           features={features.map((x) => ({ id: x.id, label: x.label }))}
         />
       )}
-
-      <FeaturesPanel
-        features={features}
-        cards={CARD_KEYS.map((k) => ({ key: k, label: label(k), feature: featureOf.get(k) ?? null }))}
-        canEdit={canEdit}
-        locked={isAdmin && !canEdit}
-      />
 
       {role && (
         <section aria-labelledby="menu-h" className="flex flex-col gap-3">

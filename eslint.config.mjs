@@ -44,6 +44,7 @@ const eslintConfig = defineConfig([
       "src/app/admin/security/verify/actions.ts",
       "src/app/admin/who-does-what/page.tsx",
       "src/app/admin/who-does-what/details/page.tsx",
+      "src/app/admin/who-does-what/features/page.tsx",
       "src/app/admin/who-does-what/roles.ts",
       "src/lib/home/roles.ts",
       "src/lib/menu/show-menu.ts",
