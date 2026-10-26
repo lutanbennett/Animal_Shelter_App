@@ -212,7 +212,10 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
   // enclosure), and a place or zone filter would only leave it empty. The Map toggle is offered
   // only once a plan image exists, so a shelter that has none yet sees no empty map.
   const plans = plansResult.data ?? [];
-  const hasMap = plans.length > 0;
+  // The list and the map count residents from the residents list; a login that reads none gets figures that say 0, so they are left out (and
+  // so is the map, which is coloured by them).
+  const canSeeResidents = can(perms, "resident.record", "read") || can(perms, "resident.who_and_where", "read");
+  const hasMap = plans.length > 0 && canSeeResidents;
   const showMap = hasMap && searchParams.view === "map";
   let mapData: FacilityMapData | null = null;
   if (showMap) {
@@ -327,7 +330,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
         </p>
       )}
 
-      <EnclosureGrid pinned={pinned} groups={groups} flat={flat} tagOrigin={tagOrigin} />
+      <EnclosureGrid pinned={pinned} groups={groups} flat={flat} tagOrigin={tagOrigin} showCounts={canSeeResidents} />
         </>
       )}
     </main>

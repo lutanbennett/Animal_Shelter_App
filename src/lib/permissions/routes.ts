@@ -495,3 +495,11 @@ export function opensAnyIn(perms: Permissions | null | undefined, section: Secti
 export function routeFor(path: string): RouteEntry | undefined {
   return ROUTES.find((r) => r.path === path);
 }
+
+/**
+ * How many pages of the section this person opens. The menu's section entry is drawn only when it leads somewhere the Home tile does not:
+ * a section that would list one page is that page's own tile again (Card review 1, 2026-10-26, do_stocktaking: "hide the Operations menu entry").
+ */
+export function pagesIn(perms: Permissions | null | undefined, section: Section): number {
+  return ROUTES.filter((r) => sectionOf(r) === section && canOpen(perms, r)).length;
+}

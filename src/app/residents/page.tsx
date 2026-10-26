@@ -430,6 +430,8 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
           bookVisit: can(perms, "visit.book"),
           // The export route's own rule: the file needs a read of the record.
           download: can(perms, "resident.record", "read"),
+          // The edit page asks for the record at edit; a read-only card is not shown a pencil that refuses.
+          edit: can(perms, "resident.record"),
         }}
         exportFilename={exportFilename({ ...filters, showAll, noChip }, 0)}
       />

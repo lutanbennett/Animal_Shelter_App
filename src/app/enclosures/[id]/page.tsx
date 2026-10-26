@@ -19,6 +19,8 @@ export default async function EnclosurePage(
     <EnclosureHub
       enclosure={details.enclosure}
       residents={details.residents}
+      // No read of any resident: the list would be empty and the count 0, which says "nobody" when it means "not allowed".
+      canSeeResidents={can(perms, "resident.record", "read") || can(perms, "resident.who_and_where", "read")}
       canEditEnclosures={can(perms, "facility.enclosures")}
       canWriteMaintenance={can(perms, "maintenance.jobs")}
       maintenanceJobs={details.maintenanceJobs}

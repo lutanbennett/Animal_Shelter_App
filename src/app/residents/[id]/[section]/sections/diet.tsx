@@ -102,7 +102,7 @@ export async function renderDietSection(ctx: SectionContext): Promise<React.Reac
   };
   return (
     <div className="flex flex-col gap-4">
-      {!isDeceased && (
+      {!isDeceased && can(perms, "medical.diet") && (
         <div className="flex justify-end">
           <ActionLink
             href={`/diets/new?residentId=${id}`}

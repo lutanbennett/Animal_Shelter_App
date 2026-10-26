@@ -138,7 +138,7 @@ export async function renderPrescriptionsSection(ctx: SectionContext): Promise<R
   };
   return (
     <div className="flex flex-col gap-4">
-      {!isDeceased && (
+      {!isDeceased && can(perms, "medical.prescriptions") && (
         <div className="flex justify-end">
           <ActionLink
             href={`/prescriptions/new?residentId=${id}`}

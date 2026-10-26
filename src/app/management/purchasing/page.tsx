@@ -488,9 +488,11 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
         {notCounted.length > 0 && (
           <p className="rounded border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-foreground print:hidden">
             {p.neverCountedBanner(notCounted.length)}{" "}
+            {can(perms, "stock.count") && (
             <Link href="/stocktake" className="font-medium text-primary hover:underline">
               {p.stocktakeLink}
             </Link>
+            )}
           </p>
         )}
 

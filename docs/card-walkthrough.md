@@ -67,7 +67,7 @@ Result: pending
 
 0. Sign in with `--cards do_maintenance`. The home screen shows the **Do Maintenance** tile (or the tile of a card that includes it).
 1. Open `/maintenance`: it loads.
-2. **Do:** Maintenance jobs: log, change, assign, cost, delete. Use a disposable record named `walk-do_maintenance`. **Read-back:** the job is on /maintenance (and on /my once assigned); status is changed on /maintenance/<id>, and assignee, zone, due date and the Estimated / Actual cost on /maintenance/<id>/edit (the cost reads back on the job page). No delete control is offered to this card.
+2. **Do:** Maintenance jobs: log, change, assign, cost. Use a disposable record named `walk-do_maintenance`. **Read-back:** the job is on /maintenance (and on /my once assigned); status is changed on /maintenance/<id>, and assignee, zone, due date and the Estimated / Actual cost on /maintenance/<id>/edit (the cost reads back on the job page). No delete control is offered to this card.
 3. **Do:** Move a job on: in progress, blocked, completed. Use a disposable record named `walk-do_maintenance`. **Read-back:** the job sits in its new column on /maintenance after a reload.
 4. **Do:** Mark your own recurring jobs done or skipped. Use a disposable record named `walk-do_maintenance`. **Read-back:** the task shows as done (or skipped) on /my after a reload.
 5. **See:** Enclosures and zones (read only). Confirm it is visible, and that no add, edit or save control is offered for it.

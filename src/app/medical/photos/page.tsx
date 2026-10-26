@@ -5,6 +5,8 @@ import { getT } from "@/lib/i18n/get-t";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { placeName } from "@/lib/enclosures/names";
 import { requirePermission } from "@/lib/permissions/require";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { loadOneResident, loadPickableResidents } from "@/lib/medical/residents";
 import { ResidentPicker } from "../ResidentPicker";
 import { MedicalPhotoUploader } from "./MedicalPhotoUploader";
@@ -90,7 +92,7 @@ export default async function AddMedicalPhotosPage(props: PageProps<"/medical/ph
         </div>
         <MedicalPhotoUploader residentId={residentId} />
         <p className="text-sm text-muted">{p.goesIn}</p>
-        <p className="text-sm text-muted">{p.noView}</p>
+        <p className="text-sm text-muted">{can(await loadPermissions(), "resident.record", "read") ? p.canView : p.noView}</p>
         {back}
       </>,
     );

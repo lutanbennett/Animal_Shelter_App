@@ -7,6 +7,8 @@
  * Order matters: the last action in each list is the primary one (the
  * filled button on the housing section).
  */
+import { can, type Permissions } from "@/lib/permissions/can";
+
 export type PlacementActionKey =
   | "move"
   | "hospital"
@@ -46,4 +48,24 @@ export function availablePlacementActions(
       // Resident / Unassigned / unknown.
       return ["hospital", "rehome", "move"];
   }
+}
+
+/** The activity each action's own page and save step ask for (the pages and move.ts / hospital.ts / rehome.ts check these). */
+const PLACEMENT_ACTION_ACTIVITY: Record<PlacementActionKey, "placement.move" | "placement.hospital" | "placement.rehome"> = {
+  move: "placement.move",
+  hospital: "placement.hospital",
+  hospitalReturn: "placement.hospital",
+  rehome: "placement.rehome",
+  returnToShelter: "placement.rehome",
+};
+
+/**
+ * The actions for this status that this login may use. A button the card cannot use is not drawn, rather than opening a page that
+ * refuses (Card review 1, 2026-10-26). The page and the save step still check, so this only decides what is offered.
+ */
+export function placementActionsFor(
+  perms: Permissions | null | undefined,
+  status: string | null | undefined,
+): PlacementActionKey[] {
+  return availablePlacementActions(status).filter((key) => can(perms, PLACEMENT_ACTION_ACTIVITY[key]));
 }
