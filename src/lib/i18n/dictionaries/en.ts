@@ -1441,6 +1441,8 @@ const en = {
           failed: (v: { unsynced: number }) => `The calendar could not be reached or the token is not working. ${v.unsynced} vet visit(s) are waiting; bookings are not affected.`,
           past: "past",
           lastError: "Last error",
+          sweepQuiet: (v: { time: string }) => `The 15-minute check has not run since ${v.time}: nothing is being retried. The Worker's schedule may have stopped.`,
+          sweepNever: "The 15-minute check has never run: nothing is being sent or retried.",
         },
         migrations: {
           title: "Database migrations",

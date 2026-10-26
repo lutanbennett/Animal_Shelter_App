@@ -148,6 +148,20 @@ export const CHECKS = {
     },
     failed: (rows) => rows.length > 0,
   },
+  "calendar-cron": {
+    asks: "Is the 15-minute calendar cron reaching the app, and which migrations were applied in the last 3 days? (Dates and file names only.)",
+    // calendar_sync_state is written by every poll the sweep makes: a last_run_at that stopped moving means the sweep is not running.
+    sql: `select json_build_object('now', now(),
+        'alerts_last_cron', (select max(ran_at) from status_alert_runs where trigger = 'cron'),
+        'state', coalesce((select json_agg(json_build_object('last_run_at', last_run_at, 'last_ok_at', last_ok_at, 'last_error', last_error, 'has_token', sync_token is not null)) from calendar_sync_state), '[]'::json),
+        'migrations', coalesce((select json_agg(json_build_object('file', filename, 'at', applied_at) order by applied_at) from schema_migrations where applied_at > now() - interval '3 days'), '[]'::json))`,
+    render: (r) => [
+      `Database time now: ${r.now}`,
+      `status alerts: last cron run ${r.alerts_last_cron ?? "never"} (same cron trigger as the calendar sweep)`,
+      ...(r.state.length ? r.state.map((x) => `poll: last run ${x.last_run_at}, last ok ${x.last_ok_at}, token ${x.has_token ? "held" : "none"}, error: ${x.last_error ?? "(none)"}`) : ["poll: no calendar_sync_state row (the poll has never run)."]),
+      ...r.migrations.map((m) => `migration ${m.file} applied ${m.at}`),
+    ],
+  },
   "fault-maintenance-delete": {
     asks: "Which roles hold the Do Maintenance card, whose maintenance jobs nobody can delete? (Every holder is affected: no delete control exists.)",
     sql: `select coalesce(json_agg(json_build_object('role', r.key) order by r.key), '[]'::json)

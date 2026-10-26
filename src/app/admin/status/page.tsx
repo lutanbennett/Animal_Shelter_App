@@ -5,7 +5,7 @@ import Link from "next/link";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import { getWaitingAccessRequests } from "@/lib/status/access-requests";
-import { checkCalendar, type PendingVisit } from "@/lib/clinics/calendar-sync";
+import { checkCalendar, SWEEP_QUIET_AFTER_MS, type PendingVisit } from "@/lib/clinics/calendar-sync";
 import { getDriveClient } from "@/lib/google/drive";
 import { loadCalendarChanges } from "@/lib/status/calendar-changes";
 import { checkAlerts } from "@/lib/status/alerts";
@@ -169,17 +169,21 @@ async function CalendarTile({ t, locale }: { t: T; locale: Locale }) {
   const x = t.admin.status.tiles.calendar;
   const result = await runCheck(async () => {
     const c = await checkCalendar();
-    if (c.state === "off") return { state: "off" as const, facts: { visits: [] as PendingVisit[] } };
-    if (c.state === "fail") return { state: "fail" as const, error: c.error, facts: { visits: c.visits } };
+    const none = { visits: [] as PendingVisit[], lastSweepAt: null as string | null, quiet: false };
+    if (c.state === "off") return { state: "off" as const, facts: none };
+    // No sweep for a while means nothing is being retried, whatever the visits say.
+    const quiet = !c.lastSweepAt || Date.now() - Date.parse(c.lastSweepAt) > SWEEP_QUIET_AFTER_MS;
+    if (c.state === "fail") return { state: "fail" as const, error: c.error, facts: { visits: c.visits, lastSweepAt: c.lastSweepAt, quiet } };
     // A visit carrying an error is failing, not waiting: say so, and show the error under it.
     const failing = c.visits.filter((v) => v.error).length;
     return {
-      state: failing > 0 ? ("fail" as const) : c.visits.length > 0 ? ("warn" as const) : ("ok" as const),
-      facts: { visits: c.visits },
+      state: failing > 0 || quiet ? ("fail" as const) : c.visits.length > 0 ? ("warn" as const) : ("ok" as const),
+      facts: { visits: c.visits, lastSweepAt: c.lastSweepAt, quiet },
     };
   });
   const visits = result.facts?.visits ?? [];
   const failing = visits.filter((v) => v.error).length;
+  const quiet = result.facts?.quiet ?? false;
   return (
     <Tile title={x.title} result={result} t={t} locale={locale}>
       <p>
@@ -191,6 +195,11 @@ async function CalendarTile({ t, locale }: { t: T; locale: Locale }) {
               ? x.failing({ count: failing })
               : x.ok({ unsynced: visits.length })}
       </p>
+      {quiet && result.state !== "off" && (
+        <p className="font-medium text-danger">
+          {result.facts?.lastSweepAt ? x.sweepQuiet({ time: formatDateTime(result.facts.lastSweepAt, locale) }) : x.sweepNever}
+        </p>
+      )}
       {visits.length > 0 && (
         <ul className="flex flex-col gap-1">
           {visits.map((v) => (

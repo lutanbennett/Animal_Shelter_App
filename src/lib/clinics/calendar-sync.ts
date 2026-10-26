@@ -282,8 +282,11 @@ export type PendingVisit = { id: string; appointmentDate: string; residentName: 
 
 export type CalendarStatus =
   | { state: "off" }
-  | { state: "fail"; error: string; visits: PendingVisit[] }
-  | { state: "ok"; visits: PendingVisit[] };
+  | { state: "fail"; error: string; visits: PendingVisit[]; lastSweepAt: string | null }
+  | { state: "ok"; visits: PendingVisit[]; lastSweepAt: string | null };
+
+/** The 15-minute sweep is quiet if its poll has not written calendar_sync_state for this long (one missed run is normal). */
+export const SWEEP_QUIET_AFTER_MS = 45 * 60_000;
 
 /** For the System status tile: does the token work, can the calendar be reached, which visits are waiting or failing. */
 export async function checkCalendar(): Promise<CalendarStatus> {
@@ -312,12 +315,20 @@ export async function checkCalendar(): Promise<CalendarStatus> {
     past: todayIso(new Date(r.appointment_date).getTime()) < today,
     error: r.calendar_error,
   }));
+  // Every sweep polls first and records the run, so this is when the cron last reached the app.
+  const { data: state } = await createAdminClient()
+    .from("calendar_sync_state")
+    .select("last_run_at")
+    .eq("calendar_id", process.env.GOOGLE_CALENDAR_ID ?? "")
+    .limit(1)
+    .returns<{ last_run_at: string | null }[]>();
+  const lastSweepAt = state?.[0]?.last_run_at ?? null;
   try {
     // calendar.events does not allow reading the calendar itself, only its events: list one.
     const res = await calendarFetch("/events?maxResults=1");
-    if (!res.ok) return { state: "fail", error: `Calendar answered ${res.status}: ${await errorText(res)}`, visits };
-    return { state: "ok", visits };
+    if (!res.ok) return { state: "fail", error: `Calendar answered ${res.status}: ${await errorText(res)}`, visits, lastSweepAt };
+    return { state: "ok", visits, lastSweepAt };
   } catch (err) {
-    return { state: "fail", error: err instanceof Error ? err.message : String(err), visits };
+    return { state: "fail", error: err instanceof Error ? err.message : String(err), visits, lastSweepAt };
   }
 }
