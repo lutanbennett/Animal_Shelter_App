@@ -74,7 +74,9 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  { text: "System status: when the Pi's tile is grey, it now says that is also what the emergency switch looks like when the Pi is sick, and the Pi-down alert mail points at the written steps for getting sign-in back without the Pi.", roles: ["admin"] },
+];
 
 /** Newest first. */
 export const releases: Release[] = [
