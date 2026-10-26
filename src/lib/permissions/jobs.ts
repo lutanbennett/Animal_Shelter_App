@@ -62,6 +62,7 @@ export const JOBS: Record<JobKey, Job> = {
     bundle: [
       { activity: "medical.weight", level: "edit" },
       { activity: "resident.who_and_where", level: "read" }, // the picker: who and where (0265)
+      { activity: "recurring.do_own" }, // My tasks (0267)
     ],
     opens: "/medical/weight",
   },
@@ -84,6 +85,7 @@ export const JOBS: Record<JobKey, Job> = {
     bundle: [
       { activity: "medical.diet", level: "read" },
       { activity: "resident.who_and_where", level: "read" }, // who and where, nothing more (0265)
+      { activity: "recurring.do_own" }, // My tasks (0267)
     ],
     opens: "/medical/diets",
   },

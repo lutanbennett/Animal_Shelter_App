@@ -33,7 +33,8 @@ Result: pending
 1. Open `/medical/weight`: it loads.
 2. **Do:** Weight. Use a disposable record named `walk-record_weight`. **Read-back:** the list shows "Saved: <name>, <kg>", and opening that resident on /medical/weight reads "Last time: <kg>, <date>" and "Today already has <kg>" (one weight per resident per day; a second save replaces it).
 3. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-4. **Refused:** open `/maintenance` (the page of **Do Maintenance**, which this login does not hold). Expect a refusal or redirect, not the page.
+4. **Do:** Mark your own recurring jobs done or skipped. Use a disposable record named `walk-record_weight`. **Read-back:** the task shows as done (or skipped) on /my after a reload.
+5. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -57,7 +58,8 @@ Result: pending
 1. Open `/medical/diets`: it loads.
 2. **See:** A resident's diet (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 3. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-4. **Refused:** open `/maintenance` (the page of **Do Maintenance**, which this login does not hold). Expect a refusal or redirect, not the page.
+4. **Do:** Mark your own recurring jobs done or skipped. Use a disposable record named `walk-feed_special_diets`. **Read-back:** the task shows as done (or skipped) on /my after a reload.
+5. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
