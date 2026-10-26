@@ -513,15 +513,16 @@ const manual: Manual = {
           title: "The resident hub",
           path: "Residents → (a resident)",
           intro:
-            "The hub is the resident's front page: who they are, where they are, and a card for each part of their record. Every card is a link to the full list behind it.",
+            "The hub is the resident's front page: who they are, where they are, and a card for each part of their record that your cards let you read. Every card is a link to the full list behind it.",
           steps: [
             "Top: profile photo, name, ID, species, sex, age, status and intake date. The pencil opens Edit resident details.",
             "Link for this resident's RFID card: the address to program into the card by the kennel. Tap Copy link, or select it by hand; the residents list has the same copy icon on every row. Someone who scans the card while signed in lands on this hub; a visitor sees a public card for the resident — photo, name, age, sex, temperament and bio — with a link to the adoption profile when the resident is shown on the public site (Edit resident details).",
             "Housing & Status: current enclosure (or hospital / carer) and the actions that apply right now — Move enclosure, Send to hospital, Foster / adopt, and so on.",
             "Photos: the Google Drive gallery for this resident.",
             "Adoption updates: news from the adopter — how many updates there are and the latest. It appears on any resident who has been adopted, including one since returned to the shelter. See Adoption updates below.",
-            "Medical cards: Immunizations, Clinic Visits, Prescriptions, Weight, Procedures and Blood Tests. Each shows the latest state (for example \"2 missing\" mandatory vaccines, or the next clinic visit) and a quick link to add a record.",
-            "On a phone the hub is split into two tabs — Overview and Medical.",
+            "Medical cards: Immunizations, Clinic Visits, Prescriptions, Weight, Procedures and Blood Tests (Diet sits with the general cards). Each shows the latest state (for example \"2 missing\" mandatory vaccines, or the next clinic visit) and a quick link to add a record.",
+            "You see the parts of the record your cards cover. A card for a part you cannot read — Blood Tests, say, when you hold only Administer medication — is not drawn at all, rather than shown as empty; the page behind it refuses you too. If none of the medical parts is open to you, the Medical heading goes as well. Admin sees everything.",
+            "On a phone the hub is split into two tabs — Overview and Medical. Someone with no medical part open sees no Medical tab.",
           ],
           screenshot: {
             src: "/manual/resident-hub.png",
