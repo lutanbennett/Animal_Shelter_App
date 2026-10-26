@@ -1490,7 +1490,7 @@ const en = {
         origin: {
           title: "Pi origin",
           drawnByPi: "Working: this page was drawn by the Pi, so pages are being served from it.",
-          off: "Not in use yet: every page is served by the Cloudflare Worker, as before the Pi.",
+          off: "Not in use: every page is served by the Cloudflare Worker. That is how it was before the Pi, and it is also what the emergency switch does when the Pi is sick (docs/pi-hosting.md).",
           ok: (v: { host: string | number }) =>
             `Reachable at ${v.host}: pages are rendered on the Pi.`,
           fallback: (v: { host: string | number }) =>
