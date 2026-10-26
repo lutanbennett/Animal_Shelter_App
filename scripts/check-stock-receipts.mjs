@@ -20,15 +20,19 @@ const sql = `
 begin;
 
 create temp table who (who text primary key, uid uuid);
-insert into who values
-  ('management', gen_random_uuid()),
-  ('volunteer', gen_random_uuid()), ('doctor', gen_random_uuid());
+-- 'admin' answers every card check without holding a card, so it does not move when a card is edited on
+-- Settings -> Who does what; 'plain' is a throwaway custom role holding one cell that has nothing to do with stock.
+-- Neither management, the volunteer nor the doctor is pinned: their cells are live data (docs/decisions/2026-10-26-harness-sweep-batch-2.md).
+insert into who values ('admin', gen_random_uuid()), ('plain', gen_random_uuid());
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
        'harness-0096-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
   from who;
+insert into roles (key, name, kind) values ('harness_0096_plain', 'Harness plain', 'custom');
+insert into role_permissions (role_id, activity, level)
+  values ((select id from roles where key = 'harness_0096_plain'), 'facility.enclosures', 1);
 insert into user_roles (user_id, role_id)
-  select s.c0, ro.id from (select uid as c0, who as role_key from who) s
+  select s.c0, ro.id from (select uid as c0, case who when 'admin' then 'admin' else 'harness_0096_plain' end as role_key from who) s
   join roles ro on ro.key = s.role_key;
 grant select on who to authenticated, anon;
 
@@ -110,10 +114,14 @@ begin
   if v_n <> 0 then raise exception 'S2 caller unit was kept on % rows', v_n; end if;
   update medication set dose_unit = 'capsule' where id = v_pill;
   select id into v_id from stock_receipts where medication_id = v_pill and quantity = 30;
-  update stock_receipts set quantity = 31, unit = 'capsule' where id = v_id;
+  -- 0235: only a delivery's cost can change, so a quantity or unit edit is refused and the stamp cannot move.
+  begin
+    update stock_receipts set quantity = 31, unit = 'capsule' where id = v_id;
+    raise exception 'S2 an edit of quantity and unit was accepted';
+  exception when insufficient_privilege then null;
+  end;
   select unit into v_unit from stock_receipts where id = v_id;
-  if v_unit <> 'tablet' then raise exception 'S2 edit re-stamped the unit: %', v_unit; end if;
-  update stock_receipts set quantity = 30 where id = v_id;
+  if v_unit <> 'tablet' then raise exception 'S2 refused edit still changed the unit: %', v_unit; end if;
   insert into stock_counts (stocktake_id, item_kind, medication_id, counted_quantity, unit, counted_at)
     values (gen_random_uuid(), 'medication', v_pill, 140, 'capsule', t4);
   insert into stock_receipts (item_kind, medication_id, quantity, received_at)
@@ -122,13 +130,16 @@ begin
   select * into r from stock_count_intervals where medication_id = v_pill and from_counted_at = t3;
   if not r.unit_changed or r.used is not null then raise exception 'S2 subtracted across a unit change: %', row_to_json(r); end if;
   -- a receipt in another unit inside an otherwise one-unit interval also blocks the sum
-  update stock_receipts set medication_id = v_other where id = v_id;  -- moved: re-stamped from the other item
-  select unit into v_unit from stock_receipts where id = v_id;
-  if v_unit <> 'tablet' then raise exception 'S2 move to another item did not re-stamp: %', v_unit; end if;
-  update stock_receipts set medication_id = v_pill where id = v_id;  -- back: now 'capsule' amid 'tablet' counts
+  begin
+    update stock_receipts set medication_id = v_other where id = v_id;
+    raise exception 'S2 a receipt was moved to another item';
+  exception when insufficient_privilege then null;
+  end;
+  insert into stock_receipts (item_kind, medication_id, quantity, received_at)
+    values ('medication', v_pill, 1, t1 + interval '5 days');  -- stamped 'capsule' amid 'tablet' counts
   select * into r from stock_count_intervals where medication_id = v_pill and from_counted_at = t1;
   if not r.unit_changed or r.used is not null then raise exception 'S2 odd-unit receipt was summed: %', row_to_json(r); end if;
-  v_report := v_report || ' | S2 unit stamped from the item not the caller, kept on edit, re-stamped on move; no sum across a count or receipt unit change';
+  v_report := v_report || ' | S2 unit stamped from the item not the caller, an edit or move is refused (0235) so the stamp cannot drift; no sum across a count or receipt unit change';
 
   -- S3 constraints.
   foreach v_err in array array[
@@ -148,41 +159,48 @@ begin
   end loop;
   v_report := v_report || ' | S3 zero, negative, negative cost, wrong kind, both items, no item, unknown kind refused';
 
-  -- S4 roles. Management records the delivery: it was Staff until 0173 retired that role.
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'management'), 'role', 'authenticated')::text, true);
+  -- S4 roles. Admin records the delivery.
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'admin'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   insert into stock_receipts (item_kind, medication_id, quantity, recorded_by)
     values ('medication', v_other, 5, gen_random_uuid()) returning id into v_id;
   reset role;
-  if (select recorded_by from stock_receipts where id = v_id) is distinct from (select uid from who where who = 'management') then
+  if (select recorded_by from stock_receipts where id = v_id) is distinct from (select uid from who where who = 'admin') then
     raise exception 'S4 recorded_by not stamped from the caller';
   end if;
 
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'management'), 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'admin'), 'role', 'authenticated')::text, true);
   set local role authenticated;
-  update stock_receipts set note = 'fixed by management' where id = v_id;
+  begin
+    update stock_receipts set note = 'fixed by admin' where id = v_id;
+    reset role;
+    raise exception 'S4 a delivery note was edited';
+  exception when insufficient_privilege then reset role;
+  end;
+  -- 0235: the cost is the one column an update may change (the bills inbox writes it)
+  set local role authenticated;
+  update stock_receipts set cost = 12 where id = v_id;
   get diagnostics v_n = row_count;
   reset role;
-  -- 0145 (C8): there is no update policy; a wrong delivery is deleted and recorded again
-  if v_n <> 0 then raise exception 'S4 management edited a receipt (%): no policy offers update', v_n; end if;
+  if v_n <> 1 then raise exception 'S4 a cost edit by the delivery holder changed % rows', v_n; end if;
 
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'volunteer'), 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'plain'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   select count(*) into v_n from stock_count_intervals where medication_id = v_pill;
   begin
     insert into stock_receipts (item_kind, medication_id, quantity) values ('medication', v_other, 1);
     reset role;
-    raise exception 'S4 volunteer recorded a delivery';
+    raise exception 'S4 a login with no stock cell recorded a delivery';
   exception when insufficient_privilege then null;
   end;
   reset role;
-  if v_n <> 0 then raise exception 'S4 volunteer reads % intervals (0134 took them away)', v_n; end if;
+  if v_n <> 0 then raise exception 'S4 a login with no stock cell reads % intervals', v_n; end if;
 
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'doctor'), 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'plain'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   select (select count(*) from stock_receipts) + (select count(*) from stock_count_intervals) into v_n;
   reset role;
-  if v_n <> 0 then raise exception 'S4 doctor sees % stock rows', v_n; end if;
+  if v_n <> 0 then raise exception 'S4 a login with no stock cell sees % stock rows', v_n; end if;
 
   perform set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true);
   set local role anon;
@@ -199,7 +217,7 @@ begin
   exception when insufficient_privilege then null;
   end;
   reset role;
-  v_report := v_report || ' | S4 management records (recorded_by forced to caller), management cannot edit (C8, 0145), volunteer reads nothing and cannot record (0134), doctor sees nothing, anon refused by the grant';
+  v_report := v_report || ' | S4 admin records (recorded_by forced to caller) and may change a cost but not a note (0235); a login with no stock cell reads nothing, records nothing and sees no receipts or intervals; anon refused by the grant';
 
   -- S5 cascade.
   delete from diet_types where id = v_kibble;
