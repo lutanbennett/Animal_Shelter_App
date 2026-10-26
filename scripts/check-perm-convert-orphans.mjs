@@ -5,8 +5,7 @@
 //   node scripts/check-perm-convert-orphans.mjs --verbose  (also list every case)
 //
 // For each table, each principal's read / update / insert / delete (1 = took effect, 0 = refused):
-//   enclosures, zones        facility.enclosures: admin all four; management, staff, volunteer, vet read only
-//                            (C1 closed); a custom role above the floor with the cell reads / writes by the cell
+//   enclosures, zones        facility.enclosures: admin all four; a custom role with the cell reads / writes by the cell
 //   group_origins            resident.register reads; nobody but admin writes
 //   resident_diet_rounds, prescription_rounds   the cell (medical.diet / medical.prescriptions) writes, and a
 //                            vet keeps writing through the parent's own clinic limit
@@ -18,12 +17,10 @@
 // Then structural sweeps: no policy on these tables names management or staff, and every new policy calls
 // has_permission() inside a (select ...) init-plan.
 //
-// The custom roles all borrow the MANAGEMENT floor (STAFF until 0173 retired it) and hold one or two cells; one holds
-// none. That is the proof that the role-named policies are gone: a role that borrows management and has no cell gets
-// nothing.
-// "staff" is no longer the Staff role (0173 refuses a live one): it is a harness custom role carrying the archived
-// Staff role's cells, so its expectations below still hold. Management holds more (item_unit_conversions, recurring
-// jobs), so it could not stand in. "vet" is a doctor login (0172 renamed the role and the clinic tables).
+// The custom roles hold one or two cells; one holds none. That is the proof that the role-named policies are gone: a role
+// with no cell gets nothing.
+// Management, the volunteer, the doctor and the archived Staff are NOT probed: their cells are live, and a harness that pinned
+// them would go red whenever a card changes. Since 0259/0264 nothing narrows a cell by role, so the custom roles are the whole test.
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
@@ -48,7 +45,11 @@ const CUSTOM = {
   c_recur: [["recurring.manage", 2], ["recurring.do_own", 2]],
   c_manage_only: [["recurring.manage", 2]],
 };
-const REAL = ["admin", "management", "volunteer", "vet"];
+const REAL = ["admin", "vet"];
+// Management, the volunteer, the doctor and the archived Staff are logins whose cells are LIVE (Settings > Who does what), so
+// the expectations below do not pin them; the harness probes admin, no role and the custom roles, whose cells it writes itself.
+// (The doctor's clinic reach is check-doctor-clinic-scope.) The logins still exist: they own the clinic and assignee fixtures.
+const LIVE = ["management", "staff", "volunteer", "vet"];
 const APP_ROLE = { vet: "doctor" };
 const P = [...REAL, "staff", "norole", ...Object.keys(CUSTOM)];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
@@ -67,7 +68,7 @@ const T = {
   stock_receipts: [`select 1 from stock_receipts where id = '${REC}'`, `update stock_receipts set quantity = quantity where id = '${REC}'`, `insert into stock_receipts (item_kind, medication_id, quantity) values ('medication', ${ref_("med")}, 1)`, `delete from stock_receipts where id = '${REC}'`],
   stock_counts: [`select 1 from stock_counts limit 1`, null, null, null],
   recurring_jobs: [`select 1 from recurring_jobs where id = '${J}'`, `update recurring_jobs set description = 'probe' where id = '${J}'`, `insert into recurring_jobs (title, time_of_day, link_path, repeat, weekdays, starts_on) values ('Harness new', 'morning', '/', 'weekly', '{1}', current_date)`, `delete from recurring_jobs where id = '${J}'`],
-  recurring_job_assignees: [`select 1 from recurring_job_assignees where job_id = '${J}'`, `update recurring_job_assignees set user_id = user_id where job_id = '${J}'`, `insert into recurring_job_assignees (job_id, user_id) values ('${J}', '${ID.management}')`, `delete from recurring_job_assignees where job_id = '${J}'`],
+  recurring_job_assignees: [`select 1 from recurring_job_assignees where job_id = '${J}'`, `update recurring_job_assignees set user_id = user_id where job_id = '${J}'`, `insert into recurring_job_assignees (job_id, user_id) values ('${J}', '${ID.admin}')`, `delete from recurring_job_assignees where job_id = '${J}'`],
   recurring_job_occurrences: [`select 1 from recurring_job_occurrences limit 1`, null, null, null],
   recurring_job_occurrence_assignees: [`select 1 from recurring_job_occurrence_assignees limit 1`, null, null, null],
 };
@@ -90,12 +91,14 @@ const EXPECT = {
   recurring_job_occurrences: { admin: "1", management: "1", staff: "1", volunteer: "1", vet: "1", c_recur: "1" },
   recurring_job_occurrence_assignees: { admin: "1", management: "1", staff: "1", volunteer: "1", vet: "1", c_recur: "1" },
 };
+for (const t of Object.values(EXPECT)) for (const k of LIVE) delete t[k];
 const CMDS = ["read", "update", "insert", "delete"];
 const expected = (tbl, who) => (EXPECT[tbl][who] ?? NO.padEnd(T[tbl].filter(Boolean).length, "0")).split("").map(Number);
 
+const PROBED = P.filter((p) => !LIVE.includes(p));
 const probes = [];
 for (const [tbl, stmts] of Object.entries(T)) {
-  for (const who of P) {
+  for (const who of PROBED) {
     stmts.forEach((q, i) => { if (q) probes.push(`  perform pg_temp.probe('${who}', ${lit(ID[who])}, '${tbl}', '${CMDS[i]}', $q$${q}$q$);`); });
   }
 }
@@ -113,7 +116,10 @@ begin
     set local role authenticated;
     begin
       execute p_sql; get diagnostics v = row_count;
-    exception when insufficient_privilege then v := -1; when others then v := -2;
+    exception when insufficient_privilege then v := -1;
+      -- check_round_applies() looks the round up under the CALLER's own read of rounds, so a login with no rounds read is stopped
+      -- there, before the policy is asked: refused, but not by this table's policy (-3)
+      when others then v := case when sqlerrm like 'That round is not used for%' then -3 else -2 end;
     end;
     reset role;
     raise exception using errcode = 'P0999', message = 'probe-rollback';
@@ -144,13 +150,6 @@ begin
     ) as v(rkey, act, lvl) on v.rkey = r.key;
   ${Object.keys(CUSTOM).map((c) => `insert into user_roles (user_id, role_id)
   select ${lit(ID[c])}, id from roles where key = 'harness_pco_${c}';`).join("\n  ")}
-  -- staff: the archived Staff role's cells on a custom role (0173), so the login keeps exactly what Staff held
-  insert into roles (key, name, kind) values ('harness_pco_staff', 'Harness staff', 'custom');
-  insert into role_permissions (role_id, activity, level)
-    select (select id from roles where key = 'harness_pco_staff'), rp.activity, rp.level
-      from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
-  insert into user_roles (user_id, role_id)
-  select ${lit(ID.staff)}, id from roles where key = 'harness_pco_staff';
 
   insert into zones (id, name) values (${lit(Z)}, 'Harness zone'), (${lit(ZD)}, 'Harness empty zone');
   insert into enclosures (id, name, zone_id) values (${lit(E)}, 'Harness enclosure', ${lit(Z)});
@@ -175,7 +174,7 @@ begin
   insert into item_unit_conversions (id, item_kind, medication_id, unit, base_units_per) values (${lit(C)}, 'medication', ${ref_("med")}, 'harness-pack', 5);
   insert into stock_receipts (id, item_kind, medication_id, quantity) values (${lit(REC)}, 'medication', ${ref_("med")}, 1);
   insert into recurring_jobs (id, title, time_of_day, link_path, repeat, weekdays, starts_on) values (${lit(J)}, 'Harness job', 'morning', '/', 'weekly', '{1,2,3,4,5,6,7}', current_date - 7);
-  insert into recurring_job_assignees (job_id, user_id) values (${lit(J)}, ${lit(ID.staff)});
+  insert into recurring_job_assignees (job_id, user_id) values (${lit(J)}, ${lit(ID.vet)});
 end $setup$;
 
 do $run$ begin
@@ -224,12 +223,13 @@ const fail = (s) => { fails++; console.log(`FAIL  ${s}`); };
 const pass = (s) => { ok++; if (verbose) console.log(`ok    ${s}`); };
 for (const [tbl, stmts] of Object.entries(T)) {
   const cmds = stmts.map((q, i) => (q ? CMDS[i] : null)).filter(Boolean);
-  for (const who of P) {
+  for (const who of PROBED) {
     const exp = expected(tbl, who);
     cmds.forEach((cmd, i) => {
       const n = get(who, tbl, cmd);
       const label = `${tbl} ${cmd} as ${who}: ${exp[i] ? "allowed" : "refused"}`;
       if (n === -2) fail(`${label} - the statement itself errored (-2); the fixture is wrong, not the policy`);
+      else if (n === -3 && exp[i]) fail(`${label} - stopped by the round lookup (-3)`);
       else if ((n >= 1) === Boolean(exp[i])) pass(label);
       else fail(`${label} - got ${n}`);
     });
@@ -240,5 +240,5 @@ if (sweep("names_mgmt_or_staff") === 0) pass("no policy on these tables names ma
 if (sweep("bare_has_permission") === 0) pass("every new policy wraps has_permission() in (select ...)"); else fail(`${sweep("bare_has_permission")} policy(ies) call has_permission() bare`);
 if (sweep("new_perm_policies") === 28) pass("28 new policies"); else fail(`expected 28 new *_perm policies, found ${sweep("new_perm_policies")}`);
 console.log(`\n${ok} checks held, ${fails} failed.`);
-console.log(fails ? "RESULT: RED" : "RESULT: GREEN (each table answers as its cell says; a management-floor role with no cell gets nothing; vets unchanged)");
+console.log(fails ? "RESULT: RED" : "RESULT: GREEN (each table answers as its cell says; a role with no cell gets nothing; no role narrows a cell any more)");
 process.exitCode = fails ? 1 : 0;
