@@ -816,6 +816,7 @@ const en = {
         subtitle:
           "Give a role cards. Each card puts a tile on the person's home screen and gives what they need to use it, so a tile can never open a page they cannot use. Tap a card to see exactly what it gives.",
         detailsLink: "See every activity (Details)",
+        featuresLink: "Edit the features (Features)",
         detailsTitle: "Who does what: Details",
         detailsSubtitle:
           "Every activity down the side and every role across the top, read live. This is a read-only view: change a role's access by giving or removing cards.",
