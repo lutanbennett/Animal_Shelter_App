@@ -53,9 +53,13 @@ export function CreateUserForm({ roles }: { roles: RoleOption[] }) {
         <select
           id="role"
           name="role"
-          defaultValue="volunteer"
+          required
+          defaultValue=""
           className="w-48 rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
         >
+          <option value="" disabled>
+            {t.admin.security.createForm.chooseRole}
+          </option>
           {roles.map((r) => (
             <option key={r.key} value={r.key}>
               {roleOptionLabel(t, locale, r)}

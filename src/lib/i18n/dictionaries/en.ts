@@ -1589,6 +1589,7 @@ const en = {
         name: "Name (optional)",
         namePlaceholder: "Shown in the header",
         role: "Role",
+        chooseRole: "Choose a role…",
         createButton: "Create user",
         tempPasswordNote:
           "A temporary password is generated and shown once — pass it on. They'll be asked to choose their own the first time they sign in with it. Someone who will only ever use Google sign-in can ignore it.",
@@ -7121,13 +7122,6 @@ const en = {
     englishOnly: "The notes themselves are in English for now.",
     notReleasedYet: "Not released yet",
     major: "Major",
-    roleNames: {
-      admin: "Admin",
-      management: "Management",
-      staff: "Staff",
-      doctor: "Doctor",
-      volunteer: "Volunteer",
-    },
     showingAll: (role: string) =>
       `Showing every change, greyed where it isn't for the ${role} role.`,
     showingMine: (role: string) =>
@@ -7156,13 +7150,13 @@ const en = {
     englishNotice: "",
     contents: "Contents",
     contentsLabel: "Manual contents",
-    rolesAtAGlance: "Roles at a glance",
-    showingRole: (role: string, count: number) =>
-      `Showing the ${count} topics for the ${role} role.`,
+    cardsAtAGlance: "Cards at a glance",
+    cardsIntro: "A card is what a person is given to do one job. The cards you hold decide which topics the manual opens on.",
+    showingMine: (count: number) => `Showing the ${count} topics for the cards you hold.`,
     showEverything: "Show everything",
-    showingEverything: (role: string) =>
-      `Showing everything. Topics outside the ${role} role are greyed.`,
-    showOnlyRole: (role: string) => `Show only the ${role} role`,
+    showingEverything: "Showing everything. Topics for cards you do not hold are greyed.",
+    showOnlyMine: "Show only my cards' topics",
+    cardsLabel: "Cards:",
     findHint:
       "The rest are tucked away, not gone: Show everything lists them, greyed, to answer \"can I do this?\".",
     printPdf: "Print this as a PDF",

@@ -43,33 +43,16 @@ const manual: Manual = {
     "How to use the Lanna Care for Animals app day to day — finding a resident, recording what happens to them, keeping the shelter's enclosures, contacts and website up to date.",
   version: "Draft 1 · September 2026 · English only for now",
 
-  roleNames: {
-    admin: "Admin",
-    management: "Management",
-    doctor: "Doctor",
-    volunteer: "Volunteer",
-  },
-  roleSummary: {
-    admin:
-      "Everything, including the Settings section (users, zones, enclosures, immunization and procedure types, frequencies) and the Management section.",
-    management:
-      "Day-to-day resident work — intake, moves, hospital, foster and adoption, photos, maintenance, projects — plus the Management section: the reporting dashboard, the public website, the contact, clinic, medication and diet lists, and the translations of public text.",
-    doctor:
-      "Clinic visits, procedures, blood tests, prescriptions and immunizations, for the residents their own clinics treat — any resident the clinic has a visit, prescription, procedure or blood test for, with that resident's whole history — plus every resident the doctor was the doctor for at a clinic they have since left, which they can read but not change. Other residents are not shown at all. The menu is Appointments and Residents only — the shelter's enclosures, maintenance, projects, contacts and clinic list are not part of a doctor's access.",
-    volunteer:
-      "Sees who each resident is and where they live, and browses the enclosures. Nothing else is read or changed: no medical records, notes or microchip numbers, no moving a resident, no photos to add, and no maintenance, projects, contacts, clinics, stock or assistant. The menu is Home, Residents and Enclosures.",
-  },
 
   filter: {
-    showingRole: (role, count) =>
-      `Showing the ${count} topics for the ${role} role.`,
+    showingMine: (count) => `Showing the ${count} topics for the cards you hold.`,
     showEverything: "Show everything",
     findHint:
       "The rest are tucked away, not gone: Show everything lists them, greyed, to answer \"can I do this?\".",
-    showingEverything: (role) =>
-      `Showing everything. Topics outside the ${role} role are greyed.`,
-    showOnlyRole: (role) => `Show only the ${role} role`,
-    notForRole: (role) => `Not part of the ${role} role`,
+    showingEverything: "Showing everything. Topics for cards you do not hold are greyed.",
+    showOnlyMine: "Show only my cards' topics",
+    notYours: "Not part of a card you hold",
+    unassigned: "Not yet assigned to a card, so it is shown to everyone.",
     you: "You",
   },
 
@@ -84,6 +67,7 @@ const manual: Manual = {
       topics: [
         {
           id: "sign-in",
+          everyone: true,
           title: "Signing in",
           path: "Home page → Staff & Volunteer Login",
           steps: [
@@ -114,6 +98,7 @@ const manual: Manual = {
         },
         {
           id: "confirm-and-offline",
+          everyone: true,
           title: "Confirming a delete, and working offline",
           steps: [
             "Anything that can't be taken back — deleting or removing a record, archiving or deleting a login, issuing a temporary password, resetting 2-step verification — asks first, in a box that names exactly what you're about to lose (\"Delete zone \\\"Quarantine\\\"?\"). The Cancel button is the one selected, so pressing Enter by accident cancels; tap the red button, or Delete, to go ahead. Esc or tapping outside the box also cancels.",
@@ -122,6 +107,7 @@ const manual: Manual = {
         },
         {
           id: "language",
+          everyone: true,
           title: "Switching language",
           steps: [
             "Use the EN / ไทย switch in the header (or on the sign-in page).",
@@ -130,6 +116,7 @@ const manual: Manual = {
         },
         {
           id: "entering-dates",
+          everyone: true,
           title: "Typing a date",
           steps: [
             "Every date box reads day first: DD/MM/YYYY, for example 13/10/2026 is 13 October. It looks the same on every phone and computer, whatever language the device is set to.",
@@ -139,6 +126,7 @@ const manual: Manual = {
         },
         {
           id: "colours",
+          everyone: true,
           title: "Choosing the app's colours",
           steps: [
             "Tap your name at the top right. Under Colours, pick Dark (the usual look), Light, High contrast or Magenta. The screen changes straight away.",
@@ -148,6 +136,7 @@ const manual: Manual = {
         },
         {
           id: "home-screen-icons",
+          everyone: true,
           title: "Putting a card on your phone's home screen",
           steps: [
             "Tap your name at the top right, then Home screen icons. You see one picture for each page you can open, drawn the same as its card, with the page's address under it.",
@@ -159,11 +148,12 @@ const manual: Manual = {
         },
         {
           id: "print-manual",
+          everyone: true,
           title: "Printing this manual",
           path: "Manual → Print this as a PDF",
           steps: [
-            "Open the Manual and tap Print this as a PDF, just under the line about your role. The PDF opens in a new page of your browser; use its Save or Print button to keep a paper or file copy.",
-            "The PDF holds the same topics you are looking at: your own role's, or the whole manual if you chose Show everything first. Without screenshots gives a much smaller, text-only file that prints quickly.",
+            "Open the Manual and tap Print this as a PDF, just under the line about your cards. The PDF opens in a new page of your browser; use its Save or Print button to keep a paper or file copy.",
+            "The PDF holds the same topics you are looking at: the ones for the cards you hold, or the whole manual if you chose Show everything first. Without screenshots gives a much smaller, text-only file that prints quickly.",
             "The copy is a snapshot of today's manual. Print it again after the manual changes.",
           ],
           callouts: [
@@ -175,6 +165,7 @@ const manual: Manual = {
         },
         {
           id: "navigation",
+          everyone: true,
           title: "Finding your way around",
           steps: [
             "On a computer the menu is always visible down the left, each link with its own icon: Home and My tasks at the top, then Residents and Operations — and, depending on your role, Management and Settings. A doctor's menu is just Appointments and Residents.",
@@ -193,6 +184,7 @@ const manual: Manual = {
         },
         {
           id: "shelter-operations",
+          everyone: true,
           title: "Operations: the daily work",
           path: "Operations (in the menu)",
           intro:
@@ -211,6 +203,7 @@ const manual: Manual = {
         },
         {
           id: "release-notes",
+          everyone: true,
           title: "What changed: release notes",
           path: "Release notes (bottom of the menu)",
           intro:
@@ -232,7 +225,6 @@ const manual: Manual = {
         {
           id: "assistant",
           title: "Asking the assistant",
-          roles: ["admin", "management"],
           activity: "assistant.ask",
           path: "Assistant button in the header (any screen)",
           intro:
@@ -265,9 +257,10 @@ const manual: Manual = {
         },
         {
           id: "roles",
-          title: "Roles — who can do what",
+          everyone: true,
+          title: "Roles and cards — who can do what",
           intro:
-            "Every account has one role. The app hides buttons you can't use, and the database refuses the change even if a button is reached another way. Sections below say which roles can do each task. The manual opens on the topics for your own role; Show everything, above Roles at a glance, brings back the rest, greyed where they aren't part of your role.",
+            "Every account has a role, and a role is exactly the cards it has been given on Who does what. The app hides buttons you can't use, and the database refuses the change even if a button is reached another way. Under each task the manual names the cards that give it. The manual opens on the topics for the cards you hold; Show everything, above Cards at a glance, brings back the rest, greyed where they aren't part of a card you hold. A topic marked as not yet assigned to a card is shown to everyone until it has been linked.",
         },
       ],
     },
@@ -283,7 +276,7 @@ const manual: Manual = {
         {
           id: "appointments-vet",
           title: "Your clinic's appointments",
-          roles: ["doctor"],
+          awaitingCard: ["doctor"],
           path: "Appointments (first in the menu)",
           intro:
             "Tap the Appointments tile on your home screen. It lists every visit booked with your clinic — not just your own patients' — in three groups: To write up (the visit date has passed and it is not marked done — oldest first, its count and dates in red), Upcoming (today or later) and Recently done (marked done in the last 30 days). Each row names the resident, which opens their page, and offers Log procedure, Log blood test, Add prescription, Log weight and Edit, all already linked to that visit; prescription and weight appear once the visit has started. Marking a visit done does not lock it: you can still add records to it, and anything you were typing when someone marked it done is saved as normal. A cancelled visit is not listed. The visits of all your clinics are listed together. If the page says your account is not linked to a clinic, ask an admin to link it to your doctor entry (Accounts and roles).",
@@ -302,7 +295,6 @@ const manual: Manual = {
         {
           id: "my-tasks-page",
           title: "Seeing what's assigned to you",
-          roles: ["admin", "management"],
           activity: "recurring.do_own",
           path: "My tasks (first in the menu)",
           steps: [
@@ -323,7 +315,7 @@ const manual: Manual = {
         {
           id: "my-access-requests",
           title: "Access requests on My tasks",
-          roles: ["admin"],
+          awaitingCard: ["admin"],
           path: "My tasks → Access requests",
           intro:
             "While anyone who has signed in is waiting for a role, every admin has one Review access requests task at the top of My tasks. It says how many are waiting, is dated the day the oldest one arrived, and counts towards the number beside My tasks in the menu. It names nobody: who is asking is shown only on Settings → Security, after your authenticator app.",
@@ -334,6 +326,7 @@ const manual: Manual = {
         },
         {
           id: "home-covering-another-role",
+          everyone: true,
           title: "Home screen: if you cover another role",
           path: "Home",
           intro:
@@ -354,7 +347,6 @@ const manual: Manual = {
         {
           id: "my-recurring-jobs",
           title: "Doing your recurring jobs",
-          roles: ["admin", "management"],
           activity: "recurring.do_own",
           path: "My tasks → Recurring jobs",
           intro:
@@ -388,6 +380,7 @@ const manual: Manual = {
       topics: [
         {
           id: "residents-list",
+          everyone: true,
           title: "Finding a resident",
           path: "Residents",
           steps: [
@@ -437,7 +430,7 @@ const manual: Manual = {
         {
           id: "name-card",
           title: "Scanning a name card",
-          roles: ["admin", "management", "doctor", "volunteer"],
+          awaitingCard: ["admin", "management", "doctor", "volunteer"],
           path: "Hold your phone to a resident's name card",
           intro:
             "Every resident has a name card with an NFC chip. Hold the top of your phone to it (an iPhone XS or later, or an Android phone with NFC on) and the resident's page opens. What you see depends on who you are, but never less than a visitor sees.",
@@ -456,7 +449,7 @@ const manual: Manual = {
         {
           id: "microchip",
           title: "Scanning a microchip",
-          roles: ["admin", "management", "doctor"],
+          awaitingCard: ["admin", "management", "doctor"],
           path: "Residents → Scan a chip, or a resident's hub",
           intro:
             "A microchip number is exactly 15 digits, and no two residents can share one. It is for staff, Management and doctors only: the public website says only whether an animal is microchipped, never the number.",
@@ -485,7 +478,6 @@ const manual: Manual = {
         {
           id: "intake",
           title: "Registering a new resident (intake)",
-          roles: ["admin", "management"],
           activity: "resident.register",
           path: "Residents → New resident (intake)",
           intro:
@@ -517,6 +509,7 @@ const manual: Manual = {
         },
         {
           id: "hub",
+          everyone: true,
           title: "The resident hub",
           path: "Residents → (a resident)",
           intro:
@@ -545,7 +538,6 @@ const manual: Manual = {
         {
           id: "adoption-updates",
           title: "Adoption updates",
-          roles: ["admin", "management"],
           activity: "resident.adoption_news",
           path: "Resident hub → Adoption updates",
           intro:
@@ -581,7 +573,6 @@ const manual: Manual = {
         {
           id: "edit",
           title: "Editing a resident's details",
-          roles: ["admin", "management"],
           activity: "resident.record",
           path: "Resident hub → pencil icon",
           steps: [
@@ -612,7 +603,6 @@ const manual: Manual = {
         {
           id: "move",
           title: "Moving between enclosures",
-          roles: ["admin", "management"],
           activity: "placement.move",
           path: "Resident hub → Housing & Status → Move enclosure",
           steps: [
@@ -630,7 +620,6 @@ const manual: Manual = {
         {
           id: "hospital",
           title: "Sending to hospital and bringing them back",
-          roles: ["admin", "management"],
           activity: "placement.hospital",
           path: "Resident hub → Housing & Status → Send to hospital",
           steps: [
@@ -647,7 +636,6 @@ const manual: Manual = {
         {
           id: "foster-adopt",
           title: "Foster and adoption",
-          roles: ["admin", "management"],
           activity: "placement.rehome",
           path: "Resident hub → Housing & Status → Foster / adopt",
           steps: [
@@ -672,7 +660,6 @@ const manual: Manual = {
         {
           id: "deceased",
           title: "Recording a death",
-          roles: ["admin", "management"],
           activity: "placement.death",
           path: "Resident hub → broken-heart icon next to the pencil",
           steps: [
@@ -696,7 +683,6 @@ const manual: Manual = {
         {
           id: "undo-deceased",
           title: "Withdrawing a death recorded in error",
-          roles: ["admin"],
           activity: "placement.death_withdraw",
           path: "Resident hub → deceased banner → Withdraw this death",
           steps: [
@@ -715,7 +701,7 @@ const manual: Manual = {
         {
           id: "placement-history",
           title: "Placement history",
-          roles: ["admin", "management", "doctor"],
+          awaitingCard: ["admin", "management", "doctor"],
           path: "Resident hub → Housing & Status card",
           steps: [
             "Tap the Housing & Status card title to open Housing & Placement History.",
@@ -740,7 +726,6 @@ const manual: Manual = {
         {
           id: "immunizations",
           title: "Logging immunizations",
-          roles: ["admin", "management", "doctor"],
           activity: "medical.immunizations",
           path: "Resident hub → Immunizations → Log immunization, or tick residents on the list",
           intro:
@@ -770,7 +755,6 @@ const manual: Manual = {
         {
           id: "vet-visit-record",
           title: "Clinic visits: opening a visit",
-          roles: ["admin", "management", "doctor"],
           activity: "medical.visits",
           activityLevel: "read",
           path: "Resident hub → Clinic Visits → tap a visit (also Appointments, Upcoming visits and a clinic's page → Open)",
@@ -787,7 +771,6 @@ const manual: Manual = {
         {
           id: "vet-visit-report",
           title: "Clinic visits: adding the doctor's report",
-          roles: ["admin", "management", "doctor"],
           activity: "medical.visits",
           path: "Resident hub → Clinic Visits → tap a visit → Doctor's report",
           steps: [
@@ -807,7 +790,6 @@ const manual: Manual = {
         {
           id: "vet-visits",
           title: "Booking and recording clinic visits",
-          roles: ["admin", "management", "doctor"],
           activity: "medical.visits",
           path: "Resident hub → Clinic Visits → Book clinic visit, or the Book a vet appointment button on Upcoming visits, Appointments and a clinic's page",
           steps: [
@@ -841,7 +823,6 @@ const manual: Manual = {
         {
           id: "prescriptions",
           title: "Adding a prescription",
-          roles: ["admin", "management", "doctor"],
           activity: "medical.prescriptions",
           path: "Resident hub → Prescriptions → Add prescription",
           steps: [
@@ -861,7 +842,6 @@ const manual: Manual = {
         {
           id: "diet",
           title: "Recording a resident's diet",
-          roles: ["admin", "management", "doctor"],
           activity: "medical.diet",
           path: "Resident hub → Diet → Add diet",
           steps: [
@@ -879,7 +859,6 @@ const manual: Manual = {
         {
           id: "weight",
           title: "Logging weight",
-          roles: ["admin", "management", "doctor"],
           activity: "medical.weight",
           path: "Resident hub → Weight → Log weight",
           steps: [
@@ -898,7 +877,7 @@ const manual: Manual = {
         {
           id: "record-weight",
           title: "Record Weight on a phone",
-          roles: ["admin", "management"],
+          awaitingCard: ["admin", "management"],
           path: "Home → Record Weight (the Head of Medical)",
           intro:
             "The Head of Medical's own weighing page, built for a phone with the scales in front of you. It shows who to weigh and takes the reading, and nothing else: it does not open the animal's medical record.",
@@ -920,7 +899,6 @@ const manual: Manual = {
         {
           id: "procedures",
           title: "Logging a procedure",
-          roles: ["admin", "management", "doctor"],
           activity: "medical.procedures",
           path: "Resident hub → Procedures → Log procedure",
           steps: [
@@ -936,7 +914,6 @@ const manual: Manual = {
         {
           id: "blood-tests",
           title: "Logging a blood test",
-          roles: ["admin", "management", "doctor"],
           activity: "medical.blood_tests",
           path: "Resident hub → Blood Tests → Log blood test",
           steps: [
@@ -953,7 +930,6 @@ const manual: Manual = {
         {
           id: "archive-records",
           title: "Removing a medical record",
-          roles: ["admin", "management"],
           activity: "medical.archive",
           path: "Resident hub → Weight, Prescriptions, Clinic visits or Immunizations",
           steps: [
@@ -979,7 +955,7 @@ const manual: Manual = {
         {
           id: "resident-photos",
           title: "Adding resident photos",
-          roles: ["admin", "management", "doctor"],
+          awaitingCard: ["admin", "management", "doctor"],
           path: "Resident hub → Photos",
           steps: [
             "Open the Photos card on the hub.",
@@ -998,7 +974,7 @@ const manual: Manual = {
         {
           id: "resident-videos",
           title: "Adding resident videos",
-          roles: ["admin", "management", "doctor"],
+          awaitingCard: ["admin", "management", "doctor"],
           path: "Resident hub → Photos",
           intro:
             "Videos live in the same Photos section as pictures, in the same Drive folders, with the same rules. There is no separate place to look.",
@@ -1020,7 +996,6 @@ const manual: Manual = {
         {
           id: "posted-on-social",
           title: "Marking a photo as posted on social media",
-          roles: ["admin", "management"],
           activity: "photos.resident_manage",
           path: "Resident hub → Photos",
           intro:
@@ -1043,7 +1018,6 @@ const manual: Manual = {
         {
           id: "approve-photos",
           title: "Approving photos",
-          roles: ["admin", "management"],
           activity: "photos.resident_publish",
           path: "Home → Photos to approve",
           intro:
@@ -1067,7 +1041,6 @@ const manual: Manual = {
         {
           id: "add-photos-quick",
           title: "Adding photos: the quick way",
-          roles: ["admin", "management", "doctor"],
           activity: "photos.resident_add",
           path: "Home → Add Shelter Photos",
           intro:
@@ -1095,7 +1068,6 @@ const manual: Manual = {
         {
           id: "add-photos-unknown",
           title: "Adding photos: if you don't know the resident",
-          roles: ["admin"],
           activity: "photos.shelter_add",
           path: "Home → Add Shelter Photos",
           intro:
@@ -1122,7 +1094,6 @@ const manual: Manual = {
         {
           id: "memes",
           title: "Memes: adding one and recording where it went",
-          roles: ["admin"],
           activity: "social.library",
           path: "Home → Meme library (or Management → Memes)",
           intro:
@@ -1153,7 +1124,6 @@ const manual: Manual = {
         {
           id: "meme-maker",
           title: "Memes: making one",
-          roles: ["admin"],
           activity: "social.library",
           path: "Meme library → Make a meme (or a resident's Photos → open a photo → Make a meme)",
           intro:
@@ -1187,7 +1157,6 @@ const manual: Manual = {
         {
           id: "browse-enclosures",
           title: "Browsing by zone and enclosure",
-          roles: ["admin", "management", "volunteer"],
           activity: "facility.enclosures",
           activityLevel: "read",
           path: "Operations → Enclosures",
@@ -1209,7 +1178,6 @@ const manual: Manual = {
         {
           id: "enclosure-map",
           title: "Finding your way round on the map",
-          roles: ["admin", "management", "volunteer"],
           activity: "facility.enclosures",
           activityLevel: "read",
           path: "Operations → Enclosures → Map",
@@ -1227,7 +1195,6 @@ const manual: Manual = {
         {
           id: "enclosure-hub",
           title: "The enclosure page",
-          roles: ["admin", "management", "volunteer"],
           activity: "facility.enclosures",
           activityLevel: "read",
           path: "Operations → Enclosures → (an enclosure)",
@@ -1257,7 +1224,6 @@ const manual: Manual = {
         {
           id: "log-maintenance",
           title: "Logging a job",
-          roles: ["admin", "management"],
           activity: "maintenance.jobs",
           path: "Operations → Maintenance → Log maintenance (or from an enclosure page)",
           steps: [
@@ -1274,7 +1240,6 @@ const manual: Manual = {
         {
           id: "maintenance-board",
           title: "Tracking jobs on the board",
-          roles: ["admin", "management"],
           activity: "maintenance.jobs",
           activityLevel: "read",
           path: "Operations → Maintenance",
@@ -1309,7 +1274,6 @@ const manual: Manual = {
         {
           id: "browse-projects",
           title: "Browsing and adding photos",
-          roles: ["admin", "management"],
           activity: "projects.folders",
           activityLevel: "read",
           path: "Operations → Projects",
@@ -1326,7 +1290,6 @@ const manual: Manual = {
         {
           id: "manage-projects",
           title: "Creating folders and writing the story",
-          roles: ["admin", "management"],
           activity: "projects.folders",
           path: "Operations → Projects → (a category or folder)",
           steps: [
@@ -1344,7 +1307,6 @@ const manual: Manual = {
         {
           id: "outreach-visits",
           title: "Recording an outreach visit",
-          roles: ["admin", "management"],
           activity: "community.outings",
           path: "Operations → Outreach visits",
           intro:
@@ -1389,7 +1351,6 @@ const manual: Manual = {
         {
           id: "vets",
           title: "Clinics",
-          roles: ["admin", "management"],
           activity: "clinics.list",
           activityLevel: "read",
           path: "Operations → Clinics",
@@ -1408,7 +1369,6 @@ const manual: Manual = {
         {
           id: "contacts",
           title: "Contacts",
-          roles: ["admin", "management"],
           activity: "contacts.browse",
           path: "Operations → Contacts",
           steps: [
@@ -1443,7 +1403,6 @@ const manual: Manual = {
         {
           id: "dashboard",
           title: "The dashboard",
-          roles: ["admin", "management"],
           activity: "reports.dashboard",
           path: "Management → Dashboard",
           steps: [
@@ -1462,7 +1421,6 @@ const manual: Manual = {
         {
           id: "manage-contacts",
           title: "Managing contacts",
-          roles: ["admin", "management"],
           activity: "contacts.directory",
           path: "Management → Contacts",
           steps: [
@@ -1482,7 +1440,6 @@ const manual: Manual = {
         {
           id: "shelter-friends",
           title: "Shelter Friends — thanking the businesses that help",
-          roles: ["admin", "management"],
           activity: "friends.manage",
           path: "Management → Shelter Friends → Add a Shelter Friend",
           intro:
@@ -1517,7 +1474,6 @@ const manual: Manual = {
         {
           id: "donation-receipts",
           title: "Recording a donation and sending its receipt",
-          roles: ["admin", "management"],
           activity: "donation.receipt",
           path: "Management → Donations → Record a donation",
           intro:
@@ -1553,7 +1509,6 @@ const manual: Manual = {
         {
           id: "running-an-appeal",
           title: "Running an appeal",
-          roles: ["admin"],
           activity: "appeal.run",
           path: "Appeals in the menu, Residents → the resident → Fundraising appeal, or Management → Appeals",
           intro:
@@ -1587,7 +1542,6 @@ const manual: Manual = {
         {
           id: "desexing-drives",
           title: "Desexing drives",
-          roles: ["admin", "management"],
           activity: "website.content",
           path: "Management → Desexing drives",
           intro:
@@ -1613,7 +1567,6 @@ const manual: Manual = {
         {
           id: "manage-vets",
           title: "Managing clinics",
-          roles: ["admin", "management"],
           activity: "clinics.list",
           path: "Management → Clinics",
           steps: [
@@ -1628,7 +1581,6 @@ const manual: Manual = {
         {
           id: "vet-doctors",
           title: "A clinic's doctors",
-          roles: ["admin", "management"],
           activity: "clinics.doctors",
           path: "Management → Clinics → Doctors",
           intro:
@@ -1653,7 +1605,6 @@ const manual: Manual = {
         {
           id: "manage-medications",
           title: "Managing medications",
-          roles: ["admin", "management"],
           activity: "stock.medications",
           path: "Management → Medication stock; the list itself is Settings → Medications",
           steps: [
@@ -1681,7 +1632,6 @@ const manual: Manual = {
         {
           id: "manage-diets",
           title: "Managing diets and the food forecast",
-          roles: ["admin", "management"],
           activity: "stock.diets",
           path: "Management → Diet stock; the list itself is Settings → Diets",
           steps: [
@@ -1706,7 +1656,7 @@ const manual: Manual = {
         {
           id: "medication-list",
           title: "The medication list",
-          roles: ["admin", "management"],
+          awaitingCard: ["admin", "management"],
           path: "Home → Administer Medication (Head of Medical), or Operations → Medication list",
           intro:
             "One list of who needs medicine today and how much, built for a phone while you walk round the enclosures. It is for reading: nothing on it is ticked off, and the app does not record that a dose was given.",
@@ -1728,7 +1678,7 @@ const manual: Manual = {
         {
           id: "feeding-list",
           title: "The feeding list",
-          roles: ["admin", "management"],
+          awaitingCard: ["admin", "management"],
           path: "Operations → Feeding list",
           intro:
             "How much food to make for each zone for one meal, and what each dog is plated, built for a phone in the kitchen. It is for reading: nothing on it is ticked off, and the app does not record that a meal was fed.",
@@ -1750,7 +1700,6 @@ const manual: Manual = {
         {
           id: "stocktake",
           title: "Doing a stocktake",
-          roles: ["admin", "management"],
           activity: "stock.count",
           path: "Operations → Stocktake, or Home → Do Stocktaking (the 2IC)",
           intro:
@@ -1780,7 +1729,6 @@ const manual: Manual = {
         {
           id: "stock-usage",
           title: "Stock between counts",
-          roles: ["admin", "management"],
           activity: "stock.usage",
           path: "Management → Stock between counts",
           intro:
@@ -1806,7 +1754,6 @@ const manual: Manual = {
         {
           id: "purchasing",
           title: "Purchasing: what to buy",
-          roles: ["admin", "management"],
           activity: "stock.purchasing",
           path: "Management → Purchasing, or Home → Do the Purchasing (the 2IC)",
           intro:
@@ -1836,7 +1783,7 @@ const manual: Manual = {
         {
           id: "stocktaking-switches",
           title: "Stock: what the Stocktaking switches do",
-          roles: ["admin"],
+          awaitingCard: ["admin"],
           path: "Settings → Stocktaking",
           intro:
             "Two switches, one for food and one for medicines and vaccines, that you turn on when the shelter is ready to count that area. Until then the stock figures are not trusted, so the app stops pretending to know them. Each is turned on or off on its own, so you can start with one without the other.",
@@ -1851,7 +1798,6 @@ const manual: Manual = {
         {
           id: "deliveries",
           title: "Recording a delivery",
-          roles: ["admin", "management"],
           activity: "stock.delivery",
           path: "Operations → Deliveries, or Home → Record a Delivery (the 2IC)",
           intro:
@@ -1874,7 +1820,6 @@ const manual: Manual = {
         {
           id: "bills",
           title: "Bills: photos of receipts for purchases and clinic visits",
-          roles: ["admin", "management"],
           activity: "stock.delivery",
           path: "Operations → Deliveries → Bills (also a Home tile for some roles)",
           intro:
@@ -1900,7 +1845,6 @@ const manual: Manual = {
         {
           id: "maintenance-bills",
           title: "Maintenance: adding a bill to a job",
-          roles: ["admin", "management"],
           activity: "maintenance.bills",
           path: "Operations → Maintenance → open a job → Bills",
           intro:
@@ -1922,7 +1866,6 @@ const manual: Manual = {
         {
           id: "recurring-jobs",
           title: "Setting up recurring jobs",
-          roles: ["admin", "management"],
           activity: "recurring.manage",
           path: "Management → Recurring jobs",
           intro:
@@ -1953,7 +1896,6 @@ const manual: Manual = {
         {
           id: "cashflow",
           title: "The cashflow forecast",
-          roles: ["admin", "management"],
           activity: "reports.cashflow",
           path: "Management → Cashflow",
           intro:
@@ -1994,7 +1936,6 @@ const manual: Manual = {
         {
           id: "translations",
           title: "Translating",
-          roles: ["admin", "management"],
           activity: "translations.manage",
           path: "Management → Translations",
           steps: [
@@ -2020,7 +1961,7 @@ const manual: Manual = {
         {
           id: "security",
           title: "Accounts and roles",
-          roles: ["admin"],
+          awaitingCard: ["admin"],
           path: "Security (bottom of the menu)",
           steps: [
             "Create a user with an email and a role. A temporary password is generated and shown once — copy it and pass it on (LINE is fine; it only works until they've signed in). The first time they sign in with it they must choose their own password before anything else opens. Someone who will only use Google sign-in can ignore the temporary password.",
@@ -2041,7 +1982,6 @@ const manual: Manual = {
         {
           id: "recent-changes",
           title: "Who changed what (Recent changes)",
-          roles: ["admin"],
           activity: "audit.view",
           path: "Settings → Recent changes",
           steps: [
@@ -2057,7 +1997,7 @@ const manual: Manual = {
         {
           id: "who-does-what",
           title: "Who does what",
-          roles: ["admin", "management"],
+          awaitingCard: ["admin", "management"],
           path: "Settings → Who does what (also on the Management page)",
           intro:
             "Where Admin shares the app out. You give each role cards. A card puts a tile on the person's home screen and gives them what they need to use it, so a tile can never open a page they cannot use. Admin can give and remove cards; Management can look but not change.",
@@ -2078,7 +2018,7 @@ const manual: Manual = {
         {
           id: "two-step",
           title: "2-step verification for Security",
-          roles: ["admin"],
+          awaitingCard: ["admin"],
           path: "Security (bottom of the menu)",
           intro:
             "Security decides who can get into the app, so it asks for a second step: a 6-digit code from an authenticator app on your phone. It works the same whether you signed in with a password or with Google. Nothing else in the app asks for it.",
@@ -2099,7 +2039,6 @@ const manual: Manual = {
         {
           id: "website",
           title: "The public website",
-          roles: ["admin", "management"],
           activity: "website.content",
           path: "Management → Website",
           steps: [
@@ -2128,7 +2067,6 @@ const manual: Manual = {
         {
           id: "website-hide-pages",
           title: "Website: hiding a page",
-          roles: ["admin", "management"],
           activity: "website.content",
           path: "Settings → Website → Pages",
           steps: [
@@ -2153,7 +2091,6 @@ const manual: Manual = {
         {
           id: "zones-enclosures",
           title: "Zones and enclosures",
-          roles: ["admin"],
           activity: "facility.enclosures",
           path: "Settings → Zones, Settings → Enclosures",
           steps: [
@@ -2175,7 +2112,6 @@ const manual: Manual = {
         {
           id: "facility-map-editor",
           title: "Placing enclosures on the facility map",
-          roles: ["admin"],
           activity: "facility.enclosures",
           path: "Settings → Facility map",
           steps: [
@@ -2198,7 +2134,6 @@ const manual: Manual = {
         {
           id: "immunization-types",
           title: "Immunization types",
-          roles: ["admin"],
           activity: "reference.types",
           path: "Settings → Immunization Types",
           steps: [
@@ -2213,7 +2148,6 @@ const manual: Manual = {
         {
           id: "procedure-types",
           title: "Procedure types",
-          roles: ["admin"],
           activity: "reference.types",
           path: "Settings → Procedure Types",
           steps: [
@@ -2228,7 +2162,6 @@ const manual: Manual = {
         {
           id: "blood-test-types",
           title: "Blood test types",
-          roles: ["admin"],
           activity: "reference.types",
           path: "Settings → Blood Test Types",
           steps: [
@@ -2243,7 +2176,6 @@ const manual: Manual = {
         {
           id: "frequencies",
           title: "Frequencies",
-          roles: ["admin"],
           activity: "reference.types",
           path: "Settings → Frequencies",
           steps: [
@@ -2254,7 +2186,6 @@ const manual: Manual = {
         {
           id: "system-status",
           title: "System status",
-          roles: ["admin"],
           activity: "system.status",
           path: "Settings → System status",
           intro:
@@ -2291,6 +2222,7 @@ const manual: Manual = {
       topics: [
         {
           id: "public-pages",
+          everyone: true,
           title: "The public pages",
           steps: [
             "Home: the heading with Meet the animals and Give monthly (which opens the Donate page for now) beside the hero photo; four live counts (in care, adopted this year, in foster care, in treatment); the Shelter Friends band, once someone is published; four ways to help (Adopt, Sponsor a resident, Foster, Volunteer); and the Pet of the week beside Our story, its first three gallery photos and a link to Our work.",
@@ -2310,6 +2242,7 @@ const manual: Manual = {
         },
         {
           id: "getting-help",
+          everyone: true,
           title: "Getting help",
           intro: SUPPORT_CONTACT
             ? `This manual is a first draft and will change as the app does. If a screen doesn't match what's described here, or something is missing, tell ${supportContactLine(SUPPORT_CONTACT)} so it can be corrected.`

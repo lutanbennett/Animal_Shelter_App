@@ -3,17 +3,15 @@ import Link from "next/link";
 import { AlertTriangle, Info, Lightbulb } from "lucide-react";
 import manual from "@/lib/manual/en";
 import { getT } from "@/lib/i18n/get-t";
-import { asManualRole } from "@/lib/manual/audience";
-import { isForTopic } from "@/lib/manual/for-topic";
+import { cardsOfTopic, holdsCard, topicView, type TopicView } from "@/lib/manual/for-topic";
+import { CARDS, CARD_KEYS, type CardKey } from "@/lib/permissions/cards";
+import { entersApp, type Permissions } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
-import { createClient } from "@/lib/supabase/server";
-import { loadSessionRole } from "@/lib/auth/app-access";
 import screenshotSizes from "@/lib/manual/screenshot-sizes.json";
 import { TocScroller } from "./TocScroller";
 import { UntilFound } from "./UntilFound";
 import type {
   ManualCallout,
-  ManualRole,
   ManualScreenshot,
   ManualSection,
   ManualTopic,
@@ -28,7 +26,8 @@ export async function generateMetadata(): Promise<Metadata> {
 const SCREENSHOT_SIZES: Record<string, { width: number; height: number } | undefined> =
   screenshotSizes;
 
-const ROLE_ORDER: ManualRole[] = ["admin", "management", "doctor", "volunteer"];
+/** The most cards a topic names under its heading before the rest are counted. */
+const CARDS_SHOWN = 4;
 
 const CALLOUT_STYLES: Record<
   ManualCallout["kind"],
@@ -55,39 +54,36 @@ const CALLOUT_STYLES: Record<
  * gap at the bottom is 100dvh - header - 3rem. The heading stays put and the list below it
  * scrolls in its own box.
  *
- * It opens filtered to the reader's role: a topic tagged with other roles
+ * It opens filtered to the reader's cards: a topic belonging only to cards they do not hold
  * is tucked away (hidden until found — Find on page and #anchors still
  * reach it, greyed), and a section left with none of the reader's topics
- * goes with its intro, since the intro describes the whole section. An
- * untagged topic is everyone's and always shows. ?view=all shows the lot,
+ * goes with its intro, since the intro describes the whole section. "The reader's" means a topic that belongs to a card
+ * they hold (for-topic.ts); a topic meant for everyone always shows, and so does one not yet assigned to a card, marked
+ * as such, because a topic with no card must never silently disappear. ?view=all shows the lot,
  * greying what isn't the reader's, because "can I do this?" deserves a
  * greyed answer rather than none (backlog, "A role-based manual").
  */
 export default async function ManualPage({ searchParams }: PageProps<"/manual">) {
-  const [{ view }, role, perms, { t }] = await Promise.all([
-    searchParams,
-    createClient().then(loadSessionRole).then(asManualRole),
-    loadPermissions(),
-    getT(),
-  ]);
+  const [{ view }, perms, { t }] = await Promise.all([searchParams, loadPermissions(), getT()]);
   const c = t.manualPage;
   const showAll = view === "all";
   const sections: ViewSection[] = manual.sections.map((section) => ({
     section,
-    topics: section.topics.map((topic) => ({ topic, mine: isForTopic(topic, role, perms) })),
+    topics: section.topics.map((topic) => ({ topic, view: topicView(topic, perms) })),
   }));
   const myTopicCount = sections.reduce(
-    (n, { topics }) => n + topics.filter((t) => t.mine).length,
+    (n, { topics }) => n + topics.filter((t) => t.view !== "notMine").length,
     0,
   );
-  const roleName = role ? t.releases.roleNames[role] : null;
+  const filtered = entersApp(perms);
+  const label = (key: CardKey) => CARDS[key].label(t);
   // The last topic on show cannot reach the top of the window unless the page
   // runs on below it, so it alone gets a minimum height: the empty space is
   // only what that topic is short of a screen, not a flat screenful.
   const lastShownId =
     sections
       .flatMap(({ topics }) => topics)
-      .filter((t) => showAll || t.mine)
+      .filter((t) => showAll || t.view !== "notMine")
       .at(-1)?.topic.id ?? null;
 
   return (
@@ -125,13 +121,11 @@ export default async function ManualPage({ searchParams }: PageProps<"/manual">)
         </aside>
 
         <div className="flex min-w-0 max-w-3xl flex-1 flex-col gap-12">
-          {roleName && (
-            <FilterBar roleName={roleName} showAll={showAll} count={myTopicCount} c={c} />
-          )}
-          <RolesTable role={role} c={c} />
+          {filtered && <FilterBar showAll={showAll} count={myTopicCount} c={c} />}
+          <CardsTable perms={perms} label={label} describe={(k) => t.admin.whoDoesWhat.cardsView.description[k]} c={c} />
           {sections.map(({ section, topics }) => {
             const Icon = section.icon;
-            const tucked = !showAll && !topics.some((t) => t.mine);
+            const tucked = !showAll && !topics.some((t) => t.view !== "notMine");
             return (
               <section
                 key={section.id}
@@ -147,12 +141,14 @@ export default async function ManualPage({ searchParams }: PageProps<"/manual">)
                   </h2>
                   <p className="text-sm text-muted">{section.intro}</p>
                 </div>
-                {topics.map(({ topic, mine }) => (
+                {topics.map(({ topic, view: topicState }) => (
                   <Topic
                     key={topic.id}
                     topic={topic}
-                    notMine={mine ? null : roleName}
-                    tucked={!showAll && !mine}
+                    view={topicState}
+                    label={label}
+                    c={c}
+                    tucked={!showAll && topicState === "notMine"}
                     last={topic.id === lastShownId}
                   />
                 ))}
@@ -168,19 +164,17 @@ export default async function ManualPage({ searchParams }: PageProps<"/manual">)
 
 type ViewSection = {
   section: ManualSection;
-  /** `mine`: for the reader's role, or for everyone. */
-  topics: { topic: ManualTopic; mine: boolean }[];
+  /** `view`: how the topic stands for the reader (for-topic.ts): theirs or everyone's, not yet assigned, or not theirs. */
+  topics: { topic: ManualTopic; view: TopicView }[];
 };
 
 type Words = Awaited<ReturnType<typeof getT>>["t"]["manualPage"];
 
 function FilterBar({
-  roleName,
   showAll,
   count,
   c,
 }: {
-  roleName: string;
   showAll: boolean;
   count: number;
   c: Words;
@@ -189,15 +183,13 @@ function FilterBar({
     <div className="flex flex-col gap-1 rounded-lg border border-border bg-surface px-4 py-3 text-sm">
       <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-foreground">
         <span>
-          {showAll
-            ? c.showingEverything(roleName)
-            : c.showingRole(roleName, count)}
+          {showAll ? c.showingEverything : c.showingMine(count)}
         </span>
         <Link
           href={showAll ? "/manual" : "/manual?view=all"}
           className="font-medium text-primary underline-offset-2 hover:underline"
         >
-          {showAll ? c.showOnlyRole(roleName) : c.showEverything}
+          {showAll ? c.showOnlyMine : c.showEverything}
         </Link>
       </p>
       {!showAll && <p className="text-xs text-muted">{c.findHint}</p>}
@@ -223,10 +215,10 @@ function Toc({ sections, showAll, c }: { sections: ViewSection[]; showAll: boole
   return (
     <nav aria-label={c.contentsLabel} className="flex flex-col gap-1 text-sm">
       <a href="#roles-table" className="rounded px-2 py-1 text-muted hover:bg-surface-hover hover:text-foreground aria-[current=location]:bg-surface-hover aria-[current=location]:text-foreground">
-        {c.rolesAtAGlance}
+        {c.cardsAtAGlance}
       </a>
       {sections.map(({ section, topics }) => {
-        const shown = showAll ? topics : topics.filter((t) => t.mine);
+        const shown = showAll ? topics : topics.filter((t) => t.view !== "notMine");
         if (shown.length === 0) return null;
         return (
           <div key={section.id} className="flex flex-col">
@@ -237,12 +229,12 @@ function Toc({ sections, showAll, c }: { sections: ViewSection[]; showAll: boole
               {section.title}
             </a>
             <div className="ml-2 flex flex-col border-l border-border pl-2">
-              {shown.map(({ topic, mine }) => (
+              {shown.map(({ topic, view }) => (
                 <a
                   key={topic.id}
                   href={`#${topic.id}`}
                   className={`rounded px-2 py-1 text-xs text-muted hover:bg-surface-hover hover:text-foreground aria-[current=location]:bg-surface-hover aria-[current=location]:text-foreground ${
-                    mine ? "" : "opacity-60"
+                    view === "notMine" ? "opacity-60" : ""
                   }`}
                 >
                   {topic.title}
@@ -256,31 +248,36 @@ function Toc({ sections, showAll, c }: { sections: ViewSection[]; showAll: boole
   );
 }
 
-function RolesTable({ role, c }: { role: ManualRole | null; c: Words }) {
+function CardsTable({
+  perms,
+  label,
+  describe,
+  c,
+}: {
+  perms: Permissions | null;
+  label: (key: CardKey) => string;
+  describe: (key: CardKey) => string;
+  c: Words;
+}) {
   return (
     <section id="roles-table" className="flex scroll-mt-6 flex-col gap-3">
-      <h2 className="text-lg font-semibold text-foreground">{c.rolesAtAGlance}</h2>
+      <h2 className="text-lg font-semibold text-foreground">{c.cardsAtAGlance}</h2>
+      <p className="text-sm text-muted">{c.cardsIntro}</p>
       <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <tbody>
-            {ROLE_ORDER.map((r) => (
-              <tr key={r} className="border-b border-border last:border-b-0">
-                <th
-                  scope="row"
-                  className="w-32 bg-surface px-3 py-2 text-left align-top font-medium text-foreground"
-                >
-                  <RoleBadge role={r} />
-                  {r === role && (
-                    <span className="mt-1 block text-xs font-normal text-muted">
-                      {manual.filter.you}
-                    </span>
-                  )}
-                </th>
-                <td className={`px-3 py-2 ${r === role ? "text-foreground" : "text-muted"}`}>
-                  {manual.roleSummary[r]}
-                </td>
-              </tr>
-            ))}
+            {CARD_KEYS.map((k) => {
+              const held = !perms?.isAdmin && holdsCard(perms, k);
+              return (
+                <tr key={k} className="border-b border-border last:border-b-0">
+                  <th scope="row" className="w-44 bg-surface px-3 py-2 text-left align-top font-medium text-foreground">
+                    <CardBadge text={label(k)} />
+                    {held && <span className="mt-1 block text-xs font-normal text-muted">{manual.filter.you}</span>}
+                  </th>
+                  <td className={`px-3 py-2 ${held ? "text-foreground" : "text-muted"}`}>{describe(k)}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -288,27 +285,31 @@ function RolesTable({ role, c }: { role: ManualRole | null; c: Words }) {
   );
 }
 
-function RoleBadge({ role }: { role: ManualRole }) {
+function CardBadge({ text }: { text: string }) {
   return (
     <span className="inline-block rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-      {manual.roleNames[role]}
+      {text}
     </span>
   );
 }
 
 /**
  * `last` is the final topic on show: see lastShownId.
- * `notMine` is the reader's role name when the topic isn't for it: the
- * topic is greyed and says so. `tucked` hides it until found.
+ * `view` is how the topic stands for the reader: "notMine" greys it and says so, "unassigned" marks it as not yet linked to a
+ * card. `tucked` hides it until found.
  */
 function Topic({
   topic,
-  notMine,
+  view,
+  label,
+  c,
   tucked,
   last,
 }: {
   topic: ManualTopic;
-  notMine: string | null;
+  view: TopicView;
+  label: (key: CardKey) => string;
+  c: Words;
   tucked: boolean;
   last: boolean;
 }) {
@@ -317,7 +318,7 @@ function Topic({
       id={topic.id}
       hidden={tucked}
       data-until-found={tucked || undefined}
-      className={`flex scroll-mt-6 flex-col gap-3 ${notMine ? "opacity-60" : ""} ${
+      className={`flex scroll-mt-6 flex-col gap-3 ${view === "notMine" ? "opacity-60" : ""} ${
         last ? "min-h-[calc(100dvh-3rem)]" : ""
       }`}
     >
@@ -326,17 +327,9 @@ function Topic({
         {topic.path && (
           <p className="font-mono text-xs text-muted">{topic.path}</p>
         )}
-        {topic.roles && (
-          <p className="flex flex-wrap items-center gap-1 text-xs text-muted">
-            <span className="mr-1">Who:</span>
-            {ROLE_ORDER.filter((r) => topic.roles?.includes(r)).map((role) => (
-              <RoleBadge key={role} role={role} />
-            ))}
-          </p>
-        )}
-        {notMine && (
-          <p className="text-xs font-medium text-muted">{manual.filter.notForRole(notMine)}</p>
-        )}
+        <TopicCards topic={topic} label={label} c={c} />
+        {view === "notMine" && <p className="text-xs font-medium text-muted">{manual.filter.notYours}</p>}
+        {view === "unassigned" && <p className="text-xs font-medium text-muted">{manual.filter.unassigned}</p>}
       </div>
 
       {topic.intro && <p className="text-sm text-foreground">{topic.intro}</p>}
@@ -398,5 +391,22 @@ function Callout({ callout }: { callout: ManualCallout }) {
         {callout.text}
       </p>
     </div>
+  );
+}
+
+/** The cards that give a topic, under its heading; a long list is cut short and counted. */
+function TopicCards({ topic, label, c }: { topic: ManualTopic; label: (key: CardKey) => string; c: Words }) {
+  const own = cardsOfTopic(topic);
+  if (own.kind !== "cards") return null;
+  const shown = own.cards.slice(0, CARDS_SHOWN);
+  const more = own.cards.length - shown.length;
+  return (
+    <p className="flex flex-wrap items-center gap-1 text-xs text-muted">
+      <span className="mr-1">{c.cardsLabel}</span>
+      {shown.map((k) => (
+        <CardBadge key={k} text={label(k)} />
+      ))}
+      {more > 0 && <span>+{more}</span>}
+    </p>
   );
 }

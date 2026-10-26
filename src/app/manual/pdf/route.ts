@@ -1,11 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import manual from "@/lib/manual/en";
-import { asManualRole } from "@/lib/manual/audience";
-import { renderManualPdf, screenshotSrcs, type ManualImages } from "@/lib/manual/manual-pdf";
+import { renderManualPdf, screenshotSrcs, type ManualCard, type ManualImages } from "@/lib/manual/manual-pdf";
 import { createClient } from "@/lib/supabase/server";
-import { loadSessionRole } from "@/lib/auth/app-access";
+import { entersApp } from "@/lib/permissions/can";
+import { CARDS, CARD_KEYS } from "@/lib/permissions/cards";
 import { loadPermissions } from "@/lib/permissions/load";
+import { getT } from "@/lib/i18n/get-t";
 
 /**
  * GET /manual/pdf — the manual as a printable PDF.
@@ -17,7 +18,7 @@ import { loadPermissions } from "@/lib/permissions/load";
  * making it public would be a scope change, see docs/decisions/). A
  * volunteer without a login gets a copy from someone who has one.
  *
- * It opens on the reader's own role, as the page does. ?view=all is the
+ * It opens on the reader's own cards' topics, as the page does. ?view=all is the
  * whole manual (the office-wall copy); ?images=0 leaves the screenshots out
  * for a small, text-only file.
  */
@@ -71,23 +72,28 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
   if (!user) return new NextResponse("Sign in to view the manual.", { status: 401 });
 
-  const role = asManualRole(await loadSessionRole(supabase));
-  const all = asked || !role;
   const perms = await loadPermissions();
+  const all = asked || !entersApp(perms) || perms?.isAdmin === true; // Admin is shown every topic anyway
+  const { t } = await getT();
+  const cards: ManualCard[] = CARD_KEYS.map((key) => ({
+    key,
+    label: CARDS[key].label(t),
+    description: t.admin.whoDoesWhat.cardsView.description[key],
+  }));
 
   const images: ManualImages = new Map();
   if (withImages) {
-    for (const src of new Set(screenshotSrcs(manual, role, all, perms))) {
+    for (const src of new Set(screenshotSrcs(manual, all, perms))) {
       const bytes = await loadImage(src, request.nextUrl.origin);
       if (bytes) images.set(src, bytes);
     }
   }
 
-  const pdf = await renderManualPdf(manual, { role, all, images, perms });
+  const pdf = await renderManualPdf(manual, { cards, all, images, perms });
   return new NextResponse(Buffer.from(pdf), {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="lanna-care-${all ? "manual" : `manual-${role}`}.pdf"`,
+      "Content-Disposition": `inline; filename="lanna-care-${all ? "manual" : "manual-my-cards"}.pdf"`,
       "Cache-Control": "private, no-store",
     },
   });
