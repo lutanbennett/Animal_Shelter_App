@@ -1437,7 +1437,12 @@ const en = {
           title: "Shelter calendar (Google Calendar)",
           off: "Not set up: vet visits are not being sent to a calendar.",
           ok: (v: { unsynced: number }) => v.unsynced === 0 ? "Connected: every vet visit is in the calendar." : `Connected: ${v.unsynced} vet visit(s) still waiting to be sent; they are retried every 15 minutes.`,
+          failing: (v: { count: number }) => `Connected, but ${v.count} vet visit(s) could not be sent to the calendar. They are retried every 15 minutes; the last error is under each one.`,
           failed: (v: { unsynced: number }) => `The calendar could not be reached or the token is not working. ${v.unsynced} vet visit(s) are waiting; bookings are not affected.`,
+          past: "past",
+          lastError: "Last error",
+          sweepQuiet: (v: { time: string }) => `The 15-minute check has not run since ${v.time}: nothing is being retried. The Worker's schedule may have stopped.`,
+          sweepNever: "The 15-minute check has never run: nothing is being sent or retried.",
         },
         migrations: {
           title: "Database migrations",

@@ -277,27 +277,56 @@ export async function syncPendingVisits(origin: string | null, limit = SWEEP_BAT
   }
 }
 
+/** A visit the tile counts as not yet in the calendar: which one, when, and the last failure if it has one. */
+export type PendingVisit = { id: string; appointmentDate: string; residentName: string | null; past: boolean; error: string | null };
+
 export type CalendarStatus =
   | { state: "off" }
-  | { state: "fail"; error: string; unsynced: number }
-  | { state: "ok"; unsynced: number };
+  | { state: "fail"; error: string; visits: PendingVisit[]; lastSweepAt: string | null }
+  | { state: "ok"; visits: PendingVisit[]; lastSweepAt: string | null };
 
-/** For the System status tile: does the token work, can the calendar be reached, how many visits are waiting. */
+
+/** For the System status tile: does the token work, can the calendar be reached, which visits are waiting or failing. */
 export async function checkCalendar(): Promise<CalendarStatus> {
   if (!calendarConfigured()) return { state: "off" };
   const { data } = await createAdminClient()
     .from("clinic_visits")
-    .select("calendar_synced_at, calendar_out_of_date_at")
+    .select("id, appointment_date, calendar_error, calendar_synced_at, calendar_out_of_date_at, residents(name)")
     .not("calendar_out_of_date_at", "is", null)
+    .order("appointment_date")
     .limit(1000)
-    .returns<{ calendar_synced_at: string | null; calendar_out_of_date_at: string }[]>();
-  const unsynced = (data ?? []).filter(isPending).length;
+    .returns<
+      {
+        id: string;
+        appointment_date: string;
+        calendar_error: string | null;
+        calendar_synced_at: string | null;
+        calendar_out_of_date_at: string;
+        residents: { name: string } | null;
+      }[]
+    >();
+  const today = todayIso();
+  const visits: PendingVisit[] = (data ?? []).filter(isPending).map((r) => ({
+    id: r.id,
+    appointmentDate: r.appointment_date,
+    residentName: r.residents?.name ?? null,
+    past: todayIso(new Date(r.appointment_date).getTime()) < today,
+    error: r.calendar_error,
+  }));
+  // Every sweep polls first and records the run, so this is when the cron last reached the app.
+  const { data: state } = await createAdminClient()
+    .from("calendar_sync_state")
+    .select("last_run_at")
+    .eq("calendar_id", process.env.GOOGLE_CALENDAR_ID ?? "")
+    .limit(1)
+    .returns<{ last_run_at: string | null }[]>();
+  const lastSweepAt = state?.[0]?.last_run_at ?? null;
   try {
     // calendar.events does not allow reading the calendar itself, only its events: list one.
     const res = await calendarFetch("/events?maxResults=1");
-    if (!res.ok) return { state: "fail", error: `Calendar answered ${res.status}: ${await errorText(res)}`, unsynced };
-    return { state: "ok", unsynced };
+    if (!res.ok) return { state: "fail", error: `Calendar answered ${res.status}: ${await errorText(res)}`, visits, lastSweepAt };
+    return { state: "ok", visits, lastSweepAt };
   } catch (err) {
-    return { state: "fail", error: err instanceof Error ? err.message : String(err), unsynced };
+    return { state: "fail", error: err instanceof Error ? err.message : String(err), visits, lastSweepAt };
   }
 }
