@@ -39,8 +39,8 @@ begin
   if (select label_drive_file_id from medication where id = v_m) is not null then raise exception 'FAIL B clear'; end if;
 
   -- C. the same on diet_types
-  insert into diet_types (name, unit, daily_qty_small, daily_qty_medium, daily_qty_large)
-    values ('harness-0129 food', 'cup', 1, 1, 1) returning id into v_d;
+  insert into diet_types (name, unit)
+    values ('harness-0129 food', 'cup') returning id into v_d;
   if (select label_drive_file_id from diet_types where id = v_d) is not null then raise exception 'FAIL C omitted not null'; end if;
   update diet_types set label_drive_file_id = '1XyZ-0129' where id = v_d;
   select label_drive_file_id into v_got from diet_types where id = v_d;

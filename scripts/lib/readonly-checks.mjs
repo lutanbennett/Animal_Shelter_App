@@ -169,6 +169,41 @@ export const CHECKS = {
     render: (rows) => rows.length ? rows.map((x) => `${x.role}: holds Do Maintenance`) : ["No role holds the Do Maintenance card."],
     failed: (rows) => rows.length > 0,
   },
+  "clinic-login-helpers": {
+    asks: "Of the four clinic-login helper functions (current_clinic_resident_ids, clinic_login_owns_visit, doctor_can_write_attachment, clinic_login_may_edit_doctor): does each still exist, and does any live policy, view, other function or column rule call it? (Object names only.)",
+    // Reads pg_proc, pg_policies, pg_views, pg_constraint and pg_attrdef, with -- comments stripped so a note that mentions a name does not
+    // count as a call. A trigger runs a function, so a trigger is found through the function it names. Whole-word match.
+    sql: `select coalesce(json_agg(json_build_object('function', f.fn,
+        'exists', exists (select 1 from pg_proc p where p.proname = f.fn and p.pronamespace in ('public'::regnamespace, 'private'::regnamespace)),
+        'called_by', (
+          select coalesce(json_agg(x.who order by x.who), '[]'::json) from (
+            select 'function ' || n.nspname || '.' || p.proname as who
+              from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+             where n.nspname in ('public', 'private') and p.prokind = 'f' and p.proname <> f.fn
+               and regexp_replace(pg_get_functiondef(p.oid), '--[^\n]*', '', 'g') ~ ('\m' || f.fn || '\M')
+            union all
+            select 'policy ' || pl.schemaname || '.' || pl.tablename || ' :: ' || pl.policyname
+              from pg_policies pl
+             where regexp_replace(coalesce(pl.qual, '') || ' ' || coalesce(pl.with_check, ''), '--[^\n]*', '', 'g') ~ ('\m' || f.fn || '\M')
+            union all
+            select 'view ' || c.relnamespace::regnamespace || '.' || c.relname
+              from pg_class c
+             where c.relkind in ('v', 'm') and c.relnamespace::regnamespace::text in ('public', 'private')
+               and pg_get_viewdef(c.oid) ~ ('\m' || f.fn || '\M')
+            union all
+            select 'constraint ' || c.conrelid::regclass || ' :: ' || c.conname
+              from pg_constraint c
+             where c.contype = 'c' and pg_get_constraintdef(c.oid) ~ ('\m' || f.fn || '\M')
+            union all
+            select 'column default ' || d.adrelid::regclass || '.' || d.adnum
+              from pg_attrdef d
+             where pg_get_expr(d.adbin, d.adrelid) ~ ('\m' || f.fn || '\M')
+          ) x)) order by f.fn), '[]'::json)
+      from (values ('current_clinic_resident_ids'), ('clinic_login_owns_visit'), ('doctor_can_write_attachment'), ('clinic_login_may_edit_doctor')) as f(fn)`,
+    render: (rows) => rows.flatMap((x) => !x.exists ? [`${x.function}: does not exist`]
+      : x.called_by.length ? [`${x.function}: CALLED by ${x.called_by.length}`, ...x.called_by.map((w) => `    ${w}`)]
+      : [`${x.function}: exists, called by nothing`]),
+  },
 };
 
 /** Wrap one check in a read-only transaction. The result rides out in an exception message, as the harnesses do. */
