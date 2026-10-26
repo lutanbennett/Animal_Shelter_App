@@ -90,7 +90,7 @@ begin
   -- the editor can read and change what it made
   perform set_config('request.jwt.claims', json_build_object('sub', ${lit(U.editor)}, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   set local role authenticated;
-  select count(*) into n from social_shares; if n <> 2 then raise exception 'FAIL editor should see 2 shares, saw %', n; end if;
+  select count(*) into n from social_shares where owner_id in (v_meme, v_photo); if n <> 2 then raise exception 'FAIL editor should see 2 shares, saw %', n; end if;
   select count(*) into n from memes; if n < 1 then raise exception 'FAIL editor should see the meme'; end if;
   update memes set archived = true where id = v_meme;
   get diagnostics n = row_count; if n <> 1 then raise exception 'FAIL editor could not archive a meme'; end if;
@@ -120,7 +120,7 @@ begin
   set local role authenticated;
   select count(*) into n from memes where id = v_meme; if n <> 1 then raise exception 'FAIL reader should see the meme'; end if;
   select count(*) into n from meme_residents where meme_id = v_meme; if n <> 1 then raise exception 'FAIL reader should see the meme''s residents'; end if;
-  select count(*) into n from social_shares where owner_type = 'meme'; if n <> 1 then raise exception 'FAIL reader should see the meme share'; end if;
+  select count(*) into n from social_shares where owner_type = 'meme' and owner_id = v_meme; if n <> 1 then raise exception 'FAIL reader should see the meme share'; end if;
   select count(*) into n from social_shares where owner_type = 'attachment'; if n <> 0 then raise exception 'FAIL reader (no resident.record) saw a photo share'; end if;
   begin insert into memes (drive_file_id, title) values ('harness-r-' || gen_random_uuid(), 'x'); raise exception 'FAIL reader added a meme';
   exception when insufficient_privilege then null; end;
@@ -135,7 +135,7 @@ begin
   -- photoman: records and sees photo shares, cannot see or touch the library
   perform set_config('request.jwt.claims', json_build_object('sub', ${lit(U.photoman)}, 'role', 'authenticated', 'aal', 'aal2')::text, true);
   set local role authenticated;
-  select count(*) into n from social_shares where owner_type = 'attachment'; if n <> 1 then raise exception 'FAIL photoman should see the photo share, saw %', n; end if;
+  select count(*) into n from social_shares where owner_type = 'attachment' and owner_id = v_photo; if n <> 1 then raise exception 'FAIL photoman should see the photo share, saw %', n; end if;
   select count(*) into n from social_shares where owner_type = 'meme'; if n <> 0 then raise exception 'FAIL photoman saw a meme share'; end if;
   select count(*) into n from memes; if n <> 0 then raise exception 'FAIL photoman saw a meme'; end if;
   select count(*) into n from meme_residents; if n <> 0 then raise exception 'FAIL photoman saw a meme-resident link'; end if;
