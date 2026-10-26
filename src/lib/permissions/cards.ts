@@ -42,7 +42,8 @@ export type NewCardKey =
   | "my_tasks"
   | "operations_landing"
   | "management_landing"
-  | "who_does_what";
+  | "who_does_what"
+  | "record_death";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -66,8 +67,20 @@ type NewCard = Omit<Card, "key" | "label">;
 
 const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // Who and where, read only: the floor every role that opens the app can already have (0134).
-  view_residents: { includes: [], bundle: [{ activity: "resident.record", level: "read" }], opens: "/residents" },
+  // Card review 1 (2026-10-26, 0265): the whole non-medical record (medical records are in their own tables) and the enclosure read, so the
+  // Enclosure column fills. The "who and where only" narrowing was rejected for this card; the four job cards hold resident.who_and_where.
+  view_residents: {
+    includes: [],
+    bundle: [
+      { activity: "resident.record", level: "read" },
+      { activity: "facility.enclosures", level: "read" },
+    ],
+    opens: "/residents",
+  },
   // Lutan, 2026-10-13: the full record, edit, move, photos and intake. Photo upload follows the edit card.
+  // Card review 1 (2026-10-26, 0265): recording a death is its own card (record_death); new photos go through approval
+  // (photos.shelter_add) instead of straight to the website (photos.resident_publish); the Foster carer list reads contacts' names only
+  // (contacts.directory at read); the enclosure lookup its forms need comes from view_residents.
   residents: {
     includes: ["view_residents"],
     bundle: [
@@ -78,13 +91,20 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
       { activity: "placement.move" },
       { activity: "placement.hospital" },
       { activity: "placement.rehome" },
-      { activity: "placement.death" },
       // placement.death_withdraw is NOT here: Management does not hold it, so the card would have handed it a power
       // on the day cards land (found by the 0194 seed check). It stays a single activity, given as an extra.
       { activity: "photos.resident_add" },
       { activity: "photos.resident_manage" },
-      { activity: "photos.resident_publish" },
+      { activity: "photos.shelter_add" },
+      { activity: "contacts.directory", level: "read" },
     ],
+    opens: "/residents",
+  },
+  // Card thirty (2026-10-26, Lutan, Card review 1: "split Recording a death out into its own card in the Medical feature"). The death page
+  // needs the resident and the Deceased enclosure, which view_residents gives. Every role that held Residents was given this card by 0265.
+  record_death: {
+    includes: ["view_residents"],
+    bundle: [{ activity: "placement.death" }],
     opens: "/residents",
   },
   medical_records: {
@@ -217,6 +237,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   operations_landing: (t) => t.appHome.cards.operationsLanding,
   management_landing: (t) => t.appHome.cards.managementLanding,
   who_does_what: (t) => t.appHome.cards.whoDoesWhat,
+  record_death: (t) => t.appHome.cards.recordDeath,
 };
 
 export const CARDS: Record<CardKey, Card> = {

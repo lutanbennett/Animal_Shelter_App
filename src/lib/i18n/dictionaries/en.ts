@@ -203,6 +203,7 @@ const en = {
       operationsLanding: "Operations",
       managementLanding: "Management",
       whoDoesWhat: "Who does what",
+      recordDeath: "Record a death",
     },
   },
 
@@ -876,7 +877,8 @@ const en = {
           do_purchasing: "Do the purchasing.",
           record_delivery: "Record a delivery when it arrives.",
           view_residents: "See who the residents are and where they are, without changing anything.",
-          residents: "The full resident record: change it, register new arrivals, microchips, moves, rehoming and deaths, and add and manage photos.",
+          residents: "The full resident record: change it, register new arrivals, microchips, moves, fostering and adoption, and add and manage photos (new photos wait for approval).",
+          record_death: "Record that a resident has died. The record is closed from that day; only Admin can withdraw a death.",
           medical_records: "Add and change a resident's medical history: visits, procedures, blood tests, prescriptions, immunizations, weight and diet.",
           book_clinic_visits: "Book a vet visit and see a resident's visits.",
           contacts: "The directory of contacts, clinics and doctors: look people up, add and change them.",
@@ -1038,6 +1040,7 @@ const en = {
         "audit.undo": "Undo a change",
         "system.status": "The system status page",
         "roles.view": "See which cards each role holds on Who does what",
+        "resident.who_and_where": "Who a resident is and where they are, nothing more",
       },
       fixed: {
         clinicRule: {
