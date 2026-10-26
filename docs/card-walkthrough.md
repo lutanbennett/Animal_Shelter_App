@@ -136,13 +136,12 @@ Result: pending
 4. **Do:** Record or correct a microchip number. Use a disposable record named `walk-residents`. **Read-back:** the number shows in the hub's header with a Correct button; a corrected number shows there straight away. Intake asks for it too, on step 3 (answered 2026-10-23).
 5. **Do:** News from an adopter. Use a disposable record named `walk-residents`. **Read-back:** only an adopted resident has the control: /residents/<id>/adoption-updates lists the new update first, with its date and channel (LINE, Facebook, Email, Visit); text marked staff only is never published (answered 2026-10-23).
 6. **Do:** Move a resident to another enclosure. Use a disposable record named `walk-residents`. **Read-back:** the resident's page shows the new enclosure.
-7. **TODO:** Send to hospital and bring back. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
-8. **TODO:** Foster, adopt, return to the shelter. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
-9. **Do:** Add a photo to a resident. Use a disposable record named `walk-residents`. **Read-back:** the page counts the photo as added; it is filed in the resident's Medical folder, never on the website; it then shows on /residents/<id>/photos as a tile with its folder and date (a Profile tag if it is the profile photo).
-10. **Do:** Refile or remove a photo, choose the profile photo. Use a disposable record named `walk-residents`. **Read-back:** tap the photo on /residents/<id>/photos: Move to folder changes the folder its tile reads (Medical to Foster read "Foster · <date>"), Remove photo and Current profile photo sit beside it (answered 2026-10-23).
-11. **TODO:** Add a resident's photo to the Shelter folder only (shown on the website once approved). Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
-12. **See:** Contacts (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-13. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+7. **TODO:** Foster, adopt, return to the shelter. Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
+8. **Do:** Add a photo to a resident. Use a disposable record named `walk-residents`. **Read-back:** the page counts the photo as added; it is filed in the resident's Medical folder, never on the website; it then shows on /residents/<id>/photos as a tile with its folder and date (a Profile tag if it is the profile photo).
+9. **Do:** Refile or remove a photo, choose the profile photo. Use a disposable record named `walk-residents`. **Read-back:** tap the photo on /residents/<id>/photos: Move to folder changes the folder its tile reads (Medical to Foster read "Foster · <date>"), Remove photo and Current profile photo sit beside it (answered 2026-10-23).
+10. **TODO:** Add a resident's photo to the Shelter folder only (shown on the website once approved). Do it on a disposable record named `walk-residents`. Question: where should this write show afterwards (which page, which row)?
+11. **See:** Contacts (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+12. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -193,7 +192,8 @@ Result: pending
 8. **Do:** A resident's diet. Use a disposable record named `walk-medical_records`. **Read-back:** the resident's Diet page (/residents/<id>/diet) lists it under Current with meals a day and the amounts at the resident's size (answered 2026-10-23).
 9. **Do:** Remove a medical record entered by mistake, and restore it. Use a disposable record named `walk-medical_records`. **Read-back:** Remove, with an optional reason, on any medical row: the row leaves the list and the chart and the page reads "1 removed hidden"; Show removed lists it with Restore, which brings it back (done on a weight entry; answered 2026-10-23).
 10. **Do:** Book a vet visit. Use a disposable record named `walk-medical_records`. **Read-back:** the visit shows on that resident's page and in the shelter's list of visits (/upcoming-visits).
-11. **Refused:** open `/medical/photos` (the page of **Add Medical Photos**, which this login does not hold). Expect a refusal or redirect, not the page.
+11. **TODO:** Send to hospital and bring back. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
+12. **Refused:** open `/medical/photos` (the page of **Add Medical Photos**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -392,13 +392,13 @@ Result: pending
 ## Run fundraising appeals (`run_appeals`)
 
 - Opens: `/management/appeals`
-- Also gives: View residents (`view_residents`) (walked under its own heading)
+- Also gives: View residents (`view_residents`), View medical (`view_medical`) (walked under its own heading)
 
 0. Sign in with `--cards run_appeals`. The home screen shows the **Run fundraising appeals** tile (or the tile of a card that includes it).
 1. Open `/management/appeals`: it loads.
 2. **TODO:** Run a fundraising appeal for a sick resident. Do it on a disposable record named `walk-run_appeals`. Question: where should this write show afterwards (which page, which row)?
 3. **TODO:** Issue a donation receipt. Do it on a disposable record named `walk-run_appeals`. Question: where should this write show afterwards (which page, which row)?
-4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+4. **Refused:** open `/medical/photos` (the page of **Add Medical Photos**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 

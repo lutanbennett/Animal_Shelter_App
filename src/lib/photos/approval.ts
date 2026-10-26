@@ -17,6 +17,8 @@ export type WaitingPhoto = {
   residentId: string;
   residentName: string;
   residentCode: string;
+  /** The animal is already shown on the public website, so approving this photo can put it there too. */
+  residentPublic: boolean;
   /** Who filed it: the login's name, else email; "—" when the login is gone. */
   addedBy: string;
   /** A clip rather than a still (0229): the queue shows a player. */
@@ -52,9 +54,9 @@ export async function loadWaitingPhotos(supabase: SupabaseClient): Promise<Waiti
   const [{ data: residents }, users] = await Promise.all([
     supabase
       .from("residents")
-      .select("id, name, resident_code")
+      .select("id, name, resident_code, is_public_visible")
       .in("id", [...new Set(rows.map((r) => r.owner_id))])
-      .returns<{ id: string; name: string; resident_code: string }[]>(),
+      .returns<{ id: string; name: string; resident_code: string; is_public_visible: boolean }[]>(),
     loadAppUsersById(supabase, rows.flatMap((r) => (r.uploaded_by ? [r.uploaded_by] : []))),
   ]);
   const byId = new Map((residents ?? []).map((r) => [r.id, r]));
@@ -73,6 +75,7 @@ export async function loadWaitingPhotos(supabase: SupabaseClient): Promise<Waiti
         residentId: resident.id,
         residentName: resident.name,
         residentCode: resident.resident_code,
+        residentPublic: resident.is_public_visible === true,
         addedBy: r.uploaded_by ? appUserLabel(users.get(r.uploaded_by)) : "—",
         isVideo: r.media_kind === "video",
       },
