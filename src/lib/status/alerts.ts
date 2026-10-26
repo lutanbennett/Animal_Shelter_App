@@ -120,7 +120,7 @@ const ADVICE: Partial<Record<HealthCheckKey, string>> = {
   cronJobs:
     "A nightly database job is not running, so old assistant requests may not be deleted, against what the privacy page promises. First check: node scripts/check-cron-job.mjs --env production.",
   origin:
-    "Public pages still load (the Worker serves them); signing in and saving may be failing. First checks: is the Pi powered and on the network (power, router, cable), then cloudflared on it. The Pi serves production and test, so both are affected.",
+    "Public pages still load (the Worker serves them); signing in and saving may be failing. First checks: is the Pi powered and on the network (power, router, cable), then cloudflared on it. The Pi serves production and test, so both are affected. If it cannot be fixed quickly and people cannot sign in, the emergency switch in docs/pi-hosting.md (\"The Pi is sick and nobody can sign in\") gets sign-in back without the Pi.",
 };
 
 /**

@@ -9,6 +9,12 @@
 //       # also (re)upload the five runtime secrets for that environment first
 //   ... --skip-build   # reuse the .open-next output of the previous run
 //   ... --no-mail      # deploy without emailing a major release to admins
+//   ... --no-pi        # EMERGENCY LEVER: this deploy sets ORIGIN_HOST empty, so the
+//                      # Worker serves everything and the Pi is not consulted. Nothing
+//                      # in wrangler.jsonc changes; the next deploy without the flag
+//                      # puts the Pi back (docs/pi-hosting.md, "The Pi is sick").
+//   ... --plan         # print the wrangler command this would run, then stop
+//                      # (before any build or upload)
 //
 // Why a script rather than `opennextjs-cloudflare deploy --env`: the Supabase
 // URL and anon key are inlined by `next build`, so each environment needs its
@@ -46,6 +52,8 @@ const { name: envName, rest } = parseEnvArg(process.argv.slice(2));
 const pushSecrets = rest.includes("--secrets");
 const skipBuild = rest.includes("--skip-build");
 const noMail = rest.includes("--no-mail");
+const noPi = rest.includes("--no-pi");
+const planOnly = rest.includes("--plan");
 
 // SITE_ORIGINS — where each environment answers — is imported from
 // ./lib/env.mjs above. It used to be declared here as well; #290 moved it into
@@ -246,7 +254,36 @@ async function liveVersion() {
 const previous = await liveVersion();
 
 console.log(`deploy: release ${latestRelease.version} "${latestRelease.title}" (live now: ${previous ?? "unknown"})`);
+if (noPi) console.log(`deploy: --no-pi: ORIGIN_HOST will be EMPTY on ${envName}; the Worker serves everything and the Pi is bypassed. Deploy again without --no-pi to put it back.`);
 console.log(`deploy: ${envName} → Supabase project ${projectRef(env)} (${git("rev-parse --short HEAD")})`);
+
+// The tag and message land in the Worker's version history (dashboard →
+// Workers → Deployments). The strip keeps the message readable in that list.
+const message = `v${latestRelease.version} ${latestRelease.title}`.replace(/[^\w .,:-]/g, "");
+// --autoconfig false stops wrangler detecting an OpenNext project and handing
+// off to `opennextjs-cloudflare deploy`, which re-invokes wrangler with a
+// re-joined command line and loses the quoting again. We have already run the
+// OpenNext build and the env strip, so there is nothing for that hand-off to add.
+// A --var on the command line beats wrangler.jsonc's value, and "NAME:" with
+// nothing after the colon is an empty string (checked in wrangler 4.145).
+const deployArgs = [
+  "deploy",
+  "--env",
+  envName,
+  "--tag",
+  `v${latestRelease.version}`,
+  "--message",
+  message,
+  "--autoconfig",
+  "false",
+  ...(noPi ? ["--var", "ORIGIN_HOST:"] : []),
+];
+if (planOnly) {
+  console.log(`deploy: --plan: would ${skipBuild ? "reuse the last build" : "build"}${pushSecrets ? ", push secrets" : ""}, then run:`);
+  console.log(`  wrangler ${deployArgs.map((a) => (/\s/.test(a) ? JSON.stringify(a) : a)).join(" ")}`);
+  console.log("deploy: --plan: stopping here; nothing built, uploaded or deployed.");
+  process.exit(0);
+}
 
 // Safe to run beside a live `next dev`: the build type-checks with
 // tsconfig.build.json (see next.config.ts), which leaves out the
@@ -282,27 +319,7 @@ if (pushSecrets) {
   wrangler(["secret", "bulk", "--env", envName], { input: JSON.stringify(secrets) });
 }
 
-// The tag and message land in the Worker's version history (dashboard →
-// Workers → Deployments): a record of what went where and when, with no
-// table of our own. The strip keeps the message readable in that list; it is
-// no longer load-bearing for quoting, since wrangler() does not use a shell.
-const message = `v${latestRelease.version} ${latestRelease.title}`.replace(/[^\w .,:-]/g, "");
-// --autoconfig false stops wrangler detecting an OpenNext project and handing
-// off to `opennextjs-cloudflare deploy`, which re-invokes wrangler with a
-// re-joined command line and loses the quoting again — downstream of anything
-// this script can control. We have already run the OpenNext build and the env
-// strip above, so there is nothing for that hand-off to add.
-wrangler([
-  "deploy",
-  "--env",
-  envName,
-  "--tag",
-  `v${latestRelease.version}`,
-  "--message",
-  message,
-  "--autoconfig",
-  "false",
-]);
+wrangler(deployArgs);
 
 await announce();
 

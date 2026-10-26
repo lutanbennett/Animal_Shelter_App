@@ -273,6 +273,15 @@ written for Lutan to run alone.
   phone hotspot). Otherwise losing the router loses your measurement.
 - In one window keep the Pi's terminal open. In another run the timer below.
 
+### What to expect now that part (a) has shipped
+
+For **stop-cloudflared** the expected log is: `pi`, then `worker` within seconds and staying `worker` (a
+save is rendered by the Worker on the edge's 530). A run of `pi-timeout` lines there would mean (a) does not
+work on the real tunnel, which is exactly what this case proves. The other cases (stop-app, wedge-app, a power
+cut in its first seconds) are **meant** to show `pi-timeout`: those refuse saves by design, and
+`docs/pi-hosting.md` ("The Pi is sick and nobody can sign in") is the way out of them. This one drill counts for
+both this item and the backlog item "The Pi is a single point of failure", so run it once.
+
 ### The timer
 
 It sends a harmless POST once a second and logs the time, the code, how long it
