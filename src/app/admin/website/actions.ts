@@ -527,6 +527,11 @@ export async function uploadGalleryPhoto(formData: FormData): Promise<SiteConten
       return refuse(t.admin.website.errors.noFile);
     }
 
+    // A public photo needs a description for visitors who cannot see it (Lutan, 2026-10-26: "Yes ask for alt text").
+    const alt = String(formData.get("alt") ?? "").trim().slice(0, 300);
+    const altTh = String(formData.get("alt_th") ?? "").trim().slice(0, 300);
+    if (!alt) return refuse(t.admin.website.gallery.altRequired);
+
     let driveFileId: string;
     try {
       driveFileId = await uploadToWebsiteFolder(file);
