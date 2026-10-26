@@ -56,7 +56,7 @@ test("an activity no card grants is Admin's alone, not shown to everyone as unas
 });
 
 test("a card that grants nothing is held by no one", () => {
-  assert.equal(holdsCard(holding("record_weight"), "my_tasks"), false);
+  assert.equal(holdsCard(holding("administer_medication"), "my_tasks"), false);
 });
 
 test("no permissions at all sees everything", () => {
