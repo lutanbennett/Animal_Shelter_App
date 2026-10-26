@@ -49,8 +49,8 @@ begin
   exception when check_violation then v_bad := true; end;
   if not v_bad then raise exception 'FAIL C medication accepted -1'; end if;
 
-  insert into diet_types (name, unit, daily_qty_small, daily_qty_medium, daily_qty_large)
-    values ('harness-0128 food', 'cup', 1, 1, 1) returning id into v_d;
+  insert into diet_types (name, unit)
+    values ('harness-0128 food', 'cup') returning id into v_d;
   update diet_types set safety_stock = 12.5 where id = v_d;
   select safety_stock into v_got from diet_types where id = v_d;
   if v_got <> 12.5 then raise exception 'FAIL C diet round-trip %', v_got; end if;

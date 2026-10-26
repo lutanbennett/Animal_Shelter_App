@@ -40,8 +40,8 @@ with m as (
 )
 insert into ids select case name when 'harness-0096 pill' then 'pill' else 'other' end, id from m;
 with d as (
-  insert into diet_types (name, unit, daily_qty_small, daily_qty_medium, daily_qty_large)
-  values ('harness-0096 kibble', 'g', 1, 1, 1) returning id
+  insert into diet_types (name, unit)
+  values ('harness-0096 kibble', 'g') returning id
 )
 insert into ids select 'kibble', id from d;
 

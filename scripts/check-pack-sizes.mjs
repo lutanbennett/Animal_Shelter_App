@@ -22,18 +22,18 @@ begin;
 create temp table ids (k text primary key, id uuid);
 
 with d as (
-  insert into diet_types (name, unit, daily_qty_small, daily_qty_medium, daily_qty_large, cost_per_unit)
-  values ('harness-0199 kibble', 'cup', 1, 1, 1, 8) returning id
+  insert into diet_types (name, unit, cost_per_unit)
+  values ('harness-0199 kibble', 'cup', 8) returning id
 )
 insert into ids select 'kibble', id from d;
 with d as (
-  insert into diet_types (name, unit, daily_qty_small, daily_qty_medium, daily_qty_large, cost_per_unit)
-  values ('harness-0199 typed only', 'cup', 1, 1, 1, 4.5) returning id
+  insert into diet_types (name, unit, cost_per_unit)
+  values ('harness-0199 typed only', 'cup', 4.5) returning id
 )
 insert into ids select 'typed', id from d;
 with d as (
-  insert into diet_types (name, unit, daily_qty_small, daily_qty_medium, daily_qty_large, cost_per_unit)
-  values ('harness-0199 gift only', 'cup', 1, 1, 1, 6) returning id
+  insert into diet_types (name, unit, cost_per_unit)
+  values ('harness-0199 gift only', 'cup', 6) returning id
 )
 insert into ids select 'gift', id from d;
 

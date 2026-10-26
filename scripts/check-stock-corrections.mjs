@@ -24,25 +24,35 @@ const migration = readFileSync(join(root, "supabase/migrations/0112_stock_count_
 
 const sql = `
 begin;
--- a second run of the whole file must be harmless
+-- The replay re-creates 0112's function bodies, which gate on the long-gone current_user_role() (the shim answers
+-- 'management' for every custom role, so the replayed record_stock_correction lets everyone in). What is live is
+-- the 0178 body, which asks stock.correct. So: keep the live definitions, replay, then put the live ones back,
+-- and every assertion below runs against what production runs (docs/decisions/2026-10-02-replay-or-assert-live.md).
+create temp table live_fns as
+  select pg_get_functiondef(p.oid) as def from pg_proc p
+   where p.pronamespace = 'public'::regnamespace and p.proname in ('record_stock_correction', 'record_stocktake');
 ${OLD_ROLE_SHIM}
 ${migration}
+do $restore$ declare r record; begin
+  for r in select def from live_fns loop execute r.def; end loop;
+end $restore$;
 
 create temp table who (who text primary key, uid uuid);
 -- clerk: Staff was this login until 0173 retired it; a custom role carrying its cells is refused the same way
 insert into who values ('management', gen_random_uuid()), ('clerk', gen_random_uuid());
+-- 'management' is the Admin login here: record_stock_correction asks stock.correct + stock.diets, and Admin answers true without a card,
+-- so it does not move when a card is edited on Settings -> Who does what. The clerk holds one unrelated cell and so is refused.
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
        'harness-0112-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
   from who;
 insert into user_roles (user_id, role_id)
-  select s.c0, ro.id from (select uid as c0, who as role_key from who where who = 'management') s
+  select s.c0, ro.id from (select uid as c0, 'admin'::text as role_key from who where who = 'management') s
   join roles ro on ro.key = s.role_key;
--- It borrows volunteer, as every live custom role does: record_* functions still gate on the enum (admin, management), so a role borrowing management would pass on that and not on its cells.
+-- A throwaway custom role holding one cell that has nothing to do with stock.
 insert into roles (key, name, kind) values ('harness_0112_clerk', 'Harness clerk', 'custom');
 insert into role_permissions (role_id, activity, level)
-  select (select id from roles where key = 'harness_0112_clerk'), rp.activity, rp.level
-    from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
+  values ((select id from roles where key = 'harness_0112_clerk'), 'facility.enclosures', 1);
 insert into user_roles (user_id, role_id)
   select (select uid from who where who = 'clerk'), id from roles where key = 'harness_0112_clerk';
 grant select on who to authenticated;
@@ -54,8 +64,8 @@ with m as (
 )
 insert into ids select 'pill', id from m;
 with d as (
-  insert into diet_types (name, unit, daily_qty_small, daily_qty_medium, daily_qty_large)
-  values ('harness-0112 kibble', 'g', 1, 1, 1) returning id
+  insert into diet_types (name, unit)
+  values ('harness-0112 kibble', 'g') returning id
 )
 insert into ids select 'kibble', id from d;
 
@@ -137,11 +147,11 @@ begin
   begin
     perform record_stock_correction('medication', v_pill, 5);
     reset role;
-    raise exception 'S7 clerk (Staff cells) was allowed';
+    raise exception 'S7 clerk (no stock cell) was allowed';
   exception when others then
     reset role;
     get stacked diagnostics v_err = message_text;
-    if v_err not like 'Not authorized%' then raise exception 'S7 clerk (Staff cells): %', v_err; end if;
+    if v_err not like 'Not authorized%' then raise exception 'S7 clerk (no stock cell): %', v_err; end if;
   end;
   perform set_config('request.jwt.claims', json_build_object('sub', v_mgr, 'role', 'authenticated')::text, true);
   set local role authenticated;
@@ -170,7 +180,7 @@ begin
     raise exception 'S7 bad source accepted';
   exception when check_violation then null;
   end;
-  v_report := v_report || ' | S7 clerk (Staff cells), negative, unknown item and bad source refused';
+  v_report := v_report || ' | S7 clerk (no stock cell), negative, unknown item and bad source refused';
 
   raise exception 'HARNESS-OK 0112 twice%', v_report;
 end $$;
