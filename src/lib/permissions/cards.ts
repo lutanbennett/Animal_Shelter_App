@@ -24,14 +24,18 @@ import { JOBS, type BundleEntry, type JobKey } from "./jobs";
 export type NewCardKey =
   | "view_residents"
   | "residents"
+  | "view_medical"
   | "medical_records"
   | "book_clinic_visits"
+  | "view_contacts"
   | "contacts"
+  | "publish_shelter_friends"
   | "recurring_jobs"
   | "dashboard"
   | "donations_receipts"
   | "bills"
   | "website"
+  | "website_photos"
   | "outreach_notes"
   | "assistant"
   | "enclosures"
@@ -40,8 +44,6 @@ export type NewCardKey =
   | "run_appeals"
   | "meme_library"
   | "my_tasks"
-  | "operations_landing"
-  | "management_landing"
   | "who_does_what"
   | "record_death";
 
@@ -107,8 +109,24 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
     bundle: [{ activity: "placement.death" }],
     opens: "/residents",
   },
-  medical_records: {
+  // Card review 2 (2026-10-26, 0268): reading medical history is its own card (view_medical); this one, shown as "Manage medical", adds
+  // writing it and booking visits. Staff held Medical records alone, so staff keeps every cell and gains visit.book and the clinic list.
+  view_medical: {
     includes: ["view_residents"],
+    bundle: [
+      { activity: "medical.visits", level: "read" },
+      { activity: "medical.procedures", level: "read" },
+      { activity: "medical.blood_tests", level: "read" },
+      { activity: "medical.prescriptions", level: "read" },
+      { activity: "medical.immunizations", level: "read" },
+      { activity: "medical.weight", level: "read" },
+      { activity: "medical.diet", level: "read" },
+      { activity: "clinics.list", level: "read" },
+    ],
+    opens: "/residents",
+  },
+  medical_records: {
+    includes: ["view_medical"],
     bundle: [
       { activity: "medical.visits", level: "edit" },
       { activity: "medical.procedures", level: "edit" },
@@ -118,26 +136,43 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
       { activity: "medical.weight", level: "edit" },
       { activity: "medical.diet", level: "edit" },
       { activity: "medical.archive" },
+      { activity: "visit.book" },
     ],
     opens: "/residents",
   },
+  // Card review 2 (0268): the clinic list and the resident's medical history at READ come through View medical; it edits and cancels the
+  // visits it books (medical.visits at edit; clinic_visits has no delete policy, so it cannot delete one).
   book_clinic_visits: {
-    includes: ["view_residents"],
-    bundle: [{ activity: "visit.book" }, { activity: "medical.visits", level: "read" }],
+    includes: ["view_medical"],
+    bundle: [{ activity: "visit.book" }, { activity: "medical.visits", level: "edit" }],
     // One card, one page. It used to open /appointments for a clinic login and /upcoming-visits for everyone else, chosen by
     // the role's clinical column; a card now opens the same page for every role that holds it (docs/decisions/2026-10-25-remove-hard-coded-security.md).
     opens: "/upcoming-visits",
   },
-  contacts: {
+  // Card review 2 (0268): looking people up is View contacts; this card, shown as "Manage contacts", edits them. Publishing Shelter Friends to the
+  // public website is its own card. Management held Contacts alone and was given Publish Shelter Friends by the migration.
+  view_contacts: {
     includes: [],
     bundle: [
       { activity: "contacts.browse" },
+      { activity: "contacts.directory", level: "read" },
+      { activity: "clinics.list", level: "read" },
+      { activity: "friends.view" },
+    ],
+    opens: "/management/contacts",
+  },
+  publish_shelter_friends: {
+    includes: ["view_contacts"],
+    bundle: [{ activity: "friends.manage" }],
+    opens: "/management/contacts",
+  },
+  contacts: {
+    includes: ["view_contacts"],
+    bundle: [
       { activity: "contacts.directory", level: "edit" },
       { activity: "contacts.add" },
       { activity: "clinics.list", level: "edit" },
       { activity: "clinics.doctors" },
-      { activity: "friends.view" },
-      { activity: "friends.manage" },
     ],
     opens: "/management/contacts",
   },
@@ -148,23 +183,61 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   },
   dashboard: {
     includes: [],
-    bundle: [{ activity: "reports.dashboard" }, { activity: "reports.cashflow", level: "read" }],
+    // Card review 2 (0268): it also reads what the dashboard counts, as who-and-where, clinic visits and maintenance jobs at read.
+    bundle: [
+      { activity: "reports.dashboard" },
+      { activity: "reports.cashflow", level: "read" },
+      { activity: "resident.who_and_where", level: "read" },
+      { activity: "medical.visits", level: "read" },
+      { activity: "maintenance.jobs", level: "read" },
+    ],
     opens: "/management/dashboard",
   },
-  donations_receipts: { includes: [], bundle: [{ activity: "donation.receipt" }], opens: "/management/donations" },
-  bills: { includes: [], bundle: [{ activity: "maintenance.bills" }], opens: "/bills" },
+  // Card review 2 (0268): a gift can be for a resident or a project, so the card reads who-and-where and project folders.
+  donations_receipts: {
+    includes: [],
+    bundle: [
+      { activity: "donation.receipt" },
+      { activity: "resident.who_and_where", level: "read" },
+      { activity: "projects.folders", level: "read" },
+    ],
+    opens: "/management/donations",
+  },
+  // Card review 2 (0268): it reads maintenance jobs, so the holder can attach a bill to one.
+  bills: { includes: [], bundle: [{ activity: "maintenance.bills" }, { activity: "maintenance.jobs", level: "read" }], opens: "/bills" },
   website: { includes: [], bundle: [{ activity: "website.content", level: "edit" }], opens: "/admin/website" },
+  // Card review 2 (0268): the photo strip is its own card, so a person who changes the opening hours cannot add a public photo. The page
+  // opens on website.content, held here at read. The hero photo is a column of site_content and stays with Website until the app half moves it.
+  website_photos: {
+    includes: [],
+    bundle: [{ activity: "website.content", level: "read" }, { activity: "website.gallery" }],
+    opens: "/admin/website",
+  },
   outreach_notes: { includes: [], bundle: [{ activity: "community.outings", level: "edit" }], opens: "/outreach" },
-  assistant: { includes: [], bundle: [{ activity: "assistant.ask" }, { activity: "assistant.record" }], opens: "/assistant" },
+  // Card review 2 (0268): reads who-and-where and the enclosures to name an animal; assistant.record is dropped (it can do nothing alone).
+  assistant: {
+    includes: [],
+    bundle: [
+      { activity: "assistant.ask" },
+      { activity: "resident.who_and_where", level: "read" },
+      { activity: "facility.enclosures", level: "read" },
+    ],
+    opens: "/assistant",
+  },
   // Lutan, 2026-10-13: deliberately narrow. Which animal is where; NOT bundled with Do Maintenance, so the
   // 2IC gets no maintenance write access by it. The facility map and rooms belong to no card (accepted).
-  enclosures: { includes: [], bundle: [{ activity: "facility.enclosures", level: "read" }], opens: "/enclosures" },
+  // Card review 2 (0268): plus who-and-where, so the occupancy it shows is true.
+  enclosures: {
+    includes: [],
+    bundle: [{ activity: "facility.enclosures", level: "read" }, { activity: "resident.who_and_where", level: "read" }],
+    opens: "/enclosures",
+  },
   // Card twenty-two (2026-10-17): file photos into the Shelter folder, phone-first, for a volunteer. The bundle is
   // photos.shelter_add and the who-and-where read the picker needs, and NOTHING else: never photos.resident_publish,
   // which is what puts a photo on the website. The photo waits for a role holding Approve photos to approve it (0217, 0224).
   add_photos: {
     includes: [],
-    bundle: [{ activity: "photos.shelter_add" }, { activity: "resident.record", level: "read" }],
+    bundle: [{ activity: "photos.shelter_add" }, { activity: "resident.who_and_where", level: "read" }],
     opens: "/photos/add",
     requiresCardSomewhere: ["approve_photos"],
   },
@@ -173,20 +246,18 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // activity; it is NOT photos.resident_publish, which Residents holds to publish its own uploads), photos.resident_manage (delete_resident_photo and refiling a waiting photo ask it, 0152), and the who-and-where
   // read. NOT resident.record at edit, not photos.resident_add, not any placement or medical cell: a role can approve photos
   // without being able to edit a resident. Residents does NOT approve (Lutan, 2026-10-19: a Residents holder publishes their own photos but cannot approve the queue). Management holds this card (0224); nobody else.
+  // Card review 2 (0268): includes View residents, the wider read, so an approver can look at age and sex (Lutan's words).
   approve_photos: {
-    includes: [],
-    bundle: [
-      { activity: "photos.approve" },
-      { activity: "photos.resident_manage" },
-      { activity: "resident.record", level: "read" },
-    ],
+    includes: ["view_residents"],
+    bundle: [{ activity: "photos.approve" }, { activity: "photos.resident_manage" }],
     opens: "/photos/approve",
   },
   // Card twenty-three (2026-10-18): run the fundraising appeals. donation.receipt is bundled because the appeals
   // pages show what has been raised only to a login that holds it (the one donations read there is). NOT granted to
   // any role here: the Director ticks it onto roles in Settings.
+  // Card review 2 (0268): includes View residents (read only). No medical read: "potentially" is a question back to Lutan.
   run_appeals: {
-    includes: [],
+    includes: ["view_residents"],
     bundle: [{ activity: "appeal.run" }, { activity: "donation.receipt" }],
     opens: "/management/appeals",
   },
@@ -196,36 +267,36 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // here: who gets it is a Settings answer, and the Director ticks it on.
   meme_library: {
     includes: [],
-    bundle: [{ activity: "social.library", level: "edit" }],
+    bundle: [{ activity: "social.library", level: "edit" }, { activity: "resident.who_and_where", level: "read" }],
     opens: "/memes",
   },
   // Card twenty-six (2026-10-21, Lutan's ruling on menu-removal orphans 1 of 6): do the recurring tasks assigned to me, and
   // nothing else. recurring.do_own is what /my reads and what record_recurring_job() enforces as own only; it gives no
   // other person's tasks and no way to set tasks up. The tile is drawn only for a role that has been given this card.
   my_tasks: { includes: [], bundle: [{ activity: "recurring.do_own" }], opens: "/my" },
-  // Cards twenty-seven and twenty-eight (2026-10-23, Lutan: a role's home is only what he gives it on Who does what): the Operations
-  // and Management landings as cards. Each grants NOTHING (empty bundle): the tile is drawn only when the role's own cells already open
-  // a page in the section (OUTSIDE_REGISTRY in tiles.ts, opensAnyIn), so giving the card never widens what a role may do. Before this
-  // the code added these tiles by itself; now Admin gives and takes them like any other card.
-  operations_landing: { includes: [], bundle: [], opens: "/operations" },
-  management_landing: { includes: [], bundle: [], opens: "/management" },
-  // Card twenty-nine (2026-10-25, Lutan: only a card gives an ability): see the roles grid on Settings -> Who does what. Read only; editing
-  // stays Admin at 2-step. Management is given it by 0262 so it keeps the page it had when the code asked for the role name.
-  who_does_what: { includes: [], bundle: [{ activity: "roles.view" }], opens: "/admin/who-does-what" },
+  // The Operations and Management landings were cards twenty-seven and twenty-eight; they are gone (0268, Lutan 2026-10-26: "it is a
+  // grouping, not a card"). The landings and their menu links open on opensAnyIn, which never read these cards.
+  // Card twenty-nine (2026-10-25, Lutan: only a card gives an ability): see the roles grid on Settings -> Who does what. Read only, in the grant too
+  // since 0268 (roles.view is a level activity held at read); editing stays Admin at 2-step. Management is given it by 0262 so it keeps the page it had when the code asked for the role name.
+  who_does_what: { includes: [], bundle: [{ activity: "roles.view", level: "read" }], opens: "/admin/who-does-what" },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */
 const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   view_residents: (t) => t.appHome.cards.viewResidents,
   residents: (t) => t.appHome.cards.residents,
+  view_medical: (t) => t.appHome.cards.viewMedical,
   medical_records: (t) => t.appHome.cards.medicalRecords,
   book_clinic_visits: (t) => t.appHome.cards.bookClinicVisits,
+  view_contacts: (t) => t.appHome.cards.viewContacts,
   contacts: (t) => t.appHome.cards.contacts,
+  publish_shelter_friends: (t) => t.appHome.cards.publishShelterFriends,
   recurring_jobs: (t) => t.appHome.cards.recurringJobs,
   dashboard: (t) => t.appHome.cards.dashboard,
   donations_receipts: (t) => t.appHome.cards.donationsReceipts,
   bills: (t) => t.appHome.cards.bills,
   website: (t) => t.appHome.cards.website,
+  website_photos: (t) => t.appHome.cards.websitePhotos,
   outreach_notes: (t) => t.appHome.cards.outreachNotes,
   assistant: (t) => t.appHome.cards.assistant,
   enclosures: (t) => t.appHome.cards.enclosures,
@@ -234,8 +305,6 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   run_appeals: (t) => t.appHome.cards.runAppeals,
   meme_library: (t) => t.appHome.cards.memeLibrary,
   my_tasks: (t) => t.appHome.cards.myTasks,
-  operations_landing: (t) => t.appHome.cards.operationsLanding,
-  management_landing: (t) => t.appHome.cards.managementLanding,
   who_does_what: (t) => t.appHome.cards.whoDoesWhat,
   record_death: (t) => t.appHome.cards.recordDeath,
 };
