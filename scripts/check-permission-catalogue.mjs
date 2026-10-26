@@ -286,15 +286,19 @@ const PINNED = {
     decides: ["resident.adoption_news"],
     in: "src/app/residents/[id]/adoption-updates/AdoptionUpdatePage.tsx",
   },
-  // A record tab: the tab's own medical activity at Read, from the page's SECTION_READS (pinned
-  // below), on top of the record. Its writes are per row, on the tab's add/edit pages above.
+  // A record tab: the tab's own activity at Read, from SECTION_READS in src/lib/residents/section-reads.ts (pinned
+  // below; the hub reads the same map to draw its tiles), on top of the record. Its writes are per row, on the tab's add/edit pages above.
   "/residents/[id]/[section]": {
-    guards: ['requireFullResident(SECTION_READS[section], "read", { allowMedicalCard: true })'],
+    guards: ['requireFullResident(sectionRead(section), "read", { allowMedicalCard: true })'],
     inDir: "src/app/residents/[id]/[section]/sections",
     decides: ["medical.archive", "medical.visits", "medical.prescriptions", "medical.diet", "medical.weight", "photos.approve", "photos.resident_manage", "resident.adoption_news", "resident.microchip", "social.library"],
     table: {
       name: "SECTION_READS",
+      in: "src/lib/residents/section-reads.ts",
       want: {
+        housing: "resident.record",
+        photos: "resident.record",
+        "adoption-updates": "resident.record",
         immunizations: "medical.immunizations",
         "clinic-visits": "medical.visits",
         prescriptions: "medical.prescriptions",
@@ -440,7 +444,8 @@ for (const { file, path } of pages) {
     const body = pin.in ? stripComments(readFileSync(join(root, pin.in), "utf8")) : text + dirText;
     eq(`F ${path} body decides with can(${pin.decides.join(", ") || "nothing"})`, decidesIn(body), [...pin.decides].sort());
     if (pin.table) {
-      const block = text.match(new RegExp(`\\b${pin.table.name}\\b[^=]*=\\s*\\{([^}]*)\\}`))?.[1] ?? "";
+      const tableText = pin.table.in ? stripComments(readFileSync(join(root, pin.table.in), "utf8")) : text;
+      const block = tableText.match(new RegExp(`\\b${pin.table.name}\\b[^=]*=\\s*\\{([^}]*)\\}`))?.[1] ?? "";
       const got = Object.fromEntries([...block.matchAll(/"?([a-z-]+)"?\s*:\s*"([a-z_.]+)"/g)].map((m) => [m[1], m[2]]));
       eq(`F ${path} ${pin.table.name} maps each tab to its activity`, got, pin.table.want);
     }
