@@ -1,4 +1,4 @@
-// perm-convert-stock-and-lists (0148): medication, diet_types, frequency, procedure_types, blood_test_types and
+// perm-convert-stock-and-lists (0148): medication, diets, frequency, procedure_types, blood_test_types and
 // immunization_types now answer through has_permission(). Against DEV only, one transaction that is always
 // rolled back, each login's own JWT.
 //
@@ -8,7 +8,7 @@
 // For each table, each principal's read / update / insert / delete (1 = took effect, 0 = refused):
 //   medication          read stock.medications Read or reference.add_while_recording; insert the same with Edit;
 //                       update and delete stock.medications Edit
-//   diet_types          read stock.diets Read or resident.register; write stock.diets Edit
+//   diets          read stock.diets Read or resident.register; write stock.diets Edit
 //   frequency           read medical.prescriptions Read (+ clinical scope) or reference.types Read; insert the add cell or
 //                       reference.types Edit; update and delete reference.types Edit
 //   procedure_types     read medical.procedures / reference.types Read / the add cell; insert the add cell or reference.types Edit
@@ -20,7 +20,7 @@
 //
 // The custom roles borrow the MANAGEMENT floor (STAFF until 0173 retired it) and hold one or two cells (c_none holds none), except c_vol_medical, which
 // sits on the VOLUNTEER floor holding the medical cells the 2IC holds in the Director's draft: the proof that the two
-// price tables (medication, diet_types) do not open to a role that sees names and stock through views, and that the four
+// price tables (medication, diets) do not open to a role that sees names and stock through views, and that the four
 // type lists DO open to it for reading, because the cell for recording one is the cell for choosing one (immunization_types
 // carries a per-dose cost: recorded in the decision file, not hidden).
 import { join } from "node:path";
@@ -59,12 +59,12 @@ const REAL = ["admin", "management", "volunteer", "vet"];
 const APP_ROLE = { vet: "doctor" }; // 0172 renamed the 'vet' app_role
 const P = [...REAL, "norole", ...Object.keys(CUSTOM)];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
-const ROW = Object.fromEntries(["medication", "diet_types", "frequency", "procedure_types", "blood_test_types", "immunization_types"].map((t) => [t, randomUUID()]));
+const ROW = Object.fromEntries(["medication", "diets", "frequency", "procedure_types", "blood_test_types", "immunization_types"].map((t) => [t, randomUUID()]));
 
 // table -> [read, update, insert, delete] statements
 const T = {
   medication: [`select 1 from medication where id = '${ROW.medication}'`, `update medication set name = name where id = '${ROW.medication}'`, `insert into medication (name) values ('Harness new med')`, `delete from medication where id = '${ROW.medication}'`],
-  diet_types: [`select 1 from diet_types where id = '${ROW.diet_types}'`, `update diet_types set name = name where id = '${ROW.diet_types}'`, `insert into diet_types (name, daily_qty_small, daily_qty_medium, daily_qty_large) values ('Harness new diet', 1, 1, 1)`, `delete from diet_types where id = '${ROW.diet_types}'`],
+  diets: [`select 1 from diets where id = '${ROW.diets}'`, `update diets set name = name where id = '${ROW.diets}'`, `insert into diets (name, servings_small, servings_medium, servings_large) values ('Harness new diet', 1, 1, 1)`, `delete from diets where id = '${ROW.diets}'`],
   frequency: [`select 1 from frequency where id = '${ROW.frequency}'`, `update frequency set label = label where id = '${ROW.frequency}'`, `insert into frequency (label) values ('Harness new frequency')`, `delete from frequency where id = '${ROW.frequency}'`],
   procedure_types: [`select 1 from procedure_types where id = '${ROW.procedure_types}'`, `update procedure_types set name = name where id = '${ROW.procedure_types}'`, `insert into procedure_types (name) values ('Harness new procedure')`, `delete from procedure_types where id = '${ROW.procedure_types}'`],
   blood_test_types: [`select 1 from blood_test_types where id = '${ROW.blood_test_types}'`, `update blood_test_types set name = name where id = '${ROW.blood_test_types}'`, `insert into blood_test_types (name) values ('Harness new blood test')`, `delete from blood_test_types where id = '${ROW.blood_test_types}'`],
@@ -75,7 +75,7 @@ const T = {
 const A = "1111", RO = "1000", RI = "1010", I = "0010";
 const EXPECT = {
   medication: { admin: A, management: A, vet: RI, c_med_read: RO, c_med_edit: A, c_add: I }, // 0151: the add cell no longer reads the table
-  diet_types: { admin: A, management: A, vet: RO, c_diet_read: RO, c_diet_edit: A }, // 0151: resident.register no longer reads the table
+  diets: { admin: A, management: A, vet: RO, c_diet_read: RO, c_diet_edit: A }, // 0151: resident.register no longer reads the table
   frequency: { admin: A, management: RI, vet: RI, c_types_read: RO, c_types_edit: A, c_add: I, c_rx_read: RO, c_vol_medical: RO },
   procedure_types: { admin: A, management: RI, vet: RI, c_add: RI, c_proc_read: RO, c_types_read: RO, c_types_edit: A, c_vol_medical: RO },
   blood_test_types: { admin: A, management: RO, vet: RO, c_blood_read: RO, c_types_read: RO, c_types_edit: A, c_vol_medical: RO },
@@ -130,7 +130,7 @@ begin
   select ${lit(ID[c])}, id from roles where key = 'harness_sl_${c}';`).join("\n  ")}
 
   insert into medication (id, name) values (${lit(ROW.medication)}, 'Harness med');
-  insert into diet_types (id, name, daily_qty_small, daily_qty_medium, daily_qty_large) values (${lit(ROW.diet_types)}, 'Harness diet', 1, 1, 1);
+  insert into diets (id, name, servings_small, servings_medium, servings_large) values (${lit(ROW.diets)}, 'Harness diet', 1, 1, 1);
   insert into frequency (id, label) values (${lit(ROW.frequency)}, 'Harness frequency');
   insert into procedure_types (id, name) values (${lit(ROW.procedure_types)}, 'Harness procedure');
   insert into blood_test_types (id, name) values (${lit(ROW.blood_test_types)}, 'Harness blood test');
@@ -152,7 +152,7 @@ do $sweep$ begin
      and (coalesce(qual,'') || coalesce(with_check,'')) ~ 'has_permission'
      and (coalesce(qual,'') || coalesce(with_check,'')) !~ 'SELECT has_permission';
   insert into res select 'sweep', 'price_tables_ask_medical', 'count', count(*) from pg_policies
-   where schemaname = 'public' and tablename in ('medication', 'diet_types') and policyname like '%\\_perm'
+   where schemaname = 'public' and tablename in ('medication', 'diets') and policyname like '%\\_perm'
      and (coalesce(qual,'') || coalesce(with_check,'')) like '%medical.%';
   insert into res select 'sweep', 'perm_policies', 'count', count(*) from pg_policies
    where schemaname = 'public' and tablename in (${tableList}) and policyname like '%\\_perm';
@@ -191,7 +191,7 @@ for (const [tbl] of Object.entries(T)) {
 const sweep = (k) => get("sweep", k, "count");
 if (sweep("names_mgmt_or_staff") === 0) pass("no policy on these tables names management or staff"); else fail(`${sweep("names_mgmt_or_staff")} policy(ies) still name management or staff`);
 if (sweep("bare_has_permission") === 0) pass("every new policy wraps has_permission() in (select ...)"); else fail(`${sweep("bare_has_permission")} policy(ies) call has_permission() bare`);
-if (sweep("price_tables_ask_medical") === 0) pass("medication and diet_types policies ask no medical.* cell"); else fail(`${sweep("price_tables_ask_medical")} price-table policy(ies) ask a medical.* cell`);
+if (sweep("price_tables_ask_medical") === 0) pass("medication and diets policies ask no medical.* cell"); else fail(`${sweep("price_tables_ask_medical")} price-table policy(ies) ask a medical.* cell`);
 if (sweep("perm_policies") === 24) pass("24 *_perm policies"); else fail(`expected 24 *_perm policies, found ${sweep("perm_policies")}`);
 console.log(`\n${ok} checks held, ${fails} failed.`);
 console.log(fails ? "RESULT: RED" : "RESULT: GREEN (each table answers as its cell says; the volunteer-floor medical role reads no price table; the vet is unchanged)");

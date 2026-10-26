@@ -162,7 +162,7 @@ begin
   insert into doctor_clinics (clinic_id, doctor_id) values (${lit(OWN)}, ${lit(DOC)});
   insert into residents (id, name, species) values (${lit(R)}, 'Harness in', 'Dog');
   insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');
-  insert into resident_diets (id, resident_id, diet_type_id, start_date) values (${lit(D)}, ${lit(R)}, (select id from diet_types limit 1), current_date - 5);
+  insert into resident_diets (id, resident_id, diet_id, start_date) values (${lit(D)}, ${lit(R)}, (select id from diets limit 1), current_date - 5);
   insert into prescriptions (id, resident_id, medication_id, start_date) values (${lit(RX)}, ${lit(R)}, ${ref_("med")}, current_date - 5);
   insert into frequency (id, label) values (${lit(F)}, 'Harness frequency');
   delete from resident_diet_rounds where resident_diet_id = ${lit(D)};

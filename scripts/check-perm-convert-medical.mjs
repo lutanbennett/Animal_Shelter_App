@@ -6,19 +6,15 @@
 //   node scripts/check-perm-convert-medical.mjs --verbose  (also list every case)
 //
 // For each converted table, as each principal (read, update, insert, delete):
-//   management             read, update and insert work; delete is refused (C5 closed)
-//                          (staff, which matched it, left when 0173 retired the role)
 //   admin                  everything, delete included (admin_all_* is left in place)
-//   volunteer              sees nothing, writes nothing (0134 removed the cells; the
-//                          conversion must not hand them back through an OR-ed policy)
 //   no role                sees nothing, writes nothing
-//   vet                    (a doctor login since 0172) still sees the in-clinic resident's rows and NOT another
-//                          clinic's: the vet_* policies are untouched and the new ones
-//                          must not widen them (sees_all_clinical() is false for a vet)
-//   custom Read role       (legacy volunteer, Read cells)  reads, cannot write
-//   custom Edit role       (legacy volunteer, Edit cells)  reads, updates, inserts, no delete
-//   custom clinic-scoped   (legacy volunteer, own_clinic, Edit cells)  sees nothing: a
-//                          scoped role is never handed the whole record by a cell
+//   custom Read role       (Read cells)  reads, cannot write
+//   custom Edit role       (Edit cells, plus visit.book)  reads, updates, inserts, no delete
+//   custom clinic-scoped   (Edit cells, no visit.book)  answers as the cells say. Since 0259/0264 nothing narrows a cell:
+//                          the own-clinic scope and sees_all_clinical() are gone, so it reads and writes like the Edit role
+//                          (but cannot book a visit: that is visit.book, which it does not hold)
+// Management, the volunteer and the doctor are NOT probed: their cells are live, edited on Settings > Who does what, and a
+// harness that pinned them would go red whenever a card changes. The doctor's clinic reach is check-doctor-clinic-scope.
 // Then structural sweeps: no policy on these tables still names management or staff,
 // and every new policy calls has_permission() inside a (select ...) init-plan.
 import { join } from "node:path";
@@ -32,7 +28,7 @@ const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
 const lit = (id) => `'${id}'::uuid`;
-const P = ["admin", "management", "volunteer", "norole", "vet", "c_read", "c_edit", "c_scoped"];
+const P = ["admin", "norole", "vet", "c_read", "c_edit", "c_scoped"];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const R = randomUUID(), R_OUT = randomUUID(), OWN = randomUUID(), OTHER = randomUUID(), DOC = randomUUID();
 const MED = "(select id from pg_temp.ref_ids where k = 'medication')";
@@ -45,13 +41,13 @@ const T = [
   ["prescriptions", "medical.prescriptions", `update prescriptions set notes = 'probe' where resident_id = '${R}'`, `insert into prescriptions (resident_id, medication_id, start_date) values ('${R}', ${MED}, current_date)`],
   ["immunization_records", "medical.immunizations", `update immunization_records set notes = 'probe' where resident_id = '${R}'`, `insert into immunization_records (resident_id, immunization_type_id, date_administered) values ('${R}', (select id from pg_temp.ref_ids where k = 'immunization'), current_date - 400)`],
   ["weight", "medical.weight", `update weight set notes = 'probe' where resident_id = '${R}'`, `insert into weight (resident_id, date, weight_kg) values ('${R}', current_date - 400, 5)`],
-  ["resident_diets", "medical.diet", `update resident_diets set notes = 'probe' where resident_id = '${R}'`, `insert into resident_diets (resident_id, diet_type_id, start_date) values ('${R}', (select id from pg_temp.ref_ids where k = 'diet'), current_date - 400)`],
+  ["resident_diets", "medical.diet", `update resident_diets set notes = 'probe' where resident_id = '${R}'`, `insert into resident_diets (resident_id, diet_id, start_date) values ('${R}', (select id from pg_temp.ref_ids where k = 'diet'), current_date - 400)`],
 ];
 
 // expected per principal: [read, update, insert, delete], 1 = allowed
 const EXPECT = {
-  admin: [1, 1, 1, 1], management: [1, 1, 1, 0],
-  volunteer: [0, 0, 0, 0], norole: [0, 0, 0, 0], c_read: [1, 0, 0, 0], c_edit: [1, 1, 1, 0], c_scoped: [0, 0, 0, 0],
+  admin: [1, 1, 1, 1],
+  norole: [0, 0, 0, 0], c_read: [1, 0, 0, 0], c_edit: [1, 1, 1, 0], c_scoped: [1, 1, 1, 0],
 };
 
 const cases = T.map(([table, act, upd, ins]) => ({
@@ -67,8 +63,6 @@ for (const c of cases) {
       probes.push(`  perform pg_temp.probe('${who}', ${lit(ID[who])}, '${c.table}', '${cmd}', $q$${q}$q$);`);
     }
   }
-  probes.push(`  perform pg_temp.probe('vet', ${lit(ID.vet)}, '${c.table}', 'read', $q$${c.read}$q$);`);
-  probes.push(`  perform pg_temp.probe('vet', ${lit(ID.vet)}, '${c.table}', 'read_other_clinic', $q$${c.read.replace(R, R_OUT)}$q$);`);
 }
 
 const harness = `
@@ -99,13 +93,13 @@ begin
   -- the reference lists are not a volunteer's to read (0134), so a role that borrows the volunteer
   -- cannot look an id up under its own login; the ids are handed in here, and the foreign key checks
   -- still run as the table owner
-  insert into diet_types (name, daily_qty_small, daily_qty_medium, daily_qty_large) select 'Harness diet', 1, 1, 1 where not exists (select 1 from diet_types);
-  insert into ref_ids values ('procedure', (select id from procedure_types limit 1)), ('blood', (select id from blood_test_types limit 1)), ('immunization', (select id from immunization_types limit 1)), ('diet', (select id from diet_types limit 1)), ('medication', (select id from medication order by id limit 1));
+  insert into diets (name, servings_small, servings_medium, servings_large) select 'Harness diet', 1, 1, 1 where not exists (select 1 from diets);
+  insert into ref_ids values ('procedure', (select id from procedure_types limit 1)), ('blood', (select id from blood_test_types limit 1)), ('immunization', (select id from immunization_types limit 1)), ('diet', (select id from diets limit 1)), ('medication', (select id from medication order by id limit 1));
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-pcm-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id)
-    select u.id, ro.id from (values ${[["admin", "admin"], ["management", "management"], ["volunteer", "volunteer"], ["vet", "doctor"]].map(([p, r]) => `('${r}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
+    select u.id, ro.id from (values ${[["admin", "admin"], ["vet", "doctor"]].map(([p, r]) => `('${r}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
   -- custom roles borrow the volunteer (the narrowest) as the Heads will
   insert into roles (key, name, kind) values
     ('harness_pcm_read', 'Harness read', 'custom'),
@@ -137,7 +131,7 @@ begin
   insert into procedures (resident_id, date, procedure_type_id) select id, current_date, (select id from pg_temp.ref_ids where k = 'procedure') from residents where id in (${lit(R)}, ${lit(R_OUT)});
   insert into prescriptions (resident_id, medication_id, start_date) select id, ${MED}, current_date from residents where id in (${lit(R)}, ${lit(R_OUT)});
   insert into immunization_records (resident_id, immunization_type_id, date_administered) select id, (select id from pg_temp.ref_ids where k = 'immunization'), current_date from residents where id in (${lit(R)}, ${lit(R_OUT)});
-  insert into resident_diets (resident_id, diet_type_id, start_date) select id, (select id from pg_temp.ref_ids where k = 'diet'), current_date - 1 from residents where id in (${lit(R)}, ${lit(R_OUT)});
+  insert into resident_diets (resident_id, diet_id, start_date) select id, (select id from pg_temp.ref_ids where k = 'diet'), current_date - 1 from residents where id in (${lit(R)}, ${lit(R_OUT)});
 end $setup$;
 
 do $run$ begin
@@ -177,7 +171,10 @@ let fails = 0, ok = 0;
 const fail = (s) => { fails++; console.log(`FAIL  ${s}`); };
 const pass = (s) => { ok++; if (verbose) console.log(`ok    ${s}`); };
 for (const c of cases) {
-  for (const [who, exp] of Object.entries(EXPECT)) {
+  for (const [who, exp0] of Object.entries(EXPECT)) {
+    let exp = exp0;
+    // booking a visit asks visit.book, which the scoped role does not hold
+    if (who === "c_scoped" && c.table === "clinic_visits") exp = [...exp.slice(0, 2), 0, exp[3]];
     [["read", exp[0]], ["update", exp[1]], ["insert", exp[2]], ["delete", exp[3]]].forEach(([cmd, allowed]) => {
       const n = get(who, c.table, cmd);
       const label = `${c.table} ${cmd} as ${who}: ${allowed ? "allowed" : "refused"}`;
@@ -186,14 +183,11 @@ for (const c of cases) {
       else fail(`${label} — got ${n}`);
     });
   }
-  const own = get("vet", c.table, "read"), other = get("vet", c.table, "read_other_clinic");
-  if (own >= 1) pass(`${c.table} read as vet, own clinic's resident`); else fail(`${c.table}: a vet lost the own-clinic resident (${own})`);
-  if (other === 0) pass(`${c.table} read as vet, other clinic's resident: refused`); else fail(`${c.table}: a vet reads another clinic's resident (${other})`);
 }
 const sweep = (k) => get("sweep", k, "count");
 if (sweep("names_mgmt_or_staff") === 0) pass("no policy on these tables names management or staff"); else fail(`${sweep("names_mgmt_or_staff")} policy(ies) still name management or staff`);
 if (sweep("bare_has_permission") === 0) pass("every new policy wraps has_permission() in (select ...)"); else fail(`${sweep("bare_has_permission")} policy(ies) call has_permission() bare`);
 if (sweep("perm_policies") === T.length * 3) pass(`${T.length * 3} new policies`); else fail(`expected ${T.length * 3} *_perm policies, found ${sweep("perm_policies")}`);
 console.log(`\n${ok} checks held, ${fails} failed.`);
-console.log(fails ? "RESULT: RED" : "RESULT: GREEN (every converted table answers as the cells say; volunteer, no-role and scoped roles still see nothing; vets unchanged)");
+console.log(fails ? "RESULT: RED" : "RESULT: GREEN (every converted table answers as the cells say; no role narrows a cell any more)");
 process.exitCode = fails ? 1 : 0;
