@@ -123,7 +123,7 @@ begin
   if v_n <> 2 then raise exception 'FAIL shape: % of 2 triggers present', v_n; end if;
 
 ${cases("prescriptions", "resident_id, medication_id, start_date")}
-${cases("resident_diets", "resident_id, diet_type_id, start_date")}
+${cases("resident_diets", "resident_id, diet_id, start_date")}
 
   raise exception 'HARNESS-OK shape: 2 columns timestamptz not null default now(), 2 triggers%  | per table: back-fill not null and >= created_at, end_date edit moves, notes edit moves, no-op keeps, hand-set ignored, backdated insert gets now() | file ran twice', v_report;
 end;
