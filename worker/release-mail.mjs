@@ -6,6 +6,12 @@
 //        scripts/deploy.mjs asks before deploying, so after the deploy it
 //        knows which releases are new to this site and mails only those.
 //
+//   GET  /api/releases/mail-status → { environment, from, hasBinding, off } so the
+//        System status tile can answer on production, where the Pi draws the
+//        page and cannot see this Worker's settings. Public on purpose: it
+//        holds only the environment label and the From address, both already
+//        in wrangler.jsonc in a public repo; never a key or a recipient.
+//
 //   POST /api/releases/mail     → relays one release email to each address.
 //        Bearer-authenticated with the service-role key (deploy.mjs has it
 //        and so does this Worker, so no new secret). The caller supplies the
@@ -49,6 +55,18 @@ async function authorised(request, env) {
   return crypto.subtle.timingSafeEqual(a, b);
 }
 
+/** Why this Worker will not send release mail, or null when it will. */
+export function releaseMailOffReason(env) {
+  const label = env.RELEASE_MAIL_ENV;
+  return !SEND_ENVIRONMENTS.has(label)
+    ? `RELEASE_MAIL_ENV is ${JSON.stringify(label ?? "")}, not UAT or Production`
+    : !env.RELEASE_MAIL
+      ? "no RELEASE_MAIL binding"
+      : !env.RELEASE_MAIL_FROM
+        ? "no RELEASE_MAIL_FROM"
+        : null;
+}
+
 async function relay(request, env) {
   if (!(await authorised(request, env))) return json({ error: "Not authorised." }, 401);
 
@@ -66,13 +84,7 @@ async function relay(request, env) {
   if (recipients.length > MAX_RECIPIENTS) return json({ error: `At most ${MAX_RECIPIENTS} recipients.` }, 400);
 
   const label = env.RELEASE_MAIL_ENV;
-  const off = !SEND_ENVIRONMENTS.has(label)
-    ? `RELEASE_MAIL_ENV is ${JSON.stringify(label ?? "")}, not UAT or Production`
-    : !env.RELEASE_MAIL
-      ? "no RELEASE_MAIL binding"
-      : !env.RELEASE_MAIL_FROM
-        ? "no RELEASE_MAIL_FROM"
-        : null;
+  const off = releaseMailOffReason(env);
   if (off) {
     const reason = `release mail is off in this environment: ${off}`;
     console.log(`release-mail: not sent — ${reason}: ${subject}`);
@@ -104,6 +116,14 @@ export async function handleReleaseRequest(request, env) {
   const { pathname } = new URL(request.url);
   if (pathname === "/api/releases/current" && request.method === "GET") {
     return json({ version: latestRelease.version });
+  }
+  if (pathname === "/api/releases/mail-status" && request.method === "GET") {
+    return json({
+      environment: env.RELEASE_MAIL_ENV || null,
+      from: env.RELEASE_MAIL_FROM || null,
+      hasBinding: !!env.RELEASE_MAIL,
+      off: releaseMailOffReason(env),
+    });
   }
   if (pathname === "/api/releases/mail") {
     return request.method === "POST" ? relay(request, env) : json({ error: "POST only." }, 405);

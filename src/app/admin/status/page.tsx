@@ -321,11 +321,15 @@ async function Health({ t, locale }: { t: T; locale: Locale }) {
         <p>
           {r.releaseMail.state === "ok" && mail
             ? x.releaseMail.ok({ label: mail.label ?? "", from: mail.from ?? "" })
-            : r.releaseMail.state === "off"
-              ? mail?.runtime === "worker"
-                ? x.releaseMail.offHere
-                : x.releaseMail.offElsewhere
-              : x.releaseMail.fail}
+            : mail?.runtime === "unreachable"
+              ? x.releaseMail.unreachable
+              : mail?.runtime === "asked" && r.releaseMail.state === "warn"
+                ? x.releaseMail.offLive
+                : r.releaseMail.state === "off"
+                  ? mail?.runtime === "worker"
+                    ? x.releaseMail.offHere
+                    : x.releaseMail.offElsewhere
+                  : x.releaseMail.fail}
         </p>
       </Tile>
 
