@@ -159,12 +159,13 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
       { activity: "clinics.list", level: "read" },
       { activity: "friends.view" },
     ],
-    opens: "/management/contacts",
+    // The look-up list, not the management list: that one asks contacts.directory at edit, which this card does not hold.
+    opens: "/contacts",
   },
   publish_shelter_friends: {
     includes: ["view_contacts"],
     bundle: [{ activity: "friends.manage" }],
-    opens: "/management/contacts",
+    opens: "/management/shelter-friends",
   },
   contacts: {
     includes: ["view_contacts"],

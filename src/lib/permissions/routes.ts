@@ -359,6 +359,8 @@ export const ROUTES: readonly RouteEntry[] = [
   {
     path: "/admin/website",
     activity: "website.content",
+    // Read opens the page: the photo card (website_photos) holds only that and the photo strip.
+    level: "read",
     icon: Globe,
     label: (t) => t.nav.website,
     device: "any",

@@ -2508,6 +2508,13 @@ const en = {
         remove: "Remove",
         removeConfirm: "Remove this photo from the gallery?",
         photoAdded: "Photo added.",
+        chosen: (name: string) => `Chosen: ${name}`,
+        altHelp: "Describe the photo for visitors who cannot see it. It is required, because the public page reads it aloud.",
+        alt: "Photo description (English)",
+        altTh: "Photo description (Thai, optional)",
+        altRequired: "Describe the photo first: a few words for visitors who cannot see it.",
+        chooseFile: "Choose photo",
+        cancel: "Cancel",
       },
       featured: {
         heading: "Pet of the week",

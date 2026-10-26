@@ -43,6 +43,8 @@ export type EnclosureResident = {
   special_diets: string[];
   /** On a current prescription (the facility map's pill); false for a role that cannot read prescriptions. */
   on_medication: boolean;
+  /** Whether this login may open the resident: a read of the whole record. Photo and name show either way. */
+  openable: boolean;
 };
 
 function ResidentThumbnail({ resident }: { resident: EnclosureResident }) {
@@ -51,11 +53,18 @@ function ResidentThumbnail({ resident }: { resident: EnclosureResident }) {
     ? `${resident.name} (${resident.thai_name})`
     : resident.name;
 
-  return (
-    <Link
-      href={`/residents/${resident.id}`}
-      className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-2 transition hover:bg-surface-hover"
-    >
+  const card = "flex flex-col gap-2 rounded-lg border border-border bg-surface p-2";
+  const wrap = (children: React.ReactNode) =>
+    resident.openable ? (
+      <Link href={`/residents/${resident.id}`} className={`${card} transition hover:bg-surface-hover`}>
+        {children}
+      </Link>
+    ) : (
+      <div className={card}>{children}</div>
+    );
+
+  return wrap(
+    <>
       {resident.profile_photo_drive_file_id ? (
         <img
           src={driveImageUrl(resident.profile_photo_drive_file_id)}
@@ -91,7 +100,7 @@ function ResidentThumbnail({ resident }: { resident: EnclosureResident }) {
           </span>
         )}
       </div>
-    </Link>
+    </>,
   );
 }
 

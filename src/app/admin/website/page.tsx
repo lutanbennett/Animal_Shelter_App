@@ -16,7 +16,7 @@ import { ImpactBaselines } from "./ImpactBaselines";
 import type { ImpactBaselineRow } from "@/lib/site/impact";
 import { DonationChannels } from "./DonationChannels";
 import { CHANNEL_COLUMNS, type DonationChannelRow } from "@/lib/site/donation-channels";
-import { WebsiteTabs } from "./WebsiteTabs";
+import { WebsiteTabs, WEBSITE_TABS } from "./WebsiteTabs";
 import { PagesAccordion } from "./PagesAccordion";
 import { PageVisibility } from "./PageVisibility";
 import { PublishedProjects, type PublishedProjectRow } from "./PublishedProjects";
@@ -37,7 +37,11 @@ export default async function WebsitePage({
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
-  const { perms } = await requirePermission("website.content");
+  // Opens at read: the photo card holds website.content at read and website.gallery. What each part of the page
+  // offers is asked of its own activity below, and its actions ask the same one.
+  const { perms } = await requirePermission("website.content", "read");
+  const canContent = can(perms, "website.content");
+  const canGallery = can(perms, "website.gallery");
   const { tab } = await searchParams;
   const { t } = await getT();
 
@@ -64,7 +68,7 @@ export default async function WebsitePage({
         .returns<SitePageRow[]>(),
       supabase
         .from("site_content_photos")
-        .select("id, drive_file_id")
+        .select("id, drive_file_id, alt")
         .order("sort_order")
         .returns<GalleryPhotoRow[]>(),
       // The featured-resident picker offers exactly what the public adoption
@@ -171,6 +175,8 @@ export default async function WebsitePage({
       {content && (
         <WebsiteTabs
           initial={tab}
+          // Only the photo strip is open to a login that does not edit the page itself.
+          tabs={canContent ? WEBSITE_TABS : ["gallery"]}
           ariaLabel={t.admin.website.tabs.aria}
           labels={t.admin.website.tabs.labels}
           panels={{
@@ -238,7 +244,7 @@ export default async function WebsitePage({
               </>
             ),
             donate: <DonationChannels rows={channelsResult.data ?? []} />,
-            gallery: <GalleryPhotos photos={photosResult.data ?? []} />,
+            gallery: <GalleryPhotos photos={photosResult.data ?? []} canEdit={canGallery} />,
             projects: <PublishedProjects projects={publishedResult.data ?? []} />,
           }}
         />

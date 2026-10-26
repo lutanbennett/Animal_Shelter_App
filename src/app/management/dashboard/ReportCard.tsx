@@ -11,9 +11,12 @@ export function entryLabel(entry: NamedEntry) {
 export function NameList({
   entries,
   none,
+  linked = true,
 }: {
   entries: NamedEntry[];
   none: string;
+  /** Whether a name opens the resident: only for a login that reads the record. Otherwise it is plain text. */
+  linked?: boolean;
 }) {
   if (entries.length === 0) {
     return <span className="text-xs text-muted">{none}</span>;
@@ -23,12 +26,16 @@ export function NameList({
       {entries.map((entry, i) => (
         <span key={entry.id}>
           {i > 0 && ", "}
-          <Link
-            href={`/residents/${entry.id}`}
-            className="relative z-10 text-foreground hover:text-primary hover:underline"
-          >
-            {entryLabel(entry)}
-          </Link>
+          {linked ? (
+            <Link
+              href={`/residents/${entry.id}`}
+              className="relative z-10 text-foreground hover:text-primary hover:underline"
+            >
+              {entryLabel(entry)}
+            </Link>
+          ) : (
+            <span className="text-foreground">{entryLabel(entry)}</span>
+          )}
         </span>
       ))}
     </span>
@@ -49,6 +56,7 @@ export function ReportCard({
   entries,
   groups,
   none,
+  linked = true,
 }: {
   title: string;
   hint?: string;
@@ -60,6 +68,8 @@ export function ReportCard({
   entries?: NamedEntry[];
   groups?: { label: string; entries: NamedEntry[] }[];
   none: string;
+  /** See NameList: names open the resident only when the login may read the record. */
+  linked?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3 md:p-4">
@@ -76,7 +86,7 @@ export function ReportCard({
         </span>
       </div>
       {detail && <span className="text-xs text-muted">{detail}</span>}
-      {entries && <NameList entries={entries} none={none} />}
+      {entries && <NameList entries={entries} none={none} linked={linked} />}
       {groups &&
         (groups.length === 0 ? (
           <span className="text-xs text-muted">{none}</span>
@@ -91,7 +101,7 @@ export function ReportCard({
                   </span>
                 </dt>
                 <dd>
-                  <NameList entries={group.entries} none={none} />
+                  <NameList entries={group.entries} none={none} linked={linked} />
                 </dd>
               </div>
             ))}
