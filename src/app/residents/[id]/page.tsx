@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { contactRelation } from "@/lib/contacts/visibility";
-import { mayOpenResidentRecord, opensRecordReadOnly, readsWhoAndWhereOnly, requireFullResident } from "@/lib/residents/who-and-where";
+import { requireFullResident } from "@/lib/residents/who-and-where";
 import { loadResidentCard } from "@/lib/residents/card";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadTranslations } from "@/lib/translations/queries";
@@ -43,16 +43,9 @@ export default async function ResidentPage(
   const { archive: archiveFlag } = await props.searchParams;
   const supabase = await createClient();
 
-  // A login that may not open the record (a volunteer, the 2IC, the Heads: 0134) gets the name
-  // card's page: never less than a stranger sees, plus where it lives and their own jobs.
-  // Except a login whose role holds a medical edit (the Medical records card): it opens the page, with only
-  // the medical sections editable (0249, docs/decisions/2026-10-23-medical-card-resident-page.md).
-  if ((await readsWhoAndWhereOnly()) && !(await mayOpenResidentRecord())) redirect(`/r/${id}`);
-  // Everyone else opens on the same guard as the record's own pages: a role that holds no read
-  // of the record gets the no-access page, not whatever RLS leaves of it. After the redirect,
-  // because a who-and-where login may hold no resident.record and must still reach the card.
-  await requireFullResident(undefined, "read", { allowMedicalCard: true });
-  const readOnlyExceptMedical = await opensRecordReadOnly();
+  // The same guard as the record's own pages: a role that holds no read of the record gets the
+  // no-access page, not whatever RLS leaves of it.
+  await requireFullResident();
 
   // Which parts of the record this login may read (section-reads.ts, the map the section pages use). A part it
   // cannot read is not drawn and not queried: the database would return no rows, and a tile saying "0 · none"
@@ -255,7 +248,7 @@ export default async function ResidentPage(
   // Sponsorship drives (0210): only a login that may run them reads the table (RLS says the same).
   // A failed read shows no card rather than failing the record.
   let appealsSummary: { count: number; latestId: string | null; latestStatus: AppealStatus | null } | null = null;
-  if (!readOnlyExceptMedical && can(perms, "appeal.run")) {
+  if (can(perms, "appeal.run")) {
     const { data, error } = await supabase
       .from("appeals")
       .select("id, status")
@@ -304,7 +297,6 @@ export default async function ResidentPage(
         notRefreshed: archiveFlag === "stale",
         photoMissing: archiveFlag === "nophoto",
       }}
-      readOnlyExceptMedical={readOnlyExceptMedical}
       showTile={show}
       medicalEdit={{
         diet: can(perms, "medical.diet", "edit"),
@@ -314,10 +306,10 @@ export default async function ResidentPage(
         weight: can(perms, "medical.weight", "edit"),
         procedures: can(perms, "medical.procedures", "edit"),
       }}
-      canRecordDeath={!readOnlyExceptMedical && can(perms, "placement.death")}
-      canUndoDeath={!readOnlyExceptMedical && can(perms, "placement.death_withdraw")}
-      canManageTranslations={!readOnlyExceptMedical && can(perms, "translations.manage")}
-      canSetMicrochip={!readOnlyExceptMedical && can(perms, "resident.microchip")}
+      canRecordDeath={can(perms, "placement.death")}
+      canUndoDeath={can(perms, "placement.death_withdraw")}
+      canManageTranslations={can(perms, "translations.manage")}
+      canSetMicrochip={can(perms, "resident.microchip")}
       translations={Array.from(translations.values())}
       currentPlacementSince={currentPlacementResult.data?.[0]?.start_date ?? null}
       carerName={carerResult?.data?.[0]?.name ?? null}
@@ -356,7 +348,7 @@ export default async function ResidentPage(
         latest: adoptionUpdatesResult.data?.[0] ?? null,
         everAdopted: (adoptCountResult.count ?? 0) > 0,
         canAdd:
-          !readOnlyExceptMedical && can(perms, "resident.adoption_news") && (adoptCountResult.count ?? 0) > 0,
+          can(perms, "resident.adoption_news") && (adoptCountResult.count ?? 0) > 0,
       }}
       now={new Date().toISOString()}
       tagOrigin={tagOrigin}

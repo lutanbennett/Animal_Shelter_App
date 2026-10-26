@@ -6,7 +6,6 @@ import { byShelterOrder, enclosuresInShelterOrder } from "@/lib/enclosures/order
 import { OFFSITE, parseZoneIds, readZonePick, zoneIdsOf } from "@/lib/enclosures/place";
 import { NOT_DECEASED, UNASSIGNED } from "@/lib/residents/status";
 import { DB_ORDER, parseSort, sortByPlace } from "@/lib/residents/sort";
-import { WHO_AND_WHERE_COLUMNS } from "@/lib/residents/who-and-where";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -58,11 +57,6 @@ export type Filters = {
    * enclosure yet ('Unassigned'). Picked with zones, it adds to them, as another zone would.
    */
   unallocated: boolean;
-  /**
-   * A volunteer's list reads `resident_who_and_where`, which has no other names (0134): the search
-   * matches name, Thai name and code only.
-   */
-  limited: boolean;
 };
 
 export function applyFilters<
@@ -72,13 +66,13 @@ export function applyFilters<
     in(column: string, values: readonly string[]): Q;
     not(column: string, operator: string, value: string): Q;
   },
->(query: Q, { q, zoneIds: onSiteIds, offsiteZoneIds, enclosureId, chippedIds, status, unallocated, limited }: Filters): Q {
+>(query: Q, { q, zoneIds: onSiteIds, offsiteZoneIds, enclosureId, chippedIds, status, unallocated }: Filters): Q {
   const zoneIds = [...onSiteIds, ...offsiteZoneIds];
   let next = query;
   if (q) {
     const term = q.replace(/[,()%]/g, "");
     next = next.or(
-      `name.ilike.%${term}%,thai_name.ilike.%${term}%,${limited ? "" : `other_names.ilike.%${term}%,`}resident_code.ilike.%${residentCodeTerm(term)}%`,
+      `name.ilike.%${term}%,thai_name.ilike.%${term}%,other_names.ilike.%${term}%,resident_code.ilike.%${residentCodeTerm(term)}%`,
     );
   }
   // By status rather than zone: Unassigned, Hospital, Fostered and Adopted
@@ -115,7 +109,7 @@ type Params = Record<string, string | string[] | undefined>;
  * them, and the toggles. The page and the spreadsheet download both read it, so a file cannot differ
  * from the list above the button (the backlog's "exactly as on screen").
  */
-export async function resolveListView(supabase: Supabase, searchParams: Params, limited: boolean) {
+export async function resolveListView(supabase: Supabase, searchParams: Params) {
   const q = typeof searchParams.q === "string" ? searchParams.q.trim() : "";
 
   // Zones and enclosures come first: which ?zone= and ?enclosure= ids are
@@ -171,7 +165,7 @@ export async function resolveListView(supabase: Supabase, searchParams: Params, 
   const showAll = searchParams.all === "1";
   // "No microchip" (the encouraging-chipping nudge): kept across every
   // other filter, like the search.
-  const noChip = !limited && searchParams.nochip === "1";
+  const noChip = searchParams.nochip === "1";
   // The status chips belong to a list with no zone, Unallocated or enclosure
   // picked: these animals are in no enclosure, so any of those would empty it.
   const status =
@@ -204,7 +198,6 @@ export async function resolveListView(supabase: Supabase, searchParams: Params, 
     chippedIds,
     status,
     unallocated,
-    limited,
   };
 
   return { q, sort, ranks, zones, physicalZones, allEnclosures, enclosures, enclosuresIn, zoneIds, unallocated, enclosureId, showAll, noChip, status, chippedIds, filters };
@@ -212,13 +205,13 @@ export async function resolveListView(supabase: Supabase, searchParams: Params, 
 
 export type ListView = Awaited<ReturnType<typeof resolveListView>>;
 
-/** The list's view, its column list and its id column: a volunteer's is `resident_who_and_where`. */
-export function listSource(limited: boolean) {
+/** The list's view, its column list and its id column. */
+export function listSource() {
   return {
-    table: limited ? "resident_who_and_where" : "resident_list_view",
-    idColumn: limited ? "id" : "resident_id",
-    // A plain string: the typed select parser cannot follow a column list that depends on the view.
-    columns: (limited ? WHO_AND_WHERE_COLUMNS : LIST_COLUMNS) as string,
+    table: "resident_list_view",
+    idColumn: "resident_id",
+    // A plain string: the typed select parser cannot follow a long column list.
+    columns: LIST_COLUMNS as string,
   };
 }
 
@@ -227,8 +220,8 @@ export function listSource(limited: boolean) {
  * Show all is on, every filter applied; `ids`, when given, narrows that to the ticked rows. The
  * caller adds `.returns<…>()`.
  */
-export function listQuery(supabase: Supabase, view: ListView, limited: boolean, ids: string[] = []) {
-  const source = listSource(limited);
+export function listQuery(supabase: Supabase, view: ListView, ids: string[] = []) {
+  const source = listSource();
   let query = supabase
     .from(source.table as "resident_list_view")
     .select(source.columns)

@@ -29,21 +29,18 @@ export function parseTickedIds(value: unknown): string[] {
 
 /** What the file may hold for this person: the full record, and each medical group they can read. */
 export type ExportScope = {
-  /** False for a volunteer: who and where only (0134). */
-  full: boolean;
   prescriptions: boolean;
   visits: boolean;
   weight: boolean;
   diet: boolean;
 };
 
-export function exportScope(perms: Permissions | null, limited: boolean): ExportScope {
+export function exportScope(perms: Permissions | null): ExportScope {
   return {
-    full: !limited,
-    prescriptions: !limited && can(perms, "medical.prescriptions", "read"),
-    visits: !limited && can(perms, "medical.visits", "read"),
-    weight: !limited && can(perms, "medical.weight", "read"),
-    diet: !limited && can(perms, "medical.diet", "read"),
+    prescriptions: can(perms, "medical.prescriptions", "read"),
+    visits: can(perms, "medical.visits", "read"),
+    weight: can(perms, "medical.weight", "read"),
+    diet: can(perms, "medical.diet", "read"),
   };
 }
 
@@ -102,7 +99,7 @@ async function loadExtras(supabase: Supabase, ids: string[], scope: ExportScope)
     diet: new Map(),
     weight: new Map(),
   };
-  if (!scope.full || ids.length === 0) return extras;
+  if (ids.length === 0) return extras;
 
   const jobs: PromiseLike<void>[] = [];
 
@@ -321,7 +318,7 @@ export type ExportRow = ResidentRow & { species?: string | null; sex?: string | 
 export async function buildResidentsCsv(supabase: Supabase, rows: ExportRow[], scope: ExportScope): Promise<string> {
   const extras = await loadExtras(supabase, rows.map((r) => r.resident_id), scope);
   const groups = new Set<Column["group"]>(["who"]);
-  if (scope.full) groups.add("record");
+  groups.add("record");
   if (scope.prescriptions) groups.add("prescriptions");
   if (scope.visits) groups.add("visits");
   if (scope.diet) groups.add("diet");

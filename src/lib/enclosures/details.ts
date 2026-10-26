@@ -3,7 +3,7 @@ import { loadMaintenanceJobs, type MaintenanceJob } from "@/lib/maintenance/quer
 import { loadSpecialDiets } from "@/lib/diets/special";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { todayIso } from "@/lib/format";
-import { loadOccupants, readsWhoAndWhereOnly } from "@/lib/residents/who-and-where";
+import { loadOccupants } from "@/lib/residents/who-and-where";
 import type { createClient } from "@/lib/supabase/server";
 import type { Enclosure, EnclosureResident } from "@/app/enclosures/[id]/EnclosureHub";
 
@@ -50,13 +50,11 @@ export async function loadEnclosureDetails(supabase: Supabase, id: string): Prom
   const row = enclosureResult.data?.[0];
   if (!row) return null;
 
-  const limited = await readsWhoAndWhereOnly();
   const residentIds = occupantsResult.data.map((r) => r.resident_id);
   const [residentsResult, specialDiets, rxResult] = await Promise.all([
     residentIds.length > 0
       ? supabase
-          // A volunteer's second step reads who and where too: it has the same five columns (0134).
-          .from((limited ? "resident_who_and_where" : "residents") as "residents")
+          .from("residents")
           .select("id, name, thai_name, resident_code, profile_photo_drive_file_id")
           .in("id", residentIds)
           .order("name")

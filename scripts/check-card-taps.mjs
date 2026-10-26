@@ -136,8 +136,6 @@ for (const p of P) {
   const landing = cardLanding({
     appAccess: p !== "anon" && !!role && APP_ROLES.includes(role),
     readsRecord: reads,
-    // readsWhoAndWhereOnly() is always false since 0259 (and 0264 dropped the function it used to ask)
-    whoAndWhereOnly: false,
     rowVisible: get(p, "visible") === "1",
   });
   if (landing === EXPECT[p]) pass(`${p}: lands on ${landing}`);

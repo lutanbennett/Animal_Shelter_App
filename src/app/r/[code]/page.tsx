@@ -11,7 +11,7 @@ import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { canOpen, routeFor } from "@/lib/permissions/routes";
 import { cardLanding } from "@/lib/residents/card-landing";
-import { readsWhoAndWhereOnly, WHO_AND_WHERE_COLUMNS, type WhoAndWhere } from "@/lib/residents/who-and-where";
+import { WHO_AND_WHERE_COLUMNS, type WhoAndWhere } from "@/lib/residents/who-and-where";
 import { placeName } from "@/lib/enclosures/names";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
 import { createClient } from "@/lib/supabase/server";
@@ -97,7 +97,6 @@ export default async function ResidentCardPage(props: PageProps<"/r/[code]">) {
   const landing = cardLanding({
     appAccess,
     readsRecord,
-    whoAndWhereOnly: appAccess ? await readsWhoAndWhereOnly() : false,
     rowVisible,
   });
   if (landing === "full") redirect(`/residents/${resident.id}`);
