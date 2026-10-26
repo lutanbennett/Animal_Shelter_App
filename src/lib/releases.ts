@@ -74,7 +74,9 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
   typeof note === "string" ? undefined : note.roles;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
-export const unreleased: ReleaseNote[] = [];
+export const unreleased: ReleaseNote[] = [
+  "The manual now opens on the topics for the cards you hold, and each topic says which cards give it. A 2IC, Head of Medical or Head of Maintenance is no longer shown the volunteer's manual, and a role called anything else gets its own. Show everything still lists the rest, greyed. A few topics are marked as not yet assigned to a card; they are shown to everyone until they are linked.",
+];
 
 /** Newest first. */
 export const releases: Release[] = [

@@ -152,8 +152,8 @@ const manual: Manual = {
           title: "Printing this manual",
           path: "Manual → Print this as a PDF",
           steps: [
-            "Open the Manual and tap Print this as a PDF, just under the line about your role. The PDF opens in a new page of your browser; use its Save or Print button to keep a paper or file copy.",
-            "The PDF holds the same topics you are looking at: your own role's, or the whole manual if you chose Show everything first. Without screenshots gives a much smaller, text-only file that prints quickly.",
+            "Open the Manual and tap Print this as a PDF, just under the line about your cards. The PDF opens in a new page of your browser; use its Save or Print button to keep a paper or file copy.",
+            "The PDF holds the same topics you are looking at: the ones for the cards you hold, or the whole manual if you chose Show everything first. Without screenshots gives a much smaller, text-only file that prints quickly.",
             "The copy is a snapshot of today's manual. Print it again after the manual changes.",
           ],
           callouts: [
@@ -258,9 +258,9 @@ const manual: Manual = {
         {
           id: "roles",
           everyone: true,
-          title: "Roles — who can do what",
+          title: "Roles and cards — who can do what",
           intro:
-            "Every account has one role. The app hides buttons you can't use, and the database refuses the change even if a button is reached another way. Sections below say which roles can do each task. The manual opens on the topics for your own role; Show everything, above Roles at a glance, brings back the rest, greyed where they aren't part of your role.",
+            "Every account has a role, and a role is exactly the cards it has been given on Who does what. The app hides buttons you can't use, and the database refuses the change even if a button is reached another way. Under each task the manual names the cards that give it. The manual opens on the topics for the cards you hold; Show everything, above Cards at a glance, brings back the rest, greyed where they aren't part of a card you hold. A topic marked as not yet assigned to a card is shown to everyone until it has been linked.",
         },
       ],
     },

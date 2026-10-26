@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
   if (!user) return new NextResponse("Sign in to view the manual.", { status: 401 });
 
   const perms = await loadPermissions();
-  const all = asked || !entersApp(perms);
+  const all = asked || !entersApp(perms) || perms?.isAdmin === true; // Admin is shown every topic anyway
   const { t } = await getT();
   const cards: ManualCard[] = CARD_KEYS.map((key) => ({
     key,
