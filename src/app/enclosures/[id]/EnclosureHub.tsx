@@ -258,6 +258,7 @@ export function EnclosureMaintenance({
 export function EnclosureHub({
   enclosure,
   residents,
+  canSeeResidents,
   canEditEnclosures,
   canWriteMaintenance,
   maintenanceJobs,
@@ -265,6 +266,8 @@ export function EnclosureHub({
 }: {
   enclosure: Enclosure;
   residents: EnclosureResident[];
+  /** Whether this login reads any resident; when not, the occupancy and the resident list are left out rather than shown as nobody. */
+  canSeeResidents: boolean;
   /** facility.enclosures at Edit: offers the Settings link to manage this enclosure. */
   canEditEnclosures: boolean;
   /** Staff/admin may log jobs; volunteers only see them. */
@@ -330,17 +333,19 @@ export function EnclosureHub({
             </div>
           )}
         </div>
-        <div className="w-full md:w-64">
-          <OccupancyIndicator
-            count={residents.length}
-            capacity={enclosure.capacity}
-            size="lg"
-          />
-        </div>
+        {canSeeResidents && (
+          <div className="w-full md:w-64">
+            <OccupancyIndicator
+              count={residents.length}
+              capacity={enclosure.capacity}
+              size="lg"
+            />
+          </div>
+        )}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-[2fr_1fr]">
-        <EnclosureResidents residents={residents} />
+      <div className={`grid gap-6 ${canSeeResidents ? "md:grid-cols-[2fr_1fr]" : ""}`}>
+        {canSeeResidents && <EnclosureResidents residents={residents} />}
 
         <aside className="flex flex-col gap-4">
           <EnclosureNotes notes={enclosure.notes} />

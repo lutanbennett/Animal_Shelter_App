@@ -48,9 +48,12 @@ function EnclosureCard({
   enclosure,
   tagOrigin,
   showZone = false,
+  showCounts,
 }: {
   enclosure: EnclosureSummary;
   tagOrigin: string | null;
+  /** False for a login that reads no resident: a count of 0 would say nobody is there when it means not allowed. */
+  showCounts: boolean;
   /** In the flat grid there is no zone heading, so the card names its zone, dot and all. */
   showZone?: boolean;
 }) {
@@ -111,10 +114,12 @@ function EnclosureCard({
           className="-mt-2 text-xs text-muted"
         />
       )}
-      <OccupancyIndicator
-        count={enclosure.resident_count}
-        capacity={enclosure.capacity}
-      />
+      {showCounts && (
+        <OccupancyIndicator
+          count={enclosure.resident_count}
+          capacity={enclosure.capacity}
+        />
+      )}
       {/* An icon and words, not a colour: the card's colour is capacity.
           <details> so a tap shows the names as well as a hover; it sits
           above the stretched link so the tap opens it instead. */}
@@ -139,8 +144,9 @@ function EnclosureCard({
 }
 
 /** "12 enclosures · 56 residents · 3 spaces free (2 enclosures have no capacity set)". */
-function TotalsText({ totals }: { totals: OccupancyTotals }) {
+function TotalsText({ totals, showCounts }: { totals: OccupancyTotals; showCounts: boolean }) {
   const { t } = useI18n();
+  if (!showCounts) return <>{t.enclosures.enclosuresCount(totals.enclosures)}</>;
   return (
     <>
       {t.enclosures.enclosuresCount(totals.enclosures)}
@@ -162,7 +168,10 @@ export function EnclosureGrid({
   groups,
   flat,
   tagOrigin,
+  showCounts,
 }: {
+  /** Whether this login reads any resident (resident.record or resident.who_and_where). Without it the figures are left out. */
+  showCounts: boolean;
   /** Lifecycle status buckets, shown first without a heading. */
   pinned: EnclosureSummary[];
   groups: ZoneGroup[];
@@ -189,14 +198,14 @@ export function EnclosureGrid({
     <p className="text-sm text-muted" data-testid="all-zones-summary">
       <span className="font-medium text-foreground">{t.enclosures.allZones}</span>
       {": "}
-      <TotalsText totals={occupancyTotals(physical)} />
+      <TotalsText totals={occupancyTotals(physical)} showCounts={showCounts} />
     </p>
   );
 
   const pinnedGrid = pinned.length > 0 && (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {pinned.map((enclosure) => (
-        <EnclosureCard key={enclosure.id} enclosure={enclosure} tagOrigin={tagOrigin} />
+        <EnclosureCard key={enclosure.id} enclosure={enclosure} tagOrigin={tagOrigin} showCounts={showCounts} />
       ))}
     </div>
   );
@@ -208,7 +217,7 @@ export function EnclosureGrid({
         {allTotals}
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {flat.map((enclosure) => (
-            <EnclosureCard key={enclosure.id} enclosure={enclosure} tagOrigin={tagOrigin} showZone />
+            <EnclosureCard key={enclosure.id} enclosure={enclosure} tagOrigin={tagOrigin} showZone showCounts={showCounts} />
           ))}
         </div>
       </div>
@@ -232,7 +241,7 @@ export function EnclosureGrid({
               <span>
                 {zone.internal ? t.enclosures.hub.internal : t.enclosures.hub.external}
                 {" · "}
-                <TotalsText totals={occupancyTotals(zone.enclosures)} />
+                <TotalsText totals={occupancyTotals(zone.enclosures)} showCounts={showCounts} />
                 {zone.enclosures.length < zone.total_enclosures &&
                   ` · ${t.enclosures.showingOf(zone.enclosures.length, zone.total_enclosures)}`}
               </span>
@@ -249,7 +258,7 @@ export function EnclosureGrid({
           </div>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {zone.enclosures.map((enclosure) => (
-              <EnclosureCard key={enclosure.id} enclosure={enclosure} tagOrigin={tagOrigin} />
+              <EnclosureCard key={enclosure.id} enclosure={enclosure} tagOrigin={tagOrigin} showCounts={showCounts} />
             ))}
           </div>
         </section>
