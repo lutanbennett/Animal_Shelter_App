@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-30 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+32 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -156,12 +156,31 @@ Result: pending
 
 Result: pending
 
-## Medical records (`medical_records`)
+## View medical (`view_medical`)
 
 - Opens: `/residents`
 - Also gives: View residents (`view_residents`) (walked under its own heading)
 
-0. Sign in with `--cards medical_records`. The home screen shows the **Medical records** tile (or the tile of a card that includes it).
+0. Sign in with `--cards view_medical`. The home screen shows the **View medical** tile (or the tile of a card that includes it).
+1. Open `/residents`: it loads.
+2. **See:** Vet visits and how they went (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+3. **See:** Procedures and their files (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+4. **See:** Blood tests and their reports (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+5. **See:** Prescriptions: what should be given (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+6. **See:** Immunizations (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+7. **See:** Weight (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+8. **See:** A resident's diet (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+9. **See:** The list of clinics (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+10. **Refused:** open `/medical/photos` (the page of **Add Medical Photos**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Manage medical (`medical_records`)
+
+- Opens: `/residents`
+- Also gives: View medical (`view_medical`) (walked under its own heading)
+
+0. Sign in with `--cards medical_records`. The home screen shows the **Manage medical** tile (or the tile of a card that includes it).
 1. Open `/residents`: it loads.
 2. **TODO:** Vet visits and how they went. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
 3. **Do:** Procedures and their files. Use a disposable record named `walk-medical_records`. **Read-back:** the resident's Procedures page (/residents/<id>/procedures) lists it with the type, where it was done, the date and the note; files are attached from the same row (answered 2026-10-23).
@@ -171,37 +190,62 @@ Result: pending
 7. **Do:** Weight. Use a disposable record named `walk-medical_records`. **Read-back:** the list shows "Saved: <name>, <kg>", and opening that resident on /medical/weight reads "Last time: <kg>, <date>" and "Today already has <kg>" (one weight per resident per day; a second save replaces it).
 8. **Do:** A resident's diet. Use a disposable record named `walk-medical_records`. **Read-back:** the resident's Diet page (/residents/<id>/diet) lists it under Current with meals a day and the amounts at the resident's size (answered 2026-10-23).
 9. **Do:** Remove a medical record entered by mistake, and restore it. Use a disposable record named `walk-medical_records`. **Read-back:** Remove, with an optional reason, on any medical row: the row leaves the list and the chart and the page reads "1 removed hidden"; Show removed lists it with Restore, which brings it back (done on a weight entry; answered 2026-10-23).
-10. **Refused:** open `/medical/photos` (the page of **Add Medical Photos**, which this login does not hold). Expect a refusal or redirect, not the page.
+10. **Do:** Book a vet visit. Use a disposable record named `walk-medical_records`. **Read-back:** the visit shows on that resident's page and in the shelter's list of visits (/upcoming-visits).
+11. **Refused:** open `/medical/photos` (the page of **Add Medical Photos**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
 ## Book clinic visits (`book_clinic_visits`)
 
 - Opens: `/upcoming-visits`
-- Also gives: View residents (`view_residents`) (walked under its own heading)
+- Also gives: View medical (`view_medical`) (walked under its own heading)
 
 0. Sign in with `--cards book_clinic_visits`. The home screen shows the **Book clinic visits** tile (or the tile of a card that includes it).
 1. Open `/upcoming-visits`: it loads.
 2. **Do:** Book a vet visit. Use a disposable record named `walk-book_clinic_visits`. **Read-back:** the visit shows on that resident's page and in the shelter's list of visits (/upcoming-visits).
 3. **See:** Vet visits and how they went (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+4. **Refused:** open `/medical/photos` (the page of **Add Medical Photos**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
-## Contacts (`contacts`)
+## View contacts (`view_contacts`)
 
 - Opens: `/management/contacts`
 
-0. Sign in with `--cards contacts`. The home screen shows the **Contacts** tile (or the tile of a card that includes it).
+0. Sign in with `--cards view_contacts`. The home screen shows the **View contacts** tile (or the tile of a card that includes it).
 1. Open `/management/contacts`: it loads.
-2. **TODO:** Browse the contacts book. Do it on a disposable record named `walk-contacts`. Question: where should this write show afterwards (which page, which row)?
-3. **TODO:** Contacts. Do it on a disposable record named `walk-contacts`. Question: where should this write show afterwards (which page, which row)?
-4. **TODO:** Add a new contact. Do it on a disposable record named `walk-contacts`. Question: where should this write show afterwards (which page, which row)?
-5. **TODO:** The list of clinics. Do it on a disposable record named `walk-contacts`. Question: where should this write show afterwards (which page, which row)?
-6. **TODO:** A clinic's doctors: add, rename, merge, retire. Do it on a disposable record named `walk-contacts`. Question: where should this write show afterwards (which page, which row)?
-7. **TODO:** See a Shelter Friend's card. Do it on a disposable record named `walk-contacts`. Question: where should this write show afterwards (which page, which row)?
-8. **TODO:** Shelter Friends: add, publish, unpublish. Do it on a disposable record named `walk-contacts`. Question: where should this write show afterwards (which page, which row)?
-9. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+2. **TODO:** Browse the contacts book. Do it on a disposable record named `walk-view_contacts`. Question: where should this write show afterwards (which page, which row)?
+3. **See:** Contacts (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+4. **See:** The list of clinics (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+5. **TODO:** See a Shelter Friend's card. Do it on a disposable record named `walk-view_contacts`. Question: where should this write show afterwards (which page, which row)?
+6. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Publish Shelter Friends (`publish_shelter_friends`)
+
+- Opens: `/management/contacts`
+- Also gives: View contacts (`view_contacts`) (walked under its own heading)
+
+0. Sign in with `--cards publish_shelter_friends`. The home screen shows the **Publish Shelter Friends** tile (or the tile of a card that includes it).
+1. Open `/management/contacts`: it loads.
+2. **TODO:** Shelter Friends: add, publish, unpublish. Do it on a disposable record named `walk-publish_shelter_friends`. Question: where should this write show afterwards (which page, which row)?
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Manage contacts (`contacts`)
+
+- Opens: `/management/contacts`
+- Also gives: View contacts (`view_contacts`) (walked under its own heading)
+
+0. Sign in with `--cards contacts`. The home screen shows the **Manage contacts** tile (or the tile of a card that includes it).
+1. Open `/management/contacts`: it loads.
+2. **TODO:** Contacts. Do it on a disposable record named `walk-contacts`. Question: where should this write show afterwards (which page, which row)?
+3. **TODO:** Add a new contact. Do it on a disposable record named `walk-contacts`. Question: where should this write show afterwards (which page, which row)?
+4. **TODO:** The list of clinics. Do it on a disposable record named `walk-contacts`. Question: where should this write show afterwards (which page, which row)?
+5. **TODO:** A clinic's doctors: add, rename, merge, retire. Do it on a disposable record named `walk-contacts`. Question: where should this write show afterwards (which page, which row)?
+6. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -226,7 +270,10 @@ Result: pending
 1. Open `/management/dashboard`: it loads.
 2. **TODO:** The dashboard. Do it on a disposable record named `walk-dashboard`. Question: where should this write show afterwards (which page, which row)?
 3. **See:** Cashflow and fixed outgoings (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+4. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+5. **See:** Vet visits and how they went (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+6. **See:** Maintenance jobs: log, change, assign, cost (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+7. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -237,7 +284,9 @@ Result: pending
 0. Sign in with `--cards donations_receipts`. The home screen shows the **Donations and receipts** tile (or the tile of a card that includes it).
 1. Open `/management/donations`: it loads.
 2. **TODO:** Issue a donation receipt. Do it on a disposable record named `walk-donations_receipts`. Question: where should this write show afterwards (which page, which row)?
-3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+3. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+4. **See:** Project folders and their stories (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+5. **Refused:** open `/maintenance` (the page of **Do Maintenance**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -248,7 +297,8 @@ Result: pending
 0. Sign in with `--cards bills`. The home screen shows the **Bills** tile (or the tile of a card that includes it).
 1. Open `/bills`: it loads.
 2. **TODO:** Add and see a maintenance job's bills and costs. Do it on a disposable record named `walk-bills`. Question: where should this write show afterwards (which page, which row)?
-3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+3. **See:** Maintenance jobs: log, change, assign, cost (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -260,6 +310,18 @@ Result: pending
 1. Open `/admin/website`: it loads.
 2. **TODO:** The public website's content. Do it on a disposable record named `walk-website`. Question: where should this write show afterwards (which page, which row)?
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Website photo strip (`website_photos`)
+
+- Opens: `/admin/website`
+
+0. Sign in with `--cards website_photos`. The home screen shows the **Website photo strip** tile (or the tile of a card that includes it).
+1. Open `/admin/website`: it loads.
+2. **See:** The public website's content (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+3. **TODO:** Add, move and remove the photos in the public website's photo strip. Do it on a disposable record named `walk-website_photos`. Question: where should this write show afterwards (which page, which row)?
+4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -281,8 +343,9 @@ Result: pending
 0. Sign in with `--cards assistant`. The home screen shows the **Assistant** tile (or the tile of a card that includes it).
 1. Open `/assistant`: it loads.
 2. **Do:** Ask the assistant a question. Use a disposable record named `walk-assistant`. **Read-back:** the answer shows in the assistant panel opened by the Assistant button in the header, and writes no row to any page.
-3. **TODO:** Record something through the assistant. Do it on a disposable record named `walk-assistant`. Question: where should this write show afterwards (which page, which row)?
-4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+3. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+4. **See:** Enclosures and zones (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+5. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -293,7 +356,8 @@ Result: pending
 0. Sign in with `--cards enclosures`. The home screen shows the **Enclosures** tile (or the tile of a card that includes it).
 1. Open `/enclosures`: it loads.
 2. **See:** Enclosures and zones (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+3. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+4. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -305,27 +369,28 @@ Result: pending
 0. Sign in with `--cards add_photos`. The home screen shows the **Add Shelter Photos** tile (or the tile of a card that includes it).
 1. Open `/photos/add`: it loads.
 2. **TODO:** Add a resident's photo to the Shelter folder only (shown on the website once approved). Do it on a disposable record named `walk-add_photos`. Question: where should this write show afterwards (which page, which row)?
-3. **See:** A resident's details, housing and history (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+3. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+4. **Refused:** open `/maintenance` (the page of **Do Maintenance**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
 ## Approve photos (`approve_photos`)
 
 - Opens: `/photos/approve`
+- Also gives: View residents (`view_residents`) (walked under its own heading)
 
 0. Sign in with `--cards approve_photos`. The home screen shows the **Approve photos** tile (or the tile of a card that includes it).
 1. Open `/photos/approve`: it loads.
 2. **TODO:** Approve or remove the photos waiting in Photos to approve. Do it on a disposable record named `walk-approve_photos`. Question: where should this write show afterwards (which page, which row)?
 3. **Do:** Refile or remove a photo, choose the profile photo. Use a disposable record named `walk-approve_photos`. **Read-back:** tap the photo on /residents/<id>/photos: Move to folder changes the folder its tile reads (Medical to Foster read "Foster · <date>"), Remove photo and Current profile photo sit beside it (answered 2026-10-23).
-4. **See:** A resident's details, housing and history (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-5. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
 ## Run fundraising appeals (`run_appeals`)
 
 - Opens: `/management/appeals`
+- Also gives: View residents (`view_residents`) (walked under its own heading)
 
 0. Sign in with `--cards run_appeals`. The home screen shows the **Run fundraising appeals** tile (or the tile of a card that includes it).
 1. Open `/management/appeals`: it loads.
@@ -342,7 +407,8 @@ Result: pending
 0. Sign in with `--cards meme_library`. The home screen shows the **Meme library** tile (or the tile of a card that includes it).
 1. Open `/memes`: it loads.
 2. **TODO:** The social media library: memes, and where each was shared. Do it on a disposable record named `walk-meme_library`. Question: where should this write show afterwards (which page, which row)?
-3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+3. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+4. **Refused:** open `/maintenance` (the page of **Do Maintenance**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -357,33 +423,13 @@ Result: pending
 
 Result: pending
 
-## Operations (`operations_landing`)
-
-- Opens: `/operations`
-
-0. Sign in with `--cards operations_landing`. The home screen shows the **Operations** tile (or the tile of a card that includes it).
-1. Open `/operations`: it loads.
-2. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
-
-Result: pending
-
-## Management (`management_landing`)
-
-- Opens: `/management`
-
-0. Sign in with `--cards management_landing`. The home screen shows the **Management** tile (or the tile of a card that includes it).
-1. Open `/management`: it loads.
-2. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
-
-Result: pending
-
 ## Who does what (`who_does_what`)
 
 - Opens: `/admin/who-does-what`
 
 0. Sign in with `--cards who_does_what`. The home screen shows the **Who does what** tile (or the tile of a card that includes it).
 1. Open `/admin/who-does-what`: it loads.
-2. **Do:** See which cards each role holds on Who does what. Use a disposable record named `walk-who_does_what`. **Read-back:** nothing is written: the page lists each role with the cards it holds, read only. Confirm it opens, shows the roles, and offers no Add, Remove or reorder control (that stays with Admin). Use the page itself, not a record named walk-who_does_what (2026-10-25).
+2. **See:** See which cards each role holds on Who does what (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending

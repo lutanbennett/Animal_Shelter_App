@@ -1,5 +1,5 @@
 // A role's home is exactly its cards (and groups): nothing is added by code (Lutan, 2026-10-23). Adding a page under /operations or
-// /management, or giving a role cells that open one, must never add a tile. Operations, Management and My tasks are cards.
+// /management, or giving a role cells that open one, must never add a tile. My tasks is a card; Operations and Management are groupings.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { homeTilesFor } from "./tiles.ts";
@@ -22,8 +22,9 @@ test("the My tasks card grants recurring.do_own and nothing else", () => {
   assert.equal(CARDS.my_tasks.opens, "/my");
 });
 
-test("the landing cards grant nothing", () => {
-  assert.deepEqual([...bundleOfCards(["operations_landing", "management_landing"])], []);
+test("Operations and Management are groupings, not cards (0268)", () => {
+  assert.ok(!("operations_landing" in CARDS));
+  assert.ok(!("management_landing" in CARDS));
 });
 
 test("a role's home is exactly its cards, however wide its cells are", () => {
@@ -45,12 +46,3 @@ test("holding recurring.do_own draws My tasks only when the card is given", () =
   assert.equal(tiles.find((x) => x.href === "/my").badge, en.my.navBadge(3));
 });
 
-test("the Operations and Management cards draw a tile only for a role that opens a page there", () => {
-  const cards = ["view_residents", "operations_landing", "management_landing"];
-  assert.deepEqual(hrefs(homeTilesFor(role(wide), en, 0, cards)), ["/residents", "/operations", "/management"]);
-  assert.deepEqual(hrefs(homeTilesFor(role({ "resident.record": 1 }), en, 0, cards)), ["/residents"]);
-});
-
-test("taking the card away takes the tile away", () => {
-  assert.ok(!hrefs(homeTilesFor(role(wide), en, 0, ["view_residents"])).includes("/operations"));
-});

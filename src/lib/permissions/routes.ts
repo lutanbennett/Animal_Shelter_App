@@ -348,6 +348,7 @@ export const ROUTES: readonly RouteEntry[] = [
   {
     path: "/admin/who-does-what",
     activity: "roles.view",
+    level: "read",
     icon: Grid3x3,
     label: (t) => t.nav.whoDoesWhat,
     device: "any",

@@ -8,5 +8,5 @@ export const WHO_DOES_WHAT_PATH = "/admin/who-does-what";
  * The landing tiles and the pages all ask this one function, so a tile never offers a page that refuses.
  */
 export function opensWhoDoesWhat(perms: Permissions | null | undefined): boolean {
-  return can(perms, "roles.view");
+  return can(perms, "roles.view", "read");
 }

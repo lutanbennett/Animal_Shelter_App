@@ -36,7 +36,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const perms = await loadPermissions();
-  await requirePermission("roles.view");
+  await requirePermission("roles.view", "read");
 
   const { t, locale } = await getT();
   const w = t.admin.whoDoesWhat;
