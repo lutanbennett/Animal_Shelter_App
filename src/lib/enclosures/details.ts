@@ -3,6 +3,8 @@ import { loadMaintenanceJobs, type MaintenanceJob } from "@/lib/maintenance/quer
 import { loadSpecialDiets } from "@/lib/diets/special";
 import { getLocale } from "@/lib/i18n/get-locale";
 import { todayIso } from "@/lib/format";
+import { can } from "@/lib/permissions/can";
+import { loadPermissions } from "@/lib/permissions/load";
 import { loadOccupants } from "@/lib/residents/who-and-where";
 import type { createClient } from "@/lib/supabase/server";
 import type { Enclosure, EnclosureResident } from "@/app/enclosures/[id]/EnclosureHub";
@@ -54,11 +56,13 @@ export async function loadEnclosureDetails(supabase: Supabase, id: string): Prom
   const [residentsResult, specialDiets, rxResult] = await Promise.all([
     residentIds.length > 0
       ? supabase
-          .from("residents")
+          // The who-and-where view, not the table: a login that holds only that read (the Enclosures card)
+          // gets no row from residents, and photo and name are exactly what this page is for.
+          .from("resident_who_and_where")
           .select("id, name, thai_name, resident_code, profile_photo_drive_file_id")
           .in("id", residentIds)
           .order("name")
-          .returns<Omit<EnclosureResident, "special_diets" | "on_medication">[]>()
+          .returns<Omit<EnclosureResident, "special_diets" | "on_medication" | "openable">[]>()
       : null,
     loadSpecialDiets(supabase, residentIds, await getLocale()),
     // On a current prescription: the facility map's own rule (archived_at null, started, not ended).
@@ -79,10 +83,13 @@ export async function loadEnclosureDetails(supabase: Supabase, id: string): Prom
   if (residentsResult?.error) throw new Error(`Enclosure details: could not read residents: ${residentsResult.error.message}`);
   if (rxResult?.error) throw new Error(`Enclosure details: could not read prescriptions: ${rxResult.error.message}`);
   const onMedication = new Set((rxResult?.data ?? []).map((r) => r.resident_id));
+  // Clicking through is governed by whatever other cards the login holds: only a read of the record opens a resident.
+  const openable = can(await loadPermissions(), "resident.record", "read");
   const residents: EnclosureResident[] = (residentsResult?.data ?? []).map((resident) => ({
     ...resident,
     special_diets: specialDiets.get(resident.id) ?? [],
     on_medication: onMedication.has(resident.id),
+    openable,
   }));
 
   return {

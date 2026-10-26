@@ -4,6 +4,7 @@ import { checkDriveConnection, getDriveClient } from "@/lib/google/drive";
 import { migrationDrift } from "@/lib/migration-drift";
 import { latestRelease, unreleased } from "@/lib/releases";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { appUrl } from "@/lib/site-hosts";
 import { renderedBy } from "./runtime";
 import { type CheckOutcome, type CheckResult, cached, runCheck } from "./run";
 import { describeBackupFolder, resolveBackupFolder } from "../../../scripts/lib/backup-folder.mjs";
@@ -159,7 +160,19 @@ export async function checkRelease(): Promise<CheckOutcome<ReleaseFacts>> {
   return { state: "ok", facts };
 }
 
-export type ReleaseMailFacts = { label: string | null; from: string | null; runtime: "worker" | "elsewhere" };
+export type ReleaseMailFacts = {
+  label: string | null;
+  from: string | null;
+  /**
+   * Where the settings came from. "worker": this page was drawn by the Worker
+   * and read its own. "asked": drawn by the Pi, which cannot see them, so it
+   * asked the Worker. "unreachable": asked and got no usable answer.
+   * "elsewhere": no Worker address to ask (next dev).
+   */
+  runtime: "worker" | "asked" | "unreachable" | "elsewhere";
+};
+
+type MailSettings = { label: string | null; from: string | null; hasBinding: boolean };
 
 /**
  * Mirrors worker/release-mail.mjs's guard: mail goes out only when
@@ -168,22 +181,64 @@ export type ReleaseMailFacts = { label: string | null; from: string | null; runt
  * mails), so there it is grey, not red. Names only: the binding is an
  * object, and the From address is a public var.
  */
-export async function checkReleaseMail(): Promise<CheckOutcome<ReleaseMailFacts>> {
-  const env = workerEnv();
-  if (!env) return { state: "off", facts: { label: null, from: null, runtime: "elsewhere" } };
-  const label = env.RELEASE_MAIL_ENV || null;
-  const facts: ReleaseMailFacts = { label, from: env.RELEASE_MAIL_FROM || null, runtime: "worker" };
+function judgeReleaseMail(m: MailSettings, runtime: "worker" | "asked"): CheckOutcome<ReleaseMailFacts> {
+  const { label } = m;
+  const facts: ReleaseMailFacts = { label, from: m.from, runtime };
   if (!label) return { state: "off", facts };
   if (label !== "UAT" && label !== "Production") {
     return { state: "fail", error: `RELEASE_MAIL_ENV is "${label}"; the relay only sends as UAT or Production.`, facts };
   }
-  if (!env.RELEASE_MAIL) {
+  if (!m.hasBinding) {
     return { state: "fail", error: "RELEASE_MAIL_ENV is set but the RELEASE_MAIL send_email binding is missing (wrangler.jsonc).", facts };
   }
-  if (!facts.from) {
+  if (!m.from) {
     return { state: "fail", error: "RELEASE_MAIL_FROM is not set, so the relay has no From address.", facts };
   }
   return { state: "ok", facts };
+}
+
+/**
+ * On production the Pi draws this page and has none of the Worker's settings,
+ * so it asks the Worker (GET /api/releases/mail-status, answered before the
+ * Pi in worker/index.mjs). Without the question the tile could never answer
+ * where it matters.
+ */
+async function askWorkerAboutMail(url: string): Promise<CheckOutcome<ReleaseMailFacts>> {
+  const unreachable = (error: string): CheckOutcome<ReleaseMailFacts> => ({
+    state: "warn",
+    error,
+    facts: { label: null, from: null, runtime: "unreachable" },
+  });
+  try {
+    const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(4_000) });
+    if (!res.ok) return unreachable(`The Worker answered ${res.status} at ${url}.`);
+    const body = (await res.json()) as { environment?: unknown; from?: unknown; hasBinding?: unknown };
+    const judged = judgeReleaseMail(
+      {
+        label: typeof body.environment === "string" && body.environment ? body.environment : null,
+        from: typeof body.from === "string" && body.from ? body.from : null,
+        hasBinding: body.hasBinding === true,
+      },
+      "asked",
+    );
+    // Off on a live site is a fault to see, not the grey "by design" of the dev database.
+    return judged.state === "off" ? { ...judged, state: "warn" } : judged;
+  } catch (err) {
+    return unreachable(`Could not ask the Worker at ${url}: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
+export async function checkReleaseMail(): Promise<CheckOutcome<ReleaseMailFacts>> {
+  const env = workerEnv();
+  if (env) {
+    return judgeReleaseMail(
+      { label: env.RELEASE_MAIL_ENV || null, from: env.RELEASE_MAIL_FROM || null, hasBinding: !!env.RELEASE_MAIL },
+      "worker",
+    );
+  }
+  const url = appUrl("/api/releases/mail-status");
+  if (!url) return { state: "off", facts: { label: null, from: null, runtime: "elsewhere" } };
+  return askWorkerAboutMail(url);
 }
 
 /** The Pi backs up daily at 03:00: a dump over 2 days old means a night was missed (amber); over 3 days, red. */

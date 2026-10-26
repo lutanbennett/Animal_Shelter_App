@@ -1481,7 +1481,9 @@ const en = {
           ok: (v: { from: string | number; label: string | number }) =>
             `On: major releases are mailed to admins as ${v.label}, from ${v.from}.`,
           offHere: "Off by design: this site runs on the dev database, which never sends release mail.",
-          offElsewhere: "Only the Worker sends release mail, and this page wasn't rendered by it.",
+          offElsewhere: "This local dev server can't tell: release mail is sent by the live site, and this page isn't connected to it.",
+          offLive: "Release mail is switched off on this site, so no admin will be mailed about new releases.",
+          unreachable: "Couldn't check whether release mail is on, so this can't say whether admins will be mailed. Try again in a minute.",
           fail: "Release mail is misconfigured.",
         },
         backup: {
@@ -2508,6 +2510,13 @@ const en = {
         remove: "Remove",
         removeConfirm: "Remove this photo from the gallery?",
         photoAdded: "Photo added.",
+        chosen: (name: string) => `Chosen: ${name}`,
+        altHelp: "Describe the photo for visitors who cannot see it. It is required, because the public page reads it aloud.",
+        alt: "Photo description (English)",
+        altTh: "Photo description (Thai, optional)",
+        altRequired: "Describe the photo first: a few words for visitors who cannot see it.",
+        chooseFile: "Choose photo",
+        cancel: "Cancel",
       },
       featured: {
         heading: "Pet of the week",

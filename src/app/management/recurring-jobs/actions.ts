@@ -16,7 +16,7 @@ import {
 import { canDoJob, needsForLinks, type Eligibility } from "@/lib/recurring-jobs/eligibility";
 import { withHeldRoles } from "@/lib/auth/held-roles";
 import { loadEligibility } from "@/lib/recurring-jobs/eligibility-load";
-import { appUserLabel, type AppUser } from "@/lib/auth/app-users";
+import { appUserName, type AppUser } from "@/lib/auth/app-users";
 import {
   MAX_SPAN_DAYS,
   loadOpenOccurrences,
@@ -219,7 +219,7 @@ async function whoCannotDo(
   return {
     names: people
       .filter((user) => !canDoJob(user.role_keys ?? user.role_key, linkPath, eligibility))
-      .map((user) => appUserLabel(user)),
+      .map((user) => appUserName(user)),
     error: null,
   };
 }

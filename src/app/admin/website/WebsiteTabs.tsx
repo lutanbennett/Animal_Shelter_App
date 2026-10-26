@@ -6,21 +6,21 @@ import { SITE_PAGE_SLUGS } from "@/lib/site/pages";
 export const WEBSITE_TABS = ["home", "contact", "pages", "donate", "gallery", "projects"] as const;
 export type WebsiteTab = (typeof WEBSITE_TABS)[number];
 
-function isTab(value: string | null): value is WebsiteTab {
-  return (WEBSITE_TABS as readonly string[]).includes(value ?? "");
+function isTab(value: string | null, shown: readonly WebsiteTab[]): value is WebsiteTab {
+  return (shown as readonly string[]).includes(value ?? "");
 }
 
 /**
  * Which tab the current address asks for: ?tab=…, else a #<page-slug> (or
  * #page-<slug>) means the Pages tab, else the first tab.
  */
-function tabFromLocation(): WebsiteTab {
+function tabFromLocation(shown: readonly WebsiteTab[]): WebsiteTab {
   const params = new URLSearchParams(window.location.search);
   const tab = params.get("tab");
-  if (isTab(tab)) return tab;
+  if (isTab(tab, shown)) return tab;
   const hash = decodeURIComponent(window.location.hash.slice(1)).replace(/^page-/, "");
-  if ((SITE_PAGE_SLUGS as readonly string[]).includes(hash)) return "pages";
-  return "home";
+  if ((SITE_PAGE_SLUGS as readonly string[]).includes(hash) && shown.includes("pages")) return "pages";
+  return shown[0];
 }
 
 /**
@@ -34,17 +34,20 @@ export function WebsiteTabs({
   panels,
   ariaLabel,
   initial,
+  tabs: shown = WEBSITE_TABS,
 }: {
+  /** The tabs this login may use (the others are not drawn); every tab by default. */
+  tabs?: readonly WebsiteTab[];
   /** ?tab= as the server saw it, so the right panel is in the first paint. */
   initial?: string;
   labels: Record<WebsiteTab, string>;
   panels: Record<WebsiteTab, ReactNode>;
   ariaLabel: string;
 }) {
-  const [active, setActive] = useState<WebsiteTab>(isTab(initial ?? null) ? (initial as WebsiteTab) : "home");
+  const [active, setActive] = useState<WebsiteTab>(isTab(initial ?? null, shown) ? (initial as WebsiteTab) : shown[0]);
 
   useEffect(() => {
-    const sync = () => setActive(tabFromLocation());
+    const sync = () => setActive(tabFromLocation(shown));
     sync();
     window.addEventListener("popstate", sync);
     window.addEventListener("hashchange", sync);
@@ -52,7 +55,7 @@ export function WebsiteTabs({
       window.removeEventListener("popstate", sync);
       window.removeEventListener("hashchange", sync);
     };
-  }, []);
+  }, [shown]);
 
   const choose = useCallback((tab: WebsiteTab) => {
     setActive(tab);
@@ -69,17 +72,17 @@ export function WebsiteTabs({
         aria-label={ariaLabel}
         className="flex gap-1 overflow-x-auto border-b border-border"
         onKeyDown={(e) => {
-          const i = WEBSITE_TABS.indexOf(active);
+          const i = shown.indexOf(active);
           const next =
             e.key === "ArrowRight" ? i + 1 : e.key === "ArrowLeft" ? i - 1 : null;
           if (next === null) return;
           e.preventDefault();
-          const tab = WEBSITE_TABS[(next + WEBSITE_TABS.length) % WEBSITE_TABS.length];
+          const tab = shown[(next + shown.length) % shown.length];
           choose(tab);
           document.getElementById(`website-tab-${tab}`)?.focus();
         }}
       >
-        {WEBSITE_TABS.map((tab) => (
+        {shown.map((tab) => (
           <button
             key={tab}
             id={`website-tab-${tab}`}
@@ -99,7 +102,7 @@ export function WebsiteTabs({
           </button>
         ))}
       </div>
-      {WEBSITE_TABS.map((tab) => (
+      {shown.map((tab) => (
         <div
           key={tab}
           id={`website-panel-${tab}`}

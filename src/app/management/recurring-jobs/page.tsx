@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { addDaysIso, todayIso } from "@/lib/format";
-import { appUserLabel, loadAppUsersById, type AppUser } from "@/lib/auth/app-users";
+import { appUserName, loadAppUsersById, type AppUser } from "@/lib/auth/app-users";
 import { isTestLogin } from "@/lib/auth/test-login";
 import {
   loadJobDates,
@@ -79,7 +79,7 @@ export default async function RecurringJobsPage() {
   );
   const person = (id: string) => ({
     id,
-    name: appUserLabel(users.get(id)),
+    name: appUserName(users.get(id)),
     archived: !!users.get(id)?.archived_at || !users.get(id),
     role: users.get(id)?.role_key ?? null,
     roles: users.get(id)?.role_keys ?? [],
@@ -161,7 +161,7 @@ export default async function RecurringJobsPage() {
   }));
 
   const people: PersonOption[] = people0
-    .map((user) => ({ id: user.id, name: appUserLabel(user), role: user.role_key, roles: user.role_keys ?? [user.role_key] }))
+    .map((user) => ({ id: user.id, name: appUserName(user), role: user.role_key, roles: user.role_keys ?? [user.role_key] }))
     .sort((a, b) => a.name.localeCompare(b.name));
   // Anyone on a job's usual team, archived or not, can be handed over *from*.
   const onJobs = new Map<string, TeamMember>();

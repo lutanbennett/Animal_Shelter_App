@@ -111,7 +111,7 @@ animal — and do not re-derive this list by grepping for quoted strings; read t
 ## 7. Documentation
 
 - [ ] Backlog item ticked in `docs/backlog.md` **on this branch** (follow-ups go on the `backlog` branch instead) — n/a: not ticked: the item also covers the My tasks residents menu entry, which card-app-11-21 owns
-- [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`) — docs/decisions/2026-10-26-card-review-2-app-half.md
+- [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`) — docs/decisions/2026-10-26-card-review-2-app-half-22-29.md
 - [x] `README.md` still accurate — README does not describe any of this
 - [x] **Release notes.** Would a shelter user notice this change? If so, `unreleased` in `src/lib/releases.ts` has a… — one line added to unreleased, tagged by card
 - [x] Commit messages say why, not just what — commit messages give the why

@@ -1,6 +1,6 @@
 -- consumer: src/lib/permissions/cards.ts, src/lib/placements/available.ts, src/app/photos/approve/actions.ts, src/app/photos/approve/pending-actions.ts, src/app/api/photos/shelter/[id]/route.ts, src/app/management/appeals/[id]/page.tsx
 --
--- CARD REVIEW 2, THE APP HALF'S SCHEMA (Lutan, 2026-10-26; docs/decisions/2026-10-26-card-review-2-app-half.md). Four changes in one file:
+-- CARD REVIEW 2, THE APP HALF'S SCHEMA (Lutan, 2026-10-26; docs/decisions/2026-10-26-card-review-2-app-half-22-29.md). Four changes in one file:
 --   1. Add Shelter Photos SAVES. record_attachment() asked photos.resident_add for a resident photo, which this card does not hold (it holds
 --      photos.shelter_add), so every upload answered "Not authorized to add attachments" (500). A resident photo is now admitted by either
 --      activity; the rule below it, unchanged, still confines photos.shelter_add to the Shelter folder, never an adopter's photo, and 0217's
