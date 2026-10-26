@@ -285,8 +285,6 @@ export type CalendarStatus =
   | { state: "fail"; error: string; visits: PendingVisit[]; lastSweepAt: string | null }
   | { state: "ok"; visits: PendingVisit[]; lastSweepAt: string | null };
 
-/** The 15-minute sweep is quiet if its poll has not written calendar_sync_state for this long (one missed run is normal). */
-export const SWEEP_QUIET_AFTER_MS = 45 * 60_000;
 
 /** For the System status tile: does the token work, can the calendar be reached, which visits are waiting or failing. */
 export async function checkCalendar(): Promise<CalendarStatus> {

@@ -5,7 +5,8 @@ import Link from "next/link";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import { getWaitingAccessRequests } from "@/lib/status/access-requests";
-import { checkCalendar, SWEEP_QUIET_AFTER_MS, type PendingVisit } from "@/lib/clinics/calendar-sync";
+import { checkCalendar, type PendingVisit } from "@/lib/clinics/calendar-sync";
+import { isSweepQuiet } from "@/lib/clinics/calendar-quiet";
 import { getDriveClient } from "@/lib/google/drive";
 import { loadCalendarChanges } from "@/lib/status/calendar-changes";
 import { checkAlerts } from "@/lib/status/alerts";
@@ -172,7 +173,7 @@ async function CalendarTile({ t, locale }: { t: T; locale: Locale }) {
     const none = { visits: [] as PendingVisit[], lastSweepAt: null as string | null, quiet: false };
     if (c.state === "off") return { state: "off" as const, facts: none };
     // No sweep for a while means nothing is being retried, whatever the visits say.
-    const quiet = !c.lastSweepAt || Date.now() - Date.parse(c.lastSweepAt) > SWEEP_QUIET_AFTER_MS;
+    const quiet = isSweepQuiet(c.lastSweepAt);
     if (c.state === "fail") return { state: "fail" as const, error: c.error, facts: { visits: c.visits, lastSweepAt: c.lastSweepAt, quiet } };
     // A visit carrying an error is failing, not waiting: say so, and show the error under it.
     const failing = c.visits.filter((v) => v.error).length;
