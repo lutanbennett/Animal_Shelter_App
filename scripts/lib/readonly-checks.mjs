@@ -180,24 +180,24 @@ export const CHECKS = {
             select 'function ' || n.nspname || '.' || p.proname as who
               from pg_proc p join pg_namespace n on n.oid = p.pronamespace
              where n.nspname in ('public', 'private') and p.prokind = 'f' and p.proname <> f.fn
-               and regexp_replace(pg_get_functiondef(p.oid), '--[^\n]*', '', 'g') ~ ('\m' || f.fn || '\M')
+               and regexp_replace(pg_get_functiondef(p.oid), '--[^\n]*', '', 'g') ~ ('\\m' || f.fn || '\\M')
             union all
             select 'policy ' || pl.schemaname || '.' || pl.tablename || ' :: ' || pl.policyname
               from pg_policies pl
-             where regexp_replace(coalesce(pl.qual, '') || ' ' || coalesce(pl.with_check, ''), '--[^\n]*', '', 'g') ~ ('\m' || f.fn || '\M')
+             where regexp_replace(coalesce(pl.qual, '') || ' ' || coalesce(pl.with_check, ''), '--[^\n]*', '', 'g') ~ ('\\m' || f.fn || '\\M')
             union all
             select 'view ' || c.relnamespace::regnamespace || '.' || c.relname
               from pg_class c
              where c.relkind in ('v', 'm') and c.relnamespace::regnamespace::text in ('public', 'private')
-               and pg_get_viewdef(c.oid) ~ ('\m' || f.fn || '\M')
+               and pg_get_viewdef(c.oid) ~ ('\\m' || f.fn || '\\M')
             union all
             select 'constraint ' || c.conrelid::regclass || ' :: ' || c.conname
               from pg_constraint c
-             where c.contype = 'c' and pg_get_constraintdef(c.oid) ~ ('\m' || f.fn || '\M')
+             where c.contype = 'c' and pg_get_constraintdef(c.oid) ~ ('\\m' || f.fn || '\\M')
             union all
             select 'column default ' || d.adrelid::regclass || '.' || d.adnum
               from pg_attrdef d
-             where pg_get_expr(d.adbin, d.adrelid) ~ ('\m' || f.fn || '\M')
+             where pg_get_expr(d.adbin, d.adrelid) ~ ('\\m' || f.fn || '\\M')
           ) x)) order by f.fn), '[]'::json)
       from (values ('current_clinic_resident_ids'), ('clinic_login_owns_visit'), ('doctor_can_write_attachment'), ('clinic_login_may_edit_doctor')) as f(fn)`,
     render: (rows) => rows.flatMap((x) => !x.exists ? [`${x.function}: does not exist`]
