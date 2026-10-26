@@ -97,7 +97,6 @@ const cases = (table, rename, insertCols) => `
 
 const sql = `
 begin;
--- a second run of the whole file must be harmless
 
 do $h$
 declare
@@ -119,9 +118,9 @@ begin
   if v_n <> 4 then raise exception 'FAIL shape: % of 4 triggers present', v_n; end if;
 
 ${cases("medication", "cost_per_unit = coalesce(cost_per_unit, 0) + 1", "name, dose_unit")}
-${cases("diet_types", "cost_per_unit = cost_per_unit + 1", "name, unit, daily_qty_small, daily_qty_medium, daily_qty_large")}
+${cases("diet_types", "cost_per_unit = cost_per_unit + 1", "name, unit")}
 
-  raise exception 'HARNESS-OK shape: 6 nullable columns, 4 triggers%  | per table: count stamps now() over a hand-set time, unrelated edit and hand-set keep the stamp, clearing clears it, same-count re-save restamps, 0 accepted, -1 stock and 0 lead days refused, insert with count stamped / without null | file ran twice', v_report;
+  raise exception 'HARNESS-OK shape: 6 nullable columns, 4 triggers%  | per table: count stamps now() over a hand-set time, unrelated edit and hand-set keep the stamp, clearing clears it, same-count re-save restamps, 0 accepted, -1 stock and 0 lead days refused, insert with count stamped / without null', v_report;
 end;
 $h$;
 rollback;
