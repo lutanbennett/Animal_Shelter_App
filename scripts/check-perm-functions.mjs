@@ -41,7 +41,7 @@ const EXPECTED = new Set([
   "doctor record_recurring_job: Only the people this job is assigned to, or management, can record it. -> Not authorized to record a recurring job.",
   // record_attachment: a role with maintenance.photos may file a maintenance photo here, which
   // attachments_insert_perm already lets it insert directly. (A doctor passed the old gate for maintenance and
-  // project files too, but doctor_can_write_attachment() refused them further down, so nothing moves for one.)
+  // project files too, but the old doctor_can_write_attachment() (dropped by 0266) refused them further down, so nothing moves for one.)
   "head_of_maintenance record_attachment maintenance: Not authorized to add attachments. -> ok",
   "second_in_command record_attachment maintenance: Not authorized to add attachments. -> ok",
 ]);

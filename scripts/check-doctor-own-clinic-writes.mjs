@@ -120,7 +120,7 @@ end $setup$;
 create temp table harness_before (applied_already boolean, doctor_rewrote_other bigint);
 grant all on harness_before to authenticated;
 insert into harness_before
-select exists (select 1 from pg_proc where proname in ('vet_owns_visit', 'clinic_login_owns_visit')),
+select true, -- the file is long applied; 0266 dropped clinic_login_owns_visit(), so the function can no longer be the marker
        pg_temp.try(pg_temp.hid('doctor'), format('update clinic_visits set notes = ''x'' where id = %L', pg_temp.hid('oth_visit')));
 
 
