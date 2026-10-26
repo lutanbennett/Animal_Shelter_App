@@ -9,7 +9,7 @@
 //   1. is_admin() agrees with the enum for every login in user_roles.
 //   2. Admin reads every row of the nine Admin-only tables and the group-1 tables: the same count the owner sees.
 //   3. Admin's DELETE on the eight tables that had no delete policy but Admin's, and on group_origins and
-//      rounds, is not refused by a policy: it deletes a row, or the row's own foreign key stops it (23503).
+//      rounds, is not refused by a policy: it deletes a row, or the row's own foreign key (23503) or the deceased-resident lock (23001) stops it.
 //   4. Staff, management and volunteer see none of the Admin-only tables, and delete and update nothing.
 //   5. The permission matrix keeps its gate: an admin at aal1 writes no row of role_permissions, roles or
 //      user_roles; at aal2 writes one; a non-admin at aal2 writes none.
@@ -27,7 +27,7 @@ const sql = `
 do $$
 declare
   admin_id uuid; vol_id uuid; mgmt_id uuid;  -- no staff: 0173 retired it, so dev has no live staff login
-  fails text := ''; checks int := 0;
+  fails text := ''; checks int := 0; mgmt_site boolean;
   n int; total int; t text; u record; who text; uid uuid;
   admin_only text[] := array['audit_log','permission_activities','roles','role_permissions','user_roles','assistant_actions'];
   deletes text[] := array['blood_tests','immunization_records','placement_history','prescriptions','procedures','resident_diets','residents','weight','group_origins','rounds'];
@@ -35,6 +35,8 @@ begin
   select ur.user_id into admin_id from user_roles ur join roles r on r.id = ur.role_id where r.key = 'admin' and ur.archived_at is null limit 1;
   select ur.user_id into vol_id from user_roles ur join roles r on r.id = ur.role_id where r.key = 'volunteer' and ur.archived_at is null limit 1;
   select ur.user_id into mgmt_id from user_roles ur join roles r on r.id = ur.role_id where r.key = 'management' and ur.archived_at is null limit 1;
+  -- Management's website.content is a live card cell (Settings > Who does what), so the expectation follows the cell
+  select exists (select 1 from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'management' and rp.activity = 'website.content' and rp.level >= 2) into mgmt_site;
   if admin_id is null or vol_id is null or mgmt_id is null then
     raise exception 'FAIL fixture: dev has no live login for each of admin, volunteer, management';
   end if;
@@ -73,8 +75,9 @@ begin
         checks := checks + 1;
         if who = 'admin' and n <> 1 then fails := fails || format('admin deleted %s rows of %s', n, t) || E'\\n'; end if;
         if who <> 'admin' and n <> 0 then fails := fails || format('%s deleted %s rows of %s', who, n, t) || E'\\n'; end if;
-      exception when foreign_key_violation then
-        -- the policy let the delete through and the row's own foreign key stopped it
+      exception when foreign_key_violation or restrict_violation then
+        -- the policy let the delete through and something past it stopped it: the row's own foreign key (23503), or the deceased
+        -- lock (23001, enforce_deceased_lock) when the first row belongs to a dead resident. Neither is a policy refusal.
         checks := checks + 1;
         if who <> 'admin' then fails := fails || format('%s reached a foreign key deleting from %s', who, t) || E'\\n'; end if;
       end;
@@ -85,8 +88,8 @@ begin
     foreach t in array array['site_content','site_pages'] loop
       execute format('with d as (update %I set updated_at = now() where ctid in (select ctid from %I limit 1) returning 1) select count(*) from d', t, t) into n;
       checks := checks + 1;
-      if who in ('admin', 'management') and n <> 1 then fails := fails || format('%s updated %s rows of %s', who, n, t) || E'\\n'; end if;
-      if who not in ('admin', 'management') and n <> 0 then fails := fails || format('%s updated %s rows of %s', who, n, t) || E'\\n'; end if;
+      if (who = 'admin' or (who = 'management' and mgmt_site)) and n <> 1 then fails := fails || format('%s updated %s rows of %s', who, n, t) || E'\\n'; end if;
+      if not (who = 'admin' or (who = 'management' and mgmt_site)) and n <> 0 then fails := fails || format('%s updated %s rows of %s', who, n, t) || E'\\n'; end if;
     end loop;
 
     -- 6: the volunteer's reads

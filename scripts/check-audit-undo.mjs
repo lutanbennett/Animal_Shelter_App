@@ -78,9 +78,13 @@ begin
   insert into user_roles (user_id, role_id)
   select v.c0, ro.id from (values (v_admin, 'admin'), (v_mgmt, 'management')) as v(c0, role_key)
   join roles ro on ro.key = v.role_key;
+  -- 0248: record_intake asks has_permission('resident.register'). Admin answers true without holding a card, and unlike Management
+  -- its answer does not move when a card is edited on Settings > Who does what. Then drop the claims.
+  perform set_config('request.jwt.claims', json_build_object('sub', v_admin, 'role', 'authenticated', 'aal', 'aal1')::text, true);
   select id into v_res from record_intake(
     p_name => 'Harness audit undo', p_intake_date => date '2026-08-01', p_weight_kg => 10,
     p_diet_id => (select id from diets order by is_standard desc nulls last limit 1));
+  perform set_config('request.jwt.claims', '', true);
   insert into harness values ('admin', v_admin), ('mgmt', v_mgmt), ('res', v_res);
 end $setup$;
 
@@ -158,7 +162,9 @@ begin
   delete from clinic_visits where id = v_visit;
   v_r := pg_temp.reinsert(v_admin, 'clinic_visits', pg_temp.last_audit('clinic_visits', v_visit, 'DELETE'));
   if v_r <> 'ok' then raise exception 'HARNESS-FAIL B: visit not put back: %', v_r; end if;
-  if to_jsonb((select x from clinic_visits x where id = v_visit)) is distinct from v_before then raise exception 'HARNESS-FAIL B: visit differs'; end if;
+  -- calendar_out_of_date_at is stamped with now() by the trigger whenever a visit is (re)inserted: the restored visit is rightly marked
+  -- as needing a calendar resync, so it is the one column that may differ.
+  if (to_jsonb((select x from clinic_visits x where id = v_visit)) - 'calendar_out_of_date_at') is distinct from (v_before - 'calendar_out_of_date_at') then raise exception 'HARNESS-FAIL B: visit differs in %', (select string_agg(k || ': ' || coalesce(v_before ->> k, 'null') || ' -> ' || coalesce((to_jsonb(x) ->> k), 'null'), '; ') from clinic_visits x, jsonb_object_keys(v_before) k where x.id = v_visit and k <> 'calendar_out_of_date_at' and v_before -> k is distinct from to_jsonb(x) -> k); end if;
   v_report := v_report || 'B: weight, vaccination, prescription, contact and visit go back identical, logged as INSERT by the admin | ';
 
   -- C: the slot taken, then freed.

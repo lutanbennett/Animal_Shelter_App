@@ -4,16 +4,20 @@
 //   node scripts/worktree.mjs dev                          (in another terminal)
 //   node scripts/check-place-order-roles.mjs [http://localhost:<port>]
 //
-// Makes a throwaway staff login and a throwaway doctor login, then checks what the browser pass could not:
+// Makes a throwaway login on a throwaway custom role that holds facility.enclosures at Read and nothing else
+// (it was a Staff login until 0173 retired that role; Staff is not to be recreated, so the reader is a cell,
+// not a role name), then checks what the browser pass could not:
 //
-//   - staff cannot open Settings → Zones or Settings → Enclosures, and the database refuses them an
+//   - the reader cannot open Settings → Zones or Settings → Enclosures, and the database refuses them an
 //     order write (the server, not just a hidden button);
-//   - staff see /enclosures's zones in the order the tables hold, not A-Z;
-//   - the doctor, who cannot read the zones and enclosures tables, still gets /enclosures and /residents
-//     (name order, no error);
+//   - the reader sees /enclosures's zones in the order the tables hold, not A-Z;
 //   - the Lifecycle pseudo-enclosures refuse an order even to the service role (0161's trigger).
 //
-// Both logins are deleted at the end, whatever happened. Exits 0 when every expectation held.
+// The doctor part is gone: it asked whether a login that cannot read the zones and enclosures tables still
+// gets /enclosures and /residents, but the doctor's cells are live (Settings → Who does what), so what that
+// login may open is a card question, not this check's. Nothing narrows a cell by role since 0259/0264.
+//
+// The login, its role and its cell are deleted at the end, whatever happened. Exits 0 when every expectation held.
 import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -66,12 +70,21 @@ async function page(path, cookie) {
 const redirected = (r) =>
   (r.status >= 300 && r.status < 400) || /NEXT_REDIRECT|NEXT_HTTP_ERROR_FALLBACK;40[34]/.test(r.html);
 
-async function makeLogin(role) {
-  const email = `harness-place-order-${role}-${tag}@example.invalid`;
+const roleKey = `harness_place_order_${tag}`;
+let roleId = null;
+
+/** A login on a throwaway custom role that holds one cell: facility.enclosures at Read. */
+async function makeReader() {
+  const email = `harness-place-order-reader-${tag}@example.invalid`;
+  const { data: role, error: roleInsErr } = await service.from("roles").insert({ key: roleKey, name: `Harness place order ${tag}`, kind: "custom" }).select("id").single();
+  if (roleInsErr) throw roleInsErr;
+  roleId = role.id;
+  const { error: cellErr } = await service.from("role_permissions").insert({ role_id: roleId, activity: "facility.enclosures", level: 1 });
+  if (cellErr) throw cellErr;
   const { data, error } = await service.auth.admin.createUser({ email, password, email_confirm: true });
   if (error) throw error;
   made.push(data.user.id);
-  const { error: roleErr } = await giveRole(service, data.user.id, role);
+  const { error: roleErr } = await giveRole(service, data.user.id, roleKey);
   if (roleErr) throw roleErr;
   return signIn(email);
 }
@@ -79,18 +92,20 @@ async function makeLogin(role) {
 const made = [];
 try {
   // The order the tables hold, read as the service role: physical zones by sort_order.
-  const { data: zones, error: zErr } = await service.from("zones").select("id, name, sort_order");
+  // Off-site zones are not drawn as zones: /enclosures folds them into the one Offsite chip and lists them after the rest (2026-10-08),
+  // so the order is asserted over the internal ones.
+  const { data: zones, error: zErr } = await service.from("zones").select("id, name, sort_order, internal");
   if (zErr) throw zErr;
   const ordered = zones
-    .filter((z) => z.sort_order != null)
+    .filter((z) => z.sort_order != null && z.internal)
     .sort((a, b) => a.sort_order - b.sort_order)
     .map((z) => z.name);
 
-  const staff = await makeLogin("staff");
+  const reader = await makeReader();
 
   for (const path of ["/admin/zones", "/admin/enclosures"]) {
-    const r = await page(path, staff.cookie);
-    expect(redirected(r) && !r.html.includes("Sort A-Z"), `staff are turned away from ${path} (${r.status})`);
+    const r = await page(path, reader.cookie);
+    expect(redirected(r) && !r.html.includes("Sort A-Z"), `the Read-only reader is turned away from ${path} (${r.status})`);
   }
 
   const { data: oneEnclosure } = await service
@@ -100,17 +115,17 @@ try {
     .not("sort_order", "is", null)
     .limit(1)
     .single();
-  const { data: wrote, error: writeErr } = await staff.client
+  const { data: wrote, error: writeErr } = await reader.client
     .from("enclosures")
     .update({ sort_order: oneEnclosure.sort_order + 1000 })
     .eq("id", oneEnclosure.id)
     .select("id");
-  expect(Boolean(writeErr) || (wrote ?? []).length === 0, `the database refuses staff an enclosure order write (${writeErr?.message ?? "0 rows"})`);
+  expect(Boolean(writeErr) || (wrote ?? []).length === 0, `the database refuses the reader an enclosure order write (${writeErr?.message ?? "0 rows"})`);
   const { data: after } = await service.from("enclosures").select("sort_order").eq("id", oneEnclosure.id).single();
   expect(after.sort_order === oneEnclosure.sort_order, "the enclosure's order is unchanged");
 
-  const enclosuresPage = await page("/enclosures", staff.cookie);
-  expect(enclosuresPage.status === 200, `staff open /enclosures (${enclosuresPage.status})`);
+  const enclosuresPage = await page("/enclosures", reader.cookie);
+  expect(enclosuresPage.status === 200, `the reader opens /enclosures (${enclosuresPage.status})`);
   // Each zone heading's first appearance in the page, in page order.
   const positions = ordered
     .map((name) => ({ name, at: enclosuresPage.html.indexOf(`>${name}<`) }))
@@ -118,16 +133,8 @@ try {
   const inPage = [...positions].sort((a, b) => a.at - b.at).map((z) => z.name);
   expect(
     positions.length > 1 && inPage.join("|") === positions.map((z) => z.name).join("|"),
-    `staff see the zones in the tables' order (${inPage.slice(0, 5).join(", ")}, …)`,
+    `the reader sees the zones in the tables' order (page: ${inPage.join(", ")} / tables: ${ordered.join(", ")})`,
   );
-
-  const doctor = await makeLogin("doctor");
-  const { data: doctorZones } = await doctor.client.from("zones").select("id");
-  console.log(`  (the doctor reads ${doctorZones?.length ?? 0} zones from the table)`);
-  for (const path of ["/enclosures", "/residents"]) {
-    const r = await page(path, doctor.cookie);
-    expect(r.status === 200 && !/Application error|Internal Server Error/.test(r.html), `the doctor opens ${path} without an error (${r.status})`);
-  }
 
   const { data: lifecycle } = await service
     .from("enclosures")
@@ -139,7 +146,12 @@ try {
   expect(/takes no order/.test(lcErr?.message ?? ""), `a Lifecycle pseudo-enclosure refuses an order (${lcErr?.message ?? "accepted!"})`);
 } finally {
   for (const id of made) await service.auth.admin.deleteUser(id);
-  console.log(`  deleted ${made.length} throwaway login(s)`);
+  if (roleId) {
+    await service.from("user_roles").delete().eq("role_id", roleId);
+    await service.from("role_permissions").delete().eq("role_id", roleId);
+    await service.from("roles").delete().eq("id", roleId);
+  }
+  console.log(`  deleted ${made.length} throwaway login(s) and the throwaway role`);
 }
 
 if (failures.length) {

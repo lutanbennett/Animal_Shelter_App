@@ -17,7 +17,7 @@
 //   C  an archived prescription leaves medication_forecast and the public
 //      in_treatment count
 //   D  an archived clinic visit leaves the cashflow forecast
-//   E  a doctor's resident scope drops an archived visit, and returns on restore
+//   E  (retired 2026-10-26: a doctor's resident scope followed visits through current_clinic_resident_ids(), which 0264 left dead)
 //   F  archiving is one UPDATE and writes exactly one audit_log row
 //   G  the consistency check: archived_by / archive_reason need archived_at
 //   H  every row that existed before the harness has no archived_at
@@ -73,9 +73,13 @@ declare
   v_doctor uuid := gen_random_uuid();
   v_clinic uuid := gen_random_uuid();
 begin
+  -- 0248: record_intake asks has_permission('resident.register'); run it as the Admin login, whose answer is true without a card and
+  -- does not move when a card is edited on Settings > Who does what. Then drop the claims.
+  perform set_config('request.jwt.claims', json_build_object('sub', (select ur.user_id from user_roles ur join roles r on r.id = ur.role_id where r.key = 'admin' and ur.archived_at is null limit 1), 'role', 'authenticated', 'aal', 'aal1')::text, true);
   select id into v_res from record_intake(
     p_name => 'Harness soft delete', p_intake_date => date '2026-08-01', p_weight_kg => 10,
     p_diet_id => (select id from diets order by is_standard desc nulls last limit 1));
+  perform set_config('request.jwt.claims', '', true);
   update residents set is_public_visible = true where id = v_res;
   insert into harness values ('res', v_res), ('doctor_user', v_doctor), ('clinic', v_clinic);
   insert into harness select 'intake_w', id from weight where resident_id = v_res;
@@ -253,28 +257,13 @@ begin
   values (v_visit2, v_res, v_clinic, v_future::timestamptz + interval '10 hours', 'Harness future visit', 'scheduled', 777);
   select coalesce(sum(amount), 0) into v_b from cashflow_forecast(date_trunc('month', v_future)::date, (date_trunc('month', v_future) + interval '1 month - 1 day')::date) where category = 'clinic';
   if v_b <> v_a + 777 then raise exception 'HARNESS-FAIL D: a live scheduled visit is not in the forecast (% -> %)', v_a, v_b; end if;
-  -- E (live half): the doctor sees the resident through that visit
-  if not (v_res = any (pg_temp.doctor_resident_ids(v_doctor))) then
-    raise exception 'HARNESS-FAIL E: the doctor cannot see a resident they have a live visit with';
-  end if;
+  -- (E, the doctor-scope halves, is gone: 0264 made current_user_clinic_ids() answer {} for everyone, so current_clinic_resident_ids()
+  -- is a dead cluster and no database path gives a clinic login sight of a resident through a visit. Nothing narrows a cell by role.)
   update clinic_visits set archived_at = now() where id = v_visit2;
   select coalesce(sum(amount), 0) into v_b from cashflow_forecast(date_trunc('month', v_future)::date, (date_trunc('month', v_future) + interval '1 month - 1 day')::date) where category = 'clinic';
   if v_b <> v_a then raise exception 'HARNESS-FAIL D: an archived visit still costs money (% -> %)', v_a, v_b; end if;
   v_report := v_report || 'D: archived visit leaves the cashflow forecast | ';
 
-  -- E: the other visit (v_visit, same clinic) is still live, so scope holds; archive it too.
-  if not (v_res = any (pg_temp.doctor_resident_ids(v_doctor))) then
-    raise exception 'HARNESS-FAIL E: scope was lost while one live visit remained';
-  end if;
-  update clinic_visits set archived_at = now() where id = v_visit;
-  if v_res = any (pg_temp.doctor_resident_ids(v_doctor)) then
-    raise exception 'HARNESS-FAIL E: archived visits still give the doctor sight of the resident';
-  end if;
-  update clinic_visits set archived_at = null where id = v_visit;
-  if not (v_res = any (pg_temp.doctor_resident_ids(v_doctor))) then
-    raise exception 'HARNESS-FAIL E: restoring the visit did not restore the doctor''s scope';
-  end if;
-  v_report := v_report || 'E: doctor scope drops archived visits and returns on restore | ';
 
   raise exception '%', format('HARNESS-OK %s asserted live | %s', ${pgQuote(file)}, v_report);
 end;

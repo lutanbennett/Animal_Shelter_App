@@ -9,14 +9,14 @@
 //   management             residents / placement_history: read, update, insert, no delete (C2 closed);
 //                          adoption_updates: all four (Edit includes delete, A8)
 //   admin                  everything (admin_all_* on residents/placement_history; has_permission() on adoption_updates)
-//   volunteer, no role     nothing (0134 took the volunteer's table read; it reads resident_who_and_where)
-//   vet (doctor, 0172)     reads the in-clinic resident's rows and NOT another clinic's; writes nothing
-//   custom, borrows the volunteer, Read or Edit cells   NOTHING: a role on the who-and-where floor is
-//                          never handed the whole record by a cell (this is what sees_all_residents() is for)
-//   custom, borrows management, Read cells     reads, writes nothing
+//   no role                nothing
+//   custom, Read or Edit cells   exactly what the cells say. Since 0259/0264 nothing narrows a cell: the volunteer floor,
+//                          the own-clinic scope and sees_all_residents() are gone, so a role that borrows the volunteer, or
+//                          carries an own_clinic scope, answers as any other role holding the same cells
+// The volunteer and the doctor are NOT probed: their cells are live (edited on Settings > Who does what), and a harness that
+// pinned them would go red whenever a card changes. The doctor's clinic reach is check-doctor-clinic-scope.
 //   custom, borrows management, Edit cells     reads, updates, inserts; adoption_updates deletes; no other deletes
 //   custom, borrows management, placement.move only   inserts a ChangeEnclosure row and no other placement type
-//   custom, borrows management, own_clinic scope      nothing: a scoped role is never handed the whole table
 // Staff, which answered exactly as management, left when 0173 retired the role; the custom roles that borrowed staff
 // borrow management now (no policy on these tables names either: the sweep below).
 // Then structural sweeps: no policy on these tables still names management or staff, and every
@@ -50,10 +50,10 @@ const T = [
 const EXPECT = {
   admin: { all: [1, 1, 1, 1] },
   management: { all: [1, 1, 1, 0], act: 1 },
-  volunteer: { all: [0, 0, 0, 0] }, norole: { all: [0, 0, 0, 0] },
-  c_vol_read: { all: [0, 0, 0, 0] }, c_vol_edit: { all: [0, 0, 0, 0] },
+  norole: { all: [0, 0, 0, 0] },
+  c_vol_read: { all: [1, 0, 0, 0] }, c_vol_edit: { all: [1, 1, 1, 0], act: 1 },
   c_st_read: { all: [1, 0, 0, 0] }, c_st_edit: { all: [1, 1, 1, 0], act: 1 }, c_st_move: { all: [1, 0, 0, 0] },
-  c_scoped: { all: [0, 0, 0, 0] },
+  c_scoped: { all: [1, 1, 1, 0], act: 1 },
 };
 const expected = (who, t) => {
   const e = EXPECT[who];
@@ -72,12 +72,6 @@ for (const t of T) {
     for (const [cmd, q] of [["read", t.read], ["update", t.upd], ["insert", t.ins], ["delete", t.del]]) {
       probes.push(`  perform pg_temp.probe('${who}', ${lit(ID[who])}, '${t.table}', '${cmd}', $q$${q}$q$);`);
     }
-  }
-  probes.push(`  perform pg_temp.probe('vet', ${lit(ID.vet)}, '${t.table}', 'read', $q$${t.read}$q$);`);
-  probes.push(`  perform pg_temp.probe('vet', ${lit(ID.vet)}, '${t.table}', 'read_other_clinic', $q$${t.read.replaceAll(R, R_OUT)}$q$);`);
-  for (const cmd of ["update", "insert", "delete"]) {
-    const q = { update: t.upd, insert: t.ins, delete: t.del }[cmd];
-    probes.push(`  perform pg_temp.probe('vet', ${lit(ID.vet)}, '${t.table}', 'vet_${cmd}', $q$${q}$q$);`);
   }
 }
 // placement_history insert by type: the activity of the row's type, nothing else
@@ -216,15 +210,6 @@ for (const t of T) {
       else fail(`${label} — got ${n}`);
     });
   }
-  const own = get("vet", t.table, "read"), other = get("vet", t.table, "read_other_clinic");
-  if (own >= 1) pass(`${t.table} read as vet, own clinic's resident`); else fail(`${t.table}: a vet lost the own-clinic resident (${own})`);
-  if (other === 0) pass(`${t.table} read as vet, other clinic's resident: refused`); else fail(`${t.table}: a vet reads another clinic's resident (${other})`);
-  for (const cmd of ["update", "insert", "delete"]) {
-    const n = get("vet", t.table, `vet_${cmd}`);
-    if (n === -2) fail(`${t.table} ${cmd} as vet: the statement itself errored (-2)`);
-    else if (n >= 1) fail(`${t.table} ${cmd} as vet: allowed (${n}), a vet writes none of these`);
-    else pass(`${t.table} ${cmd} as vet: refused`);
-  }
 }
 // placement_history insert by type
 const ALLOWED_TYPES = {
@@ -247,5 +232,5 @@ if (sweep("names_mgmt_or_staff") === 0) pass("no policy on these tables names ma
 if (sweep("bare_has_permission") === 0) pass("every new policy wraps has_permission() in (select ...)"); else fail(`${sweep("bare_has_permission")} policy(ies) call has_permission() bare`);
 if (sweep("perm_policies") === 10) pass("10 new policies (3 + 3 + 4)"); else fail(`expected 10 *_perm policies, found ${sweep("perm_policies")}`);
 console.log(`\n${ok} checks held, ${fails} failed.`);
-console.log(fails ? "RESULT: RED" : "RESULT: GREEN (the three resident tables answer as the cells say; the volunteer floor and scoped roles see nothing; vets unchanged)");
+console.log(fails ? "RESULT: RED" : "RESULT: GREEN (the three resident tables answer as the cells say; no role narrows a cell any more)");
 process.exitCode = fails ? 1 : 0;
