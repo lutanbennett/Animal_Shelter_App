@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → n/a: a release cut is a step in `docs/release-procedure.md`, not a backlog item |
 | Branch / worktree | `claude/cut-release-0-40-5` @ `C:\Development\Animal_Shelter_cut-release-0-40-5` (a fresh worktree; `/clean-streams` left no leftovers to reuse, so this cut paid the four-minute `npm ci` that `0.40.4`'s handover said to expect from now on) |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3002` |
-| PR | #961 |
+| PR | #962 |
 | Tested by / date | Claude Opus 5 (production release manager session) / 2026-10-26 |
 | Carries a migration? | **no** — this PR is `src/lib/releases.ts` and `package.json` only. The release it cuts carries one, `0265_card_review_1_reads.sql`, which belongs to #960's plan and is not signed here |
 | Tested at SHA | `9db37279`, whose parent is `42c3704c` (`origin/main` at the cut) |
