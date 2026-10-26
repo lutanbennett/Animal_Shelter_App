@@ -138,6 +138,10 @@ notify pgrst, 'reload schema';
 -- ---------------------------------------------------------------------------
 -- 5. The record: what every role gained and lost
 -- ---------------------------------------------------------------------------
+-- This table is only a statement boundary: scripts/check-hard-coded-security.mjs reads everything after a function up to the next
+-- CREATE as that function's body, and the report below joins roles (to print role keys), which is not a role read by record_attachment().
+create temp table report_0269_marker (n int) on commit drop;
+
 do $report$
 declare
   r record;
