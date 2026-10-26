@@ -189,6 +189,82 @@ updates. Re-runnable.
 - **Rollback to Worker-only**: set `ORIGIN_HOST` back to `""` and
   `npm run deploy:prod`. The Pi can stay running; nothing reaches it.
 
+## The Pi is sick and nobody can sign in
+
+**This is the emergency switch. It is not the fix.** The permanent fix is the failover work in
+`docs/pi-failover.md` (making saves safe to retry). Until that is built, this is what you pull at 9pm.
+
+### Do you need it? How to tell
+
+You need it only if **all** of these are true:
+
+1. Public pages still open (the home page, the adoption pages), but **signing in or saving fails**,
+   typically with a plain page saying *"The shelter's server did not answer in time"*.
+2. The Pi is not coming back in the next few minutes: you have checked the power, the router and the
+   cable, and `ssh lutan@lanna-pi.local` does not answer, or answers and `systemctl is-active lanna-care cloudflared`
+   shows one of them is not `active` and restarting it did not help.
+3. From any computer, this prints `pi-timeout` (or nothing at all):
+
+```bash
+curl -s -m 30 -D - -o /dev/null -X POST -d x=1 https://lannacare.org/drill-probe | grep -i x-lanna-served-by
+```
+
+**Do not pull it for a power cut that is only seconds old.** When the tunnel program on the Pi is
+gone, Cloudflare answers 530 and the Worker already takes over saves by itself (`docs/decisions/2026-10-02-origin-write-fallback.md`).
+Wait two minutes and try the command again. If it says `worker`, nothing more is needed.
+
+### What to do
+
+On the PC, in the main checkout (`C:DevelopmentAnimal_Shelter_App`, on `main`), run:
+
+```bash
+node scripts/deploy.mjs --env production --no-pi
+```
+
+It builds (about four minutes of quiet, as for any release) and deploys. Nothing in `wrangler.jsonc`
+changes and nothing is committed; the flag only tells that one deploy to leave the Pi's address empty. Its
+first lines say `--no-pi: ORIGIN_HOST will be EMPTY on production`. Without `--skip-build` on purpose: a
+leftover build from an older release would put old code live.
+
+To see exactly what it will run without doing anything, add `--plan`: it prints the one `wrangler deploy`
+line (ending `--var ORIGIN_HOST:`) and stops before building. The production deploy itself is Lutan's to run.
+
+### What it costs
+
+The Worker now draws every page itself, which is the CPU load the Pi was adopted to avoid. It ran this
+way until 2026-09-30, so it works, but expect **some staff pages to be slow and an occasional "Error 1102"**
+on the heavy ones. Public pages are unaffected. The Pi is simply not asked.
+
+**Test is on the same Pi** (`test-pi.lannacare.org`) and is down too. Pull the switch there only if you
+need to check something: `node scripts/deploy.mjs --env test --no-pi`.
+
+### How to know it worked
+
+1. The `curl` above now prints `x-lanna-served-by: worker`.
+2. Sign in on `https://lannacare.org` and save something small.
+3. Settings → System status: the Pi tile is **grey, "Not in use"**. That is expected, not a fault, and a grey
+   tile does not send an alert, so the "Pi is down" mail stops coming.
+
+### How to put it back
+
+Once the Pi is healthy again (`systemctl is-active lanna-care cloudflared` both `active`, and the Pi tile is
+not red when you look), deploy normally:
+
+```bash
+npm run deploy:prod
+```
+
+That is the whole undo, because the Pi's address lives in `wrangler.jsonc` and the flag never touched it.
+**It also happens by itself:** the next ordinary release deploy puts the Pi back. So the one way to get
+this wrong is to forget, and the cost of forgetting is only the slower pages above. After it, repeat
+"How to know it worked" and expect `x-lanna-served-by: pi` and a green Pi tile.
+
+### Not yet proved on the real thing
+
+The code path (empty address means the Worker serves saves too) is tested (`node scripts/check-worker-origin.mjs`),
+and `--var ORIGIN_HOST:` was checked to override the config in wrangler's own dry run. No one has yet pulled
+it on production. The first real use is its test, so after it, write down in the next release record what happened.
+
 ## Building the box (what was done on 2026-09-30)
 
 The NVMe SSD is on a HAT, and there was no adapter to flash it from a laptop, so:
