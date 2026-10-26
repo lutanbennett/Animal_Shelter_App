@@ -1,157 +1,149 @@
-# Planner handover — edition `357`, 2026-10-25
+# Planner handover — edition `366`, 2026-10-26
 
-**A delta, twelfth edition in this shape.** Rules are the skill's step 8 — say what **changed**,
+**A delta, thirteenth edition in this shape.** Rules are the skill's step 8 — say what **changed**,
 promote durable facts once, cite `.plan-day.md` rather than reproducing it.
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`** — if they
 disagree with this, they are right and this is stale. **Read first:** `CLAUDE.md` → the skill →
-`.plan-day.md` → this. **The next slug is `366`.**
+`.plan-day.md` → this. **The next slug is `375`.**
 
 > **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
 > release state, candidates. **Re-read every time, never diffed.**
 
-**Written at Lutan's request at eight streams rather than nine**, after the worst day of planner
-error in this loop. Read the first section before anything else.
-
 ---
 
-## THE DEFINING FINDING, AND IT IS MINE: I TOLD HIM THE WORK WAS DONE TWICE WHEN IT WAS NOT
+## `357` IS CLOSED OUT: ITS WHOLE "NEXT ROUND" LIST SHIPPED, AND ONE OF ITS NUMBERS WAS WRONG
 
-**His words: *"I asked for all security to be removed but it wasn't - you misled me."*** He was
-right, both times.
+Its five-point list is now four points done. The coded-security guarantee shipped, the patch
+releases shipped, Lutan confirmed, and **every card has been written up and driven in a browser**.
+Only its point 5 remains, and it is now the gate on everything: **his fault-log review as a set,
+then the fixes, then Card review 2, then Management's cards, then Admin off the Director.**
 
-1. **I said the hard-coded security was "gone from both halves"** — relaying a stream's own report
-   after verifying only that its PR had merged. **Production still held 65 `role_extras` rows.** They
-   were inert, but inert is not gone, and he found them by asking.
-2. **I said the extras "did not impact the card tests"** when I had measured `cards-union` **after
-   the fact**. His reply is the rule now: *"If you cannot guarantee this then don't assert that it
-   does not matter."*
+**Two of `357`'s statements are now actively misleading — correct them rather than re-deriving:**
 
-**The mechanism of the error, and it generalises past this item: a merged PR is not a measured
-outcome, and my own measurement is not the stream's.** `0259` merged, so I reported the database
-clean; the registry still listed five mechanisms with counts of 11, 45, 4, 0 and 10. **Those count
-callers and pages, not rules — there are zero rules — but nobody reading that output can tell.**
+- **It says 28 cards. There are 29.** `CARD_KEYS` is `JobKey | NewCardKey`:
+  **21 + 8 = 29**, and `scripts/check-cards-count.mjs` asserts it in CI. The eight job cards
+  (`add_medical_photos`, `administer_medication`, `do_maintenance`, `do_purchasing`,
+  `do_stocktaking`, `feed_special_diets`, `record_delivery`, `record_weight`) are easy to miss
+  because they live in `jobs.ts`, not `cards.ts` — **a backlog item made exactly that error this
+  round and was corrected on the item.** Never type a card list; read `CARD_KEYS`.
+- **It says production is behind on migrations and the Who does what save is undeployed.** Stale.
+  Re-read, do not trust either sentence.
 
-**SO THE REAL DEFECT IS THAT THE INSTRUMENT LIES.** `scripts/check-hard-coded-security.mjs` is a
-**ratchet with baselines that permit 70**, under a heading that says hard-coded security. **A check
-that cannot print a clean "nothing" is not a guarantee, and it is why he spent two days unable to
-tell whether his own instruction had been carried out.** `claude/no-coded-security-guarantee` exists
-to replace it with an assertion of zero that blocks; **it is the critical path and everything about
-cards waits behind it.**
+## WHAT `357` ASKED FOR, and what each warning actually did
 
-## AND THE SECOND DEFINING FINDING: I SETTLED THE REVIEW METHOD AFTER THE REVIEW HAD STARTED
+- **"Check PR state with `gh`, not the session list." FIRED — fifth edition running.** A PR looked
+  fine by every other signal and `gh pr view` reported it `CONFLICTING` with every check `SKIPPED`.
+  **Keep it forever.**
+- **"A measurement has a timestamp; a fact does not." FIRED, and this time it paid.** I reported a
+  count, `main` moved underneath me mid-check, and re-reading changed the answer. **Say the clock,
+  and re-read before relying on it.**
+- **"Capture the actuals before archiving." FIRED** — three of three read while the processes were
+  alive, `session_id` echoed on every call.
+- **"A note from a session is its report, not proof." FIRED HARDEST, and it was the most valuable
+  minute of the round** — see the next section.
+- **Its band discipline did not hold, because I set no bands at all.** See "My own failure".
 
-**His words: *"This should have all been done before we started 1 check."*** Also right.
+## THE PLANNER IS THE ONLY ROLE THAT CAN READ PRODUCTION, AND THIS ROUND THAT PAID PROPERLY
 
-`card-review-1-a` (#926) ran, read its 14 cards **from the wiring only**, and filed 45 fault rows.
-Only then was the method put to him — and **he chose wiring PLUS a driven browser pass**, because his
-standard is *"can it actually perform that function"*, which reading grants cannot answer. **So those
-14 cards must be redone**, and the per-card read-back, the sign-in route and the one-root-cause rule
-all reached the later streams as **chat messages after they had already hit the problems.**
+The skill's step 2 already says to run a production check an item names. **It fired and it found a
+live outage nobody knew about.**
 
-**Chat messages die with the session. The method now lives on the Card review 1 item** (A–F), and
-the re-pass is its own item. **Do not brief a review whose method is not already written down.**
+A stream filed an item whose commit title said the production Worker cron had stopped. **I did not
+take the title.** I ran the check it named, and production said the cron's last run was three days
+earlier — **and that the same trigger sends the status-alert mail, so every System status alert had
+been silent for three days, including the Pi-down alert built for the October outage.**
 
-## THE THIRD: I SCHEDULED A MIGRATION BESIDE THE STREAMS THAT DEPENDED ON IT
+**The monitoring was down and nothing said so**, which is the exact failure the alerting exists to
+prevent. The repo was innocent (`wrangler.jsonc` unchanged), so it is Lutan's: a Worker deploy or
+the Cloudflare trigger.
 
-`role-extras-drop` and the two card reviews ran in one batch on the **shared dev database**. Its
-`0261` dropped `set_role_cards`'s `p_bundle`, which broke `scripts/dev-signin.mjs` — **the way the
-reviews sign in** — and stalled `card-review-1-b-money` outright. It also broke `role-cells`, the
-check that proves cards are the only source of access. **Breaking the instrument that proves the rule
-holds is worse than leaving the table another day.**
+**The lesson is not "run the check" — that was already written. It is that the yield is high enough
+to do it FIRST, before planning anything.** Thirty seconds of a read-only script turned a stream's
+side-note into the most important thing to tell him all day.
 
-**The rule: a stream that changes a function or table other streams' tooling calls does not share a
-batch with them.** `CLAUDE.md` already says dev is shared; what was missing is that *tooling* is a
-dependency too.
+## MY OWN FAILURE THIS ROUND: SIX STREAMS SET UP WITH NO BANDS
 
-## THE FOURTH: STARTING A SESSION MYSELF SETS THE DIALS, AND INHERITS MINE
+Six streams were set up in conversation rather than through `/plan-day` — three card-report streams
+and three more today. **Not one was given a token band.** Their actuals are therefore measurements
+with nothing to compare against: `calendar-pending-tile` **224,198**, `manual-by-card` **278,853**,
+`pi-origin-lever` **183,416**, all `claude-sonnet-5-5` / `low`, all sound readings.
 
-`security-db-half` ran on **opus-5 / medium** for mechanical deletion work banded for sonnet/low,
-because I started it with `start_session` and it inherited the planner's dials. His words: *"That's
-because you setup security-db-half on the wrong model as a branch from this planner stream."*
-**The skill's "you do not control the dial" is true only when he opens the session.** Recorded in
-`.plan-day.md`: create the worktree and the brief and let him open it; if a stream must be started
-from here, pass `model` and `effort` explicitly. **A figure from an inherited-dial session is not a
-band reading.**
+**Banding costs one line and it is the only mechanism by which the table self-corrects.** A stream
+set up outside the skill is still a stream. **Write the band even when nobody asked for a plan.**
 
-**And twice I started a session that collided with work already running** — once over the release
-record the release manager owned, once a duplicate on a worktree he had already opened. **Check
-`list_sessions` by `cwd` before starting anything.**
+## BAND CORRECTION — one, and it has three readings
 
----
+**An app-only stream that also drives a browser across several roles lands at 180–280k on
+sonnet/low**, not the 120–145k ordinary default. The three figures above are the evidence, and the
+spread tracks how wide the edit was rather than how hard the thinking was — the widest refactor was
+the dearest, the runbook-plus-flag was the cheapest.
 
-## WHAT LUTAN DECIDED, and none of it is to be re-opened
+This is consistent with the skill's existing +30k browser allowance; what is new is that **it
+compounds with edit width rather than adding to a fixed base.**
 
-- **CARD REVIEW 1 IS PER-CARD AND HAS NOTHING TO DO WITH ROLES.** *"a compare of each card
-  (irrelevant of whether it has been assigned to a role) advertised function and can it actually
-  perform that function… is it enough / too much"*, and flatly *"Nothing at all to do with roles."*
-  **Every card, assigned or not. Both directions: too little AND too much** — the over-grant half had
-  never been checked by anything.
-- **ALL CARDS RECHECKED FROM SCRATCH; the old walkthrough is background, not evidence.** *"we can't
-  guarantee that the old checks ensured both no extra or not enough security applied and they were
-  not checking each card in isolation."*
-- **A DRIVEN BROWSER PASS IS REQUIRED.** Reading grants proves a grant is missing, never that a save
-  path works.
-- **REVIEW 1 FIRST, THEN MANAGEMENT.** *"once we prove that existing cards do what they advertise
-  then management comes next."* Stage 2 order: `management` → `volunteer` → `second_in_command` →
-  `head_of_medical` and `head_of_maintenance` → `doctor`.
-- **CARD REVIEW 2 IS GATED** on review 1 finishing, his fault-log decisions **and those fixes
-  landing** — because *"we will have outcomes from card review 1 which will require fixes / updates
-  and decisions which may impact review 2."* A gap list built before the fixes proposes cards that
-  are not needed and misses ones that are.
-- **EVERY CARD TEST GETS RERUN, and the trigger is HIS WORD, not a planner's judgement:** *"Before we
-  rerun the tests I will ask for a further confirmation that all settings have been removed from the
-  system that could affect the tests."* Removed, not inventoried.
-- **THE VET IS LAST.** *"The vet can wait as it's the least used (current no doctors are in the
-  system) profile."* The Doctor's 9 missing cells are a prerequisite with a trigger, not an outage.
-- **COST IS NOT THE CONSTRAINT.** *"I'm happy for it to cost whatever it takes to get this done, we
-  have probably already wasted over 1m tokens going round in circles."* **Stop optimising briefs for
-  tokens; optimise for finishing.**
-- **ADMIN STAYS OUTSIDE THE CARD SYSTEM.** Unchanged, settled, never to be put to him again.
+## TWO THINGS PROMOTED OUT OF THIS DOCUMENT IN THIS PR
 
-## BAND CORRECTIONS — three, and two are solid
+Per the delta rule: a fact that will still be true in three rounds does not live here.
 
-- **A WIRING-ONLY card read is ~170k for 14 cards**, not 200–280k. Reading grants is cheap.
-- **A DRIVEN card review is `88k + ~7.0k per walkthrough step` — NOT the walkthrough run rate of
-  9.8k.** Two independent readings agree: money 30 steps → 288,063 (6.7k/step); ops 33 steps →
-  318,991 (7.0k/step), both ~17% under bands built on 9.8k. **The step count is a good proxy for
-  work; the walkthrough-run rate over-prices a review by about a quarter.**
-- `role-extras-drop` went **7% over** a 130–170k band, having swept **five** consumers where its
-  brief named two. **A removal's cost is in finding the callers, not deleting them.**
+1. **"No fallback to a named role" is now in `CLAUDE.md`.** Lutan, 2026-10-26: *"I want the system to
+   enable full flexibility of roles to be named whatever a shelter wants them to be named as so
+   having any fallback to a named role will break longer term."* It is a **cousin of the
+   hard-coded-security rule, not the same rule**, and the difference matters: the security check
+   will never catch it, because the offending files are correctly recorded as *content marking, not
+   access*. Being shown the wrong manual page grants nobody anything — it just breaks the moment a
+   shelter renames a role. **A rule no check can enforce has to be written down.**
+2. **"A split backlog item is invisible, and nothing tests for it" is now in the skill's step 3.**
+   New failure class, found this round: an item had split across two lines, ending mid-code-span,
+   with its remaining 1,577 characters orphaned on the next line. **`check-backlog-sections` passed
+   throughout**, because the orphan carried no list marker. It is the same invisibility as a
+   mis-filed item and it has no checker. The irony is instructive: the item was *about* a
+   newline-handling fault.
 
-## WHAT `348` ASKED FOR, and what happened
+## TWO WAYS AN ITEM CAN BE WRONG ABOUT ITSELF — both met this round
 
-- **"Check PR state with `gh`, not the session list." FIRED AGAIN** — fourth edition running. Keep.
-- **"A measurement has a timestamp; a fact does not." FIRED, AND I BROKE IT ANYWAY** — see the
-  defining finding. It is not enough to know the rule; the failure mode is quoting someone else's
-  measurement as a guarantee.
-- **"Capture the actuals before archiving." FIRED** — eight of eight read while alive, `session_id`
-  echoed on every call.
-- **"Never conclude 'the latest definition' from a `create or replace` grep." FIRED** — passed into
-  three briefs; `security-db-half` found three functions the brief had missed.
-- **Its band discipline did NOT hold**, because the bands were mine and wrong: see above.
+Neither is a reason to distrust items generally; both are reasons to read the code before briefing.
+
+- **An item can prescribe a method that a standing rule forbids.** The resident-hub item says to
+  test with the Doctor role. **The Doctor is the card test role Lutan holds one card at a time on**,
+  so following the item would have destroyed work in progress. The brief overrides the item and says
+  why. **When an item and a standing rule disagree, the brief says which wins — do not leave the
+  stream to notice.**
+- **An item can under-describe its hard half.** The same item says the non-medical tiles take their
+  activity "from the same source the section page uses". **That source covers the seven medical
+  sections only**; for the rest it does not exist. One `sed -n` found it. **The confident sentence
+  is the one to check.**
+
+## WHAT LUTAN DECIDED THIS ROUND, and none of it is to be re-opened
+
+- **No fallback to a named role, anywhere** (promoted above).
+- **The card report's format is approved** — *"The report format is good"* — and all 29 cards are
+  written up. **He is reading it now.** Do not schedule the fault-log fixes, the manual's last 14
+  topics or Card review 2 until he has.
+- **Outages at the shelter: once every six months, never more than two hours.** Asked and answered
+  in one line, after sitting unknown long enough to block the battery item. **Ask.**
+- **The PoE switch need not be protected** — *"I could bypass the switch if need be"* — which is
+  what made that purchase cheap.
 
 ## STILL CARRIED, unchanged
 
 - **A release's cut and record PRs, and the two handover PRs, merge on green CI without asking.**
 - **Model, effort and which allowance to spend are his. Never block paid usage.**
-- **Never write scratch output above the repo.** `git show <rev>:<path>` still lies about dotted paths.
+- **Never write scratch output above the repo.** `git show <rev>:<path>` still lies about dotted
+  paths, and still reports zero when piped.
 - **`worktree.mjs done` refusing is information.**
-- **A note from a session is its report, not proof.** Read the diff before telling him it is done —
-  the whole of this edition's first section is what happens when you do not.
+- **A note from a session is its report, not proof.** This round that rule found a three-day outage.
 
 ## NEXT ROUND POINTS AT
 
-1. **`claude/no-coded-security-guarantee` — the critical path.** An exhaustive inventory of every
-   mechanism that can decide access (policies read from the database, `security definer` functions,
-   `roles.*` columns, `role_extras`, **`CARD_SATISFIED_BY` and the `card_includes` closure**, `aal2`,
-   `service_role` paths, app guards, env flags, middleware) **and** a check that asserts zero and
-   blocks. Its brief forbids changing any access: find, report, stop.
-2. **THE PATCH RELEASE.** Production is behind on migrations and the Who does what save fix is merged
-   but **not deployed**, so **nobody can change a role's cards on production** and the `role_extras`
-   rows are still there. Re-read the pending list rather than trusting this sentence.
-3. **His confirmation** that everything affecting the tests is removed — he asks, it is answered with
-   the check's own clean output, not a summary.
-4. **Then rerun all 28 cards, driven.** Four streams or so on the step arithmetic above.
-5. **Then his fault-log review as a set**, then the fixes, then Card review 2, then Management's
-   cards, then **take Admin back off the Director**.
+1. **The production cron — his, and the oldest thing on the board.** Three days of silent alerting.
+   **Re-read its state before mentioning it; do not quote this sentence.**
+2. **Batch 1 merging** — `resident-hub-card-tiles`, `who-does-what-features-page`,
+   `release-tooling-fixes`. Composition, bands and set-up notes are in `.plan-day.md`; do not
+   reproduce them here.
+3. **His card review, which gates batch 3** — the fault log fixed as a set, the manual's 14
+   `awaitingCard` topics, then Card review 2.
+4. **The battery for the Pi** — one question outstanding with the seller: does it switch over
+   automatically on AC? The decision rule is written on the item.
+5. **The tunnel drill** — his hands on the Pi, and it takes production and test down together, so
+   he picks the moment. When he runs it, **it serves two items at once.**
