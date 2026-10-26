@@ -4643,6 +4643,9 @@ const th: Dictionary = {
     bulkConfirmTitle: (n: number) => `อนุมัติ ${n} รูป?`,
     bulkConfirmBody: (names: string) => `คุณติ๊กรูปของ: ${names} คุณดูครบทุกรูปแล้วใช่ไหม รูปที่อนุมัติแล้วจะแสดงบนเว็บไซต์ได้`,
     approved: (n: number) => `อนุมัติแล้ว ${n} รูป`,
+    publicWarnTitle: "สัตว์ตัวนี้แสดงอยู่บนเว็บไซต์แล้ว",
+    publicWarnBody: (names: string) =>
+      `${names} แสดงอยู่บนเว็บไซต์สาธารณะแล้ว การอนุมัติรูปนี้อาจทำให้ผู้เยี่ยมชมเห็นรูปนี้ ใช่สัตว์ตัวที่ถูกต้องและไม่มีอะไรที่ควรเป็นส่วนตัวในรูปใช่ไหม`,
     remove: "ลบ",
     removeConfirmTitle: "ลบรูปนี้?",
     removeConfirmBody: (name: string) => `รูปของ ${name} จะถูกลบ`,

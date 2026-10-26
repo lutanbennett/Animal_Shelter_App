@@ -4788,6 +4788,10 @@ const en = {
     bulkConfirmTitle: (n: number) => (n === 1 ? "Approve 1 photo?" : `Approve ${n} photos?`),
     bulkConfirmBody: (names: string) => `You ticked photos of: ${names}. Have you looked at each one? Approved photos can be shown on the website.`,
     approved: (n: number) => (n === 1 ? "1 photo approved." : `${n} photos approved.`),
+    /** Shown only when the animal is already published on the website (Lutan, 2026-10-26). */
+    publicWarnTitle: "This animal is on the website",
+    publicWarnBody: (names: string) =>
+      `${names} is already shown on the public website, so approving this photo can put it in front of the public. Is it the right animal, with nothing private in it?`,
     remove: "Remove",
     removeConfirmTitle: "Remove this photo?",
     removeConfirmBody: (name: string) => `The photo of ${name} will be deleted.`,

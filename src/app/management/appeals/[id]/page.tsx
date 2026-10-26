@@ -125,7 +125,7 @@ export default async function AppealPage(props: PageProps<"/management/appeals/[
         status={appeal.status}
         published={appeal.published}
         hasStory={!publishBlocker(appeal)}
-        residentPublic={resident.data?.is_public_visible ?? false}
+        residentPublic={resident.data ? resident.data.is_public_visible : null}
         outcome={appeal.outcome_note}
       />
 

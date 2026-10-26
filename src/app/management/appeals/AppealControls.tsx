@@ -32,7 +32,8 @@ export function AppealControls({
   status: AppealStatus;
   published: boolean;
   hasStory: boolean;
-  residentPublic: boolean;
+  /** null: this login cannot read the resident's setting, so no warning is better than a wrong one. */
+  residentPublic: boolean | null;
   outcome: string | null;
 }) {
   const { t } = useI18n();
@@ -87,7 +88,7 @@ export function AppealControls({
     <section className="flex max-w-3xl flex-col gap-3 rounded border border-border bg-surface p-4">
       <h2 className="text-base font-semibold text-foreground">{p.heading}</h2>
       <p className="text-sm font-medium text-foreground">{note}</p>
-      {status !== "closed" && !residentPublic && published && (
+      {status !== "closed" && residentPublic === false && published && (
         <p className="rounded border border-border bg-background px-3 py-2 text-sm text-muted">{p.residentNotPublic}</p>
       )}
       {status === "draft" && !hasStory && (

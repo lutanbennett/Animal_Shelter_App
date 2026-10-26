@@ -91,7 +91,6 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
       { activity: "resident.microchip" },
       { activity: "resident.adoption_news", level: "edit" },
       { activity: "placement.move" },
-      { activity: "placement.hospital" },
       { activity: "placement.rehome" },
       // placement.death_withdraw is NOT here: Management does not hold it, so the card would have handed it a power
       // on the day cards land (found by the 0194 seed check). It stays a single activity, given as an extra.
@@ -137,6 +136,8 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
       { activity: "medical.diet", level: "edit" },
       { activity: "medical.archive" },
       { activity: "visit.book" },
+      // 0269: Send to hospital is a medical action, visible only through this card (Lutan, 2026-10-26).
+      { activity: "placement.hospital" },
     ],
     opens: "/residents",
   },
@@ -255,9 +256,9 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // Card twenty-three (2026-10-18): run the fundraising appeals. donation.receipt is bundled because the appeals
   // pages show what has been raised only to a login that holds it (the one donations read there is). NOT granted to
   // any role here: the Director ticks it onto roles in Settings.
-  // Card review 2 (0268): includes View residents (read only). No medical read: "potentially" is a question back to Lutan.
+  // Card review 2 (0268): includes View residents (read only). 0269: and the medical history at read through View medical (his answer: "Make it a yes").
   run_appeals: {
-    includes: ["view_residents"],
+    includes: ["view_residents", "view_medical"],
     bundle: [{ activity: "appeal.run" }, { activity: "donation.receipt" }],
     opens: "/management/appeals",
   },

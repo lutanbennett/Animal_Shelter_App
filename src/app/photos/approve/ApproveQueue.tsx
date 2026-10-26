@@ -67,6 +67,16 @@ export function ApproveQueue({
       });
       if (!ok) return;
     }
+    // The warning is conditional (Lutan, 2026-10-26): only for an animal already on the website, never on every approval.
+    const publicNames = [...new Set(photos.filter((p) => ids.includes(p.id) && p.residentPublic).map((p) => p.residentName))];
+    if (publicNames.length > 0) {
+      const ok = await confirm({
+        title: q.publicWarnTitle,
+        body: q.publicWarnBody(publicNames.join(", ")),
+        confirmLabel: q.approve,
+      });
+      if (!ok) return;
+    }
     startTransition(async () => {
       setMessage(null);
       const result = await approvePhotos(ids);
