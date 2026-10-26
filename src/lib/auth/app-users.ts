@@ -23,6 +23,15 @@ export function appUserLabel(user: Pick<AppUser, "email" | "display_name"> | nul
 }
 
 /**
+ * Only the name, for a picker or list that must not hand out addresses (Lutan, 2026-10-26, Recurring jobs):
+ * the display name, else what comes before the @ of the email, never the address itself.
+ */
+export function appUserName(user: Pick<AppUser, "email" | "display_name"> | null | undefined): string {
+  if (!user) return "—";
+  return user.display_name ?? user.email?.split("@")[0] ?? "—";
+}
+
+/**
  * Logins a maintenance job can be assigned to: everyone with app access
  * except anyone who has been archived, or who is a test login
  * (test-login.ts). Sorted by the name that will

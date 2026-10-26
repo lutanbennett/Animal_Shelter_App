@@ -66,17 +66,18 @@ type Supabase = Awaited<ReturnType<typeof createClient>>;
  */
 export async function loadOccupants(supabase: Supabase, enclosureId?: string) {
   let query = supabase
-    .from("resident_list_view")
-    .select("enclosure_id, resident_id, name")
+    // The who-and-where view, which every login that reads a resident at all can read (the list view needs the whole record).
+    .from("resident_who_and_where")
+    .select("enclosure_id, id, name")
     .not("enclosure_id", "is", null)
     .order("name");
   if (enclosureId) query = query.eq("enclosure_id", enclosureId);
-  const { data, error } = await query.returns<{ enclosure_id: string; resident_id: string; name: string }[]>();
+  const { data, error } = await query.returns<{ enclosure_id: string; id: string; name: string }[]>();
   return {
     error,
     data: (data ?? []).map((row) => ({
       enclosure_id: row.enclosure_id,
-      resident_id: row.resident_id,
+      resident_id: row.id,
       name: row.name,
     })),
   };

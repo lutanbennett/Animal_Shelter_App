@@ -6,6 +6,7 @@ import { todayIso } from "@/lib/format";
 import { countMyUrgentAccessRequests } from "@/lib/my-tasks/access-requests";
 import { countMyUrgentMaintenance } from "@/lib/my-tasks/maintenance";
 import { countMyUrgentRecurring } from "@/lib/my-tasks/recurring";
+import { loadClinicScope } from "@/lib/clinics/scope";
 import { showMenuForLogin } from "@/lib/menu/show-menu";
 import { NavLinks } from "./NavLinks";
 
@@ -41,6 +42,13 @@ export async function NavPane() {
   ]);
   const urgentCount = accessCount + maintenanceCount + recurringCount;
 
+  // /appointments is a doctor's page (the visits at the clinics their own record works at); anyone else with
+  // the same read would land on "not linked to a clinic", so their entry opens the shelter-wide list instead.
+  const appointmentsHref =
+    opens("/appointments") && (await loadClinicScope(supabase)).kind === "clinics"
+      ? "/appointments"
+      : "/upcoming-visits";
+
   return (
     <NavLinks
       canSecurity={perms.isAdmin}
@@ -53,6 +61,7 @@ export async function NavPane() {
       canResidents={can(perms, "resident.record", "read")}
       hasTasks={can(perms, "recurring.do_own")}
       canAppointments={opens("/appointments")}
+      appointmentsHref={appointmentsHref}
       urgentCount={urgentCount}
     />
   );

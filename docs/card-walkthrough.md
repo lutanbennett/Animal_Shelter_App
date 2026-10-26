@@ -212,10 +212,10 @@ Result: pending
 
 ## View contacts (`view_contacts`)
 
-- Opens: `/management/contacts`
+- Opens: `/contacts`
 
 0. Sign in with `--cards view_contacts`. The home screen shows the **View contacts** tile (or the tile of a card that includes it).
-1. Open `/management/contacts`: it loads.
+1. Open `/contacts`: it loads.
 2. **TODO:** Browse the contacts book. Do it on a disposable record named `walk-view_contacts`. Question: where should this write show afterwards (which page, which row)?
 3. **See:** Contacts (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 4. **See:** The list of clinics (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
@@ -226,11 +226,11 @@ Result: pending
 
 ## Publish Shelter Friends (`publish_shelter_friends`)
 
-- Opens: `/management/contacts`
+- Opens: `/management/shelter-friends`
 - Also gives: View contacts (`view_contacts`) (walked under its own heading)
 
 0. Sign in with `--cards publish_shelter_friends`. The home screen shows the **Publish Shelter Friends** tile (or the tile of a card that includes it).
-1. Open `/management/contacts`: it loads.
+1. Open `/management/shelter-friends`: it loads.
 2. **TODO:** Shelter Friends: add, publish, unpublish. Do it on a disposable record named `walk-publish_shelter_friends`. Question: where should this write show afterwards (which page, which row)?
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 

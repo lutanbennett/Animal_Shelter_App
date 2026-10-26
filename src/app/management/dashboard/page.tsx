@@ -45,6 +45,7 @@ import { CopyTextButton } from "./CopyTextButton";
 import { TrendView } from "./TrendView";
 import { dailySeries, DAILY_COUNT_PLACEMENTS, type DailyPlacement } from "@/lib/management/daily-count";
 import { requirePermission } from "@/lib/permissions/require";
+import { canOpen, routeFor } from "@/lib/permissions/routes";
 
 const TREND_MONTHS = 12;
 
@@ -61,7 +62,12 @@ const REPORTED_PLACEMENTS = [
 export default async function ManagementDashboardPage(
   props: PageProps<"/management/dashboard">,
 ) {
-  await requirePermission("reports.dashboard");
+  const { perms } = await requirePermission("reports.dashboard");
+  // A figure links on only to a page this login opens: a link to a refused page is a button that cannot be used.
+  const linkIfOpens = (path: string, href = path) => {
+    const route = routeFor(path);
+    return route && canOpen(perms, route) ? href : undefined;
+  };
   const searchParams = await props.searchParams;
   const { t, locale } = await getT();
   const d = t.management.dashboard;
@@ -364,7 +370,7 @@ export default async function ManagementDashboardPage(
         <h2 className="text-lg font-semibold text-foreground">{d.now.heading}</h2>
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <StatCard
-            href="/residents"
+            href={linkIfOpens("/residents")}
             title={d.now.inCare}
             value={String(current.inCare)}
             detail={speciesSummary || d.now.inCareDetail}
@@ -400,13 +406,13 @@ export default async function ManagementDashboardPage(
           />
           {/* Encouraging chipping: a nudge, not a target. */}
           <StatCard
-            href="/residents?nochip=1"
+            href={linkIfOpens("/residents", "/residents?nochip=1")}
             title={d.now.noMicrochip}
             value={String(current.notMicrochipped)}
             detail={d.now.noMicrochipDetail(current.microchipped)}
           />
           <StatCard
-            href="/clinics"
+            href={linkIfOpens("/clinics")}
             title={d.now.vetVisitsDue}
             value={String(current.clinicVisitsDue)}
             detail={
@@ -417,7 +423,7 @@ export default async function ManagementDashboardPage(
             tone={current.clinicVisitsOverdue > 0 ? "danger" : "neutral"}
           />
           <StatCard
-            href="/maintenance"
+            href={linkIfOpens("/maintenance")}
             title={d.now.openMaintenance}
             value={String(current.openMaintenance)}
             detail={
@@ -480,7 +486,7 @@ export default async function ManagementDashboardPage(
 
         <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3 print:grid-cols-2">
           {cards.map((card) => (
-            <ReportCard key={card.title} {...card} none={d.month.none} />
+            <ReportCard key={card.title} {...card} none={d.month.none} linked={!!linkIfOpens("/residents")} />
           ))}
         </div>
       </section>
