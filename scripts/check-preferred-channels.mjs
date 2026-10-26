@@ -23,11 +23,11 @@ do $h$
 declare
   v_n int; v_rows int; v_val text[]; v_rejected boolean;
 begin
-  -- A. still the singleton, and its row reads {line}: today's behaviour
+  -- A. still the singleton, and its live row holds only known channels (it is shelter-edited content, so its value is not pinned)
   select count(*) into v_rows from site_content;
   if v_rows <> 1 then raise exception 'FAIL A site_content has % rows, expected 1', v_rows; end if;
   select preferred_channels into v_val from site_content;
-  if v_val is distinct from array['line']::text[] then raise exception 'FAIL A existing row reads %', v_val; end if;
+  if v_val is null or not v_val <@ array['line','messenger','whatsapp','instagram','phone','email']::text[] then raise exception 'FAIL A existing row reads %', v_val; end if;
 
   -- B. shape: one NOT NULL text[] column, exactly one check after two runs
   select count(*) into v_n from information_schema.columns
@@ -74,7 +74,7 @@ begin
   reset role;
   if v_val is distinct from array['messenger']::text[] then raise exception 'FAIL F anon read %', v_val; end if;
 
-  raise exception 'HARNESS-OK singleton reads {line} | NOT NULL text[], 1 check after two runs | full ordered list round-trips | unknown / upper-case / 7 entries refused | NULL refused, empty allowed | anon reads it through public_site_content';
+  raise exception 'HARNESS-OK singleton holds only known channels | NOT NULL text[], 1 check after two runs | full ordered list round-trips | unknown / upper-case / 7 entries refused | NULL refused, empty allowed | anon reads it through public_site_content';
 end;
 $h$;
 rollback;
