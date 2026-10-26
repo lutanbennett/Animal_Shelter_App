@@ -40,6 +40,8 @@ export type Release = {
   notes: ReleaseNote[];
 };
 
+import type { CardKey } from "./permissions/cards";
+
 /** The live roles a new note can be tagged for. */
 export type ReleaseRole =
   | "admin"
@@ -57,24 +59,37 @@ export type ReleaseRole =
 type RetiredReleaseRole = "staff";
 
 /**
- * One line of a release. A plain string is for everyone; `roles` narrows
- * it to the people who will notice it, and /releases opens on the reader's
+ * One line of a release. A plain string is for everyone. A NEW line that is
+ * plainly not for everyone is tagged by CARD: `{ text, cards: [...] }` is for
+ * whoever holds one of those cards, and Admin (outside the card system) sees
+ * every line; a card nobody recognises widens, never narrows. `roles` is the
+ * older tag, in Lanna's own role keys, and is CLOSED TO NEW NOTES: a shelter
+ * may rename its roles, and the tag would then mean nothing
+ * (docs/decisions/2026-10-26-release-notes-by-card.md). Notes already tagged
+ * by role stay as they are. /releases opens on the reader's
  * role (docs/decisions.md, "Release notes by role"). Tag a line only when it
  * is plainly not for some role — a doctor has no use for a stocktake line —
  * since an untagged line is never filtered out, and a wrong tag hides it
  * from the people it is for. Lines released before tagging existed stay
  * untagged: they are history, and untagged reads as everyone.
  */
-export type ReleaseNote = string | { text: string; roles: (ReleaseRole | RetiredReleaseRole)[] };
+export type ReleaseNote =
+  | string
+  | { text: string; roles: (ReleaseRole | RetiredReleaseRole)[] }
+  | { text: string; cards: CardKey[] };
 
 export const noteText = (note: ReleaseNote): string =>
   typeof note === "string" ? note : note.text;
 
 export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)[] | undefined =>
-  typeof note === "string" ? undefined : note.roles;
+  typeof note === "string" || !("roles" in note) ? undefined : note.roles;
+
+export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
+  typeof note === "string" || !("cards" in note) ? undefined : note.cards;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The Releases page now tags new notes by the cards you hold instead of by your role's name, so what you are shown no longer depends on what your shelter calls your role. A note for a card you do not hold is greyed under Show everything, and a note nobody has tagged is still shown to everyone. Notes from earlier releases read as they did.",
   { text: "Who does what: the Features list (the areas the Available cards are grouped by) has moved to its own page, opened with the new Edit the features button at the top. The cards page is shorter, and the cards are still grouped the same way.", roles: ["admin", "management"] },
   "A resident's hub now shows only the parts of the record your cards let you read. Someone who gives medication sees Prescriptions but no Blood tests, Procedures, Visits, Weight, Diet or Immunisations card, and no Medical heading if none of them is open to them. Before, a card they could not open still appeared and said \"0 · none\", which was untrue. If a part is missing that you need, ask an admin to give you the card for it.",
   "The manual now opens on the topics for the cards you hold, and each topic says which cards give it. A 2IC, Head of Medical or Head of Maintenance is no longer shown the volunteer's manual, and a role called anything else gets its own. Show everything still lists the rest, greyed. A few topics are marked as not yet assigned to a card; they are shown to everyone until they are linked.",

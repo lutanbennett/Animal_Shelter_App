@@ -114,12 +114,13 @@ const RESULTS = ["pass", "pass with accepted defects", "fail"];
 // The lines in `unreleased`, read as text rather than imported, because the base
 // side only exists as a blob. Strings are pulled out of the array literal; a
 // file without the declaration (none at the base, or renamed) reads as empty.
-// A tagged line is `{ text: "…", roles: ["doctor"] }`: its roles are dropped
-// first, so tagging a line doesn't read as adding lines called "doctor".
+// A tagged line is `{ text: "…", cards: ["record_weight"] }` (or the older
+// `roles: ["doctor"]`): its tag is dropped first, so tagging a line doesn't
+// read as adding lines called "record_weight".
 const unreleasedLines = (src) => {
   const block = src.match(/export const unreleased\b[^=]*=\s*\[([\s\S]*?)\];/);
   if (!block) return [];
-  return [...block[1].replace(/\broles\s*:\s*\[[^\]]*\]/g, "").matchAll(/"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|`((?:[^`\\]|\\.)*)`/g)].map(
+  return [...block[1].replace(/\b(?:roles|cards)\s*:\s*\[[^\]]*\]/g, "").matchAll(/"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)'|`((?:[^`\\]|\\.)*)`/g)].map(
     (m) => m[1] ?? m[2] ?? m[3],
   );
 };
@@ -137,14 +138,19 @@ try {
 }
 const before = new Set(unreleasedLines(baseReleases));
 const added = unreleasedLines(headReleases).filter((l) => !before.has(l));
-// Advisory only: a new note that names an admin-only place but carries no `roles`
-// shows to every live role. A wrong tag hides a note from the people it is for,
+// Advisory only: a new note that names an admin-only place but carries no tag (`cards`, or the
+// older `roles`) shows to every live role. A wrong tag hides a note from the people it is for,
 // which is the worse error, so this warns and never fails
 // (docs/decisions/2026-10-22-release-note-audience-question.md).
 const unreleasedBlock = headReleases.match(/export const unreleased\b[^=]*=\s*\[([\s\S]*?)\];/)?.[1] ?? "";
 const taggedTexts = new Set(
+  [...unreleasedBlock.matchAll(/\{\s*text\s*:\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)\s*,\s*(?:roles|cards)\b/g)].map((m) => m[1].slice(1, -1)),
+);
+// The older tag is closed to new notes (docs/decisions/2026-10-26-release-notes-by-card.md).
+const rolesTaggedTexts = new Set(
   [...unreleasedBlock.matchAll(/\{\s*text\s*:\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)\s*,\s*roles\b/g)].map((m) => m[1].slice(1, -1)),
 );
+const newRoleTagged = added.filter((l) => rolesTaggedTexts.has(l));
 const ADMIN_ONLY_NOTE = /Settings\s*(?:→|->)|\/admin\b|\bAdmin-only\b|\bonly (?:an )?admins?\b/i;
 const untaggedAdminNotes = added.filter((l) => !taggedTexts.has(l) && ADMIN_ONLY_NOTE.test(l));
 const visible = touched.filter((f) => USER_VISIBLE.some((p) => p.test(f)));
@@ -432,11 +438,18 @@ const releaseNote =
   visible.length && added.length === 0 && releaseNa.length
     ? `\nNo release note, on the plan's word (touches ${shown}):\n` + releaseNa.map((r) => `  ${r}`).join("\n")
     : "";
-const audienceNote = untaggedAdminNotes.length
-  ? "\nWarning (not a failure): a new `unreleased` note names an admin-only place but has no `roles`, so every role will see it. " +
-    "If only some roles can open that page, tag it `{ text, roles: [...] }`:\n" +
-    untaggedAdminNotes.map((t) => `  "${t.length > 90 ? t.slice(0, 90) + "…" : t}"`).join("\n")
-  : "";
+const clip = (t) => `  "${t.length > 90 ? t.slice(0, 90) + "…" : t}"`;
+const audienceNote =
+  (untaggedAdminNotes.length
+    ? "\nWarning (not a failure): a new `unreleased` note names an admin-only place but has no tag, so every role will see it. " +
+      "If only some readers can open that page, tag it `{ text, cards: [...] }` with the card that opens it:\n" +
+      untaggedAdminNotes.map(clip).join("\n")
+    : "") +
+  (newRoleTagged.length
+    ? "\nWarning (not a failure): a new `unreleased` note is tagged by `roles`. That tag is closed to new notes, because a shelter may rename its roles; " +
+      "use `{ text, cards: [...] }` (docs/decisions/2026-10-26-release-notes-by-card.md):\n" +
+      newRoleTagged.map(clip).join("\n")
+    : "");
 const releaseFromNote = releaseFrom.length
   ? "\nSign-off PR: release-notes tick checked against the merge that introduced the plan:\n" +
     releaseFrom.map((r) => `  ${r}`).join("\n")
