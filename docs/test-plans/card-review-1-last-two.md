@@ -94,8 +94,8 @@
 - [ ] Deployed to test — deferred: release manager
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: release manager
 - [ ] **Timezone-sensitive behaviour proved** — n/a: no dates
-- [ ] **Boundary or banding change** — n/a
-- [ ] **Evidence pasted is unedited** — n/a
+- [ ] **Boundary or banding change** — n/a: nothing numeric in this change — two `card_grants` rows and one folder-name condition; no thresholds, ranges or dates
+- [ ] **Evidence pasted is unedited** — n/a: no evidence pasted here; the deployed-build checks above are deferred to the release manager
 - [ ] Public pages re-checked after a cache purge — n/a: public site untouched
 
 ### Deploy safety
@@ -139,9 +139,9 @@ Automated checks by: Claude  Date: 2026-10-26
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty; it is waiting on a person, see the signature below
 
-Manual verification by:
+Manual verification by: pending: a person uploads a real photo to a resident with no profile picture — Medical folder leaves the profile picture empty, a Shelter-folder photo still fills it — and confirms a login holding only Record weight sees My tasks (items 1 and 2 above)
 
 ### Result
 
