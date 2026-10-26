@@ -59,9 +59,14 @@ declare
   v_v2 uuid := gen_random_uuid();
   v_w uuid;
 begin
+  -- 0248: registering a resident is a card; the seed runs as the Admin login, as the batch-2 seeders do.
+  perform set_config('request.jwt.claims', json_build_object('sub', (select ur.user_id from user_roles ur join roles r on r.id = ur.role_id where r.key = 'admin' and ur.archived_at is null limit 1), 'role', 'authenticated', 'aal', 'aal1')::text, true);
+  set local role authenticated;
   select id into v_res from record_intake(
     p_name => 'Harness weight one-per-day', p_intake_date => date '2026-08-01', p_weight_kg => 10,
     p_diet_id => (select id from diets order by is_standard desc nulls last limit 1));
+  reset role;
+  perform set_config('request.jwt.claims', '', true);
   insert into harness values ('res', v_res), ('v1', v_v1), ('v2', v_v2);
   insert into harness select 'intake_w', id from weight where resident_id = v_res;
 

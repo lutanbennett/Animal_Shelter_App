@@ -48,6 +48,10 @@ const sourceFiles = [...walk(join(root, "src"), (n) => /\.tsx?$/.test(n) && !/\.
 
 // Blank comments, keeping every newline so line numbers stay honest. Strings and template literals are skipped over so a "//" inside
 // one is not mistaken for a comment.
+// [^\r\n]*, not .*$: on a CRLF checkout (Windows) `.` will not cross the \r and an unanchored `$` only matches at end of string, so no comment was stripped and 0264's header was read as code.
+const stripSqlComment = (l) => l.replace(/--[^\r\n]*/, "");
+// Guard: a CRLF fixture's comments must not survive stripping, or this check cries wolf on Windows again.
+if (/opens_app|scope_residents|--/.test(["-- opens_app dropped.\r", "select 1; -- scope_residents\r"].map(stripSqlComment).join(""))) { console.error("FAIL stripSqlComment leaves a comment on a CRLF line."); process.exit(1); }
 const keepNewlines = (s) => s.split(NL).map(() => "").join(NL);
 function stripComments(src) {
   let out = "";
@@ -175,7 +179,7 @@ const usedDb = new Set();
 const migFiles = existsSync(migDir) ? readdirSync(migDir).filter((n) => /^\d{4}_.*\.sql$/.test(n) && Number(n.slice(0, 4)) >= FROM).sort() : [];
 const declare = (mig, item, msg) => { const k = `${mig}|${item}`; if (declaredDb.has(k)) usedDb.add(k); else fail(`${mig}: ${msg} (declare it under database.declared as "${item}" with a reason, or make it a card)`); };
 for (const mig of migFiles) {
-  const sql = readFileSync(join(migDir, mig), "utf8").split(NL).map((l) => l.replace(/--.*$/, "")).join(NL);
+  const sql = readFileSync(join(migDir, mig), "utf8").split(NL).map(stripSqlComment).join(NL);
   for (const m of sql.matchAll(/create\s+policy\s+("[^"]+"|\w+)\s+on\s+([\w."]+)([\s\S]*?);/gi)) {
     const body = m[3];
     if (!/has_permission\s*\(|is_admin\s*\(/i.test(body)) declare(mig, `policy ${m[2]}.${m[1].replace(/"/g, "")}`, `policy ${m[1]} on ${m[2]} does not resolve through has_permission() or is_admin()`);

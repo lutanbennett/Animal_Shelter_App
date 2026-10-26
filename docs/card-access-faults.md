@@ -306,3 +306,12 @@ Driven in a browser as a login holding only the card (`dev-signin.mjs --cards`),
 **Contradicted by driving:** nothing in this stream contradicts an earlier row. It does close one open statement (stream 3's "no recurring task is assigned to a card-only login": an assignment is possible and works).
 
 **Method notes for later streams.** (1) The Recurring jobs "Assigned to" list is built when the page loads, so a login created after the page was opened is missing from it: reload the page first. (2) A page can paint before React has attached and screenshots can lag a few seconds: read state with `javascript_tool` before concluding a click failed. (3) The first characters typed after opening New recurring job also landed in the Instructions box once; check both boxes. (4) A dev-signin snippet is about 2.7 KB of base64; saving it to a file in the scratchpad and pasting from there worked for four logins (run the script once per card set, never twice for the same set).
+
+## Added 2026-10-26 by `claude/harness-sweep-batch-4` (`check-director-answers-schema`)
+
+Found by reading the live policies while sweeping a harness. Nothing was fixed. Roles, cards and activity names only.
+
+| role | card | fails at | missing | production | read at |
+|---|---|---|---|---|---|
+| any role holding `contacts.directory` (edit) without `contacts.browse` | none holds it alone | reading the `contacts` table: `contacts_select_perm` asks `contacts.browse` alone since `0264`, so a login holding only the directory cell and `contacts.add` is refused the table the harness expected it to read (it read it under `0170`/`0171`) | `contacts.browse` at read | not established | 2026-10-26, dev (`pg_policies`) |
+| any role holding `friends.manage` without `friends.view` | none holds it alone | reading `shelter_friends`: `shelter_friends_select_perm` asks `friends.view` alone, so a login that may manage Shelter Friends cannot read them. The `contacts` card holds both, so no shipped card shows it | `friends.view` at read | not established | 2026-10-26, dev (`pg_policies`) |

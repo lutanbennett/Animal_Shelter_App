@@ -54,7 +54,7 @@ begin
     elsif t = 'maintenance' then update maintenance set title = title || '.' where id = (select id from maintenance limit 1);
     elsif t = 'maintenance_bills' then update maintenance_bills set amount = amount + 1 where id = (select id from maintenance_bills limit 1);
     elsif t = 'bills_inbox' then update bills_inbox set created_at = created_at + interval '1 second' where id = (select id from bills_inbox limit 1);
-    elsif t = 'stock_receipts' then update stock_receipts set note = coalesce(note,'') || '.' where id = (select id from stock_receipts limit 1);
+    elsif t = 'stock_receipts' then update stock_receipts set cost = coalesce(cost,0) + 1 where id = (select id from stock_receipts limit 1);
     elsif t = 'blood_tests' then update blood_tests set date = date + 1 where id = (select id from blood_tests limit 1);
     elsif t = 'procedures' then update procedures set date = date + 1 where id = (select id from procedures limit 1);
     elsif t = 'resident_diets' then update resident_diets set start_date = start_date + 1 where id = (select id from resident_diets limit 1);
