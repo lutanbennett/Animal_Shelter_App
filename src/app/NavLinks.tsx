@@ -45,6 +45,7 @@ export function NavLinks({
   canResidents,
   hasTasks,
   canAppointments,
+  appointmentsHref,
   urgentCount,
 }: {
   /** Whoever may change who can sign in: the Security link. Not an activity (an Admin rule). */
@@ -67,6 +68,8 @@ export function NavLinks({
    * either gets no second entry: a volunteer's menu is Home, Residents and Enclosures.
    */
   canAppointments: boolean;
+  /** Where the Appointments entry leads: a doctor's own page, or the shelter-wide list for a login with no clinic link. */
+  appointmentsHref: string;
   /** My tasks due today or overdue, shown on the My tasks link when > 0. */
   urgentCount: number;
 }) {
@@ -101,7 +104,7 @@ export function NavLinks({
         : canAppointments
           ? [
               {
-                href: "/appointments",
+                href: appointmentsHref,
                 label: t.nav.appointments,
                 icon: NAV_ICONS.appointments,
               },
