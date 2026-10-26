@@ -203,7 +203,7 @@ Result: pending
 0. Sign in with `--cards book_clinic_visits`. The home screen shows the **Book clinic visits** tile (or the tile of a card that includes it).
 1. Open `/upcoming-visits`: it loads.
 2. **Do:** Book a vet visit. Use a disposable record named `walk-book_clinic_visits`. **Read-back:** the visit shows on that resident's page and in the shelter's list of visits (/upcoming-visits).
-3. **See:** Vet visits and how they went (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+3. **TODO:** Vet visits and how they went. Do it on a disposable record named `walk-book_clinic_visits`. Question: where should this write show afterwards (which page, which row)?
 4. **Refused:** open `/medical/photos` (the page of **Add Medical Photos**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending

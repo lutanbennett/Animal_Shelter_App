@@ -144,7 +144,7 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // visits it books (medical.visits at edit; clinic_visits has no delete policy, so it cannot delete one).
   book_clinic_visits: {
     includes: ["view_medical"],
-    bundle: [{ activity: "visit.book" }, { activity: "medical.visits" }],
+    bundle: [{ activity: "visit.book" }, { activity: "medical.visits", level: "edit" }],
     // One card, one page. It used to open /appointments for a clinic login and /upcoming-visits for everyone else, chosen by
     // the role's clinical column; a card now opens the same page for every role that holds it (docs/decisions/2026-10-25-remove-hard-coded-security.md).
     opens: "/upcoming-visits",
