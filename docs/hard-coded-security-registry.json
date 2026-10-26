@@ -156,22 +156,6 @@
       ],
       "kind": "admin-identity",
       "reason": "Who the status-alert email goes to: the Admin logins. A recipient list, not an access rule."
-    },
-    {
-      "file": "src/app/manual/page.tsx",
-      "matches": [
-        "topic.roles?.includes"
-      ],
-      "kind": "documentation",
-      "reason": "Which manual topics are marked as written for the reader's role. Content marking in the manual, not access to anything."
-    },
-    {
-      "file": "src/lib/manual/manual-pdf.tsx",
-      "matches": [
-        "topic.roles?.includes"
-      ],
-      "kind": "documentation",
-      "reason": "The same marking in the printed manual."
     }
   ],
   "serviceRoleSites": [

@@ -12,7 +12,7 @@
 //
 // Three sources, only the first mechanical:
 //   1. The manual (src/lib/manual/en.ts) says WHICH activities exist and WHICH
-//      roles do them, read through isForRole like the manual page itself.
+//      cards do them (a topic's cards come from its activity, through cardsOfTopic like the manual page itself).
 //   2. scripts/lib/acceptance-matrix-entries.mjs says what a tester is told to do
 //      and see: the words, and the device each activity is really done on
 //      (field work on a phone, setup and reporting on a desktop — the
@@ -37,6 +37,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { register } from "node:module";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.resolve(here, "..");
@@ -84,7 +85,19 @@ if (onlyRole && !ROLES.includes(onlyRole)) {
 }
 
 const { default: manual } = await load("src/lib/manual/en.ts");
-const { isForRole } = await load("src/lib/manual/filter.ts");
+// for-topic.ts and cards.ts import "@/…" and "./jobs" without extensions, as Next allows; plain node needs a resolver hook.
+const srcUrl = pathToFileURL(path.join(repo, "src") + "/").href;
+register(
+  "data:text/javascript," +
+    encodeURIComponent(`
+      export async function resolve(spec, ctx, next) {
+        if (spec.startsWith("@/")) return next(${JSON.stringify(srcUrl)} + spec.slice(2) + ".ts", ctx);
+        if (spec.startsWith(".") && !/\\.[a-z]+$/.test(spec)) return next(spec + ".ts", ctx);
+        return next(spec, ctx);
+      }`),
+);
+const { cardsOfTopic } = await load("src/lib/manual/for-topic.ts");
+const { isCardKey } = await load("src/lib/permissions/cards.ts");
 const { loadSeed } = await load("scripts/lib/permission-seed.mjs");
 const seed = loadSeed(repo);
 /** "placement.move" or "resident.record:read" -> the roles that hold it today, or null when the key is unknown. */
@@ -172,28 +185,41 @@ for (const t of topics) {
   topicIds.add(t.id);
 }
 
-// A topic that names an activity: its `roles` tag (the "Who:" badge, which names the six roles that
-// exist today) must be exactly the roles that hold that activity by default, so the words cannot drift
-// from the cells. The manual page asks can() for the activity itself.
+// Every topic is checked against the cards (docs/decisions/2026-10-26-manual-by-card.md). A topic that names an
+// activity must be in the catalogue, and one that names `cards` must name real cards: either failing means the manual
+// points at nothing. (An activity no card grants is Admin's alone, outside the card system: derived, not a fault.) A topic with no activity, no cards and no `everyone` is UNASSIGNED, waiting for the
+// card review; that is reported as a worklist, never as a failure, and never guessed at.
+const unassigned = [];
 for (const t of topics) {
-  if (!t.activity) continue;
-  const held = holders(t.activityLevel === "read" ? `${t.activity}:read` : t.activity);
-  if (!held) {
+  for (const k of t.cards ?? []) {
+    if (!isCardKey(k)) problem(`The manual topic "${t.id}" names the card "${k}", which is not a card.`, ["Use a key from CARD_KEYS in src/lib/permissions/cards.ts."]);
+  }
+  if (t.activity && !holders(t.activityLevel === "read" ? `${t.activity}:read` : t.activity)) {
     problem(`The manual topic "${t.id}" names the activity "${t.activity}", which the seeded catalogue does not have.`, []);
     continue;
   }
-  const got = held.filter((r) => SIGNED_IN.includes(r)).join();
-  const want = SIGNED_IN.filter((r) => (t.roles ?? SIGNED_IN).includes(r)).join();
-  if (got !== want) {
-    problem(`The manual topic "${t.id}" has roles [${want}] but ${t.activity} is held by [${got}].`, [
-      "Either the `roles` tag or the activity is wrong: the cell is what the system does, so fix the tag unless the cell itself is to change.",
-    ]);
-  }
+  if (cardsOfTopic(t).kind === "unassigned") unassigned.push(t.id);
 }
+if (unassigned.length) {
+  console.error(`acceptance-matrix: ${unassigned.length} manual topics are not yet assigned to a card (shown to everyone, marked): ${unassigned.join(", ")}`);
+}
+
+/**
+ * The signed-in roles a topic is for, which is the matrix's column and nothing the manual page reads: whoever holds the
+ * activity's card by default; everyone for an `everyone` topic; the old role tag kept in `awaitingCard` for an unassigned one.
+ */
+const topicRoles = (t) => {
+  const own = cardsOfTopic(t);
+  if (own.kind === "everyone") return SIGNED_IN;
+  if (own.kind === "unassigned") return SIGNED_IN.filter((r) => (t.awaitingCard ?? SIGNED_IN).includes(r));
+  if (t.activity) return (holders(t.activityLevel === "read" ? `${t.activity}:read` : t.activity) ?? []).filter((r) => SIGNED_IN.includes(r));
+  return SIGNED_IN.filter((r) => own.cards.every((k) => CARDS[k].bundle.every((b) => (holders(b.level === "read" ? `${b.activity}:read` : b.activity) ?? []).includes(r))));
+};
 
 for (const t of topics) {
   if (!ENTRIES[t.id]?.length) {
-    const roles = t.roles ? `roles: ${t.roles.join(", ")}` : "for everyone who signs in";
+    const own = cardsOfTopic(t);
+    const roles = own.kind === "cards" ? `cards: ${own.cards.join(", ")}` : own.kind === "everyone" ? "for everyone who signs in" : "not yet assigned to a card";
     problem(`The manual topic "${t.title}" (${t.section.id}/${t.id}, ${roles}) has no matrix entry.`, [
       `The matrix is what the shelter signs, so every thing a person can do needs a row. Add to ENTRIES in ${ENTRIES_FILE}:`,
       `${JSON.stringify(t.id)}: [`,
@@ -223,11 +249,12 @@ for (const t of topics) {
       if (typeof e[f] !== "string" || !e[f].trim()) problem(`${where} has no \`${f}\`.`, [`Every row needs an activity name, a "do" line and an "expect" line.`]);
     }
     if (!DEVICES.includes(e.device)) problem(`${where} ("${e.activity}") has device ${JSON.stringify(e.device)}.`, [`Use "phone", "desktop" or "both".`]);
-    if (e.roles && t.roles) {
-      const extra = e.roles.filter((r) => !t.roles.includes(r));
+    const topicWho = topicRoles(t);
+    if (e.roles) {
+      const extra = e.roles.filter((r) => !topicWho.includes(r));
       if (extra.length) {
         problem(`${where} ("${e.activity}") gives the activity to ${extra.join(", ")}, which the manual topic is not for.`, [
-          `\`roles\` can only narrow the manual's roles (${t.roles.join(", ")}). To widen it, fix the topic's roles in the manual first.`,
+          `\`roles\` can only narrow the topic's roles (${topicWho.join(", ")}). To widen it, link the topic to the right card first.`,
         ]);
       }
     }
@@ -238,7 +265,7 @@ for (const t of topics) {
       problem(`${where} ("${e.activity}") needs "${e.needs}", which the seeded catalogue does not have.`, ['Use a key from src/lib/permissions/catalogue.ts, with ":read" for a read level.']);
     }
     if (needed) {
-      const want = SIGNED_IN.filter((r) => (e.roles ?? t.roles ?? SIGNED_IN).includes(r)).join();
+      const want = SIGNED_IN.filter((r) => (e.roles ?? topicWho).includes(r)).join();
       const got = needed.filter((r) => SIGNED_IN.includes(r)).join();
       if (want !== got) problem(`${where} ("${e.activity}") needs ${e.needs}, held by [${got}], but its roles are [${want}].`, ["Fix whichever is wrong; the cell is what the system does."]);
     }
@@ -253,7 +280,7 @@ for (const t of topics) {
       if (e.who) does = e.who.includes(role);
       else if (e.audience === "all") does = true;
       else if (e.audience === "signedin") does = role !== "visitor";
-      else if (SIGNED_IN.includes(role)) does = needed ? needed.includes(role) : isForRole(e.roles ?? t.roles, role);
+      else if (SIGNED_IN.includes(role)) does = needed ? needed.includes(role) : (e.roles ?? topicWho).includes(role);
       else does = false;
       cells[role] = does ? "does" : e.na?.includes(role) || e.naRest ? "n/a" : "must not";
     }

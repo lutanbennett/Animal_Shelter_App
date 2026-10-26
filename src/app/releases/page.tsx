@@ -2,15 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { getAppEnv } from "@/lib/app-env";
-import { loadSessionRole } from "@/lib/auth/app-access";
-import { can } from "@/lib/permissions/can";
+import { can, entersApp } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { formatDate } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
-import { asManualRole, audiencesOf } from "@/lib/manual/audience";
-import { isForRole } from "@/lib/manual/filter";
+import { isForAnyRole } from "@/lib/manual/filter";
 import { noteRoles, noteText, releases, unreleased, type ReleaseNote } from "@/lib/releases";
-import { createClient } from "@/lib/supabase/server";
 import { OpenReleaseFromHash } from "./OpenReleaseFromHash";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -27,6 +24,12 @@ export async function generateMetadata(): Promise<Metadata> {
  * "Production" in the same commit.
  */
 const ENV_LABEL = { dev: "Dev", uat: "UAT", production: "UAT" } as const;
+
+/**
+ * The role keys the notes were ever tagged in (releases.ts's ReleaseRole, and "staff" from before 0173). A reader holding
+ * none of them has a role these tags cannot speak to, so the page shows them every note instead of narrowing (isForAnyRole).
+ */
+const TAGGED_ROLES = ["admin", "management", "second_in_command", "head_of_maintenance", "head_of_medical", "doctor", "volunteer", "staff"];
 
 /** A note as the page shows it: `mine` when it is for the reader's role or for everyone. */
 type ViewNote = { text: string; mine: boolean };
@@ -47,9 +50,8 @@ type ViewNote = { text: string; mine: boolean };
  * reader's (docs/decisions.md, "Release notes by role").
  */
 export default async function ReleasesPage({ searchParams }: PageProps<"/releases">) {
-  const [{ view }, role, perms, { t, locale }] = await Promise.all([
+  const [{ view }, perms, { t, locale }] = await Promise.all([
     searchParams,
-    createClient().then(loadSessionRole).then(asManualRole),
     loadPermissions(),
     getT(),
   ]);
@@ -59,12 +61,14 @@ export default async function ReleasesPage({ searchParams }: PageProps<"/release
   // The environment tag is for whoever runs the system: to everyone else
   // "Dev" on every release is a developer's word on a staff screen.
   const showEnv = can(perms, "system.status");
-  const roleName = role ? r.roleNames[role] : null;
+  // The reader's own role name, whatever the shelter calls it; none for a session that does not open the app.
+  const roleName = perms && entersApp(perms) ? perms.role.name : null;
+  const roleKeys = perms?.roles ?? [];
   const showAll = view === "all" || !roleName;
   /** The notes this view lists: the reader's, or all of them under Show everything. */
   const shown = (notes: ReleaseNote[]): ViewNote[] =>
     notes
-      .map((note) => ({ text: noteText(note), mine: isForRole(noteRoles(note), role) || audiencesOf(perms).some((a) => isForRole(noteRoles(note), a)) }))
+      .map((note) => ({ text: noteText(note), mine: isForAnyRole(noteRoles(note), roleKeys, TAGGED_ROLES) }))
       .filter((n) => showAll || n.mine);
   const pending = shown(unreleased);
 

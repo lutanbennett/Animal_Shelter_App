@@ -6,7 +6,7 @@
 //   A  a login with ONE role gets exactly the home homeTilesFor() always gave it (hashed, per default role)
 //   B  a login with two roles gets both homes, once each tile, main role's first
 //   C  canDoJob() counts every role a person holds, and a doctor key counts like any other (by its cells, never by its name)
-//   D  the manual reads a covering person as both audiences
+//   D  the manual opens on the cards a covering person holds across both roles, never on a role's name
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -29,8 +29,7 @@ const { ACTIVITIES } = await imp("src/lib/permissions/catalogue.ts");
 const { parsePermissions } = await imp("src/lib/permissions/can.ts");
 const { bundleOfRole } = await imp("scripts/lib/test-role-jobs.mjs");
 const { canDoJob } = await imp("src/lib/recurring-jobs/eligibility.ts");
-const { audiencesOf } = await imp("src/lib/manual/audience.ts");
-const { isForTopic } = await imp("src/lib/manual/for-topic.ts");
+const { isForTopic, topicView } = await imp("src/lib/manual/for-topic.ts");
 const { loadSeed } = await import(pathToFileURL(join(root, "scripts/lib/permission-seed.mjs")).href);
 const t = (await imp("src/lib/i18n/dictionaries/en.ts")).default;
 const seed = loadSeed(root);
@@ -101,11 +100,12 @@ ok("C a doctor key counts exactly when it holds the cell", canDoJob(["doctor"], 
 ok("C no roles, no job", !canDoJob([], MAINT, {}));
 
 // ---- D ----
-ok("D one role, one audience", JSON.stringify(audiencesOf(permsFor("head_of_medical"))) === JSON.stringify(["volunteer"]));
-ok("D management covering a volunteer role reads as both", JSON.stringify(audiencesOf(permsFor("management", "head_of_medical"))) === JSON.stringify(["management", "volunteer"]));
-const topic = { id: "x", title: "x", roles: ["volunteer"], steps: [] };
-ok("D a volunteer-tagged topic is the covering manager's", isForTopic(topic, "management", permsFor("management", "head_of_medical")));
-ok("D ...and not a plain manager's", !isForTopic(topic, "management", permsFor("management")));
+const maintenanceTopic = { id: "x", title: "x", activity: "maintenance.jobs", steps: [] };
+ok("D a maintenance topic is not the Head of Medical's", !isForTopic(maintenanceTopic, permsFor("head_of_medical")));
+ok("D ...it is the Head of Maintenance's", isForTopic(maintenanceTopic, permsFor("head_of_maintenance")));
+ok("D ...and the Head of Medical's once covering Maintenance", isForTopic(maintenanceTopic, permsFor("head_of_medical", "head_of_maintenance")));
+ok("D a topic for everyone is everyone's", topicView({ id: "y", title: "y", everyone: true }, permsFor("head_of_medical")) === "mine");
+ok("D a topic with no card is shown, marked unassigned", topicView({ id: "z", title: "z" }, permsFor("head_of_medical")) === "unassigned");
 
 console.log(fails ? `\n${fails} check(s) failed` : "\nall checks passed");
 process.exit(fails ? 1 : 0);

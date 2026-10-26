@@ -1,8 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import type { ActivityKey } from "@/lib/permissions/catalogue";
-
-/** The app_role values, as the manual's "who can do this" badges name them. */
-export type ManualRole = "admin" | "management" | "doctor" | "volunteer";
+import type { CardKey } from "@/lib/permissions/cards";
 
 /**
  * A screenshot under public/manual/. `src` is the path the <img> loads;
@@ -27,14 +25,27 @@ export type ManualCallout = {
 export type ManualTopic = {
   id: string;
   title: string;
-  /** Roles that can perform this task; omitted = everyone who can sign in. */
-  roles?: ManualRole[];
+  /**
+   * The cards whose holders do this task, when a person has decided that and the activity cannot say. Wins over the
+   * derivation. Left out for almost every topic: a topic that names an `activity` derives its cards from cards.ts
+   * (for-topic.ts, `cardsOfTopic`), so a change to a card needs no edit here.
+   */
+  cards?: CardKey[];
+  /**
+   * The topic is for everyone who signs in, and says so. This is the one legitimate "no card"; a topic with no
+   * `activity`, no `cards` and no `everyone` is *unassigned*: shown to everyone and marked, never hidden.
+   */
+  everyone?: true;
+  /**
+   * UNASSIGNED, WAITING FOR THE CARD REVIEW. The roles this topic used to be tagged with, kept only as the worklist for
+   * whoever links it to a card (docs/decisions/2026-10-26-manual-by-card.md). Nothing reads it to decide who sees the
+   * topic and it names no one's access.
+   */
+  awaitingCard?: string[];
   /**
    * The activity whose holders do this task (edit level unless `activityLevel` says read; the catalogue's key).
-   * The reader's "is this mine?" asks can() for it, so a role built later sees
-   * the right topics; `roles` stays for the "Who:" badge, which names the six
-   * roles that exist today, and scripts/acceptance-matrix.mjs fails when the
-   * two disagree. Omit it where the topic is everyone's.
+   * The topic's cards are the cards that grant it, so a role built later sees the right topics.
+   * scripts/acceptance-matrix.mjs fails when it names an activity no card grants.
    */
   activity?: ActivityKey;
   /** "read" when the topic is for whoever can look at the activity, not only change it (Enclosures, Maintenance board…). */
@@ -60,19 +71,15 @@ export type Manual = {
   subtitle: string;
   /** Free text shown under the title, e.g. "Draft 1 · September 2026". */
   version: string;
-  roleNames: Record<ManualRole, string>;
-  roleSummary: Record<ManualRole, string>;
-  /**
-   * The page's role filter: the line above the sections and the label on a
-   * topic outside the reader's role. `role` is already the role's name.
-   */
+  /** The page's filter line, and the label on a topic outside the reader's cards. */
   filter: {
-    showingRole: (role: string, count: number) => string;
+    showingMine: (count: number) => string;
     showEverything: string;
     findHint: string;
-    showingEverything: (role: string) => string;
-    showOnlyRole: (role: string) => string;
-    notForRole: (role: string) => string;
+    showingEverything: string;
+    showOnlyMine: string;
+    notYours: string;
+    unassigned: string;
     you: string;
   };
   sections: ManualSection[];

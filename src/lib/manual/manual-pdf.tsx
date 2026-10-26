@@ -5,9 +5,10 @@ import { NOTO_SANS_THAI_REGULAR } from "@/lib/archive/fonts/noto-sans-thai-regul
 import { NOTO_SANS_THAI_BOLD } from "@/lib/archive/fonts/noto-sans-thai-bold";
 import { thaiPdfChildren } from "@/lib/archive/fonts/thai-pdf-children";
 import screenshotSizes from "./screenshot-sizes.json";
-import { isForTopic } from "./for-topic";
+import { cardsOfTopic, isForTopic } from "./for-topic";
 import type { Permissions } from "@/lib/permissions/can";
-import type { Manual, ManualCallout, ManualRole, ManualTopic } from "./types";
+import type { CardKey } from "@/lib/permissions/cards";
+import type { Manual, ManualCallout, ManualTopic } from "./types";
 
 /**
  * The manual as a printable PDF, drawn from the same `Manual` data as the
@@ -38,7 +39,8 @@ function Text(props: ComponentProps<typeof PdfText>) {
   );
 }
 
-const ROLE_ORDER: ManualRole[] = ["admin", "management", "doctor", "volunteer"];
+/** A card as the copy names it: its title and its one line from Who does what, so the two can never drift. */
+export type ManualCard = { key: CardKey; label: string; description: string };
 const COLORS = { text: "#1f2933", muted: "#6b7280", rule: "#d8dee5", accent: "#a35f00" };
 const CALLOUT: Record<ManualCallout["kind"], { label: string; bg: string; border: string }> = {
   tip: { label: "Tip", bg: "#ecf7ee", border: "#7cc48a" },
@@ -80,14 +82,14 @@ export type ManualImages = Map<string, Uint8Array>;
 const SIZES: Record<string, { width: number; height: number } | undefined> = screenshotSizes;
 
 /** Whether a topic is in the copy: everything, or the reader's own. */
-export function topicInCopy(topic: ManualTopic, role: ManualRole | null, all: boolean, perms?: Permissions | null) {
-  return all || isForTopic(topic, role, perms);
+export function topicInCopy(topic: ManualTopic, all: boolean, perms?: Permissions | null) {
+  return all || isForTopic(topic, perms);
 }
 
 /** The `src`s the copy will draw, so the caller can fetch just those. */
-export function screenshotSrcs(manual: Manual, role: ManualRole | null, all: boolean, perms?: Permissions | null): string[] {
+export function screenshotSrcs(manual: Manual, all: boolean, perms?: Permissions | null): string[] {
   return manual.sections.flatMap((s) =>
-    s.topics.filter((t) => t.screenshot && topicInCopy(t, role, all, perms)).map((t) => t.screenshot!.src),
+    s.topics.filter((t) => t.screenshot && topicInCopy(t, all, perms)).map((t) => t.screenshot!.src),
   );
 }
 
@@ -111,9 +113,9 @@ function Shot({ topic, images }: { topic: ManualTopic; images: ManualImages }) {
   );
 }
 
-function ManualDocument({ manual, role, all, images, perms }: { manual: Manual; role: ManualRole | null; all: boolean; images: ManualImages; perms?: Permissions | null }) {
-  const roleName = role ? manual.roleNames[role] : null;
-  const scope = all || !roleName ? "Full edition" : `${roleName} edition`;
+function ManualDocument({ manual, cards, all, images, perms }: { manual: Manual; cards: readonly ManualCard[]; all: boolean; images: ManualImages; perms?: Permissions | null }) {
+  const labelOf = new Map(cards.map((c) => [c.key, c.label]));
+  const scope = all ? "Full edition" : "Your cards' edition";
   return (
     <Document title={manual.title} author="Lanna Care for Animals" subject={scope}>
       <Page size="A4" style={styles.page}>
@@ -123,17 +125,17 @@ function ManualDocument({ manual, role, all, images, perms }: { manual: Manual; 
         <Text style={styles.version}>{manual.version}</Text>
 
         <View style={{ marginTop: 18 }}>
-          <Text style={styles.h2}>Roles at a glance</Text>
-          {ROLE_ORDER.map((r) => (
-            <View key={r} style={styles.roleRow} wrap={false}>
-              <Text style={styles.roleName}>{manual.roleNames[r]}</Text>
-              <Text style={styles.roleText}>{manual.roleSummary[r]}</Text>
+          <Text style={styles.h2}>Cards at a glance</Text>
+          {cards.map((c) => (
+            <View key={c.key} style={styles.roleRow} wrap={false}>
+              <Text style={styles.roleName}>{c.label}</Text>
+              <Text style={styles.roleText}>{c.description}</Text>
             </View>
           ))}
         </View>
 
         {manual.sections.map((section) => {
-          const topics = section.topics.filter((t) => topicInCopy(t, role, all, perms));
+          const topics = section.topics.filter((t) => topicInCopy(t, all, perms));
           if (topics.length === 0) return null;
           return (
             <View key={section.id} break>
@@ -144,11 +146,7 @@ function ManualDocument({ manual, role, all, images, perms }: { manual: Manual; 
                   <View minPresenceAhead={60}>
                     <Text style={styles.h3}>{topic.title}</Text>
                     {topic.path && <Text style={styles.muted}>{topic.path}</Text>}
-                    {topic.roles && (
-                      <Text style={styles.muted}>
-                        {`Who: ${ROLE_ORDER.filter((r) => topic.roles?.includes(r)).map((r) => manual.roleNames[r]).join(", ")}`}
-                      </Text>
-                    )}
+                    <TopicCardsLine topic={topic} labelOf={labelOf} filter={manual.filter} />
                   </View>
                   {topic.intro && <Text style={[styles.body, { marginTop: 3 }]}>{topic.intro}</Text>}
                   {topic.steps?.map((step, i) => (
@@ -185,10 +183,20 @@ function ManualDocument({ manual, role, all, images, perms }: { manual: Manual; 
   );
 }
 
-/** Renders the manual to PDF bytes. `role` null = no role known, so everything. */
+/** The line under a topic's heading: the cards that give it, or the note that none does yet. */
+function TopicCardsLine({ topic, labelOf, filter }: { topic: ManualTopic; labelOf: Map<CardKey, string>; filter: Manual["filter"] }) {
+  const own = cardsOfTopic(topic);
+  if (own.kind === "unassigned") return <Text style={styles.muted}>{filter.unassigned}</Text>;
+  if (own.kind !== "cards") return null;
+  const names = own.cards.map((k) => labelOf.get(k) ?? k);
+  const text = names.length > 4 ? `${names.slice(0, 4).join(", ")} and ${names.length - 4} more` : names.join(", ");
+  return <Text style={styles.muted}>{`Cards: ${text}`}</Text>;
+}
+
+/** Renders the manual to PDF bytes. No permissions known = everything. */
 export async function renderManualPdf(
   manual: Manual,
-  options: { role: ManualRole | null; all: boolean; images: ManualImages; perms?: Permissions | null },
+  options: { cards: readonly ManualCard[]; all: boolean; images: ManualImages; perms?: Permissions | null },
 ): Promise<Uint8Array> {
   const buffer = await renderToBuffer(<ManualDocument manual={manual} {...options} />);
   return new Uint8Array(buffer);
