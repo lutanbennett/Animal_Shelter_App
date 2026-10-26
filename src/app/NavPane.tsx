@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { can, entersApp } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
-import { canOpen, opensAnyIn, routeFor } from "@/lib/permissions/routes";
+import { canOpen, opensAnyIn, pagesIn, routeFor } from "@/lib/permissions/routes";
 import { todayIso } from "@/lib/format";
 import { countMyUrgentAccessRequests } from "@/lib/my-tasks/access-requests";
 import { countMyUrgentMaintenance } from "@/lib/my-tasks/maintenance";
@@ -47,7 +47,10 @@ export async function NavPane() {
       // A landing opens for whoever may open one page in its section: the question its guard asks.
       canSettings={opensAnyIn(perms, "settings")}
       canManagement={opensAnyIn(perms, "management")}
-      canOperations={opensAnyIn(perms, "operations")}
+      // Two or more pages, or the section would only repeat the one tile Home already has.
+      canOperations={pagesIn(perms, "operations") > 1}
+      // The list is the whole record: a login with no read of it would open an empty list (requireFullResident asks the same).
+      canResidents={can(perms, "resident.record", "read")}
       hasTasks={can(perms, "recurring.do_own")}
       canAppointments={opens("/appointments")}
       urgentCount={urgentCount}

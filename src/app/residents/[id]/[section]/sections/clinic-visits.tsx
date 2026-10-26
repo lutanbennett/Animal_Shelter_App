@@ -8,7 +8,7 @@ import { visitDate } from "@/lib/clinics/linkable";
 import { ActionLink } from "@/components/ActionLink";
 import { ACTION_ICONS, PLACEMENT_ICONS, SECTION_ICONS } from "@/components/hub-icons";
 import { RowActionLink } from "@/components/RowAction";
-import { availablePlacementActions } from "@/lib/placements/available";
+import { placementActionsFor } from "@/lib/placements/available";
 import type { SectionContext } from "./types";
 import { calendarConfigured } from "@/lib/clinics/calendar-sync";
 import { retryCalendarSync } from "@/app/clinic-visits/calendar-actions";
@@ -99,7 +99,8 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
   };
   // A visit can end with the resident admitted; offer that on each record
   // unless they're already in hospital, adopted out, or gone.
-  const canSendToHospital = availablePlacementActions(
+  const canSendToHospital = placementActionsFor(
+    perms,
     isDeceased ? "Deceased" : residentState?.current_status,
   ).includes("hospital");
   const visitSubject = (row: { reason: string | null; appointment_date: string }) =>

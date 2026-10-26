@@ -1,3 +1,4 @@
+import { can } from "@/lib/permissions/can";
 import { localLabel } from "@/lib/translations/labels";
 import { ProcedureList, type ProcedureRow } from "@/components/ProcedureList";
 import { ActionLink } from "@/components/ActionLink";
@@ -5,7 +6,7 @@ import { SECTION_ICONS } from "@/components/hub-icons";
 import type { SectionContext } from "./types";
 
 export async function renderProceduresSection(ctx: SectionContext): Promise<React.ReactNode> {
-  const { id, isDeceased, t, locale, supabase } = ctx;
+  const { id, isDeceased, perms, t, locale, supabase } = ctx;
   const { data: procedureRows, error } = await supabase
     .from("procedures")
     .select(
@@ -53,7 +54,7 @@ export async function renderProceduresSection(ctx: SectionContext): Promise<Reac
 
   return (
     <div className="flex flex-col gap-4">
-      {!isDeceased && (
+      {!isDeceased && can(perms, "medical.procedures") && (
         <div className="flex justify-end">
           <ActionLink
             href={`/procedures/new?residentId=${id}`}

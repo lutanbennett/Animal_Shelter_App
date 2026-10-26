@@ -1,3 +1,4 @@
+import { can } from "@/lib/permissions/can";
 import { localLabel } from "@/lib/translations/labels";
 import { BloodTestList, type BloodTestRow } from "@/components/BloodTestList";
 import { ActionLink } from "@/components/ActionLink";
@@ -5,7 +6,7 @@ import { SECTION_ICONS } from "@/components/hub-icons";
 import type { SectionContext } from "./types";
 
 export async function renderBloodTestsSection(ctx: SectionContext): Promise<React.ReactNode> {
-  const { id, isDeceased, t, locale, supabase } = ctx;
+  const { id, isDeceased, perms, t, locale, supabase } = ctx;
   const { data: tests } = await supabase
     .from("blood_tests")
     .select(
@@ -50,7 +51,7 @@ export async function renderBloodTestsSection(ctx: SectionContext): Promise<Reac
 
   return (
     <div className="flex flex-col gap-4">
-      {!isDeceased && (
+      {!isDeceased && can(perms, "medical.blood_tests") && (
         <div className="flex justify-end">
           <ActionLink
             href={`/blood-tests/new?residentId=${id}`}
