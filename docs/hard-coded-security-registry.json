@@ -195,6 +195,11 @@
       "guard": "opensWhoDoesWhat (Admin or Management by role key: the first open rule)."
     },
     {
+      "file": "src/app/admin/who-does-what/features/page.tsx",
+      "for": "Reads the features list and which feature each card is filed under.",
+      "guard": "opensWhoDoesWhat (Admin or Management by role key: the first open rule)."
+    },
+    {
       "file": "src/app/admin/who-does-what/page.tsx",
       "for": "Reads every role's cards, groups and settings.",
       "guard": "opensWhoDoesWhat (Admin or Management by role key: the first open rule)."
