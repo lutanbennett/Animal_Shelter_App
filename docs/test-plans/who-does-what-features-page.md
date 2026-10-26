@@ -149,7 +149,7 @@ Automated checks by: Claude  Date: 2026-10-26
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: item 1 above
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: item 1 is not yet checked by anyone, so nothing is ticked; the signature below carries the pending state
 
 Manual verification by: pending: the edit round on the Features page with the authenticator step
 
