@@ -1,129 +1,107 @@
-# Planner handover — edition `366`, 2026-10-26
+# Planner handover — edition `375`, 2026-10-26
 
-**A delta, thirteenth edition in this shape.** Rules are the skill's step 8 — say what **changed**,
+**A delta, fourteenth edition in this shape.** Rules are the skill's step 8 — say what **changed**,
 promote durable facts once, cite `.plan-day.md` rather than reproducing it.
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`** — if they
 disagree with this, they are right and this is stale. **Read first:** `CLAUDE.md` → the skill →
-`.plan-day.md` → this. **The next slug is `375`.**
+`.plan-day.md` → this. **The next slug is `384`.**
 
 > **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
 > release state, candidates. **Re-read every time, never diffed.**
 
 ---
 
-## `357` IS CLOSED OUT: ITS WHOLE "NEXT ROUND" LIST SHIPPED, AND ONE OF ITS NUMBERS WAS WRONG
+## THE NEVER-CARRY-A-COUNT RULE JUST PROVED ITSELF ON THIS DOCUMENT
 
-Its five-point list is now four points done. The coded-security guarantee shipped, the patch
-releases shipped, Lutan confirmed, and **every card has been written up and driven in a browser**.
-Only its point 5 remains, and it is now the gate on everything: **his fault-log review as a set,
-then the fixes, then Card review 2, then Management's cards, then Admin off the Director.**
+Edition `366` spent a paragraph correcting `357`'s *"28 cards"* to **29**, with the arithmetic and
+the CI assertion that holds it. **That correction is already stale: the count moved again this
+round**, under Lutan's own card-review decision, and `scripts/check-cards-count.mjs` moved with it.
 
-**Two of `357`'s statements are now actively misleading — correct them rather than re-deriving:**
+So the right lesson is not the new number — **writing it here would repeat the mistake.** It is that
+**a count in a handover has a half-life of about one round.** Read `CARD_KEYS` and read the check;
+never type a card total, including the one in the sentence you are tempted to copy from here.
 
-- **It says 28 cards. There are 29.** `CARD_KEYS` is `JobKey | NewCardKey`:
-  **21 + 8 = 29**, and `scripts/check-cards-count.mjs` asserts it in CI. The eight job cards
-  (`add_medical_photos`, `administer_medication`, `do_maintenance`, `do_purchasing`,
-  `do_stocktaking`, `feed_special_diets`, `record_delivery`, `record_weight`) are easy to miss
-  because they live in `jobs.ts`, not `cards.ts` — **a backlog item made exactly that error this
-  round and was corrected on the item.** Never type a card list; read `CARD_KEYS`.
-- **It says production is behind on migrations and the Who does what save is undeployed.** Stale.
-  Re-read, do not trust either sentence.
+## WHAT `366` ASKED FOR, and what each warning actually did
 
-## WHAT `357` ASKED FOR, and what each warning actually did
+- **"Check PR state with `gh`, not the session list." FIRED — sixth edition running.** The session
+  row said a PR was `OPEN`; `gh pr view` said `MERGED`. Lutan's own "batch 1 merged" was right and
+  the app's list was stale. **Keep it forever.** The session list is a convenience, not a record.
+- **"Capture the actuals before archiving." FIRED, nine of nine** — every figure read with the
+  process alive, and `context.session` checked against the id passed on every single call.
+- **"Run the production check FIRST." FIRED IN A NEW WAY — the check did not exist.** See below; it
+  is the most useful thing in this edition.
+- **"A note from a session is its report, not proof." FIRED AGAINST ME**, which is the better test.
+  See "My own failure".
+- **Its band correction held, and the band discipline mostly held** — nine streams, all banded, six
+  inside, three over, none under. The three overruns share one cause, now a row in the skill.
 
-- **"Check PR state with `gh`, not the session list." FIRED — fifth edition running.** A PR looked
-  fine by every other signal and `gh pr view` reported it `CONFLICTING` with every check `SKIPPED`.
-  **Keep it forever.**
-- **"A measurement has a timestamp; a fact does not." FIRED, and this time it paid.** I reported a
-  count, `main` moved underneath me mid-check, and re-reading changed the answer. **Say the clock,
-  and re-read before relying on it.**
-- **"Capture the actuals before archiving." FIRED** — three of three read while the processes were
-  alive, `session_id` echoed on every call.
-- **"A note from a session is its report, not proof." FIRED HARDEST, and it was the most valuable
-  minute of the round** — see the next section.
-- **Its band discipline did not hold, because I set no bands at all.** See "My own failure".
+## A PRODUCTION CHECK THAT DOES NOT EXIST IS NOT A PARKED QUESTION
 
-## THE PLANNER IS THE ONLY ROLE THAT CAN READ PRODUCTION, AND THIS ROUND THAT PAID PROPERLY
+The skill says to run the check an item names. **This round the item named a read that nothing in
+the repo could perform**, and that is a different situation with a different duty.
 
-The skill's step 2 already says to run a production check an item names. **It fired and it found a
-live outage nobody knew about.**
+A stream filed an item asking whether four clinic-login functions still had callers — a
+`pg_policies` / `pg_proc` read of production. Only the planner can read production, so it came to
+me. `scripts/check-production.mjs` has a fixed set of named checks and **none of them covered it.**
 
-A stream filed an item whose commit title said the production Worker cron had stopped. **I did not
-take the title.** I ran the check it named, and production said the cron's last run was three days
-earlier — **and that the same trigger sends the status-alert mail, so every System status alert had
-been silent for three days, including the Pi-down alert built for the October outage.**
+**The temptation is to park it, and it had already been parked twice.** What I did instead: said
+plainly that the instrument was missing rather than implying the question was unattended, and folded
+**building the named check** into a stream in the same batch. It shipped.
 
-**The monitoring was down and nothing said so**, which is the exact failure the alerting exists to
-prevent. The repo was innocent (`wrangler.jsonc` unchanged), so it is Lutan's: a Worker deploy or
-the Cloudflare trigger.
+**The rule to carry: when a question can only be answered by a read nobody can run, the deliverable
+is the instrument, not the answer.** A question parked for want of a tool will be parked again next
+round, and the third parking costs more than the script.
 
-**The lesson is not "run the check" — that was already written. It is that the yield is high enough
-to do it FIRST, before planning anything.** Thirty seconds of a read-only script turned a stream's
-side-note into the most important thing to tell him all day.
+## MY OWN FAILURE THIS ROUND: I PASSED A WRONG ASSUMPTION INTO A BRIEF
 
-## MY OWN FAILURE THIS ROUND: SIX STREAMS SET UP WITH NO BANDS
+An item said some clinic-login helpers were dead code. **I repeated that in the brief without
+checking it.** The stream read the code, found one of them is called by five routes, kept it, and
+said plainly what it could not establish.
 
-Six streams were set up in conversation rather than through `/plan-day` — three card-report streams
-and three more today. **Not one was given a token band.** Their actuals are therefore measurements
-with nothing to compare against: `calendar-pending-tile` **224,198**, `manual-by-card` **278,853**,
-`pi-origin-lever` **183,416**, all `claude-sonnet-5-5` / `low`, all sound readings.
+**That is the correct outcome and it cost nothing — but it worked because the stream distrusted its
+brief, not because the brief was sound.** The brief is the one document a stream has no reason to
+doubt, and a planner's unchecked sentence inside it carries the planner's authority.
 
-**Banding costs one line and it is the only mechanism by which the table self-corrects.** A stream
-set up outside the skill is still a stream. **Write the band even when nobody asked for a plan.**
+**So: a claim an item makes about what is dead, unused or uncalled gets one `grep` before it enters
+a brief.** The same "confident sentence is the one to check" rule `366` wrote about items applies
+to the briefs I write *from* those items.
 
-## BAND CORRECTION — one, and it has three readings
+## BAND CORRECTION — one shape, now a row in the skill
 
-**An app-only stream that also drives a browser across several roles lands at 180–280k on
-sonnet/low**, not the 120–145k ordinary default. The three figures above are the evidence, and the
-spread tracks how wide the edit was rather than how hard the thinking was — the widest refactor was
-the dearest, the runbook-plus-flag was the cheapest.
+**All three overruns today were banded on the item's FRAMING rather than on a COUNT**, and the one
+with a countable unit missed worst. The fix is promoted into the skill's band table as its own row
+(**harness triage: ~85k + ~20k per harness, ~15k each when one cause explains them all**), with both
+of today's readings as evidence.
 
-This is consistent with the skill's existing +30k browser allowance; what is new is that **it
-compounds with edit width rather than adding to a fixed base.**
+**The genuinely new finding, and the first mitigation check to return a real answer:** a
+**shared cause discounts about a quarter per harness**, because the second harness onwards is a
+re-run rather than a diagnosis. That is now worth asking before banding any batch of similar work —
+not just harnesses.
 
-## TWO THINGS PROMOTED OUT OF THIS DOCUMENT IN THIS PR
+The permissions half of the schema-with-code row also gained a third reading and held at +3.7%.
 
-Per the delta rule: a fact that will still be true in three rounds does not live here.
+## A RULE OF MINE THAT IS NOW UNTESTED TWO ROUNDS RUNNING — do not promote it, do not drop it
 
-1. **"No fallback to a named role" is now in `CLAUDE.md`.** Lutan, 2026-10-26: *"I want the system to
-   enable full flexibility of roles to be named whatever a shelter wants them to be named as so
-   having any fallback to a named role will break longer term."* It is a **cousin of the
-   hard-coded-security rule, not the same rule**, and the difference matters: the security check
-   will never catch it, because the offending files are correctly recorded as *content marking, not
-   access*. Being shown the wrong manual page grants nobody anything — it just breaks the moment a
-   shelter renames a role. **A rule no check can enforce has to be written down.**
-2. **"A split backlog item is invisible, and nothing tests for it" is now in the skill's step 3.**
-   New failure class, found this round: an item had split across two lines, ending mid-code-span,
-   with its remaining 1,577 characters orphaned on the next line. **`check-backlog-sections` passed
-   throughout**, because the orphan carried no list marker. It is the same invisibility as a
-   mis-filed item and it has no checker. The irony is instructive: the item was *about* a
-   newline-handling fault.
+The `src/lib/releases.ts` collision rule — *name one owner; tell the others the conflict is expected
+and resolved by keeping both notes* — **has still never fired.** Both rounds since it was written,
+only one stream in the batch had a release note, so the rule was never exercised.
 
-## TWO WAYS AN ITEM CAN BE WRONG ABOUT ITSELF — both met this round
+**It is not evidence yet and must not be written anywhere as settled practice.** It is also not
+wrong — it has simply had no opportunity. **Carry it as untested for a third round rather than
+tidying it away**, because the round it is needed is the round three streams all add a note.
 
-Neither is a reason to distrust items generally; both are reasons to read the code before briefing.
+## WHAT WENT RIGHT AND IS WORTH KNOWING WENT RIGHT
 
-- **An item can prescribe a method that a standing rule forbids.** The resident-hub item says to
-  test with the Doctor role. **The Doctor is the card test role Lutan holds one card at a time on**,
-  so following the item would have destroyed work in progress. The brief overrides the item and says
-  why. **When an item and a standing rule disagree, the brief says which wins — do not leave the
-  stream to notice.**
-- **An item can under-describe its hard half.** The same item says the non-medical tiles take their
-  activity "from the same source the section page uses". **That source covers the seven medical
-  sections only**; for the rest it does not exist. One `sed -n` found it. **The confident sentence
-  is the one to check.**
+**No item went invisible this round — the first such round since the failure class was found.**
+Both batch-3 streams hit an item that was only partly closed, and **both rewrote the item's title to
+say what was left instead of ticking it.** One of them left its item open with *"Nothing left to
+decide; buildable now"* and the remaining half named in the title.
 
-## WHAT LUTAN DECIDED THIS ROUND, and none of it is to be re-opened
-
-- **No fallback to a named role, anywhere** (promoted above).
-- **The card report's format is approved** — *"The report format is good"* — and all 29 cards are
-  written up. **He is reading it now.** Do not schedule the fault-log fixes, the manual's last 14
-  topics or Card review 2 until he has.
-- **Outages at the shelter: once every six months, never more than two hours.** Asked and answered
-  in one line, after sitting unknown long enough to block the battery item. **Ask.**
-- **The PoE switch need not be protected** — *"I could bypass the switch if need be"* — which is
-  what made that purchase cheap.
+That is `CLAUDE.md`'s "Answering a decision on a backlog item" rule working exactly as written, and
+it is worth recording because **the three invisibility faults in the skill's step 3 all read as
+warnings about streams** — this round they behaved better than the warnings imply. **Keep reading
+the tails; stop assuming the tick will be wholesale.**
 
 ## STILL CARRIED, unchanged
 
@@ -131,19 +109,20 @@ Neither is a reason to distrust items generally; both are reasons to read the co
 - **Model, effort and which allowance to spend are his. Never block paid usage.**
 - **Never write scratch output above the repo.** `git show <rev>:<path>` still lies about dotted
   paths, and still reports zero when piped.
-- **`worktree.mjs done` refusing is information.**
-- **A note from a session is its report, not proof.** This round that rule found a three-day outage.
+- **`worktree.mjs done` refusing is information**, and its suggested flag is not advice.
+- **The planner is the only role that can read production**, and the yield is high enough to do it
+  before planning anything.
 
 ## NEXT ROUND POINTS AT
 
-1. **The production cron — his, and the oldest thing on the board.** Three days of silent alerting.
-   **Re-read its state before mentioning it; do not quote this sentence.**
-2. **Batch 1 merging** — `resident-hub-card-tiles`, `who-does-what-features-page`,
-   `release-tooling-fixes`. Composition, bands and set-up notes are in `.plan-day.md`; do not
-   reproduce them here.
-3. **His card review, which gates batch 3** — the fault log fixed as a set, the manual's 14
-   `awaitingCard` topics, then Card review 2.
-4. **The battery for the Pi** — one question outstanding with the seller: does it switch over
-   automatically on AC? The decision rule is written on the item.
-5. **The tunnel drill** — his hands on the Pi, and it takes production and test down together, so
-   he picks the moment. When he runs it, **it serves two items at once.**
+1. **A release is being cut now** — re-read its state rather than this sentence. The plan's three
+   batches are complete, which is what made this the moment.
+2. **His card review is still the gate**, and it now gates a named, buildable thing: the **app half**
+   of Card review 1, which the item describes in full and which needs no decision. Re-read the item;
+   do not reproduce its contents here.
+3. **The production cron** — his, and still the oldest thing on the board. **Re-read its state
+   before mentioning it.**
+4. **The battery for the Pi**, and **the tunnel drill** — his hands, his timing, and the drill
+   serves two items at once.
+5. **Six leftover worktrees** were cleared this round; two remain, both held by their own sessions.
+   `held` is the column to read before touching any of them.
