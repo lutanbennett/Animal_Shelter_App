@@ -20,7 +20,7 @@ const role = (permissions, clinical = "any") =>
 
 test("the card's bundle is shelter_add and the who-and-where read, and never the right to publish", () => {
   const bundle = bundleOfCards(["add_photos"]);
-  assert.deepEqual([...bundle.keys()].sort(), ["photos.shelter_add", "resident.record"]);
+  assert.deepEqual([...bundle.keys()].sort(), ["photos.shelter_add", "resident.who_and_where"]);
   assert.equal(bundle.has("photos.resident_publish"), false);
   assert.equal(bundle.has("photos.resident_add"), false);
 });

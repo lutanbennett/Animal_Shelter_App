@@ -5,8 +5,8 @@ import { JOBS, bundleOfJobs } from "./jobs.ts";
 import { ACTIVITIES } from "./catalogue.ts";
 import { ROUTES } from "./routes.ts";
 
-test("the agreed set is thirty cards, the eight jobs among them", () => {
-  assert.equal(CARD_KEYS.length, 30);
+test("the agreed set is thirty-two cards, the eight jobs among them", () => {
+  assert.equal(CARD_KEYS.length, 32);
   for (const k of Object.keys(JOBS)) assert.ok(CARDS[k], k);
 });
 
@@ -48,8 +48,8 @@ test("the eight jobs as cards give what the jobs give", () => {
   for (const key of Object.keys(JOBS)) assert.deepEqual(bundleOfCards([key]), bundleOfJobs([key]), key);
 });
 
-test("Enclosures is narrow: Read on the enclosures and nothing of maintenance", () => {
-  assert.deepEqual([...bundleOfCards(["enclosures"])], [["facility.enclosures", "read"]]);
+test("Enclosures is narrow: Read on the enclosures and who-and-where, nothing of maintenance", () => {
+  assert.deepEqual([...bundleOfCards(["enclosures"])], [["facility.enclosures", "read"], ["resident.who_and_where", "read"]]);
 });
 
 test("Management is not handed a power it does not hold: Residents leaves death withdrawal out", () => {
