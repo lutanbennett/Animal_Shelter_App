@@ -47,7 +47,7 @@ export function ResidentsTable({
   sortLinks,
   exportHref,
   exportFilename,
-  actions = { register: true, logImmunizations: true, bookVisit: true, download: true },
+  actions = { register: true, logImmunizations: true, bookVisit: true, download: true, edit: true },
 }: {
   residents: ResidentRow[];
   /** Origin for each row's RFID-card link (src/lib/tags/origin.ts). */
@@ -61,7 +61,7 @@ export function ResidentsTable({
   /** The name that download will save under, so the page can say where it went. */
   exportFilename: string;
   /** Which of the list's buttons this login may use; each target page refuses the rest, so they are not offered. */
-  actions?: { register: boolean; logImmunizations: boolean; bookVisit: boolean; download: boolean };
+  actions?: { register: boolean; logImmunizations: boolean; bookVisit: boolean; download: boolean; edit: boolean };
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -380,6 +380,7 @@ export function ResidentsTable({
                     origin={tagOrigin}
                     name={fullName(resident)}
                   />
+                  {actions.edit && (
                   <Link
                     href={`/residents/${resident.resident_id}/edit`}
                     title={t.residents.list.table.editAriaLabel(fullName(resident))}
@@ -390,6 +391,7 @@ export function ResidentsTable({
                   >
                     <Pencil aria-hidden="true" className="h-4 w-4" />
                   </Link>
+                  )}
                 </td>
               </tr>
             ))}

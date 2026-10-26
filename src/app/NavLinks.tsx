@@ -42,6 +42,7 @@ export function NavLinks({
   canSettings,
   canManagement,
   canOperations,
+  canResidents,
   hasTasks,
   canAppointments,
   urgentCount,
@@ -54,6 +55,8 @@ export function NavLinks({
   canManagement: boolean;
   /** Opens any page in the Operations section: its link (opensAnyIn, the landing's own guard). */
   canOperations: boolean;
+  /** Reads the resident record (resident.record): the Residents link. A login without it would open an empty list. */
+  canResidents: boolean;
   /**
    * Has recurring jobs of their own (recurring.do_own): My tasks leads the menu.
    * Without it the menu leads with Appointments, as a doctor's does.
@@ -104,7 +107,7 @@ export function NavLinks({
               },
             ]
           : []),
-      { href: "/residents", label: t.nav.residents, icon: NAV_ICONS.residents },
+      ...(canResidents ? [{ href: "/residents", label: t.nav.residents, icon: NAV_ICONS.residents }] : []),
       // The daily work (Lutan, 2026-10-08). Staff and volunteers have this
       // section and no other: it opens for anyone who can open one tile.
       ...(canOperations

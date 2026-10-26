@@ -4,7 +4,7 @@ import { placementTypeLabel } from "@/lib/i18n/enum-labels";
 import { ActionLink } from "@/components/ActionLink";
 import { ArchivedBadge } from "@/components/ArchivedBadge";
 import { PLACEMENT_ICONS } from "@/components/hub-icons";
-import { PLACEMENT_ACTION_PATHS, availablePlacementActions } from "@/lib/placements/available";
+import { PLACEMENT_ACTION_PATHS, placementActionsFor } from "@/lib/placements/available";
 import type { SectionContext } from "./types";
 import { RecordList } from "./shared";
 
@@ -43,7 +43,8 @@ export async function renderHousingSection(ctx: SectionContext): Promise<React.R
   // availablePlacementActions() for the table. The last one is primary.
   // A deceased resident has none, which is also how the read-only rule
   // shows up here.
-  const actions = availablePlacementActions(
+  const actions = placementActionsFor(
+    ctx.perms,
     isDeceased ? "Deceased" : residentState?.current_status,
   );
   return (

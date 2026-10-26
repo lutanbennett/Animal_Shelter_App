@@ -6,6 +6,7 @@ import { HandHeart, Pencil } from "lucide-react";
 import type { AppealStatus } from "@/lib/appeals/state";
 import type { Platform } from "@/lib/memes/platforms";
 import { SharedOn } from "@/app/memes/PlatformIcon";
+import type { Permissions } from "@/lib/permissions/can";
 import {
   DeceasedBanner,
   DeceasedRestoreNotice,
@@ -19,7 +20,7 @@ import {
 import { HUB_TAB_ICONS, PLACEMENT_ICONS, SECTION_ICONS } from "@/components/hub-icons";
 import {
   PLACEMENT_ACTION_PATHS,
-  availablePlacementActions,
+  placementActionsFor,
 } from "@/lib/placements/available";
 import {
   formatAge,
@@ -178,6 +179,8 @@ export function ResidentHub({
   archive,
   showTile,
   medicalEdit,
+  canEditResident,
+  perms,
   canRecordDeath,
   canUndoDeath,
   canManageTranslations,
@@ -220,7 +223,11 @@ export function ResidentHub({
   showTile: Record<HubSectionKey, boolean>;
   /** Which medical sections this login may add to (can(...,"edit")); the buttons follow it, as the pages do. */
   medicalEdit: Record<"diet" | "immunizations" | "visits" | "prescriptions" | "weight" | "procedures", boolean>;
-  /** Admin/staff, the roles that may record a death (and retry an archive). */
+  /** May edit the record (resident.record at edit); the pencil is drawn only then, as the edit page asks the same. */
+  canEditResident: boolean;
+  /** This login's permissions: the Housing buttons follow them (placementActionsFor). */
+  perms: Permissions | null;
+  /** Whoever holds the Record a death card (placement.death) (and retry an archive). */
   canRecordDeath: boolean;
   /** Admin only: may withdraw a death recorded in error (and retry its Drive restore). */
   canUndoDeath: boolean;
@@ -330,7 +337,7 @@ export function ResidentHub({
   }
   // Which placement actions apply depends on the lifecycle status — see
   // availablePlacementActions() for the table.
-  const housingActions: StatCardAction[] = availablePlacementActions(isDeceased ? "Deceased" : currentStatus).map((key) => ({
+  const housingActions: StatCardAction[] = placementActionsFor(perms, isDeceased ? "Deceased" : currentStatus).map((key) => ({
     href: `${base}${PLACEMENT_ACTION_PATHS[key]}`,
     label: t.residents.hub.placementActions[key],
     icon: PLACEMENT_ICONS[key],
@@ -510,6 +517,7 @@ export function ResidentHub({
               </span>
               {/* After death the edit page offers only the bio and photos
                   (0052); record-death is never offered twice. */}
+              {canEditResident && (
                 <Link
                   href={`${base}/edit`}
                   title={t.residents.hub.editResident}
@@ -519,6 +527,7 @@ export function ResidentHub({
                   <Pencil aria-hidden="true" className="h-4 w-4" />
                   <span className="md:sr-only">{t.residents.hub.editResident}</span>
                 </Link>
+              )}
               {!isDeceased && canRecordDeath && (
                 <Link
                   href={`${base}/deceased`}

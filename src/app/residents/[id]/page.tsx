@@ -306,6 +306,8 @@ export default async function ResidentPage(
         weight: can(perms, "medical.weight", "edit"),
         procedures: can(perms, "medical.procedures", "edit"),
       }}
+      canEditResident={can(perms, "resident.record")}
+      perms={perms}
       canRecordDeath={can(perms, "placement.death")}
       canUndoDeath={can(perms, "placement.death_withdraw")}
       canManageTranslations={can(perms, "translations.manage")}

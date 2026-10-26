@@ -35,7 +35,10 @@ export async function renderPhotosSection(ctx: SectionContext): Promise<React.Re
       )}
       {/* Photos stay open after death (0052); the archive is refreshed
           by the upload route and the photo actions. */}
-      <PhotoUploader residentId={id} categories={photoCategoriesFor(perms)} />
+      {/* No drop zone for a card that cannot add photos: it would only refuse (Card review 1, 2026-10-26). */}
+      {(can(perms, "photos.resident_add") || can(perms, "photos.shelter_add") || can(perms, "photos.resident_publish")) && (
+        <PhotoUploader residentId={id} categories={photoCategoriesFor(perms)} />
+      )}
       <PhotoGallery
         residentId={id}
         photos={photos ?? []}

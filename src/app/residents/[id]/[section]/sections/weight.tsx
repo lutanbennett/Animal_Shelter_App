@@ -78,7 +78,7 @@ export async function renderWeightSection(ctx: SectionContext): Promise<React.Re
   };
   return (
     <div className="flex flex-col gap-4">
-      {!isDeceased && (
+      {!isDeceased && can(perms, "medical.weight") && (
         <div className="flex justify-end">
           <ActionLink
             href={`/weight/new?residentId=${id}`}

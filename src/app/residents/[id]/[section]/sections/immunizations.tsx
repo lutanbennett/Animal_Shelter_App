@@ -1,3 +1,4 @@
+import { can } from "@/lib/permissions/can";
 import { formatDate, todayIso } from "@/lib/format";
 import { localLabel } from "@/lib/translations/labels";
 import { ArchiveRecordControl } from "@/components/ArchiveRecordControl";
@@ -7,7 +8,7 @@ import type { SectionContext } from "./types";
 import { RecordList } from "./shared";
 
 export async function renderImmunizationsSection(ctx: SectionContext): Promise<React.ReactNode> {
-  const { id, isDeceased, t, locale, supabase, showArchived, canArchive, archivedCount, archivedToggle, archivedList } = ctx;
+  const { id, isDeceased, perms, t, locale, supabase, showArchived, canArchive, archivedCount, archivedToggle, archivedList } = ctx;
   const { data } = await supabase
     .from("immunization_records")
     .select("id, date_administered, administered_by, immunization_types:picker_immunization_types(name, name_th)")
@@ -94,7 +95,7 @@ export async function renderImmunizationsSection(ctx: SectionContext): Promise<R
   const today = todayIso();
   return (
     <div className="flex flex-col gap-4">
-      {!isDeceased && (
+      {!isDeceased && can(perms, "medical.immunizations") && (
         <div className="flex justify-end">
           <ActionLink
             href={`/immunizations/new?residentId=${id}`}

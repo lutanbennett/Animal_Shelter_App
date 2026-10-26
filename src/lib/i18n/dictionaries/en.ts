@@ -997,7 +997,7 @@ const en = {
         "photos.shelter_add": "Add a resident's photo to the Shelter folder only (shown on the website once approved)",
         "photos.approve": "Approve or remove the photos waiting in Photos to approve",
         "facility.enclosures": "Enclosures and zones",
-        "maintenance.jobs": "Maintenance jobs: log, change, assign, cost, delete",
+        "maintenance.jobs": "Maintenance jobs: log, change, assign, cost",
         "maintenance.progress": "Move a job on: in progress, blocked, completed",
         "maintenance.photos": "Add and remove a job's photos",
         "maintenance.delete": "Delete a maintenance job for good",
@@ -4972,7 +4972,8 @@ const en = {
       closed: "This record is closed, so no photo can be added here. Ask Management.",
       back: "Back to the list",
       count: (n: number) => (n === 1 ? "1 photo saved" : `${n} photos saved`),
-      noView: "You can add photos here but not look at them again. Management can see them on the resident's record.",
+      noView: "This card adds photos but does not show them again. Anyone whose card shows the resident's record can see them on the resident's Photos page.",
+      canView: "You can look at the photos again on the resident's Photos page.",
       errors: {
         notAuthorized: "You can't add photos.",
         notFound: "Resident not found.",
