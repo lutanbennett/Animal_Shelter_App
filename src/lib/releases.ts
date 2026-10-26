@@ -75,6 +75,7 @@ export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "A resident's hub now shows only the parts of the record your cards let you read. Someone who gives medication sees Prescriptions but no Blood tests, Procedures, Visits, Weight, Diet or Immunisations card, and no Medical heading if none of them is open to them. Before, a card they could not open still appeared and said \"0 · none\", which was untrue. If a part is missing that you need, ask an admin to give you the card for it.",
   "The manual now opens on the topics for the cards you hold, and each topic says which cards give it. A 2IC, Head of Medical or Head of Maintenance is no longer shown the volunteer's manual, and a role called anything else gets its own. Show everything still lists the rest, greyed. A few topics are marked as not yet assigned to a card; they are shown to everyone until they are linked.",
   { text: "System status: when the Pi's tile is grey, it now says that is also what the emergency switch looks like when the Pi is sick, and the Pi-down alert mail points at the written steps for getting sign-in back without the Pi.", roles: ["admin"] },
 ];

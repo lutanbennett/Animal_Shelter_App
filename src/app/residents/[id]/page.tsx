@@ -8,6 +8,7 @@ import { loadResidentCard } from "@/lib/residents/card";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadTranslations } from "@/lib/translations/queries";
 import { placeName } from "@/lib/enclosures/names";
+import { SECTION_READS } from "@/lib/residents/section-reads";
 import { getT } from "@/lib/i18n/get-t";
 import { isMedicalFolder } from "@/lib/google/drive-client";
 import { canBrowseMemes, loadResidentMemes } from "@/lib/memes/queries";
@@ -27,6 +28,14 @@ import {
   type WeightRow,
 } from "./ResidentHub";
 
+/** What a read that was skipped hands back: the same shape as a query that found nothing. */
+const SKIPPED = { data: null, error: null, count: null } as const;
+
+/** Runs `query` only when `show`: a builder that is never awaited never reaches the database. */
+function when<T>(show: boolean, query: PromiseLike<T>): PromiseLike<T | typeof SKIPPED> {
+  return show ? query : Promise.resolve(SKIPPED);
+}
+
 export default async function ResidentPage(
   props: PageProps<"/residents/[id]">,
 ) {
@@ -45,6 +54,14 @@ export default async function ResidentPage(
   await requireFullResident(undefined, "read", { allowMedicalCard: true });
   const readOnlyExceptMedical = await opensRecordReadOnly();
 
+  // Which parts of the record this login may read (section-reads.ts, the map the section pages use). A part it
+  // cannot read is not drawn and not queried: the database would return no rows, and a tile saying "0 · none"
+  // would be false, not hidden.
+  const perms = await loadPermissions();
+  const show = Object.fromEntries(
+    Object.entries(SECTION_READS).map(([section, activity]) => [section, can(perms, activity, "read")]),
+  ) as Record<keyof typeof SECTION_READS, boolean>;
+
   const [
     residentResult,
     listViewResult,
@@ -60,7 +77,6 @@ export default async function ResidentPage(
     proceduresResult,
     bloodTestsResult,
     attachmentsCountResult,
-    perms,
     adoptionUpdatesResult,
     adoptCountResult,
   ] = await Promise.all([
@@ -107,65 +123,62 @@ export default async function ResidentPage(
       .from("placement_history")
       .select("id", { count: "exact", head: true })
       .eq("resident_id", id),
-    supabase
+    when(show.immunizations, supabase
       .from("immunization_records")
       .select("id, date_administered, immunization_types:picker_immunization_types(name, name_th)")
       .is("archived_at", null)
       .eq("resident_id", id)
       .order("date_administered", { ascending: false })
-      .returns<ImmunizationRecordRow[]>(),
-    supabase
+      .returns<ImmunizationRecordRow[]>()),
+    when(show.immunizations, supabase
       .from("immunization_compliance")
       .select("immunization_type_id, immunization_type_name")
       .eq("resident_id", id)
-      .returns<MissingImmunizationRow[]>(),
-    supabase
+      .returns<MissingImmunizationRow[]>()),
+    when(show["clinic-visits"], supabase
       .from("clinic_visits")
       .select("id, appointment_date, status, reason")
       .is("archived_at", null)
       .eq("resident_id", id)
       .order("appointment_date", { ascending: false })
-      .returns<ClinicVisitRow[]>(),
-    supabase
+      .returns<ClinicVisitRow[]>()),
+    when(show.prescriptions, supabase
       .from("prescriptions")
       .select("id, start_date, end_date, medication:picker_medications(name, name_th)")
       .is("archived_at", null)
       .eq("resident_id", id)
       .order("start_date", { ascending: false })
-      .returns<PrescriptionRow[]>(),
-    supabase
+      .returns<PrescriptionRow[]>()),
+    when(show.diet, supabase
       .from("resident_diets")
       .select("id, start_date, end_date, diet_types:diets(name, name_th)")
       .eq("resident_id", id)
       .order("start_date", { ascending: false })
-      .returns<DietRow[]>(),
-    supabase
+      .returns<DietRow[]>()),
+    when(show.weight, supabase
       .from("weight")
       .select("id, date, weight_kg")
       .is("archived_at", null)
       .eq("resident_id", id)
       .order("date", { ascending: false })
-      .returns<WeightRow[]>(),
-    supabase
+      .returns<WeightRow[]>()),
+    when(show.procedures, supabase
       .from("procedures")
       .select("id, date, procedure_types(name, name_th)")
       .eq("resident_id", id)
       .order("date", { ascending: false })
-      .returns<ProcedureRow[]>(),
-    supabase
+      .returns<ProcedureRow[]>()),
+    when(show["blood-tests"], supabase
       .from("blood_tests")
       .select("id, date")
       .eq("resident_id", id)
       .order("date", { ascending: false })
-      .returns<BloodTestRow[]>(),
+      .returns<BloodTestRow[]>()),
     supabase
       .from("attachments")
       .select("id", { count: "exact", head: true })
       .eq("owner_type", "resident")
       .eq("owner_id", id),
-    // The permissions: the controls the hub offers ask can(), and the contacts scope picks the
-    // address-book view the carer's name is read through (contacts/visibility.ts).
-    loadPermissions(),
     // Newest first; the card shows how many and the latest (0097).
     supabase
       .from("adoption_updates")
@@ -292,6 +305,7 @@ export default async function ResidentPage(
         photoMissing: archiveFlag === "nophoto",
       }}
       readOnlyExceptMedical={readOnlyExceptMedical}
+      showTile={show}
       medicalEdit={{
         diet: can(perms, "medical.diet", "edit"),
         immunizations: can(perms, "medical.immunizations", "edit"),

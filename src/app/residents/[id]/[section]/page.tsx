@@ -5,7 +5,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { contactNameEmbed } from "@/lib/contacts/visibility";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
-import type { LevelKey } from "@/lib/permissions/catalogue";
+import { sectionRead } from "@/lib/residents/section-reads";
 import { requireFullResident } from "@/lib/residents/who-and-where";
 import { residentPhotoSelect } from "@/lib/adoption-updates/options";
 import { type MedicalArchiveKind } from "@/lib/medical-archive/kinds";
@@ -39,21 +39,6 @@ const RENDERERS: Record<string, (ctx: SectionContext) => Promise<React.ReactNode
   "blood-tests": renderBloodTestsSection,
 };
 
-/**
- * The activity each tab of the record is read under. Housing, photos and adoption updates are the
- * resident's own record (resident.record); the medical tabs each have their cell, so a login with no
- * read of that part is refused, not shown an empty list.
- */
-const SECTION_READS: Partial<Record<string, LevelKey>> = {
-  immunizations: "medical.immunizations",
-  "clinic-visits": "medical.visits",
-  prescriptions: "medical.prescriptions",
-  diet: "medical.diet",
-  weight: "medical.weight",
-  procedures: "medical.procedures",
-  "blood-tests": "medical.blood_tests",
-};
-
 export default async function ResidentSectionPage(
   props: PageProps<"/residents/[id]/[section]">,
 ) {
@@ -64,7 +49,7 @@ export default async function ResidentSectionPage(
   )[section];
   if (!title) notFound();
   // The Medical records card opens the medical tabs and, read-only, housing, photos and adoption news.
-  await requireFullResident(SECTION_READS[section], "read", { allowMedicalCard: true });
+  await requireFullResident(sectionRead(section), "read", { allowMedicalCard: true });
   const SectionIcon = SECTION_ICONS[section as HubSection];
 
   const supabase = await createClient();
