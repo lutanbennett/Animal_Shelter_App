@@ -73,9 +73,13 @@ declare
   v_doctor uuid := gen_random_uuid();
   v_clinic uuid := gen_random_uuid();
 begin
+  -- 0248: record_intake asks has_permission('resident.register'); run it as the Admin login, whose answer is true without a card and
+  -- does not move when a card is edited on Settings > Who does what. Then drop the claims.
+  perform set_config('request.jwt.claims', json_build_object('sub', (select ur.user_id from user_roles ur join roles r on r.id = ur.role_id where r.key = 'admin' and ur.archived_at is null limit 1), 'role', 'authenticated', 'aal', 'aal1')::text, true);
   select id into v_res from record_intake(
     p_name => 'Harness soft delete', p_intake_date => date '2026-08-01', p_weight_kg => 10,
     p_diet_id => (select id from diets order by is_standard desc nulls last limit 1));
+  perform set_config('request.jwt.claims', '', true);
   update residents set is_public_visible = true where id = v_res;
   insert into harness values ('res', v_res), ('doctor_user', v_doctor), ('clinic', v_clinic);
   insert into harness select 'intake_w', id from weight where resident_id = v_res;

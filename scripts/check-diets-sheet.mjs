@@ -20,11 +20,11 @@ declare
 begin
   select ur.user_id into v_admin from user_roles ur join roles r on r.id = ur.role_id
    where r.key = 'admin' and ur.archived_at is null limit 1;
-  insert into diet_types (name, unit, daily_qty_small, daily_qty_medium, daily_qty_large) values ('ZZ pumpkin', 'kg', 1, 1, 1) returning id into v_a;
-  insert into diet_types (name, unit, daily_qty_small, daily_qty_medium, daily_qty_large) values ('ZZ turkey', 'kg', 1, 1, 1) returning id into v_b;
-  delete from diets where name in ('ZZ pumpkin', 'ZZ turkey');
-  insert into diets (name) values ('ZZ Diabetic') returning id into v_diet;
-  insert into diet_ingredients (diet_id, diet_type_id, qty_small, qty_medium, qty_large) values (v_diet, v_a, 0.1, 0.2, 0.3), (v_diet, v_b, 0.4, 0.5, 0.6);
+  -- 0239: diet_types is the ingredient list now; a recipe is a diets row with servings per size, and each ingredient carries qty_per_serving.
+  insert into diet_types (name) values ('ZZ pumpkin') returning id into v_a;
+  insert into diet_types (name) values ('ZZ turkey') returning id into v_b;
+  insert into diets (name, servings_small, servings_medium, servings_large) values ('ZZ Diabetic', 1, 2, 3) returning id into v_diet;
+  insert into diet_ingredients (diet_id, diet_type_id, qty_per_serving) values (v_diet, v_a, 0.1), (v_diet, v_b, 0.25);
   select id into v_std from diets where is_standard;
 
   perform set_config('request.jwt.claims', json_build_object('sub', v_admin, 'role', 'authenticated', 'aal', 'aal1')::text, true);
@@ -61,7 +61,8 @@ let fails = 0;
 const check = (ok, what) => { if (!ok) fails++; console.log(`${ok ? "ok   " : "FAIL "} ${what}`); };
 console.log("sheet rows:", get("qty"));
 check(get("rows") === "2", "the new recipe gives one sheet row per ingredient");
-check(get("qty") === "ZZ pumpkin=0.10,ZZ turkey=0.25", "medium size times portion 0.5");
+// numeric scale is the view's business (0.10, 0.250), so compare the numbers: 0.1 and 0.25 per serving x 2 servings (Medium) x portion 0.5
+check((get("qty") ?? "").split(",").map((p) => p.split("=").map((x, i) => (i ? Number(x) : x)).join("=")).join(",") === "ZZ pumpkin=0.1,ZZ turkey=0.25", "medium size times portion 0.5");
 check(get("picker") === "2" || get("picker") === "1", "picker_diets lists the new diet (and Standard if one is set)");
 check(get("std_on_sheet") === "0", "Standard stays off the special diets sheet");
 check(get("nodiet") === "refused", "intake without a diet is refused");

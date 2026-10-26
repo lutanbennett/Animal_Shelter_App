@@ -78,9 +78,13 @@ begin
   insert into user_roles (user_id, role_id)
   select v.c0, ro.id from (values (v_admin, 'admin'), (v_mgmt, 'management')) as v(c0, role_key)
   join roles ro on ro.key = v.role_key;
+  -- 0248: record_intake asks has_permission('resident.register'). Admin answers true without holding a card, and unlike Management
+  -- its answer does not move when a card is edited on Settings > Who does what. Then drop the claims.
+  perform set_config('request.jwt.claims', json_build_object('sub', v_admin, 'role', 'authenticated', 'aal', 'aal1')::text, true);
   select id into v_res from record_intake(
     p_name => 'Harness audit undo', p_intake_date => date '2026-08-01', p_weight_kg => 10,
     p_diet_id => (select id from diets order by is_standard desc nulls last limit 1));
+  perform set_config('request.jwt.claims', '', true);
   insert into harness values ('admin', v_admin), ('mgmt', v_mgmt), ('res', v_res);
 end $setup$;
 
