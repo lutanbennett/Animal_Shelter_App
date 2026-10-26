@@ -73,7 +73,7 @@ function findPolicies(sql, test, MARKER) {
     for (const line of lines) {
       const m = line.match(MARKER);
       if (m) marker = m[1].trim();
-      const stripped = line.replace(/--.*$/, "");
+      const stripped = line.replace(/--[^\r\n]*/, "");
       if (stripped.trim()) code.push(stripped);
       else if (!code.length && line.trim().startsWith("--")) carried.push(line);
     }
