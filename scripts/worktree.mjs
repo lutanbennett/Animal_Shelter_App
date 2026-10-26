@@ -232,10 +232,31 @@ function sleep(ms) {
  * whose command line merely names the folder is somebody's session (a
  * Claude tool call, a terminal), and --stop-servers must never end one.
  */
+let holdersUnreadable = false;
+
+/**
+ * The process table, parsed so that nothing outside this repo can take it out.
+ * A command line holding a raw control character is invalid inside a JSON
+ * string and used to throw from JSON.parse, killing 'list' for every stream at
+ * once. Control characters are blanked first; a table that still will not
+ * parse gives null, never an exception.
+ */
+function parseProcessTable(text) {
+  try {
+    // eslint-disable-next-line no-control-regex
+    return [].concat(JSON.parse(text.replace(/[\u0000-\u001f\u007f]/g, " ")));
+  } catch {
+    return null;
+  }
+}
+
 function holders(dirs) {
   const found = new Map(dirs.map((d) => [d, []]));
   if (!WINDOWS || dirs.length === 0) return found;
-  const r = spawnSync(
+  // WORKTREE_PROCESS_TABLE_FILE stands in for the PowerShell call so the
+  // failure can be rehearsed with a fixture.
+  const fixture = process.env.WORKTREE_PROCESS_TABLE_FILE;
+  const r = fixture ? { status: 0, stdout: readFileSync(fixture, "utf8") } : spawnSync(
     "powershell",
     [
       "-NoProfile",
@@ -245,9 +266,16 @@ function holders(dirs) {
     ],
     { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
   );
-  if (r.status !== 0 || !r.stdout) return found;
+  const table = r.status === 0 && r.stdout ? parseProcessTable(r.stdout) : null;
+  if (!table) {
+    // An empty answer only means "nobody could be named"; held() stays the
+    // authority on whether a folder is in use.
+    holdersUnreadable = true;
+    console.error("warning: could not read the process table; held-by names may be missing");
+    return found;
+  }
   const norm = (s) => s.replaceAll("/", "\\").toLowerCase();
-  for (const p of [].concat(JSON.parse(r.stdout))) {
+  for (const p of table) {
     if (p.ProcessId === process.pid) continue;
     const cmd = norm(p.CommandLine ?? "");
     const exe = norm(p.ExecutablePath ?? "");
@@ -851,6 +879,7 @@ function cmdClean(args) {
   const flat = (s) => s.replaceAll("/", "\\").replace(/\\+/g, "\\").replace("\\.bin\\..\\", "\\").toLowerCase();
   const nextDir = `${flat(repo)}\\node_modules\\next\\`;
   const busy = (holders([repo]).get(repo) ?? []).filter((p) => flat(p.cmd).includes(nextDir));
+  if (holdersUnreadable) fail("not cleaning: the process table could not be read, so a running next cannot be ruled out. Run this again.");
   if (busy.length) {
     const pids = busy.map((p) => "pid " + p.pid).join(", ");
     fail(`not cleaning: next is running here (${pids}). Stop it and run this again.`);
