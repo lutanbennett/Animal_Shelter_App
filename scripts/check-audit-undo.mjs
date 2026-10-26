@@ -162,7 +162,9 @@ begin
   delete from clinic_visits where id = v_visit;
   v_r := pg_temp.reinsert(v_admin, 'clinic_visits', pg_temp.last_audit('clinic_visits', v_visit, 'DELETE'));
   if v_r <> 'ok' then raise exception 'HARNESS-FAIL B: visit not put back: %', v_r; end if;
-  if to_jsonb((select x from clinic_visits x where id = v_visit)) is distinct from v_before then raise exception 'HARNESS-FAIL B: visit differs'; end if;
+  -- calendar_out_of_date_at is stamped with now() by the trigger whenever a visit is (re)inserted: the restored visit is rightly marked
+  -- as needing a calendar resync, so it is the one column that may differ.
+  if (to_jsonb((select x from clinic_visits x where id = v_visit)) - 'calendar_out_of_date_at') is distinct from (v_before - 'calendar_out_of_date_at') then raise exception 'HARNESS-FAIL B: visit differs in %', (select string_agg(k || ': ' || coalesce(v_before ->> k, 'null') || ' -> ' || coalesce((to_jsonb(x) ->> k), 'null'), '; ') from clinic_visits x, jsonb_object_keys(v_before) k where x.id = v_visit and k <> 'calendar_out_of_date_at' and v_before -> k is distinct from to_jsonb(x) -> k); end if;
   v_report := v_report || 'B: weight, vaccination, prescription, contact and visit go back identical, logged as INSERT by the admin | ';
 
   -- C: the slot taken, then freed.
