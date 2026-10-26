@@ -50,7 +50,7 @@ export const JOBS: Record<JobKey, Job> = {
     label: (t) => t.appHome.jobs.administerMedication,
     bundle: [
       { activity: "medical.prescriptions", level: "read" },
-      { activity: "resident.record", level: "read" }, // who and where, nothing more (0134)
+      { activity: "resident.who_and_where", level: "read" }, // who and where, nothing more (0265)
     ],
     opens: "/operations/medication-list",
   },
@@ -61,7 +61,7 @@ export const JOBS: Record<JobKey, Job> = {
     label: (t) => t.appHome.jobs.recordWeight,
     bundle: [
       { activity: "medical.weight", level: "edit" },
-      { activity: "resident.record", level: "read" }, // the picker: who and where (0134)
+      { activity: "resident.who_and_where", level: "read" }, // the picker: who and where (0265)
     ],
     opens: "/medical/weight",
   },
@@ -72,7 +72,7 @@ export const JOBS: Record<JobKey, Job> = {
     label: (t) => t.appHome.jobs.addMedicalPhotos,
     bundle: [
       { activity: "photos.resident_add" },
-      { activity: "resident.record", level: "read" }, // the picker: who and where (0134)
+      { activity: "resident.who_and_where", level: "read" }, // the picker: who and where (0265)
     ],
     opens: "/medical/photos",
   },
@@ -83,7 +83,7 @@ export const JOBS: Record<JobKey, Job> = {
     label: (t) => t.appHome.jobs.feedSpecialDiets,
     bundle: [
       { activity: "medical.diet", level: "read" },
-      { activity: "resident.record", level: "read" }, // who and where, nothing more (0134)
+      { activity: "resident.who_and_where", level: "read" }, // who and where, nothing more (0265)
     ],
     opens: "/medical/diets",
   },
@@ -97,7 +97,7 @@ export const JOBS: Record<JobKey, Job> = {
       { activity: "maintenance.jobs", level: "edit" },
       { activity: "maintenance.progress" },
       { activity: "recurring.do_own" },
-      { activity: "resident.record", level: "read" }, // who and where, nothing more (0134)
+      // No resident read (Lutan, 2026-10-26, Card review 1): the enclosure page is what a maintenance job needs (0265).
       { activity: "facility.enclosures", level: "read" }, // the board names and picks them
       // Lutan ruled 2026-10-19 she keeps both: she works entirely on a phone, photographing what she
       // found is most of what the board is for, and the assistant is how someone with no keyboard asks.

@@ -129,18 +129,18 @@ begin
   select level into v_lvl from role_permissions where role_id = b and activity = 'resident.record';
   if v_lvl is distinct from 1 then raise exception 'ASSERT medical_records should bring resident.record at read via view_residents, got %', v_lvl; end if;
 
-  -- changing what a card requires updates every holder at once
+  -- changing what a card requires updates every holder at once (community.outings: held by no card these roles hold; facility.enclosures was used until 0265 gave it to view_residents)
   insert into role_cards (role_id, card, position) values (c, 'my_tasks', 1);
-  insert into card_grants (card, activity, level) values ('my_tasks', 'facility.enclosures', 1);
-  if (select count(*) from role_permissions where activity = 'facility.enclosures' and role_id in (a, c)) <> 2 then
+  insert into card_grants (card, activity, level) values ('my_tasks', 'community.outings', 1);
+  if (select count(*) from role_permissions where activity = 'community.outings' and role_id in (a, c)) <> 2 then
     raise exception 'ASSERT adding a card_grants row did not reach both holders';
   end if;
-  update card_grants set level = 2 where card = 'my_tasks' and activity = 'facility.enclosures';
-  if (select count(*) from role_permissions where activity = 'facility.enclosures' and level = 2 and role_id in (a, c)) <> 2 then
+  update card_grants set level = 2 where card = 'my_tasks' and activity = 'community.outings';
+  if (select count(*) from role_permissions where activity = 'community.outings' and level = 2 and role_id in (a, c)) <> 2 then
     raise exception 'ASSERT raising a card_grants level did not reach both holders';
   end if;
-  delete from card_grants where card = 'my_tasks' and activity = 'facility.enclosures';
-  if exists (select 1 from role_permissions where activity = 'facility.enclosures' and role_id in (a, c)) then
+  delete from card_grants where card = 'my_tasks' and activity = 'community.outings';
+  if exists (select 1 from role_permissions where activity = 'community.outings' and role_id in (a, c)) then
     raise exception 'ASSERT deleting a card_grants row left the access behind';
   end if;
 
