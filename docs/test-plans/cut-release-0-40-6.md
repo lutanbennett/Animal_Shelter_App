@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → n/a: a release cut is a step in `docs/release-procedure.md`, not a backlog item |
 | Branch / worktree | `claude/cut-release-0-40-6` @ `C:\Development\Animal_Shelter_harness-sweep-batch-4` — **a reused free leftover, not a fresh worktree.** Paperwork rule 2 says to reuse one before making a new one, and the saving was confirmed rather than assumed: `git diff --name-only HEAD..origin/main -- package.json package-lock.json` was **empty**, so its `node_modules` still matches the lockfile and the four-minute `npm ci` was genuinely unnecessary |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3003` |
-| PR | #974 |
+| PR | #975 |
 | Tested by / date | Claude Opus 5 (production release manager session) / 2026-10-26 |
 | Carries a migration? | **no** — this PR is `src/lib/releases.ts` and `package.json` only. The release it cuts carries **four**, `0266`–`0269`, which belong to #966, #967, #970 and #972's plans and are not signed here |
 | Tested at SHA | the cut commit on this branch, whose parent is `cbc3377f` (`origin/main` at the cut) |
