@@ -1,4 +1,4 @@
--- consumer: src/lib/permissions/cards.ts, src/app/admin/who-does-what/page.tsx, src/app/admin/who-does-what/actions.ts, scripts/check-cards-schema.mjs, scripts/check-card-grants.mjs
+-- consumer: src/lib/permissions/cards.ts, src/app/admin/who-does-what/page.tsx, src/app/admin/who-does-what/actions.ts, scripts/check-card-grants.mjs
 --
 -- cards-grants-schema (docs/decisions/2026-10-24-cards-grants-in-the-database.md). Lutan's ruling, 2026-10-24: "all security
 -- restrictions should be driven by cards only"; "If I assign a card the required access to perform that cards action is to be

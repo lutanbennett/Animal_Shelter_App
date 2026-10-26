@@ -186,6 +186,17 @@ note:
   what was recorded, and does the tick cover everything the item claimed?** A ticked item whose
   work is only partly done is the same invisibility fault as one filed below `## Completed`, and
   costs more because it reads as finished.
+- **AND A THIRD WAY AN ITEM GOES INVISIBLE, WITH NO CHECKER AT ALL: IT SPLITS IN TWO.** Added
+  2026-10-26. The release-cut-script item ended **mid-code-span** at *"anchors on \`"*, and its
+  remaining **1,577 characters sat on the next line with no list marker.** **`check-backlog-sections`
+  passed throughout**, because it tests an item's *position*, and an orphan that is not a `- [ ]`
+  line is not an item to it. To anyone skimming, the item simply read as truncated nonsense — the
+  same invisibility as filing below `## Completed`, reached a different way. The cause is worth
+  knowing because it will recur: **a backtick-quoted literal newline**, written by a script that did
+  not escape it, which is the same class of fault the item itself was about. **The cheap habit: when
+  an item you are about to brief ends mid-sentence or mid-code-span, look at the NEXT line before
+  concluding the item is badly written** — and rejoin it on the `backlog` branch rather than
+  briefing from half an item.
 - **AND THE MIRROR FAULT: work recorded only as a sub-note of another item is
   invisible, and cannot be ticked.** Added 2026-10-21, after two such gaps were
   found in one round. Dropping the dead `role_home_tiles` table had **no item at

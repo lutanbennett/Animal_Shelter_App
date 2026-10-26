@@ -40,6 +40,7 @@ import {
   energyLevelLabel,
 } from "@/lib/i18n/enum-labels";
 import { residentText } from "@/lib/residents/labels";
+import { MEDICAL_SECTIONS, type HubSectionKey } from "@/lib/residents/section-reads";
 import type { AdoptionProfile } from "@/components/AdoptionProfileFields";
 import { CopyTagLink } from "@/components/CopyTagLink";
 import { ZoneName } from "@/components/ZoneName";
@@ -176,6 +177,7 @@ export function ResidentHub({
   causeOfDeath,
   archive,
   readOnlyExceptMedical,
+  showTile,
   medicalEdit,
   canRecordDeath,
   canUndoDeath,
@@ -217,6 +219,8 @@ export function ResidentHub({
   archive: DeceasedArchive;
   /** The Medical records card (0249): the record is shown whole, but name, location, intake and history offer no edit. */
   readOnlyExceptMedical: boolean;
+  /** Which parts of the record this login may read (section-reads.ts, the map the section pages use). A tile is drawn only when true; the group heading and phone tab go when none of its tiles is. */
+  showTile: Record<HubSectionKey, boolean>;
   /** Which medical sections this login may add to (can(...,"edit")); the buttons follow it, as the pages do. */
   medicalEdit: Record<"diet" | "immunizations" | "visits" | "prescriptions" | "weight" | "procedures", boolean>;
   /** Admin/staff, the roles that may record a death (and retry an archive). */
@@ -255,6 +259,8 @@ export function ResidentHub({
 }) {
   const { t, locale } = useI18n();
   const [tab, setTab] = useState<"info" | "medical">("info");
+  // A heading over no tiles says something false in a smaller way: the Medical group goes when no medical part is readable.
+  const showMedical = MEDICAL_SECTIONS.some((k) => showTile[k]);
 
   const displayName = resident.thai_name
     ? `${resident.name} (${resident.thai_name})`
@@ -616,7 +622,7 @@ export function ResidentHub({
           <DeceasedRestoreNotice residentId={resident.id} canRetry={canUndoDeath} />
         )}
 
-      <div className="flex gap-1 rounded-lg border border-border bg-surface p-1 md:hidden">
+      <div className={`${showMedical ? "flex" : "hidden"} gap-1 rounded-lg border border-border bg-surface p-1 md:hidden`}>
         <button
           type="button"
           onClick={() => setTab("info")}
@@ -625,14 +631,16 @@ export function ResidentHub({
           <HUB_TAB_ICONS.info aria-hidden="true" className="h-4 w-4" />
           {t.residents.hub.overview}
         </button>
-        <button
-          type="button"
-          onClick={() => setTab("medical")}
-          className={tabButtonClass(tab === "medical")}
-        >
-          <HUB_TAB_ICONS.medical aria-hidden="true" className="h-4 w-4" />
-          {t.residents.hub.medical}
-        </button>
+        {showMedical && (
+          <button
+            type="button"
+            onClick={() => setTab("medical")}
+            className={tabButtonClass(tab === "medical")}
+          >
+            <HUB_TAB_ICONS.medical aria-hidden="true" className="h-4 w-4" />
+            {t.residents.hub.medical}
+          </button>
+        )}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -643,33 +651,37 @@ export function ResidentHub({
             {t.residents.hub.generalInformation}
           </h2>
           <div className="grid grid-cols-2 gap-3">
-            <StatCard
-              title={t.residents.hub.housingStatus}
-              icon={
-                isHospitalised
-                  ? PLACEMENT_ICONS.hospital
-                  : isWithCarer
-                    ? PLACEMENT_ICONS.rehome
-                    : SECTION_ICONS.housing
-              }
-              value={
-                isHospitalised
-                  ? t.residents.hub.inHospital
-                  : statusLabel(t, currentStatus)
-              }
-              detail={housingDetail}
-              tone={housingTone}
-              href={`${base}/housing`}
-              actions={housingActions}
-            />
-            <StatCard
-              title={t.residents.hub.photos}
-              icon={SECTION_ICONS.photos}
-              value={`${photoCount}`}
-              detail={t.residents.hub.photosDetail}
-              tone="neutral"
-              href={`${base}/photos`}
-            />
+            {showTile["housing"] && (
+              <StatCard
+                title={t.residents.hub.housingStatus}
+                icon={
+                  isHospitalised
+                    ? PLACEMENT_ICONS.hospital
+                    : isWithCarer
+                      ? PLACEMENT_ICONS.rehome
+                      : SECTION_ICONS.housing
+                }
+                value={
+                  isHospitalised
+                    ? t.residents.hub.inHospital
+                    : statusLabel(t, currentStatus)
+                }
+                detail={housingDetail}
+                tone={housingTone}
+                href={`${base}/housing`}
+                actions={housingActions}
+              />
+            )}
+            {showTile["photos"] && (
+              <StatCard
+                title={t.residents.hub.photos}
+                icon={SECTION_ICONS.photos}
+                value={`${photoCount}`}
+                detail={t.residents.hub.photosDetail}
+                tone="neutral"
+                href={`${base}/photos`}
+              />
+            )}
             {appeals && (
               <StatCard
                 title={t.appealsAdmin.hubCard.title}
@@ -690,7 +702,7 @@ export function ResidentHub({
             {/* Any resident ever adopted keeps the card, returned or not —
                 the news from their time away stays on the record
                 (docs/decisions.md, 2026-09-27). */}
-            {(adoptionUpdates.everAdopted || adoptionUpdates.count > 0) && (
+            {showTile["adoption-updates"] && (adoptionUpdates.everAdopted || adoptionUpdates.count > 0) && (
               <StatCard
                 title={t.adoptionUpdates.title}
                 icon={SECTION_ICONS["adoption-updates"]}
@@ -714,20 +726,22 @@ export function ResidentHub({
                 }
               />
             )}
-            <StatCard
-              title={t.residents.hub.diet}
-              icon={SECTION_ICONS.diet}
-              value={t.residents.hub.dietsActive(currentDiets.length)}
-              detail={dietDetail}
-              tone={currentDiets.length > 0 ? "success" : "neutral"}
-              href={`${base}/diet`}
-              actions={medicalActions("diet", [
-                {
-                  href: `/diets/new?residentId=${resident.id}`,
-                  label: t.residents.hub.addDiet,
-                },
-              ])}
-            />
+            {showTile["diet"] && (
+              <StatCard
+                title={t.residents.hub.diet}
+                icon={SECTION_ICONS.diet}
+                value={t.residents.hub.dietsActive(currentDiets.length)}
+                detail={dietDetail}
+                tone={currentDiets.length > 0 ? "success" : "neutral"}
+                href={`${base}/diet`}
+                actions={medicalActions("diet", [
+                  {
+                    href: `/diets/new?residentId=${resident.id}`,
+                    label: t.residents.hub.addDiet,
+                  },
+                ])}
+              />
+            )}
           </div>
 
           <div className="rounded-lg border border-border bg-surface p-4">
@@ -814,106 +828,120 @@ export function ResidentHub({
           )}
         </section>
 
-        <section
-          className={`${tab === "medical" ? "flex" : "hidden"} flex-col gap-4 md:flex`}
-        >
-          <h2 className="text-lg font-semibold text-foreground">
-            {t.residents.hub.medicalHeading}
-          </h2>
-          <div className="grid grid-cols-2 gap-3">
-            <StatCard
-              title={t.residents.hub.immunizations}
-              icon={SECTION_ICONS.immunizations}
-              value={immunizationValue}
-              detail={immunizationDetail}
-              tone={immunizationTone}
-              href={`${base}/immunizations`}
-              actions={medicalActions("immunizations", [
-                {
-                  href: `/immunizations/new?residentId=${resident.id}`,
-                  label: t.residents.sections.logImmunization,
-                },
-              ])}
-            />
-            <StatCard
-              title={t.residents.hub.vetAppointments}
-              icon={SECTION_ICONS["clinic-visits"]}
-              value={visitValue}
-              detail={visitDetail}
-              tone={visitTone}
-              href={`${base}/clinic-visits`}
-              actions={medicalActions("visits", [
-                {
-                  href: `/clinic-visits/new?residentId=${resident.id}`,
-                  label: t.residents.sections.bookVetVisit,
-                },
-              ])}
-            />
-            <StatCard
-              title={t.residents.hub.prescriptions}
-              icon={SECTION_ICONS.prescriptions}
-              value={t.residents.hub.prescriptionsActive(activePrescriptions.length)}
-              detail={prescriptionDetail}
-              tone={prescriptionTone}
-              href={`${base}/prescriptions`}
-              actions={medicalActions("prescriptions", [
-                {
-                  href: `/prescriptions/new?residentId=${resident.id}`,
-                  label: t.residents.hub.addPrescription,
-                },
-              ])}
-            />
-            <StatCard
-              title={t.residents.hub.weight}
-              icon={SECTION_ICONS.weight}
-              value={weightValue}
-              detail={weightDetail}
-              tone="neutral"
-              href={`${base}/weight`}
-              actions={medicalActions("weight", [
-                {
-                  href: `/weight/new?residentId=${resident.id}`,
-                  label: t.residents.sections.logWeight,
-                },
-              ])}
-            />
-            <StatCard
-              title={t.residents.hub.procedures}
-              icon={SECTION_ICONS.procedures}
-              value={`${procedures.length}`}
-              detail={
-                latestProcedure
-                  ? t.residents.hub.proceduresLast(
-                      latestProcedure.procedure_types?.name ?? t.procedures.unknownType,
-                      formatDate(latestProcedure.date, locale),
-                    )
-                  : t.residents.hub.proceduresNone
-              }
-              tone="neutral"
-              href={`${base}/procedures`}
-              actions={medicalActions("procedures", [
-                {
-                  href: `/procedures/new?residentId=${resident.id}`,
-                  label: t.residents.sections.logProcedure,
-                },
-              ])}
-            />
-            <StatCard
-              title={t.residents.hub.bloodTests}
-              icon={SECTION_ICONS["blood-tests"]}
-              value={`${bloodTests.length}`}
-              detail={`${
-                latestBloodTest
-                  ? t.residents.hub.bloodTestsLast(
-                      formatDate(latestBloodTest.date, locale),
-                    )
-                  : t.residents.hub.bloodTestsNone
-              } · ${t.residents.hub.bloodTestsEvery(resident.blood_test_interval_months)}`}
-              tone="neutral"
-              href={`${base}/blood-tests`}
-            />
-          </div>
-        </section>
+        {showMedical && (
+          <section
+            className={`${tab === "medical" ? "flex" : "hidden"} flex-col gap-4 md:flex`}
+          >
+            <h2 className="text-lg font-semibold text-foreground">
+              {t.residents.hub.medicalHeading}
+            </h2>
+            <div className="grid grid-cols-2 gap-3">
+              {showTile["immunizations"] && (
+                <StatCard
+                  title={t.residents.hub.immunizations}
+                  icon={SECTION_ICONS.immunizations}
+                  value={immunizationValue}
+                  detail={immunizationDetail}
+                  tone={immunizationTone}
+                  href={`${base}/immunizations`}
+                  actions={medicalActions("immunizations", [
+                    {
+                      href: `/immunizations/new?residentId=${resident.id}`,
+                      label: t.residents.sections.logImmunization,
+                    },
+                  ])}
+                />
+              )}
+              {showTile["clinic-visits"] && (
+                <StatCard
+                  title={t.residents.hub.vetAppointments}
+                  icon={SECTION_ICONS["clinic-visits"]}
+                  value={visitValue}
+                  detail={visitDetail}
+                  tone={visitTone}
+                  href={`${base}/clinic-visits`}
+                  actions={medicalActions("visits", [
+                    {
+                      href: `/clinic-visits/new?residentId=${resident.id}`,
+                      label: t.residents.sections.bookVetVisit,
+                    },
+                  ])}
+                />
+              )}
+              {showTile["prescriptions"] && (
+                <StatCard
+                  title={t.residents.hub.prescriptions}
+                  icon={SECTION_ICONS.prescriptions}
+                  value={t.residents.hub.prescriptionsActive(activePrescriptions.length)}
+                  detail={prescriptionDetail}
+                  tone={prescriptionTone}
+                  href={`${base}/prescriptions`}
+                  actions={medicalActions("prescriptions", [
+                    {
+                      href: `/prescriptions/new?residentId=${resident.id}`,
+                      label: t.residents.hub.addPrescription,
+                    },
+                  ])}
+                />
+              )}
+              {showTile["weight"] && (
+                <StatCard
+                  title={t.residents.hub.weight}
+                  icon={SECTION_ICONS.weight}
+                  value={weightValue}
+                  detail={weightDetail}
+                  tone="neutral"
+                  href={`${base}/weight`}
+                  actions={medicalActions("weight", [
+                    {
+                      href: `/weight/new?residentId=${resident.id}`,
+                      label: t.residents.sections.logWeight,
+                    },
+                  ])}
+                />
+              )}
+              {showTile["procedures"] && (
+                <StatCard
+                  title={t.residents.hub.procedures}
+                  icon={SECTION_ICONS.procedures}
+                  value={`${procedures.length}`}
+                  detail={
+                    latestProcedure
+                      ? t.residents.hub.proceduresLast(
+                          latestProcedure.procedure_types?.name ?? t.procedures.unknownType,
+                          formatDate(latestProcedure.date, locale),
+                        )
+                      : t.residents.hub.proceduresNone
+                  }
+                  tone="neutral"
+                  href={`${base}/procedures`}
+                  actions={medicalActions("procedures", [
+                    {
+                      href: `/procedures/new?residentId=${resident.id}`,
+                      label: t.residents.sections.logProcedure,
+                    },
+                  ])}
+                />
+              )}
+              {showTile["blood-tests"] && (
+                <StatCard
+                  title={t.residents.hub.bloodTests}
+                  icon={SECTION_ICONS["blood-tests"]}
+                  value={`${bloodTests.length}`}
+                  detail={`${
+                    latestBloodTest
+                      ? t.residents.hub.bloodTestsLast(
+                          formatDate(latestBloodTest.date, locale),
+                        )
+                      : t.residents.hub.bloodTestsNone
+                  } · ${t.residents.hub.bloodTestsEvery(resident.blood_test_interval_months)}`}
+                  tone="neutral"
+                  href={`${base}/blood-tests`}
+                />
+              )}
+            </div>
+          </section>
+        )}
       </div>
     </main>
   );

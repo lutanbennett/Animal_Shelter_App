@@ -85,6 +85,36 @@ card — no exceptions."* And, the rule in full:
 - **If a hard-coded rule blocks your work:** record it in `docs/card-access-faults.md` (from `claude/cards-grants-app`; if it is not on `main` yet, say so in your PR), raise it,
   and do not patch around it or add another.
 
+## No code may fall back to a role BY NAME — a different rule from the one above
+
+**Lutan, 2026-10-26:** *"We need to remove the fallback to volunteer profile that keeps appearing, I
+want the system to enable full flexibility of roles to be named whatever a shelter wants them to be
+named as so having any fallback to a named role will break longer term."*
+
+A shelter must be able to call its roles whatever it likes. So **no line may say "if I do not
+recognise this role, treat it as the volunteer"** — or as any other named role.
+
+**This is NOT the hard-coded-security rule, and the difference is the whole reason it needs writing
+down.** That rule governs what **grants or denies** access. This one also covers code that merely
+**marks or selects content**: being shown the wrong page of the manual grants nobody anything, so
+`check-hard-coded-security.mjs` is right to pass it — those files are correctly recorded in
+`docs/hard-coded-security-registry.json` as *content marking, not access*. **The check will never
+catch this, which is exactly why the rule has to be read rather than enforced.**
+
+- **The test:** does the code name a role key, and does something differ when it does not match?
+  Then it is this fault, whether or not it decides access.
+- **Widen, never narrow, when a tag does not match.** The safe default is already in the codebase:
+  an untagged release note reads as everyone's, so an unrecognised role is **shown** the note, not
+  hidden from it. The manual's old `audience.ts` did the opposite — it narrowed a 2IC to the
+  volunteer's manual — and that is the shape to avoid.
+- **Three things that look like this and are NOT:** a list that fixes the **order** roles appear in
+  on an admin screen (`CLAUDE.md` already allows ordering, and an unknown role sorts last rather
+  than becoming another role); a label lookup that **falls through to the role's own name**; and
+  anything about the public website's Volunteer **page**, which is a page about volunteering and has
+  nothing to do with roles.
+- **Admin is unaffected.** It sits outside the card system and is keyed on `roles.is_admin`, not on
+  a role name.
+
 ## Where am I?
 
 First thing in any session: `git rev-parse --show-toplevel` and

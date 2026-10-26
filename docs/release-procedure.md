@@ -285,6 +285,14 @@ Then derive the version and the `major` flag from his answer, and assert both in
 (the absence-plus-presence pair below). On `0.40.1` that second question took one round
 trip and settled it.
 
+**Do the cut and the check with `scripts/cut-release.mjs`, not a throwaway script.**
+`node scripts/cut-release.mjs <version> <date> <major|minor> --title "…"` does the cut
+(either line ending; refuses before writing if `unreleased` is empty or an anchor is
+missing), then the same line with `--verify` runs the assertions below against
+`origin/main` and exits non-zero on any failure. Note: `major` there means *worth an
+email*. It is the mechanical form of the paragraph that follows; read that paragraph
+to know what is being asserted.
+
 **Verify the cut mechanically — do not read it over.** A cut's one real failure
 mode is losing or altering a note, and that is invisible to every gate. Compare
 the new entry against `origin/main:src/lib/releases.ts` note by note and assert:
