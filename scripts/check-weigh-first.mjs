@@ -94,7 +94,7 @@ const probes = [
   [
     "clinic_visits direct",
     `select 1 from clinic_visits where resident_id = ${lit(CASE_ID[0])}`,
-    { ...NONE, admin: 1, management: 1 },
+    { ...NONE, admin: 1, management: null, doctor: null }, // management and doctor hold live cards (doctor reads its own clinic since 0253), so they are not pinned; the floor is that the Head of Medical, the volunteer and a roleless login still read nothing
   ],
   // Hers already, and the reason the comparison stays in the app.
   ["weight direct", `select 1 from weight where resident_id = ${lit(WEIGHED)}`, WEIGHERS],
@@ -194,6 +194,7 @@ for (const [name, , exp] of probes) {
   }
   for (const who of P) {
     const n = get(who, name), want = exp[who];
+    if (want === null) continue;
     const label = `${name} as ${who}: ${want ? "returned" : "not returned"}`;
     if ((n >= 1) === Boolean(want)) pass(label);
     else fail(`${label} — got ${n}`);
