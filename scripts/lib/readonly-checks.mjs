@@ -120,6 +120,34 @@ export const CHECKS = {
       : ["No role holds a clinic-visit card or cell."],
     failed: (rows) => rows.some((x) => !x.clinics_list),
   },
+  "calendar-pending": {
+    asks: "Which vet visits does the System status calendar tile count as 'waiting to be sent', and what do they have in common? (Ids and dates only, no names.)",
+    // Same test as isPending() in src/lib/clinics/calendar-sync.ts: never synced, or marked out of date after the last sync.
+    // gap_seconds is out_of_date minus synced: a small positive number on every row points at the two clocks, not at Google.
+    sql: `select coalesce(json_agg(json_build_object('id', v.id, 'date', v.appointment_date, 'past', v.appointment_date < now(),
+        'status', v.status, 'archived', v.archived_at is not null, 'has_event', v.calendar_event_id is not null,
+        'synced_at', v.calendar_synced_at, 'out_of_date_at', v.calendar_out_of_date_at, 'error', v.calendar_error,
+        'gap_seconds', round(extract(epoch from (v.calendar_out_of_date_at - v.calendar_synced_at))::numeric, 1),
+        'db_now', now()) order by v.appointment_date, v.id), '[]'::json)
+      from clinic_visits v
+      where v.calendar_out_of_date_at is not null
+        and (v.calendar_synced_at is null or v.calendar_out_of_date_at > v.calendar_synced_at)`,
+    render: (rows) => {
+      if (!rows.length) return ["No vet visit is waiting: the tile should say every visit is in the calendar."];
+      const out = [`${rows.length} vet visit(s) counted as waiting:`];
+      for (const x of rows) {
+        out.push(`${x.id}  ${String(x.date).slice(0, 16)} ${x.past ? "(past)" : "(upcoming)"}  ${x.status}${x.archived ? ", archived" : ""}  event ${x.has_event ? "yes" : "no"}`
+          + `  synced ${x.synced_at ?? "never"}  out of date ${x.out_of_date_at}  gap ${x.gap_seconds === null ? "n/a" : x.gap_seconds + "s"}`
+          + `  error: ${x.error ?? "(none)"}`);
+      }
+      const withError = rows.filter((x) => x.error).length;
+      const past = rows.filter((x) => x.past).length;
+      out.push(`In common: ${withError} of ${rows.length} carry an error (so they are failing, not waiting); ${past} are past, ${rows.length - past} upcoming; `
+        + `${rows.filter((x) => x.synced_at === null).length} were never synced; ${rows.filter((x) => x.gap_seconds !== null && x.gap_seconds < 5).length} have out-of-date less than 5s after their sync (a clock or in-flight re-stamp).`);
+      return out;
+    },
+    failed: (rows) => rows.length > 0,
+  },
   "fault-maintenance-delete": {
     asks: "Which roles hold the Do Maintenance card, whose maintenance jobs nobody can delete? (Every holder is affected: no delete control exists.)",
     sql: `select coalesce(json_agg(json_build_object('role', r.key) order by r.key), '[]'::json)
