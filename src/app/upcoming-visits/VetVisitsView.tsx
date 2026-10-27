@@ -87,8 +87,12 @@ export function VetVisitsView({
       rows.filter(
         (r) =>
           (!clinic || r.clinicId === clinic) &&
-          (showCompleted || r.status !== "completed") &&
-          (showCancelled || r.status !== "cancelled"),
+          // Each chip is that status and nothing else; neither on leaves the list as it always was.
+          (showCompleted
+            ? r.status === "completed"
+            : showCancelled
+              ? r.status === "cancelled"
+              : r.status !== "completed" && r.status !== "cancelled"),
       ),
     [rows, clinic, showCompleted, showCancelled],
   );
@@ -253,10 +257,10 @@ export function VetVisitsView({
           <option value="">{labels.allClinics}</option>
           {clinics.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
-        <button type="button" aria-pressed={showCompleted} onClick={() => setShowCompleted(!showCompleted)} className={`${chip} ${showCompleted ? on : off}`}>
+        <button type="button" aria-pressed={showCompleted} onClick={() => { setShowCompleted(!showCompleted); setShowCancelled(false); }} className={`${chip} ${showCompleted ? on : off}`}>
           {labels.showCompleted}
         </button>
-        <button type="button" aria-pressed={showCancelled} onClick={() => setShowCancelled(!showCancelled)} className={`${chip} ${showCancelled ? on : off}`}>
+        <button type="button" aria-pressed={showCancelled} onClick={() => { setShowCancelled(!showCancelled); setShowCompleted(false); }} className={`${chip} ${showCancelled ? on : off}`}>
           {labels.showCancelled}
         </button>
         <button type="button" aria-pressed={hideOverdue} onClick={() => toggleOverdue(!hideOverdue)} className={`${chip} ${hideOverdue ? on : off}`}>

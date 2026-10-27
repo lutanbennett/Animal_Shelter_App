@@ -4,7 +4,7 @@ import { residentCodeTerm } from "@/lib/residents/code-search";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
 import { byShelterOrder, enclosuresInShelterOrder } from "@/lib/enclosures/order";
 import { OFFSITE, parseZoneIds, readZonePick, zoneIdsOf } from "@/lib/enclosures/place";
-import { NOT_DECEASED, UNASSIGNED } from "@/lib/residents/status";
+import { DECEASED, NOT_DECEASED, UNASSIGNED } from "@/lib/residents/status";
 import { DB_ORDER, parseSort, sortByPlace } from "@/lib/residents/sort";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
@@ -13,7 +13,7 @@ type Supabase = Awaited<ReturnType<typeof createClient>>;
  * The status chips beside Show all (Lutan, 2026-10-08): residents who are in no enclosure, one
  * status at a time. Each is `current_status` exactly (src/lib/residents/place.ts), in this order.
  */
-export const STATUS_CHIPS = ["Adopted", "Fostered", "Hospitalised"] as const;
+export const STATUS_CHIPS = ["Adopted", "Fostered", "Hospitalised", "Deceased"] as const;
 export type StatusChip = (typeof STATUS_CHIPS)[number];
 
 /** `?status=fostered` → "Fostered". `?adopted=1`, the Adopted chip's link before there were three, still works. */
@@ -228,7 +228,8 @@ export function listQuery(supabase: Supabase, view: ListView, ids: string[] = []
     .order(DB_ORDER[view.sort.key] ?? "name", { ascending: view.sort.dir === "asc" });
   // Ties, and the columns the database cannot rank, fall back to name.
   if (view.sort.key !== "name") query = query.order("name");
-  if (!view.showAll) {
+  // The Deceased chip asks for the dead; stripping them here would leave it showing nothing.
+  if (!view.showAll && view.filters.status !== DECEASED) {
     query = query.or(NOT_DECEASED);
   }
   const filtered = applyFilters(query, view.filters);

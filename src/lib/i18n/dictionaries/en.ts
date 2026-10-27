@@ -5456,17 +5456,21 @@ const en = {
           n === 1 ? "1 fostered resident matches" : `${n} fostered residents match`,
         Hospitalised: (n: number) =>
           n === 1 ? "1 resident in hospital matches" : `${n} residents in hospital match`,
+        Deceased: (n: number) =>
+          n === 1 ? "1 deceased resident matches" : `${n} deceased residents match`,
       },
       /** The status chips beside Show all: one at a time, each clears place, zone and enclosure. */
       statusFilter: {
         Adopted: "Adopted",
         Fostered: "Fostered",
         Hospitalised: "Hospitalised",
+        Deceased: "Deceased",
       },
       statusOnly: {
         Adopted: "Showing adopted residents only",
         Fostered: "Showing fostered residents only",
         Hospitalised: "Showing residents in hospital only",
+        Deceased: "Showing deceased residents only",
       },
       /** With the zone chips: at the shelter, no enclosure yet (current_status 'Unassigned'). */
       unallocatedFilter: "Unallocated",
