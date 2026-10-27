@@ -24,6 +24,16 @@ export function assertSelectOnly(name, sql) {
   if (hit) throw new Error(`check "${name}": contains "${hit[0]}"`);
 }
 
+export function cronVerdict(r) {
+  const stale = (t) => !t || Date.now() - new Date(t).getTime() > 45 * 60 * 1000;
+  if (!r.beat_last) return stale(r.alerts_last_cron) ? "no heartbeat yet (not deployed, or the trigger is not firing): not proven either way" : "healthy";
+  if (stale(r.beat_last)) return "trigger STOPPED: the heartbeat itself has gone quiet, so the fault is the Cloudflare trigger or the Worker not running";
+  if (!stale(r.alerts_last_cron)) return "healthy: trigger firing and the app is writing real runs";
+  if (/skipped/.test(r.beat_note ?? "")) return "trigger fires but a stage was SKIPPED (a variable is missing; the note names it)";
+  if (/failed|threw|: [45][0-9][0-9]/.test(r.beat_note ?? "")) return "trigger fires and a stage FAILED (see the note)";
+  return "trigger fires but no real run was written: the Worker did not reach the app, or the route did not write";
+}
+
 export const CHECKS = {
   "schema-version": {
     asks: "Which migration was applied last, and how many are applied?",
@@ -152,12 +162,18 @@ export const CHECKS = {
     asks: "Is the 15-minute calendar cron reaching the app, and which migrations were applied in the last 3 days? (Dates and file names only.)",
     // calendar_sync_state is written by every poll the sweep makes: a last_run_at that stopped moving means the sweep is not running.
     sql: `select json_build_object('now', now(),
-        'alerts_last_cron', (select max(ran_at) from status_alert_runs where trigger = 'cron'),
+        'alerts_last_cron', (select max(ran_at) from status_alert_runs where trigger = 'cron' and coalesce(note, '') not like 'heartbeat:%'),
+        'beat_last', (select max(ran_at) from status_alert_runs where trigger = 'cron' and note like 'heartbeat:%'),
+        'beat_note', (select note from status_alert_runs where trigger = 'cron' and note like 'heartbeat:%' order by ran_at desc limit 1),
         'state', coalesce((select json_agg(json_build_object('last_run_at', last_run_at, 'last_ok_at', last_ok_at, 'last_error', last_error, 'has_token', sync_token is not null)) from calendar_sync_state), '[]'::json),
         'migrations', coalesce((select json_agg(json_build_object('file', filename, 'at', applied_at) order by applied_at) from schema_migrations where applied_at > now() - interval '3 days'), '[]'::json))`,
     render: (r) => [
       `Database time now: ${r.now}`,
-      `status alerts: last cron run ${r.alerts_last_cron ?? "never"} (same cron trigger as the calendar sweep)`,
+      // Separate lines on purpose: the Worker's heartbeat (worker/heartbeat.mjs) proves only that the trigger fired; a real run is a row the
+      // app's route wrote. A heartbeat must never be read as a real run, or a dead cron looks fixed.
+      `status alerts: last REAL cron run ${r.alerts_last_cron ?? "never"} (written by the app's route; same trigger as the calendar sweep)`,
+      `worker heartbeat: last trigger fired ${r.beat_last ?? "never"}${r.beat_note ? ` - ${r.beat_note}` : ""}`,
+      `verdict: ${cronVerdict(r)}`,
       ...(r.state.length ? r.state.map((x) => `poll: last run ${x.last_run_at}, last ok ${x.last_ok_at}, token ${x.has_token ? "held" : "none"}, error: ${x.last_error ?? "(none)"}`) : ["poll: no calendar_sync_state row (the poll has never run)."]),
       ...r.migrations.map((m) => `migration ${m.file} applied ${m.at}`),
     ],

@@ -294,6 +294,11 @@
       "file": "worker/translations.mjs",
       "for": "Translates labels in the background.",
       "guard": "Worker only."
+    },
+    {
+      "file": "worker/heartbeat.mjs",
+      "for": "Writes one 'the trigger fired' row to status_alert_runs each time the 15-minute cron runs, so a dead cron can be told from a skipped stage.",
+      "guard": "Worker only. Writes and patches only status_alert_runs; grants no access to anyone."
     }
   ],
   "serviceRoleHelpers": [],
