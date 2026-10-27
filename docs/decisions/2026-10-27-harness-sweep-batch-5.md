@@ -76,11 +76,19 @@ the rebuild, and it stays red until the cards cover those pages. No `ACCEPTED` e
 ### `check-resident-sections`: a snapshot tool, not a green/red check
 
 It exits 1 with a usage message when run bare because it is a before/after tool for a refactor (`--out a.json`, `--out b.json`,
-`--compare a b`), needing a dev server. It was not red for any reason in its code. I ran it against a dev server on the current roles
-(`admin`, `management`, `head_of_medical` first, then the full set) to check it still works; it makes and deletes its own throwaway
-logins. The first attempt was killed by my timeout before its cleanup ran and left four `harness-sections-*` logins on dev, which I deleted
-by hand. Result of two full runs compared: see the test plan. Nothing in it asserts a role name or a role column; the role list is the
-set of logins it signs in as, not a rule. No change.
+`--compare a b`), needing a dev server. It was not red for any reason in its code, and nothing in it asserts a role name or column (the role
+list is the set of logins it signs in as). **No change.**
+
+I ran it twice against the dev server on 2026-10-27 to see whether it still works on the current roles: both runs signed in as all eight
+(`admin`, `management`, `head_of_medical`, `doctor`, `volunteer`, `head_of_maintenance`, `second_in_command`, `public_viewer`) and wrote
+**600 probes**; each run took about half an hour on a cold server and its throwaway logins were deleted at the end. **Comparing the two runs
+of the same code gave 38 differences of 600, with the same status and redirect on every one.** The difference is when each response ended:
+a page is sometimes captured with its loading placeholder (`<!--$?-->`) and sometimes with the content already streamed in (`<!--$-->`).
+So today the tool is **not reliable for a byte-for-byte before/after diff**: a refactor would see about 6% false differences and need each
+re-run. Stripping image preload hints from the comparison, the one cheap normaliser tried, removed 1 of the 38 and was reverted. A real fix
+(wait for the stream to finish, or compare with the loading shell removed) is a small design change, not a role-model fix, and is left.
+The first attempt was killed by my own timeout before its cleanup ran and left four `harness-sections-*` logins on dev, which I deleted
+by hand.
 
 ## `check-recurring-jobs`: a job with no page link (Lutan, 2026-10-27)
 
@@ -95,4 +103,4 @@ activity, card or eligibility rule is created for it.**
 column or a role key is consulted. The throwaway roles are named `harness_*`, and the role filters in `check-who-does-what` and
 `check-menu-coverage` are fixture hygiene in scripts, not app code and not access.
 
-**Of the ten:** eight are green (five already, `weigh-first` and `recurring-jobs` fixed, and `resident-sections` works as a snapshot tool); two stay red for real reasons (`who-does-what`, `menu-coverage`). The red count in the backlog item is the planner's to restate; I have not re-run the other harnesses.
+**Of the ten:** seven are green (five already, `weigh-first` and `recurring-jobs` fixed); `resident-sections` is a snapshot tool that works but is about 6% noisy run to run; two stay red for real reasons (`who-does-what`, `menu-coverage`). The red count in the backlog item is the planner's to restate; I have not re-run the other harnesses.
