@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { todayIso } from "@/lib/format";
+import { wantsEvent } from "./calendar-change";
 import { getAppEnv } from "@/lib/app-env";
 import { buildCalendarEvent, calendarEventIdFor } from "./calendar-event";
 
@@ -93,11 +94,13 @@ const COLUMNS =
 
 export type SyncOutcome = "created" | "updated" | "deleted" | "unchanged" | "failed" | "off";
 
-/** Whether this visit should have an event: still booked, not archived, today or later at the shelter. */
-function wantsEvent(row: Row): boolean {
-  if (row.status !== "scheduled" || row.archived_at) return false;
-  const bangkokDay = todayIso(new Date(row.appointment_date).getTime());
-  return bangkokDay >= todayIso() && Boolean(row.residents && row.clinics);
+/** Whether this visit should have an event: the rule is in calendar-change.ts (past and completed visits keep theirs). */
+function rowWantsEvent(row: Row): boolean {
+  return wantsEvent(
+    { status: row.status, archived_at: row.archived_at, hasEvent: Boolean(row.calendar_event_id), hasNames: Boolean(row.residents && row.clinics) },
+    todayIso(new Date(row.appointment_date).getTime()),
+    todayIso(),
+  );
 }
 
 function isPending(r: Pick<Row, "calendar_synced_at" | "calendar_out_of_date_at">): boolean {
@@ -121,7 +124,7 @@ async function syncRow(row: Row, origin: string | null): Promise<SyncOutcome> {
   const write = (patch: Record<string, string | null>) =>
     db.from("clinic_visits").update(patch).eq("id", row.id);
   try {
-    if (!wantsEvent(row)) {
+    if (!rowWantsEvent(row)) {
       if (!row.calendar_event_id) {
         await write({ calendar_synced_at: startedAt, calendar_error: null });
         return "unchanged";

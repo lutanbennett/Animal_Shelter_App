@@ -22,6 +22,8 @@ import { importNewEvent } from "./calendar-import";
  *  - a change that is the app's own (same etag as the one it recorded) is ignored;
  *  - changed in the app AND the calendar since the last sync: the app wins, the calendar is put back
  *    by the sweep, and the clash is left on the visit (calendar_error) for someone to look at;
+ *  - the app's own delete read back, and any deletion for a visit whose date has passed, never cancel a visit
+ *    (decideChange: "own" / "past"); a past one is flagged in calendar_error instead;
  *  - a completed or already cancelled visit is not changed by a calendar edit.
  * Nothing here throws.
  */
@@ -117,6 +119,15 @@ async function apply(event: GEvent, origin: string | null, result: PollResult): 
   if (isOtherEnvironment(tagged, getAppEnv())) return; // another system's event: not ours to cancel or move
   const decision = decideChange(event, visit);
   if (decision === "ignore" || decision === "own") return;
+  if (decision === "past") {
+    // A past visit cannot be called off from the calendar: leave it scheduled and flag it for a person.
+    result.clashes += 1;
+    await db
+      .from("clinic_visits")
+      .update({ calendar_error: "The event for this past visit was deleted in Google Calendar; the visit was left as it is." })
+      .eq("id", visit.id);
+    return;
+  }
   if (decision === "clash") {
     result.clashes += 1;
     await db
