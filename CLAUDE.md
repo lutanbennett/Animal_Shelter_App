@@ -115,6 +115,30 @@ catch this, which is exactly why the rule has to be read rather than enforced.**
 - **Admin is unaffected.** It sits outside the card system and is keyed on `roles.is_admin`, not on
   a role name.
 
+## A button is shown only if the login's cards let it do that action
+
+**Lutan, 2026-10-27:** *"If a user cannot perform an action via the card that is assigned the buttons
+should not be available for example if I can view residents the buttons should not to edit the
+resident should not be visible."* It was raised by the resident photo gallery, which drew Delete,
+*set as profile photo* and *move to folder* for a login holding only View residents; the database
+refused each press.
+
+- **The rule:** every control that triggers an action — button, link, form, menu item — is drawn
+  only when `can(perms, <activity>, <level>)` is true, where `<activity>` is **the one the action's
+  own server check or RPC asks**, read from the same place, so the control and the action cannot
+  disagree. Find it in the action file (`can(perms, …)`) or the RPC body (`has_permission('…')`);
+  never guess it from the control's label. Pattern: `SECTION_READS` for the hub's tiles
+  (`docs/decisions/2026-10-26-resident-hub-tiles-follow-cards.md`); a gallery or other shared
+  component takes a `can…` prop that **defaults to false**, so a caller that forgets offers nothing.
+- **Hiding is the courtesy, never the security.** The server and database checks stay exactly as
+  they are. Never remove or weaken one because its button is now hidden.
+- **Not a licence to name a role.** The gate asks a card-derived activity, never a role key or name
+  (the two sections above). **Admin sees everything** through the `perms.isAdmin` short-circuit in
+  `can.ts`, unchanged.
+- **Before you finish a page,** list its action controls and the activity each one's action asks. A
+  control you pass and leave ungated goes in your decision file as *found, not fixed*, with the file
+  and the activity it should ask.
+
 ## Where am I?
 
 First thing in any session: `git rev-parse --show-toplevel` and

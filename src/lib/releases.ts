@@ -89,6 +89,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "A resident’s photos no longer offer Remove, Set as profile photo or Move to folder to someone whose cards do not allow it, and the Book a vet visit button only appears for a login that can book one. Previously the buttons showed and then refused.",
 ];
 
 /** Newest first. */

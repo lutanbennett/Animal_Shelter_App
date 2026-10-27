@@ -47,6 +47,8 @@ export async function renderPhotosSection(ctx: SectionContext): Promise<React.Re
         shares={shares}
         canMarkPosted={canMarkPosted}
         canMakeMeme={can(perms, "social.library")}
+        canManage={canMarkPosted}
+        canFileToMedical={can(perms, "photos.resident_add")}
       />
     </div>
   );
