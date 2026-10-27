@@ -45,7 +45,8 @@ export type NewCardKey =
   | "meme_library"
   | "my_tasks"
   | "who_does_what"
-  | "record_death";
+  | "record_death"
+  | "translations";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -281,6 +282,12 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // Card twenty-nine (2026-10-25, Lutan: only a card gives an ability): see the roles grid on Settings -> Who does what. Read only, in the grant too
   // since 0268 (roles.view is a level activity held at read); editing stays Admin at 2-step. Management is given it by 0262 so it keeps the page it had when the code asked for the role name.
   who_does_what: { includes: [], bundle: [{ activity: "roles.view", level: "read" }], opens: "/admin/who-does-what" },
+  // Lutan, 2026-10-27: "Management will also do translations so a card is required for this" (0271). Who holds it is assigned in Who does what.
+  translations: {
+    includes: [],
+    bundle: [{ activity: "translations.view" }, { activity: "translations.manage" }],
+    opens: "/management/translations",
+  },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */
@@ -309,6 +316,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   my_tasks: (t) => t.appHome.cards.myTasks,
   who_does_what: (t) => t.appHome.cards.whoDoesWhat,
   record_death: (t) => t.appHome.cards.recordDeath,
+  translations: (t) => t.appHome.cards.translations,
 };
 
 export const CARDS: Record<CardKey, Card> = {

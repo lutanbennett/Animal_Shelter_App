@@ -206,6 +206,7 @@ const en = {
       myTasks: "My tasks",
       whoDoesWhat: "Who does what",
       recordDeath: "Record a death",
+      translations: "Translations",
     },
   },
 
@@ -880,6 +881,7 @@ const en = {
           record_delivery: "Record a delivery when it arrives.",
           view_residents: "See who the residents are and where they are, without changing anything.",
           residents: "The full resident record: change it, register new arrivals, microchips, moves, fostering and adoption, and add and manage photos (new photos wait for approval).",
+          translations: "Check and approve the Thai translations of stories, bios and labels, and write them in.",
           record_death: "Record that a resident has died. The record is closed from that day; only Admin can withdraw a death.",
           medical_records: "Add and change a resident's medical history: visits, procedures, blood tests, prescriptions, immunizations, weight and diet, and book vet visits. Includes View medical.",
           view_medical: "Read a resident's medical history (visits, procedures, blood tests, prescriptions, immunizations, weight and diet) and the clinic list, without changing anything.",
