@@ -63,6 +63,7 @@ import { originOrLocal } from "./origin.mjs";
 import { handleCspReport } from "./csp-report.mjs";
 import { withSecurityHeaders } from "./security-headers.mjs";
 import { runTranslations } from "./translations.mjs";
+import { recordHeartbeat, finishHeartbeat } from "./heartbeat.mjs";
 import { isEdgeCachedPage } from "../src/lib/public-paths.ts";
 import { localeFromAcceptLanguage } from "../src/lib/i18n/locales.ts";
 
@@ -174,21 +175,30 @@ const worker = {
   // environment names its site in STATUS_ALERT_SITE: the links in the mail
   // point there, and an environment with no site has nothing to alert about.
   async scheduled(controller, env, ctx) {
+    // First, before any guard: proof the trigger fired (worker/heartbeat.mjs). Never throws.
+    const beat = await recordHeartbeat(env, controller.cron);
+    const stages = [];
     try {
-      await runStatusAlerts(controller, env, ctx);
+      stages.push(await runStatusAlerts(controller, env, ctx));
     } catch (err) {
       console.error(`status-alerts: ${err?.message ?? err}`);
+      stages.push(`status-alerts: threw, ${err?.message ?? err}`);
     }
     // The shelter calendar's safety net: sends any vet visit that is out of date. Never throws.
-    await runCalendarSweep(env, ctx);
+    stages.push(await runCalendarSweep(env, ctx));
     // Machine-drafted translations (worker/translations.mjs) share the trigger.
     // After the alerts so they can never delay one; runTranslations does not throw.
     await runTranslations(env);
+    await finishHeartbeat(env, beat, controller.cron, stages);
   },
 };
 
 async function runCalendarSweep(env, ctx) {
-  if (!env.STATUS_ALERT_SITE || !env.GOOGLE_CALENDAR_REFRESH_TOKEN) return;
+  const missing = [!env.STATUS_ALERT_SITE && "STATUS_ALERT_SITE", !env.GOOGLE_CALENDAR_REFRESH_TOKEN && "GOOGLE_CALENDAR_REFRESH_TOKEN"].filter(Boolean);
+  if (missing.length) {
+    console.error(`calendar-sweep: skipped; not set: ${missing.join(", ")}`);
+    return `calendar-sweep: skipped, not set: ${missing.join(", ")}`;
+  }
   try {
     const request = new Request(`${env.STATUS_ALERT_SITE}/api/calendar/sweep`, {
       method: "POST",
@@ -197,15 +207,17 @@ async function runCalendarSweep(env, ctx) {
     const response = await openNext.fetch(request, env, ctx);
     const log = response.ok ? console.log : console.error;
     log(`calendar-sweep: ${response.status} ${await response.text()}`);
+    return `calendar-sweep: ${response.status}`;
   } catch (err) {
     console.error(`calendar-sweep: ${err?.message ?? err}`);
+    return `calendar-sweep: failed, ${err?.message ?? err}`;
   }
 }
 
 async function runStatusAlerts(controller, env, ctx) {
   if (!env.STATUS_ALERT_SITE) {
-    console.log("status-alerts: STATUS_ALERT_SITE is not set; not running.");
-    return;
+    console.error("status-alerts: skipped; not set: STATUS_ALERT_SITE");
+    return "status-alerts: skipped, not set: STATUS_ALERT_SITE";
   }
   const request = new Request(`${env.STATUS_ALERT_SITE}/api/status/alerts`, {
     method: "POST",
@@ -216,6 +228,7 @@ async function runStatusAlerts(controller, env, ctx) {
   // The Worker's logs are where a run that could not remember shows first.
   const log = response.ok ? console.log : console.error;
   log(`status-alerts: ${controller.cron} → ${response.status} ${body}`);
+  return `status-alerts: ${response.status}`;
 }
 
 export default worker;
