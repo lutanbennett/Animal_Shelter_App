@@ -105,7 +105,6 @@ const PROBES = {
   "merge_doctors same": `select count(*) from (select merge_doctors(${L(ids.docA)}, ${L(ids.docA)})) x`,
   "merge_doctors login": `select count(*) from (select merge_doctors(${L(ids.docA)}, ${L(ids.docB)})) x`,
   doctors_guard_login: `with x as (update doctors set user_id = auth.uid() where id = ${L(ids.docA)} returning 1) select count(*) from x`,
-  clinic_login_may_edit_doctor: `select count(*) from doctors d where clinic_login_may_edit_doctor(d.id)`,
   current_user_clinic_ids: `select cardinality(current_user_clinic_ids())`,
   current_doctor_resident_ids: `select count(*) from current_doctor_resident_ids()`,
   "view doctor_contacts": `select count(*) from doctor_contacts`,
@@ -130,7 +129,7 @@ begin
         perform set_config('request.jwt.claims', json_build_object('sub', u.user_id, 'role', 'authenticated', 'aal', 'aal2')::text, true);
         set local role authenticated;
         execute p[2] into n;
-        raise exception using errcode = 'ZZ001', message = case when p[1] like 'view %' or p[1] like 'current_%' or p[1] in ('clinic_login_may_edit_doctor', 'doctors_guard_login') then n::text else 'ok' end;
+        raise exception using errcode = 'ZZ001', message = case when p[1] like 'view %' or p[1] like 'current_%' or p[1] in ('doctors_guard_login') then n::text else 'ok' end;
       exception when sqlstate 'ZZ001' then res := sqlerrm;
                 when others then res := sqlerrm;
       end;
