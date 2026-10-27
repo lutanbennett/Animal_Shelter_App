@@ -107,9 +107,12 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
     });
   }
 
-  /** The same list with the deceased toggle flipped, other filters kept. */
+  /**
+   * The same list with the deceased toggle flipped. Like the status chips it takes over the list:
+   * the deceased sit in the Lifecycle pseudo-zone, so with a zone picked it would show none of them.
+   */
   function toggleHref(all: boolean) {
-    return buildHref(sort, { zones: zoneIds, q, enclosure: enclosureId, all, noChip, status, unallocated });
+    return buildHref(sort, { zones: [], q, enclosure: "", all, noChip, status, unallocated: false });
   }
 
   /** The same list with "No microchip" flipped, other filters kept. */
@@ -150,7 +153,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
   // ignoring those filters, and only when hidden.
   const narrowed = zoneIds.length > 0 || unallocated || Boolean(enclosureId);
   const hiddenStatuses = q
-    ? STATUS_CHIPS.filter((s) => s !== status && (status !== null || narrowed))
+    ? STATUS_CHIPS.filter((s) => s !== DECEASED && s !== status && (status !== null || narrowed))
     : [];
   const deceasedCountQuery = supabase
     .from(listTable as "resident_list_view")
@@ -219,7 +222,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
             {deceasedCount > 0 && (
               <>
                 {" · "}
-                {showAll ? (
+                {showAll || status === DECEASED ? (
                   t.residents.list.deceasedIncluded(deceasedCount)
                 ) : q ? (
                   // A name search must never tell staff that a past animal
@@ -385,19 +388,16 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
               : t.residents.list.showAllDeceased}
           </Link>
           {/* One at a time; tapping the one that is on takes it off. */}
-          {zoneIds.length === 0 &&
-            !unallocated &&
-            !enclosureId &&
-            STATUS_CHIPS.map((s) => (
-              <Link
-                key={s}
-                href={statusHref(status === s ? null : s)}
-                aria-current={status === s ? "true" : undefined}
-                className={toggleChip(status === s)}
-              >
-                {t.residents.list.statusFilter[s]}
-              </Link>
-            ))}
+          {STATUS_CHIPS.map((s) => (
+            <Link
+              key={s}
+              href={statusHref(status === s ? null : s)}
+              aria-current={status === s ? "true" : undefined}
+              className={toggleChip(status === s)}
+            >
+              {t.residents.list.statusFilter[s]}
+            </Link>
+          ))}
             <Link href={noChipHref(!noChip)} className={toggleChip(noChip)}>
               {t.residents.list.noMicrochip}
             </Link>

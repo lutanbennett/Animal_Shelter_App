@@ -89,6 +89,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Upcoming visits: Show cancelled and Show completed now show only those appointments, and ticking one unticks the other. The Residents list has a Deceased button to find only the residents who have died, and the buttons under Filter now clear any zone you had picked so the list matches what you tapped." },
   { text: "The Donations card can now pick an appeal when recording a gift. Before, the list said there was no appeal to choose, even when appeals were open.", cards: ["donations_receipts"] },
   { text: "The Website photo card can now replace or remove the big photo at the top of the welcome page, from the Gallery tab. Replace photo and Remove only show for a login whose cards allow it, and Replace photo no longer asks for a description it had no place to put.", cards: ["website_photos"] },
 ];
