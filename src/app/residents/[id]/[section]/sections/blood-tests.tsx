@@ -66,6 +66,7 @@ export async function renderBloodTestsSection(ctx: SectionContext): Promise<Reac
         residentId={id}
         bloodTests={bloodTests}
         readOnly={isDeceased}
+        canManage={can(perms, "medical.blood_tests")}
       />
     </div>
   );

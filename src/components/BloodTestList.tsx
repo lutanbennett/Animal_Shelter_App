@@ -38,11 +38,14 @@ export function BloodTestList({
   residentId,
   bloodTests,
   readOnly = false,
+  canManage = false,
 }: {
   residentId: string;
   bloodTests: BloodTestRow[];
   /** A closed record (deceased resident): files can be opened, not changed. */
   readOnly?: boolean;
+  /** The login holds the card the attach and remove actions ask. Defaults to false so a caller that forgets offers nothing. */
+  canManage?: boolean;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -124,7 +127,7 @@ export function BloodTestList({
                           </span>
                         )}
                       </a>
-                      {!readOnly && (
+                      {!readOnly && canManage && (
                         // Always shown on a phone (there is no hover); on hover with a mouse.
                         <div className="absolute right-0.5 top-0.5 md:hidden md:group-hover:block">
                           <RowActionButton
@@ -147,7 +150,7 @@ export function BloodTestList({
             <p className="text-xs text-muted">{t.bloodTests.noFiles}</p>
           )}
 
-          {!readOnly &&
+          {!readOnly && canManage &&
             (attaching ? (
               <div className="flex flex-col gap-2">
                 <AttachmentUploader
