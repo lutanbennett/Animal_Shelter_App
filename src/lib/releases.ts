@@ -90,6 +90,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   "A resident’s photos no longer offer Remove, Set as profile photo or Move to folder to someone whose cards do not allow it, and the Book a vet visit button only appears for a login that can book one. Previously the buttons showed and then refused.",
+  "Settings → Who does what now has a Delete this role button, for an Admin who has verified with the authenticator app. It asks you to confirm, saying how many cards and groups go with the role. A role cannot be deleted while any login still holds it: it names those logins so you can move them to another role first.",
 ];
 
 /** Newest first. */

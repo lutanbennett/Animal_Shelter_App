@@ -918,6 +918,16 @@ const en = {
       legend:
         "Edit: see, add, change and remove. Read: see only. None: not at all. Yes and No are for things that are an act, with nothing to look at.",
       levels: { edit: "Edit", read: "Read", none: "None", yes: "Yes", no: "No" },
+      deleteRole: {
+        button: "Delete this role",
+        buttonFor: (name: string): string => `Delete the role ${name}`,
+        confirm: (name: string, cards: number, groups: number, ended: number): string =>
+          `Delete ${name} for good? It has ${cards} ${cards === 1 ? "card" : "cards"} and ${groups} ${groups === 1 ? "group" : "groups"} on its home, and those go with it. ${ended} ${ended === 1 ? "ended login link is" : "ended login links are"} cleared. The deletion is kept in Recent changes. This cannot be undone.`,
+        confirmYes: "Yes, delete it",
+        cancel: "Keep it",
+        heldBy: (people: string): string => `This role cannot be deleted while these logins still hold it: ${people}. Move them to another role on Settings → Security first, then try again.`,
+        heldNow: "A login was just given this role, so it was not deleted. Move that login to another role on Settings → Security first.",
+      },
       edit: {
         intro:
           "You are an Admin, so you can change a box: pick a new answer and it is saved at once and listed in Recent changes. The role feels it the next time it opens a page.",

@@ -5,6 +5,7 @@ import { databaseFailure, runAction, type ActionResult } from "@/lib/action-resu
 import { hasAdminRole } from "@/lib/auth/require-admin";
 import { hasTwoStep } from "@/lib/auth/two-step";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getT } from "@/lib/i18n/get-t";
 import { isCardKey, type CardKey } from "@/lib/permissions/cards";
 import { isGroupIconKey } from "@/lib/home/group-icons";
@@ -250,6 +251,53 @@ export async function setShowMenu(roleKey: string, show: boolean): Promise<Actio
     revalidatePath("/", "layout");
     return done();
   });
+}
+
+/*
+ * Delete a role (docs/decisions/2026-10-27-delete-role-button.md). Admin at the authenticator-app step, as above; the
+ * tables' own policies enforce it again. REFUSES, naming them, while any LIVE login holds the role (user_roles with
+ * archived_at null, as 0270 tests it): nobody may be locked out. Then the ended links go (user_roles.role_id has no
+ * cascade) and the role, and role_cards, role_permissions, role_groups and role_home_tiles cascade. audit_log keeps the
+ * DELETE with the role's name and contents, which is why a role never needed archiving (0272).
+ */
+export async function deleteRole(roleKey: string): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("whoDoesWhat.deleteRole", t.common.somethingWentWrong, async () => {
+    const g = await guard(t, roleKey);
+    if (!g.ok) return g;
+    const d = t.admin.whoDoesWhat.deleteRole;
+    const { data: row } = await g.supabase.from("roles").select("is_admin").eq("id", g.roleId).maybeSingle<{ is_admin: boolean }>();
+    if (!row || row.is_admin) return { ok: false, error: t.admin.whoDoesWhat.edit.noSuchRole };
+    const { data: live, error: liveError } = await g.supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("role_id", g.roleId)
+      .is("archived_at", null)
+      .returns<{ user_id: string }[]>();
+    if (liveError) return databaseFailure("whoDoesWhat.deleteRole", liveError, t.common);
+    if ((live ?? []).length > 0) {
+      const people = await holderNames((live ?? []).map((x) => x.user_id));
+      return { ok: false, error: d.heldBy(people.join(", ")) };
+    }
+    const { error: linkError } = await g.supabase.from("user_roles").delete().eq("role_id", g.roleId).not("archived_at", "is", null);
+    if (linkError) return databaseFailure("whoDoesWhat.deleteRole", linkError, t.common);
+    // A login given the role between the check and here fails on the foreign key: refused, nobody locked out.
+    const { error } = await g.supabase.from("roles").delete().eq("id", g.roleId);
+    if (error) return error.code === "23503" ? { ok: false, error: d.heldNow } : databaseFailure("whoDoesWhat.deleteRole", error, t.common);
+    revalidatePath("/", "layout");
+    return done();
+  });
+}
+
+/** Names for the refusal: the login's email, else its id. Read with the service role; only an Admin reaches here. */
+async function holderNames(ids: string[]): Promise<string[]> {
+  const admin = createAdminClient();
+  const out: string[] = [];
+  for (const id of ids) {
+    const { data } = await admin.auth.admin.getUserById(id);
+    out.push(data.user?.email ?? id);
+  }
+  return out;
 }
 
 /*
