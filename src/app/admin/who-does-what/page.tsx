@@ -13,7 +13,7 @@ import { WHO_DOES_WHAT_PATH } from "@/lib/permissions/who-does-what";
 import { parsePermissions } from "@/lib/permissions/can";
 import { isSubsumed, tileBlock } from "@/lib/home/tiles";
 import { getT } from "@/lib/i18n/get-t";
-import { CardButton, ShowMenuToggle } from "./CardControls";
+import { CardButton, DeleteRoleButton, ShowMenuToggle } from "./CardControls";
 import { CardBoard } from "./CardBoard";
 import { loadRoles, roleName } from "./roles";
 
@@ -59,6 +59,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
     admin.from("features").select("id, name, name_th, position").order("position").order("name"),
     admin.from("card_features").select("card, feature_id"),
   ]);
+  const { count: endedLinks } = await admin.from("user_roles").select("user_id", { count: "exact", head: true }).eq("role_id", role?.id ?? "").not("archived_at", "is", null);
   const loadError = cardsError ?? groupsError ?? featuresError ?? cardFeaturesError;
   if (loadError) throw new Error(`Who does what: ${loadError.message}`);
   // Features (0255): sections of the Available column. A card with no row, a null feature, or a feature that is gone is Not yet sorted.
@@ -263,6 +264,19 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
           ) : (
             isAdmin && <p className="text-xs text-muted">{c.menuLocked}</p>
           )}
+        </section>
+      )}
+
+      {role && canEdit && (
+        <section aria-label={w.deleteRole.button} className="flex flex-col gap-2">
+          <DeleteRoleButton
+            roleKey={role.key}
+            label={w.deleteRole.button}
+            ariaLabel={w.deleteRole.buttonFor(names.get(role.key) ?? role.key)}
+            confirmText={w.deleteRole.confirm(names.get(role.key) ?? role.key, held.length, groups.length, endedLinks ?? 0)}
+            yesLabel={w.deleteRole.confirmYes}
+            cancelLabel={w.deleteRole.cancel}
+          />
         </section>
       )}
 

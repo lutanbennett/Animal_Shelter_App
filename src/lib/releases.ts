@@ -90,6 +90,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   "A resident’s photos no longer offer Remove, Set as profile photo or Move to folder to someone whose cards do not allow it, and the Book a vet visit button only appears for a login that can book one. Previously the buttons showed and then refused.",
+  { text: "Settings → Who does what now has a Delete this role button, for an Admin who has verified with the authenticator app. It asks you to confirm, saying how many cards and groups go with the role. A role cannot be deleted while any login still holds it: it names those logins so you can move them to another role first.", cards: ["who_does_what"] },
   "Settings → Security is easier to read: each person is one row with every role they hold shown as a chip (the main role marked, each extra role with its end date and a small ✕ to take it away). Add a role and Add person now open in a pop-up, a search box finds people by name or email, the less-used actions (edit name, temporary password, 2-step reset, archive, delete) are in a … menu on each row, and people who have left sit in a folded-away list at the bottom. A doctor record can now be linked from any login, whatever its role is called.",
 ];
 

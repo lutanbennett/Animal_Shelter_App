@@ -20,6 +20,17 @@ export function roleName(role: Pick<Role, "key" | "name" | "nameTh">, t: Diction
   return role.nameTh ?? (t.admin.security.roles as Record<string, string>)[role.key] ?? role.name;
 }
 
+/** Names for the refusal: the login's email, else its id. Read with the service role; only an Admin reaches here. */
+export async function holderNames(ids: string[]): Promise<string[]> {
+  const admin = createAdminClient();
+  const out: string[] = [];
+  for (const id of ids) {
+    const { data } = await admin.auth.admin.getUserById(id);
+    out.push(data.user?.email ?? id);
+  }
+  return out;
+}
+
 export async function loadRoles(): Promise<Role[]> {
   const { data, error } = await createAdminClient()
     .from("roles")
