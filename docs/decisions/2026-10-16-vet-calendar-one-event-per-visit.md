@@ -27,3 +27,6 @@ earlier clinic-day text was superseded and not built; the schema (0207) already 
   ticked until he confirms it can go.
 - Concurrent form-sync and cron on the same new visit could in theory both create an event; the window
   is seconds and the cost is one duplicate entry.
+
+**SUPERSEDED 2026-10-27 (the "event gone once past or completed" rule):** a past or completed visit now
+keeps its event; it is deleted only on cancel or archive. See `2026-10-27-calendar-loop.md`.

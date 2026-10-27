@@ -158,6 +158,33 @@ export const CHECKS = {
     },
     failed: (rows) => rows.length > 0,
   },
+  "calendar-recent": {
+    asks: "Which visits lost their calendar event in the last 14 days, and did the poll cancel them? (Ids, dates and status only.)",
+    sql: `select coalesce(json_agg(json_build_object('id', v.id, 'status', v.status, 'appointment_date', v.appointment_date,
+        'calendar_changed_at', v.calendar_changed_at, 'calendar_change_kind', v.calendar_change_kind,
+        'calendar_synced_at', v.calendar_synced_at, 'archived', v.archived_at is not null) order by v.calendar_synced_at desc), '[]'::json)
+      from clinic_visits v
+      where v.calendar_event_id is null and v.calendar_synced_at > now() - interval '14 days'
+        and (v.status <> 'scheduled' or v.calendar_change_kind is not null or v.appointment_date < now())`,
+    render: (rows) => rows.length
+      ? rows.map((x) => `visit ${x.id}: ${x.status}${x.archived ? " (archived)" : ""}, dated ${x.appointment_date}, event gone at sync ${x.calendar_synced_at}, calendar change ${x.calendar_change_kind ?? "none"} at ${x.calendar_changed_at ?? "n/a"}`)
+      : ["No visit lost its event in the last 14 days."],
+  },
+  "visit-duplicates": {
+    asks: "Which resident and clinic have a cancelled and a scheduled visit within one day of each other? (Ids, dates and status only; backlog item 2, the overdue-and-cancelled duplicates.)",
+    sql: `select coalesce(json_agg(json_build_object('cancelled_id', c.id, 'scheduled_id', s.id,
+        'cancelled_date', c.appointment_date, 'scheduled_date', s.appointment_date,
+        'cancelled_created_by', c.created_by, 'scheduled_created_by', s.created_by,
+        'cancelled_created_at', c.created_at, 'scheduled_created_at', s.created_at,
+        'cancelled_kind', c.calendar_change_kind, 'scheduled_kind', s.calendar_change_kind) order by c.appointment_date desc), '[]'::json)
+      from clinic_visits c
+      join clinic_visits s on s.resident_id = c.resident_id and s.clinic_id = c.clinic_id and s.id <> c.id
+        and s.status = 'scheduled' and abs(extract(epoch from (s.appointment_date - c.appointment_date))) < 86400
+      where c.status = 'cancelled'`,
+    render: (rows) => rows.length
+      ? rows.map((x) => `cancelled ${x.cancelled_id} (${x.cancelled_date}, made ${x.cancelled_created_at} by ${x.cancelled_created_by ?? "?"}, kind ${x.cancelled_kind ?? "none"}) vs scheduled ${x.scheduled_id} (${x.scheduled_date}, made ${x.scheduled_created_at} by ${x.scheduled_created_by ?? "?"}, kind ${x.scheduled_kind ?? "none"})`)
+      : ["No cancelled/scheduled pair for one resident and clinic on the same day."],
+  },
   "calendar-cron": {
     asks: "Is the 15-minute calendar cron reaching the app, and which migrations were applied in the last 3 days? (Dates and file names only.)",
     // calendar_sync_state is written by every poll the sweep makes: a last_run_at that stopped moving means the sweep is not running.
