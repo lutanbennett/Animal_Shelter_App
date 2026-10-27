@@ -123,7 +123,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 Automated checks by: Claude  Date: 2026-10-28
 
-- [ ] The manual list above is not empty — pending: a person to read setup.sh step 2a against the live Pi's files
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: one item is listed and Lutan has not looked yet (see the pending signature below)
 
 Manual verification by: pending: Lutan to review setup.sh step 2a (cannot be run without the Pi)
 
