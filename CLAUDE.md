@@ -451,9 +451,10 @@ worse than the finding. Then write what you concluded on the PR and in
 `docs/decisions/2026-10-01-next-og-advisory-handled-as-routine.md` and
 `docs/decisions/2026-10-07-sharp-override.md`.
 
-**Scope changed 2026-10-25 (Lutan; `docs/decisions/2026-10-25-audit-on-releases-not-every-pr.md`).** The PR `audit` job now
-runs only on a PR that changes `package.json` or `package-lock.json`; on any other PR it shows **skipped**, which is
-not a pass. The advisory check someone acts on is a step in every production release (`docs/release-procedure.md`,
+**Scope changed 2026-10-25 (Lutan; `docs/decisions/2026-10-25-audit-on-releases-not-every-pr.md`).** The PR `audit` job was meant to
+run only on a PR that changes `package.json` or `package-lock.json`. **Corrected 2026-10-27: as built it never runs on any PR**
+(its condition in `ci.yml:248` tests `deps-changed`, which `check-docs-only.mjs` never writes out, lines 107–108), so expect it to
+show **skipped**, even on a release cut that changes `package.json`; skipped is not a pass, and there is no PR check to go looking for. The advisory check someone acts on is a step in every production release (`docs/release-procedure.md`,
 "Audit the production dependencies"), with the daily `advisories.yml` run between. He asked *"If the audit check
 always fails in a CI and is ignored is it actually adding value?"* and chose this. Everything above about a red
 `audit` on a PR that does run it still holds.
