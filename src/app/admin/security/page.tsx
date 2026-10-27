@@ -7,7 +7,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getT } from "@/lib/i18n/get-t";
 import { mustChangePassword } from "@/lib/auth/password-change";
 import { AccessRequests, type AccessRequest } from "./AccessRequests";
-import { CreateUserForm } from "./CreateUserForm";
 import { UsersTable, type ExtraRole, type SecurityUser } from "./UsersTable";
 import { CoversEnding, type EndingCover } from "./CoversEnding";
 import { todayIso, addDaysIso } from "@/lib/format";
@@ -181,7 +180,6 @@ export default async function SecurityPage() {
       )}
 
       <AccessRequests requests={requests} roles={roleOptionsResult.roles} />
-      <CreateUserForm roles={roleOptionsResult.roles} />
       <CoversEnding covers={endingCovers} roles={roleOptionsResult.roles} />
       <UsersTable
         users={users}
