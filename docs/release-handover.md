@@ -1,127 +1,122 @@
-# Release handover — written 2026-10-26 after `0.40.5`
+# Release handover — written 2026-10-27 after `0.40.6`
 
-A **delta**. The release's own facts are in `docs/releases/2026-10-26-0-40-5.md` and the durable
+A **delta**. The release's own facts are in `docs/releases/2026-10-27-0-40-6.md` and the durable
 rules are in `docs/release-procedure.md`. **Both outrank this file.**
 
 ## START HERE
 
-**`0.40.5` is deployed, verified, and it correctly mailed nobody.** All four builds came from
-`aa984fa1`, both databases read **266 of 266** with `No drift`, `0265` went on before any deploy, and
-the production deploy succeeded first time. **It cost two touches — one answer and one command —
-which is the target.**
+**`0.40.6` is deployed, verified, and it correctly mailed nobody.** Both databases read **270 of 270**
+with `No drift`, all four migrations went on before any deploy, and both Worker deploys succeeded
+first time. **It cost two touches — one answer and one command — which is the target.**
 
-**What did it, again, was folding every foreseeable question into ONE round** before the cut: the
-mail, `0265`'s access narrowing, and the thirteen unsigned plans. Two releases running. **Do that
-again** — a decision you can see coming is a decision you can batch.
+**What did it, for the third release running, was folding every foreseeable question into ONE round**
+before the cut: the mail, the seven unsigned plans, and the Send to hospital consequence. **Do that
+again.**
 
-**The most important thing in this edition is a correction, and it is about this file.**
-`0.40.4`'s handover carried `check-diets-per-serving-schema.mjs` as *"one red still unresolved rather
-than explained away… carried from `0.40.1`, `0.40.2` and `0.40.3`, still plausible and unverified"*,
-and told you four releases carrying one red script is how a real fault hides. **That script did not
-exist when those words were written.** It was deleted on 2026-10-25 by `3a0219c8` ("Diets link 4"),
-deliberately: `0260` dropped the `qty_small/medium/large` columns it asserted proportions on. This
-session repeated the claim to Lutan **twice** before running it, offered to make it a workstream, and
-he said yes — the phantom was caught only because writing the backlog item properly meant capturing
-the exact failure, and there wasn't one. **No item was filed.**
-
-**So: the handover's own first instruction is the one it is easiest to skip for the handover itself.**
-Re-measure before repeating ANY item below, including the ones that look like settled background.
-A carried item with no command attached to it is a rumour. `git log --oneline --all -- <path>` costs
-five seconds and would have caught this four editions ago.
+**The previous edition's own correction worked, and this release is the proof.** `0.40.5`'s handover
+said to re-measure before repeating any carried item, after four editions passed along a red script
+that did not exist. Every carried item below was re-measured this time, and one of them moved — the
+`audit` item finally went from observation to a filed backlog item, and the OpenNext count was
+*counted* rather than recalled. **Keep doing that.** A carried item with no command attached to it is
+a rumour.
 
 **`doctor-cells` red is EXPECTED and is not a fault** — Lutan uses Doctor as his test role, one card
 at a time (`docs/decisions/2026-10-25-doctor-is-the-test-role.md`). It reads `MISSING 12 of 13`.
 **Never restore the Doctor's cards and never edit the check.** Report the number, change nothing.
 
-**Re-measure before trusting any of this.** `git diff --stat aa984fa1..HEAD`, `gh pr list`,
+**Re-measure before trusting any of this.** `git diff --stat 641f340c..HEAD`, `gh pr list`,
 `--status --env production`, `node scripts/check-production.mjs all`, the live `/api/version`.
 
-## Corrections to the last edition
+## Corrections and closures to the last edition
 
-- **The diets red: wrong, and wrong for four editions.** See START HERE. **Do not reinstate it.**
-- **It said the home-icon count was "an independent check that exactly one card was added"
-  (`52 cards … 8 created`). It is not, and this release proved it.** `iconCatalogue()` counts
-  **distinct pages**, deduped by path in `toIcons()`. `record_death` has `opens: "/residents"`, the
-  same path as two existing cards, so the count correctly stayed at **52 with 0 created** while a card
-  genuinely was added. It only ever detected cards that open a **new** page. **`cards-union`,
-  `role-cards` and a before/after prediction are the real checks.**
-- **It said to expect to pay a four-minute `npm ci` for the cut worktree from now on. Paid, correctly.**
-  There were no leftovers. The record then **reused the cut's worktree** under paperwork rule 2 rather
-  than making a second one.
-- **It said `audit` showed `skipping` although the cut changes `package.json`, second release running.
-  Third now**, same behaviour. Its gate is genuinely narrower than the 2026-10-25 decision's wording
-  suggests. **Still not worth changing during a release** — but it is now a pattern, and if a fourth
-  release sees it, the decision's wording should be corrected rather than the job.
-- **It said the OpenNext `Failed to copy` count held at three on test and zero on production, fourth
-  release. Fifth now**, same three packages. **Still watch, do not act.**
-- **It said `strip-baked-env` was held at 14 for a seventh release. Eighth now**, same 14 names both sides.
-- **It said the public-page and edge-cache checks are vacuous while `PUBLIC_SITE=locked`, and to prove
-  it rather than recall it. Proven again** — the deploy printed `env.PUBLIC_SITE ("locked")` and
-  `/adopt` 307s to `/login` on both hosts.
-- **It said the "all four builds from one SHA" property is retired and carries no counter. Honoured.**
-  All four did come from `aa984fa1`, recorded as a fact.
+- **The `audit`-shows-`skipped` item is now FILED, not carried.** Fourth release running, which is
+  what `0.40.5`'s handover said should trigger a fix. It is a backlog item under *Documentation*:
+  **the decision file's wording is wrong, not the job.** Measured on #975 rather than recalled.
+  **Do not carry it here again** — check the backlog item instead.
+- **The home-icon count behaved exactly as the last edition's correction predicted, which retires the
+  question.** It moved **52 → 50** while the card count stayed at **32**, because `iconCatalogue()`
+  counts distinct *pages* and `0268`/`0269` repointed what some cards open. **It verifies nothing
+  about cards.** `cards-union`, `role-cards`, `role-cards-coverage` and `check-cards-count` are the
+  real checks, and all four were clean.
+- **`strip-baked-env` was held at 14 for an eighth release. Ninth now**, same 14 names both sides.
+- **OpenNext `Failed to copy`: counted, not recalled — 3 on test, 0 on production, same three
+  packages** (`age-encryption`, `color-string`, `data-uri-to-buffer`). **Sixth release running.**
+  Still watch, do not act.
+- **The public-page and edge-cache checks are vacuous while `PUBLIC_SITE=locked`. Proven again** —
+  both deploy logs printed `env.PUBLIC_SITE ("locked")` and `/adopt` 307s to `/login` on both hosts.
+- **The retired "all four builds from one SHA" property stayed retired. Honoured.** `main` moved once
+  (#974, a planner handover) and the code-identity diff was **empty**, so nothing was rebuilt.
+- **`release-prs.mjs` exited 0 with no squash-merge gap**, unlike the last two releases. The exit code
+  was still read from the command rather than through a pipe, which is the habit, not the result.
 
 ## Where things stand
 
 | | |
 |---|---|
-| Live | **`0.40.5`** — production Worker version `5880dc1d` tagged `v0.40.5`, test Worker `24e3a999`; both Pi builds under the script from `aa984fa1` |
-| Previous release SHA, for the next range | **`aa984fa1ad4e033781e10e109ded460efa6a4f54`** |
-| Production database | **`266 applied, 0 pending`**, `No drift`. **Run it yourself** |
-| Dev database | **`No drift`, 266 of 266** |
-| Next free migration number | **`0266`**. **Check `origin/main` *and* open `*-schema` PRs anyway** |
-| The mail | **None, correctly.** Both deploys printed `no major release new to <env> (was 0.40.4), so no email.` |
-| `unreleased` and open PRs | 0 at the cut; `main` moved **one** PR during the release (#961, a planner handover), and the shipping tree is **byte-identical** to the tested SHA |
-| Public site | **`PUBLIC_SITE=locked`**, read from the deploy. Public-page and edge-cache-`HIT` checks are vacuous |
-| Home screen icons | `52 cards, 416 images`, **0 created** — correct, see the correction above |
-| Worktrees | The record's (reused from the cut) plus two free leftovers from merged PRs — `card-decisions-schema` (#960) and `harness-sweep-diets-stock` (#959). **A `/clean-streams` round is owed** |
+| Live | **`0.40.6`** — production Worker `e8828404` tagged `v0.40.6`, test Worker `5211879f`; both Pi clones at `641f340c` |
+| Previous release SHA, for the next range | **`641f340ce816f064a39a825c1eefa2da706e4427`** |
+| Production database | **`270 applied, 0 pending`**, `No drift`. **Run it yourself** |
+| Dev database | **`No drift`, 270 of 270** |
+| Next free migration number | **`0270`**. **Check `origin/main` *and* open `*-schema` PRs anyway** |
+| The mail | **None, correctly.** Both deploys printed `no major release new to <env> (was 0.40.5), so no email.` |
+| Cards | **32**, `cards-union` and `role-cards-coverage` both clean |
+| Public site | **`PUBLIC_SITE=locked`**, read from both deploys |
+| Worktrees | The record's (reused from the cut, itself a reused leftover) plus several free leftovers from merged PRs. **A `/clean-streams` round is owed** |
 
-**Counters:** `npm ci` as step 1 **28**; first CI run green by construction **11**; no production-only
-guard **30**; `strip-baked-env` **23**, at **14**, eighth consecutive release. **Server Actions keys**
-(twenty-seventh check): production `cbd55beae8d8`, test `ecc41837fc0b`, unchanged across six releases.
+**Counters:** `npm ci` as step 1 **29**; no production-only guard **31**; `strip-baked-env` **24**, at
+**14**, ninth consecutive release; **Server Actions keys** (twenty-eighth check): production
+`cbd55beae8d8`, test `ecc41837fc0b`, unchanged across seven releases.
 **Releases that mailed: 1 in the last ten.**
 
 ## The method that keeps paying
 
-**Read an exit code from the thing you are measuring, not from what printed it.** This release met
-that trap **three times in one afternoon**, and it is the single highest-value habit here:
+**Take the before-picture of the table the migration writes, and diff it afterwards.** This release
+is the clearest case yet that it is worth the ninety seconds. `role-cells` before and after gave the
+whole permission change as four lines, and **the one loss in the release — the 2IC's single cell,
+`placement.hospital` — was itemised rather than inferred.** Without it, "Send to hospital is held by
+nobody" would have been an argument from a migration header instead of a measurement.
 
-- `release-prs.mjs` piped through `tail` read **0**; its real exit is **1**, and it was hiding two squash-merged PRs.
-- The gates run's background wrapper reported **exit 0** — also `tail`'s. The gates' own `GATES_EXIT=0` was the evidence.
-- The production Pi build's wrapper returned **exit 0 after 20 seconds** — that was the `sleep`.
+**Read an exit code from the thing you are measuring, not from what printed it.** Still the highest
+value habit here; met three times again (`release-prs`, `gates`, `check-release-guards`), each read
+from the command or from `GATES_EXIT` rather than from a pipe or a background wrapper.
 
-**It is worth promoting into `docs/release-procedure.md` as a one-liner** rather than being
-re-derived from a record every release. That is this edition's one suggested rule change.
+**A failed deploy also finishes.** Both deploys were confirmed from `wrangler deployments list`
+against the log's `Current Version ID`.
 
-**A failed deploy also finishes.** Still true, still the reason every deploy is confirmed from
-`wrangler deployments list` against the log's `Current Version ID`.
+## Two things a future release manager will meet
+
+- **The classifier refuses `apply-migrations --env production` sometimes, as `[Production Deploy]`.**
+  It was **transient and cleared on one retry** this release. It looks exactly like a missing
+  permission and is not one. Retry **once**; if it refuses again, hand it to Lutan rather than
+  working around it.
+- **`git reset --hard` is refused by the classifier, and the runbook's worktree-reuse recipe names
+  it.** You do not need it: `git checkout -b <branch> origin/main` in a clean worktree lands at the
+  same commit. **Worth correcting in `docs/release-procedure.md`** — it is one line, and this is the
+  second mechanical recipe in that file found to be unrunnable as written.
 
 ## In flight and open
 
-**Card review 1's APP half is the next piece, and the release notes already promise it.**
-`0265` landed the schema; the app half is a later stream. Until it lands, four medical cards are
-narrowed in the database while the live app still asks for the wider read — which the notes describe
-honestly ("will show nothing or refuse"). **The five manual checks in
-`docs/test-plans/cut-release-0-40-5.md` are the ones that would catch a card left short**, and four of
-them can only be done on production.
+**`role-cards-coverage` is CLEAN on production, and `CLAUDE.md` still says it is not.** That file
+records "it does not pass yet: on 2026-10-24 production named four roles". It now prints `Every held
+card is covered by its role's access`. **Someone should confirm and update that paragraph** — not
+mid-release, and not by assuming: re-run the check first.
 
-**Card review 2 stays blocked behind Card review 1** by Lutan's ruling of 2026-10-25. Read its item
-fresh when the gates are met.
+**Send to hospital is held by no live role** until Lutan gives someone **Manage medical** in Settings
+→ Who does what. His decision, the note says so, and the fix is a card assignment rather than code.
+**It is row 1 of his manual list and the one open item with a live consequence.**
 
-**Thirteen `pending:` plans shipped as a stated gap** on Lutan's explicit decision — the largest number
-so far, nine of them him reading this release's card reports. Listed in the record, not ticked on
-anyone's behalf. **Worth watching as a trend rather than a per-release footnote:** 5, 5, 5, 5, 13.
+**The `staff` phantom is the root cause of two decisions reasoned about a role that does not exist**
+(`0268` and `0269`, hours apart). The backlog item — remove `staff` completely and stop reporting
+archived roles as live — says the **check fix comes first**, because it is still feeding wrong
+evidence to other streams. Nothing here changes that ordering.
 
-**Still filed rather than fixed:** `0257`'s stale `-- consumer:` header. **`tee` under PowerShell
-writes the deploy log as UTF-16**, so `tr -d '\000'` before grepping — used again this release and it
-works.
+**Seven `pending:` plans shipped as a stated gap** on Lutan's explicit decision. The trend is
+**5, 5, 5, 5, 13, 7** — worth watching as a trend rather than a per-release footnote.
 
-**Retired from this file:** the diets red (never existed), and the home-icon card count as a
-verification (it does not verify that).
-
-**Carried unchanged, nothing new to say:** `who-does-what` items 2 and 3 and `stocktaking` item 3; the
-Thai wording of the Units screen and one real vet visit on production; the same three silent failures
-as a set (public desexing sign-up, Drive space thresholds, the retention job — all wanting the same
+**Carried unchanged, nothing new to say, and RE-MEASURE EACH before repeating it:** `0257`'s stale
+`-- consumer:` header; `who-does-what` items 2 and 3 and `stocktaking` item 3; the Thai wording of the
+Units screen and one real vet visit on production; the three silent failures as a set (public
+desexing sign-up, Drive space thresholds, the retention job — all wanting the same
 `status_alert_runs` → mail plumbing); and the two unlooked-at items, the prescription form reading 4
-and video playback on a real handset. **Re-measure each before repeating it — that is what this
-edition's correction is about.**
+and video playback on a real handset. **`tee` under PowerShell still writes the deploy log as
+UTF-16** — `tr -d '\000'` before grepping, used again and it works.
