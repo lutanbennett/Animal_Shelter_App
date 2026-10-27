@@ -89,6 +89,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "A clinic visit page now only offers Log blood test, Add prescription, Log weight and Log procedure to a login whose cards allow each one. Before, a login that could edit visits saw all four and was turned away from the ones it had no card for.", cards: ["medical_records"] },
   "Upcoming visits: Show cancelled and Show completed now show only those appointments, and ticking one unticks the other. The Residents list has a Deceased button to find only the residents who have died, and the buttons under Filter now clear any zone you had picked so the list matches what you tapped.",
 ];
 
