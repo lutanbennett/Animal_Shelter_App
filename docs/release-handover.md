@@ -15,7 +15,8 @@ the cause, the fix and the proof.
 
 **TEST IS A FULL RELEASE BEHIND AND ON THE OLD ADAPTER.** Only production was deployed. **Test's cron
 is still dead and test is NOT a valid pre-production check right now.** Do not read a green production
-and assume both. Bringing test up is Lutan's call and is row 4 of his list.
+and assume both. **This is DECIDED, not open:** Lutan, 2026-10-28 — test comes up **inline with the
+next release's ordinary test-Worker deploy**. Nothing to arrange and nothing to ask him.
 
 ## The correction this edition exists to make
 
@@ -110,8 +111,14 @@ with `--ref 429229cd` for that reason. **The window is now routinely long enough
 
 ## In flight and open
 
-**Test needs a decision**: bring it to `0.40.8` with the new adapter, or knowingly leave it behind.
-Row 4 of Lutan's list. While it is behind, nothing about test tells you anything about production.
+**Test is DECIDED, not open. Lutan, 2026-10-28, asked directly: *"For test we will get that inline
+when we do the next release."*** So the next release's **ordinary test-Worker deploy** is what brings
+test onto the new adapter — there is nothing to arrange, nothing to schedule, and **nothing to put to
+him again**. Two things follow for whoever runs that release: **deploy test as usual, do not treat it
+as a special step**; and **afterwards, one quarter-hour later, run
+`node scripts/check-production.mjs calendar-cron --env test` and expect `verdict: healthy`**, which is
+what ticks the backlog item. Until then test stays a release behind with a dead cron, and **that is
+expected — do not report it as a fault**, and do not read a green production as covering test.
 
 **Two user-visible changes shipped unlooked-at**: picking an appeal when recording a donation, and
 replacing the welcome-page photo. Rows 1 and 2.
