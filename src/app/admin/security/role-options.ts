@@ -13,6 +13,8 @@ export type RoleOption = {
   key: string;
   name: string;
   nameTh: string | null;
+  /** roles.is_admin: the role outside the card system. Read this flag, never the key. */
+  isAdmin: boolean;
 };
 
 /**
@@ -38,13 +40,14 @@ function rank(key: string) {
 export async function loadRoleOptions(
   admin: ReturnType<typeof createAdminClient>,
 ): Promise<{ roles: RoleOption[]; error: string | null }> {
-  const { data, error } = await admin.from("roles").select("key, name, name_th");
+  const { data, error } = await admin.from("roles").select("key, name, name_th, is_admin");
   if (error) return { roles: [], error: error.message };
   const roles = (data ?? [])
     .map((r) => ({
       key: r.key as string,
       name: r.name as string,
       nameTh: (r.name_th as string | null) ?? null,
+      isAdmin: r.is_admin === true,
     }))
     .sort((a, b) => rank(a.key) - rank(b.key) || a.name.localeCompare(b.name));
   return { roles, error: null };
