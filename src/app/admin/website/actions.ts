@@ -454,10 +454,8 @@ export async function uploadHeroPhoto(formData: FormData): Promise<SiteContentFo
       return refuse(t.admin.website.errors.noFile);
     }
 
-    // A public photo needs a description for visitors who cannot see it (Lutan, 2026-10-26: "Yes ask for alt text").
-    const alt = String(formData.get("alt") ?? "").trim().slice(0, 300);
-    const altTh = String(formData.get("alt_th") ?? "").trim().slice(0, 300);
-    if (!alt) return refuse(t.admin.website.gallery.altRequired);
+    // No description is asked here: the hero reads its alt text from site_content.hero_alt (Home page tab, website.content),
+    // which this form never sent, so asking for one made Replace photo refuse every time.
 
     let driveFileId: string;
     try {
