@@ -236,6 +236,8 @@ begin
   insert into contacts (id, name, type) values (${lit(F.CONTACT)}, 'Harness contact', 'Vendor'), (${lit(F.CARER)}, 'Harness carer', 'Carer');
   insert into shelter_friends (id, contact_id) values (${lit(F.FRIEND)}, ${lit(F.CONTACT)});
   -- 2026-10-24: diet_types (the ingredients; the stock.diets probes) lost daily_qty_*; a resident's diet is now a row of diets (0090 onwards), same id
+  -- a live medicine unit, looked up here because a probe's role may not read units (0252 refuses a unit that is not one)
+  perform set_config('harness.med_unit', (select name from units where for_medicines and archived_at is null order by sort_order, name limit 1), true);
   insert into diet_types (id, name) values (${lit(F.DIET)}, 'Harness diet');
   insert into diets (id, name) values (${lit(F.DIET)}, 'Harness diet');
   -- the immunization probe names this type rather than looking one up: what a role can look up is not what it is probing

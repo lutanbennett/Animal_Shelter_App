@@ -84,10 +84,10 @@ export const PROBES = [
   { activity: "medical.archive", level: "edit", sql: `update clinic_visits set archived_at = now(), archive_reason = 'probe' where resident_id = $R` },
 
   // --- Photos
-  { activity: "photos.resident_add", level: "edit", scoped: true, fn: true, sql: `select record_attachment('resident', $R, 'harness-probe-file', 'probe.jpg', 'Medical', null, null)` },
+  { activity: "photos.resident_add", level: "edit", sharedWith: ["photos.shelter_add"], scoped: true, fn: true, sql: `select record_attachment('resident', $R, 'harness-probe-file', 'probe.jpg', 'Medical', null, null)` },
   { activity: "photos.resident_manage", level: "edit", fn: true, sql: `select delete_resident_photo((select id from attachments where owner_type = 'resident' and owner_id = $R limit 1))` },
   // A5 (0152): filing outside Medical is what publishes, and the cell now says who may.
-  { activity: "photos.resident_publish", level: "edit", fn: true, sql: `select record_attachment('resident', $R, 'harness-probe-file', 'probe.jpg', 'Shelter', null, null)` },
+  { activity: "photos.resident_publish", level: "edit", fn: true, /* a folder photos.shelter_add (0269) does not open: only publishing does */ sql: `select record_attachment('resident', $R, 'harness-probe-file', 'probe.jpg', 'Adopter', null, null)` },
   { activity: "photos.resident_manage", level: "edit", fn: true, sql: `select set_resident_profile_photo($R, (select drive_file_id from attachments where owner_type = 'resident' and owner_id = $R limit 1))` },
 
   // --- Enclosures
@@ -161,7 +161,7 @@ export const PROBES = [
   { activity: "reference.types", level: "edit", sql: `update immunization_types set cost = cost where id = (select id from immunization_types limit 1)`, known: [{ id: "C3", roles: ["doctor"] }] },
   { activity: "reference.types", level: "edit", sql: `insert into immunization_types (name, interval_months) values ('Probe type', 12)`, known: [{ id: "C3", roles: ["doctor"] }] },
   { activity: "reference.types", level: "edit", sql: `update blood_test_types set name = name where id = (select id from blood_test_types limit 1)` },
-  { activity: "reference.add_while_recording", level: "edit", sharedWith: ["stock.medications"], sql: `insert into medication (name) values ('Probe medication')` },
+  { activity: "reference.add_while_recording", level: "edit", sharedWith: ["stock.medications"], sql: `insert into medication (name, dose_unit) values ('Probe medication', current_setting('harness.med_unit', true))`, refusedBy: ["P0001"] /* check_unit_in_units (0252) reads units as the caller, so a role that cannot read them is refused there first, with a message about units */ },
   { activity: "reference.add_while_recording", level: "edit", sql: `insert into frequency (label) values ('Probe frequency')` },
   { activity: "reference.add_while_recording", level: "edit", sql: `insert into procedure_types (name) values ('Probe procedure')` },
   { activity: "audit.view", level: "edit", sql: `select 1 from audit_log limit 1` },
