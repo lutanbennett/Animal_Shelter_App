@@ -117,6 +117,7 @@ export const ACTIVITIES = [
   { key: "roles.view", kind: "level", area: "settings", sort: 68, requires: [], probes: [] },
   { key: "website.gallery", kind: "yesno", area: "settings", sort: 70, requires: [], probes: [] },
   { key: "resident.who_and_where", kind: "level", area: "residents", sort: 69, requires: [], probes: [] },
+  { key: "photos.resident_medical", kind: "level", area: "photos", sort: 71, requires: [], probes: [] },
 ] as const satisfies readonly ActivityDef[];
 
 export type Activity = (typeof ACTIVITIES)[number];

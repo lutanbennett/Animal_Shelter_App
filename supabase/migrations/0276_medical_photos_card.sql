@@ -22,7 +22,7 @@
 -- Nothing here names a role or grants anything to Admin, which sits outside the card system. Re-runnable.
 
 insert into permission_activities (key, kind, area, sort)
-select 'photos.resident_medical', 'level', 'photos', coalesce(max(sort), 0) + 1 from permission_activities
+values ('photos.resident_medical', 'level', 'photos', 71)
 on conflict (key) do update set kind = excluded.kind, area = excluded.area;
 
 insert into card_grants (card, activity, level)
