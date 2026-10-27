@@ -1,67 +1,17 @@
-# Feature test plan
-
-Copy this file to the feature branch as `docs/test-plans/<feature>.md`, fill the
-header, and tick as you go.
-
-Every line must end up in one of three states, and CI checks this:
-
-- `- [x]` — the check was actually run and passed.
-- `- [ ] … — n/a: <reason>` — the check did not apply, and the reason says why.
-- `- [ ] … — deferred: <owner>` — **section 8 only.** The check cannot be true
-  yet, and this names who picks it up.
-
-That third state exists because the deploy gates in section 8 cannot be true at
-PR time: there is no deployed build to check and no production apply to have run.
-Writing them `n/a` is a lie in a box labelled "did not apply", and once that habit
-forms people write `n/a` for things they simply did not do. `deferred:` says the
-truthful thing and passes, because a PR cannot be held open waiting for a deploy
-it precedes. It is confined to section 8 deliberately — anywhere else it would be
-a general-purpose escape hatch, which is the one thing this check exists to
-prevent — and the checker rejects it elsewhere.
-
-**The reason must follow `n/a:` immediately.** `n/a: no UI surface` passes;
-`n/a as a deploy check, because …` reads fine to a human but fails, and that
-strictness is deliberate — it is what makes every reason greppable in one pass
-across every checklist in the repo. Put any qualifying words after the colon,
-not before it.
-
-Never tick something you did not do, and never leave a line untouched. Anything
-that failed goes under **Defects**.
-
-**No merge without a signed-off checklist. No exceptions.** CI enforces it: a PR
-with no completed `docs/test-plans/<feature>.md` fails. Small changes are not
-exempt — they are simply fast, because most lines are honestly `n/a`. Writing the
-`n/a` reason *is* the check; that is what says someone looked at everything rather
-than at the happy path.
-
-Run `node scripts/check-test-plan.mjs` locally before pushing to see what CI will say.
-
-The `test-plan` CI job reports **red without blocking the merge**, and **that is
-permanent** — decided by Lutan on 2026-10-20: *"we will NOT make this mandatory
-it stays as advisory"* (`docs/decisions/2026-10-20-test-plan-stays-advisory.md`).
-It is a deliberate soft gate, not an oversight and not a trial. **Treat a red
-`test-plan` as a stop anyway:** the script goes red only when a plan is genuinely
-wrong, so a red one is always someone's mistake to fix.
-It will **not** become a required check. Earlier wording here said it would
-"once we know the checklist is working", which read as a decision still pending
-and got him asked for an answer he had already given.
-The completed checklist is also pasted into the PR and read by the production
-release manager before `npm run deploy:prod`.
-
----
+# Feature test plan — policy-triage-1
 
 ## Header
 
 | | |
 |---|---|
-| Feature | |
+| Feature | Triage of ten tables the table-policy-commands check lists |
 | Backlog item | `docs/backlog.md` → |
 | Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
-| PR | |
-| Tested by / date | |
-| Carries a migration? | yes / no |
-| Tested at SHA | |
+| PR | see PR |
+| Tested by / date | Claude / 2026-10-28 |
+| Carries a migration? | no |
+| Tested at SHA | `32275b29` |
 
 ## 1. Scope and risk
 
@@ -86,11 +36,13 @@ wait for `worktree.mjs new` to exit before trusting the tree. A gate ticked
 because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
-- [x] `node scripts/worktree.mjs sync` — SYNCNOTE
-- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`:
+- [x] `node scripts/worktree.mjs sync` — origin/main merged, already up to date
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 test=0 build=0`:
 
 ```
-GATESOUT
+=== gates: build exited 0 after 268s
+
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 - [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so write it `n/a: not yet — the PR does not exist at this commit` and **leave it there.** Changed 2026-10-20: ticking it in a follow-up commit used to be the rule, and that commit **invalidated its own evidence** — a new HEAD means a new run, so every PR in this repository paid two full CI cycles to transcribe a result GitHub already records permanently against the commit. A tick here attests to nothing a reader can check better by looking at the PR. **What must still happen, and is a merge step rather than a checklist line: before merging, read the run for your current HEAD (`gh run view <id> --json status,conclusion,headSha`) and confirm its `headSha` matches.** Merging on an older run's strength merges a commit whose CI never finished. **Do not pre-tick this line either** — a green you have not seen is the exact failure this checklist exists to prevent — n/a: not yet — the PR does not exist at this commit
 
@@ -175,36 +127,36 @@ database; `lannacare.org` runs **production** (`dbkodyyxxhtygxcxmfcu`).
 
 ### Tested build
 
-- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — n/a: deploy-time item; docs only, nothing to deploy
-- [ ] Deployed SHA matches the tested SHA — `deploy.mjs` prints both the target project and the short SHA; read that line, do not assume it — n/a: deploy-time item; docs only, nothing to deploy
+- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — deferred: release manager (docs only, nothing to deploy)
+- [ ] Deployed SHA matches the tested SHA — `deploy.mjs` prints both the target project and the short SHA; read that line, do not assume it — deferred: release manager (docs only, nothing to deploy)
 
 ### On the deployed build
 
-- [ ] Deployed to test: `npm run deploy:test` — n/a: deploy-time item; docs only, nothing to deploy
-- [ ] Smoke-tested on `test.lannacare.org` — the happy path works on the deployed Workers build, not just `next dev` — n/a: deploy-time item; docs only, nothing to deploy
-- [ ] **Timezone-sensitive behaviour proved, not observed at a convenient hour.** Workers run in UTC wherever they are, so anything deriving "today" is wrong for part of every day in Thailand. That is two separate claims and they need different checks: — n/a: deploy-time item; docs only, nothing to deploy
+- [ ] Deployed to test: `npm run deploy:test` — deferred: release manager (docs only, nothing to deploy)
+- [ ] Smoke-tested on `test.lannacare.org` — the happy path works on the deployed Workers build, not just `next dev` — deferred: release manager (docs only, nothing to deploy)
+- [ ] **Timezone-sensitive behaviour proved, not observed at a convenient hour.** Workers run in UTC wherever they are, so anything deriving "today" is wrong for part of every day in Thailand. That is two separate claims and they need different checks: — deferred: release manager (docs only, nothing to deploy)
   - *Does the logic handle the boundary?* Where the code lets an instant be injected, assert it rather than waiting for the clock: run the **real exported** function against fixed instants — both sides of 17:00Z, the 00:00 and 06:59 Thai ends of the broken window, month-end, year-end, a leap day — and then the same suite under `TZ=UTC`, which is the Workers case. Deterministic, and it does not depend on what hour you happened to be testing. Prefer this where it is available, and never re-type the logic into the test; a copy proves only that the copy works
   - *Does the deployed build behave as the source does?* A different claim, and only `test.lannacare.org` answers it — during 00:00–07:00 Thai, when the two dates differ. If you cannot be there at that hour, put it in **Left for manual verification** rather than ticking it
-- [ ] **For a boundary or banding change, the assertions cover both edges of the band and both sides of the boundary — not only the case the bug report named.** A bug report names the case that was *noticed*, which is rarely the case that *discriminates*, so a test written faithfully from the report can pass while the fault survives. This is not hypothetical: `dueState()` was reported as "a job due today reads as not yet overdue", but due-today behaves identically under both clocks and does not move at all; the cases that moved were due-yesterday and the far end of the due-soon band. Applies to any threshold, rounding rule, retry window, pagination limit or permission cutoff, not only to dates — n/a: deploy-time item; docs only, nothing to deploy
-- [ ] **Evidence pasted into this plan is the tool's actual output, unedited.** A hand-maintained table of results is prose about a measurement rather than the measurement, and it drifts from the run without anyone noticing — which is precisely what the evidence was there to prevent. Regenerate it; do not tidy it — n/a: deploy-time item; docs only, nothing to deploy
-- [ ] Public pages (`/`, `/adopt`, `/our-work`, `/donate`) re-checked after a cache purge or a 10-minute wait — anonymous GETs are edge-cached per data centre, so a stale page can look like a defect that isn't one, or hide one that is — n/a: deploy-time item; docs only, nothing to deploy
+- [ ] **For a boundary or banding change, the assertions cover both edges of the band and both sides of the boundary — not only the case the bug report named.** A bug report names the case that was *noticed*, which is rarely the case that *discriminates*, so a test written faithfully from the report can pass while the fault survives. This is not hypothetical: `dueState()` was reported as "a job due today reads as not yet overdue", but due-today behaves identically under both clocks and does not move at all; the cases that moved were due-yesterday and the far end of the due-soon band. Applies to any threshold, rounding rule, retry window, pagination limit or permission cutoff, not only to dates — deferred: release manager (docs only, nothing to deploy)
+- [ ] **Evidence pasted into this plan is the tool's actual output, unedited.** A hand-maintained table of results is prose about a measurement rather than the measurement, and it drifts from the run without anyone noticing — which is precisely what the evidence was there to prevent. Regenerate it; do not tidy it — deferred: release manager (docs only, nothing to deploy)
+- [ ] Public pages (`/`, `/adopt`, `/our-work`, `/donate`) re-checked after a cache purge or a 10-minute wait — anonymous GETs are edge-cached per data centre, so a stale page can look like a defect that isn't one, or hide one that is — deferred: release manager (docs only, nothing to deploy)
 
 ### Deploy safety
 
-- [ ] `deploy: production → Supabase project <ref>` line read and the ref **matches production**. `scripts/lib/env.mjs` resolves shell over `.env.deploy.production` over `.env.local`, so a stray exported `NEXT_PUBLIC_SUPABASE_URL` silently builds production against dev and nothing errors — n/a: deploy-time item; docs only, nothing to deploy
-- [ ] `strip-baked-env: removed N env var(s) from the Worker bundle` seen in the deploy output — without it the bundle still carries a snapshot of `.env.local`, shipping dev credentials as silent fallbacks — n/a: deploy-time item; docs only, nothing to deploy
-- [ ] Any new secret/env var exists in the production Cloudflare environment — n/a: deploy-time item; docs only, nothing to deploy
+- [ ] `deploy: production → Supabase project <ref>` line read and the ref **matches production**. `scripts/lib/env.mjs` resolves shell over `.env.deploy.production` over `.env.local`, so a stray exported `NEXT_PUBLIC_SUPABASE_URL` silently builds production against dev and nothing errors — deferred: release manager (docs only, nothing to deploy)
+- [ ] `strip-baked-env: removed N env var(s) from the Worker bundle` seen in the deploy output — without it the bundle still carries a snapshot of `.env.local`, shipping dev credentials as silent fallbacks — deferred: release manager (docs only, nothing to deploy)
+- [ ] Any new secret/env var exists in the production Cloudflare environment — deferred: release manager (docs only, nothing to deploy)
 
 ### Migration ordering — *skip if no migration*
 
-- [ ] **Does this PR contain both a migration and code that reads it?** If yes, the production apply must happen *before* the deploy, and that ordering is written into the apply plan below. (PR #53 shipped both together; `main` briefly carried code selecting columns production did not have.) — n/a: deploy-time item; docs only, nothing to deploy
-- [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — it executes the real DDL inside `begin…rollback` against production's actual schema, which has drifted from dev — n/a: deploy-time item; docs only, nothing to deploy
+- [ ] **Does this PR contain both a migration and code that reads it?** If yes, the production apply must happen *before* the deploy, and that ordering is written into the apply plan below. (PR #53 shipped both together; `main` briefly carried code selecting columns production did not have.) — deferred: release manager (docs only, nothing to deploy)
+- [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — it executes the real DDL inside `begin…rollback` against production's actual schema, which has drifted from dev — deferred: release manager (docs only, nothing to deploy)
 - [ ] For a **destructive or rewriting** migration only: a production backup exists and is fresh. (Additive nullable columns do not need this gate. Note the README restore recipe has never been exercised.) — n/a: nothing in README changes
-- [ ] Apply plan stated: which file, which project, and whether it runs before or after the deploy — n/a: deploy-time item; docs only, nothing to deploy
+- [ ] Apply plan stated: which file, which project, and whether it runs before or after the deploy — deferred: release manager (docs only, nothing to deploy)
 
 ### Rollback
 
-- [ ] Rollback position stated, **including what it does not cover**. Production is served by the Pi, so the rollback is `./scripts/pi/deploy-pi.sh --ref <sha>` there (a rebuild); `npx wrangler rollback --env production` reverts only the Worker fallback. Neither reverts migrations. Purely additive schema is safe to leave; anything else needs its own down-migration before "rollback available" is a true statement — n/a: deploy-time item; docs only, nothing to deploy
+- [ ] Rollback position stated, **including what it does not cover**. Production is served by the Pi, so the rollback is `./scripts/pi/deploy-pi.sh --ref <sha>` there (a rebuild); `npx wrangler rollback --env production` reverts only the Worker fallback. Neither reverts migrations. Purely additive schema is safe to leave; anything else needs its own down-migration before "rollback available" is a true statement — deferred: release manager (docs only, nothing to deploy)
 
 ## Defects found
 
