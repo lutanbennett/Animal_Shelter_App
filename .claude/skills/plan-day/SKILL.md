@@ -1060,6 +1060,35 @@ belong here.
    item whose status is a question the main checkout can answer — `--status --env production` settles
    "is this live?" in one line.
 
+5. **AN INSTRUMENT THAT EXISTS IS NOT AN INSTRUMENT THAT IS RIGHT. READ WHAT A CHECK MATCHES ON, AND
+   SAY WHICH DATABASE IT RAN AGAINST, BEFORE YOU QUOTE IT.** Added 2026-10-26, after **four** in one
+   day. Rule 4 above says write the instrument; this says the opposite failure is now the commoner
+   one. **(a)** `clinic-login-helpers` reported four functions "called by nothing" — its whole-word
+   pattern matched nothing at all, **two had live callers**, and the planner had already written the
+   reading into a brief as settled fact; dropping them would have broken a working policy. **(b)**
+   `check-menu-coverage` printed **"118 unexplained orphans"**, of which **88 were disposable
+   `dev_signin_cards_*` logins** the card streams had made on the shared dev database; the real
+   figure across live roles was **30**. **(c)** `role-cards` / `role-cells` filter
+   `r.kind <> 'fixed'` and **say nothing about `roles.archived_at`**, so a role retired a fortnight
+   earlier was listed as a live seventh role holding thirteen cards — **Lutan caught that one
+   himself**, reading a stream's report. **(d)** and then a merged migration repeated (c)'s mistake
+   hours later, concluding a card was "held by staff only" — which means **nobody** — and moving a
+   capability onto a card no live role holds.
+   **The shape is always the same: a trusted, named, committed check, quoted without anyone reading
+   its query.** The damage is not a wrong number; it is a wrong number carrying the authority of a
+   check, which a brief, a backlog item and a migration then inherit in silence.
+   **The whole cost of avoiding it is one minute** — open the check, read the SQL or the regex, and
+   state the environment beside the figure. **A count without its database is not a reading.**
+   **And its sibling, from the same day, which is purely logical: RULING OUT ONE MECHANISM IS NOT
+   RULING OUT A CAUSE.** Chasing a dead cron, the planner established that every deploy re-registers
+   the schedule and that several deploys had happened since it died, then concluded *"so it cannot be
+   a deploy"* — true of a deploy **wiping** the schedule, and silent about a deploy breaking what the
+   schedule **invokes**. Half a day went to the wrong suspect. **Name the exact mechanism you
+   eliminated and claim nothing wider.** What broke it open was checking the OTHER environment:
+   **test and production had both died, each on its last cycle before its own deploy**, a pattern
+   invisible while only one was being looked at. **When something fails in one environment, read the
+   other before theorising.**
+
 **And the habit that limits the damage of all three: when an incident ends, the findings go onto the
 backlog in the same session.** Every measurement from that morning lived only in the chat for about
 an hour, while the backlog carried an item saying the cause was *"not yet confirmed"* with four
