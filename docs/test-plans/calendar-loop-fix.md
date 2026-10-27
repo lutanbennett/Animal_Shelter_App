@@ -6,7 +6,7 @@
 |---|---|
 | Feature | Calendar loop fix: past/completed visits keep their event; poll never cancels on its own delete or a past visit |
 | Backlog item | `docs/backlog.md` → calendar loop (item 1); duplicates check only (item 2) |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/calendar-loop-fix` @ `C:DevelopmentAnimal_Shelter_calendar-loop-fix` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | opened after this commit |
 | Tested by / date | Claude, 2026-10-27 |
@@ -203,11 +203,11 @@ Automated checks by: Claude  Date: 2026-10-27
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
+has looked and explicitly asks in chat; the line then says so, e.g. a name, then
+confirmed in chat, and the date.
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
+- a name and a date — a person looked. The date is required here.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
