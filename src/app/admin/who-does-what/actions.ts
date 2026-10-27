@@ -5,10 +5,10 @@ import { databaseFailure, runAction, type ActionResult } from "@/lib/action-resu
 import { hasAdminRole } from "@/lib/auth/require-admin";
 import { hasTwoStep } from "@/lib/auth/two-step";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { getT } from "@/lib/i18n/get-t";
 import { isCardKey, type CardKey } from "@/lib/permissions/cards";
 import { isGroupIconKey } from "@/lib/home/group-icons";
+import { holderNames } from "./roles";
 
 /**
  * Settings → Who does what: give a role a card, take one away, and reorder them.
@@ -287,17 +287,6 @@ export async function deleteRole(roleKey: string): Promise<ActionResult> {
     revalidatePath("/", "layout");
     return done();
   });
-}
-
-/** Names for the refusal: the login's email, else its id. Read with the service role; only an Admin reaches here. */
-async function holderNames(ids: string[]): Promise<string[]> {
-  const admin = createAdminClient();
-  const out: string[] = [];
-  for (const id of ids) {
-    const { data } = await admin.auth.admin.getUserById(id);
-    out.push(data.user?.email ?? id);
-  }
-  return out;
 }
 
 /*
