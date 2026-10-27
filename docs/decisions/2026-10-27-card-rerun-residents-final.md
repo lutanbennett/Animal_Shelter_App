@@ -77,3 +77,8 @@ death-page wording, the step-12 wording and the export all still stand, and the 
 ## The fourteen-card item
 
 **This card completes the set of fourteen, so the backlog item is now closeable.** Per the brief it is **not ticked here**; that is the planner's.
+
+## Created on dev, said plainly
+
+- `walk-residents-final` (R-6600) is left **Adopted** by an existing disposable carer, with one Medical-folder photo still on it. A second Medical photo was removed. The first photo's Drive file sits in the Shelter folder while its record says Medical (the failed move), so Drive and the record disagree for that one dev photo.
+- The login `dev-signin-f012b073@example.invalid` **cannot be deleted**: it is the per-card-set login used by earlier `residents` passes too, and rows still reference it (`residents.created_by` 5, `placement_history.created_by` 15, `weight.created_by` 1, `attachments.uploaded_by` 3, `resident_diets.created_by` 5). `--remove --cards residents` removed its throwaway role, so **it now holds no card**. Same shape as #985's `record_death` login.
