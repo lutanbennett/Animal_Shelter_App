@@ -89,16 +89,24 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "Settings → Website → Pages now shows a real preview of a page while you are still typing. Under each page, Preview shows the page exactly as visitors would see it, with your unsaved heading and text, in English or in Thai, and nothing is saved or published until you press Save changes. The photo, contact details, header and footer in the preview are the saved ones.",
-  "A resident’s photos no longer offer Remove, Set as profile photo or Move to folder to someone whose cards do not allow it, and the Book a vet visit button only appears for a login that can book one. Previously the buttons showed and then refused.",
-  "The user manual now shows each topic to the logins whose cards let them do that job, for the last fourteen topics too (scanning a microchip, placement history, adding photos and videos, the medication and feeding lists, Record Weight, Who does what). Before, those fourteen were shown to everyone and marked ‘Not yet assigned to a card’; now Settings topics such as Security and 2-step verification are shown only to Admin, and the name card topic to everyone.",
-  { text: "Settings → Who does what now has a Delete this role button, for an Admin who has verified with the authenticator app. It asks you to confirm, saying how many cards and groups go with the role. A role cannot be deleted while any login still holds it: it names those logins so you can move them to another role first.", cards: ["who_does_what"] },
-  "Settings → Security is easier to read: each person is one row with every role they hold shown as a chip (the main role marked, each extra role with its end date and a small ✕ to take it away). Add a role and Add person now open in a pop-up, a search box finds people by name or email, the less-used actions (edit name, temporary password, 2-step reset, archive, delete) are in a … menu on each row, and people who have left sit in a folded-away list at the bottom. A doctor record can now be linked from any login, whatever its role is called.",
-  "Blood tests and procedures no longer offer Attach files or Remove file to someone whose cards only let them read medical history, and a resident’s edit page only links to Return from hospital or Return from carer for a login that can do it. Previously those buttons showed and then refused.",
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.40.7",
+    date: "2026-10-27",
+    title: "Buttons follow your cards, website previews and a tidier Security page",
+    major: false,
+    notes: [
+      "Settings → Website → Pages now shows a real preview of a page while you are still typing. Under each page, Preview shows the page exactly as visitors would see it, with your unsaved heading and text, in English or in Thai, and nothing is saved or published until you press Save changes. The photo, contact details, header and footer in the preview are the saved ones.",
+      "A resident’s photos no longer offer Remove, Set as profile photo or Move to folder to someone whose cards do not allow it, and the Book a vet visit button only appears for a login that can book one. Previously the buttons showed and then refused.",
+      "The user manual now shows each topic to the logins whose cards let them do that job, for the last fourteen topics too (scanning a microchip, placement history, adding photos and videos, the medication and feeding lists, Record Weight, Who does what). Before, those fourteen were shown to everyone and marked ‘Not yet assigned to a card’; now Settings topics such as Security and 2-step verification are shown only to Admin, and the name card topic to everyone.",
+      { text: "Settings → Who does what now has a Delete this role button, for an Admin who has verified with the authenticator app. It asks you to confirm, saying how many cards and groups go with the role. A role cannot be deleted while any login still holds it: it names those logins so you can move them to another role first.", cards: ["who_does_what"] },
+      "Settings → Security is easier to read: each person is one row with every role they hold shown as a chip (the main role marked, each extra role with its end date and a small ✕ to take it away). Add a role and Add person now open in a pop-up, a search box finds people by name or email, the less-used actions (edit name, temporary password, 2-step reset, archive, delete) are in a … menu on each row, and people who have left sit in a folded-away list at the bottom. A doctor record can now be linked from any login, whatever its role is called.",
+      "Blood tests and procedures no longer offer Attach files or Remove file to someone whose cards only let them read medical history, and a resident’s edit page only links to Return from hospital or Return from carer for a login that can do it. Previously those buttons showed and then refused.",
+    ],
+  },
   {
     version: "0.40.6",
     date: "2026-10-26",
