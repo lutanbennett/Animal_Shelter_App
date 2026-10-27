@@ -1,145 +1,121 @@
-# Planner handover — edition `393`, 2026-10-27
+# Planner handover — edition `402`, 2026-10-27
 
-**A delta, sixteenth edition in this shape.** Rules are the skill's step 8 — say what **changed**,
+**A delta, seventeenth edition in this shape.** Rules are the skill's step 8 — say what **changed**,
 promote durable facts once, cite `.plan-day.md` rather than reproducing it.
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`** — if they
 disagree with this, they are right and this is stale. **Read first:** `CLAUDE.md` → the skill →
-`.plan-day.md` → this. **The next slug is `402`.**
+`.plan-day.md` → this. **The next slug is `411`.**
 
 > **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
 > release state, candidates. **Re-read every time, never diffed.**
 
 ---
 
-## WHAT `384` ASKED FOR, and what each warning actually did
+## WHAT `393` ASKED FOR, and what each warning actually did
 
-- **"An instrument that exists is not an instrument that is right." FIRED, and it paid for itself
-  four times over.** Reading what a check matched on before quoting it is now routine, and it caught
-  the stale `role-cards` reporting that had already contaminated a merged migration. **Promoted
-  already; do not recopy it.**
-- **"Capture the actuals before archiving." FIRED, six of six**, every read with the process alive
-  and `context.session` checked against the id passed. **No figure lost this round** — the first
-  clean sweep since the rule was written.
-- **"A note from a session is its report, not proof." FIRED AGAINST ME, third round running.** See
-  the next section; this time Lutan was the one who caught it.
-- **"Check PR state with `gh`, not the session list." FIRED, at last, after holding quietly for
-  seven editions.** `list_sessions` reported a merged PR as **OPEN**; `gh` said `MERGED`. Had I
-  trusted the session list I would have paused the next batch for a stream that had finished. **Keep
-  it — and note the failure mode is a false OPEN, not a false MERGED.**
-- **The `src/lib/releases.ts` collision rule is STILL UNTESTED — fourth round.** Three batches of
-  nine streams and not one carried a release note; all nine were verification or documentation work.
-  **Batch 3's translations card is the first told to add one.** Carry it untested; do not promote it
-  and do not tidy it away.
-- **Band discipline: the best round yet.** Six of six inside or under band, **none over**, worst
-  error −40% and that one was mine, not a stream's. Three of the six landed within 11% of band.
+- **"A prior pass has an expiry date." FIRED, and then was found to be HALF the lesson.** It is true,
+  and the skill now carries it. What `393` did not say is that **a prior pass is only one of the
+  things a brief can be over-confident about** — see the next section, which is the whole of this
+  edition.
+- **"Band the harnesses that are RED, not the ones the item names." FIRED once, then went untested** —
+  the harness sweep was deliberately not scheduled again (it would have collided with the doctors
+  stream in `scripts/`). Carry it.
+- **"Do not band a stream for a proof it cannot run." FIRED, and its mirror image appeared.** The
+  doctors stream could not read production and said so plainly; **the planner ran the check and
+  unblocked it in one command.** That is the rule working. **But note the inversion:** the stream had
+  to *build* the instrument before the planner could run it, so the sequence is **stream builds,
+  planner runs** — neither half alone was enough.
+- **"Check PR state with `gh`, not the session list." FIRED THREE MORE TIMES**, once per batch.
+  `list_sessions` reported merged PRs as **OPEN** every single time. **Always a false OPEN, never a
+  false MERGED.** Eight editions of evidence; stop re-deriving it.
+- **The `src/lib/releases.ts` collision rule is TESTED AT LAST, after five rounds untested.** Four
+  streams added four notes across two batches and **every line survived.** **It can stop being
+  carried as a hypothesis.** One cosmetic residue for the release: three notes are bare strings and
+  one uses the `{ text: … }` object shape.
+- **Band discipline: eighteen streams measured, fifteen inside or under, two over, one not a
+  reading.** Both overruns were planner band errors, not stream overruns.
 
-## THE ROUND'S LESSON: A PRIOR PASS HAS AN EXPIRY DATE, AND BOTH OF US GOT IT WRONG
+## THE ROUND'S LESSON: THREE BRIEFS, THREE DISAGREEMENTS, AND THE STREAM WAS RIGHT EVERY TIME
 
-**Promoted into the skill** (beside the walkthrough rate); here only because the shape of the error
-is the thing worth carrying.
+**Promoted into the skill** (step 7, beside "write the planner's evidence in"); here because the
+pattern across all three is the thing to carry, not the three incidents.
 
-I briefed a card re-pass saying *"these three cards have never been driven"*. **False.** I had listed
-`docs/decisions/` with `grep -i "card-re|rerun|card-review"` and **missed the whole `card-report-*`
-family** — seven streams that had driven 27 of 32 cards two days earlier and said **"driven"** in
-their fault-log headings. The stream found those rows and reported **"nothing to do"**. **Also
-wrong**, because the walks predated `0265`, which had **narrowed all three cards**.
+Every one had the same shape: **the brief was more certain than the item it came from, or than the
+evidence supported.**
 
-**Lutan handed it back in one line:** *"please check Card rerun daily medical, it says nothing to
-do"*. That message was worth more than any check I ran all day.
+1. **A card re-pass** was told its three cards had "never been driven". The planner's `grep` over
+   `docs/decisions/` missed the whole `card-report-*` family — seven streams, 27 of 32 cards.
+2. **The manual fix** was told to remove a by-name fallback. It had been deleted the previous day,
+   **and the item's own HEAD said so**; the planner had quoted the item's *tail*, a paragraph headed
+   *"what the manual does today (read 2026-10-25)"*. **An item's head is its current statement; its
+   tail is history, and a dated state description ages in place.**
+3. **The doctors gap** is the one that should sting. **The item was careful and correct** — it said
+   the app uses *"the ordinary signed-in client"* and that the fault was **"NOT ESTABLISHED ON THE
+   LIVE DATABASE … so BUILD THE CHECK FIRST."** The brief rendered the client as *"the service
+   role"* and **converted the open question into a verified fact**, citing a grep that could never
+   have matched: the policies were created under the table's **old name**, and Postgres carries
+   policy names through a rename. The stream built the check, read `pg_policies`, and proved the
+   opposite — a doctor *can* be renamed and deleted, on dev and production.
 
-**Two things to take from it.** First, the question is never *"has this been driven?"* but **"has it
-been driven SINCE the last thing that changed its behaviour?"** — and **two** things change it, a
-migration (grants) and the app half (what a page shows and whether it can be reached). I checked only
-the first, and **that nearly cancelled three quarters of a stream** whose cards no migration had
-touched; one look at the app-half PR's file list reversed it. Second, **the stream pushing back was
-the system working.** Step zero exists so a brief's evidence gets tested, and it tested mine.
+**So: when an item says NOT ESTABLISHED, carry that through verbatim with the command it names. A
+grep that finds nothing is not proof of absence. And state evidence AS evidence, with its source** —
+all three were caught *because* the briefs said where the claim came from, which is the argument for
+writing the planner's evidence in rather than against it.
 
-## A MESSAGE THAT ARRIVES AFTER THE REASONING COSTS A ROUND TRIP THROUGH LUTAN
+**Lutan caught all three, each in one line.** That is three round trips through him that a minute of
+reading would have saved, and it is the cost to drive down next round.
 
-`384` recorded "message the running streams when context changes" as a habit that paid, with the
-limit that *a message only helps if it arrives before the reasoning*. **This round proved the limit
-rather than the habit.** The correction reached the stream only after it had concluded and reported,
-so the message had to say outright that its conclusion was superseded — and the route it travelled
-was Lutan noticing first. **Send early; and sending is not fixing.** Unchanged advice, now with a
-price attached.
+## WHAT THE STREAMS DID BETTER THAN THE BRIEFS ASKED
 
-## WHAT I GOT WRONG IN A BAND, AND IT IS A NEW CLASS
+Worth recording because it is the counterweight, and because two of these are now habits to keep.
 
-A schema stream came in **40% under** a 230–290k band having delivered everything. The band had
-priced *"and prove the outcome on production"* — and **a stream in a worktree cannot read
-production.** I charged a stream for work it was structurally unable to do, then did that work
-myself. **Promoted into the skill:** ask who can actually run a proof before charging for it. The
-same applies to a Worker deploy, a Cloudflare setting, the Pi.
+- **Both button-sweep guards were narrow and BOTH SAID SO.** *"It cannot detect a new ungated
+  control; there is no render harness in the repo."* **Twice, unprompted, the honest answer instead
+  of a check that matches nothing and reports success** — the fault that cost a merged migration on
+  2026-10-26. Keep asking for guards; keep accepting "narrow, and here is why".
+- **A residue list beat the planner's own scoping.** Slice 2 reported that the clinic-visit,
+  prescription, weight and diet **row** controls live on their own pages, outside
+  `src/app/residents/` — **so a brief scoped by that folder could never have reached them.** Scope
+  the next slice **by control family, not by folder.**
+- **A stream's instrument outlived its item.** The doctors stream's `table-policy-commands` check
+  names every table where no live policy can answer for a command. Run against production it found a
+  substantial list. **Filed as its own item**, with the warning that RLS denies by default, so a
+  service-role-only table legitimately has no policy and **adding policies wholesale would be a
+  widening.**
 
-**Second band correction, also promoted:** a harness batch briefed as ten found **five already
-green**, fixed the day before by commits the item did not know about. **Run the harnesses as step
-zero — that is the scope list**, not the item's names. It still cost 228k, because **two of the five
-were investigations rather than fixes.** Price a diagnosis above a repair.
+## BAND CORRECTIONS, both mine
 
-## A TICK IS A CLAIM ABOUT AN ENVIRONMENT, AND "DELETED" NEEDS TO SAY WHICH ONE
-
-A stream's DONE note read *"staff row, 13 cards, 31 cells … deleted"*. **True of dev, false of
-production**, where the migration was still pending — so the rows were physically present, archived
-and correctly unreported. Nothing was broken, and the half that mattered (the reporting fix, a script
-change) **was** live everywhere. But the sentence read as finished everywhere, which is the
-invisible-work fault wearing a tick. **Corrected in place on `backlog`.** The habit: when a tick
-describes a deletion, name the environment and say what is still pending.
-
-## WHAT WENT RIGHT AND IS WORTH KNOWING WENT RIGHT
-
-- **Four mitigations moved from hypothesis to proven**, which is the most in one round so far:
-  the dev sign-in line (three streams drove real browsers on card-only logins, **no
-  `pending: no signed-in session` anywhere** — treat it as settled); the shared append-only fault
-  log (**three dated headings coexist**, each stream keeping the others'); **"assert card-derived
-  wiring, never a role's assignment"** (a stream *removed* a doctor pin rather than asserting it,
-  left two harnesses deliberately red with written reasons, and **added no `ACCEPTED` entries** to
-  paper over them); and **pairing a harness stream with a driving stream in one batch** (the driving
-  stream wrote a section addressed to the harness stream, reporting **no** contradiction rather than
-  inventing one, plus two faults only driving finds).
-- **Step zero fired three times** — two phantoms caught at planning, my own wrong evidence caught by
-  a stream, five already-green harnesses caught by another.
-- **Two phantoms were ticked rather than scheduled**, both shipped by the *previous* batch's own
-  streams and never ticked by them. **The "tick what else your work closed" rule is not being applied
-  to a stream's own item either** — worth watching, not yet worth a rule.
-- **A backlog item was invisible in a new way and is now repaired.** Its tail had broken onto its own
-  line beginning `` `## Completed` ``, so everything scanning for headings stopped dead there — it
-  truncated my own first listing at 17 of 96 items, and `check-backlog-sections` passed throughout,
-  because it tests an item's *position* and an orphan is not an item to it. **When a listing looks
-  short, suspect the file before the backlog.**
-- **A stale duplicate question cost Lutan a second answer**, and he was right to be short about it:
-  *"We went through this already all questions were answered previously"*. One copy had been answered
-  the day before; the other still read "still unanswered", reached `.plan-day.md`, and I asked him
-  again. **Marked superseded in place.** This is the fault `CLAUDE.md` already documents, and knowing
-  the rule did not stop me repeating it.
+- **The walkthrough rate SPLITS, and I corrected it in the wrong direction first.** Five first passes
+  gave `~6.3k` a step; I wrote that into the plan, then banded a **reconciliation** pass on it and ran
+  **17% over** at 11,223 a step. **A first pass is `~95k + ~6.3k x steps`; a second pass over an
+  already-driven card is `~95k + ~11k x steps`**, because the work is confirming or contradicting
+  every existing row. **And the floor has moved to ~95k from ~88k.** Both now in the skill.
+- **A FOURTH way a figure is not a band reading: the stream was rescoped mid-session.** Two of them
+  this round, in opposite directions — one grew, one shrank. **If you sent a stream a correction, its
+  number is not a reading.** In the skill beside dead process, blocked stream and reset window.
 
 ## STILL CARRIED, unchanged
 
 - **A release's cut and record PRs, and the two handover PRs, merge on green CI without asking.**
-- **Model, effort and which allowance to spend are his. Never block paid usage** — report the
-  figures, forecast in one line, then work. He was offered a smaller split three times this round and
-  chose the full batch every time.
-- **Never write scratch output above the repo.** `git show <rev>:<path>` still lies about dotted
-  paths and still reports zero when piped.
-- **One item is ONE LINE in `docs/backlog.md`.** I nearly wrote a newline into the middle of an item
-  while recording notes — the same fault I had repaired that morning. **Check your own amendment
-  script for `\n` before running it.**
-- **The planner is the only role that can read production**, and the yield stays high.
-- **A measurement has a timestamp; a fact does not.** Quote production readings with the clock.
+- **Model, effort and which allowance to spend are his. Never block paid usage** — report, forecast
+  in one line, then work. He was offered a smaller split six times today and took the full batch
+  every time.
+- **One item is ONE LINE in `docs/backlog.md`**, and check your own amendment script for `\n` before
+  running it.
+- **The planner is the only role that can read production.** A worktree cannot, correctly.
+- **A measurement has a timestamp; a fact does not.**
 
 ## NEXT ROUND POINTS AT
 
-1. **The production cron is five days dead and is the oldest thing on the board.** His. Diagnosed,
-   not mysterious — both environments died at their own deploy. **Re-read the item: it names the one
-   hypothesis left and the cheap test that kills it.**
-2. **Batch 3 finishes the first-14 card re-pass bar `residents`.** After it merges, **a release is
-   the natural next step**, and it will carry the pending staff-deletion migration.
-3. **His card-assignment rebuild is where the real residue sits** — *"Send to hospital is held by no
-   one"*, and `Manage medical` and `Assistant` held by no live role. **He should not meet those by
-   surprise**, and no stream may fix them by naming a role.
-4. **Two harnesses are red ON PURPOSE** until the cards cover those pages. **Not unfinished work, and
-   not to be made green.**
-5. **The remaining red-harness count is NOT ESTABLISHED** and the old "30" is stale. Whoever needs a
-   number runs them and quotes the date; 17 need a dev server.
-6. **Eight free leftover worktrees** and a mis-named one. `held` is the column to read; `/clean-streams`
-   does the round.
+1. **THE RELEASE IS THE OLDEST THING ON THE BOARD AND IT NOW GATES HIM.** Production is **four**
+   migrations behind at the time of writing — re-read it — and **he cannot assign the translations
+   card until that lands.** Two merged features sit against schema production does not have.
+2. **The production cron, still dead.** His, diagnosed, one hypothesis left.
+3. **The third buttons slice**, rescoped above and bigger than it looked. Scope by control family.
+4. **The new policy-triage item** — bounded, one batch of tables per stream, and **not** to be
+   "fixed" by adding policies.
+5. **The harness sweep is still owed a batch**, deliberately deferred twice. Its red count is **not
+   established**; run them as step zero.
+6. **His card-assignment rebuild** is where `Manage medical` and `Assistant` being held by no live
+   role belong.
