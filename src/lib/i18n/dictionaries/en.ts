@@ -1010,6 +1010,7 @@ const en = {
         "photos.resident_add": "Add a photo to a resident",
         "photos.resident_manage": "Refile or remove a photo, choose the profile photo",
         "photos.resident_publish": "Put a resident's photo on the public website",
+        "photos.resident_medical": "See the photos in a resident's Medical folder",
         "photos.shelter_add": "Add a resident's photo to the Shelter folder only (shown on the website once approved)",
         "photos.approve": "Approve or remove the photos waiting in Photos to approve",
         "facility.enclosures": "Enclosures and zones",
