@@ -72,16 +72,15 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
   // Who approves photos right now, asked as the database asks it (0222): live, not Admin, holding the activity.
   const { data: approverRows, error: approverError } = await admin
     .from("role_permissions")
-    .select("activity, level, roles!inner(key, name, name_th, archived_at)")
+    .select("activity, level, roles!inner(key, name, name_th)")
     .eq("activity", APPROVE_ACTIVITY)
     .gte("level", 1)
-    .returns<{ activity: string; level: number; roles: { key: string; name: string; name_th: string | null; archived_at: string | null } }[]>();
+    .returns<{ activity: string; level: number; roles: { key: string; name: string; name_th: string | null } }[]>();
   if (approverError) throw new Error(`Who does what: ${approverError.message}`);
   const approvers = approverNames(
     (approverRows ?? []).map((x) => ({
       roleKey: x.roles.key,
       roleName: roleName({ key: x.roles.key, name: x.roles.name, nameTh: x.roles.name_th }, t, locale),
-      archived: !!x.roles.archived_at,
       activity: x.activity,
       level: x.level,
     })),

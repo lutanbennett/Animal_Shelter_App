@@ -13,8 +13,6 @@ export type RoleOption = {
   key: string;
   name: string;
   nameTh: string | null;
-  /** Retired (Staff, 0173): shown on a login that still holds it, never offered. */
-  archived: boolean;
 };
 
 /**
@@ -40,14 +38,13 @@ function rank(key: string) {
 export async function loadRoleOptions(
   admin: ReturnType<typeof createAdminClient>,
 ): Promise<{ roles: RoleOption[]; error: string | null }> {
-  const { data, error } = await admin.from("roles").select("key, name, name_th, archived_at");
+  const { data, error } = await admin.from("roles").select("key, name, name_th");
   if (error) return { roles: [], error: error.message };
   const roles = (data ?? [])
     .map((r) => ({
       key: r.key as string,
       name: r.name as string,
       nameTh: (r.name_th as string | null) ?? null,
-      archived: r.archived_at != null,
     }))
     .sort((a, b) => rank(a.key) - rank(b.key) || a.name.localeCompare(b.name));
   return { roles, error: null };
@@ -63,5 +60,3 @@ export function roleOptionLabel(t: Dictionary, locale: Locale, role: Pick<RoleOp
   return (locale === "th" && role.nameTh) || role.name;
 }
 
-/** The roles a login may be given: the live ones. */
-export const givableRoles = (roles: RoleOption[]) => roles.filter((r) => !r.archived);

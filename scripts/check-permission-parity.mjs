@@ -271,13 +271,8 @@ function sectionZ() {
 do $z$
 declare v_report jsonb := '[]'::jsonb; r record; a record; n bigint;
 begin
-  insert into roles (key, name, kind) values ('harness_parity_archived', 'Harness archived', 'custom');
-  insert into role_permissions (role_id, activity, level) select id, 'stock.count', 2 from roles where key = 'harness_parity_archived';
-  insert into user_roles (user_id, role_id)
-  select ${lit(F.archrole)}, id from roles where key = 'harness_parity_archived';
-  update roles set archived_at = now() where key = 'harness_parity_archived';
   -- every activity, both levels, for the three people who must always be answered no
-  for r in select who, id from harness_ids where who in ('norole', 'archperson', 'archrole') loop
+  for r in select who, id from harness_ids where who in ('norole', 'archperson') loop
     for a in select key from permission_activities loop
       n := (select (pg_temp.probe(r.id, format('select has_permission(%L, %L) where has_permission(%L, %L)', a.key, 'read', a.key, 'read'))->>'n')::bigint);
       if n is distinct from 0 then v_report := v_report || jsonb_build_object('z', r.who || ' answered yes to ' || a.key || ' read'); end if;

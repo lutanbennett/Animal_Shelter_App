@@ -93,7 +93,7 @@ begin
   join roles ro on ro.key = s.role_key;
 end $setup$;
 
--- A configured role that holds one cell and is archived.
+-- A configured role that holds one cell (0272: roles can no longer be archived, so its holder is simply live).
 -- (borrows 'management': it borrowed 'staff' until 0173 retired that role; and since 0173's trigger
 -- refuses a live login on an archived role, the holder is given it first and the role archived after)
 insert into roles (key, name, kind) values ('harness_archived', 'Harness archived', 'custom');
@@ -101,7 +101,6 @@ insert into role_permissions (role_id, activity, level)
 select id, 'stock.count', 2 from roles where key = 'harness_archived';
 insert into user_roles (user_id, role_id)
   select h.id, r.id from harness_ids h, roles r where h.who = 'archrole' and r.key = 'harness_archived';
-update roles set archived_at = now() where key = 'harness_archived';
 
 do $h$
 declare
@@ -138,8 +137,6 @@ begin
   -- the four "answers no" cases, from a caller who is allowed to ask
   perform pg_temp.eq('A missing cell', pg_temp.q(v_admin, 'role_can(''volunteer'', ''stock.purchasing'', ''edit'')'), 'false');
   perform pg_temp.eq('A unknown activity', pg_temp.q(v_admin, 'role_can(''management'', ''no.such_activity'', ''read'')'), 'false');
-  perform pg_temp.eq('A archived role', pg_temp.q(v_admin, 'role_can(''harness_archived'', ''stock.count'', ''edit'')'), 'false');
-  perform pg_temp.eq('A archived role matches has_permission', pg_temp.q(v_archr, 'has_permission(''stock.count'', ''edit'')'), 'false');
   perform pg_temp.eq('A person with no role matches has_permission', pg_temp.q(v_none, 'has_permission(''stock.count'', ''edit'')'), 'false');
   perform pg_temp.eq('A no such role key', pg_temp.q(v_admin, 'role_can(''no_such_role'', ''stock.count'', ''edit'')'), 'false');
   perform pg_temp.eq('A null role', pg_temp.q(v_admin, 'role_can(null, ''stock.count'', ''edit'')'), 'false');
@@ -186,7 +183,6 @@ begin
   end loop;
   -- an archived person or an archived role's holder may not claim a role
   perform pg_temp.eq('C archived person cannot claim staff', pg_temp.q(v_archp, 'role_can(''staff'', ''stock.count'', ''edit'')'), 'ERR:42501');
-  perform pg_temp.eq('C archived role holder cannot claim it', pg_temp.q(v_archr, 'role_can(''harness_archived'', ''stock.count'', ''edit'')'), 'ERR:42501');
   v_report := v_report || 'C: management, admin and the service role answered; doctor, volunteer, public viewer, no-role, archived person, archived-role holder and anon refused (42501) about any other role, answered about their own | ';
 
   -- D: the door follows the matrix.

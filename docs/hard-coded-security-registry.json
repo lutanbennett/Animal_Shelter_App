@@ -419,7 +419,33 @@
   "database": {
     "scannedFrom": 262,
     "note": "The check reads migration files from this number on; everything before it was inventoried from the LIVE database on 2026-10-25 (see the decision file). A new policy that does not call has_permission() or is_admin(), a new security definer function that does not call has_permission(), is_admin() or role_can(), a read of a retired role column, or a grant to anon/public must be declared here with a reason, or become a card.",
-    "declared": [],
+    "declared": [
+      {
+        "migration": "0272_remove_role_archiving.sql",
+        "item": "function public.holds_app_role reads a role",
+        "reason": "Re-declared only to drop the roles.archived_at filter (docs/decisions/2026-10-27-role-archiving-removed.md); the one role-key read is the Admin short-circuit r.key = 'admin', which sits OUTSIDE the card system (CLAUDE.md, 2026-10-25). Every other access is derived from role_permissions, i.e. from cards. No rule added. Answers whether a login is in the app at all."
+      },
+      {
+        "migration": "0272_remove_role_archiving.sql",
+        "item": "function public.holds_app_role definer",
+        "reason": "Security definer so it can read user_roles/role_permissions under RLS; it returns a yes/no about the caller only and grants nothing by itself. Body unchanged from 0259 but for the dropped archived filter."
+      },
+      {
+        "migration": "0272_remove_role_archiving.sql",
+        "item": "function public.my_permissions definer",
+        "reason": "Security definer so it can read the caller own roles and cells under RLS; it reports the caller own card-derived cells (Admin: all) and grants nothing itself. Body unchanged from 0259 but for the dropped archived filter."
+      },
+      {
+        "migration": "0272_remove_role_archiving.sql",
+        "item": "function public.reassign_recurring_job reads a role",
+        "reason": "Re-declared only to drop the roles.archived_at filter (docs/decisions/2026-10-27-role-archiving-removed.md); the one role-key read is the Admin short-circuit r.key = 'admin', which sits OUTSIDE the card system (CLAUDE.md, 2026-10-25). Every other access is derived from role_permissions, i.e. from cards. No rule added. Its own gate is has_permission('recurring.manage'); the Admin test is only part of 'can this person still sign in'."
+      },
+      {
+        "migration": "0272_remove_role_archiving.sql",
+        "item": "function public.role_can reads a role",
+        "reason": "Re-declared only to drop the roles.archived_at filter (docs/decisions/2026-10-27-role-archiving-removed.md); the one role-key read is the Admin short-circuit r.key = 'admin', which sits OUTSIDE the card system (CLAUDE.md, 2026-10-25). Every other access is derived from role_permissions, i.e. from cards. No rule added. The key is the role being asked about, not a rule on the caller."
+      }
+    ],
     "stubs": [
       "is_clinic_login",
       "sees_all_residents",

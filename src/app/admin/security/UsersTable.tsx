@@ -80,11 +80,8 @@ function UserRow({
   >(null);
   const [isPending, startTransition] = useTransition();
   const archived = !!user.archivedAt;
-  // Live roles are offered. A retired one (Staff, 0173) is never offered; a login that still holds it (an
-  // archived one) shows it, unchosen, and its select stays open so it can be given another role before Restore.
-  const offered = roles.filter((r) => !r.archived);
+  const offered = roles;
   const held = roles.find((r) => r.key === role);
-  const holdsRetired = !!held?.archived;
   // The Admin and Doctor rules follow the role's key; `role` is the key until it is saved, so a role just picked counts.
 
   /**
@@ -269,8 +266,7 @@ function UserRow({
         <td className="px-4 py-2">
           <select
             value={role}
-            // An archived login that held a retired role can be given another, so Restore can bring it back.
-            disabled={isPending || isSelf || (archived && !holdsRetired)}
+            disabled={isPending || isSelf || archived}
             onChange={(e) => handleRoleChange(e.target.value)}
             className="rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary disabled:opacity-50"
           >
@@ -282,7 +278,7 @@ function UserRow({
                 {roleOptionLabel(t, locale, r)}
               </option>
             ))}
-            {/* Held but not offered: a retired role, or one this list could not load. Named, never chosen. */}
+            {/* Held but not offered: a role this list could not load. Named, never chosen. */}
             {role && !offered.some((r) => r.key === role) && (
               <option value={role} disabled>
                 {roleOptionLabel(t, locale, held ?? { key: role, name: role, nameTh: null })}
