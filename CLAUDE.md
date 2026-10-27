@@ -55,8 +55,7 @@ card — no exceptions."* And, the rule in full:
   admin access = all to be hard coded."* and, deciding its shape: *"It should sit outside the card system."* The rule governs how a
   role's access is derived from its cards. Admin's access is derived from nothing and Admin is not a participant in that system, so
   "zero exceptions" stays literally true *within* it. The invariant, in his words: *"Admin always has access to everything. No
-  matter what cards exist or don't exist."* `src/lib/permissions/can.ts:67` (`if (perms.isAdmin) return true;`, keyed on
-  `roles.is_admin`) satisfies that because it answers before looking at a single cell or card. Admin holds no cards (production,
+  matter what cards exist or don't exist."* `src/lib/permissions/can.ts:67` (`if (perms.isAdmin) return true;`, answered from `my_permissions()`'s `isAdmin`; the `roles.is_admin` column exists since `0275`, but the SQL still decides Admin by `key = 'admin'`) satisfies that because it answers before looking at a single cell or card. Admin holds no cards (production,
   2026-10-25), so removing it would lock the only administrator out of Settings → Who does what, the screen needed to give Admin
   cards again: a one-way door. Three things follow, and they close off the three wrong turns:
   - **Admin is never given cards**, not to satisfy the rule, not to make a check pass, not as tidying. Giving Admin every card would
@@ -64,7 +63,7 @@ card — no exceptions."* And, the rule in full:
     bypass is superseded and must not be revived.
   - **Admin is not debt.** It is not a mechanism, carries no baseline, and is never counted down. It is recorded as
     `outsideTheCardSystem` in `docs/hard-coded-security-registry.json`, which the check ignores on purpose.
-  - **It is not a precedent.** It is `can.ts:67` and `roles.is_admin`, Admin only, all-or-nothing. Nothing else gets to sit
+  - **It is not a precedent.** It is `can.ts:67` (the SQL decides Admin by `key = 'admin'`; the `roles.is_admin` flag exists since `0275` and moving the SQL onto it is a separate item), Admin only, all-or-nothing. Nothing else gets to sit
     outside the card system by citing it.
   Settled. Do not re-open it and never put it to him again.
 - **The target is zero, and the check asserts zero** (2026-10-25,
@@ -112,7 +111,7 @@ catch this, which is exactly why the rule has to be read rather than enforced.**
   than becoming another role); a label lookup that **falls through to the role's own name**; and
   anything about the public website's Volunteer **page**, which is a page about volunteering and has
   nothing to do with roles.
-- **Admin is unaffected.** It sits outside the card system and is keyed on `roles.is_admin`, not on
+- **Admin is unaffected.** It sits outside the card system and is decided in SQL by `key = 'admin'` (the `roles.is_admin` column exists since `0275` but is not yet what the SQL reads), not on
   a role name.
 
 ## A button is shown only if the login's cards let it do that action
