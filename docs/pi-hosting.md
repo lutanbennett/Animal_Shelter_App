@@ -61,7 +61,9 @@ Then everything else:
 ./scripts/pi/setup.sh <tunnel-id>
 ```
 
-which installs Node 22 and cloudflared, builds the app, installs
+which installs Node 22 and cloudflared (cloudflared then updates itself through
+unattended-upgrades, and `cloudflared-restart.path` restarts the tunnel whenever its
+binary changes, because the package does not), builds the app, installs
 `lanna-care.service` (next start on 127.0.0.1:3000, restart always) and
 the cloudflared service with `scripts/pi/cloudflared-config.yml` (Host
 header rewritten to `lannacare.org`), and turns on unattended security

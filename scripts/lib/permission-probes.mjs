@@ -195,7 +195,7 @@ export const NO_DB_PROBE = {
   "placement.death_withdraw": undefined, // probed above; kept out of this list on purpose
   "projects.publish": undefined,
   "stock.purchasing": "a page over medication_forecast / diet_forecast, which read what stock.medications and stock.diets probes already cover",
-  "maintenance.bills": "maintenance_bills and the job-cost view are probed for every role by scripts/check-bills-roles.mjs (it needs a job, a bill and an attachment fixture the parity fixtures do not build), so the cell is covered there, not here",
+  "maintenance.bills": "maintenance_bills and the job-cost view are not probed here: the parity fixtures build no job, bill or attachment (the check that did, check-bills-roles.mjs, was retired 2026-10-28 with the role matrix it asserted)",
   "appeal.medical_photo": "the guard on appeal_photos (0216) is exercised by scripts/check-appeal-medical-photos.mjs; the paper gives no non-Admin role a cell, which check-permission-tables.mjs H compares",
   "photos.shelter_add": "the one folder rule in the attachments insert policy (0217) is exercised by scripts/check-photo-approval.mjs; the cell itself is compared by check-permission-tables.mjs H",
   "social.library": "a page over memes and social shares, exercised by scripts/check-social-shares-schema.mjs; the cell is compared by check-permission-tables.mjs H",
@@ -204,7 +204,7 @@ export const NO_DB_PROBE = {
   "system.status": "status_alert_runs is not granted to authenticated at all, Admin included: the page reads it with the service role, so the database has no per-role statement to test",
   "reports.dashboard": "a page that reads tables other activities own; it has no table",
   "translations.manage": "the translations table has no fixture row that is stable across runs; the policy is read by hand in Appendix C",
-  "translations.view": "management and staff read the table through this cell, but a doctor and a volunteer still read it through their own legacy policies (doctor_read_translations, volunteer_read_translations, perm-convert-vet's), so a read probe would report them as differences that are not this cell's; check-perm-convert-settings.mjs and check-app-access-gate.mjs read it under every login instead",
+  "translations.view": "management and staff read the table through this cell, but a doctor and a volunteer still read it through their own legacy policies (doctor_read_translations, volunteer_read_translations, perm-convert-vet's), so a read probe would report them as differences that are not this cell's; check-app-access-gate.mjs reads it under every login instead",
   "assistant.ask": "app code and the Anthropic call; no database statement",
   "assistant.record": "app code; each thing it records is checked against that thing's own activity",
   "audit.undo": "app code replaying the audit log through the ordinary table policies",

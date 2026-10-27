@@ -2,7 +2,7 @@
 //
 //   node scripts/check-bill-photos-listed.mjs
 //
-// check-bills-roles.mjs asks who may see a bill photo; it never asked whether a page lists one. On 2026-10-13
+// the retired check-bills-roles.mjs asked who may see a bill photo; it never asked whether a page lists one. On 2026-10-13
 // all four places ordered their photo query by attachments.created_at, a column that table does not have
 // (it is uploaded_at), PostgREST returned an error, the code read `data ?? []` and every bill showed "Add a
 // photo". This reads the source and the dev schema:
