@@ -374,16 +374,12 @@ export async function removeExtraRole(userId: string, roleKey: string): Promise<
  */
 async function loadDoctorLogin(userId: string, t: T) {
   const admin = createAdminClient();
-  const { data, error } = await admin
-    .from("user_roles")
-    .select("user_id, roles!inner(key)")
-    .eq("user_id", userId)
-    .eq("roles.key", "doctor")
-    .maybeSingle<{ user_id: string }>();
-  if (error) {
+  // Any login may be linked to a doctor: what a role is called, or whether a shelter has a doctor role at all,
+  // is the shelter's to choose (CLAUDE.md, no fallback to a role by name). The login only has to exist.
+  const { data, error } = await admin.auth.admin.getUserById(userId);
+  if (error || !data?.user) {
     return { denied: unexpectedFailure("security.loadDoctorLogin", error, t.common.somethingWentWrong) };
   }
-  if (!data) return { denied: refuse(t.admin.security.errors.linkOnlyForVets) };
   return { denied: null, admin };
 }
 

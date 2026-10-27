@@ -34,22 +34,18 @@
       "matches": [
         "role.key !== \"admin\"",
         "role.key === \"admin\"",
-        ".eq(\"roles.key\", \"doctor\")",
         ".from(\"roles\")"
       ],
       "kind": "admin-screen",
-      "reason": "Settings → Security is Admin-only and needs the authenticator app. These lines decide which logins a new admin may be set up for, that Admin and the public viewer cannot be an additional role (a database trigger says the same), and that a doctor record can only be linked to a login whose role is the doctor role. They guard identities on an Admin screen; none gives a card-only login anything."
+      "reason": "Settings → Security is Admin-only and needs the authenticator app. These lines decide which logins a new admin may be set up for, that Admin and the public viewer cannot be an additional role (a database trigger says the same) (a doctor record can now be linked to any login: the doctor-role test was removed 2026-10-27). They guard identities on an Admin screen; none gives a card-only login anything."
     },
     {
       "file": "src/app/admin/security/UsersTable.tsx",
       "matches": [
-        "r.key !== \"admin\"",
-        "role !== \"admin\"",
-        "role === \"doctor\"",
-        "user.role === \"admin\""
+        "r.key !== \"public_viewer\""
       ],
       "kind": "admin-screen",
-      "reason": "Which buttons the Admin-only Security table draws for each login. The server actions behind it decide, and they are Admin-only."
+      "reason": "Only which roles the Admin-only Security list offers as an additional role (the public viewer is never one; a database trigger says the same). Admin is read from the role's is_admin flag, and Link a doctor record is offered on every login. The server actions behind it decide, and they are Admin-only."
     },
     {
       "file": "src/app/admin/security/role-options.ts",
