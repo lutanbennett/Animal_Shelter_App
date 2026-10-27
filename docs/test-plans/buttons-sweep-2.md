@@ -6,7 +6,7 @@
 |---|---|
 | Feature | Buttons follow cards, second slice: blood-test and procedure file controls and the edit page return links |
 | Backlog item | `docs/backlog.md` → STANDING RULE: A BUTTON IS SHOWN ONLY IF THE LOGIN'S CARDS LET IT DO THAT ACTION (left open: third slice remains) |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/buttons-sweep-2` @ `C:DevelopmentAnimal_Shelter_buttons-sweep-2` |
 | Dev server | `http://localhost:3007` |
 | PR | pending: number assigned when opened |
 | Tested by / date | Claude / 2026-10-27 |
@@ -215,11 +215,11 @@ Automated checks by: Claude  Date: 2026-10-27
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
+has looked and explicitly asks in chat; the line then says so, e.g. `a name —
 confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
+- a name and a date — a person looked. The date is required here.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
