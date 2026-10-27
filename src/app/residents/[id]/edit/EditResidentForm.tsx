@@ -75,6 +75,8 @@ export function EditResidentForm({
   resident,
   photos,
   housing,
+  canReturnFromHospital = false,
+  canReturnFromCarer = false,
   zones,
   enclosures,
   ageNow,
@@ -82,6 +84,9 @@ export function EditResidentForm({
   resident: EditableResident;
   photos: PhotoRow[];
   housing: HousingState;
+  /** Card-derived: the return pages ask placement.hospital / placement.rehome. Default false. */
+  canReturnFromHospital?: boolean;
+  canReturnFromCarer?: boolean;
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
   /** Current computed age (server-side, so it matches what the hub shows). */
@@ -383,22 +388,26 @@ export function EditResidentForm({
           ) : housing.isHospitalised ? (
             <p className="text-sm text-muted">
               {t.residents.move.errors.inHospital}{" "}
-              <Link
-                href={`/residents/${resident.id}/hospital/return`}
-                className="font-medium text-primary hover:underline"
-              >
-                {h.inHospital}
-              </Link>
+              {canReturnFromHospital && (
+                <Link
+                  href={`/residents/${resident.id}/hospital/return`}
+                  className="font-medium text-primary hover:underline"
+                >
+                  {h.inHospital}
+                </Link>
+              )}
             </p>
           ) : housing.isWithCarer ? (
             <p className="text-sm text-muted">
               {t.residents.move.errors.withCarer}{" "}
-              <Link
-                href={`/residents/${resident.id}/rehome/return`}
-                className="font-medium text-primary hover:underline"
-              >
-                {h.withCarer}
-              </Link>
+              {canReturnFromCarer && (
+                <Link
+                  href={`/residents/${resident.id}/rehome/return`}
+                  className="font-medium text-primary hover:underline"
+                >
+                  {h.withCarer}
+                </Link>
+              )}
             </p>
           ) : (
             <>

@@ -133,6 +133,8 @@ export default async function EditResidentPage(
           resident={resident}
           photos={photosResult.data ?? []}
           housing={housing}
+          canReturnFromHospital={can(perms, "placement.hospital")}
+          canReturnFromCarer={can(perms, "placement.rehome")}
           zones={options.zones}
           enclosures={options.enclosures}
           ageNow={estimatedAgeNow(
