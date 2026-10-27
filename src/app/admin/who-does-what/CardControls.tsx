@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { addCard, moveCard, removeCard, setShowMenu } from "./actions";
+import { addCard, deleteRole, moveCard, removeCard, setShowMenu } from "./actions";
 
 /**
  * The buttons on the cards page (Admin, with the authenticator app, only: the page shows them to no one else and
@@ -92,6 +92,52 @@ export function ShowMenuToggle({ roleKey, show, onLabel, offLabel }: { roleKey: 
       </div>
       {error && (
         <p role="alert" className="text-xs text-danger [overflow-wrap:anywhere]">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Delete a role: one press asks, the second does it. The server refuses while a live login holds the role and says who. */
+export function DeleteRoleButton({ roleKey, label, ariaLabel, confirmText, yesLabel, cancelLabel }: { roleKey: string; label: string; ariaLabel: string; confirmText: string; yesLabel: string; cancelLabel: string }) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [asking, setAsking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  return (
+    <div className="flex flex-col gap-2">
+      {!asking ? (
+        <button type="button" aria-label={ariaLabel} onClick={() => { setError(null); setAsking(true); }} className="min-h-11 self-start rounded-md border border-danger px-3 py-2 text-sm font-medium text-danger">
+          {label}
+        </button>
+      ) : (
+        <div role="alertdialog" aria-label={ariaLabel} className="flex flex-col gap-2 rounded-md border border-danger p-3">
+          <p className="text-sm text-foreground [overflow-wrap:anywhere]">{confirmText}</p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() =>
+                startTransition(async () => {
+                  const result = await deleteRole(roleKey);
+                  if (!result.ok) { setError(result.error); setAsking(false); }
+                  router.replace("/admin/who-does-what");
+                  router.refresh();
+                })
+              }
+              className="min-h-11 rounded-md border border-danger bg-danger px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
+            >
+              {yesLabel}
+            </button>
+            <button type="button" disabled={pending} onClick={() => setAsking(false)} className="min-h-11 rounded-md border border-border bg-surface px-3 py-2 text-sm font-medium text-foreground">
+              {cancelLabel}
+            </button>
+          </div>
+        </div>
+      )}
+      {error && (
+        <p role="alert" className="text-sm text-danger [overflow-wrap:anywhere]">
           {error}
         </p>
       )}
