@@ -81,6 +81,10 @@ const summary = [];
 for (const role of roles) {
   if (role.key === "admin" || role.kind === "fixed") continue;
   if (only && role.key !== only) continue;
+  // The disposable one-card logins the card walkthroughs and dry runs leave on the shared dev database come and go
+  // while this runs, and each "orphans" every page its single card does not reach. Not a role anyone is given; named
+  // with --role= they are still checked.
+  if (!only && /^(dev_signin_|dryrun_|harness_)/.test(role.key)) continue;
   const rc = cells.filter((c) => c.key === role.key);
   const held = cards.filter((c) => c.key === role.key).map((c) => c.card).filter(isCardKey);
   const perms = parsePermissions({
