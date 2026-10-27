@@ -16,6 +16,7 @@ import type { ManualTopic } from "./types";
 export type TopicCards = { kind: "everyone" } | { kind: "unassigned" } | { kind: "cards"; cards: CardKey[] };
 
 export function cardsOfTopic(topic: ManualTopic): TopicCards {
+  if (topic.adminOnly) return { kind: "cards", cards: [] };
   if (topic.cards?.length) return { kind: "cards", cards: topic.cards };
   if (topic.activity) {
     const need = topic.activityLevel === "read" ? "read" : "edit";

@@ -71,3 +71,10 @@ test("every manual topic is either derived, explicit, for everyone, or on the un
     assert.equal(t.roles, undefined, `${t.id} still carries a role tag`);
   }
 });
+
+test("an admin-only topic is Admin's alone, and decided rather than unassigned", () => {
+  const topic = { id: "s", title: "s", adminOnly: true };
+  assert.deepEqual(cardsOfTopic(topic), { kind: "cards", cards: [] });
+  assert.equal(topicView(topic, holding("record_weight")), "notMine");
+  assert.equal(topicView(topic, admin), "mine");
+});
