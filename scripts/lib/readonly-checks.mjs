@@ -35,15 +35,27 @@ export const CHECKS = {
     sql: `select coalesce(json_agg(json_build_object('role', r.key,
         'cells', (select count(*) from role_permissions p where p.role_id = r.id),
         'cards', (select count(*) from role_cards c where c.role_id = r.id)) order by r.key), '[]'::json)
-      from roles r where r.kind <> 'fixed'`,
+      from roles r where r.kind <> 'fixed' and r.archived_at is null`,
     render: (rows) => rows.map((x) => `${x.role}: ${x.cells} cells, ${x.cards} cards`),
   },
   "role-cards": {
     asks: "Which cards does each role hold? (Answers 'does any role hold the Operations or Management card?'.)",
     sql: `select coalesce(json_agg(json_build_object('role', r.key,
         'cards', coalesce((select json_agg(c.card order by c.position) from role_cards c where c.role_id = r.id), '[]'::json)) order by r.key), '[]'::json)
-      from roles r where r.kind <> 'fixed'`,
+      from roles r where r.kind <> 'fixed' and r.archived_at is null`,
     render: (rows) => rows.map((x) => `${x.role}: ${x.cards.length ? x.cards.join(", ") : "(no cards)"}`),
+  },
+  "archived-role-references": {
+    asks: "For each ARCHIVED role: how many user_roles rows (live and archived logins), role_cards rows and role_permissions cells point at it? (Counts only; the question to answer before deleting a retired role.)",
+    sql: `select coalesce(json_agg(json_build_object('role', r.key,
+        'live_logins', (select count(*) from user_roles u where u.role_id = r.id and u.archived_at is null),
+        'archived_logins', (select count(*) from user_roles u where u.role_id = r.id and u.archived_at is not null),
+        'cards', (select count(*) from role_cards c where c.role_id = r.id),
+        'cells', (select count(*) from role_permissions p where p.role_id = r.id)) order by r.key), '[]'::json)
+      from roles r where r.archived_at is not null`,
+    render: (rows) => rows.length
+      ? rows.map((x) => `${x.role} (archived): ${x.live_logins} live logins, ${x.archived_logins} archived logins, ${x.cards} cards, ${x.cells} cells`)
+      : ["No archived roles."],
   },
   "doctor-cells": {
     asks: "Does the doctor role hold the 13 cells migration 0230 gave it, at that level or higher?",
@@ -68,7 +80,7 @@ export const CHECKS = {
           'need', g.level, 'have', coalesce(p.level, 0)) order by r.key, c.card, g.activity), '[]'::json)
       from roles r join role_cards c on c.role_id = r.id join g on g.card = c.card
         left join role_permissions p on p.role_id = r.id and p.activity = g.activity
-      where r.kind <> 'fixed' and coalesce(p.level, 0) < g.level`,
+      where r.kind <> 'fixed' and r.archived_at is null and coalesce(p.level, 0) < g.level`,
     render: (rows) => rows.length
       ? rows.map((x) => `${x.role}: card ${x.card} needs ${x.activity} at ${x.need === 2 ? "edit/yes" : "read"}, role has ${["none", "read", "edit/yes"][x.have]}`)
       : ["Every held card is covered by its role's access."],
@@ -86,7 +98,7 @@ export const CHECKS = {
           'unapplied', coalesce((select json_agg(w.activity order by w.activity) from want w
             where w.role_id = r.id and not exists (select 1 from role_permissions p where p.role_id = r.id and p.activity = w.activity and p.level >= w.level)), '[]'::json))
         order by r.key), '[]'::json)
-      from roles r where r.kind <> 'fixed'`,
+      from roles r where r.kind <> 'fixed' and r.archived_at is null`,
     render: (rows) => rows.map((x) => x.unbacked.length + x.unapplied.length === 0
       ? `${x.role}: exactly the union of its cards`
       : `${x.role}: ${x.unbacked.length} cells no card backs (${x.unbacked.join(", ") || "-"}); ${x.unapplied.length} backed but missing (${x.unapplied.join(", ") || "-"})`),
@@ -98,7 +110,7 @@ export const CHECKS = {
         'residents_card', exists (select 1 from role_cards c where c.role_id = r.id and c.card = 'residents'),
         'placement_cells', coalesce((select json_agg(p.activity order by p.activity) from role_permissions p where p.role_id = r.id and p.activity like 'placement.%'), '[]'::json),
         'enclosures_read', exists (select 1 from role_permissions p where p.role_id = r.id and p.activity = 'facility.enclosures' and p.level >= 1)) order by r.key), '[]'::json)
-      from roles r where r.kind <> 'fixed'
+      from roles r where r.kind <> 'fixed' and r.archived_at is null
         and (exists (select 1 from role_cards c where c.role_id = r.id and c.card = 'residents')
           or exists (select 1 from role_permissions p where p.role_id = r.id and p.activity like 'placement.%'))`,
     render: (rows) => rows.length
@@ -112,7 +124,7 @@ export const CHECKS = {
         'cards', coalesce((select json_agg(c.card order by c.card) from role_cards c where c.role_id = r.id and c.card in ('book_clinic_visits', 'medical_records')), '[]'::json),
         'visit_book', exists (select 1 from role_permissions p where p.role_id = r.id and p.activity = 'visit.book'),
         'clinics_list', exists (select 1 from role_permissions p where p.role_id = r.id and p.activity = 'clinics.list' and p.level >= 1)) order by r.key), '[]'::json)
-      from roles r where r.kind <> 'fixed'
+      from roles r where r.kind <> 'fixed' and r.archived_at is null
         and (exists (select 1 from role_cards c where c.role_id = r.id and c.card in ('book_clinic_visits', 'medical_records'))
           or exists (select 1 from role_permissions p where p.role_id = r.id and p.activity = 'visit.book'))`,
     render: (rows) => rows.length
@@ -165,7 +177,7 @@ export const CHECKS = {
   "fault-maintenance-delete": {
     asks: "Which roles hold the Do Maintenance card, whose maintenance jobs nobody can delete? (Every holder is affected: no delete control exists.)",
     sql: `select coalesce(json_agg(json_build_object('role', r.key) order by r.key), '[]'::json)
-      from roles r where r.kind <> 'fixed' and exists (select 1 from role_cards c where c.role_id = r.id and c.card = 'do_maintenance')`,
+      from roles r where r.kind <> 'fixed' and r.archived_at is null and exists (select 1 from role_cards c where c.role_id = r.id and c.card = 'do_maintenance')`,
     render: (rows) => rows.length ? rows.map((x) => `${x.role}: holds Do Maintenance`) : ["No role holds the Do Maintenance card."],
     failed: (rows) => rows.length > 0,
   },
