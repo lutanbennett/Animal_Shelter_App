@@ -2510,7 +2510,11 @@ const en = {
         bodyHint:
           "Separate paragraphs with a blank line. Start a line with \"## \" for a sub-heading and \"- \" for a bullet point. Paste a web address and it becomes a link. For your own words: [words](https://…). Email and phone work too: [Email us](mailto:name@example.org), [Call us](tel:+66812345678).",
         preview: "Preview",
-        previewHint: "How the text will look. Links do not open here until you save.",
+        previewHint: "The page as your unsaved changes would show it. Nothing is saved until you press Save changes.",
+        previewLoading: "Loading the preview…",
+        previewLanguage: "Show it in",
+        previewThaiNote: "Thai shows the saved translation. A change to the English is not translated until you save it.",
+        previewDonateNote: "The ways to give are not shown here; they appear on the live page as usual.",
         titleRequired: "The page needs a heading.",
         unknownPage: "That page doesn't exist.",
         slugs: {

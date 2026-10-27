@@ -3,7 +3,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { loadSiteContent, loadClinicVisitEstimate } from "@/lib/site/content";
 import { SITE_PAGE_PATHS, SITE_PAGE_SLUGS } from "@/lib/site/pages";
 import en from "@/lib/i18n/dictionaries/en";
-import { sitePageStarter } from "../../adopt/SitePageView";
+import { sitePageStarter } from "@/lib/site/starter";
 import { loadTranslations, translationKey } from "@/lib/translations/queries";
 import { SiteSettingsForm } from "./SiteSettingsForm";
 import { ClinicVisitEstimate } from "./ClinicVisitEstimate";
@@ -23,6 +23,34 @@ import { PublishedProjects, type PublishedProjectRow } from "./PublishedProjects
 import Link from "next/link";
 import { requirePermission } from "@/lib/permissions/require";
 import { can } from "@/lib/permissions/can";
+import { hasPublicFriends } from "@/lib/shelter-friends/public";
+
+/** The saved contact details the preview's "get in touch" card is built from. */
+function pickContact(c: NonNullable<Awaited<ReturnType<typeof loadSiteContent>>>) {
+  return {
+    contact_line: c.contact_line,
+    contact_phone: c.contact_phone,
+    contact_email: c.contact_email,
+    facebook_url: c.facebook_url,
+    instagram_url: c.instagram_url,
+    messenger_url: c.messenger_url,
+    whatsapp_number: c.whatsapp_number,
+    x_url: c.x_url,
+    preferred_channels: c.preferred_channels,
+  };
+}
+
+/** The photo an admin chose for Donate, Foster, Volunteer or About, as saved. */
+function pagePhoto(c: NonNullable<Awaited<ReturnType<typeof loadSiteContent>>>, slug: string) {
+  if (slug !== "donate" && slug !== "foster" && slug !== "volunteer" && slug !== "about") return null;
+  const fileId = c[`${slug}_photo_drive_file_id`]?.trim();
+  if (!fileId) return null;
+  return {
+    fileId,
+    alt: c[`${slug}_photo_alt`]?.trim() ?? "",
+    altTh: c[`${slug}_photo_alt_th`]?.trim() ?? "",
+  };
+}
 
 type PublicResidentRow = {
   id: string;
@@ -151,6 +179,10 @@ export default async function WebsitePage({
     current_status: null,
   }));
 
+  // The live preview of an unsaved page edit shows the Shelter Friends mention
+  // on Donate only once there are friends, as the public page does.
+  const friendsPublic = await hasPublicFriends();
+
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
       <div>
@@ -235,6 +267,12 @@ export default async function WebsitePage({
                           // In English whatever language the admin reads the app in:
                           // pages are written in English and translated through the queue.
                           starterBody={sitePageStarter(en, page.slug)?.body}
+                          previewContext={{
+                            contact: pickContact(content),
+                            photo: pagePhoto(content, page.slug),
+                            showFriends: page.slug === "donate" && friendsPublic,
+                            thai: tr[0]?.text?.trim() || tr[1]?.text?.trim() ? { title: tr[0]?.text?.trim() ?? "", body: tr[1]?.text?.trim() ?? "" } : null,
+                          }}
                         />
                       ),
                     };

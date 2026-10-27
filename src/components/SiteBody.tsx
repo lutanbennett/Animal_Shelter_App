@@ -9,13 +9,16 @@ import { LinkedText } from "./LinkedText";
  * picks the prose scale — the home page story reads larger than a
  * sidebar block.
  */
-export async function SiteBody({
+export function SiteBodyView({
   body,
   size = "base",
   headingLevel = "h3",
   className = "",
+  newTabLabel,
 }: {
   body: string | null | undefined;
+  /** t.common.opensInNewTab, passed in so this also renders inside a client component. */
+  newTabLabel: string;
   size?: "sm" | "base" | "lg";
   /**
    * What a "## " line becomes. A whole page's body sits under the page's h1,
@@ -30,9 +33,8 @@ export async function SiteBody({
   const blocks = parseBody(body);
   if (blocks.length === 0) return null;
   const Heading = headingLevel;
-  const { t } = await getT();
   const link = (text: string) => (
-    <LinkedText text={text} newTabLabel={t.common.opensInNewTab} />
+    <LinkedText text={text} newTabLabel={newTabLabel} />
   );
 
   const prose =
@@ -69,4 +71,10 @@ export async function SiteBody({
       })}
     </div>
   );
+}
+
+/** The server wrapper every public page uses: looks up the visitor's language itself. */
+export async function SiteBody(props: Omit<Parameters<typeof SiteBodyView>[0], "newTabLabel">) {
+  const { t } = await getT();
+  return <SiteBodyView {...props} newTabLabel={t.common.opensInNewTab} />;
 }

@@ -3,14 +3,13 @@
 import { useState } from "react";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
-import { LinkedText } from "@/components/LinkedText";
-import { parseBody } from "@/lib/site/body";
 import { useKeptForm } from "@/lib/use-kept-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { TranslationPanel } from "@/components/TranslationPanel";
 import type { SitePageSlug } from "@/lib/site/pages";
 import type { TranslationRow } from "@/lib/translations/types";
 import { updateSitePage } from "./actions";
+import { SitePagePreview, type PagePreviewContext } from "./SitePagePreview";
 
 export type SitePageRow = {
   id: string;
@@ -39,6 +38,7 @@ export function SitePageForm({
   translations,
   canManageTranslations,
   starterBody,
+  previewContext,
 }: {
   page: SitePageRow;
   translations: { title?: TranslationRow; body?: TranslationRow };
@@ -49,6 +49,8 @@ export function SitePageForm({
    * starting from nothing. It is saved only when they save.
    */
   starterBody?: string;
+  /** What the live preview needs besides the typed text (read on the server). */
+  previewContext: PagePreviewContext;
 }) {
   const [state, onSubmit, pending] = useKeptForm(
     updateSitePage.bind(null, page.slug),
@@ -60,7 +62,7 @@ export function SitePageForm({
   const showStarter = !page.body && Boolean(starterBody);
   const body = showStarter ? starterBody! : page.body;
   const [draft, setDraft] = useState(body);
-  const blocks = parseBody(draft);
+  const [titleDraft, setTitleDraft] = useState(page.title);
 
   return (
     <div className="flex flex-col gap-4">
@@ -76,6 +78,7 @@ export function SitePageForm({
           form={formId}
           required
           defaultValue={page.title}
+          onChange={(e) => setTitleDraft(e.target.value)}
           className={`${inputClass} sm:w-96`}
         />
         {translations.title && (
@@ -103,27 +106,11 @@ export function SitePageForm({
           onChange={(e) => setDraft(e.target.value)}
           className={inputClass}
         />
-        {blocks.length > 0 && (
-          <details className="rounded border border-border px-3 py-2 text-sm">
-            <summary className="cursor-pointer font-medium text-muted">{p.preview}</summary>
-            <p className="mt-1 text-xs text-muted">{p.previewHint}</p>
-            <div className="mt-2 flex flex-col gap-2 text-foreground">
-              {blocks.map((block, i) =>
-                block.type === "heading" ? (
-                  <h4 key={i} className="font-semibold">{block.text}</h4>
-                ) : block.type === "list" ? (
-                  <ul key={i} className="list-disc pl-5">
-                    {block.items.map((item, j) => (
-                      <li key={j}><LinkedText text={item} newTabLabel={t.common.opensInNewTab} /></li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p key={i}><LinkedText text={block.text} newTabLabel={t.common.opensInNewTab} /></p>
-                ),
-              )}
-            </div>
-          </details>
-        )}
+        <details className="rounded border border-border px-3 py-2 text-sm">
+          <summary className="cursor-pointer font-medium text-muted">{p.preview}</summary>
+          <p className="mb-2 mt-1 text-xs text-muted">{p.previewHint}</p>
+          <SitePagePreview slug={page.slug} title={titleDraft} body={draft} context={previewContext} />
+        </details>
         {translations.body && (
           <TranslationPanel
             key={translations.body.id + translations.body.updated_at}
