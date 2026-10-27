@@ -112,8 +112,11 @@ notes on purpose, because a note would promise a screen nobody can reach. Row 8 
 
 **The production 15-minute cron has not run since 2026-10-23**, so the calendar sweep, status-alert
 mail and translation drafts are all stopped. **Already on the backlog twice** (Lutan's; the recorded
-fix is a Worker deploy or the Cloudflare trigger). This release *was* a Worker deploy, so **check
-whether it restarted** — `node scripts/check-production.mjs calendar-cron` — before anyone works on it.
+fix is "a Worker deploy or the Cloudflare trigger"). **This release rules out the Worker-deploy half.**
+The production Worker went out at `12:39:05Z` and the next quarter-hour slot passed with no run
+(read `12:46:17Z`, `last cron run` still `2026-10-23T10:00:13Z`). **So the trigger itself is the
+remaining candidate**, which fits the `Trigger configuration … was only partially updated` error the
+test deploy threw. Do not spend another release re-deploying the Worker to see; look at the trigger.
 
 **Thirteen `pending:` plans shipped as a stated gap** on Lutan's explicit decision — the highest yet.
 The trend is **5, 5, 5, 13, 7, 13**. Worth watching as a trend rather than a per-release footnote.
