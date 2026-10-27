@@ -4,21 +4,21 @@
 
 | | |
 |---|---|
-| Feature | `docs/planner-handover.md` edition `393`, and three durable rules promoted into the `/plan-day` skill |
-| Backlog item | none — the skill's own step 8 requires a handover at nine or more workstreams since the last one; this round ran exactly nine |
-| Branch / worktree | `claude/planner-handover-393` @ `C:\Development\Animal_Shelter_planner-handover-393` |
+| Feature | `docs/planner-handover.md` edition `402`, and three durable rules promoted into the `/plan-day` skill |
+| Backlog item | none — the skill's step 8 requires a handover at nine or more workstreams since the last one; this was the second round of nine on 2026-10-27 |
+| Branch / worktree | `claude/planner-handover-402` @ `C:\Development\Animal_Shelter_planner-handover-402` |
 | Dev server | not started — documentation and a skill file only |
 | PR | opened from this branch |
 | Tested by / date | Claude / 2026-10-27 |
 | Carries a migration? | no |
-| Tested at SHA | `37c155e7` |
+| Tested at SHA | `16c9fdb6` |
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the skill asked for — replace the handover with edition `393` as a delta, and promote this round's three durable lessons into the skill so no future handover carries them
-- [x] Files/areas touched listed — `docs/planner-handover.md` (replaced, 145 lines) and `.claude/skills/plan-day/SKILL.md` (three insertions: the prior-pass expiry rule beside the walkthrough rate, the "band the RED harnesses" clause on the harness-triage band row, and the "do not band a proof the stream cannot run" rule above the token estimates). No `src/`, no `worker/`, no `supabase/migrations/`, no shared libs
+- [x] Change is described in one sentence, and it matches what the skill asked for — replace the handover with edition `402` as a delta against `393`, and promote this round's three durable lessons into the skill so no future handover carries them
+- [x] Files/areas touched listed — `docs/planner-handover.md` (replaced, 121 lines) and `.claude/skills/plan-day/SKILL.md` (three insertions: a fourth spoilt-figure case beside the existing three; the split walkthrough rate with its six measured passes, replacing one rate with two; and "never upgrade an item's open question into a finding" in step 7 beside the step-zero block). No `src/`, no `worker/`, no `supabase/migrations/`, no shared libs
 - [x] Roles affected identified — n/a in the usual sense: no role reads either file in the app. They are read by the planner chat only
-- [x] Anything explicitly **out of scope** written down — the live `.plan-day.md` is gitignored and is NOT in this PR; its batch-3 setup, its nine-stream counter and its six measured actuals were written in place by the planner session. The `docs/backlog.md` edits this round produced (the rejoined split item, two phantom ticks, four recorded answers, the staff dev-vs-production correction, the harness red-count restatement and the 9-of-14 card progress) all went to the `backlog` branch, not here
+- [x] Anything explicitly **out of scope** written down — the live `.plan-day.md` is gitignored and is NOT in this PR. The `docs/backlog.md` edits this round produced (the manual tick, the doctors tick, buttons slice-2 progress with its rescoped third slice, the new policy-triage item, and three corrections of stale item prose) all went to the `backlog` branch, not here
 
 ## 2. Automated gates
 
@@ -26,7 +26,7 @@
 - [x] `node scripts/gates.mjs` ends with all four at zero. Closing lines as printed:
 
 ```
-=== gates: build exited 0 after 130s
+=== gates: build exited 0 after 142s
 
 gates: typecheck=0 lint=0 test=0 build=0
 ```
@@ -48,8 +48,8 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ## 4. Functional checks
 
-- [x] Happy path works end to end — the document's purpose is to be read by the next planner chat; both files were re-read after writing, and the headings, the delta structure, the "next slug is `402`" line and the three skill insertions are each in place and in the right section
-- [ ] Data persists — `n/a: no data is written by this change; both files are static markdown read by a chat`
+- [x] Happy path works end to end — the document's purpose is to be read by the next planner chat; both files were re-read after writing, and the delta structure, the "next slug is `411`" line and all three skill insertions are in place and in the right sections
+- [ ] Data persists — `n/a: no data is written; both files are static markdown read by a chat`
 - [ ] Create / edit / delete exercised — `n/a: no CRUD surface; this is two documents`
 - [ ] Empty state renders sensibly — `n/a: no rendered surface`
 - [ ] Invalid input is rejected — `n/a: no input`
@@ -62,7 +62,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 | all roles | n/a | n/a | neither file is served by the app or read by any role; they are repository documents |
 | signed out | n/a | n/a | as above |
 
-- [x] Every role above tested — `n/a` recorded for each: neither file is reachable from the app at any URL, so there is nothing for a role to reach. Verified by the files' paths (`docs/`, `.claude/skills/`), neither of which is served
+- [x] Every role above tested — `n/a` recorded for each: neither file is reachable from the app at any URL. Verified by the files' paths (`docs/`, `.claude/skills/`), neither of which is served
 - [x] A role that should not have access is blocked server-side — same reason: there is no route to either file
 
 ## 5. Cross-cutting
@@ -78,14 +78,15 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 A handover's only failure mode is being wrong, so these replace the usual functional checks.
 
-- [x] **Every figure quoted was read, not recalled.** The six measured streams' token figures came from `get_usage` with `context.session` checked against the id passed on each of the six calls; model and effort came from `get_session` for each. Every band verdict was checked against that stream's PR diff and elapsed time before being written
-- [x] **The round's central claim was verified against the code, not inferred.** That `0265` narrowed three cards is quoted from `0265_card_review_1_reads.sql:118-126` (`delete … where activity = 'resident.record'`, then `insert … 'resident.who_and_where', 1`); that the app half moved the nav is from #965's own file list (`NavLinks.tsx`, `NavPane.tsx`, `routes.ts`, `management/purchasing/page.tsx`); the ambiguous card was settled by commit times, `e4946259` at 00:09:07 against `0af6fa5c` at 16:16:42
-- [x] **The production claims carry their database and their clock.** `role-cards` listing six roles was read on production (`dbkodyyxxhtygxcxmfcu`) at 09:4x on 2026-10-27; the pending migration was read from `apply-migrations.mjs --status --env production`. The handover states the dev-versus-production split rather than saying "deleted"
-- [x] **The `gh`-not-the-session-list warning is reported from what actually happened** — `list_sessions` reported PR #982 as `OPEN` while `gh pr view 982` reported `MERGED`, which is why that warning is marked fired rather than held
-- [x] **No count, PR number, migration number or release state is carried forward.** The handover's own opening block forbids it, and the document was checked against that rule after writing
-- [x] **The predecessor's warnings are each reported as fired, held or untested**, with the untested one (`src/lib/releases.ts`) explicitly carried into a fourth round rather than dropped or promoted
-- [x] **The three promoted rules are in the skill and not duplicated in the handover** — the handover points at them in one clause each. `SKILL.md` was read back after the edit and its CRLF line endings were preserved (the skill's own trap)
-- [x] **Length measured, not estimated** — `wc -l` reports 145, inside the skill's ~150 target, so no trimming pass was spent
+- [x] **Every figure quoted was read, not recalled.** The nine measured streams' token figures came from `get_usage` with `context.session` checked against the id passed on each of the nine calls; model and effort came from `get_session`. Every band verdict was checked against that stream's PR diff before being banked, and the two rescoped streams are marked **not readings** rather than counted
+- [x] **The per-step arithmetic in the skill is arithmetic, not estimate.** Each of the six passes' floors was taken from that stream's own non-`Messages` categories; the work-above-floor and per-step columns are those subtractions. The 17% overrun on #989 and its 11,223 a step are the same sum
+- [x] **The round's central claim was verified in the code AND the live database, not inferred.** That the doctors policies exist is from `0147_perm_convert_people.sql:222/:225` (`using ((select has_permission('clinics.doctors')))`); that no migration drops them is from a repo-wide grep; that they are live on **production** is from running the stream's own `table-policy-commands` check with `--env production` — `doctors` was absent, and that check lists only tables where no live policy can answer
+- [x] **The production migration gap was measured, not carried.** `apply-migrations.mjs --status --env production` reports **four** pending (`0270`–`0273`) against 274 files on `origin/main`, read 2026-10-27 — the number the handover's "next round" section states
+- [x] **The three brief failures are described from what was actually written**, including the one where the item was correct and the brief degraded it; that item's own wording (*"the ordinary signed-in client"*, *"NOT ESTABLISHED ON THE LIVE DATABASE"*) is quoted rather than paraphrased
+- [x] **No count, PR number, migration number or release state is carried forward.** The handover's opening block forbids it, and the document was checked against that rule after writing
+- [x] **The predecessor's warnings are each reported as fired, held or now closed**, with the one that finally got its test (`src/lib/releases.ts`) marked as no longer a hypothesis
+- [x] **The three promoted rules are in the skill and only pointed at from the handover.** `SKILL.md` was read back after the edit and its **CRLF line endings were preserved** — the skill's own documented trap
+- [x] **Length measured, not estimated** — `wc -l` reports 121, inside the skill's ~150 target, so no trimming pass was spent
 
 ## 7. Release notes
 
