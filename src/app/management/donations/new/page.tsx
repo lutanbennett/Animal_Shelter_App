@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { todayIso } from "@/lib/format";
 import { requirePermission } from "@/lib/permissions/require";
-import { loadRaised, loadStaffAppeals } from "@/lib/appeals/staff";
+import { loadRaised } from "@/lib/appeals/staff";
 import { SUPPORTER_COLUMNS, type SupporterRow } from "@/lib/donations/supporters";
 import { DonationForm, type AppealOption, type DonorContact } from "./DonationForm";
 
@@ -45,17 +45,23 @@ export default async function NewDonationPage(props: PageProps<"/management/dona
   if (contacts.error) console.error("donation form: contact list failed", contacts.error);
   if (residents.error) console.error("donation form: resident list failed", residents.error);
   if (supporters.error) console.error("donation form: donor list failed", supporters.error);
-  // Appeals still taking gifts. A login without appeal.run reads none (RLS), and the form says so. A failed read
+  // Appeals still taking gifts, from the appeal_choices view (0274), which is keyed on donation.receipt: the card that
+  // records a gift is the card that picks the appeal. A login without it reads none, and the form says so. A failed read
   // must not look like "no appeals", so it is logged and the form gets an empty list with the same sentence.
   let appealOptions: AppealOption[] = [];
   try {
-    const open = (await loadStaffAppeals(supabase)).filter((a) => a.status !== "closed");
+    const { data: open, error: openError } = await supabase
+      .from("appeal_choices")
+      .select("id, title, resident_name, status, target")
+      .order("title")
+      .returns<{ id: string; title: string; resident_name: string | null; status: string; target: number }[]>();
+    if (openError) throw openError;
     const raised = await loadRaised(supabase, open.map((a) => a.id));
     appealOptions = open.map((a) => ({
       id: a.id,
       title: a.title,
-      residentName: a.residents?.name ?? "",
-      target: a.target_amount,
+      residentName: a.resident_name ?? "",
+      target: a.target,
       raised: raised.get(a.id)?.raised ?? 0,
       status: a.status,
     }));

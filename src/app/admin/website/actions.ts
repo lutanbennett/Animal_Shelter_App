@@ -447,17 +447,15 @@ async function trashInDrive(fileId: string) {
 export async function uploadHeroPhoto(formData: FormData): Promise<SiteContentFormState> {
   const { t } = await getT();
   return runAction("website.uploadHeroPhoto", t.common.somethingWentWrong, async () => {
-    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "website.gallery")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const file = formData.get("file");
     if (!(file instanceof File) || file.size === 0) {
       return refuse(t.admin.website.errors.noFile);
     }
 
-    // A public photo needs a description for visitors who cannot see it (Lutan, 2026-10-26: "Yes ask for alt text").
-    const alt = String(formData.get("alt") ?? "").trim().slice(0, 300);
-    const altTh = String(formData.get("alt_th") ?? "").trim().slice(0, 300);
-    if (!alt) return refuse(t.admin.website.gallery.altRequired);
+    // No description is asked here: the hero reads its alt text from site_content.hero_alt (Home page tab, website.content),
+    // which this form never sent, so asking for one made Replace photo refuse every time.
 
     let driveFileId: string;
     try {
@@ -474,10 +472,8 @@ export async function uploadHeroPhoto(formData: FormData): Promise<SiteContentFo
       .limit(1)
       .returns<{ hero_drive_file_id: string | null }[]>();
 
-    const { error } = await supabase
-      .from("site_content")
-      .update({ hero_drive_file_id: driveFileId })
-      .eq("id", true);
+    // A function, not a direct update: it asks website.gallery itself (0274), so the card is the only gate.
+    const { error } = await supabase.rpc("set_hero_photo", { p_drive_file_id: driveFileId });
 
     if (error) return refuse(error.message);
 
@@ -492,7 +488,7 @@ export async function uploadHeroPhoto(formData: FormData): Promise<SiteContentFo
 export async function removeHeroPhoto(): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("website.removeHeroPhoto", t.common.somethingWentWrong, async () => {
-    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!can(await loadPermissions(), "website.gallery")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const supabase = await createClient();
     const { data: current } = await supabase
@@ -502,10 +498,7 @@ export async function removeHeroPhoto(): Promise<ActionResult> {
       .limit(1)
       .returns<{ hero_drive_file_id: string | null }[]>();
 
-    const { error } = await supabase
-      .from("site_content")
-      .update({ hero_drive_file_id: null })
-      .eq("id", true);
+    const { error } = await supabase.rpc("set_hero_photo", { p_drive_file_id: null });
 
     if (error) return refuse(error.message);
 
