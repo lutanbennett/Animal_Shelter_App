@@ -1,7 +1,7 @@
 # Medical photos need their own read (`0276`)
 
 Lutan, 2026-10-27: *"on the view residents card I can access medical photos. I should not be able to view medical photos."*
-Schema half only; the app half is the next batch's stream. Nothing in `src/` changed.
+Schema half only; the app half is the next batch's stream. The only `src/` edits are three one-line registrations lint demands for any new activity (`catalogue.ts`, `en.ts`, `th.ts`).
 
 ## Cause (confirmed from the live policy, `0264:199`, and read on dev)
 
