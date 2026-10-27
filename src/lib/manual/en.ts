@@ -276,7 +276,8 @@ const manual: Manual = {
         {
           id: "appointments-vet",
           title: "Your clinic's appointments",
-          awaitingCard: ["doctor"],
+          activity: "medical.visits",
+          activityLevel: "read",
           path: "Appointments (first in the menu)",
           intro:
             "Tap the Appointments tile on your home screen. It lists every visit booked with your clinic — not just your own patients' — in three groups: To write up (the visit date has passed and it is not marked done — oldest first, its count and dates in red), Upcoming (today or later) and Recently done (marked done in the last 30 days). Each row names the resident, which opens their page, and offers Log procedure, Log blood test, Add prescription, Log weight and Edit, all already linked to that visit; prescription and weight appear once the visit has started. Marking a visit done does not lock it: you can still add records to it, and anything you were typing when someone marked it done is saved as normal. A cancelled visit is not listed. The visits of all your clinics are listed together. If the page says your account is not linked to a clinic, ask an admin to link it to your doctor entry (Accounts and roles).",
@@ -315,7 +316,7 @@ const manual: Manual = {
         {
           id: "my-access-requests",
           title: "Access requests on My tasks",
-          awaitingCard: ["admin"],
+          adminOnly: true,
           path: "My tasks → Access requests",
           intro:
             "While anyone who has signed in is waiting for a role, every admin has one Review access requests task at the top of My tasks. It says how many are waiting, is dated the day the oldest one arrived, and counts towards the number beside My tasks in the menu. It names nobody: who is asking is shown only on Settings → Security, after your authenticator app.",
@@ -430,7 +431,7 @@ const manual: Manual = {
         {
           id: "name-card",
           title: "Scanning a name card",
-          awaitingCard: ["admin", "management", "doctor", "volunteer"],
+          everyone: true,
           path: "Hold your phone to a resident's name card",
           intro:
             "Every resident has a name card with an NFC chip. Hold the top of your phone to it (an iPhone XS or later, or an Android phone with NFC on) and the resident's page opens. What you see depends on who you are, but never less than a visitor sees.",
@@ -449,7 +450,7 @@ const manual: Manual = {
         {
           id: "microchip",
           title: "Scanning a microchip",
-          awaitingCard: ["admin", "management", "doctor"],
+          activity: "resident.microchip",
           path: "Residents → Scan a chip, or a resident's hub",
           intro:
             "A microchip number is exactly 15 digits, and no two residents can share one. It is for staff, Management and doctors only: the public website says only whether an animal is microchipped, never the number.",
@@ -702,7 +703,8 @@ const manual: Manual = {
         {
           id: "placement-history",
           title: "Placement history",
-          awaitingCard: ["admin", "management", "doctor"],
+          activity: "resident.record",
+          activityLevel: "read",
           path: "Resident hub → Housing & Status card",
           steps: [
             "Tap the Housing & Status card title to open Housing & Placement History.",
@@ -878,7 +880,7 @@ const manual: Manual = {
         {
           id: "record-weight",
           title: "Record Weight on a phone",
-          awaitingCard: ["admin", "management"],
+          activity: "medical.weight",
           path: "Home → Record Weight (the Head of Medical)",
           intro:
             "The Head of Medical's own weighing page, built for a phone with the scales in front of you. It shows who to weigh and takes the reading, and nothing else: it does not open the animal's medical record.",
@@ -956,7 +958,7 @@ const manual: Manual = {
         {
           id: "resident-photos",
           title: "Adding resident photos",
-          awaitingCard: ["admin", "management", "doctor"],
+          activity: "photos.resident_add",
           path: "Resident hub → Photos",
           steps: [
             "Open the Photos card on the hub.",
@@ -975,7 +977,7 @@ const manual: Manual = {
         {
           id: "resident-videos",
           title: "Adding resident videos",
-          awaitingCard: ["admin", "management", "doctor"],
+          activity: "photos.resident_add",
           path: "Resident hub → Photos",
           intro:
             "Videos live in the same Photos section as pictures, in the same Drive folders, with the same rules. There is no separate place to look.",
@@ -1657,7 +1659,8 @@ const manual: Manual = {
         {
           id: "medication-list",
           title: "The medication list",
-          awaitingCard: ["admin", "management"],
+          activity: "medical.prescriptions",
+          activityLevel: "read",
           path: "Home → Administer Medication (Head of Medical), or Operations → Medication list",
           intro:
             "One list of who needs medicine today and how much, built for a phone while you walk round the enclosures. It is for reading: nothing on it is ticked off, and the app does not record that a dose was given.",
@@ -1679,7 +1682,8 @@ const manual: Manual = {
         {
           id: "feeding-list",
           title: "The feeding list",
-          awaitingCard: ["admin", "management"],
+          activity: "medical.diet",
+          activityLevel: "read",
           path: "Operations → Feeding list",
           intro:
             "How much food to make for each zone for one meal, and what each dog is plated, built for a phone in the kitchen. It is for reading: nothing on it is ticked off, and the app does not record that a meal was fed.",
@@ -1784,7 +1788,7 @@ const manual: Manual = {
         {
           id: "stocktaking-switches",
           title: "Stock: what the Stocktaking switches do",
-          awaitingCard: ["admin"],
+          adminOnly: true,
           path: "Settings → Stocktaking",
           intro:
             "Two switches, one for food and one for medicines and vaccines, that you turn on when the shelter is ready to count that area. Until then the stock figures are not trusted, so the app stops pretending to know them. Each is turned on or off on its own, so you can start with one without the other.",
@@ -1962,7 +1966,7 @@ const manual: Manual = {
         {
           id: "security",
           title: "Accounts and roles",
-          awaitingCard: ["admin"],
+          adminOnly: true,
           path: "Security (bottom of the menu)",
           steps: [
             "Create a user with an email and a role. A temporary password is generated and shown once — copy it and pass it on (LINE is fine; it only works until they've signed in). The first time they sign in with it they must choose their own password before anything else opens. Someone who will only use Google sign-in can ignore the temporary password.",
@@ -1998,7 +2002,8 @@ const manual: Manual = {
         {
           id: "who-does-what",
           title: "Who does what",
-          awaitingCard: ["admin", "management"],
+          activity: "roles.view",
+          activityLevel: "read",
           path: "Settings → Who does what (also on the Management page)",
           intro:
             "Where Admin shares the app out. You give each role cards. A card puts a tile on the person's home screen and gives them what they need to use it, so a tile can never open a page they cannot use. Admin can give and remove cards; Management can look but not change.",
@@ -2019,7 +2024,7 @@ const manual: Manual = {
         {
           id: "two-step",
           title: "2-step verification for Security",
-          awaitingCard: ["admin"],
+          adminOnly: true,
           path: "Security (bottom of the menu)",
           intro:
             "Security decides who can get into the app, so it asks for a second step: a 6-digit code from an authenticator app on your phone. It works the same whether you signed in with a password or with Google. Nothing else in the app asks for it.",

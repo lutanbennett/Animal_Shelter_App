@@ -90,6 +90,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   "A resident’s photos no longer offer Remove, Set as profile photo or Move to folder to someone whose cards do not allow it, and the Book a vet visit button only appears for a login that can book one. Previously the buttons showed and then refused.",
+  "The user manual now shows each topic to the logins whose cards let them do that job, for the last fourteen topics too (scanning a microchip, placement history, adding photos and videos, the medication and feeding lists, Record Weight, Who does what). Before, those fourteen were shown to everyone and marked ‘Not yet assigned to a card’; now Settings topics such as Security and 2-step verification are shown only to Admin, and the name card topic to everyone.",
 ];
 
 /** Newest first. */

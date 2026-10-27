@@ -37,6 +37,11 @@ export type ManualTopic = {
    */
   everyone?: true;
   /**
+   * The topic is about something only Admin does (Settings → Security, Stocktaking…), which sits outside the card system:
+   * no card grants it, so only Admin is shown it. A decided answer, the same as an activity no card grants, not a gap.
+   */
+  adminOnly?: true;
+  /**
    * UNASSIGNED, WAITING FOR THE CARD REVIEW. The roles this topic used to be tagged with, kept only as the worklist for
    * whoever links it to a card (docs/decisions/2026-10-26-manual-by-card.md). Nothing reads it to decide who sees the
    * topic and it names no one's access.
