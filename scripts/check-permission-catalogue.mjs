@@ -265,7 +265,7 @@ const PINNED = {
   // The record hub: a who-and-where login is redirected to /r/ before this guard (redirect() is not
   // a guard, so it is not listed), and every control on it that writes asks can().
   "/residents/[id]": { guards: [FULL], decides: ["placement.death", "placement.death_withdraw", "translations.manage", "resident.microchip", "resident.adoption_news", "appeal.run", "medical.diet", "medical.immunizations", "medical.visits", "medical.prescriptions", "medical.weight", "medical.procedures", "resident.record"] },
-  "/residents/[id]/edit": { guards: [FULL], decides: ["resident.record"] },
+  "/residents/[id]/edit": { guards: [FULL], decides: ["placement.hospital", "placement.rehome", "resident.record"] },
   "/residents/[id]/move": { guards: [FULL], decides: ["placement.move"] },
   "/residents/[id]/hospital": { guards: [FULL], decides: ["placement.hospital"] },
   "/residents/[id]/hospital/return": { guards: [FULL], decides: ["placement.hospital"] },
