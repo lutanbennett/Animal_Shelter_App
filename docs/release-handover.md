@@ -111,8 +111,9 @@ to Who does what. **Row 1 of his list and the one open item with a live conseque
 notes on purpose, because a note would promise a screen nobody can reach. Row 8 of his list.
 
 **The production 15-minute cron has not run since 2026-10-23**, so the calendar sweep, status-alert
-mail and translation drafts are all stopped. **Already on the backlog twice** (Lutan's; the recorded
-fix is "a Worker deploy or the Cloudflare trigger"). **This release rules out the Worker-deploy half.**
+mail and translation drafts are all stopped. **Already on the backlog** (Lutan's; the recorded fix is
+"a Worker deploy or the Cloudflare trigger"). **This release rules out the Worker-deploy half**, and
+the backlog item now carries that measurement.
 The production Worker went out at `12:39:05Z` and the next quarter-hour slot passed with no run
 (read `12:46:17Z`, `last cron run` still `2026-10-23T10:00:13Z`). **So the trigger itself is the
 remaining candidate**, which fits the `Trigger configuration … was only partially updated` error the
