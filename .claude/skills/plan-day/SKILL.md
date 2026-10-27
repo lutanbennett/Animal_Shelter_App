@@ -134,7 +134,19 @@ a 164-line test plan did not do it in 24k of messages. **The test is two numbers
 `Messages` against elapsed time, and against the diff.** A floor-sized `Messages` on a long session
 means the figure is a remainder. Record it as `not a reading` and keep it out of the bands - banking
 it would have taught the next planner that a new public surface with switches costs 123k, less than a
-schema PR with nothing to discover. **Dead process, blocked stream, reset window: three ways, one
+schema PR with nothing to discover.
+
+**AND A FOURTH: THE STREAM WAS RESCOPED MID-SESSION, SO ITS FIGURE SPANS TWO SCOPES AND BANDS
+NEITHER.** Added 2026-10-27, twice in one round. `manual-follows-cards-fix` spent its first turns on a
+premise the planner had got wrong, absorbed a correction, then did the real work: **186,604 against a
+140-185k band that described only the second half.** `doctors-update-delete` went the other way — the
+job **shrank** when the stream disproved the item, so **164,301 against 200-260k is not an under-run,
+it is a different job.** **Record the figure, mark it `rescoped`, and keep it out of the bands.** The
+tell is in your own transcript rather than the data: if you sent that stream a correction, its number
+is not a reading. **And the planner's half of this: a brief you had to correct mid-flight has already
+cost the tokens — do not also let it corrupt the bands.**
+
+**Dead process, blocked stream, reset window, rescoped mid-session: four ways, one
 habit. A figure is evidence only once you know what the stream actually did.**
 
 ## 3. Read the backlog
@@ -511,7 +523,41 @@ judgement — it was banded ~250–400k on exactly the reasoning above and
 count?" but "must it build the instrument?" Reading is cheap; building
 the instrument is not.
 
-### A WALKTHROUGH RUN STREAM HAS A MEASURED RATE: the floor plus ~9.8k PER NUMBERED STEP
+### THE WALKTHROUGH RATE SPLITS IN TWO, AND THE FLOOR HAS MOVED — measured 2026-10-27
+
+**Six driven passes in one day, all `claude-sonnet-5-5` / `low`, floor taken per stream from its own
+non-`Messages` categories.** This supersedes the single 9.8k figure below for **first** passes.
+
+| stream | steps | actual | its own floor | above floor | per step |
+|---|---|---|---|---|---|
+| #979 `card-rerun-daily-medical` | 16 | 197,831 | 94,829 | 103,002 | **6,438** |
+| #980 `card-rerun-view-medical` | 16 | 183,399 | 94,929 | 88,470 | **5,529** |
+| #981 `card-rerun-ops-facility` | 21 | 263,128 | 94,929 | 168,199 | **8,010** |
+| #985 `card-rerun-diets-residents` | 15 | 182,885 | 95,018 | 87,867 | **5,858** |
+| #986 `card-rerun-manage-medical` | 13 | 172,842 | 95,994 | 76,848 | **5,911** |
+| #989 `card-rerun-residents-final` | 13 | 240,828 | 94,921 | 145,907 | **11,223** |
+
+**THE FLOOR IS NOW ~95k, NOT ~88k** (MCP tools 20.2k and memory 17.7-18.3k have both grown).
+**Re-measure it from a stream's own categories rather than carrying this number forward.**
+
+**AND THE RATE DEPENDS ON WHAT KIND OF PASS IT IS:**
+
+- **A FIRST driven pass: `~95k + ~6.3k x steps`.** Four of the five first passes fit within 7%.
+  It under-predicts only the **four-card** group (#981), because extra cards mean extra one-card
+  logins — **that cost is per CARD, not per step**, so add a few k for each extra card.
+- **A RECONCILIATION pass — a second pass over a card already driven — is `~95k + ~11k x steps`.**
+  #989 was banded on the 6.3k rate and came in **17% over**, at 11,223 a step, **higher than the old
+  9.8k.** The work is not driving, it is **confirming or contradicting every row an earlier pass
+  left**, which the first pass never had to do.
+- **AND THE BRIEF ADDS TO IT.** #989 was also asked to adjudicate three things: whether the pass was
+  needed at all, another stream's finding, and whether a missing control was a sibling's fix or a
+  fault. **The planner widened the work and did not widen the band.** The skill already says the
+  live-interaction axis applies to the brief; so does this.
+
+**So ask which kind of pass it is before you reach for a rate.** A single number here is wrong half
+the time, which is how 2026-10-27 produced a 17% overrun on the same day the rate was "corrected".
+
+### THE ORIGINAL READING, kept because it is the floor of the range: the floor plus ~9.8k PER NUMBERED STEP
 
 Added 2026-10-23 after the first round where **all nine streams were measured**. Three completed run
 streams, all `claude-sonnet-5-5` / `low`, agree to within 2%:
@@ -968,6 +1014,37 @@ Before writing anything:
 or decision file that did it. Do not build it again, and do not open a PR. **That is a successful
 outcome for this stream, not a failure.**
 ```
+
+**AND NEVER UPGRADE AN ITEM'S OPEN QUESTION INTO A FINDING. THIS IS THE ONE THAT COST MOST ON
+2026-10-27 — THREE BRIEFS IN ONE DAY, AND THE STREAM WAS RIGHT EVERY TIME.**
+
+All three had the same shape: **the planner wrote a brief that was more certain than the item it came
+from, or than the evidence supported.**
+
+1. **`card-rerun-daily-medical`** — the brief said the three cards had "never been driven". The
+   planner had grepped `docs/decisions/` for "card-re|rerun|card-review" and **missed the whole
+   `card-report-*` family**, seven streams that had driven 27 of 32 cards.
+2. **`manual-follows-cards-fix`** — the brief quoted the item's paragraph headed *"what the manual
+   does today (read 2026-10-25)"* as current. **It had been fixed the next day, and the item's own
+   HEAD said so.** An item's head is its current statement; **its tail is history, and a dated state
+   description ages in place.**
+3. **`doctors-update-delete`** — the worst, because the item was careful and the brief degraded it.
+   The item said the app uses *"the ordinary signed-in client"* (true) and **"NOT ESTABLISHED ON THE
+   LIVE DATABASE … so BUILD THE CHECK FIRST"**. The brief rendered the client as *"the ordinary
+   service role"* and **turned the explicit open question into a verified fact**, citing a grep for
+   `on public.doctors` that could never have matched — the policies were created under the table's
+   **old name** and Postgres carries policy names through a rename. The stream built the check the
+   item asked for, read `pg_policies`, and proved the opposite.
+
+**Three rules out of it, and the third is the general one:**
+
+- **When an item says NOT ESTABLISHED, the brief carries that uncertainty through VERBATIM**, with
+  the command the item names. Never convert it into a finding.
+- **A grep that finds nothing is not proof of absence.** Say what the pattern was and what it could
+  not have matched. This is the same fault as a check reporting "called by nothing".
+- **State your evidence AS evidence, with its source**, so a stream can test it. All three briefs
+  were caught *because* they said where the claim came from — which is the argument for writing the
+  planner's evidence in, not against it.
 
 **Write the planner's own evidence into it.** Nine briefs carried this on 2026-10-21
 and it cost almost nothing, because the planner had already done the greps while
