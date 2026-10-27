@@ -302,6 +302,102 @@
     }
   ],
   "serviceRoleHelpers": [],
+  "noLivePolicyDeliberate": {
+    "_about": "Triage of the table-policy-commands check (2026-10-28, docs/decisions/2026-10-28-policy-triage-1.md). A command listed here has no live policy ON PURPOSE: row security refuses it for every signed-in login, Admin included. Not access that is granted, so the hard-coded-security check does not read this; it is the record that someone read each one. Do NOT add a policy to a row here: that is a widening.",
+    "tables": [
+      {
+        "table": "site_content",
+        "commands": [
+          "insert",
+          "delete"
+        ],
+        "writtenBy": "No runtime writer. One row, seeded by supabase/migrations/0018_site_content.sql and held to one row by the check constraint site_content_singleton (id boolean). Every app write is an update (src/app/admin/website/actions.ts).",
+        "why": "A singleton is never created or removed by anyone."
+      },
+      {
+        "table": "site_pages",
+        "commands": [
+          "insert",
+          "delete"
+        ],
+        "writtenBy": "No runtime writer. The fixed slugs are seeded by migrations 0059 and 0099; the editor only updates (src/app/admin/website/actions.ts, the .from(\"site_pages\").update on slug).",
+        "why": "Pages are a fixed set; a new public page is a code change, not a form."
+      },
+      {
+        "table": "stock_counts",
+        "commands": [
+          "insert",
+          "update",
+          "delete"
+        ],
+        "writtenBy": "Security-definer functions only: save_stocktake and record_stock_correction (last redefined in supabase/migrations/0178_perm_functions.sql), each checking its card inside. The table grants authenticated select only (0093 line 117). The app reads it and never writes it directly.",
+        "why": "A count is history; nobody edits or deletes one. A correction is a new row."
+      },
+      {
+        "table": "translatable_labels",
+        "commands": [
+          "insert",
+          "update",
+          "delete"
+        ],
+        "writtenBy": "Migrations only (0166_label_translations.sql seeds it; 0172, 0175, 0205, 0209 add rows). Even service_role holds select only (0166 lines 209-210). The app reads it through label_translations().",
+        "why": "A registry of which columns carry Thai; changing it is a code change."
+      },
+      {
+        "table": "units",
+        "commands": [
+          "delete"
+        ],
+        "writtenBy": "Never deleted by design: units are archived (src/app/admin/units/actions.ts setUnitArchived, comment on line 13; 0252_units_of_measure_are_data.sql line 69). The Units screen has no delete control.",
+        "why": "Deleting a unit would orphan the quantities recorded in it."
+      },
+      {
+        "table": "donation_receipts",
+        "commands": [
+          "insert",
+          "delete"
+        ],
+        "writtenBy": "Insert: the security-definer function issue_donation_receipt (0168_donation_receipts.sql line 171, security definer; the app calls it, nothing inserts directly). Delete: refused for everyone including the service role by the donation_receipts_guard trigger; receipts are numbered legal records and are voided, never removed (src/app/management/donations/actions.ts voids).",
+        "why": "Numbered receipts must never have gaps or disappear."
+      },
+      {
+        "table": "recurring_job_occurrences",
+        "commands": [
+          "insert",
+          "update",
+          "delete"
+        ],
+        "writtenBy": "Security-definer functions only: record_recurring_job and reassign_recurring_job (0095_recurring_jobs.sql lines 578, 648; 0134 line 288), called from src/app/management/recurring-jobs/actions.ts lines 49, 352, 445. Authenticated holds select only (0095 line 452).",
+        "why": "An occurrence is a record of what happened; it is written by the function that checks the card."
+      },
+      {
+        "table": "recurring_job_occurrence_assignees",
+        "commands": [
+          "insert",
+          "update",
+          "delete"
+        ],
+        "writtenBy": "reassign_recurring_job (0095 line 657), as above. Authenticated holds select only (0095 line 455).",
+        "why": "As recurring_job_occurrences."
+      },
+      {
+        "table": "community_places",
+        "commands": [
+          "delete"
+        ],
+        "writtenBy": "Never deleted by design: places are archived (the app filters archived_at is null, src/app/outreach/actions.ts line 72). Grants are select, insert, update only (0169 line 303). No delete control exists.",
+        "why": "Outings point at a place."
+      },
+      {
+        "table": "impact_baselines",
+        "commands": [
+          "delete"
+        ],
+        "writtenBy": "Never deleted: a fixed set of keys; the editor only updates (src/app/admin/website/actions.ts line 693). Grants are select, insert, update (0156 line 86).",
+        "why": "The public counters read these rows."
+      }
+    ]
+  },
   "environment": [
     {
       "name": "PUBLIC_SITE",
