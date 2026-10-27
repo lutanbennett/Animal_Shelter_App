@@ -204,6 +204,28 @@ export const CHECKS = {
       : x.called_by.length ? [`${x.function}: CALLED by ${x.called_by.length}`, ...x.called_by.map((w) => `    ${w}`)]
       : [`${x.function}: exists, called by nothing`]),
   },
+  "table-policy-commands": {
+    asks: "For each public table with row security on, which commands (select/insert/update/delete) have no policy that can answer true for anyone? A policy counts as live when it resolves through has_permission(), is_admin() or a row test; one that only calls a function known to be false, or has no policy at all, does not. (Table and command names only.)",
+    // RLS denies by default, so a command with no live policy is refused for everyone, Admin included (Admin's bypass runs inside
+    // has_permission()/is_admin(), which only a policy invokes). 'all' policies cover every command. Comments are stripped before matching.
+    // 'dead' = the policy text names is_clinic_login() or clinic_login_may_edit_doctor(), which cannot return true since 0259.
+    sql: `select coalesce(json_agg(json_build_object('table', t.relname, 'command', c.cmd,
+        'live', (select count(*) from pg_policies p where p.schemaname = 'public' and p.tablename = t.relname
+                  and (p.cmd = upper(c.cmd) or p.cmd = 'ALL')
+                  and regexp_replace(coalesce(p.qual, '') || ' ' || coalesce(p.with_check, ''), '--[^\n]*', '', 'g') !~ '\\m(is_clinic_login|clinic_login_may_edit_doctor)\\M'),
+        'dead', (select coalesce(json_agg(p.policyname), '[]'::json) from pg_policies p where p.schemaname = 'public' and p.tablename = t.relname
+                  and (p.cmd = upper(c.cmd) or p.cmd = 'ALL')
+                  and regexp_replace(coalesce(p.qual, '') || ' ' || coalesce(p.with_check, ''), '--[^\n]*', '', 'g') ~ '\\m(is_clinic_login|clinic_login_may_edit_doctor)\\M'))
+        order by t.relname, c.cmd), '[]'::json)
+      from pg_class t cross join (values ('select'), ('insert'), ('update'), ('delete')) as c(cmd)
+     where t.relnamespace = 'public'::regnamespace and t.relkind = 'r' and t.relrowsecurity
+       and not exists (select 1 from pg_policies p where p.schemaname = 'public' and p.tablename = t.relname
+                  and (p.cmd = upper(c.cmd) or p.cmd = 'ALL')
+                  and regexp_replace(coalesce(p.qual, '') || ' ' || coalesce(p.with_check, ''), '--[^\n]*', '', 'g') !~ '\\m(is_clinic_login|clinic_login_may_edit_doctor)\\M')`,
+    render: (rows) => rows.length
+      ? rows.map((x) => `${x.table}: nobody can ${x.command}${x.dead.length ? ` (only dead policies: ${x.dead.join(", ")})` : " (no policy)"}`)
+      : ["Every table with row security has a live policy for all four commands."],
+  },
 };
 
 /** Wrap one check in a read-only transaction. The result rides out in an exception message, as the harnesses do. */
