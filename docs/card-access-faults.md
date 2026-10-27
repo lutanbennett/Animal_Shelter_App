@@ -390,6 +390,24 @@ Driven in a browser as a login holding only the card (`dev-signin.mjs --cards <c
 
 **Not driven, so not claimed:** the Operations and Appointments pages as `book_clinic_visits`; the calendar Week and Month views; the Cost box; Cancel on a visit; the Log blood test and Log procedure forms (refused before they open).
 
+---
+
+## Added 2026-10-27 by `claude/card-rerun-manage-medical` (`medical_records`, driven again after 0268, 0269 and the #965 app half)
+
+Driven in a browser as a login holding only the card (`dev-signin.mjs --cards medical_records --port 3002`), aal1, code at `c439f911`, dev schema 271 applied, 0 pending. **No live role holds this card** (it was `staff`'s alone and `staff` is gone); it was driven as if one did. Nothing was fixed and no card proposed. Disposable resident: Capwarn Test 0924; every row written is named `walk-medical_records` (the weight reading is not: it corrected the day's existing 4.8 kg to 4.9 kg).
+
+| Card | Kind | What was found | Needs | Production | Found |
+|---|---|---|---|---|---|
+| `medical_records` | a card that works (closes earlier rows) | **Step 10, book a vet visit: works.** The booking form lists 9 clinics and saves; the visit shows on the resident's Clinic Visits tab (clinic named, "Scheduled", "In the shelter calendar") and in `/upcoming-visits`. The visit opens, its Edit form opens with 9 clinics and saves. This contradicts the 2026-10-25 row "`medical_records` cannot book a visit": `/clinic-visits/new` now loads for this card alone | none | n/a | 2026-10-27 dev, driven |
+| `medical_records` | a card that works | **Weight, prescription, remove and restore all work.** A weight saved and shows on the Weight page. A prescription (Amoxicillin) saved, listed under Current on the resident's Prescriptions page. Remove on the weight row: "1 removed hidden"; Show removed lists it with Restore; Restore brought it back | none | n/a | 2026-10-27 dev, driven |
+| `medical_records` | the lookups are populated | Forms for procedures, blood tests, prescriptions (27 medicines), immunizations and diet all open with their pick-lists filled. **Opened only, not saved:** procedures, blood tests, immunizations, diet | none | n/a | 2026-10-27 dev, opened |
+| `medical_records` | refusal | `/medical/photos` goes to `/no-access` (step 12) | none | n/a | 2026-10-27 dev, driven |
+| `medical_records` | too much, still true | `/residents/export` returns the whole CSV (200, `text/csv`) through the included `view_residents` | a decision on the export | not established | 2026-10-27 dev, driven |
+| `medical_records` | misleading display | the prescription form's **Linked clinic visit** pick-list offered only "No linked visit" although the resident has two visits. Not investigated: it may be a filter | find out | not established | 2026-10-27 dev, driven |
+| `medical_records` | still empty | the Appointments entry in the menu now points at `/upcoming-visits` and that loads; the 2026-10-25 "dead end" row was about `/appointments` and was **not** re-driven | none | n/a | 2026-10-27 dev |
+
+**Not driven, so not claimed:** saving a procedure, blood test, immunization or diet (and attaching files to them); walkthrough step 2 and 11 are `TODO`s with no question answered, so step 2 is covered only by what I drove (open, edit, complete) and step 11 (send to hospital) not at all; the doctor's report page; the three-card comparison of the Operations tiles.
+
 ## Added 2026-10-27 by `claude/card-rerun-diets-residents` (`feed_special_diets`, `view_residents` and `record_death`, driven)
 
 Driven in a browser as a login holding only the card (`dev-signin.mjs --cards <card> --port 3003`), aal1, no page asked for a second step. Code at `c439f911`, dev shared with other streams. `feed_special_diets`: all 6 steps; `view_residents`: all 5; `record_death` (never driven by anyone): all 4, the death really saved. Nothing fixed, no card proposed. Rows marked in place above are marked CLOSED or CONTRADICTED with this date.
