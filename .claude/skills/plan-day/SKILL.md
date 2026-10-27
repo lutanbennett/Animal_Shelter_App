@@ -198,6 +198,20 @@ note:
   what was recorded, and does the tick cover everything the item claimed?** A ticked item whose
   work is only partly done is the same invisibility fault as one filed below `## Completed`, and
   costs more because it reads as finished.
+- **AND AN ITEM'S *CONCLUSION* AGES EXACTLY LIKE A COUNT OR A PRIOR PASS — THIS ONE COST FOUR DAYS.**
+  Added 2026-10-27. The cron item read *"the fix is a Worker deploy or the Cloudflare trigger, and the
+  repo is innocent. Nothing to build; one thing to check."* **Every clause was wrong.** It had been
+  written while only ONE environment had been read, and four days went at a Cloudflare dashboard. The
+  real cause was a `next` bump three days earlier that the adapter could not load, and **the trigger
+  had been firing the whole time into a Worker that crashed on startup.**
+  **So ask of any conclusion on an item: when was this written, and what had been read by then?**
+  *"Nothing to build"* and *"X is ruled out"* are **findings with a clock on them**, not facts — and
+  a ruling-out is narrower than it sounds: "a deploy did not RESTART it" says nothing about a deploy
+  having BROKEN it. **What worked, and is the transferable half:** the brief did not assert the
+  opposite. It carried the item's claims through as **NOT ESTABLISHED in those words**, listed the
+  mechanisms that produce the same symptom, and named what the existing instrument structurally could
+  not see. The stream then **built the missing instrument instead of arguing**, and settled it in one
+  cycle.
 - **AND A THIRD WAY AN ITEM GOES INVISIBLE, WITH NO CHECKER AT ALL: IT SPLITS IN TWO.** Added
   2026-10-26. The release-cut-script item ended **mid-code-span** at *"anchors on \`"*, and its
   remaining **1,577 characters sat on the next line with no list marker.** **`check-backlog-sections`
@@ -428,6 +442,22 @@ recommendations applied to nothing). Reading a recommendation as the
 setting produces a false finding.
 
 ### Token estimates (provisional — revise from the actuals)
+
+**A BRIEF THAT HANDS OVER THE CAUSE, THE DECISION AND THE SHAPE OF THE FIX LANDS NEAR THE FLOOR.**
+Added 2026-10-27 on **four** readings in one day, all 27-43% UNDER band: `cron-leaves-a-trace` 161,185
+(banded 220-290k), `calendar-loop-fix` 162,041 (250-310k), `filters-say-what-they-do` 169,996
+(195-245k), `buttons-sweep-3-medical-rows` 156,879 (190-245k). **Every one had an item that named the
+cause AND the decision AND the shape of the fix**, so there was nothing left to find out. The
+"nothing left to discover" row below is written about schema PRs; **it generalises to bug fixes and
+sweeps.** **Band by what the stream must FIND OUT, never by the size of the surface it touches** —
+a live production bug across three modules with a specified fix is cheaper than a small feature whose
+shape is open.
+
+**AND A HYPOTHESIS KILLED BY READING IS NOT AN INVESTIGATION.** Added 2026-10-27. A stream was given
++40k to "test the `APP_HOST` hypothesis" and **disconfirmed it with `git log` and three file reads**,
+coming in 27% under. **Ask which kind it is before widening: can this be killed by READING, or does it
+need an instrument BUILT?** Same axis as *"reading widely is cheap; building the instrument is not"* —
+it applies to hypotheses as well as to scope.
 
 **AND DO NOT BAND A STREAM FOR A PROOF IT CANNOT RUN.** Added 2026-10-27. A schema stream was
 banded 230–290k with the usual **+30k for permissions proof**, and came in at **139,529 — 40%
@@ -1175,6 +1205,25 @@ belong here.
    a stream just filed for a named-but-unrun production check, and run it.** The same applies to any
    item whose status is a question the main checkout can answer — `--status --env production` settles
    "is this live?" in one line.
+
+6. **VERIFY THE THING THE USER SEES, NOT THE THING THAT ANSWERS — AND ON THIS PROJECT A DEPLOY HAS
+   TWO HALVES.** Added 2026-10-27, the planner's own error. After a production deploy the planner read
+   `https://lannacare.org/ -> 200` and reported the release live. **The Worker answers that whether or
+   not the Pi was rebuilt**, and it had not been: `/api/version` (the Pi) read the OLD version while
+   `/api/releases/current` (the Worker bundle) read the new one. **Users were on the previous build
+   and the release's notes were live to nobody.** A release-manager session caught it and quoted
+   `docs/release-procedure.md` §6: a Worker deploy alone does NOT update what users see.
+   **A 200 from a fallback proves the fallback.** Read the two endpoints against each other, and
+   remember a Pi build must be pinned with `--ref` to the release commit — **the cut-to-deploy window
+   is now routinely long enough for other PRs to land inside it, so `main`'s tip is not what shipped.**
+
+7. **WHEN A USER'S REPORT CONTRADICTS THE DATA, ASK WHAT THEY ARE LOOKING AT BEFORE WIDENING THE
+   INVESTIGATION.** Added 2026-10-27. Lutan reported appointments *"showing as overdue and cancelled -
+   it can't be both"*. Two code readings and a **live production read** all concluded one row cannot be
+   both, and **all three were correct.** The fault was a filter chip whose label promised one thing and
+   whose behaviour did another; he settled it in one sentence once asked what was on his screen.
+   **The reads could not find it because it was not there to find.** A screen can disagree with a
+   correct database, and no amount of database reading closes that gap.
 
 5. **AN INSTRUMENT THAT EXISTS IS NOT AN INSTRUMENT THAT IS RIGHT. READ WHAT A CHECK MATCHES ON, AND
    SAY WHICH DATABASE IT RAN AGAINST, BEFORE YOU QUOTE IT.** Added 2026-10-26, after **four** in one
