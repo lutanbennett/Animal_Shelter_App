@@ -89,6 +89,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Upcoming visits: Show cancelled and Show completed now show only those appointments, and ticking one unticks the other. The Residents list has a Deceased button to find only the residents who have died, and the buttons under Filter now clear any zone you had picked so the list matches what you tapped.",
 ];
 
 /** Newest first. */
