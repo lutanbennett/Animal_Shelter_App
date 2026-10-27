@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → n/a: the record and the handover are steps 8 and 4 of `docs/release-procedure.md`, not backlog items |
 | Branch / worktree | `claude/record-0-40-8` @ `C:\Development\Animal_Shelter_cron-leaves-a-trace` — **a free leftover reused**, which is paperwork rule 2. Branch made with `git checkout -b claude/record-0-40-8 origin/main`, not `git reset --hard`, which the classifier refuses |
 | Dev server | n/a: markdown only; nothing runs |
-| PR | #1010 |
+| PR | #1011 |
 | Tested by / date | Claude Opus 5 (production release manager session) / 2026-10-28 |
 | Carries a migration? | **no** |
 | Tested at SHA | this branch's commit, parent `ad4a7000` |
