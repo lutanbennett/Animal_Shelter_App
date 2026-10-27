@@ -1,121 +1,143 @@
-# Planner handover — edition `402`, 2026-10-27
+# Planner handover — edition `411`, 2026-10-27
 
-**A delta, seventeenth edition in this shape.** Rules are the skill's step 8 — say what **changed**,
+**A delta, eighteenth edition in this shape.** Rules are the skill's step 8 — say what **changed**,
 promote durable facts once, cite `.plan-day.md` rather than reproducing it.
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`** — if they
 disagree with this, they are right and this is stale. **Read first:** `CLAUDE.md` → the skill →
-`.plan-day.md` → this. **The next slug is `411`.**
+`.plan-day.md` → this. **The next slug is `420`.**
 
 > **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
 > release state, candidates. **Re-read every time, never diffed.**
 
 ---
 
-## WHAT `393` ASKED FOR, and what each warning actually did
+## WHAT `402` ASKED FOR, and what each warning actually did
 
-- **"A prior pass has an expiry date." FIRED, and then was found to be HALF the lesson.** It is true,
-  and the skill now carries it. What `393` did not say is that **a prior pass is only one of the
-  things a brief can be over-confident about** — see the next section, which is the whole of this
-  edition.
-- **"Band the harnesses that are RED, not the ones the item names." FIRED once, then went untested** —
-  the harness sweep was deliberately not scheduled again (it would have collided with the doctors
-  stream in `scripts/`). Carry it.
-- **"Do not band a stream for a proof it cannot run." FIRED, and its mirror image appeared.** The
-  doctors stream could not read production and said so plainly; **the planner ran the check and
-  unblocked it in one command.** That is the rule working. **But note the inversion:** the stream had
-  to *build* the instrument before the planner could run it, so the sequence is **stream builds,
-  planner runs** — neither half alone was enough.
-- **"Check PR state with `gh`, not the session list." FIRED THREE MORE TIMES**, once per batch.
-  `list_sessions` reported merged PRs as **OPEN** every single time. **Always a false OPEN, never a
-  false MERGED.** Eight editions of evidence; stop re-deriving it.
-- **The `src/lib/releases.ts` collision rule is TESTED AT LAST, after five rounds untested.** Four
-  streams added four notes across two batches and **every line survived.** **It can stop being
-  carried as a hypothesis.** One cosmetic residue for the release: three notes are bare strings and
-  one uses the `{ text: … }` object shape.
-- **Band discipline: eighteen streams measured, fifteen inside or under, two over, one not a
-  reading.** Both overruns were planner band errors, not stream overruns.
+- **"Band the harnesses that are RED, not the ones the item names." FIRED, and harder than it knew.**
+  Batch 6 ran all 196 and found **76 red, 105 green, 15 timed out**. The item's "30" was not stale by
+  five; it was stale by **forty-six**. **Running them IS the scope decision. Settled — stop carrying
+  it as advice and treat it as the method.**
+- **"Do not band a stream for a proof it cannot run." FIRED.** `calendar-loop-fix` was not charged
+  for the production checks, and the planner ran them. **The same shape then fired twice more:** the
+  planner ran the restore, and the **classifier blocked the planner's own production migration
+  apply** — so **the planner is not the last resort either.** Add to the step-7 question: ask who can
+  run the proof, and know the answer may be Lutan even when it looks like the planner.
+- **"A prior pass has an expiry date." FIRED three times**, and the two cheap commands caught every
+  one. No change needed.
+- **"Check PR state with `gh`, not the session list." HELD, fourth round.** No false MERGED again.
+- **The `src/lib/releases.ts` collision rule: tested a second time and held.** Both batch-2 notes
+  survived into `0.40.8`. **Stop carrying it at all.**
+- **Band discipline: twelve streams, twelve measured, all `claude-sonnet-5-5` / `low`.** Figures and
+  verdicts are in `.plan-day.md`; the three corrections worth knowing are below.
 
-## THE ROUND'S LESSON: THREE BRIEFS, THREE DISAGREEMENTS, AND THE STREAM WAS RIGHT EVERY TIME
+## THE ROUND'S LESSON: AN ITEM'S *CONCLUSION* AGES LIKE A COUNT OR A PRIOR PASS
 
-**Promoted into the skill** (step 7, beside "write the planner's evidence in"); here because the
-pattern across all three is the thing to carry, not the three incidents.
+**Promoted into the skill** (step 3, beside "an item's head is its current statement"). Here because
+it cost four days and is the most expensive thing this edition records.
 
-Every one had the same shape: **the brief was more certain than the item it came from, or than the
-evidence supported.**
+The cron item said *"the fix is a Worker deploy or the Cloudflare trigger, and the repo is innocent.
+Nothing to build; one thing to check."* **Every clause was wrong**, and it was written while only one
+environment had been read. Four days went at a Cloudflare dashboard.
 
-1. **A card re-pass** was told its three cards had "never been driven". The planner's `grep` over
-   `docs/decisions/` missed the whole `card-report-*` family — seven streams, 27 of 32 cards.
-2. **The manual fix** was told to remove a by-name fallback. It had been deleted the previous day,
-   **and the item's own HEAD said so**; the planner had quoted the item's *tail*, a paragraph headed
-   *"what the manual does today (read 2026-10-25)"*. **An item's head is its current statement; its
-   tail is history, and a dated state description ages in place.**
-3. **The doctors gap** is the one that should sting. **The item was careful and correct** — it said
-   the app uses *"the ordinary signed-in client"* and that the fault was **"NOT ESTABLISHED ON THE
-   LIVE DATABASE … so BUILD THE CHECK FIRST."** The brief rendered the client as *"the service
-   role"* and **converted the open question into a verified fact**, citing a grep that could never
-   have matched: the policies were created under the table's **old name**, and Postgres carries
-   policy names through a rename. The stream built the check, read `pg_policies`, and proved the
-   opposite — a doctor *can* be renamed and deleted, on dev and production.
+**What the planner did right, and it is the transferable part:** the brief did not assert the
+opposite. It said the item's conclusions were **NOT ESTABLISHED, in those words**, listed four
+mechanisms that produce the same symptom, and named what the existing instrument structurally could
+not see — the row it reads is written by the Next route, not the Worker, so it cannot tell a dead
+trigger from a crashing one. **The stream then built the missing instrument instead of arguing**, and
+one unconditional heartbeat row settled it in a single quarter-hour cycle.
 
-**So: when an item says NOT ESTABLISHED, carry that through verbatim with the command it names. A
-grep that finds nothing is not proof of absence. And state evidence AS evidence, with its source** —
-all three were caught *because* the briefs said where the claim came from, which is the argument for
-writing the planner's evidence in rather than against it.
+**Cause `942ea49f` (2026-10-23): `next` 16.3.8 → 16.4.2 added `server/preview-props.json`, and
+adapter 1.20.6 throws on it. Fix `244a1731` (#1005).** Each environment died on its last cycle before
+its own deploy. **The Cloudflare trigger was never at fault — exonerated by observation at the 16:45
+fire, on an unchanged configuration with only the adapter changed. Date that to the fire, not to the
+reasoning.**
 
-**Lutan caught all three, each in one line.** That is three round trips through him that a minute of
-reading would have saved, and it is the cost to drive down next round.
+**So: when an item states a conclusion, ask when it was written and what had been read by then.
+"Nothing to build" is a finding with a clock on it.**
 
-## WHAT THE STREAMS DID BETTER THAN THE BRIEFS ASKED
+## THE THREE BAND CORRECTIONS, and I got one of them wrong twice before settling
 
-Worth recording because it is the counterweight, and because two of these are now habits to keep.
+1. **A BRIEF THAT HANDS OVER THE CAUSE, THE DECISION AND THE SHAPE OF THE FIX LANDS NEAR THE FLOOR —
+   four readings, 27–43% under band.** `cron-leaves-a-trace` 161,185 (banded 220–270k),
+   `calendar-loop-fix` 162,041 (250–310k), `filters-say-what-they-do` 169,996 (195–245k),
+   `buttons-sweep-3-medical-rows` 156,879 (190–245k). **Every one had an item naming the cause and the
+   decided fix.** The skill's "nothing left to discover" row is written about schema PRs; **it
+   generalises to bug fixes and sweeps.** Band by what the stream must FIND OUT, never by the size of
+   the surface. **In the skill now.**
+2. **A HYPOTHESIS KILLED BY READING IS NOT AN INVESTIGATION.** I added ~40k for "test the `APP_HOST`
+   hypothesis" and it died to `git log` and three file reads. **Ask which kind it is before widening:
+   can it be disconfirmed by reading, or must something be built?** The same axis the skill already
+   has for scope. **In the skill now.**
+3. **The walkthrough rate — I REVISED IT TWICE IN ONE DAY AND WAS WRONG BOTH TIMES.** `402` said a
+   reconciliation pass costs ~11k a step. I argued that was wrong and banded at 6.3k;
+   `card-drive-content` came in at **10,297** with no adjudication, killing my explanation. I
+   re-banded at ~10k; `card-drive-contacts` came in at **7,813**. **Current best, nine readings: a
+   re-pass over an already-driven card ~6k a step, a FIRST pass ~8–10k, and adjudication jobs the
+   brief adds push it to ~11k.** The spread inside first passes is incidental discoveries, not the
+   pass itself.
+   **DELIBERATELY NOT PROMOTED INTO THE SKILL. It has moved three times in one day and its author was
+   confident each time. Leave it here until a fourth reading agrees** — that restraint is the finding,
+   not the number.
 
-- **Both button-sweep guards were narrow and BOTH SAID SO.** *"It cannot detect a new ungated
-  control; there is no render harness in the repo."* **Twice, unprompted, the honest answer instead
-  of a check that matches nothing and reports success** — the fault that cost a merged migration on
-  2026-10-26. Keep asking for guards; keep accepting "narrow, and here is why".
-- **A residue list beat the planner's own scoping.** Slice 2 reported that the clinic-visit,
-  prescription, weight and diet **row** controls live on their own pages, outside
-  `src/app/residents/` — **so a brief scoped by that folder could never have reached them.** Scope
-  the next slice **by control family, not by folder.**
-- **A stream's instrument outlived its item.** The doctors stream's `table-policy-commands` check
-  names every table where no live policy can answer for a command. Run against production it found a
-  substantial list. **Filed as its own item**, with the warning that RLS denies by default, so a
-  service-role-only table legitimately has no policy and **adding policies wholesale would be a
-  widening.**
+## WHAT I GOT WRONG, and a peer caught it
 
-## BAND CORRECTIONS, both mine
+**I declared a production deploy healthy on a check that could not see the failure.** I read
+`https://lannacare.org/ → 200` and concluded `0.40.8` was live. **The Worker answers that whether or
+not the Pi was rebuilt**, and it had not been: `/api/version` read `0.40.7` while
+`/api/releases/current` read `0.40.8`. Users were on the old build and the release's two notes were
+live to nobody. The release-manager session found it and quoted `docs/release-procedure.md` §6 at me,
+correctly.
 
-- **The walkthrough rate SPLITS, and I corrected it in the wrong direction first.** Five first passes
-  gave `~6.3k` a step; I wrote that into the plan, then banded a **reconciliation** pass on it and ran
-  **17% over** at 11,223 a step. **A first pass is `~95k + ~6.3k x steps`; a second pass over an
-  already-driven card is `~95k + ~11k x steps`**, because the work is confirming or contradicting
-  every existing row. **And the floor has moved to ~95k from ~88k.** Both now in the skill.
-- **A FOURTH way a figure is not a band reading: the stream was rescoped mid-session.** Two of them
-  this round, in opposite directions — one grew, one shrank. **If you sent a stream a correction, its
-  number is not a reading.** In the skill beside dead process, blocked stream and reset window.
+**The rule, and it is the same shape as the instrument rules already in step 7: verify the thing the
+USER sees, not the thing that answers.** A 200 from a fallback proves the fallback. **A deploy on this
+project has two halves — the Worker and the Pi — so "deployed" is never one endpoint.**
+
+**I caught the mirror image in the same exchange**, which is why this is not a story about one session
+being careless. That peer told me the heartbeat still read `never` and the cron was unproven; **its
+reading was at 16:44:43Z and 16:45:05Z, and the trigger fired at 16:45:09.** Right principle, stale
+measurement. **Two errors of measurement discipline, in opposite directions, inside ten minutes.**
+Re-read before relying on it, and say the clock.
+
+**From the same exchange, and worth more than either correction: the cut-to-deploy window is now
+routinely long enough for other PRs to land inside it.** The deployed Worker was built from
+`429229cd`; `#1006` and `#1009` merged minutes after. **`main`'s tip is not what shipped, so a Pi
+build must be pinned with `--ref` to the release commit.** The release manager pinned it; nobody had
+written that down.
+
+## THE OTHER THING THAT ONLY A PERSON COULD ANSWER
+
+Lutan reported appointments *"showing as overdue and cancelled — it can't be both"*. Two code readings
+and a **live production read** all said one row cannot be both. **All three were correct.** The fault
+was a filter chip whose label promised one thing and whose behaviour did another, and he settled it in
+one sentence when asked what was on his screen.
+
+**So: when a user's report contradicts the data, ask what they are looking at before widening the
+investigation.** Three reads could not find it because it was not there to find. **In the skill now,
+beside the instrument rules.**
 
 ## STILL CARRIED, unchanged
 
 - **A release's cut and record PRs, and the two handover PRs, merge on green CI without asking.**
-- **Model, effort and which allowance to spend are his. Never block paid usage** — report, forecast
-  in one line, then work. He was offered a smaller split six times today and took the full batch
-  every time.
-- **One item is ONE LINE in `docs/backlog.md`**, and check your own amendment script for `\n` before
-  running it.
-- **The planner is the only role that can read production.** A worktree cannot, correctly.
-- **A measurement has a timestamp; a fact does not.**
+- **Model, effort and which allowance to spend are his. Never block paid usage.**
+- **One item is ONE LINE in `docs/backlog.md`**, and check your own amendment script for `\n` first.
+- **A measurement has a timestamp; a fact does not.** It cost both sessions today.
+- **`check-who-does-what` and `check-menu-coverage` are red ON PURPOSE.**
 
 ## NEXT ROUND POINTS AT
 
-1. **THE RELEASE IS THE OLDEST THING ON THE BOARD AND IT NOW GATES HIM.** Production is **four**
-   migrations behind at the time of writing — re-read it — and **he cannot assign the translations
-   card until that lands.** Two merged features sit against schema production does not have.
-2. **The production cron, still dead.** His, diagnosed, one hypothesis left.
-3. **The third buttons slice**, rescoped above and bigger than it looked. Scope by control family.
-4. **The new policy-triage item** — bounded, one batch of tables per stream, and **not** to be
-   "fixed" by adding policies.
-5. **The harness sweep is still owed a batch**, deliberately deferred twice. Its red count is **not
-   established**; run them as step zero.
-6. **His card-assignment rebuild** is where `Manage medical` and `Assistant` being held by no live
-   role belong.
+1. **THE PI IS NOT DEPLOYED AND IT IS LUTAN'S.** The classifier blocked both the release manager's
+   `ssh` and the planner's migration apply as `[Production Deploy]`. **Until he runs it, production
+   users are on the previous release.** Read `/api/version` against `/api/releases/current` before
+   assuming otherwise — re-read both, never carry this line forward.
+2. **`test.lannacare.org` still carries the broken adapter**, so its cron is still dead and **test is
+   not a valid pre-production check for the cron fix** until it is deployed.
+3. **The red harness count is a fresh reading in batch 6's decision file, with its date.** The
+   remainder are mostly **investigations rather than repairs**, so price them higher and expect fewer
+   per stream. The brief's "do fewer and say so" escape **fired and was correct.**
+4. **`policy-triage-pi-updates` was dropped from batch 3 by Lutan's own choice** and took the board's
+   only quick win with it. **The next plan has no quick win unless one is filed.**
+5. **Cards remain undriven and the rate above is still unsettled** — count them from the repo.
+6. **The four deleted calendar entries are deliberately not restored** (his "records only"), and the
+   duplicates *fix* is unscheduled: `visit-duplicates` found no pairs on production, so its cause is
+   **not established** and the next step is his word, not more code.
