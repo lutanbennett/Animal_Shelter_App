@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { ChannelLink } from "@/lib/site/channels";
 import type { SitePageSlug } from "@/lib/site/pages";
-import { SiteBodyView } from "./SiteBody";
+import { SiteBodyView } from "./SiteBodyView";
 
 /**
  * The part of a standalone site page between the header and the footer: the

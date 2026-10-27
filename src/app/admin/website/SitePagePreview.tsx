@@ -38,19 +38,22 @@ export function SitePagePreview({
   const { t: adminT } = useI18n();
   const p = adminT.admin.website.pages;
   const [lang, setLang] = useState<"en" | "th">("en");
+  const [failed, setFailed] = useState<string | null>(null);
   const [dicts, setDicts] = useState<{ en?: Dictionary; th?: Dictionary }>({});
 
   useEffect(() => {
     let live = true;
     const load = lang === "th" ? import("@/lib/i18n/dictionaries/th") : import("@/lib/i18n/dictionaries/en");
-    load.then((m) => live && setDicts((d) => ({ ...d, [lang]: m.default as Dictionary })));
+    load
+      .then((m) => live && setDicts((d) => ({ ...d, [lang]: m.default as Dictionary })))
+      .catch((e) => live && setFailed(String(e)));
     return () => {
       live = false;
     };
   }, [lang]);
 
   const t = dicts[lang];
-  if (!t) return <p className="text-sm text-muted">{p.previewLoading}</p>;
+  if (!t) return <p className="text-sm text-muted">{failed ?? p.previewLoading}</p>;
 
   const starter = sitePageStarter(t, slug);
   const thai = lang === "th" ? context.thai : null;
