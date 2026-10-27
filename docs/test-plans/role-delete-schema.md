@@ -149,7 +149,7 @@ Automated checks by: Claude  Date: 2026-10-27
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: someone looks at Settings → Security
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty, so only the person who looks may tick it
 
 Manual verification by: pending: Settings → Security role picker and Restore login
 
