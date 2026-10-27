@@ -1,4 +1,4 @@
-# The PR `audit` job runs only when the package list changes; every release audits
+# The PR `audit` job was meant to run only when the package list changes (as built it never runs); every release audits
 
 2026-10-25. Lutan asked: *"If the audit check always fails in a CI and is ignored is it actually adding value?"*
 and *"Should we consider the Audit advisory goes on each production release not on every build — what would the
@@ -6,7 +6,13 @@ risk be in doing that"*. He chose this version: *"yes put that in the backlog pl
 
 ## What changed
 
-1. **`ci.yml`:** the PR `audit` job runs only when the diff touches `package.json` or `package-lock.json`.
+1. **`ci.yml`:** the PR `audit` job was meant to run only when the diff touches `package.json` or `package-lock.json`.
+   **CORRECTED 2026-10-27: as built, it never runs on any PR.** Its `if` (`ci.yml:248`) needs the `changes` job to report
+   `deps-changed` as `true`. The `changes` job passes that value on (`ci.yml:44`), but `check-docs-only.mjs` only prints it
+   (`:97`) and writes just `docs-only` to the job output (`:107–108`), so the value is always empty and the test is never met.
+   That is why a release cut, which does change `package.json`, still showed `audit` as skipped on 0.40.3 to 0.40.6.
+   Nothing was unguarded: the release step below is the check, and it has run on every release. The job was left alone on
+   purpose; whether to write the missing value is Lutan's call. The rest of this item describes the intent.
    `check-docs-only.mjs` (already classifying the diff against the merge base) gained a `deps-changed` output
    and the `changes` job exposes it; `audit` is gated on it instead of on "not documents-only". An unreadable diff
    counts as changed, so the failure direction is "audit anyway". A PR that skips it shows the job as *skipped*.
