@@ -214,7 +214,7 @@ export default async function WebsitePage({
           panels={{
             home: (
               <>
-                <HeroPhoto heroDriveFileId={content.hero_drive_file_id} />
+                <HeroPhoto heroDriveFileId={content.hero_drive_file_id} canChange={canGallery} />
                 <FeaturedResident
                   featuredResidentId={content.featured_resident_id}
                   residents={publicResidents}
@@ -282,7 +282,15 @@ export default async function WebsitePage({
               </>
             ),
             donate: <DonationChannels rows={channelsResult.data ?? []} />,
-            gallery: <GalleryPhotos photos={photosResult.data ?? []} canEdit={canGallery} />,
+            gallery: (
+              <>
+                {/* A photo-strip login has no Home tab, so the hero control sits here for it. */}
+                {!canContent && canGallery && (
+                  <HeroPhoto heroDriveFileId={content.hero_drive_file_id} canChange />
+                )}
+                <GalleryPhotos photos={photosResult.data ?? []} canEdit={canGallery} />
+              </>
+            ),
             projects: <PublishedProjects projects={publishedResult.data ?? []} />,
           }}
         />

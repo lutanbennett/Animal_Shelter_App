@@ -13,8 +13,11 @@ import { removeHeroPhoto, uploadHeroPhoto } from "./actions";
 
 export function HeroPhoto({
   heroDriveFileId,
+  canChange = false,
 }: {
   heroDriveFileId: string | null;
+  /** can(perms, "website.gallery"), the activity uploadHeroPhoto / removeHeroPhoto ask. Off unless the caller says so. */
+  canChange?: boolean;
 }) {
   const { t } = useI18n();
   const confirm = useConfirm();
@@ -76,6 +79,7 @@ export function HeroPhoto({
         )}
       </div>
 
+      {canChange && (
       <div className="flex items-center gap-3">
         <ActionButton icon={ACTION_ICONS.uploadImage} disabled={isPending} onClick={() => inputRef.current?.click()}>
           {isPending && <PendingPuppy />}
@@ -97,6 +101,7 @@ export function HeroPhoto({
           }}
         />
       </div>
+      )}
 
       {message && (
         <p
