@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -9,9 +8,10 @@ import { defaultShareImage, shareImageMetadata } from "@/lib/site/share";
 import { bodyLead } from "@/lib/site/body";
 import { preferredChannels } from "@/lib/site/channels";
 import { loadSiteContent, pairedText } from "@/lib/site/content";
+import { sitePageStarter } from "@/lib/site/starter";
 import { loadSitePage, SITE_PAGE_PATHS, sitePageText, type SitePageSlug } from "@/lib/site/pages";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
-import { SiteBody } from "@/components/SiteBody";
+import { SitePageArticle } from "@/components/SitePageArticle";
 import { PublicPhoto } from "@/components/PublicPhoto";
 import { PublicHeader, type PublicSection } from "./PublicHeader";
 import { PublicFooter } from "./PublicFooter";
@@ -32,18 +32,7 @@ import { requirePageVisible } from "@/lib/public-page-access";
  * button beside email and LINE, and the message already started.
  */
 
-/**
- * The text a page shows while its row has no body yet. /adopt/international
- * and /friends/join have one: each went live before the Director wrote hers,
- * so it carries a generic description instead of "coming soon"
- * (docs/decisions.md, 2026-09-27). The other pages keep "coming soon".
- */
-export function sitePageStarter(t: Dictionary, slug: SitePageSlug) {
-  if (slug === "international-adoption") return t.sitePages.internationalStarter;
-  if (slug === "shelter-friends-join") return t.sitePages.friendsJoinStarter;
-  if (slug === "about") return t.sitePages.aboutStarter;
-  return null;
-}
+export { sitePageStarter };
 
 function pageText(t: Dictionary, slug: SitePageSlug, text: { title: string; body: string } | null) {
   const starter = sitePageStarter(t, slug);
@@ -135,10 +124,6 @@ export async function SitePageView({
   // (the same honesty as the Release notes and Manual, docs/decisions/
   // 2026-10-04-staff-wording-and-thai.md), instead of English that looks like a mistake.
   const englishOnly = !!raw?.bodyIsOriginal;
-  // Split at the first blank line: the intro paragraph, then everything else.
-  const bodyParts = (text.body ?? "").replace(/\r\n/g, "\n").trim().split(/\n\s*\n/);
-  const intro = bodyParts[0] ?? "";
-  const rest = bodyParts.slice(1).join("\n\n");
   // A business asking to join gets the message already started, where the
   // channel can take one (email, LINE, WhatsApp). The channels come in the
   // shelter's order, and the card offers the first three.
@@ -171,115 +156,18 @@ export async function SitePageView({
         })()}
       />
 
-      <article className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10 sm:px-12">
-        {photoNode ? (
-          <div className="flex flex-col-reverse items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl xl:text-[60px]">
-              {text.title || t.header.appName}
-            </h1>
-            <div className="w-56 shrink-0 self-center sm:w-64">{photoNode}</div>
-          </div>
-        ) : (
-          <h1 className="font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl xl:text-[60px]">
-            {text.title || t.header.appName}
-          </h1>
-        )}
-        {englishOnly && (
-          <p role="note" className="rounded-lg border border-border bg-surface p-4 text-sm text-muted">
-            {t.sitePages.englishOnly}
-          </p>
-        )}
-        {text.body ? (
-          afterIntro ? (
-            <>
-              <div data-reveal>
-                <SiteBody body={intro} size="lg" headingLevel="h2" />
-              </div>
-              {afterIntro}
-              {rest && (
-                <div data-reveal>
-                  <SiteBody body={rest} size="lg" headingLevel="h2" />
-                </div>
-              )}
-            </>
-          ) : (
-            <div data-reveal>
-              <SiteBody body={text.body} size="lg" headingLevel="h2" />
-            </div>
-          )
-        ) : (
-          <>
-            <p className="text-sm text-muted">{t.sitePages.comingSoon}</p>
-            {afterIntro}
-          </>
-        )}
-
-        {channels.length > 0 && (
-          <div data-reveal className="mt-4 flex flex-col gap-3 rounded-[20px] border border-border bg-surface p-6 sm:p-8">
-            <h2 className="text-lg font-semibold text-foreground">
-              {t.sitePages.getInTouch}
-            </h2>
-            <p className="text-sm text-muted">
-              {join?.hint ?? t.contactChannels.getInTouchHint(channelNames)}
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {channels.map((c, i) => (
-                <a
-                  key={c.channel}
-                  href={c.href}
-                  {...(c.external ? { target: "_blank", rel: "noreferrer" } : {})}
-                  className={
-                    i === 0
-                      ? "spring-lift inline-flex min-h-11 items-center rounded bg-primary px-5 text-sm font-semibold text-primary-foreground hover:bg-primary-hover"
-                      : "spring-lift inline-flex min-h-11 items-center rounded border border-border px-5 text-sm font-semibold text-foreground hover:bg-surface-hover"
-                  }
-                >
-                  {t.contactChannels.us[c.channel](c.value)}
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {showFriends && (
-          <div data-reveal className="flex flex-col gap-2 rounded-[20px] border border-border bg-surface p-6 sm:p-8">
-            <h2 className="text-lg font-semibold text-foreground">
-              {t.shelterFriends.donateMention.heading}
-            </h2>
-            <p className="text-sm text-muted">{t.shelterFriends.donateMention.body}</p>
-            <div className="flex flex-wrap gap-x-6 gap-y-2">
-              <Link href="/friends" className="inline-flex min-h-11 items-center md:min-h-9 text-sm font-semibold text-primary hover:underline">
-                {t.shelterFriends.donateMention.link} &rarr;
-              </Link>
-              {/* A business reading this can be one of them. */}
-              <Link href="/friends/join" className="inline-flex min-h-11 items-center md:min-h-9 text-sm font-semibold text-primary hover:underline">
-                {t.shelterFriends.donateMention.join} &rarr;
-              </Link>
-            </div>
-          </div>
-        )}
-
-        {slug !== "donate" && (
-          <p className="text-sm text-muted">
-            {t.sitePages.alsoSee}{" "}
-            {join && (
-              <>
-                <Link href="/friends" className="inline-flex min-h-11 items-center md:min-h-9 font-medium text-primary hover:underline">
-                  {t.shelterFriends.navLabel}
-                </Link>
-                {" · "}
-              </>
-            )}
-            <Link href="/adopt" className="inline-flex min-h-11 items-center md:min-h-9 font-medium text-primary hover:underline">
-              {t.adopt.adoptNav}
-            </Link>
-            {" · "}
-            <Link href="/our-work" className="inline-flex min-h-11 items-center md:min-h-9 font-medium text-primary hover:underline">
-              {t.adopt.ourWorkNav}
-            </Link>
-          </p>
-        )}
-      </article>
+      <SitePageArticle
+        t={t}
+        slug={slug}
+        title={text.title}
+        body={text.body}
+        englishOnly={englishOnly}
+        photoNode={photoNode}
+        channels={channels}
+        channelNames={channelNames}
+        showFriends={showFriends}
+        afterIntro={afterIntro}
+      />
 
       <PublicFooter content={content} />
     </main>
