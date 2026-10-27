@@ -11,7 +11,7 @@ import { CreateUserForm } from "./CreateUserForm";
 import { UsersTable, type ExtraRole, type SecurityUser } from "./UsersTable";
 import { CoversEnding, type EndingCover } from "./CoversEnding";
 import { todayIso, addDaysIso } from "@/lib/format";
-import { givableRoles, loadRoleOptions } from "./role-options";
+import { loadRoleOptions } from "./role-options";
 
 /** How far ahead a cover that is about to end is listed. */
 const COVER_WARNING_DAYS = 7;
@@ -180,8 +180,8 @@ export default async function SecurityPage() {
         </p>
       )}
 
-      <AccessRequests requests={requests} roles={givableRoles(roleOptionsResult.roles)} />
-      <CreateUserForm roles={givableRoles(roleOptionsResult.roles)} />
+      <AccessRequests requests={requests} roles={roleOptionsResult.roles} />
+      <CreateUserForm roles={roleOptionsResult.roles} />
       <CoversEnding covers={endingCovers} roles={roleOptionsResult.roles} />
       <UsersTable
         users={users}

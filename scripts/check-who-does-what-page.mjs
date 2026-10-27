@@ -100,7 +100,7 @@ async function login(roleKey) {
 
 try {
   // The truth: live roles and their cells, read here, not through the page.
-  const { data: roles } = await service.from("roles").select("id, key, name").is("archived_at", null).neq("key", "admin").neq("key", "public_viewer");
+  const { data: roles } = await service.from("roles").select("id, key, name").neq("key", "admin").neq("key", "public_viewer");
   const { data: cells } = await service.from("role_permissions").select("role_id, activity, level");
   const keyOf = new Map(roles.map((r) => [r.id, r.key]));
   const cell = new Map(cells.filter((c) => keyOf.has(c.role_id)).map((c) => [`${keyOf.get(c.role_id)}|${c.activity}`, c.level]));

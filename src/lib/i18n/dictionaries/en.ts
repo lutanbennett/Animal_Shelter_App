@@ -1745,7 +1745,6 @@ const en = {
         passwordTooShort: "Password must be at least 12 characters.",
         selectValidRole: "Select a valid role.",
         invalidRole: "Invalid role.",
-        retiredRole: "Staff is no longer a role. Choose another role for this login, then Restore.",
         cantChangeOwnRole: "You can't change your own role.",
         extraRoleNotAdmin: "Admin can't be a second role. Give Admin as the person's main role instead.",
         extraRoleNeedsMain: "This person has no main role to add to.",

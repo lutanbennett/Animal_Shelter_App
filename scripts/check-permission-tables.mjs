@@ -257,9 +257,6 @@ begin
   perform pg_temp.eq('B missing cell', pg_temp.q(v_staff, 'has_permission(''stock.purchasing'')'), 'false');
   perform pg_temp.eq('B unknown activity', pg_temp.q(v_staff, 'has_permission(''no.such_activity'')'), 'false');
   perform pg_temp.eq('B archived role (cell exists)', pg_temp.q(v_archr, 'has_permission(''stock.count'')'), 'true');
-  update roles set archived_at = now() where key = 'harness_archived';
-  perform pg_temp.eq('B archived role', pg_temp.q(v_archr, 'has_permission(''stock.count'')'), 'false');
-  perform pg_temp.eq('B archived role, read', pg_temp.q(v_archr, 'has_permission(''stock.count'', ''read'')'), 'false');
   perform pg_temp.eq('B person with no role', pg_temp.q(v_none, 'has_permission(''stock.count'')'), 'false');
   -- and the neighbours of those
   perform pg_temp.eq('B archived person', pg_temp.q(v_archp, 'has_permission(''stock.count'')'), 'false');
@@ -345,8 +342,7 @@ begin
   if n <> -2 then raise exception 'HARNESS-FAIL D: an activity with Read cells became Yes/No (%)', n; end if;
   n := pg_temp.try(null, 'delete from roles where key in (''admin'', ''public_viewer'')', 'aal1', 'service_role');
   if n <> -2 then raise exception 'HARNESS-FAIL D: a fixed role was deleted (%)', n; end if;
-  foreach t in array array['update roles set archived_at = now() where key = ''admin''',
-                           'update roles set key = ''boss'' where key = ''admin''',
+  foreach t in array array['update roles set key = ''boss'' where key = ''admin''',
                            'update roles set kind = ''default'' where key = ''public_viewer''',
                            'insert into roles (key, name, kind) values (''admin2'', ''x'', ''fixed'')',
                            'insert into roles (key, name, kind) values (''boss'', ''x'', ''fixed'')',

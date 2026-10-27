@@ -74,23 +74,20 @@ for (const key of CARD_KEYS) {
   else ok(`card ${key}: opens ${CARDS[key].opens}`);
 }
 
-const roles = await sql(`select id, key, name, kind, home_path from roles where archived_at is null order by key`);
+const roles = await sql(`select id, key, name, kind, home_path from roles order by key`);
 const cards = await sql(`select r.key, c.card, c.position from role_cards c join roles r on r.id = c.role_id order by r.key, c.position`);
 const cells = await sql(`select r.key, p.activity, p.level from role_permissions p join roles r on r.id = p.role_id order by r.key, p.activity`);
 
 // 6: who approves photos. The Who does what screen (approverNames) must give the very answer the database guard gives
-//    (0222): a live, non-Admin role holding photos.approve. A retired role (archived_at set) holding it must NOT be
-//    listed, so the + on Add resident photos is disabled for exactly the states the database would refuse.
+//    (0222, 0272): a non-Admin role holding photos.approve, so the + on Add resident photos is disabled for exactly the states
+//    the database would refuse.
 {
-  const { approverNames, needsApprover, APPROVE_ACTIVITY } = await imp("src/lib/permissions/approvers.ts");
-  const holders = await sql(`select r.key, r.name, (r.archived_at is not null) as archived, p.activity, p.level from role_permissions p join roles r on r.id = p.role_id where p.activity = 'photos.approve'`);
-  const db = await sql(`select name from roles r where r.archived_at is null and r.key <> 'admin' and exists (select 1 from role_permissions p where p.role_id = r.id and p.activity = 'photos.approve' and p.level >= 1) order by r.name`);
-  const screen = approverNames(holders.map((h) => ({ roleKey: h.key, roleName: h.name, archived: h.archived, activity: h.activity, level: h.level })));
+  const { approverNames, needsApprover } = await imp("src/lib/permissions/approvers.ts");
+  const holders = await sql(`select r.key, r.name, p.activity, p.level from role_permissions p join roles r on r.id = p.role_id where p.activity = 'photos.approve'`);
+  const db = await sql(`select name from roles r where r.key <> 'admin' and exists (select 1 from role_permissions p where p.role_id = r.id and p.activity = 'photos.approve' and p.level >= 1) order by r.name`);
+  const screen = approverNames(holders.map((h) => ({ roleKey: h.key, roleName: h.name, activity: h.activity, level: h.level })));
   if (JSON.stringify([...screen].sort()) !== JSON.stringify(db.map((x) => x.name).sort())) fail(`approvers: the screen says [${screen}] but the database guard counts [${db.map((x) => x.name)}]`);
   else ok(`approvers: screen and database agree (${screen.length ? screen.join(", ") : "none"})`);
-  const retired = holders.filter((h) => h.archived);
-  if (retired.some((h) => screen.includes(h.name))) fail("approvers: a retired role is listed as an approver");
-  else ok(`approvers: ${retired.length} retired role(s) hold ${APPROVE_ACTIVITY} and are not listed`);
   if (!needsApprover("add_photos") || needsApprover("approve_photos")) fail("approvers: only Add resident photos should wait on an approver");
   else ok("approvers: Add resident photos waits on an approver; Approve photos does not");
   // the card grants exactly three cells

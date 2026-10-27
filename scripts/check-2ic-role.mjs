@@ -180,7 +180,7 @@ begin
 end $cmp$;
 
 do $role$ begin
-  insert into res select 'role', 'row', 0 where exists (select 1 from roles where key = 'second_in_command' and kind = 'custom' and name_th is not null and archived_at is null);
+  insert into res select 'role', 'row', 0 where exists (select 1 from roles where key = 'second_in_command' and kind = 'custom' and name_th is not null);
   insert into res select 'role', 'cell:' || rp.activity || ':' || rp.level, 0 from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'second_in_command';
   insert into res select 'role', 'card:' || rc.card, 0 from role_cards rc join roles r on r.id = rc.role_id where r.key = 'second_in_command';
   insert into res select 'role', 'diet-forecast-has-no-cost', 0 where not exists (select 1 from pg_proc where proname = 'stock_diet_forecast' and pg_get_function_result(oid) ilike '%cost%');

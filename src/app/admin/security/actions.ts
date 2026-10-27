@@ -103,7 +103,7 @@ type GivableRole = { id: string; key: string; name: string; nameTh: string | nul
  * The role a picker named, if a login may be given it: a live row of `roles`. Read from the
  * database, not a list in the code (this replaced VALID_ROLES), so a configured role (2IC, Head of Medical,
  * Head of Maintenance) can be given the day it exists. Public viewer stays givable although it does not open
- * the app (0085). Staff is not: retired by 0173, which also makes the database refuse it to a live login.
+ * the app (0085). A role that was deleted is simply not found.
  */
 async function givableRole(key: string | null): Promise<GivableRole | null> {
   if (!key) return null;
@@ -111,7 +111,6 @@ async function givableRole(key: string | null): Promise<GivableRole | null> {
     .from("roles")
     .select("id, key, name, name_th")
     .eq("key", key)
-    .is("archived_at", null)
     .maybeSingle();
   if (!data) return null;
   return {
@@ -580,15 +579,6 @@ export async function restoreUser(userId: string): Promise<ActionResult> {
     if (denied) return denied;
 
     const admin = createAdminClient();
-    // A login that held a retired role (Staff, 0173) is given another one first: the database refuses it
-    // back otherwise, and this says what to do instead of "something went wrong".
-    const { data: held } = await admin
-      .from("user_roles")
-      .select("roles(archived_at)")
-      .eq("user_id", userId)
-      .maybeSingle<{ roles: { archived_at: string | null } | null }>();
-    if (held?.roles?.archived_at) return refuse(t.admin.security.errors.retiredRole);
-
     const { error } = await admin
       .from("user_roles")
       .update({ archived_at: null })

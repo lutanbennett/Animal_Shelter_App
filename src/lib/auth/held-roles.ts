@@ -20,7 +20,7 @@ export async function loadHeldRoleKeys(userIds: readonly string[]): Promise<Map<
   const today = todayIso();
   const { data, error } = await createAdminClient()
     .from("user_roles")
-    .select("user_id, is_main, starts_on, ends_on, roles(key, archived_at)")
+    .select("user_id, is_main, starts_on, ends_on, roles(key)")
     .in("user_id", ids)
     .is("archived_at", null)
     .order("is_main", { ascending: false });
@@ -31,9 +31,9 @@ export async function loadHeldRoleKeys(userIds: readonly string[]): Promise<Map<
     is_main: boolean;
     starts_on: string | null;
     ends_on: string | null;
-    roles: { key: string; archived_at: string | null } | null;
+    roles: { key: string } | null;
   }[]) {
-    if (!row.roles || row.roles.archived_at) continue;
+    if (!row.roles) continue;
     if ((row.starts_on && row.starts_on > today) || (row.ends_on && row.ends_on < today)) continue;
     held.set(row.user_id, [...(held.get(row.user_id) ?? []), row.roles.key]);
   }
@@ -56,7 +56,7 @@ export async function loadHeldRoles(userId: string): Promise<HeldRole[]> {
   const today = todayIso();
   const { data, error } = await createAdminClient()
     .from("user_roles")
-    .select("is_main, starts_on, ends_on, roles(key, name, name_th, archived_at)")
+    .select("is_main, starts_on, ends_on, roles(key, name, name_th)")
     .eq("user_id", userId)
     .is("archived_at", null)
     .order("is_main", { ascending: false })
@@ -67,9 +67,9 @@ export async function loadHeldRoles(userId: string): Promise<HeldRole[]> {
     is_main: boolean;
     starts_on: string | null;
     ends_on: string | null;
-    roles: { key: string; name: string; name_th: string | null; archived_at: string | null } | null;
+    roles: { key: string; name: string; name_th: string | null } | null;
   }[]) {
-    if (!row.roles || row.roles.archived_at) continue;
+    if (!row.roles) continue;
     if ((row.starts_on && row.starts_on > today) || (row.ends_on && row.ends_on < today)) continue;
     out.push({ key: row.roles.key, name: row.roles.name, nameTh: row.roles.name_th, isMain: row.is_main, endsOn: row.ends_on });
   }

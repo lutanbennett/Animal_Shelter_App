@@ -1,9 +1,8 @@
 /**
  * Who approves photos, asked the way the database asks it (0221, 0222) so the screen and set_role_cards() cannot disagree.
- * An approver is a role that is not Admin (a fixed role holding no cells) and not retired (roles.archived_at set) and holds
- * photos.approve at any level, through a card (Approve photos) or an extra. The test is the ACTIVITY
- * and the retired FLAG, never a card name and never the key 'staff': the next retired role drops out by itself.
- * Lutan, 2026-10-18: "exclude retired roles as this will future proof the system going forward."
+ * An approver is a role that is not Admin (a fixed role holding no cells) and holds photos.approve at any level, through a card
+ * (Approve photos). The test is the ACTIVITY, never a card name or a role key. (0222 also excluded retired roles; role
+ * archiving was removed in 0272, so there are none to exclude.)
  *
  * Pure and client-safe.
  */
@@ -11,14 +10,14 @@ import { CARDS, type CardKey } from "./cards";
 
 export const APPROVE_ACTIVITY = "photos.approve";
 
-export type RoleCell = { roleKey: string; roleName: string; archived: boolean; activity: string; level: number };
+export type RoleCell = { roleKey: string; roleName: string; activity: string; level: number };
 
 /** The names of the roles that approve photos right now, in the order given. */
 export function approverNames(cells: readonly RoleCell[]): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
   for (const c of cells) {
-    if (c.activity !== APPROVE_ACTIVITY || c.level < 1 || c.archived || c.roleKey === "admin" || seen.has(c.roleKey)) continue;
+    if (c.activity !== APPROVE_ACTIVITY || c.level < 1 || c.roleKey === "admin" || seen.has(c.roleKey)) continue;
     seen.add(c.roleKey);
     out.push(c.roleName);
   }

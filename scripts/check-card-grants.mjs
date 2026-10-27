@@ -179,15 +179,6 @@ begin
     if v_msg not like 'This is the last role that can approve photos%' then raise exception 'ASSERT wrong refusal: %', v_msg; end if;
   end;
 
-  -- a retired role does not count as an approver
-  update roles set archived_at = now() where id = a;
-  begin
-    perform set_role_cards(c, array['add_photos']);
-    raise exception 'ASSERT a retired role was counted as an approver';
-  exception when check_violation then
-    null;
-  end;
-  update roles set archived_at = null where id = a;
 
   select count(*) into v_n from role_permissions p join roles r on r.id = p.role_id where r.kind = 'fixed';
   if v_n <> 0 then raise exception 'ASSERT fixed roles hold % cells after', v_n; end if;

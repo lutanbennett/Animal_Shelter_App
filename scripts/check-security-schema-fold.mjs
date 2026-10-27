@@ -25,7 +25,7 @@ declare
 begin
   -- F2: each role's view of the three tables
   for r in select ro.key, (select ur.user_id from user_roles ur where ur.role_id = ro.id and ur.archived_at is null limit 1) uid
-             from roles ro where ro.archived_at is null loop
+             from roles ro loop
     continue when r.uid is null;
     perform set_config('request.jwt.claims', json_build_object('sub', r.uid, 'role', 'authenticated', 'aal', 'aal1')::text, true);
     set local role authenticated;
