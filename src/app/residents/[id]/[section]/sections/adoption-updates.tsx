@@ -143,6 +143,8 @@ export async function renderAdoptionUpdatesSection(ctx: SectionContext): Promise
                     profilePhotoDriveFileId={resident.profile_photo_drive_file_id}
                     shares={shares}
                     canMarkPosted={canMarkPosted}
+                    canManage={canMarkPosted}
+                    canFileToMedical={can(perms, "photos.resident_add")}
                   />
                 )}
               </li>

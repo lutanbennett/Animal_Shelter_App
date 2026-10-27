@@ -211,6 +211,8 @@ export function PhotoGallery({
   shares,
   canMarkPosted = false,
   canMakeMeme = false,
+  canManage = false,
+  canFileToMedical = false,
 }: {
   residentId: string;
   photos: PhotoRow[];
@@ -244,6 +246,13 @@ export function PhotoGallery({
   canMarkPosted?: boolean;
   /** May this login open the meme maker (social.library at Edit)? A Medical or waiting photo never gets the button. */
   canMakeMeme?: boolean;
+  /**
+   * May this login remove a photo, make it the profile photo, or refile it? The activity the database asks for all
+   * three: photos.resident_manage. Default false, so a caller that forgets to pass it offers nothing that would refuse.
+   */
+  canManage?: boolean;
+  /** May this login file a photo INTO Medical without managing photos? The move action allows photos.resident_add for that one folder. */
+  canFileToMedical?: boolean;
 }) {
   const { t, locale } = useI18n();
   const p = t.photos.posted;
@@ -378,6 +387,8 @@ export function PhotoGallery({
     openPhoto && !openPhoto.adoption_update && PHOTO_CATEGORIES.includes(openPhoto.sub_folder as PhotoCategory)
       ? moveCategories.filter((c) => c !== openPhoto.sub_folder)
       : [];
+  // Only the folders this login may actually move into: the action refuses any but Medical to a login that cannot manage.
+  const offeredMoves = canManage ? moveOptions : canFileToMedical ? moveOptions.filter((c) => c === "Medical") : [];
   const mayMark = canMarkPosted && !readOnly && shares !== undefined;
   const selectedIds = Array.from(selected).filter((id) => photos.some((ph) => ph.id === id));
 
@@ -740,7 +751,7 @@ export function PhotoGallery({
 
               {readOnly ? (
                 <p className="text-sm text-muted">{t.photos.readOnly}</p>
-              ) : (
+              ) : !canManage ? null : (
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex flex-col">
                     {confirmingDelete ? (
@@ -789,7 +800,7 @@ export function PhotoGallery({
                 </div>
               )}
 
-              {!readOnly && moveOptions.length > 0 && (
+              {!readOnly && offeredMoves.length > 0 && (
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                   <select
                     aria-label={t.photos.moveToFolder}
@@ -800,7 +811,7 @@ export function PhotoGallery({
                     <option value="" disabled>
                       {t.photos.moveToFolder}
                     </option>
-                    {moveOptions.map((c) => (
+                    {offeredMoves.map((c) => (
                       <option key={c} value={c}>
                         {photoFolderLabel(t, c)}
                       </option>
