@@ -77,6 +77,9 @@ async function query(sql) {
 const rolesRes = await query(`select r.key, coalesce(json_object_agg(rp.activity, rp.level) filter (where rp.activity is not null), '{}') as cells
   from roles r left join role_permissions rp on rp.role_id = r.id
  where r.archived_at is null and r.key not in ('admin', 'public_viewer')
+   -- the disposable logins the card walkthroughs and dry runs leave on the shared dev database come and go
+   -- while this runs; a box on one of them is not a box on the page
+   and r.key !~ '^(dev_signin_|dryrun_|harness_)'
  group by r.key order by r.key`);
 if (!Array.isArray(rolesRes.body)) throw new Error(`could not read roles: ${JSON.stringify(rolesRes.body).slice(0, 400)}`);
 const ROLES = rolesRes.body.map((r) => r.key);
@@ -181,7 +184,10 @@ begin
   insert into placement_history (resident_id, placement_type, start_date) values (${lit(F.DEAD)}, 'Deceased', now() - interval '1 day');
   insert into contacts (id, name, type) values (${lit(F.CONTACT)}, 'Harness contact', 'Vendor'), (${lit(F.CARER)}, 'Harness carer', 'Carer');
   insert into shelter_friends (id, contact_id) values (${lit(F.FRIEND)}, ${lit(F.CONTACT)});
-  insert into diet_types (id, name, daily_qty_small, daily_qty_medium, daily_qty_large) values (${lit(F.DIET)}, 'Harness diet', 1, 1, 1);
+  -- a live medicine unit, looked up here because a probe's role may not read units (0252 refuses a unit that is not one)
+  perform set_config('harness.med_unit', (select name from units where for_medicines and archived_at is null order by sort_order, name limit 1), true);
+  insert into diet_types (id, name) values (${lit(F.DIET)}, 'Harness diet');
+  insert into diets (id, name) values (${lit(F.DIET)}, 'Harness diet');
   insert into immunization_types (id, name, interval_months) values (${lit(F.IMM_TYPE)}, 'Harness immunization type', 12);
   insert into maintenance (id, title, zone_id) values (${lit(F.JOB)}, 'Harness job', ${lit(F.ZONE)});
   insert into project_folders (id, top_level_category, name, parent_folder_id) values (${lit(F.PROJECT)}, 'Events', 'Harness project', ${lit(F.CATEGORY)});
@@ -197,7 +203,7 @@ begin
   insert into procedures (resident_id, date, procedure_type_id) select id, current_date, (select id from procedure_types limit 1) from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
   insert into prescriptions (resident_id, medication_id, start_date) select id, (select id from medication order by id limit 1), current_date from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
   insert into immunization_records (resident_id, immunization_type_id, date_administered) select id, (select id from immunization_types limit 1), current_date from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
-  insert into resident_diets (resident_id, diet_type_id, start_date) select id, ${lit(F.DIET)}, current_date - 1 from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
+  insert into resident_diets (resident_id, diet_id, start_date) select id, ${lit(F.DIET)}, current_date - 1 from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
   insert into adoption_updates (resident_id, received_on, channel) select id, current_date, 'visit' from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
   insert into attachments (id, owner_type, owner_id, drive_file_id, file_name, sub_folder) values
     (${lit(F.ATT_IN)}, 'resident', ${lit(F.R_IN)}, 'harness-${F.R_IN}', 'x.jpg', 'Medical'),

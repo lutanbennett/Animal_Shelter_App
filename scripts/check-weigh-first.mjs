@@ -97,7 +97,8 @@ const probes = [
     { ...NONE, admin: 1, management: null, doctor: null }, // management and doctor hold live cards (doctor reads its own clinic since 0253), so they are not pinned; the floor is that the Head of Medical, the volunteer and a roleless login still read nothing
   ],
   // Hers already, and the reason the comparison stays in the app.
-  ["weight direct", `select 1 from weight where resident_id = ${lit(WEIGHED)}`, WEIGHERS],
+  // The doctor holds live cards that read weight, so it is not pinned (as with clinic_visits above).
+  ["weight direct", `select 1 from weight where resident_id = ${lit(WEIGHED)}`, { ...WEIGHERS, doctor: null }],
 ];
 
 const lines = [];

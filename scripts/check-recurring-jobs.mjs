@@ -83,18 +83,15 @@ insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, ra
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
        'harness-0095-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
   from who where uid is not null;
-insert into user_roles (user_id, role_id, archived_at)
-  select s.c0, ro.id, s.c2 from (select uid as c0, (case who when 'archived' then 'staff' else who end) as role_key, case who when 'archived' then now() end as c2 from who where who not in ('roleless', 'anon', 'clerk', 'clerk2')) s
-  join roles ro on ro.key = s.role_key;
--- clerk, clerk2: the two staff logins until 0173 retired the role; a custom role carrying the
--- archived Staff role's cells stands in for them
--- It borrows volunteer, as every live custom role does: record_* functions still gate on the enum (admin, management), so a role borrowing management would pass on that and not on its cells.
+-- clerk, clerk2: ordinary workers who may record their own recurring dates and nothing else. A throwaway
+-- custom role holds that one cell (recurring.do_own), so the harness no longer depends on any role that
+-- may or may not exist on the database it runs against (the archived staff role was deleted by 0270).
 insert into roles (key, name, kind) values ('harness_0095_clerk', 'Harness clerk', 'custom');
 insert into role_permissions (role_id, activity, level)
-  select (select id from roles where key = 'harness_0095_clerk'), rp.activity, rp.level
-    from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
-insert into user_roles (user_id, role_id)
-  select w.uid, r.id from who w, roles r where w.who in ('clerk', 'clerk2') and r.key = 'harness_0095_clerk';
+  values ((select id from roles where key = 'harness_0095_clerk'), 'recurring.do_own', 2);
+insert into user_roles (user_id, role_id, archived_at)
+  select s.c0, ro.id, s.c2 from (select uid as c0, (case when who in ('clerk', 'clerk2', 'archived') then 'harness_0095_clerk' else who end) as role_key, case who when 'archived' then now() end as c2 from who where who not in ('roleless', 'anon')) s
+  join roles ro on ro.key = s.role_key;
 grant select on who to authenticated, anon;
 
 -- Run one statement as a login ('anon' = signed out). Returns its single
