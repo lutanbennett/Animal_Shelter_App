@@ -4,21 +4,21 @@
 
 | | |
 |---|---|
-| Feature | `docs/planner-handover.md` edition `384`, and one durable rule promoted into the `/plan-day` skill |
-| Backlog item | none — the skill's own step 8 requires a handover at nine or more workstreams since the last one; this round ran ten |
-| Branch / worktree | `claude/planner-handover` @ `C:\Development\Animal_Shelter_planner-handover` |
+| Feature | `docs/planner-handover.md` edition `393`, and three durable rules promoted into the `/plan-day` skill |
+| Backlog item | none — the skill's own step 8 requires a handover at nine or more workstreams since the last one; this round ran exactly nine |
+| Branch / worktree | `claude/planner-handover-393` @ `C:\Development\Animal_Shelter_planner-handover-393` |
 | Dev server | not started — documentation and a skill file only |
 | PR | opened from this branch |
-| Tested by / date | Claude / 2026-10-26 |
+| Tested by / date | Claude / 2026-10-27 |
 | Carries a migration? | no |
-| Tested at SHA | `3c938909` |
+| Tested at SHA | `37c155e7` |
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the skill asked for — replace the handover with edition `384` as a delta, and promote this round's one durable lesson into the skill so it is not rewritten every nine streams
-- [x] Files/areas touched listed — `docs/planner-handover.md` (replaced, 147 lines) and `.claude/skills/plan-day/SKILL.md` (rule 5 added to step 7's planner-touches-production rules). No `src/`, no `worker/`, no `supabase/migrations/`, no shared libs
+- [x] Change is described in one sentence, and it matches what the skill asked for — replace the handover with edition `393` as a delta, and promote this round's three durable lessons into the skill so no future handover carries them
+- [x] Files/areas touched listed — `docs/planner-handover.md` (replaced, 145 lines) and `.claude/skills/plan-day/SKILL.md` (three insertions: the prior-pass expiry rule beside the walkthrough rate, the "band the RED harnesses" clause on the harness-triage band row, and the "do not band a proof the stream cannot run" rule above the token estimates). No `src/`, no `worker/`, no `supabase/migrations/`, no shared libs
 - [x] Roles affected identified — n/a in the usual sense: no role reads either file in the app. They are read by the planner chat only
-- [x] Anything explicitly **out of scope** written down — the live `.plan-day.md` is gitignored and is NOT in this PR; its batch-3 actuals and its counter were updated in place by the planner session. The `docs/backlog.md` entries this round produced went to the `backlog` branch, not here
+- [x] Anything explicitly **out of scope** written down — the live `.plan-day.md` is gitignored and is NOT in this PR; its batch-3 setup, its nine-stream counter and its six measured actuals were written in place by the planner session. The `docs/backlog.md` edits this round produced (the rejoined split item, two phantom ticks, four recorded answers, the staff dev-vs-production correction, the harness red-count restatement and the 9-of-14 card progress) all went to the `backlog` branch, not here
 
 ## 2. Automated gates
 
@@ -26,7 +26,7 @@
 - [x] `node scripts/gates.mjs` ends with all four at zero. Closing lines as printed:
 
 ```
-=== gates: build exited 0 after 159s
+=== gates: build exited 0 after 130s
 
 gates: typecheck=0 lint=0 test=0 build=0
 ```
@@ -48,7 +48,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ## 4. Functional checks
 
-- [x] Happy path works end to end — the document's own purpose is to be read by the next planner chat; both files were re-read after writing and the headings, the delta structure and the "next slug is `393`" line are correct
+- [x] Happy path works end to end — the document's purpose is to be read by the next planner chat; both files were re-read after writing, and the headings, the delta structure, the "next slug is `402`" line and the three skill insertions are each in place and in the right section
 - [ ] Data persists — `n/a: no data is written by this change; both files are static markdown read by a chat`
 - [ ] Create / edit / delete exercised — `n/a: no CRUD surface; this is two documents`
 - [ ] Empty state renders sensibly — `n/a: no rendered surface`
@@ -78,12 +78,14 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 A handover's only failure mode is being wrong, so these replace the usual functional checks.
 
-- [x] **Every figure quoted was read, not recalled.** The nine measured streams' token figures came from `get_usage` with `context.session` checked against the id passed on each call; the model and effort came from `get_session`. The band verdicts were checked against each stream's diff and elapsed time before being written
-- [x] **The four instrument failures are each traceable to a command that was actually run** — the clinic-login-helpers reading, `check-menu-coverage`'s 118 against its real 30, `role-cards` listing an archived role, and `0269`'s header quoting that reading. All four are recorded on `docs/backlog.md` with their evidence
-- [x] **The cron lesson states only what was established.** Both environments' last-run times and both Workers' deploy times were read from production, from the dev database and from `wrangler deployments list`; the remaining hypothesis is labelled as a hypothesis in both the handover and the backlog item
+- [x] **Every figure quoted was read, not recalled.** The six measured streams' token figures came from `get_usage` with `context.session` checked against the id passed on each of the six calls; model and effort came from `get_session` for each. Every band verdict was checked against that stream's PR diff and elapsed time before being written
+- [x] **The round's central claim was verified against the code, not inferred.** That `0265` narrowed three cards is quoted from `0265_card_review_1_reads.sql:118-126` (`delete … where activity = 'resident.record'`, then `insert … 'resident.who_and_where', 1`); that the app half moved the nav is from #965's own file list (`NavLinks.tsx`, `NavPane.tsx`, `routes.ts`, `management/purchasing/page.tsx`); the ambiguous card was settled by commit times, `e4946259` at 00:09:07 against `0af6fa5c` at 16:16:42
+- [x] **The production claims carry their database and their clock.** `role-cards` listing six roles was read on production (`dbkodyyxxhtygxcxmfcu`) at 09:4x on 2026-10-27; the pending migration was read from `apply-migrations.mjs --status --env production`. The handover states the dev-versus-production split rather than saying "deleted"
+- [x] **The `gh`-not-the-session-list warning is reported from what actually happened** — `list_sessions` reported PR #982 as `OPEN` while `gh pr view 982` reported `MERGED`, which is why that warning is marked fired rather than held
 - [x] **No count, PR number, migration number or release state is carried forward.** The handover's own opening block forbids it, and the document was checked against that rule after writing
-- [x] **The predecessor's warnings are each reported as fired, held or untested**, with the untested one explicitly carried rather than dropped
-- [x] **Length measured, not estimated** — `wc -l` reports 147, inside the skill's ~150 target, so no trimming pass was spent
+- [x] **The predecessor's warnings are each reported as fired, held or untested**, with the untested one (`src/lib/releases.ts`) explicitly carried into a fourth round rather than dropped or promoted
+- [x] **The three promoted rules are in the skill and not duplicated in the handover** — the handover points at them in one clause each. `SKILL.md` was read back after the edit and its CRLF line endings were preserved (the skill's own trap)
+- [x] **Length measured, not estimated** — `wc -l` reports 145, inside the skill's ~150 target, so no trimming pass was spent
 
 ## 7. Release notes
 
@@ -91,9 +93,9 @@ A handover's only failure mode is being wrong, so these replace the usual functi
 
 ## 8. Sign-off
 
-Automated checks by: Claude (planner session)  Date: 2026-10-26
+Automated checks by: Claude (planner session)  Date: 2026-10-27
 
-Manual verification by: n/a: there is nothing for a person to look at — no UI, no route, no data. The content's accuracy is covered by section 6, which is signed above because every item there was a command that was run rather than a screen that was viewed
+Manual verification by: n/a: there is nothing for a person to look at — no UI, no route, no data. The content's accuracy is covered by section 6, which is signed above because every item there was a command that was run or a file that was read, not a screen that was viewed
 
 Result: pass
 

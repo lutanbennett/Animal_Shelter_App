@@ -417,6 +417,14 @@ setting produces a false finding.
 
 ### Token estimates (provisional — revise from the actuals)
 
+**AND DO NOT BAND A STREAM FOR A PROOF IT CANNOT RUN.** Added 2026-10-27. A schema stream was
+banded 230–290k with the usual **+30k for permissions proof**, and came in at **139,529 — 40%
+under**, having delivered everything. The band had priced *"and prove the outcome on production"*,
+and **a stream in a worktree cannot read production**; the planner ran that half itself. **The
+planner is the only role that can read production, so a production proof is the planner's time, not
+the stream's band.** Same test for anything else the stream structurally cannot reach: a Worker
+deploy, a Cloudflare setting, a Pi. **Ask who can actually run the proof before you charge for it.**
+
 **BEFORE ANY OF THIS: a figure only counts if the stream FINISHED.** See step 2
 — a blocked stream's number is not evidence about estimating.
 
@@ -471,7 +479,7 @@ Two axes that genuinely do cost, both measured 2026-10-20:
 | **Creates a new surface people submit data through** | **200–270k** | 235,561 |
 | **A new surface that ALSO DELETES what it replaces** | **260–330k** | 290,888 — `units-of-measure-app` (2026-10-23), banded 200–270k and **+8% over**. A Settings CRUD screen, **plus** eight call sites moved onto the table, **plus** deleting the two hard-coded lists and their dictionary entries, **plus** both dictionaries, the manual and real browser checks. **The wide deletion is a SECOND job, not a detail of the first** — ask whether the new surface retires something, and if it does, use this row rather than the one above |
 | Builds an instrument / transport path from nothing | **250–320k** | 286,350 — **one reading only, and nothing since has belonged in it. Do not widen a stream into this row because its behaviour sounds new** |
-| **Harness triage — band the COUNT, not the family** | **~85k + ~20k per harness; ~15k each when one cause explains them all** | Measured twice on 2026-10-26, which is why this row exists. Ten database harnesses with mixed causes: **285,783** — 20.1k each above the floor, banded 190–240k as *"a harness family"* and **+19% over**. Eight diets/stock harnesses sharing ONE cause (a rename) **plus** a new production check written from nothing: **206,138** — 15.1k each with the extra script inside that, banded 170–220k and **comfortably inside**. **The count is the unit of work; the framing is not.** Ask how many harnesses, then ask whether one cause explains them — a shared cause discounts about a quarter, because the second harness onwards is a re-run rather than a diagnosis |
+| **Harness triage — band the COUNT, not the family** | **~85k + ~20k per harness; ~15k each when one cause explains them all** | Measured twice on 2026-10-26, which is why this row exists. Ten database harnesses with mixed causes: **285,783** — 20.1k each above the floor, banded 190–240k as *"a harness family"* and **+19% over**. Eight diets/stock harnesses sharing ONE cause (a rename) **plus** a new production check written from nothing: **206,138** — 15.1k each with the extra script inside that, banded 170–220k and **comfortably inside**. **The count is the unit of work; the framing is not.** Ask how many harnesses, then ask whether one cause explains them — a shared cause discounts about a quarter, because the second harness onwards is a re-run rather than a diagnosis. **AND BAND THE HARNESSES THAT ARE RED, NOT THE HARNESSES THE ITEM NAMES** (added 2026-10-27): a batch briefed as ten found **five already green**, fixed the day before by commits the item did not know about, so the item's list was stale by half. **Run the harnesses as step zero — that is the scope list.** It still cost **228,126** against a 255–310k band because **two of the five were INVESTIGATIONS rather than fixes** (one ran 600 probes across two runs to establish that a harness is a snapshot tool with ~6% run-to-run noise). **Price a diagnosis above a repair**, and expect a harness whose fixtures lean on a role being removed to fail for that reason rather than because the app is wrong |
 | Quick win | 110–170k | 1–3 files; screenshots cost far less than first assumed. **Left as written on Lutan's ruling, 2026-10-11** — the planner had been quoting 130–200k while both measured quick wins (129,320 · 135,901) sat *inside* this band. **The band was right and the quoting was high. Do not reopen it** |
 | Schema PR, single file | **~140–155k** | measured 6×: `cashflow-forecast-function` 139,791 · `drop-leftovers-schema` 143,030 (three unrelated items in one file) · `receipt-issuer-server-side` 143,678 · `map-rooms-schema` 151,273 · `role-floor-schema` 231,297 · `perm-functions-schema` 284,248 |
 | **Schema PR with code — SPLITS, do not quote one band** | **160–185k** a view or function rewrite plus a named handful of readers · **230–285k** permissions work across many call sites | Corrected 2026-10-21. `diets-sheet-schema` rewrote `special_diet_list`, changed `record_intake` and moved **four named app files** onto recipes: banded 230–285k off the two readings below and came in at **166,331, 28% UNDER.** Those two readings (`role-floor-schema`, `perm-functions-schema`) were **permissions** changes rippling through many call sites, which is a different job. **Ask how many readers the item NAMES**: a named handful is the lower band. **The permissions half now has a third reading and held:** `card-decisions-schema` (2026-10-26) moved four card reads onto narrower grants, added a card and changed two delete policies across many policy call sites — banded 230–285k, came in at **295,409, +3.7% over**, which is the band working rather than failing |
@@ -531,6 +539,37 @@ awk -v c="<card name>" 'BEGIN{p=0} $0 ~ "^## " {p=(index($0,c)>0)} p && /^[0-9]+
 ```
 
 A `TODO:` is **one line inside one step**, not a step. A card with 4 steps and 1 TODO is 4 steps.
+**AND BEFORE YOU COUNT STEPS AT ALL, ASK WHETHER THE PASS IS NEEDED: A PRIOR PASS HAS AN EXPIRY
+DATE.** Added 2026-10-27, after the planner and a stream got this wrong in opposite directions on the
+same morning and Lutan had to hand it back. The brief said *"these cards have never been driven"* —
+**false**, because the planner listed `docs/decisions/` with `grep -i "card-re|rerun|card-review"` and
+**missed the whole `card-report-*` family**, seven streams that had driven 27 of 32 cards and said
+**"driven"** in their fault-log headings. The stream found those rows and reported **"nothing to
+do"** — **also wrong**, because the walks predated the change.
+
+**The question is never "has this been driven?" but "has it been driven SINCE the last thing that
+changed its behaviour?" — and TWO things change it:**
+
+1. **A migration**, for what the card grants. `0265` deleted `resident.record` from five cards and
+   inserted `resident.who_and_where`; a **narrowing** is the likeliest way to break a save path,
+   which is the whole reason driven passes were demanded.
+2. **The app half**, for what the page shows and **whether it can be reached at all.** #965 moved
+   `NavLinks.tsx`, `NavPane.tsx` and `routes.ts`. **Checking only (1) nearly cancelled three quarters
+   of a stream** whose three cards no migration had touched — one look at that PR's file list
+   reversed it.
+
+**So, per card, two commands before any sizing:**
+
+```
+grep -n "^## Added" docs/card-access-faults.md          # who drove what, and WHEN
+grep -ln "'<card_key>'" supabase/migrations/02*.sql     # what changed its grants since
+```
+
+Then read the app-half PR's file list. **Where the dates are hours apart, read the commit times
+rather than guessing** — one card was settled by finding the drive at 00:09 and the migration at
+16:16 the same day. **A prior pass quoted without its date is the same fault as a count quoted
+without its database.**
+
 This same command, run at batch 2 setup, caught a six-card group at 25 steps (~335k) and got it split
 into two finishable threes, both of which then landed inside their bands. **It is the cheapest
 high-value command in this skill.**
