@@ -62,6 +62,33 @@ if ! command -v cloudflared >/dev/null; then
 fi
 cloudflared --version
 
+echo "== 2a. cloudflared keeps itself up to date (copied from the live Pi, 2026-10-27)"
+# unattended-upgrades only takes Debian's own origins; this adds Cloudflare's apt repo (its Origin/Label from InRelease).
+sudo tee /etc/apt/apt.conf.d/52unattended-upgrades-cloudflared >/dev/null <<'EOF'
+Unattended-Upgrade::Origins-Pattern { "origin=cloudflared,label=cloudflared"; };
+EOF
+# The package's postinst does NOT restart the tunnel, so a path unit restarts it when the binary changes.
+sudo tee /etc/systemd/system/cloudflared-restart.service >/dev/null <<'EOF'
+[Unit]
+Description=Restart cloudflared after its binary is replaced
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/systemctl try-restart cloudflared.service
+EOF
+sudo tee /etc/systemd/system/cloudflared-restart.path >/dev/null <<'EOF'
+[Unit]
+Description=Watch the cloudflared binary
+
+[Path]
+PathChanged=/usr/bin/cloudflared
+
+[Install]
+WantedBy=multi-user.target
+EOF
+sudo systemctl daemon-reload
+sudo systemctl enable --now cloudflared-restart.path
+
 echo "== 2b. Swap: a 4 GB file beside the Pi's zram, so `next build` can finish"
 # `next build` peaks above 6 GB on this 4 GB Pi. At 4 GB RAM + 2 GB swap it was killed three
 # times running (2026-10-17); with ~4 GB of FILE-backed swap added it went through first try.

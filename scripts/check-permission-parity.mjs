@@ -34,7 +34,7 @@
 //            the retired Staff role). Staff is not a live principal since 0173: no
 //            live login can hold it. 2IC, Maintenance and Medical are configured
 //            roles with no §4 column, so there is no default to reproduce; their
-//            own checks are check-2ic-role / check-maintenance-role / check-medical-role.
+//            own checks are check-maintenance-role / check-medical-role (check-2ic-role was retired 2026-10-28).
 //            A configured role that has been archived is probed through
 //            has_permission() alone (section Z), since today's policies read the
 //            enum and would still let the person in.
