@@ -139,6 +139,11 @@ export default async function ClinicVisitPage(props: PageProps<"/clinic-visits/[
   const filesOf = (ownerId: string) => (fileRows ?? []).filter((a) => a.owner_id === ownerId);
   const anyRecorded = blood.length + procs.length + rxs.length + weights.length > 0;
   const writable = canEdit && !isDeceased;
+  // Each link below opens a page that asks its own activity, so each is drawn only when the login holds that one.
+  const canBlood = can(perms, "medical.blood_tests");
+  const canRx = can(perms, "medical.prescriptions");
+  const canWeight = can(perms, "medical.weight");
+  const canProc = can(perms, "medical.procedures");
     const started = visitDate(visit) <= todayIso();
 
   const recordLink = "text-primary hover:underline";
@@ -254,14 +259,18 @@ export default async function ClinicVisitPage(props: PageProps<"/clinic-visits/[
           <h2 className="text-lg font-semibold text-foreground">{v.actions}</h2>
           <div className="flex flex-wrap gap-2">
             <ActionLink href={`/clinic-visits/${id}/edit`} label={t.common.edit} icon={ACTION_ICONS.edit} iconOnlyOnMobile={false} />
-            <ActionLink href={`/blood-tests/new?residentId=${rid}&clinicVisitId=${id}`} label={t.residents.sections.logBloodTest} icon={SECTION_ICONS["blood-tests"]} iconOnlyOnMobile={false} />
-            {started && (
+            {canBlood && (
+              <ActionLink href={`/blood-tests/new?residentId=${rid}&clinicVisitId=${id}`} label={t.residents.sections.logBloodTest} icon={SECTION_ICONS["blood-tests"]} iconOnlyOnMobile={false} />
+            )}
+            {started && canRx && (
               <ActionLink href={`/prescriptions/new?residentId=${rid}&clinicVisitId=${id}`} label={t.residents.sections.addPrescription} icon={SECTION_ICONS.prescriptions} iconOnlyOnMobile={false} />
             )}
-            {started && weights.length === 0 && (
+            {started && canWeight && weights.length === 0 && (
               <ActionLink href={`/weight/new?residentId=${rid}&clinicVisitId=${id}`} label={t.residents.sections.logWeight} icon={SECTION_ICONS.weight} iconOnlyOnMobile={false} />
             )}
-            <ActionLink href={`/procedures/new?residentId=${rid}&clinicVisitId=${id}`} label={t.residents.sections.logProcedure} icon={SECTION_ICONS.procedures} iconOnlyOnMobile={false} />
+            {canProc && (
+              <ActionLink href={`/procedures/new?residentId=${rid}&clinicVisitId=${id}`} label={t.residents.sections.logProcedure} icon={SECTION_ICONS.procedures} iconOnlyOnMobile={false} />
+            )}
           </div>
         </section>
       )}
