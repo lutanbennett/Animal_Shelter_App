@@ -45,6 +45,7 @@ import {
 export function MaintenanceJobView({
   job,
   canWrite,
+  canPhotos = false,
   canMakeMeme = false,
   canMove,
   canDelete,
@@ -57,6 +58,7 @@ export function MaintenanceJobView({
   job: MaintenanceJob;
   /** Staff/admin: change status and details, remove files. */
   canWrite: boolean;
+  canPhotos?: boolean;
   canMakeMeme?: boolean;
   /** maintenance.progress: the status buttons. */
   canMove: boolean;
@@ -255,7 +257,8 @@ export function MaintenanceJobView({
             addLabel={d.addBefore}
             dropHere={d.dropBefore}
             attachments={before}
-            canRemove={canWrite}
+            canRemove={canPhotos}
+            canAdd={canPhotos}
             canMakeMeme={canMakeMeme}
             disabled={isPending}
             onRemove={removeAttachment}
@@ -269,7 +272,8 @@ export function MaintenanceJobView({
             addLabel={d.addAfter}
             dropHere={d.dropAfter}
             attachments={after}
-            canRemove={canWrite}
+            canRemove={canPhotos}
+            canAdd={canPhotos}
             canMakeMeme={canMakeMeme}
             disabled={isPending}
             onRemove={removeAttachment}
@@ -352,6 +356,7 @@ function PhotoSection({
   dropHere,
   attachments,
   canRemove,
+  canAdd,
   canMakeMeme,
   disabled,
   onRemove,
@@ -365,6 +370,7 @@ function PhotoSection({
   dropHere: string;
   attachments: MaintenanceAttachment[];
   canRemove: boolean;
+  canAdd: boolean;
   canMakeMeme: boolean;
   disabled: boolean;
   onRemove: (attachmentId: string, fileName: string) => Promise<void>;
@@ -382,9 +388,11 @@ function PhotoSection({
           </h2>
           <span className="text-xs text-muted">{hint}</span>
         </div>
-        <ActionButton icon={open ? ACTION_ICONS.clear : ACTION_ICONS.uploadImage} onClick={() => setOpen((v) => !v)}>
-          {open ? t.common.close : addLabel}
-        </ActionButton>
+        {canAdd && (
+          <ActionButton icon={open ? ACTION_ICONS.clear : ACTION_ICONS.uploadImage} onClick={() => setOpen((v) => !v)}>
+            {open ? t.common.close : addLabel}
+          </ActionButton>
+        )}
       </div>
 
       {open && (
