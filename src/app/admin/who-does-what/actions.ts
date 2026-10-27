@@ -34,7 +34,6 @@ async function guard(t: Dict, roleKey: string): Promise<{ ok: false; error: stri
     .from("roles")
     .select("id, kind")
     .eq("key", roleKey)
-    .is("archived_at", null)
     .limit(1)
     .returns<{ id: string; kind: string }[]>();
   const role = data?.[0];

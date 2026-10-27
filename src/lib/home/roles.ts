@@ -20,7 +20,6 @@ export async function listHomeRoles(supabase: SupabaseClient): Promise<HomeRole[
   const { data, error } = await supabase
     .from("roles")
     .select("key, name, name_th, kind")
-    .is("archived_at", null)
     .neq("kind", "fixed")
     .order("kind")
     .order("name");
@@ -37,7 +36,6 @@ export async function loadRolePermissions(supabase: SupabaseClient, roleKey: str
     .from("roles")
     .select("id, key, name, name_th, kind, home_path")
     .eq("key", roleKey)
-    .is("archived_at", null)
     .maybeSingle();
   if (!role) return null;
   const { data: cells } = await supabase.from("role_permissions").select("activity, level").eq("role_id", role.id);

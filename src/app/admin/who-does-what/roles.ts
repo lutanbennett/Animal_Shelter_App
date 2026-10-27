@@ -24,7 +24,6 @@ export async function loadRoles(): Promise<Role[]> {
   const { data, error } = await createAdminClient()
     .from("roles")
     .select("id, key, name, name_th, kind")
-    .is("archived_at", null)
     .neq("kind", "fixed");
   if (error) throw new Error(`Who does what: ${error.message}`);
   return (data ?? [])
