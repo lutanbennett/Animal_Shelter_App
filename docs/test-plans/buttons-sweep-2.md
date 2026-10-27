@@ -6,7 +6,7 @@
 |---|---|
 | Feature | Buttons follow cards, second slice: blood-test and procedure file controls and the edit page return links |
 | Backlog item | `docs/backlog.md` → STANDING RULE: A BUTTON IS SHOWN ONLY IF THE LOGIN'S CARDS LET IT DO THAT ACTION (left open: third slice remains) |
-| Branch / worktree | `claude/buttons-sweep-2` @ `C:DevelopmentAnimal_Shelter_buttons-sweep-2` |
+| Branch / worktree | `claude/buttons-sweep-2` in the buttons-sweep-2 worktree |
 | Dev server | `http://localhost:3007` |
 | PR | pending: number assigned when opened |
 | Tested by / date | Claude / 2026-10-27 |
@@ -216,7 +216,7 @@ Automated checks by: Claude  Date: 2026-10-27
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
 has looked and explicitly asks in chat; the line then says so, e.g. `a name —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
+confirmed in chat; line written by Claude at their request  Date: a date`.
 Three valid states:
 
 - a name and a date — a person looked. The date is required here.
