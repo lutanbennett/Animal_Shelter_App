@@ -15,6 +15,7 @@ import { loadConversions, loadDeliveryCosts } from "@/lib/units-server";
 import { loadReceipts } from "@/lib/management/receipts-server";
 import { receivedSinceCount } from "@/lib/management/purchasing";
 import { requirePermission } from "@/lib/permissions/require";
+import { can } from "@/lib/permissions/can";
 import { loadStocktakingSwitches } from "@/lib/management/stocktaking-switches";
 import { canEditItemSettings } from "@/lib/permissions/item-settings";
 import { moveDietType } from "./actions";
@@ -50,14 +51,16 @@ type ForecastRow = {
  * unit conversions — is Settings → Diets (/admin/diets), Admin only.
  */
 export default async function DietStockPage(props: PageProps<"/management/diets">) {
-  const { supabase, perms } = await requirePermission("stock.diets");
+  const { supabase, perms } = await requirePermission("stock.diets", "read");
+  // Read sees the forecast; every control below asks edit, the level its own action asks (actions.ts), and is drawn only then.
+  const canEdit = can(perms, "stock.diets", "edit");
   const { t, locale } = await getT();
   const switches = await loadStocktakingSwitches(supabase);
   const searchParams = await props.searchParams;
 
   // ?view=order: the cupboard order on a screen of its own, one job per
   // screen for the 2IC's phone, with no forecast to load.
-  if (searchParams.view === "order") {
+  if (searchParams.view === "order" && canEdit) {
     const { data, error } = await supabase
       .from("diet_types")
       .select("id, name, name_th, unit")
@@ -199,12 +202,14 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
             icon={ClipboardCheck}
             iconOnlyOnMobile={false}
           />
-          <ActionLink
-            href="/management/diets?view=order"
-            label={t.management.stock.order.link}
-            icon={ArrowUpDown}
-            iconOnlyOnMobile={false}
-          />
+          {canEdit && (
+            <ActionLink
+              href="/management/diets?view=order"
+              label={t.management.stock.order.link}
+              icon={ArrowUpDown}
+              iconOnlyOnMobile={false}
+            />
+          )}
           <ActionLink
             href="/management/stock-usage"
             label={t.management.stockUsage.link}
@@ -254,28 +259,38 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
             invalid={custom != null && "invalid" in custom}
           />
           {!switches.food && <p className="text-sm text-foreground">{t.management.stock.stocktakingOff}</p>}
-          <DietStockCards dietTypes={dietTypes} forecastHeadings={forecastHeadings} stocktaking={switches.food} />
+          <DietStockCards
+            dietTypes={dietTypes}
+            forecastHeadings={forecastHeadings}
+            stocktaking={switches.food}
+            canEdit={canEdit}
+          />
           <p className="text-xs text-muted">{m.table.forecastNote}</p>
           <p className="text-xs text-muted">{t.management.stock.note}</p>
         </section>
 
-        {conversions.error && (
-          <p className="text-sm text-danger">
-            {t.units.title}: {conversions.error}
-          </p>
+        {/* The price panel sets prices (units/actions.ts asks stock.diets at edit), so it is drawn only for an editor. */}
+        {canEdit && (
+          <>
+            {conversions.error && (
+              <p className="text-sm text-danger">
+                {t.units.title}: {conversions.error}
+              </p>
+            )}
+            <UnitsPanel
+              kind="diet"
+              mode="price"
+              items={dietTypes.map((type) => ({
+                id: type.id,
+                name: type.name,
+                baseUnit: dietUnitLabel(t, type.unit),
+                conversions: conversions.data[type.id] ?? [],
+                costPerBase: type.shownCost,
+                costFromDelivery: type.costFromDelivery,
+              }))}
+            />
+          </>
         )}
-        <UnitsPanel
-          kind="diet"
-          mode="price"
-          items={dietTypes.map((type) => ({
-            id: type.id,
-            name: type.name,
-            baseUnit: dietUnitLabel(t, type.unit),
-            conversions: conversions.data[type.id] ?? [],
-            costPerBase: type.shownCost,
-            costFromDelivery: type.costFromDelivery,
-          }))}
-        />
       </div>
     </main>
   );

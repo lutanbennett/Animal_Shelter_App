@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-33 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+36 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -278,11 +278,10 @@ Result: pending
 0. Sign in with `--cards dashboard`. The home screen shows the **Dashboard** tile (or the tile of a card that includes it).
 1. Open `/management/dashboard`: it loads.
 2. **TODO:** The dashboard. Do it on a disposable record named `walk-dashboard`. Question: where should this write show afterwards (which page, which row)?
-3. **See:** Cashflow and fixed outgoings (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-4. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-5. **See:** Vet visits and how they went (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-6. **See:** Maintenance jobs: log, change, assign, cost (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-7. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
+3. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+4. **See:** Vet visits and how they went (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+5. **See:** Maintenance jobs: log, change, assign, cost (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+6. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -454,6 +453,39 @@ Result: pending
 2. **TODO:** See the website's translations. Do it on a disposable record named `walk-translations`. Question: where should this write show afterwards (which page, which row)?
 3. **TODO:** Translate the website, and every label's Thai. Do it on a disposable record named `walk-translations`. Question: where should this write show afterwards (which page, which row)?
 4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## See the food forecast (`food_forecast`)
+
+- Opens: `/management/diets`
+
+0. Sign in with `--cards food_forecast`. The home screen shows the **See the food forecast** tile (or the tile of a card that includes it).
+1. Open `/management/diets`: it loads.
+2. **See:** The diet list and the food forecast (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## See the medicine forecast (`medicine_forecast`)
+
+- Opens: `/management/medications`
+
+0. Sign in with `--cards medicine_forecast`. The home screen shows the **See the medicine forecast** tile (or the tile of a card that includes it).
+1. Open `/management/medications`: it loads.
+2. **See:** The medication list: prices, labels, reorder levels (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## View cashflow (`view_cashflow`)
+
+- Opens: `/management/cashflow`
+
+0. Sign in with `--cards view_cashflow`. The home screen shows the **View cashflow** tile (or the tile of a card that includes it).
+1. Open `/management/cashflow`: it loads.
+2. **See:** Cashflow and fixed outgoings (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 

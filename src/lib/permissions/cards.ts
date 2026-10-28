@@ -46,7 +46,10 @@ export type NewCardKey =
   | "my_tasks"
   | "who_does_what"
   | "record_death"
-  | "translations";
+  | "translations"
+  | "food_forecast"
+  | "medicine_forecast"
+  | "view_cashflow";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -187,9 +190,9 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   dashboard: {
     includes: [],
     // Card review 2 (0268): it also reads what the dashboard counts, as who-and-where, clinic visits and maintenance jobs at read.
+    // Cashflow came off it in 0280 (Lutan, 2026-10-28: "Keep dashboard and cashflow separate"); View cashflow is its own card.
     bundle: [
       { activity: "reports.dashboard" },
-      { activity: "reports.cashflow", level: "read" },
       { activity: "resident.who_and_where", level: "read" },
       { activity: "medical.visits", level: "read" },
       { activity: "maintenance.jobs", level: "read" },
@@ -288,6 +291,12 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
     bundle: [{ activity: "translations.view" }, { activity: "translations.manage" }],
     opens: "/management/translations",
   },
+  // Card review 2, his answers of 2026-10-28 (0280): three cards, each at READ, because the diet list, the medicine list and the cashflow
+  // outgoings are Admin tasks and stay with Admin (outside the card system). Read sees the page; every control that changes something asks
+  // the same activity at edit, so none of them is drawn for a holder of one of these cards.
+  food_forecast: { includes: [], bundle: [{ activity: "stock.diets", level: "read" }], opens: "/management/diets" },
+  medicine_forecast: { includes: [], bundle: [{ activity: "stock.medications", level: "read" }], opens: "/management/medications" },
+  view_cashflow: { includes: [], bundle: [{ activity: "reports.cashflow", level: "read" }], opens: "/management/cashflow" },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */
@@ -317,6 +326,9 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   who_does_what: (t) => t.appHome.cards.whoDoesWhat,
   record_death: (t) => t.appHome.cards.recordDeath,
   translations: (t) => t.appHome.cards.translations,
+  food_forecast: (t) => t.appHome.cards.foodForecast,
+  medicine_forecast: (t) => t.appHome.cards.medicineForecast,
+  view_cashflow: (t) => t.appHome.cards.viewCashflow,
 };
 
 export const CARDS: Record<CardKey, Card> = {

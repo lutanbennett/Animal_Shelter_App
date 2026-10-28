@@ -46,7 +46,12 @@ export function CashflowView({
   fixedMonthly,
   from,
   to,
+  canEditFixedOutgoings = false,
+  canEditClinicEstimate = false,
 }: {
+  /** The two links to places that change what the figures rest on; false by default, so a caller that forgets offers nothing. */
+  canEditFixedOutgoings?: boolean;
+  canEditClinicEstimate?: boolean;
   rows: CashflowRow[];
   /** The window, ISO — only used to name the CSV file. */
   from: string;
@@ -314,19 +319,27 @@ export function CashflowView({
                 : clinicBasis.unitCostSource === "actual"
                   ? c.vetCostActual(formatBaht(clinicBasis.unitCost, locale), clinicBasis.costedVisits)
                   : c.vetCostEstimate(formatBaht(clinicBasis.unitCost, locale))}{" "}
-              <Link href="/admin/website" className="text-primary hover:underline">
-                {c.vetNoteLink}
-              </Link>
-              .
+              {canEditClinicEstimate && (
+                <>
+                  <Link href="/admin/website" className="text-primary hover:underline">
+                    {c.vetNoteLink}
+                  </Link>
+                  .
+                </>
+              )}
             </>
           )}
         </p>
         <p className="text-xs text-muted">
           {fixedMonthly == null ? c.fixedNoteNone : c.fixedNote(formatBaht(fixedMonthly, locale))}{" "}
-          <Link href="/management/cashflow/fixed-outgoings" className="text-primary hover:underline">
-            {c.fixedOutgoingsLink}
-          </Link>
-          .
+          {canEditFixedOutgoings && (
+            <>
+              <Link href="/management/cashflow/fixed-outgoings" className="text-primary hover:underline">
+                {c.fixedOutgoingsLink}
+              </Link>
+              .
+            </>
+          )}
         </p>
         <p className="text-xs text-muted">{c.table.basisNote}</p>
       </section>

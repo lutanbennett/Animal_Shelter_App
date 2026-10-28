@@ -300,6 +300,8 @@ export const ROUTES: readonly RouteEntry[] = [
   {
     path: "/management/medications",
     activity: "stock.medications",
+    // Read opens the page (0280): the forecast card holds only that. Every control on it asks edit.
+    level: "read",
     icon: SECTION_ICONS.prescriptions,
     label: (t) => t.nav.medicationStock,
     device: "any",
@@ -308,6 +310,8 @@ export const ROUTES: readonly RouteEntry[] = [
   {
     path: "/management/diets",
     activity: "stock.diets",
+    // Read opens the page (0280): the forecast card holds only that. Every control on it asks edit.
+    level: "read",
     icon: SECTION_ICONS.diet,
     label: (t) => t.nav.dietStock,
     device: "any",
@@ -332,6 +336,8 @@ export const ROUTES: readonly RouteEntry[] = [
   {
     path: "/management/cashflow",
     activity: "reports.cashflow",
+    // Read opens the page (0280): the forecast card holds only that. Every control on it asks edit.
+    level: "read",
     icon: Coins,
     label: (t) => t.nav.cashflow,
     device: "any",

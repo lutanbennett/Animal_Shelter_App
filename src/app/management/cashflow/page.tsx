@@ -13,6 +13,7 @@ import { fixedOutgoingRows, type FixedOutgoing } from "@/lib/management/fixed-ou
 import { CLINIC_HISTORY_DAYS, clinicForecast, type ClinicVisit } from "@/lib/management/clinic-forecast";
 import { CashflowView } from "./CashflowView";
 import { requirePermission } from "@/lib/permissions/require";
+import { can } from "@/lib/permissions/can";
 
 type VisitRow = { appointment_date: string; cost: number | string | null };
 
@@ -29,7 +30,7 @@ type VisitRow = { appointment_date: string; cost: number | string | null };
  * volunteer seeing the page frame at all.
  */
 export default async function CashflowPage(props: PageProps<"/management/cashflow">) {
-  await requirePermission("reports.cashflow");
+  const { perms } = await requirePermission("reports.cashflow", "read");
   const { t, locale } = await getT();
   const searchParams = await props.searchParams;
   const c = t.management.cashflow;
@@ -156,6 +157,9 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
           fixedMonthly={fixedLines.some((l) => l.active) ? fixedMonthly : null}
           from={window.from}
           to={window.to}
+          // Each link is drawn only for the activity its own page or action asks (fixed-outgoings/actions.ts, admin/website).
+          canEditFixedOutgoings={can(perms, "reports.cashflow", "edit")}
+          canEditClinicEstimate={can(perms, "website.content", "edit")}
         />
       )}
     </main>
