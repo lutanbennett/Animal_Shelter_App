@@ -113,6 +113,7 @@ export default async function VetVisitsPage() {
           weekdays: v.weekdays, status: v.status,
         }}
         overdueHiddenTemplate={v.overdueHidden(999999)}
+        canEdit={can(perms, "medical.visits", "edit")}
       />
     </main>
   );
