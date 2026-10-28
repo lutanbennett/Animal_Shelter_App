@@ -243,7 +243,7 @@ two or three at once; more than that and merging becomes the bottleneck.
 
    **Record your own usage on the PR, immediately before `gh pr merge`.** A feature stream (not a
    release cut or record, not a handover) calls `mcp__ccd_session_mgmt__get_usage` and
-   `mcp__ccd_session_mgmt__get_session` with **no `session_id`** (self: the process is alive, so it
+   `mcp__ccd_session_mgmt__get_session` with **`session_id: "self"`** (both require the field; omitting it fails on `get_session`; self: the process is alive, so it
    cannot be `unavailable`, and it cannot read the planner's window), then posts ONE comment on its
    own PR with `gh pr comment`, in this one-line form:
    `stream-usage: slug=<feature> tokens=<context.tokensUsed> messages=<Messages category> model=<model> effort=<effort> started=<session start> merged=<now UTC> compacted=<yes|no|unknown> rescoped=<yes|no> finished=<yes|blocked>`.
