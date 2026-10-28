@@ -76,7 +76,7 @@ async function query(sql) {
 // The live roles and their cells, as the page reads them.
 const rolesRes = await query(`select r.key, coalesce(json_object_agg(rp.activity, rp.level) filter (where rp.activity is not null), '{}') as cells
   from roles r left join role_permissions rp on rp.role_id = r.id
- where r.archived_at is null and r.key not in ('admin', 'public_viewer')
+ where r.key not in ('admin', 'public_viewer')
    -- the disposable logins the card walkthroughs and dry runs leave on the shared dev database come and go
    -- while this runs; a box on one of them is not a box on the page
    and r.key !~ '^(dev_signin_|dryrun_|harness_)'
@@ -164,7 +164,7 @@ begin
             'harness-wdw-' || r.who || '-' || r.id || '@example.invalid', '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
   -- by role_id, as the app's own writes do
-  insert into user_roles (user_id, role_id) select h.id, ro.id from harness_ids h join roles ro on ro.key = h.who and ro.archived_at is null;
+  insert into user_roles (user_id, role_id) select h.id, ro.id from harness_ids h join roles ro on ro.key = h.who;
 
   insert into clinics (id, name) values (v_own, 'Harness own clinic'), (v_oth, 'Harness other clinic');
   with d as (insert into doctors (name, user_id) select 'Harness doctor', id from harness_ids where who = 'doctor' returning id)

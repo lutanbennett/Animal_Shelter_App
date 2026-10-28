@@ -62,7 +62,7 @@ begin
   for u in
     select distinct on (r.key) r.key, ur.user_id
       from user_roles ur join roles r on r.id = ur.role_id
-     where ur.archived_at is null and r.archived_at is null
+     where ur.archived_at is null
      order by r.key, ur.created_at
   loop
     perform set_config('request.jwt.claims', json_build_object('sub', u.user_id, 'role', 'authenticated', 'aal', 'aal2')::text, true);

@@ -14,7 +14,10 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { giveRole } from "./lib/user-role.mjs";
+import { giveCards } from "./lib/user-role.mjs";
+
+// A login holding exactly view_residents (resident.record read): the check only reads. Card-shaped; the retired staff role is gone.
+let cleanupCards = async () => {};
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -69,7 +72,8 @@ try {
   const { data: u, error: uErr } = await service.auth.admin.createUser({ email, password, email_confirm: true });
   if (uErr) throw uErr;
   userId = u.user.id;
-  const { error: roleErr } = await giveRole(service, userId, "staff");
+  const { error: roleErr, cleanup } = await giveCards(service, userId, ["view_residents"]);
+  cleanupCards = cleanup;
   if (roleErr) throw roleErr;
   const { data: r, error: rErr } = await service.from("residents").insert({ name }).select("id, resident_code").single();
   if (rErr) throw rErr;
@@ -92,6 +96,7 @@ try {
     const { error } = await service.auth.admin.deleteUser(userId);
     if (error) console.error(`  could not delete login ${userId}: ${error.message}`);
   }
+  await cleanupCards();
   console.log("  deleted the throwaway resident and login");
 }
 
