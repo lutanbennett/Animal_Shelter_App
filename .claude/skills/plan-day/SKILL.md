@@ -287,6 +287,26 @@ note:
   another candidate creates? That fixes which batch it can go in.
 - **Size** — a quick win, a day, or more.
 
+### EVERY FINDING, BAND AND BRIEF IS STATED BY CARD, NEVER BY ROLE
+
+**Lutan, 2026-10-28, twice in one day:** *"Can we stop analyzing against Roles. All analysis must be
+against cards as Roles are just a transient grouping of cards."* **The full rule is in `CLAUDE.md`;
+this is the planner's half of it, because the planner is where it broke.**
+
+**It broke in this exact step.** Card review 2 was sized straight off `check-menu-coverage`'s output —
+*"32 unexplained orphans: doctor 9, management 10, 2IC 5, head of medical 4, head of maintenance 3,
+volunteer 1"* — hours after the planner had itself written the instruction down. **The output was role
+shaped, so the sizing came out role shaped, and nobody noticed until he said it a second time.**
+
+- **Before you write a band or a brief, read your own sentence back:** does it name a role? Would it
+  still be true once the card assignments are rebuilt? If not, **find the card that carries the
+  behaviour and say that instead.**
+- **A per-role count is not a count of work.** `check-menu-coverage`'s "32 orphans" is **32 role-page
+  pairs**, not 32 pages: the same page is counted once per role that cannot reach it. **Dedupe to
+  distinct pages before you band anything**, and say which number you used.
+- **The instruments are role-shaped and that is a finding, not a nuisance.** When a check's output
+  forces you into role language, say so in the plan and the brief rather than passing it on.
+
 ## 4. Choose — nine items, in three batches
 
 ### WHEN AN INSTRUCTION IS ABSOLUTE, BRIEF THE WHOLE JOB AS ONE STREAM. DO NOT SLICE IT AND DO NOT
