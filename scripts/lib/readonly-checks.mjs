@@ -205,11 +205,21 @@ export const CHECKS = {
       ...r.migrations.map((m) => `migration ${m.file} applied ${m.at}`),
     ],
   },
+  // REWRITTEN 2026-10-28. It used to ask which roles hold Do Maintenance and FAIL if any did, on the
+  // premise "no delete control exists". Both halves were wrong: the delete control does exist
+  // (MaintenanceJobView, gated can(perms, "maintenance.delete")) and NO card grants that activity, so
+  // only Admin passes - which is exactly what Lutan decided on 2026-10-28, asked directly: "Only admin
+  // can delete maintenance, keep it that way." The old check therefore reported the intended design as
+  // a fault on every run, and would have done so for ever. 0265's own header had already said it:
+  // "maintenance.delete, which Do maintenance has never held; the job page only promised it."
+  // So the useful question is the inverse, and it GUARDS his decision instead of restating a dead fault.
   "fault-maintenance-delete": {
-    asks: "Which roles hold the Do Maintenance card, whose maintenance jobs nobody can delete? (Every holder is affected: no delete control exists.)",
-    sql: `select coalesce(json_agg(json_build_object('role', r.key) order by r.key), '[]'::json)
-      from roles r where r.kind <> 'fixed' and exists (select 1 from role_cards c where c.role_id = r.id and c.card = 'do_maintenance')`,
-    render: (rows) => rows.length ? rows.map((x) => `${x.role}: holds Do Maintenance`) : ["No role holds the Do Maintenance card."],
+    asks: "Does any card grant maintenance.delete, which would take deleting a maintenance job outside Admin? (Lutan, 2026-10-28: only Admin deletes. None is correct.)",
+    sql: `select coalesce(json_agg(json_build_object('card', g.card) order by g.card), '[]'::json)
+      from card_grants g where g.activity = 'maintenance.delete'`,
+    render: (rows) => rows.length
+      ? rows.map((x) => `${x.card}: GRANTS maintenance.delete - deleting a job is no longer Admin-only`)
+      : ["No card grants maintenance.delete, so only Admin can delete a maintenance job - as decided."],
     failed: (rows) => rows.length > 0,
   },
   "clinic-login-helpers": {
