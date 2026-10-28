@@ -68,6 +68,61 @@ const porcelainPaths = (out) =>
     })
     .filter(Boolean);
 
+// A fenced block under a TICKED checklist line is the evidence that tick claims
+// to have pasted. It is empty, or still holds the template's stand-in text, when
+// nobody pasted anything: 411's plan shipped GATES_OUTPUT_PLACEHOLDER there and
+// passed. Narrow on purpose: only fences owned by a ticked box are read (a fence
+// under n/a:, pending: or an unticked line claims no evidence), only the stand-in
+// words below count, and nothing else in a fence is judged, so a faithful paste
+// that quotes this checker's own <name> messages still passes.
+const FENCE_PLACEHOLDER = /PLACEHOLDER|\bTODO\b|<paste|\b(?:xxx|XXX)\b/; // case-sensitive: pasted guard output says "placeholder" in prose
+const fenceProblems = (lines) => {
+  const out = [];
+  let owner = null; // the box the next fence belongs to
+  let open = null; // { start, owner, content }
+  lines.forEach((l, i) => {
+    if (/^\s*```/.test(l)) {
+      if (open) {
+        const o = open.owner;
+        if (o?.ticked) {
+          const text = open.content.join("\n");
+          const label = `ticked line ${o.line} ("${o.body.slice(0, 50)}")`;
+          if (!text.trim()) out.push([open.start, `empty fenced block under ${label} — paste the output the line asks for`]);
+          else if (FENCE_PLACEHOLDER.test(text)) out.push([open.start, `fenced block under ${label} still holds placeholder text — paste the real output`]);
+        }
+        open = null;
+      } else {
+        open = { start: i + 1, owner, content: [] };
+      }
+      return;
+    }
+    if (open) {
+      open.content.push(l);
+      return;
+    }
+    const box = l.match(/^\s*-\s\[( |x|X)\]\s*(.*)$/);
+    if (box) owner = { line: i + 1, ticked: box[1] !== " ", body: box[2] };
+    else if (/^#{1,6}\s/.test(l)) owner = null;
+  });
+  return out;
+};
+
+if (args.includes("--fences-all")) {
+  // Reads every plan in docs/test-plans/ for the fence rule alone, to show it
+  // fires on nothing legitimate. Prints each finding and how many plans it read.
+  const { readdirSync } = await import("node:fs");
+  const files = readdirSync("docs/test-plans").filter((f) => f.endsWith(".md"));
+  let hits = 0;
+  for (const f of files) {
+    for (const [line, msg] of fenceProblems(readFileSync("docs/test-plans/" + f, "utf8").split(/\r?\n/))) {
+      console.log("docs/test-plans/" + f + ":" + line + " — " + msg);
+      hits += 1;
+    }
+  }
+  console.log("read " + files.length + " plans, " + hits + " fence problem(s)");
+  process.exit(0);
+}
+
 let changed = [];
 let touched = [];
 let mergeBase = "";
@@ -232,7 +287,7 @@ for (const file of changed) {
     continue;
   }
 
-  // Fenced code blocks hold pasted evidence, and evidence routinely quotes this
+  // Fenced code blocks hold pasted evidence (judged only by fenceProblems, above), and evidence routinely quotes this
   // checker's own messages — which mention `<name>` and `<yyyy-mm-dd>`. Scanning
   // inside them flags the template's placeholders in text that is a faithful
   // record of a run, so the rule requiring unedited evidence would fight the rule
@@ -250,6 +305,8 @@ for (const file of changed) {
       inFence.push(open);
     }
   }
+
+  for (const [line, msg] of fenceProblems(lines)) note(file, line, msg);
 
   // Template placeholders must be replaced.
   lines.forEach((l, i) => {
