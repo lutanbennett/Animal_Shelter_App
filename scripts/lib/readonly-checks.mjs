@@ -70,7 +70,7 @@ export const CHECKS = {
     failed: (r) => !r.role_exists || r.missing.length > 0,
   },
   "role-cards-coverage": {
-    asks: "For each role: which held card needs access the role does not have, and which activity at which level is missing? (After the card-grants release this must print nothing.)",
+    asks: "TRANSIENT CONTEXT, not a finding — SUPERSEDED as a fault check by `card-grants-applied`, which asks the card question and guards the same invariant. Kept only to show who is affected today: For each role: which held card needs access the role does not have, and which activity at which level is missing? (After the card-grants release this must print nothing.)",
     // Reads card_grants and card_includes (0257): each held card with everything it includes. Before 0257 is applied to a database
     // this reports a missing table, which is the same finding: that database has no copy of what a card requires.
     sql: `with g(card, activity, level) as (select c0.card, cg.activity, max(cg.level) from (select distinct card from role_cards) c0 cross join lateral card_closure(array[c0.card]) cl join card_grants cg on cg.card = cl.card group by c0.card, cg.activity)
@@ -85,7 +85,7 @@ export const CHECKS = {
     failed: (rows) => rows.length > 0,
   },
   "cards-union": {
-    asks: "For each role: are its permission cells exactly the union of its cards' grants? (Lists cells no card backs, and backed access the role lacks.)",
+    asks: "TRANSIENT CONTEXT, not a finding — SUPERSEDED as a fault check by `card-cells-backed`, which asks the activity question and guards the same invariant. Kept only to show who is affected today: For each role: are its permission cells exactly the union of its cards' grants? (Lists cells no card backs, and backed access the role lacks.)",
     // Reads card_grants and card_includes, like role-cards-coverage.
     sql: `with g(card, activity, level) as (select c0.card, cg.activity, max(cg.level) from (select distinct card from role_cards) c0 cross join lateral card_closure(array[c0.card]) cl join card_grants cg on cg.card = cl.card group by c0.card, cg.activity),
       want as (select c.role_id, g.activity, max(g.level) as level
@@ -101,6 +101,40 @@ export const CHECKS = {
       ? `${x.role}: exactly the union of its cards`
       : `${x.role}: ${x.unbacked.length} cells no card backs (${x.unbacked.join(", ") || "-"}); ${x.unapplied.length} backed but missing (${x.unapplied.join(", ") || "-"})`),
     failed: (rows) => rows.some((x) => x.unbacked.length + x.unapplied.length > 0),
+  },
+  "card-grants-applied": {
+    asks: "For each card: does anything that holds it lack an activity the card grants (counting what it includes), and how many holders do? (Names no role: the cells are stored per role, so this counts holders. A card that does nothing is the fault; none is correct.)",
+    // Same data as role-cards-coverage, grouped by card. Role archiving was removed in 0272, so no retired-role filter is needed.
+    sql: `with g(card, activity, level) as (select c0.card, cg.activity, max(cg.level) from (select distinct card from role_cards) c0 cross join lateral card_closure(array[c0.card]) cl join card_grants cg on cg.card = cl.card group by c0.card, cg.activity)
+      select coalesce(json_agg(json_build_object('card', t.card, 'activity', t.activity, 'need', t.level, 'holders', t.holders, 'lacking', t.lacking) order by t.card, t.activity), '[]'::json)
+      from (select c.card, g.activity, g.level, count(*) as holders, count(*) filter (where coalesce(p.level, 0) < g.level) as lacking
+        from roles r join role_cards c on c.role_id = r.id join g on g.card = c.card
+          left join role_permissions p on p.role_id = r.id and p.activity = g.activity
+        where r.kind <> 'fixed'
+        group by c.card, g.activity, g.level) t
+      where t.lacking > 0`,
+    render: (rows) => rows.length
+      ? rows.map((x) => `${x.card}: grants ${x.activity} at ${x.need === 2 ? "edit/yes" : "read"}, but ${x.lacking} of ${x.holders} holders lack it - the card does nothing there`)
+      : ["Every held card is fully applied wherever it is held."],
+    failed: (rows) => rows.length > 0,
+  },
+  "card-cells-backed": {
+    asks: "For each activity: is any permission cell held that no card the holder has backs, or any card-backed access missing from a holder, and how many holders? (Names no role: the cells are stored per role, so this counts holders. None is correct.)",
+    sql: `with g(card, activity, level) as (select c0.card, cg.activity, max(cg.level) from (select distinct card from role_cards) c0 cross join lateral card_closure(array[c0.card]) cl join card_grants cg on cg.card = cl.card group by c0.card, cg.activity),
+      want as (select c.role_id, g.activity, max(g.level) as level from role_cards c join g on g.card = c.card group by c.role_id, g.activity),
+      live as (select id from roles where kind <> 'fixed'),
+      unbacked as (select p.activity, count(*) as n from role_permissions p join live on live.id = p.role_id
+        where not exists (select 1 from want w where w.role_id = p.role_id and w.activity = p.activity and w.level >= p.level) group by p.activity),
+      unapplied as (select w.activity, count(*) as n from want w join live on live.id = w.role_id
+        where not exists (select 1 from role_permissions p where p.role_id = w.role_id and p.activity = w.activity and p.level >= w.level) group by w.activity)
+      select json_build_object(
+        'unbacked', coalesce((select json_agg(json_build_object('activity', activity, 'holders', n) order by activity) from unbacked), '[]'::json),
+        'unapplied', coalesce((select json_agg(json_build_object('activity', activity, 'holders', n) order by activity) from unapplied), '[]'::json))`,
+    render: (r) => r.unbacked.length + r.unapplied.length === 0
+      ? ["Every permission cell is backed by a card, and every card-backed cell is present."]
+      : [...r.unbacked.map((x) => `${x.activity}: held by ${x.holders} with no card backing it`),
+         ...r.unapplied.map((x) => `${x.activity}: backed by a card but missing from ${x.holders} holders`)],
+    failed: (r) => r.unbacked.length + r.unapplied.length > 0,
   },
   "fault-residents-lifecycle": {
     asks: "TRANSIENT CONTEXT, not a finding — SUPERSEDED as a fault check by `card-lifecycle-enclosures`, which asks the card question and guards the invariant. Kept only to show who is affected today: Which roles hold the Residents card or a placement cell but not facility.enclosures at read? (They cannot move, hospitalise, foster/adopt or record a death: the enclosure lookup is refused.)",

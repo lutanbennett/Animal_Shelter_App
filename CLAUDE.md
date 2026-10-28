@@ -153,7 +153,7 @@ as *"doctor 9, management 10, 2IC 5"*. So it lives here instead, where every ses
 - **One modelling caveat worth knowing before you promise a card-shaped answer:** reachability is not a
   property of a card alone. A page can be reached from a tile on the home, through a group doorway, or
   because another card in the set opens the section (`opensAnyIn`). So *per card* means **a login
-  holding exactly that card and nothing else** — `node scripts/dev-signin.mjs <role> --cards <card>`
+  holding exactly that card and nothing else** — `node scripts/dev-signin.mjs --cards <card> --port <yours>`
   already models that. Where a page needs two cards together, **report it rather than hiding it**.
 - **Admin is unaffected.** It sits outside the card system and is decided in SQL, not on a role name.
 
@@ -514,9 +514,12 @@ Know its limits, and say so in the test plan when they bite:
     is not established, so a brief asking for that press must say where. Not turned into a check script: see
     `docs/decisions/2026-10-28-aal1-list-stays-prose.md`.
   If a page you changed does not open, write down which page and what it asked for.
-- **A login's cards can be set with `dev-signin.mjs <role> --cards <card>`.** Called twice for the
-  same login it **re-keys** it, so only the **later** snippet is valid; an earlier one signs you in as
-  nothing, or as the wrong card set.
+- **A login holding exactly some cards: `node scripts/dev-signin.mjs --cards <a,b> --port <yours>`, with NO role.** The script
+  **refuses** a role and `--cards` together (`give a role or --cards, not both`). Given `--cards` alone it builds a disposable role
+  of its own holding exactly those cards, so no real role is disturbed and no other running stream is signed out. Called twice
+  for the same cards it **re-keys** the login, so only the **later** snippet is valid.
+- **Never run `--remove` while other streams are running:** it deletes every login the script has ever made, including their
+  live ones.
 - **The snippet holds a live dev session token.** Never paste it into a PR, a test plan or a commit.
 - **Cookies belong to `localhost`, not to a port**, so every dev server in that browser shares one
   signed-in role at a time. Run the script again to switch.
