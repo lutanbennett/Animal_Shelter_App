@@ -443,14 +443,46 @@ is why the old "ask for your port to be added" step was a dead end. Nothing abou
 
 Know its limits, and say so in the test plan when they bite:
 
-- **The session is aal1 (password only).** Pages that demand the second step redirect to it. Proven
-  reachable at aal1 on 2026-10-22: `/management/purchasing`, `/admin/who-does-what`, `/admin/diets`,
-  `/admin/security`. If a page you changed does not open, write down which page and what it asked for.
+- **The session is aal1 (password only).** Pages that demand the second step redirect to it. A page
+  that *loads* is not the same as an action that *runs*, so the list is two lists. **Re-measured
+  2026-10-28** (clicked through, `requestAnimationFrame` firing; the 2026-10-22 reading listed all four
+  as reachable and something has narrowed it since, so treat any list here as dated and re-check):
+  - **Page loads at aal1:** `/management/purchasing`, `/admin/who-does-what`, `/admin/diets`.
+  - **Redirects:** `/admin/security` goes to `/admin/security/verify` ("Set-up isn't open yet"). It
+    cannot be driven without a real authenticator code: write `n/a: aal2 required, no authenticator`.
+  - **Actions:** Purchasing's Print and Download CSV are present. On Who does what, #1014 reported
+    that the Delete role press asks for the authenticator code (not re-pressed on 2026-10-28, because
+    it deletes from the shared dev database). Diets edits were not pressed.
+  If a page you changed does not open, write down which page and what it asked for.
+- **A login's cards can be set with `dev-signin.mjs <role> --cards <card>`.** Called twice for the
+  same login it **re-keys** it, so only the **later** snippet is valid; an earlier one signs you in as
+  nothing, or as the wrong card set.
 - **The snippet holds a live dev session token.** Never paste it into a PR, a test plan or a commit.
 - **Cookies belong to `localhost`, not to a port**, so every dev server in that browser shares one
   signed-in role at a time. Run the script again to switch.
 - **The dev database is shared by every stream**, so what you write is visible to the others.
 - The cookie lasts 50 minutes. If a page sends you to `/login`, run the script again.
+
+### The built-in browser pane lies about pages you load by their address
+
+Measured 2026-10-28 (`docs/decisions/2026-10-28-website-contact-tab-not-an-app-fault.md`, extended
+the same day by two streams). In the pane, **`requestAnimationFrame` never fires on a page loaded
+directly by its address**. React streams a page body inside a Suspense boundary and swaps it in with
+an inline `$RC(...)` call that waits on `requestAnimationFrame`, so the swap stays pending, the page's
+own client chunks are never requested and **only the layout hydrates**. An un-hydrated form is a plain
+HTML form: Save submits a GET with every field in the address bar and saves nothing.
+
+- **Reach every page by clicking through from another page.** A client-side navigation never uses
+  that swap and works. (`/my`, the first screen after sign-in, is a direct load and shows only the layout.)
+- **Before recording anything that looks dead, run `requestAnimationFrame(()=>0)`** in
+  `javascript_tool`. If it never fires, stop and retest in real Chrome before suspecting the app.
+- **A hidden pane stops painting and `requestAnimationFrame` stops there too**, even on a page reached
+  by click. **Taking a `screenshot` wakes it** (re-measured 2026-10-28: `never` before, `fires` after).
+- **The screenshot frame is 800x600 while the page is 1024x768**, so pixel coordinates read off a
+  screenshot do not map to the page and a click can land on nothing, which looks exactly like a dead
+  control. Use `element.click()` through `javascript_tool` when a pixel click seems to miss.
+- **A plain-GET form submission in the pane is a symptom of this, not a finding.** Do not file it as
+  an app fault or a `docs/card-access-faults.md` row.
 
 ## A red `audit` check is not a blocker, and never has been
 
