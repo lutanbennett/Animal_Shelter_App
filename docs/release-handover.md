@@ -1,142 +1,131 @@
-# Release handover — written 2026-10-28 after `0.40.8`
+# Release handover — written 2026-10-28 after `0.40.9`
 
-A **delta**. **Two releases shipped on 2026-10-27** and each has its own record —
-`docs/releases/2026-10-27-0-40-7.md` and `docs/releases/2026-10-27-0-40-8.md`. The durable rules are
-in `docs/release-procedure.md`. **All of those outrank this file.**
+A **delta**. The release's own facts are in `docs/releases/2026-10-28-0-40-9.md` and the durable rules
+are in `docs/release-procedure.md`. **Both outrank this file.**
 
 ## START HERE
 
-**`0.40.8` is deployed on production and verified.** Both endpoints agree, both databases read
-**275 of 275** with `No drift`, cache purged and proved, 33 cards and all card checks clean.
+**`0.40.9` is deployed on production and verified.** Both endpoints agree, **279 of 279** with no
+drift, cache purged and proved, 33 cards and every card check clean, and the cron still healthy a day
+after it was fixed.
 
-**The headline is not the two notes. It is that the dead 15-minute cron is FIXED** — dead four days
-and six hours, back at `2026-10-27T16:45:10Z`, confirmed by two independent sessions. The record has
-the cause, the fix and the proof.
+**The one thing worth reading before your next release: do NOT run two builds in the same checkout.**
+This release ran the test Worker deploy while Lutan's production deploy was building in the same
+folder. Both died — his on `ENOTEMPTY` clearing `.open-next`, mine on a missing file inside it. The
+runbook already says *"Two builds in one worktree collide"*; it was read that morning and done anyway.
+**Deploy test AFTER production, not in parallel to save ten minutes.** Nothing was damaged (it is
+gitignored build output) but it cost a ten-minute deploy and an extra touch of his.
 
-**TEST IS A FULL RELEASE BEHIND AND ON THE OLD ADAPTER.** Only production was deployed. **Test's cron
-is still dead and test is NOT a valid pre-production check right now.** Do not read a green production
-and assume both. **This is DECIDED, not open:** Lutan, 2026-10-28 — test comes up **inline with the
-next release's ordinary test-Worker deploy**. Nothing to arrange and nothing to ask him.
+**`doctor-cells` is no longer the red you expect — read it fresh.** Doctor now holds `medical_records`
+and reads **15 cells**. Lutan is still using Doctor as his test role
+(`docs/decisions/2026-10-25-doctor-is-the-test-role.md`), so **never restore its cards and never edit
+the check** — but do not report a specific number from memory either.
 
-## The correction this edition exists to make
-
-**The previous edition said the Cloudflare trigger was the remaining candidate for the dead cron. That
-was WRONG, and it is worth reading why, because the measurement behind it was sound.**
-
-`0.40.7`'s handover reasoned: a Worker deploy did not restart the cron (true, measured across a whole
-quarter-hour slot), therefore the trigger is what is left. **The inference was the error** — it assumed
-the two candidates on the backlog item were exhaustive, when the real cause was a third thing nobody
-had named: the Worker was crashing on startup. The honest statement at the time was *"cause not yet
-established; a Worker deploy is ruled out"*, and that is all the evidence supported.
-
-**What actually settled it was an instrument, not an argument.** The old check read a row written by
-the **app's route**, so "the trigger never fired" and "the trigger fired into a crashing Worker" looked
-identical. #999 added an unconditional heartbeat written by the **Worker itself**, before any guard,
-and the two cases separated immediately.
-
-**The framing that produced it is worth copying:** the planner's brief put the claim to the stream as
-**NOT ESTABLISHED, with the command that would settle it**, rather than as a conclusion to defend. The
-stream built the instrument instead of arguing. **When two sessions disagree about a cause, the useful
-move is to name the measurement that would separate them.**
+**Re-measure before trusting any of this.** `git diff --stat 0911a1e0..HEAD`, `gh pr list`,
+`--status --env production`, `node scripts/check-production.mjs all`, the live `/api/version`.
 
 ## Corrections and closures to the last edition
 
-- **The cron item is CLOSED on production.** Cause: `942ea49f` (2026-10-23) bumped Next to 16.4.2,
-  which added `server/preview-props.json`; adapter `@opennextjs/cloudflare` 1.20.6 throws on it.
-  Fix: `244a1731` / #1005, adapter 1.20.13. **Both commits belong in any retelling — one is the cause,
-  one is the fix, and they are four days apart.** Still open on **test**.
-- **The Cloudflare trigger is exonerated BY OBSERVATION, dated to the 16:45:09Z fire** on an unchanged
-  Cloudflare configuration with only the adapter changed. Not by anyone's reasoning, including mine.
-- **`strip-baked-env` has NO reading this release** — the first break in eleven. The production deploy
-  was run by Lutan after the classifier blocked the planner, with no `tee`, so the line was never
-  captured. **The counter is broken, not continued at 14.** Do not write 14 from memory.
-- **The OpenNext `Failed to copy` item stays CLOSED** (settled in the `0.40.7` edition by listing the
-  built output). Do not reopen it.
-- **The home-icon count held at 50** against 33 cards, as expected: `iconCatalogue()` counts pages.
+- **Send to hospital is HELD AGAIN. Close it.** Row 1 of Lutan's list for two releases running. The
+  before-picture showed **Doctor holds `medical_records`** on production — he assigned it between
+  releases, exactly the card assignment the last two editions predicted. **Stop carrying it.**
+- **Test is no longer behind, and THE CRON ITEM IS NOW FULLY CLOSED — tick it, do not carry it.**
+  `0.40.9` brought test up inline, which was Lutan's decision of 2026-10-28, and one quarter-hour
+  after the test Worker went out the heartbeat fired `05:30:39Z` with a real run at `05:30:41Z` and
+  `verdict: healthy`. Test's cron had been dead **five days**, since `2026-10-23T09:45:42Z`. Both
+  environments now run adapter 1.20.13 with firing crons, so **test is a valid pre-production check
+  again.**
+- **`strip-baked-env` is RESTORED at 14.** `0.40.8` had no reading at all because its deploy ran
+  without a `tee`; this release handed the command over with one and read **14** on both environments.
+  **The streak is re-established, not continued** — `0.40.8` is a genuine gap in it.
+- **The four advisories carried since 2026-10-24 are GONE**, resolved incidentally by the adapter bump
+  that fixed the cron. Confirmed **by grepping each ID**. Do not carry them again.
+- **One NEW advisory replaces them and must not be "fixed":** `GHSA-5j98-mcp5-4vw2`, `glob` CLI command
+  injection. Not reachable (the flaw is in `glob`'s **binary**; nothing here invokes it; absent from
+  the built `worker.js`), and **`npm audit fix --force` would install `@opennextjs/cloudflare@1.20.9`
+  — older than the 1.20.13 that fixed the four-day cron outage.** Decision file:
+  `docs/decisions/2026-10-28-glob-cli-advisory-not-reachable.md`. **Read it before touching the audit.**
+- **The OpenNext `Failed to copy` item stays CLOSED** (settled two editions ago by listing the built
+  output). Do not reopen it.
 
 ## Where things stand
 
 | | |
 |---|---|
-| Live, production | **`0.40.8`** — Worker `00c6926e` tagged `v0.40.8`, Pi at `429229cd`, both endpoints agree |
-| Live, test | **`0.40.7`**, **old adapter**, **cron still dead** — not deployed, by omission rather than decision |
-| Previous release SHA, for the next range | **`429229cd4680a04dc8a5f025cd7e6ea9b20371b3`** |
-| Production database | **`275 applied, 0 pending`**, `No drift`. **Run it yourself** |
-| Dev database | **`No drift`, 275 of 275** |
-| Next free migration number | **`0275`**. **Check `origin/main` *and* open `*-schema` PRs anyway** |
-| The mail | **None**, correctly, on both of the day's releases |
+| Live, production | **`0.40.9`** — Worker `89d8e4cf` tagged `v0.40.9`, Pi at `0911a1e0`, both endpoints agree |
+| Live, test | **`0.40.9`** — Worker `802ee57c`, Pi at `0911a1e0`, both endpoints agree, **cron healthy** |
+| Previous release SHA, for the next range | **`0911a1e0c475208f8857002579c09b10365fd0d8`** |
+| Production database | **`279 applied, 0 pending`**, `No drift`. **Run it yourself** |
+| Dev database | **`279 applied, 0 pending`** |
+| Next free migration number | **`0279`**. **Check `origin/main` *and* open `*-schema` PRs anyway** |
+| The mail | **None**, correctly. Seventh release running |
 | Cards | **33**, `cards-union` and `role-cards-coverage` both clean |
-| Cron | **Healthy on production** (`verdict: healthy`), **dead on test** |
+| Cron | **Healthy on BOTH** — production `05:15:12Z`, test `05:30:41Z`, both with a Worker heartbeat beside the run |
 
-**Counters:** `npm ci` as step 1 **31**; no production-only guard **33**; **`strip-baked-env` BROKEN
-this release — no reading** (was 14 for ten consecutive releases); **Server Actions keys**: production
-`cbd55beae8d8` read on the `0.40.7` Pi build, **not read on `0.40.8`**.
-**Releases that mailed: 1 in the last twelve.**
+**Counters:** `npm ci` as step 1 **32**; no production-only guard **34**; **`strip-baked-env` back at
+14**, with `0.40.8` a gap in the run; **Server Actions keys**: production `cbd55beae8d8`, test
+`ecc41837fc0b`, unchanged.
+**Releases that mailed: 1 in the last thirteen.**
 
 ## The method that keeps paying
 
-**Never verify a deploy with a check the fallback can satisfy.** This is `0.40.8`'s real lesson and it
-cost 21 minutes of production serving the wrong release. The deploying session checked
-`https://lannacare.org/ returns 200` and treated it as proof the deploy was whole — **but the Worker
-answers that whether or not the Pi moved.** The two-endpoint comparison the runbook already prescribes
-catches it instantly: `/api/version` is the app (the Pi), `/api/releases/current` is the Worker bundle.
-**Run both, every time, and say both numbers out loud.**
+**Read an exit code from the thing you are measuring, and this release is the sharpest case yet.**
+`check-admin-by-flag.mjs --env production` prints `status 400` and `Failed to run sql query` **on
+success**, because the harness rolls itself back with a `raise exception`. Its real exit is **0** and
+its message begins `HARNESS-OK`. **Reading the surface would have called a pass a failure and very
+likely stopped the release.** Also: the background wrapper reported the first test deploy as exit 0
+when the deploy had exited **1**.
 
-**Read an exit code from the thing you are measuring.** Twice more today. `release-prs.mjs` **exited 1**
-on `0.40.8` and would have recorded 7 PRs instead of 9 — both missing ones were **squash-merged**, so
-neither left a `Merge pull request #N` commit. And on `0.40.7` a background wrapper reported a deploy
-as exit 0 that had **exited 1**.
+**Ask the one-way-door question before the cut, not after.** `0277` changed how Admin is recognised,
+and Admin holds no cards on production, so a wrong answer locks the only administrator out of the
+screen needed to fix it. Lutan was asked and chose to have Admin verified **between the apply and the
+deploy**. It passed, including **with the Admin role renamed**. That is a two-minute check against a
+one-way door — always worth it.
 
-**Take the before-picture of the table the migration writes.** Carried from `0.40.7`, where it turned
-the riskiest-looking change of the day into one line: deleting the `staff` role took nothing from
-anybody.
+**Use the window between the apply and the deploy as a free live test.** Production spends those
+minutes running the PREVIOUS release's code against the NEW functions. If a migration has broken a
+permission function, it shows **then**, before anything is deployed. Here the site answered 200 and
+both card checks were clean in that window.
 
-**When `main` moves inside the cut-to-deploy window, pin the Pi to what the WORKER shipped.** On
-`0.40.8` the Worker was built at 16:36:17Z, between the cut at 16:24:20Z and two further merges at
-16:39:59Z and 16:43:57Z. Seven real code files separate the cut from `main`'s tip. The Pi was pinned
-with `--ref 429229cd` for that reason. **The window is now routinely long enough for two PRs.**
+**Keep the cut-to-deploy window empty.** The planner was asked to hold its one docs-only PR until the
+cut merged. `main` did not move, the code-identity diff was empty, and no time went on working out
+what the Worker had actually built from — which is what `0.40.8` paid for.
+
+**Take the before-picture of the tables the migration writes.** Fourth release running. This time it
+did more than prove nothing was lost: it is **how Send to hospital was found to be closed**.
 
 ## Two things a future release manager will meet
 
-- **The auto-mode classifier blocks `[Production Deploy]` intermittently** — it stopped the planner's
-  `apply-migrations --env production` and this session's `ssh … deploy-pi.sh`, the latter ninety
-  minutes after the same session ran it successfully. **Try once, do not work around it, hand it to
-  Lutan.** Both were unblocked that way within minutes.
-- **Cloudflare's API can time out from this machine for minutes at a stretch** (`fetch failed`,
-  `ConnectTimeoutError`), hitting `wrangler`, `purge-cache.mjs` and `check-production.mjs` alike. It is
-  **not** bandwidth and **not** IPv6 — both measured and ruled out on `0.40.7`. **Retry; it clears.**
+- **The auto-mode classifier blocks `[Production Deploy]` intermittently.** It blocked the Pi deploy
+  on `0.40.8` and allowed the same command on `0.40.9`. **Try once, do not work around it, hand it to
+  Lutan.**
+- **Cloudflare's API can time out from this machine for minutes** (`fetch failed`,
+  `ConnectTimeoutError`). Not bandwidth, not IPv6 — both measured and ruled out. **Retry; it clears.**
 - **`git reset --hard` is refused by the classifier and the runbook's worktree-reuse recipe names it.**
-  `git checkout -b <branch> origin/main` in a clean worktree does the same job. **Named by three
-  editions now and still not corrected in `docs/release-procedure.md`** — it is one line.
+  `git checkout -b <branch> origin/main` in a clean worktree does the same job. **Named by four
+  editions now and still not corrected in `docs/release-procedure.md`** — it is one line, and it would
+  take less time to fix than it has taken to keep writing down.
 
 ## In flight and open
 
-**Test is DECIDED, not open. Lutan, 2026-10-28, asked directly: *"For test we will get that inline
-when we do the next release."*** So the next release's **ordinary test-Worker deploy** is what brings
-test onto the new adapter — there is nothing to arrange, nothing to schedule, and **nothing to put to
-him again**. Two things follow for whoever runs that release: **deploy test as usual, do not treat it
-as a special step**; and **afterwards, one quarter-hour later, run
-`node scripts/check-production.mjs calendar-cron --env test` and expect `verdict: healthy`**, which is
-what ticks the backlog item. Until then test stays a release behind with a dead cron, and **that is
-expected — do not report it as a fault**, and do not read a green production as covering test.
+**`release-prs.mjs` has exited 1 on three consecutive releases**, each time because a PR was
+**squash-merged** and left no `Merge pull request #N` commit to match. `0.40.8` reported 7 of 9;
+`0.40.9` reported 27 of 29. Each release has patched it by hand. **Three in a row is the point at
+which the script should learn about squash merges** — raised with the planner for a backlog item. Until
+then: **read its exit code, and when it is 1, find the missing PRs with `gh pr view` before writing a
+count into a record.**
 
-**Two user-visible changes shipped unlooked-at**: picking an appeal when recording a donation, and
-replacing the welcome-page photo. Rows 1 and 2.
+**Fifteen `pending:` plans shipped as a stated gap** on Lutan's explicit decision — the highest yet.
+The trend is **5, 5, 13, 7, 13, 15**, and it is now rising rather than oscillating. Worth putting to
+him as a trend question at some point, **but not as a per-release footnote and not as a decision he
+owes** — he has answered it the same way seven times.
 
-**The two deploy-log lines were never captured** and may be gone. Row 3. If Lutan's terminal has
-scrolled, `strip-baked-env` simply has no value for `0.40.8`; **record that rather than carrying 14
-forward**.
+**The Translations card is still held by nobody** (`0271`, deliberately). It is the one carried item
+left from the `0.40.7` list now that Send to hospital is closed.
 
-**Carried from `0.40.7` and unchanged: Send to hospital is held by no live role** until Manage medical
-is assigned, and **the Translations card is held by nobody** by design. Rows 5 and 6.
-
-**The four deleted vet-visit calendar entries are NOT restored** and will not come back by themselves —
-Lutan's "records only for now", its own backlog item under Medical records. **No visit was ever wrongly
-cancelled on production**, and #1002 proved itself on the 16:45 sweep by deleting nothing when four
-days of backlog ran at once. **No release note may imply the calendar is whole.**
-
-**Carried unchanged, nothing new to say, and RE-MEASURE EACH before repeating it:** `0257`'s stale
-`-- consumer:` header; `who-does-what` items 2 and 3 and `stocktaking` item 3; the Thai wording of the
-Units screen and of the Pages preview; the restore drill, still never exercised; and the two
-unlooked-at items, the prescription form reading 4 and video playback on a real handset.
-**`tee` under PowerShell still writes the deploy log as UTF-16** — `tr -d '\000'` before grepping.
+**Carried unchanged, and RE-MEASURE EACH before repeating it:** `0257`'s stale `-- consumer:` header;
+`who-does-what` items 2 and 3 and `stocktaking` item 3; the Thai wording of the Units screen, the Pages
+preview and this release's new notes; the restore drill, still never exercised and now with three more
+rewritten security-definer functions behind it; and the two unlooked-at items, the prescription form
+reading 4 and video playback on a real handset. **`tee` under PowerShell still writes the deploy log as
+UTF-16** — `tr -d '\000'` before grepping.
