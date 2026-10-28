@@ -129,7 +129,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 | # | What to check | Where |
 |---|---|---|
-| 1 | Lutan's own review of the log as a set — **gate 3**. This is not verification of this PR: it is the separate decision the whole log is waiting on, and this header exists to make it cheaper | `docs/card-access-faults.md` |
+| 1 | ~~Lutan's own review of the log as a set — **gate 3**~~ **DONE 2026-10-28: he reviewed the log as a set in this session and closed the gate.** His decisions, his "cards not roles" correction, and the two card-level questions still with him are recorded in the log's own new gate-3 section | `docs/card-access-faults.md` |
 
 ## Sign-off
 
@@ -142,9 +142,9 @@ Automated checks by: Claude (Opus 5), planner session — gates, and both cited 
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty; item 1 is Lutan's gate-3 review of the whole log, which no one else can do and which this PR does not depend on
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list's one item happened during this session (Lutan reviewed the log and closed gate 3), so nothing is outstanding; left unticked rather than ticked by Claude, because only the person who looked may tick it
 
-Manual verification by: pending: Lutan's gate-3 review of the fault log as a set — item 1 above
+Manual verification by: Lutan — reviewed the log as a set in chat and closed gate 3; this line was written by Claude from his recorded decisions and is NOT a signature made on his behalf  Date: 2026-10-28
 
 ### Result
 

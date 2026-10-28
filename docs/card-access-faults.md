@@ -2,11 +2,73 @@
 
 **What this is.** Lutan's instruction, 2026-10-24: *"I want all errors to surface based on card only access. Please add these to a log that I can review at the end of the fix to the card access control work."*
 
-**Who reviews it, and when.** Lutan, once, when the card-access work (the item *a card given to a role must carry its own access*) closes. **That review is the gate, not each fault.**
+**Who reviews it, and when.** Lutan, once, when the card-access work (the item *a card given to a role must carry its own access*) closes. **That review is the gate, not each fault.** **IT HAPPENED: he reviewed the log as a set and CLOSED THE GATE on 2026-10-28 — see the next section for his decisions and his correction that a row is about a CARD, never a role.**
 
 **How to use it.** A fault found while access is driven by cards only gets a **row here** instead of a one-off fix. Later streams **append a row rather than fixing a fault in isolation**, and held faults stay held until the review. If your work happens to fix one, say so in your PR and mark its row, rather than quietly removing it.
 
 Roles, cards and activity names only. No personal data.
+
+---
+
+## THE REVIEW HAPPENED: GATE 3 IS CLOSED — Lutan, 2026-10-28
+
+**He reviewed the log as a set, which is what the gate always was, and closed it.** Card review 2 and
+the four held fault-log items are unblocked. **Do not re-open this gate or re-ask for the review.**
+
+**WHAT HE WAS SHOWN, and it is why the review was short:** of the five rows that have ever said LIVE
+there were only ever two root causes — the empty clinic list (**closed**, cards changed, nothing
+patched) and the un-deletable maintenance job (**live, and he decided it the same day**: *"No, this
+will be an admin duty to delete"*, own item under *Facility*, building as `maintenance-delete-schema`).
+Three further top-table rows were settled by planner production reads in the review itself:
+`fault-residents-lifecycle` returns **enclosures read yes for every card-holder**, so the move /
+hospitalise / rehome / record-a-death row is **closed**; `role-cards-coverage` returns **"every held
+card is covered by its role's access"**, so no card does nothing; `check-hard-coded-security.mjs`
+returns **"no coded security outside the Admin bypass"**.
+
+### HIS CORRECTION, AND IT GOVERNS EVERY FUTURE ROW IN THIS LOG
+
+The findings were put to him grouped by **role**. He rejected the framing:
+
+> *"Let's keep the review to cards not roles. As roles are only transient groupings and all will be
+> updated once we finish the cards."*
+
+**So a row in this log is about a CARD.** Naming a role is at best shorthand and at worst misleading,
+because the role holding a card today will change. **A finding stated as "Head of Maintenance can do
+X" must be restated as "the card that grants X carries it", or it cannot be acted on.** This is the
+same reasoning as the no-named-role-fallback rule in `CLAUDE.md`, applied to the log.
+
+### HIS DECISIONS, so nobody re-asks
+
+| put to him | his answer |
+|---|---|
+| **Give the read-only cards (View contacts, View medical) to whoever only needs to look?** Both exist and neither is held; the full Contacts card can permanently delete a contact, a clinic or a doctor | **"Leave it as it is."** No change. Note this is also a *who holds what* question, which his correction above makes transient |
+| **The "Assigned to" / "Hand over" pickers list every login in the app to any holder** (`do_maintenance`, `recurring_jobs`), and **Recent deliveries offers delete on every row including ones another login recorded** (`record_delivery`) | **"Neither for now."** Both judged untidy rather than harmful. **Not faults to fix; do not file them as work** |
+| **Does the review close now?** | **Yes.** Closed 2026-10-28 |
+
+### WHAT IS STILL OPEN, AND IT IS NOT HIS
+
+**141 rows still say *not established*** — a stream saw something on the shared dev database and
+nobody has checked it against production. **He was explicitly NOT asked to rule on these**, because
+a row that establishes nothing is not a finding. **They are the planner's to settle** (only the main
+checkout can read production, and most rows already name the command). Settling them does **not**
+re-open the gate: it either closes a row or produces a new card-level finding to put to him on its
+own.
+
+**Still with him as card-level questions, asked 2026-10-28 and not yet answered:**
+
+1. **Should downloading the whole resident list as a spreadsheet be its own card?** `/residents/export`
+   asks only `resident.record` at read (`src/app/residents/export/route.ts:29`), so **eight cards
+   carry it** — **View residents, Residents, Approve photos** directly, and **View medical, Manage
+   medical, Book clinic visits, Run fundraising appeals, Record a death** through an included card. It
+   returns every resident's name, Thai name, species, breed, microchip, status, enclosure, intake date
+   and diet.
+2. **Should Add medical photos be able to look at the photos it files?** `0276` deliberately withheld
+   the read on his *"decrease to just what is required"* ruling, so that card files into Medical and
+   cannot open it.
+
+*This section is the record of the gate. The rows below are unchanged by it: per his 2026-10-24
+ruling they are fixed as a set, and the set is now the two questions above plus whatever settling the
+141 produces.*
 
 ---
 
@@ -33,10 +95,10 @@ Roles, cards and activity names only. No personal data.
 | any role holding it | `residents` | move, hospitalise, foster/adopt, record a death | the enclosure lookup, refused by RLS from `0145` (not a card cell) | not live | 2026-10-24 19:53 (`check-production.mjs`) |
 | doctor | `view_residents` / any card that opens `/residents` | the Residents tile is no longer drawn (it used to follow `roles.opens_app`) | `resident.record` at read (the doctor's cells hold it as None; `clinicRule` in fixed-for-now.ts) | not established; settle with `node scripts/check-production.mjs role-cards` | 2026-10-25 (found by removing the app-side rule; `claude/remove-hidden-security-invisible-failures`) |
 | doctor | `book_clinic_visits` | the card now opens the shelter's list of visits (`/upcoming-visits`) instead of the clinic's own `/appointments`; the database shows a clinic login only its own clinic's visits, so the page can be narrower or empty | one card, one page: the clinic-only page has no card of its own | not established; settle with `node scripts/check-production.mjs role-cards` | 2026-10-25 (found by removing the app-side rule; `claude/remove-hidden-security-invisible-failures`) |
-| ~~CLOSED by 0259~~ doctor | `bills`, `do_*` cards that file a bill | offered the Bills page (the clinical refusal in `canUseBills` is gone); `record_attachment()` (0174, 0190) then refuses the upload | the database function asks the role's clinical column, not a card | not established; settle with `node scripts/check-production.mjs role-cards` | 2026-10-25 (found by removing the app-side rule; `claude/remove-hidden-security-invisible-failures`) | **CLOSED 2026-10-25 by 0259** (is_clinic_login() reads no role column)
-| ~~CLOSED by 0259~~ doctor | `administer_medication`, `feed_special_diets`, `record_weight`, `add_medical_photos` | the four medical pages (`/operations/medication-list`, `/operations/feeding-list`, `/medical/weight`, `/medical/photos`, `/medical/diets`) are now offered to a doctor holding the activity; their views are for a login that sees every clinic (`sees_all_clinical()`, 0135, 0136, 0140), so they open empty | the views and `sees_all_clinical()` ask the role's clinical column | not established; settle with `node scripts/check-production.mjs role-cards` | 2026-10-25 (found by removing the app-side rule; `claude/remove-hidden-security-invisible-failures`) | **CLOSED 2026-10-25 by 0259** (sees_all_clinical() reads no role column)
-| ~~CLOSED by 0259~~ second_in_command, volunteer | `contacts` | the Contacts page now reads the `contacts` table for anyone holding `contacts.browse`; the database narrows a `name_phone` role to `volunteer_contacts` (0126, 0155) and refuses the table, so the list comes back empty | `sees_all_contacts()` asks `roles.scope_contacts` | not established; settle with `node scripts/check-production.mjs role-cards` | 2026-10-25 (found by removing the app-side rule; `claude/remove-hidden-security-invisible-failures`) | **CLOSED 2026-10-25 by 0259** (sees_all_contacts() reads no role column; volunteer_contacts dropped)
-| ~~CLOSED by 0259~~ a role with `scope_residents = who_and_where` | `residents` (Mark as posted on photos and adoption updates) | the button is now offered to any holder of `photos.resident_manage`; the write policies ask `sees_all_residents()`, which reads `roles.scope_residents` (0144, 0179, 0196), and refuse | the database function asks the role's residents column | not established; settle with `node scripts/check-production.mjs role-cards` | 2026-10-25 (found by removing the app-side rule; `claude/remove-hidden-security-invisible-failures`) | **CLOSED 2026-10-25 by 0259** (sees_all_residents() reads no role column)
+| ~~CLOSED by 0259~~ doctor | `bills`, `do_*` cards that file a bill | offered the Bills page (the clinical refusal in `canUseBills` is gone); `record_attachment()` (0174, 0190) then refuses the upload | the database function asks the role's clinical column, not a card | not established; settle with `node scripts/check-production.mjs role-cards` | 2026-10-25 (found by removing the app-side rule; `claude/remove-hidden-security-invisible-failures`) | **CLOSED 2026-10-25 by 0259** (is_clinic_login() reads no role column)
+| ~~CLOSED by 0259~~ doctor | `administer_medication`, `feed_special_diets`, `record_weight`, `add_medical_photos` | the four medical pages (`/operations/medication-list`, `/operations/feeding-list`, `/medical/weight`, `/medical/photos`, `/medical/diets`) are now offered to a doctor holding the activity; their views are for a login that sees every clinic (`sees_all_clinical()`, 0135, 0136, 0140), so they open empty | the views and `sees_all_clinical()` ask the role's clinical column | not established; settle with `node scripts/check-production.mjs role-cards` | 2026-10-25 (found by removing the app-side rule; `claude/remove-hidden-security-invisible-failures`) | **CLOSED 2026-10-25 by 0259** (sees_all_clinical() reads no role column)
+| ~~CLOSED by 0259~~ second_in_command, volunteer | `contacts` | the Contacts page now reads the `contacts` table for anyone holding `contacts.browse`; the database narrows a `name_phone` role to `volunteer_contacts` (0126, 0155) and refuses the table, so the list comes back empty | `sees_all_contacts()` asks `roles.scope_contacts` | not established; settle with `node scripts/check-production.mjs role-cards` | 2026-10-25 (found by removing the app-side rule; `claude/remove-hidden-security-invisible-failures`) | **CLOSED 2026-10-25 by 0259** (sees_all_contacts() reads no role column; volunteer_contacts dropped)
+| ~~CLOSED by 0259~~ a role with `scope_residents = who_and_where` | `residents` (Mark as posted on photos and adoption updates) | the button is now offered to any holder of `photos.resident_manage`; the write policies ask `sees_all_residents()`, which reads `roles.scope_residents` (0144, 0179, 0196), and refuse | the database function asks the role's residents column | not established; settle with `node scripts/check-production.mjs role-cards` | 2026-10-25 (found by removing the app-side rule; `claude/remove-hidden-security-invisible-failures`) | **CLOSED 2026-10-25 by 0259** (sees_all_residents() reads no role column)
 | any role holding cards whose bundles are all empty, or no cards | (none) | the login is no longer let into the app: `entersApp()` needs Admin or at least one cell. It used to follow `roles.opens_app`, so a role switched on by that column and holding no cell is now locked out | at least one card that gives a cell; `operations_landing` and `management_landing` give none | not established; settle with `node scripts/check-production.mjs role-cards` | 2026-10-25 (found by removing the app-side rule; `claude/remove-hidden-security-invisible-failures`) |
 | a clinic login with no clinic linked | `book_clinic_visits`, `medical_records` | `loadClinicScope()` now answers `any` (it used to answer `unlinked` and refuse); the database still refuses the write (`current_clinic_resident_ids()`) | a clinic link for the login; the app no longer fences it | not established; settle with `node scripts/check-production.mjs role-cards` | 2026-10-25 (found by removing the app-side rule; `claude/remove-hidden-security-invisible-failures`) |
 | Head of Medical, Head of Maintenance, 2IC | (no cards held) | the job-based home these three had when they held no cards is gone (`JOBS_OF_ROLE`): with no cards they now get the home derived from their cells, which includes pages the jobs did not list (for example `/photos/add`) | a card home; give the role its cards | not established; settle with `node scripts/check-production.mjs role-cards` | 2026-10-25 (found by removing the app-side rule; `claude/remove-hidden-security-invisible-failures`) |
