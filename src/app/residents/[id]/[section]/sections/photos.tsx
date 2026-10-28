@@ -41,7 +41,7 @@ export async function renderPhotosSection(ctx: SectionContext): Promise<React.Re
       {/* Photos stay open after death (0052); the archive is refreshed
           by the upload route and the photo actions. */}
       {/* No drop zone for a card that cannot add photos: it would only refuse (Card review 1, 2026-10-26). */}
-      {(can(perms, "photos.resident_add") || can(perms, "photos.shelter_add") || can(perms, "photos.resident_publish")) && (
+      {photoCategoriesFor(perms).length > 0 && (
         <PhotoUploader residentId={id} categories={photoCategoriesFor(perms)} canSeeMedical={canReadMedical} />
       )}
       <PhotoGallery
@@ -53,7 +53,7 @@ export async function renderPhotosSection(ctx: SectionContext): Promise<React.Re
         canMarkPosted={canMarkPosted}
         canMakeMeme={can(perms, "social.library")}
         canManage={canMarkPosted}
-        canFileToMedical={can(perms, "photos.resident_add")}
+        canFileToMedical={can(perms, "photos.medical_add") && (can(perms, "photos.resident_add") || can(perms, "photos.resident_manage"))}
       />
     </div>
   );

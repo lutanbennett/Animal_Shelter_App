@@ -251,7 +251,7 @@ export function PhotoGallery({
    * three: photos.resident_manage. Default false, so a caller that forgets to pass it offers nothing that would refuse.
    */
   canManage?: boolean;
-  /** May this login file a photo INTO Medical without managing photos? The move action allows photos.resident_add for that one folder. */
+  /** May this login file a photo INTO Medical without managing photos? The move action asks photos.medical_add for that one folder (0278). */
   canFileToMedical?: boolean;
 }) {
   const { t, locale } = useI18n();

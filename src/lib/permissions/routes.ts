@@ -262,7 +262,7 @@ export const ROUTES: readonly RouteEntry[] = [
   },
   {
     path: "/medical/photos",
-    activity: "photos.resident_add",
+    activity: "photos.medical_add",
     icon: Camera,
     label: (t) => t.appHome.jobs.addMedicalPhotos,
     device: "any",
