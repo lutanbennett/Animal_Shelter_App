@@ -1,0 +1,44 @@
+{
+  "rule": "An advisory on this list has been assessed by a person and found unreachable here. scripts/audit-register.mjs lets exactly these through and fails on any other high or critical production advisory, so a new one is the only thing anyone sees. Each entry says why in CHECKABLE terms (mustStayAbsent): if any pattern starts matching, the entry stops being true and the check fails until it is re-assessed. An entry also expires on reviewBy. Entries are never a way to hide a red: do not add one without a decision file. See docs/decisions/2026-10-28-advisory-register.md.",
+  "accepted": [
+    {
+      "id": "GHSA-5j98-mcp5-4vw2",
+      "package": "glob",
+      "title": "glob CLI: Command injection via -c/--cmd executes matches with shell:true",
+      "assessed": "2026-10-28",
+      "reviewBy": "2027-01-28",
+      "decision": "docs/decisions/2026-10-28-glob-cli-advisory-not-reachable.md",
+      "why": "The flaw is in glob's command-line binary, not its library API. Nothing in this repo runs that binary, and glob arrives only through the build-time chain @opennextjs/cloudflare > @opennextjs/aws > @node-minify/core.",
+      "mustStayAbsent": [
+        {
+          "what": "any invocation of the glob binary or @node-minify from package.json, scripts/ or worker/",
+          "pattern": "glob\\s+(-c|--cmd)\\b|\\bnpx\\s+glob\\b|node_modules/\\.bin/glob|node-minify",
+          "paths": ["package.json", "scripts", "worker"],
+          "skip": ["scripts/audit-register.mjs"]
+        }
+      ],
+      "mustBeAbsentFromBuild": {
+        "what": "the built Worker bundle (checked only when a build is present; reported as not checked otherwise)",
+        "pattern": "node-minify",
+        "paths": [".open-next/worker.js", ".open-next/server-functions/default/handler.mjs"]
+      }
+    }
+  ],
+  "resolved": [
+    {
+      "ids": ["GHSA-27r3-jxmh-p828", "GHSA-4qv8-2p9j-2685", "GHSA-f72v-6w45-q472", "GHSA-xjj6-f33q-929c"],
+      "decision": "docs/decisions/2026-10-24-audit-body-parser-undici-not-reachable.md",
+      "note": "Cleared by the adapter upgrade on 2026-10-28. Deliberately NOT accepted: if one comes back it is a regression and should be seen."
+    },
+    {
+      "ids": ["GHSA-vcvr-r3jv-pc5j"],
+      "decision": "docs/decisions/2026-10-01-next-og-advisory-handled-as-routine.md",
+      "note": "Fixed by next 16.3.8. Not accepted."
+    },
+    {
+      "ids": ["GHSA-2464-fhr4-w9xw", "GHSA-673q-mjm6-r5xr", "GHSA-p3m5-59mp-jv5r"],
+      "decision": "docs/decisions/2026-10-23-next-16-4-2-advisories-routine.md",
+      "note": "Fixed by next 16.4.2. Not accepted."
+    }
+  ]
+}
