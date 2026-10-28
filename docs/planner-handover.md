@@ -37,8 +37,12 @@ restated.
   **The live card position — derived from `card_includes`/`card_grants`, NOT proven by a query as
   those logins:** three cards reach the new read through `card_closure()` — Manage medical, Book
   clinic visits, Run appeals — so **Management can see medical photos and Head of Medical cannot**,
-  though she holds Add medical photos and files them there. Deliberate per `0276`'s note 4; whether
-  Management reaching them through a booking card was intended is Lutan's call, raised 2026-10-28.
+  though she holds Add medical photos and files them there. **Both halves are deliberate and were
+  written down in advance:** `0276` note 4 withholds the read from Add medical photos on Lutan's
+  "decrease to just what is required" ruling, and note 2 says the two including cards read Medical
+  photos too — "that is what 'includes' means and is recorded, not widened." **So there is nothing
+  here to file as a fault; the only open question is whether Lutan WANTS that shape**, which is a
+  Settings answer, raised 2026-10-28.
   **Re-read `--status --env production` and `role-cards`; never quote any of this.**
 - **"Ten card re-passes owing." CLOSED — the whole fourteen-card programme is done** (#1026, #1035).
 - **"Buttons slices 5 and 6." BOTH DONE; the six-slice sweep is complete** (#1027, #1030). Slice 5
