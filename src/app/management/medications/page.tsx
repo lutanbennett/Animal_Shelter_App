@@ -15,6 +15,7 @@ import { loadConversions, loadDeliveryCosts } from "@/lib/units-server";
 import { loadReceipts } from "@/lib/management/receipts-server";
 import { receivedSinceCount } from "@/lib/management/purchasing";
 import { requirePermission } from "@/lib/permissions/require";
+import { can } from "@/lib/permissions/can";
 import { loadStocktakingSwitches } from "@/lib/management/stocktaking-switches";
 import { canEditItemSettings } from "@/lib/permissions/item-settings";
 import { moveMedication } from "./actions";
@@ -53,14 +54,16 @@ type ForecastRow = {
  * Settings → Medications (/admin/medications), Admin only.
  */
 export default async function MedicationStockPage(props: PageProps<"/management/medications">) {
-  const { supabase, perms } = await requirePermission("stock.medications");
+  const { supabase, perms } = await requirePermission("stock.medications", "read");
+  // Read sees the forecast; every control below asks edit, the level its own action asks (actions.ts), and is drawn only then.
+  const canEdit = can(perms, "stock.medications", "edit");
   const { t, locale } = await getT();
   const switches = await loadStocktakingSwitches(supabase);
   const searchParams = await props.searchParams;
 
   // ?view=order: the cupboard order on a screen of its own, one job per
   // screen for the 2IC's phone, with no forecast to load.
-  if (searchParams.view === "order") {
+  if (searchParams.view === "order" && canEdit) {
     const { data, error } = await supabase
       .from("medication")
       .select("id, name, name_th, dose_unit")
@@ -205,12 +208,14 @@ export default async function MedicationStockPage(props: PageProps<"/management/
             icon={ClipboardCheck}
             iconOnlyOnMobile={false}
           />
-          <ActionLink
-            href="/management/medications?view=order"
-            label={t.management.stock.order.link}
-            icon={ArrowUpDown}
-            iconOnlyOnMobile={false}
-          />
+          {canEdit && (
+            <ActionLink
+              href="/management/medications?view=order"
+              label={t.management.stock.order.link}
+              icon={ArrowUpDown}
+              iconOnlyOnMobile={false}
+            />
+          )}
           <ActionLink
             href="/management/stock-usage"
             label={t.management.stockUsage.link}
@@ -269,6 +274,7 @@ export default async function MedicationStockPage(props: PageProps<"/management/
             medications={medications}
             forecastHeadings={forecastHeadings}
             stocktaking={switches.medical}
+            canEdit={canEdit}
           />
           <p className="text-xs text-muted">{m.table.forecastNote}</p>
           <p className="text-xs text-muted">{t.management.stock.note}</p>
@@ -283,23 +289,28 @@ export default async function MedicationStockPage(props: PageProps<"/management/
           stocktaking={switches.medical}
         />
 
-        {conversions.error && (
-          <p className="text-sm text-danger">
-            {t.units.title}: {conversions.error}
-          </p>
+        {/* The price panel sets prices (units/actions.ts asks stock.medications at edit), so it is drawn only for an editor. */}
+        {canEdit && (
+          <>
+            {conversions.error && (
+              <p className="text-sm text-danger">
+                {t.units.title}: {conversions.error}
+              </p>
+            )}
+            <UnitsPanel
+              kind="medication"
+              mode="price"
+              items={medications.map((medication) => ({
+                id: medication.id,
+                name: medication.name,
+                baseUnit: doseUnitLabel(t, medication.dose_unit),
+                conversions: conversions.data[medication.id] ?? [],
+                costPerBase: medication.shownCost,
+                costFromDelivery: medication.costFromDelivery,
+              }))}
+            />
+          </>
         )}
-        <UnitsPanel
-          kind="medication"
-          mode="price"
-          items={medications.map((medication) => ({
-            id: medication.id,
-            name: medication.name,
-            baseUnit: doseUnitLabel(t, medication.dose_unit),
-            conversions: conversions.data[medication.id] ?? [],
-            costPerBase: medication.shownCost,
-            costFromDelivery: medication.costFromDelivery,
-          }))}
-        />
       </div>
     </main>
   );

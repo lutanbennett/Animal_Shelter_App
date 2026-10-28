@@ -74,8 +74,11 @@ function MedicationCard({
   medication,
   forecastHeadings,
   stocktaking,
+  canEdit,
 }: {
   medication: MedicationStockRow;
+  /** Count, price and label controls are drawn only when true (the actions ask edit). */
+  canEdit: boolean;
   forecastHeadings: string[];
   stocktaking: boolean;
 }) {
@@ -281,6 +284,7 @@ function MedicationCard({
         ))}
       </dl>
 
+      {canEdit && (
       <div className="flex flex-wrap gap-2">
         {mode === "view" ? (
           <>
@@ -332,6 +336,7 @@ function MedicationCard({
           </>
         )}
       </div>
+      )}
 
       {message && (
         <p role="status" className={`text-sm ${message.type === "error" ? "text-danger" : "text-success"}`}>
@@ -346,8 +351,11 @@ export function MedicationStockCards({
   medications,
   forecastHeadings,
   stocktaking,
+  canEdit = false,
 }: {
   medications: MedicationStockRow[];
+  /** Whether the login may change stock (edit). Defaults to false, so a caller that forgets offers nothing. */
+  canEdit?: boolean;
   /** The medical Stocktaking switch (stocktaking-switches.ts). */
   stocktaking: boolean;
   /** One heading per forecast window, in the order the rows' forecast arrays use. */
@@ -364,7 +372,7 @@ export function MedicationStockCards({
           key={medication.id}
           medication={medication}
           forecastHeadings={forecastHeadings}
-          stocktaking={stocktaking}
+          stocktaking={stocktaking} canEdit={canEdit}
         />
       ))}
     </ul>

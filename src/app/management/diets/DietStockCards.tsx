@@ -66,8 +66,11 @@ function DietCard({
   dietType,
   forecastHeadings,
   stocktaking,
+  canEdit,
 }: {
   dietType: DietStockRow;
+  /** Count, price and label controls are drawn only when true (the actions ask edit). */
+  canEdit: boolean;
   forecastHeadings: string[];
   stocktaking: boolean;
 }) {
@@ -255,6 +258,7 @@ function DietCard({
         ))}
       </dl>
 
+      {canEdit && (
       <div className="flex flex-wrap gap-2">
         {mode === "view" ? (
           <>
@@ -283,6 +287,7 @@ function DietCard({
           </>
         )}
       </div>
+      )}
 
       {message && (
         <p role="status" className={`text-sm ${message.type === "error" ? "text-danger" : "text-success"}`}>
@@ -297,8 +302,11 @@ export function DietStockCards({
   dietTypes,
   forecastHeadings,
   stocktaking,
+  canEdit = false,
 }: {
   dietTypes: DietStockRow[];
+  /** Whether the login may change stock (edit). Defaults to false, so a caller that forgets offers nothing. */
+  canEdit?: boolean;
   /** The food Stocktaking switch (stocktaking-switches.ts). */
   stocktaking: boolean;
   /** One heading per forecast window, in the order the rows' forecast arrays use. */
@@ -314,7 +322,7 @@ export function DietStockCards({
     <div className="flex flex-col gap-3">
       <ul className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
         {dietTypes.map((dietType) => (
-          <DietCard key={dietType.id} dietType={dietType} forecastHeadings={forecastHeadings} stocktaking={stocktaking} />
+          <DietCard key={dietType.id} dietType={dietType} forecastHeadings={forecastHeadings} stocktaking={stocktaking} canEdit={canEdit} />
         ))}
       </ul>
       <dl className="flex flex-col gap-1 rounded border border-border bg-surface p-4 text-sm">
