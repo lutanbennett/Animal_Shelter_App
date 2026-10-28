@@ -34,3 +34,13 @@ test("booking a vet visit from the hub asks the activity the booking page asks",
   assert.match(section, /can\(perms, "visit\.book"\)/);
   assert.match(read("../app/clinic-visits/new/page.tsx"), /requirePermission\("visit\.book"\)/);
 });
+
+test("the photos page asks the Medical read, and the uploader never promises a thumbnail without it", () => {
+  const page = read("../app/residents/[id]/[section]/sections/photos.tsx");
+  assert.match(page, /const canReadMedical = can\(perms, "photos\.resident_medical"\);/);
+  assert.match(page, /canReadMedical \? allPhotos : .*isMedicalFolder/);
+  assert.match(page, /canSeeMedical=\{canReadMedical\}/);
+  const up = read("./PhotoUploader.tsx");
+  assert.match(up, /canSeeMedical = false,/, "canSeeMedical must default to false");
+  assert.match(up, /item\.category === "Medical" && !canSeeMedical \? t\.photos\.uploader\.doneMedicalHidden/);
+});

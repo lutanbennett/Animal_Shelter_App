@@ -1,6 +1,7 @@
 import { PhotoUploader } from "@/components/PhotoUploader";
 import { photoCategoriesFor } from "@/lib/google/drive-client";
 import { PhotoGallery, type PhotoRow } from "@/components/PhotoGallery";
+import { isMedicalFolder } from "@/lib/google/drive-client";
 import Link from "next/link";
 import { can } from "@/lib/permissions/can";
 import { loadPhotoShares } from "@/lib/social-shares";
@@ -8,7 +9,7 @@ import type { SectionContext } from "./types";
 
 export async function renderPhotosSection(ctx: SectionContext): Promise<React.ReactNode> {
   const { id, resident, perms, supabase, photoSelect, t } = ctx;
-  const [{ data: photos }] = await Promise.all([
+  const [{ data: allPhotos }] = await Promise.all([
     supabase
       .from("attachments")
       .select(photoSelect)
@@ -17,6 +18,10 @@ export async function renderPhotosSection(ctx: SectionContext): Promise<React.Re
       .order("uploaded_at", { ascending: true })
       .returns<PhotoRow[]>(),
   ]);
+  // The database already returns no Medical row to a login without this read (0276); the page asks the same activity
+  // so nothing Medical is drawn, counted or left as an empty group for it.
+  const canReadMedical = can(perms, "photos.resident_medical");
+  const photos = canReadMedical ? allPhotos : (allPhotos ?? []).filter((p) => !isMedicalFolder(p.sub_folder));
   // Photos filed by a login that may not publish wait for one that does (0217); the approver can go straight to the queue.
   const waiting = (photos ?? []).filter((p) => p.approved_at === null).length;
   // Where each photo has been posted on social media (0223). One query for the grid, owner_type pinned inside.
@@ -37,7 +42,7 @@ export async function renderPhotosSection(ctx: SectionContext): Promise<React.Re
           by the upload route and the photo actions. */}
       {/* No drop zone for a card that cannot add photos: it would only refuse (Card review 1, 2026-10-26). */}
       {(can(perms, "photos.resident_add") || can(perms, "photos.shelter_add") || can(perms, "photos.resident_publish")) && (
-        <PhotoUploader residentId={id} categories={photoCategoriesFor(perms)} />
+        <PhotoUploader residentId={id} categories={photoCategoriesFor(perms)} canSeeMedical={canReadMedical} />
       )}
       <PhotoGallery
         residentId={id}
