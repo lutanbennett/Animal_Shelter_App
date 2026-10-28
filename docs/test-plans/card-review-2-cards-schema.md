@@ -43,7 +43,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [x] Existing rows still read correctly after the change: Admin and the four card-only logins below read the pages from dev rows
 - [ ] Constraints and defaults exercised against real rows in a `begin; … rollback;` harness — n/a: the file inserts grant rows and deletes one; the `card_grants` triggers of `0257` were exercised by `check-card-grants.mjs` (`direct insert grants; direct delete removes; card_grants changes reach every holder` passed)
 - [ ] Down-migration written, or the reason one is not needed is stated — n/a: re-inserting `('dashboard','reports.cashflow',1)` and deleting the three cards' grants reverses it; nobody holds the new cards, so no role changes
-- [ ] Production apply plan stated for the release manager — deferred: release manager (apply `0280` to `dbkodyyxxhtygxcxmfcu` before the deploy: the code reads no new column, but a deployed read guard with no seeded grant would leave the cards inert)
+- [ ] Production apply plan stated for the release manager — n/a: the production apply is the release manager's, stated here: apply `0280` to `dbkodyyxxhtygxcxmfcu` before the deploy: the code reads no new column, but a deployed read guard with no seeded grant would leave the cards inert)
 
 ## 4. Functional checks
 
