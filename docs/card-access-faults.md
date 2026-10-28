@@ -17,8 +17,10 @@ the four held fault-log items are unblocked. **Do not re-open this gate or re-as
 
 **WHAT HE WAS SHOWN, and it is why the review was short:** of the five rows that have ever said LIVE
 there were only ever two root causes — the empty clinic list (**closed**, cards changed, nothing
-patched) and the un-deletable maintenance job (**live, and he decided it the same day**: *"No, this
-will be an admin duty to delete"*, own item under *Facility*, building as `maintenance-delete-schema`).
+patched) and the un-deletable maintenance job — which, checked properly the same day, **was never a
+fault**: the control exists and no card grants the activity, so it is already Admin-only, which is what
+he wants (*"Only admin can delete maintenance, keep it that way"*). **Nothing was built and nothing
+needed to be.**
 Three further top-table rows were settled by planner production reads in the review itself:
 `fault-residents-lifecycle` returns **enclosures read yes for every card-holder**, so the move /
 hospitalise / rehome / record-a-death row is **closed**; `role-cards-coverage` returns **"every held
@@ -74,12 +76,12 @@ ruling they are fixed as a set, and the set is now the two questions above plus 
 
 ## Before you read the rows: what is actually live, read on production 2026-10-28
 
-**252 fault rows. 31 are closed. Of the five that have ever said LIVE, there were only ever TWO root causes, and after today's production reads one is closed and the other is decided. No other row is confirmed live on production.**
+**252 fault rows. 31 are closed. Of the five that have ever said LIVE, there were only ever TWO root causes — and as of 2026-10-28 NEITHER IS A LIVE FAULT, so NOTHING IN THIS LOG IS CONFIRMED LIVE ON PRODUCTION.** One was closed by the cards changing; the other **was never a fault at all** and is the behaviour Lutan wants (below). **Corrected the same day: this header first said the maintenance delete was "LIVE, CONFIRMED". It is not.**
 
 | root cause | rows | state after 2026-10-28 |
 |---|---|---|
 | The vet clinic list is empty, so a clinic visit cannot be saved | top row 1, and the `ONE root cause` row | **CLOSED.** `fault-clinic-visit-save` shows **both** roles that can save a visit — `doctor` and `management` — now holding `clinics.list`. The cards changed; nothing was patched. The 2026-10-24 LIVE marking is superseded, and the role it named (`staff`) is retired. |
-| A maintenance job cannot be deleted by anyone | top row 2, and the two re-driven rows | **LIVE, CONFIRMED, AND DECIDED.** `fault-maintenance-delete` shows `head_of_maintenance` and `second_in_command` affected. **Lutan, 2026-10-28: *"No, this will be an admin duty to delete"*** — so a delete control must exist and be Admin-only. Own item under *Facility*; this closes when it lands. |
+| A maintenance job cannot be deleted by anyone **except Admin** | top row 2, and the two re-driven rows | **NOT A FAULT — IT IS THE INTENDED BEHAVIOUR, AND ALWAYS WAS.** The delete control **does** exist (`MaintenanceJobView`, gated `can(perms, "maintenance.delete")`) and **no card grants that activity**, so only Admin passes through the one declared bypass. `0265`'s header had already said so: *"maintenance.delete, which Do maintenance has never held; the job page only promised it."* **Lutan, 2026-10-28, asked directly: *"No, this will be an admin duty to delete"***, and then, shown that it already was: ***"Only admin can delete maintenance, keep it that way."*** **Nothing to build; the Facility item is ticked.** The `fault-maintenance-delete` check has been **rewritten** to guard this instead of reporting it: it now asks whether any card grants `maintenance.delete` and fails if one does. |
 
 **The caveat that matters more than the table: 141 rows still say *not established*** — a stream saw something on the shared dev database and nobody has checked whether it is true on production. **That is over half the log, and it is the planner's to settle, not the reviewer's**, because only the main checkout can read production and most of those rows already name the command they need. **Until they are settled, a row saying nothing more than *not established* is not a finding to rule on.**
 

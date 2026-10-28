@@ -21,7 +21,7 @@ signing for work it did not watch. The automated signature below covers exactly 
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the backlog item asked for
-- [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs) — `docs/card-access-faults.md` only, plus this plan. No code, no schema, no UI
+- [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs) — `docs/card-access-faults.md`, **`scripts/lib/readonly-checks.mjs`** (the `fault-maintenance-delete` check, rewritten) and this plan. No schema, no UI, no app code. **It is no longer a docs-only PR, so CI runs its full set rather than skipping it**
 - [x] Roles affected identified: admin / staff / doctor / volunteer / resident / signed-out public — none. The fault log is an internal record; no login reads it and nothing in the app imports it
 - [x] Anything explicitly **out of scope** written down — out of scope by Lutan's 2026-10-24 ruling: **fixing** any row. Rows are fixed as a set after his review (gate 3). This PR marks and records; it deletes and rewrites nothing, and ticks no backlog item
 
@@ -52,7 +52,9 @@ gates: typecheck=0 lint=0 test=0 build=0
 ## 4. Functional checks
 
 - [x] Happy path works end to end — the header renders as a markdown table and the marked rows keep their original columns; read through in full after the merge from `main`
-- [x] **Both production checks the header cites were re-run by the planner, and both reproduce it.** `fault-clinic-visit-save` returns `doctor: clinics.list yes` and `management: clinics.list yes` — no role lacks the clinic list, so that root cause is genuinely **CLOSED** as the header says. `fault-maintenance-delete` returns `head_of_maintenance` and `second_in_command`, so the maintenance-delete row is genuinely **LIVE** as the header says
+- [x] **`fault-clinic-visit-save` was re-run by the planner and reproduces the header:** `doctor: clinics.list yes`, `management: clinics.list yes` — no role lacks the clinic list, so that root cause is genuinely **CLOSED**
+- [x] **The maintenance-delete claim was WRONG and is corrected in this PR.** The header first said **LIVE, CONFIRMED**, on the old check's output. Established 2026-10-28 by reading the code and every migration: the delete control **exists** (`src/app/maintenance/actions.ts:283` records that RLS on `maintenance.delete` is what stops a role without it) and **no migration grants `maintenance.delete` to any card** — `grep -rn "'maintenance.delete'" supabase/migrations/*.sql` returns only its activity registration at `0179:90`. `card_grants` is written only by migrations, so no card holds it and **only Admin passes**. `0265`'s header said the same in passing. **So it was never a fault, and Lutan confirmed the behaviour: *"Only admin can delete maintenance, keep it that way."***
+- [ ] **The rewritten `fault-maintenance-delete` check run against production** — n/a: a worktree has no production credentials by design (`.env.deploy.production` is only in the main checkout), so its SQL was validated by reading as above. **The planner runs it from the main checkout immediately after this merges**, and that is recorded in the manual list below rather than ticked here
 - [ ] Data persists — reload the page and the change is still there — n/a: a markdown file in git, no stored state
 - [ ] Create / edit / delete all exercised — n/a: a document has no such surface, and deleting rows is forbidden by the ruling above
 - [ ] Empty state renders sensibly (no rows yet) — n/a: the log has 252 rows and cannot be empty
@@ -124,12 +126,15 @@ gates: typecheck=0 lint=0 test=0 build=0
 |---|---|---|---|
 | 1 | low | The maintenance-delete row's first column still reads **"three roles"**, while today's production read returns **two** (`head_of_maintenance`, `second_in_command`). `staff` held Do Maintenance and was deleted by `0270` | accepted — the row's original wording is left as written, which is what the ruling requires; the header's own table carries the corrected count and its date. Recorded here so the next reader does not treat "three" as current |
 | 2 | low | The content commit had **no test plan**, so the PR could not have been opened as it stood | fixed — this plan was written by the planner session, which re-ran both cited checks rather than signing for unwatched work |
+| 3 | **medium** | **The header asserted the maintenance delete was LIVE, CONFIRMED on production. It is not a fault at all** — the control exists and no card grants the activity, so it has always been Admin-only. The planner read the policy (`has_permission('maintenance.delete')`) and concluded work was needed **without reading the grants**, which is the same class of error as quoting a check without reading its query | fixed in this PR — header, root-cause table and gate-3 section all corrected, with Lutan's confirming words recorded. A backlog item and a stream brief had already been written on the wrong premise; the stream's own step-zero check caught it and it built nothing |
+| 4 | **medium** | **The `fault-maintenance-delete` check reported the intended design as a fault on every run**, and would have for ever: it listed holders of Do Maintenance and failed if there were any, on the premise "no delete control exists" | fixed in this PR — rewritten to ask the inverse question that **guards** the decision: does any card grant `maintenance.delete`? None is correct; one would mean deleting a job had left Admin |
 
 ## Left for manual verification
 
 | # | What to check | Where |
 |---|---|---|
 | 1 | ~~Lutan's own review of the log as a set — **gate 3**~~ **DONE 2026-10-28: he reviewed the log as a set in this session and closed the gate.** His decisions, his "cards not roles" correction, and the two card-level questions still with him are recorded in the log's own new gate-3 section | `docs/card-access-faults.md` |
+| 2 | **Run the rewritten `fault-maintenance-delete` from the main checkout** and confirm it prints "No card grants maintenance.delete". A worktree cannot reach production; the planner owns this and does it as soon as this merges | `node scripts/check-production.mjs fault-maintenance-delete` |
 
 ## Sign-off
 
@@ -144,7 +149,7 @@ Automated checks by: Claude (Opus 5), planner session — gates, and both cited 
 
 - [x] The manual list above is empty, or every item in it was checked by a person — Lutan reviewed the log as a set, closed gate 3, and asked in chat for this to be recorded as his signature
 
-Manual verification by: Lutan — reviewed the card-access fault log as a set, closed gate 3, and confirmed in chat; line written by Claude at their request  Date: 2026-10-28
+Manual verification by: Lutan — reviewed the card-access fault log as a set, closed gate 3, and confirmed in chat; line written by Claude at their request. His signature covers THE REVIEW; the maintenance-delete correction (defects 3 and 4) was made after it, is a factual fix rather than a decision, and carries his own confirming words  Date: 2026-10-28
 
 ### Result
 
