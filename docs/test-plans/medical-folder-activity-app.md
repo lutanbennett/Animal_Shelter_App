@@ -148,7 +148,7 @@ Automated checks by: Claude  Date: 2026-10-28
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: row 1 above
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not empty; row 1 is waiting for a person, see the signature below
 
 Manual verification by: pending: a person looking at the Photos tab as Residents, Add medical photos and Admin
 
