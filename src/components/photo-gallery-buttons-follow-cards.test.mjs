@@ -25,7 +25,7 @@ test("every page that draws the gallery passes the card test the actions make", 
     const src = read(p);
     assert.match(src, /canManage=\{canMarkPosted\}/, `${p} must pass canManage`);
     assert.match(src, /const canMarkPosted = can\(perms, "photos\.resident_manage"\);/, `${p}: canMarkPosted must be photos.resident_manage`);
-    assert.match(src, /canFileToMedical=\{can\(perms, "photos\.resident_add"\)\}/);
+    assert.match(src, /canFileToMedical=\{can\(perms, "photos\.medical_add"\) && \(can\(perms, "photos\.resident_add"\) \|\| can\(perms, "photos\.resident_manage"\)\)\}/);
   }
 });
 
