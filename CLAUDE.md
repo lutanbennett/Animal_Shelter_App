@@ -114,6 +114,49 @@ catch this, which is exactly why the rule has to be read rather than enforced.**
 - **Admin is unaffected.** It sits outside the card system and is decided in SQL by `key = 'admin'` (the `roles.is_admin` column exists since `0275` but is not yet what the SQL reads), not on
   a role name.
 
+## All analysis is by CARD, never by role — a third role rule, and the one about CONCLUSIONS
+
+**Lutan, 2026-10-28, said TWICE in one day:** *"Can we stop analyzing against Roles. All analysis must
+be against cards as Roles are just a transient grouping of cards."* Earlier the same day, mid-review:
+*"Let's keep the review to cards not roles. As roles are only transient groupings and all will be
+updated once we finish the cards."*
+
+**He had to repeat it because the first time was recorded in one document and then broken within the
+hour** — the planner wrote the instruction into `docs/card-access-faults.md`, then sized Card review 2
+as *"doctor 9, management 10, 2IC 5"*. So it lives here instead, where every session reads it first.
+
+- **The test, before you write any finding, band, brief, backlog note or release note:** if the
+  sentence names a role, **would it still be true after the card assignments are rebuilt?** He has said
+  they will be: *"I will build all of the card assignments up once we have finished all cards"*. If
+  not, it is not a finding. **Restate it as the card that carries the behaviour.**
+- **Worked example, from the same day.** *"Five of six roles can download the whole resident list"* is
+  not a finding — the roles change next week. *"Eight cards carry the whole-list download, because*
+  `src/app/residents/export/route.ts` *asks only* `resident.record` *at read"* is one, and it is
+  actionable: you can see which card to narrow.
+- **Roles still appear in exactly two places, and NEITHER is analysis:** saying who is affected
+  **today**, clearly labelled as transient context; and **ordering** on an admin screen, which
+  `CLAUDE.md` already allows. **A count per role measures nothing durable.**
+- **THIS IS NOT THE NO-NAMED-ROLE-FALLBACK RULE ABOVE, and the difference is the point.** That one
+  governs what **code may read**. This one governs what **a person or a session may conclude and
+  report** — prose, tables, bands, briefs. A perfectly card-driven codebase can still be analysed,
+  briefed and reported entirely by role, and that is what was happening.
+- **IT REACHES THE INSTRUMENTS, WHICH IS WHY PROSE ALONE WILL NOT HOLD IT.**
+  `scripts/check-menu-coverage.mjs` says in its own first line *"which pages would become unreachable
+  for each non-Admin role"* and loops over roles; most of `scripts/check-production.mjs` is keyed on
+  roles the same way. **Every brief and band is written from their output, so while they answer per
+  role the rule keeps being broken by people trying to follow it.** Making them card-shaped is its own
+  backlog item under *Security*.
+- **The shape to copy is already in the repo.** `fault-maintenance-delete` was rewritten on 2026-10-28
+  (#1040) from *"which roles hold Do Maintenance"* to *"does any card grant `maintenance.delete`"*.
+  Same subject, card-shaped — and it turned a check that reported the intended design as a fault on
+  every run into one that **guards a decision**.
+- **One modelling caveat worth knowing before you promise a card-shaped answer:** reachability is not a
+  property of a card alone. A page can be reached from a tile on the home, through a group doorway, or
+  because another card in the set opens the section (`opensAnyIn`). So *per card* means **a login
+  holding exactly that card and nothing else** — `node scripts/dev-signin.mjs <role> --cards <card>`
+  already models that. Where a page needs two cards together, **report it rather than hiding it**.
+- **Admin is unaffected.** It sits outside the card system and is decided in SQL, not on a role name.
+
 ## A button is shown only if the login's cards let it do that action
 
 **Lutan, 2026-10-27:** *"If a user cannot perform an action via the card that is assigned the buttons
