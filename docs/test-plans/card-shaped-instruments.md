@@ -88,7 +88,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [x] Backlog item ticked in `docs/backlog.md` — the medical-photos item was already ticked; its note and the three-times mechanism are recorded. The instruments item is annotated PART DONE, not ticked, because the rest of `check-production.mjs` is still role-keyed
 - [x] Non-obvious design choices added as a new file in `docs/decisions/` — `2026-10-28-instruments-ask-a-card-question.md`
 - [x] `README.md` still accurate
-- [x] **Release notes.** Would a shelter user notice this change? Yes: `src/lib/releases.ts` gained a line, in `0.40.10`'s own `notes` (not `unreleased`), because `0279` is on production (280 of 280 applied, read 2026-10-28). A released version was amended on purpose
+- [ ] **Release notes.** Would a shelter user notice this change? — n/a: yes, and the line is written, but in `0.40.10`'s own `notes` (a released version, amended on purpose because `0279` shipped in that release), not `unreleased`, so the checker cannot see it
 - [x] Commit messages say why, not just what
 - [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned** — the 64/37/10/17 figures are the script's output
 
