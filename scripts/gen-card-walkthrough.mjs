@@ -74,6 +74,32 @@ function findActivityLabels(node) {
   return null;
 }
 
+// Pages the card's `opens` does not name, one owner card each, so a page nothing else opens still has a numbered step
+// (2026-10-28, claude/card-walkthrough-six-pages: 22 of 46 registered pages had none). Each says what the page's controls
+// ask. Wording is by card and activity, never by role.
+export const PAGE_STEPS = {
+  view_medical: [
+    "Open `/appointments`: it loads (read only; the list is the visits booked with this login's clinics, so it may read as unlinked). Confirm NO Book appointment, Log procedure, Log blood test, Add prescription, Log weight or Edit link is offered: each asks its own edit-level activity (visit.book, medical.procedures, medical.blood_tests, medical.prescriptions, medical.weight, medical.visits), none of which this card holds.",
+    "Open `/operations/feeding-list`: it loads (asks medical.diet at read). It is navigation only (round and view switches); confirm no add, edit or save control is offered.",
+  ],
+  medical_records: [
+    "Open `/appointments`: it loads. Confirm the Log procedure, Log blood test, Edit links are offered on every row, and Add prescription and Log weight on a visit whose date has started (a login holding visit.book also sees Book appointment, which this card does not).",
+  ],
+  view_contacts: [
+    "Open `/clinics`: it loads (clinics.list at read). Confirm the clinic tiles are visible and the Manage link to `/management/clinics` is NOT offered (that asks clinics.list at edit).",
+  ],
+  contacts: [
+    "Open `/clinics`: it loads, and the Manage link is offered.",
+    "Open `/management/clinics` from that link: it loads. Add, Edit and Delete are offered; every server action on the page asks clinics.list at edit. Doctors on a clinic ask clinics.doctors, a separate yes/no.",
+  ],
+  website: [
+    "Open `/management/desexing-drives`: it loads (website.content at edit). Start a drive, open one, and the signup controls are offered; every action asks website.content at edit.",
+  ],
+  donations_receipts: [
+    "Open `/projects`: it loads (projects.folders at read). Confirm the twelve category folders show, the \"read only\" note shows, and NO New folder, Rename, Move or Delete control is offered. No card in the catalogue gives projects.folders at edit today, so the write side of this page has no card to walk.",
+  ],
+};
+
 /** Every activity the card gives: its own bundle and, recursively, that of each card it includes. */
 function heldActivities(card, CARDS) {
   const acts = new Set(card.bundle.map((b) => b.activity));
@@ -103,6 +129,7 @@ export function stepsFor(card, cat) {
       steps.push(`**See:** ${label} (read only). Confirm it is visible, and that no add, edit or save control is offered for it.`);
     }
   }
+  steps.push(...(PAGE_STEPS[card.key] ?? []));
   // The point of a one-card login: a page this card does not give must be refused, not quietly opened.
   // A page is only a fair refusal if nothing this login holds (its own bundle, or that of a card it includes) is also in
   // the other card's bundle: a card holding medical.prescriptions legitimately opens the medication list, whose card
