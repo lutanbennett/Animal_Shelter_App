@@ -288,7 +288,7 @@ const PINNED = {
   "/residents/[id]/[section]": {
     guards: ['requireFullResident(sectionRead(section), "read")'],
     inDir: "src/app/residents/[id]/[section]/sections",
-    decides: ["medical.archive", "medical.visits", "medical.prescriptions", "medical.diet", "medical.weight", "medical.procedures", "medical.immunizations", "medical.blood_tests", "photos.approve", "photos.resident_add", "photos.resident_manage", "photos.resident_publish", "photos.shelter_add", "resident.adoption_news", "resident.microchip", "social.library", "visit.book"],
+    decides: ["medical.archive", "medical.visits", "medical.prescriptions", "medical.diet", "medical.weight", "medical.procedures", "medical.immunizations", "medical.blood_tests", "photos.approve", "photos.resident_add", "photos.resident_manage", "photos.resident_medical", "photos.resident_publish", "photos.shelter_add", "resident.adoption_news", "resident.microchip", "social.library", "visit.book"],
     table: {
       name: "SECTION_READS",
       in: "src/lib/residents/section-reads.ts",
