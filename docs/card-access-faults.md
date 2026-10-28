@@ -46,6 +46,8 @@ same reasoning as the no-named-role-fallback rule in `CLAUDE.md`, applied to the
 | **Give the read-only cards (View contacts, View medical) to whoever only needs to look?** Both exist and neither is held; the full Contacts card can permanently delete a contact, a clinic or a doctor | **"Leave it as it is."** No change. Note this is also a *who holds what* question, which his correction above makes transient |
 | **The "Assigned to" / "Hand over" pickers list every login in the app to any holder** (`do_maintenance`, `recurring_jobs`), and **Recent deliveries offers delete on every row including ones another login recorded** (`record_delivery`) | **"Neither for now."** Both judged untidy rather than harmful. **Not faults to fix; do not file them as work** |
 | **Does the review close now?** | **Yes.** Closed 2026-10-28 |
+| **Should downloading the whole resident list as a spreadsheet be its own card?** `/residents/export` asks only `resident.record` at read, so eight cards carry it | **"No we don't need a separate card for downloading residents data, it is given by the residents read or residents cards."** The resident read **is** the intended gate. **Nothing to build, no migration** — the route already asks exactly that. Working in the section below |
+| **Should Add medical photos be able to look at the photos it files?** `0276` withheld the read on his *"decrease to just what is required"* ruling | **"Yes add medical photos should also be able to view medical photos."** One `card_grants` row, no app change; built in `0279` |
 
 ### WHAT IS STILL OPEN, AND IT IS NOT HIS
 
@@ -56,21 +58,30 @@ checkout can read production, and most rows already name the command). Settling 
 re-open the gate: it either closes a row or produces a new card-level finding to put to him on its
 own.
 
-**Still with him as card-level questions, asked 2026-10-28 and not yet answered:**
+**BOTH CARD-LEVEL QUESTIONS ARE NOW ANSWERED, 2026-10-28. NOTHING IN THIS LOG IS WITH HIM.** They are
+recorded in the decisions table above; kept here with their working so nobody re-derives the premise.
 
-1. **Should downloading the whole resident list as a spreadsheet be its own card?** `/residents/export`
-   asks only `resident.record` at read (`src/app/residents/export/route.ts:29`), so **eight cards
-   carry it** — **View residents, Residents, Approve photos** directly, and **View medical, Manage
-   medical, Book clinic visits, Run fundraising appeals, Record a death** through an included card. It
-   returns every resident's name, Thai name, species, breed, microchip, status, enclosure, intake date
-   and diet.
-2. **Should Add medical photos be able to look at the photos it files?** `0276` deliberately withheld
-   the read on his *"decrease to just what is required"* ruling, so that card files into Medical and
-   cannot open it.
+1. **Should downloading the whole resident list as a spreadsheet be its own card? NO — ANSWERED
+   2026-10-28.** **His words:** *"no we don't need a separate card for downloading residents data, it
+   is given by the residents read or residents cards."* So the existing resident read **is** the
+   intended gate, and the eight cards carrying it carry it correctly. **Nothing to build and no
+   migration:** `src/app/residents/export/route.ts:29` already asks `can(perms, "resident.record",
+   "read")` and nothing else (re-read 2026-10-28), which is exactly the behaviour he described. The
+   working, for anyone tempted to reopen it: eight cards carry the download — **View residents,
+   Residents, Approve photos** directly, and **View medical, Manage medical, Book clinic visits, Run
+   fundraising appeals, Record a death** through an included card — and it returns every resident's
+   name, Thai name, species, breed, microchip, status, enclosure, intake date and diet. **He was shown
+   that spread and chose it. Do not file it as a fault or put it to him again.**
+2. **Should Add medical photos be able to look at the photos it files? YES — ANSWERED 2026-10-28, and
+   BUILT.** **His words:** *"Yes add medical photos should also be able to view medical photos."* It is
+   one `card_grants` row and no app change, built in migration `0279`; the backlog item carries the
+   state of the production apply. **This paragraph was stale for part of the day** — it still read
+   *"not yet answered"* after he had answered it, which is the record-versus-artifact fault the
+   2026-10-28 handover names. Fixed here rather than left to be read as current.
 
 *This section is the record of the gate. The rows below are unchanged by it: per his 2026-10-24
-ruling they are fixed as a set, and the set is now the two questions above plus whatever settling the
-141 produces.*
+ruling they are fixed as a set, and **with both card-level questions answered the set is now whatever
+settling the 141 *not established* rows produces** — which is the planner's work, not his.*
 
 ---
 
