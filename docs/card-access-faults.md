@@ -500,3 +500,14 @@ Driven in the built-in browser pane on card-only logins (`node scripts/dev-signi
 **Not driven, said plainly:** Skip and Undo on My tasks, Resume, Edit, Delete, Give back and the "from now on" Hand over on Recurring jobs.
 
 **Test rows left on dev:** recurring jobs "walk-recurring_jobs 1028" and "walk-my_tasks 1028" (both Wednesday, both with today's date marked done), and two disposable logins, `dev-signin-a3ea274c` (`recurring_jobs`) and `dev-signin-381b9992` (`my_tasks`).
+
+**`enclosures`, driven 2026-10-28 under the same heading** (login `dev-signin-95b59328`, one card, clicked through from the Home tile; the menu is Home only):
+
+| card | kind | what | missing / extra | production | read at |
+|---|---|---|---|---|---|
+| `enclosures` | enough, and **the 2026-10-25 "wrong, not just empty" row is CLOSED (driven)** | all 5 steps pass. The page reads "All zones: 67 enclosures · 55 residents · 273 spaces free" and Cat Enclosure **5 / 5, Full** (it read 0 / 5, "Space available" on 2026-10-25). Zone totals add up (Front Zone 37 residents, House Zone 6, Cat Zone 5). An enclosure's own page now lists its residents by name and number (Cat Enclosure: five), its Notes and its open Maintenance jobs. The only controls are List / Map, the zone links, Search, Sort, Filter and **Copy link**; no add, edit or save control anywhere, on the list or on an enclosure's page. `/stocktake` goes to `/no-access` | n/a | not established | 2026-10-28 dev, driven |
+| `enclosures` | control offered that refuses | an enclosure's page draws **View all** under Maintenance, linking to `/maintenance?enclosure=<id>`. Pressed: `/no-access` ("Your role doesn't include it"). The card does not hold Do Maintenance. The "Log repairs and work needed on this enclosure so it can be budgeted and tracked." line under it is text, not a button | hide View all (and say less) unless the login can open the maintenance board | not established | 2026-10-28 dev, driven |
+| `enclosures` | misleading menu | **CLOSED 2026-10-28 (driven):** the menu is Home only (no Residents entry, which the 2026-10-25 row named for this card). The Residents list itself was not opened by address | n/a | not established | 2026-10-28 dev, driven |
+| `enclosures` | residents are names without a door | the resident rows on an enclosure's page are not links (no link on the page except Back and View all). Not a fault, since the card holds no resident page; recorded so a later stream does not read it as one | n/a | n/a | 2026-10-28 dev, driven |
+
+**Not driven:** the Map view, Search and Sort, and an enclosure with notes or open jobs. Nothing was written, so there is nothing to clean up for this card beyond the disposable login.
