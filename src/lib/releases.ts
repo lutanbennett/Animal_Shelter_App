@@ -101,6 +101,7 @@ export const releases: Release[] = [
     notes: [
       { text: "On Upcoming visits, Edit now only appears if your cards let you change a visit. Before, it was shown to everyone who could see the list, and pressing it turned you away.", cards: ["view_medical", "dashboard"] },
       { text: "Looking at the photos in a resident's Medical folder now needs its own permission, given by the View medical, Manage medical, Book clinic visits and Run fundraising appeals cards. A login that holds View residents but none of those still sees the resident's other photo folders, and the Medical folder's photos are no longer shown to it. A login that holds Add Medical Photos can still file photos into the Medical folder but can no longer look at them afterwards. The check is in the database and not only on the page, so a medical photo cannot be reached by its web address either.", cards: ["view_residents", "residents", "add_medical_photos", "view_medical", "medical_records", "book_clinic_visits", "run_appeals"] },
+      { text: "If your cards include Add medical photos, you can now look at the photos in a resident's Medical folder as well as add them. Before, a photo you filed there could not be opened again.", cards: ["add_medical_photos"] },
     ],
   },
   {

@@ -130,6 +130,31 @@ export const CHECKS = {
       : ["No role holds a clinic-visit card or cell."],
     failed: (rows) => rows.some((x) => !x.clinics_list),
   },
+  // The next two restate fault-residents-lifecycle and fault-clinic-visit-save as card questions (Lutan, 2026-10-28: analysis is by card).
+  // Same subject, but `failed` now fires on a CARD that does something with a required piece missing, which stays true after the role
+  // assignments are rebuilt. Written by reading, not run: production credentials are not in a worktree.
+  "card-lifecycle-enclosures": {
+    asks: "Does any card grant a placement.* activity (move, hospitalise, foster/adopt, record a death) without also granting facility.enclosures at read, counting what it includes? (The enclosure lookup would be refused. None is correct.)",
+    sql: `with g(card, activity, level) as (select c0.card, cg.activity, max(cg.level) from (select distinct card from card_grants) c0 cross join lateral card_closure(array[c0.card]) cl join card_grants cg on cg.card = cl.card group by c0.card, cg.activity)
+      select coalesce(json_agg(json_build_object('card', p.card, 'placements', p.acts) order by p.card), '[]'::json)
+      from (select g.card, json_agg(g.activity order by g.activity) as acts from g where g.activity like 'placement.%' group by g.card) p
+      where not exists (select 1 from g where g.card = p.card and g.activity = 'facility.enclosures' and g.level >= 1)`,
+    render: (rows) => rows.length
+      ? rows.map((x) => `${x.card}: grants ${x.placements.length} placement activities but not facility.enclosures at read - BLOCKED`)
+      : ["Every card that grants a placement activity also grants facility.enclosures at read."],
+    failed: (rows) => rows.length > 0,
+  },
+  "card-clinic-visit-save": {
+    asks: "Does any card grant visit.book without also granting clinics.list at read, counting what it includes? (The clinic list would be empty and the field is required. None is correct.)",
+    sql: `with g(card, activity, level) as (select c0.card, cg.activity, max(cg.level) from (select distinct card from card_grants) c0 cross join lateral card_closure(array[c0.card]) cl join card_grants cg on cg.card = cl.card group by c0.card, cg.activity)
+      select coalesce(json_agg(json_build_object('card', b.card) order by b.card), '[]'::json)
+      from g b where b.activity = 'visit.book'
+        and not exists (select 1 from g where g.card = b.card and g.activity = 'clinics.list' and g.level >= 1)`,
+    render: (rows) => rows.length
+      ? rows.map((x) => `${x.card}: grants visit.book but not clinics.list at read - BLOCKED`)
+      : ["Every card that grants visit.book also grants clinics.list at read."],
+    failed: (rows) => rows.length > 0,
+  },
   "calendar-pending": {
     asks: "Which vet visits does the System status calendar tile count as 'waiting to be sent', and what do they have in common? (Ids and dates only, no names.)",
     // Same test as isPending() in src/lib/clinics/calendar-sync.ts: never synced, or marked out of date after the last sync.
