@@ -55,7 +55,7 @@ card — no exceptions."* And, the rule in full:
   admin access = all to be hard coded."* and, deciding its shape: *"It should sit outside the card system."* The rule governs how a
   role's access is derived from its cards. Admin's access is derived from nothing and Admin is not a participant in that system, so
   "zero exceptions" stays literally true *within* it. The invariant, in his words: *"Admin always has access to everything. No
-  matter what cards exist or don't exist."* `src/lib/permissions/can.ts:67` (`if (perms.isAdmin) return true;`, answered from `my_permissions()`'s `isAdmin`; the `roles.is_admin` column exists since `0275`, but the SQL still decides Admin by `key = 'admin'`) satisfies that because it answers before looking at a single cell or card. Admin holds no cards (production,
+  matter what cards exist or don't exist."* `src/lib/permissions/can.ts` (`if (perms.isAdmin) return true;`, line 69 on 2026-10-28; re-check with `grep -n "isAdmin) return true" src/lib/permissions/can.ts`, answered from `my_permissions()`'s `isAdmin`; the `roles.is_admin` column exists since `0275`, but the SQL still decides Admin by `key = 'admin'`) satisfies that because it answers before looking at a single cell or card. Admin holds no cards (production,
   2026-10-25), so removing it would lock the only administrator out of Settings → Who does what, the screen needed to give Admin
   cards again: a one-way door. Three things follow, and they close off the three wrong turns:
   - **Admin is never given cards**, not to satisfy the rule, not to make a check pass, not as tidying. Giving Admin every card would
@@ -63,7 +63,7 @@ card — no exceptions."* And, the rule in full:
     bypass is superseded and must not be revived.
   - **Admin is not debt.** It is not a mechanism, carries no baseline, and is never counted down. It is recorded as
     `outsideTheCardSystem` in `docs/hard-coded-security-registry.json`, which the check ignores on purpose.
-  - **It is not a precedent.** It is `can.ts:67` (the SQL decides Admin by `key = 'admin'`; the `roles.is_admin` flag exists since `0275` and moving the SQL onto it is a separate item), Admin only, all-or-nothing. Nothing else gets to sit
+  - **It is not a precedent.** It is that `perms.isAdmin` line in `can.ts` (the SQL decides Admin by `key = 'admin'`; the `roles.is_admin` flag exists since `0275` and moving the SQL onto it is a separate item), Admin only, all-or-nothing. Nothing else gets to sit
     outside the card system by citing it.
   Settled. Do not re-open it and never put it to him again.
 - **The target is zero, and the check asserts zero** (2026-10-25,
@@ -452,7 +452,10 @@ Know its limits, and say so in the test plan when they bite:
     cannot be driven without a real authenticator code: write `n/a: aal2 required, no authenticator`.
   - **Actions:** Purchasing's Print and Download CSV are present. On Who does what, #1014 reported
     that the Delete role press asks for the authenticator code (not re-pressed on 2026-10-28, because
-    it deletes from the shared dev database). Diets edits were not pressed.
+    it deletes from the shared dev database). Diets edits were not pressed. The Delete role button is
+    not on that page's first view (#1024: no button matching delete, save or add at load); where it appears
+    is not established, so a brief asking for that press must say where. Not turned into a check script: see
+    `docs/decisions/2026-10-28-aal1-list-stays-prose.md`.
   If a page you changed does not open, write down which page and what it asked for.
 - **A login's cards can be set with `dev-signin.mjs <role> --cards <card>`.** Called twice for the
   same login it **re-keys** it, so only the **later** snippet is valid; an earlier one signs you in as
@@ -508,7 +511,7 @@ worse than the finding. Then write what you concluded on the PR and in
 
 **Scope changed 2026-10-25 (Lutan; `docs/decisions/2026-10-25-audit-on-releases-not-every-pr.md`).** The PR `audit` job was meant to
 run only on a PR that changes `package.json` or `package-lock.json`. **Corrected 2026-10-27: as built it never runs on any PR**
-(its condition in `ci.yml:248` tests `deps-changed`, which `check-docs-only.mjs` never writes out, lines 107–108), so expect it to
+(its condition in `ci.yml:248` tests `deps-changed`, which `check-docs-only.mjs` prints to the log but never appends to `GITHUB_OUTPUT`; that file appends only `docs-only=`. Re-checked 2026-10-28 and still true; re-check with `grep -n GITHUB_OUTPUT scripts/check-docs-only.mjs`), so expect it to
 show **skipped**, even on a release cut that changes `package.json`; skipped is not a pass, and there is no PR check to go looking for. The advisory check someone acts on is a step in every production release (`docs/release-procedure.md`,
 "Audit the production dependencies"), with the daily `advisories.yml` run between. He asked *"If the audit check
 always fails in a CI and is ignored is it actually adding value?"* and chose this. Everything above about a red
