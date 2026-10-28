@@ -4,16 +4,20 @@
 // with --verify, proves nothing was lost, changed or invented.
 // docs/release-procedure.md step 4; docs/decisions/2026-10-26-cut-release-script.md.
 //
-//   node scripts/cut-release.mjs <version> <YYYY-MM-DD> <major|minor> --title "…" [--root <dir>]
+//   node scripts/cut-release.mjs <version> <YYYY-MM-DD> <major|minor> --title "…" [--deferred-reviewed "<answer>"] [--since <ref>] [--root <dir>]
 //   node scripts/cut-release.mjs <version> <YYYY-MM-DD> <major|minor> --verify [--base <ref|file>] [--root <dir>]
 //
 // "major" means worth an EMAIL to admins (not semver major); "minor" means no mail.
+// Before cutting it lists every PR in the range whose plan answered the release-notes line n/a,
+// and REFUSES while one may owe a note and --deferred-reviewed gives no answer (it runs whether or
+// not unreleased is empty). docs/decisions/2026-10-28-release-note-guard.md.
 // Both line endings work. Every refusal happens before a byte is written.
 import { readFileSync, writeFileSync, mkdtempSync, copyFileSync, rmSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { lastCut, scanRange, report } from "./check-deferred-notes.mjs";
 
 const die = (msg) => {
   console.error(`cut-release: REFUSED — ${msg}`);
@@ -39,6 +43,8 @@ const title = opt("title");
 const rootArg = opt("root");
 const baseArg = opt("base") ?? "origin/main";
 const verify = flag("verify");
+const reviewed = opt("deferred-reviewed");
+const sinceArg = opt("since");
 const [version, date, kind] = argv;
 
 const repoDir = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -73,6 +79,23 @@ async function load(file) {
 }
 
 if (!verify) {
+  // Unconditional: runs before the empty-unreleased refusal, because a release missing SOME notes looks
+  // exactly like one with nothing deferred (0275, 0276, 0279 all went missing that way).
+  let scan;
+  try {
+    const since = sinceArg ?? lastCut();
+    scan = scanRange(since);
+    console.log(report(scan, since) + "\n");
+  } catch (e) {
+    die(`could not list deferred release notes (${e.message}); fix that or pass --since <ref>`);
+  }
+  if (scan.candidates.length && !(reviewed ?? "").trim()) {
+    die(
+      `${scan.candidates.length} PR(s) above wrote n/a for a step that may close in this release. For each, decide: ` +
+        'closed now -> add its note to unreleased first; still open -> leave it. Then re-run with --deferred-reviewed "<one line per PR: note added / still open and why>". Nothing written.',
+    );
+  }
+  if (reviewed) console.log(`deferred notes reviewed: ${reviewed}\n`);
   const mU = OPEN_UNRELEASED.exec(src);
   if (!mU) die("could not find `export const unreleased: ReleaseNote[] = [` (no anchor, nothing written)");
   const bodyStart = mU.index + mU[0].length;
