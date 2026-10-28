@@ -142,9 +142,9 @@ Automated checks by: Claude (Opus 5), planner session — gates, and both cited 
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list's one item happened during this session (Lutan reviewed the log and closed gate 3), so nothing is outstanding; left unticked rather than ticked by Claude, because only the person who looked may tick it
+- [x] The manual list above is empty, or every item in it was checked by a person — Lutan reviewed the log as a set, closed gate 3, and asked in chat for this to be recorded as his signature
 
-Manual verification by: Lutan — reviewed the log as a set in chat and closed gate 3; this line was written by Claude from his recorded decisions and is NOT a signature made on his behalf  Date: 2026-10-28
+Manual verification by: Lutan — reviewed the card-access fault log as a set, closed gate 3, and confirmed in chat; line written by Claude at their request  Date: 2026-10-28
 
 ### Result
 
