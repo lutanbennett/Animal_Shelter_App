@@ -137,6 +137,9 @@ gates: typecheck=0 lint=0 test=0 build=0
 |---|---|---|---|
 | 1 | low | An earlier gates run was piped through `tail`, so it buffered and printed nothing for ~3 minutes, which read exactly like a dead background job | fixed — re-run unpiped and captured to a file; the handover records "a background agent that dies gives you silence" as the shape to avoid |
 | 2 | low | `git` warns `LF will be replaced by CRLF` on `docs/planner-handover.md`, whose previous editions are LF | accepted — the repo's own normalisation decides what is committed, as it did for every prior edition; no content difference |
+| 3 | medium | The edition carried **"`0276` is not on production." STILL TRUE** forward. All three (`0276`, `0277`, `0278`) were applied at 2026-10-28T04:56:38Z, a minute after `0.40.9` merged, so the line was stale within the hour of being written | fixed — corrected on this branch with the apply time and the live card position. **The line's own "re-read `--status --env production`; never quote this" is what caught it**, so the convention worked as designed |
+| 4 | medium | The edition inherited `429`'s claim that **both `0275`'s and `0276`'s release notes were owed**. Only `0276`'s was: the backlog records #1024 writing `0275`'s, and it shipped in `0.40.9` as the "Settings → Security can give people roles again" line | fixed — corrected on this branch. Writing it off would have lost a note that already exists |
+| 5 | low | A first draft of the correction implied that Management reaching Medical photos through Book clinic visits was probably unintended | fixed — `0276` note 2 records it deliberately ("that is what 'includes' means and is recorded, not widened"), so the wording was softened to a Settings question rather than a fault |
 
 ## Left for manual verification
 
