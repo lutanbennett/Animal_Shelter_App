@@ -206,7 +206,7 @@ Automated checks by: Claude  Date: 2026-10-29
 
 ### Manual verification
 
-The power-pull drill and removing the temporary sudo rule are Lutan's, at the Pi.
+The power-pull drill is Lutan's, at the Pi. The temporary sudoers rule was removed by Lutan on 2026-10-29 and checked absent from the Pi.
 
 - [ ] The manual list above is empty — n/a: the list holds only the power-pull drill, which is Lutan's and still open
 
