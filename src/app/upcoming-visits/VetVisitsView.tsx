@@ -44,7 +44,7 @@ function mondayOf(iso: string): string {
 const asVisit = (r: VisitRow) => ({ status: r.status, appointment_date: r.appointmentDate });
 
 export function VetVisitsView({
-  rows, today, dayLabels, clinics, locale, labels, overdueHiddenTemplate,
+  rows, today, dayLabels, clinics, locale, labels, overdueHiddenTemplate, canEdit = false,
 }: {
   rows: VisitRow[];
   today: string;
@@ -53,6 +53,8 @@ export function VetVisitsView({
   locale: "en" | "th";
   labels: Labels;
   overdueHiddenTemplate: string;
+  /** Draws each row's Edit link. Defaults to false so a caller that forgets offers nothing; the edit page asks `medical.visits` at edit. */
+  canEdit?: boolean;
 }) {
   const [view, setView] = useState<"list" | "week" | "month">("list");
   const [clinic, setClinic] = useState("");
@@ -135,9 +137,11 @@ export function VetVisitsView({
           <Link href={`/clinic-visits/${r.id}`} className="text-xs font-medium text-primary hover:underline">
             {labels.view}
           </Link>
-          <Link href={`/clinic-visits/${r.id}/edit`} className="text-xs font-medium text-primary hover:underline">
-            {labels.edit}
-          </Link>
+          {canEdit && (
+            <Link href={`/clinic-visits/${r.id}/edit`} className="text-xs font-medium text-primary hover:underline">
+              {labels.edit}
+            </Link>
+          )}
         </div>
       </div>
     </li>
