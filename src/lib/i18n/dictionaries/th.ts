@@ -917,6 +917,7 @@ const th: Dictionary = {
         "photos.resident_manage": "ย้ายหรือลบรูป และเลือกรูปโปรไฟล์",
         "photos.resident_publish": "แสดงรูปสัตว์บนเว็บไซต์สาธารณะ",
         "photos.resident_medical": "ดูรูปในโฟลเดอร์การแพทย์ของสัตว์",
+        "photos.medical_add": "เพิ่มรูปสัตว์ในโฟลเดอร์การแพทย์",
         "photos.shelter_add": "เพิ่มรูปสัตว์ในโฟลเดอร์ Shelter เท่านั้น (แสดงบนเว็บไซต์เมื่อได้รับอนุมัติ)",
         "photos.approve": "อนุมัติหรือลบรูปที่รอในหน้า Photos to approve",
         "facility.enclosures": "กรงและโซน",
