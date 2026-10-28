@@ -303,7 +303,7 @@
   ],
   "serviceRoleHelpers": [],
   "noLivePolicyDeliberate": {
-    "_about": "Triage of the table-policy-commands check (2026-10-28, docs/decisions/2026-10-28-policy-triage-1.md). A command listed here has no live policy ON PURPOSE: row security refuses it for every signed-in login, Admin included. Not access that is granted, so the hard-coded-security check does not read this; it is the record that someone read each one. Do NOT add a policy to a row here: that is a widening.",
+    "_about": "Triage of the table-policy-commands check (2026-10-28, docs/decisions/2026-10-28-policy-triage-1.md and -2.md, twenty tables). A command listed here has no live policy ON PURPOSE: row security refuses it for every signed-in login, Admin included. Not access that is granted, so the hard-coded-security check does not read this; it is the record that someone read each one. Do NOT add a policy to a row here: that is a widening.",
     "tables": [
       {
         "table": "site_content",
@@ -395,6 +395,113 @@
         ],
         "writtenBy": "Never deleted: a fixed set of keys; the editor only updates (src/app/admin/website/actions.ts line 693). Grants are select, insert, update (0156 line 86).",
         "why": "The public counters read these rows."
+      },
+      {
+        "table": "audit_log",
+        "commands": [
+          "insert",
+          "update",
+          "delete"
+        ],
+        "writtenBy": "Security-definer trigger function record_audit() only (supabase/migrations/0121_audit_log.sql line 118; redefined 0195 line 33). Insert, update, delete and truncate are revoked from every API role (0121 line 88) and a trigger refuses update/delete/truncate even to the service role. Admin reads it by policy.",
+        "why": "An audit trail nobody can edit is the point; the trigger writes it as a side effect of the audited table's own write."
+      },
+      {
+        "table": "calendar_sync_state",
+        "commands": [
+          "select",
+          "insert",
+          "update",
+          "delete"
+        ],
+        "writtenBy": "Service role only. src/lib/clinics/calendar-poll.ts (createAdminClient at lines 105 and 169; upserts at 173, 195, 210) from the 15-minute sweep POST /api/calendar/sweep (service-role bearer); read for the status tile at src/lib/clinics/calendar-sync.ts:321. 0232 lines 23-25: RLS on, everything revoked from authenticated, granted to service_role.",
+        "why": "Holds Google's sync token; no signed-in login has a reason to see or change it."
+      },
+      {
+        "table": "label_sources",
+        "commands": [
+          "insert",
+          "update",
+          "delete"
+        ],
+        "writtenBy": "Security-definer trigger function record_label_sources() only (supabase/migrations/0166_label_translations.sql line 244); the table comment says no one writes it directly. Select is policy-covered; grants (line 236-237) give select only, even to service_role.",
+        "why": "It records the English a Thai label was written against; a hand edit would hide a stale translation."
+      },
+      {
+        "table": "permission_activities",
+        "commands": [
+          "insert",
+          "update",
+          "delete"
+        ],
+        "writtenBy": "Migrations only: the catalogue is seeded by 0132 and kept equal to src/lib/permissions/catalogue.ts by scripts/check-permission-catalogue.mjs. Admin reads it by policy (0132 line 561); authenticated has select only (line 596). No app code writes it.",
+        "why": "A new activity is a code and migration change in one PR, never a form; a runtime writer would let a card appear with no code behind it."
+      },
+      {
+        "table": "receipt_counters",
+        "commands": [
+          "select",
+          "insert",
+          "update",
+          "delete"
+        ],
+        "writtenBy": "Security-definer issue_donation_receipt() only (supabase/migrations/0168_donation_receipts.sql, update at line 194; execute granted line 211). RLS on with no policy (line 231, comment 251). Not a sequence, so a refused issue never skips a number.",
+        "why": "Receipt numbers must be gap-free and issued only by the function that checks the card."
+      },
+      {
+        "table": "schema_migrations",
+        "commands": [
+          "select",
+          "insert",
+          "update",
+          "delete"
+        ],
+        "writtenBy": "scripts/apply-migrations.mjs through the Supabase Management API (create 231-235, insert 283 and 384), and the clean-up migrations 0203 and 0208 that delete stale ledger rows. Not the Worker or the service-role client; no src/ or worker/ site touches it.",
+        "why": "It is the migration ledger; the app has no business with it."
+      },
+      {
+        "table": "status_alert_checks",
+        "commands": [
+          "select",
+          "insert",
+          "update",
+          "delete"
+        ],
+        "writtenBy": "Service role only. src/lib/status/alerts.ts (createAdminClient at lines 146, 270, 290, 409, 426, 482; upsert at 353) run by POST /api/status/alerts (service-role bearer, src/app/api/status/alerts/route.ts) and the Pi/Admin button. 0098 lines 50-88: RLS on, no policy, revoked from authenticated, granted to service_role.",
+        "why": "Operations bookkeeping; the status page reads it with the service role after the system.status check."
+      },
+      {
+        "table": "status_alert_runs",
+        "commands": [
+          "select",
+          "insert",
+          "update",
+          "delete"
+        ],
+        "writtenBy": "Service role only, same sites as status_alert_checks (src/lib/status/alerts.ts, POST /api/status/alerts). 0098 lines 79-88. scripts/lib/permission-probes.mjs:204 already records that the page reads it with the service role.",
+        "why": "The heartbeat of the alert job; nobody signed in writes it."
+      },
+      {
+        "table": "status_alert_test_requests",
+        "commands": [
+          "select",
+          "insert",
+          "update",
+          "delete"
+        ],
+        "writtenBy": "Service role only. Written by requestTestAlert (src/lib/status/alerts.ts:409), called from sendTestAlertNow in src/app/admin/status/actions.ts after can(..., \"system.status\") at line 72; picked up and updated by processTestRequests (alerts.ts:426-449) in the Worker run. 0226 lines 62-64.",
+        "why": "A queue between the Pi button and the Worker, written only after the card check."
+      },
+      {
+        "table": "video_uploads",
+        "commands": [
+          "select",
+          "insert",
+          "update",
+          "delete"
+        ],
+        "writtenBy": "Service role only. src/app/api/residents/[id]/videos/start/route.ts:105 and finish/route.ts:52-95, each after can(perms, \"photos.resident_add\") (start line 32, finish line 29). 0229 lines 65-67: RLS on, revoked from authenticated, granted to service_role.",
+        "why": "Upload bookkeeping behind a card-checked route; the attachment row it produces carries its own policies."
       }
     ]
   },
