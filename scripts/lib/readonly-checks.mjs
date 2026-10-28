@@ -41,7 +41,7 @@ export const CHECKS = {
     render: (r) => [`${r.applied} migrations applied; the latest is ${r.latest}.`],
   },
   "role-cells": {
-    asks: "For each role: how many permission cells and cards does it hold? (Cells with no card behind them are stripped the next time that role's cards are saved.)",
+    asks: "TRANSIENT CONTEXT, not a finding (who holds what TODAY; roles are a transient grouping of cards, so do not quote this as a measurement): For each role: how many permission cells and cards does it hold? (Cells with no card behind them are stripped the next time that role's cards are saved.)",
     sql: `select coalesce(json_agg(json_build_object('role', r.key,
         'cells', (select count(*) from role_permissions p where p.role_id = r.id),
         'cards', (select count(*) from role_cards c where c.role_id = r.id)) order by r.key), '[]'::json)
@@ -49,7 +49,7 @@ export const CHECKS = {
     render: (rows) => rows.map((x) => `${x.role}: ${x.cells} cells, ${x.cards} cards`),
   },
   "role-cards": {
-    asks: "Which cards does each role hold? (Answers 'does any role hold the Operations or Management card?'.)",
+    asks: "TRANSIENT CONTEXT, not a finding (who holds what TODAY; roles are a transient grouping of cards, so do not quote this as a measurement): Which cards does each role hold? (Answers 'does any role hold the Operations or Management card?'.)",
     sql: `select coalesce(json_agg(json_build_object('role', r.key,
         'cards', coalesce((select json_agg(c.card order by c.position) from role_cards c where c.role_id = r.id), '[]'::json)) order by r.key), '[]'::json)
       from roles r where r.kind <> 'fixed'`,
@@ -103,7 +103,7 @@ export const CHECKS = {
     failed: (rows) => rows.some((x) => x.unbacked.length + x.unapplied.length > 0),
   },
   "fault-residents-lifecycle": {
-    asks: "Which roles hold the Residents card or a placement cell but not facility.enclosures at read? (They cannot move, hospitalise, foster/adopt or record a death: the enclosure lookup is refused.)",
+    asks: "TRANSIENT CONTEXT, not a finding — SUPERSEDED as a fault check by `card-lifecycle-enclosures`, which asks the card question and guards the invariant. Kept only to show who is affected today: Which roles hold the Residents card or a placement cell but not facility.enclosures at read? (They cannot move, hospitalise, foster/adopt or record a death: the enclosure lookup is refused.)",
     sql: `select coalesce(json_agg(json_build_object('role', r.key,
         'residents_card', exists (select 1 from role_cards c where c.role_id = r.id and c.card = 'residents'),
         'placement_cells', coalesce((select json_agg(p.activity order by p.activity) from role_permissions p where p.role_id = r.id and p.activity like 'placement.%'), '[]'::json),
@@ -117,7 +117,7 @@ export const CHECKS = {
     failed: (rows) => rows.some((x) => !x.enclosures_read),
   },
   "fault-clinic-visit-save": {
-    asks: "Which roles hold a card or cell that books or saves a clinic visit (Book clinic visits, Medical records, visit.book) but not clinics.list? (The clinic list is empty and the field is required.)",
+    asks: "TRANSIENT CONTEXT, not a finding — SUPERSEDED as a fault check by `card-clinic-visit-save`, which asks the card question and guards the invariant. Kept only to show who is affected today: Which roles hold a card or cell that books or saves a clinic visit (Book clinic visits, Medical records, visit.book) but not clinics.list? (The clinic list is empty and the field is required.)",
     sql: `select coalesce(json_agg(json_build_object('role', r.key,
         'cards', coalesce((select json_agg(c.card order by c.card) from role_cards c where c.role_id = r.id and c.card in ('book_clinic_visits', 'medical_records')), '[]'::json),
         'visit_book', exists (select 1 from role_permissions p where p.role_id = r.id and p.activity = 'visit.book'),
