@@ -39,7 +39,7 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
   const e = t.medicalJobs.photos.errors;
 
   const perms = await loadPermissions();
-  if (!can(perms, "photos.resident_add")) {
+  if (!can(perms, "photos.medical_add")) {
     return NextResponse.json({ error: e.notAuthorized }, { status: 403 });
   }
   // Whoever can file in Medical at all; the role's own scope is checked again in the database.

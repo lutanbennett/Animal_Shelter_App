@@ -87,6 +87,10 @@ async function handlePost(
   // photo either, which has no category and a folder of its own; the hub
   // never offers a doctor one.
   const categories = photoCategoriesFor(perms);
+  if (categories.length === 0) {
+    const { t } = await getT();
+    return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
+  }
   const onlyFolder = categories.length === 1 ? categories[0] : null;
   const category = formData.get("category");
   if (

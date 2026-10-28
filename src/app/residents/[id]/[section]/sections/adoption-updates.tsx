@@ -144,7 +144,7 @@ export async function renderAdoptionUpdatesSection(ctx: SectionContext): Promise
                     shares={shares}
                     canMarkPosted={canMarkPosted}
                     canManage={canMarkPosted}
-                    canFileToMedical={can(perms, "photos.resident_add")}
+                    canFileToMedical={can(perms, "photos.medical_add") && (can(perms, "photos.resident_add") || can(perms, "photos.resident_manage"))}
                   />
                 )}
               </li>
