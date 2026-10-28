@@ -149,7 +149,7 @@ Manual verification by: n/a: documentation only, nothing to look at
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [x] Checklist pasted into the PR
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — n/a: not yet — the release manager reads the plan at release time
 
 Result: pass
 
