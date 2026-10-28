@@ -692,6 +692,30 @@ parent directory, not the file) but a root-owned *directory tree* cannot.
 *behind* production makes it useless as a pre-production check. Test being ahead
 between releases is fine.
 
+**ONE COMMAND AT A TIME. This is the only fault that has cost Lutan time in two
+consecutive releases, and both halves of it came from trying to save ten minutes.**
+Added 2026-10-28, after he said *"this is two releases in a row now."* The rule, in
+three clauses:
+
+1. **Never run anything of yours against shared state while a command of his is in
+   flight.** On `0.40.9` the test deploy was started in the main checkout while his
+   production deploy was building there. Both write one `.open-next`: his died
+   `ENOTEMPTY, Directory not empty: .open-next` at `initOutputDir`, mine died
+   `ENOENT … pages-turbo.runtime.prod.js`. Nothing was damaged — it is gitignored
+   build output — but it cost a wasted ten-minute deploy. Recovery: confirm no build
+   process holds it (`wmic process where "name='node.exe'" get CommandLine`), delete
+   `.open-next`, run **one** build.
+2. **Hand over ONE command, never two.** On `0.40.10` the migration and the deploy
+   were given in the same message, in two code blocks, and the deploy was run first.
+   The guard refused it correctly — *"production is missing 1 migration(s) this commit
+   carries"* — but it cost a round trip. **A command in a code block gets run**, which
+   is the standing *never show commands early* rule; describe the next step in words
+   and give its command only when the previous one has reported.
+3. **The next command only after the previous one reports.** Not "while it finishes".
+
+**Deploy test AFTER production, not alongside it.** The ten minutes saved by
+parallelising is the whole of what both failures bought.
+
 **Two builds in one worktree collide.** Never run `gates.mjs` twice at once in the
 same checkout; a build that fails in seconds rather than minutes is contention
 until proven otherwise. A build that *passes* in seconds is usually a warm

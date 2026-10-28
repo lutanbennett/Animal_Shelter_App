@@ -1,131 +1,122 @@
-# Release handover — written 2026-10-28 after `0.40.9`
+# Release handover — written 2026-10-28 after `0.40.10`
 
-A **delta**. The release's own facts are in `docs/releases/2026-10-28-0-40-9.md` and the durable rules
-are in `docs/release-procedure.md`. **Both outrank this file.**
+A **delta**. **Two releases shipped on 2026-10-28** — `0.40.9` and `0.40.10` — and each has its own
+record. The durable rules are in `docs/release-procedure.md`. **Both outrank this file.**
 
 ## START HERE
 
-**`0.40.9` is deployed on production and verified.** Both endpoints agree, **279 of 279** with no
-drift, cache purged and proved, 33 cards and every card check clean, and the cron still healthy a day
-after it was fixed.
+**`0.40.10` is deployed on BOTH environments and verified.** Same commit everywhere, **280 of 280**
+with no drift on either database, both crons healthy, cache purged and proved, 33 cards and every card
+check clean.
 
-**The one thing worth reading before your next release: do NOT run two builds in the same checkout.**
-This release ran the test Worker deploy while Lutan's production deploy was building in the same
-folder. Both died — his on `ENOTEMPTY` clearing `.open-next`, mine on a missing file inside it. The
-runbook already says *"Two builds in one worktree collide"*; it was read that morning and done anyway.
-**Deploy test AFTER production, not in parallel to save ten minutes.** Nothing was damaged (it is
-gitignored build output) but it cost a ten-minute deploy and an extra touch of his.
+**The one thing to read before your next release: `audit` WILL BE RED on your cut, and that is now
+normal.** Until 2026-10-27 a broken trigger made the job skip every cut; #1041 fixed it, and
+`0.40.10` was the first cut it genuinely ran on. **A cut always changes `package.json`, so the job
+always runs, and the one open advisory (`glob`) is one we deliberately refuse to "fix"** — the fix
+reinstalls the adapter that caused the four-day cron outage. **It cannot block a merge**
+(`continue-on-error: true`, `ci.yml:251`). **Do not touch the check.** A backlog item is filed.
 
-**`doctor-cells` is no longer the red you expect — read it fresh.** Doctor now holds `medical_records`
-and reads **15 cells**. Lutan is still using Doctor as his test role
-(`docs/decisions/2026-10-25-doctor-is-the-test-role.md`), so **never restore its cards and never edit
-the check** — but do not report a specific number from memory either.
+**`doctor-cells` now reads `MISSING 4 of 13`, not 12 — READ IT FRESH.** Doctor is Lutan's test role
+and gains cards as he tests. The last edition warned about quoting a number from memory and the number
+has already moved again. **Never restore its cards, never edit the check, report what you read.**
 
-**Re-measure before trusting any of this.** `git diff --stat 0911a1e0..HEAD`, `gh pr list`,
+**Re-measure before trusting any of this.** `git diff --stat 5ebb4a98..HEAD`, `gh pr list`,
 `--status --env production`, `node scripts/check-production.mjs all`, the live `/api/version`.
+
+## The fault to actually fix, because it has now happened twice
+
+**Two releases in a row, this session cost Lutan an avoidable round-trip, and he named the pattern:
+*"this is two releases in a row now."*** Both were the same error — optimising the release manager's
+end of the job at the expense of his.
+
+- **`0.40.9`:** the test deploy was started in the main checkout **while his production deploy was
+  building there**. Both write one `.open-next`; his died `ENOTEMPTY`, mine died `ENOENT`. The runbook
+  already said *"Two builds in one worktree collide"*.
+- **`0.40.10`:** **two commands were handed over in one message** and he ran the second first. The
+  deploy refused itself — *"production is missing 1 migration(s) this commit carries"*. There is a
+  standing rule against this (*never show commands early*): **a command in a code block gets run.**
+
+**THE RULE, and it dissolves both:** **one command at a time; nothing of yours running against shared
+state while a command of his is in flight; the next command only after the previous one reports.**
+Now written into `docs/release-procedure.md` as a trap with both examples.
+
+**The corollary worth internalising:** every one of these came from trying to save ten minutes. The
+deploys take what they take. **Sequencing costs nothing and is the only thing that has gone wrong
+twice.**
 
 ## Corrections and closures to the last edition
 
-- **Send to hospital is HELD AGAIN. Close it.** Row 1 of Lutan's list for two releases running. The
-  before-picture showed **Doctor holds `medical_records`** on production — he assigned it between
-  releases, exactly the card assignment the last two editions predicted. **Stop carrying it.**
-- **Test is no longer behind, and THE CRON ITEM IS NOW FULLY CLOSED — tick it, do not carry it.**
-  `0.40.9` brought test up inline, which was Lutan's decision of 2026-10-28, and one quarter-hour
-  after the test Worker went out the heartbeat fired `05:30:39Z` with a real run at `05:30:41Z` and
-  `verdict: healthy`. Test's cron had been dead **five days**, since `2026-10-23T09:45:42Z`. Both
-  environments now run adapter 1.20.13 with firing crons, so **test is a valid pre-production check
-  again.**
-- **`strip-baked-env` is RESTORED at 14.** `0.40.8` had no reading at all because its deploy ran
-  without a `tee`; this release handed the command over with one and read **14** on both environments.
-  **The streak is re-established, not continued** — `0.40.8` is a genuine gap in it.
-- **The four advisories carried since 2026-10-24 are GONE**, resolved incidentally by the adapter bump
-  that fixed the cron. Confirmed **by grepping each ID**. Do not carry them again.
-- **One NEW advisory replaces them and must not be "fixed":** `GHSA-5j98-mcp5-4vw2`, `glob` CLI command
-  injection. Not reachable (the flaw is in `glob`'s **binary**; nothing here invokes it; absent from
-  the built `worker.js`), and **`npm audit fix --force` would install `@opennextjs/cloudflare@1.20.9`
-  — older than the 1.20.13 that fixed the four-day cron outage.** Decision file:
-  `docs/decisions/2026-10-28-glob-cli-advisory-not-reachable.md`. **Read it before touching the audit.**
-- **The OpenNext `Failed to copy` item stays CLOSED** (settled two editions ago by listing the built
-  output). Do not reopen it.
+- **`release-prs.mjs` is FIXED — stop carrying it.** It exited 1 on three consecutive releases because
+  squash-merged PRs leave no `Merge pull request #N` commit. #1041 taught it to resolve those from
+  GitHub, and `0.40.10` came back complete, exit 0, with no by-hand patching.
+- **The advisory register was OFFERED AND DECLINED on 2026-10-25, and is now filed again because the
+  reason for declining has gone.** `docs/decisions/2026-10-25-audit-on-releases-not-every-pr.md`
+  records it: *"Not included (offered, not chosen)"*. He declined it because the job would rarely run;
+  it now runs on every cut. **If this comes up, lead with that history** — it is not a fresh idea.
+- **Send to hospital stays CLOSED** (Doctor holds Manage medical). Do not re-raise it.
+- **The cron item stays CLOSED on both environments.** Do not re-raise it.
+- **`strip-baked-env` held at 14 on both environments**, two releases after the gap `0.40.8` left.
+- **The four advisories retired in `0.40.9` have not returned**, confirmed by grepping each ID.
 
 ## Where things stand
 
 | | |
 |---|---|
-| Live, production | **`0.40.9`** — Worker `89d8e4cf` tagged `v0.40.9`, Pi at `0911a1e0`, both endpoints agree |
-| Live, test | **`0.40.9`** — Worker `802ee57c`, Pi at `0911a1e0`, both endpoints agree, **cron healthy** |
-| Previous release SHA, for the next range | **`0911a1e0c475208f8857002579c09b10365fd0d8`** |
-| Production database | **`279 applied, 0 pending`**, `No drift`. **Run it yourself** |
-| Dev database | **`279 applied, 0 pending`** |
-| Next free migration number | **`0279`**. **Check `origin/main` *and* open `*-schema` PRs anyway** |
-| The mail | **None**, correctly. Seventh release running |
+| Live, production | **`0.40.10`** — Worker `2f7737af`, Pi at `5ebb4a98`, endpoints agree, cron healthy |
+| Live, test | **`0.40.10`** — Worker `2ab4e083`, Pi at `5ebb4a98`, endpoints agree, cron healthy |
+| Previous release SHA, for the next range | **`5ebb4a987670f64359948f323d85b87e9dbb75f9`** |
+| Production database | **`280 applied, 0 pending`**, `No drift`. **Run it yourself** |
+| Dev database | **`280 applied, 0 pending`**, `No drift` |
+| Next free migration number | **`0280`**. **Check `origin/main` *and* open `*-schema` PRs anyway** |
+| The mail | **None**, correctly. Eighth release running |
 | Cards | **33**, `cards-union` and `role-cards-coverage` both clean |
-| Cron | **Healthy on BOTH** — production `05:15:12Z`, test `05:30:41Z`, both with a Worker heartbeat beside the run |
+| Worktrees | Cleaned out by another session mid-release; only the main checkout, `Backlog`, and one live stream remained |
 
-**Counters:** `npm ci` as step 1 **32**; no production-only guard **34**; **`strip-baked-env` back at
-14**, with `0.40.8` a gap in the run; **Server Actions keys**: production `cbd55beae8d8`, test
-`ecc41837fc0b`, unchanged.
-**Releases that mailed: 1 in the last thirteen.**
+**Counters:** `npm ci` as step 1 **33** (skipped on `0.40.10` with an empty lockfile diff as the
+stated reason); no production-only guard **35**; `strip-baked-env` at **14**; **Server Actions keys**:
+production `cbd55beae8d8`, test `ecc41837fc0b`, unchanged.
+**Releases that mailed: 1 in the last fourteen.**
 
 ## The method that keeps paying
 
-**Read an exit code from the thing you are measuring, and this release is the sharpest case yet.**
-`check-admin-by-flag.mjs --env production` prints `status 400` and `Failed to run sql query` **on
-success**, because the harness rolls itself back with a `raise exception`. Its real exit is **0** and
-its message begins `HARNESS-OK`. **Reading the surface would have called a pass a failure and very
-likely stopped the release.** Also: the background wrapper reported the first test deploy as exit 0
-when the deploy had exited **1**.
+**Assert the data AND read the page — they prove different things.** `0.40.10` is the first
+double-digit patch, and a string sort puts `"0.40.10"` **before** `"0.40.9"`. The assertions covered
+the data; only reading the rendered page covered the page. **Nothing would have failed if the page had
+sorted as text.** Expect this again at `0.41.10`, and at any further double-digit boundary.
 
-**Ask the one-way-door question before the cut, not after.** `0277` changed how Admin is recognised,
-and Admin holds no cards on production, so a wrong answer locks the only administrator out of the
-screen needed to fix it. Lutan was asked and chose to have Admin verified **between the apply and the
-deploy**. It passed, including **with the Admin role renamed**. That is a two-minute check against a
-one-way door — always worth it.
+**Close a `pending:` by asking the person while you have them.** This release reached **zero items
+awaiting a person** — a first, against a trend of 5, 5, 13, 7, 13, 15 — because both were put to Lutan
+**in the same round as the email question**, one of them by simply showing him the note and asking
+whether it read correctly. **That cost one extra question and closed two plans.**
 
-**Use the window between the apply and the deploy as a free live test.** Production spends those
-minutes running the PREVIOUS release's code against the NEW functions. If a migration has broken a
-permission function, it shows **then**, before anything is deployed. Here the site answered 200 and
-both card checks were clean in that window.
+**When `main` moves, read what deployed rather than reasoning about it.** The test Worker reported
+building from `092f0109`, not the release SHA. One `git diff --name-only` excluding `docs/` showed the
+application code identical, so nothing was rebuilt to chase a SHA.
 
-**Keep the cut-to-deploy window empty.** The planner was asked to hold its one docs-only PR until the
-cut merged. `main` did not move, the code-identity diff was empty, and no time went on working out
-what the Worker had actually built from — which is what `0.40.8` paid for.
-
-**Take the before-picture of the tables the migration writes.** Fourth release running. This time it
-did more than prove nothing was lost: it is **how Send to hospital was found to be closed**.
+**Take the before-picture of the tables the migration writes.** Fifth release running.
 
 ## Two things a future release manager will meet
 
-- **The auto-mode classifier blocks `[Production Deploy]` intermittently.** It blocked the Pi deploy
-  on `0.40.8` and allowed the same command on `0.40.9`. **Try once, do not work around it, hand it to
-  Lutan.**
-- **Cloudflare's API can time out from this machine for minutes** (`fetch failed`,
-  `ConnectTimeoutError`). Not bandwidth, not IPv6 — both measured and ruled out. **Retry; it clears.**
+- **The classifier blocks `[Production Deploy]` intermittently** — it blocked `apply-migrations` twice
+  on `0.40.10` and allowed the same command an hour earlier. **Try once, retry once, hand it to
+  Lutan.** Do not work around it.
+- **Cloudflare's API can time out from this machine for minutes.** Not bandwidth, not IPv6 — both
+  measured and ruled out. **Retry; it clears.**
 - **`git reset --hard` is refused by the classifier and the runbook's worktree-reuse recipe names it.**
-  `git checkout -b <branch> origin/main` in a clean worktree does the same job. **Named by four
-  editions now and still not corrected in `docs/release-procedure.md`** — it is one line, and it would
-  take less time to fix than it has taken to keep writing down.
+  `git checkout -b <branch> origin/main` does the same job. **Named by five editions and still not
+  corrected** — one line, and it has now cost more to keep writing down than to fix.
 
 ## In flight and open
 
-**`release-prs.mjs` has exited 1 on three consecutive releases**, each time because a PR was
-**squash-merged** and left no `Merge pull request #N` commit to match. `0.40.8` reported 7 of 9;
-`0.40.9` reported 27 of 29. Each release has patched it by hand. **Three in a row is the point at
-which the script should learn about squash merges** — raised with the planner for a backlog item. Until
-then: **read its exit code, and when it is 1, find the missing PRs with `gh pr view` before writing a
-count into a record.**
+**The advisory register** (above) is the one new backlog item, and it carries a real design trap in
+its text: **a registered advisory stops being re-examined.** `glob` is harmless only because nothing
+here runs its CLI; a register that stores "we looked once" would be worse than the red.
 
-**Fifteen `pending:` plans shipped as a stated gap** on Lutan's explicit decision — the highest yet.
-The trend is **5, 5, 13, 7, 13, 15**, and it is now rising rather than oscillating. Worth putting to
-him as a trend question at some point, **but not as a per-release footnote and not as a decision he
-owes** — he has answered it the same way seven times.
-
-**The Translations card is still held by nobody** (`0271`, deliberately). It is the one carried item
-left from the `0.40.7` list now that Send to hospital is closed.
+**The Translations card is still held by nobody** (`0271`, deliberately). It is the only carried item
+left from the `0.40.7` list.
 
 **Carried unchanged, and RE-MEASURE EACH before repeating it:** `0257`'s stale `-- consumer:` header;
-`who-does-what` items 2 and 3 and `stocktaking` item 3; the Thai wording of the Units screen, the Pages
-preview and this release's new notes; the restore drill, still never exercised and now with three more
-rewritten security-definer functions behind it; and the two unlooked-at items, the prescription form
-reading 4 and video playback on a real handset. **`tee` under PowerShell still writes the deploy log as
-UTF-16** — `tr -d '\000'` before grepping.
+`who-does-what` items 2 and 3 and `stocktaking` item 3; the Thai wording of the Units screen, the
+Pages preview and both of this release's notes; the restore drill, still never exercised; and the two
+unlooked-at items, the prescription form reading 4 and video playback on a real handset. **`tee` under
+PowerShell still writes the deploy log as UTF-16** — `tr -d '\000'` before grepping.
