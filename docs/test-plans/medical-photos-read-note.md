@@ -27,7 +27,9 @@
 - [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
 
 ```
-GATES_OUTPUT_PLACEHOLDER
+=== gates: build exited 0 after 135s
+
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 ## 3. Schema and data — *skip if no migration*
@@ -133,7 +135,7 @@ Automated checks by: Claude (Opus 5)  Date: 2026-10-28
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty; item 1 is a wording judgement and waits for a person, so nothing here is signed for
 
 Manual verification by: pending: a person to read the note's wording — item 1 above
 
