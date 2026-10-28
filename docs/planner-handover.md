@@ -33,7 +33,9 @@ restated.
   re-read instruction. **It worked: a planner who re-read `--status --env production` found the
   truth. Keep writing release state that way.** What is still owed is the **release note for
   `0276`'s READ half**: `0.40.9` told users that *filing* into Medical needs its own permission and
-  said nothing about *viewing* it. `0275`'s is fairly `n/a` (a column, nothing a user sees).
+  said nothing about *viewing* it. **`0275`'s is NOT owed — #1024 wrote it and it shipped in
+  `0.40.9`** ("Settings → Security can give people roles again…", card tag `who_does_what`). `429`
+  listed both as owed; only one was.
   **The live card position — derived from `card_includes`/`card_grants`, NOT proven by a query as
   those logins:** three cards reach the new read through `card_closure()` — Manage medical, Book
   clinic visits, Run appeals — so **Management can see medical photos and Head of Medical cannot**,
