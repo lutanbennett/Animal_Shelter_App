@@ -154,11 +154,19 @@ export function AssistantConversation({
     update(turn.id, outcome);
   }
 
-  const examples = a.examples(
-    context.residents[0]?.name ?? "Panda",
-    context.enclosures[0]?.name ?? "A3",
-    context.clinics[0]?.name ?? "Dr Somchai",
-  );
+  // A suggestion that can only end in "recording is not for you" is not offered: without the activity the
+  // confirm step asks (assistant.record), only the examples that parse as lookups are drawn.
+  const examples = a
+    .examples(
+      context.residents[0]?.name ?? "Panda",
+      context.enclosures[0]?.name ?? "A3",
+      context.clinics[0]?.name ?? "Dr Somchai",
+    )
+    .filter((example) => {
+      if (context.canWrite) return true;
+      const parsed = parseRequest(example, parserData);
+      return !parsed || !isWriteIntent(parsed.intent);
+    });
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">

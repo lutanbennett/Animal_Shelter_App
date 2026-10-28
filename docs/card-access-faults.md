@@ -575,3 +575,5 @@ Driven in the built-in browser pane at desktop width, each as its own login hold
 **Evidence left on dev (disposable, none removed):** contact `walk-contacts` (a phone number set); the doctor added on `walk-contacts clinic` was deleted, so none remains. Logins `dev-signin-9db49a59` (contacts), `dev-signin-27a9612b` (assistant), `dev-signin-c78387df` (who_does_what).
 
 **Environment, not card faults:** the pane went hidden mid-run and one script timed out; a screenshot woke it. A page loaded by address showed only the layout until the redirect to `/no-access` fired, which is the pane's `requestAnimationFrame`, not the app.
+
+**Found 2026-10-28 (buttons slice 5), `assistant`:** no card grants `assistant.record` since 0268 deleted its only grant, so every login except Admin is read-only in the Assistant and a card that "records" nothing is offered nowhere. The write examples are now hidden without it. Needs a card decision (which card should record), not a patch.
