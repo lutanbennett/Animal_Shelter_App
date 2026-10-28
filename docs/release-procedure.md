@@ -335,9 +335,17 @@ replacement cards, was not yet on production. That rule says the note goes in th
 that **closes** the step — so the cut PR published it, and the migration went on
 before the deploy, so the note was true the moment it became visible.
 
-**So when `unreleased` is empty, do not conclude "nothing visible".** Check whether
-any PR in the range wrote `n/a` on its release-notes line for a step this release
-closes; grepping the range's test plans for that line is a minute's work. An empty
+**Do not conclude "nothing visible" from `unreleased`, empty or not.** This check used to run
+only when `unreleased` was empty, so at `0.40.10` — two notes in, a third missing — it never ran,
+and `0275`, `0276` and `0279` each lost a note that way. It is now a script that runs on every
+cut: `node scripts/check-deferred-notes.mjs` lists each PR in the range whose plan wrote `n/a` on
+its release-notes line, and `cut-release.mjs` runs it first and **refuses to write** while a
+candidate (a reason pointing at a step still to happen) has no answer. For each one decide whether
+this release closes its step; if so add the note to `unreleased` first. Then pass
+`--deferred-reviewed "<one line per PR>"`. The note still goes in the PR that closes the step
+(`docs/decisions/2026-10-11-release-note-truth-rule.md`); the script never asks for one early.
+It does not tell you the step closed, only that nobody may skip the question
+(`docs/decisions/2026-10-28-release-note-guard.md`). An empty
 note list otherwise looks exactly like a release in which nothing visible shipped,
 which is the failure `docs/decisions.md` records on 2026-09-24. **Expect this shape
 again while the security rebuild runs**, since it lands schema and code in separate
