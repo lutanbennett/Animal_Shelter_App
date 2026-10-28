@@ -96,8 +96,11 @@ export function uploadResidentPhoto(
 export function PhotoUploader({
   residentId,
   categories = PHOTO_CATEGORIES,
+  canSeeMedical = false,
 }: {
   residentId: string;
+  /** May this login read the Medical folder (photos.resident_medical)? Defaults to false: a Medical photo is then filed but never shown back, and the form says so. */
+  canSeeMedical?: boolean;
   /**
    * The folders this user may file into (photoCategoriesForRole). With one
    * (a doctor: Medical) there is no picker — the form says where the photos
@@ -259,7 +262,11 @@ export function PhotoUploader({
         </div>
         <p className="pb-2 text-xs text-muted">
           {t.photos.uploader.folderHint}{" "}
-          {category === "" ? null : category === "Medical" ? t.photos.uploader.privateNote : t.photos.uploader.publicNote}
+          {category === "" ? null : category === "Medical"
+            ? canSeeMedical
+              ? t.photos.uploader.privateNote
+              : `${t.photos.uploader.privateNote} ${t.photos.uploader.medicalNotShownBack}`
+            : t.photos.uploader.publicNote}
         </p>
         </>
         )}

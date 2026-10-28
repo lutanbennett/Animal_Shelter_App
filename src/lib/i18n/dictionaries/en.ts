@@ -6773,6 +6773,8 @@ const en = {
       folderHint: "Applies to every photo in this batch.",
       publicNote: "Photos in this folder can appear on the public website, on this resident's Adopt page.",
       privateNote: "Photos in the Medical folder never appear on the website.",
+      medicalNotShownBack: "You can add Medical photos but not view them here.",
+      doneMedicalHidden: "Saved to Medical (not shown to you)",
       dropHere: "Drop photos here or tap to upload",
       selectFolderFirst: "Select a folder above to enable uploads",
       multipleHint:
