@@ -344,7 +344,7 @@ export function PhotoUploader({
                   <span className="text-xs text-danger">{item.warning}</span>
                 ) : (
                   <span className="text-xs font-medium text-success">
-                    {t.photos.uploader.done}
+                    {item.category === "Medical" && !canSeeMedical ? t.photos.uploader.doneMedicalHidden : t.photos.uploader.done}
                   </span>
                 )
               ) : (
