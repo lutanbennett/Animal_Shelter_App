@@ -89,6 +89,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Filter the Residents list, open a resident and press Back to residents: you now return to the same filtered list instead of the full one.", cards: ["residents"] },
   { text: "Filing a resident's photo into the Medical folder now needs its own permission, given by the Add medical photos and Manage medical cards. A login that only holds Add a photo to a resident (the Residents card) can still upload to Shelter and the other folders, but no longer sees Medical in the uploader or in Move.", cards: ["residents", "add_medical_photos", "medical_records"] },
   { text: "The Assistant page now only suggests the recording examples (such as sending a resident to hospital) to a login whose cards allow recording. Before, everyone was offered them and then told recording was not for them.", cards: ["assistant"] },
   { text: "Settings → Security can give people roles again, and Settings → Who does what can delete a role. Before, the list of roles on both screens was empty, so there was nothing to give and Delete refused every role.", cards: ["who_does_what"] },

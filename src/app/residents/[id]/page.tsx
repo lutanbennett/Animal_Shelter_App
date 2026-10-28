@@ -5,6 +5,7 @@ import { loadPermissions } from "@/lib/permissions/load";
 import { contactRelation } from "@/lib/contacts/visibility";
 import { requireFullResident } from "@/lib/residents/who-and-where";
 import { loadResidentCard } from "@/lib/residents/card";
+import { residentsListHref } from "@/lib/residents/list-view";
 import { getTagOrigin } from "@/lib/tags/origin";
 import { loadTranslations } from "@/lib/translations/queries";
 import { placeName } from "@/lib/enclosures/names";
@@ -40,7 +41,7 @@ export default async function ResidentPage(
   props: PageProps<"/residents/[id]">,
 ) {
   const { id } = await props.params;
-  const { archive: archiveFlag } = await props.searchParams;
+  const { archive: archiveFlag, list: listParam } = await props.searchParams;
   const supabase = await createClient();
 
   // The same guard as the record's own pages: a role that holds no read of the record gets the
@@ -282,6 +283,7 @@ export default async function ResidentPage(
 
   return (
     <ResidentHub
+      backHref={residentsListHref(listParam)}
       otherPhotos={otherPhotos}
       resident={resident}
       status={listViewResult.data?.[0] ?? null}
