@@ -105,7 +105,7 @@ function main() {
   }
 
   if (process.env.GITHUB_OUTPUT) {
-    appendFileSync(process.env.GITHUB_OUTPUT, `docs-only=${result.docsOnly}\n`);
+    appendFileSync(process.env.GITHUB_OUTPUT, `docs-only=${result.docsOnly}\ndeps-changed=${deps}\n`);
   }
 }
 
