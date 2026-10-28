@@ -70,12 +70,16 @@ end $f$;
 do $setup$
 declare
   v_res uuid;
+  v_seed uuid := gen_random_uuid();
   v_doctor uuid := gen_random_uuid();
   v_clinic uuid := gen_random_uuid();
 begin
   -- 0248: record_intake asks has_permission('resident.register'); run it as the Admin login, whose answer is true without a card and
   -- does not move when a card is edited on Settings > Who does what. Then drop the claims.
-  perform set_config('request.jwt.claims', json_build_object('sub', (select ur.user_id from user_roles ur join roles r on r.id = ur.role_id where r.key = 'admin' and ur.archived_at is null limit 1), 'role', 'authenticated', 'aal', 'aal1')::text, true);
+  insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+  values (v_seed, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-soft-delete-seed-' || v_seed || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now());
+  insert into user_roles (user_id, role_id) select v_seed, id from roles where key = 'admin';
+  perform set_config('request.jwt.claims', json_build_object('sub', v_seed, 'role', 'authenticated', 'aal', 'aal1')::text, true);
   select id into v_res from record_intake(
     p_name => 'Harness soft delete', p_intake_date => date '2026-08-01', p_weight_kg => 10,
     p_diet_id => (select id from diets order by is_standard desc nulls last limit 1));
