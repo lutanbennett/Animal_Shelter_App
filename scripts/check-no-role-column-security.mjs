@@ -81,10 +81,10 @@ if (offenders.length) {
 // 2. The Admin short-circuit must still be there. Admin holds no cards, so this is its only access.
 const [{ has_permission_admin, holds_app_role_admin, admin_cells }] = await query(`
   select
-    pg_get_functiondef('public.has_permission(text,text)'::regprocedure) like '%r.key = ''admin''%' as has_permission_admin,
-    pg_get_functiondef('public.holds_app_role()'::regprocedure)          like '%r.key = ''admin''%' as holds_app_role_admin,
+    pg_get_functiondef('public.has_permission(text,text)'::regprocedure) like '%r.is_admin%' as has_permission_admin,
+    pg_get_functiondef('public.holds_app_role()'::regprocedure)          like '%r.is_admin%' as holds_app_role_admin,
     (select count(*) from public.role_permissions rp
-       join public.roles r on r.id = rp.role_id where r.key = 'admin')                              as admin_cells
+       join public.roles r on r.id = rp.role_id where r.is_admin)                                 as admin_cells
 `);
 
 for (const [ok, what] of [
