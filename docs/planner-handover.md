@@ -1,143 +1,144 @@
-# Planner handover — edition `411`, 2026-10-27
+# Planner handover — edition `420`, 2026-10-28
 
-**A delta, eighteenth edition in this shape.** Rules are the skill's step 8 — say what **changed**,
+**A delta, nineteenth edition in this shape.** Rules are the skill's step 8 — say what **changed**,
 promote durable facts once, cite `.plan-day.md` rather than reproducing it.
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`** — if they
 disagree with this, they are right and this is stale. **Read first:** `CLAUDE.md` → the skill →
-`.plan-day.md` → this. **The next slug is `420`.**
+`.plan-day.md` → this. **The next slug is `429`.**
 
 > **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
 > release state, candidates. **Re-read every time, never diffed.**
 
 ---
 
-## WHAT `402` ASKED FOR, and what each warning actually did
+## WHAT `411` ASKED FOR, and what each warning actually did
 
-- **"Band the harnesses that are RED, not the ones the item names." FIRED, and harder than it knew.**
-  Batch 6 ran all 196 and found **76 red, 105 green, 15 timed out**. The item's "30" was not stale by
-  five; it was stale by **forty-six**. **Running them IS the scope decision. Settled — stop carrying
-  it as advice and treat it as the method.**
-- **"Do not band a stream for a proof it cannot run." FIRED.** `calendar-loop-fix` was not charged
-  for the production checks, and the planner ran them. **The same shape then fired twice more:** the
-  planner ran the restore, and the **classifier blocked the planner's own production migration
-  apply** — so **the planner is not the last resort either.** Add to the step-7 question: ask who can
-  run the proof, and know the answer may be Lutan even when it looks like the planner.
-- **"A prior pass has an expiry date." FIRED three times**, and the two cheap commands caught every
-  one. No change needed.
-- **"Check PR state with `gh`, not the session list." HELD, fourth round.** No false MERGED again.
-- **The `src/lib/releases.ts` collision rule: tested a second time and held.** Both batch-2 notes
-  survived into `0.40.8`. **Stop carrying it at all.**
-- **Band discipline: twelve streams, twelve measured, all `claude-sonnet-5-5` / `low`.** Figures and
-  verdicts are in `.plan-day.md`; the three corrections worth knowing are below.
+- **"The Pi is not deployed and it is Lutan's." CLOSED.** Both halves read `0.40.8` at `429229cd`
+  when checked. He had done it. **Checking the two endpoints against each other took one command and
+  is now the only honest way to say "deployed".**
+- **"Ask who can run the proof — the answer may be Lutan even when it looks like the planner."
+  FIRED, and split both ways in one day.** The classifier let `0275`'s production apply through and
+  **refused `0276`'s twice**, including after Lutan asked for it in chat. **So it is not even
+  predictable per command.** Band nothing for a production apply; find out who can run it at the
+  moment you need it.
+- **"Band the harnesses that are RED." Now the method, as `411` said. HELD.**
+- **"Check PR state with `gh`, not the session list." HELD, fifth round.** Two false OPENs today,
+  no false MERGED, ever. **Stop carrying it — it is in the skill.**
+- **"An item's conclusion ages like a count." FIRED TWICE, both on TITLES.** A ticked item still read
+  *"STILL LIVE ON PRODUCTION UNTIL 0275 IS APPLIED"* twenty minutes after it was applied, and the
+  calendar item still ordered `/plan-day` to spend a slot on work that shipped in `0.40.8`. **Add:
+  a TICKED item's stale title is worse than an open one's, because nobody reads a ticked item.**
+- **Band discipline: nine streams, nine measured, nine inside or under, none over.** Best spread
+  recorded. **Three were band errors in one direction — see below; a clean sheet is not the same as
+  a good one.**
 
-## THE ROUND'S LESSON: AN ITEM'S *CONCLUSION* AGES LIKE A COUNT OR A PRIOR PASS
+## THE ROUND'S LESSON: OUR OWN TOOL WAS LYING, AND A BRIEF TO FIX A BUG FOUND IT
 
-**Promoted into the skill** (step 3, beside "an item's head is its current statement"). Here because
-it cost four days and is the most expensive thing this edition records.
+**In the built-in browser pane, `requestAnimationFrame` NEVER FIRES.** React streams a page body
+inside a Suspense boundary and swaps it in with an inline `$RC(...)` call that waits on it: the swap
+stays pending, the page's client chunks are never requested, and **only the layout hydrates.** An
+un-hydrated form is a plain HTML form, so Save submits a GET with every field in the address bar.
+Clicking through from another page is a client-side navigation, never uses that swap, and works.
 
-The cron item said *"the fix is a Worker deploy or the Cloudflare trigger, and the repo is innocent.
-Nothing to build; one thing to check."* **Every clause was wrong**, and it was written while only one
-environment had been read. Four days went at a Cloudflare dashboard.
+**Measured by #1017** (`docs/decisions/2026-10-28-website-contact-tab-not-an-app-fault.md`): the pane
+hydrated **no** button on `/admin/website?tab=contact` and showed 15 forms all `method=get`; Chrome
+hydrated all 13. `/admin/diets` fails identically **and nobody has ever reported it**, which is how
+we know it is the pane.
 
-**What the planner did right, and it is the transferable part:** the brief did not assert the
-opposite. It said the item's conclusions were **NOT ESTABLISHED, in those words**, listed four
-mechanisms that produce the same symptom, and named what the existing instrument structurally could
-not see — the row it reads is written by the Next route, not the Worker, so it cannot tell a dead
-trigger from a crashing one. **The stream then built the missing instrument instead of arguing**, and
-one unconditional heartbeat row settled it in a single quarter-hour cycle.
+**#1001 had filed this as an app fault. I filed it as a backlog item. A whole stream was spent
+proving there was nothing there.** How many other rows in `docs/card-access-faults.md` are the same
+artefact is **not established**, and that log is Lutan's gate 3 — **propose a marking pass, never run
+one.**
 
-**Cause `942ea49f` (2026-10-23): `next` 16.3.8 → 16.4.2 added `server/preview-props.json`, and
-adapter 1.20.6 throws on it. Fix `244a1731` (#1005).** Each environment died on its last cycle before
-its own deploy. **The Cloudflare trigger was never at fault — exonerated by observation at the 16:45
-fire, on an unchanged configuration with only the adapter changed. Date that to the fire, not to the
-reasoning.**
+**The workaround is in every batch-3 brief and filed for `CLAUDE.md`:** click through, never type an
+address; if something looks dead run `requestAnimationFrame(()=>0)` **before recording anything**; a
+plain-GET submission in the pane is a symptom, not a finding.
 
-**So: when an item states a conclusion, ask when it was written and what had been read by then.
-"Nothing to build" is a finding with a clock on it.**
+**Why the brief worked:** the item's hypothesis — a component throwing during hydration — was written
+in **as a hypothesis, with its source**. The stream disproved it and found the real cause. **Had I
+asserted it, the stream would have fixed the wrong thing.** That is the `402` lesson paying off.
 
-## THE THREE BAND CORRECTIONS, and I got one of them wrong twice before settling
+## THE BAND ERRORS WERE ALL ONE ERROR, AND IT NEEDS A SHARPER TEST THAN THE SKILL HAS
 
-1. **A BRIEF THAT HANDS OVER THE CAUSE, THE DECISION AND THE SHAPE OF THE FIX LANDS NEAR THE FLOOR —
-   four readings, 27–43% under band.** `cron-leaves-a-trace` 161,185 (banded 220–270k),
-   `calendar-loop-fix` 162,041 (250–310k), `filters-say-what-they-do` 169,996 (195–245k),
-   `buttons-sweep-3-medical-rows` 156,879 (190–245k). **Every one had an item naming the cause and the
-   decided fix.** The skill's "nothing left to discover" row is written about schema PRs; **it
-   generalises to bug fixes and sweeps.** Band by what the stream must FIND OUT, never by the size of
-   the surface. **In the skill now.**
-2. **A HYPOTHESIS KILLED BY READING IS NOT AN INVESTIGATION.** I added ~40k for "test the `APP_HOST`
-   hypothesis" and it died to `git log` and three file reads. **Ask which kind it is before widening:
-   can it be disconfirmed by reading, or must something be built?** The same axis the skill already
-   has for scope. **In the skill now.**
-3. **The walkthrough rate — I REVISED IT TWICE IN ONE DAY AND WAS WRONG BOTH TIMES.** `402` said a
-   reconciliation pass costs ~11k a step. I argued that was wrong and banded at 6.3k;
-   `card-drive-content` came in at **10,297** with no adjudication, killing my explanation. I
-   re-banded at ~10k; `card-drive-contacts` came in at **7,813**. **Current best, nine readings: a
-   re-pass over an already-driven card ~6k a step, a FIRST pass ~8–10k, and adjudication jobs the
-   brief adds push it to ~11k.** The spread inside first passes is incidental discoveries, not the
-   pass itself.
-   **DELIBERATELY NOT PROMOTED INTO THE SKILL. It has moved three times in one day and its author was
-   confident each time. Leave it here until a fourth reading agrees** — that restraint is the finding,
-   not the number.
+43% under, 21% under, 17% under — `harness-sweep-batch-6`, `buttons-sweep-4-operations`,
+`policy-triage-1`. **Each was banded for the size of its surface; each delivered a READING of that
+surface.** Ten harnesses became a count and five verdicts; five areas of button fixes became an audit
+finding **one** gap; ten tables of policy investigation came back **all ten deliberate**.
 
-## WHAT I GOT WRONG, and a peer caught it
+The skill says *band by what the stream must find out, not by the size of the surface*. **I was
+reading that as being about open-ended scope. It also covers scope that is wide but shallow.**
 
-**I declared a production deploy healthy on a check that could not see the failure.** I read
-`https://lannacare.org/ → 200` and concluded `0.40.8` was live. **The Worker answers that whether or
-not the Pi was rebuilt**, and it had not been: `/api/version` read `0.40.7` while
-`/api/releases/current` read `0.40.8`. Users were on the old build and the release's two notes were
-live to nobody. The release-manager session found it and quoted `docs/release-procedure.md` §6 at me,
-correctly.
+**The test that catches all three, and it is one question: if everything here turns out to be FINE,
+what work is left?** If the answer is "write the list and say so", it is a report — band it near the
+floor whatever its surface. **A sweep that expects to find little is an audit, and an audit is
+cheap.** Promote this when a fourth reading agrees; three is a pattern, not yet a rule.
 
-**The rule, and it is the same shape as the instrument rules already in step 7: verify the thing the
-USER sees, not the thing that answers.** A 200 from a fallback proves the fallback. **A deploy on this
-project has two halves — the Worker and the Pi — so "deployed" is never one endpoint.**
+## A DOCUMENT IS NOT A READING — and this one shipped a production outage
 
-**I caught the mirror image in the same exchange**, which is why this is not a story about one session
-being careless. That peer told me the heartbeat still read `never` and the cron was unproven; **its
-reading was at 16:44:43Z and 16:45:05Z, and the trigger fired at 16:45:09.** Right principle, stale
-measurement. **Two errors of measurement discipline, in opposite directions, inside ten minutes.**
-Re-read before relying on it, and say the clock.
+**`CLAUDE.md` said the Admin bypass was *"keyed on `roles.is_admin`"* in three places. That column did
+not exist.** The planner's *Security redesign* item repeated the document, #990 and #991 built on it,
+and both shipped in `0.40.7` selecting a column no migration ever created — **so Settings → Security
+could not give anyone a role, and Delete role refused every role.** Lutan found it. `0275` fixed it.
 
-**From the same exchange, and worth more than either correction: the cut-to-deploy window is now
-routinely long enough for other PRs to land inside it.** The deployed Worker was built from
-`429229cd`; `#1006` and `#1009` merged minutes after. **`main`'s tip is not what shipped, so a Pi
-build must be pinned with `--ref` to the release commit.** The release manager pinned it; nobody had
-written that down.
+**The same day, a second one:** `CLAUDE.md`'s *"proven reachable at aal1 … `/admin/security`"* is
+wrong — it redirects to `/admin/security/verify` — and I had quoted that into #1014's brief, so it
+could drive neither of its pages.
 
-## THE OTHER THING THAT ONLY A PERSON COULD ANSWER
+**The rule: `CLAUDE.md` is authoritative about DECISIONS and is not evidence about BEHAVIOUR.** Where
+it states a behaviour it needs a date and a way to re-check it. **A brief that cites a document where
+it should cite a file and a line is the same fault as a count quoted without its database** — and
+this time it cost an outage, not a round trip.
 
-Lutan reported appointments *"showing as overdue and cancelled — it can't be both"*. Two code readings
-and a **live production read** all said one row cannot be both. **All three were correct.** The fault
-was a filter chip whose label promised one thing and whose behaviour did another, and he settled it in
-one sentence when asked what was on his screen.
+**What came out well, and is worth not re-litigating:** I asked #1014 to check whether #990 and #991
+had made false ticks. **Neither had.** Both marked the unverified parts `pending:` honestly. **The
+test-plan discipline held; the briefing was the entire fault.** Do not propose tightening the
+checklist over this.
 
-**So: when a user's report contradicts the data, ask what they are looking at before widening the
-investigation.** Three reads could not find it because it was not there to find. **In the skill now,
-beside the instrument rules.**
+## WHAT I GOT WRONG BESIDES THE BANDS
+
+**I asked two streams for a proof that cannot be run.** #1008 and #1015 both wrote `pending:` against
+*driven in both directions*. I diagnosed a shared-dev-database inconvenience and wrote
+`dev-signin --cards` into the next brief. **For #1015 the login cannot exist:** `maintenance.jobs`
+and `maintenance.photos` are both granted by `do_maintenance`, and a card is the only thing that
+grants anything. **Before writing "drive it in both directions", check whether the two activities
+live on the SAME card.** If they do, the hidden side is unobservable and the brief should say so.
+
+**That is the "a mitigation is a hypothesis" rule firing on me, one round later, exactly as the skill
+predicts.** The batch-2 mitigations *did* fire — #1017 carried its *not established* clauses through
+and tried the cheapest instrument first. **Check the browser-pane block next round; it is new.**
+
+## THE RELEASE-NOTE RULE HAS A GAP, AND IT SWALLOWED A NOTE
+
+#1014 wrote `n/a` and deferred its note to *"the PR that closes the production apply"* — **the truth
+rule applied exactly right.** But the apply was a **command**, so that PR never existed and
+`unreleased` is missing the day's most user-visible fix. **When the outstanding step is a command —
+a migration apply, a Worker deploy, a Pi rebuild — nominate who carries the note at the moment the
+step is named.** Filed; batch 3's briefs say it explicitly.
 
 ## STILL CARRIED, unchanged
 
 - **A release's cut and record PRs, and the two handover PRs, merge on green CI without asking.**
 - **Model, effort and which allowance to spend are his. Never block paid usage.**
-- **One item is ONE LINE in `docs/backlog.md`**, and check your own amendment script for `\n` first.
-- **A measurement has a timestamp; a fact does not.** It cost both sessions today.
+- **One item is ONE LINE in `docs/backlog.md`**, and check your amendment script for `\n` first —
+  **and for substring collisions: `"## Quick wins\n"` also matches `### Quick wins`.** The guards
+  caught both failures today loudly, which is the whole argument for writing them.
+- **A measurement has a timestamp; a fact does not.**
 - **`check-who-does-what` and `check-menu-coverage` are red ON PURPOSE.**
 
 ## NEXT ROUND POINTS AT
 
-1. **THE PI IS NOT DEPLOYED AND IT IS LUTAN'S.** The classifier blocked both the release manager's
-   `ssh` and the planner's migration apply as `[Production Deploy]`. **Until he runs it, production
-   users are on the previous release.** Read `/api/version` against `/api/releases/current` before
-   assuming otherwise — re-read both, never carry this line forward.
-2. **`test.lannacare.org` still carries the broken adapter**, so its cron is still dead and **test is
-   not a valid pre-production check for the cron fix** until it is deployed.
-3. **The red harness count is a fresh reading in batch 6's decision file, with its date.** The
-   remainder are mostly **investigations rather than repairs**, so price them higher and expect fewer
-   per stream. The brief's "do fewer and say so" escape **fired and was correct.**
-4. **`policy-triage-pi-updates` was dropped from batch 3 by Lutan's own choice** and took the board's
-   only quick win with it. **The next plan has no quick win unless one is filed.**
-5. **Cards remain undriven and the rate above is still unsettled** — count them from the repo.
-6. **The four deleted calendar entries are deliberately not restored** (his "records only"), and the
-   duplicates *fix* is unscheduled: `visit-duplicates` found no pairs on production, so its cause is
-   **not established** and the next step is his word, not more code.
+1. **`0276` IS NOT ON PRODUCTION.** The classifier refused the planner twice. **And applying it is
+   not neutral: no live role holds View medical or Manage medical**, so it makes Medical photos
+   Admin-only — Head of Medical included. Lutan chose *apply now, assign after*. **Re-read
+   `--status --env production` and `role-cards` before saying anything about it.**
+2. **Did the browser-pane block fire?** Batch 3's three briefs carry it. Did they click through, and
+   did any run the `rAF` probe? **This is the first use of the round's biggest finding.**
+3. **The card-access fault log may contain pane artefacts.** Propose a marking pass; do not run one.
+4. **Policy triage 2** — the other ten tables. Batch 1's ten were **all deliberate**, so **band it as
+   a report.**
+5. **Cards: ten re-passes still owing** after batch 3's eight — `assistant`, `add_photos`,
+   `approve_photos`, `meme_library`, `contacts` (14 steps), `who_does_what`. Count them from the
+   repo.
+6. **Sixteen worktrees and two husks.** Lutan has been offered a clean three times and said leave
+   them. **Do not keep asking.**
