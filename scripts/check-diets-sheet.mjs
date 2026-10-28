@@ -18,8 +18,10 @@ do $h$
 declare
   v_admin uuid; v_a uuid; v_b uuid; v_diet uuid; v_std uuid; v_res uuid; v_n bigint; v_q text; v_pick bigint;
 begin
-  select ur.user_id into v_admin from user_roles ur join roles r on r.id = ur.role_id
-   where r.key = 'admin' and ur.archived_at is null limit 1;
+  v_admin := gen_random_uuid();
+  insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+  values (v_admin, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-diets-seed-' || v_admin || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now());
+  insert into user_roles (user_id, role_id) select v_admin, id from roles where key = 'admin';
   -- 0239: diet_types is the ingredient list now; a recipe is a diets row with servings per size, and each ingredient carries qty_per_serving.
   insert into diet_types (name) values ('ZZ pumpkin') returning id into v_a;
   insert into diet_types (name) values ('ZZ turkey') returning id into v_b;

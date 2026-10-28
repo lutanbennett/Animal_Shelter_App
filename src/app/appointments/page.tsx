@@ -108,18 +108,22 @@ export default async function AppointmentsPage() {
                     .join(" · ")}
                 </div>
                 <div className="flex flex-wrap gap-x-3 gap-y-1">
-                  <Link href={link("/procedures/new")} className={actionClass}>
-                    {t.residents.sections.logProcedure}
-                  </Link>
-                  <Link href={link("/blood-tests/new")} className={actionClass}>
-                    {t.residents.sections.logBloodTest}
-                  </Link>
-                  {started && (
+                  {can(perms, "medical.procedures") && (
+                    <Link href={link("/procedures/new")} className={actionClass}>
+                      {t.residents.sections.logProcedure}
+                    </Link>
+                  )}
+                  {can(perms, "medical.blood_tests") && (
+                    <Link href={link("/blood-tests/new")} className={actionClass}>
+                      {t.residents.sections.logBloodTest}
+                    </Link>
+                  )}
+                  {started && can(perms, "medical.prescriptions") && (
                     <Link href={link("/prescriptions/new")} className={actionClass}>
                       {t.residents.sections.addPrescription}
                     </Link>
                   )}
-                  {started && (
+                  {started && can(perms, "medical.weight") && (
                     <Link href={link("/weight/new")} className={actionClass}>
                       {t.residents.sections.logWeight}
                     </Link>
@@ -127,9 +131,11 @@ export default async function AppointmentsPage() {
                   <Link href={`/clinic-visits/${row.id}`} className={actionClass}>
                     {t.vetVisits.record.view}
                   </Link>
-                  <Link href={`/clinic-visits/${row.id}/edit`} className={actionClass}>
-                    {t.common.edit}
-                  </Link>
+                  {can(perms, "medical.visits") && (
+                    <Link href={`/clinic-visits/${row.id}/edit`} className={actionClass}>
+                      {t.common.edit}
+                    </Link>
+                  )}
                 </div>
               </li>
             );

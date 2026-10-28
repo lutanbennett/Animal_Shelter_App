@@ -264,7 +264,7 @@ jobs:
         run: |
           for attempt in 1 2; do
             set +e
-            timeout 90 npm run audit:prod 2>&1 | tee audit.log
+            timeout 90 npm run audit:register 2>&1 | tee audit.log
             code=${PIPESTATUS[0]}
             set -e
             if [ "$code" -eq 0 ]; then exit 0; fi

@@ -73,6 +73,7 @@ end $f$;
 do $setup$
 declare
   v_res uuid;
+  v_seed uuid := gen_random_uuid();
   v_mgmt uuid := gen_random_uuid();
   v_doctor uuid := gen_random_uuid();
   v_vol uuid := gen_random_uuid();
@@ -96,8 +97,12 @@ begin
   join roles ro on ro.key = v.role_key;
   -- 0127: a doctor login's clinic is its linked doctor's (doctor_clinics links it, 0172)
   with d as (insert into doctors (name, user_id) values ('Harness doctor', v_doctor) returning id) insert into doctor_clinics (clinic_id, doctor_id) select v_own, id from d;
-  -- 0248: record_intake asks has_permission('resident.register'), so it needs a login. Run it as the Management login, then drop the claims.
-  perform set_config('request.jwt.claims', json_build_object('sub', v_mgmt, 'role', 'authenticated', 'aal', 'aal1')::text, true);
+  -- 0248: record_intake asks has_permission('resident.register'), so it needs a login. Run it as a disposable Admin login (true without a card,
+  -- so editing cards on Who does what cannot move this seed), then drop the claims.
+  insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+  values (v_seed, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-archive-seed-' || v_seed || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now());
+  insert into user_roles (user_id, role_id) select v_seed, id from roles where key = 'admin';
+  perform set_config('request.jwt.claims', json_build_object('sub', v_seed, 'role', 'authenticated', 'aal', 'aal1')::text, true);
   select id into v_res from record_intake(
     p_name => 'Harness archive roles', p_intake_date => date '2026-08-01', p_weight_kg => 10,
     p_diet_id => (select id from diets order by is_standard desc nulls last limit 1));
