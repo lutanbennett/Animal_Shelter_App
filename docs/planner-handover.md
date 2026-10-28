@@ -1,107 +1,157 @@
-# Planner handover — edition `429`, 2026-10-28
+# Planner handover — edition `438`, 2026-10-28
 
-**A delta, twentieth edition in this shape, and an OFF-CADENCE one.** `420` was written and merged
-about an hour before this, and the counter stood at **0**: batch 3's three streams were set up
-before `420` and are counted in its nine. **Lutan asked for this edition directly.** It exists
-because one thing `420` could not contain has now happened — **batch 3 ran, so `420`'s own
-prediction can be tested** — so it is deliberately short and covers batch 3 only. **Read `420`
-first; this does not replace it.**
+**A delta, twenty-first edition in this shape, and the longest day in the loop's history: SIXTEEN
+streams, fifteen planned plus one unplanned, every one of them inside or under its band.** `429` was
+an off-cadence edition covering batch 3 only; this covers everything after it. **Read `429` first for
+the browser-pane findings; this does not repeat them.**
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`.**
-**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → `420` → this. **The next slug is `438`.**
+**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → `429` → this. **The next slug is `447`.**
 
 > **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
 > release state, candidates. **Re-read every time, never diffed.**
 
+**Three durable facts were promoted out of this edition into the skill rather than recopied here:**
+the audit/report band row, the item-TITLE check, and Lutan's usage conversion. Cited below, not
+restated.
+
 ---
 
-## THE ONE THING THIS EDITION EXISTS FOR: `420`'s MITIGATION FIRED, AND THE STREAMS EXTENDED IT
+## WHAT `429` ASKED FOR, and what each warning did
 
-`420` closed by asking: *"Did the browser-pane block fire? This is the first use of the round's
-biggest finding."* **It did, on both card streams, and neither filed a false row.**
+- **"Promote the ~6k re-pass rate" — DO NOT, AND THIS IS THE CORRECTION THAT MATTERS.** Two more
+  readings landed: 6,722 a step (17 steps) and **7,365 a step (15 steps)**. `429` wanted a single
+  number promoted on seven readings; it has now moved **three times** and the single-number version
+  is disproven twice — #989's reconciliation pass at 11,223 and today's 7,365. **The axis, not the
+  number, is the durable thing: a re-pass costs what it costs to CONFIRM OR CONTRADICT the prior
+  rows, not to drive the steps.** Today's 7,365 group had **four** behaviour changes to check against
+  (`0276`, `0277`, `0278`, #1032); the 6.0–6.8k readings had one or two. **Band from how much prior
+  state the pass must settle. Nothing was promoted, deliberately.**
+- **"`0276` is not on production." NO LONGER TRUE — all THREE went on at 04:56Z today**, a minute
+  after `0.40.9` merged (`0276`, `0277`, `0278`; production reads 279 applied, 0 pending). This line
+  read STILL TRUE when written and went stale inside the hour, which is why it carried its own
+  re-read instruction. **It worked: a planner who re-read `--status --env production` found the
+  truth. Keep writing release state that way.** What is still owed is the **release note for
+  `0276`'s READ half**: `0.40.9` told users that *filing* into Medical needs its own permission and
+  said nothing about *viewing* it. **`0275`'s is NOT owed — #1024 wrote it and it shipped in
+  `0.40.9`** ("Settings → Security can give people roles again…", card tag `who_does_what`). `429`
+  listed both as owed; only one was.
+  **The live card position — derived from `card_includes`/`card_grants`, NOT proven by a query as
+  those logins:** three cards reach the new read through `card_closure()` — Manage medical, Book
+  clinic visits, Run appeals — so **Management can see medical photos and Head of Medical cannot**,
+  though she holds Add medical photos and files them there. **Both halves are deliberate and were
+  written down in advance:** `0276` note 4 withholds the read from Add medical photos on Lutan's
+  "decrease to just what is required" ruling, and note 2 says the two including cards read Medical
+  photos too — "that is what 'includes' means and is recorded, not widened." **So there is nothing
+  here to file as a fault; the only open question is whether Lutan WANTS that shape**, which is a
+  Settings answer, raised 2026-10-28.
+  **Re-read `--status --env production` and `role-cards`; never quote any of this.**
+- **"Ten card re-passes owing." CLOSED — the whole fourteen-card programme is done** (#1026, #1035).
+- **"Buttons slices 5 and 6." BOTH DONE; the six-slice sweep is complete** (#1027, #1030). Slice 5
+  also settled the question its predecessor handed forward: **a suggestion is gated when it names one
+  specific action whose activity is missing; free-text hints are not.** That rule binds later work.
+- **"The `CLAUDE.md` pane entry." DONE (#1024), and the expensive half EVAPORATED.** The marking pass
+  found **no row in the fault log is a pane artefact**: 12 rows matched (not 14 — `429`'s count came
+  from a looser grep), and **all 12 fell to reading alone.** Every hit was "dead" meaning a dead-end
+  page, or "pane" meaning a panel or a file-picker limit. **A whole feared clean-up was a negative
+  result, which is the cheapest kind of good news.**
+- **"Policy triage 2 — band it as a report." HELD, and it was the round's best estimate:** all ten
+  tables deliberate, **144,682 against 145–185k.**
+- **"Sixteen-plus worktrees. Stop asking." HELD.** Not raised once.
 
-`card-drive-daily-ops`, in its own words: *"`requestAnimationFrame` fired on every page driven, and
-each page hydrated after a click-through, so none of the rows above is the pane."* Its one direct
-load — `/my`, the first screen after sign-in — **showed only the layout, exactly as the brief
-predicted, and was recorded as nothing.** It also noticed the sensible exception on its own: *"Only
-the refusal checks typed an address, since a refusal is decided on the server."*
+## THE ROUND'S BIGGEST FINDING: A MERGED STREAM LEAVES ITS ITEM'S *TITLE* LYING, AND IT HAPPENED FOUR TIMES
 
-**`card-drive-money` then found three things the original diagnosis did not cover.** All three are
-appended to the pane's backlog item and belong in the same `CLAUDE.md` entry:
+Four times in one day, each in a different way, and **one of them put already-finished work into this
+plan's own batch 3**:
 
-1. **A HIDDEN pane stops painting, and `rAF` stops firing there too** — so the symptom is **not**
-   confined to direct loads: a page reached correctly by click can still freeze if the pane is off
-   screen. **A `screenshot` wakes it.**
-2. **Pixel clicks can miss: the screenshot frame is 800×600 while the page is 1024×768.** A click
-   read off a screenshot lands somewhere else — it missed the resident chooser's **Done**.
-   `element.click()` through `javascript_tool` worked. **A click that lands on nothing looks exactly
-   like a dead control**, which is how this becomes a false fault-log row.
-3. **`dev-signin.mjs --cards <card>` called twice re-keys the same login**, so only the later snippet
-   is valid.
+1. **#1024 never touched `docs/backlog.md` at all.** All three deliverables shipped — verified in the
+   tree — and **two items still read OPEN**, one of which this plan had scheduled.
+2. **#1029 shipped `0278` but left its item's head reading "(schema PR, then the app)"**, as though
+   both halves were open.
+3. **The tiles item read *"what is left is Lutan choosing which role to flip first"*** — which is why
+   the planner put it to him as a decision. **His correction: *"this is driven by the UI in who does
+   what, it doesn't need a decision here."*** Not a decision, not a blocker, self-service.
+4. **#1026 got it right**, and the difference is instructive: its brief told it **not** to tick, and
+   to strike only the three cards it drove.
 
-**The transferable part: a mitigation is a hypothesis, and this is what it looks like when one is
-confirmed properly.** Not "no complaints", but two streams saying in writing what they checked, and
-one of them finding the edges the original measurement missed. **Keep asking the next round.**
+**The skill already says a merged PR is not proof its item is closed. What it did not say, and now
+does: after every batch, re-read the TITLE of each item a stream touched, not just its tick.** A
+stale title is worse than an open one because nobody re-reads a ticked or answered item. **Promoted
+into the skill; not restated here.**
 
-## THE WALKTHROUGH RE-PASS RATE NOW HAS ITS FOURTH AND FIFTH READINGS, AND IT HOLDS
+## BAND WORK: THE MORNING'S CORRECTION HELD, AND A NEW ROW EARNED ITSELF
 
-Both card streams, floor taken from their own non-`Messages` categories (**~98.0k each**):
+- **Audits banded as REPORTS landed at the BOTTOM EDGE instead of 20% under.** The morning's three
+  errors were one error — pricing a *reading* of a surface as a *build* on it (43%, 21%, 17% under).
+  The test — **if everything here turns out to be FINE, what work is left?** — was applied to both of
+  the round's audits: `policy-triage-2` 144,682 against 145–185k, `buttons-sweep-5` 151,124 against
+  150–190k. **Promoted into the skill's band table.**
+- **NEW, one reading, kept here rather than promoted: scope a triage job READ-FIRST, DRIVE-SECOND and
+  it lands near the floor.** `fault-log-marking-pass` was briefed to settle each row from its own
+  source before touching a browser; **all 12 settled by reading, no page re-driven, 142,111 against
+  170–215k — 16% under.** Same axis as *a hypothesis killed by reading is not an investigation*,
+  applied to a per-row job. **Ask of any marking or triage brief: which rows could reading settle?**
+- **The floor moved again inside one day: ~95.7k → ~97.4k**, and it is **memory files** growing
+  (18,453 → 19,626). **Re-measure it from a stream's own non-`Messages` categories every round.** The
+  whole per-step rate is computed above it, so carrying a stale floor corrupts the rate.
 
-| stream | steps | actual | above floor | per step |
-|---|---|---|---|---|
-| `card-drive-daily-ops` | 23 | 237,110 | 139,120 | **6,049** |
-| `card-drive-money` | 20 | 233,021 | 135,031 | **6,752** |
+## WHAT THE PLANNER GOT WRONG, AND ONE OF THEM IS THE RULE I BRIEF OTHERS ON
 
-**`411` said a re-pass is ~6k a step and asked for a fourth reading before promoting it. There are
-now two more, both inside, and both banded correctly** (215–265k and 195–245k). Seven readings
-across three rounds: 5,529 · 5,858 · 5,911 · 6,438 · 8,010 · 6,049 · 6,752.
+- **I left my own branch pushed with NO PR, and did not notice until Lutan said "everything is
+  merged."** That is the finish-line rule — the one at the top of every brief I write — failing on
+  the author. The gates genuinely had to finish before the test plan could carry their real output,
+  **but that is a reason to SAY it is still open, not to leave it looking done.** **The finish-line
+  block applies to the planner's own PRs.**
+- **I read a path as a file.** Checking the PDF toolchain, I printed what `chromium.executablePath()`
+  *would* return and reported the toolchain present. **No browser was installed.** Same shape as
+  quoting a document instead of reading the code — one `existsSync` would have settled it. Used the
+  system Chrome instead of downloading one.
+- **I told another role its gate had a hole. It did not.** I warned the release manager that the
+  per-PR migration-ordering gate could not catch `0278`, because the migration (#1029) and its reader
+  (#1032) were in different PRs. **The mechanism was right and it verified it independently** — but
+  the protection was never that gate: `docs/release-procedure.md` §5 puts migrations before **any**
+  deploy unconditionally, **and both deploy paths refuse a commit whose database lacks a migration on
+  `main`.** So it was already blocked. **Before telling another role their gate has a gap, read their
+  runbook.** The warning still earned its place — it named which failure to expect if the order
+  slipped, and went into the cut plan with the file references.
 
-**This is now safe to promote into the skill — but promoting it is the NEXT planner's job, not a
-thing to do in an off-cadence edition written at the end of a long day.** The rate moved three times
-in one day on 2026-10-27 because someone was confident each time. **Do it deliberately, in a chat
-that has read the figures rather than inherited them.**
+## THE BACKLOG RAN OUT OF BUILDABLE WORK, AND THAT IS THE REAL STATE TO HAND OVER
 
-## WHAT ELSE BATCH 3 SHOWED
+**Lutan asked for three more batches. There were about five buildable items.** All open items were
+read: the rest are waiting on him, waiting on the Director, parked by him, blocked on a date, or
+gated behind his fault-log review. **The only thing available in volume is harness triage** — and the
+item itself warns many are red *because their fixtures lean on roles being deliberately removed*, so
+making them green can mean **adding back** hidden security.
 
-- **Nine of nine inside or under band, for the second round running.** `medical-photos-app` 140,226
-  (banded 150–190k, 7% under), and the two above inside. **Twelve streams today, none over.**
-- **The release-note-by-command gap, which `420` recorded, was closed by a brief.** #1020 was told
-  to say explicitly what note was owed and who should carry it, and it did: *"Release note owed once
-  Lutan applies `0276`: 'Medical photos are now visible only to logins holding View medical or
-  Manage medical.'"* **That is the fix working first time.** `0275`'s note is still owed and still
-  unwritten.
-- **`card-drive-daily-ops` found a control the walkthrough could not have found:** `/upcoming-visits`
-  offers **Edit** to a read-only login and sends it to `/no-access`. Its own observation is the
-  useful part — *"it sits on a page the menu adds and no step opens"* — so **the walkthrough and the
-  buttons sweep have a gap between them that neither covers.** Worth a thought when slice 5 is
-  scoped.
-- **`card-drive-money` separated a cause it read from a cause it proved**, unprompted: the donations
-  resident picker reads `resident_list_view` while `/residents` reads `resident_who_and_where`, and
-  it wrote *"read from the code and the view's definition, **not proven**: no query was run as that
-  login."* **That is the NOT ESTABLISHED discipline arriving in a stream's own output** without the
-  brief asking for it.
+**He was offered the choice and chose: one batch, then the release.** **This is what "nine is a target
+and not a quota" looks like in practice — do not pad a plan with harness triage to reach nine.**
+
+## WHAT UNBLOCKS THE NEXT PLAN
+
+1. **141 fault-log rows still say "not established"** — over half the log. **This is the planner's to
+   settle, not the reviewer's:** only the main checkout reads production, and most rows name the check
+   they need. Two such reads today closed one root cause and confirmed another **in minutes**. **Until
+   they are settled, a row saying only *not established* is not a finding to rule on.** Best single
+   candidate for the next round, and it is a stream.
+2. **His fault-log review (gate 3)** still releases four items plus **Card review 2**, the largest
+   blocked thing on the board. The log is now materially easier to read: no pane artefacts, and the
+   live rows carry dated production readings.
+3. **`0.40.9` is being cut by the release manager.** Two of my PRs are **deliberately held** at its
+   request — keeping the cut-to-deploy window empty removes the "which SHA did the Worker build
+   from" question that cost `0.40.8` real time. **Open them once the cut merges:**
+   `claude/fault-log-production-readings` and this edition's own branch.
 
 ## STILL CARRIED, unchanged
 
 - **A release's cut and record PRs, and the two handover PRs, merge on green CI without asking.**
-- **Model, effort and which allowance to spend are his. Never block paid usage.**
-- **`0276` IS STILL NOT ON PRODUCTION.** The classifier refused the planner twice, including after
-  Lutan asked for it in chat, so it is one command of his. **He chose *apply now, assign after*,
-  knowing it makes Medical photos Admin-only until a role holds View medical.** Re-read
-  `--status --env production` and `role-cards` before saying anything about it.
+- **Model, effort and which allowance to spend are his. Never block paid usage** — and **convert
+  before forecasting**, now in the skill: three streams ≈ 2% of the weekly allowance. The planner
+  read 91% and warned a batch might not fit; **sixteen streams moved it 91% → 94%.**
 - **A measurement has a timestamp; a fact does not.**
 - **`check-who-does-what` and `check-menu-coverage` are red ON PURPOSE.**
-
-## NEXT ROUND POINTS AT
-
-1. **Promote the ~6k re-pass rate into the skill**, deliberately, with the seven readings above.
-2. **`0276`'s production apply, and the release note that follows it** — both `0275`'s and `0276`'s
-   are now owed and neither is written.
-3. **Ten card re-passes still owing:** `assistant`, `add_photos`, `approve_photos`, `meme_library`,
-   `contacts` (14 steps), `who_does_what`. Count them from the repo, not from here.
-4. **Buttons slices 5 and 6**, and the gap `card-drive-daily-ops` found between the walkthrough and
-   the sweep — a page the menu adds that no walkthrough step opens.
-5. **The `CLAUDE.md` entry for the browser pane**, now four facts rather than one.
-6. **Policy triage 2** — band it as a report; batch 1's ten were all deliberate.
-7. **Sixteen-plus worktrees.** Lutan has been offered a clean four times and said leave them.
-   **Stop asking.**
+- **Lutan's decisions this round, so nobody re-asks:** run the marking pass; **deleting a maintenance
+  job is an Admin duty, not the card's** (own item, and both obvious implementations break his own
+  rules — the item says why); the tiles switch is not a decision.
+- **Watch across releases, not within one: test plans signed `pending: a person` reached 15 of 29**,
+  against a trend of 5, 5, 13, 7, 13, 15. He was asked and chose to ship with it recorded. **It is a
+  trend for the record, not an incident, and not a decision he owes again.**

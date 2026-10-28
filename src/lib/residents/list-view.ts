@@ -247,3 +247,14 @@ export function inListOrder<T extends { name: string; enclosure_id: string | nul
 ): T[] {
   return DB_ORDER[view.sort.key] ? rows : sortByPlace(rows, view.sort, view.ranks);
 }
+
+/**
+ * The list's own query string, carried to a resident (`?list=…`) so the hub's back link can return to the same
+ * filtered list. Only a bare query is accepted and it is always re-prefixed with `/residents`, so the link can
+ * never point off the site; anything else gives plain `/residents`.
+ */
+export function residentsListHref(raw: string | string[] | undefined): string {
+  const qs = typeof raw === "string" ? raw.replace(/^\?/, "") : "";
+  if (!qs || qs.length > 500 || /[\u0000-\u001f\s#]/.test(qs)) return "/residents";
+  return `/residents?${qs}`;
+}

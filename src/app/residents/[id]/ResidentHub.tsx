@@ -205,9 +205,11 @@ export function ResidentHub({
   now,
   tagOrigin,
   otherPhotos,
+  backHref,
 }: {
   /** The resident's non-medical photos (page.tsx filters), for the header's photo viewer. */
   otherPhotos: ViewerPhoto[];
+  backHref: string;
   resident: Resident;
   status: ResidentStatus | null;
   isDeceased: boolean;
@@ -464,7 +466,7 @@ export function ResidentHub({
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
-      <Link href="/residents" className="text-sm text-muted hover:text-foreground">
+      <Link href={backHref} className="text-sm text-muted hover:text-foreground">
         {t.residents.hub.backToResidents}
       </Link>
 

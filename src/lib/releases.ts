@@ -89,16 +89,26 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  { text: "Filing a resident's photo into the Medical folder now needs its own permission, given by the Add medical photos and Manage medical cards. A login that only holds Add a photo to a resident (the Residents card) can still upload to Shelter and the other folders, but no longer sees Medical in the uploader or in Move.", cards: ["residents", "add_medical_photos", "medical_records"] },
-  { text: "The Assistant page now only suggests the recording examples (such as sending a resident to hospital) to a login whose cards allow recording. Before, everyone was offered them and then told recording was not for them.", cards: ["assistant"] },
-  { text: "Settings → Security can give people roles again, and Settings → Who does what can delete a role. Before, the list of roles on both screens was empty, so there was nothing to give and Delete refused every role.", cards: ["who_does_what"] },
-  { text: "A maintenance job page now only offers Add photo and the photo Remove buttons to a login whose cards allow maintenance photos. Before, Remove followed the edit-jobs card and Add showed for everyone, and the ones without the card were turned away.", cards: ["do_maintenance"] },
-  { text: "A clinic visit page now only offers Log blood test, Add prescription, Log weight and Log procedure to a login whose cards allow each one. Before, a login that could edit visits saw all four and was turned away from the ones it had no card for.", cards: ["medical_records"] },
-  "Upcoming visits: Show cancelled and Show completed now show only those appointments, and ticking one unticks the other. The Residents list has a Deceased button to find only the residents who have died, and the buttons under Filter now clear any zone you had picked so the list matches what you tapped.",
+  { text: "Looking at the photos in a resident's Medical folder now needs its own permission, given by the View medical, Manage medical, Book clinic visits and Run fundraising appeals cards. A login that holds View residents but none of those still sees the resident's other photo folders, and the Medical folder's photos are no longer shown to it. A login that holds Add Medical Photos can still file photos into the Medical folder but can no longer look at them afterwards. The check is in the database and not only on the page, so a medical photo cannot be reached by its web address either.", cards: ["view_residents", "residents", "add_medical_photos", "view_medical", "medical_records", "book_clinic_visits", "run_appeals"] },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.40.9",
+    date: "2026-10-28",
+    title: "Buttons match your cards, roles can be given again, and filters stick",
+    major: false,
+    notes: [
+      { text: "Filter the Residents list, open a resident and press Back to residents: you now return to the same filtered list instead of the full one.", cards: ["residents"] },
+      { text: "Filing a resident's photo into the Medical folder now needs its own permission, given by the Add medical photos and Manage medical cards. A login that only holds Add a photo to a resident (the Residents card) can still upload to Shelter and the other folders, but no longer sees Medical in the uploader or in Move.", cards: ["residents", "add_medical_photos", "medical_records"] },
+      { text: "The Assistant page now only suggests the recording examples (such as sending a resident to hospital) to a login whose cards allow recording. Before, everyone was offered them and then told recording was not for them.", cards: ["assistant"] },
+      { text: "Settings → Security can give people roles again, and Settings → Who does what can delete a role. Before, the list of roles on both screens was empty, so there was nothing to give and Delete refused every role.", cards: ["who_does_what"] },
+      { text: "A maintenance job page now only offers Add photo and the photo Remove buttons to a login whose cards allow maintenance photos. Before, Remove followed the edit-jobs card and Add showed for everyone, and the ones without the card were turned away.", cards: ["do_maintenance"] },
+      { text: "A clinic visit page now only offers Log blood test, Add prescription, Log weight and Log procedure to a login whose cards allow each one. Before, a login that could edit visits saw all four and was turned away from the ones it had no card for.", cards: ["medical_records"] },
+      "Upcoming visits: Show cancelled and Show completed now show only those appointments, and ticking one unticks the other. The Residents list has a Deceased button to find only the residents who have died, and the buttons under Filter now clear any zone you had picked so the list matches what you tapped.",
+    ],
+  },
   {
     version: "0.40.8",
     date: "2026-10-27",

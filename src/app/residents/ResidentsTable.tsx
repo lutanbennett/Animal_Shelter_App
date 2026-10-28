@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Download, PawPrint, Pencil } from "lucide-react";
 import { ActionLink } from "@/components/ActionLink";
@@ -65,6 +65,10 @@ export function ResidentsTable({
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
+  // The list's own filters, carried to the resident so Back to residents returns to the same list.
+  const listQuery = useSearchParams().toString();
+  const residentHref = (id: string) =>
+    listQuery ? `/residents/${id}?list=${encodeURIComponent(listQuery)}` : `/residents/${id}`;
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [downloading, setDownloading] = useState<string | null>(null);
   // How many ticked residents the last change of filters took out of the list (and so unticked).
@@ -136,7 +140,7 @@ export function ResidentsTable({
     const target = event.target as HTMLElement;
     if (target.closest("a, input, button, label")) return;
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    router.push(`/residents/${residentId}`);
+    router.push(residentHref(residentId));
   }
 
   function whereLabel(status: string | null) {
@@ -341,7 +345,7 @@ export function ResidentsTable({
                 </td>
                 <td className="px-4 py-2 text-foreground">
                   <Link
-                    href={`/residents/${resident.resident_id}`}
+                    href={residentHref(resident.resident_id)}
                     className="hover:text-primary hover:underline"
                   >
                     {fullName(resident)}
