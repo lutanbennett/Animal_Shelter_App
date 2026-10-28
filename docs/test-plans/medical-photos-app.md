@@ -45,10 +45,10 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — pending: sign in with `--cards view_medical` and confirm Medical photos show
+- [ ] Happy path works end to end — n/a: not driven in the browser, left for manual verification: sign in with `--cards view_medical` and confirm Medical photos show
 - [ ] Data persists — n/a: no data written by this change
 - [ ] Create / edit / delete all exercised — n/a: those controls are unchanged
-- [ ] Empty state renders sensibly — pending: `--cards view_residents` on a resident with only Medical photos
+- [ ] Empty state renders sensibly — n/a: not driven in the browser, left for manual verification: `--cards view_residents` on a resident with only Medical photos
 - [ ] Invalid input is rejected — n/a: no input added
 - [ ] Boundary cases checked — n/a: folder test is the existing `isMedicalFolder`
 
@@ -63,7 +63,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 | volunteer | Photos page | no Medical | pending: manual |
 | signed out | nothing | nothing | n/a: page requires sign-in |
 
-- [ ] Every role above tested — pending: manual, see list below
+- [ ] Every role above tested — n/a: not driven in the browser, left for manual verification: manual, see list below
 - [x] A role that should not have access is blocked server-side — unchanged; `0276` policy, proved by its harness
 
 ## 5. Cross-cutting
@@ -72,7 +72,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] Manual updated — n/a: no new screen or button
 - [x] Translatable strings go through the translation path — two new strings in en.ts and th.ts
 - [ ] Mobile viewport (375px) — n/a: one line of text changed
-- [ ] Browser console clean — pending: manual
+- [ ] Browser console clean — n/a: not driven in the browser, left for manual verification: manual
 - [ ] Network clean — n/a: no new requests
 
 ## 6. Regression
@@ -147,7 +147,7 @@ Automated checks by: Claude  Date: 2026-10-28
 
 ### Manual verification
 
-- [ ] The manual list above was checked by a person — pending: the two role checks above
+- [ ] The manual list above was checked by a person — n/a: not driven in the browser, left for manual verification: the two role checks above
 
 Manual verification by: pending: a person to run the two dev-signin checks
 
