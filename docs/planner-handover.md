@@ -1,144 +1,142 @@
-# Planner handover — edition `447`, 2026-10-28
+# Planner handover — edition `456`, 2026-10-28
 
-**A delta, twenty-second edition in this shape. Nine streams, and the round's subject is not the work
-— it is that FIVE separate faults all had the same shape: the record was right and the thing itself
-was not.** `438` covered the sixteen-stream day; this covers everything after it. **Read `438` first
-for the band corrections; this does not repeat them.**
+**A delta, twenty-third edition in this shape. Nine streams.** `447` covered the round whose subject
+was *the record was right and the thing itself was not*. **This round is the cost of that fault landing
+on a person: SIX times in one afternoon Lutan was asked for something he had already settled or that
+was already done**, and he said what it was doing to him:
+
+> *"it is wearing me down having to continually answer the same questions."*
+
+**That sentence is this edition's subject. Everything below is either an instance of it or a guard
+against it.**
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`.**
-**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → `438` → this. **The next slug is `456`.**
+**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → `447` → this. **The next slug is `465`.**
 
 > **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
-> release state, candidates. **Re-read every time, never diffed.** This edition deliberately names no
-> figure you could get from a command.
+> release state, candidates. **Re-read every time, never diffed.** This edition names no figure you
+> could get from a command.
 
 ---
 
-## THE ONE THING TO READ: HE RULED ON ANALYSIS, AND HAD TO SAY IT THREE TIMES
+## THE ONE THING TO READ: THE BACKLOG ASKS, AND THE PLANNER RELAYS WITHOUT CHECKING
 
-> *"Can we stop analyzing against Roles. All analysis must be against cards as Roles are just a
-> transient grouping of cards."*
+All six have the same mechanism. **A note was true when it was written and false later. Nobody
+re-read it against the live system, so it was relayed to him as a live question.** He cannot tell a
+question nobody recorded from a question nobody asked — they look identical from his side.
 
-**It is now in `CLAUDE.md` (*All analysis is by CARD, never by role*) and in the skill's step 3. Read
-it there; it is not repeated here.** What belongs in a delta is **how it failed twice before it stuck**,
-because the second failure is the one you will make:
+1. **The status alert.** Put to him as *apply `0226`, then deploy the Worker*. **Done since 20 October**
+   — the release record for that day says in its own words that it applied the migration, deployed the
+   Worker and shipped the note *"The status test alert now works"*, which the truth rule only permits
+   once the step is closed. His reply: *"I'm sure is done, this one is yet another one that keeps
+   coming back as outstanding."*
+2. **BitLocker.** *"you showed me how to do this already and we confirmed it was on."* It was on the
+   list in **two** items, so fixing one would have left the other to ask again.
+3. **The vet's cards**, put to him as a *role* question after he had ruled on that three times:
+   *"we are back on doctor roles. Why are we back talking about roles yet again."*
+4. **The 1 TB drive**, offered as a choice between two jobs when the first was **already built** and he
+   wanted both.
+5. **Leaked-password protection**, asked for when it is **Pro-only** and this project runs on a hard
+   zero-ongoing-cost rule — so it was never something he could say yes to.
+6. **The auth sender**, with directions to *Authentication → SMTP settings* — **a panel he does not
+   use**, so it was empty and he had to find the real screen himself.
 
-1. **First telling, mid-review.** Recorded — in the fault log's own gate-3 section, as a rule for that
-   log. **Broken within the hour**, when Card review 2 was sized per role.
-2. **Second telling.** The rule went into `CLAUDE.md`. Then the planner **stopped writing per role and
-   went on SIZING off a per-role NUMBER** — banding a review off a figure that counts a page once per
-   role. **Obeying it in the prose while sizing off a role-shaped figure is still breaking it, and it is
-   harder to see because the sentence no longer names a role.** That band is withdrawn.
-3. **Third telling.** He asked why we were still talking about it.
+**THE GUARD, AND IT IS MEASURED: TWO COMMANDS SETTLED THREE OF THESE IN UNDER A MINUTE.**
+`node scripts/apply-migrations.mjs --status --env production` (280 applied, 0 pending — so `0226` and
+`0261` were both live) and reading `docs/releases/<date>.md` for the release that closed the step.
+**Before any item reaches him, run the one command that would settle it.** The planner is the only
+role that can read production; leaving that unrun and relaying the question instead is the whole fault.
 
-**The transferable rule, beyond roles: if a figure came out of a per-role loop it is not a measurement
-of anything. Say the quantity is unknown and name what would report it.**
+**And its corollary, which is the half that costs him most: a question generated FROM A DOCUMENT is
+not a question from the system.** Items 5 and 6 above were never answerable — one asked for a paid
+feature, the other named an empty screen. **Nothing in the repo would have caught either. Reading the
+item as a claim about the world, rather than as an instruction, would have.**
 
-**And a rule recorded in the document where it was discovered governs only that document.** That is why
-it took a `CLAUDE.md` edit to hold.
+## WHAT TO DO WITH A NOTE ONCE YOU HAVE CHECKED IT
 
-## THE ROUND'S REAL FINDING: FIVE FAULTS, ONE SHAPE
+Every one of the six is now recorded with **his words, what closed it, and why it read open** — and
+three carry an explicit *do not ask again*. **That last clause is the only part that stops recurrence**,
+because the next planner reads the item, not this document.
 
-Each was found separately. Each cost real time. **They are one habit.**
+**Write the reason it read open, not just the answer.** *"BitLocker: confirmed"* would have been ticked
+and forgotten; *"confirmed 2026-10-28, and he had confirmed it once before — closed, do not re-ask"*
+tells the next reader that the board itself was the fault.
 
-- **A policy read without its grants.** `maintenance_delete_perm` asks an activity; the planner
-  concluded work was needed **without checking whether any card held that activity.** None did, so it
-  was already Admin-only and always had been. A backlog item, a brief and a worktree were built on it;
-  the stream's step-zero check killed it. **A policy asking `has_permission('x')` tells you nothing
-  until you know who holds `x`.**
-- **A check quoted without its query.** That same subject's check listed holders of a card and **failed
-  if there were any**, on a false premise — reporting the intended design as a fault on every run, for
-  ever. **Rewritten to ask the card question and guard the decision.** That rewrite is the shape to copy
-  and it is in the repo.
-- **A release-note carrier nominated in prose, four times, and never picked up.** Three migrations
-  running lost their note. **The planner's own fix — write the carrier down clearly — WAS the failed
-  intervention.**
-- **A decision file claiming a prefix that was never written.** One grep for the word returned zero.
-- **A decision file NOTICING two contradictory release notes and leaving them live** in a shipped
-  release, with *"is now superseded by the line beside it"* — true as an observation, worthless to the
-  person reading the notes.
+## WHAT `447` ASKED FOR, and what each warning did
 
-**THE GUARD, AND IT IS CHEAP: RE-READ THE ARTIFACT, NOT THE NOTE ABOUT IT.** One grep, one look at the
-grants, one look at the check's SQL. **A decision file is where this hides best, because a sentence
-describing an intention reads exactly like one describing a completed action.**
+- **"RE-READ THE ARTIFACT, NOT THE NOTE ABOUT IT." FIRED FOUR TIMES, and it was the planner breaking
+  it in three of them** — the six above are that warning, aimed at a person instead of a file. **Where
+  it was obeyed it paid immediately:** his resident-download ruling was checked against
+  `src/app/residents/export/route.ts` rather than the fault log's description of it, and the answer was
+  that **nothing needed building**. One file read turned a feature into a record.
+- **"All analysis by CARD, never by role." FIRED AGAIN, a fourth telling.** The planner relayed an
+  item's role-shaped framing instead of restating it. **The new sub-rule: an item written role-first
+  will make you break the rule by quoting it.** Restate it card-shaped before you act on it — the vet
+  item is now *"nine activities carried by no card sized for them"*, and in that shape there was no
+  decision for him at all.
+- **The count correction, which is small and embarrassing and worth recording.** He was told the round
+  stood at **ten** streams and that this handover was overdue. **It was seven.** One `gh pr list`
+  settled it. The day had been busy with answers, production reads and a driven check — **none of which
+  is a workstream. Count from the PR list before quoting the counter.**
 
-## WHAT `438` ASKED FOR, and what each warning did
+## WHAT WENT RIGHT, AND IS WORTH COPYING
 
-- **"`0276` is not on production." WRONG, and he caught it** — *"I believe that this was put onto
-  production a while ago."* All three had gone on minutes after the release merged. **The line's own
-  *"re-read `--status --env production`; never quote this"* is what made it recoverable: one command
-  settled it.** Keep writing release state with its re-read instruction attached. **Corrected on `438`'s
-  own branch, not on its predecessor** — a second PR against this file is the two-streams-one-file
-  conflict.
-- **"A merged stream leaves its item's TITLE lying." FIRED AGAIN, three more times**, and once worse
-  than a title: a stream measured the walkthrough seam, **wrote the number only into its decision file,
-  ticked its own item and filed nothing** — so a finding with real work in it was invisible to anything
-  that reads the backlog. `438` called this its biggest finding; this is the second round running.
-  **Check the item of every stream that merges, and check whether its FINDINGS were filed, not just
-  whether its box is ticked.**
-- **"Ten card re-passes owing." / "Buttons slices 5 and 6." / "Policy triage 2." / "The pane entry."
-  ALL HELD.** Nothing reopened.
-- **"Sixteen-plus worktrees. Stop asking." HELD.** Not raised. Leftovers were reported once as a fact,
-  never as a question.
+- **The usage-comment mechanism fired on its first real batch, 3 of 3** (shipped by #1051 that morning).
+  **Auto-archive on PR close was switched on the same day**, and every session was archived within
+  moments of merging, so `get_usage` was `unavailable` for all three: **the comment is now the only
+  record, which was the point.** Two gave figures, both inside band.
+- **The one gap is the mechanism's real cost, not a failure of it.** One stream posted
+  `tokens=unmeasured` — **honest, and the rule asks for exactly that over a guess** — but with the
+  session archived the figure is **permanently lost**, where before auto-archive it could have been
+  read afterwards. **Batch 3's briefs now say: retry once, and say in the comment what failed, so a gap
+  is explained rather than blank. That is a hypothesis — check next round whether it fired.**
+- **Driving a question beats arguing it.** Whether the `dashboard` card opens `/management/cashflow`
+  was settled by signing in with that card alone and watching it land on `/no-access`, with the
+  dashboard page itself as the control. **Both halves matter: a refusal with no control proves nothing.**
 
-## GATE 3 IS CLOSED — AND IT RELEASED LESS THAN EVERY PLAN PREDICTED
+## THE TRAP THAT COST THE MOST TECHNICALLY: A DEFAULT IS A FIELD, NOT AN OMISSION
 
-He reviewed the fault log as a set and closed it. **Recorded in the log itself, with his signature at
-his explicit request**, because a gate that happened only in a chat is one nobody can find.
+`requirePermission(activity)` **defaults its level to `"edit"`** (`src/lib/permissions/require.ts`).
+The planner read the cashflow route and page asking the activity *"with no level"* and **inferred
+read** — then wrote that inference onto a backlog item as a finding, concluding a card already existed.
+Driving it proved the opposite.
 
-**Every plan said it would release four items plus Card review 2. It released one fix.** Two of the four
-were **already closed and nobody had noticed**; a third was the **same fault filed twice**; the fourth
-turned out to be **a fix his button rule already governs**, not a decision. **And Card review 2 was not
-unblocked by the gate** — closing it cleared one of three, and the last fell only when the fault it was
-waiting on turned out never to have existed.
+**Inferring a value from the absence of an argument is the same fault as quoting a check without
+reading its query.** Open the function and read the default. **It also changes what gets built:** three
+new cards would have shipped granting *read* against guards demanding *edit*, i.e. **three cards that
+open nothing** — the one state `CLAUDE.md` says a card must never be in.
 
-**For the next gate you describe: count what it releases by opening each item, not by counting the items
-that cite it.**
+## TWO THINGS THE STREAMS DID THAT THE PLANNER HAD TO CLEAN UP
 
-## HIS DECISIONS THIS ROUND, so nobody re-asks
+- **Two of three streams in one batch never edited `docs/backlog.md`**, so their work was invisible and
+  both items' titles still described it as outstanding. **This is the fault shape promoted into the
+  skill's step 3 that same morning, recurring the same day.** Briefs should name the item to annotate
+  and say that annotating is part of finishing.
+- **`CLAUDE.md` documents `dev-signin.mjs <role> --cards <card>`; the script refuses it.** The correct
+  form is **`--cards` alone**, which builds a throwaway role holding exactly those cards — safer as well
+  as correct, since the documented form would have re-keyed a shared role and could have signed a
+  running stream out. Filed as a quick win; **the script is right and must not be changed.**
 
-- **Read-only cards (View contacts, View medical) for whoever only needs to look: *"Leave it as it is."***
-- **Login pickers listing every login; delete buttons on rows another login recorded: *"Neither for
-  now."*** Untidy rather than harmful — **not work to file.**
-- **Deleting a maintenance job: *"Only admin can delete maintenance, keep it that way."***
-- **Add medical photos may view medical photos: *"Yes."*** One `card_grants` row, no app code.
-- **Still open, and the only card question outstanding:** should downloading the whole resident list be
-  its own card? Several cards carry it, because the route asks only the resident-record read.
+## ONE FINDING ABOUT SIZING, FROM CARD REVIEW 2
 
-## TWO PROCESS FAULTS NOW FIXED IN THE BRIEFS, each of which cost a real thing
+`check-menu-coverage` reported **17 pages no card opens**. Thirteen were `/admin/*`, outside the card
+system by his settled ruling — and he then answered that **three of the remaining four are Admin tasks
+too**. So **sixteen times in seventeen, *"no card opens this page"* meant *"and none should."***
 
-- **A STEP-ZERO STOP APPLIES TO THE WHOLE STREAM UNLESS THE BRIEF SAYS OTHERWISE.** A stream was given a
-  second, independent job, hit its step-zero stop on the first, reported *"nothing to do"*, and was
-  archived **having never read job 2 — which was one of his decisions.** Lost for a day. **Every brief
-  now says which parts its stop covers.**
-- **ACTUALS DIE AT MERGE, NOT AT THE NEXT `/plan-day`.** Six figures were lost to auto-archive in one
-  round; the skill's *"capture at the first `/plan-day` after the batch merges"* is too late when
-  sessions archive on merge. **Capture before merging, or accept `unmeasured`.** The dials survive
-  (`get_session` never expires) and every stream measured this round ran the same pair, so there is
-  still no model finding worth the name. **Auto-archive is a setting and it is his** — raised, not
-  decided.
+**A page nothing opens is a question about who the page is for, not evidence of a missing card.** The
+obvious reading of that check is a backlog of cards to create, and it was not. **Do not size a future
+review as though every such page implies a card** — and note that what settled three of them was
+telling him what a page *is*. He asked what URL the stock-usage card would point at, was told the page
+is reachable only by typing its address, and answered *Admin*. **One line of fact beat a schema PR.**
 
-## STILL CARRIED, unchanged
+## STATE, RE-READ EVERY TIME
 
-- **A release's cut and record PRs, and the two handover PRs, merge on green CI without asking.**
-- **Model, effort and which allowance to spend are his. Never block paid usage** — and convert before
-  forecasting.
-- **A measurement has a timestamp; a fact does not.**
-- **`check-who-does-what` and `check-menu-coverage` are red ON PURPOSE.** Making menu-coverage
-  card-shaped did not change that, and **if a rewrite of it ever goes green, suspect the rewrite.**
-- **`doctor-cells` red is EXPECTED** and is the proof the card save works. Never restore Doctor's cards.
+Nothing in this section may be quoted from here. **Re-read it:** open items and their titles from
+`docs/backlog.md`; batches, bands and actuals from `.plan-day.md`; release state from
+`apply-migrations.mjs --status --env production`; what merged from `gh pr list`.
 
-## NEXT ROUND POINTS AT
-
-1. **Card review 2 — all three gates clear, no decision of his owed, and a card-shaped scope list now
-   exists.** Band it as a **report**: it ends in a list of proposed cards for him to approve, and the
-   migration is a separate PR after. **Read the count from the instrument, never from here.**
-2. **The pages no walkthrough step opens** — its own item, triage already done. **Ask him first whether
-   to add walkthrough steps rather than audit once by hand;** that is in the item as a question, not an
-   assumption.
-3. **The release-note mechanism.** Three in a row lost, and prose nomination is the proven-failed fix.
-   **Read `docs/release-procedure.md` before proposing anything** — it is not established whether a step
-   is missing or was skipped.
-4. **The rest of the instruments item.** Two superseded role checks are labelled rather than deleted, on
-   purpose and reversibly: **if a role figure from either turns up in a brief or a band again, delete
-   them.**
+**What is with Lutan as of this writing** — and it is short, which is the point: the 60-day Supabase
+session timeout and the Cloudflare WAF glance; the Translations card assignment; the duplicate-resident
+corrections and the six deceased PDFs on production; the Pi drive work; the NFC card check on two
+phones; and the Director's long list, of which **the nameservers at sav.com block the most**.
+**Leaked-password protection is NOT on that list and must never return to it.**
