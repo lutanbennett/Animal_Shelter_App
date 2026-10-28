@@ -11,7 +11,7 @@
 | PR | pending |
 | Tested by / date | Claude / 2026-10-28 |
 | Carries a migration? | no |
-| Tested at SHA | `SHA_HERE` |
+| Tested at SHA | `a3db0c82` |
 
 ## 1. Scope and risk
 
