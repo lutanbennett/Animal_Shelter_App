@@ -27,8 +27,19 @@ restated.
   rows, not to drive the steps.** Today's 7,365 group had **four** behaviour changes to check against
   (`0276`, `0277`, `0278`, #1032); the 6.0–6.8k readings had one or two. **Band from how much prior
   state the pass must settle. Nothing was promoted, deliberately.**
-- **"`0276` is not on production." STILL TRUE, and it is now THREE** — `0276`, `0277`, `0278`, all
-  riding `0.40.9`. **Re-read `--status --env production`; never quote this.**
+- **"`0276` is not on production." NO LONGER TRUE — all THREE went on at 04:56Z today**, a minute
+  after `0.40.9` merged (`0276`, `0277`, `0278`; production reads 279 applied, 0 pending). This line
+  read STILL TRUE when written and went stale inside the hour, which is why it carried its own
+  re-read instruction. **It worked: a planner who re-read `--status --env production` found the
+  truth. Keep writing release state that way.** What is still owed is the **release note for
+  `0276`'s READ half**: `0.40.9` told users that *filing* into Medical needs its own permission and
+  said nothing about *viewing* it. `0275`'s is fairly `n/a` (a column, nothing a user sees).
+  **The live card position — derived from `card_includes`/`card_grants`, NOT proven by a query as
+  those logins:** three cards reach the new read through `card_closure()` — Manage medical, Book
+  clinic visits, Run appeals — so **Management can see medical photos and Head of Medical cannot**,
+  though she holds Add medical photos and files them there. Deliberate per `0276`'s note 4; whether
+  Management reaching them through a booking card was intended is Lutan's call, raised 2026-10-28.
+  **Re-read `--status --env production` and `role-cards`; never quote any of this.**
 - **"Ten card re-passes owing." CLOSED — the whole fourteen-card programme is done** (#1026, #1035).
 - **"Buttons slices 5 and 6." BOTH DONE; the six-slice sweep is complete** (#1027, #1030). Slice 5
   also settled the question its predecessor handed forward: **a suggestion is gated when it names one
