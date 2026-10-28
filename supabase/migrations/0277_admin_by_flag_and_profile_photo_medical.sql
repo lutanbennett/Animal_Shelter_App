@@ -1,4 +1,4 @@
--- consumer: src/lib/permissions/can.ts (reads my_permissions().is_admin), src/lib/auth/held-roles.ts, scripts/check-no-role-column-security.mjs, scripts/check-roles-columns.mjs
+-- consumer: src/lib/permissions/can.ts, src/lib/auth/held-roles.ts, scripts/check-no-role-column-security.mjs
 --
 -- TWO SMALL FIXES IN ONE SCHEMA PR (backlog, Security, filed 2026-10-28). Re-runnable: create or replace.
 --

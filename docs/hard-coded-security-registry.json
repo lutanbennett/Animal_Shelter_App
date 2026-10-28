@@ -541,6 +541,21 @@
         "migration": "0272_remove_role_archiving.sql",
         "item": "function public.role_can reads a role",
         "reason": "Re-declared only to drop the roles.archived_at filter (docs/decisions/2026-10-27-role-archiving-removed.md); the one role-key read is the Admin short-circuit r.key = 'admin', which sits OUTSIDE the card system (CLAUDE.md, 2026-10-25). Every other access is derived from role_permissions, i.e. from cards. No rule added. The key is the role being asked about, not a rule on the caller."
+      },
+      {
+        "migration": "0277_admin_by_flag_and_profile_photo_medical.sql",
+        "item": "function public.holds_app_role definer",
+        "reason": "Re-declared only to key the Admin short-circuit on roles.is_admin instead of the name 'admin' (docs/decisions/2026-10-28-admin-by-flag-and-profile-photo-medical.md). Security definer so it can read user_roles/role_permissions under RLS; it returns a yes/no about the caller only and grants nothing by itself."
+      },
+      {
+        "migration": "0277_admin_by_flag_and_profile_photo_medical.sql",
+        "item": "function public.my_permissions definer",
+        "reason": "Re-declared only to key the Admin short-circuit on roles.is_admin instead of the name 'admin' (docs/decisions/2026-10-28-admin-by-flag-and-profile-photo-medical.md). Security definer so it can read the caller own roles and cells under RLS; it reports the caller own card-derived cells (Admin: all) and grants nothing itself."
+      },
+      {
+        "migration": "0277_admin_by_flag_and_profile_photo_medical.sql",
+        "item": "function public.role_can reads a role",
+        "reason": "Re-declared only to key the Admin short-circuit on roles.is_admin instead of the name 'admin'. The remaining key read is the role being asked about (r.key = p_role_key), not a rule on the caller; the Admin test no longer reads a name."
       }
     ],
     "stubs": [
