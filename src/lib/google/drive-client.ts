@@ -64,12 +64,14 @@ export type PhotoCategory = (typeof PHOTO_CATEGORIES)[number];
  * upload route refuses anything else.
  */
 export function photoCategoriesFor(perms: Permissions | null | undefined): readonly PhotoCategory[] {
-  if (can(perms, "photos.resident_publish")) return PHOTO_CATEGORIES;
+  // Medical is its own activity (photos.medical_add, 0278), the one the database asks, a publisher included.
+  const medical = can(perms, "photos.medical_add");
+  if (can(perms, "photos.resident_publish")) return medical ? PHOTO_CATEGORIES : PHOTO_CATEGORIES.filter((c) => c !== "Medical");
   // photos.shelter_add (0217) is Shelter and nowhere else, and only for a login that may not publish: the rule
-  // belongs to the activity, never to the page, so Management keeps all four and the Head of Medical keeps Medical.
-  // A login holding shelter_add and resident_add (no publish) has both of those two.
-  if (can(perms, "photos.shelter_add")) return can(perms, "photos.resident_add") ? ["Shelter", "Medical"] : ["Shelter"];
-  return ["Medical"];
+  // belongs to the activity, never to the page. A login holding shelter_add and medical_add has both of those two.
+  if (can(perms, "photos.shelter_add")) return medical ? ["Shelter", "Medical"] : ["Shelter"];
+  // A login with neither is offered nothing: the final fallback is empty, never Medical.
+  return medical ? ["Medical"] : [];
 }
 
 /**

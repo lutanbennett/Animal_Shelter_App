@@ -45,8 +45,9 @@ Result: pending
 0. Sign in with `--cards add_medical_photos`. The home screen shows the **Add Medical Photos** tile (or the tile of a card that includes it).
 1. Open `/medical/photos`: it loads.
 2. **Do:** Add a photo to a resident. Use a disposable record named `walk-add_medical_photos`. **Read-back:** the page counts the photo as added; it is filed in the resident's Medical folder, never on the website; this card cannot look at it again, so also confirm it on the resident's record with a login that holds a record card.
-3. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-4. **Refused:** open `/maintenance` (the page of **Do Maintenance**, which this login does not hold). Expect a refusal or redirect, not the page.
+3. **TODO:** Add a resident's photo to the Medical folder. Do it on a disposable record named `walk-add_medical_photos`. Question: where should this write show afterwards (which page, which row)?
+4. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+5. **Refused:** open `/maintenance` (the page of **Do Maintenance**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 

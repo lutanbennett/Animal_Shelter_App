@@ -22,7 +22,7 @@ import { BackLink } from "@/components/BackLink";
  * implying a gallery.
  */
 export default async function AddMedicalPhotosPage(props: PageProps<"/medical/photos">) {
-  await requirePermission("photos.resident_add");
+  await requirePermission("photos.medical_add");
   const { t, locale } = await getT();
   const p = t.medicalJobs.photos;
   const sp = await props.searchParams;

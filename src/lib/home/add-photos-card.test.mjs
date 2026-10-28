@@ -40,18 +40,22 @@ test("a role without either activity gets no tile and is refused the page", () =
 });
 
 test("folders follow the login: Management keeps four, Head of Medical keeps Medical, a volunteer gets Shelter only", () => {
-  const management = role({ "photos.resident_add": 2, "photos.resident_publish": 2 });
+  const management = role({ "photos.resident_add": 2, "photos.resident_publish": 2, "photos.medical_add": 2 });
   assert.deepEqual([...photoCategoriesFor(management)], ["Shelter", "Medical", "Foster", "Adoption"]);
 
-  const headOfMedical = role({ "photos.resident_add": 2 });
+  const headOfMedical = role({ "photos.resident_add": 2, "photos.medical_add": 2 });
   assert.deepEqual([...photoCategoriesFor(headOfMedical)], ["Medical"]);
 
   const volunteer = role({ "photos.shelter_add": 2 });
   assert.deepEqual([...photoCategoriesFor(volunteer)], ["Shelter"]);
 
   // Holding the card never narrows a login that may publish.
-  const managementWithCard = role({ "photos.resident_add": 2, "photos.resident_publish": 2, "photos.shelter_add": 2 });
+  const managementWithCard = role({ "photos.resident_add": 2, "photos.resident_publish": 2, "photos.shelter_add": 2, "photos.medical_add": 2 });
   assert.equal(photoCategoriesFor(managementWithCard).length, 4);
-  // Nothing at all: the old answer, so no page is silently opened.
-  assert.deepEqual([...photoCategoriesFor(role({}))], ["Medical"]);
+  // Medical is its own activity (0278): the Residents card alone never files there, publisher or not.
+  assert.deepEqual([...photoCategoriesFor(role({ "photos.resident_add": 2, "photos.shelter_add": 2 }))], ["Shelter"]);
+  assert.deepEqual([...photoCategoriesFor(role({ "photos.resident_add": 2, "photos.resident_publish": 2 }))], ["Shelter", "Foster", "Adoption"]);
+  // Nothing at all: nothing offered, never Medical.
+  assert.deepEqual([...photoCategoriesFor(role({}))], []);
+  assert.deepEqual([...photoCategoriesFor(role({ "photos.resident_add": 2 }))], []);
 });
