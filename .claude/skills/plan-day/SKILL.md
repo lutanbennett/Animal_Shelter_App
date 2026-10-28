@@ -71,7 +71,18 @@ leftovers to `done` — but only if `held` says `free`. A `HELD` worktree
 has a session or a process in it; name it and ask rather than tearing it
 down. List any husks it prints so the user can clear them.
 
-**Capture the actuals now.** For each worktree whose PR has merged, find the
+**Capture the actuals now — from the PR first.** Since 2026-10-28 each feature stream posts one
+`stream-usage:` comment on its own PR just before it merges (`CLAUDE.md`, merge train step 4;
+fields: `slug tokens messages model effort started merged compacted rescoped finished`). For each
+merged PR run `gh pr view <n> --json comments` and take that line. It was read from the stream's own
+live process, so it cannot be `unavailable` or the planner's window. Record in `.plan-day.md` which
+source each figure came from (`PR comment` or `get_usage`). **The stream reports; you still judge:**
+`finished=blocked`, `compacted=yes`/a floor-sized `messages`, and `rescoped=yes` each keep a figure
+out of the bands, exactly as the rules below say. Release-manager and handover PRs post none. **Only
+when a PR has no such comment** (a stream that never merged, or a PR merged by hand) fall back to the
+live reading below, which is now the fallback and keeps every warning it had.
+
+**Fallback reading.** For each worktree whose PR has merged, find the
 session in `mcp__ccd_session_mgmt__list_sessions` (match on its folder), then
 call **both** `mcp__ccd_session_mgmt__get_usage` (for `context.tokensUsed`) and
 `mcp__ccd_session_mgmt__get_session` (for `model` and `effort`), and record all
@@ -533,7 +544,7 @@ Two axes that genuinely do cost, both measured 2026-10-20:
 | scale | band | shape |
 |---|---|---|
 | **Ordinary well-briefed stream — the default** | **120–145k** | 126,512 · 127,979 · 128,114 · 129,848 (2026-10-20) |
-| Floor | **~84–85k** | every stream, before any work: tools, memory, skills, CLAUDE.md, brief. Measured across nine streams 2026-10-20: System tools 38.7k · MCP 16.3–16.7k · Memory 11.9–12.0k · System prompt 8.6k · Skills 6.6k. **Corrected 2026-10-11 from ~110k and drifting slowly down since; re-measure rather than carrying a number forward.** The original 30k error was inherited by every band below, which is most of why the older ones read high |
+| Floor | **~84–85k on 2026-10-20, ~98k by 2026-10-28 (see the walkthrough section)** | every stream, before any work: tools, memory, skills, CLAUDE.md, brief. Measured across nine streams 2026-10-20: System tools 38.7k · MCP 16.3–16.7k · Memory 11.9–12.0k · System prompt 8.6k · Skills 6.6k. **Corrected 2026-10-11 from ~110k and drifting slowly down since; re-measure rather than carrying a number forward.** The original 30k error was inherited by every band below, which is most of why the older ones read high |
 | Routing into surfaces that already exist | **120–165k** | 127,979 · 119,265 |
 | A new integration on existing machinery | **145–180k** | 153,821 |
 | Schema with a public write path / RLS to get right | **145–185k** | 159,976 |
@@ -589,7 +600,7 @@ non-`Messages` categories.** This supersedes the single 9.8k figure below for **
 | #986 `card-rerun-manage-medical` | 13 | 172,842 | 95,994 | 76,848 | **5,911** |
 | #989 `card-rerun-residents-final` | 13 | 240,828 | 94,921 | 145,907 | **11,223** |
 
-**THE FLOOR IS NOW ~95k, NOT ~88k** (MCP tools 20.2k and memory 17.7-18.3k have both grown).
+**THE FLOOR WAS ~95k on 2026-10-27 and read 98,063 on 2026-10-28** (System tools 39,444 + Memory 20,887 + MCP 20,235 + System prompt 10,975 + Skills 6,522, from one stream's own non-`Messages` categories); it keeps drifting up, so re-measure rather than carrying this forward.
 **Re-measure it from a stream's own categories rather than carrying this number forward.**
 
 **AND THE RATE DEPENDS ON WHAT KIND OF PASS IT IS:**

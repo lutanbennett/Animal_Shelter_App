@@ -239,7 +239,21 @@ two or three at once; more than that and merging becomes the bottleneck.
    same three checks. Once the user says so, merge it — **except for a
    release's own two PRs, which Claude merges itself the moment CI is
    green, without asking** (see "Release PRs merge without asking"
-   below). Then
+   below).
+
+   **Record your own usage on the PR, immediately before `gh pr merge`.** A feature stream (not a
+   release cut or record, not a handover) calls `mcp__ccd_session_mgmt__get_usage` and
+   `mcp__ccd_session_mgmt__get_session` with **`session_id: "self"`** (both require the field; omitting it fails on `get_session`; self: the process is alive, so it
+   cannot be `unavailable`, and it cannot read the planner's window), then posts ONE comment on its
+   own PR with `gh pr comment`, in this one-line form:
+   `stream-usage: slug=<feature> tokens=<context.tokensUsed> messages=<Messages category> model=<model> effort=<effort> started=<session start> merged=<now UTC> compacted=<yes|no|unknown> rescoped=<yes|no> finished=<yes|blocked>`.
+   Any field you cannot read is `unmeasured`, **never a guess** and never a figure from a neighbour.
+   `compacted=yes` if the window was compacted or cleared (the figure is then a remainder, and a
+   floor-sized `messages` on a long session is the tell); `rescoped=yes` if you were corrected
+   mid-flight or the job changed size; `finished=blocked` if you stopped early. You report; the
+   planner still judges which figures reach a band. **A comment, not a commit:** a commit after green
+   CI re-runs CI, and the comment is durable and tied to the PR
+   (`docs/decisions/2026-10-28-stream-usage-pr-comment.md`). Then
    `node scripts/worktree.mjs done <feature>` from another checkout
    removes the folder and the branch locally and on `origin`, prunes
    git's registry and checks that all of it actually happened. It
