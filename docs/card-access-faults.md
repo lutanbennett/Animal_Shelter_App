@@ -734,3 +734,18 @@ Driven in a browser as a login holding only the card (`dev-signin.mjs --cards <c
 **Driven and found working, for the record.** `view_medical`: `/residents` loads; the resident hub shows real counts and no control; Procedures, Blood Tests, Prescriptions, Immunizations, Weight and Diet offer nothing to add or edit; `/clinics` lists with no control; `/operations/feeding-list` offers only round and view switches; `/medical/photos` goes to `/no-access`. `add_medical_photos`: the home shows the Add Medical Photos tile; `/medical/photos` loads; picking a resident shows name, number and enclosure with no edit control; the upload saves and the row is in the Medical folder; `/maintenance` goes to `/no-access`.
 
 **Not driven, so not claimed:** step 0 for `view_medical` (its home tile) was not looked at; the Medical folder read-back by a login holding `add_medical_photos` (it cannot reach a resident's page).
+
+## Added 2026-10-29 by `claude/card-drive-three-new-cards` (`food_forecast`, `medicine_forecast` and `view_cashflow`, first drive after `0280`)
+
+Driven in a browser as a login holding only the card (`dev-signin.mjs --cards <card> --port 3003`, one login per card), aal1, no page asked for a second step. All 12 steps of the three walkthrough sections (0 to 3 each) were driven; each home screen showed exactly its own tile, and each page was reached by clicking through.
+
+| Card | Kind | What was found | Needs | Production | Found |
+|---|---|---|---|---|---|
+| `food_forecast` | offered, then refused | `/management/diets` draws four links the card cannot use: **Stocktake** (`stock.count`), **Stock between counts** (`stock.usage`), **Purchasing** (`stock.purchasing`) and **Record a delivery** (`stock.delivery`). Each leads to `/no-access` (clicked, all four). Only the **Order** and **Settings** links are gated (`canEdit`, `canEditItemSettings`) in `src/app/management/diets/page.tsx` | gate each link on the activity its own page asks, as listed | n/a | 2026-10-29 dev, driven |
+| `medicine_forecast` | offered, then refused | `/management/medications` draws the same four links (Stocktake, Stock between counts, Purchasing, Record a delivery); all four lead to `/no-access` (clicked) | same four gates in `src/app/management/medications/page.tsx` | n/a | 2026-10-29 dev, driven |
+| `food_forecast`, `medicine_forecast` | stale words | the subtitles read "Count it, price it, set when to reorder" (and "add a photo of the label"), which the read-only card cannot do | reword or leave: a wording decision | n/a | 2026-10-29 dev, read |
+| `view_cashflow` | found working | `/management/cashflow` loads with the forecast; no edit control is drawn (fixed outgoings and the clinic estimate are gated on `reports.cashflow` edit and `website.content` edit). Download CSV is built in the page from data already shown | none | n/a | 2026-10-29 dev, driven |
+
+**Driven and found working, for the record.** All three cards: the home shows only that card's tile; the page loads; no add, edit or save control is drawn on it; `/operations/medication-list` goes to `/no-access`.
+
+**Not driven, so not claimed:** the Order link on the diets page (it needs `stock.diets` edit, which `food_forecast` does not hold, so it is correctly absent); the fixed-outgoings page by address.
