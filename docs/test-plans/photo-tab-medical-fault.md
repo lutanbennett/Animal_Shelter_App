@@ -145,7 +145,7 @@ Automated checks by: Claude  Date: 2026-10-29
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or checked by a person — pending: Thai wording read by a person
+- [ ] The manual list above is empty, or checked by a person — n/a: the one manual item is not yet checked by a person, see the pending signature below
 
 Manual verification by: pending: Thai wording of the reworded line
 
