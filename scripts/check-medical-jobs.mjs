@@ -1,22 +1,19 @@
-// medical-jobs (0140): what the Head of Medical's three remaining jobs stand on. Against DEV only, one
-// transaction that is always rolled back, each login's own JWT.
+// medical-jobs (0140): what the medical jobs' four cards stand on. Against DEV only, one transaction that is
+// always rolled back, each login's own JWT. Restated 2026-10-29: principals are CARD holdings, not roles.
 //
 //   node scripts/check-medical-jobs.mjs            (from the repo root; dev only)
 //   node scripts/check-medical-jobs.mjs --verbose  (also list every passing check)
 //
-// What it holds, for six principals (the Head of Medical, admin, management, volunteer, a doctor, no role; staff
-// left them when 0173 retired it, as a live staff login can no longer be made):
-//   weight        the Head of Medical reads, adds and corrects a reading; a volunteer, no role and a doctor
-//                 outside their clinic cannot; admin and management still can
-//   photos        record_attachment() files a resident photo in Medical for her, refuses any other folder, an
-//                 adopter's photo, and a procedure file; the legacy roles are unchanged (management files in any
-//                 folder); the volunteer is still refused
-//   photo view    medical_photo_residents answers the cell; set_resident_drive_folder() fills a missing folder
-//                 and never overwrites one
-//   diets         special_diet_list shows the non-standard diet with the right amount and rounds, never the
-//                 standard one, and carries no price or stock column
-//   the floor     she still cannot read residents, medication, diet_types or attachments
-//   the cells     role_permissions = the jobs in jobs.ts plus the three cells 0140 granted ahead of their screens
+// Four principals: "hom" holds exactly administer_medication, record_weight, add_medical_photos and
+// feed_special_diets; "viewer" exactly view_residents; "norole" nothing; Admin sits outside the cards.
+//   weight / photos / photo view / the floor   as before, per card holding
+//   diets         special_diet_list (a recipe: qty_per_serving x servings x portion_factor, 0258) shows the
+//                 non-standard diet with the right amount and rounds, never the standard one, and carries no
+//                 price or stock column
+// RETIRED, with reasons: the "role row" and "cells" checks (the head_of_medical role's role_permissions equal
+// to a jobs.ts fixture) compared a copy of one role's cards with the database; which cards a role holds is data
+// Lutan is rebuilding, and set_role_cards deriving cells from cards is check-card-grants' job. The management /
+// volunteer / doctor principals were roles, not cards, and their expectations moved with the roles.
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
@@ -26,33 +23,27 @@ const { loadEnv, projectRef } = await import(pathToFileURL(join(process.cwd(), "
 const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
-const { bundleOfRole } = await import(pathToFileURL(join(process.cwd(), "scripts/lib/test-role-jobs.mjs")).href);
 
-// Cells a migration grants ahead of the screen that turns them into a job. Empty since batch 47: all three
-// of 0140's cells are now jobs in jobs.ts, so bundleOfRole() carries them. Add one here only if a cell lands first.
-// Lutan ruled 2026-10-19 that the Head of Medical KEEPS these three (the cells are right, the expectation was
-// short): counting what is left is part of the medication rounds, ticking off her own repeating jobs is how
-// rounds are recorded, and seeing the enclosures is how she finds the animal. Not copied from the database
-// on assumption; they live here, not in jobs.ts, because no job tile of hers opens a page that needs them.
-const AHEAD = new Map([["facility.enclosures", 1], ["recurring.do_own", 2], ["stock.count", 2]]);
-
+const HOM_CARDS = ["administer_medication", "record_weight", "add_medical_photos", "feed_special_diets"];
 const lit = (id) => `'${id}'::uuid`;
-const P = ["hom", "admin", "management", "volunteer", "doctor", "norole"];
+const P = ["hom", "admin", "viewer", "norole"];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
-const R = randomUUID(), R2 = randomUUID(), OWN = randomUUID(), NSD = randomUUID();
+const R = randomUUID(), R2 = randomUUID(), OWN = randomUUID(), NSD = randomUUID(), NSDD = randomUUID();
 
-const NONE = { hom: 0, admin: 0, management: 0, volunteer: 0, doctor: 0, norole: 0 };
-const STAFF_UP = { ...NONE, admin: 1, management: 1 };
+// Principals are CARD holdings, never roles (restated 2026-10-29): "hom" holds exactly the four cards of
+// the Head of Medical's jobs, "viewer" exactly view_residents, "norole" nothing; Admin sits outside the cards.
+const NONE = { hom: 0, admin: 0, viewer: 0, norole: 0 };
+const STAFF_UP = { ...NONE, admin: 1 }; // Admin only
 const HOM_UP = { ...STAFF_UP, hom: 1 };
-const HOM_UP_DOCTOR = { ...HOM_UP, doctor: 1 }; // the harness resident has a visit at the doctor's own clinic
-const NOT_DOCTOR = HOM_UP; // gated on sees_all_clinical(): a doctor (own clinic) gets none
+const HOM_UP_DOCTOR = HOM_UP;
+const NOT_DOCTOR = HOM_UP;
 
 const probes = [
   // 1. weight
   ["read weight", `select 1 from weight where resident_id = '${R}'`, HOM_UP_DOCTOR],
   ["insert weight", `insert into weight (resident_id, date, weight_kg) values ('${R}', current_date - 500, 5)`, HOM_UP_DOCTOR],
   ["correct a weight", `update weight set weight_kg = 6 where resident_id = '${R}'`, HOM_UP_DOCTOR],
-  ["who and where picker", `select 1 from resident_who_and_where where id = '${R}'`, { ...STAFF_UP, hom: 1, volunteer: 1 } /* 0192: Admin and Management read it too; doctor and no role still get none */],
+  ["who and where picker", `select 1 from resident_who_and_where where id = '${R}'`, { ...STAFF_UP, hom: 1, viewer: 1 } /* 0192: Admin and Management read it too; doctor and no role still get none */],
   // 2. photos
   ["file a Medical photo", `select 1 from record_attachment('resident', '${R}', 'f-med', 'a.jpg', 'Medical', current_date, null)`, HOM_UP_DOCTOR],
   ["file a ' medical ' photo (case and spaces)", `select 1 from record_attachment('resident', '${R}', 'f-med2', 'a.jpg', ' medical ', current_date, null)`, HOM_UP_DOCTOR],
@@ -67,19 +58,19 @@ const probes = [
   // 3. diets
   ["special diet list", `select 1 from special_diet_list where resident_id = '${R}'`, NOT_DOCTOR],
   ["the amount is the size default", `select 1 from special_diet_list where resident_id = '${R}' and daily_quantity = 7 and diet_unit = 'g' and meals_per_day = 2 and round_keys = array['morning','evening']`, NOT_DOCTOR],
-  ["the amount is the resident's own", `select 1 from special_diet_list where resident_id = '${R2}' and daily_quantity = 11`, NOT_DOCTOR],
+  ["the amount is the resident's own (portion_factor 2)", `select 1 from special_diet_list where resident_id = '${R2}' and daily_quantity = 14`, NOT_DOCTOR],
   ["the standard diet is not listed", `select 1 from special_diet_list where resident_id = '${R2}' and diet_type_id <> '${NSD}'`, NONE],
-  ["an ended diet is not listed", `select 1 from special_diet_list where resident_id = '${R2}' and daily_quantity = 3`, NONE],
+  ["an ended diet is not listed", `select 1 from special_diet_list where resident_id = '${R2}' and daily_quantity = 3.5`, NONE],
   ["price column on the diet list", `select cost_per_unit from special_diet_list limit 1`, "error"],
   ["stock column on the diet list", `select stock_on_hand from special_diet_list limit 1`, "error"],
   ["breed column on the diet list", `select breed from special_diet_list limit 1`, "error"],
   ["read resident_diets", `select 1 from resident_diets where resident_id = '${R}'`, HOM_UP_DOCTOR],
-  ["write resident_diets", `update resident_diets set notes = 'probe' where resident_id = '${R}'`, { ...STAFF_UP, doctor: 1 }],
+  ["write resident_diets", `update resident_diets set notes = 'probe' where resident_id = '${R}'`, STAFF_UP],
   // the floor
-  ["residents", `select 1 from residents where id = '${R}'`, { ...STAFF_UP, doctor: 1 }],
-  ["medication", `select 1 from medication limit 1`, { ...STAFF_UP, doctor: 1 }],
-  ["diet_types", `select 1 from diet_types limit 1`, { ...STAFF_UP, doctor: 1 }],
-  ["attachments", `select 1 from attachments limit 1`, "hom-zero"],
+  ["residents", `select 1 from residents where id = '${R}'`, { ...STAFF_UP, viewer: 1 } /* the view_residents card reads residents */],
+  ["medication", `select 1 from medication limit 1`, STAFF_UP],
+  ["diet_types", `select 1 from diet_types limit 1`, STAFF_UP],
+  // RETIRED 2026-10-29: "attachments returns the photo cards' holder nothing". Attachment rows follow the photo cards (0276/0279), so a holder of add_medical_photos reads them.
   ["procedures", `select 1 from procedures where resident_id = '${R}'`, "hom-zero"],
   ["visit write", `insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values ('${R}', '${OWN}', now(), 'scheduled')`, "hom-zero"],
 ];
@@ -128,47 +119,54 @@ begin
 end $f$;
 
 do $setup$
-declare v_std uuid;
+declare v_std uuid; v_std_ing uuid; v_role uuid;
 begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-mj-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id)
-    select u.id, ro.id from (values ${["admin", "management", "volunteer", "doctor"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
-  insert into user_roles (user_id, role_id)
-  select ${lit(ID.hom)}, id from roles where key = 'head_of_medical';
+    select ${lit(ID.admin)}, id from roles where key = 'admin';
+  -- throwaway roles holding exactly some cards (as dev-signin.mjs --cards builds them); set_role_cards needs Admin
+  perform set_config('request.jwt.claims', json_build_object('sub', ${lit(ID.admin)}, 'role', 'authenticated', 'aal', 'aal1')::text, true);
+  insert into roles (key, name, kind, home_path) values ('harness_mj_hom', 'Harness medical-jobs cards', 'custom', '/home') returning id into v_role;
+  perform set_role_cards(v_role, array[${HOM_CARDS.map((c) => `'${c}'`).join(",")}]);
+  insert into user_roles (user_id, role_id) values (${lit(ID.hom)}, v_role);
+  insert into roles (key, name, kind, home_path) values ('harness_mj_viewer', 'Harness view residents', 'custom', '/home') returning id into v_role;
+  perform set_role_cards(v_role, array['view_residents']);
+  insert into user_roles (user_id, role_id) values (${lit(ID.viewer)}, v_role);
   insert into clinics (id, name) values (${lit(OWN)}, 'Harness own');
-  with d as (insert into doctors (name, user_id) values ('Harness doctor', ${lit(ID.doctor)}) returning id) insert into doctor_clinics (clinic_id, doctor_id) select ${lit(OWN)}, id from d;
   insert into residents (id, name, species, size) values (${lit(R)}, 'Harness resident', 'Dog', 'Medium');
-  insert into residents (id, name, species, size, drive_folder_id) values (${lit(R2)}, 'Harness resident two', 'Cat', 'Small', 'keep-me');
+  insert into residents (id, name, species, size, drive_folder_id) values (${lit(R2)}, 'Harness resident two', 'Cat', 'Medium', 'keep-me');
   insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');
   insert into weight (resident_id, date, weight_kg) values (${lit(R)}, current_date - 1, 5);
-  select id into v_std from diet_types where is_standard;
+  -- a diet is a recipe (0239/0250): one ingredient, 5 g per serving, 1 / 1.4 / 1.8 servings for Small / Medium / Large
+  select id into v_std from diets where is_standard;
   if v_std is null then
-    insert into diet_types (name, daily_qty_small, daily_qty_medium, daily_qty_large, is_standard) values ('Harness standard', 1, 1, 1, true) returning id into v_std;
+    insert into diet_types (name, unit) values ('Harness standard ingredient', 'g') returning id into v_std_ing;
+    insert into diets (name, is_standard) values ('Harness standard', true) returning id into v_std;
+    insert into diet_ingredients (diet_id, diet_type_id, qty_per_serving) values (v_std, v_std_ing, 1);
   end if;
-  insert into diet_types (id, name, unit, cost_per_unit, daily_qty_small, daily_qty_medium, daily_qty_large, stock_on_hand)
-    values (${lit(NSD)}, 'Harness kidney diet', 'g', 9, 5, 7, 9, 100);
-  -- R: the type's medium default (7) at two meals; R2: its own amount (11), plus an ended diet (3) and a standard one
-  insert into resident_diets (resident_id, diet_type_id, start_date, meals_per_day) values (${lit(R)}, ${lit(NSD)}, current_date - 2, 2);
-  insert into resident_diets (resident_id, diet_type_id, start_date, daily_quantity) values (${lit(R2)}, ${lit(NSD)}, current_date - 2, 11);
-  insert into resident_diets (resident_id, diet_type_id, start_date, end_date, daily_quantity) values (${lit(R2)}, ${lit(NSD)}, current_date - 20, current_date - 10, 3);
-  insert into resident_diets (resident_id, diet_type_id, start_date, daily_quantity) values (${lit(R2)}, v_std, current_date - 2, 13);
+  insert into diet_types (id, name, unit, cost_per_unit, stock_on_hand)
+    values (${lit(NSD)}, 'Harness kidney diet', 'g', 9, 100);
+  insert into diets (id, name, servings_small, servings_medium, servings_large)
+    values (${lit(NSDD)}, 'Harness kidney recipe', 1, 1.4, 1.8);
+  insert into diet_ingredients (diet_id, diet_type_id, serving_unit, qty_per_serving) values (${lit(NSDD)}, ${lit(NSD)}, 'g', 5);
+  -- both residents are Medium: R gets 5 x 1.4 = 7 at two meals; R2 has portion_factor 2 (14), an ended diet at 0.5 (3.5) and the standard diet
+  insert into resident_diets (resident_id, diet_id, start_date, meals_per_day) values (${lit(R)}, ${lit(NSDD)}, current_date - 2, 2);
+  insert into resident_diets (resident_id, diet_id, start_date, portion_factor) values (${lit(R2)}, ${lit(NSDD)}, current_date - 2, 2);
+  insert into resident_diets (resident_id, diet_id, start_date, end_date, portion_factor) values (${lit(R2)}, ${lit(NSDD)}, current_date - 20, current_date - 10, 0.5);
+  insert into resident_diets (resident_id, diet_id, start_date, portion_factor) values (${lit(R2)}, v_std, current_date - 2, 2);
 end $setup$;
 
 do $run$ begin
 ${lines.join("\n")}
   perform pg_temp.effect('hom', ${lit(ID.hom)}, 'folder filled', $c$select set_resident_drive_folder('${R}', 'new-folder')$c$, $c$select drive_folder_id from residents where id = '${R}'$c$);
   perform pg_temp.effect('hom', ${lit(ID.hom)}, 'folder kept', $c$select set_resident_drive_folder('${R2}', 'hijack')$c$, $c$select drive_folder_id from residents where id = '${R2}'$c$);
-  perform pg_temp.effect('volunteer', ${lit(ID.volunteer)}, 'folder by volunteer', $c$select set_resident_drive_folder('${R}', 'vol-folder')$c$, $c$select coalesce(drive_folder_id, 'NONE') from residents where id = '${R}'$c$);
+  perform pg_temp.effect('viewer', ${lit(ID.viewer)}, 'folder by viewer', $c$select set_resident_drive_folder('${R}', 'vol-folder')$c$, $c$select coalesce(drive_folder_id, 'NONE') from residents where id = '${R}'$c$);
   perform pg_temp.effect('hom', ${lit(ID.hom)}, 'profile photo set', $c$select 1 from record_attachment('resident', '${R}', 'f-prof', 'a.jpg', 'Medical', current_date, null)$c$, $c$select coalesce(profile_photo_drive_file_id, 'NONE') from residents where id = '${R}'$c$);
   perform pg_temp.effect('hom', ${lit(ID.hom)}, 'attachment row', $c$select 1 from record_attachment('resident', '${R}', 'f-row', 'a.jpg', 'Medical', current_date, null)$c$, $c$select uploaded_by::text from attachments where drive_file_id = 'f-row'$c$);
 end $run$;
 
-do $role$ begin
-  insert into res select 'role', 'row', 0 where exists (select 1 from roles where key = 'head_of_medical' and kind = 'custom');
-  insert into res select 'role', 'cell:' || rp.activity || ':' || rp.level, 0 from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'head_of_medical';
-end $role$;
 do $o$ begin raise exception 'HARNESS-RESULT %', (select json_agg(row_to_json(res)) from res); end $o$;
 rollback;`;
 
@@ -217,18 +215,12 @@ for (const [name, , exp] of probes) {
 const eq = (label, got, want) => (got === want ? pass(`${label} (${want})`) : fail(`${label}: expected ${want}, got ${got}`));
 eq("set_resident_drive_folder fills a missing folder", valueOf("hom", "folder filled"), "new-folder");
 eq("set_resident_drive_folder never overwrites a folder", valueOf("hom", "folder kept"), "keep-me");
-eq("a volunteer cannot set a folder", valueOf("volunteer", "folder by volunteer"), "NONE");
-eq("a first photo from her becomes the profile photo, as it does for the legacy roles (unchanged behaviour)", valueOf("hom", "profile photo set"), "f-prof");
+eq("a login holding only view_residents cannot set a folder", valueOf("viewer", "folder by viewer"), "NONE");
+// 0267: record_attachment() never makes a Medical photo the profile photo (restated from "becomes the profile photo")
+eq("a Medical photo filed by the add_medical_photos card does NOT become the profile photo", valueOf("hom", "profile photo set"), "NONE");
 eq("an attachment she files is stamped with her id", valueOf("hom", "attachment row")?.length, 36);
 
-if (get("role", "row") === 0) pass("role row: custom, borrows volunteer, medical-only photos"); else fail("role row head_of_medical missing or wrong shape");
-const have = new Map(rows.filter((r) => r.who === "role" && r.tbl.startsWith("cell:")).map((r) => r.tbl.split(":").slice(1)).map(([a, l]) => [a, Number(l)]));
-const want = new Map([...bundleOfRole("head_of_medical")].map(([a, l]) => [a, l === "edit" ? 2 : 1]));
-for (const [a, l] of AHEAD) if (!want.has(a)) want.set(a, l);
-const same = have.size === want.size && [...want].every(([a, l]) => have.get(a) === l);
-if (same) pass(`cells: role_permissions = jobs.ts plus the three granted ahead (${[...want.keys()].join(", ")})`);
-else fail(`cells: role_permissions ${JSON.stringify([...have])} differ from ${JSON.stringify([...want])}`);
 
 console.log(`\n${ok} checks held, ${fails} failed.`);
-console.log(fails ? "RESULT: RED" : "RESULT: GREEN (weight, medical photos and special diets work for the Head of Medical and no one else gained or lost)");
+console.log(fails ? "RESULT: RED" : "RESULT: GREEN (weight, medical photos and special diets work for exactly the four job cards)");
 process.exitCode = fails ? 1 : 0;

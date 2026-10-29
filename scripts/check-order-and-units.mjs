@@ -67,8 +67,8 @@ begin
 
   insert into medication (name) values ('Harness medicine 0161') returning sort_order into n;
   out := out || format('check|new medicine goes last|%s', n > (select max(sort_order) from medication where name <> 'Harness medicine 0161')) || E'\\n';
-  insert into diet_types (name, unit, daily_qty_small, daily_qty_medium, daily_qty_large)
-    values ('Harness diet 0161', 'g', 1, 1, 1) returning sort_order into n;
+  insert into diet_types (name, unit)
+    values ('Harness diet 0161', 'g') returning sort_order into n;
   out := out || format('check|new diet goes last|%s', n > coalesce((select max(sort_order) from diet_types where name <> 'Harness diet 0161'), 0)) || E'\\n';
 
   update diet_types set cost_per_unit = 0.035 where name = 'Harness diet 0161';
