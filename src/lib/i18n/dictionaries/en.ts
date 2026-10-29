@@ -210,6 +210,10 @@ const en = {
       foodForecast: "See the food forecast",
       medicineForecast: "See the medicine forecast",
       viewCashflow: "View cashflow",
+      recordVetCare: "Record vet care",
+      recordMicrochip: "Record a microchip",
+      adoptionNews: "Adoption news",
+      addWhileRecording: "Add to lists while recording",
     },
   },
 

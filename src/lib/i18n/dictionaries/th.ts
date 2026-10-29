@@ -199,6 +199,10 @@ const th: Dictionary = {
       foodForecast: "ดูการคาดการณ์อาหาร",
       medicineForecast: "ดูการคาดการณ์ยา",
       viewCashflow: "ดูกระแสเงินสด",
+      recordVetCare: "บันทึกการรักษาสัตวแพทย์",
+      recordMicrochip: "บันทึกไมโครชิป",
+      adoptionNews: "ข่าวจากผู้รับเลี้ยง",
+      addWhileRecording: "เพิ่มรายการขณะบันทึก",
     },
   },
 
