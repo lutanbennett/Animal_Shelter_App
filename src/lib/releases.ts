@@ -89,6 +89,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "On the public Adopt page, every picture under Happy endings now opens that animal's journey: when they arrived, their story, any news their family has shared, and the day they went home.",
 ];
 
 /** Newest first. */
