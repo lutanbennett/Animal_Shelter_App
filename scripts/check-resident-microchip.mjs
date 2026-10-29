@@ -3,8 +3,15 @@
 // One transaction: 0113 (twice), assertions against real rows, then
 // a deliberate `raise exception` carrying the evidence — nothing can commit.
 // The function is asserted live, not replayed: 0172 redefined it for the
-// doctor role, and 0116's and 0155's bodies name the old 'vet' role
+// card, and 0116's and 0155's bodies name the old 'vet' role and a clinic scope
 // (docs/decisions/2026-10-02-replay-or-assert-live.md).
+//
+// Restated 2026-10-29 (harness-restate-nine). set_resident_microchip() now asks one cell,
+// resident.microchip, and nothing else: there is no clinic scope left to test (0172's doctor
+// link no longer decides it). The principals were named roles (doctor, management, volunteer);
+// they are now throwaway roles holding exactly resident.microchip (two logins) or one
+// unrelated cell (photos.resident_add), plus anon. The old out-of-clinic and unlinked-doctor
+// refusals asserted a mechanism the function no longer has and are gone.
 //
 //   node scripts/check-resident-microchip.mjs     (from the repo root; dev only)
 //
@@ -21,7 +28,7 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 
 const migration = readFileSync(join(root, "supabase/migrations/0113_resident_microchip_number.sql"), "utf8");
 // set_resident_microchip() is the live one: 0155 (q8) gave it a has_permission('resident.microchip') check and
-// Management the cell; 0172 renamed the role it scopes to a clinic from vet to doctor.
+// the cell.
 
 const sql = `
 begin;
@@ -36,8 +43,8 @@ declare
   v_a uuid; v_b uuid; v_dead uuid;
   v_rows int; v_set int; v_n int;
   v_rejected boolean;
-  v_doctor uuid := gen_random_uuid(); v_vol uuid := gen_random_uuid();
-  v_mgmt uuid := gen_random_uuid(); v_unl uuid := gen_random_uuid(); v_own uuid := gen_random_uuid(); v_oth uuid := gen_random_uuid();
+  v_chip uuid := gen_random_uuid(); v_vol uuid := gen_random_uuid();
+  v_chip2 uuid := gen_random_uuid();
   v_in uuid; v_out uuid; v_before jsonb; v_after jsonb; v_err text;
 begin
   -- A. the replay back-filled nothing (real rows may carry a chip by now: compare with before)
@@ -108,32 +115,21 @@ begin
   if not v_rejected then raise exception 'FAIL F implant date changed on a deceased resident'; end if;
 
   -- G. set_resident_microchip (0116)
-  insert into clinics (id, name) values (v_own, 'Harness own clinic'), (v_oth, 'Harness other clinic');
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-0116-' || u || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
-    from unnest(array[v_doctor, v_vol, v_unl, v_mgmt]) u;
+    from unnest(array[v_chip, v_vol, v_chip2]) u;
+  insert into roles (key, name, kind) values ('h0116_chip', 'h chip', 'custom'), ('h0116_other', 'h other', 'custom');
+  insert into role_permissions (role_id, activity, level) select id, 'resident.microchip', 2 from roles where key = 'h0116_chip';
+  insert into role_permissions (role_id, activity, level) select id, 'photos.resident_add', 2 from roles where key = 'h0116_other';
   insert into user_roles (user_id, role_id)
-  select v.c0, ro.id from (values (v_doctor, 'doctor'), (v_unl, 'doctor')) as v(c0, role_key)
-  join roles ro on ro.key = v.role_key;
-  -- 0127: a doctor login's clinic is its linked doctor's (doctor_clinics links it, 0172)
-  with d as (insert into doctors (name, user_id) values ('Harness doctor', v_doctor) returning id) insert into doctor_clinics (clinic_id, doctor_id) select v_own, id from d;
-  insert into user_roles (user_id, role_id)
-  select v.c0, ro.id from (values (v_vol, 'volunteer'), (v_mgmt, 'management')) as v(c0, role_key)
+  select v.c0, ro.id from (values (v_chip, 'h0116_chip'), (v_chip2, 'h0116_chip'), (v_vol, 'h0116_other')) as v(c0, role_key)
   join roles ro on ro.key = v.role_key;
   insert into residents (name) values ('harness 0116 in'), ('harness 0116 out');
   select id into v_in from residents where name = 'harness 0116 in';
   select id into v_out from residents where name = 'harness 0116 out';
-  -- the 0026 lock refuses a visit on a deceased resident, so lift it just for this setup row
-  perform set_config('app.deceased_lock_bypass', 'on', true);
-  insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values
-    (v_in, v_own, now() - interval '2 days', 'completed'),
-    (v_out, v_oth, now() - interval '2 days', 'completed'),
-    (v_dead, v_own, now() - interval '2 days', 'completed');
 
-  perform set_config('app.deceased_lock_bypass', '', true);
-
-  -- G1 doctor, in scope: sets the chip and date, and no other column changes
-  perform set_config('request.jwt.claims', json_build_object('sub', v_doctor, 'role', 'authenticated')::text, true);
+  -- G1 a resident.microchip login sets the chip and date, and no other column changes
+  perform set_config('request.jwt.claims', json_build_object('sub', v_chip, 'role', 'authenticated')::text, true);
   select to_jsonb(r) - 'microchip_number' - 'microchip_implanted_on' into v_before from residents r where id = v_in;
   set local role authenticated;
   perform set_resident_microchip(v_in, '985112345678901', date '2026-02-02');
@@ -152,22 +148,16 @@ begin
 
   -- G2 refusals. Each must fail with the named error; none may write.
   set local role authenticated;
-  -- G2a doctor, resident outside clinic scope
-  v_rejected := false;
-  begin perform set_resident_microchip(v_out, '985112345678903', null);
-  exception when insufficient_privilege then v_rejected := true; end;
-  if not v_rejected then raise exception 'FAIL G2a doctor wrote outside their clinic scope'; end if;
-  -- G2b doctor, deceased resident (in scope)
+  -- G2b deceased resident
   v_rejected := false;
   begin perform set_resident_microchip(v_dead, '985112345678904', null);
   exception when restrict_violation then v_rejected := true; end;
-  if not v_rejected then raise exception 'FAIL G2b doctor wrote on a deceased resident'; end if;
+  if not v_rejected then raise exception 'FAIL G2b resident.microchip wrote on a deceased resident'; end if;
   perform set_resident_microchip(v_in, '985112345678905', null);
   reset role;
 
-  -- G2c duplicate chip, G2d malformed numbers, G2e management on a deceased resident
-  -- (G2c to G3 ran as a staff login until 0173 retired the role; management has the same outcome)
-  perform set_config('request.jwt.claims', json_build_object('sub', v_mgmt, 'role', 'authenticated')::text, true);
+  -- G2c duplicate chip, G2d malformed numbers, G2e a deceased resident (second login, same cell)
+  perform set_config('request.jwt.claims', json_build_object('sub', v_chip2, 'role', 'authenticated')::text, true);
   set local role authenticated;
   v_rejected := false;
   begin perform set_resident_microchip(v_out, '985112345678905', null);
@@ -182,31 +172,30 @@ begin
   v_rejected := false;
   begin perform set_resident_microchip(v_dead, '985112345678906', null);
   exception when restrict_violation then v_rejected := true; end;
-  if not v_rejected then raise exception 'FAIL G2e management wrote on a deceased resident'; end if;
+  if not v_rejected then raise exception 'FAIL G2e resident.microchip wrote on a deceased resident'; end if;
 
-  -- G3 management writes any resident
+  -- G3 a resident.microchip login writes any resident
   perform set_resident_microchip(v_out, '985112345678907', date '2026-03-03');
   reset role;
   select count(*) into v_n from residents where id = v_out and microchip_number = '985112345678907';
-  if v_n <> 1 then raise exception 'FAIL G3 management write did not land'; end if;
+  if v_n <> 1 then raise exception 'FAIL G3 resident.microchip write did not land'; end if;
 
-  -- G3b Management writes a chip (0155, q8): the handbook said it could and the function refused it
-  perform set_config('request.jwt.claims', json_build_object('sub', v_mgmt, 'role', 'authenticated')::text, true);
+  -- G3b a second resident.microchip login writes a chip and is refused on a deceased resident
+  perform set_config('request.jwt.claims', json_build_object('sub', v_chip2, 'role', 'authenticated')::text, true);
   set local role authenticated;
   perform set_resident_microchip(v_out, '985112345678909', date '2026-04-04');
   v_rejected := false;
   begin perform set_resident_microchip(v_dead, '985112345678910', null);
   exception when restrict_violation then v_rejected := true; end;
   reset role;
-  if not v_rejected then raise exception 'FAIL G3b management wrote on a deceased resident'; end if;
+  if not v_rejected then raise exception 'FAIL G3b resident.microchip wrote on a deceased resident'; end if;
   select count(*) into v_n from residents where id = v_out and microchip_number = '985112345678909' and microchip_implanted_on = date '2026-04-04';
-  if v_n <> 1 then raise exception 'FAIL G3b management write did not land'; end if;
+  if v_n <> 1 then raise exception 'FAIL G3b resident.microchip write did not land'; end if;
 
-  -- G4 roles that must not: volunteer, a doctor with no clinic, anon
-  foreach v_err in array array['vol', 'unlinked', 'anon'] loop
+  -- G4 who must not: a login without resident.microchip, anon
+  foreach v_err in array array['vol', 'anon'] loop
     perform set_config('request.jwt.claims', case v_err
       when 'vol' then json_build_object('sub', v_vol, 'role', 'authenticated')::text
-      when 'unlinked' then json_build_object('sub', v_unl, 'role', 'authenticated')::text
       else '{"role":"anon"}' end, true);
     v_rejected := false;
     begin
@@ -219,7 +208,7 @@ begin
   select count(*) into v_n from residents where id = v_in and microchip_number = '985112345678905';
   if v_n <> 1 then raise exception 'FAIL G4 a refused call changed the row'; end if;
 
-  raise exception 'HARNESS-OK existing rows=% back-filled=0 by the replay | shape: text + date, nullable | many nulls coexist | check rejects 14 digits, 16 digits, spaces, dashes, a letter, legacy 9-digit and empty string; accepts 15 digits with leading zeros | partial unique rejects a duplicate on update and insert and frees on clear | deceased resident: chip and date locked, bio still editable | file ran twice | set_resident_microchip (live): doctor in scope writes, corrects and clears with no other column changed; doctor out of scope, doctor or management on a deceased resident, duplicate, 14-digit / spaced / letters / empty, volunteer, unlinked doctor and anon all refused; management write allowed | 0155: management write allowed, and refused on a deceased resident', v_rows;
+  raise exception 'HARNESS-OK existing rows=% back-filled=0 by the replay | shape: text + date, nullable | many nulls coexist | check rejects 14 digits, 16 digits, spaces, dashes, a letter, legacy 9-digit and empty string; accepts 15 digits with leading zeros | partial unique rejects a duplicate on update and insert and frees on clear | deceased resident: chip and date locked, bio still editable | file ran twice | set_resident_microchip (live, cell resident.microchip): a holder writes, corrects and clears with no other column changed; a holder on a deceased resident, duplicate, 14-digit / spaced / letters / empty, a login without the cell and anon all refused; a second holder writes any resident', v_rows;
 end;
 $h$;
 rollback;
