@@ -1,122 +1,123 @@
-# Release handover — written 2026-10-28 after `0.40.10`
+# Release handover — written 2026-10-29 after `0.40.11`
 
-A **delta**. **Two releases shipped on 2026-10-28** — `0.40.9` and `0.40.10` — and each has its own
-record. The durable rules are in `docs/release-procedure.md`. **Both outrank this file.**
+A **delta**. The durable rules are in `docs/release-procedure.md` and this release's own record is
+`docs/releases/2026-10-29-0-40-11.md`. **Both outrank this file.**
 
 ## START HERE
 
-**`0.40.10` is deployed on BOTH environments and verified.** Same commit everywhere, **280 of 280**
-with no drift on either database, both crons healthy, cache purged and proved, 33 cards and every card
-check clean.
+**`0.40.11` is deployed on BOTH environments and verified.** Same commit everywhere (`d9628a26`),
+**282 of 282** with `No drift` on both databases, both crons healthy, cache purged and proved
+byte-for-byte on both hosts, **40 cards** and every card check clean.
 
-**The one thing to read before your next release: `audit` WILL BE RED on your cut, and that is now
-normal.** Until 2026-10-27 a broken trigger made the job skip every cut; #1041 fixed it, and
-`0.40.10` was the first cut it genuinely ran on. **A cut always changes `package.json`, so the job
-always runs, and the one open advisory (`glob`) is one we deliberately refuse to "fix"** — the fix
-reinstalls the adapter that caused the four-day cron outage. **It cannot block a merge**
-(`continue-on-error: true`, `ci.yml:251`). **Do not touch the check.** A backlog item is filed.
+**The last edition's headline is already wrong, and you should not act on it.** It opened with
+*"`audit` WILL BE RED on your cut, and that is now normal."* **It was GREEN on this cut.** The
+advisory register that same handover filed as a backlog item was **built and merged inside this
+release** (#1055): the PR `audit` job now runs `npm run audit:register`, which passes an advisory
+that has a dated entry, a reason in checkable terms and a decision file, and **fails on anything
+else**. The `glob` entry expires **2027-01-28**. **So a red `audit` means something genuinely new
+again** — treat it as a real finding, not as the known noise.
 
-**`doctor-cells` now reads `MISSING 4 of 13`, not 12 — READ IT FRESH.** Doctor is Lutan's test role
-and gains cards as he tests. The last edition warned about quoting a number from memory and the number
-has already moved again. **Never restore its cards, never edit the check, report what you read.**
+**`npm run audit:prod` is unchanged and still exits 1.** That is not a contradiction: the register
+wraps the PR job only, while the release step and the daily `advisories.yml` still read the raw
+advisory. Run it at the release step as the runbook says, and expect the `glob` line.
 
-**Re-measure before trusting any of this.** `git diff --stat 5ebb4a98..HEAD`, `gh pr list`,
+**`doctor-cells` reads `MISSING 4 of 13` — READ IT FRESH.** Doctor is Lutan's test role and the
+number moves as he tests. **But one thing is worth carrying:** three of the four missing cells
+(`reference.add_while_recording`, `resident.adoption_news`, `resident.microchip`) are exactly what
+`0281`'s new vet cards grant, so assigning those cards would close three of them.
+
+**Re-measure before trusting any of this.** `git diff --stat d9628a26..HEAD`, `gh pr list`,
 `--status --env production`, `node scripts/check-production.mjs all`, the live `/api/version`.
 
-## The fault to actually fix, because it has now happened twice
+## The fault that cost two releases did NOT recur, and here is what it cost to avoid
 
-**Two releases in a row, this session cost Lutan an avoidable round-trip, and he named the pattern:
-*"this is two releases in a row now."*** Both were the same error — optimising the release manager's
-end of the job at the expense of his.
+`0.40.9` and `0.40.10` each cost Lutan an avoidable round-trip, and the rule written afterwards was
+**one command at a time; nothing of yours running against shared state while a command of his is in
+flight; the next command only after the previous one reports.**
 
-- **`0.40.9`:** the test deploy was started in the main checkout **while his production deploy was
-  building there**. Both write one `.open-next`; his died `ENOTEMPTY`, mine died `ENOENT`. The runbook
-  already said *"Two builds in one worktree collide"*.
-- **`0.40.10`:** **two commands were handed over in one message** and he ran the second first. The
-  deploy refused itself — *"production is missing 1 migration(s) this commit carries"*. There is a
-  standing rule against this (*never show commands early*): **a command in a code block gets run.**
+**Following it cost no time at all**, which is the part worth internalising, because both earlier
+failures came from trying to save ten minutes. Each command went over alone, the next step was
+described in words only, and the apply was **verified** before the deploy command was written. The
+test Worker deploy was not started until his production deploy had reported.
 
-**THE RULE, and it dissolves both:** **one command at a time; nothing of yours running against shared
-state while a command of his is in flight; the next command only after the previous one reports.**
-Now written into `docs/release-procedure.md` as a trap with both examples.
-
-**The corollary worth internalising:** every one of these came from trying to save ten minutes. The
-deploys take what they take. **Sequencing costs nothing and is the only thing that has gone wrong
-twice.**
+**What makes it free is using the genuine parallelism instead of the fake kind.** Both Pi builds, the
+cache purge and the icon sync all ran while his command was outstanding — none of them builds
+anything in the main checkout. By the time his deploy reported, only the test Worker deploy and the
+paperwork were left. **The sequencing is not the cost; skipping it is.**
 
 ## Corrections and closures to the last edition
 
-- **`release-prs.mjs` is FIXED — stop carrying it.** It exited 1 on three consecutive releases because
-  squash-merged PRs leave no `Merge pull request #N` commit. #1041 taught it to resolve those from
-  GitHub, and `0.40.10` came back complete, exit 0, with no by-hand patching.
-- **The advisory register was OFFERED AND DECLINED on 2026-10-25, and is now filed again because the
-  reason for declining has gone.** `docs/decisions/2026-10-25-audit-on-releases-not-every-pr.md`
-  records it: *"Not included (offered, not chosen)"*. He declined it because the job would rarely run;
-  it now runs on every cut. **If this comes up, lead with that history** — it is not a fresh idea.
-- **Send to hospital stays CLOSED** (Doctor holds Manage medical). Do not re-raise it.
-- **The cron item stays CLOSED on both environments.** Do not re-raise it.
-- **`strip-baked-env` held at 14 on both environments**, two releases after the gap `0.40.8` left.
-- **The four advisories retired in `0.40.9` have not returned**, confirmed by grepping each ID.
+- **"`audit` red on every cut" — SUPERSEDED within one release** (above). Its backlog item is ticked.
+- **The advisory register's history no longer needs leading with.** The last edition said to open
+  with the 2026-10-25 decline if it came up. It is built; do not re-litigate it.
+- **`release-prs.mjs` stayed fixed** — exit 0 on a **38-PR** range, resolving 8 squash merges from
+  GitHub with no by-hand patching. Second release running; stop carrying it as a worry.
+- **`strip-baked-env` held at 14** on both environments, third release running.
+- **The Translations card is still held by nobody** (`0271`, deliberately) — the one carried item
+  left from the `0.40.7` list, now joined by seven more unassigned cards (below).
 
 ## Where things stand
 
 | | |
 |---|---|
-| Live, production | **`0.40.10`** — Worker `2f7737af`, Pi at `5ebb4a98`, endpoints agree, cron healthy |
-| Live, test | **`0.40.10`** — Worker `2ab4e083`, Pi at `5ebb4a98`, endpoints agree, cron healthy |
-| Previous release SHA, for the next range | **`5ebb4a987670f64359948f323d85b87e9dbb75f9`** |
-| Production database | **`280 applied, 0 pending`**, `No drift`. **Run it yourself** |
-| Dev database | **`280 applied, 0 pending`**, `No drift` |
-| Next free migration number | **`0280`**. **Check `origin/main` *and* open `*-schema` PRs anyway** |
-| The mail | **None**, correctly. Eighth release running |
-| Cards | **33**, `cards-union` and `role-cards-coverage` both clean |
-| Worktrees | Cleaned out by another session mid-release; only the main checkout, `Backlog`, and one live stream remained |
+| Live, production | **`0.40.11`** — Worker `a25e33a2`, Pi at `d9628a26`, endpoints agree, cron healthy |
+| Live, test | **`0.40.11`** — Worker `17f6d282`, Pi at `d9628a26`, endpoints agree, cron healthy |
+| Previous release SHA, for the next range | **`d9628a26c9414a88f0d5bb51adf27658b393f979`** |
+| Production database | **`282 applied, 0 pending`**, `No drift`. **Run it yourself** |
+| Dev database | **`282 applied, 0 pending`**, `No drift` |
+| Next free migration number | **`0282`**. **Check `origin/main` *and* open `*-schema` PRs anyway** |
+| The mail | **None**, correctly. Ninth release running |
+| Cards | **40** (was 33), every card check clean |
+| Open PR not in the release | **#1082**, process documents only — deliberately left out, costless |
 
-**Counters:** `npm ci` as step 1 **33** (skipped on `0.40.10` with an empty lockfile diff as the
-stated reason); no production-only guard **35**; `strip-baked-env` at **14**; **Server Actions keys**:
-production `cbd55beae8d8`, test `ecc41837fc0b`, unchanged.
-**Releases that mailed: 1 in the last fourteen.**
+**Counters:** `npm ci` as step 1 **34** (skipped on `0.40.11`, reason measured below); no
+production-only guard **36**; `strip-baked-env` at **14**; **Server Actions keys**: production
+`cbd55beae8d8`, test `ecc41837fc0b`, unchanged.
+**Releases that mailed: 1 in the last fifteen.**
 
 ## The method that keeps paying
 
-**Assert the data AND read the page — they prove different things.** `0.40.10` is the first
-double-digit patch, and a string sort puts `"0.40.10"` **before** `"0.40.9"`. The assertions covered
-the data; only reading the rendered page covered the page. **Nothing would have failed if the page had
-sorted as text.** Expect this again at `0.41.10`, and at any further double-digit boundary.
+**Read the table the migration writes, BEFORE it writes it.** `0280` took `reports.cashflow` off the
+`dashboard` card, and the `0257` triggers recompute every role's cells from its cards — so a
+narrowing there can silently remove a live cell. One `check-production.mjs role-cards` before the
+apply settled it: **no role holds the `dashboard` card.** The prediction "all six roles unchanged"
+was then confirmed by the after-picture. **Ninety seconds turned a "should be fine" into a fact.**
 
-**Close a `pending:` by asking the person while you have them.** This release reached **zero items
-awaiting a person** — a first, against a trend of 5, 5, 13, 7, 13, 15 — because both were put to Lutan
-**in the same round as the email question**, one of them by simply showing him the note and asking
-whether it read correctly. **That cost one extra question and closed two plans.**
+**Assert the data AND read the page.** `0.40.11` string-sorts **below** `0.40.9` exactly as `0.40.10`
+did, so this boundary is **not behind us** — expect it at every further double-digit patch. Both
+checks were run again and both passed.
 
-**When `main` moves, read what deployed rather than reasoning about it.** The test Worker reported
-building from `092f0109`, not the release SHA. One `git diff --name-only` excluding `docs/` showed the
-application code identical, so nothing was rebuilt to chase a SHA.
+**Applying a migration does NOT close a note whose step is a card being ASSIGNED.**
+`check-deferred-notes.mjs` raised 11 candidates and the two that mattered both turned on this. The
+seven new cards are held by nobody, so their notes stay withheld. **This will recur while the
+security rebuild runs**, since it lands cards and their assignment separately by design.
 
-**Take the before-picture of the tables the migration writes.** Fifth release running.
+**Skip `npm ci` only on a measured reason.** The `package.json` diff here was a **single added
+`scripts` line** and `package-lock.json` was untouched — read, not assumed, and confirmed by the
+build banner `▲ Next.js 16.4.2`.
 
 ## Two things a future release manager will meet
 
-- **The classifier blocks `[Production Deploy]` intermittently** — it blocked `apply-migrations` twice
-  on `0.40.10` and allowed the same command an hour earlier. **Try once, retry once, hand it to
-  Lutan.** Do not work around it.
-- **Cloudflare's API can time out from this machine for minutes.** Not bandwidth, not IPv6 — both
-  measured and ruled out. **Retry; it clears.**
-- **`git reset --hard` is refused by the classifier and the runbook's worktree-reuse recipe names it.**
-  `git checkout -b <branch> origin/main` does the same job. **Named by five editions and still not
-  corrected** — one line, and it has now cost more to keep writing down than to fix.
+- **The classifier blocks `[Production Deploy]` intermittently** — it blocked `apply-migrations`
+  **twice** on this release, as it did on `0.40.10`. **Try once, retry once, hand it to Lutan.** No
+  workaround. **This is what makes a release cost three touches instead of two**, and it is now the
+  only recurring cause of that.
+- **`git reset --hard` is refused by the classifier and the runbook's worktree-reuse recipe names
+  it.** `git checkout -b <branch> origin/main` does the same job and was used here.
+  **Named by six editions now and still not corrected** in the runbook — one line.
 
 ## In flight and open
 
-**The advisory register** (above) is the one new backlog item, and it carries a real design trap in
-its text: **a registered advisory stops being re-examined.** `glob` is harmless only because nothing
-here runs its CLI; a register that stores "we looked once" would be worse than the red.
+**Seven new cards are held by nobody** — three view-only (Food forecast, Medicine forecast, View
+cashflow, `0280`) and four vet (Record vet care, Record microchip, Adoption news, Add while
+recording, `0281`). They grant nothing until assigned in Settings → Who does what, **and their
+release notes are deliberately withheld until then.** Row 6 of this release's manual list.
 
-**The Translations card is still held by nobody** (`0271`, deliberately). It is the only carried item
-left from the `0.40.7` list.
+**The public Adopt page's new journey pages have not been seen signed-out**, because `PUBLIC_SITE`
+is `locked` — the one change in this release aimed squarely at the public.
 
 **Carried unchanged, and RE-MEASURE EACH before repeating it:** `0257`'s stale `-- consumer:` header;
 `who-does-what` items 2 and 3 and `stocktaking` item 3; the Thai wording of the Units screen, the
-Pages preview and both of this release's notes; the restore drill, still never exercised; and the two
-unlooked-at items, the prescription form reading 4 and video playback on a real handset. **`tee` under
-PowerShell still writes the deploy log as UTF-16** — `tr -d '\000'` before grepping.
+Pages preview and this release's five notes; the restore drill, still never exercised; and the two
+unlooked-at items, the prescription form reading 4 and video playback on a real handset. **`tee`
+under PowerShell still writes the deploy log as UTF-16** — `tr -d '\000'` before grepping.
