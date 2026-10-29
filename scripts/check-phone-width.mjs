@@ -11,6 +11,14 @@
 //   node scripts/check-phone-width.mjs --keep      (leave the seeded rows and the throwaway logins in dev)
 //   node scripts/check-phone-width.mjs --verbose   (also list every page that passed)
 //   node scripts/check-phone-width.mjs --clean     (remove what a killed run left behind - rows over an hour old - and stop)
+//   node scripts/check-phone-width.mjs --no-public  (skip the signed-out public pass; --pages narrows only the signed-in pages,
+//                                                    and the public pass always adds ~20 page views, so use this to go smaller)
+//
+// IT IS LONG, AND IT SAYS WHERE IT IS. It prints the planned size first and one line per page view as it is
+// measured ("[n/N] role locale path -> outcome"). An unnarrowed run is roles x locales x ~119 pages, ~1,700 page
+// views at 6-8 s each: hours. Background it with its output redirected to a file and read the file; never run it
+// in the foreground, where the ten-minute cap kills it. A narrowed run, e.g.
+// --roles=admin --locales=en --pages=/clinics,/enclosures,/residents,/home, takes a few minutes.
 //
 // Run it by hand, or in the release smoke test. It is deliberately NOT in
 // `npm run lint` or scripts/gates.mjs: it needs a server, a browser and seeded
@@ -58,6 +66,10 @@ const args = process.argv.slice(2);
 const opt = (name) => args.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3).split(",").filter(Boolean);
 const VERBOSE = args.includes("--verbose");
 const KEEP = args.includes("--keep");
+const NO_PUBLIC = args.includes("--no-public");
+/** Progress is printed as each page view finishes, not at the end, so a killed run still shows where it got to. */
+let seen = 0;
+let planned = 0;
 const SHOTS = opt("shots")?.[0];
 
 const WIDTH = 375;
@@ -573,9 +585,23 @@ async function settle(page) {
   await page.waitForTimeout(250);
 }
 
+function progress(r) {
+  seen += 1;
+  const why = r.why ? `  (${r.why})` : "";
+  console.log(`  [${seen}/${planned}] ${r.role} ${r.locale} ${r.path} -> ${r.kind}${why}`);
+}
+
 async function run(ids, accounts) {
   const browser = await launch();
   const results = []; // { role, locale, path, kind: ok|overflow|skipped|warning, ... }
+  const baseCount = (onlyPages ?? PAGES).length;
+  planned = roleNames.length * locales.length * baseCount;
+  console.log(
+    `Planned: ${roleNames.length} role(s) x ${locales.length} locale(s) x ${baseCount} page(s) = ${planned} signed-in page views` +
+      (onlyPages ? "" : " (N grows as each login's own nav links are found)") +
+      (NO_PUBLIC ? ", no public pass (--no-public)" : `, then the public pass (${PUBLIC_PAGES.length} pages + a resident, a story and the phone menu, per locale)`) +
+      ". Output is one line per page view.",
+  );
   try {
     for (const roleName of roleNames) {
       const cookies = await signInCookies(accounts[roleName], roleName === "admin");
@@ -593,8 +619,12 @@ async function run(ids, accounts) {
           .catch(() => []);
         for (const href of navLinks) if (href && !href.startsWith("/api/") && !href.includes("#")) targets.add(href);
 
-        for (const target of onlyPages ? onlyPages.map((p) => fill(p, ids)).filter(Boolean) : targets) {
-          results.push(await checkPage(page, { roleName, locale, target }));
+        const todo = onlyPages ? onlyPages.map((p) => fill(p, ids)).filter(Boolean) : [...targets];
+        planned += todo.length - baseCount;
+        for (const target of todo) {
+          const r = await checkPage(page, { roleName, locale, target });
+          results.push(r);
+          progress(r);
         }
         await context.close();
       }
@@ -603,7 +633,7 @@ async function run(ids, accounts) {
     await browser.close();
   }
   const code = report(results);
-  return (await publicPass()) || code;
+  return NO_PUBLIC ? code : (await publicPass()) || code;
 }
 
 /**
@@ -632,7 +662,8 @@ async function publicPass() {
         const one = hrefs.find((h) => pattern.test(h));
         if (one) targets.push(one);
       }
-      for (const target of targets) {
+      for (const [i, target] of targets.entries()) {
+        console.log(`  [public ${locale} ${i + 1}/${targets.length}] ${target}`);
         try {
           await page.goto(`${base}${target}`, { waitUntil: "domcontentloaded", timeout: 60_000 });
         } catch (error) {
