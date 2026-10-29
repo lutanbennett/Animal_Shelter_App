@@ -1,8 +1,8 @@
-// A volunteer's refused-write row, against DEV (policy 0214, client: assistant-refused-row).
+// A refused-write row from a login holding only the Assistant card, against DEV (policy 0214, client: assistant-refused-row).
 //
 //   node scripts/check-assistant-refused-client.mjs [--keep]
 //
-// Makes a throwaway volunteer, signs in as them with the anon key, and checks
+// Makes a throwaway login, signs in as them with the anon key, and checks
 // the exact write the app makes: a bare insert (no .select()) of status
 // 'refused' on their own row succeeds; they cannot read it back; any other
 // status, or another user's row, is refused. The row is then read as the
@@ -14,7 +14,7 @@ import { appendFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createClient } from "@supabase/supabase-js";
-import { giveRole } from "./lib/user-role.mjs";
+import { giveCards } from "./lib/user-role.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -32,11 +32,14 @@ const email = `dryrun-volunteer-${tag}@example.invalid`;
 const password = randomBytes(18).toString("base64url");
 const text = `  Move Rex to the vet ${tag}  `;
 let userId;
+let cleanupCards = async () => {};
 try {
   const { data, error } = await service.auth.admin.createUser({ email, password, email_confirm: true });
   if (error) throw error;
   userId = data.user.id;
-  const { error: roleErr } = await giveRole(service, userId, "volunteer");
+  // a login holding exactly the Assistant card (assistant.ask) and nothing else
+  const { error: roleErr, cleanup } = await giveCards(service, userId, ["assistant"]);
+  cleanupCards = cleanup;
   if (roleErr) throw roleErr;
 
   const me = createClient(url, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, opts);
@@ -44,9 +47,9 @@ try {
   if (inErr) throw inErr;
 
   const { error: e1 } = await me.from("assistant_actions").insert({ request_text: text, intent: null, draft: null, status: "refused", result: null });
-  expect(!e1, `volunteer's bare 'refused' insert succeeds (${e1?.message ?? "no error"})`);
+  expect(!e1, `a login holding only the Assistant card: its bare 'refused' insert succeeds (${e1?.message ?? "no error"})`);
   const { data: back } = await me.from("assistant_actions").select("id").eq("request_text", text);
-  expect((back ?? []).length === 0, "the volunteer cannot read the row back");
+  expect((back ?? []).length === 0, "that login cannot read the row back");
   const { error: e2 } = await me.from("assistant_actions").insert({ request_text: text, status: "confirmed" });
   expect(!!e2, "'confirmed' under assistant.ask is refused");
   const { error: e3 } = await me.from("assistant_actions").insert({ request_text: text, status: "unmatched" });
@@ -61,7 +64,7 @@ try {
   const { data: rows } = await service.from("assistant_actions").select("user_id,status,request_text,intent,draft,result").eq("request_text", text);
   console.log("  rows as service role:", JSON.stringify(rows));
   expect(rows?.length === 1 && rows[0].status === "refused" && rows[0].user_id === userId && rows[0].intent === null && rows[0].draft === null,
-    "exactly one row: refused, the volunteer's own user_id, no intent or draft");
+    "exactly one row: refused, the login's own user_id, no intent or draft");
 } catch (e) {
   failures.push(String(e?.message ?? e));
   console.log("ERROR", e?.message ?? e);
@@ -73,6 +76,7 @@ try {
     await service.from("assistant_actions").delete().eq("request_text", text);
     await service.from("user_roles").delete().eq("user_id", userId);
     await service.auth.admin.deleteUser(userId);
+    await cleanupCards();
   }
 }
 process.exitCode = failures.length ? 1 : 0;
