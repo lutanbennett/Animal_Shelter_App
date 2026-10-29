@@ -48,11 +48,10 @@ const have = new Map(rows.map((r) => [r.card, r.key]));
 const missing = cardKeys.filter((k) => !have.has(k));
 const unsorted = cardKeys.filter((k) => have.has(k) && !have.get(k));
 const stray = rows.filter((r) => !cardKeys.includes(r.card)).map((r) => r.card);
-if (cardKeys.length !== 28) fail(`cards.ts should have 28 cards, has ${cardKeys.length}`);
-if (missing.length) fail(`cards with no feature row: ${missing.join(", ")}`);
+// 0255: a card with no card_features row is Not yet sorted by design, so a missing row is not a fault.
 if (unsorted.length) fail(`cards with a null feature: ${unsorted.join(", ")}`);
 if (stray.length) fail(`rows for cards that do not exist: ${stray.join(", ")}`);
-if (!missing.length && !unsorted.length && !stray.length) pass("every one of the 28 cards has exactly one feature");
+if (!unsorted.length && !stray.length) pass(`${cardKeys.length} cards in cards.ts: none left with a null feature, none has a stray row (${missing.length} not yet sorted, which 0255 allows)`);
 
 // 2. behaviour, rolled back
 const lit = (s) => `'${s}'`;

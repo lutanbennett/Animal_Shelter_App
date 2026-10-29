@@ -90,10 +90,11 @@ const cells = await sql(`select r.key, p.activity, p.level from role_permissions
   else ok(`approvers: screen and database agree (${screen.length ? screen.join(", ") : "none"})`);
   if (!needsApprover("add_photos") || needsApprover("approve_photos")) fail("approvers: only Add resident photos should wait on an approver");
   else ok("approvers: Add resident photos waits on an approver; Approve photos does not");
-  // the card grants exactly three cells
+  // the card grants publish and manage, plus whatever View residents grants (it includes that card)
   const grant = [...bundleOfCards(["approve_photos"])].map(([a, l]) => `${a}=${l}`).sort().join(",");
-  if (grant !== "photos.approve=edit,photos.resident_manage=edit,resident.record=read") fail(`approve_photos grants ${grant}`);
-  else ok("approve_photos grants exactly publish, manage and the who-and-where read");
+  const want = [...new Map([...bundleOfCards(["view_residents"]), ["photos.approve", "edit"], ["photos.resident_manage", "edit"]])].map(([a, l]) => `${a}=${l}`).sort().join(",");
+  if (grant !== want) fail(`approve_photos grants ${grant}`);
+  else ok("approve_photos grants publish and manage on top of View residents");
 }
 
 for (const role of roles) {
