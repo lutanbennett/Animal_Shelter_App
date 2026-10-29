@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → CARD REVIEW 2 (ticked) |
 | Branch / worktree | `claude/stock-links-gate` @ `C:DevelopmentAnimal_Shelter_stock-links-gate` |
 | Dev server | `next dev` on port 3003; logins from `dev-signin.mjs --cards <card>` |
-| PR | opened after this commit |
+| PR | https://github.com/lutanbennett/Animal_Shelter_App/pull/1072 |
 | Tested by / date | Claude, 2026-10-29 |
 | Carries a migration? | no |
 | Tested at SHA | c0bbf284 |
