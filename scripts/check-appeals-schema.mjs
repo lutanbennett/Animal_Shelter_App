@@ -1,24 +1,22 @@
 // 0210 (appeals, the schema half) exercised on dev without keeping anything: the file is applied inside begin...,
-// assertions run under real admin, management and anon sessions, and a final raise rolls it all back.
+// assertions run under a real admin, a login holding only View residents, and anon sessions, and a final raise rolls it all back.
 //
 //   node scripts/check-appeals-schema.mjs
 //
-// Covers: who writes (appeal.run: admin yes, management and anon no), a draft is invisible to anon and cannot be
+// Covers: who writes (appeal.run: admin yes; a login without it, and anon, no), a draft is invisible to anon and cannot be
 // marked published, publishing makes it visible, a gift designated to the appeal moves raised_amount while a gift
 // designated to the resident does not, the public view carries no donor column, a Medical / non-image / other
 // resident's photo is refused and a photo refiled to Medical leaves the public view and the photo proxy, links must
 // be https, closing needs an outcome, designation 'appeal' needs an appeal, and the Thai queue picks up the prose.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
 const env = loadEnv("test");
 const ref = projectRef(env);
-const mig = readFileSync(join(root, "supabase/migrations/0210_appeals.sql"), "utf8");
 const sql = `
 begin;
-${mig}
+-- (0210 is already applied; replaying it over the live schema failed with 42P16 once later migrations altered its views)
 create function pg_temp.q(p_uid uuid, p_expr text, p_pgrole text default 'authenticated') returns text language plpgsql as $f$
 declare v text;
 begin
@@ -40,16 +38,21 @@ begin
 end $f$;
 create temp table r (n serial, label text, got text, want text);
 do $$
-declare a uuid; m uuid; res uuid; res2 uuid; ap uuid; photo uuid; med uuid; txt uuid; other uuid; don uuid; don2 uuid;
+declare a uuid; m uuid; rn uuid; res uuid; res2 uuid; ap uuid; photo uuid; med uuid; txt uuid; other uuid; don uuid; don2 uuid;
 begin
   select ur.user_id into a from user_roles ur join roles x on x.id = ur.role_id where x.key = 'admin' and ur.archived_at is null limit 1;
-  select ur.user_id into m from user_roles ur join roles x on x.id = ur.role_id where x.key = 'management' and ur.archived_at is null limit 1;
+  -- m is a login holding exactly View residents (no appeal.run): an existing login re-roled for this rolled-back transaction.
+  select user_id into m from user_roles where archived_at is null and user_id <> a order by user_id limit 1;
+  delete from user_roles where user_id = m;
+  insert into roles (key, name, kind, home_path) values ('harness_no_appeals', 'Harness: view residents', 'custom', '/home') returning id into rn;
+  insert into role_cards (role_id, card) values (rn, 'view_residents');
+  insert into user_roles (user_id, role_id) values (m, rn);
   select id into res from residents rr where is_public_visible and not exists (select 1 from private.resident_current_state s where s.resident_id = rr.id and s.current_status = 'Deceased') order by id limit 1;
   select id into res2 from residents where id <> res order by id limit 1;
   insert into r (label, got, want) values ('logins and residents found', (a is not null and m is not null and res is not null and res2 is not null)::text, 'true');
 
   insert into r (label, got, want) values ('anon cannot read the table', pg_temp.q(null, '(select count(*) from appeals)', 'anon'), 'ERR:42501');
-  insert into r (label, got, want) values ('management cannot create',
+  insert into r (label, got, want) values ('a login without appeal.run cannot create',
     pg_temp.try(m, format($q$insert into appeals (resident_id, title, target_amount) values (%L, 'X', 100)$q$, res))::text, '-1');
   insert into r (label, got, want) values ('anon cannot create',
     pg_temp.try(null, format($q$insert into appeals (resident_id, title, target_amount) values (%L, 'X', 100)$q$, res), 'anon')::text, '-1');
@@ -81,7 +84,7 @@ begin
   insert into r (label, got, want) values ('another resident photo refused', pg_temp.try(a, format($q$insert into appeal_photos (appeal_id, attachment_id) values (%L, %L)$q$, ap, other))::text, '-2');
   insert into r (label, got, want) values ('shelter photo accepted as cover', pg_temp.try(a, format($q$insert into appeal_photos (appeal_id, attachment_id, is_cover, is_graphic) values (%L, %L, true, true)$q$, ap, photo))::text, '1');
   insert into r (label, got, want) values ('second cover refused', (pg_temp.try(a, format($q$insert into appeal_photos (appeal_id, attachment_id, is_cover) select %L, id, true from attachments where id = %L$q$, ap, photo)) < 0)::text, 'true');
-  insert into r (label, got, want) values ('management cannot attach', pg_temp.try(m, format($q$insert into appeal_photos (appeal_id, attachment_id) values (%L, %L)$q$, ap, photo))::text, '-1');
+  insert into r (label, got, want) values ('a login without appeal.run cannot attach', pg_temp.try(m, format($q$insert into appeal_photos (appeal_id, attachment_id) values (%L, %L)$q$, ap, photo))::text, '-1');
 
   -- publish
   update appeals set status = 'live', published = true where id = ap;
@@ -133,7 +136,7 @@ begin
   insert into r (label, got, want) values ('title queued for Thai', (select (count(*) > 0)::text from translations where table_name = 'appeals' and row_id = ap and column_name = 'title'), 'true');
   insert into r (label, got, want) values ('what_is_wrong queued for Thai', (select (count(*) > 0)::text from translations where table_name = 'appeals' and row_id = ap and column_name = 'what_is_wrong'), 'true');
   insert into r (label, got, want) values ('nobody can write the views', (has_table_privilege('anon', 'public_appeals', 'delete') or has_table_privilege('authenticated', 'public_appeals', 'insert') or has_table_privilege('anon', 'public_appeal_photos', 'update'))::text, 'false');
-  insert into r (label, got, want) values ('appeal.run: admin only (no role_permissions row)', (select count(*)::text from role_permissions where activity = 'appeal.run'), '0');
+  insert into r (label, got, want) values ('appeal.run is granted by the Run appeals card alone', (select string_agg(card, ',' order by card) from card_grants where activity = 'appeal.run'), 'run_appeals');
 end $$;
 do $$ begin raise exception 'RESULT%RESULT', (select json_agg(json_build_object('l', label, 'got', got, 'want', want) order by n) from r); end $$;
 `;
