@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-36 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+40 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -486,6 +486,59 @@ Result: pending
 1. Open `/management/cashflow`: it loads.
 2. **See:** Cashflow and fixed outgoings (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Record vet care (`record_vet_care`)
+
+- Opens: `/residents`
+- Also gives: View medical (`view_medical`) (walked under its own heading)
+
+0. Sign in with `--cards record_vet_care`. The home screen shows the **Record vet care** tile (or the tile of a card that includes it).
+1. Open `/residents`: it loads.
+2. **TODO:** Vet visits and how they went. Do it on a disposable record named `walk-record_vet_care`. Question: where should this write show afterwards (which page, which row)?
+3. **Do:** Procedures and their files. Use a disposable record named `walk-record_vet_care`. **Read-back:** the resident's Procedures page (/residents/<id>/procedures) lists it with the type, where it was done, the date and the note; files are attached from the same row (answered 2026-10-23).
+4. **Do:** Blood tests and their reports. Use a disposable record named `walk-record_vet_care`. **Read-back:** the resident's Blood Tests page (/residents/<id>/blood-tests) lists it with the type, date and results note, and "No files attached yet" until a scan is added (answered 2026-10-23).
+5. **Do:** Prescriptions: what should be given. Use a disposable record named `walk-record_vet_care`. **Read-back:** the resident's Prescriptions page (/residents/<id>/prescriptions) lists it under Current with the dose, how often and the start date; it also appears on /operations/medication-list (answered 2026-10-23).
+6. **Do:** Immunizations. Use a disposable record named `walk-record_vet_care`. **Read-back:** the form shows a table straight after saving (resident, immunization, administered, next due). The Add all in zone and enclosure pickers are empty for a card-only login (answered 2026-10-23).
+7. **Do:** A resident's diet. Use a disposable record named `walk-record_vet_care`. **Read-back:** the resident's Diet page (/residents/<id>/diet) lists it under Current with meals a day and the amounts at the resident's size (answered 2026-10-23).
+8. **Refused:** open `/medical/photos` (the page of **Add Medical Photos**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Record a microchip (`record_microchip`)
+
+- Opens: `/residents`
+- Also gives: View residents (`view_residents`) (walked under its own heading)
+
+0. Sign in with `--cards record_microchip`. The home screen shows the **Record a microchip** tile (or the tile of a card that includes it).
+1. Open `/residents`: it loads.
+2. **Do:** Record or correct a microchip number. Use a disposable record named `walk-record_microchip`. **Read-back:** the number shows in the hub's header with a Correct button; a corrected number shows there straight away. Intake asks for it too, on step 3 (answered 2026-10-23).
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Adoption news (`adoption_news`)
+
+- Opens: `/residents`
+- Also gives: View residents (`view_residents`) (walked under its own heading)
+
+0. Sign in with `--cards adoption_news`. The home screen shows the **Adoption news** tile (or the tile of a card that includes it).
+1. Open `/residents`: it loads.
+2. **Do:** News from an adopter. Use a disposable record named `walk-adoption_news`. **Read-back:** only an adopted resident has the control: /residents/<id>/adoption-updates lists the new update first, with its date and channel (LINE, Facebook, Email, Visit); text marked staff only is never published (answered 2026-10-23).
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Add to lists while recording (`add_while_recording`)
+
+- Opens: `/residents`
+- Also gives: View medical (`view_medical`) (walked under its own heading)
+
+0. Sign in with `--cards add_while_recording`. The home screen shows the **Add to lists while recording** tile (or the tile of a card that includes it).
+1. Open `/residents`: it loads.
+2. **TODO:** Add a missing medication, frequency or procedure type from a form. Do it on a disposable record named `walk-add_while_recording`. Question: where should this write show afterwards (which page, which row)?
+3. **Refused:** open `/medical/photos` (the page of **Add Medical Photos**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 

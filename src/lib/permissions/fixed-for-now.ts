@@ -72,7 +72,6 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
         "stock.medications",
         "stock.diets",
         "reference.types",
-        "reference.add_while_recording",
       ],
     },
     shown: true,
