@@ -639,8 +639,16 @@ dev server running, none of it matters.
   and commit there (`git -C ../Animal_Shelter_Backlog commit -am
   "Backlog: <what>"`); the post-commit hook pushes it. No `claude/*`
   branch, no PR. Never edit `docs/backlog.md` on `main` directly.
-  New items go **above `## Completed`**, in their section: one filed below it is invisible
-  to every session, and the pre-commit hook refuses it (`scripts/check-backlog-sections.mjs`).
+  New items go **in the section their subject belongs to**, and above `## Completed`.
+  **Appending to the end of the file is ALWAYS WRONG**, however well it satisfies "above
+  `## Completed`": `## Fundraising` is the last section, so an item appended there lands in
+  Fundraising **by construction**, passes the checker, and is invisible to anyone reading
+  Security or Architecture. **Six items in two days had to be moved by hand** — a card-access
+  item, a wording note, an app fault and three more — and every one of them had followed the
+  instruction as it was then worded. One filed *below* `## Completed` is invisible to every
+  session and the pre-commit hook refuses it; **`scripts/check-backlog-sections.mjs` tests
+  POSITION ONLY and will never catch a wrong section**, so this one is on you to read.
+  (Lutan chose this wording fix over a checker warning, 2026-10-29.)
 - **Ticking the item a feature completes** stays on the feature branch,
   as part of finishing it — that is the one edit to `docs/backlog.md`
   that belongs in a PR.
