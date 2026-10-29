@@ -1,5 +1,10 @@
 // Rollback harness for 0119_placement_history_guards.sql against DEV only.
-// One transaction: the file (twice), then each guard exercised as the roles
+// Restated 2026-10-29 (harness-restate-nine): the logins were named roles (volunteer,
+// management). The live insert policy asks one cell per placement type, so the mover is now
+// a throwaway role holding exactly placement.move, placement.hospital, placement.rehome and
+// placement.death, and the refused login holds one unrelated cell (photos.resident_add).
+// Admin signs in as itself and holds no cells.
+// One transaction: the file (twice), then each guard exercised as the logins
 // that matter, then a deliberate `raise exception` carrying the evidence, so
 // nothing can commit. Safe to run before or after the file is applied.
 //
@@ -79,10 +84,14 @@ begin
     values (v_uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
             'harness-placement-' || v_uid || '@example.invalid', '{}'::jsonb, '{"full_name":"Harness"}'::jsonb, now(), now());
   end loop;
-  -- management: Staff was this login until 0173 retired it (a live staff row is refused)
+  insert into roles (key, name, kind) values ('h0119_placer', 'h placer', 'custom'), ('h0119_other', 'h other', 'custom');
+  insert into role_permissions (role_id, activity, level)
+  select roles.id, act, 2 from roles, unnest(array['placement.move', 'placement.hospital', 'placement.rehome', 'placement.death', 'resident.record']) act where roles.key = 'h0119_placer';
+  insert into role_permissions (role_id, activity, level) select roles.id, 'photos.resident_add', 2 from roles where roles.key = 'h0119_other';
   insert into user_roles (user_id, role_id)
-  select v.c0, ro.id from (values (v_vol, 'volunteer'), (v_mgmt, 'management'), (v_admin, 'admin')) as v(c0, role_key)
+  select v.c0, ro.id from (values (v_vol, 'h0119_other'), (v_mgmt, 'h0119_placer')) as v(c0, role_key)
   join roles ro on ro.key = v.role_key;
+  insert into user_roles (user_id, role_id) select v_admin, roles.id from roles where roles.is_admin;
   insert into zones (id, name) values (v_zone, 'Harness zone');
   insert into enclosures (id, name, zone_id) values (v_e1, 'Harness E1', v_zone), (v_e2, 'Harness E2', v_zone);
   insert into contacts (id, name, type) values (v_carer, 'Harness carer', 'Carer');
@@ -94,10 +103,10 @@ begin
   values (a, 'Intake', t0, v_life, v_un);
 
   -- P1
-  -- 0134: a volunteer no longer moves a resident; management makes the first move
+  -- a login without placement.move cannot move a resident; one with it makes the first move
   v_r := pg_temp.run(v_vol, format($q$insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id, previous_enclosure_id)
     values (%L, 'ChangeEnclosure', %L, %L, %L, %L)$q$, a, t0 + interval '1 day', v_zone, v_e1, v_un));
-  if v_r not like '%row-level security%' then raise exception 'FAIL P1 volunteer ChangeEnclosure should be refused by RLS: %', v_r; end if;
+  if v_r not like '%row-level security%' then raise exception 'FAIL P1 a login without placement.move ChangeEnclosure should be refused by RLS: %', v_r; end if;
   v_r := pg_temp.run(v_mgmt, format($q$insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id, previous_enclosure_id)
     values (%L, 'ChangeEnclosure', %L, %L, %L, %L)$q$, a, t0 + interval '1 day', v_zone, v_e1, v_un));
   if v_r <> 'ok' then raise exception 'FAIL P1 management ChangeEnclosure between ordinary enclosures: %', v_r; end if;
