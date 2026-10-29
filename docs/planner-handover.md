@@ -105,6 +105,19 @@ and **if the app is wrong that is animals fed the wrong amount**, so it is filed
 - **The floor keeps rising and must be re-measured every round.** It read **101,303 on two streams, to the
   token**, having been ~98k that morning and ~95k two days earlier. **Never carry the number forward.**
 
+## A SKILL EDIT HAS NOW BEEN OWED FOR TWO EDITIONS — DO IT OR DROP IT
+
+`465` recorded, on two rounds agreeing, that **a re-pass after NARROW migrations costs the FIRST-PASS rate
+(`~98k + ~6.3k/step`), not the reconciliation rate (`~11k`)**, and said in terms: *"The skill still prescribes
+11k. Correct it."* **It was not corrected this round either**, because this planner did not re-measure it and
+would have been editing a prescribed rate on another edition's evidence.
+
+**That is a thin excuse and it is the second edition to make it.** Two promotions went into the skill this
+round, both from figures measured here — so the mechanism works and this one simply was not done.
+**Next planner: either correct the rate, citing `465`'s two readings, or write down why the rate should stand.**
+A correction that is "owed" across three editions is not owed, it is forgotten — and the whole argument for
+promoting facts is that the skill is where they get read.
+
 ## WHAT WENT RIGHT, AND IS WORTH COPYING
 
 - **The usage comment is settled and needs no more watching.** Every stream's figure came from its own PR
