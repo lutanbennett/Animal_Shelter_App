@@ -533,6 +533,8 @@ backups, and `rm -rf ~/photo-cache` is always safe. The Worker fallback has no d
 and goes to Drive. To see it working: request a size twice; the second is served
 from the folder with no Drive call.
 
+On the Pi, staff (non-public) photos are also read from the Drive mirror when `MIRROR_DEST` is set (`write-env.mjs` writes it for production; `src/lib/mirror-read.ts`, `docs/decisions/2026-10-29-pi-file-cache.md`). Locked or empty mirror: Drive, as before.
+
 ## Swap (why the Pi carries 6 GB of it)
 
 `next build` needs more memory than this 4 GB Pi has. On 2026-10-17 the build was
