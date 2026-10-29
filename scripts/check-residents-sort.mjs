@@ -13,7 +13,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { giveRole } from "./lib/user-role.mjs";
+import { giveCards, giveRole } from "./lib/user-role.mjs";
 import { exitWith } from "./lib/exit.mjs";
 
 const root = process.cwd();
@@ -32,13 +32,17 @@ const expect = (ok, what) => {
 const tag = randomBytes(4).toString("hex");
 const password = randomBytes(18).toString("base64url");
 const made = [];
+const cleanups = [];
 
-async function makeLogin(role) {
+/** `who` is "admin", or a list of card keys (a login holding exactly those cards). */
+async function makeLogin(who) {
+  const role = Array.isArray(who) ? who.join("-") : who;
   const email = `harness-sort-${role}-${tag}@example.invalid`;
   const { data, error } = await service.auth.admin.createUser({ email, password, email_confirm: true });
   if (error) throw error;
   made.push(data.user.id);
-  const { error: roleErr } = await giveRole(service, data.user.id, role);
+  const { error: roleErr, cleanup } = Array.isArray(who) ? await giveCards(service, data.user.id, who) : await giveRole(service, data.user.id, who);
+  if (cleanup) cleanups.push(cleanup);
   if (roleErr) throw roleErr;
   const jar = new Map();
   const ssr = createServerClient(url, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
@@ -74,10 +78,11 @@ try {
   };
   console.log(`  (${rows.length} living residents, ${zoneRank.size} zones)`);
 
-  for (const role of ["admin", "volunteer"]) {
+  for (const who of ["admin", ["view_residents"]]) {
+    const role = Array.isArray(who) ? who.join("-") : who;
     console.log(role);
-    const cookie = await makeLogin(role);
-    const idsOf = (html) => [...new Set([...html.matchAll(/href="\/residents\/([0-9a-f-]{36})"/g)].map((m) => m[1]))];
+    const cookie = await makeLogin(who);
+    const idsOf = (html) => [...new Set([...html.matchAll(/href="\/residents\/([0-9a-f-]{36})(?:\?[^"]*)?"/g)].map((m) => m[1]))];
     const byName = new Map(rows.map((r) => [r.resident_id, r]));
     for (const key of ["id", "name", "enclosure", "zone", "status", "location"]) {
       for (const dir of ["asc", "desc"]) {
@@ -115,6 +120,7 @@ try {
   }
 } finally {
   for (const id of made) await service.auth.admin.deleteUser(id);
+  for (const c of cleanups) await c();
 }
 console.log(failures.length ? `\n${failures.length} FAILED` : "\nall held");
 await exitWith(failures.length ? 1 : 0);
