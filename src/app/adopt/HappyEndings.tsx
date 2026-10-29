@@ -7,7 +7,7 @@ import type { Locale } from "@/lib/i18n/locales";
 
 export type RecentAdoption = {
   id: string;
-  /** Added by 0215. Leads to /adopt/stories/<resident_id> when that animal has a published story. */
+  /** Added by 0215. Opens /adopt/journey/<resident_id>. */
   resident_id: string;
   name: string;
   species: string | null;
@@ -20,13 +20,10 @@ export function HappyEndings({
   recent,
   t,
   locale,
-  withStories,
 }: {
   recent: RecentAdoption[];
   t: Dictionary;
   locale: Locale;
-  /** Animals with a published success story: their picture becomes a link to it. */
-  withStories?: ReadonlySet<string>;
 }) {
   if (recent.length === 0) return null;
   const monthFormat = new Intl.DateTimeFormat(locale === "th" ? "th-TH" : "en-GB", {
@@ -73,20 +70,14 @@ export function HappyEndings({
           const layout = "flex w-full flex-col items-center gap-2 text-center";
           return (
             <li key={a.id}>
-              {withStories?.has(a.resident_id) ? (
-                <Link
-                  href={`/adopt/stories/${a.resident_id}`}
-                  className={`${layout} rounded-2xl transition hover:opacity-80`}
-                  aria-label={t.adopt.happyEndings.readStory(a.name)}
-                >
-                  {inner}
-                  <span className="text-xs font-medium text-primary underline">
-                    {t.adopt.happyEndings.seeStory}
-                  </span>
-                </Link>
-              ) : (
-                <div className={layout}>{inner}</div>
-              )}
+              <Link
+                href={`/adopt/journey/${a.resident_id}`}
+                className={`${layout} rounded-2xl transition hover:opacity-80`}
+                aria-label={t.adopt.journey.openJourney(a.name)}
+              >
+                {inner}
+                <span className="text-xs font-medium text-primary underline">{t.adopt.journey.seeJourney}</span>
+              </Link>
             </li>
           );
         })}

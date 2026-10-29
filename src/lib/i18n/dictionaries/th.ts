@@ -6952,6 +6952,15 @@ const th: Dictionary = {
       readStory: (name: string) => `อ่านข่าวของ ${name} ที่บ้านใหม่`,
       seeStory: "อ่านข่าวของน้อง",
     },
+    journey: {
+      heading: (name: string) => `เส้นทางของ ${name}`,
+      arrived: (date: string) => `มาถึงเมื่อ ${date}`,
+      update: "ข่าวจากบ้านใหม่",
+      adopted: (date: string) => `รับเลี้ยงเมื่อ ${date}`,
+      quiet: (name: string) => `${name} กำลังปรับตัวที่บ้านใหม่ ข่าวที่ครอบครัวแบ่งปันจะแสดงที่นี่`,
+      seeJourney: "ดูเส้นทางของน้อง",
+      openJourney: (name: string) => `ดูเส้นทางของ ${name}`,
+    },
     successStories: {
       heading: "ถึงบ้านแล้ว",
       subtitle: "ข่าวและภาพจากครอบครัวที่รับเลี้ยงสัตว์จากเรา แบ่งปันด้วยความยินยอมของเขา",

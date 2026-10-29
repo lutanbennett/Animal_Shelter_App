@@ -7185,6 +7185,15 @@ const en = {
       readStory: (name: string) => `Read the news about ${name} at home`,
       seeStory: "Read their news",
     },
+    journey: {
+      heading: (name: string) => `${name}'s journey`,
+      arrived: (date: string) => `Arrived ${date}`,
+      update: "News from home",
+      adopted: (date: string) => `Adopted ${date}`,
+      quiet: (name: string) => `${name} is settling in at home. Any news the family shares will appear here.`,
+      seeJourney: "See their journey",
+      openJourney: (name: string) => `See ${name}'s journey`,
+    },
     successStories: {
       heading: "Home at last",
       subtitle: "News and photos from families who adopted from us, shared with their permission.",
