@@ -18,20 +18,26 @@ begin;
 do $h$
 declare
   ua uuid; ub uuid; v_res uuid; v_upd uuid;
-  v_total int; v_shared int; v_anon int; v_n int; v_cols text;
+  v_role uuid; v_total int; v_shared int; v_anon int; v_n int; v_cols text;
 begin
   select user_id into ua from user_roles where archived_at is null order by user_id limit 1;
   select user_id into ub from user_roles where archived_at is null and user_id <> ua order by user_id limit 1;
-  update user_roles set role_id = (select id from roles where key = 'volunteer') where user_id = ua;
-  update user_roles set role_id = (select id from roles where key = 'management') where user_id = ub;
+  -- Fixtures by card, not role (rolled back): ua holds exactly the Assistant card (assistant.ask, no assistant.record), ub is Admin,
+  -- which sits outside the card system and so can still record a confirmed action.
+  delete from user_roles where user_id in (ua, ub);
+  insert into roles (key, name, kind, home_path) values ('harness_asker', 'Harness: assistant', 'custom', '/home') returning id into v_role;
+  insert into role_cards (role_id, card) values (v_role, 'assistant');
+  insert into user_roles (user_id, role_id) values (ua, v_role);
+  insert into user_roles (user_id, role_id) select ub, id from roles where key = 'admin';
 
-  -- A1. nothing existing is publishable: count rows, rows ticked, rows anon sees
+  -- A1. anon sees no more than what was ticked for sharing. (It once asserted that NOTHING was shared, which was true only on the day 0214
+  -- landed; staff have since ticked real stories on dev, so the standing invariant is anon <= shared.)
   select count(*) into v_total from adoption_updates;
   select count(*) into v_shared from adoption_updates where share_publicly;
   set local role anon;
   select count(*) into v_anon from public_adoption_updates;
   reset role;
-  if v_shared <> 0 or v_anon <> 0 then raise exception 'FAIL A1 shared %, anon sees %', v_shared, v_anon; end if;
+  if v_anon > v_shared then raise exception 'FAIL A1 shared %, anon sees %', v_shared, v_anon; end if;
 
   -- A2. a fresh update defaults to not shared and stays invisible to anon even with photo + words
   select r.id into v_res from residents r
@@ -75,13 +81,13 @@ begin
   set local role authenticated;
   insert into assistant_actions (user_id, request_text, status) values (ua, 'delete rex', 'refused');
   begin insert into assistant_actions (user_id, request_text, status) values (ua, 'x', 'confirmed');
-    raise exception 'FAIL B1 volunteer inserted confirmed';
+    raise exception 'FAIL B1 a login holding only Assistant inserted confirmed';
   exception when insufficient_privilege then null; end;
   begin insert into assistant_actions (user_id, request_text, status) values (ub, 'x', 'refused');
-    raise exception 'FAIL B2 volunteer inserted for someone else';
+    raise exception 'FAIL B2 a login holding only Assistant inserted for someone else';
   exception when insufficient_privilege then null; end;
   select count(*) into v_n from assistant_actions;
-  if v_n <> 0 then raise exception 'FAIL B3 volunteer reads % rows', v_n; end if;
+  if v_n <> 0 then raise exception 'FAIL B3 a login holding only Assistant reads % rows', v_n; end if;
   reset role;
 
   perform set_config('request.jwt.claims', json_build_object('sub', ub, 'role', 'authenticated')::text, true);
@@ -89,7 +95,7 @@ begin
   insert into assistant_actions (user_id, request_text, status) values (ub, 'x', 'confirmed');
   reset role;
 
-  raise exception 'HARNESS-OK existing rows % ticked 0 anon 0; fresh default false; ticked shows 2 photos (Medical excluded) with columns %; non-public resident hidden; surname refused; volunteer: refused own ok, confirmed refused, other-user refused, reads 0; management confirmed still ok', v_total, v_cols;
+  raise exception 'HARNESS-OK existing rows %, anon sees no more than are ticked; fresh default false; ticked shows 2 photos (Medical excluded) with columns %; non-public resident hidden; surname refused; Assistant card alone: refused own ok, confirmed refused, other-user refused, reads 0; Admin confirmed still ok', v_total, v_cols;
 end
 $h$;
 rollback;
