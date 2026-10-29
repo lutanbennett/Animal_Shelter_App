@@ -47,3 +47,16 @@ No migration, nothing under `src/lib/permissions/` or `supabase/migrations/`, `d
 untouched. The six diet harnesses, the `doctor-*` and `clinics-readonly` rows, `check-who-does-what`,
 `check-menu-coverage` and `doctor-cells` were not touched and not counted. No security is keyed to anything
 but a card: every restated login holds exactly named cards and Admin is used only as Admin.
+
+## `phone-width`: long, not red, and deliberately not card-shaped
+
+- **It runs correctly against a live server.** Narrowed run completed: `--roles=admin --locales=en --pages=/clinics,/enclosures,/residents,/home`
+  (3 pages measured, `/home` skipped as a redirect to `/admin`; 184 actions measured; no sideways scroll, every action at least 44 px).
+- **The FULL matrix was not run.** 7 roles x 2 locales x about 119 pages is about 1,666 page views plus the public pass. It is deliberately out of
+  `gates.mjs` and CI (`2026-10-05-phone-width-check.md`); a full run belongs in the release smoke test, not a fair-count sweep. A wide run stopped by hand
+  after about 85 minutes produced no result, and an earlier 170 s sweep timeout was slow, not red. The script collects results and prints only at the end,
+  so a long run is silent and looks like a hang (a tooling fault the planner is filing; not fixed here).
+- **Do not restate it per card.** The roles in this script are not deciding access; they are a cheap way to sample seven different page sets to measure
+  layout, which `CLAUDE.md` puts outside the card rule ("does it only decide layout or ordering? Then it is not security"). Per card would be 40 cards x 2
+  locales x 119 pages, over 9,500 page views.
+- **Clean-up:** `node scripts/check-phone-width.mjs --clean` was run after the killed runs, removing the `ZZ Width …` rows and `phonewidth-…` logins. `dev-signin.mjs --remove` was never run.
