@@ -27,7 +27,12 @@ Batch-7 triage marked these twelve `?` ("classified from the first error line on
 
 ## Found, not fixed
 
-- `roles.scope_residents` still decides which resident rows a login reads (`may_open_resident_record`, 0249). It is a role column granting
-  access; it belongs in `docs/hard-coded-security-registry.json` if it is not already there.
+- SUPERSEDED 2026-10-29: the next bullet is WRONG, kept so the reasoning still reads. `0264` (2026-10-25) dropped `may_open_resident_record()` and the column
+  `roles.scope_residents` (its sections 5 and 6), and dropped the clinic-scoped `doctor_read_residents` policy; the registry already records them as no longer
+  existing, and `check-no-role-column-security.mjs` is clean on test and production. The stream read `0249`, superseded twice. What governs the resident row now is
+  `residents_select_perm`, which asks only `has_permission('resident.record','read')` (0264): a card, with no clinic narrowing. Do NOT add the column to the registry.
+  The removed card-taps principal is correctly absent for that reason (the behaviour is gone), now written in the check.
+- ~~`roles.scope_residents` still decides which resident rows a login reads (`may_open_resident_record`, 0249). It is a role column granting
+  access; it belongs in `docs/hard-coded-security-registry.json` if it is not already there.~~
 - `check-photo-approval` and `check-daily-count` still lean on nothing role-named I changed; `check-daily-count` needs the data fix above.
 - `scripts/lib/` untouched.

@@ -8,7 +8,7 @@
 //
 // WHAT THIS ASSERTS (and what it does not), per principal, each defined by the CARDS it holds: signed out, public_viewer, Admin,
 // a login whose role holds no card, one holding only a who-and-where card (Enclosures), and one holding View residents.
-// (Doctor-outside-their-clinic left the list: that is the roles.scope_residents column, not a card.)
+// (Doctor-outside-their-clinic is not a principal: no card or policy narrows the resident row by clinic any more; see below.)
 //   1. the public card (public_resident_cards) answers with a row for every one of them: the
 //      floor nobody falls below, so the page never 404s on a resident that exists
 //   2. the landing, from src/lib/residents/card-landing.ts fed the inputs the page reads from
@@ -33,8 +33,11 @@ const { cardLanding } = await import(pathToFileURL(join(root, "src/lib/residents
 
 const lit = (id) => `'${id}'::uuid`;
 // Principals are defined by the CARDS they hold, never by a role: a role is a transient grouping that gets rebuilt (Lutan, 2026-10-28).
-// A doctor outside the treating clinic used to be a principal here; that row rule is the roles.scope_residents column (0249
-// may_open_resident_record), not a card, so it is not asserted (a harness never asserts a role column is consulted).
+// A doctor outside the treating clinic is deliberately NOT a principal, and the reason is that the behaviour is gone, not that a
+// column is: 0264 dropped the clinic-scoped doctor_read_residents policy, may_open_resident_record() and roles.scope_residents, and
+// residents_select_perm now asks only has_permission('resident.record', 'read'). So any login holding that card reads every
+// resident row, whatever clinic it works in; the reads_record principal below is that case. Restore a principal here only if a card
+// that narrows the row set is ever built (backlog: scoped card grants).
 // Each login below is given a throwaway role holding exactly the cards named, inside the rolled-back transaction.
 const CARDS_OF = {
   no_cards: [],                     // signed in, a role holding no card: not in the app
