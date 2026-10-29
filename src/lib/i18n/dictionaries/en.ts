@@ -3919,7 +3919,7 @@ const en = {
     diets: {
       title: "Diet stock",
       subtitle:
-        "How much of each food is in the cupboard, what it costs and when to reorder, with what the residents living at the shelter will eat. Count it, price it, set when to reorder. The food list itself — names, units, the daily amount for each size — is under Settings → Diets.",
+        "How much of each food is in the cupboard, what it costs and when to reorder, with what the residents living at the shelter will eat. The food list itself — names, units, the daily amount for each size — is under Settings → Diets.",
       settingsLink: "Names and units",
       stockCard: {
         unit: (unit: string) => `Measured in ${unit}`,
@@ -3992,7 +3992,7 @@ const en = {
     medications: {
       title: "Medication stock",
       subtitle:
-        "How much of each medicine is in the cupboard, what it costs and when to reorder, with what the prescriptions will use. Count it, price it, set when to reorder, add a photo of the label. The medication list itself — names, units, merging duplicates — is under Settings → Medications.",
+        "How much of each medicine is in the cupboard, what it costs and when to reorder, with what the prescriptions will use. The medication list itself — names, units, merging duplicates — is under Settings → Medications.",
       settingsLink: "Names and units",
       stockCard: {
         unit: (unit: string) => `Measured in ${unit}`,
