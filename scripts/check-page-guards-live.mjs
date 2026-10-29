@@ -3,14 +3,14 @@
 //   node scripts/worktree.mjs dev                 (in another terminal)
 //   node scripts/check-page-guards-live.mjs
 //
-// Makes throwaway logins (volunteer, Head of Medical, management) and one throwaway configured role that opens the
-// app, holds one unrelated cell and no resident.record, and does not answer 'volunteer' (legacy management): the role
-// the hub's guard exists for, which no live role is today. All are deleted at the end, whatever happened.
-//   edit pages   a Read-only holder (Head of Medical on diets, 0140) is refused; management opens each with its form
-//   hub          volunteer and Head of Medical still reach /r/ (the redirect runs first); the no-record role is
-//                refused; management opens it
-// It also prints what RLS returns a volunteer and the Head of Medical for each row, which is what says the old pages
-// were a wrong door rather than a leak: they render only what the login's own client reads. Exits 0 when all held.
+// Makes throwaway logins that each hold exactly one card (Manage medical, View medical, Food forecast), through
+// giveCards, and deletes them and their throwaway roles at the end, whatever happened.
+//   edit pages   a read-only holder (View medical) is refused; Manage medical opens each with its form
+//   hub          View medical reaches the hub or its card; a login with no resident.record is refused;
+//                Manage medical opens it
+// It also prints what RLS returns the read-only login for each row, which is what says the old pages were a wrong
+// door rather than a leak: they render only what the login's own client reads. Exits 0 when all held.
+// Restated by card 2026-10-29: it used to sign in as the volunteer, Head of Medical and management roles.
 import { randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -18,6 +18,7 @@ import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { exitWith } from "./lib/exit.mjs";
+import { giveCards } from "./lib/user-role.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -70,68 +71,52 @@ const RES = W.resident_id;
 const EDIT = { weight: `/weight/${W.id}/edit`, prescriptions: `/prescriptions/${P.id}/edit`, diets: `/diets/${D.id}/edit`, "clinic-visits": `/clinic-visits/${V.id}/edit` };
 
 const made = [];
-let customRoleId = null;
+const cleanups = [];
+// Logins are built from CARDS, not roles (a role is a transient grouping that gets rebuilt):
+//   editor    Manage medical    edits weight, prescriptions, diets and visits, and reads the resident record
+//   reader    View medical      reads the same, edits none of it
+//   norecord  Food forecast     opens the app, holds one unrelated card and no resident.record
+const LOGINS = { editor: ["medical_records"], reader: ["view_medical"], norecord: ["food_forecast"] };
 try {
-  // A configured role that opens the app, holds one unrelated cell and no resident.record,
-  // and is not on the volunteer floor (scope_residents stays all).
-  const { data: role, error: rErr } = await service.from("roles").insert({
-    key: `harness_norecord_${tag}`, name: `Harness no record ${tag}`, kind: "custom", home_path: "/home",
-  }).select("id").single();
-  if (rErr) throw rErr;
-  customRoleId = role.id;
-  const { error: cErr } = await service.from("role_permissions").insert({ role_id: customRoleId, activity: "stock.count", level: 2 });
-  if (cErr) throw cErr;
-
   const who = {};
-  for (const r of ["volunteer", "head_of_medical", "management", "norecord"]) {
+  for (const [r, cards] of Object.entries(LOGINS)) {
     const email = `harness-guard-${r}-${tag}@example.invalid`;
     const { data, error } = await service.auth.admin.createUser({ email, password, email_confirm: true });
     if (error) throw error;
     made.push(data.user.id);
-    const row = r === "norecord"
-      ? { user_id: data.user.id, role_id: customRoleId }
-      : r === "head_of_medical"
-        ? await service.from("roles").select("id").eq("key", r).single().then(({ data: x }) => ({ user_id: data.user.id, role_id: x.id }))
-        : await service.from("roles").select("id").eq("key", r).single().then(({ data: x }) => ({ user_id: data.user.id, role_id: x.id }));
-    const { error: urErr } = await service.from("user_roles").insert(row);
-    if (urErr) throw urErr;
+    const { error: gErr, cleanup } = await giveCards(service, data.user.id, cards);
+    cleanups.push(cleanup);
+    if (gErr) throw gErr;
     who[r] = await signIn(email);
   }
 
   console.log("What RLS returns each login for the sample rows");
-  for (const as of ["volunteer", "head_of_medical"]) for (const [t, id] of [["weight", W.id], ["prescriptions", P.id], ["resident_diets", D.id], ["clinic_visits", V.id], ["residents", RES]]) {
+  for (const as of ["reader"]) for (const [t, id] of [["weight", W.id], ["prescriptions", P.id], ["resident_diets", D.id], ["clinic_visits", V.id], ["residents", RES]]) {
     const { data, error } = await who[as].db.from(t).select("id").eq("id", id);
     console.log(`  ${as} select ${t} by id: ${error ? `error ${error.message}` : `${data.length} row(s)`}`);
   }
 
   console.log("Task 1: the four edit pages");
   for (const [k, path] of Object.entries(EDIT)) {
-    const v = await page(path, who.volunteer.cookie);
-    expect(v.loc === "/no-access", `volunteer ${k} edit is refused (${show(v)})`);
-    const m = await page(path, who.management.cookie);
-    expect(m.status === 200 && hasForm(m), `management ${k} edit opens with its form (${show(m)})`);
+    const v = await page(path, who.reader.cookie);
+    expect(v.loc === "/no-access", `a read-only (View medical) login is refused the ${k} edit (${show(v)})`);
+    const m = await page(path, who.editor.cookie);
+    expect(m.status === 200 && hasForm(m), `a Manage medical login opens the ${k} edit with its form (${show(m)})`);
   }
-  const hd = await page(EDIT.diets, who.head_of_medical.cookie);
-  expect(hd.loc === "/no-access", `Head of Medical diets edit is refused (${show(hd)})`);
-  const hp = await page(EDIT.prescriptions, who.head_of_medical.cookie);
-  expect(hp.loc === "/no-access", `Head of Medical prescriptions edit is refused (${show(hp)})`);
-
   console.log("Task 2: the record hub");
-  const vh = await page(`/residents/${RES}`, who.volunteer.cookie);
-  expect(vh.loc === `/r/${RES}`, `volunteer is still sent to the card (${show(vh)})`);
-  const hh = await page(`/residents/${RES}`, who.head_of_medical.cookie);
-  expect(hh.loc === `/r/${RES}`, `Head of Medical (answers volunteer) is sent to the card (${show(hh)})`);
+  const rh = await page(`/residents/${RES}`, who.reader.cookie);
+  expect(rh.status === 200 && !rh.nf && rh.loc !== "/no-access", `a View medical login opens the hub or its card (${show(rh)})`);
   const nh = await page(`/residents/${RES}`, who.norecord.cookie);
-  expect(nh.loc === "/no-access", `a configured role with no resident.record is refused (${show(nh)})`);
-  const mh = await page(`/residents/${RES}`, who.management.cookie);
-  expect(mh.status === 200 && !mh.loc && !mh.nf, `management opens the hub (${show(mh)})`);
+  expect(nh.loc === "/no-access", `a login with no resident.record is refused (${show(nh)})`);
+  const mh = await page(`/residents/${RES}`, who.editor.cookie);
+  expect(mh.status === 200 && !mh.loc && !mh.nf, `a Manage medical login opens the hub (${show(mh)})`);
 } finally {
   for (const id of made) {
     const { error } = await service.auth.admin.deleteUser(id);
     if (error) console.error(`  could not delete ${id}: ${error.message}`);
   }
-  if (customRoleId) await service.from("roles").delete().eq("id", customRoleId);
-  console.log(`  deleted ${made.length} throwaway login(s) and the harness role`);
+  for (const c of cleanups) await c();
+  console.log(`  deleted ${made.length} throwaway login(s) and the harness role(s)`);
 }
 console.log(fails.length ? `\n${fails.length} FAILED` : "\nall held");
 await exitWith(fails.length ? 1 : 0);

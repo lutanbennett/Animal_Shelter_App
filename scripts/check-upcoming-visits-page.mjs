@@ -16,7 +16,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { giveRole } from "./lib/user-role.mjs";
+import { giveCards } from "./lib/user-role.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -58,13 +58,16 @@ const editIds = (html) =>
   new Set([...html.matchAll(/href="\/clinic-visits\/([0-9a-f-]{36})\/edit"/g)].map((m) => m[1]));
 
 const made = [];
-async function login(roleKey) {
-  const email = `harness-vetvisits-${roleKey ?? "none"}-${tag}@example.invalid`;
+const cleanups = [];
+/** A login holding exactly these cards (null: a login with no role at all). */
+async function login(cards) {
+  const email = `harness-vetvisits-${cards ? cards.join("-") : "none"}-${tag}@example.invalid`;
   const { data, error } = await service.auth.admin.createUser({ email, password, email_confirm: true });
   if (error) throw error;
   made.push(data.user.id);
-  if (roleKey) {
-    const { error: roleError } = await giveRole(service, data.user.id, roleKey);
+  if (cards) {
+    const { error: roleError, cleanup } = await giveCards(service, data.user.id, cards);
+    cleanups.push(cleanup);
     if (roleError) throw roleError;
   }
   return signInCookies(email);
@@ -80,15 +83,17 @@ try {
   const expected = new Set(scheduled.map((r) => r.id));
   console.log(`  dev has ${expected.size} scheduled, unarchived visit(s)`);
 
-  const mgmt = await page("/upcoming-visits", await login("management"));
-  expect(mgmt.status === 200, `management opens /upcoming-visits (${mgmt.status}${mgmt.location ? ` → ${mgmt.location}` : ""})`);
+  const mgmt = await page("/upcoming-visits", await login(["book_clinic_visits"]));
+  expect(mgmt.status === 200, `a login holding only Book clinic visits opens /upcoming-visits (${mgmt.status}${mgmt.location ? ` → ${mgmt.location}` : ""})`);
   const shown = editIds(mgmt.html);
   expect(shown.size === expected.size, `page shows ${shown.size} visits, the table has ${expected.size} (exact)`);
   expect([...expected].every((id) => shown.has(id)), "every scheduled visit in the table is on the page");
   expect([...shown].every((id) => expected.has(id)), "nothing on the page is outside the table's scheduled set");
 
-  for (const roleKey of ["doctor", "public_viewer", null]) {
-    const res = await page("/upcoming-visits", await login(roleKey));
+  // Not the Book clinic visits card: View residents alone, and no card at all.
+  for (const cards of [["view_residents"], null]) {
+    const roleKey = cards ? cards.join("+") : null;
+    const res = await page("/upcoming-visits", await login(cards));
     const refused = res.status !== 200 || editIds(res.html).size === 0 && !res.html.includes("Every visit booked at every clinic");
     expect(refused, `${roleKey ?? "a login with no role"} does not get the page (${res.status}${res.location ? ` → ${res.location}` : ""})`);
     expect(editIds(res.html).size === 0, `${roleKey ?? "no role"}: no visit links in the response`);
@@ -98,6 +103,7 @@ try {
     const { error } = await service.auth.admin.deleteUser(id);
     if (error) console.error(`  could not delete ${id}: ${error.message}`);
   }
+  for (const c of cleanups) await c();
   console.log(`  deleted ${made.length} throwaway login(s)`);
 }
 

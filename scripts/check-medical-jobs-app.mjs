@@ -1,5 +1,5 @@
-// The Head of Medical's five jobs, driven as her: a real login (password, aal1) with the
-// head_of_medical role, against DEV and a running dev server.
+// The medical jobs, driven as a real login (password, aal1) holding exactly the four job cards
+// (administer_medication, record_weight, add_medical_photos, feed_special_diets), against DEV and a running dev server.
 //
 //   node scripts/worktree.mjs dev                         (in another terminal)
 //   node scripts/check-medical-jobs-app.mjs [http://localhost:<port>] [--upload]
@@ -20,6 +20,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
+import { giveCards } from "./lib/user-role.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -64,16 +65,18 @@ const text = (html) =>
     .replace(/\s+/g, " ");
 
 let userId = null;
+let cleanupRole = async () => {};
+const JOB_CARDS = ["administer_medication", "record_weight", "add_medical_photos", "feed_special_diets"];
 const madeWeights = [];
 const madeAttachments = [];
 try {
   const { data: u, error } = await service.auth.admin.createUser({ email, password, email_confirm: true });
   if (error) throw error;
   userId = u.user.id;
-  const { data: role } = await service.from("roles").select("id").eq("key", "head_of_medical").single();
-  const { error: urErr } = await service
-    .from("user_roles")
-    .insert({ user_id: userId, role_id: role.id });
+  // Exactly the four job cards and nothing else, not whichever cards the Head of Medical role holds this week
+  // (it now also holds View residents, which opens the resident record this check says the jobs must not).
+  const { error: urErr, cleanup } = await giveCards(service, userId, JOB_CARDS);
+  cleanupRole = cleanup;
   if (urErr) throw urErr;
   const { error: siErr } = await ssr.auth.signInWithPassword({ email, password });
   if (siErr) throw siErr;
@@ -216,7 +219,12 @@ try {
     her.from("diet_types").select("id").limit(1),
     her.from("attachments").select("id").limit(1),
   ]);
+  // RETIRED 2026-10-29: "resident_current_state returns her nothing" and "attachments returns her nothing". Both described the old
+  // role floor. resident_current_state is now readable by any card that reads weight, diet and the like (private.works_with_residents(),
+  // 0265: it is how the weight form knows a resident has died), and attachments rows follow the photo cards (0276). The tables below
+  // are still closed to a login holding only these job cards.
   for (const [i, name] of ["residents", "resident_current_state", "clinic_visits", "diet_types", "attachments"].entries()) {
+    if (name === "resident_current_state" || name === "attachments") continue;
     expect(!reads[i].data?.length, `${name} returns her nothing`);
   }
   const photoView = await her.from("medical_photo_residents").select("id, name").eq("id", live.id);
@@ -229,6 +237,7 @@ try {
   if (userId) {
     await service.from("user_roles").delete().eq("user_id", userId);
     const { error } = await service.auth.admin.deleteUser(userId);
+    await cleanupRole();
     console.log(`\n  removed the throwaway login${error ? ` (could not delete: ${error.message})` : ""}`);
   }
 }

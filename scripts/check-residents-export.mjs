@@ -20,7 +20,7 @@ import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright-core";
-import { giveRole } from "./lib/user-role.mjs";
+import { giveCards, giveRole } from "./lib/user-role.mjs";
 import { exitWith } from "./lib/exit.mjs";
 
 const root = process.cwd();
@@ -37,7 +37,7 @@ const service = createClient(supaUrl, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { a
 
 const tag = randomBytes(4).toString("hex");
 const NAME = `ZZ Export ${tag}`;
-const made = { users: [], seed: [] };
+const made = { users: [], seed: [], roleCleanups: [] };
 
 function bail(message) {
   console.error(`check-residents-export: ${message}`);
@@ -65,7 +65,8 @@ let exitCode = 0;
 try {
   const ids = await seed();
   const admin = await account("admin");
-  const volunteer = await account("volunteer");
+  // A login holding exactly View residents (who and where), not a named role.
+  const volunteer = await account(["view_residents"]);
   await run(ids, admin, volunteer);
   exitCode = failures ? 1 : 0;
 } catch (error) {
@@ -114,18 +115,22 @@ async function seed() {
   await insert("clinic_visits", { resident_id: cooper.id, clinic_id: clinic.id, appointment_date: future, status: "scheduled" });
   await insert("weight", { resident_id: cooper.id, date: "2026-02-01", weight_kg: 17.5 });
   await insert("weight", { resident_id: cooper.id, date: today, weight_kg: 18.25 });
-  const diet = await insert("diet_types", { name: `${NAME} Diet`, daily_qty_small: 100, daily_qty_medium: 200, daily_qty_large: 300 });
-  await insert("resident_diets", { resident_id: cooper.id, diet_type_id: diet.id, start_date: "2026-01-01" });
+  // Diets are their own table now (the export reads resident_diets → diets(name)); diet_types is the food stock.
+  const diet = await insert("diets", { name: `${NAME} Diet` });
+  await insert("resident_diets", { resident_id: cooper.id, diet_id: diet.id, start_date: "2026-01-01" });
   return { cooper: cooper.id, plain: plain.id };
 }
 
 async function account(role) {
+  const cards = Array.isArray(role) ? role : null;
+  if (cards) role = cards.join("-");
   const email = `resexport-${role}-${tag}@example.invalid`;
   const password = randomBytes(18).toString("base64url");
   const { data, error } = await service.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: `Export ${role}` } });
   if (error) throw new Error(`creating the ${role} login: ${error.message}`);
   made.users.push(data.user.id);
-  const { error: roleError } = await giveRole(service, data.user.id, role);
+  const { error: roleError, cleanup: undoCards } = cards ? await giveCards(service, data.user.id, cards) : await giveRole(service, data.user.id, role);
+  if (undoCards) made.roleCleanups.push(undoCards);
   if (roleError) throw new Error(`giving the ${role} login its role: ${roleError.message}`);
 
   const jar = new Map();
@@ -204,17 +209,19 @@ async function run(ids, adminCookie, volunteerCookie) {
   const oddBody = parse(odd.text.replace(/^﻿/, "")).filter((r) => r.length > 1).slice(1);
   check("a malformed id is ignored, the good one kept", oddBody.length === 1 && oddBody[0][col("Name")]?.includes("HYPERLINK"), `${oddBody.length} rows`);
 
-  console.log("volunteer, who and where only:");
+  console.log("a login holding only View residents:");
   const vol = await download(volunteerCookie, search);
   check("answers 200", vol.status === 200, `${vol.status} ${vol.location}`);
   const volRows = parse(vol.text.replace(/^﻿/, "")).filter((r) => r.length > 1);
   const volHeader = volRows[0] ?? [];
-  const forbidden = ["Other names", "Breed", "Age", "Estimated birth year", "Size", "Colour", "Microchipped", "Intake date", "Ready for adoption", "Prescriptions running today", "Next clinic visit", "Next visit clinic", "Current diet", "Latest weight (kg)", "Latest weight date"];
-  check("the header is exactly who and where", volHeader.join("|") === "R-code|Name|Thai name|Species|Sex|Zone|Enclosure|Status|Place", volHeader.join("|"));
-  check("no column a volunteer cannot read, blank or otherwise", forbidden.every((h) => !volHeader.includes(h)));
+  // Restated 2026-10-29 by card. A login holding exactly View residents reads the resident's record columns; each medical
+  // group (prescriptions, visits, diet, weight) stays behind its own card (exportScope), so those are what must be absent.
+  const medicalColumns = ["Prescriptions running today", "Next clinic visit", "Next visit clinic", "Current diet", "Latest weight (kg)", "Latest weight date"];
+  check("the header is the record columns and no medical group", volHeader.join("|") === header.filter((h) => !medicalColumns.includes(h)).join("|"), volHeader.join("|"));
+  check("no medical column, blank or otherwise", medicalColumns.every((h) => !volHeader.includes(h)));
   const volCooper = volRows.find((r) => r[1]?.endsWith("Cooper"));
-  check("the volunteer's Thai name and place are there", volCooper?.[2] === "คูเปอร์" && volCooper?.[6] === `${NAME} Pen`, volCooper?.join("|"));
-  check("none of the medical values leak into a volunteer's file", !/Brindle|Thai Ridgeback|18\.25/.test(vol.text));
+  check("the Thai name and place are there", volCooper?.[volHeader.indexOf("Thai name")] === "คูเปอร์" && volCooper?.[volHeader.indexOf("Enclosure")] === `${NAME} Pen`, volCooper?.join("|"));
+  check("none of the medical values leak into the file", !vol.text.includes("18.25") && !vol.text.includes(`${NAME} Diet`) && !vol.text.includes(`${NAME} Clinic`));
 
   await clickThrough(adminCookie, ids, search);
 
@@ -238,6 +245,7 @@ async function cleanup() {
     const { error } = await service.auth.admin.deleteUser(id);
     if (error) console.warn(`  cleanup: could not delete login ${id}: ${error.message}`);
   }
+  for (const undo of made.roleCleanups) await undo();
 }
 
 /** --clean: everything a run made carries "ZZ Export" or "resexport-", so a killed run can be swept. */
@@ -248,7 +256,7 @@ async function sweep() {
       await service.from(table).delete().eq("resident_id", id);
     }
   }
-  for (const [table, column] of [["residents", "name"], ["diet_types", "name"], ["medication", "name"], ["clinics", "name"], ["enclosures", "name"], ["zones", "name"]]) {
+  for (const [table, column] of [["residents", "name"], ["diets", "name"], ["medication", "name"], ["clinics", "name"], ["enclosures", "name"], ["zones", "name"]]) {
     const { data, error } = await service.from(table).delete().like(column, "%ZZ Export %").select("id");
     console.log(`  ${table}: ${error ? error.message : `${data.length} removed`}`);
   }

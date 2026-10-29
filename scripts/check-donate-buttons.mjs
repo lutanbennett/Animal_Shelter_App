@@ -114,11 +114,12 @@ try {
 
   // The public page, as a signed-in reader (the dev site is closed to visitors).
   const donate = await page("/donate", admin.cookie);
-  const hrefOf = (label) => new RegExp(`href="([^"]+)"[^>]*>[^<]*${label}`).exec(donate.html)?.[1];
+  // The button text is the fixed "Give via …" phrase for its way (DonateWays.tsx), not the label, so look for the link itself.
+  const hasLink = (href) => donate.html.includes(`href="${href}"`);
   expect(donate.status === 200, `/donate opens (${donate.status})`);
-  expect(hrefOf(`Harness PayPal ${tag}`)?.startsWith("https://www.paypal.com/"), "the PayPal button points at paypal.com");
-  expect(hrefOf(`Harness DonorBox ${tag}`) === "https://donorbox.org/harness", "the DonorBox button points at donorbox.org");
-  expect(hrefOf(`Harness Wise ${tag}`) === "https://wise.com/pay/me/harness", "the Wise button points at wise.com");
+  expect(hasLink("https://www.paypal.com/donate/?hosted_button_id=HARNESS"), "the PayPal button points at paypal.com");
+  expect(hasLink("https://donorbox.org/harness"), "the DonorBox button points at donorbox.org");
+  expect(hasLink("https://wise.com/pay/me/harness"), "the Wise button points at wise.com");
   expect(donate.html.includes(`99-${tag}-77`), "the bank card shows the account number");
   expect(donate.html.includes('target="_blank"') && donate.html.includes("noopener"), "buttons open in a new tab without handing over the opener");
   expect(!donate.html.includes(`Harness Hidden ${tag}`), "a hidden way is not on /donate");

@@ -96,6 +96,13 @@ await exitWith(exitCode);
 
 // ---------------------------------------------------------------------------------------------------------
 
+/** The create form lives in an "Add a person" modal now; open it unless it already is. */
+async function openAddPerson(page, label) {
+  if (await page.locator("select#role").count()) return;
+  await page.getByRole("button", { name: label }).first().click();
+  await page.locator("select#role").waitFor({ timeout: 30_000 });
+}
+
 async function run() {
   const roles = await rolesByKey();
   const adminCookies = await makeAdmin();
@@ -109,13 +116,22 @@ async function run() {
   // 1. The picker
   await page.goto(`${base}/admin/security`, { waitUntil: "networkidle" });
   check(new URL(page.url()).pathname === "/admin/security", "the test admin reaches Settings -> Security", page.url());
+  await openAddPerson(page, "Add person");
   const createOptions = await page.locator("select#role option").allTextContents();
-  check(JSON.stringify(createOptions) === JSON.stringify(EXPECTED_ORDER), "the create form offers every live role, in order", JSON.stringify(createOptions));
+  // Every live role in the roles table is offered, none twice, and the named ones keep the picker's order. The set is read
+  // from the database rather than listed here: other streams leave "Dev sign-in: …" roles on the shared dev project.
+  const offered = createOptions.filter((o) => o !== "Choose a role…");
+  const liveNames = Object.values(roles).filter((r) => r.key !== "staff").map((r) => r.name);
+  const missing = liveNames.filter((n) => !offered.includes(n));
+  const named = offered.filter((o) => EXPECTED_ORDER.includes(o));
+  check(missing.length === 0 && new Set(offered).size === offered.length, "the create form offers every live role, once each", JSON.stringify({ missing }));
+  check(JSON.stringify(named) === JSON.stringify(EXPECTED_ORDER.filter((o) => offered.includes(o))), "the named roles keep the picker's order", JSON.stringify(named));
   check(!createOptions.includes("Staff"), "Staff is not offered");
   await shot(page, "1-security-en");
 
   await context.addCookies([{ name: "locale", value: "th", url: base }]);
   await page.reload({ waitUntil: "networkidle" });
+  await openAddPerson(page, "เพิ่มคน");
   const thai = await page.locator("select#role option").allTextContents();
   for (const key of ["second_in_command", "head_of_maintenance", "head_of_medical"]) {
     check(thai.includes(roles[key].name_th), `in Thai, ${roles[key].name} reads ${roles[key].name_th}`, JSON.stringify(thai));
@@ -128,6 +144,7 @@ async function run() {
   const logins = [];
   for (const role of CONFIGURED) {
     const email = `rolepicker-${role.key.replace(/_/g, "-")}-${tag}@example.invalid`;
+    await openAddPerson(page, "Add person");
     const form = page.locator("form").filter({ has: page.locator("select#role") });
     await form.locator("#email").fill(email);
     await form.locator("#name").fill(`Role picker ${role.name}`);
@@ -148,32 +165,11 @@ async function run() {
     await page.reload({ waitUntil: "networkidle" });
   }
 
-  // 3. The users table names each by its own role
-  for (const login of logins) {
-    const shown = await selectedRoleInTable(page, login.email);
-    check(shown === login.name, `${login.name}: the users table shows "${login.name}"`, `shows "${shown}"`);
-  }
-  await page.locator("tr", { hasText: logins[0].email }).scrollIntoViewIfNeeded();
-  await shot(page, "3-users-table");
+  // RETIRED 2026-10-29: sections 3 and 4 (the users table names the configured role in a per-row <select>; changing the role there moves
+  // role_id both ways, through Doctor and Admin). Both drove a table of one-role-per-row with a role <select> in a <tr>. Since 0196 a login
+  // holds several roles and the table is a list with its own roles dialog, so that control is gone, not broken. Writing a role through the
+  // create form (section 2) is still checked, and Admin's two-step set-up is checked by the security harnesses.
 
-  // 4. Changing a role in the table keeps the pair in step, both ways
-  const medical = logins.find((l) => l.key === "head_of_medical");
-  // Through Doctor and Admin too: their special cases follow the role's key (the clinic box; 2-step set-up opened).
-  for (const to of ["management", "doctor", "admin", "head_of_medical"]) {
-    await page.locator("tr", { hasText: medical.email }).locator("select").first().selectOption(to);
-    await page.locator("tr", { hasText: medical.email }).locator("+ tr .text-success").waitFor({ timeout: 30_000 });
-    const row = await roleRow(medical.userId);
-    check(row.role_id === roles[to].id, `changed in the table to ${roles[to].name}: role_id is the ${to} row`, JSON.stringify(row));
-    await page.reload({ waitUntil: "networkidle" });
-    if (to === "doctor") {
-      const box = await page.locator("tr", { hasText: medical.email }).getByText("Not linked to a doctor").count();
-      check(box === 1, "as Doctor, the row shows its Doctor box (not linked yet)");
-    }
-    if (to === "admin") {
-      const { data } = await service.auth.admin.getUserById(medical.userId);
-      check(typeof data.user?.app_metadata?.two_step_setup_until === "string", "made Admin, the login's 2-step set-up is opened");
-    }
-  }
   check(consoleErrors.length === 0, "no browser console errors on Settings -> Security", consoleErrors.slice(0, 3).join(" | "));
   await context.close();
 

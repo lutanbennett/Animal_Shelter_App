@@ -16,7 +16,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { giveRole } from "./lib/user-role.mjs";
+import { giveCards, giveRole } from "./lib/user-role.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -90,6 +90,7 @@ const WINDOWS = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (K
 
 const made = [];
 const kept = {};
+const cleanups = [];
 try {
   const cookies = {};
   for (const role of ["admin", "management", "head_of_maintenance", "volunteer", "doctor"]) {
@@ -122,7 +123,8 @@ try {
   const staffHome = await page("/home/head_of_maintenance", cookies.admin.header, IPHONE);
   expect(staffHome.status === 200 && onHome(staffHome.html, "/maintenance"), "Admin sees the Head of Maintenance home, with Maintenance on it");
   const doctorHome = await page("/home/doctor", cookies.admin.header, IPHONE);
-  expect(doctorHome.status === 200 && onHome(doctorHome.html, "/appointments"), "Admin sees the doctor home, with Appointments on it");
+  // Status only: what the doctor home holds follows whichever cards Doctor has been given that week, so a tile is not asserted here.
+  expect(doctorHome.status === 200, `Admin opens the doctor home (${doctorHome.status})`);
   const noSuch = await page("/home/no_such_role", cookies.admin.header, IPHONE);
   expect(notFound(noSuch), `a role that does not exist is a 404 (${noSuch.status})`);
   const publicViewer = await page("/home/public_viewer", cookies.admin.header, IPHONE);
@@ -151,7 +153,18 @@ try {
   expect(v.status === 200 && onHome(v.html, "/residents") && onHome(v.html, "/enclosures"), `volunteer: Residents and Enclosures (${tilesIn(v.html).join(" ")})`);
   expect(!onHome(v.html, "/management/recurring-jobs"), "volunteer: not Management's pages");
   const vt = await page("/home", cookies.doctor.header, IPHONE);
-  expect(vt.status === 200 && onHome(vt.html, "/appointments"), `doctor: a home with Appointments on it (${tilesIn(vt.html).join(" ")})`);
+  expect(vt.status === 200 || goes(vt, "/no-access"), `doctor: opens its home or is told it has none (${vt.status} → ${vt.location})`);
+  // The card-shaped version of the old Appointments claim: a login holding exactly Book clinic visits has its page on the home.
+  const cardEmail = `harness-home-card-${tag}@example.invalid`;
+  const { data: cu, error: cuErr } = await service.auth.admin.createUser({ email: cardEmail, password, email_confirm: true });
+  if (cuErr) throw cuErr;
+  made.push(cu.user.id);
+  const { error: cardErr, cleanup } = await giveCards(service, cu.user.id, ["book_clinic_visits"]);
+  cleanups.push(cleanup);
+  if (cardErr) throw cardErr;
+  const cardCookies = await signInCookies(cardEmail);
+  const cardHome = await page("/home", cardCookies.header, IPHONE);
+  expect(cardHome.status === 200 && onHome(cardHome.html, "/upcoming-visits"), `exactly Book clinic visits: Upcoming visits on its home (${cardHome.status}; ${tilesIn(cardHome.html).join(" ")})`);
   const out = await page("/home", "", IPHONE);
   expect((out.location ?? "").startsWith("/login"), `signed out: sent to sign in (${out.status} → ${out.location})`);
 } finally {
@@ -163,6 +176,7 @@ try {
       const { error } = await service.auth.admin.deleteUser(id);
       if (error) console.error(`  could not delete ${id}: ${error.message}`);
     }
+    for (const c of cleanups) await c();
     console.log(`  deleted ${made.length} throwaway login(s)`);
   }
 }
