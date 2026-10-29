@@ -60,3 +60,6 @@ but a card: every restated login holds exactly named cards and Admin is used onl
   layout, which `CLAUDE.md` puts outside the card rule ("does it only decide layout or ordering? Then it is not security"). Per card would be 40 cards x 2
   locales x 119 pages, over 9,500 page views.
 - **Clean-up:** `node scripts/check-phone-width.mjs --clean` was run after the killed runs, removing the `ZZ Width …` rows and `phonewidth-…` logins. `dev-signin.mjs --remove` was never run.
+- **The earlier "no output" readings** (the 2026-10-28 sweep's 170 s timeout, and the wide run stopped here) were killed runs, not failures: the script
+  reports only at the end, a foreground command is capped at 10 minutes, and each page view costs about 6-8 s. `--pages` also leaves a floor of about 20
+  public-pass views. The planner has filed the end-only-reporting item on the backlog.
