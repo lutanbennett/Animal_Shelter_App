@@ -5045,7 +5045,7 @@ const en = {
       closed: "This record is closed, so no photo can be added here. Ask Management.",
       back: "Back to the list",
       count: (n: number) => (n === 1 ? "1 photo saved" : `${n} photos saved`),
-      noView: "This card adds photos but does not show them again. Anyone whose card shows the resident's record can see them on the resident's Photos page.",
+      noView: "This card adds photos but does not show them again. Anyone whose card shows Medical photos can see them on the resident's Photos page.",
       canView: "You can look at the photos again on the resident's Photos page.",
       errors: {
         notAuthorized: "You can't add photos.",

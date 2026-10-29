@@ -37,7 +37,7 @@ test("booking a vet visit from the hub asks the activity the booking page asks",
 
 test("the photos page asks the Medical read, and the uploader never promises a thumbnail without it", () => {
   const page = read("../app/residents/[id]/[section]/sections/photos.tsx");
-  assert.match(page, /const canReadMedical = can\(perms, "photos\.resident_medical"\);/);
+  assert.match(page, /const canReadMedical = can\(perms, "photos\.resident_medical", "read"\);/);
   assert.match(page, /canReadMedical \? allPhotos : .*isMedicalFolder/);
   assert.match(page, /canSeeMedical=\{canReadMedical\}/);
   const up = read("./PhotoUploader.tsx");

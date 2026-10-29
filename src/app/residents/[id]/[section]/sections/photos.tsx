@@ -20,7 +20,7 @@ export async function renderPhotosSection(ctx: SectionContext): Promise<React.Re
   ]);
   // The database already returns no Medical row to a login without this read (0276); the page asks the same activity
   // so nothing Medical is drawn, counted or left as an empty group for it.
-  const canReadMedical = can(perms, "photos.resident_medical");
+  const canReadMedical = can(perms, "photos.resident_medical", "read");
   const photos = canReadMedical ? allPhotos : (allPhotos ?? []).filter((p) => !isMedicalFolder(p.sub_folder));
   // Photos filed by a login that may not publish wait for one that does (0217); the approver can go straight to the queue.
   const waiting = (photos ?? []).filter((p) => p.approved_at === null).length;
