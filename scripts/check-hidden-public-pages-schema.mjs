@@ -23,17 +23,23 @@ ${migration}
 
 do $t$
 declare
-  v_admin uuid; v_mgmt uuid; v_vol uuid; n int; ok boolean;
+  v_admin uuid; v_mgmt uuid; v_vol uuid; v_role uuid; n int; ok boolean;
 begin
   insert into res select 'default_nonempty', count(*)::text from site_content where cardinality(hidden_public_pages) > 0;
   insert into res select 'rows', count(*)::text from site_content;
 
   select ur.user_id into v_admin from user_roles ur join roles r on r.id = ur.role_id where r.key = 'admin' and ur.archived_at is null limit 1;
-  select ur.user_id into v_mgmt from user_roles ur join roles r on r.id = ur.role_id where r.key = 'management' and ur.archived_at is null limit 1;
-  select ur.user_id into v_vol from user_roles ur join roles r on r.id = ur.role_id where r.key = 'volunteer' and ur.archived_at is null limit 1;
+  -- Card-shaped fixtures: one existing login, re-roled inside this rolled-back transaction, first to a throwaway role holding exactly
+  -- the Website card (website.content at edit), later to one holding only View residents. No role is named; nothing persists.
+  select ur.user_id into v_mgmt from user_roles ur join roles r on r.id = ur.role_id where r.key <> 'admin' and ur.archived_at is null limit 1;
+  v_vol := v_mgmt;
+  delete from user_roles where user_id = v_mgmt;
+  insert into roles (key, name, kind, home_path) values ('harness_site_editor', 'Harness: website', 'custom', '/home') returning id into v_role;
+  insert into role_cards (role_id, card) values (v_role, 'website');
+  insert into user_roles (user_id, role_id) values (v_mgmt, v_role);
   insert into res values ('have_users', (v_admin is not null)::text || '/' || (v_mgmt is not null)::text || '/' || (v_vol is not null)::text);
 
-  -- a website editor (Management has website.content) writes it, through RLS
+  -- a login holding the Website card (website.content at edit) writes it, through RLS
   if v_mgmt is not null then
     perform set_config('request.jwt.claims', json_build_object('sub', v_mgmt, 'role', 'authenticated', 'aal', 'aal1')::text, true);
     set local role authenticated;
@@ -47,8 +53,12 @@ begin
     -- reset above is the owner; undo its audit noise is unnecessary, the transaction rolls back
   end if;
 
-  -- someone who cannot edit the website changes nothing
+  -- a login whose only card is View residents (no website.content) changes nothing
   if v_vol is not null then
+    delete from user_roles where user_id = v_vol;
+    insert into roles (key, name, kind, home_path) values ('harness_site_reader', 'Harness: view residents', 'custom', '/home') returning id into v_role;
+    insert into role_cards (role_id, card) values (v_role, 'view_residents');
+    insert into user_roles (user_id, role_id) values (v_vol, v_role);
     perform set_config('request.jwt.claims', json_build_object('sub', v_vol, 'role', 'authenticated', 'aal', 'aal1')::text, true);
     set local role authenticated;
     update site_content set hidden_public_pages = array['page:foster'];
@@ -110,12 +120,12 @@ const check = (k, want, what) => {
 };
 check("default_nonempty", "0", "default hides nothing");
 check("rows", "1", "one settings row");
-console.log(`INFO  users admin/management/volunteer present: ${get("have_users")}`);
-check("editor_rows", "1", "a website editor (Management) can write it");
+console.log(`INFO  users admin/editor/reader present: ${get("have_users")}`);
+check("editor_rows", "1", "a login holding the Website card can write it");
 check("editor_value", "{page:desexing,section:services}", "the editor's value stuck");
 check("audit_rows", "1", "the change is audited with the editor as actor");
-check("volunteer_rows", "0", "a Volunteer cannot write it");
-check("volunteer_value", "{}", "the Volunteer's value did not stick");
+check("volunteer_rows", "0", "a login without website.content cannot write it");
+check("volunteer_value", "{}", "the value did not stick");
 for (const k of ["page:home", "page:privacy", "page:r", "page:e", "page:fostr", "foster"]) check(`refused_${k}`, "refused", `${k} refused by the database`);
 check("anon_view", "{page:desexing}", "signed-out read through public_site_content works");
 check("anon_base_rows", "denied", "signed-out read of site_content itself is denied");
