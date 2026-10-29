@@ -119,12 +119,12 @@ database; `lannacare.org` runs **production** (`dbkodyyxxhtygxcxmfcu`).
 
 ### Tested build
 
-- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — deferred: release manager
+- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time — deferred: release manager
 - [ ] Deployed SHA matches the tested SHA — deferred: release manager
 
 ### On the deployed build
 
-- [ ] Deployed to test: `npm run deploy:test` — deferred: release manager
+- [ ] Deployed to test: `npm run deploy:test` — deferred: release manager
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: release manager
 - [ ] **Timezone-sensitive behaviour proved, not observed at a convenient hour.** Workers run in UTC wherever they are, so any — deferred: release manager
   - *Does the logic handle the boundary?* Where the code lets an instant be injected, assert it rather than waiting for the clock: run the **real exported** function against fixed instants — both sides of 17:00Z, the 00:00 and 06:59 Thai ends of the broken window, month-end, year-end, a leap day — and then the same suite under `TZ=UTC`, which is the Workers case. Deterministic, and it does not depend on what hour you happened to be testing. Prefer this where it is available, and never re-type the logic into the test; a copy proves only that the copy works
@@ -137,14 +137,14 @@ database; `lannacare.org` runs **production** (`dbkodyyxxhtygxcxmfcu`).
 
 - [ ] `deploy: production → Supabase project <ref>` line read and the ref **matches production**. `scripts/lib/env.mjs` resolv — deferred: release manager
 - [ ] `strip-baked-env: removed N env var(s) from the Worker bundle` seen in the deploy output — deferred: release manager
-- [ ] Any new secret/env var exists in the production Cloudflare environment — deferred: release manager
+- [ ] Any new secret/env var exists in the production Cloudflare environment — deferred: release manager
 
 ### Migration ordering — *skip if no migration*
 
 - [ ] **Does this PR contain both a migration and code that reads it?** If yes, the production apply must happen *before* the  — deferred: release manager
 - [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — deferred: release manager
 - [ ] For a **destructive or rewriting** migration only: a production backup exists and is fresh. (Additive nullable columns d — deferred: release manager
-- [ ] Apply plan stated: which file, which project, and whether it runs before or after the deploy — deferred: release manager
+- [ ] Apply plan stated: which file, which project, and whether it runs before or after the deploy — deferred: release manager
 
 ### Rollback
 
@@ -199,34 +199,6 @@ Automated checks by: Claude  Date: 2026-10-29
 
 ### Manual verification
 
-The items in **Left for manual verification** above. Signed by the person who
-looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
-Three valid states:
-
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
-- `n/a: <reason>` — there was nothing to look at.
-- `pending: <what is outstanding>` — the work is done and something genuinely
-  needs a person who has not got to it yet. **This does not fail the check**
-  (changed 2026-09-24): it is the normal state for most of a PR's life, and a
-  check that is permanently red is one people learn to filter. The checker prints
-  *awaiting manual verification: <what>* and exits 0, so the outstanding item is
-  on the record without drowning the signal. What still fails is a plan that is
-  missing, incomplete or self-contradictory. Use `pending:` rather than reaching
-  for `n/a` — green is no longer something you have to buy, and an `n/a` over a
-  real outstanding item is a false assurance about the one thing you could not
-  verify. **Nothing ships on a `pending:`** — the release manager's pre-deploy
-  pass is what holds that line, not CI.
-
-`n/a:` and `pending:` take **no `Date:` segment** — there is no date to record, so
-write the line and stop. A trailing `Date: —` is accepted too, since existing
-plans use it. A bare *name* with no date is still rejected, which is what stops an
-empty signature quietly passing.
-
-A red `test-plan` that says what it is waiting for is a red people act on. An
-illegible one is a red people learn to ignore.
-
 - [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet; one item waits for production
 
 Manual verification by: pending: the one item under Left for manual verification
@@ -234,8 +206,8 @@ Manual verification by: pending: the one item under Left for manual verification
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — n/a: the PR body links it — deferred: release manager
-- [ ] Handed to the production release manager — n/a: through the release's PR list — deferred: release manager
+- [ ] Checklist pasted into the PR — n/a: the PR body links it
+- [ ] Handed to the production release manager — n/a: through the release's PR list
 
 Result: pass
 
