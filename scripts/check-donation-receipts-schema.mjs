@@ -1,10 +1,14 @@
-// 0168 (donation receipts) exercised on dev without keeping anything: assertions run under real
-// management, 2IC and anon sessions inside begin…, and a final raise rolls it all back, the
+// 0168 (donation receipts) exercised on dev without keeping anything: assertions run under a login holding the
+// donation.receipt cell, a login holding an unrelated cell, and anon, inside begin…, and a final raise rolls it all back, the
 // receipt counter included.
 //
 //   node scripts/check-donation-receipts-schema.mjs
 //
-// Covers: who writes (the donation.receipt cell: management yes, 2IC and anon no), the line
+// Restated 2026-10-29 (harness-restate-nine): the two logins were looked up by role key ('management',
+// 'second_in_command'), so the answer depended on which real login held which card that day. They are now
+// throwaway logins made here, holding exactly donation.receipt, or one unrelated cell (maintenance.photos).
+//
+// Covers: who writes (the donation.receipt cell: a holder yes, a login without it and anon no), the line
 // constraints (in kind is null, never 0), issuing takes consecutive numbers and a refused issue
 // does not advance the counter (no gaps), one live receipt per donation, a receipt cannot be
 // inserted directly, rewritten or deleted, a void needs a reason and cannot be undone, a re-issue
@@ -108,13 +112,20 @@ declare m uuid; s uuid; d uuid; d2 uuid; c0 bigint; n1 text; n2 text; n3 text; r
   th text := ('${want("TH")}'::jsonb)::text;
   us text := ('${want("US")}'::jsonb)::text;
 begin
-  select ur.user_id into m from user_roles ur join roles x on x.id = ur.role_id where x.key = 'management' and ur.archived_at is null limit 1;
-  select ur.user_id into s from user_roles ur join roles x on x.id = ur.role_id where x.key = 'second_in_command' and ur.archived_at is null limit 1;  -- the 2IC: Staff until 0173 retired it
+  m := gen_random_uuid(); s := gen_random_uuid();
+  insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+  select u, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-0168-' || u || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
+    from unnest(array[m, s]) u;
+  insert into roles (key, name, kind) values ('h0168_holder', 'h holder', 'custom'), ('h0168_other', 'h other', 'custom');
+  insert into role_permissions (role_id, activity, level) select roles.id, 'donation.receipt', 2 from roles where roles.key = 'h0168_holder';
+  insert into role_permissions (role_id, activity, level) select roles.id, 'maintenance.photos', 2 from roles where roles.key = 'h0168_other';
+  insert into user_roles (user_id, role_id) select m, roles.id from roles where roles.key = 'h0168_holder';
+  insert into user_roles (user_id, role_id) select s, roles.id from roles where roles.key = 'h0168_other';
   insert into r (label, got, want) values ('logins found', (m is not null and s is not null)::text, 'true');
   select next_value into c0 from receipt_counters where series = 'LCA';
 
-  insert into r (label, got, want) values ('mgmt records donation', pg_temp.try(m, $q$insert into donations (received_on, donor_name, method) values (current_date, 'Probe ผู้บริจาค จำกัด', 'cash')$q$)::text, '1');
-  insert into r (label, got, want) values ('2IC records donation', pg_temp.try(s, $q$insert into donations (received_on, donor_name, method) values (current_date, 'Staff probe', 'cash')$q$)::text, '-1');
+  insert into r (label, got, want) values ('holder records donation', pg_temp.try(m, $q$insert into donations (received_on, donor_name, method) values (current_date, 'Probe ผู้บริจาค จำกัด', 'cash')$q$)::text, '1');
+  insert into r (label, got, want) values ('no-cell login records donation', pg_temp.try(s, $q$insert into donations (received_on, donor_name, method) values (current_date, 'Staff probe', 'cash')$q$)::text, '-1');
   insert into r (label, got, want) values ('anon records donation', pg_temp.try(null, $q$insert into donations (received_on, donor_name, method) values (current_date, 'Anon', 'cash')$q$, 'anon')::text, '-1');
   insert into r (label, got, want) values ('bad method refused', pg_temp.try(m, $q$insert into donations (received_on, donor_name, method) values (current_date, 'X', 'crypto')$q$)::text, '-2');
   insert into r (label, got, want) values ('blank donor refused', pg_temp.try(m, $q$insert into donations (received_on, donor_name, method) values (current_date, '  ', 'cash')$q$)::text, '-2');
@@ -124,11 +135,11 @@ begin
   insert into r (label, got, want) values ('in-kind line, null amount', pg_temp.try(m, format($q$insert into donation_lines (donation_id, position, description) values (%L, 1, 'Blankets')$q$, d))::text, '1');
   insert into r (label, got, want) values ('zero amount refused', pg_temp.try(m, format($q$insert into donation_lines (donation_id, position, description, amount) values (%L, 2, 'Zero', 0)$q$, d))::text, '-2');
   insert into r (label, got, want) values ('amount keeps satang', (select amount from donation_lines where donation_id = d and position = 0)::text, '1200.50');
-  insert into r (label, got, want) values ('2IC reads donations', pg_temp.q(s, '(select count(*) from donations)'), '0');
+  insert into r (label, got, want) values ('no-cell login reads donations', pg_temp.q(s, '(select count(*) from donations)'), '0');
   insert into r (label, got, want) values ('anon reads donations', pg_temp.q(null, '(select count(*) from donations)', 'anon'), 'ERR:42501');
 
   n1 := pg_temp.q(m, format('(' || issue || ').number', d, 'TH'));
-  insert into r (label, got, want) values ('mgmt issues: the next number', n1, 'LCA' || lpad(c0::text, 7, '0'));
+  insert into r (label, got, want) values ('holder issues: the next number', n1, 'LCA' || lpad(c0::text, 7, '0'));
   insert into r (label, got, want) values ('issued_by from session', (select issued_by from donation_receipts where number = n1)::text, m::text);
   insert into r (label, got, want) values ('forged issuer ignored: TH receipt stores the real issuer', (select issuer::text from donation_receipts where number = n1), th);
   insert into r (label, got, want) values ('forged content ignored: the receipt says what the donation says', (select content::text from donation_receipts where number = n1), ${wantContent("Probe ผู้บริจาค จำกัด", [{ description: "Dog food", amount: "1200.50" }, { description: "Blankets", amount: null }])});
@@ -137,12 +148,12 @@ begin
   insert into r (label, got, want) values ('receipt_issuer(FR) refused', pg_temp.q(m, $q$receipt_issuer('FR')$q$), 'ERR:22023');
   insert into r (label, got, want) values ('second live receipt refused', pg_temp.q(m, format('(' || issue || ').number', d, 'TH')), 'ERR:23505');
   insert into r (label, got, want) values ('refused issue did not advance the counter', (select next_value from receipt_counters where series = 'LCA')::text, (c0 + 1)::text);
-  insert into r (label, got, want) values ('2IC issue refused', pg_temp.q(s, format('(' || issue || ').number', d, 'TH')), 'ERR:42501');
+  insert into r (label, got, want) values ('no-cell login issue refused', pg_temp.q(s, format('(' || issue || ').number', d, 'TH')), 'ERR:42501');
   insert into r (label, got, want) values ('bad country refused', pg_temp.q(m, format('(' || issue || ').number', d, 'FR')), 'ERR:23514');
   insert into r (label, got, want) values ('counter still unmoved', (select next_value from receipt_counters where series = 'LCA')::text, (c0 + 1)::text);
   insert into r (label, got, want) values ('direct insert refused', pg_temp.try(m, format($q$insert into donation_receipts (number, donation_id, country, issued_on, content, issuer) values ('LCA9999999', %L, 'TH', current_date, '{}', '{}')$q$, d))::text, '-1');
   insert into r (label, got, want) values ('content rewrite refused', pg_temp.try(m, format($q$update donation_receipts set content = '{"donorName":"Changed"}' where number = %L$q$, n1))::text, '-2');
-  insert into r (label, got, want) values ('mgmt delete refused (no grant)', pg_temp.try(m, format($q$delete from donation_receipts where number = %L$q$, n1))::text, '-1');
+  insert into r (label, got, want) values ('holder delete refused (no grant)', pg_temp.try(m, format($q$delete from donation_receipts where number = %L$q$, n1))::text, '-1');
   insert into r (label, got, want) values ('owner delete refused (trigger)', pg_temp.try(null, format($q$delete from donation_receipts where number = %L$q$, n1), 'postgres')::text, '-2');
   insert into r (label, got, want) values ('mark sent + drive id', pg_temp.try(m, format($q$update donation_receipts set sent_at = now(), drive_file_id = 'probe' where number = %L$q$, n1))::text, '1');
   insert into r (label, got, want) values ('void without reason refused', pg_temp.try(m, format($q$update donation_receipts set voided_at = now() where number = %L$q$, n1))::text, '-2');
@@ -185,7 +196,7 @@ ${c.lines.map(([desc, amt, pos]) => `  insert into donation_lines (donation_id, 
   .join("\n")}
   insert into r (label, got, want) values ('the linked contact is named otherwise', (cn is distinct from 'Probe typed name')::text, 'true');
   insert into r (label, got, want) values ('receipt_content of no donation is null', coalesce(pg_temp.q(m, $q$receipt_content(gen_random_uuid())$q$), 'null'), 'null');
-  insert into r (label, got, want) values ('2IC cannot read a donation through receipt_content', coalesce(pg_temp.q(s, format('receipt_content(%L)', d)), 'null'), 'null');
+  insert into r (label, got, want) values ('no-cell login cannot read a donation through receipt_content', coalesce(pg_temp.q(s, format('receipt_content(%L)', d)), 'null'), 'null');
   insert into r (label, got, want) values ('anon cannot call receipt_content', pg_temp.q(null, format('receipt_content(%L)', d), 'anon'), 'ERR:42501');
 
   -- Every real donation on dev, as it stands: what the database would store against what the app would send.
