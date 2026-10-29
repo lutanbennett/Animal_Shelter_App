@@ -871,6 +871,11 @@ front of the same function. Starting with it buys a caveat for nothing.
 Task B(a) asks for a check, not an assertion. Building it needs the catalogue
 file and the tables, which are the next stream's, so it is specified here.
 
+> **RETIRED 2026-10-29.** `scripts/check-permission-parity.mjs` no longer exists (it asked per-role
+> questions; `docs/decisions/2026-10-29-harness-restate-permission-checks.md`). What follows is the
+> original specification, kept as history. The per-card questions now live in `check-who-does-what.mjs`,
+> `check-menu-coverage.mjs` and, for the resident photo table, `check-photo-cards.mjs`.
+
 **`scripts/check-permission-parity.mjs`**, against the dev database, nothing
 committed, in the style of `check-role-write-policies.mjs`.
 
