@@ -11,7 +11,7 @@
 | PR | pending: opened after this commit |
 | Tested by / date | Claude, 2026-10-29 |
 | Carries a migration? | yes: `0281_vet_cards.sql` |
-| Tested at SHA | f934e0b0 |
+| Tested at SHA | a8b66e1d |
 
 ## 1. Scope and risk
 
@@ -23,7 +23,13 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in
-- [ ] `node scripts/gates.mjs` — n/a: pending, filled in below once it has run
+- [x] `node scripts/gates.mjs` ends `typecheck=0 lint=0 test=0 build=0`. Closing lines as printed:
+
+```
+=== gates: build exited 0 after 173s
+
+gates: typecheck=0 lint=0 test=0 build=0
+```
 - [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data
@@ -122,6 +128,7 @@
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
+| 2 | low | `scripts/check-cards-count.mjs` hard-codes 36 cards and now fails (cards.ts has 40); the brief forbids editing `check-*.mjs` here | deferred to backlog: one number, 36 to 40, owned by `harness-rerun-server-rows`; CI job red until then |
 | 1 | n/a | `check-card-grants.mjs` already differs on dev for `photos.resident_medical` / `photos.medical_add` rows from another stream's `0279` side | deferred to backlog: the stream that owns it |
 
 ## Left for manual verification
