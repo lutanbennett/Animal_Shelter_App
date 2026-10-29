@@ -1,4 +1,4 @@
-// diets-app: the number the item exists for. Splitting the Standard diet into kibble, chicken and rice cuts the
+// diets-app (restated 2026-10-29 for per-serving recipes, 0250/0260: qty_per_serving, no bridge): the number the item exists for. Splitting the Standard diet into kibble, chicken and rice cuts the
 // month's kibble need to a quarter, and chicken and rice appear in the forecast Purchasing reads.
 // Against DEV only, one transaction that is always rolled back.
 //
@@ -6,7 +6,7 @@
 //
 //   split      Standard's one ingredient (today: all of it is "kibble") becomes kibble 1/4, chicken 3/8, rice 3/8
 //              of the same daily amount, for every size. 4 cups a day -> 1 cup kibble + 1.5 cup chicken + 1.5 cup rice.
-//   proves     kibble need after = 25% of before; chicken and rice rows exist; the three together equal the old total
+//   proves     Standard's own kibble share falls to 25% (other diets may share the ingredient); chicken and rice rows exist; the three together equal the old total
 //   forecast   stock_diet_forecast (what Purchasing calls) shows the same three ingredients
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -39,17 +39,15 @@ begin
   insert into res values ('before_kibble', coalesce(b_qty, 0)::text);
   insert into res values ('residents_on_standard', coalesce(b_res, 0)::text);
 
-  insert into diet_types (name, unit, daily_qty_small, daily_qty_medium, daily_qty_large) values ('ZZ chicken', v_unit, 1, 1, 1) returning id into v_chicken;
-  insert into diet_types (name, unit, daily_qty_small, daily_qty_medium, daily_qty_large) values ('ZZ rice', v_unit, 1, 1, 1) returning id into v_rice;
-  -- the 0239 bridge gave each a same-named recipe; the app removes it, so does this
-  delete from diets where name in ('ZZ chicken', 'ZZ rice');
+  insert into diet_types (name, unit) values ('ZZ chicken', v_unit) returning id into v_chicken;
+  insert into diet_types (name, unit) values ('ZZ rice', v_unit) returning id into v_rice;
 
-  update diet_ingredients set qty_small = qty_small * 0.25, qty_medium = qty_medium * 0.25, qty_large = qty_large * 0.25
+  update diet_ingredients set qty_per_serving = qty_per_serving * 0.25
    where diet_id = v_diet and diet_type_id = v_kibble;
-  insert into diet_ingredients (diet_id, diet_type_id, qty_small, qty_medium, qty_large)
-    select v_diet, v_chicken, qty_small * 1.5, qty_medium * 1.5, qty_large * 1.5 from diet_ingredients where diet_id = v_diet and diet_type_id = v_kibble;
-  insert into diet_ingredients (diet_id, diet_type_id, qty_small, qty_medium, qty_large)
-    select v_diet, v_rice, qty_small * 1.5, qty_medium * 1.5, qty_large * 1.5 from diet_ingredients where diet_id = v_diet and diet_type_id = v_kibble;
+  insert into diet_ingredients (diet_id, diet_type_id, serving_unit, qty_per_serving)
+    select v_diet, v_chicken, serving_unit, qty_per_serving * 1.5 from diet_ingredients where diet_id = v_diet and diet_type_id = v_kibble;
+  insert into diet_ingredients (diet_id, diet_type_id, serving_unit, qty_per_serving)
+    select v_diet, v_rice, serving_unit, qty_per_serving * 1.5 from diet_ingredients where diet_id = v_diet and diet_type_id = v_kibble;
 
   select quantity into a_k from diet_forecast(v_from, v_to) where diet_type_id = v_kibble;
   select quantity into a_c from diet_forecast(v_from, v_to) where diet_type_id = v_chicken;
@@ -85,7 +83,11 @@ console.log(`Standard on dev: ${get("residents_on_standard")} residents, unit ${
 console.log(`kibble need before the split: ${before}`);
 console.log(`after: kibble ${n("after_kibble")}, chicken ${n("after_chicken")}, rice ${n("after_rice")}`);
 check(before > 0, "there is a kibble need to compare");
-check(Math.abs(n("after_kibble") - before * 0.25) < 1e-6, "kibble need falls to a quarter");
+// Other diets may use the same kibble, so the quarter applies to Standard's own share S, not the whole need:
+// kibble falls by 3/4 S and chicken gains 3/8 S, so chicken = half the fall, and rice equals chicken.
+check(n("after_kibble") < before, "kibble need falls");
+check(Math.abs(n("after_chicken") - (before - n("after_kibble")) / 2) < 1e-6, "Standard's kibble share falls to a quarter (chicken = half the fall)");
+check(Math.abs(n("after_chicken") - n("after_rice")) < 1e-6, "rice equals chicken");
 check(n("after_chicken") > 0 && n("after_rice") > 0, "chicken and rice appear in the forecast");
 check(Math.abs(n("after_kibble") + n("after_chicken") + n("after_rice") - before) < 1e-6, "the three together equal the old total");
 check(n("stock_kibble") === n("after_kibble") && n("stock_chicken") === n("after_chicken") && n("stock_rice") === n("after_rice"),
