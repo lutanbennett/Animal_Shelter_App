@@ -196,12 +196,14 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
         <h1 className="text-2xl font-semibold text-foreground">{m.title}</h1>
         <p className="text-sm text-muted">{m.subtitle}</p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <ActionLink
-            href="/stocktake?tab=diets"
-            label={t.management.stock.stocktakeLink}
-            icon={ClipboardCheck}
-            iconOnlyOnMobile={false}
-          />
+          {can(perms, "stock.count") && (
+            <ActionLink
+              href="/stocktake?tab=diets"
+              label={t.management.stock.stocktakeLink}
+              icon={ClipboardCheck}
+              iconOnlyOnMobile={false}
+            />
+          )}
           {canEdit && (
             <ActionLink
               href="/management/diets?view=order"
@@ -210,24 +212,30 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
               iconOnlyOnMobile={false}
             />
           )}
-          <ActionLink
-            href="/management/stock-usage"
-            label={t.management.stockUsage.link}
-            icon={Scale}
-            iconOnlyOnMobile={false}
-          />
-          <ActionLink
-            href="/management/purchasing"
-            label={t.management.purchasing.link}
-            icon={ShoppingCart}
-            iconOnlyOnMobile={false}
-          />
-          <ActionLink
-            href="/deliveries?tab=diets"
-            label={t.management.stock.deliveriesLink}
-            icon={Truck}
-            iconOnlyOnMobile={false}
-          />
+          {can(perms, "stock.usage") && (
+            <ActionLink
+              href="/management/stock-usage"
+              label={t.management.stockUsage.link}
+              icon={Scale}
+              iconOnlyOnMobile={false}
+            />
+          )}
+          {can(perms, "stock.purchasing") && (
+            <ActionLink
+              href="/management/purchasing"
+              label={t.management.purchasing.link}
+              icon={ShoppingCart}
+              iconOnlyOnMobile={false}
+            />
+          )}
+          {can(perms, "stock.delivery") && (
+            <ActionLink
+              href="/deliveries?tab=diets"
+              label={t.management.stock.deliveriesLink}
+              icon={Truck}
+              iconOnlyOnMobile={false}
+            />
+          )}
           {canEditItemSettings(perms, "diet") && (
             <ActionLink href="/admin/diets" label={m.settingsLink} icon={ListChecks} iconOnlyOnMobile={false} />
           )}
