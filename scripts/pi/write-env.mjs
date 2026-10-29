@@ -89,6 +89,9 @@ const lines = [
   // capped (PHOTO_CACHE_MAX_MB, default 1024), kept outside ~/backups.
   // Test has its own directory: it shares the Pi with production and its own cap.
   `PHOTO_CACHE_DIR=${join(homedir(), name === "test" ? "photo-cache-test" : "photo-cache")}`,
+  // The read path onto the Drive mirror (src/lib/mirror-read.ts). Production only: the mirror is the production
+  // shelter's Drive. Unmounted, it has no state.json and every file is fetched from Drive as before.
+  ...(name === "test" ? [] : [`MIRROR_DEST=${process.env.MIRROR_DEST || "/mnt/lanna-mirror"}`]),
 ];
 writeFileSync(".env.production.local", lines.join("\n") + "\n", { mode: 0o600 });
 // The service runs as its own user (docs/decisions/2026-10-22-pi-app-own-user.md) and reads this

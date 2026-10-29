@@ -555,6 +555,14 @@
       "gates": "The Google client secret."
     },
     {
+      "name": "MIRROR_DEST",
+      "gates": "Where the Pi drive mirror is read from (Pi). Not who may see a file: the database decides that first."
+    },
+    {
+      "name": "MIRROR_SHELTER",
+      "gates": "Which shelter folder inside the mirror is read (Pi). Not who may see a file."
+    },
+    {
       "name": "PHOTO_CACHE_DIR",
       "gates": "Where the photo cache is kept (Pi)."
     },
