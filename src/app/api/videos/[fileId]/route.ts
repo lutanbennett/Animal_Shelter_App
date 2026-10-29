@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
+import { openMirroredVideo } from "@/lib/mirror-read";
 
 /**
  * Playback for a resident's video, streamed from Drive with the browser's Range header passed through, so an
@@ -34,6 +35,27 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   if (isPublic !== true) {
     const { data, error } = await supabase.rpc("can_see_drive_file", { p_drive_file_id: fileId });
     if (error || data !== true) return notFound();
+  }
+
+  // An internal video on the Pi mirror (src/lib/mirror-read.ts), reached only after the checks above.
+  // A public file is left to Drive, as photos are. Any miss falls through to Drive below.
+  if (isPublic !== true) {
+    const mirrored = await openMirroredVideo(fileId, request.headers.get("range"));
+    if (mirrored && "unsatisfiable" in mirrored) {
+      return new NextResponse(null, { status: 416, headers: { "Content-Range": `bytes */${mirrored.unsatisfiable}` } });
+    }
+    if (mirrored) {
+      return new NextResponse(mirrored.body, {
+        status: mirrored.status,
+        headers: {
+          ...mirrored.headers,
+          "Content-Type": mirrored.contentType,
+          "X-Content-Type-Options": "nosniff",
+          "Content-Disposition": "inline",
+          "Cache-Control": "private, no-store",
+        },
+      });
+    }
   }
 
   let upstream: Response;

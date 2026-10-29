@@ -8,7 +8,7 @@ import { pathToFileURL } from "node:url";
 // `server-only` cannot load under plain Node: test a copy of the module without that one line.
 const copy = path.join(os.tmpdir(), `mirror-read-${process.pid}.ts`);
 fs.writeFileSync(copy, fs.readFileSync(new URL("./mirror-read.ts", import.meta.url), "utf8").replace('import "server-only";', ""));
-const { readMirroredFile } = await import(pathToFileURL(copy).href);
+const { readMirroredFile, openMirroredVideo } = await import(pathToFileURL(copy).href);
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), "mirror-"));
 fs.mkdirSync(path.join(root, "_mirror"));
@@ -41,4 +41,26 @@ test("with an index", async () => {
   assert.equal(f.contentType, "image/jpeg");
   assert.equal(f.body.toString(), "JPG");
   for (const id of ["gone", "video", "escape", "missing", "unknown", "__proto__"]) assert.equal(await readMirroredFile(id), null, id);
+});
+
+const drain = async (b) => Buffer.concat(await Array.fromAsync(b)).toString();
+test("video: whole file, ranges, suffix, unsatisfiable, misses", async () => {
+  process.env.MIRROR_DEST = root;
+  let v = await openMirroredVideo("video", null);
+  assert.equal(v.status, 200);
+  assert.equal(v.contentType, "video/mp4");
+  assert.equal(v.headers["Content-Length"], "3");
+  assert.equal(await drain(v.body), "VID");
+  v = await openMirroredVideo("video", "bytes=1-");
+  assert.equal(v.status, 206);
+  assert.equal(v.headers["Content-Range"], "bytes 1-2/3");
+  assert.equal(await drain(v.body), "ID");
+  v = await openMirroredVideo("video", "bytes=-1");
+  assert.equal(await drain(v.body), "D");
+  v = await openMirroredVideo("video", "bytes=0-99");
+  assert.equal(v.headers["Content-Range"], "bytes 0-2/3");
+  assert.deepEqual(await openMirroredVideo("video", "bytes=5-"), { unsatisfiable: 3 });
+  for (const id of ["ok", "gone", "escape", "missing", "unknown", "__proto__"]) assert.equal(await openMirroredVideo(id, null), null, id);
+  delete process.env.MIRROR_DEST;
+  assert.equal(await openMirroredVideo("video", null), null);
 });

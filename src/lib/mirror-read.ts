@@ -25,6 +25,13 @@ const TYPES: Record<string, string> = {
   ".pdf": "application/pdf",
 };
 
+const VIDEO_TYPES: Record<string, string> = {
+  ".mp4": "video/mp4",
+  ".m4v": "video/mp4",
+  ".mov": "video/quicktime",
+  ".webm": "video/webm",
+};
+
 type Entry = { path: string; modifiedTime?: string; gone?: string };
 let indexCache: { mtimeMs: number; size: number; map: Record<string, Entry> } | null = null;
 
@@ -38,9 +45,8 @@ async function loadFs() {
   return { fs, path };
 }
 
-export type MirroredFile = { contentType: string; body: Buffer };
-
-export async function readMirroredFile(fileId: string): Promise<MirroredFile | null> {
+/** The mirror path for a Drive id, or null on any miss (see the header). `types` is what may be served. */
+async function resolveMirrored(fileId: string, types: Record<string, string>) {
   const dest = mirrorDest();
   if (!dest) return null;
   try {
@@ -53,15 +59,80 @@ export async function readMirroredFile(fileId: string): Promise<MirroredFile | n
     const entry = Object.prototype.hasOwnProperty.call(indexCache.map, fileId) ? indexCache.map[fileId] : null;
     if (!entry || typeof entry.path !== "string" || entry.gone) return null;
 
-    const contentType = TYPES[path.extname(entry.path).toLowerCase()];
+    const contentType = types[path.extname(entry.path).toLowerCase()];
     if (!contentType) return null;
 
     const root = path.resolve(dest, process.env.MIRROR_SHELTER?.trim() || SHELTER_DEFAULT);
     const full = path.resolve(root, entry.path.replace(/^[\\/]+/, ""));
     if (!full.startsWith(root + path.sep)) return null;
-    return { contentType, body: await fs.readFile(full) };
+    return { contentType, full };
   } catch {
     // No index, nothing mounted, no filesystem (a Worker) or an unreadable file: a miss.
+    return null;
+  }
+}
+
+export type MirroredFile = { contentType: string; body: Buffer };
+
+export async function readMirroredFile(fileId: string): Promise<MirroredFile | null> {
+  const hit = await resolveMirrored(fileId, TYPES);
+  if (!hit) return null;
+  try {
+    const { fs } = await loadFs();
+    return { contentType: hit.contentType, body: await fs.readFile(hit.full) };
+  } catch {
+    return null;
+  }
+}
+
+export type MirroredVideo = {
+  contentType: string;
+  status: 200 | 206;
+  /** Content-Length, Content-Range (206 only) and Accept-Ranges, ready to send. */
+  headers: Record<string, string>;
+  body: ReadableStream;
+};
+
+/**
+ * A mirrored video as a byte-range stream. Same rules as readMirroredFile: null is a miss and the caller asks Drive.
+ * A Range the file cannot satisfy is `{ unsatisfiable: size }` (the caller answers 416), exactly as Drive would.
+ */
+export async function openMirroredVideo(
+  fileId: string,
+  range: string | null,
+): Promise<MirroredVideo | { unsatisfiable: number } | null> {
+  const hit = await resolveMirrored(fileId, VIDEO_TYPES);
+  if (!hit) return null;
+  try {
+    const { fs } = await loadFs();
+    const size = (await fs.stat(hit.full)).size;
+    let start = 0;
+    let end = size - 1;
+    let status: 200 | 206 = 200;
+    if (range) {
+      const m = /^bytes=([0-9]*)-([0-9]*)$/.exec(range.trim());
+      // Multi-range or malformed: ignore the header and send it all, as a server may.
+      if (m && (m[1] || m[2])) {
+        if (!m[1]) {
+          start = Math.max(0, size - Number(m[2]));
+        } else {
+          start = Number(m[1]);
+          if (m[2]) end = Math.min(end, Number(m[2]));
+        }
+        if (start >= size || start > end) return { unsatisfiable: size };
+        status = 206;
+      }
+    }
+    const { createReadStream } = await import("node:fs");
+    const { Readable } = await import("node:stream");
+    const headers: Record<string, string> = {
+      "Accept-Ranges": "bytes",
+      "Content-Length": String(end - start + 1),
+    };
+    if (status === 206) headers["Content-Range"] = `bytes ${start}-${end}/${size}`;
+    const body = Readable.toWeb(createReadStream(hit.full, { start, end })) as unknown as ReadableStream;
+    return { contentType: hit.contentType, status, headers, body };
+  } catch {
     return null;
   }
 }
