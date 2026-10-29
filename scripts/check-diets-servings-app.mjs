@@ -4,7 +4,7 @@
 //   node scripts/check-diets-servings-app.mjs
 //
 // Builds a throwaway diet (50 g of an ingredient per serving, servings 1 / 1.5 / 2.5 as the app's
-// saveServings writes them: qty_* = amount x servings), puts a Small, a Medium and a Large dog on it
+// saveServings writes them: qty_per_serving x diets.servings_*), puts a Small, a Medium and a Large dog on it
 // for 7 days (the Large dog at portion_factor 0.75), and compares diet_forecast() with the hand
 // calculation: 50x1x7 + 50x1.5x7 + 50x2.5x0.75x7 = 350 + 525 + 656.25 = 1531.25 g.
 import { join } from "node:path";
@@ -26,10 +26,10 @@ begin
    where r.key = 'admin' and ur.archived_at is null limit 1;
   perform set_config('request.jwt.claims', json_build_object('sub', v_admin, 'role', 'authenticated', 'aal', 'aal1')::text, true);
   select id into v_ing from diet_types where unit = 'g' order by name limit 1;
-  select r.id into v_s from residents r join resident_current_state s on s.resident_id = r.id where s.current_status <> 'Deceased' and r.size = 'Small' limit 1;
-  select r.id into v_m from residents r join resident_current_state s on s.resident_id = r.id where s.current_status <> 'Deceased' and r.size = 'Medium' limit 1;
+  select r.id into v_s from residents r join resident_current_state s on s.resident_id = r.id where s.current_status not in ('Deceased', 'Adopted', 'Fostered') and r.size = 'Small' limit 1;
+  select r.id into v_m from residents r join resident_current_state s on s.resident_id = r.id where s.current_status not in ('Deceased', 'Adopted', 'Fostered') and r.size = 'Medium' limit 1;
   -- dev has no Large resident on record, so one is made Large inside this rolled-back transaction.
-  select r.id into v_l from residents r join resident_current_state s on s.resident_id = r.id where s.current_status <> 'Deceased' and r.id not in (v_s, v_m) limit 1;
+  select r.id into v_l from residents r join resident_current_state s on s.resident_id = r.id where s.current_status not in ('Deceased', 'Adopted', 'Fostered') and r.id not in (v_s, v_m) limit 1;
   update residents set size = 'Large' where id = v_l;
   insert into res values ('sizes_found', (v_s is not null and v_m is not null and v_l is not null)::text);
   insert into diets (name, servings_small, servings_medium, servings_large) values ('ZZ proof servings', 1, 1.5, 2.5) returning id into v_diet;
@@ -61,6 +61,6 @@ const rows = JSON.parse(m[1]);
 const get = (k) => rows.find((x) => x.k === k)?.v;
 let fails = 0;
 const check = (ok, what) => { console.log(`${ok ? "ok   " : "FAIL "} ${what}`); if (!ok) fails++; };
-check(get("sizes_found") === "true", "dev has a Small, a Medium and a further resident");
+check(get("sizes_found") === "true", "dev has a Small, a Medium and a further resident, none Deceased, Adopted or Fostered (diet_forecast skips those)");
 check(Number(get("delta")) === 1531.25, `forecast delta ${get("delta")} g = hand calculation 1531.25 g`);
 process.exit(fails ? 1 : 0);
