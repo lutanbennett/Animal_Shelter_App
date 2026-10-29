@@ -11,8 +11,8 @@
  *  - A role is given jobs, a job expands to activities, and a role's rights are the union. Jobs
  *    may overlap, so the union is not a partition.
  *  - What a role is given is expressed in the database the old way: `role_permissions` rows. The
- *    migration writes the expansion; check-medical-role.mjs fails if the rows and this file ever
- *    disagree, so neither can drift without a red.
+ *    migration writes the expansion; the check that once compared the rows to this file
+ *    (check-medical-role.mjs) is retired, and check-who-does-what.mjs carries the per-card question.
  *
  * Pure and client-safe.
  */

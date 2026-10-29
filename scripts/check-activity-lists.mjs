@@ -32,7 +32,6 @@ const ALLOWED = new Map([
   ["scripts/lib/acceptance-matrix-entries.mjs", "the acceptance matrix, generated per activity"],
   ["scripts/lib/menu-coverage-declared.mjs", "declared menu coverage"],
   ["scripts/check-permission-catalogue.mjs", "compares catalogue.ts to the database"],
-  ["scripts/check-permission-parity.mjs", "compares has_permission() to can()"],
   ["scripts/gen-card-walkthrough.mjs", "describes cards by activity"],
   ["src/app/photos/add/page.tsx", "the activities that open this page (requireAnyPermission), as routes.ts gates it"],
   ["src/lib/home/add-photos-card.test.mjs", "pins what cards.ts gives this card"],
