@@ -608,10 +608,18 @@ non-`Messages` categories.** This supersedes the single 9.8k figure below for **
 - **A FIRST driven pass: `~95k + ~6.3k x steps`.** Four of the five first passes fit within 7%.
   It under-predicts only the **four-card** group (#981), because extra cards mean extra one-card
   logins — **that cost is per CARD, not per step**, so add a few k for each extra card.
-- **A RECONCILIATION pass — a second pass over a card already driven — is `~95k + ~11k x steps`.**
-  #989 was banded on the 6.3k rate and came in **17% over**, at 11,223 a step, **higher than the old
-  9.8k.** The work is not driving, it is **confirming or contradicting every row an earlier pass
-  left**, which the first pass never had to do.
+- **A SECOND pass is NOT automatically a reconciliation pass, and the 11k rate is NARROWER than it
+  reads. CORRECTED 2026-10-29, on `465`'s two readings, after being owed for three editions.**
+  **A re-pass triggered by a NARROW migration costs the FIRST-PASS rate (`floor + ~6.3k x steps`).**
+  Two rounds agreeing: `card-repass-manage-medical` landed at **6.0k a step** above its floor, and
+  `card-repass-medical-two`, banded deliberately on that reading, landed **inside**. **Use 6.3k by
+  default for a second visit.**
+- **The `~11k x steps` rate is for a pass that must ADJUDICATE, and that is what costs — not the
+  second visit.** #989 came in 17% over a 6.3k band at 11,223 a step, and it had been asked to settle
+  three disputed things: whether the pass was needed at all, another stream's finding, and whether a
+  missing control was a sibling's fix or a fault. **So the question that picks the rate is not "is
+  this the first pass?" but "must this stream settle rows an earlier pass or another stream left in
+  dispute?"** If yes, 11k. If it is simply driving the steps again because the grants moved, 6.3k.
 - **AND THE BRIEF ADDS TO IT.** #989 was also asked to adjudicate three things: whether the pass was
   needed at all, another stream's finding, and whether a missing control was a sibling's fix or a
   fault. **The planner widened the work and did not widen the band.** The skill already says the
