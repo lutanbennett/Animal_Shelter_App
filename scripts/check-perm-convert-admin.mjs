@@ -10,10 +10,10 @@
 //   2. Admin reads every row of the nine Admin-only tables and the group-1 tables: the same count the owner sees.
 //   3. Admin's DELETE on the eight tables that had no delete policy but Admin's, and on group_origins and
 //      rounds, is not refused by a policy: it deletes a row, or the row's own foreign key (23503) or the deceased-resident lock (23001) stops it.
-//   4. Staff, management and volunteer see none of the Admin-only tables, and delete and update nothing.
+//   4. A login holding no cards sees none of the Admin-only tables, and delete and update nothing.
 //   5. The permission matrix keeps its gate: an admin at aal1 writes no row of role_permissions, roles or
 //      user_roles; at aal2 writes one; a non-admin at aal2 writes none.
-//   6. The volunteer still reads every enclosure and zone (volunteer_read_* went; enclosures_select_perm covers).
+//   (The old check 6, the volunteer reading enclosures and zones, asked a role; what a card lets be read is the parity/card checks.)
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -26,20 +26,20 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 const sql = `
 do $$
 declare
-  admin_id uuid; vol_id uuid; mgmt_id uuid;  -- no staff: 0173 retired it, so dev has no live staff login
-  fails text := ''; checks int := 0; mgmt_site boolean;
+  admin_id uuid; nc_id uuid; nc_role uuid;  -- nc: a throwaway login holding NO cards
+  fails text := ''; checks int := 0;
   n int; total int; t text; u record; who text; uid uuid;
   admin_only text[] := array['audit_log','permission_activities','roles','role_permissions','user_roles','assistant_actions'];
   deletes text[] := array['blood_tests','immunization_records','placement_history','prescriptions','procedures','resident_diets','residents','weight','group_origins','rounds'];
 begin
   select ur.user_id into admin_id from user_roles ur join roles r on r.id = ur.role_id where r.key = 'admin' and ur.archived_at is null limit 1;
-  select ur.user_id into vol_id from user_roles ur join roles r on r.id = ur.role_id where r.key = 'volunteer' and ur.archived_at is null limit 1;
-  select ur.user_id into mgmt_id from user_roles ur join roles r on r.id = ur.role_id where r.key = 'management' and ur.archived_at is null limit 1;
-  -- Management's website.content is a live card cell (Settings > Who does what), so the expectation follows the cell
-  select exists (select 1 from role_permissions rp join roles r on r.id = rp.role_id where r.key = 'management' and rp.activity = 'website.content' and rp.level >= 2) into mgmt_site;
-  if admin_id is null or vol_id is null or mgmt_id is null then
-    raise exception 'FAIL fixture: dev has no live login for each of admin, volunteer, management';
-  end if;
+  if admin_id is null then raise exception 'FAIL fixture: dev has no live Admin login'; end if;
+  nc_id := gen_random_uuid();
+  insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
+  values (nc_id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-nocards-' || nc_id || '@example.invalid',
+          '{}'::jsonb, jsonb_build_object('full_name', 'Harness no cards'), now(), now());
+  insert into roles (key, name, kind, home_path) values ('harness_cards_' || replace(nc_id::text, '-', ''), 'Harness no cards', 'custom', '/home') returning id into nc_role;
+  insert into user_roles (user_id, role_id) values (nc_id, nc_role);
 
   -- 1
   for u in select distinct user_id from user_roles loop
@@ -52,8 +52,8 @@ begin
     reset role;
   end loop;
 
-  foreach who in array array['admin', 'management', 'volunteer'] loop
-    uid := case who when 'admin' then admin_id when 'management' then mgmt_id else vol_id end;
+  foreach who in array array['admin', 'nocards'] loop
+    uid := case who when 'admin' then admin_id else nc_id end;
     perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated', 'aal', 'aal2')::text, true);
     set local role authenticated;
 
@@ -88,27 +88,16 @@ begin
     foreach t in array array['site_content','site_pages'] loop
       execute format('with d as (update %I set updated_at = now() where ctid in (select ctid from %I limit 1) returning 1) select count(*) from d', t, t) into n;
       checks := checks + 1;
-      if (who = 'admin' or (who = 'management' and mgmt_site)) and n <> 1 then fails := fails || format('%s updated %s rows of %s', who, n, t) || E'\\n'; end if;
-      if not (who = 'admin' or (who = 'management' and mgmt_site)) and n <> 0 then fails := fails || format('%s updated %s rows of %s', who, n, t) || E'\\n'; end if;
+      if who = 'admin' and n <> 1 then fails := fails || format('%s updated %s rows of %s', who, n, t) || E'\\n'; end if;
+      if who <> 'admin' and n <> 0 then fails := fails || format('%s updated %s rows of %s', who, n, t) || E'\\n'; end if;
     end loop;
 
-    -- 6: the volunteer's reads
-    if who = 'volunteer' then
-      foreach t in array array['enclosures','zones'] loop
-        execute format('select count(*) from %I', t) into n;
-        reset role;
-        execute format('select count(*) from %I', t) into total;
-        set local role authenticated;
-        checks := checks + 1;
-        if n <> total or total = 0 then fails := fails || format('volunteer reads %s of %s rows of %s', n, total, t) || E'\\n'; end if;
-      end loop;
-    end if;
     reset role;
   end loop;
 
   -- 5: the gate on the permission matrix, then on the people table
-  foreach who in array array['admin@aal1', 'admin@aal2', 'management@aal2'] loop
-    perform set_config('request.jwt.claims', json_build_object('sub', case when who like 'admin%' then admin_id else mgmt_id end, 'role', 'authenticated', 'aal', split_part(who, '@', 2))::text, true);
+  foreach who in array array['admin@aal1', 'admin@aal2', 'nocards@aal2'] loop
+    perform set_config('request.jwt.claims', json_build_object('sub', case when who like 'admin%' then admin_id else nc_id end, 'role', 'authenticated', 'aal', split_part(who, '@', 2))::text, true);
     set local role authenticated;
     foreach t in array array['role_permissions:level','roles:name','user_roles:created_at'] loop
       execute format('with d as (update %I set %I = %I where ctid in (select ctid from %I limit 1) returning 1) select count(*) from d', split_part(t, ':', 1), split_part(t, ':', 2), split_part(t, ':', 2), split_part(t, ':', 1)) into n;

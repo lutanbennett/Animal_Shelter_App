@@ -80,7 +80,7 @@ const has = new Set(cov.body.map((r) => `${r.tablename}|${r.cmd}`));
 for (const [table, cmd] of OFFERED) {
   if (!has.has(`${table}|${cmd}`)) fail(`${table} ${cmd}: the app offers it but no policy covers it`);
 }
-console.log(`1  offered writes: ${OFFERED.length} checked (a policy covers each; who holds it is check-permission-parity's)`);
+console.log(`1  offered writes: ${OFFERED.length} checked (a policy covers each; which card grants it is part 3 below)`);
 
 // 3
 const sql = `
@@ -111,45 +111,43 @@ declare
   v_bt uuid := gen_random_uuid();
   v_who text;
   v_uid uuid;
+  v_role uuid;
   n bigint;
   v_report text := '';
 begin
   insert into residents (id, name, species) values (v_res, 'Harness blood', 'Dog');
   insert into blood_tests (id, resident_id, blood_test_type_id, date) values (v_bt, v_res, v_type, current_date - 1);
 
-  -- no staff: 0173 retired it, and a live staff login can no longer be made
-  foreach v_who in array array['management', 'volunteer'] loop
+  -- Card-shaped: three logins, each holding exactly the cards named and nothing else. The question is
+  -- whether the write policies on blood_tests answer to the card (medical.blood_tests at edit), not to
+  -- any role. Admin sits outside the card system and is not asked here.
+  foreach v_who in array array['medical_records', 'view_medical', 'none'] loop
     v_uid := gen_random_uuid();
     insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
     values (v_uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
             'harness-blood-' || v_who || '-' || v_uid || '@example.invalid',
             '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || v_who), now(), now());
-    insert into user_roles (user_id, role_id)
-  select v.c0, ro.id from (values (v_uid, v_who)) as v(c0, role_key)
-  join roles ro on ro.key = v.role_key;
+    insert into roles (key, name, kind, home_path) values ('harness_cards_' || replace(v_uid::text, '-', ''), 'Harness ' || v_who, 'custom', '/home')
+      returning id into v_role;
+    if v_who <> 'none' then perform set_role_cards(v_role, array[v_who]); end if;
+    insert into user_roles (user_id, role_id) values (v_uid, v_role);
 
     n := pg_temp.try(v_uid, format('insert into blood_tests (resident_id, blood_test_type_id, date, results) values (%L, %L, current_date, ''x'')', v_res, v_type));
-    if v_who = 'management' then
-      if n <> 1 then raise exception 'HARNESS-FAIL: % insert gave %', v_who, n; end if;
+    if v_who = 'medical_records' then
+      if n <> 1 then raise exception 'HARNESS-FAIL: card % insert gave %', v_who, n; end if;
       n := pg_temp.try(v_uid, format('update blood_tests set results = ''y'' where id = %L', v_bt));
-      if n <> 1 then raise exception 'HARNESS-FAIL: % update gave %', v_who, n; end if;
+      if n <> 1 then raise exception 'HARNESS-FAIL: card % update gave %', v_who, n; end if;
+      n := pg_temp.try(v_uid, format('select record_attachment(''blood_test'', %L, %L)', v_bt, 'harnessFile' || v_who));
+      if n <> 1 then raise exception 'HARNESS-FAIL: card % record_attachment gave %', v_who, n; end if;
     else
-      if n <> -1 then raise exception 'HARNESS-FAIL: % insert gave % (want refused)', v_who, n; end if;
+      if n <> -1 then raise exception 'HARNESS-FAIL: card % insert gave % (want refused)', v_who, n; end if;
       n := pg_temp.try(v_uid, format('update blood_tests set results = ''y'' where id = %L', v_bt));
-      if n <> 0 then raise exception 'HARNESS-FAIL: % updated % rows', v_who, n; end if;
+      if n <> 0 then raise exception 'HARNESS-FAIL: card % updated % rows', v_who, n; end if;
     end if;
-    -- the file half of "Log blood test": record_attachment is what the upload route calls
-    n := pg_temp.try(v_uid, format('select record_attachment(''blood_test'', %L, %L)', v_bt, 'harnessFile' || v_who));
-    if v_who = 'management' then
-      if n <> 1 then raise exception 'HARNESS-FAIL: % record_attachment gave %', v_who, n; end if;
-    end if;
-    n := pg_temp.try(v_uid, format('delete from blood_tests where id = %L', v_bt));
-    if n <> 0 then raise exception 'HARNESS-FAIL: % deleted % rows', v_who, n; end if;
     n := pg_temp.try(v_uid, format('select 1 from blood_tests where id = %L', v_bt));
-    -- 0134: a volunteer reads no blood tests at all
-    if v_who = 'volunteer' and n <> 0 then raise exception 'HARNESS-FAIL: volunteer read % rows', n; end if;
-    if v_who <> 'volunteer' and n < 1 then raise exception 'HARNESS-FAIL: % read % rows', v_who, n; end if;
-    v_report := v_report || v_who || (case when v_who = 'volunteer' then ' refused, reads nothing' else ' insert+update+file, no delete' end) || ' | ';
+    if v_who = 'none' and n <> 0 then raise exception 'HARNESS-FAIL: no card, read % rows', n; end if;
+    if v_who <> 'none' and n < 1 then raise exception 'HARNESS-FAIL: card % read % rows', v_who, n; end if;
+    v_report := v_report || v_who || (case when v_who = 'medical_records' then ' insert+update+file' when v_who = 'view_medical' then ' reads, writes refused' else ' refused, reads nothing' end) || ' | ';
   end loop;
 
   raise exception '%', 'HARNESS-OK blood_tests: ' || v_report;

@@ -89,6 +89,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "On a resident's Clinic Visits tab, Log blood test, Add prescription, Log weight and Log procedure now only appear if your cards let you do them. Before, a login that could only look at medical records was shown all four, and pressing one turned you away.", cards: ["view_medical"] },
   "On the public Adopt page, every picture under Happy endings now opens that animal's journey: when they arrived, their story, any news their family has shared, and the day they went home.",
 ];
 

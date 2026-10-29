@@ -160,13 +160,15 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
                     icon={ACTION_ICONS.edit}
                   />
                 )}
-                <RowActionLink
-                  href={`/blood-tests/new?residentId=${id}&clinicVisitId=${row.id}`}
-                  label={t.residents.sections.logBloodTest}
-                  subject={visitSubject(row)}
-                  icon={SECTION_ICONS["blood-tests"]}
-                />
-                {visitDate(row) <= today && (
+                {can(perms, "medical.blood_tests") && (
+                  <RowActionLink
+                    href={`/blood-tests/new?residentId=${id}&clinicVisitId=${row.id}`}
+                    label={t.residents.sections.logBloodTest}
+                    subject={visitSubject(row)}
+                    icon={SECTION_ICONS["blood-tests"]}
+                  />
+                )}
+                {visitDate(row) <= today && can(perms, "medical.prescriptions") && (
                   <RowActionLink
                     href={`/prescriptions/new?residentId=${id}&clinicVisitId=${row.id}`}
                     label={t.residents.sections.addPrescription}
@@ -184,7 +186,7 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
                     />
                   )
                 ) : (
-                  visitDate(row) <= today && (
+                  visitDate(row) <= today && can(perms, "medical.weight") && (
                     <RowActionLink
                       href={`/weight/new?residentId=${id}&clinicVisitId=${row.id}`}
                       label={t.residents.sections.logWeight}
@@ -193,12 +195,14 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
                     />
                   )
                 )}
-                <RowActionLink
-                  href={`/procedures/new?residentId=${id}&clinicVisitId=${row.id}`}
-                  label={t.residents.sections.logProcedure}
-                  subject={visitSubject(row)}
-                  icon={SECTION_ICONS.procedures}
-                />
+                {can(perms, "medical.procedures") && (
+                  <RowActionLink
+                    href={`/procedures/new?residentId=${id}&clinicVisitId=${row.id}`}
+                    label={t.residents.sections.logProcedure}
+                    subject={visitSubject(row)}
+                    icon={SECTION_ICONS.procedures}
+                  />
+                )}
               </>
             )}
             {canSendToHospital && (
