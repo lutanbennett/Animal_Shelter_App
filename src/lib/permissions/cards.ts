@@ -49,7 +49,11 @@ export type NewCardKey =
   | "translations"
   | "food_forecast"
   | "medicine_forecast"
-  | "view_cashflow";
+  | "view_cashflow"
+  | "record_vet_care"
+  | "record_microchip"
+  | "adoption_news"
+  | "add_while_recording";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -297,6 +301,25 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   food_forecast: { includes: [], bundle: [{ activity: "stock.diets", level: "read" }], opens: "/management/diets" },
   medicine_forecast: { includes: [], bundle: [{ activity: "stock.medications", level: "read" }], opens: "/management/medications" },
   view_cashflow: { includes: [], bundle: [{ activity: "reports.cashflow", level: "read" }], opens: "/management/cashflow" },
+  // Vet cards (2026-10-29, 0281): the nine activities a vet performs that no card was sized for, split so a vet is not handed Manage medical
+  // (archive, send to hospital, booking) or Residents (move, rehome, register). Each includes the read it needs to be usable.
+  record_vet_care: {
+    includes: ["view_medical"],
+    bundle: [
+      { activity: "medical.visits", level: "edit" },
+      { activity: "medical.procedures", level: "edit" },
+      { activity: "medical.blood_tests", level: "edit" },
+      { activity: "medical.prescriptions", level: "edit" },
+      { activity: "medical.immunizations", level: "edit" },
+      { activity: "medical.diet", level: "edit" },
+    ],
+    opens: "/residents",
+  },
+  record_microchip: { includes: ["view_residents"], bundle: [{ activity: "resident.microchip" }], opens: "/residents" },
+  adoption_news: { includes: ["view_residents"], bundle: [{ activity: "resident.adoption_news", level: "edit" }], opens: "/residents" },
+  // Its own card, not part of record_vet_care: the cell is asked by the medication, frequency and procedure-type insert policies (0148), which
+  // anyone recording may need, so it must be givable without the six medical edits. Includes view_medical so it sits where the forms are.
+  add_while_recording: { includes: ["view_medical"], bundle: [{ activity: "reference.add_while_recording" }], opens: "/residents" },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */
@@ -329,6 +352,10 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   food_forecast: (t) => t.appHome.cards.foodForecast,
   medicine_forecast: (t) => t.appHome.cards.medicineForecast,
   view_cashflow: (t) => t.appHome.cards.viewCashflow,
+  record_vet_care: (t) => t.appHome.cards.recordVetCare,
+  record_microchip: (t) => t.appHome.cards.recordMicrochip,
+  adoption_news: (t) => t.appHome.cards.adoptionNews,
+  add_while_recording: (t) => t.appHome.cards.addWhileRecording,
 };
 
 export const CARDS: Record<CardKey, Card> = {
