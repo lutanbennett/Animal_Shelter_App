@@ -27,7 +27,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { giveRole } from "./lib/user-role.mjs";
+import { giveCards } from "./lib/user-role.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -86,11 +86,14 @@ const embedFor = (html, place) => html.includes(`q=${encodeURIComponent(place)}`
 
 const madeUsers = [];
 const madeContacts = [];
+let cleanupRole = async () => {};
 try {
   const { data: u, error: uErr } = await service.auth.admin.createUser({ email, password, email_confirm: true });
   if (uErr) throw uErr;
   madeUsers.push(u.user.id);
-  const { error: roleErr } = await giveRole(service, u.user.id, "management");
+  // Exactly the Manage contacts card (it includes View contacts), not a role other work can rebuild.
+  const { error: roleErr, cleanup } = await giveCards(service, u.user.id, ["contacts"]);
+  cleanupRole = cleanup;
   if (roleErr) throw roleErr;
 
   const { data: rows, error: cErr } = await service.from("contacts").insert([A, B, C, D]).select("id, name");
@@ -153,6 +156,7 @@ try {
     const { error } = await service.auth.admin.deleteUser(uid);
     if (error) console.error(`  could not delete ${uid}: ${error.message}`);
   }
+  await cleanupRole();
   console.log(`  deleted ${madeContacts.length} throwaway contact(s) and ${madeUsers.length} login(s)`);
 }
 
