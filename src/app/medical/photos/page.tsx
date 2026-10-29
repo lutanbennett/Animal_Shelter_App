@@ -92,7 +92,7 @@ export default async function AddMedicalPhotosPage(props: PageProps<"/medical/ph
         </div>
         <MedicalPhotoUploader residentId={residentId} />
         <p className="text-sm text-muted">{p.goesIn}</p>
-        <p className="text-sm text-muted">{can(await loadPermissions(), "resident.record", "read") ? p.canView : p.noView}</p>
+        <p className="text-sm text-muted">{can(await loadPermissions(), "photos.resident_medical", "read") ? p.canView : p.noView}</p>
         {back}
       </>,
     );
