@@ -6,7 +6,7 @@
 // What it holds:
 //   vocabulary   three rounds, lunch is medication-only, food is morning + evening
 //   back-fill    every real frequency, prescription and diet on dev has the rounds its schedule owes,
-//                so no existing prescription falls in no round (whether anything reads none or mismatch on real data is no longer asserted: apply-day claim)
+//                so (whether anything reads none or mismatch on real data is no longer asserted: apply-day claim)
 //   defaults     a new frequency, prescription or diet is given rounds (1 -> morning,
 //                2 -> morning + evening, 3 -> all, interval -> morning, as needed -> none); a changed
 //                schedule re-defaults; a hand-ticked set survives an unrelated edit
@@ -32,17 +32,19 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 
 const lit = (id) => `'${id}'::uuid`;
 // No staff principal: 0173 retired Staff and a live staff login can no longer be made.
-const P = ["admin", "management", "volunteer", "doctor", "norole"];
+// Principals are CARD holdings, not roles (restated 2026-10-29): "meds" holds exactly administer_medication,
+// "editor" exactly medical_records (it edits medical.prescriptions), "viewer" exactly view_residents, "norole" nothing; Admin sits outside the cards.
+const P = ["admin", "meds", "editor", "viewer", "norole"];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
 const R = randomUUID();
 
 const probes = [
-  ["read frequency_rounds", `select 1 from frequency_rounds limit 1`, { admin: 1, management: 1, doctor: 1, volunteer: 0, norole: 0 }],
-  ["read rounds", `select 1 from rounds limit 1`, { admin: 1, management: 1, doctor: 1, volunteer: 1, norole: 1 }],
+  ["read frequency_rounds", `select 1 from frequency_rounds limit 1`, { admin: 1, meds: 1, editor: 1, viewer: 0, norole: 0 }],
+  ["read rounds", `select 1 from rounds limit 1`, { admin: 1, meds: 1, editor: 1, viewer: 0, norole: 0 } /* 0263: rounds are read by the cards whose forms list them, no longer by everyone */],
   // management: 0 since 0145 — a frequency_rounds write asks reference.types Edit, which is Admin-only (paper line 374; "A write is now Admin's, as the frequency list is", docs/decisions/2026-10-05-perm-convert-orphans.md). Was 1 under the old role list.
-  ["write frequency_rounds", `delete from frequency_rounds where frequency_id = (select id from frequency where label = 'Once daily')`, { admin: 1, management: 0, doctor: 0, volunteer: 0, norole: 0 }],
-  ["write rounds", `update rounds set name = name where key = 'lunch'`, { admin: 1, management: 0, doctor: 0, volunteer: 0, norole: 0 }],
-  ["write prescription_rounds", `delete from prescription_rounds where prescription_id in (select id from prescriptions where resident_id = '${R}')`, { admin: 1, management: 1, doctor: 0, volunteer: 0, norole: 0 }],
+  ["write frequency_rounds", `delete from frequency_rounds where frequency_id = (select id from frequency where label = 'Once daily')`, { admin: 1, meds: 0, editor: 0, viewer: 0, norole: 0 }],
+  ["write rounds", `update rounds set name = name where key = 'lunch'`, { admin: 1, meds: 0, editor: 0, viewer: 0, norole: 0 }],
+  ["write prescription_rounds", `delete from prescription_rounds where prescription_id in (select id from prescriptions where resident_id = '${R}')`, { admin: 1, meds: 0, editor: 1, viewer: 0, norole: 0 }],
 ];
 // [function, the table its argument is an id of]: called with a real id, so a granted call would really reset it.
 const RESETS = [["reset_prescription_rounds", "prescriptions"], ["reset_frequency_rounds", "frequency"], ["reset_diet_rounds", "resident_diets"]];
@@ -85,12 +87,23 @@ begin
 end $f$;
 
 do $setup$
+declare v_role uuid;
 begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-rd-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
-  insert into user_roles (user_id, role_id)
-    select u.id, ro.id from (values ${["admin", "management", "volunteer", "doctor"].map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id) join roles ro on ro.key = u.who;
+  insert into user_roles (user_id, role_id) select ${lit(ID.admin)}, id from roles where key = 'admin';
+  -- throwaway roles holding exactly some cards (as dev-signin.mjs --cards builds them); set_role_cards needs Admin
+  perform set_config('request.jwt.claims', json_build_object('sub', ${lit(ID.admin)}, 'role', 'authenticated', 'aal', 'aal1')::text, true);
+  insert into roles (key, name, kind, home_path) values ('harness_mr_meds', 'Harness administer medication', 'custom', '/home') returning id into v_role;
+  perform set_role_cards(v_role, array['administer_medication']);
+  insert into user_roles (user_id, role_id) values (${lit(ID.meds)}, v_role);
+  insert into roles (key, name, kind, home_path) values ('harness_mr_editor', 'Harness medical records', 'custom', '/home') returning id into v_role;
+  perform set_role_cards(v_role, array['medical_records']);
+  insert into user_roles (user_id, role_id) values (${lit(ID.editor)}, v_role);
+  insert into roles (key, name, kind, home_path) values ('harness_mr_viewer', 'Harness view residents', 'custom', '/home') returning id into v_role;
+  perform set_role_cards(v_role, array['view_residents']);
+  insert into user_roles (user_id, role_id) values (${lit(ID.viewer)}, v_role);
   insert into residents (id, name, species) values (${lit(R)}, 'Harness resident', 'Dog');
 end $setup$;
 
@@ -121,12 +134,8 @@ begin
   perform pg_temp.t('back-fill: Weekly (an interval) -> morning', pg_temp.keys((select id from frequency where label = 'Weekly')) = 'morning');
   perform pg_temp.t('back-fill: As needed -> no rounds, and that reads ok', pg_temp.keys((select id from frequency where label = 'As needed')) = ''
     and (select status from frequency_round_status where label = 'As needed') = 'ok');
-  perform pg_temp.t('back-fill: no existing prescription with a schedule is left in no round',
-    not exists (select 1 from prescriptions p join frequency f on f.id = p.frequency_id
-                 where (f.doses_per_day is not null or f.interval_count is not null)
-                   and not exists (select 1 from prescription_rounds pr where pr.prescription_id = p.id)),
-    (select count(*)::text from prescriptions p join frequency f on f.id = p.frequency_id where (f.doses_per_day is not null or f.interval_count is not null)
-        and not exists (select 1 from prescription_rounds pr where pr.prescription_id = p.id)));
+  -- Dropped 2026-10-29 with the others above: "no existing prescription with a schedule is left in no round" is an apply-day claim
+  -- about rows staff keep entering (dev held one such prescription). What the defaults do is asserted on rows this harness makes.
   perform pg_temp.t('back-fill: every two-meal diet is morning+evening',
     not exists (select 1 from resident_diets d where d.meals_per_day = 2 and pg_temp.dkeys(d.id) <> 'morning+evening'));
 
@@ -177,9 +186,9 @@ begin
   perform pg_temp.t('prescription: an ended prescription drops out of the status view', not exists (select 1 from prescription_round_status where prescription_id = x3));
 
   -- diets
-  select id into dt from diet_types order by id limit 1;
-  insert into resident_diets (resident_id, diet_type_id, start_date, meals_per_day) values (${lit(R)}, dt, current_date, 2) returning id into d1;
-  insert into resident_diets (resident_id, diet_type_id, start_date, meals_per_day) values (${lit(R)}, dt, current_date, 1) returning id into d2;
+  select id into dt from diets order by id limit 1; -- a recipe (resident_diets.diet_id, 0239); diet_type_id was dropped in 0243
+  insert into resident_diets (resident_id, diet_id, start_date, meals_per_day) values (${lit(R)}, dt, current_date, 2) returning id into d1;
+  insert into resident_diets (resident_id, diet_id, start_date, meals_per_day) values (${lit(R)}, dt, current_date, 1) returning id into d2;
   perform pg_temp.t('diet insert: 2 meals -> morning+evening', pg_temp.dkeys(d1) = 'morning+evening');
   perform pg_temp.t('diet insert: 1 meal -> morning', pg_temp.dkeys(d2) = 'morning');
   update resident_diets set meals_per_day = 2 where id = d2;
