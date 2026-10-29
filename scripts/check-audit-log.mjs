@@ -10,14 +10,14 @@
 //   A1  insert, update and delete on each of the seven tables write one row
 //       with the right op, row_id and images
 //   A2  actor is the session's login (management, doctor, admin); null for the owner
-//       (management stands where Staff stood until 0173 retired it: it writes but cannot read the log)
+//       (the writer login below holds the resident and photo cells but no audit cell: it writes and cannot read the log)
 //   A3  residents' images omit microchip_number and microchip_implanted_on;
 //       the other tables keep every column
 //   A4  an update that changes nothing writes no row
 //   A5  each of the seven tables carries record_audit() as a trigger
 // Reading
-//   R1  an admin reads audit_log; management, volunteer and doctor read zero rows
-//   R2  a doctor's or a management login's write is recorded though they cannot read it
+//   R1  an admin reads audit_log; a login holding resident and photo cells reads zero rows
+//   R2  a write by a login without an audit cell is recorded though it cannot read it
 // History is not rewritable
 //   W1  no API role can insert, update, delete or truncate audit_log
 //       (admin included); the owner cannot update, delete or truncate either
@@ -90,9 +90,17 @@ begin
     values (v_uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
             'harness-audit-' || v_uid || '@example.invalid', '{}'::jsonb, '{"full_name":"Harness"}'::jsonb, now(), now());
   end loop;
+  -- Restated 2026-10-29 (harness-restate-nine): the logins were named roles (volunteer, management, doctor).
+  -- The writer holds the cells the live policies ask of its statements (resident.record, photos.resident_add,
+  -- photos.resident_manage, photos.resident_publish); the two others hold one unrelated cell. Admin signs in as itself.
+  insert into roles (key, name, kind) values ('h0120_writer', 'h writer', 'custom'), ('h0120_other', 'h other', 'custom');
+  insert into role_permissions (role_id, activity, level)
+  select roles.id, act, 2 from roles, (values ('resident.record'), ('photos.resident_add'), ('photos.resident_manage'), ('photos.resident_publish')) v(act) where roles.key = 'h0120_writer';
+  insert into role_permissions (role_id, activity, level) select roles.id, 'maintenance.photos', 2 from roles where roles.key = 'h0120_other';
   insert into user_roles (user_id, role_id)
-  select v.c0, ro.id from (values (v_vol, 'volunteer'), (v_mgmt, 'management'), (v_doctor_u, 'doctor'), (v_admin, 'admin')) as v(c0, role_key)
+  select v.c0, ro.id from (values (v_vol, 'h0120_other'), (v_mgmt, 'h0120_writer'), (v_doctor_u, 'h0120_other')) as v(c0, role_key)
   join roles ro on ro.key = v.role_key;
+  insert into user_roles (user_id, role_id) select v_admin, roles.id from roles where roles.is_admin;
 
   -- A1/A2: owner-made rows have a null actor
   insert into contacts (id, name, type) values (v_carer, 'Harness carer', 'Carer');
@@ -108,7 +116,7 @@ begin
 
   -- A3: the microchip stays out of residents' images
   v_r := pg_temp.run(v_mgmt, format($q$update residents set microchip_number = '985112345678901', microchip_implanted_on = '2026-01-01', behaviour_notes = 'chipped' where id = %L$q$, v_res));
-  if v_r <> 'ok' then raise exception 'FAIL A3 management chip update: %', v_r; end if;
+  if v_r <> 'ok' then raise exception 'FAIL A3 resident.record chip update: %', v_r; end if;
   select * into v_row from audit_log where row_id = v_res and op = 'UPDATE';
   if v_row.id is null then raise exception 'FAIL A1 resident update wrote no row'; end if;
   if v_row.actor is distinct from v_mgmt then raise exception 'FAIL A2 resident update actor %', v_row.actor; end if;
@@ -240,7 +248,7 @@ begin
   then raise exception 'FAIL W2 a trigger function is executable by an API role'; end if;
   if has_table_privilege('anon', 'audit_log', 'select') then raise exception 'FAIL W1 anon can select audit_log'; end if;
 
-  raise exception 'HARNESS-OK live schema | A5 record_audit() on all seven tables | A1 insert/update/delete recorded on residents, contacts, prescriptions, clinic_visits, weight, attachments, immunization_records | A2 actor is the session login (management, admin), null for the owner | A3 residents images omit microchip_number and microchip_implanted_on | A4 no-change and excluded-column-only updates write nothing | R1 admin reads, volunteer/management/doctor see zero rows | R2 management writes recorded though they cannot read the log | W1 no API role (admin, service_role included) inserts, updates, deletes or truncates; the owner is refused by the trigger | W2 trigger functions not executable by anon/authenticated';
+  raise exception 'HARNESS-OK live schema | A5 record_audit() on all seven tables | A1 insert/update/delete recorded on residents, contacts, prescriptions, clinic_visits, weight, attachments, immunization_records | A2 actor is the session login (a cell holder, admin), null for the owner | A3 residents images omit microchip_number and microchip_implanted_on | A4 no-change and excluded-column-only updates write nothing | R1 admin reads, volunteer/management/doctor see zero rows | R2 management writes recorded though they cannot read the log | W1 no API role (admin, service_role included) inserts, updates, deletes or truncates; the owner is refused by the trigger | W2 trigger functions not executable by anon/authenticated';
 end
 $h$;
 rollback;

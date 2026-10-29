@@ -1,17 +1,22 @@
-// Rollback harness for 0118_unit_conversions.sql against DEV only. One
-// transaction: the migration twice (re-runnable), throwaway items, the
-// conversion table's constraints and roles, the point-in-time factor on
-// receipts and counts, record_stocktake() with and without "entered", and a
-// check that rows written the old way are untouched — then a deliberate
-// `raise exception` carrying the evidence, so nothing can commit.
+// Rollback harness for unit conversions (0118, 0199) against DEV only, on the LIVE schema.
+// One transaction: throwaway items, the conversion table's constraints and who may
+// read or write it, the point-in-time factor on receipts and counts,
+// record_stocktake() with and without "entered", and a check that rows written the
+// old way are untouched, then a deliberate raise exception carrying the evidence,
+// so nothing can commit.
+//
+// Restated 2026-10-29 (harness-restate-nine). It used to replay 0118 and 0199 inside the
+// transaction and sign in as 'management' and 'volunteer'. Replaying fails on the live
+// schema (0199 made several rows per diet type legal, and 0239 dropped the diet_types
+// quantity columns) and re-creates role-keyed policies beside the card ones. The
+// principals are now throwaway roles holding exactly the cells the live policies ask:
+// stock.diets (write) and stock.count (read, and the stocktake RPC).
 //
 //   node scripts/check-unit-conversions.mjs     (from the repo root; dev only)
 //
 // Exits 0 when every assertion held. Writes nothing.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { OLD_ROLE_SHIM } from "./lib/old-role-shim.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -19,33 +24,30 @@ const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
 
-const migration = readFileSync(join(root, "supabase/migrations/0118_unit_conversions.sql"), "utf8") +
-  readFileSync(join(root, "supabase/migrations/0199_pack_sizes.sql"), "utf8");
-
 const sql = `
 begin;
-${OLD_ROLE_SHIM}
-${migration}
--- a second run of the whole file must be harmless
-${migration}
 
 create temp table who (who text primary key, uid uuid);
 insert into who values
-  ('management', gen_random_uuid()), ('volunteer', gen_random_uuid());
+  ('writer', gen_random_uuid()), ('reader', gen_random_uuid());
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
        'harness-0118-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
   from who;
+insert into roles (key, name, kind) values ('h0118_writer', 'h writer', 'custom'), ('h0118_reader', 'h reader', 'custom');
+insert into role_permissions (role_id, activity, level)
+  select id, a, 2 from roles, (values ('stock.diets'), ('stock.count')) v(a) where key = 'h0118_writer';
+insert into role_permissions (role_id, activity, level)
+  select id, 'stock.count', 2 from roles where key = 'h0118_reader';
 insert into user_roles (user_id, role_id)
-  select s.c0, ro.id from (select uid as c0, who as role_key from who) s
-  join roles ro on ro.key = s.role_key;
+  select w.uid, r.id from who w join roles r on r.key = 'h0118_' || w.who;
 grant select on who to authenticated;
 
 create temp table ids (k text primary key, id uuid);
 grant select on ids to authenticated;
 with d as (
-  insert into diet_types (name, unit, daily_qty_small, daily_qty_medium, daily_qty_large)
-  values ('harness-0118 kibble', 'cup', 1, 1, 1) returning id
+  insert into diet_types (name, unit)
+  values ('harness-0118 kibble', 'cup') returning id
 )
 insert into ids select 'kibble', id from d;
 with m as (
@@ -141,8 +143,8 @@ begin
   if not v_ok then raise exception 'FAIL F empty entered accepted'; end if;
   v_rep := v_rep || ' | F mixed entry (1 bag + 10 kg = 300) saved; mismatch, zero factor, non-array, empty all refused';
 
-  -- G. record_stocktake as management (Staff until 0173 retired it): old shape unchanged, then with entered
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'management'), 'role', 'authenticated')::text, true);
+  -- G. record_stocktake as a login holding stock.count: old shape unchanged, then with entered
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'writer'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   perform record_stocktake(null, jsonb_build_array(jsonb_build_object('id', v_kibble, 'count', 123)));
   reset role;
@@ -183,17 +185,16 @@ begin
   v_rep := v_rep || ' | H stock_count_intervals unchanged';
 
   -- I. roles on the conversion table
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'volunteer'), 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'reader'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   select count(*) into v_n from item_unit_conversions where diet_type_id = v_kibble;
-  if v_n <> 2 then reset role; raise exception 'FAIL I volunteer cannot read conversions (% rows)', v_n; end if;
+  if v_n <> 2 then reset role; raise exception 'FAIL I stock.count cannot read conversions (% rows)', v_n; end if;
   v_ok := false;
   begin insert into item_unit_conversions (item_kind, diet_type_id, unit, base_units_per) values ('diet_type', v_kibble, 'tin', 3);
   exception when insufficient_privilege or others then v_ok := true; end;
   reset role;
-  if not v_ok then raise exception 'FAIL I volunteer wrote a conversion'; end if;
-  -- (a staff login was the second refused writer here until 0173 retired the role)
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'management'), 'role', 'authenticated')::text, true);
+  if not v_ok then raise exception 'FAIL I stock.count alone wrote a conversion'; end if;
+    perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'writer'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   insert into item_unit_conversions (item_kind, diet_type_id, unit, base_units_per) values ('diet_type', v_kibble, 'tin', 3);
   reset role;
@@ -204,7 +205,7 @@ begin
   exception when insufficient_privilege then v_ok := true; end;
   reset role;
   if not v_ok then raise exception 'FAIL I anon read conversions'; end if;
-  v_rep := v_rep || ' | I volunteer reads but cannot write, management writes, anon refused';
+  v_rep := v_rep || ' | I stock.count reads but cannot write, stock.diets writes, anon refused';
 
   -- J. cascade
   delete from diet_types where id = v_kibble;
@@ -212,7 +213,7 @@ begin
   if v_n <> 0 then raise exception 'FAIL J conversions survived their diet type'; end if;
   v_rep := v_rep || ' | J deleting an item deletes its conversions';
 
-  raise exception 'HARNESS-OK 0118 twice%', v_rep;
+  raise exception 'HARNESS-OK unit conversions, live schema%', v_rep;
 end $$;
 `;
 

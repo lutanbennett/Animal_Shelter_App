@@ -1,7 +1,7 @@
 // Rollback harness for 0107_prescriptions_visit_not_in_future.sql against DEV
 // only, asserting the LIVE schema. One transaction: seed a harness resident with
 // visits yesterday, today, and tomorrow at the shelter, then write
-// prescriptions as a signed-in management user straight through the tables — the
+// prescriptions as a signed-in the cell holder user straight through the tables — the
 // second-tab / direct-API case the form's filter never sees — ending in a
 // deliberate `raise exception` carrying the evidence, so nothing can commit.
 //
@@ -9,18 +9,20 @@
 // clinic_visits and vet_appointment_id to clinic_visit_id and redefined both
 // trigger functions, so a replay of 0107 names columns that no longer exist; it
 // asserts the live schema instead (docs/decisions/2026-10-02-replay-or-assert-live.md).
-// The signed-in user was staff until 0173 retired that role (a live staff row is
-// refused); management writes prescriptions the same way.
+// Restated 2026-10-29 (harness-restate-nine): the signed-in user was a named role
+// (the cell holder). It is now a throwaway role holding exactly the cells the live policies
+// ask, medical.prescriptions (prescriptions insert and update) and medical.visits
+// (clinic_visits update, the E door).
 //
 //   node scripts/check-prescription-visit-not-future.mjs   (repo root; dev only)
 //
 // It checks, dates relative to shelter_today():
-//   A  management linking a new prescription to tomorrow's visit is refused
+//   A  the cell holder linking a new prescription to tomorrow's visit is refused
 //      (check_violation, named prescriptions_visit_not_in_future) — including
 //      a visit at 06:00 Bangkok tomorrow, which is still today in UTC
-//   B  what still works for management: yesterday's visit, a visit at 23:30
+//   B  what still works for the cell holder: yesterday's visit, a visit at 23:30
 //      tonight, and no visit at all
-//   C  management re-linking an existing prescription to tomorrow's visit is
+//   C  the cell holder re-linking an existing prescription to tomorrow's visit is
 //      refused; editing its dose, dates and notes without touching the link
 //      is not
 //   D  a link that predates the rule (planted with the trigger off) survives
@@ -54,9 +56,10 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   values (v_mgmt, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
           'harness-rx-future-mgmt@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now());
-  insert into user_roles (user_id, role_id)
-  select v.c0, ro.id from (values (v_mgmt, 'management')) as v(c0, role_key)
-  join roles ro on ro.key = v.role_key;
+  insert into roles (key, name, kind) values ('h0107_rx', 'h rx', 'custom');
+  insert into role_permissions (role_id, activity, level)
+  select id, a, 2 from roles, (values ('medical.prescriptions'), ('medical.visits')) v(a) where key = 'h0107_rx';
+  insert into user_roles (user_id, role_id) select v_mgmt, id from roles where key = 'h0107_rx';
 
   insert into residents (name) values ('Harness rx no future visit') returning id into v_res;
   insert into harness values ('mgmt', v_mgmt), ('res', v_res),
@@ -117,7 +120,7 @@ begin
     raise exception 'HARNESS-FAIL A: a prescription on 06:00 tomorrow (today in UTC) was accepted';
   exception when check_violation then null;
   end;
-  v_report := v_report || 'A: management insert on tomorrow''s visit refused, 06:00 tomorrow too | ';
+  v_report := v_report || 'A: the cell holder insert on tomorrow''s visit refused, 06:00 tomorrow too | ';
 
   -- B: what still works.
   insert into prescriptions (resident_id, medication_id, start_date, clinic_visit_id)
@@ -138,7 +141,7 @@ begin
   if (select dose_quantity from prescriptions where id = v_rx) <> 2 then
     raise exception 'HARNESS-FAIL C: the dose edit did not land (RLS?)';
   end if;
-  v_report := v_report || 'C: management re-link to tomorrow refused, dose/date/notes edit accepted | ';
+  v_report := v_report || 'C: the cell holder re-link to tomorrow refused, dose/date/notes edit accepted | ';
 
   reset role;
 

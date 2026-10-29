@@ -40,6 +40,6 @@ export const MEDICAL_ARCHIVE_SECTIONS = {
  * 0110). They are not offered it because the archive is one-way for them:
  * 0124 drops an archived visit from current_clinic_resident_ids(), so the doctor
  * who archives a resident's only visit loses sight of the resident and
- * cannot restore it (found by scripts/check-medical-archive-roles.mjs).
+ * cannot restore it (found by scripts/check-medical-archive-card.mjs).
  * A volunteer cannot update any of the four.
  */

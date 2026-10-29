@@ -1,9 +1,14 @@
-// Rollback harness for 0088_record_stocktake.sql,
-// 0091_record_stocktake_staff.sql and 0093_stock_counts.sql against DEV only.
-// One transaction: LIVE schema, not replayed (0112 and 0118 redefined record_stocktake after these), harness
-// logins, calls to
-// record_stocktake() as each of them, then a deliberate `raise exception`
+// Rollback harness for record_stocktake() and the stock_counts history (0088, 0091, 0093, as
+// redefined since) against DEV only. One transaction: LIVE schema, not replayed, throwaway logins,
+// calls to record_stocktake() as each of them, then a deliberate `raise exception`
 // carrying the evidence — so nothing can commit.
+//
+// Restated 2026-10-29 (harness-restate-nine): the logins used to be named roles (management,
+// staff, volunteer, doctor, public_viewer). The function's own guard is the cell stock.count
+// (0178), and stock_counts reads on stock.count, stock.delivery or stock.purchasing, so the
+// principals are now throwaway roles holding exactly: stock.count (two logins, so history
+// attribution can be told apart), and one unrelated cell (photos.resident_add), plus a login
+// with no role and anon. Admin sits outside the card system and is signed in as itself.
 //
 //   node scripts/check-stocktake.mjs     (from the repo root; dev only)
 //
@@ -22,24 +27,23 @@ begin;
 
 create temp table who (who text primary key, uid uuid);
 insert into who values
-  ('management', gen_random_uuid()), ('admin', gen_random_uuid()),
-  ('staff', gen_random_uuid()), ('volunteer', gen_random_uuid()), ('doctor', gen_random_uuid()),
-  ('public_viewer', gen_random_uuid()), ('roleless', gen_random_uuid()), ('anon', null);
+  ('counter', gen_random_uuid()), ('admin', gen_random_uuid()),
+  ('counter2', gen_random_uuid()), ('other', gen_random_uuid()),
+  ('roleless', gen_random_uuid()), ('anon', null);
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
        'harness-0091-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
   from who where uid is not null;
 insert into user_roles (user_id, role_id)
-  select s.c0, ro.id from (select uid as c0, who as role_key from who where who in ('management', 'admin', 'volunteer', 'doctor', 'public_viewer')) s
-  join roles ro on ro.key = s.role_key;
--- staff: the Staff role until 0173 retired it; a custom role carrying its cells keeps this login on the same path
--- It borrows volunteer, as every live custom role does: record_* functions still gate on the enum (admin, management), so a role borrowing management would pass on that and not on its cells.
-insert into roles (key, name, kind) values ('harness_0091_staff', 'Harness staff', 'custom');
+  select w.uid, r.id from who w join roles r on r.is_admin where w.who = 'admin';
+insert into roles (key, name, kind) values ('h0091_counter', 'h counter', 'custom'), ('h0091_other', 'h other', 'custom');
 insert into role_permissions (role_id, activity, level)
-select (select id from roles where key = 'harness_0091_staff'), rp.activity, rp.level
-  from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
+  select id, 'stock.count', 2 from roles where key = 'h0091_counter';
+insert into role_permissions (role_id, activity, level)
+  select id, 'photos.resident_add', 2 from roles where key = 'h0091_other';
 insert into user_roles (user_id, role_id)
-  select (select uid from who where who = 'staff'), id from roles where key = 'harness_0091_staff';
+  select w.uid, r.id from who w join roles r on r.key = 'h0091_' || case w.who when 'other' then 'other' else 'counter' end
+   where w.who in ('counter', 'counter2', 'other');
 grant select on who to authenticated, anon;
 
 -- Call record_stocktake as a login (null = anon). Returns the result as
@@ -91,11 +95,11 @@ begin
 
   list := jsonb_build_array(jsonb_build_object('id', m1, 'count', 12.5), jsonb_build_object('id', m2, 'count', 40));
 
-  -- A. management saves two medications and a diet type in one call
+  -- A. a stock.count login saves two medications and a diet type in one call
   select count(*) into v_hist from stock_counts;
-  v := pg_temp.as_login('management', list, jsonb_build_array(jsonb_build_object('id', d1, 'count', 0)));
+  v := pg_temp.as_login('counter', list, jsonb_build_array(jsonb_build_object('id', d1, 'count', 0)));
   if v not like '{"medication_updated":2,"diet_types_updated":1,"counted_at":%' then raise exception 'FAIL A: %', v; end if;
-  v_report := v_report || ' | management: ' || v;
+  v_report := v_report || ' | counter: ' || v;
   select count(*) into v_n from medication where id in (m1, m2) and stock_counted_at = now();
   if v_n <> 2 then raise exception 'FAIL A: % of 2 medications stamped now()', v_n; end if;
   if (select stock_on_hand from medication where id = m1) <> 12.5 then raise exception 'FAIL A: m1 count not written'; end if;
@@ -117,7 +121,7 @@ begin
     raise exception 'FAIL K1: A wrote % history rows, not 3', (select count(*) from stock_counts) - v_hist;
   end if;
   select min(stocktake_id::text)::uuid into v_a_stocktake from stock_counts
-   where counted_by = (select uid from who where who = 'management');
+   where counted_by = (select uid from who where who = 'counter');
   if (select count(*) from stock_counts where stocktake_id = v_a_stocktake) <> 3 then
     raise exception 'FAIL K1: A''s three rows do not share one stocktake id';
   end if;
@@ -156,25 +160,25 @@ begin
     jsonb_build_array(jsonb_build_object('id', m1, 'count', 99), jsonb_build_object('id', 'not-a-uuid', 'count', 1)),
     jsonb_build_object('id', m1, 'count', 99)
   ] loop
-    v := pg_temp.as_login('management', list, null);
+    v := pg_temp.as_login('counter', list, null);
     if v not like 'ERR P0001 %' then raise exception 'FAIL F: % was not refused cleanly: %', list, v; end if;
     if (select stock_on_hand from medication where id = m1) <> 12.5 then raise exception 'FAIL F: % wrote m1', list; end if;
     v_report := v_report || ' | ' || substr(v, 10, 60);
   end loop;
   -- a bad diet list stops the medication list in the same call
-  v := pg_temp.as_login('management', jsonb_build_array(jsonb_build_object('id', m1, 'count', 99)),
+  v := pg_temp.as_login('counter', jsonb_build_array(jsonb_build_object('id', m1, 'count', 99)),
                         jsonb_build_array(jsonb_build_object('id', gen_random_uuid(), 'count', 1)));
   if v not like 'ERR P0001 %' or (select stock_on_hand from medication where id = m1) <> 12.5 then
     raise exception 'FAIL F: a bad diet list still wrote medication: %', v;
   end if;
 
-  v := pg_temp.as_login('management', null,
+  v := pg_temp.as_login('counter', null,
                         jsonb_build_array(jsonb_build_object('id', d1, 'count', 1), jsonb_build_object('id', upper(d1::text), 'count', 2)));
   if v <> 'ERR P0001 The same diet type is listed twice.' then raise exception 'FAIL F: diet duplicate (case-insensitive id): %', v; end if;
 
-  -- G. who is refused: doctor, public_viewer and role-less by the function's
+  -- G. who is refused: a login without stock.count and a role-less one, by the function's
   -- own guard (0091: it is the whole access rule now), anon by the grant
-  foreach v_who in array array['doctor', 'public_viewer', 'roleless'] loop
+  foreach v_who in array array['other', 'roleless'] loop
     v := pg_temp.as_login(v_who, jsonb_build_array(jsonb_build_object('id', m1, 'count', 1)), null);
     if v <> 'ERR P0001 Not authorized to record a stocktake.' then raise exception 'FAIL G %: %', v_who, v; end if;
   end loop;
@@ -186,9 +190,9 @@ begin
     raise exception 'FAIL K2: refused calls wrote % history rows', (select count(*) from stock_counts) - v_hist;
   end if;
 
-  -- I. staff may save a stocktake (0091; volunteers stopped in 0134) — through the
+  -- I. a second stock.count login may save a stocktake — through the
   -- definer function, both tables, same stamp as any other caller
-  foreach v_who in array array['staff'] loop
+  foreach v_who in array array['counter2'] loop
     v := pg_temp.as_login(v_who, jsonb_build_array(jsonb_build_object('id', m1, 'count', 7)),
                           jsonb_build_array(jsonb_build_object('id', d1, 'count', 5)));
     if v not like '{"medication_updated":1,"diet_types_updated":1,"counted_at":%' then raise exception 'FAIL I %: %', v_who, v; end if;
@@ -208,41 +212,41 @@ begin
     v_report := v_report || ' | ' || v_who || ' ok';
   end loop;
   select count(*) into v_hist from stock_counts;
-  -- and still a refusal before anything is written (a volunteer is refused outright, 0134)
-  v := pg_temp.as_login('volunteer', jsonb_build_array(jsonb_build_object('id', m1, 'count', 99), jsonb_build_object('id', m2, 'count', -1)), null);
+  -- and still a refusal before anything is written (a login without stock.count is refused outright)
+  v := pg_temp.as_login('other', jsonb_build_array(jsonb_build_object('id', m1, 'count', 99), jsonb_build_object('id', m2, 'count', -1)), null);
   if v <> 'ERR P0001 Not authorized to record a stocktake.' or (select stock_on_hand from medication where id = m1) <> 7 then
-    raise exception 'FAIL I volunteer refusal: %', v;
+    raise exception 'FAIL I refusal: %', v;
   end if;
-  if (select count(*) from stock_counts) <> v_hist then raise exception 'FAIL K2: the volunteer refusal wrote history'; end if;
+  if (select count(*) from stock_counts) <> v_hist then raise exception 'FAIL K2: the refusal wrote history'; end if;
 
-  -- K4. the table has no door but the function: staff can read the history
-  -- but not insert (so not back-date), update or delete it; a doctor reads
+  -- K4. the table has no door but the function: a stock.count login can read the history
+  -- but not insert (so not back-date), update or delete it; a login without any stock cell reads
   -- nothing; anon is refused outright
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'staff'), 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'counter2'), 'role', 'authenticated')::text, true);
   set local role authenticated;
-  if (select count(*) from stock_counts) <> v_hist then raise exception 'FAIL K4: staff cannot read the history'; end if;
+  if (select count(*) from stock_counts) <> v_hist then raise exception 'FAIL K4: counter cannot read the history'; end if;
   begin
     insert into stock_counts (stocktake_id, item_kind, medication_id, counted_quantity, counted_at)
     values (gen_random_uuid(), 'medication', m1, 1, '2000-01-01');
-    raise exception 'FAIL K4: staff inserted a history row';
+    raise exception 'FAIL K4: counter inserted a history row';
   exception when insufficient_privilege then null;
   end;
   begin
     update stock_counts set counted_at = '2000-01-01';
-    raise exception 'FAIL K4: staff updated the history';
+    raise exception 'FAIL K4: counter updated the history';
   exception when insufficient_privilege then null;
   end;
   begin
     delete from stock_counts;
-    raise exception 'FAIL K4: staff deleted the history';
+    raise exception 'FAIL K4: counter deleted the history';
   exception when insufficient_privilege then null;
   end;
   reset role;
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'doctor'), 'role', 'authenticated')::text, true);
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'other'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   v_n := (select count(*) from stock_counts);
   reset role;
-  if v_n <> 0 then raise exception 'FAIL K4: a doctor read % history rows', v_n; end if;
+  if v_n <> 0 then raise exception 'FAIL K4: a login without stock cells read % history rows', v_n; end if;
   perform set_config('request.jwt.claims', json_build_object('role', 'anon')::text, true);
   set local role anon;
   begin
@@ -255,14 +259,14 @@ begin
 
   -- K5. deleting a counted item still works, and takes its history with it
   insert into medication (name) values ('harness-0093 throwaway') returning id into v_tmp;
-  v := pg_temp.as_login('staff', jsonb_build_array(jsonb_build_object('id', v_tmp, 'count', 3)), null);
+  v := pg_temp.as_login('counter2', jsonb_build_array(jsonb_build_object('id', v_tmp, 'count', 3)), null);
   if (select count(*) from stock_counts where medication_id = v_tmp) <> 1 then raise exception 'FAIL K5: throwaway not counted: %', v; end if;
   delete from medication where id = v_tmp;
   if exists (select 1 from stock_counts where medication_id = v_tmp) then raise exception 'FAIL K5: history outlived its item'; end if;
 
-  -- J. the function is the only door: staff still cannot write the tables
-  -- directly (no UPDATE policy — renaming or repricing stays management's)
-  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'staff'), 'role', 'authenticated')::text, true);
+  -- J. the function is the only door: stock.count still cannot write the tables
+  -- directly (no UPDATE policy for stock.count; renaming or repricing needs another cell)
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'counter2'), 'role', 'authenticated')::text, true);
   set local role authenticated;
   update medication set name = name || ' (harness)', stock_on_hand = 1 where id = m1;
   get diagnostics v_n = row_count;
@@ -270,7 +274,7 @@ begin
   get diagnostics v_direct = row_count;
   reset role;
   perform set_config('request.jwt.claims', '', true);
-  if v_n <> 0 or v_direct <> 0 then raise exception 'FAIL J: staff wrote % medication / % diet rows directly', v_n, v_direct; end if;
+  if v_n <> 0 or v_direct <> 0 then raise exception 'FAIL J: stock.count wrote % medication / % diet rows directly', v_n, v_direct; end if;
   if not (select prosecdef from pg_proc where oid = 'record_stocktake(jsonb, jsonb)'::regprocedure)
      or not exists (select 1 from pg_proc where oid = 'record_stocktake(jsonb, jsonb)'::regprocedure
                      and 'search_path=public' = any(proconfig)) then
@@ -284,7 +288,7 @@ begin
     raise exception 'FAIL H: grants not anon-no / authenticated-yes / service_role-yes';
   end if;
 
-  raise exception 'HARNESS-OK record_stocktake against the live schema | K1 one history row per listed item: one stocktake id, stored figure, unit, same stamp, caller; none for the unlisted row | K2 refusals write no history | K3 each call its own stocktake id, attributed | K4 staff read-only, doctor sees none, anon refused | K5 delete cascades | A 2 meds + 1 diet in one call, all stamped now() | B same figure restamps | C zero is a count | D unlisted row untouched | E admin ok, null and [] lists ok | F refused, nothing written:% | bad diet list stops the meds | G doctor, public_viewer and role-less refused by the guard, anon by the grant | I staff and volunteer save both tables; still refused before writing | J staff cannot update either table directly; definer + search_path | H grants', v_report;
+  raise exception 'HARNESS-OK record_stocktake against the live schema | K1 one history row per listed item: one stocktake id, stored figure, unit, same stamp, caller; none for the unlisted row | K2 refusals write no history | K3 each call its own stocktake id, attributed | K4 stock.count reads history but cannot write it, an unrelated cell sees none, anon refused | K5 delete cascades | A 2 meds + 1 diet in one call, all stamped now() | B same figure restamps | C zero is a count | D unlisted row untouched | E admin ok, null and [] lists ok | F refused, nothing written:% | bad diet list stops the meds | G a login without stock.count and a role-less one refused by the guard, anon by the grant | I a second stock.count login saves both tables; others still refused before writing | J stock.count cannot update either table directly; definer + search_path | H grants', v_report;
 end;
 $h$;
 rollback;

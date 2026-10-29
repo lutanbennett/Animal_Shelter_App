@@ -7,13 +7,20 @@
 //
 //   node scripts/check-medical-archive-roles.mjs     (from the repo root; dev only)
 //
-// It checks, per docs/decisions/2026-10-02-medical-archive-roles.md:
-//   A  management archives and restores a weight, prescription, visit and
+// Renamed from check-medical-archive-roles.mjs and restated 2026-10-29 (harness-restate-nine,
+// docs/decisions/2026-10-29-harness-restate-nine.md): the question is which CELL lets a row be archived,
+// not which role. The principals are throwaway roles holding exactly:
+//   archiver  medical.archive plus the four edit cells the tables' update policies ask
+//             (medical.weight, medical.prescriptions, medical.visits, medical.immunizations)
+//   editor    the same four edit cells and NOT medical.archive
+//   nothing   one unrelated cell
+// It checks (see also docs/decisions/2026-10-02-medical-archive-roles.md and 2026-10-12-medical-archive-trigger.md):
+//   A  medical.archive with the edit cells archives and restores a weight, prescription, visit and
 //      immunization (1 row each), and each archive writes ONE audit row
-//      (was staff until 0173 retired it; a live staff login can no longer be made)
-//   B  a doctor is refused on their own clinic by the 0187 trigger (-1) and on
-//      another clinic by RLS (0 rows); the app offers them no Archive either way
-//   C  a volunteer archives nothing
+//   B  the edit cells WITHOUT medical.archive are refused by the 0187 trigger (-1) on every one of
+//      the four tables. (It used to split own-clinic and other-clinic rows; the clinic scope is gone,
+//      so there is one outcome.)
+//   C  a login holding neither archives nothing
 //   D  a second archive of an archived row changes nothing (the .is(null) guard)
 //
 // Exits 0 when every assertion held. Writes nothing even on success.
@@ -88,15 +95,16 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
          'harness-archive-' || u || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
-  from unnest(array[v_mgmt, v_doctor, v_vol]) u;
+  from (values (v_mgmt), (v_doctor), (v_vol)) v(u);
+  insert into roles (key, name, kind) values ('h0187_archiver', 'h archiver', 'custom'), ('h0187_editor', 'h editor', 'custom'), ('h0187_nothing', 'h nothing', 'custom');
+  insert into role_permissions (role_id, activity, level)
+  select roles.id, act, 2 from roles, (values ('medical.weight'), ('medical.prescriptions'), ('medical.visits'), ('medical.immunizations')) v(act)
+   where roles.key in ('h0187_archiver', 'h0187_editor');
+  insert into role_permissions (role_id, activity, level) select roles.id, 'medical.archive', 2 from roles where roles.key = 'h0187_archiver';
+  insert into role_permissions (role_id, activity, level) select roles.id, 'maintenance.photos', 2 from roles where roles.key = 'h0187_nothing';
   insert into user_roles (user_id, role_id)
-  select v.c0, ro.id from (values (v_mgmt, 'management'), (v_vol, 'volunteer')) as v(c0, role_key)
+  select v.c0, ro.id from (values (v_mgmt, 'h0187_archiver'), (v_doctor, 'h0187_editor'), (v_vol, 'h0187_nothing')) as v(c0, role_key)
   join roles ro on ro.key = v.role_key;
-  insert into user_roles (user_id, role_id)
-  select v.c0, ro.id from (values (v_doctor, 'doctor')) as v(c0, role_key)
-  join roles ro on ro.key = v.role_key;
-  -- 0127: a doctor login's clinic is its linked doctor's (doctor_clinics links it, 0172)
-  with d as (insert into doctors (name, user_id) values ('Harness doctor', v_doctor) returning id) insert into doctor_clinics (clinic_id, doctor_id) select v_own, id from d;
   -- 0248: record_intake asks has_permission('resident.register'), so it needs a login. Run it as a disposable Admin login (true without a card,
   -- so editing cards on Who does what cannot move this seed), then drop the claims.
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
@@ -140,38 +148,39 @@ begin
   insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity, clinic_visit_id)
   values (v_res, v_med, v_freq, date '2026-08-12', 1, v_visit_other) returning id into v_rx_other;
 
-  -- A: management (Staff until 0173), all four, one audit row each.
+  -- A: medical.archive with the edit cells, all four, one audit row each.
   select count(*) into v_audit from audit_log where row_id = v_w and table_name = 'weight';
-  if pg_temp.archive_as(v_mgmt, 'weight', v_w) <> 1 then raise exception 'HARNESS-FAIL A: management could not archive a weight'; end if;
+  if pg_temp.archive_as(v_mgmt, 'weight', v_w) <> 1 then raise exception 'HARNESS-FAIL A: the archiver could not archive a weight'; end if;
   if (select count(*) from audit_log where row_id = v_w and table_name = 'weight') <> v_audit + 1 then
     raise exception 'HARNESS-FAIL A: archiving a weight wrote % audit rows, not 1',
       (select count(*) from audit_log where row_id = v_w and table_name = 'weight') - v_audit;
   end if;
-  if pg_temp.restore_as(v_mgmt, 'weight', v_w) <> 1 then raise exception 'HARNESS-FAIL A: management could not restore a weight'; end if;
-  if pg_temp.archive_as(v_mgmt, 'prescriptions', v_rx) <> 1 then raise exception 'HARNESS-FAIL A: management could not archive a prescription'; end if;
-  if pg_temp.archive_as(v_mgmt, 'clinic_visits', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: management could not archive a visit'; end if;
-  if pg_temp.archive_as(v_mgmt, 'immunization_records', v_i) <> 1 then raise exception 'HARNESS-FAIL A: management could not archive an immunization'; end if;
-  if pg_temp.restore_as(v_mgmt, 'clinic_visits', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: management could not restore a visit'; end if;
-  v_report := v_report || 'A: management archives all four, restores, one audit row per archive | ';
+  if pg_temp.restore_as(v_mgmt, 'weight', v_w) <> 1 then raise exception 'HARNESS-FAIL A: the archiver could not restore a weight'; end if;
+  if pg_temp.archive_as(v_mgmt, 'prescriptions', v_rx) <> 1 then raise exception 'HARNESS-FAIL A: the archiver could not archive a prescription'; end if;
+  if pg_temp.archive_as(v_mgmt, 'clinic_visits', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: the archiver could not archive a visit'; end if;
+  if pg_temp.archive_as(v_mgmt, 'immunization_records', v_i) <> 1 then raise exception 'HARNESS-FAIL A: the archiver could not archive an immunization'; end if;
+  if pg_temp.restore_as(v_mgmt, 'clinic_visits', v_visit_other) <> 1 then raise exception 'HARNESS-FAIL A: the archiver could not restore a visit'; end if;
+  v_report := v_report || 'A: medical.archive archives all four, restores, one audit row per archive | ';
 
-  -- B: a doctor. RLS lets them reach their own clinic's visit and a prescription on it, but since 0187 the
-  -- trigger refuses the archive (-1) because a doctor holds no medical.archive; the other clinic's rows are 0 rows
-  -- (RLS). The app offers them nothing either way.
-  if pg_temp.archive_as(v_doctor, 'prescriptions', v_rx_own) <> -1 then raise exception 'HARNESS-FAIL B: doctor archived a prescription on their own visit past the trigger'; end if;
-  if pg_temp.archive_as(v_doctor, 'clinic_visits', v_visit_other) = 1 then raise exception 'HARNESS-FAIL B: doctor archived ANOTHER clinic''s visit'; end if;
-  if pg_temp.archive_as(v_doctor, 'prescriptions', v_rx_other) = 1 then raise exception 'HARNESS-FAIL B: doctor archived a prescription on ANOTHER clinic''s visit'; end if;
-  if pg_temp.archive_as(v_doctor, 'clinic_visits', v_visit_own) <> -1 then raise exception 'HARNESS-FAIL B: doctor archived their own clinic''s visit past the trigger'; end if;
-  v_report := v_report || 'B: doctor refused by the 0187 trigger on their own clinic, by RLS on the other | ';
+  -- B: the edit cells without medical.archive. Since 0187 the trigger refuses the archive (-1) on all four tables.
+  if pg_temp.archive_as(v_doctor, 'prescriptions', v_rx_own) <> -1 then raise exception 'HARNESS-FAIL B: an editor archived a prescription past the trigger'; end if;
+  if pg_temp.archive_as(v_doctor, 'prescriptions', v_rx_other) <> -1 then raise exception 'HARNESS-FAIL B: an editor archived a second prescription past the trigger'; end if;
+  if pg_temp.archive_as(v_doctor, 'clinic_visits', v_visit_other) <> -1 then raise exception 'HARNESS-FAIL B: an editor archived a visit past the trigger'; end if;
+  if pg_temp.archive_as(v_doctor, 'clinic_visits', v_visit_own) <> -1 then raise exception 'HARNESS-FAIL B: an editor archived a second visit past the trigger'; end if;
+  if pg_temp.archive_as(v_doctor, 'weight', v_w) <> -1 then raise exception 'HARNESS-FAIL B: an editor archived a weight past the trigger'; end if;
+  perform pg_temp.restore_as(v_mgmt, 'immunization_records', v_i);
+  if pg_temp.archive_as(v_doctor, 'immunization_records', v_i) <> -1 then raise exception 'HARNESS-FAIL B: an editor archived an immunization past the trigger'; end if;
+  v_report := v_report || 'B: the edit cells without medical.archive are refused by the 0187 trigger on all four tables | ';
 
-  -- C: a volunteer.
+  -- C: a login holding neither.
   select count(*) into v_n from (values
     (pg_temp.archive_as(v_vol, 'weight', v_w)),
     (pg_temp.archive_as(v_vol, 'prescriptions', v_rx_other)),
     (pg_temp.archive_as(v_vol, 'clinic_visits', v_visit_other)),
     (pg_temp.archive_as(v_vol, 'immunization_records', (select id from immunization_records where resident_id = v_res limit 1)))
   ) x(n) where n <> 0;
-  if v_n <> 0 then raise exception 'HARNESS-FAIL C: a volunteer archived something'; end if;
-  v_report := v_report || 'C: volunteer archives nothing | ';
+  if v_n <> 0 then raise exception 'HARNESS-FAIL C: a login without either archived something'; end if;
+  v_report := v_report || 'C: a login without the cells archives nothing | ';
 
   -- D: archiving twice.
   if pg_temp.archive_as(v_mgmt, 'prescriptions', v_rx) <> 0 then raise exception 'HARNESS-FAIL D: archived an archived row again'; end if;

@@ -30,9 +30,17 @@ insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, ra
 select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
        'harness-0097-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
   from who;
+-- Restated 2026-10-29 (harness-restate-nine): the logins were named roles (management, volunteer, doctor).
+-- The writer holds resident.adoption_news (the cell every policy here asks) and the photo cells record_attachment
+-- asks (photos.resident_add, can_publish_resident_photos); the other two hold one unrelated cell, so they read and
+-- write nothing. The doctor row used to assert a clinic scope (0108) that 0264 removed; it is now a second login
+-- without the adoption-news cell.
+insert into roles (key, name, kind) values ('h0097_writer', 'h writer', 'custom'), ('h0097_other', 'h other', 'custom');
+insert into role_permissions (role_id, activity, level)
+  select roles.id, act, 2 from roles, (values ('resident.adoption_news'), ('photos.resident_add'), ('photos.resident_publish'), ('resident.record'), ('projects.photos')) v(act) where roles.key = 'h0097_writer';
+insert into role_permissions (role_id, activity, level) select roles.id, 'maintenance.photos', 2 from roles where roles.key = 'h0097_other';
 insert into user_roles (user_id, role_id)
-  select s.c0, ro.id from (select uid as c0, who as role_key from who) s
-  join roles ro on ro.key = s.role_key;
+  select w.uid, r.id from who w join roles r on r.key = case w.who when 'management' then 'h0097_writer' else 'h0097_other' end;
 grant select on who to authenticated, anon;
 
 do $$
