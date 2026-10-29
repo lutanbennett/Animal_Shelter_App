@@ -26,7 +26,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { giveRole } from "./lib/user-role.mjs";
+import { giveCards, giveRole } from "./lib/user-role.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -51,7 +51,7 @@ const adminEmail = `harness-access-admin-${tag}@example.invalid`;
 const adminPassword = randomBytes(18).toString("base64url");
 const requesterEmail = `harness-access-request-${tag}@example.invalid`;
 const requesterName = `Harness Requester ${tag}`;
-const staffEmail = `harness-access-staff-${tag}@example.invalid`;
+const cardEmail = `harness-access-card-${tag}@example.invalid`;
 
 /** The session cookies the app's own SSR client would set, for a password sign-in. */
 async function signInCookies(email, password) {
@@ -84,6 +84,7 @@ const countFrom = (html) => {
 };
 
 const made = [];
+let cleanupRole = async () => {};
 try {
   const { data: a, error: aErr } = await service.auth.admin.createUser({
     email: adminEmail,
@@ -128,25 +129,26 @@ try {
   // A fresh admin has nothing else assigned, so the badge is this task alone.
   expect(my.html.includes("1 due today or overdue"), "the My tasks badge counts it");
 
-  // Staff: no card, no task — the page is admin-only and the source is too.
+  // A login holding one ordinary card (not Admin): no card, no task — the page is admin-only and the source is too.
   const { data: s, error: sErr } = await service.auth.admin.createUser({
-    email: staffEmail,
+    email: cardEmail,
     password: adminPassword,
     email_confirm: true,
   });
   if (sErr) throw sErr;
   made.push(s.user.id);
-  const { error: sRoleErr } = await giveRole(service, s.user.id, "staff");
+  const { error: sRoleErr, cleanup } = await giveCards(service, s.user.id, ["view_residents"]);
+  cleanupRole = cleanup;
   if (sRoleErr) throw sRoleErr;
-  const staffCookie = await signInCookies(staffEmail, adminPassword);
-  const staffStatus = await page("/admin/status", staffCookie);
+  const cardCookie = await signInCookies(cardEmail, adminPassword);
+  const cardStatus = await page("/admin/status", cardCookie);
   expect(
-    !/access requests? waiting|Waiting for access/.test(staffStatus.html),
-    `staff get no card on /admin/status (${staffStatus.status}${staffStatus.location ? ` → ${staffStatus.location}` : ""})`,
+    !/access requests? waiting|Waiting for access/.test(cardStatus.html),
+    `a login with only View residents gets no card on /admin/status (${cardStatus.status}${cardStatus.location ? ` → ${cardStatus.location}` : ""})`,
   );
-  const staffMy = await page("/my", staffCookie);
-  expect(staffMy.status === 200 && !staffMy.html.includes("Review access requests"), "staff have no Review access requests task");
-  expect(leaks(staffStatus.html + staffMy.html).length === 0, "no name or email for staff either");
+  const cardMy = await page("/my", cardCookie);
+  expect(cardMy.status === 200 && !cardMy.html.includes("Review access requests"), "a login with only View residents has no Review access requests task");
+  expect(leaks(cardStatus.html + cardMy.html).length === 0, "no name or email for a card-only login either");
 
   const security = await page("/admin/security", cookie);
   // A 3xx before anything streams; once loading.tsx has started the stream,
@@ -169,6 +171,7 @@ try {
     const { error } = await service.auth.admin.deleteUser(id);
     if (error) console.error(`  could not delete ${id}: ${error.message}`);
   }
+  await cleanupRole();
   console.log(`  deleted ${made.length} throwaway login(s)`);
 }
 
