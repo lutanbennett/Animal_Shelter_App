@@ -553,7 +553,7 @@ Two axes that genuinely do cost, both measured 2026-10-20:
 | **Creates a new surface people submit data through** | **200–270k** | 235,561 |
 | **A new surface that ALSO DELETES what it replaces** | **260–330k** | 290,888 — `units-of-measure-app` (2026-10-23), banded 200–270k and **+8% over**. A Settings CRUD screen, **plus** eight call sites moved onto the table, **plus** deleting the two hard-coded lists and their dictionary entries, **plus** both dictionaries, the manual and real browser checks. **The wide deletion is a SECOND job, not a detail of the first** — ask whether the new surface retires something, and if it does, use this row rather than the one above |
 | Builds an instrument / transport path from nothing | **250–320k** | 286,350 — **one reading only, and nothing since has belonged in it. Do not widen a stream into this row because its behaviour sounds new** |
-| **Harness triage — band the COUNT, not the family** | **~85k + ~20k per harness; ~15k each when one cause explains them all** | Measured twice on 2026-10-26, which is why this row exists. Ten database harnesses with mixed causes: **285,783** — 20.1k each above the floor, banded 190–240k as *"a harness family"* and **+19% over**. Eight diets/stock harnesses sharing ONE cause (a rename) **plus** a new production check written from nothing: **206,138** — 15.1k each with the extra script inside that, banded 170–220k and **comfortably inside**. **The count is the unit of work; the framing is not.** Ask how many harnesses, then ask whether one cause explains them — a shared cause discounts about a quarter, because the second harness onwards is a re-run rather than a diagnosis. **AND BAND THE HARNESSES THAT ARE RED, NOT THE HARNESSES THE ITEM NAMES** (added 2026-10-27): a batch briefed as ten found **five already green**, fixed the day before by commits the item did not know about, so the item's list was stale by half. **Run the harnesses as step zero — that is the scope list.** It still cost **228,126** against a 255–310k band because **two of the five were INVESTIGATIONS rather than fixes** (one ran 600 probes across two runs to establish that a harness is a snapshot tool with ~6% run-to-run noise). **Price a diagnosis above a repair**, and expect a harness whose fixtures lean on a role being removed to fail for that reason rather than because the app is wrong |
+| **Harness triage — band the COUNT, not the family** | **~85k + ~20k per harness; ~15k each when one cause explains them all** | Measured twice on 2026-10-26, which is why this row exists. Ten database harnesses with mixed causes: **285,783** — 20.1k each above the floor, banded 190–240k as *"a harness family"* and **+19% over**. Eight diets/stock harnesses sharing ONE cause (a rename) **plus** a new production check written from nothing: **206,138** — 15.1k each with the extra script inside that, banded 170–220k and **comfortably inside**. **The count is the unit of work; the framing is not.** Ask how many harnesses, then ask whether one cause explains them — a shared cause discounts about a quarter, because the second harness onwards is a re-run rather than a diagnosis. **AND BAND THE HARNESSES THAT ARE RED, NOT THE HARNESSES THE ITEM NAMES** (added 2026-10-27): a batch briefed as ten found **five already green**, fixed the day before by commits the item did not know about, so the item's list was stale by half. **Run the harnesses as step zero — that is the scope list.** It still cost **228,126** against a 255–310k band because **two of the five were INVESTIGATIONS rather than fixes** (one ran 600 probes across two runs to establish that a harness is a snapshot tool with ~6% run-to-run noise). **Price a diagnosis above a repair**, and expect a harness whose fixtures lean on a role being removed to fail for that reason rather than because the app is wrong. **AND A RESTATE-OR-RETIRE ROW IS A THIRD OF THE PRICE OF A DIAGNOSED ONE: ~6.8k, NOT ~20k** (added 2026-10-29). A stream resolved **eight rows for 54,505 tokens above the floor** — three retired with reasons, three repaired or restated, one never broken, one filed as an app fault. **Every figure in this row above was measured on rows whose causes each had to be DIAGNOSED**, which is the expensive half. Once the cause is understood — a column dropped, a role model removed — restating a check against the new shape, or retiring it with a reason, is cheap and repetitive. **So band a restate batch at `floor + ~7k x rows` and reserve ~20k a row for genuine diagnosis.** The question that picks the rate is: **does this stream have to work out WHY each row is red, or has someone already told it?** |
 | **An AUDIT or a REPORT over a wide but shallow surface — band it NEAR THE FLOOR whatever its size** | **145–190k** | **PROMOTED FROM HANDOVER `438`** on five readings across two rounds. **The test, and it is one question: if everything here turns out to be FINE, what work is left?** If the answer is "write the list and say so", it is a report. Banded for the SIZE of the surface, three landed 43%, 21% and 17% UNDER (`harness-sweep-batch-6`, `buttons-sweep-4-operations`, `policy-triage-1`, 2026-10-28 morning). Banded as REPORTS the same day, two landed on the bottom edge: `policy-triage-2` **144,682** against 145–185k (ten tables, all deliberate) and `buttons-sweep-5-money-content` **151,124** against 150–190k (five areas audited, one gap). **A sweep that expects to find little is an audit, and an audit is cheap.** Ten harnesses, twenty tables, five areas of button checks: the count of things to LOOK AT does not move this row; only a real repair does |
 | Quick win | 110–170k | 1–3 files; screenshots cost far less than first assumed. **Left as written on Lutan's ruling, 2026-10-11** — the planner had been quoting 130–200k while both measured quick wins (129,320 · 135,901) sat *inside* this band. **The band was right and the quoting was high. Do not reopen it** |
 | Schema PR, single file | **~140–155k** | measured 6×: `cashflow-forecast-function` 139,791 · `drop-leftovers-schema` 143,030 (three unrelated items in one file) · `receipt-issuer-server-side` 143,678 · `map-rooms-schema` 151,273 · `role-floor-schema` 231,297 · `perm-functions-schema` 284,248 |
@@ -1196,6 +1196,40 @@ every time.
 **Never** change either audit workflow to make the red go away, and **never** run
 `npm audit fix --force` — it is free to move a dependency backwards across a major version.
 ```
+
+### And every brief that RUNS anything carries this block: a silent check is a killed check
+
+Added 2026-10-29, after a correct check was recorded as broken **twice** and the second time cost two hours.
+`check-phone-width.mjs` reports only at the end; a foreground command is killed at ten minutes; the full run
+takes 2.5–3 hours. **A killed run therefore prints nothing, which is indistinguishable from a check that is
+broken.** It had already been filed once as *"no output, 170 s timeout"* alongside seventeen checks that failed
+with `ECONNREFUSED` because that sweep ran with no dev server up — and **seven of those eighteen had never been
+broken at all.** Reasoning: `docs/decisions/2026-10-29-silent-checks-are-killed-runs.md`.
+
+**Measured, so no brief has to guess:** `goto` costs **4–6 s per page** because Turbopack compiles each route on
+first visit, and a settle step often runs twice per page view, so ~6–8 s a page view. `networkidle` is the
+obvious suspect and is **innocent** — it settles in 1–2 s. Of 186 `scripts/check-*.mjs`, only **four** drive a
+browser; the rest run in **1–3 seconds**, so a list of ten checks is seconds of work, not hours.
+
+Append this to any `.brief.md` whose stream will run check scripts:
+
+```markdown
+## Running the checks: a silent check is a killed check, not a broken one
+
+- **Start the dev server first** and confirm it is serving. Eighteen checks were once filed as broken because a
+  sweep ran with no server up, and **seven of them had never been broken.**
+- **Put a per-check timeout on every run:** `timeout 60 node scripts/check-<name>.mjs`. A check that trips it is
+  a **finding** ("exceeded 60s, not run to completion"), never a reason to raise the timeout and wait.
+- **Echo the name BEFORE each check runs**, not after, so a killed command still shows where it got to.
+- **Never loop over a list you have not sized**, and never over all of `scripts/check-*.mjs`.
+- **Anything you expect to run long goes in the background with its output redirected to a file in your
+  scratchpad** — never in the foreground.
+- **If a check gives you NO output, establish whether it was killed before concluding it is broken.**
+  "No output" is not evidence of a fault.
+```
+
+**And the planner's half: do not ask a stream to run something you have not sized.** The brief that caused this
+handed over an eighteen-check loop with one 3-hour job inside it. **Name the slow ones, or exclude them.**
 
 ### WHEN THE PLANNER TOUCHES PRODUCTION ITSELF: three rules, all learned in one morning
 
