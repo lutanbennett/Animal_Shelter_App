@@ -1,5 +1,5 @@
 // 0169 (community dogs, the schema half) exercised on dev without keeping anything:
-// the file is applied inside begin…, 31 assertions run under real management, 2IC and
+// the live schema is exercised inside begin…, assertions run under logins holding exactly the Outreach notes card, exactly View residents, and
 // anon sessions, and a final raise rolls it all back. Re-runnable before and after the
 // file is applied (the migration is written to be).
 //
@@ -10,17 +10,15 @@
 // places list's unique live name and no delete, photos private by default and closed to
 // anon, and public_impact_figures: an empty baseline is not public, and community_dogs /
 // villages_sterilised count outings strictly after the baseline date.
-import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
 const env = loadEnv("test");
 const ref = projectRef(env);
-const mig = readFileSync(join(root, "supabase/migrations/0169_community_dogs.sql"), "utf8");
 const sql = `
 begin;
-${mig}
+-- (0169 is already applied; replaying it over the live schema failed with 42P16 once later migrations altered its views)
 create function pg_temp.q(p_uid uuid, p_expr text, p_pgrole text default 'authenticated') returns text language plpgsql as $f$
 declare v text;
 begin
@@ -42,10 +40,18 @@ begin
 end $f$;
 create temp table r (n serial, label text, got text, want text);
 do $$
-declare m uuid; s uuid; p uuid; o uuid; y date := shelter_date(now()) - 1;
+declare m uuid; s uuid; rm uuid; rs uuid; p uuid; o uuid; y date := shelter_date(now()) - 1;
 begin
-  select ur.user_id into m from user_roles ur join roles x on x.id = ur.role_id where x.key = 'management' and ur.archived_at is null limit 1;
-  select ur.user_id into s from user_roles ur join roles x on x.id = ur.role_id where x.key = 'second_in_command' and ur.archived_at is null limit 1;  -- the 2IC: Staff until 0173 retired it
+  -- Fixtures by card, not role (this whole script is rolled back): m holds exactly Outreach notes (community.outings at edit),
+  -- s holds exactly View residents (no community.outings). Two existing logins are re-roled for the transaction.
+  select user_id into m from user_roles where archived_at is null order by user_id limit 1;
+  select user_id into s from user_roles where archived_at is null and user_id <> m order by user_id limit 1;
+  delete from user_roles where user_id in (m, s);
+  insert into roles (key, name, kind, home_path) values ('harness_outings', 'Harness: outreach notes', 'custom', '/home') returning id into rm;
+  insert into role_cards (role_id, card) values (rm, 'outreach_notes');
+  insert into roles (key, name, kind, home_path) values ('harness_no_outings', 'Harness: view residents', 'custom', '/home') returning id into rs;
+  insert into role_cards (role_id, card) values (rs, 'view_residents');
+  insert into user_roles (user_id, role_id) values (m, rm), (s, rs);
   insert into r (label, got, want) values ('logins found', (m is not null and s is not null)::text, 'true');
   insert into r (label, got, want) values ('mgmt adds place', pg_temp.try(m, $q$insert into community_places (name, kind) values ('Wat Probe', 'temple')$q$)::text, '1');
   insert into r (label, got, want) values ('2IC adds place', pg_temp.try(s, $q$insert into community_places (name, kind) values ('Ban Probe', 'village')$q$)::text, '-1');
@@ -65,7 +71,7 @@ begin
   insert into r (label, got, want) values ('zero dogs', pg_temp.try(m, format($q$insert into community_dog_outings (place_id, dog_count, fed) values (%L, 0, true)$q$, p))::text, '-2');
   insert into r (label, got, want) values ('no place', pg_temp.try(m, $q$insert into community_dog_outings (dog_count, fed) values (2, true)$q$)::text, '-2');
   insert into r (label, got, want) values ('2IC reads outings', pg_temp.q(s, '(select count(*) from community_dog_outings)'), '0');
-  insert into r (label, got, want) values ('mgmt reads outings', pg_temp.q(m, '(select count(*) from community_dog_outings)'), '2');
+  insert into r (label, got, want) values ('mgmt reads outings', pg_temp.q(m, '(select count(*) from community_dog_outings)'), (select count(*) from community_dog_outings)::text);  -- every row, whatever dev already holds
   insert into r (label, got, want) values ('anon reads outings', pg_temp.q(null, '(select count(*) from community_dog_outings)', 'anon'), 'ERR:42501');
   insert into r (label, got, want) values ('2IC deletes outing', pg_temp.try(s, 'delete from community_dog_outings')::text, '0');
   insert into r (label, got, want) values ('mgmt deletes place (no grant)', pg_temp.try(m, 'delete from community_places')::text, '-1');
@@ -73,10 +79,12 @@ begin
   insert into r (label, got, want) values ('mgmt adds photo', pg_temp.try(m, format($q$insert into community_outing_photos (outing_id, drive_file_id) values (%L, 'probe-file')$q$, o))::text, '1');
   insert into r (label, got, want) values ('photo private by default', (select is_public from community_outing_photos where outing_id = o)::text, 'false');
   insert into r (label, got, want) values ('anon reads photos', pg_temp.q(null, '(select count(*) from community_outing_photos)', 'anon'), 'ERR:42501');
-  insert into role_permissions (role_id, activity, level) select id, 'community.outings', 2 from roles where key = 'second_in_command';
+  -- give s the Outreach notes card (a card, never a cell written by hand), then take it away again
+  delete from user_roles where user_id = s;
+  insert into user_roles (user_id, role_id) values (s, rm);
   insert into r (label, got, want) values ('2IC given the cell adds outing', pg_temp.try(s, format($q$insert into community_dog_outings (place_id, dog_count, vaccinated) values (%L, 1, true)$q$, p))::text, '1');
   delete from community_dog_outings where dog_count = 1;
-  delete from role_permissions where activity = 'community.outings' and role_id = (select id from roles where key = 'second_in_command');
+  delete from user_roles where user_id = s;
   insert into r (label, got, want) values ('community_dogs row empty', (select (baseline_count is null and baseline_date is null)::text from impact_baselines where key = 'community_dogs'), 'true');
   insert into r (label, got, want) values ('empty row not public', pg_temp.q(null, $q$(select count(*) from public_impact_figures where key = 'community_dogs')$q$, 'anon'), '0');
   update impact_baselines set baseline_count = 100, baseline_date = y where key = 'community_dogs';

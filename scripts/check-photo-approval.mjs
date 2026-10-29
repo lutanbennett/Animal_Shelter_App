@@ -45,11 +45,10 @@ do $h$
 declare
   r uuid; v_user uuid; v_app uuid;
   a_old uuid; a_wait uuid; a_med uuid;
-  v_waiting int;
+  v_waiting int; -- unused since step 0 was retired
 begin
-  -- 0. The back-fill: nothing that existed before this harness is waiting.
-  select count(*) into v_waiting from attachments where approved_at is null;
-  if v_waiting <> 0 then raise exception 'FAIL 0 % existing attachment(s) are waiting after the back-fill', v_waiting; end if;
+  -- 0. (retired 2026-10-29) "nothing that existed before is waiting" was true only on the day 0217 back-filled approved_at. Photos
+  -- now legitimately wait for approval on dev, so the count is live data. The rows this harness makes are what it asserts on below.
   if not exists (select 1 from permission_activities where key = 'photos.shelter_add' and kind = 'yesno') then
     raise exception 'FAIL 0b the activity photos.shelter_add is missing';
   end if;
@@ -122,7 +121,7 @@ begin
   update attachments set approved_at = null where id = a_wait;
   if pg_temp.as_anon('h0217wait') or pg_temp.anon_view_has('h0217wait') then raise exception 'FAIL H1 an un-approved photo is still public'; end if;
 
-  raise exception 'HARNESS-OK no existing photo waiting after back-fill | script-filed photo approved on save and public by view and proxy | non-publisher photo waiting, caller cannot pre-approve | waiting photo absent from every public view, the proxy and as a profile photo | refused on an appeal | non-publisher cannot approve or withdraw | Medical approved on save and still not public | approving makes it public, withdrawing removes it again';
+  raise exception 'HARNESS-OK script-filed photo approved on save and public by view and proxy | non-publisher photo waiting, caller cannot pre-approve | waiting photo absent from every public view, the proxy and as a profile photo | refused on an appeal | non-publisher cannot approve or withdraw | Medical approved on save and still not public | approving makes it public, withdrawing removes it again';
 end;
 $h$;
 rollback;

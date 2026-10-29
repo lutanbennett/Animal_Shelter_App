@@ -46,8 +46,9 @@ Result: pending
 1. Open `/medical/photos`: it loads.
 2. **Do:** Add a photo to a resident. Use a disposable record named `walk-add_medical_photos`. **Read-back:** the page counts the photo as added; it is filed in the resident's Medical folder, never on the website; this card cannot look at it again, so also confirm it on the resident's record with a login that holds a record card.
 3. **TODO:** Add a resident's photo to the Medical folder. Do it on a disposable record named `walk-add_medical_photos`. Question: where should this write show afterwards (which page, which row)?
-4. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-5. **Refused:** open `/maintenance` (the page of **Do Maintenance**, which this login does not hold). Expect a refusal or redirect, not the page.
+4. **See:** See the photos in a resident's Medical folder (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+5. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+6. **Refused:** open `/maintenance` (the page of **Do Maintenance**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -173,9 +174,10 @@ Result: pending
 7. **See:** Weight (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 8. **See:** A resident's diet (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 9. **See:** The list of clinics (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-10. Open `/appointments`: it loads (read only; the list is the visits booked with this login's clinics, so it may read as unlinked). Confirm NO Book appointment, Log procedure, Log blood test, Add prescription, Log weight or Edit link is offered: each asks its own edit-level activity (visit.book, medical.procedures, medical.blood_tests, medical.prescriptions, medical.weight, medical.visits), none of which this card holds.
-11. Open `/operations/feeding-list`: it loads (asks medical.diet at read). It is navigation only (round and view switches); confirm no add, edit or save control is offered.
-12. **Refused:** open `/medical/photos` (the page of **Add Medical Photos**, which this login does not hold). Expect a refusal or redirect, not the page.
+10. **See:** See the photos in a resident's Medical folder (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+11. Open `/appointments`: it loads (read only; the list is the visits booked with this login's clinics, so it may read as unlinked). Confirm NO Book appointment, Log procedure, Log blood test, Add prescription, Log weight or Edit link is offered: each asks its own edit-level activity (visit.book, medical.procedures, medical.blood_tests, medical.prescriptions, medical.weight, medical.visits), none of which this card holds.
+12. Open `/operations/feeding-list`: it loads (asks medical.diet at read). It is navigation only (round and view switches); confirm no add, edit or save control is offered.
+13. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -196,8 +198,10 @@ Result: pending
 9. **Do:** Remove a medical record entered by mistake, and restore it. Use a disposable record named `walk-medical_records`. **Read-back:** Remove, with an optional reason, on any medical row: the row leaves the list and the chart and the page reads "1 removed hidden"; Show removed lists it with Restore, which brings it back (done on a weight entry; answered 2026-10-23).
 10. **Do:** Book a vet visit. Use a disposable record named `walk-medical_records`. **Read-back:** the visit shows on that resident's page and in the shelter's list of visits (/upcoming-visits).
 11. **TODO:** Send to hospital and bring back. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
-12. Open `/appointments`: it loads. Confirm the Log procedure, Log blood test, Edit links are offered on every row, and Add prescription and Log weight on a visit whose date has started (a login holding visit.book also sees Book appointment, which this card does not).
-13. **Refused:** open `/medical/photos` (the page of **Add Medical Photos**, which this login does not hold). Expect a refusal or redirect, not the page.
+12. **See:** See the photos in a resident's Medical folder (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+13. **TODO:** Add a resident's photo to the Medical folder. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
+14. Open `/appointments`: it loads. Confirm the Log procedure, Log blood test, Edit links are offered on every row, and Add prescription and Log weight on a visit whose date has started (a login holding visit.book also sees Book appointment, which this card does not).
+15. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -210,7 +214,7 @@ Result: pending
 1. Open `/upcoming-visits`: it loads.
 2. **Do:** Book a vet visit. Use a disposable record named `walk-book_clinic_visits`. **Read-back:** the visit shows on that resident's page and in the shelter's list of visits (/upcoming-visits).
 3. **TODO:** Vet visits and how they went. Do it on a disposable record named `walk-book_clinic_visits`. Question: where should this write show afterwards (which page, which row)?
-4. **Refused:** open `/medical/photos` (the page of **Add Medical Photos**, which this login does not hold). Expect a refusal or redirect, not the page.
+4. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -406,7 +410,7 @@ Result: pending
 1. Open `/management/appeals`: it loads.
 2. **TODO:** Run a fundraising appeal for a sick resident. Do it on a disposable record named `walk-run_appeals`. Question: where should this write show afterwards (which page, which row)?
 3. **TODO:** Issue a donation receipt. Do it on a disposable record named `walk-run_appeals`. Question: where should this write show afterwards (which page, which row)?
-4. **Refused:** open `/medical/photos` (the page of **Add Medical Photos**, which this login does not hold). Expect a refusal or redirect, not the page.
+4. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -502,7 +506,7 @@ Result: pending
 5. **Do:** Prescriptions: what should be given. Use a disposable record named `walk-record_vet_care`. **Read-back:** the resident's Prescriptions page (/residents/<id>/prescriptions) lists it under Current with the dose, how often and the start date; it also appears on /operations/medication-list (answered 2026-10-23).
 6. **Do:** Immunizations. Use a disposable record named `walk-record_vet_care`. **Read-back:** the form shows a table straight after saving (resident, immunization, administered, next due). The Add all in zone and enclosure pickers are empty for a card-only login (answered 2026-10-23).
 7. **Do:** A resident's diet. Use a disposable record named `walk-record_vet_care`. **Read-back:** the resident's Diet page (/residents/<id>/diet) lists it under Current with meals a day and the amounts at the resident's size (answered 2026-10-23).
-8. **Refused:** open `/medical/photos` (the page of **Add Medical Photos**, which this login does not hold). Expect a refusal or redirect, not the page.
+8. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -538,7 +542,7 @@ Result: pending
 0. Sign in with `--cards add_while_recording`. The home screen shows the **Add to lists while recording** tile (or the tile of a card that includes it).
 1. Open `/residents`: it loads.
 2. **TODO:** Add a missing medication, frequency or procedure type from a form. Do it on a disposable record named `walk-add_while_recording`. Question: where should this write show afterwards (which page, which row)?
-3. **Refused:** open `/medical/photos` (the page of **Add Medical Photos**, which this login does not hold). Expect a refusal or redirect, not the page.
+3. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 

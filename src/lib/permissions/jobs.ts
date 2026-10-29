@@ -74,6 +74,7 @@ export const JOBS: Record<JobKey, Job> = {
     bundle: [
       { activity: "photos.resident_add" },
       { activity: "photos.medical_add" }, // filing into Medical is its own activity (0278)
+      { activity: "photos.resident_medical", level: "read" }, // looking at the Medical folder again (0279)
       { activity: "resident.who_and_where", level: "read" }, // the picker: who and where (0265)
     ],
     opens: "/medical/photos",

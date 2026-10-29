@@ -4,8 +4,8 @@
 //   node scripts/worktree.mjs dev                          (in another terminal)
 //   node scripts/check-residents-status-chips.mjs [http://localhost:<port>]
 //
-// Makes a throwaway staff login and a throwaway resident with a random chip, picks one real
-// resident of each status from dev, then fetches /residents as that staff member and checks:
+// Makes a throwaway login holding exactly View residents and a throwaway resident with a random chip, picks one real
+// resident of each status from dev, then fetches /residents as that login and checks:
 //
 //   - the Lifecycle zone is no longer a zone chip, and an old link to it means Unallocated,
 //   - Unallocated lists the unassigned and not the adopted, fostered or hospitalised,
@@ -22,7 +22,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { giveRole } from "./lib/user-role.mjs";
+import { giveCards } from "./lib/user-role.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -71,9 +71,11 @@ async function page(path, cookie) {
 }
 
 /** A resident's link on the list: their hub's href, which no other row carries. */
-const lists = (html, id) => html.includes(`/residents/${id}"`);
+// The list links to a resident as /residents/<id> or, under a filter, /residents/<id>?list=<filter> (ResidentsTable.tsx:71).
+const lists = (html, id) => html.includes(`/residents/${id}"`) || html.includes(`/residents/${id}?list=`);
 
 let userId = null;
+let cleanupCards = async () => {};
 let residentId = null;
 try {
   // One real resident per status, from dev's own rows.
@@ -100,7 +102,9 @@ try {
   const { data: u, error: uErr } = await service.auth.admin.createUser({ email, password, email_confirm: true });
   if (uErr) throw uErr;
   userId = u.user.id;
-  const { error: roleErr } = await giveRole(service, userId, "staff");
+  // exactly View residents (resident.record read): the check only reads /residents. A card, not the retired staff role.
+  const { error: roleErr, cleanup } = await giveCards(service, userId, ["view_residents"]);
+  cleanupCards = cleanup;
   if (roleErr) throw roleErr;
   const { data: r, error: rErr } = await service
     .from("residents")
@@ -181,6 +185,7 @@ try {
     const { error } = await service.auth.admin.deleteUser(userId);
     if (error) console.error(`  could not delete login ${userId}: ${error.message}`);
   }
+  await cleanupCards();
   console.log("  deleted the throwaway resident and login");
 }
 

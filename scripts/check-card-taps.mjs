@@ -6,18 +6,16 @@
 //   node scripts/check-card-taps.mjs            (from the repo root; dev only)
 //   node scripts/check-card-taps.mjs --verbose  (also list every passing check)
 //
-// WHAT THIS ASSERTS (and what it does not), per principal: signed out, public_viewer, admin,
-// management, the 2IC, both Heads, a volunteer, a doctor whose clinic treats the resident and
-// a doctor whose clinic does not. (Staff left the list when 0173 retired it; it landed "full" like
-// admin and management.)
+// WHAT THIS ASSERTS (and what it does not), per principal, each defined by the CARDS it holds: signed out, public_viewer, Admin,
+// a login whose role holds no card, one holding only a who-and-where card (Enclosures), and one holding View residents.
+// (Doctor-outside-their-clinic left the list: that is the roles.scope_residents column, not a card.)
 //   1. the public card (public_resident_cards) answers with a row for every one of them: the
 //      floor nobody falls below, so the page never 404s on a resident that exists
 //   2. the landing, from src/lib/residents/card-landing.ts fed the inputs the page reads from
 //      the live database (my_permissions, the residents row), is exactly the
 //      expected one below
 //   3. a "full" landing really reads the resident row (the hub will not 404) and holds
-//      resident.record; a "public-plus" landing really reads the who-and-where row, except a doctor
-//      outside their clinic, who sees the plain card
+//      resident.record; a "public-plus" landing really reads the who-and-where row.
 // Not asserted: the rendered HTML, the job buttons, or the redirect from /residents/<id>. Those
 // are in the test plan's browser checks. Whether the Heads and volunteers SHOULD read medical is
 // the Director's matrix, not this script: it asserts the default (no).
@@ -34,15 +32,24 @@ if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the
 const { cardLanding } = await import(pathToFileURL(join(root, "src/lib/residents/card-landing.ts")).href);
 
 const lit = (id) => `'${id}'::uuid`;
-const P = ["anon", "public_viewer", "admin", "management", "volunteer", "doctor_in", "doctor_out", "sic", "hom", "hm"];
+// Principals are defined by the CARDS they hold, never by a role: a role is a transient grouping that gets rebuilt (Lutan, 2026-10-28).
+// A doctor outside the treating clinic used to be a principal here; that row rule is the roles.scope_residents column (0249
+// may_open_resident_record), not a card, so it is not asserted (a harness never asserts a role column is consulted).
+// Each login below is given a throwaway role holding exactly the cards named, inside the rolled-back transaction.
+const CARDS_OF = {
+  no_cards: [],                     // signed in, a role holding no card: not in the app
+  who_where_only: ["enclosures"],   // resident.who_and_where read and no resident.record
+  reads_record: ["view_residents"], // resident.record at read
+};
+const P = ["anon", "public_viewer", "admin", ...Object.keys(CARDS_OF)];
 const ID = Object.fromEntries(P.map((p) => [p, randomUUID()]));
-const R = randomUUID(), OWN = randomUUID(), OTHER = randomUUID();
+const ROLE = Object.fromEntries(Object.keys(CARDS_OF).map((p) => [p, randomUUID()]));
+const R = randomUUID();
 
 const EXPECT = {
-  anon: "public", public_viewer: "public",
-  admin: "full", management: "full",
-  sic: "public-plus", hom: "public-plus", hm: "public-plus", volunteer: "public-plus",
-  doctor_in: "full", doctor_out: "public-plus",
+  anon: "public", public_viewer: "public", no_cards: "public",
+  admin: "full", reads_record: "full",
+  who_where_only: "public-plus",
 };
 
 const harness = `
@@ -50,7 +57,7 @@ begin;
 create temp table res (who text, k text, v text);
 grant all on res to authenticated, anon;
 create function pg_temp.look(p_who text, p_uid uuid, p_anon boolean) returns void language plpgsql as $f$
-declare role_name text; rec text; vis int; card int; wow int;
+declare role_name text; enters text := 'false'; rec text; vis int; card int; wow int;
 begin
   begin
     if p_anon then
@@ -65,6 +72,7 @@ begin
       role_name := my_permissions() -> 'role' ->> 'key';
       rec := (my_permissions() -> 'permissions' ->> 'resident.record');
       if coalesce((my_permissions() ->> 'is_admin')::boolean, false) then rec := '2'; end if;
+      enters := (coalesce((my_permissions() ->> 'is_admin')::boolean, false) or my_permissions() -> 'permissions' <> '{}'::jsonb)::text;
       select count(*) into vis from residents where id = '${R}';
       select count(*) into wow from resident_who_and_where where id = '${R}';
     end if;
@@ -73,6 +81,7 @@ begin
   exception when sqlstate 'P0999' then null;
   end;
   insert into res values (p_who, 'role', coalesce(role_name, ''));
+  insert into res values (p_who, 'enters', enters);
   insert into res values (p_who, 'rec', coalesce(rec, '0'));
   insert into res values (p_who, 'visible', vis::text);
   insert into res values (p_who, 'wow', wow::text);
@@ -85,22 +94,14 @@ begin
   select u.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated', 'harness-card-' || u.who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
     from (values ${P.filter((p) => p !== "anon").map((p) => `('${p}', ${lit(ID[p])})`).join(",")}) as u(who, id);
   insert into user_roles (user_id, role_id)
-  select v.c0, ro.id from (values (${lit(ID.admin)}, 'admin'), (${lit(ID.management)}, 'management'), (${lit(ID.volunteer)}, 'volunteer'), (${lit(ID.public_viewer)}, 'public_viewer')) as v(c0, role_key)
-  join roles ro on ro.key = v.role_key;
-  insert into clinics (id, name) values (${lit(OWN)}, 'Harness own'), (${lit(OTHER)}, 'Harness other');
+  select ${lit(ID.admin)}, id from roles where key = 'admin';
   insert into user_roles (user_id, role_id)
-  select v.c0, ro.id from (values (${lit(ID.doctor_in)}, 'doctor'), (${lit(ID.doctor_out)}, 'doctor')) as v(c0, role_key)
-  join roles ro on ro.key = v.role_key;
-  with d as (insert into doctors (name, user_id) values ('Harness doctor in', ${lit(ID.doctor_in)}), ('Harness doctor out', ${lit(ID.doctor_out)}) returning id, user_id)
-    insert into doctor_clinics (clinic_id, doctor_id) select case when user_id = ${lit(ID.doctor_in)} then ${lit(OWN)} else ${lit(OTHER)} end, id from d;
-  insert into user_roles (user_id, role_id)
-  select ${lit(ID.sic)}, id from roles where key = 'second_in_command';
-  insert into user_roles (user_id, role_id)
-  select ${lit(ID.hom)}, id from roles where key = 'head_of_medical';
-  insert into user_roles (user_id, role_id)
-  select ${lit(ID.hm)}, id from roles where key = 'head_of_maintenance';
+  select ${lit(ID.public_viewer)}, id from roles where key = 'public_viewer';
+${Object.entries(CARDS_OF).map(([p, cards], i) => `
+  insert into roles (id, key, name, kind, home_path) values (${lit(ROLE[p])}, 'harness_tap_${i}', 'Harness: ${cards.join(", ") || "no cards"}', 'custom', '/home');
+  ${cards.map((c) => `insert into role_cards (role_id, card) values (${lit(ROLE[p])}, '${c}');`).join("\n  ")}
+  insert into user_roles (user_id, role_id) values (${lit(ID[p])}, ${lit(ROLE[p])});`).join("")}
   insert into residents (id, name, species) values (${lit(R)}, 'Harness resident', 'Dog');
-  insert into clinic_visits (resident_id, clinic_id, appointment_date, status) values (${lit(R)}, ${lit(OWN)}, now() - interval '3 days', 'completed');
 end $setup$;
 
 do $run$ begin
@@ -122,7 +123,6 @@ if (!m) throw new Error(`no result (status ${res.status}): ${msg.slice(0, 1500)}
 const rows = JSON.parse(m[1]);
 const get = (who, k) => rows.find((r) => r.who === who && r.k === k)?.v;
 
-const APP_ROLES = ["admin", "management", "staff", "doctor", "volunteer"]; // src/lib/auth/app-access.ts
 let fails = 0, ok = 0;
 const fail = (s) => { fails++; console.log(`FAIL  ${s}`); };
 const pass = (s) => { ok++; if (verbose) console.log(`ok    ${s}`); };
@@ -134,7 +134,7 @@ for (const p of P) {
   const role = get(p, "role") || null;
   const reads = get(p, "rec") === "1" || get(p, "rec") === "2";
   const landing = cardLanding({
-    appAccess: p !== "anon" && !!role && APP_ROLES.includes(role),
+    appAccess: get(p, "enters") === "true", // entersApp(): Admin, or any cell at all
     readsRecord: reads,
     rowVisible: get(p, "visible") === "1",
   });
@@ -143,7 +143,7 @@ for (const p of P) {
 
   if (landing === "full" && get(p, "visible") !== "1") fail(`${p}: "full" but the resident row is not readable (the hub would 404)`);
   if (landing === "full" && !reads) fail(`${p}: "full" without resident.record`);
-  if (landing === "public-plus" && p !== "doctor_out" && get(p, "wow") !== "1") fail(`${p}: public-plus but the who-and-where row is not readable`);
+  if (landing === "public-plus" && get(p, "wow") !== "1") fail(`${p}: public-plus but the who-and-where row is not readable`);
 }
 
 console.log(`\n${ok} checks held, ${fails} failed.`);

@@ -201,9 +201,9 @@ try {
   const rows = await res.json();
   console.log("6 sessions on dev by sign-in method:");
   for (const r of rows) console.log(`    ${r.method.padEnd(10)} ${r.aal}  ${r.n} session(s), latest ${r.latest}`);
-  const oauth = rows.filter((r) => r.method === "oauth");
-  if (oauth.length) expect(oauth.every((r) => r.aal === "aal1"), "every Google (oauth) session on dev is aal1");
-  else console.log("    (no Google sessions on dev to read)");
+  // Retired expectation (2026-10-29): "every Google (oauth) session on dev is aal1" was a fact about whoever had signed in to dev that day,
+  // not about the app. A person who legitimately completes the authenticator step makes one aal2, and the app is right to allow it.
+  // The table above is kept as information only; the app's own behaviour is asserted by steps 1-5.
 } finally {
   await service.from("user_roles").delete().eq("user_id", userId);
   const { error } = await service.auth.admin.deleteUser(userId);

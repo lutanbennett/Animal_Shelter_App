@@ -129,6 +129,7 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
       { activity: "medical.weight", level: "read" },
       { activity: "medical.diet", level: "read" },
       { activity: "clinics.list", level: "read" },
+      { activity: "photos.resident_medical", level: "read" }, // the Medical photo folder (0276)
     ],
     opens: "/residents",
   },
@@ -146,6 +147,9 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
       { activity: "visit.book" },
       // 0269: Send to hospital is a medical action, visible only through this card (Lutan, 2026-10-26).
       { activity: "placement.hospital" },
+      // 0276/0278: the Medical photo folder is read through photos.resident_medical and filed into through photos.medical_add.
+      { activity: "photos.resident_medical", level: "read" },
+      { activity: "photos.medical_add" },
     ],
     opens: "/residents",
   },

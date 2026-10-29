@@ -118,8 +118,10 @@ try {
   );
 
   const res = await page("/residents?zone=offsite", cookie);
-  expect(res.html.includes(`/residents/${away.id}"`), "/residents?zone=offsite lists the resident in the new zone");
-  expect(!res.html.includes(`/residents/${home.id}"`), "/residents?zone=offsite leaves out the on-site resident");
+  // The list links to a resident as /residents/<id> or, under a filter, /residents/<id>?list=<filter> (ResidentsTable.tsx:71).
+  const inList = (html, id) => html.includes(`/residents/${id}"`) || html.includes(`/residents/${id}?list=`);
+  expect(inList(res.html, away.id), "/residents?zone=offsite lists the resident in the new zone");
+  expect(!inList(res.html, home.id), "/residents?zone=offsite leaves out the on-site resident");
 
   for (const [path, want, what] of [
     ["/enclosures?place=external", /^\/enclosures\?zone=offsite$/, "old Off-site link → the Off-site chip"],
