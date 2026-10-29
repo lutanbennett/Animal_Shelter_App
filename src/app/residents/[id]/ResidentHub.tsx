@@ -6,7 +6,7 @@ import { HandHeart, Pencil } from "lucide-react";
 import type { AppealStatus } from "@/lib/appeals/state";
 import type { Platform } from "@/lib/memes/platforms";
 import { SharedOn } from "@/app/memes/PlatformIcon";
-import type { Permissions } from "@/lib/permissions/can";
+import { can, type Permissions } from "@/lib/permissions/can";
 import {
   DeceasedBanner,
   DeceasedRestoreNotice,
@@ -350,6 +350,11 @@ export function ResidentHub({
   // rather than left to fail.
   const medicalActions = (section: keyof typeof medicalEdit, actions: StatCardAction[]) =>
     isDeceased || !medicalEdit[section] ? [] : actions;
+
+  // Booking asks visit.book, the activity /clinic-visits/new and its action check, not medical.visits at edit,
+  // so it is gated on its own rather than through medicalActions (visits has no other action on this tile).
+  const bookVisitActions = (actions: StatCardAction[]) =>
+    isDeceased || !can(perms, "visit.book") ? [] : actions;
 
   // Immunizations — we can only tell "recorded" vs "missing mandatory type"
   // today; due-date/interval tracking isn't in the data model yet (see
@@ -863,7 +868,7 @@ export function ResidentHub({
                   detail={visitDetail}
                   tone={visitTone}
                   href={`${base}/clinic-visits`}
-                  actions={medicalActions("visits", [
+                  actions={bookVisitActions([
                     {
                       href: `/clinic-visits/new?residentId=${resident.id}`,
                       label: t.residents.sections.bookVetVisit,

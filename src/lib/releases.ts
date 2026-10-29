@@ -89,6 +89,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "On a resident's page, the Book vet visit button now only appears if your cards let you book visits. Before, a login that could edit visits but not book them was shown the button, and pressing it turned you away.", cards: ["record_vet_care"] },
   { text: "On Diet stock and Medication stock, the Stocktake, Stock between counts, Purchasing and Record a delivery buttons now only appear if your cards let you use them. Before, a login that could only look at the forecast was shown all four, and pressing one turned you away. The page descriptions no longer promise counting and pricing to people who cannot do them.", cards: ["food_forecast", "medicine_forecast"] },
   { text: "On a resident's Clinic Visits tab, Log blood test, Add prescription, Log weight and Log procedure now only appear if your cards let you do them. Before, a login that could only look at medical records was shown all four, and pressing one turned you away.", cards: ["view_medical"] },
   { text: "A login that can see Medical photos now sees them on the resident's Photos tab. Before, the tab said no photos had been uploaded. The Add medical photos page also now tells you correctly whether you can look at them again.", cards: ["view_medical", "add_medical_photos"] },
