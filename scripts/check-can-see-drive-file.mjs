@@ -2,7 +2,8 @@
 //
 //   node scripts/check-can-see-drive-file.mjs
 //
-// For one live login of every role, plus anon and service_role, and for every Drive id the seven sources hold (plus ids
+// For one live login of every role (the disposable dev_signin_cards_* roles that dev-signin --cards leaves behind are skipped:
+// on 2026-10-29 they were 46 of 54 keys, and the run went from seconds to over the 100 s statement budget; the function reads cards, not role keys, so they add no coverage), plus anon and service_role, and for every Drive id the seven sources hold (plus ids
 // that do not exist), the function must answer exactly what "any of the seven selects returns a row" answers under the
 // same session. Prints how many ids each role may see, so a vacuous pass (everyone sees nothing) is visible.
 import { join } from "node:path";
@@ -46,8 +47,10 @@ begin
   perform set_config('request.jwt.claims', case when p_uid is null then json_build_object('role', p_pgrole)::text
     else json_build_object('sub', p_uid, 'role', p_pgrole, 'aal', 'aal1')::text end, true);
   execute format('set local role %I', p_pgrole);
-  select count(*), count(*) filter (where pg_temp.old_see(id)), count(*) filter (where pg_temp.new_see(id) = 'true'),
-    count(*) filter (where pg_temp.old_see(id)::text is distinct from (case when p_pgrole = 'anon' and pg_temp.new_see(id) = 'ERR:42501' then 'false' else pg_temp.new_see(id) end)) into t, o, nw, mm from ids;
+  -- each function once per id: the three counts below used to re-run new_see (and old_see) per aggregate
+  select count(*), count(*) filter (where q.old_r), count(*) filter (where q.new_r = 'true'),
+    count(*) filter (where q.old_r::text is distinct from (case when p_pgrole = 'anon' and q.new_r = 'ERR:42501' then 'false' else q.new_r end)) into t, o, nw, mm
+    from (select pg_temp.old_see(id) as old_r, pg_temp.new_see(id) as new_r from ids offset 0) q;
   reset role;
   insert into r (who, total, old_yes, new_yes, mismatches) values (p_label, t, o, nw, mm);
 end $f$;
@@ -57,7 +60,7 @@ begin
   perform pg_temp.cmp('anon', null, 'anon');
   perform pg_temp.cmp('service_role', null, 'service_role');
   for rec in select distinct on (x.key) x.key, ur.user_id from user_roles ur join roles x on x.id = ur.role_id
-             where ur.archived_at is null order by x.key, ur.user_id loop
+             where ur.archived_at is null and left(x.key, 17) <> 'dev_signin_cards_' order by x.key, ur.user_id loop
     perform pg_temp.cmp(rec.key, rec.user_id, 'authenticated');
   end loop;
   perform pg_temp.cmp('authenticated, no role', gen_random_uuid(), 'authenticated');
