@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
 import { PHOTO_WIDTHS, type PhotoWidth } from "@/lib/google/drive-client";
 import { readCachedPhoto, writeCachedPhoto } from "@/lib/photo-cache";
+import { readMirroredFile, resizeMirrored } from "@/lib/mirror-read";
 
 /**
  * Image proxy for Drive-backed photos. Fetches a file once via the
@@ -190,6 +191,26 @@ export async function GET(
       });
       if (cache) await cache.put(cacheKey, response.clone());
       return response;
+    }
+  }
+
+  // A staff file on the Pi's Drive mirror (src/lib/mirror-read.ts). Reached only after the checks above, so
+  // the database has already said this caller may see it; the headers are the same `private, no-store` the
+  // Drive path sends. Any miss falls through to Drive below.
+  if (!isPublicFile) {
+    let mirrored = await readMirroredFile(fileId);
+    if (mirrored && width) mirrored = await resizeMirrored(mirrored, width, webp);
+    if (mirrored) {
+      return new NextResponse(new Uint8Array(mirrored.body), {
+        status: 200,
+        headers: {
+          "Content-Type": mirrored.contentType,
+          "X-Content-Type-Options": "nosniff",
+          "Content-Disposition": safeToRenderInline(mirrored.contentType) ? "inline" : "attachment",
+          "Cache-Control": "private, no-store",
+          ...(width ? { Vary: "Accept" } : {}),
+        },
+      });
     }
   }
 
