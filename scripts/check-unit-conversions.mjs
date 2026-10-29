@@ -36,7 +36,7 @@ select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authentica
   from who;
 insert into roles (key, name, kind) values ('h0118_writer', 'h writer', 'custom'), ('h0118_reader', 'h reader', 'custom');
 insert into role_permissions (role_id, activity, level)
-  select id, a, 2 from roles, unnest(array['stock.diets', 'stock.count']) a where key = 'h0118_writer';
+  select id, a, 2 from roles, (values ('stock.diets'), ('stock.count')) v(a) where key = 'h0118_writer';
 insert into role_permissions (role_id, activity, level)
   select id, 'stock.count', 2 from roles where key = 'h0118_reader';
 insert into user_roles (user_id, role_id)

@@ -58,7 +58,7 @@ begin
           'harness-rx-future-mgmt@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now());
   insert into roles (key, name, kind) values ('h0107_rx', 'h rx', 'custom');
   insert into role_permissions (role_id, activity, level)
-  select id, a, 2 from roles, unnest(array['medical.prescriptions', 'medical.visits']) a where key = 'h0107_rx';
+  select id, a, 2 from roles, (values ('medical.prescriptions'), ('medical.visits')) v(a) where key = 'h0107_rx';
   insert into user_roles (user_id, role_id) select v_mgmt, id from roles where key = 'h0107_rx';
 
   insert into residents (name) values ('Harness rx no future visit') returning id into v_res;

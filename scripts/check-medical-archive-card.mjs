@@ -95,10 +95,10 @@ begin
   insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
   select u, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
          'harness-archive-' || u || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now()
-  from unnest(array[v_mgmt, v_doctor, v_vol]) u;
+  from (values (v_mgmt), (v_doctor), (v_vol)) v(u);
   insert into roles (key, name, kind) values ('h0187_archiver', 'h archiver', 'custom'), ('h0187_editor', 'h editor', 'custom'), ('h0187_nothing', 'h nothing', 'custom');
   insert into role_permissions (role_id, activity, level)
-  select roles.id, act, 2 from roles, unnest(array['medical.weight', 'medical.prescriptions', 'medical.visits', 'medical.immunizations']) act
+  select roles.id, act, 2 from roles, (values ('medical.weight'), ('medical.prescriptions'), ('medical.visits'), ('medical.immunizations')) v(act)
    where roles.key in ('h0187_archiver', 'h0187_editor');
   insert into role_permissions (role_id, activity, level) select roles.id, 'medical.archive', 2 from roles where roles.key = 'h0187_archiver';
   insert into role_permissions (role_id, activity, level) select roles.id, 'maintenance.photos', 2 from roles where roles.key = 'h0187_nothing';

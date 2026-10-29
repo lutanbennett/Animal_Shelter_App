@@ -86,7 +86,7 @@ begin
   end loop;
   insert into roles (key, name, kind) values ('h0119_placer', 'h placer', 'custom'), ('h0119_other', 'h other', 'custom');
   insert into role_permissions (role_id, activity, level)
-  select roles.id, act, 2 from roles, unnest(array['placement.move', 'placement.hospital', 'placement.rehome', 'placement.death', 'resident.record']) act where roles.key = 'h0119_placer';
+  select roles.id, act, 2 from roles, (values ('placement.move'), ('placement.hospital'), ('placement.rehome'), ('placement.death'), ('resident.record')) v(act) where roles.key = 'h0119_placer';
   insert into role_permissions (role_id, activity, level) select roles.id, 'photos.resident_add', 2 from roles where roles.key = 'h0119_other';
   insert into user_roles (user_id, role_id)
   select v.c0, ro.id from (values (v_vol, 'h0119_other'), (v_mgmt, 'h0119_placer')) as v(c0, role_key)

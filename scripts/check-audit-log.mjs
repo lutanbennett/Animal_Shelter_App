@@ -95,7 +95,7 @@ begin
   -- photos.resident_manage, photos.resident_publish); the two others hold one unrelated cell. Admin signs in as itself.
   insert into roles (key, name, kind) values ('h0120_writer', 'h writer', 'custom'), ('h0120_other', 'h other', 'custom');
   insert into role_permissions (role_id, activity, level)
-  select roles.id, act, 2 from roles, unnest(array['resident.record', 'photos.resident_add', 'photos.resident_manage', 'photos.resident_publish']) act where roles.key = 'h0120_writer';
+  select roles.id, act, 2 from roles, (values ('resident.record'), ('photos.resident_add'), ('photos.resident_manage'), ('photos.resident_publish')) v(act) where roles.key = 'h0120_writer';
   insert into role_permissions (role_id, activity, level) select roles.id, 'maintenance.photos', 2 from roles where roles.key = 'h0120_other';
   insert into user_roles (user_id, role_id)
   select v.c0, ro.id from (values (v_vol, 'h0120_other'), (v_mgmt, 'h0120_writer'), (v_doctor_u, 'h0120_other')) as v(c0, role_key)

@@ -37,7 +37,7 @@ select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authentica
 -- without the adoption-news cell.
 insert into roles (key, name, kind) values ('h0097_writer', 'h writer', 'custom'), ('h0097_other', 'h other', 'custom');
 insert into role_permissions (role_id, activity, level)
-  select roles.id, act, 2 from roles, unnest(array['resident.adoption_news', 'photos.resident_add', 'photos.resident_publish', 'resident.record', 'projects.photos']) act where roles.key = 'h0097_writer';
+  select roles.id, act, 2 from roles, (values ('resident.adoption_news'), ('photos.resident_add'), ('photos.resident_publish'), ('resident.record'), ('projects.photos')) v(act) where roles.key = 'h0097_writer';
 insert into role_permissions (role_id, activity, level) select roles.id, 'maintenance.photos', 2 from roles where roles.key = 'h0097_other';
 insert into user_roles (user_id, role_id)
   select w.uid, r.id from who w join roles r on r.key = case w.who when 'management' then 'h0097_writer' else 'h0097_other' end;
