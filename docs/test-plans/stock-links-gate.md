@@ -6,12 +6,12 @@
 |---|---|
 | Feature | First browser pass of `food_forecast`, `medicine_forecast` and `view_cashflow` (12 walkthrough steps) as one-card logins; findings recorded, no code changed |
 | Backlog item | `docs/backlog.md` → CARD REVIEW 2 (ticked) |
-| Branch / worktree | `claude/card-drive-three-new-cards` @ `C:\Development\Animal_Shelter_card-drive-three-new-cards` |
+| Branch / worktree | `claude/stock-links-gate` @ `C:DevelopmentAnimal_Shelter_stock-links-gate` |
 | Dev server | `next dev` on port 3003; logins from `dev-signin.mjs --cards <card>` |
-| PR | pending: opened after this commit |
+| PR | opened after this commit |
 | Tested by / date | Claude, 2026-10-29 |
 | Carries a migration? | no |
-| Tested at SHA | 95734d0a |
+| Tested at SHA | c0bbf284 |
 
 ## 1. Scope and risk
 
