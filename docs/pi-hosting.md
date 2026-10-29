@@ -449,6 +449,69 @@ hour without finishing. `init` now fails a slow drive for this reason. **Use a b
 500 GB to 1 TB SSD** from a reputable shop (the clone needs about 7 GB; the archive less than
 that), and run `f3probe` on it before first use.
 
+## Drive mirror (stage 1: a copy on the USB drive; Drive stays primary)
+
+`scripts/pi/drive-mirror.mjs` copies everything under the app's Drive root
+(`GOOGLE_DRIVE_ROOT_FOLDER_ID`: residents, photos, documents, blood work, procedures and
+`Residents/Deceased/`) onto the encrypted part of the USB drive. It uses the app's own Drive
+credentials from `.env.deploy.production`; nothing new is minted.
+
+- **It never writes to Drive.** Read-only calls only. This is a rule, written in the script's header.
+- **Incremental.** A file is copied when it is new or its Drive `modifiedTime` changed, so a
+  regenerated archive PDF or `index.html` is picked up.
+- **Nothing is ever deleted from the drive.** A file that vanishes from Drive stays here and is
+  logged in `_mirror/gone.log`. A renamed file appears at its new path; the old copy stays.
+  Google Docs/Sheets are saved as PDF. Shortcuts are skipped.
+- **Layout:** `/mnt/lanna-mirror/<shelter>/<same folders as Drive>/`; state in `_mirror/`.
+
+### One-time setup (Lutan, on the Pi)
+
+The clone uses the first 64 GB of the 1.8 TB drive (`sda1`, `sda2`); the mirror goes in a third,
+**encrypted** partition made from the free space. The clone half stays unencrypted on purpose
+(`docs/decisions/2026-10-02-spare-boot-drive-not-encrypted.md`).
+
+1. Make partition 3 from the free space (`sudo fdisk /dev/disk/by-id/usb-Seagate_BUP_Slim_BK_NA97757A-0:0`,
+   `n`, `p`, `3`, defaults, `w`), then `sudo partprobe`. This does not touch `sda1` or `sda2`.
+2. `sudo cryptsetup luksFormat <that partition's by-id path>` (choose a passphrase; store it with
+   the backup key, not on the Pi), then `sudo cryptsetup open <path> lanna-mirror`,
+   `sudo mkfs.ext4 -L lanna-mirror /dev/mapper/lanna-mirror`.
+3. Mount **by UUID**, never `/dev/sda3`: `sudo blkid` for the ext4 UUID inside the mapper, and
+   `sudo mkdir /mnt/lanna-mirror`. Add to `/etc/crypttab` the partition's **LUKS UUID** with the
+   option `noauto`, so a power cut never waits for a passphrase. After a reboot the mirror is simply
+   not mounted and the job fails visibly (below); unlock with `sudo cryptsetup open` + `sudo mount UUID=<uuid> /mnt/lanna-mirror`.
+4. Install the timer: `sudo sed -e "s|__REPO__|$PWD|g" -e "s|__USER__|$USER|g" scripts/pi/drive-mirror.service | sudo tee /etc/systemd/system/drive-mirror.service`,
+   `sudo cp scripts/pi/drive-mirror.timer /etc/systemd/system/`, `sudo systemctl daemon-reload`,
+   `sudo systemctl enable --now drive-mirror.timer`. Run once now: `sudo systemctl start drive-mirror.service`
+   and watch `journalctl -u drive-mirror -f`.
+
+Free space first: `df -h /mnt/lanna-mirror`. On dev the tree measured 1.1 GB (934 files, 2026-10-29);
+production's was not measured, but the partition is over 1.7 TB.
+
+### Is it working?
+
+`node scripts/pi/drive-mirror.mjs --dest /mnt/lanna-mirror --status` prints
+`{"lastAttempt","lastSuccess","result","detail","counts"}` (the file is `_mirror/status.json`).
+`systemctl list-timers drive-mirror.timer`. If the drive is locked or unplugged the unit fails
+and the status stays at the last good time.
+
+**For the Home Assistant item (not built here): the "last mirror sync" tile** reads
+`lastSuccess` from `/mnt/lanna-mirror/_mirror/status.json`, and should go amber after 2 days and
+red after 4, the way `spare-clone.sh status` ages the clone.
+
+### Restoring a folder to Drive by hand
+
+Stay calm: the mirror is a plain folder tree, and Drive is untouched by it.
+
+1. Unlock and mount (step 3 above). Find the folder under `/mnt/lanna-mirror/<shelter>/`,
+   for example `Residents/Deceased/<Name> (<ID>)/`. Files deleted from Drive are listed in `_mirror/gone.log` (with their old path).
+2. Copy it to a computer (`scp -r lutan@lanna-pi.local:/mnt/lanna-mirror/lanna/<folder> .`).
+3. In the shelter's Drive, open the matching parent folder and drag the copied folder in
+   (Drive: New, then Folder upload). Keep the **folder names exactly** as they were: the app finds
+   residents by folder name.
+4. Files restored this way get new Drive IDs, so photos that the app linked by ID need re-attaching
+   (or the resident's records re-linked); that is a repair job, not a copy job. Tell the developer which resident.
+5. The next nightly run copies the restored files under the new IDs and leaves the old copies in place.
+
 ## Second Pi (later)
 
 There is **no second connector today**. This section is for if one is ever added.

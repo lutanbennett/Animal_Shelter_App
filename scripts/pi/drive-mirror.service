@@ -1,0 +1,15 @@
+# Pulls the Drive tree onto the encrypted USB partition. Installed by hand; see
+# docs/pi-hosting.md, "Drive mirror". __REPO__ and __USER__ are rewritten on install.
+# Never writes to Drive. Will not run unless the encrypted drive is mounted.
+[Unit]
+Description=Mirror Google Drive onto the encrypted USB drive (pull-only)
+RequiresMountsFor=/mnt/lanna-mirror
+
+[Service]
+Type=oneshot
+User=__USER__
+WorkingDirectory=__REPO__
+ExecStart=/usr/bin/node scripts/pi/drive-mirror.mjs --env-file __REPO__/.env.deploy.production --dest /mnt/lanna-mirror
+TimeoutStartSec=6h
+Nice=10
+IOSchedulingClass=idle

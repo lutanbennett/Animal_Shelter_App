@@ -1,0 +1,12 @@
+# Nightly 04:00 Bangkok time: an hour after the 03:00 backup, clear of the Sunday 05:00 clone.
+# Persistent: a missed run (Pi was off) fires at boot.
+[Unit]
+Description=Nightly Drive mirror
+
+[Timer]
+OnCalendar=*-*-* 04:00:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
