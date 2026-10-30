@@ -149,7 +149,7 @@ Automated checks by: Claude  Date: 2026-10-30
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: Thai reader and a real phone
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet — the Thai read and the real-phone look are listed above for a person
 
 Manual verification by: pending: Lutan or a Thai reader
 
