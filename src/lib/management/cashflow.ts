@@ -217,6 +217,13 @@ export function resolveCashflowWindow(params: CashflowWindowParams): {
 }
 
 /**
+ * Which categories the viewer may follow to their price page: true only when
+ * the login holds the activity that page asks (set by the page, never here).
+ * Empty means no link is drawn.
+ */
+export type CashflowFixAccess = Partial<Record<CashflowCategory, boolean>>;
+
+/**
  * Where the "not priced yet" card sends you. When every gap in the window
  * sits in one category the card links straight to where that price is
  * entered; when they are spread across several there is no single right
@@ -228,13 +235,17 @@ export function notPricedTarget(
   totals: Record<CashflowCategory, CashflowCell>,
   shown: ReadonlySet<CashflowCategory>,
   anchor: string,
+  canFix: CashflowFixAccess = {},
 ): { href: string; categories: CashflowCategory[] } | null {
   const categories = CASHFLOW_CATEGORIES.filter(
     (k) => shown.has(k) && totals[k].missing > 0,
   );
   if (categories.length === 0) return null;
   return {
-    href: categories.length === 1 ? CATEGORY_PRICE_PATH[categories[0]] : `#${anchor}`,
+    href:
+      categories.length === 1 && canFix[categories[0]]
+        ? CATEGORY_PRICE_PATH[categories[0]]
+        : `#${anchor}`,
     categories,
   };
 }

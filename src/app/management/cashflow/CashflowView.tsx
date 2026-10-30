@@ -16,6 +16,7 @@ import {
   categoryTotal,
   monthTotal,
   notPricedTarget,
+  type CashflowFixAccess,
   windowTotal,
   type CashflowCategory,
   type CashflowCell,
@@ -48,7 +49,10 @@ export function CashflowView({
   to,
   canEditFixedOutgoings = false,
   canEditClinicEstimate = false,
+  canFix = {},
 }: {
+  /** Per category: may this login open the page where its price is entered? Empty by default, so a caller that forgets offers no link. */
+  canFix?: CashflowFixAccess;
   /** The two links to places that change what the figures rest on; false by default, so a caller that forgets offers nothing. */
   canEditFixedOutgoings?: boolean;
   canEditClinicEstimate?: boolean;
@@ -81,8 +85,8 @@ export function CashflowView({
   );
 
   const gap = useMemo(
-    () => notPricedTarget(totals, shown, NOT_PRICED_ANCHOR),
-    [totals, shown],
+    () => notPricedTarget(totals, shown, NOT_PRICED_ANCHOR, canFix),
+    [totals, shown, canFix],
   );
 
   function downloadTable() {
@@ -288,12 +292,16 @@ export function CashflowView({
                 {columns.map((category) => (
                   <td key={category} className="px-3 py-2 text-right">
                     {totals[category].missing > 0 ? (
-                      <Link
-                        href={CATEGORY_PRICE_PATH[category]}
-                        className="text-primary hover:underline"
-                      >
-                        {c.table.fixCount(totals[category].missing)}
-                      </Link>
+                      canFix[category] ? (
+                        <Link
+                          href={CATEGORY_PRICE_PATH[category]}
+                          className="text-primary hover:underline"
+                        >
+                          {c.table.fixCount(totals[category].missing)}
+                        </Link>
+                      ) : (
+                        <span>{c.table.fixCount(totals[category].missing)}</span>
+                      )
                     ) : (
                       <span className="text-muted">{c.table.nothing}</span>
                     )}
