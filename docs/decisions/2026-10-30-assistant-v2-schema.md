@@ -9,7 +9,7 @@
   messages and tool calls. Fixing a shape here would be inventing one.
 - **No enum change**: nothing needs one, and an add-value cannot share the runner's per-file transaction anyway.
 - **No policy or grant change**: the 0070 policies are row-level, so new columns are covered.
-- **`audit.ts` writes both**, from optional `model` / `exchange` on `AssistantActionLog`, defaulting to null. Without a writer the
+- **CORRECTED 2026-10-30: this was NOT done in #1113.** `audit.ts` last changed in a version 1 commit and neither key was written. It is written by `assistant-v2-interpret` (see `2026-10-30-assistant-v2-interpret.md`): optional `model` / `exchange` on `AssistantActionLog`, defaulting to null. Without a writer the
   columns would be indistinguishable from columns that do not exist.
 
 ## Is there anything meaningful to put in `exchange` before stream 3?
