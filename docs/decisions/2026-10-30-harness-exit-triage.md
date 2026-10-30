@@ -100,3 +100,28 @@ needs an open keep-alive socket, so the safe scripts that make no network call a
 | check-upcoming-visits-page.mjs | 1 | needs a guard | line 112, then `console.log("\nAll expectations held.");` |
 | check-worker-origin.mjs | 1 | needs a guard | line 219, then `console.log("all cases ok");` |
 | check-worktree-done.mjs | 1 | safe (nothing runs after) | - |
+
+## security-role-picker (app or harness?)
+
+Measured with the dev server up and the harness's mobile emulation (375x812). The Thai-label checks
+pass; the first create-form submit click times out, reported as the modal backdrop
+(`fixed inset-0 z-40`, `src/app/admin/security/Modal.tsx`) intercepting pointer events. But the submit
+button is inside the dialog, and `elementFromPoint` at its centre returns the button. What does differ
+from a phone: the page is **631 px wide** (`scrollWidth` 631, 52 elements past x=380, all the per-person
+role-select rows), so the emulated layout viewport is wider than 375. **Established:** the Security page
+overflows a phone horizontally (an app fault, filed under Mobile). **Not established:** that this overflow
+is why Playwright's click lands on the backdrop. Neither the page nor the harness was changed.
+
+## who-does-what
+
+- (3a) The fixture attachments were `Medical`, which `set_resident_profile_photo` correctly refuses, so the
+  Admin control failed the `photos.resident_manage` edit probe. They are `Photos` now; Admin is allowed.
+- (3b) `photos.resident_add` is proved shared with `photos.shelter_add` for three boxes, so they are listed
+  under `databaseWider` (shown: false).
+- (3c) `whoAndWhere` and `nameAndPhone` entries removed (every box obeyed); their ids stay in `FIXED_IDS`
+  because the i18n dictionaries are keyed by them. **The brief expected `add_while_recording` to need
+  adding; the check measured the opposite**: `management stock.delivery` and `management
+  reference.add_while_recording` are both obeyed now, so they were taken out of `databaseWider`
+  (`second_in_command stock.delivery` is still shared and stays).
+- (3d) untouched. The check exits **1**: 17 `clinicRule: doctor <activity>` entries are over-listed only
+  because the Doctor holds no cards while one card at a time is being tested. Correct, not unfinished.
