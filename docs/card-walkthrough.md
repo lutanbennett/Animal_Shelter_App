@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-39 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+40 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -325,6 +325,17 @@ Result: pending
 2. **See:** The public website's content (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 3. **TODO:** Add, move and remove the photos in the public website's photo strip. Do it on a disposable record named `walk-website_photos`. Question: where should this write show afterwards (which page, which row)?
 4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Shop for the shelter (`manage_shop_page`)
+
+- Opens: `/admin/website`
+
+0. Sign in with `--cards manage_shop_page`. The home screen shows the **Shop for the shelter** tile (or the tile of a card that includes it).
+1. Open `/admin/website`: it loads.
+2. **TODO:** Manage the Shop for the shelter page. Do it on a disposable record named `walk-manage_shop_page`. Question: where should this write show afterwards (which page, which row)?
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
