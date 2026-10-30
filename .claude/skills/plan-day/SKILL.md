@@ -360,6 +360,19 @@ Rules, in order:
    *different batches*. This is what makes nine items plannable where
    three were a squeeze. Inside one batch the old rule still holds: two
    streams that collide are one stream, not two.
+   **AND FILES ARE NOT THE ONLY AXIS: THE SHARED DEV DATABASE AND THE CHECK SUITE ARE THE OTHER.**
+   Added 2026-10-30, caught at setup rather than mid-flight. A small, decided card retirement was
+   moved into a batch on backlog priority, and would have changed the card counts and grants that
+   `check-card-grants`, `check-cards-count` and `role-cards-coverage` read — **on the dev database
+   all three streams share** — while one stream's whole job was to take the first accurate count of
+   which checks are red. **Two streams can own disjoint files and still collide through dev or through
+   the checks.**
+   **The distinction that decides whether it is a swap or a brief note: ignoring a known red is cheap;
+   taking a census while someone edits the register is not.** Batch 7 told a stream to expect one red
+   and not fix it, and that held. A stream whose deliverable **is** the red count cannot be told that.
+   **So ask of every batch: does any stream here change what another stream's checks READ?** If the
+   other stream merely has to ignore a red, say so in its brief. If its deliverable is the measurement,
+   **move one of them to the next batch** — a decided, small item loses nothing by waiting.
 3. **At most one migration-carrying stream per batch** (CLAUDE.md's
    one-in-flight rule, applied per batch because batches are
    sequential). If two items in one batch need schema, either fold them
@@ -1127,6 +1140,30 @@ from, or than the evidence supported.**
 - **State your evidence AS evidence, with its source**, so a stream can test it. All three briefs
   were caught *because* they said where the claim came from — which is the argument for writing the
   planner's evidence in, not against it.
+
+**AND THE POSITIVE FORM, WHICH IS THE WHOLE REASON THIS RULE PAYS RATHER THAN MERELY AVOIDING HARM: A
+BRIEF THAT SAYS WHAT THE PLANNER HAS NOT ESTABLISHED GETS CORRECTED. ONE THAT ASSERTS GETS OBEYED.**
+Added 2026-10-30 on three instances in one round, each of which came back with something the planner could
+not have reached:
+
+- **A premise that was wrong in the UNEXPECTED direction.** An item described a large gap in how staff
+  open documents. The brief said *"a grep that finds three sites is not proof there are only three places
+  a document is opened"* and named four more files to look at. The stream found that most of it was
+  **already built** — the attachments were already served through the app and the mirror — and the real
+  gap was three links. **The planner expected the correction to widen the job; it shrank it.** An
+  assertion either way would have been obeyed.
+- **A contradiction the planner could not resolve, resolved.** The item asked for a control gated on
+  *"the same activity the route asks"*, and the route asks a **row** rather than an activity. The brief
+  wrote that contradiction down **in those words, as not established**; the stream settled it and
+  recorded the order the route asks in.
+- **A side effect named as existing behaviour** — a tick box an earlier migration had already made appear
+  — which stopped a stream filing it as a fault it had found.
+
+**So the rule has two halves and they are the same rule:** never convert an item's open question into a
+finding, **and** write your own open questions into the brief as questions. **The cost is a sentence; the
+yield is a stream spending its turns on what you could not work out instead of re-deriving what you
+could.** The band consequence is in *Token estimates*: **a question the stream must SETTLE is judgement
+and bands near the ordinary stream; a question it must build an INSTRUMENT to answer does not.**
 
 **Write the planner's own evidence into it.** Nine briefs carried this on 2026-10-21
 and it cost almost nothing, because the planner had already done the greps while
