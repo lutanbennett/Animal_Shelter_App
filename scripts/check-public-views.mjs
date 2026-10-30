@@ -82,6 +82,7 @@ const PUBLIC_VIEWS = [
   // included). Owner-run with `where shown`, so a hidden row is never
   // readable; the donation_channels table itself refuses anon.
   "public_donation_channels",
+  "public_shop_links",
   // 0210. Published sponsorship appeals: the raised figure is a SUM over gifts designated to the appeal, so no
   // donor name reaches anon; drafts and non-public residents are filtered in the view (owner-run, no RLS to fall back
   // on). The photos view leaves out Medical-folder files.
