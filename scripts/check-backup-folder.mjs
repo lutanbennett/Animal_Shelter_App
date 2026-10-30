@@ -3,6 +3,7 @@
 // The bug (2026-10-02 to 10-13): backup.mjs uploaded to BACKUP_DRIVE_FOLDER_ID, set only on the Pi,
 // while the tile ran on the Worker without it and looked under the root. No code disagreed;
 // the settings did. So this pins the single rule and that both sides use it.
+import { exitWith } from "./lib/exit.mjs";
 import { readFileSync } from "node:fs";
 import { describeBackupFolder, resolveBackupFolder } from "./lib/backup-folder.mjs";
 import { RUNTIME_CONFIG } from "./lib/runtime-config.mjs";
@@ -28,4 +29,4 @@ check("neither side reads BACKUP_DRIVE_FOLDER_ID itself", !/env\.BACKUP_DRIVE_FO
 const entry = RUNTIME_CONFIG.find((c) => c.name === "BACKUP_DRIVE_FOLDER_ID");
 check("the setting is declared for both the Worker and the Pi", entry?.where === "both", String(entry?.where));
 
-process.exit(failures ? 1 : 0);
+await exitWith(failures ? 1 : 0);

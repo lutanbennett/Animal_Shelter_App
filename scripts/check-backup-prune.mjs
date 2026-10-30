@@ -1,6 +1,7 @@
 // Offline check of the backup pruning rules (scripts/lib/backup-prune.mjs):
 // fabricated file lists, no database, Drive or disk. Run: node scripts/check-backup-prune.mjs
 // The point is the floor: no scenario may delete the newest backups or run without a confirmed upload.
+import { exitWith } from "./lib/exit.mjs";
 import { MIN_KEPT, planPrune } from "./lib/backup-prune.mjs";
 
 let failures = 0;
@@ -82,4 +83,4 @@ for (let i = 0; i < 2000; i++) {
 check("2000 random lists: the newest five always survive", violations === 0, `${violations} violations`);
 
 console.log(failures === 0 ? "\nAll backup-prune checks passed." : `\n${failures} FAILED.`);
-process.exit(failures === 0 ? 0 : 1);
+await exitWith(failures === 0 ? 0 : 1);

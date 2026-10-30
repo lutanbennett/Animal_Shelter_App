@@ -10,6 +10,7 @@
  *
  *   node scripts/check-site-hosts.mjs
  */
+import { exitWith } from "./lib/exit.mjs";
 import { readFileSync } from "node:fs";
 import { siteAllowedOrigins, isSiteHostname } from "../src/lib/site-hosts.ts";
 import { readWranglerConfig } from "./lib/wrangler.mjs";
@@ -43,4 +44,4 @@ for (const [name, block] of Object.entries(envs)) {
 }
 
 console.log(failed ? `\n${failed} wrong` : "\nall right");
-process.exit(failed ? 1 : 0);
+await exitWith(failed ? 1 : 0);

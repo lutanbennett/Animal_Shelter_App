@@ -6,6 +6,7 @@
 // as-needed doses are not counted; no-round doses are not counted but ARE reported (nothing is
 // silently left out of the bag); a missing amount flags the line rather than reading as zero;
 // apart residents are not bagged for; same medicine in two units stays two lines.
+import { exitWith } from "./lib/exit.mjs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -57,4 +58,4 @@ check("zone lines are the enclosure sums", A.lines.reduce((n, l) => n + l.doses,
 check("empty list", buildPickList({ ...list, zones: [] }).zones.length === 0);
 
 console.log(failed ? `${failed} FAILED` : "all held");
-process.exit(failed ? 1 : 0);
+await exitWith(failed ? 1 : 0);

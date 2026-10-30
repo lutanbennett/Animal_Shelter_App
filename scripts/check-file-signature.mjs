@@ -11,6 +11,7 @@
  * No database, no Drive: imports the helper directly (Node strips its
  * types). Exits 1 if any case is wrong.
  */
+import { exitWith } from "./lib/exit.mjs";
 import {
   checkFileSignature,
   formatNames,
@@ -89,4 +90,4 @@ if (sniffBytes(new Uint8Array(0)) !== null) {
 }
 
 console.log(failed ? `\n${failed} failed` : `\nall ${cases.length + 2} passed`);
-process.exit(failed ? 1 : 0);
+await exitWith(failed ? 1 : 0);

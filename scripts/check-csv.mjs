@@ -7,6 +7,7 @@
  *
  *   node scripts/check-csv.mjs
  */
+import { exitWith } from "./lib/exit.mjs";
 import { csvField, toCsv } from "../src/lib/csv.ts";
 
 const cases = [
@@ -47,4 +48,4 @@ if (!wholeOk) failed++;
 console.log(`${wholeOk ? "ok  " : "FAIL"} toCsv row with a formula and a negative amount`);
 
 console.log(failed ? `\n${failed} wrong` : "\nall right");
-process.exit(failed ? 1 : 0);
+await exitWith(failed ? 1 : 0);

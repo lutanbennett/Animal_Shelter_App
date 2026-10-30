@@ -4,6 +4,7 @@
 // the database against cards.ts (docs/decisions/2026-10-16-cards-count-in-ci.md).
 //
 //   node scripts/check-cards-count.mjs
+import { exitWith } from "./lib/exit.mjs";
 import { join } from "node:path";
 import { register } from "node:module";
 import { pathToFileURL } from "node:url";
@@ -34,4 +35,4 @@ for (const k of CARD_KEYS) {
 if (CARD_KEYS.length !== 39) fail(`the agreed set is thirty-nine cards (forty until record_death was folded into Manage medical, 0282); cards.ts has ${CARD_KEYS.length}`);
 else if (!failed) console.log("ok   cards.ts has the thirty-nine agreed cards, all naming real activities");
 
-process.exit(failed ? 1 : 0);
+await exitWith(failed ? 1 : 0);

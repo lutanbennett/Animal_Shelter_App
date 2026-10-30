@@ -17,6 +17,7 @@
  *
  *   node scripts/check-next-og.mjs
  */
+import { exitWith } from "./lib/exit.mjs";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -55,5 +56,5 @@ if (hits.length && behind) {
       "\nGHSA-vcvr-r3jv-pc5j is a remote code execution in ImageResponse. Bump next to " +
       `${FIXED.join(".")} or later first. See docs/decisions/2026-10-01-next-og-advisory-handled-as-routine.md.`,
   );
-  process.exit(1);
+  await exitWith(1);
 }

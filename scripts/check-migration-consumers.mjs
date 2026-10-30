@@ -7,6 +7,7 @@
  *
  *   node scripts/check-migration-consumers.mjs
  */
+import { exitWith } from "./lib/exit.mjs";
 import { spawnSync } from "node:child_process";
 import { assumedLiveRelease, consumerReport, declaredConsumers, liveRelease } from "./lib/migration-consumers.mjs";
 
@@ -77,4 +78,4 @@ index.ts
 ` : null) });
 check("a directory is reported as its own state, not differs", dir.warnings.length === 1 && dir.warnings[0].includes("is a directory"), JSON.stringify(dir));
 
-process.exit(failures ? 1 : 0);
+await exitWith(failures ? 1 : 0);
