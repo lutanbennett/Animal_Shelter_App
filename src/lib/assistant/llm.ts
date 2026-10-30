@@ -71,6 +71,8 @@ export type LlmErrorKind =
   | "rate_limited"
   | "bad_request"
   | "unavailable"
+  | "timeout"
+  | "bad_response"
   | "unknown";
 
 /** Every failure an implementation raises, so callers never see a vendor class. */
