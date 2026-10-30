@@ -99,6 +99,7 @@ const en = {
     shopLinks: "Shop for the shelter",
     security: "Security",
     systemStatus: "System status",
+    assistantLog: "Assistant log",
     stocktaking: "Stocktaking",
     recentChanges: "Recent changes",
     whoDoesWhat: "Who does what",
@@ -1138,6 +1139,8 @@ const en = {
           "Sign-in accounts, roles and access requests. Needs your authenticator app (2-step verification). Also pinned to the bottom of the menu.",
         stocktaking:
           "Turn stocktaking on or off for food, and for medicines and vaccines, separately. Needs your authenticator app (2-step verification).",
+        assistantLog:
+          "What people typed at the assistant that it could not help with, to read and to export as a test set. Admin only.",
         systemStatus:
           "Whether the database, photo storage, migrations, release mail, backups and the Pi are healthy, and how much the app is being used.",
         recentChanges:
@@ -1577,6 +1580,9 @@ const en = {
           title: "Assistant requests",
           value: (v: { requests: string | number }) =>
             `${v.requests} requests`,
+          couldNotHelp: (v: { unmatched: string | number; refused: string | number }) =>
+            `Could not help: ${v.unmatched} not understood, ${v.refused} refused.`,
+          openLog: "Open the Assistant log",
         },
         visitors: {
           title: "Website visitors",
@@ -1593,6 +1599,27 @@ const en = {
           },
         },
       },
+    },
+    assistantLog: {
+      title: "Assistant log",
+      subtitle:
+        "Sentences typed at the assistant that it could not help with: not understood, or refused. Kept for 90 days. Newest first.",
+      status: "What happened",
+      statusAll: "Both",
+      statuses: { unmatched: "Not understood", refused: "Refused" } as Record<"unmatched" | "refused", string>,
+      from: "From",
+      to: "To",
+      apply: "Show",
+      clear: "Clear",
+      export: "Download as a test set (CSV)",
+      when: "When",
+      typed: "What was typed",
+      about: "About",
+      aResident: "A resident",
+      empty: "Nothing in this window. Either the assistant understood everything, or the rows have passed their 90 days.",
+      loadFailed: "The log could not be read. Try again in a moment.",
+      showing: (v: { count: number }) => `${v.count} shown.`,
+      showingLimit: (v: { count: number }) => `The newest ${v.count} are shown. Narrow the dates, or download the file for more.`,
     },
     stocktaking: {
       title: "Stocktaking",
