@@ -160,6 +160,7 @@ const offenders = [];
 })(decodeURIComponent(root));
 check("no date-only value is compared with Date.now()", offenders, []);
 
+// process.exit is safe here: this script makes no network call, so the libuv crash in scripts/lib/exit.mjs cannot happen.
 if (failed) {
   console.error(`\n${failed} check(s) failed.`);
   process.exit(1);
