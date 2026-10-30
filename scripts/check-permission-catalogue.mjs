@@ -359,6 +359,7 @@ const EXEMPT = {
   "/volunteer": { public: true, why: "Public website: a site_pages page (SitePageView), the same text for every visitor, signed in or not." },
   "/donate": { public: true, why: "Public website: a site_pages page (SitePageView), the same text for every visitor, signed in or not." },
   "/friends": { public: true, why: "Public website: public_shelter_friends (0076)." },
+  "/shop": { public: true, why: "Public website: public_shop_links (0285), shown entries only." },
   "/friends/join": { public: true, why: "Public website: a site_pages page (SitePageView), the same text for every visitor, signed in or not." },
   "/r/[code]": {
     public: true,
