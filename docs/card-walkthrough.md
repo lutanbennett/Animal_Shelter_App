@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-40 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+39 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -531,18 +531,6 @@ Result: pending
 1. Open `/residents`: it loads.
 2. **Do:** News from an adopter. Use a disposable record named `walk-adoption_news`. **Read-back:** only an adopted resident has the control: /residents/<id>/adoption-updates lists the new update first, with its date and channel (LINE, Facebook, Email, Visit); text marked staff only is never published (answered 2026-10-23).
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
-
-Result: pending
-
-## Add to lists while recording (`add_while_recording`)
-
-- Opens: `/residents`
-- Also gives: View medical (`view_medical`) (walked under its own heading)
-
-0. Sign in with `--cards add_while_recording`. The home screen shows the **Add to lists while recording** tile (or the tile of a card that includes it).
-1. Open `/residents`: it loads.
-2. **TODO:** Add a missing medication, frequency or procedure type from a form. Do it on a disposable record named `walk-add_while_recording`. Question: where should this write show afterwards (which page, which row)?
-3. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
