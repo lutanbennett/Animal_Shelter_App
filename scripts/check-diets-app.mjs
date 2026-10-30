@@ -10,6 +10,7 @@
 //   forecast   stock_diet_forecast (what Purchasing calls) shows the same three ingredients
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { exitWith } from "./lib/exit.mjs";
 
 const { loadEnv, projectRef } = await import(pathToFileURL(join(process.cwd(), "scripts/lib/env.mjs")).href);
 const env = loadEnv("test");
@@ -73,24 +74,26 @@ const m = /HARNESS-RESULT (.*)/.exec(msg);
 if (!m) throw new Error(`no result (status ${res.status}): ${msg.slice(0, 2000)}`);
 const rows = JSON.parse(m[1]);
 const get = (k) => rows.find((r) => r.k === k)?.v;
-if (get("skipped")) { console.log(`SKIPPED: ${get("skipped")}`); process.exit(0); }
+if (get("skipped")) { console.log(`SKIPPED: ${get("skipped")}`); await exitWith(0); }
+else {
 
-const n = (k) => Number(get(k));
-const before = n("before_kibble");
-let fails = 0;
-const check = (ok, what) => { if (!ok) fails++; console.log(`${ok ? "ok   " : "FAIL "} ${what}`); };
-console.log(`Standard on dev: ${get("residents_on_standard")} residents, unit ${get("unit")}, month of Oct 2026`);
-console.log(`kibble need before the split: ${before}`);
-console.log(`after: kibble ${n("after_kibble")}, chicken ${n("after_chicken")}, rice ${n("after_rice")}`);
-check(before > 0, "there is a kibble need to compare");
-// Other diets may use the same kibble, so the quarter applies to Standard's own share S, not the whole need:
-// kibble falls by 3/4 S and chicken gains 3/8 S, so chicken = half the fall, and rice equals chicken.
-check(n("after_kibble") < before, "kibble need falls");
-check(Math.abs(n("after_chicken") - (before - n("after_kibble")) / 2) < 1e-6, "Standard's kibble share falls to a quarter (chicken = half the fall)");
-check(Math.abs(n("after_chicken") - n("after_rice")) < 1e-6, "rice equals chicken");
-check(n("after_chicken") > 0 && n("after_rice") > 0, "chicken and rice appear in the forecast");
-check(Math.abs(n("after_kibble") + n("after_chicken") + n("after_rice") - before) < 1e-6, "the three together equal the old total");
-check(n("stock_kibble") === n("after_kibble") && n("stock_chicken") === n("after_chicken") && n("stock_rice") === n("after_rice"),
-  "Purchasing's forecast (stock_diet_forecast) shows the same three ingredients");
-console.log(fails ? "\nRESULT: RED" : "\nRESULT: GREEN");
-process.exitCode = fails ? 1 : 0;
+  const n = (k) => Number(get(k));
+  const before = n("before_kibble");
+  let fails = 0;
+  const check = (ok, what) => { if (!ok) fails++; console.log(`${ok ? "ok   " : "FAIL "} ${what}`); };
+  console.log(`Standard on dev: ${get("residents_on_standard")} residents, unit ${get("unit")}, month of Oct 2026`);
+  console.log(`kibble need before the split: ${before}`);
+  console.log(`after: kibble ${n("after_kibble")}, chicken ${n("after_chicken")}, rice ${n("after_rice")}`);
+  check(before > 0, "there is a kibble need to compare");
+  // Other diets may use the same kibble, so the quarter applies to Standard's own share S, not the whole need:
+  // kibble falls by 3/4 S and chicken gains 3/8 S, so chicken = half the fall, and rice equals chicken.
+  check(n("after_kibble") < before, "kibble need falls");
+  check(Math.abs(n("after_chicken") - (before - n("after_kibble")) / 2) < 1e-6, "Standard's kibble share falls to a quarter (chicken = half the fall)");
+  check(Math.abs(n("after_chicken") - n("after_rice")) < 1e-6, "rice equals chicken");
+  check(n("after_chicken") > 0 && n("after_rice") > 0, "chicken and rice appear in the forecast");
+  check(Math.abs(n("after_kibble") + n("after_chicken") + n("after_rice") - before) < 1e-6, "the three together equal the old total");
+  check(n("stock_kibble") === n("after_kibble") && n("stock_chicken") === n("after_chicken") && n("stock_rice") === n("after_rice"),
+    "Purchasing's forecast (stock_diet_forecast) shows the same three ingredients");
+  console.log(fails ? "\nRESULT: RED" : "\nRESULT: GREEN");
+  process.exitCode = fails ? 1 : 0;
+}

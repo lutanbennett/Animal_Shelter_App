@@ -22,6 +22,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { exitWith } from "./lib/exit.mjs";
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const dir = mkdtempSync(path.join(tmpdir(), "acceptance-pdf-"));
@@ -102,4 +103,4 @@ try {
 }
 
 console.log(failed ? `\ncheck-acceptance-pdf: ${failed} failed` : "\ncheck-acceptance-pdf: all passed");
-process.exit(failed ? 1 : 0);
+await exitWith(failed ? 1 : 0);

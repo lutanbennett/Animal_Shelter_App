@@ -17,6 +17,7 @@ import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { giveCards, giveRole } from "./lib/user-role.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -37,152 +38,154 @@ if (cleanupFile) {
     const { error } = await service.auth.admin.deleteUser(id);
     console.log(error ? `could not delete ${id}: ${error.message}` : `deleted ${id}`);
   }
-  process.exit(0);
-}
+  await exitWith(0);
+} else {
 
-const failures = [];
-const expect = (ok, what) => {
-  console.log(`  ${ok ? "ok  " : "FAIL"} ${what}`);
-  if (!ok) failures.push(what);
-};
+  const failures = [];
+  const expect = (ok, what) => {
+    console.log(`  ${ok ? "ok  " : "FAIL"} ${what}`);
+    if (!ok) failures.push(what);
+  };
 
-const tag = randomBytes(4).toString("hex");
-const password = randomBytes(18).toString("base64url");
+  const tag = randomBytes(4).toString("hex");
+  const password = randomBytes(18).toString("base64url");
 
-async function signInCookies(email) {
-  const jar = new Map();
-  const ssr = createServerClient(url, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
-    cookies: {
-      getAll: () => [...jar].map(([name, value]) => ({ name, value })),
-      setAll: (list) => list.forEach(({ name, value }) => (value ? jar.set(name, value) : jar.delete(name))),
-    },
-  });
-  const { error } = await ssr.auth.signInWithPassword({ email, password });
-  if (error) throw error;
-  return { header: [...jar].map(([n, v]) => `${n}=${v}`).join("; "), jar: Object.fromEntries(jar) };
-}
-
-async function page(path, cookie, ua) {
-  const headers = { cookie };
-  if (ua) headers["user-agent"] = ua;
-  const res = await fetch(`${base}${path}`, { headers, redirect: "manual" });
-  const html = await res.text();
-  // Once a response has started streaming, Next sends a 200 whose body carries the redirect.
-  const inBody = html.match(/NEXT_REDIRECT;(?:replace|push);([^;]+);/)?.[1] ?? null;
-  return { status: res.status, location: res.headers.get("location") ?? inBody, html };
-}
-const goes = (r, to) => (r.location ?? "").replace(/^https?:\/\/[^/]+/, "") === to;
-// A tile is an anchor with the tile class. While the page is still streaming, the same tile is in the RSC payload instead of
-// the markup, so read both, and never count the sidebar's own links as tiles.
-const tilesIn = (html) => [
-  ...new Set([
-    ...[...html.matchAll(/<a[^>]*>/g)].map((m) => m[0]).filter((a) => a.includes("min-h-28")).map((a) => a.match(/href="([^"]+)"/)?.[1]),
-    ...[...html.matchAll(/\\"href\\":\\"(\/[^\\"]*)\\",\\"className\\":\\"[^\\"]*min-h-28/g)].map((m) => m[1]),
-  ]),
-].filter(Boolean);
-const onHome = (html, path) => tilesIn(html).includes(path);
-const notFound = (r) => r.status === 404 || r.html.includes("NEXT_HTTP_ERROR_FALLBACK;404");
-const has = (html, path) => new RegExp(`href="${path.replace(/[/.]/g, "\\$&")}"`).test(html);
-
-const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
-const IPAD = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15";
-const WINDOWS = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
-
-const made = [];
-const kept = {};
-const cleanups = [];
-try {
-  const cookies = {};
-  for (const role of ["admin", "management", "head_of_maintenance", "volunteer", "doctor"]) {
-    const email = `harness-home-${role}-${tag}@example.invalid`;
-    const { data, error } = await service.auth.admin.createUser({ email, password, email_confirm: true });
+  async function signInCookies(email) {
+    const jar = new Map();
+    const ssr = createServerClient(url, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+      cookies: {
+        getAll: () => [...jar].map(([name, value]) => ({ name, value })),
+        setAll: (list) => list.forEach(({ name, value }) => (value ? jar.set(name, value) : jar.delete(name))),
+      },
+    });
+    const { error } = await ssr.auth.signInWithPassword({ email, password });
     if (error) throw error;
-    made.push(data.user.id);
-    const { error: roleErr } = await giveRole(service, data.user.id, role);
-    if (roleErr) throw roleErr;
-    cookies[role] = await signInCookies(email);
-    kept[role] = { email, ...cookies[role].jar };
+    return { header: [...jar].map(([n, v]) => `${n}=${v}`).join("; "), jar: Object.fromEntries(jar) };
   }
 
-  console.log("Admin's landing follows the device");
-  const phone = await page("/home", cookies.admin.header, IPHONE);
-  expect(goes(phone, "/home/management"), `a phone lands on the Management home (${phone.status} → ${phone.location})`);
-  const tablet = await page("/home", cookies.admin.header, IPAD);
-  expect(goes(tablet, "/admin"), `a tablet lands on Settings (${tablet.status} → ${tablet.location})`);
-  const desk = await page("/home", cookies.admin.header, WINDOWS);
-  expect(goes(desk, "/admin"), `a desk lands on Settings (${desk.status} → ${desk.location})`);
+  async function page(path, cookie, ua) {
+    const headers = { cookie };
+    if (ua) headers["user-agent"] = ua;
+    const res = await fetch(`${base}${path}`, { headers, redirect: "manual" });
+    const html = await res.text();
+    // Once a response has started streaming, Next sends a 200 whose body carries the redirect.
+    const inBody = html.match(/NEXT_REDIRECT;(?:replace|push);([^;]+);/)?.[1] ?? null;
+    return { status: res.status, location: res.headers.get("location") ?? inBody, html };
+  }
+  const goes = (r, to) => (r.location ?? "").replace(/^https?:\/\/[^/]+/, "") === to;
+  // A tile is an anchor with the tile class. While the page is still streaming, the same tile is in the RSC payload instead of
+  // the markup, so read both, and never count the sidebar's own links as tiles.
+  const tilesIn = (html) => [
+    ...new Set([
+      ...[...html.matchAll(/<a[^>]*>/g)].map((m) => m[0]).filter((a) => a.includes("min-h-28")).map((a) => a.match(/href="([^"]+)"/)?.[1]),
+      ...[...html.matchAll(/\\"href\\":\\"(\/[^\\"]*)\\",\\"className\\":\\"[^\\"]*min-h-28/g)].map((m) => m[1]),
+    ]),
+  ].filter(Boolean);
+  const onHome = (html, path) => tilesIn(html).includes(path);
+  const notFound = (r) => r.status === 404 || r.html.includes("NEXT_HTTP_ERROR_FALLBACK;404");
+  const has = (html, path) => new RegExp(`href="${path.replace(/[/.]/g, "\\$&")}"`).test(html);
 
-  console.log("Admin opens the homes and has the switch");
-  const mgmt = await page("/home/management", cookies.admin.header, IPHONE);
-  expect(mgmt.status === 200, `Admin opens /home/management (${mgmt.status})`);
-  expect(tilesIn(mgmt.html).length > 0, `the Management home has tiles (${tilesIn(mgmt.html).join(" ")})`);
-  expect(has(mgmt.html, "/admin") && has(mgmt.html, "/home/head_of_maintenance") && has(mgmt.html, "/home/volunteer"), "the switch lists Settings and the other roles");
-  expect(!has(mgmt.html, "/home/admin") && !has(mgmt.html, "/home/public_viewer"), "the switch lists neither Admin nor the public viewer");
-  const settings = await page("/admin", cookies.admin.header, WINDOWS);
-  expect(settings.status === 200 && has(settings.html, "/home/management"), "Settings has the switch too");
-  const staffHome = await page("/home/head_of_maintenance", cookies.admin.header, IPHONE);
-  expect(staffHome.status === 200 && onHome(staffHome.html, "/maintenance"), "Admin sees the Head of Maintenance home, with Maintenance on it");
-  const doctorHome = await page("/home/doctor", cookies.admin.header, IPHONE);
-  // Status only: what the doctor home holds follows whichever cards Doctor has been given that week, so a tile is not asserted here.
-  expect(doctorHome.status === 200, `Admin opens the doctor home (${doctorHome.status})`);
-  const noSuch = await page("/home/no_such_role", cookies.admin.header, IPHONE);
-  expect(notFound(noSuch), `a role that does not exist is a 404 (${noSuch.status})`);
-  const publicViewer = await page("/home/public_viewer", cookies.admin.header, IPHONE);
-  expect(notFound(publicViewer), `the public viewer has no home (${publicViewer.status})`);
-  const adminHome = await page("/home/admin", cookies.admin.header, IPHONE);
-  expect(goes(adminHome, "/admin"), "/home/admin goes to Settings");
+  const IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1";
+  const IPAD = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15";
+  const WINDOWS = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
-  console.log("Nobody but Admin opens another role's home");
-  for (const role of ["management", "head_of_maintenance", "volunteer", "doctor"]) {
-    for (const target of ["/home/management", "/home/head_of_maintenance", `/home/${role}`]) {
-      const r = await page(target, cookies[role].header, IPHONE);
-      expect(goes(r, "/no-access") && !r.html.includes("min-h-28"), `${role} opening ${target} is refused (${r.status} → ${r.location})`);
+  const made = [];
+  const kept = {};
+  const cleanups = [];
+  try {
+    const cookies = {};
+    for (const role of ["admin", "management", "head_of_maintenance", "volunteer", "doctor"]) {
+      const email = `harness-home-${role}-${tag}@example.invalid`;
+      const { data, error } = await service.auth.admin.createUser({ email, password, email_confirm: true });
+      if (error) throw error;
+      made.push(data.user.id);
+      const { error: roleErr } = await giveRole(service, data.user.id, role);
+      if (roleErr) throw roleErr;
+      cookies[role] = await signInCookies(email);
+      kept[role] = { email, ...cookies[role].jar };
     }
-    const a = await page("/admin", cookies[role].header, IPHONE);
-    expect(!has(a.html, "/home/management"), `${role} is not shown the switch on Settings`);
+
+    console.log("Admin's landing follows the device");
+    const phone = await page("/home", cookies.admin.header, IPHONE);
+    expect(goes(phone, "/home/management"), `a phone lands on the Management home (${phone.status} → ${phone.location})`);
+    const tablet = await page("/home", cookies.admin.header, IPAD);
+    expect(goes(tablet, "/admin"), `a tablet lands on Settings (${tablet.status} → ${tablet.location})`);
+    const desk = await page("/home", cookies.admin.header, WINDOWS);
+    expect(goes(desk, "/admin"), `a desk lands on Settings (${desk.status} → ${desk.location})`);
+
+    console.log("Admin opens the homes and has the switch");
+    const mgmt = await page("/home/management", cookies.admin.header, IPHONE);
+    expect(mgmt.status === 200, `Admin opens /home/management (${mgmt.status})`);
+    expect(tilesIn(mgmt.html).length > 0, `the Management home has tiles (${tilesIn(mgmt.html).join(" ")})`);
+    expect(has(mgmt.html, "/admin") && has(mgmt.html, "/home/head_of_maintenance") && has(mgmt.html, "/home/volunteer"), "the switch lists Settings and the other roles");
+    expect(!has(mgmt.html, "/home/admin") && !has(mgmt.html, "/home/public_viewer"), "the switch lists neither Admin nor the public viewer");
+    const settings = await page("/admin", cookies.admin.header, WINDOWS);
+    expect(settings.status === 200 && has(settings.html, "/home/management"), "Settings has the switch too");
+    const staffHome = await page("/home/head_of_maintenance", cookies.admin.header, IPHONE);
+    expect(staffHome.status === 200 && onHome(staffHome.html, "/maintenance"), "Admin sees the Head of Maintenance home, with Maintenance on it");
+    const doctorHome = await page("/home/doctor", cookies.admin.header, IPHONE);
+    // Status only: what the doctor home holds follows whichever cards Doctor has been given that week, so a tile is not asserted here.
+    expect(doctorHome.status === 200, `Admin opens the doctor home (${doctorHome.status})`);
+    const noSuch = await page("/home/no_such_role", cookies.admin.header, IPHONE);
+    expect(notFound(noSuch), `a role that does not exist is a 404 (${noSuch.status})`);
+    const publicViewer = await page("/home/public_viewer", cookies.admin.header, IPHONE);
+    expect(notFound(publicViewer), `the public viewer has no home (${publicViewer.status})`);
+    const adminHome = await page("/home/admin", cookies.admin.header, IPHONE);
+    expect(goes(adminHome, "/admin"), "/home/admin goes to Settings");
+
+    console.log("Nobody but Admin opens another role's home");
+    for (const role of ["management", "head_of_maintenance", "volunteer", "doctor"]) {
+      for (const target of ["/home/management", "/home/head_of_maintenance", `/home/${role}`]) {
+        const r = await page(target, cookies[role].header, IPHONE);
+        expect(goes(r, "/no-access") && !r.html.includes("min-h-28"), `${role} opening ${target} is refused (${r.status} → ${r.location})`);
+      }
+      const a = await page("/admin", cookies[role].header, IPHONE);
+      expect(!has(a.html, "/home/management"), `${role} is not shown the switch on Settings`);
+    }
+
+    console.log("Each role lands on its own home");
+    const m = await page("/home", cookies.management.header, IPHONE);
+    expect(m.status === 200 && onHome(m.html, "/residents") && onHome(m.html, "/management/recurring-jobs") && !onHome(m.html, "/admin/zones"), `management: tiles, no Settings page (${tilesIn(m.html).join(" ")})`);
+    expect(!has(m.html, "/home/head_of_maintenance"), "management has no switch");
+    const s = await page("/home", cookies.head_of_maintenance.header, IPHONE);
+    expect(s.status === 200 && onHome(s.html, "/maintenance"), `head of maintenance: Maintenance (${tilesIn(s.html).join(" ")})`);
+    expect(!onHome(s.html, "/management/recurring-jobs") && !onHome(s.html, "/appointments"), "head of maintenance: none of Management's pages, no appointments");
+    const v = await page("/home", cookies.volunteer.header, IPHONE);
+    expect(v.status === 200 && onHome(v.html, "/residents") && onHome(v.html, "/enclosures"), `volunteer: Residents and Enclosures (${tilesIn(v.html).join(" ")})`);
+    expect(!onHome(v.html, "/management/recurring-jobs"), "volunteer: not Management's pages");
+    const vt = await page("/home", cookies.doctor.header, IPHONE);
+    expect(vt.status === 200 || goes(vt, "/no-access"), `doctor: opens its home or is told it has none (${vt.status} → ${vt.location})`);
+    // The card-shaped version of the old Appointments claim: a login holding exactly Book clinic visits has its page on the home.
+    const cardEmail = `harness-home-card-${tag}@example.invalid`;
+    const { data: cu, error: cuErr } = await service.auth.admin.createUser({ email: cardEmail, password, email_confirm: true });
+    if (cuErr) throw cuErr;
+    made.push(cu.user.id);
+    const { error: cardErr, cleanup } = await giveCards(service, cu.user.id, ["book_clinic_visits"]);
+    cleanups.push(cleanup);
+    if (cardErr) throw cardErr;
+    const cardCookies = await signInCookies(cardEmail);
+    const cardHome = await page("/home", cardCookies.header, IPHONE);
+    expect(cardHome.status === 200 && onHome(cardHome.html, "/upcoming-visits"), `exactly Book clinic visits: Upcoming visits on its home (${cardHome.status}; ${tilesIn(cardHome.html).join(" ")})`);
+    const out = await page("/home", "", IPHONE);
+    expect((out.location ?? "").startsWith("/login"), `signed out: sent to sign in (${out.status} → ${out.location})`);
+  } finally {
+    if (keepFile) {
+      writeFileSync(keepFile, JSON.stringify({ ids: made, accounts: kept }, null, 2));
+      console.log(`  kept ${made.length} throwaway login(s); cookies and ids in ${keepFile}. Delete with --cleanup ${keepFile}`);
+    } else {
+      for (const id of made) {
+        const { error } = await service.auth.admin.deleteUser(id);
+        if (error) console.error(`  could not delete ${id}: ${error.message}`);
+      }
+      for (const c of cleanups) await c();
+      console.log(`  deleted ${made.length} throwaway login(s)`);
+    }
   }
 
-  console.log("Each role lands on its own home");
-  const m = await page("/home", cookies.management.header, IPHONE);
-  expect(m.status === 200 && onHome(m.html, "/residents") && onHome(m.html, "/management/recurring-jobs") && !onHome(m.html, "/admin/zones"), `management: tiles, no Settings page (${tilesIn(m.html).join(" ")})`);
-  expect(!has(m.html, "/home/head_of_maintenance"), "management has no switch");
-  const s = await page("/home", cookies.head_of_maintenance.header, IPHONE);
-  expect(s.status === 200 && onHome(s.html, "/maintenance"), `head of maintenance: Maintenance (${tilesIn(s.html).join(" ")})`);
-  expect(!onHome(s.html, "/management/recurring-jobs") && !onHome(s.html, "/appointments"), "head of maintenance: none of Management's pages, no appointments");
-  const v = await page("/home", cookies.volunteer.header, IPHONE);
-  expect(v.status === 200 && onHome(v.html, "/residents") && onHome(v.html, "/enclosures"), `volunteer: Residents and Enclosures (${tilesIn(v.html).join(" ")})`);
-  expect(!onHome(v.html, "/management/recurring-jobs"), "volunteer: not Management's pages");
-  const vt = await page("/home", cookies.doctor.header, IPHONE);
-  expect(vt.status === 200 || goes(vt, "/no-access"), `doctor: opens its home or is told it has none (${vt.status} → ${vt.location})`);
-  // The card-shaped version of the old Appointments claim: a login holding exactly Book clinic visits has its page on the home.
-  const cardEmail = `harness-home-card-${tag}@example.invalid`;
-  const { data: cu, error: cuErr } = await service.auth.admin.createUser({ email: cardEmail, password, email_confirm: true });
-  if (cuErr) throw cuErr;
-  made.push(cu.user.id);
-  const { error: cardErr, cleanup } = await giveCards(service, cu.user.id, ["book_clinic_visits"]);
-  cleanups.push(cleanup);
-  if (cardErr) throw cardErr;
-  const cardCookies = await signInCookies(cardEmail);
-  const cardHome = await page("/home", cardCookies.header, IPHONE);
-  expect(cardHome.status === 200 && onHome(cardHome.html, "/upcoming-visits"), `exactly Book clinic visits: Upcoming visits on its home (${cardHome.status}; ${tilesIn(cardHome.html).join(" ")})`);
-  const out = await page("/home", "", IPHONE);
-  expect((out.location ?? "").startsWith("/login"), `signed out: sent to sign in (${out.status} → ${out.location})`);
-} finally {
-  if (keepFile) {
-    writeFileSync(keepFile, JSON.stringify({ ids: made, accounts: kept }, null, 2));
-    console.log(`  kept ${made.length} throwaway login(s); cookies and ids in ${keepFile}. Delete with --cleanup ${keepFile}`);
+  if (failures.length) {
+    console.error(`\n${failures.length} expectation(s) failed.`);
+    await exitWith(1);
   } else {
-    for (const id of made) {
-      const { error } = await service.auth.admin.deleteUser(id);
-      if (error) console.error(`  could not delete ${id}: ${error.message}`);
-    }
-    for (const c of cleanups) await c();
-    console.log(`  deleted ${made.length} throwaway login(s)`);
+    console.log("\nAll expectations held.");
   }
 }
-
-if (failures.length) {
-  console.error(`\n${failures.length} expectation(s) failed.`);
-  process.exit(1);
-}
-console.log("\nAll expectations held.");

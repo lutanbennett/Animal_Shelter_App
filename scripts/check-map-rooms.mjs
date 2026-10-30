@@ -24,6 +24,7 @@
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
+import { exitWith } from "./lib/exit.mjs";
 
 const verbose = process.argv.includes("--verbose");
 const breakAt = process.argv.indexOf("--break");
@@ -209,54 +210,55 @@ if (!m) {
   console.log(`FAIL  the harness did not finish (status ${res.status}): ${msg.slice(0, 1500)}`);
   console.log(breakName ? `(deliberate break: ${breakName})` : "");
   console.log("RESULT: RED");
-  process.exit(1);
-}
-const rows = JSON.parse(m[1]);
-const row = (who, probe) => rows.find((r) => r.who === who && r.probe === probe);
-const get = (who, probe) => row(who, probe)?.n;
-const str = (who, probe) => row(who, probe)?.s;
+  await exitWith(1);
+} else {
+  const rows = JSON.parse(m[1]);
+  const row = (who, probe) => rows.find((r) => r.who === who && r.probe === probe);
+  const get = (who, probe) => row(who, probe)?.n;
+  const str = (who, probe) => row(who, probe)?.s;
 
-let fails = 0, ok = 0;
-const fail = (s) => { fails++; console.log(`FAIL  ${s}`); };
-const pass = (s) => { ok++; if (verbose) console.log(`ok    ${s}`); };
-const eq = (who, probe, want, what) => (get(who, probe) === want ? pass(what) : fail(`${what} - got ${get(who, probe)}${str(who, probe) ? ` (${str(who, probe)})` : ""}`));
-const eqs = (who, probe, want, what) => (str(who, probe) === want ? pass(what) : fail(`${what} - got ${JSON.stringify(str(who, probe))}`));
-const refused = (who, probe, what) => (get(who, probe) === -1 || get(who, probe) === -2 ? pass(what) : fail(`${what} - got ${get(who, probe)}`));
+  let fails = 0, ok = 0;
+  const fail = (s) => { fails++; console.log(`FAIL  ${s}`); };
+  const pass = (s) => { ok++; if (verbose) console.log(`ok    ${s}`); };
+  const eq = (who, probe, want, what) => (get(who, probe) === want ? pass(what) : fail(`${what} - got ${get(who, probe)}${str(who, probe) ? ` (${str(who, probe)})` : ""}`));
+  const eqs = (who, probe, want, what) => (str(who, probe) === want ? pass(what) : fail(`${what} - got ${JSON.stringify(str(who, probe))}`));
+  const refused = (who, probe, what) => (get(who, probe) === -1 || get(who, probe) === -2 ? pass(what) : fail(`${what} - got ${get(who, probe)}`));
 
-for (const who of REAL) {
-  eq(who, "read", 1, `${who} can read a room (any login with app access)`);
-  if (WRITERS.has(who)) {
-    eq(who, "insert", 1, `${who} can add a room`);
-    eq(who, "rename", 1, `${who} can rename a room`);
-    eq(who, "describe", 1, `${who} can describe a room`);
-    eq(who, "delete", 1, `${who} can delete a room`);
-  } else {
-    refused(who, "insert", `${who} cannot add a room`);
-    eq(who, "rename", 0, `${who} rename touches nothing`);
-    eq(who, "describe", 0, `${who} describe touches nothing`);
-    eq(who, "delete", 0, `${who} delete touches nothing`);
+  for (const who of REAL) {
+    eq(who, "read", 1, `${who} can read a room (any login with app access)`);
+    if (WRITERS.has(who)) {
+      eq(who, "insert", 1, `${who} can add a room`);
+      eq(who, "rename", 1, `${who} can rename a room`);
+      eq(who, "describe", 1, `${who} can describe a room`);
+      eq(who, "delete", 1, `${who} can delete a room`);
+    } else {
+      refused(who, "insert", `${who} cannot add a room`);
+      eq(who, "rename", 0, `${who} rename touches nothing`);
+      eq(who, "describe", 0, `${who} describe touches nothing`);
+      eq(who, "delete", 0, `${who} delete touches nothing`);
+    }
   }
+  for (const k of ["two_points", "out_of_range", "no_plan", "no_name"]) refused("admin", k, `admin ${k} rejected`);
+  // A blank name is stopped by the app (cleanRoomName); the table only insists on not null. Recorded, not judged.
+  if (verbose) console.log(`note  a blank-name insert returns ${get("admin", "blank_name")} (the editor never sends one)`);
+
+  eq("admin", "admin_other_translation", 1, "(setup) the other table's approved translation exists");
+  eq("volunteer", "read_room_thai", 1, "a volunteer reads a room description's approved Thai (0184)");
+  eq("volunteer", "read_other_translation", 0, "and not an approved translation of any other table");
+  eq("sweep", "two_added", 2, "two rooms with no kind can both be added");
+  eqs("sweep", "typed_kept", "Typed name / ชื่อที่พิมพ์", "a typed name is kept on a new room");
+  eqs("sweep", "legacy_typed_kept", "Treatment room", "a typed name is kept on a legacy kinded room");
+  eqs("sweep", "legacy_rename_kept", "Clinic / คลินิก", "renaming a legacy kinded room keeps the new name in both languages");
+  eq("sweep", "upsert_by_id", 1, "the restore path's upsert on id leaves one row");
+  eqs("sweep", "upsert_by_id", "Restored again", "and the second upsert updated it");
+  eq("sweep", "description_queued", 1, "a description queues one translations row");
+  eqs("sweep", "queue_names_it", "Map room · Typed name | /admin/facility-map", "the queue names the room and links Settings → Facility map");
+  eq("sweep", "delete_drops_translation", 0, "deleting the room drops its translation");
+  eq("sweep", "cascade", 0, "deleting a plan deletes the room's placement on it");
+  eq("sweep", "cascade_room", 1, "and leaves the room itself");
+  eq("sweep", "anon_read", 0, "anon cannot read");
+
+  console.log(`\n${ok} checks held, ${fails} failed.${breakName ? ` (deliberate break: ${breakName})` : ""}`);
+  console.log(fails ? "RESULT: RED" : "RESULT: GREEN");
+  process.exitCode = fails ? 1 : 0;
 }
-for (const k of ["two_points", "out_of_range", "no_plan", "no_name"]) refused("admin", k, `admin ${k} rejected`);
-// A blank name is stopped by the app (cleanRoomName); the table only insists on not null. Recorded, not judged.
-if (verbose) console.log(`note  a blank-name insert returns ${get("admin", "blank_name")} (the editor never sends one)`);
-
-eq("admin", "admin_other_translation", 1, "(setup) the other table's approved translation exists");
-eq("volunteer", "read_room_thai", 1, "a volunteer reads a room description's approved Thai (0184)");
-eq("volunteer", "read_other_translation", 0, "and not an approved translation of any other table");
-eq("sweep", "two_added", 2, "two rooms with no kind can both be added");
-eqs("sweep", "typed_kept", "Typed name / ชื่อที่พิมพ์", "a typed name is kept on a new room");
-eqs("sweep", "legacy_typed_kept", "Treatment room", "a typed name is kept on a legacy kinded room");
-eqs("sweep", "legacy_rename_kept", "Clinic / คลินิก", "renaming a legacy kinded room keeps the new name in both languages");
-eq("sweep", "upsert_by_id", 1, "the restore path's upsert on id leaves one row");
-eqs("sweep", "upsert_by_id", "Restored again", "and the second upsert updated it");
-eq("sweep", "description_queued", 1, "a description queues one translations row");
-eqs("sweep", "queue_names_it", "Map room · Typed name | /admin/facility-map", "the queue names the room and links Settings → Facility map");
-eq("sweep", "delete_drops_translation", 0, "deleting the room drops its translation");
-eq("sweep", "cascade", 0, "deleting a plan deletes the room's placement on it");
-eq("sweep", "cascade_room", 1, "and leaves the room itself");
-eq("sweep", "anon_read", 0, "anon cannot read");
-
-console.log(`\n${ok} checks held, ${fails} failed.${breakName ? ` (deliberate break: ${breakName})` : ""}`);
-console.log(fails ? "RESULT: RED" : "RESULT: GREEN");
-process.exitCode = fails ? 1 : 0;

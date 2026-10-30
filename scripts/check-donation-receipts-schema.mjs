@@ -33,6 +33,7 @@
 import { register } from "node:module";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { exitWith } from "./lib/exit.mjs";
 const root = process.cwd();
 // donations.ts imports "./receipt" without an extension, as Next resolves it; Node needs the .ts.
 register(
@@ -211,13 +212,15 @@ do $$ begin raise exception 'RESULT%RESULT', (select json_agg(json_build_object(
 const { res, body } = await query(sql);
 const msg = body?.message ?? JSON.stringify(body);
 const m = msg.match(/RESULT(\[[\s\S]*\])RESULT/);
-if (!m) { console.log(res.status, msg.slice(0, 2000)); process.exit(1); }
-const rows = JSON.parse(m[1]);
-let bad = 0;
-for (const x of rows) {
-  const ok = x.got === x.want;
-  if (!ok) bad++;
-  console.log(`${ok ? "ok  " : "FAIL"} ${x.l}: got ${x.got}${ok ? "" : ` want ${x.want}`}`);
+if (!m) { console.log(res.status, msg.slice(0, 2000)); await exitWith(1); }
+else {
+  const rows = JSON.parse(m[1]);
+  let bad = 0;
+  for (const x of rows) {
+    const ok = x.got === x.want;
+    if (!ok) bad++;
+    console.log(`${ok ? "ok  " : "FAIL"} ${x.l}: got ${x.got}${ok ? "" : ` want ${x.want}`}`);
+  }
+  console.log(bad ? `${bad} FAILED` : `all ${rows.length} held (rolled back, nothing kept)`);
+  process.exitCode = bad ? 1 : 0;
 }
-console.log(bad ? `${bad} FAILED` : `all ${rows.length} held (rolled back, nothing kept)`);
-process.exitCode = bad ? 1 : 0;
