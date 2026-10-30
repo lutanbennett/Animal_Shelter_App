@@ -11,13 +11,9 @@ import { readMirroredFile } from "@/lib/mirror-read";
  *
  * Who may fetch what, every request, as the caller (RLS answers, so a signed-out visitor, an archived login
  * and a login without the card all see nothing):
- *  - a file held by a row can_see_drive_file() knows (attachments and the rest, 0193/0218);
- *  - a donation receipt's filed copy: the donation_receipts row, which RLS gives only to donation.receipt;
- *  - a deceased resident's summary or index: the residents row, which RLS gives only to a login that can read
- *    that resident.
+ *  - a file held by a row can_see_drive_file() knows (0193/0218, and since 0286 also a donation receipt's filed copy
+ *    and a deceased resident's summary or index, each answered by that table's own RLS: donation.receipt, resident read);
  *  - anything else is "Document not found.", so an internal file cannot be told from a made-up id.
- * The last two are asked here and not in can_see_drive_file because this stream carries no migration; fold them
- * into that function in the next schema PR (same note as the memes check in the photo route).
  *
  * Never public, never cached: `private, no-store`. Only raster images and PDFs render in the browser; anything
  * else (HTML, SVG, text) is downloaded, so an uploaded file cannot run as a page on our origin.
@@ -27,20 +23,9 @@ const FILE_ID_PATTERN = /^[A-Za-z0-9_-]{10,100}$/;
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
-async function hasRow(supabase: Supabase, table: string, column: string, fileId: string) {
-  const { count, error } = await supabase
-    .from(table)
-    .select("*", { count: "exact", head: true })
-    .eq(column, fileId);
-  return !error && (count ?? 0) > 0;
-}
-
 async function callerMaySee(supabase: Supabase, fileId: string) {
   const { data, error } = await supabase.rpc("can_see_drive_file", { p_drive_file_id: fileId });
-  if (!error && data === true) return true;
-  if (await hasRow(supabase, "donation_receipts", "drive_file_id", fileId)) return true;
-  if (await hasRow(supabase, "residents", "deceased_summary_drive_file_id", fileId)) return true;
-  return hasRow(supabase, "residents", "deceased_index_drive_file_id", fileId);
+  return !error && data === true;
 }
 
 function safeToRenderInline(contentType: string) {
