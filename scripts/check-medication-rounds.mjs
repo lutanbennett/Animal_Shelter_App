@@ -4,7 +4,7 @@
 //   node scripts/check-medication-rounds.mjs --verbose  (also list every passing check)
 //
 // What it holds:
-//   vocabulary   three rounds, lunch is medication-only, food is morning + evening
+//   vocabulary   four rounds (night added by 0283), lunch and night are medication-only, food is morning + evening
 //   back-fill    every real frequency, prescription and diet on dev has the rounds its schedule owes,
 //                so (whether anything reads none or mismatch on real data is no longer asserted: apply-day claim)
 //   defaults     a new frequency, prescription or diet is given rounds (1 -> morning,
@@ -117,10 +117,12 @@ declare
   f1 uuid; f2 uuid; f3 uuid; f4 uuid; fi uuid; fa uuid; d1 uuid; d2 uuid; dt uuid; med uuid;
   x1 uuid; x2 uuid; x3 uuid;
 begin
-  perform pg_temp.t('vocabulary: morning, lunch, evening in order',
-    (select string_agg(key, '+' order by sort_order) from rounds) = 'morning+lunch+evening');
-  perform pg_temp.t('vocabulary: lunch is medication only, the others are both',
-    (select bool_and(for_medication) and not bool_or(for_food) filter (where key = 'lunch') and bool_and(for_food) filter (where key <> 'lunch') from rounds));
+  perform pg_temp.t('vocabulary: morning, lunch, evening, night in order',
+    (select string_agg(key, '+' order by sort_order) from rounds) = 'morning+lunch+evening+night');
+  perform pg_temp.t('vocabulary: lunch and night are medication only, morning and evening are both',
+    (select bool_and(for_medication)
+        and not bool_or(for_food) filter (where key in ('lunch', 'night'))
+        and bool_and(for_food) filter (where key in ('morning', 'evening')) from rounds));
 
   -- back-fill
   -- Dropped 2026-10-21: "no real frequency, prescription or diet reads none or mismatch" is an apply-day claim (rule 4 of
