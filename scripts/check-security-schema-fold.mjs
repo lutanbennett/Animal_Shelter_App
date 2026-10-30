@@ -79,7 +79,7 @@ begin
   if (select pg_get_expr(adbin, adrelid) from pg_attrdef where adrelid = 'maintenance_bills'::regclass
         and adnum = (select attnum from pg_attribute where attrelid = 'maintenance_bills'::regclass and attname = 'bill_date')) not like '%shelter_today%'
   then raise exception 'FAIL W1 bill_date default'; end if;
-  perform count(*) from prescription_round_status; perform count(*) from resident_diet_round_status;
+  perform count(*) from resident_diet_round_status;
   ev := ev || ' | W1 default shelter_today(), views answer';
 
   raise exception 'HARNESS-OK %', ev;

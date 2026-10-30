@@ -40,8 +40,6 @@ const VIEWS = [
   "resident_list_view",
   "project_folder_summary",
   "immunization_next_due",
-  "frequency_round_status",
-  "prescription_round_status",
   "resident_diet_round_status",
 ];
 

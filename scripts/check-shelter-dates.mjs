@@ -129,7 +129,9 @@ for (const tz of ["UTC", "Asia/Bangkok", "America/Los_Angeles", "Pacific/Kiritim
     ["2026-10-03T04:00:00Z", 11, "lunch", "evening"], // 11:00:00 ICT
     ["2026-10-03T08:59:59Z", 15, "lunch", "evening"], // 15:59:59 ICT
     ["2026-10-03T09:00:00Z", 16, "evening", "evening"], // 16:00:00 ICT
-    ["2026-10-03T16:59:59Z", 23, "evening", "evening"], // 23:59:59 ICT
+    ["2026-10-03T14:59:59Z", 21, "evening", "evening"], // 21:59:59 ICT, last second before medication night
+    ["2026-10-03T15:00:00Z", 22, "night", "evening"], // 22:00:00 ICT, medication night begins
+    ["2026-10-03T16:59:59Z", 23, "night", "evening"], // 23:59:59 ICT
   ];
   for (const [iso, hour, med, food] of edges) {
     const at = new Date(iso);
