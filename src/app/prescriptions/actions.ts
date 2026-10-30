@@ -215,8 +215,8 @@ async function ensureMedication(
 }
 
 /**
- * Records a prescription, creating the medication and/or frequency first
- * when the form was used to add a new one inline. Three inserts at most.
+ * Records a prescription, creating the medication first when the form was
+ * used to add a new one inline. Two inserts at most.
  * Redirects to the resident's prescriptions tab on success; the deceased
  * lock (0026) and the date / dose checks (0027) are enforced by the
  * database as well as here.
