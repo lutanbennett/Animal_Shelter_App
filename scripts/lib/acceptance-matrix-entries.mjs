@@ -1213,6 +1213,15 @@ export const ENTRIES = {
       expect: "The page opens with a bar saying This page is hidden from the public. A volunteer's login sees Not found at the same address.",
     },
   ],
+  shop: [
+    {
+      activity: "Add a shop to Shop for the shelter and show it",
+      needs: "shop.manage",
+      device: "desktop",
+      do: "Open Settings → Shop for the shelter, add a shop with a name and an https:// link, press Show, then open the public site signed out.",
+      expect: "Shop for the shelter is in the Get involved menu and the footer, the shop is on the page marked as a paid link, and the Donate page has a line pointing to it. An http:// link is refused.",
+    },
+  ],
   "zones-enclosures": [
     {
       activity: "Add a zone and an enclosure",

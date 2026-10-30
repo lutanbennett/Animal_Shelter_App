@@ -100,11 +100,11 @@ export async function PublicHeader({
   const showHiddenBanner = !!current && isPageHidden(current, hidden) && (await canSeeHiddenPages());
 
   // The menu comes from the one list of pages (src/lib/public-pages.ts): groups in
-  // their order, a top-level link where it stands among them. Two pages carry a
+  // their order, a top-level link where it stands among them. Some pages carry a
   // rule the list cannot: Appeals is always listed (with none live it follows
   // Donate, and /appeals says nothing is open), Shelter Friends only once there is
-  // someone to thank (or while the visitor is on /friends, so the page stays
-  // marked), and Donate's entry ("care") is there only while no appeal is live
+  // someone to thank and Shop for the shelter only once an entry is shown (each
+  // also while the visitor is on it, so the page stays marked), and Donate's entry ("care") is there only while no appeal is live
   // — with one, the Appeals entry is the sponsorship page.
   const pageLink = (page: PublicPage, navKey?: string): PublicNavLink => ({
     key: navKey ?? page.key,
@@ -117,6 +117,7 @@ export async function PublicHeader({
     if (!p.menu || isPageHidden(p.key, hidden)) return false;
     if (p.key === "donate") return !showAppeals;
     if (p.key === "friends") return showFriends || current === "friends";
+    if (p.key === "shop") return showShop || current === "shop";
     return true;
   });
   const allEntries: PublicNavEntry[] = [];
@@ -137,14 +138,6 @@ export async function PublicHeader({
       entry.links.push(
         page.key === "donate" ? { ...pageLink(page, page.menu?.navKey), current: false } : pageLink(page),
       );
-    }
-  }
-  // Shop for the shelter (0285) is not on the page list (the database's hide switch has no key for it),
-  // so it joins Get involved here, once it has an entry to show and only while that section is showing.
-  if (showShop) {
-    const group = allEntries.find((e) => e.kind === "group" && e.key === "get-involved");
-    if (group?.kind === "group") {
-      group.links.push({ key: "shop", href: "/shop", label: t.shop.navLabel, current: false });
     }
   }
   // A group with nothing in it is left out rather than shown as an empty menu.

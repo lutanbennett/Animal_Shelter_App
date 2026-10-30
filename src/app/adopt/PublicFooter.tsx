@@ -6,6 +6,7 @@ import { loadSiteContent, pairedText, socialLinks, visitingHoursLines, type Site
 import { footerPages, hiddenPagesOf, isPageHidden } from "@/lib/public-pages";
 import { staffLoginHref } from "@/lib/site-hosts";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
+import { hasPublicShopLinks } from "@/lib/shop/shop-links";
 import { FacebookIcon } from "@/components/FacebookIcon";
 import { InstagramIcon } from "@/components/InstagramIcon";
 import { MessengerIcon } from "@/components/MessengerIcon";
@@ -36,9 +37,10 @@ const smallLink =
  */
 export async function PublicFooter({ content }: { content?: SiteContent | null }) {
   const { t, locale } = await getT();
-  const [site, showFriends] = await Promise.all([
+  const [site, showFriends, showShop] = await Promise.all([
     content === undefined ? createClient().then(loadSiteContent) : content,
     hasPublicFriends(),
+    createClient().then(hasPublicShopLinks),
   ]);
   const hidden = hiddenPagesOf(site?.hidden_public_pages);
   const hours = visitingHoursLines(locale, site);
@@ -143,7 +145,12 @@ export async function PublicFooter({ content }: { content?: SiteContent | null }
         <div className="flex flex-col">
           <span className={`${heading} pb-1`}>{f.help}</span>
           {footerPages("help")
-            .filter((page) => !isPageHidden(page.key, hidden) && (page.key !== "friends" || showFriends))
+            .filter(
+              (page) =>
+                !isPageHidden(page.key, hidden) &&
+                (page.key !== "friends" || showFriends) &&
+                (page.key !== "shop" || showShop),
+            )
             .map((page) => (
               <Link key={page.key} href={page.href} className={footerLink}>{page.label(t)}</Link>
             ))}
