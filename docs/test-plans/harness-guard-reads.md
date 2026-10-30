@@ -104,7 +104,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: release manager
 - [ ] **Timezone-sensitive behaviour proved** — n/a: no date logic changed
 - [ ] **Boundary or banding change** — n/a: no threshold changed
-- [ ] **Evidence pasted is the tool's actual output, unedited** — the gates output above is unedited
+- [x] **Evidence pasted is the tool's actual output, unedited** — the gates output above is unedited
 - [ ] Public pages re-checked — n/a: the public site reads none of this
 
 ### Deploy safety
