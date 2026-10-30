@@ -861,8 +861,12 @@ back, and print both. `0.38.1` paired `majorReleasesSince("0.38.0") → []` with
 
 **`git checkout main` in a second worktree is refused** (`'main' is already used
 by worktree at …`), because the main checkout holds it. To reuse the cut's
-worktree for the record — which rule 2 of the paperwork budget requires — create
-the branch there and then `git reset --hard origin/main`.
+worktree for the record — which rule 2 of the paperwork budget requires — run
+`git fetch` and then `git checkout -b claude/record-<version> origin/main` there.
+(This said `git reset --hard origin/main`, which the auto-mode classifier refuses;
+six handover editions named it before `0.40.12` corrected it.) **Check the worktree
+still exists first:** on `0.40.12` another session's clean-up removed it minutes after
+the cut merged, since its branch was by then fully merged and its folder free.
 
 **A predicted `-- consumer:` warning that does not appear is fine.** It means the
 declared consumer file is unchanged since the live release, so its reader was
