@@ -193,7 +193,6 @@ const PAGES = [
   "/management/translations",
   "/admin/blood-test-types",
   "/admin/facility-map",
-  "/admin/frequencies",
   "/admin/immunization-types",
   "/admin/procedure-types",
   "/admin/recent-changes",
@@ -326,9 +325,8 @@ async function seed() {
     .catch((error) => console.warn(`  warning: could not put a resident in hospital, so the Return from hospital page will be skipped (${error.message})`));
   // A prescription on the living resident, so /prescriptions/{rx}/edit shows the form, not the closed-record notice.
   const med = (await service.from("medication").select("id").limit(1)).data?.[0]?.id;
-  const freq = (await service.from("frequency").select("id").limit(1)).data?.[0]?.id ?? null;
   const livingRx = med
-    ? await insert("prescriptions", { resident_id: resident.id, medication_id: med, frequency_id: freq, start_date: "2026-10-01", notes: `ZZ Width ${tag} a long note to see how the form wraps on a phone` }).catch((error) => (console.warn(`  warning: no living prescription (${error.message})`), null))
+    ? await insert("prescriptions", { resident_id: resident.id, medication_id: med, start_date: "2026-10-01", notes: `ZZ Width ${tag} a long note to see how the form wraps on a phone` }).catch((error) => (console.warn(`  warning: no living prescription (${error.message})`), null))
     : null;
   // Existing dev rows, for the pages that open one record (read only; never created or deleted here).
   const first = async (table, column = "id") => (await service.from(table).select(column).limit(1)).data?.[0]?.[column] ?? null;

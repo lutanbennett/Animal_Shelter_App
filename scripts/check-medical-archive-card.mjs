@@ -131,7 +131,6 @@ declare
   v_w uuid; v_i uuid; v_rx uuid; v_rx_own uuid; v_rx_other uuid;
   v_type uuid := (select id from immunization_types order by name limit 1);
   v_med uuid := (select id from medication order by name limit 1);
-  v_freq uuid := (select id from frequency order by label limit 1);
   v_n int; v_audit int;
   v_report text := '';
 begin
@@ -141,12 +140,12 @@ begin
   insert into weight (resident_id, date, weight_kg) values (v_res, date '2026-08-12', 11) returning id into v_w;
   insert into immunization_records (resident_id, immunization_type_id, date_administered)
   values (v_res, v_type, date '2026-08-12') returning id into v_i;
-  insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity)
-  values (v_res, v_med, v_freq, date '2026-08-12', 1) returning id into v_rx;
-  insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity, clinic_visit_id)
-  values (v_res, v_med, v_freq, date '2026-08-12', 1, v_visit_own) returning id into v_rx_own;
-  insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity, clinic_visit_id)
-  values (v_res, v_med, v_freq, date '2026-08-12', 1, v_visit_other) returning id into v_rx_other;
+  insert into prescriptions (resident_id, medication_id, start_date, dose_quantity)
+  values (v_res, v_med, date '2026-08-12', 1) returning id into v_rx;
+  insert into prescriptions (resident_id, medication_id, start_date, dose_quantity, clinic_visit_id)
+  values (v_res, v_med, date '2026-08-12', 1, v_visit_own) returning id into v_rx_own;
+  insert into prescriptions (resident_id, medication_id, start_date, dose_quantity, clinic_visit_id)
+  values (v_res, v_med, date '2026-08-12', 1, v_visit_other) returning id into v_rx_other;
 
   -- A: medical.archive with the edit cells, all four, one audit row each.
   select count(*) into v_audit from audit_log where row_id = v_w and table_name = 'weight';

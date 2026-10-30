@@ -95,7 +95,6 @@ declare
   v_res uuid := (select id from harness where k = 'res');
   v_type uuid := (select id from immunization_types order by name limit 1);
   v_med uuid := (select id from medication order by name limit 1);
-  v_freq uuid := (select id from frequency order by label limit 1);
   v_visit uuid := gen_random_uuid();
   v_w uuid; v_w2 uuid; v_rx uuid; v_rx_visit uuid; v_i uuid; v_c uuid;
   v_before jsonb; v_a bigint; v_r text; v_n int;
@@ -123,10 +122,10 @@ begin
   insert into weight (resident_id, date, weight_kg) values (v_res, date '2026-08-12', 11) returning id into v_w;
   insert into immunization_records (resident_id, immunization_type_id, date_administered)
     values (v_res, v_type, date '2026-08-12') returning id into v_i;
-  insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity)
-    values (v_res, v_med, v_freq, date '2026-08-12', 1) returning id into v_rx;
-  insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity, clinic_visit_id)
-    values (v_res, v_med, v_freq, date '2026-08-13', 1, v_visit) returning id into v_rx_visit;
+  insert into prescriptions (resident_id, medication_id, start_date, dose_quantity)
+    values (v_res, v_med, date '2026-08-12', 1) returning id into v_rx;
+  insert into prescriptions (resident_id, medication_id, start_date, dose_quantity, clinic_visit_id)
+    values (v_res, v_med, date '2026-08-13', 1, v_visit) returning id into v_rx_visit;
 
   v_before := to_jsonb((select x from weight x where id = v_w));
   delete from weight where id = v_w;

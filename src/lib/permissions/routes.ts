@@ -461,14 +461,6 @@ export const ROUTES: readonly RouteEntry[] = [
     menu: false,
   },
   {
-    path: "/admin/frequencies",
-    activity: "reference.types",
-    icon: SECTION_ICONS.prescriptions,
-    label: (t) => t.nav.frequencies,
-    device: "any",
-    menu: false,
-  },
-  {
     path: "/admin/recent-changes",
     activity: "audit.view",
     icon: History,

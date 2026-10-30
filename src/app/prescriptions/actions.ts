@@ -288,7 +288,6 @@ export async function updatePrescription(
     .from("prescriptions")
     .update({
       medication_id: refs.medicationId,
-      frequency_id: null, // retired: the schedule columns are the truth now (0283)
       ...scheduleColumns(fields.schedule),
       clinic_visit_id: fields.clinicVisitId,
       dose_quantity: fields.doseQuantity,

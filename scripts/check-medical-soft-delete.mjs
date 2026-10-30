@@ -119,7 +119,6 @@ declare
   v_i1 uuid;
   v_i2 uuid;
   v_med uuid := (select id from medication order by name limit 1);
-  v_freq uuid := (select id from frequency where doses_per_day is not null order by label limit 1);
   v_rx uuid;
   v_n int;
   v_a numeric;
@@ -130,8 +129,8 @@ declare
   v_future date := date '2027-03-10';
 begin
   if v_intake is null then raise exception 'HARNESS-FAIL setup: record_intake wrote no weight'; end if;
-  if v_type is null or v_med is null or v_freq is null then
-    raise exception 'HARNESS-FAIL setup: dev needs an immunization type with an interval, a medication and a per-day frequency';
+  if v_type is null or v_med is null then
+    raise exception 'HARNESS-FAIL setup: dev needs an immunization type with an interval and a medication';
   end if;
 
   -- H: nothing that existed before has been archived.
@@ -240,8 +239,9 @@ begin
   -- C: prescriptions.
   select coalesce(max(prescription_count), 0) into v_a from medication_forecast(current_date, current_date + 30) where medication_id = v_med;
   select in_treatment into v_inc from public_shelter_stats;
-  insert into prescriptions (resident_id, medication_id, frequency_id, start_date, dose_quantity)
-  values (v_res, v_med, v_freq, current_date, 1) returning id into v_rx;
+  insert into prescriptions (resident_id, medication_id, schedule_unit, schedule_every, start_date, dose_quantity)
+  values (v_res, v_med, 'day', 1, current_date, 1) returning id into v_rx;
+  insert into prescription_rounds (prescription_id, round_id) select v_rx, id from rounds where key = 'morning';
   select coalesce(max(prescription_count), 0) into v_b from medication_forecast(current_date, current_date + 30) where medication_id = v_med;
   if v_b <> v_a + 1 then raise exception 'HARNESS-FAIL C: a live prescription is not in the forecast (% -> %)', v_a, v_b; end if;
   if (select in_treatment from public_shelter_stats) <> v_inc + 1 then
