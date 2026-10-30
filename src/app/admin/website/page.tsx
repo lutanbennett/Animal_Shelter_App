@@ -247,6 +247,7 @@ export default async function WebsitePage({
                   <p className="text-sm text-muted">{t.admin.website.pages.subtitle}</p>
                 </div>
                 <PagesAccordion
+                  canEdit={canContent}
                   items={pages.map((page) => {
                     const tr = [
                       translations.get(translationKey(page.id, "title")),

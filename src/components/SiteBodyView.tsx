@@ -1,5 +1,16 @@
-import { parseBody } from "@/lib/site/body";
+import { parseBody, parseInline, stripMarks, type InlineNode } from "@/lib/site/body";
 import { LinkedText } from "./LinkedText";
+
+const MARK_COLOR_CLASS = {
+  ink: "text-site-ink",
+  action: "text-site-action-hover",
+  accent: "text-site-accent",
+} as const;
+const MARK_SIZE_CLASS = {
+  small: "text-sm",
+  large: "text-xl",
+  xlarge: "text-2xl",
+} as const;
 
 /**
  * A site_pages body rendered for the public pages: paragraphs, "## "
@@ -32,9 +43,18 @@ export function SiteBodyView({
   const blocks = parseBody(body);
   if (blocks.length === 0) return null;
   const Heading = headingLevel;
-  const link = (text: string) => (
-    <LinkedText text={text} newTabLabel={newTabLabel} />
-  );
+  const render = (nodes: InlineNode[]): React.ReactNode =>
+    nodes.map((n, i) => {
+      if (n.type === "text") return <LinkedText key={i} text={n.text} newTabLabel={newTabLabel} />;
+      const kids = render(n.children);
+      if (n.tag === "b") return <strong key={i} className="font-semibold">{kids}</strong>;
+      if (n.tag === "i") return <em key={i}>{kids}</em>;
+      if (n.tag === "u") return <span key={i} className="underline underline-offset-4">{kids}</span>;
+      if (n.tag === "c") return <span key={i} className={MARK_COLOR_CLASS[n.arg]}>{kids}</span>;
+      if (n.tag === "s") return <span key={i} className={MARK_SIZE_CLASS[n.arg]}>{kids}</span>;
+      return null;
+    });
+  const link = (text: string) => render(parseInline(text));
 
   const prose =
     size === "lg"
@@ -53,7 +73,7 @@ export function SiteBodyView({
                 key={index}
                 className="mt-2 text-lg font-semibold text-foreground"
               >
-                {block.text}
+                {stripMarks(block.text)}
               </Heading>
             );
           case "list":
