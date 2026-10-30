@@ -11,7 +11,7 @@
 | PR | filled in on the PR itself |
 | Tested by / date | Claude / 2026-10-30 |
 | Carries a migration? | no |
-| Tested at SHA | `a11f52aa` |
+| Tested at SHA | `49a0a632` |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,11 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed.
 
 ```
-GATES_OUTPUT
+=== gates: typecheck exited 0 after 16s
+=== gates: lint exited 0 after 145s
+=== gates: test exited 0 after 17s
+=== gates: build exited 0 after 56s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
@@ -45,7 +49,7 @@ GATES_OUTPUT
 
 ## 4. Functional checks
 
-- [x] Happy path works end to end — Settings tile → log lists the 3 dev rows newest first → filter by status → export downloads
+- [x] Happy path works end to end (driven before the two date boxes were swapped for the shared DateInput component, which the lint gate requires; the swap passed all gates but was not re-driven in the browser) — Settings tile → log lists the 3 dev rows newest first → filter by status → export downloads
 - [ ] Data persists — reload the page and the change is still there — n/a: read-only, nothing is saved
 - [ ] Create / edit / delete all exercised — n/a: read-only screen and export
 - [x] Empty state renders sensibly (no rows yet) — the empty sentence is in both dictionaries; a date window with no rows returned a header-only file (2026-10-16 in shelter time: 0 rows)
