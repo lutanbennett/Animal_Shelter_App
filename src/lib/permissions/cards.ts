@@ -52,8 +52,7 @@ export type NewCardKey =
   | "view_cashflow"
   | "record_vet_care"
   | "record_microchip"
-  | "adoption_news"
-  | "add_while_recording";
+  | "adoption_news";
 
 export type CardKey = JobKey | NewCardKey;
 
