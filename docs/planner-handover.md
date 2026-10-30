@@ -1,159 +1,151 @@
-# Planner handover — edition `474`, 2026-10-29
+# Planner handover — edition `483`, 2026-10-30
 
-**A delta, twenty-fifth edition in this shape. Eight streams** — three batches of 3, 2 and 3, batches 1 and 2
-merged, batch 3 set up, because a batch counts once at setup. Written one stream early, at Lutan's request.
-`465`'s subject was *every cost that reached Lutan started with the planner*. **It happened again, in a new
-shape: this round a perfectly correct check was twice recorded as broken, and the thing that misled everyone
-was that it printed nothing.**
+**A delta, twenty-sixth edition in this shape. Nine streams** — batches of 3, 2 and 3, plus one unplanned
+PR of the planner's own that shipped and so counts. `474`'s subject was *"no output" is not evidence of a
+fault*. **It held, and the class recurred twice in new disguises: a misleading exit code, and a sweep
+poisoned by one argument.** But the round's real subject is different, and it is the planner's own:
+**three times, work or a finding was invisible because of where it was written, not because it was wrong.**
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`.**
-**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → `465` → this. **The next slug is `483`.**
+**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → `474` → this. **The next slug is `492`.**
 
 > **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
 > release state, candidates. **Re-read every time, never diffed.**
 
 ---
 
-## THE ONE THING TO READ: "NO OUTPUT" IS NOT EVIDENCE OF A FAULT
+## THE ONE THING TO READ: WORK WRITTEN IN THE WRONG PLACE IS INVISIBLE, AND NO CHECK WE HAVE SEES IT
 
-`check-phone-width.mjs` was recorded as broken **twice**, by two different streams, and it was correct both
-times.
+Three instances in one round, three different mechanisms, **every one passing every instrument**:
 
-- **First** by the 2026-10-28 sweep, as *"no output, 170 s timeout"*, filed alongside seventeen checks that had
-  failed with `ECONNREFUSED` because that sweep ran **with no dev server up**.
-- **Then** on 2026-10-29, when a stream ran it for over two hours and reported that it got **no output.**
+- **A folded job of a different kind got silently dropped.** #1079 was given four deliverables: an API
+  route and two documentation edits. It shipped the route, filed its finding properly, reported
+  `finished=yes`, and **said nothing about either doc edit** — one of which was a decision Lutan had made
+  that morning. CI green, test plan passed, usage comment posted. **The planner found it by grepping
+  `main` a day later.**
+- **A ticked backlog item had swallowed two open items mid-sentence.** One line held three items
+  concatenated; inside the ticked one's prose sat *Walkthrough seam* (invisible since 2026-10-26) and a
+  **decision for Lutan** filed the same day. Its own tail had broken onto a line beginning `## Completed`.
+  **`check-backlog-sections.mjs` passed throughout and was right to**: it tests the *start* of a line, so
+  an item spliced mid-line is not an item to it.
+- **A solved problem was filed as an unknown fault**, because the brief named the rules and not the
+  instruments. See *the instruments* below.
 
-**Lutan asked the right question twice** — first *"why is the harness rerun server trying to do 1700+ page
-loads"*, then *"after 2 hours of running it is stating it got no output. Something is not right."* He was right
-that something was wrong. **It was not the app and not the check's logic.**
+**Two of the three are now mechanism rather than hope**: rule 8 has a *same-kind* qualifier and every brief
+carries a *report every deliverable* block — **both promoted into the skill this round, and the block
+already fired twice.** The third is a habit: **when an item you are about to brief ends mid-sentence, or
+when a TICKED item's prose contains `- [ ]`, look harder.** No checker will ever catch that one.
 
-**Measured, and the numbers are the whole explanation:** `goto` costs **4–6 s per page**, because Turbopack
-compiles each route on first visit, and `settle()` runs twice per page view — so ~6–8 s a page view, putting
-the full matrix (7 roles × 2 locales × ~119 pages) at **2.5–3 hours**. A foreground command is killed at **ten
-minutes**. And the script **reports only at the end**, so a killed run leaves **not one line.**
-**`networkidle` was the obvious suspect and is innocent: it settles in 1–2 s.** Also: `--pages` narrows only
-the signed-in targets, so `publicPass()` always runs and there is a floor of ~20 page views whatever you pass.
+## AND THE PLANNER'S HALF, WHICH IS WHERE TWO OF THE ROUND'S FAULTS STARTED
 
-**THE GUARD IS NOW A STANDARD BRIEF BLOCK IN THE SKILL** — per-check `timeout`, echo the name *before* each
-check, background anything long, and *"if a check gives no output, establish whether it was killed before
-concluding it is broken"*. Reasoning in `docs/decisions/2026-10-29-silent-checks-are-killed-runs.md`.
-**Do not re-derive it here; it is promoted, not repeated.**
+**A brief that names the rules but not the INSTRUMENTS sends a stream to re-derive what the repo already
+knows.** Two instances, two days, both mine:
 
-**AND THE PLANNER'S HALF, WHICH IS THE SECOND ROUND RUNNING.** Diagnosing this cost the stream two
-corrections mid-session, so **its figure is `rescoped=yes` and unusable** — exactly what `465` recorded about
-its own round. Both corrections were right and the stream acted on both. **That is not the point: a brief the
-planner has to correct mid-flight has already spent the tokens, and it must not also corrupt the bands.**
+- The brief carried every run-safety rule and never named `scripts/lib/exit.mjs`. A stream met
+  `process.exit()`-after-`fetch` dying in libuv on Windows — **a passing verdict reading as exit 127** —
+  and filed it as *"a genuine fault, cause not established"*. It had been diagnosed and fixed by that
+  helper a fortnight earlier, with its own decision file, and the fix is one line.
+- The same brief said how to run checks and never said **most take no arguments**. A sweep passed
+  `--port` to all 183; several read it as a filename, died with `ENOENT`, and **36 checks looked broken
+  when none was.** The whole sweep had to be redone.
 
-## WHAT `465` ASKED FOR, and what each warning did
+**Promoted into the skill as its own rule: for each thing the stream must do, ask whether a helper, script,
+fixture or decision file already does it, and name it by path.** A grep of `scripts/lib/` and
+`docs/decisions/` for the brief's subject costs a minute.
 
-- **"A ruling that closes a CLASS of future asks goes in `docs/decisions/`, not only on a backlog item."
-  HELD.** Nobody re-asked about either Supabase paid feature, and the decision file was the thing that made it
-  cheap to check.
-- **"Search only inside `C:\Development\*`." HELD, no instance.** No recursive read went near OneDrive.
-- **"All analysis by CARD, never by role." HELD, second round running, and now with a worked instance** —
-  `fault-maintenance-delete`'s shape was cited in two briefs and both harness streams restated rows card-shaped
-  rather than counting roles. **Still do not read it as closed:** it fired in four of the five rounds before
-  these two.
-- **"Count from the PR list before quoting the counter." HELD.**
-- **"Re-read the TITLE of every item a stream touched." FIRED BOTH WAYS IN ONE ROUND, which is new.** The good
-  way: a stream rewrote its own item's title to *"ONE THING LEFT: part (1)"* with no prompting, after a brief
-  told it not to tick wholesale — the first time this rule has worked at the **stream** end rather than being
-  repaired by the planner. The bad way is its own section below.
-- **"The batch re-check earned itself — do not ever skip it." FIRED AGAIN, and it saved a whole session.**
-  See the diet-harness finding below.
+## WHAT `474` ASKED FOR, and what each warning did
 
-## THE BACKLOG-SECTION FAULT IS STRUCTURAL, NOT CARELESSNESS — AND IT NEEDS LUTAN'S CHOICE
+- **"No output is not evidence of a fault." HELD, and it generalises further than it was written.** Both
+  harness streams produced fair counts. **But the class recurred twice in shapes the block did not
+  anticipate:** exit **127** read as *command not found* when it was a teardown crash after a pass, and a
+  whole sweep's reds caused by one bad argument. **The general form is now: an exit code or a red is a
+  CLAIM about a check, not a reading of the app.** Both disguises are in the skill.
+- **"A brief the planner has to correct mid-flight must not corrupt the bands." HELD, cleanly.** I sent no
+  mid-flight correction to any of the nine streams. **Zero `rescoped` figures this round**, against one in
+  `474` and one in `465`. Three rounds of this warning, first round it is fully clean.
+- **"The backlog-section fault needs Lutan's choice — raise it; do not decide it." CLOSED.** He chose
+  rewording `CLAUDE.md` over a checker warning. Done and merged. **Do not change
+  `check-backlog-sections.mjs` — that is the option he did not pick.**
+- **"A skill edit has been owed for TWO editions — do it or drop it." CLOSED, finally.** The
+  reconciliation rate is corrected and on `main`: a second pass costs the **first-pass** rate by default,
+  and `~11k` is reserved for a pass that must **adjudicate** disputed rows. **Nothing is now owed across
+  editions. Do not let one accumulate again** — it took three editions and an explicit shaming to land.
+- **"Verify artifacts before banding." FIRED IN A NEW WAY, and it earned itself again.** It has always
+  been described as catching a stream that *never ran*; this time it caught a **partial** delivery that
+  reported `finished=yes`. **A stream's `finished=yes` is its own claim; the artifact check is what tests
+  it.**
+- **"The restate-or-retire row costs ~6.8k." CORRECTED THE SAME DAY IT WAS PROMOTED — and the correction
+  then held.** See the bands below.
+- **"A measurement has a timestamp; a fact does not." HELD, and it bit two streams instead.** See below.
 
-**Three items in one day** were filed at the bottom of `## Fundraising` and had to be moved by the planner: a
-card-access item, a wording note, and a stream's `cards.ts`/`card_grants` app fault. **`check-backlog-sections.mjs`
-passed every time**, because it tests only that an item sits above `## Completed`.
+## THE BAND NOTE THAT MATTERS, AND IT IS A LESSON ABOUT PROMOTING
 
-**The cause is mechanical. `## Fundraising` is the LAST section**, so anything appended "above `## Completed`"
-lands in it **by construction** — and `CLAUDE.md`'s wording is *"above `## Completed`, in their section"*, of
-which the first half is the half that gets read and obeyed. **Every stream that followed the instruction
-correctly still landed in the wrong section.**
+`474` promoted *"a restate-or-retire row costs ~6.8k, not ~20k"* into the skill's band table. **Within
+hours, two harness streams landed at 16–19.5k a row above their own floors.** The rate was not wrong; its
+**scope** was. #1074's rows were *retire-or-restate with the cause already given*; those two had to
+**repair against a new data model**.
 
-**Two candidate fixes, and the choice is his:** make the checker warn when an item's subject looks nothing
-like its section, or make `CLAUDE.md` lead with *"in its section"* and demote "above Completed" to the
-secondary clause. **Not filed as an item, deliberately** — it is one line of his judgement, and filing it as
-a Claude-buildable item would pick the fix for him. **Raise it; do not decide it.**
+**So the split, now confirmed by a second round and safe to rely on: ~6.8k a row when someone has already
+told the stream WHY the row is red; ~15–20k when it must work that out.** The skill's harness row already
+asks exactly that question — I under-applied it. **The transferable lesson is the one I then followed for
+the rest of the round: a figure measured once is a reading, not a rate.** Which is why the *find-little
+driven pass at ~5k a step* now has **three** readings and is **still not promoted** — `.plan-day.md`
+carries the instruction for the fourth.
 
-## THE RE-CHECK'S CATCH: A LIST OF FILES IS NOT A LIST OF NAMES
+## TWO STREAMS READ A SUPERSEDED MIGRATION AS CURRENT, which is a new shape of an old fault
 
-Batch 3's diet stream was nearly briefed with **the wrong six harnesses.** The obvious move — `ls scripts/ |
-grep diet` — returns `diets-sheet`, `standard-diet`, `diets-forecast-functions` and others, **not one of which
-is the list.** The triage names `diets-app`, `diets-recipes-schema`, `medical-jobs`, `medication-rounds`,
-`order-and-units`, `price-free-pickers`, sharing one cause. **A filename pattern is a guess; the instrument is
-the record** — the same lesson as *"read what a check matches on"*, reached from the other direction.
+The skill warns that an **item's** conclusion ages. **Twice this round a stream aged a MIGRATION FILE
+instead** — and one acted on it:
 
-Two neighbours from the same re-check, both now in the brief: **`check-medical-jobs.mjs` is a different file
-from `check-medical-jobs-app.mjs`**, which an earlier stream had already restated; and one row of the family is
-an **adjudication, not a repair** — a forecast delta where the arithmetic may be right and the fixture stale,
-and **if the app is wrong that is animals fed the wrong amount**, so it is filed rather than quietly fixed.
+- A stream read `0249`, superseded twice, concluded a dropped column *"still decides which resident rows a
+  login reads"*, and **removed a harness principal on that basis.** Settled in one minute on both live
+  databases, which only the planner can read: no role column grants or denies anything, on test or
+  production.
+- Another filed the libuv crash as unknown while the fix sat in `scripts/lib/`.
 
-## THREE BAND CORRECTIONS, ALL FROM VERIFIED ARTIFACTS
+**So: a migration file is a historical record, not a statement of current schema.** The current answer
+lives in the latest migration that touches the object, in the registry, or in a live read. **And the
+planner's duty follows from it: when an item or a stream names a check only the main checkout can run
+against production, run it.** That took a minute and reversed a finding.
 
-- **A restate-or-retire row costs ~6.8k, not ~20k.** One stream resolved **eight rows for 54,505 tokens above
-  the floor.** The skill's harness row was measured on rows with **mixed causes that each needed diagnosing**;
-  restating a row whose cause is understood, or retiring it with a reason, is a third of that.
-  **Promoted into the skill's band table.**
-- **A Pi-side job built on machinery that already exists costs ~160k, not 200–260k.** Banded as though it were
-  greenfield; came in **19% under** having delivered the whole job — a 189-line script, a service unit, a
-  timer, 63 lines of restore documentation, a decision file, a 245-line test plan and two backlog ticks.
-  **The artifacts were checked BEFORE the figure was allowed near a band**, which is the only reason this
-  counts as evidence rather than as a stream that stopped early.
-- **The floor keeps rising and must be re-measured every round.** It read **101,303 on two streams, to the
-  token**, having been ~98k that morning and ~95k two days earlier. **Never carry the number forward.**
+## A PRODUCTION READING TURNED A DECIDED ITEM INTO A SEQUENCING QUESTION
 
-## A SKILL EDIT HAS NOW BEEN OWED FOR TWO EDITIONS — DO IT OR DROP IT
+Lutan had decided an item outright; the item noted in passing that some holders *"lose it until the card
+sets are rebuilt"*. **Measured, it was not "some holders": it was both of them, and the only card that
+would then carry the activity belonged to a role with no live login.** A daily-use capability would have
+gone dark between the migration landing and him assigning cards. **He was shown the figure, chose to go
+ahead, and will assign the cards in the same release.**
 
-`465` recorded, on two rounds agreeing, that **a re-pass after NARROW migrations costs the FIRST-PASS rate
-(`~98k + ~6.3k/step`), not the reconciliation rate (`~11k`)**, and said in terms: *"The skill still prescribes
-11k. Correct it."* **It was not corrected this round either**, because this planner did not re-measure it and
-would have been editing a prescribed rate on another edition's evidence.
+**The transferable half: an item that acknowledges a consequence in passing has not measured it.** *"They
+lose it until X"* reads like a handled detail. One command turned it into a decision worth one message —
+**and this is work no brief can do, because a stream in a worktree cannot read production.**
 
-**That is a thin excuse and it is the second edition to make it.** Two promotions went into the skill this
-round, both from figures measured here — so the mechanism works and this one simply was not done.
-**Next planner: either correct the rate, citing `465`'s two readings, or write down why the rate should stand.**
-A correction that is "owed" across three editions is not owed, it is forgotten — and the whole argument for
-promoting facts is that the skill is where they get read.
+## A CORRECTION I OWE THE NEXT PLANNER, AND IT IS THE SECOND EDITION TO OWE IT
 
-## WHAT WENT RIGHT, AND IS WORTH COPYING
+**Twice in two batches I filed a backlog item on the `backlog` branch the same morning I briefed it.** The
+stream then could not tick its own work — the item was not on `main` yet — so both times **I ticked it
+myself, after re-reading the stream's work to confirm it.** I recorded the lesson after the first and did
+not act on it.
 
-- **The usage comment is settled and needs no more watching.** Every stream's figure came from its own PR
-  comment again; `get_usage` was never needed as a fallback. **Treat it as mechanism, not hypothesis.**
-- **Verifying artifacts before banding caught nothing wrong — and that is the point.** The 19% under-run had
-  exactly the shape of a stream that never ran. Reading its diff is what turned it from a discarded figure
-  into a band correction.
-- **A refused tool call was reported, not worked around.** Asked to change a live session's permission mode,
-  the planner was blocked by the classifier, **said so**, and sent the session a message instead — which
-  unstuck it. `CLAUDE.md`'s rule that a refused step is something to report held under mild pressure.
-- **A merge conflict was resolved by keeping BOTH sides' work**, not by picking a side: one side carried a
-  stream's item update, the other a different stream's tick. **Read what each side is before resolving a
-  backlog conflict** — the sides are usually different work, not competing versions.
-
-## A CORRECTION I OWE THE NEXT PLANNER, ABOUT MY OWN DISCIPLINE
-
-Auto-archive looked as though it had failed for one stream of three, and the planner **told Lutan it
-correlated with Remote Control being active.** It had not failed: it archived **late**, and every stream was
-archived within the hour. **The correlation was reported from a sample of three before it was established.**
-
-The skill already says a measurement has a timestamp and a fact does not. **This is the same fault one step
-earlier: an inference offered with more confidence than three data points can carry.** Say *"the only
-difference I can see is X, which I have not established"*, or wait a few minutes and look again.
+**File an item at least one daily merge before briefing it, or say in the brief that the planner owns the
+tick.** The second works and is what I did, but it moves bookkeeping from the stream that has the context
+to the planner who has to re-derive it.
 
 ## STATE, RE-READ EVERY TIME
 
 Nothing in this section may be quoted from here. **Re-read it:** open items and their titles from
-`docs/backlog.md`; batches, bands, actuals and the mitigations in flight from `.plan-day.md`; release state
-from `apply-migrations.mjs --status --env production`; what merged from `gh pr list`; live worktrees from
+`docs/backlog.md`; batches, bands, actuals, the mitigations in flight and the band instruction for the
+find-little rate from `.plan-day.md`; release and migration state from
+`apply-migrations.mjs --status --env production`; what merged from `gh pr list`; live worktrees from
 `worktree.mjs list`.
 
-**What is with Lutan** changes daily and is listed in `.plan-day.md` under his decisions — read it there. The
-two standing ones worth knowing because they shape sequencing rather than appearing as tasks: **the production
-Worker deploy and the Pi install are his by instruction**, so any stream whose work only runs after one of
-those **must write `n/a` on its release note** and name the outstanding step. And **the domain move gates two
-free Cloudflare steps**, so they are sequenced behind the Director rather than blocked on anyone here.
+**What is with Lutan** changes daily and is listed in `.plan-day.md` under his decisions — read it there.
+The standing ones that shape sequencing rather than appearing as tasks: **the production Worker deploy and
+the Pi install are his by instruction**, so any stream whose work only runs after one of those **must write
+`n/a` on its release note** and name the outstanding step; **the domain move gates two free Cloudflare
+steps**; and **a release has two halves on this project** — a Worker deploy alone does not change what
+users see, so read the Pi's version endpoint against the Worker's rather than trusting a 200.
 
 **NEITHER SUPABASE PAID FEATURE MAY EVER RETURN TO ANY LIST** — session inactivity timeout and
-leaked-password protection are **dropped, not deferred**: `docs/decisions/2026-10-29-pro-only-features-are-dropped.md`.
+leaked-password protection are **dropped, not deferred**:
+`docs/decisions/2026-10-29-pro-only-features-are-dropped.md`.

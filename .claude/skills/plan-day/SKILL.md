@@ -375,11 +375,21 @@ Rules, in order:
    Claude-buildable, unblocked items, plan fewer and say why. Padding
    the list with user-driven items to reach nine is the failure mode to
    avoid — those stay reminders in **Not today**.
-8. **Fold small items into one stream.** Every stream pays a ~80k floor
+8. **Fold small items into one stream — BUT ONLY WORK OF THE SAME KIND.** Every stream pays a floor
    before any work (see *Token estimates*), so three quick wins as three
-   streams cost ~240k of floor; as one stream, ~80k. Disjointness
+   streams cost three floors; as one stream, one. Disjointness
    decides what *can* share a stream; this decides what *should*. Worked
    example: batch 73's `stock-pages-finish` folds three items.
+   **THE QUALIFIER, added 2026-10-30 after a folded job was silently dropped:** fold work that is the
+   **same kind** as the stream's main task. #1078 carried a folded `check-phone-width` progress job
+   beside nine harness rows and delivered both — all one piece of work to the stream. #1079 was given two
+   **documentation** edits beside a change to an API route, shipped the route, reported `finished=yes`
+   and **said nothing about either doc edit**; one of them was a decision Lutan had made that morning, and
+   the planner found it by grepping `main` a day later.
+   **So work of a different kind — process docs beside code, a rule change beside a feature — gets its own
+   PR, even a one-paragraph one, and even though that pays a floor.** A dropped change costs more than a
+   floor, because nothing reports it. Reasoning:
+   `docs/decisions/2026-10-29-folded-process-docs-get-their-own-pr.md`.
 
 When the third batch is planned, note that cutting a release is the
 natural step once it merges.
@@ -1238,6 +1248,50 @@ Append this to any `.brief.md` whose stream will run check scripts:
 
 **And the planner's half: do not ask a stream to run something you have not sized.** The brief that caused this
 handed over an eighteen-check loop with one 3-hour job inside it. **Name the slow ones, or exclude them.**
+
+**AND THE SECOND HALF OF THAT, LEARNED THE HARD WAY 2026-10-29: MOST CHECK SCRIPTS TAKE NO ARGUMENTS.** A
+sweep passed `--port 3001` to all 183 checks; several read it as a **positional filename** and died with
+`ENOENT: no such file or directory, open '…\--port'`. That looked like **36 broken checks and was none of
+them**, and the whole sweep had to be redone. **Say in the brief that arguments go only where the script
+documents them**, and name the few that take `--port`.
+
+### And every brief carries this block: REPORT EVERY DELIVERABLE, INCLUDING THE ONES YOU DID NOT DO
+
+Added 2026-10-30, after #1079 shipped its main task, reported `finished=yes`, and **silently dropped two of
+its four deliverables** — one of them a decision Lutan had made that morning. Its PR body listed three
+bullets, neither dropped item among them. **Nothing caught it**: CI was green, the test plan passed, the
+usage comment was posted, and the planner found it only by grepping `main` the next round.
+
+**It fired on the next two batches** — #1083 and #1084 both accounted for every numbered deliverable, and
+#1084 did so including the one it had deliberately *tolerated* rather than fixed. **Treat it as mechanism,
+not hypothesis, and put it in every brief:**
+
+```markdown
+## REPORT EVERY DELIVERABLE, INCLUDING THE ONES YOU DID NOT DO
+
+**A stream once shipped its main task, reported `finished=yes`, and silently dropped two of its four
+deliverables** — one of them a decision Lutan had made that morning. Nothing caught it; the planner found
+it by grepping `main` a day later. **Your PR body must account for EVERY numbered deliverable in this
+brief**, one line each, done or not done and why. A deliverable you skip is a legitimate outcome **said out
+loud** and a fault **left silent**.
+```
+
+### A BRIEF THAT NAMES THE RULES BUT NOT THE INSTRUMENTS SENDS A STREAM TO RE-DERIVE WHAT THE REPO KNOWS
+
+Added 2026-10-30, on **two instances in two days, both the planner's fault and neither the stream's.**
+
+- A brief carried every run-safety rule and **never named `scripts/lib/exit.mjs`**. So a stream met
+  `process.exit()`-after-`fetch` dying in libuv on Windows (`!(handle->flags & UV_HANDLE_CLOSING)`, exit
+  127, a **passing** verdict read as a failure), and filed it as *"a genuine fault, cause not established"*.
+  **It had been diagnosed on 2026-10-16 and fixed with that shared helper, which has its own decision file
+  and names the assertion in its own comment.** The fix is one line.
+- The same brief said how to run checks safely and **never said most of them take no arguments** — hence
+  the `--port` sweep above.
+
+**The test when writing a brief: for each thing the stream must do, is there already a helper, a script, a
+fixture or a decision file in this repo that does it? Name it by path.** The rules tell a stream how to
+behave; the instruments tell it what not to rebuild. **A grep of `scripts/lib/` and `docs/decisions/` for
+the brief's subject costs a minute and is the cheapest part of writing one.**
 
 ### WHEN THE PLANNER TOUCHES PRODUCTION ITSELF: three rules, all learned in one morning
 
