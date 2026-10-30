@@ -1,48 +1,33 @@
-import { scheduleKind, type FrequencySchedule } from "@/lib/prescriptions/frequency";
+import { isRecurring, MAX_DOSES_PER_DAY, type RxSchedule } from "@/lib/prescriptions/schedule";
 
 /**
- * The Morning / Lunch / Evening ticks on the prescription form.
+ * The Morning / Lunch / Evening / Night ticks on the prescription form.
  *
- * The FREQUENCY is the count of doses a day (`doses_per_day`, which the stock
- * forecast, the medication list and usage-versus-plan read); the ticks only
- * say which rounds those doses go out in. Nothing here ever feeds the count
- * back, so a four-times-daily prescription with three rounds ticked stays four
- * (Lutan, 2026-10-20: the fourth dose goes in the notes).
+ * The ticks ARE the doses: each ticked round is one dose on every scheduled day, with its own amount
+ * (prescription_rounds, 0138/0234), so there is no separate dose count to keep in step with them.
+ * Four a day is the most (Lutan, 2026-10-30: "keep it to 4 with additional notes if something needs to be
+ * given hourly"); a dose written only in the notes is not in the forecast, by design.
  */
 
-/** Mirrors `default_frequency_round_keys` (0137): what choosing a schedule pre-ticks. */
-export function defaultRoundKeys(s: FrequencySchedule): string[] {
-  if (s.doses_per_day != null) {
-    if (s.doses_per_day >= 3) return ["morning", "lunch", "evening"];
-    if (s.doses_per_day === 2) return ["morning", "evening"];
-    return ["morning"];
-  }
-  return s.interval_count != null ? ["morning"] : [];
+/** What choosing a day pattern pre-ticks: Morning, for a prescription that has days. */
+export function defaultRoundKeys(s: RxSchedule | null): string[] {
+  return isRecurring(s) ? ["morning"] : [];
 }
 
-/** As needed (and no frequency at all) is never scheduled, so it shows no ticks. */
-export function showsRoundTicks(s: FrequencySchedule | null): boolean {
-  return s != null && scheduleKind(s) !== "asNeeded";
-}
-
-/** How many doses a day the schedule gives; an every-N-days one gives one. */
-export function dosesOwed(s: FrequencySchedule): number {
-  if (s.doses_per_day != null) return s.doses_per_day;
-  return s.interval_count != null ? 1 : 0;
+/** As needed (and nothing chosen yet) is never scheduled, so it shows no ticks. */
+export function showsRoundTicks(s: RxSchedule | null): boolean {
+  return isRecurring(s);
 }
 
 /**
- * ok      — as many ticks as doses, or the schedule shows no ticks.
- * fewer   — fewer ticks than doses: normal; the extra dose goes in the notes.
- * tooMany — more ticks than doses: the one case that is a mistake.
- * none    — owes a round and none is ticked (the medication list would flag it).
+ * ok      — a scheduled prescription with between one and four rounds ticked, or one that shows no ticks.
+ * none    — scheduled but no round ticked (the medication list would flag it).
+ * tooMany — more than four (the form has four boxes, so only a stale or hand-made submission reaches this).
  */
-export type TickVerdict = "ok" | "fewer" | "tooMany" | "none";
+export type TickVerdict = "ok" | "none" | "tooMany";
 
-export function tickVerdict(s: FrequencySchedule | null, ticked: number): TickVerdict {
-  if (!s || !showsRoundTicks(s)) return "ok";
-  const owed = dosesOwed(s);
+export function tickVerdict(s: RxSchedule | null, ticked: number): TickVerdict {
+  if (!showsRoundTicks(s)) return "ok";
   if (ticked === 0) return "none";
-  if (ticked > owed) return "tooMany";
-  return ticked < owed ? "fewer" : "ok";
+  return ticked > MAX_DOSES_PER_DAY ? "tooMany" : "ok";
 }

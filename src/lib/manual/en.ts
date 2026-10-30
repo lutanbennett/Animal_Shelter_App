@@ -830,8 +830,8 @@ const manual: Manual = {
           path: "Resident hub → Prescriptions → Add prescription",
           steps: [
             "Pick the medication from the list (or add a new one, giving what one unit is — tablet, ml, drop…). An admin keeps this list tidy under Settings → Medications.",
-            "Enter the dose per administration and set how often: times a day, every so many days, weeks or months, or as needed. There is no list to pick from; the form finds or adds the matching schedule itself.",
-            "Under it, tick the time of day the dose is given: Morning, Lunch and Evening. Setting how often ticks the usual ones (twice a day ticks Morning and Evening) and you can change them. Each ticked time of day gets its own amount box, so two in the morning and one in the evening is fine; leave a box blank to use the Dose above. The frequency still says how many doses a day; the ticks say when. If you tick more times of day than the frequency gives doses, the form tells you. If you tick fewer, that is fine: for four doses a day, tick the three rounds and write in the notes when the other is given, for example \"give final tablet at midnight\". An as-needed prescription shows no ticks.",
+            "Enter the dose per administration and choose which days it is given: every day or every few days, on chosen days of the week (for example Monday and Thursday), on chosen days of the month (for example the 1st and the 15th; a month without that day uses its last day), or as needed. For every few days, weeks or months, type how many in the Every box: 2 weeks on Monday is every other Monday.",
+            "Under it, tick the times of day the dose is given: Morning, Lunch, Evening and Night (about 10 pm). Each ticked time is one dose on every day you chose, so four times a day is the most. Each ticked time gets its own amount box, so two in the morning and one in the evening is fine; leave a box blank to use the Dose above. If a dose is needed more often than four times a day, write it in the notes: staff give it, but the medicine forecast does not count it. An as-needed prescription shows no times and is not counted in the forecast.",
             "Set the start date, and an end date if it's a course; leave the end blank if ongoing.",
             "Optionally link the clinic visit that prescribed it and add notes such as \"give with food\". Only visits up to today are offered: a prescription belongs to a visit that has happened, and one still to come can be linked once it has.",
             "Tap Save prescription. The resident's Prescriptions page separates Current from Expired.",
@@ -1668,9 +1668,9 @@ const manual: Manual = {
             "The Head of Medical signs in to a Home with one button, Administer Medication, and taps it. Everyone else opens Operations from the menu and taps Medication list. The date at the top is today at the shelter.",
             "The list is grouped by zone, then by enclosure, in the order you would walk them, and each enclosure shows its animals. Each animal has a photo and name at the top, so you treat the right one.",
             "Under the animal, each medicine shows a photo of its box or bottle label (added under Management → Medication stock), the amount to give, and how often. If a medicine has no label photo, only its name shows.",
-            "A medicine given every other day, weekly or monthly shows only on the days it falls due, counted from the day the prescription started. A medicine marked as needed is always shown. Last day of the course appears on a medicine whose prescription ends today.",
+            "A medicine given on chosen days (every other day, Monday and Thursday, the 1st and the 15th) shows only on the days it falls due, counted from the day the prescription started. A medicine marked as needed is always shown. Last day of the course appears on a medicine whose prescription ends today.",
             "An animal who is in hospital, fostered or out in the community is listed at the end under Not in an enclosure today, so no one thinks they were missed.",
-            "The list says how often (for example, 3 × a day) but not at what times: fixed rounds are the Head of Medical's knowledge, not something the app holds.",
+            "Tap Morning, Lunch, Evening or Night to see that round: the page suggests one from the time of day (from about 10 pm it suggests Night) but you choose. A medicine shows in each round it is ticked for, with the amount for that round, and says which days it is given (for example Every week on Mon, Thu).",
           ],
           callouts: [
             {
@@ -2185,8 +2185,8 @@ const manual: Manual = {
           activity: "reference.types",
           path: "Settings → Frequencies",
           steps: [
-            "A read-only record of the schedules prescriptions use — 2 × a day, Every 1 week, As needed — with how many prescriptions use each. The prescription form no longer picks from this list: staff choose times a day, every so many days, weeks or months, or as needed, and the matching row is found or added here. Nothing needs tidying.",
-            "The medication forecast counts the schedule (so many doses a day), never the ticked times of day. Four doses a day with Morning, Lunch and Evening ticked and a note about the last dose still counts four.",
+            "A read-only record of the older schedules prescriptions were saved with — 2 × a day, Every 1 week, As needed. New and edited prescriptions no longer use this list: they store their own days and times, so nothing is found or added here and nothing needs tidying.",
+            "The medication forecast counts the days chosen on each prescription and the times of day ticked: every scheduled day gives one dose per tick. Four doses a day with Morning, Lunch, Evening and Night ticked counts four; a dose written only in the notes is not counted.",
           ],
         },
         {

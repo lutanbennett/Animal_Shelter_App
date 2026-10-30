@@ -53,7 +53,7 @@ export default async function NewPrescriptionPage(
       .returns<{ is_deceased: boolean }[]>(),
     loadPrescriptionOptions(supabase, residentId, locale),
   ]);
-  const { medications, frequencies, clinicVisits, rounds, roundsError } = options;
+  const { medications, clinicVisits, rounds, roundsError } = options;
 
   const resident = residentResult.data?.[0];
   if (!resident) {
@@ -90,7 +90,6 @@ export default async function NewPrescriptionPage(
 
   const loadErrors = [
     [t.prescriptions.couldntLoadMedications, medications.error],
-    [t.prescriptions.couldntLoadFrequencies, frequencies.error],
     [t.prescriptions.couldntLoadVetAppointments, clinicVisits.error],
     [t.prescriptions.couldntLoadRounds, roundsError ? { message: roundsError } : null],
   ] as const;
@@ -123,7 +122,6 @@ export default async function NewPrescriptionPage(
         residentId={residentId}
         residentDisplayName={displayName}
         medications={medications.data ?? []}
-        frequencies={frequencies.data ?? []}
         clinicVisits={clinicVisits.data ?? []}
         rounds={rounds}
         preselectedClinicVisitId={

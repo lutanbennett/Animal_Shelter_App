@@ -11,36 +11,35 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, todayIso } from "@/lib/format";
 import { doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { UnitSelect } from "@/components/UnitSelect";
-import { describeSchedule, type FrequencySchedule } from "@/lib/prescriptions/frequency";
 import { defaultRoundKeys, showsRoundTicks, tickVerdict } from "@/lib/prescriptions/rounds";
 import {
-  EMPTY_SCHEDULE_FIELDS,
-  FrequencyScheduleFields,
-  scheduleToFields,
-} from "@/components/FrequencyScheduleFields";
-import type {
-  FrequencyOption,
-  MedicationOption,
-  ClinicVisitOption,
-  RoundOption,
-  FrequencyRoundDefaults,
-} from "@/lib/prescriptions/options";
+  parseScheduleForm,
+  scheduleToForm,
+  AS_NEEDED,
+  type RxSchedule,
+} from "@/lib/prescriptions/schedule";
+import { ScheduleDays } from "./ScheduleDays";
+import type { MedicationOption, ClinicVisitOption, RoundOption } from "@/lib/prescriptions/options";
 import { OptionalDateInput } from "@/components/OptionalDateInput";
 import { visitDate } from "@/lib/clinics/linkable";
 import { DateInput } from "@/components/DateInput";
 
-export type { FrequencyOption, MedicationOption, ClinicVisitOption };
+export type { MedicationOption, ClinicVisitOption };
 
 /** The columns the edit page loads to prefill the form. */
 export type PrescriptionInitial = {
   id: string;
   medication_id: string | null;
-  frequency_id: string | null;
   clinic_visit_id: string | null;
   dose_quantity: number | null;
   start_date: string;
   end_date: string | null;
   notes: string | null;
+  /** Which days (0283): every N days / weeks / months, or none = as needed. */
+  schedule_unit: RxSchedule["schedule_unit"];
+  schedule_every: number | null;
+  schedule_weekdays: number[] | null;
+  schedule_month_days: number[] | null;
   /** The rounds ticked now (prescription_rounds), as round ids. */
   round_ids?: string[];
   /** The amount given in each ticked round (prescription_rounds.dose_quantity), by round id. */
@@ -53,7 +52,7 @@ const inputClass =
 /**
  * One form for adding and editing. Edit mode prefills every field from
  * `initial` and submits `updatePrescription` instead; the inline "add a new
- * medication / frequency" affordances stay available either way.
+ * medication" affordance stays available either way.
  */
 /**
  * The name, with the unit it is dosed in after it — unless the name already
@@ -65,22 +64,11 @@ function medicationOptionLabel(t: Parameters<typeof doseUnitLabel>[0], m: { name
     : `${m.name} (${doseUnitLabel(t, m.dose_unit)})`;
 }
 
-/** The schedule the inline "add a frequency" fields describe so far, or null while incomplete. */
-function scheduleOfFields(v: typeof EMPTY_SCHEDULE_FIELDS): FrequencySchedule | null {
-  if (v.kind === "asNeeded") return { doses_per_day: null, interval_count: null, interval_unit: null };
-  const n = Number(v.kind === "perDay" ? v.dosesPerDay : v.intervalCount);
-  if (!Number.isInteger(n) || n <= 0) return null;
-  return v.kind === "perDay"
-    ? { doses_per_day: n, interval_count: null, interval_unit: null }
-    : { doses_per_day: null, interval_count: n, interval_unit: v.intervalUnit as FrequencySchedule["interval_unit"] };
-}
-
 export function PrescriptionForm({
   mode = "create",
   residentId,
   residentDisplayName,
   medications,
-  frequencies,
   clinicVisits,
   rounds,
   preselectedClinicVisitId = null,
@@ -91,11 +79,8 @@ export function PrescriptionForm({
   residentId: string;
   residentDisplayName: string;
   medications: MedicationOption[];
-  frequencies: FrequencyOption[];
   clinicVisits: ClinicVisitOption[];
   rounds: RoundOption[];
-  /** Kept so the pages need not change; the usual ticks now come from the pattern chosen. */
-  frequencyRounds?: FrequencyRoundDefaults;
   preselectedClinicVisitId?: string | null;
   initial?: PrescriptionInitial | null;
   cancelHref: string;
@@ -110,7 +95,7 @@ export function PrescriptionForm({
   const preselectedVisit =
     clinicVisits.find((a) => a.id === preselectedClinicVisitId) ?? null;
 
-  // Medication / frequency each switch between "pick one" and "add a new
+  // Medication switches between "pick one" and "add a new
   // one" the way the intake form's origin field does; whichever set of
   // inputs is mounted is what gets submitted.
   const [medicationId, setMedicationId] = useState(initial?.medication_id ?? "");
@@ -118,24 +103,24 @@ export function PrescriptionForm({
     medications.length === 0,
   );
   const [newMedicationUnit, setNewMedicationUnit] = useState<string>("tablet");
-  // How often: a pattern (times a day / every N days / as needed), not a pick from a list. The
-  // frequency is the count of doses a day; the ticks below never change it.
-  const [pattern, setPattern] = useState(() => {
-    const current = initial?.frequency_id ? frequencies.find((f) => f.id === initial.frequency_id) : null;
-    return current ? scheduleToFields(current) : EMPTY_SCHEDULE_FIELDS;
-  });
-  const schedule: FrequencySchedule | null = scheduleOfFields(pattern);
-  const [ticked, setTicked] = useState<Set<string>>(() => new Set(initial?.round_ids ?? []));
+  // Which days (0283); the ticks below are the times on those days, one dose each.
+  const [ticked, setTicked] = useState<Set<string>>(
+    () =>
+      new Set(
+        initial?.round_ids ??
+          // A new prescription is every day, so it starts with the Morning dose ticked.
+          rounds.filter((r) => defaultRoundKeys({ ...AS_NEEDED, schedule_unit: "day", schedule_every: 1 }).includes(r.key)).map((r) => r.id),
+      ),
+  );
   // Amount per ticked round, as typed; blank means "the dose above".
   const [roundDoses, setRoundDoses] = useState<Record<string, string>>(() =>
     Object.fromEntries(
       Object.entries(initial?.round_doses ?? {}).map(([id, q]) => [id, q == null ? "" : String(q)]),
     ),
   );
-  const verdict = tickVerdict(schedule, ticked.size);
 
-  function tickDefaultsFor(s: FrequencySchedule | null) {
-    const keys = s ? defaultRoundKeys(s) : [];
+  function tickDefaultsFor(s: RxSchedule | null) {
+    const keys = defaultRoundKeys(s);
     setTicked(new Set(rounds.filter((r) => keys.includes(r.key)).map((r) => r.id)));
   }
   function toggleRound(id: string) {
@@ -162,6 +147,28 @@ export function PrescriptionForm({
     return todayIso();
   });
   const [endDate, setEndDate] = useState(initial?.end_date ?? "");
+
+  const [days, setDays] = useState(() =>
+    scheduleToForm(
+      initial
+        ? {
+            schedule_unit: initial.schedule_unit,
+            schedule_every: initial.schedule_every,
+            schedule_weekdays: initial.schedule_weekdays,
+            schedule_month_days: initial.schedule_month_days,
+          }
+        : null,
+      initial?.start_date ?? startDate,
+    ),
+  );
+  const parsedDays = parseScheduleForm({
+    unit: days.unit,
+    every: days.every,
+    weekdays: days.weekdays,
+    monthDays: days.monthDays,
+  });
+  const schedule: RxSchedule | null = "schedule" in parsedDays ? parsedDays.schedule : null;
+  const verdict = tickVerdict(schedule, ticked.size);
 
   function handleClinicVisitChange(id: string) {
     if (startTouched || mode === "edit" || !id) return;
@@ -282,13 +289,16 @@ export function PrescriptionForm({
 
         <div className="flex flex-col gap-1">
           <span className="text-sm font-medium text-muted">{t.prescriptions.schedule}</span>
-          <FrequencyScheduleFields
-            value={pattern}
+          <ScheduleDays
+            value={days}
+            startDate={startDate}
             onChange={(v) => {
-              setPattern(v);
-              tickDefaultsFor(scheduleOfFields(v));
+              setDays(v);
+              // Ticks follow the kind of schedule, not each edit within it: switching to or from as needed.
+              const was = days.unit === "asNeeded";
+              const now = v.unit === "asNeeded";
+              if (was !== now) tickDefaultsFor(now ? AS_NEEDED : { ...AS_NEEDED, schedule_unit: "day", schedule_every: 1 });
             }}
-            namePrefix="pattern"
           />
           <p className="text-xs text-muted">{t.prescriptions.scheduleHint}</p>
         </div>
@@ -297,7 +307,7 @@ export function PrescriptionForm({
       {showsRoundTicks(schedule) && rounds.length > 0 && (
         <fieldset className="flex flex-col gap-2">
           <legend className="text-sm font-medium text-muted">{t.prescriptions.rounds}</legend>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {rounds.map((r) => (
               <label
                 key={r.id}
@@ -316,7 +326,7 @@ export function PrescriptionForm({
             ))}
           </div>
           {rounds.some((r) => ticked.has(r.id)) && (
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               {rounds
                 .filter((r) => ticked.has(r.id))
                 .map((r) => (
@@ -337,16 +347,6 @@ export function PrescriptionForm({
             </div>
           )}
           <p className="text-xs text-muted">{t.prescriptions.roundDosesHint}</p>
-          {verdict === "tooMany" && schedule && (
-            <p role="alert" className="text-sm text-danger">
-              {t.prescriptions.roundsTooMany(describeSchedule(t, schedule), ticked.size)}
-            </p>
-          )}
-          {verdict === "fewer" && schedule && (
-            <p className="text-sm text-muted">
-              {t.prescriptions.roundsFewer(describeSchedule(t, schedule), ticked.size)}
-            </p>
-          )}
           {verdict === "none" && <p className="text-sm text-muted">{t.prescriptions.roundsNone}</p>}
           <p className="text-xs text-muted">{t.prescriptions.roundsHint}</p>
         </fieldset>

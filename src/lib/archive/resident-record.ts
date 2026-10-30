@@ -1,5 +1,6 @@
 import "server-only";
 import { formatQuantity } from "@/lib/diets/options";
+import { ENGLISH_WORDS, SCHEDULE_COLUMNS, describeRxSchedule, type RxSchedule } from "@/lib/prescriptions/schedule";
 import { lineAmount, loadDietOptions } from "@/lib/diets/recipes";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { dateToYymm, dateToYyyymmdd } from "@/lib/google/drive-client";
@@ -295,7 +296,10 @@ type PrescriptionRow = {
   dose_quantity: number | null;
   notes: string | null;
   medication: { name: string; dose_unit: string } | null;
-  frequency: { label: string } | null;
+  schedule_unit: RxSchedule["schedule_unit"];
+  schedule_every: number | null;
+  schedule_weekdays: number[] | null;
+  schedule_month_days: number[] | null;
 };
 
 type WeightRow = {
@@ -398,7 +402,7 @@ export async function loadResidentArchiveRecord(
       .returns<AppointmentRow[]>(),
     supabase
       .from("prescriptions")
-      .select("id, start_date, end_date, dose_quantity, notes, medication:picker_medications(name, dose_unit), frequency(label)")
+      .select("id, start_date, end_date, dose_quantity, notes, medication:picker_medications(name, dose_unit), " + SCHEDULE_COLUMNS)
       .is("archived_at", null)
       .eq("resident_id", residentId)
       .order("start_date", { ascending: false })
@@ -548,7 +552,7 @@ export async function loadResidentArchiveRecord(
         row.dose_quantity != null
           ? `${Number(row.dose_quantity)} ${row.medication?.dose_unit ?? ""}`.trim()
           : null,
-      frequencyLabel: row.frequency?.label ?? null,
+      frequencyLabel: describeRxSchedule(ENGLISH_WORDS, row, row.start_date),
       startDate: row.start_date,
       endDate: row.end_date,
       notes: row.notes,

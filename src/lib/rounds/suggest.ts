@@ -20,13 +20,16 @@
 
 import { SHELTER_TIME_ZONE } from "@/lib/format";
 
-export type RoundKey = "morning" | "lunch" | "evening";
+export type RoundKey = "morning" | "lunch" | "evening" | "night";
 export type RoundUse = "medication" | "food";
 
-/** In day order. Mirrors the `rounds` rows seeded by 0137 (sort_order 1..3). */
-export const ROUND_KEYS: readonly RoundKey[] = ["morning", "lunch", "evening"];
+/**
+ * In day order. Mirrors the `rounds` rows seeded by 0137 (sort_order 1..3) and 0283 (night, sort_order 4,
+ * medication only: about 10 pm).
+ */
+export const ROUND_KEYS: readonly RoundKey[] = ["morning", "lunch", "evening", "night"];
 
-/** Food has no lunch round. */
+/** Food has no lunch and no night round (Lutan, 2026-10-30: diets stay morning and evening). */
 export function roundsFor(use: RoundUse): readonly RoundKey[] {
   return use === "food" ? ["morning", "evening"] : ROUND_KEYS;
 }
@@ -34,6 +37,8 @@ export function roundsFor(use: RoundUse): readonly RoundKey[] {
 /** First hour (shelter clock, 24h) each round is suggested from. Lunch is 11:00–15:59. */
 export const LUNCH_FROM_HOUR = 11;
 export const EVENING_FROM_HOUR = 16;
+/** The medication night round is about 10 pm; 22:00–23:59 suggests it. Food never has one. */
+export const NIGHT_FROM_HOUR = 22;
 
 const HOUR_FORMAT = new Intl.DateTimeFormat("en-GB", {
   timeZone: SHELTER_TIME_ZONE,
@@ -49,7 +54,7 @@ export function shelterHour(now: Date | number = Date.now()): number {
 
 /**
  * The round to pre-select. Medication: morning before 11:00, lunch 11:00–15:59,
- * evening from 16:00 (so 00:00–06:59 Thai time is still "morning", not yesterday's
+ * evening from 16:00, night from 22:00 (so 00:00–06:59 Thai time is still "morning", not yesterday's
  * evening: nobody is out before dawn bagging up a round that finished at night).
  * Food has no lunch, so the lunch window suggests evening: the morning feed is
  * done and the next one is the evening's.
@@ -58,5 +63,6 @@ export function suggestRound(use: RoundUse, now: Date | number = Date.now()): Ro
   const hour = shelterHour(now);
   if (hour < LUNCH_FROM_HOUR) return "morning";
   if (hour < EVENING_FROM_HOUR) return use === "food" ? "evening" : "lunch";
+  if (use === "medication" && hour >= NIGHT_FROM_HOUR) return "night";
   return "evening";
 }
