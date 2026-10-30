@@ -1265,15 +1265,6 @@ export const ENTRIES = {
       expect: "The type is offered on the blood test form; a type with logged tests cannot be deleted, only merged.",
     },
   ],
-  frequencies: [
-    {
-      activity: "Add a frequency",
-      needs: "reference.types",
-      device: "desktop",
-      do: "Add \"Every 6 hours\" with its schedule.",
-      expect: "It is offered on the prescription form.",
-    },
-  ],
   "system-status": [
     {
       activity: "Read the system status",
