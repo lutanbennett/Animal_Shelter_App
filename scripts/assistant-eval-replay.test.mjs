@@ -61,3 +61,35 @@ test("an empty labelled set reports n/a rather than dividing by zero", async () 
   const out = await replay([{ id: "1", typed: "x", correct_intent: "", correct_answer: "" }], scripted({}), setup);
   assert.match(report(out, { provider: "p", model: "m" }), /n\/a/);
 });
+
+// The meeting point of #1116 (this replay) and #1118 (the OpenAI-compatible adapter), built in parallel
+// branches and first run together on 2026-10-30. The real adapter, a fake transport speaking Ollama's shape:
+// arguments arrive as a JSON string, and a garbled one must score as an error, not stop the run.
+test("replay runs through the OpenAI-compatible adapter unchanged", async () => {
+  const { createOpenAiAdapter } = await import("../src/lib/assistant/llm-openai.ts");
+  const { draftTools } = await import("../src/lib/assistant/llm-tools.ts");
+  const answers = {
+    "Panda weighs 4.2 kg today": ["weight", JSON.stringify({ residentId: "res-panda" })],
+    "put Mochi in the hospital": ["hospital", JSON.stringify({ residentId: "res-mochi" })],
+    'move Biscuit to the "front" yard': ["move", "{residentId: res-biscuit"],
+  };
+  const sent = [];
+  const fetch = async (url, init) => {
+    const body = JSON.parse(init.body);
+    sent.push({ url, body });
+    const a = answers[body.messages.find((m) => m.role === "user").content];
+    const message = a
+      ? { role: "assistant", content: "", tool_calls: [{ id: "c", type: "function", function: { name: a[0], arguments: a[1] } }] }
+      : { role: "assistant", content: "nothing to record" };
+    return new Response(JSON.stringify({ model: "stub:8b", choices: [{ message, finish_reason: a ? "tool_calls" : "stop" }] }), { status: 200 });
+  };
+  const llm = createOpenAiAdapter({ baseUrl: "http://pc.lan:11434/v1/", model: "stub:8b", fetch });
+  const out = await replay(sample(), llm, { system: "s", tools: draftTools() });
+  const s = summarise(out);
+  assert.deepEqual(s.intent, { right: 3, of: 4 }); // the garbled move is the miss
+  assert.equal(s.errors, 1);
+  assert.equal(sent[0].url, "http://pc.lan:11434/v1/chat/completions");
+  assert.equal(sent[0].body.tools.length, draftTools().length);
+  assert.deepEqual(sent[0].body.messages.map((m) => m.role), ["system", "user"]);
+  assert.match(report(out, llm), /openai-compatible \/ stub:8b/);
+});
