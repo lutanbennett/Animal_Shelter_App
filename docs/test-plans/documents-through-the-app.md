@@ -145,7 +145,7 @@ Manual verification by: pending: card-limited login and Pi checks above
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [x] Checklist pasted into the PR
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — n/a: handed over at release cut, after merge
 
 Result: pass with accepted defects
 
