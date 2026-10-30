@@ -18,7 +18,7 @@
 --   public_shop_links     what anon reads: shown entries only, named columns only.
 --
 -- Re-runnable. To undo: drop view public_shop_links, table shop_links, the card_grants / card_features rows for
--- manage_shop_page, the permission_activities row shop.manage, and restore is_public_drive_file() from 0191.
+-- manage_shop_page, the permission_activities row shop.manage, and restore is_public_drive_file() from 0245.
 
 -- 1. The card's activity and the card ------------------------------------------------------------------
 insert into permission_activities (key, kind, area, sort)
@@ -170,6 +170,10 @@ set search_path = public
 as $$
   select exists (
     select 1 from public_site_content where hero_drive_file_id = p_drive_file_id
+      or donate_photo_drive_file_id = p_drive_file_id
+      or foster_photo_drive_file_id = p_drive_file_id
+      or volunteer_photo_drive_file_id = p_drive_file_id
+      or about_photo_drive_file_id = p_drive_file_id
     union all
     select 1 from public_site_content_photos where drive_file_id = p_drive_file_id
     union all
@@ -189,8 +193,16 @@ as $$
     union all
     select 1 from public_donation_channels where qr_drive_file_id = p_drive_file_id
     union all
+    select 1 from public_appeal_photos where drive_file_id = p_drive_file_id
+    union all
+    select 1 from public_adoption_updates where drive_file_id = p_drive_file_id
+    union all
     select 1 from public_shop_links where photo_drive_file_id = p_drive_file_id
   );
 $$;
+
+revoke execute on function is_public_drive_file(text) from public;
+grant execute on function is_public_drive_file(text)
+  to anon, authenticated, service_role;
 
 notify pgrst, 'reload schema';
