@@ -11,7 +11,7 @@
 | PR | filled in on the PR itself |
 | Tested by / date | Claude / 2026-10-30 |
 | Carries a migration? | no |
-| Tested at SHA | `49a0a632` |
+| Tested at SHA | `0f8be8ea` |
 
 ## 1. Scope and risk
 
