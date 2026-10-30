@@ -7,7 +7,7 @@ risk be in doing that"*. He chose this version: *"yes put that in the backlog pl
 ## What changed
 
 1. **`ci.yml`:** the PR `audit` job was meant to run only when the diff touches `package.json` or `package-lock.json`.
-   **CORRECTED 2026-10-27: as built, it never runs on any PR.** Its `if` (`ci.yml:248`) needs the `changes` job to report
+   **CORRECTED 2026-10-27: as built, it never runs on any PR. SUPERSEDED 2026-10-28: #1041 made `check-docs-only.mjs` write `deps-changed`, so it now runs on a PR touching the package list (see `2026-10-30-claude-md-audit-paragraph.md`).** Its `if` (`ci.yml:248`) needs the `changes` job to report
    `deps-changed` as `true`. The `changes` job passes that value on (`ci.yml:44`), but `check-docs-only.mjs` only prints it
    (`:97`) and writes just `docs-only` to the job output (`:107–108`), so the value is always empty and the test is never met.
    That is why a release cut, which does change `package.json`, still showed `audit` as skipped on 0.40.3 to 0.40.6.

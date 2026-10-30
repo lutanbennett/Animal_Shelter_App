@@ -569,13 +569,19 @@ worse than the finding. Then write what you concluded on the PR and in
 `docs/decisions/2026-10-01-next-og-advisory-handled-as-routine.md` and
 `docs/decisions/2026-10-07-sharp-override.md`.
 
-**Scope changed 2026-10-25 (Lutan; `docs/decisions/2026-10-25-audit-on-releases-not-every-pr.md`).** The PR `audit` job was meant to
-run only on a PR that changes `package.json` or `package-lock.json`. **Corrected 2026-10-27: as built it never runs on any PR**
-(its condition in `ci.yml:248` tests `deps-changed`, which `check-docs-only.mjs` prints to the log but never appends to `GITHUB_OUTPUT`; that file appends only `docs-only=`. Re-checked 2026-10-28 and still true; re-check with `grep -n GITHUB_OUTPUT scripts/check-docs-only.mjs`), so expect it to
-show **skipped**, even on a release cut that changes `package.json`; skipped is not a pass, and there is no PR check to go looking for. The advisory check someone acts on is a step in every production release (`docs/release-procedure.md`,
-"Audit the production dependencies"), with the daily `advisories.yml` run between. He asked *"If the audit check
-always fails in a CI and is ignored is it actually adding value?"* and chose this. Everything above about a red
-`audit` on a PR that does run it still holds.
+**Scope changed 2026-10-25 (Lutan; `docs/decisions/2026-10-25-audit-on-releases-not-every-pr.md`).** The PR `audit` job runs
+only on a PR that changes `package.json` or `package-lock.json`, and shows **skipped** on every other PR. Skipped is not a pass: it
+means nothing was checked, on purpose. **It works as designed since 2026-10-28 (#1041):** `check-docs-only.mjs` now appends
+`deps-changed=` to `GITHUB_OUTPUT` beside `docs-only=`, which the job's condition in `ci.yml` reads. (From 2026-10-25 to 2026-10-28
+it was never written and the job skipped everything, release cuts included; that is why older decision files and release records
+say "never runs". They were true then. Re-check with `grep -n GITHUB_OUTPUT scripts/check-docs-only.mjs`: both values on the one line
+means the gate works.) So **a release cut, which always changes `package.json`, runs it for real, and a docs-only record PR skips it.**
+Since #1055 the job runs `npm run audit:register`, which passes only an advisory with a dated entry in `docs/advisory-register.json`
+(a reason in checkable terms and a decision file) and **fails on any id not on it**, so a red `audit` is a real finding again, not
+the known `glob` noise; read the job log. It still cannot block a merge. The advisory check someone acts on is also a step in every
+production release (`docs/release-procedure.md`, "Audit the production dependencies"), with the daily `advisories.yml` run between.
+He asked *"If the audit check always fails in a CI and is ignored is it actually adding value?"* and chose this. Everything above
+about a red `audit` on a PR that does run it still holds.
 
 Two standing rules. **Do not change `advisories.yml`, and do not change the PR job's `continue-on-error`, timeout
 or retry, to make the red go away**: the PR job and the daily `advisories.yml` disagree about failing on purpose by
