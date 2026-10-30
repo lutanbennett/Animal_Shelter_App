@@ -6,12 +6,12 @@
 |---|---|
 | Feature | Correct the audit paragraph in CLAUDE.md |
 | Backlog item | `docs/backlog.md` → Documentation: CLAUDE.md says audit never runs on any PR |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/claude-md-audit-paragraph` @ `C:\Development\Animal_Shelter_claude-md-audit-paragraph` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | (opened after this commit) |
 | Tested by / date | Claude / 2026-10-30 |
 | Carries a migration? | no |
-| Tested at SHA | |
+| Tested at SHA | de1ba060 |
 
 ## 1. Scope and risk
 
@@ -36,8 +36,12 @@ wait for `worktree.mjs new` to exit before trusting the tree. A gate ticked
 because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
-- [ ] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly — n/a: documentation only (CLAUDE.md and a decision file); no code, UI, schema or deploy
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them — n/a: documentation only (CLAUDE.md and a decision file); no code, UI, schema or deploy
+- [x] `node scripts/worktree.mjs sync` — origin/main merged in (git fetch + merge)
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`
+
+```
+gates: typecheck=0 lint=0 test=0 build=0
+```
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
@@ -201,33 +205,7 @@ Automated checks by: Claude  Date: 2026-10-30
 
 ### Manual verification
 
-The items in **Left for manual verification** above. Signed by the person who
-looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
-Three valid states:
-
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
-- `n/a: <reason>` — there was nothing to look at.
-- `pending: <what is outstanding>` — the work is done and something genuinely
-  needs a person who has not got to it yet. **This does not fail the check**
-  (changed 2026-09-24): it is the normal state for most of a PR's life, and a
-  check that is permanently red is one people learn to filter. The checker prints
-  *awaiting manual verification: <what>* and exits 0, so the outstanding item is
-  on the record without drowning the signal. What still fails is a plan that is
-  missing, incomplete or self-contradictory. Use `pending:` rather than reaching
-  for `n/a` — green is no longer something you have to buy, and an `n/a` over a
-  real outstanding item is a false assurance about the one thing you could not
-  verify. **Nothing ships on a `pending:`** — the release manager's pre-deploy
-  pass is what holds that line, not CI.
-
-`n/a:` and `pending:` take **no `Date:` segment** — there is no date to record, so
-write the line and stop. A trailing `Date: —` is accepted too, since existing
-plans use it. A bare *name* with no date is still rejected, which is what stops an
-empty signature quietly passing.
-
-A red `test-plan` that says what it is waiting for is a red people act on. An
-illegible one is a red people learn to ignore.
+Nothing for a person to look at.
 
 - [ ] The manual list above is empty — n/a: nothing for a person to look at
 
