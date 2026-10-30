@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { parseRequest, type ParsedRequest } from "@/lib/assistant/parse";
 import { isoLocal } from "@/lib/assistant/text";
-import { isWriteIntent } from "@/lib/assistant/types";
+import { isWriteIntent, type AssistantTrace } from "@/lib/assistant/types";
 import type { AssistantContext } from "@/lib/assistant/data";
 import { recordAssistantTurn, recordRefusedTurn } from "@/app/assistant/actions";
+import { interpretRequest } from "@/app/assistant/interpret";
 import { assistantLookup, type LookupAnswer } from "@/app/assistant/lookups";
 import { AssistantCard, type AssistantOutcome } from "./AssistantCards";
 import { AssistantAnswer } from "./AssistantAnswers";
@@ -25,10 +26,13 @@ import {
  * The /assistant page and the slide-over both render this, so there is
  * one behaviour to reason about and one to replace when version 2 lands.
  *
- * The parsing happens right here in the browser, against the rows the
- * server handed over — so nothing is asked of the server until there is
- * something to do. What reaches the server is a confirmed write, a
- * read-only question, or the audit row for a turn that ended in neither.
+ * Version 2: the sentence goes first to the model (`interpretRequest`),
+ * which hands back a Draft for the same cards to confirm. When there is no
+ * model, or it is slow, refuses or returns nothing usable, the keyword
+ * parser runs here in the browser against the rows the server handed over,
+ * exactly as it did before the model existed. What reaches the server for a
+ * write is still only the confirmed card; a read-only question or the audit
+ * row for a turn that ended in neither follows the same path as ever.
  */
 
 type TurnState =
@@ -48,6 +52,8 @@ type Turn = {
   request: string;
   parsed: ParsedRequest | null;
   state: TurnState;
+  /** Set when a model was asked about this sentence, whatever came of it. */
+  trace?: AssistantTrace;
 };
 
 export function AssistantConversation({
@@ -64,6 +70,8 @@ export function AssistantConversation({
   // Turn ids are also field ids inside the cards, so they have to be
   // unique for the life of the conversation — a counter, not a clock.
   const nextTurnId = useRef(1);
+  // Once the server says no model is set up, stop asking it on every sentence.
+  const modelOff = useRef(false);
 
   const parserData = useMemo(
     () => ({
@@ -88,9 +96,41 @@ export function AssistantConversation({
     const trimmed = request.trim();
     if (!trimmed) return;
 
-    const parsed = parseRequest(trimmed, parserData);
     const id = nextTurnId.current++;
+    setText("");
 
+    if (modelOff.current || !context.canAsk) {
+      const parsed = parseRequest(trimmed, parserData);
+      setTurns((prev) => [...prev, startedTurn(id, trimmed, parsed)]);
+      afterParse(id, trimmed, parsed);
+      return;
+    }
+
+    // The model first; the keyword parser is what every failure falls back to.
+    setTurns((prev) => [...prev, { id, request: trimmed, parsed: null, state: { kind: "pending" } }]);
+    const fallback = (trace?: AssistantTrace) => {
+      const parsed = parseRequest(trimmed, parserData);
+      setTurns((prev) =>
+        prev.map((turn) => (turn.id === id ? startedTurn(id, trimmed, parsed, trace) : turn)),
+      );
+      afterParse(id, trimmed, parsed, trace);
+    };
+    interpretRequest({ request: trimmed, today: isoLocal(new Date()) })
+      .then((result) => {
+        if (!result.ok) {
+          if (result.reason === "not_configured") modelOff.current = true;
+          return fallback(result.trace);
+        }
+        const parsed: ParsedRequest = { draft: result.draft, intent: result.draft.kind, residentCandidates: [] };
+        setTurns((prev) =>
+          prev.map((turn) => (turn.id === id ? startedTurn(id, trimmed, parsed, result.trace) : turn)),
+        );
+        afterParse(id, trimmed, parsed, result.trace);
+      })
+      .catch(() => fallback());
+  }
+
+  function startedTurn(id: number, request: string, parsed: ParsedRequest | null, trace?: AssistantTrace): Turn {
     const state: TurnState = !parsed
       ? { kind: "unmatched" }
       : isWriteIntent(parsed.intent)
@@ -98,24 +138,28 @@ export function AssistantConversation({
           ? { kind: "card" }
           : { kind: "readOnly" }
         : { kind: "pending" };
+    return { id, request, parsed, state, trace };
+  }
 
-    setTurns((prev) => [...prev, { id, request: trimmed, parsed, state }]);
-    setText("");
+  /** The bookkeeping and the read-only answer that follow once a turn has a Draft, or none. */
+  function afterParse(id: number, trimmed: string, parsed: ParsedRequest | null, trace?: AssistantTrace) {
+    const state = startedTurn(id, trimmed, parsed, trace).state;
 
     if (state.kind === "readOnly") {
       // Bookkeeping only: a failure here must never touch the refusal shown.
-      recordRefusedTurn(trimmed).catch(() => {});
+      recordRefusedTurn(trimmed, trace).catch(() => {});
       return;
     }
 
     if (!parsed) {
-      // The sentences a keyword parser could not place are the test set
-      // version 2 has to beat (0070), so they are worth a row of their own.
+      // The sentences neither the model nor a keyword parser could place are
+      // the test set (0070), so they are worth a row of their own.
       void recordAssistantTurn({
         request: trimmed,
         intent: null,
         draft: null,
         status: "unmatched",
+        trace,
       });
       return;
     }
@@ -148,6 +192,7 @@ export function AssistantConversation({
         intent: turn.parsed?.intent ?? null,
         draft: turn.parsed?.draft ?? null,
         status: "cancelled",
+        trace: turn.trace,
       });
       return;
     }
@@ -255,6 +300,7 @@ function TurnReply({
           ctx={{
             turnId: turn.id,
             request: turn.request,
+            trace: turn.trace,
             residents: context.residents,
             zones: context.zones,
             enclosures: context.enclosures,

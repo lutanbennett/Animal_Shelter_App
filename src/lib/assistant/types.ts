@@ -199,3 +199,12 @@ export type IntentParser = {
   intent: Intent;
   parse: (text: string, ctx: ParseContext) => ParseResult | null;
 };
+
+/**
+ * What a version 2 turn carries from the model call to the audit row: the
+ * model id and the exchange (shape: `AssistantExchange` in interpret.ts).
+ * Absent on every version 1 turn. It travels through the browser the same
+ * way `request` and `draft` already do, so it is exactly as trustworthy as
+ * they are, which for a row on the caller's own session is enough.
+ */
+export type AssistantTrace = { model: string; exchange: unknown };

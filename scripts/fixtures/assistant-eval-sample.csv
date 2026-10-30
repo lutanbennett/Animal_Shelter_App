@@ -1,0 +1,6 @@
+id,when,status,typed,assistant_did,intent_guessed,resident_id_guessed,correct_intent,correct_answer
+f1,2026-10-30 09:00,unmatched,Panda weighs 4.2 kg today,no match: no parser placed the sentence,,,weight,res-panda
+f2,2026-10-30 09:05,unmatched,put Mochi in the hospital,no match: no parser placed the sentence,,,hospital,res-mochi
+f3,2026-10-30 09:10,unmatched,"move Biscuit to the ""front"" yard",no match: no parser placed the sentence,,,move,res-biscuit
+f4,2026-10-30 09:15,unmatched,what is the weather,no match: no parser placed the sentence,,,none,
+f5,2026-10-30 09:20,unmatched,ยังไม่ได้ตรวจ,no match: no parser placed the sentence,,,,
