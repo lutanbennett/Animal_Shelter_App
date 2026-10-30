@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireAdminUser } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
+import { DateInput } from "@/components/DateInput";
 import { getT } from "@/lib/i18n/get-t";
 import { formatDateTime } from "@/lib/format";
 import {
@@ -52,11 +53,11 @@ export default async function AssistantLogPage(props: PageProps<"/admin/assistan
         </label>
         <label className="flex flex-col gap-1 text-sm text-muted">
           {a.from}
-          <input type="date" name="from" defaultValue={filters.from} className={input} />
+          <DateInput name="from" defaultValue={filters.from} className={input} />
         </label>
         <label className="flex flex-col gap-1 text-sm text-muted">
           {a.to}
-          <input type="date" name="to" defaultValue={filters.to} className={input} />
+          <DateInput name="to" defaultValue={filters.to} className={input} />
         </label>
         <button type="submit" className="min-h-11 rounded border border-border px-3 py-1 text-sm text-foreground hover:bg-surface-hover md:min-h-0">
           {a.apply}
