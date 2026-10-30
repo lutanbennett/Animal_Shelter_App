@@ -89,6 +89,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Settings → Assistant log (Admin only): see what people typed at the assistant that it could not understand or would not do, newest first, filter by what happened and by date, and download them as a spreadsheet with empty columns for the right answer. System status now shows how many each period.",
   "Donation receipts and a deceased resident's archive: the filed receipt, summary PDF and offline index now open inside the app instead of taking you to Google Drive. You need the same card you needed before; anyone without it is turned away.",
   "Cashflow: a \"fix\" link for an unpriced item now shows only if you can open the page where the price is entered, instead of leading you to a page that turns you away.",
   "Settings → Security: the list of people waiting for access no longer runs off the side of a phone screen, so the role menu and the Approve and Deny buttons can all be reached.",
