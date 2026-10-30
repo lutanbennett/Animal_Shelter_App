@@ -11,6 +11,7 @@
  * No database: imports the helper directly (Node strips its types). Exits 1
  * if any case is wrong.
  */
+import { exitWith } from "./lib/exit.mjs";
 import { safeNextPath } from "../src/lib/auth/next-path.ts";
 
 const cases = [
@@ -57,4 +58,4 @@ for (const [input, expected] of cases) {
 }
 
 console.log(failed ? `\n${failed} failed` : `\nall ${cases.length} passed`);
-process.exit(failed ? 1 : 0);
+await exitWith(failed ? 1 : 0);

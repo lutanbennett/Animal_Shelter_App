@@ -7,6 +7,7 @@
 //   B  a login with two roles gets both homes, once each tile, main role's first
 //   C  canDoJob() counts every role a person holds, and a doctor key counts like any other (by its cells, never by its name)
 //   D  the manual opens on the cards a covering person holds across both roles, never on a role's name
+import { exitWith } from "./lib/exit.mjs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -108,4 +109,4 @@ ok("D a topic for everyone is everyone's", topicView({ id: "y", title: "y", ever
 ok("D a topic with no card is shown, marked unassigned", topicView({ id: "z", title: "z" }, permsFor("head_of_medical")) === "unassigned");
 
 console.log(fails ? `\n${fails} check(s) failed` : "\nall checks passed");
-process.exit(fails ? 1 : 0);
+await exitWith(fails ? 1 : 0);

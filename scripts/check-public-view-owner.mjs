@@ -5,6 +5,7 @@
 //
 //   node scripts/check-public-view-owner.mjs
 
+import { exitWith } from "./lib/exit.mjs";
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -49,4 +50,4 @@ try {
 } finally {
   rmSync(dir, { recursive: true, force: true });
 }
-process.exit(bad ? 1 : 0);
+await exitWith(bad ? 1 : 0);

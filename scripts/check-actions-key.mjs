@@ -15,6 +15,7 @@
  * form crosses over. It does NOT build anything; the cross-build behaviour
  * itself was reproduced by hand (docs/decisions/2026-10-03-server-actions-encryption-key.md).
  */
+import { exitWith } from "./lib/exit.mjs";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -81,4 +82,4 @@ check(
 );
 
 console.log(failures ? `\n${failures} failed` : "\nall passed");
-process.exit(failures ? 1 : 0);
+await exitWith(failures ? 1 : 0);

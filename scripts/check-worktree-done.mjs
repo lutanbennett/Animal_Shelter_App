@@ -4,6 +4,7 @@
 //   done <folder-name> --force   still refuses
 //   done <branch-name>           removes it properly
 // Run from any checkout: node scripts/check-worktree-done.mjs
+import { exitWith } from "./lib/exit.mjs";
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import path from "node:path";
@@ -49,4 +50,4 @@ try {
   git("worktree", "prune");
   for (const b of [folderName, branchName]) git("branch", "-D", `claude/${b}`);
 }
-process.exit(failed ? 1 : 0);
+await exitWith(failed ? 1 : 0);

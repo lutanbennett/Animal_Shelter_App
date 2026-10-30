@@ -5,6 +5,7 @@
 //   node scripts/check-units.mjs
 //
 // No database, no env. Exits 0 when every case holds.
+import { exitWith } from "./lib/exit.mjs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -125,4 +126,4 @@ eq("price per purchase unit derived from the cost", pricePerPurchaseUnit(4.25, k
 }
 
 console.log(fails ? `\n${fails} FAILED` : "\nall ok");
-process.exit(fails ? 1 : 0);
+await exitWith(fails ? 1 : 0);

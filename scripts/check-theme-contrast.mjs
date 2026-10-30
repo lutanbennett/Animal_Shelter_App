@@ -15,6 +15,7 @@
  * Dev's teal (`:root[data-env="dev"]`) is checked too: it applies only under
  * the default theme (docs/decisions/2026-10-10-user-colour-themes.md).
  */
+import { exitWith } from "./lib/exit.mjs";
 import { readFileSync } from "node:fs";
 
 const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
@@ -192,4 +193,4 @@ for (const [name, t] of Object.entries(themes)) {
   console.log(`  ${edge[1] >= 3 ? "ok  " : "FAIL"} zone chips: weakest edge ${edge[0]} ${edge[1].toFixed(2)}:1 against the page [graphic, 3:1]`);
 }
 console.log(failures ? `\n${failures} pair(s) below WCAG AA.` : "\nEvery pair meets WCAG AA.");
-process.exit(failures ? 1 : 0);
+await exitWith(failures ? 1 : 0);

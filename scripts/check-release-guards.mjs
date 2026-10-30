@@ -10,6 +10,7 @@
  * one real process spawned is guard-release.mjs --env test, which must not
  * ask for an environment file. Exits 1 if any case is wrong.
  */
+import { exitWith } from "./lib/exit.mjs";
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { decideGuard, releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
@@ -64,4 +65,4 @@ check(
     migrate.includes("const { unapplied, missingFile } = driftReport();"),
 );
 
-process.exit(failures ? 1 : 0);
+await exitWith(failures ? 1 : 0);

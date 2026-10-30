@@ -19,6 +19,7 @@
  *   - an environment with no AI binding / key does nothing and does not throw;
  *   - swapping the engine to Ollama changes nothing else.
  */
+import { exitWith } from "./lib/exit.mjs";
 import { runTranslations, fingerprint, MAX_ATTEMPTS } from "../worker/translations.mjs";
 import { cleanOutput, checkOutput, pickEngine, systemPrompt, OutputRejected } from "../worker/translate-engines.mjs";
 
@@ -274,4 +275,4 @@ const thaiAi = () => async () => ({ response: THAI_REPLY });
 }
 
 console.log(failures ? `\n${failures} check(s) failed` : "\nall checks passed");
-process.exit(failures ? 1 : 0);
+await exitWith(failures ? 1 : 0);

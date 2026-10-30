@@ -5,6 +5,7 @@
 //   node scripts/check-delivery-lines.mjs
 //
 // No database, no env. Exits 0 when every case holds.
+import { exitWith } from "./lib/exit.mjs";
 import { register } from "node:module";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -79,4 +80,4 @@ const t = [conv("box", 50), conv("sleeve", 10)];
 eq("1 box + 3 sleeves = 80 tablets", resolveDeliveryLines([line("1", "box"), line("3", "sleeve")], t, ["tablet"]).base, 80);
 
 console.log(fails ? `\n${fails} FAILED` : "\nall ok");
-process.exit(fails ? 1 : 0);
+await exitWith(fails ? 1 : 0);

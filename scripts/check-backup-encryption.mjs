@@ -6,6 +6,7 @@
 //   - the session tables are excluded from the pg_dump arguments
 //   - scripts/backup.mjs no longer writes a plaintext dump or prints the Drive link
 
+import { exitWith } from "./lib/exit.mjs";
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { generateIdentity, identityToRecipient } from "age-encryption";
@@ -49,4 +50,4 @@ const r = spawnSync(process.execPath, ["scripts/backup.mjs", "--local", "os-tmp-
 check("backup.mjs refuses without a recipient", r.status === 1 && /always encrypted/.test(r.stderr), r.stderr + r.stdout);
 
 console.log(failures ? `\n${failures} check(s) failed.` : "\nAll checks passed.");
-process.exit(failures ? 1 : 0);
+await exitWith(failures ? 1 : 0);

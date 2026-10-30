@@ -7,6 +7,7 @@
  *
  *   node scripts/check-public-paths.mjs
  */
+import { exitWith } from "./lib/exit.mjs";
 import { readFileSync } from "node:fs";
 import { isPublicPage, isPublicPath, isEdgeCachedPage, PUBLIC_PAGE_PREFIXES } from "../src/lib/public-paths.ts";
 
@@ -40,4 +41,4 @@ if (skipsImages) failed++;
 console.log(`${skipsImages ? "FAIL" : "ok  "} proxy matcher does not skip image extensions`);
 
 console.log(failed ? `\n${failed} wrong` : "\nall right");
-process.exit(failed ? 1 : 0);
+await exitWith(failed ? 1 : 0);

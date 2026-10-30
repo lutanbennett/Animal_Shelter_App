@@ -7,6 +7,7 @@
  *
  * No files touched: the reader is stubbed. Exits 1 if any case is wrong.
  */
+import { exitWith } from "./lib/exit.mjs";
 import { strayEnvFiles } from "./lib/env-leak.mjs";
 import { appEnvForSupabaseUrl } from "../src/lib/app-env.ts";
 
@@ -45,4 +46,4 @@ check("unmarked file with only a wrong host is caught", run("test", { ".env": "N
 check("trailing slash on the right host is not a mismatch", run("test", { ".env": "NEXT_PUBLIC_SITE_URL=https://test.lannacare.org/\n" }).length === 0);
 check("unrelated vars pass", run("test", { ".env": "FOO=bar\n" }).length === 0);
 
-process.exit(failures ? 1 : 0);
+await exitWith(failures ? 1 : 0);

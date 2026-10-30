@@ -2,6 +2,7 @@
 // Against DEV only, one transaction that is always rolled back; applies 0252's text inside it.
 //
 //   node scripts/check-units-schema.mjs            (from the repo root; dev only)
+import { exitWith } from "./lib/exit.mjs";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -81,4 +82,4 @@ if (!m) throw new Error(`no result (status ${res.status}): ${msg.slice(0, 2000)}
 const rows = JSON.parse(m[1]);
 let bad = 0;
 for (const r of rows) { const ok = r.v === "ok" || r.v === "true" || /^\d+$/.test(r.v); if (!ok) bad++; console.log(`${ok ? "ok  " : "FAIL"} ${r.k}: ${r.v}`); }
-if (bad) { console.error(`${bad} failed`); process.exit(1); }
+if (bad) { console.error(`${bad} failed`); await exitWith(1); }
