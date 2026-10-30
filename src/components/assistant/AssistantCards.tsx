@@ -26,6 +26,7 @@ import type {
   WeightDraft,
   ImmunizationDraft,
   CarerReturnDraft,
+  AssistantTrace,
 } from "@/lib/assistant/types";
 import {
   assistantRecordDeath,
@@ -62,6 +63,8 @@ export type CardContext = {
   /** Unique within the conversation; only used to keep field ids apart. */
   turnId: number;
   request: string;
+  /** Set when a model interpreted the sentence; handed to the audit row on Confirm. */
+  trace?: AssistantTrace;
   residents: AssistantResident[];
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
@@ -343,6 +346,7 @@ function MoveCard({ ctx, draft }: { ctx: CardContext; draft: MoveDraft }) {
         enclosureId: target.id,
         moveDate: date,
         request: ctx.request,
+        trace: ctx.trace,
         draft: { ...draft, residentId: resident.id, enclosureId: target.id, date },
       });
       if ("error" in result) return setError(result.error);
@@ -458,6 +462,7 @@ function ClinicCard({ ctx, draft }: { ctx: CardContext; draft: ClinicVisitDraft 
         reason: reason || null,
         doctorName: doctor || null,
         request: ctx.request,
+        trace: ctx.trace,
         draft: {
           ...draft,
           residentId: resident.id,
@@ -620,6 +625,7 @@ function HospitalCard({ ctx, draft }: { ctx: CardContext; draft: HospitalDraft }
         residentId: resident.id,
         date,
         request: ctx.request,
+        trace: ctx.trace,
         draft: { ...draft, residentId: resident.id, date },
       });
       if ("error" in result) return setError(result.error);
@@ -710,6 +716,7 @@ function HospitalReturnCard({
         enclosureId: target.id,
         date,
         request: ctx.request,
+        trace: ctx.trace,
         draft: { ...draft, residentId: resident.id, enclosureId: target.id, date },
       });
       if ("error" in result) return setError(result.error);
@@ -793,6 +800,7 @@ function WeightCard({ ctx, draft }: { ctx: CardContext; draft: WeightDraft }) {
         weightKg,
         date,
         request: ctx.request,
+        trace: ctx.trace,
         draft: { ...draft, residentId: resident.id, weightKg, date },
       });
       if ("error" in result) return setError(result.error);
@@ -918,6 +926,7 @@ function DeathCard({ ctx, draft }: { ctx: CardContext; draft: DeathDraft }) {
         date,
         causeOfDeath: cause.trim() || null,
         request: ctx.request,
+        trace: ctx.trace,
         draft: { ...draft, residentId: resident.id, date, causeOfDeath: cause.trim() || null },
       });
       setConfirming(false);
@@ -1018,6 +1027,7 @@ function RehomeCard({ ctx, draft }: { ctx: CardContext; draft: RehomeDraft }) {
         carerId: carer.id,
         date,
         request: ctx.request,
+        trace: ctx.trace,
         draft: {
           ...draft,
           residentId: resident.id,
@@ -1134,6 +1144,7 @@ function CarerReturnCard({ ctx, draft }: { ctx: CardContext; draft: CarerReturnD
         enclosureId: target.id,
         date,
         request: ctx.request,
+        trace: ctx.trace,
         draft: { ...draft, residentId: resident.id, enclosureId: target.id, date },
       });
       if ("error" in result) return setError(result.error);
@@ -1228,6 +1239,7 @@ function ImmunizationCard({ ctx, draft }: { ctx: CardContext; draft: Immunizatio
         immunizationTypeIds: chosen.map((ty) => ty.id),
         date,
         request: ctx.request,
+        trace: ctx.trace,
         draft: {
           ...draft,
           residentId: resident.id,

@@ -25,7 +25,7 @@ import {
   loadAssistantContext,
   type AssistantContext,
 } from "@/lib/assistant/data";
-import type { Draft, Intent } from "@/lib/assistant/types";
+import type { AssistantTrace, Draft, Intent } from "@/lib/assistant/types";
 import { syncVisitToCalendar } from "@/lib/clinics/calendar-sync";
 import { getSiteOrigin } from "@/lib/site-origin";
 
@@ -49,6 +49,8 @@ type WriteInput<T> = T & {
   request: string;
   /** The draft as the card had it when Confirm was pressed. */
   draft: Draft;
+  /** Set when a model interpreted the sentence; absent for the keyword parser. */
+  trace?: AssistantTrace;
 };
 
 /**
@@ -61,7 +63,7 @@ type WriteInput<T> = T & {
  */
 async function runWrite(
   intent: Intent,
-  input: { request: string; draft: Draft },
+  input: { request: string; draft: Draft; trace?: AssistantTrace },
   write: (supabase: Supabase, t: T) => Promise<{ error: string } | { ok: true; id: string }>,
   revalidate: () => void,
   resultTable: string,
@@ -77,6 +79,8 @@ async function runWrite(
       draft: input.draft,
       status: "confirmed",
       result: error,
+      model: input.trace?.model ?? null,
+      exchange: input.trace?.exchange ?? null,
     });
     return { error };
   }
@@ -91,6 +95,8 @@ async function runWrite(
     result: "error" in result ? result.error : "ok",
     resultTable: "error" in result ? null : resultTable,
     resultRowId: "error" in result ? null : result.id || null,
+    model: input.trace?.model ?? null,
+    exchange: input.trace?.exchange ?? null,
   });
 
   if ("error" in result) return result;
@@ -405,6 +411,7 @@ export async function recordAssistantTurn(input: {
   intent: Intent | null;
   draft: Draft | null;
   status: Extract<AssistantActionStatus, "cancelled" | "unmatched">;
+  trace?: AssistantTrace;
 }): Promise<void> {
   const supabase = await createClient();
   await logAssistantAction(supabase, {
@@ -413,6 +420,8 @@ export async function recordAssistantTurn(input: {
     draft: input.draft,
     status: input.status,
     result: null,
+    model: input.trace?.model ?? null,
+    exchange: input.trace?.exchange ?? null,
   });
 }
 
@@ -426,7 +435,7 @@ export async function recordAssistantTurn(input: {
  * so this is a bare insert with no `.select()`. Fire-and-forget: it never
  * throws, so the refusal they see is unaffected by the bookkeeping.
  */
-export async function recordRefusedTurn(request: string): Promise<void> {
+export async function recordRefusedTurn(request: string, trace?: AssistantTrace): Promise<void> {
   try {
     const supabase = await createClient();
     await logAssistantAction(supabase, {
@@ -435,6 +444,8 @@ export async function recordRefusedTurn(request: string): Promise<void> {
       draft: null,
       status: "refused",
       result: null,
+      model: trace?.model ?? null,
+      exchange: trace?.exchange ?? null,
     });
   } catch (e) {
     console.error("assistant: could not record the refusal —", e);
