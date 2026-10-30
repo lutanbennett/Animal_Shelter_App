@@ -229,7 +229,7 @@ export function ResidentHub({
   canEditResident: boolean;
   /** This login's permissions: the Housing buttons follow them (placementActionsFor). */
   perms: Permissions | null;
-  /** Whoever holds the Record a death card (placement.death) (and retry an archive). */
+  /** Whoever holds placement.death (the Manage medical card) (and retry an archive). */
   canRecordDeath: boolean;
   /** Admin only: may withdraw a death recorded in error (and retry its Drive restore). */
   canUndoDeath: boolean;

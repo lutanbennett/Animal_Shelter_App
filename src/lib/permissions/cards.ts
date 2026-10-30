@@ -45,7 +45,6 @@ export type NewCardKey =
   | "meme_library"
   | "my_tasks"
   | "who_does_what"
-  | "record_death"
   | "translations"
   | "food_forecast"
   | "medicine_forecast"
@@ -88,7 +87,7 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
     opens: "/residents",
   },
   // Lutan, 2026-10-13: the full record, edit, move, photos and intake. Photo upload follows the edit card.
-  // Card review 1 (2026-10-26, 0265): recording a death is its own card (record_death); new photos go through approval
+  // Card review 1 (2026-10-26, 0265): new photos go through approval
   // (photos.shelter_add) instead of straight to the website (photos.resident_publish); the Foster carer list reads contacts' names only
   // (contacts.directory at read); the enclosure lookup its forms need comes from view_residents.
   residents: {
@@ -107,13 +106,6 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
       { activity: "photos.shelter_add" },
       { activity: "contacts.directory", level: "read" },
     ],
-    opens: "/residents",
-  },
-  // Card thirty (2026-10-26, Lutan, Card review 1: "split Recording a death out into its own card in the Medical feature"). The death page
-  // needs the resident and the Deceased enclosure, which view_residents gives. Every role that held Residents was given this card by 0265.
-  record_death: {
-    includes: ["view_residents"],
-    bundle: [{ activity: "placement.death" }],
     opens: "/residents",
   },
   // Card review 2 (2026-10-26, 0268): reading medical history is its own card (view_medical); this one, shown as "Manage medical", adds
@@ -147,6 +139,8 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
       { activity: "visit.book" },
       // 0269: Send to hospital is a medical action, visible only through this card (Lutan, 2026-10-26).
       { activity: "placement.hospital" },
+      // 0282: recording a death folds into this card (Lutan, 2026-10-29: "B, fold it into the medical card"); record_death is retired.
+      { activity: "placement.death" },
       // 0276/0278: the Medical photo folder is read through photos.resident_medical and filed into through photos.medical_add.
       { activity: "photos.resident_medical", level: "read" },
       { activity: "photos.medical_add" },
@@ -351,7 +345,6 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   meme_library: (t) => t.appHome.cards.memeLibrary,
   my_tasks: (t) => t.appHome.cards.myTasks,
   who_does_what: (t) => t.appHome.cards.whoDoesWhat,
-  record_death: (t) => t.appHome.cards.recordDeath,
   translations: (t) => t.appHome.cards.translations,
   food_forecast: (t) => t.appHome.cards.foodForecast,
   medicine_forecast: (t) => t.appHome.cards.medicineForecast,
