@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isPublicSiteLocked } from "@/lib/public-site";
 import { hiddenPagesOf, isPageHidden, sitemapPages } from "@/lib/public-pages";
 import { loadSiteContent } from "@/lib/site/content";
+import { hasPublicShopLinks } from "@/lib/shop/shop-links";
 import { getSiteOrigin } from "@/lib/site-origin";
 
 // PUBLIC_SITE is a Worker var read at request time (src/lib/public-site.ts),
@@ -34,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // A hidden page, or a section it sits in, is not listed, nor are the pages under it.
   const hidden = hiddenPagesOf((await loadSiteContent(supabase))?.hidden_public_pages);
 
-  const [residents, projects, appeals] = await Promise.all([
+  const [residents, projects, appeals, hasShopLinks] = await Promise.all([
     supabase.from("public_resident_profiles").select("id").returns<{ id: string }[]>(),
     supabase
       .from("public_projects")
@@ -42,12 +43,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .returns<{ id: string; sort_date: string | null }[]>(),
     // Appeals still asking (live) or just funded; the list page covers the rest.
     supabase.from("public_appeals").select("id").in("status", ["live", "funded"]).returns<{ id: string }[]>(),
+    hasPublicShopLinks(supabase),
   ]);
 
   // The static public pages, the home page first; /adopt#how-to-adopt is a
-  // fragment of /adopt and so not listed twice.
+  // fragment of /adopt and so not listed twice. Shop for the shelter is left out
+  // while it has no entry shown, as the menu leaves it out: an empty page to index.
   const pages: MetadataRoute.Sitemap = sitemapPages()
-    .filter((page) => !isPageHidden(page.key, hidden))
+    .filter((page) => !isPageHidden(page.key, hidden) && (page.key !== "shop" || hasShopLinks))
     .map((page) => ({
       url: abs(page.href),
       changeFrequency: page.sitemap.changeFrequency,

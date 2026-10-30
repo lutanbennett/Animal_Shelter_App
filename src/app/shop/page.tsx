@@ -8,6 +8,7 @@ import { getSiteOrigin } from "@/lib/site-origin";
 import { loadSiteContent } from "@/lib/site/content";
 import { defaultShareImage, shareImageMetadata } from "@/lib/site/share";
 import { loadPublicShopLinks, shopText } from "@/lib/shop/shop-links";
+import { requirePageVisible } from "@/lib/public-page-access";
 import { PublicHeader } from "../adopt/PublicHeader";
 import { PublicFooter } from "../adopt/PublicFooter";
 
@@ -43,6 +44,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * No click is recorded and no visitor data goes in a link: see docs/decisions/2026-10-30-affiliate-links-app.md.
  */
 export default async function ShopPage() {
+  await requirePageVisible("shop");
   const supabase = await createClient();
   const { t, locale } = await getT();
   const s = t.shop;
@@ -57,7 +59,7 @@ export default async function ShopPage() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <PublicHeader trail={[{ label: t.publicNav.getInvolved }, { label: s.navLabel }]} />
+      <PublicHeader current="shop" trail={[{ label: t.publicNav.getInvolved }, { label: s.navLabel }]} />
 
       <div className={`${PUBLIC_FRAME} flex flex-col gap-6 py-10`}>
         <div className="flex flex-col gap-2">

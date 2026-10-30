@@ -165,6 +165,9 @@ export const PROBES = [
   { activity: "reference.add_while_recording", level: "edit", sql: `insert into frequency (label) values ('Probe frequency')` },
   { activity: "reference.add_while_recording", level: "edit", sql: `insert into procedure_types (name) values ('Probe procedure')` },
   { activity: "audit.view", level: "edit", sql: `select 1 from audit_log limit 1` },
+  // 0285: shop_links' four policies ask shop.manage and nothing else. Edit only: a read needs a row, dev has none,
+  // and the fixtures are check-who-does-what.mjs's (docs/decisions/2026-10-30-shop-page-finish.md).
+  { activity: "shop.manage", level: "edit", sql: `insert into shop_links (title, link_url) values ('Probe shop', 'https://example.invalid/probe')` },
 ];
 
 // A statement a read on a Yes/No activity: "read" there means "needs Yes".

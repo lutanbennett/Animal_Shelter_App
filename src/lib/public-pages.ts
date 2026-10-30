@@ -25,6 +25,7 @@ export type PublicSection =
   | "appeals"
   | "desexing"
   | "about"
+  | "shop"
   | "privacy";
 
 /** A header menu group: the heading a page sits under, or none for a top-level link. */
@@ -118,7 +119,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
     href: "/appeals",
     label: (t) => t.appeals.navLabel,
     menu: { group: "get-involved" },
-    footer: { column: "help", order: 9 },
+    footer: { column: "help", order: 10 },
     sitemap: { order: 3, changeFrequency: "daily", priority: 0.8 },
   },
   {
@@ -138,11 +139,22 @@ export const PUBLIC_PAGES: PublicPage[] = [
     sitemap: { order: 11, changeFrequency: "yearly", priority: 0.3 },
   },
   {
+    // Shop for the shelter (0285; hideable since 0290). A way to give, so it sits with Donate in Get involved
+    // and the footer's Help column. Like Shelter Friends it carries a rule the list cannot: the menu, the
+    // footer and the Donate page's line show it only once an entry is shown (hasPublicShopLinks).
+    key: "shop",
+    href: "/shop",
+    label: (t) => t.shop.navLabel,
+    menu: { group: "get-involved" },
+    footer: { column: "help", order: 9 },
+    sitemap: { order: 12, changeFrequency: "monthly", priority: 0.5 },
+  },
+  {
     key: "desexing",
     href: "/services/desexing",
     label: (t) => t.desexing.navLabel,
     menu: { group: "services" },
-    footer: { column: "help", order: 10 },
+    footer: { column: "help", order: 11 },
     sitemap: { order: 4, changeFrequency: "weekly", priority: 0.6 },
   },
   {
@@ -164,7 +176,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
     label: (t) => t.privacy.nav,
     neverHidden: true,
     footer: { column: "foot", order: 1 },
-    sitemap: { order: 12, changeFrequency: "yearly", priority: 0.1 },
+    sitemap: { order: 13, changeFrequency: "yearly", priority: 0.1 },
   },
 ];
 
