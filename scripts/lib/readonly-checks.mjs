@@ -338,6 +338,22 @@ export const CHECKS = {
       ? rows.map((x) => `${x.table}: nobody can ${x.command}${x.dead.length ? ` (only dead policies: ${x.dead.join(", ")})` : " (no policy)"}`)
       : ["Every table with row security has a live policy for all four commands."],
   },
+  "assistant-could-not-help": {
+    asks: "What has the assistant failed to answer? Counts of the 'unmatched' (no parser placed the sentence) and 'refused' rows it keeps for 90 days, and the newest 25 with id, date, status and what was typed. Names no login and no resident; the typed text is exactly as typed. Informational: it flags nothing.",
+    // Reads assistant_actions (0070), the rows Settings -> Assistant log lists. The retention rule (0227) keeps these two statuses 90 days.
+    sql: `select json_build_object(
+        'unmatched', count(*) filter (where status = 'unmatched'),
+        'refused', count(*) filter (where status = 'refused'),
+        'oldest', min(created_at),
+        'newest', max(created_at),
+        'recent', coalesce((select json_agg(x order by x.created_at desc) from (select id, created_at, status, left(request_text, 200) as typed
+            from assistant_actions where status in ('unmatched', 'refused') order by created_at desc limit 25) x), '[]'::json))
+      from assistant_actions where status in ('unmatched', 'refused')`,
+    render: (r) => (r.unmatched + r.refused === 0
+      ? ["No could-not-help rows are held (nothing was missed in the last 90 days, or the rows have not been written yet)."]
+      : [`${r.unmatched} not understood, ${r.refused} refused; oldest ${String(r.oldest).slice(0, 10)}, newest ${String(r.newest).slice(0, 10)}.`,
+         ...r.recent.map((x) => `${String(x.created_at).slice(0, 16).replace("T", " ")} ${x.status} ${x.id} ${JSON.stringify(x.typed)}`)]),
+  },
 };
 
 /** Wrap one check in a read-only transaction. The result rides out in an exception message, as the harnesses do. */

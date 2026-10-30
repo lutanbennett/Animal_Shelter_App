@@ -32,7 +32,7 @@ type Locale = Awaited<ReturnType<typeof getT>>["locale"];
  * it — the page names where secrets live and what's misconfigured.
  */
 export default async function SystemStatusPage(props: PageProps<"/admin/status">) {
-  await requirePermission("system.status");
+  const { perms } = await requirePermission("system.status");
   const { t, locale } = await getT();
   const s = t.admin.status;
   const days = parsePeriod((await props.searchParams).days);
@@ -112,7 +112,7 @@ export default async function SystemStatusPage(props: PageProps<"/admin/status">
           </nav>
         </div>
         <Suspense key={days} fallback={<p className="text-sm text-muted">{s.checking}</p>}>
-          <Usage t={t} locale={locale} days={days} />
+          <Usage t={t} locale={locale} days={days} isAdmin={perms.isAdmin} />
         </Suspense>
       </section>
     </main>
@@ -527,7 +527,7 @@ function Figure({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
-async function Usage({ t, locale, days }: { t: T; locale: Locale; days: UsagePeriod }) {
+async function Usage({ t, locale, days, isAdmin }: { t: T; locale: Locale; days: UsagePeriod; isAdmin: boolean }) {
   const r = await getUsageReport(days);
   const u = t.admin.status.usage;
   const unavailable = <p className="text-muted">{t.admin.status.unavailable}</p>;
@@ -563,7 +563,20 @@ async function Usage({ t, locale, days }: { t: T; locale: Locale; days: UsagePer
       </Tile>
 
       <Tile title={u.assistant.title} result={r.assistant} t={t} locale={locale}>
-        {r.assistant.facts ? <p>{u.assistant.value(r.assistant.facts)}</p> : unavailable}
+        {r.assistant.facts ? (
+          <>
+            <p>{u.assistant.value(r.assistant.facts)}</p>
+            <p>{u.assistant.couldNotHelp(r.assistant.facts)}</p>
+            {/* The log is Admin only (no card), so the link is drawn only for an Admin: the page's own guard asks the same. */}
+            {isAdmin && (
+              <Link href="/admin/assistant" className="text-primary hover:underline">
+                {u.assistant.openLog}
+              </Link>
+            )}
+          </>
+        ) : (
+          unavailable
+        )}
       </Tile>
 
       <Tile title={u.visitors.title} result={r.visitors} t={t} locale={locale}>

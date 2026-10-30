@@ -314,6 +314,8 @@ const PINNED = {
 
   // Admin rules, not activities (§6: a power only one role holds is not a cell): who signs in,
   // and seeing another role's home screen.
+  // Settings → Assistant log: Admin only, no card (docs/decisions/2026-10-30-assistant-could-not-help-log.md).
+  "/admin/assistant": { guards: ["requireAdminUser()"], decides: [] },
   "/admin/security": { guards: ["requireAdminUser()"], decides: [] },
   "/admin/security/verify": { guards: ["requireAdminUser()"], decides: [] },
   // Settings → Stocktaking (stocktaking-switches-app): the two ON/OFF switches. Admin at 2-step, like Security.

@@ -20,11 +20,13 @@ export function parsePeriod(value: string | string[] | undefined): UsagePeriod {
 const sinceIso = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
 
 /** Rows in a table whose timestamp column falls in the period; head-only, no rows travel. */
-async function countSince(table: string, column: string, since: string): Promise<number> {
-  const { count, error } = await createAdminClient()
+async function countSince(table: string, column: string, since: string, status?: string): Promise<number> {
+  let q = createAdminClient()
     .from(table)
     .select("id", { count: "exact", head: true })
     .gte(column, since);
+  if (status) q = q.eq("status", status);
+  const { count, error } = await q;
   if (error) throw new Error(`${table}: ${error.message}`);
   return count ?? 0;
 }
@@ -86,10 +88,17 @@ export async function countUploads(days: number): Promise<CheckOutcome<UploadFac
   return { state: "ok", facts: { total: counts.reduce((a, b) => a + b, 0) } };
 }
 
-export type AssistantFacts = { requests: number };
+/** `unmatched` and `refused` are the could-not-help rows; Settings → Assistant log lists them. */
+export type AssistantFacts = { requests: number; unmatched: number; refused: number };
 
 export async function countAssistantRequests(days: number): Promise<CheckOutcome<AssistantFacts>> {
-  return { state: "ok", facts: { requests: await countSince("assistant_actions", "created_at", sinceIso(days)) } };
+  const since = sinceIso(days);
+  const [requests, unmatched, refused] = await Promise.all([
+    countSince("assistant_actions", "created_at", since),
+    countSince("assistant_actions", "created_at", since, "unmatched"),
+    countSince("assistant_actions", "created_at", since, "refused"),
+  ]);
+  return { state: "ok", facts: { requests, unmatched, refused } };
 }
 
 /** Where the app answering this request runs, which decides where the two values belong. */

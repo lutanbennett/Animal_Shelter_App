@@ -109,6 +109,12 @@ export default async function AdminPage() {
       icon: SECTION_ICONS.diet,
     },
     {
+      href: "/admin/assistant",
+      label: t.nav.assistantLog,
+      description: t.admin.landing.tiles.assistantLog,
+      icon: Activity,
+    },
+    {
       href: "/admin/security",
       label: t.nav.security,
       description: t.admin.landing.tiles.security,
@@ -134,7 +140,7 @@ export default async function AdminPage() {
     },
   ];
   const tiles = allTiles.filter((tile) => {
-    if (tile.href === "/admin/security" || tile.href === "/admin/stocktaking") return perms.isAdmin;
+    if (tile.href === "/admin/security" || tile.href === "/admin/stocktaking" || tile.href === "/admin/assistant") return perms.isAdmin;
     if (tile.href === WHO_DOES_WHAT_PATH) return opensWhoDoesWhat(perms);
     const route = routeFor(tile.href);
     return !!route && canOpen(perms, route);
