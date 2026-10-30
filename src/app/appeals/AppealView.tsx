@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PUBLIC_FRAME } from "@/lib/site/frame";
 import { formatBahtExact, formatDate, todayIso } from "@/lib/format";
 import { bodyLead } from "@/lib/site/body";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -63,7 +64,7 @@ export function AppealView({
 
   return (
       <div className="flex flex-1 flex-col">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-3 py-2 lg:px-8 lg:py-4">
+        <div className="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-3 px-3 py-2 lg:px-8 lg:py-4 xl:px-16">
           <BackLink
             href={backHref}
             className="flex min-h-11 items-center gap-1.5 rounded-full px-1 text-base font-semibold text-site-ink hover:text-site-action-hover"
@@ -97,7 +98,7 @@ export function AppealView({
           </div>
         </div>
 
-        <div className="mx-auto grid w-full max-w-6xl grid-cols-1 lg:grid-cols-2 lg:items-start lg:gap-12 lg:px-8">
+        <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 lg:grid-cols-2 lg:items-start lg:gap-12 lg:px-8">
           <AppealGallery items={gallery} alt={text.residentName} />
 
           <div className="flex flex-col gap-5 px-5 pt-5 lg:px-0 lg:pt-0">

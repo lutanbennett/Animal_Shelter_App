@@ -215,7 +215,7 @@ export default async function PublicResidentPage(
           after it, above the footer — it never sits over the sponsor line
           at the end (the mockup's bar covers it). */}
       <div className="flex flex-1 flex-col">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-3 py-2 lg:px-8 lg:py-4">
+        <div className="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-3 px-3 py-2 lg:px-8 lg:py-4">
           <BackLink
             href="/adopt"
             className="flex min-h-11 items-center gap-1.5 rounded-full px-1 text-base font-semibold text-site-ink hover:text-site-action-hover"
@@ -232,7 +232,7 @@ export default async function PublicResidentPage(
         {/* grid-cols-1, not the implicit column: a resident with dozens of
             photos has a thumbnail strip thousands of pixels wide, and an
             auto track would grow to it instead of letting the strip scroll. */}
-        <div className="mx-auto grid w-full max-w-6xl grid-cols-1 lg:grid-cols-2 lg:items-start lg:gap-12 lg:px-8">
+        <div className="mx-auto grid w-full max-w-[1440px] grid-cols-1 lg:grid-cols-2 lg:items-start lg:gap-12 lg:px-8">
           <PhotoGallery residentName={resident.name} photoIds={photoIds} />
 
           <div className="flex flex-col gap-5 px-5 pt-5 lg:px-0 lg:pt-0">
@@ -399,7 +399,7 @@ export default async function PublicResidentPage(
         {similar.length > 0 && (
           <section
             aria-labelledby="similar-heading"
-            className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-5 pb-12 lg:px-8"
+            className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 px-5 pb-12 lg:px-8"
           >
             <h2 id="similar-heading" data-reveal className={storyHeading}>
               {t.adopt.similar(resident.name)}
@@ -416,7 +416,7 @@ export default async function PublicResidentPage(
           aria-label={p.actions(resident.name)}
           className="sticky bottom-0 z-20 mt-auto border-t lg:hidden border-site-line bg-site-paper px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3"
         >
-          <div className="mx-auto flex max-w-6xl gap-2.5 sm:justify-end lg:px-4">
+          <div className="mx-auto flex max-w-[1440px] gap-2.5 sm:justify-end lg:px-4">
             {ask && (
               <a
                 href={ask.href}

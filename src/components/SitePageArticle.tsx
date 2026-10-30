@@ -4,6 +4,7 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { ChannelLink } from "@/lib/site/channels";
 import type { SitePageSlug } from "@/lib/site/pages";
 import { SiteBodyView } from "./SiteBodyView";
+import { PUBLIC_FRAME } from "@/lib/site/frame";
 
 /**
  * The part of a standalone site page between the header and the footer: the
@@ -46,7 +47,7 @@ export function SitePageArticle({
   const newTabLabel = t.common.opensInNewTab;
 
   return (
-    <article className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10 sm:px-12">
+    <article className={`${PUBLIC_FRAME} flex flex-col gap-6 py-10`}>
       {photoNode ? (
         <div className="flex flex-col-reverse items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl xl:text-[60px]">
@@ -59,6 +60,8 @@ export function SitePageArticle({
           {title || t.header.appName}
         </h1>
       )}
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,44rem)_minmax(0,1fr)] lg:items-start lg:gap-12">
+      <div className="flex flex-col gap-6">
       {englishOnly && (
         <p role="note" className="rounded-lg border border-border bg-surface p-4 text-sm text-muted">
           {t.sitePages.englishOnly}
@@ -89,6 +92,8 @@ export function SitePageArticle({
         </>
       )}
 
+      </div>
+      <div className="flex flex-col gap-6 lg:sticky lg:top-6">
       {channels.length > 0 && (
         <div data-reveal className="mt-4 flex flex-col gap-3 rounded-[20px] border border-border bg-surface p-6 sm:p-8">
           <h2 className="text-lg font-semibold text-foreground">
@@ -154,6 +159,8 @@ export function SitePageArticle({
           </Link>
         </p>
       )}
+      </div>
+      </div>
     </article>
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PUBLIC_FRAME } from "@/lib/site/frame";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -40,7 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-const wrap = "mx-auto w-full max-w-6xl px-5 lg:px-8";
+const wrap = "mx-auto w-full max-w-[1440px] px-5 lg:px-8 xl:px-16";
 
 /**
  * Help a sick resident: a card per appeal that is asking for money now, then

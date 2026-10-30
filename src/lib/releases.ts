@@ -89,6 +89,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Every page on the public website now fills the screen the same way the home page does, so moving between About, Adopt, Donate and the rest no longer shrinks the page to a narrow strip on a computer. Paragraphs keep a comfortable reading width, and on a large screen the contact details sit beside the text. Phones look the same as before.",
 ];
 
 /** Newest first. */
