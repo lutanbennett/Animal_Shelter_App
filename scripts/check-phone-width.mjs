@@ -252,31 +252,37 @@ function fail(message) {
   process.exit(2);
 }
 
+// Every exit after a network call goes through exitWith (scripts/lib/exit.mjs), with the rest of the
+// script in an else, because exitWith returns instead of stopping. fail() keeps process.exit(2): it
+// runs before any request (env/project guards) or right after a fetch that was refused outright,
+// where no keep-alive socket exists to trip libuv, and it is a red either way.
 if (args.includes("--clean")) {
   await sweep();
-  process.exit(0);
-}
+  await exitWith(0);
+} else {
+  try {
+    await fetch(`${base}/login`, { redirect: "manual" });
+  } catch {
+    fail(`nothing is answering at ${base}. Start it: node scripts/worktree.mjs dev`);
+  }
 
-try {
-  await fetch(`${base}/login`, { redirect: "manual" });
-} catch {
-  fail(`nothing is answering at ${base}. Start it: node scripts/worktree.mjs dev`);
+  if (args.includes("--public-only")) {
+    await exitWith(await publicPass());
+  } else {
+    try {
+      const ids = await seed();
+      const accounts = await makeAccounts(ids.clinic);
+      exitCode = await run(ids, accounts);
+    } catch (error) {
+      console.error(error);
+      exitCode = 2;
+    } finally {
+      if (KEEP) console.log(`\n--keep: seeded rows named "ZZ Width ${tag}…" and ${made.users.length} throwaway login(s) are left in dev.`);
+      else await cleanup();
+    }
+    await exitWith(exitCode);
+  }
 }
-
-if (args.includes("--public-only")) process.exit(await publicPass());
-
-try {
-  const ids = await seed();
-  const accounts = await makeAccounts(ids.clinic);
-  exitCode = await run(ids, accounts);
-} catch (error) {
-  console.error(error);
-  exitCode = 2;
-} finally {
-  if (KEEP) console.log(`\n--keep: seeded rows named "ZZ Width ${tag}…" and ${made.users.length} throwaway login(s) are left in dev.`);
-  else await cleanup();
-}
-await exitWith(exitCode);
 
 // ---------------------------------------------------------------------------
 // Seeding
