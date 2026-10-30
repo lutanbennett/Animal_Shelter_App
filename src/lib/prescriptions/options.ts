@@ -1,22 +1,18 @@
 import type { createClient } from "@/lib/supabase/server";
-import type { FrequencySchedule } from "@/lib/prescriptions/frequency";
 import { loadLinkableVisits, type LinkableVisit } from "@/lib/clinics/linkable";
 import type { Locale } from "@/lib/i18n/locales";
 import { localLabel } from "@/lib/translations/labels";
 
 export type MedicationOption = { id: string; name: string; dose_unit: string };
-export type FrequencyOption = FrequencySchedule & { id: string; label: string };
 export type ClinicVisitOption = LinkableVisit;
 /** One of the medication rounds (0137), in the order the form shows them. */
 export type RoundOption = { id: string; key: string; name: string };
-/** The rounds each frequency ticks by default (frequency_rounds), as round ids. */
-export type FrequencyRoundDefaults = Record<string, string[]>;
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 /**
- * The three pick-lists the prescription form offers, for the add and edit
- * pages alike: every medication and frequency, and the resident's own clinic
+ * The pick-lists the prescription form offers, for the add and edit
+ * pages alike: every medication, the rounds, and the resident's own clinic
  * visits (newest first) to link the prescription to — only those on or
  * before today, since a prescription on a visit that hasn't happened is a
  * mistake or a plan (0107 refuses it). `keepVisitId` is the visit an edited
@@ -26,21 +22,16 @@ type Supabase = Awaited<ReturnType<typeof createClient>>;
 export async function loadPrescriptionOptions(
   supabase: Supabase,
   residentId: string,
-  /** Medicine and frequency names come back in this language where they have one (0166). */
+  /** Medicine and round names come back in this language where they have one (0166). */
   locale: Locale,
   keepVisitId: string | null = null,
 ) {
-  const [medications, frequencies, linkable, roundRows, defaultRows] = await Promise.all([
+  const [medications, linkable, roundRows] = await Promise.all([
     supabase
       .from("picker_medications")
       .select("id, name, name_th, dose_unit")
       .order("name")
       .returns<(MedicationOption & { name_th: string | null })[]>(),
-    supabase
-      .from("frequency")
-      .select("id, label, label_th, doses_per_day, interval_count, interval_unit")
-      .order("label")
-      .returns<(FrequencyOption & { label_th: string | null })[]>(),
     loadLinkableVisits(supabase, residentId, { notInFuture: true, keep: keepVisitId }),
     supabase
       .from("rounds")
@@ -48,20 +39,12 @@ export async function loadPrescriptionOptions(
       .eq("for_medication", true)
       .order("sort_order")
       .returns<{ id: string; key: string; name: string; name_th: string }[]>(),
-    supabase
-      .from("frequency_rounds")
-      .select("frequency_id, round_id")
-      .returns<{ frequency_id: string; round_id: string }[]>(),
   ]);
   const rounds: RoundOption[] = (roundRows.data ?? []).map((r) => ({
     id: r.id,
     key: r.key,
     name: localLabel(locale, r.name, r.name_th),
   }));
-  const frequencyRounds: FrequencyRoundDefaults = {};
-  for (const row of defaultRows.data ?? []) {
-    (frequencyRounds[row.frequency_id] ??= []).push(row.round_id);
-  }
   // Same { data, error } shape as the other two, for the pages' error list.
   const clinicVisits = {
     data: linkable.visits,
@@ -72,14 +55,8 @@ export async function loadPrescriptionOptions(
       ...medications,
       data: medications.data?.map(({ name_th, ...m }) => ({ ...m, name: localLabel(locale, m.name, name_th) })) ?? null,
     },
-    frequencies: {
-      ...frequencies,
-      data:
-        frequencies.data?.map(({ label_th, ...f }) => ({ ...f, label: localLabel(locale, f.label, label_th) })) ?? null,
-    },
     clinicVisits,
     rounds,
-    frequencyRounds,
-    roundsError: roundRows.error?.message ?? defaultRows.error?.message ?? null,
+    roundsError: roundRows.error?.message ?? null,
   };
 }

@@ -2,17 +2,17 @@ import type { createClient } from "@/lib/supabase/server";
 import { todayIso } from "@/lib/format";
 import { loadPlaceOrder } from "@/lib/enclosures/order";
 import { doseDueState, type DueSchedule } from "./due";
+import { SCHEDULE_COLUMNS } from "@/lib/prescriptions/schedule";
 import { ROUND_KEYS, type RoundKey } from "@/lib/rounds/suggest";
 import type { Locale } from "@/lib/i18n/locales";
 import { localLabel } from "@/lib/translations/labels";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
-type PrescriptionRow = {
+type PrescriptionRow = DueSchedule & {
   id: string;
   resident_id: string;
   medication_id: string;
-  frequency_id: string | null;
   dose_quantity: number | string | null;
   start_date: string;
   end_date: string | null;
@@ -20,7 +20,6 @@ type PrescriptionRow = {
 };
 
 type MedicationRow = { id: string; name: string; name_th: string | null; dose_unit: string; label_drive_file_id: string | null };
-type FrequencyRow = DueSchedule & { id: string; label: string; label_th: string | null };
 
 /** A row of `medication_list_residents` (0136): who a resident is and where it lives. */
 type PlacementRow = {
@@ -52,13 +51,12 @@ export type ListedMedication = {
   rounds: RoundKey[];
   name: string;
   doseUnit: string;
-  /** Null when the prescription has no amount recorded. */
+  /** The amount for the round being shown (its own, else the prescription's); null when none is recorded. */
   quantity: number | null;
-  /** The schedule as stored, for the "how often" wording. */
-  schedule: DueSchedule | null;
-  /** The frequency's own label, the fallback when there is no schedule. */
-  frequencyLabel: string | null;
-  /** The prescription's free-text note: where an extra dose outside the three rounds is written. */
+  /** The days as stored, for the "how often" wording; the start date resolves a weekday or day left unset. */
+  schedule: DueSchedule;
+  startDate: string;
+  /** The prescription's free-text note: where an extra dose outside the four rounds is written. */
   notes: string | null;
   labelFileId: string | null;
   /** The course ends today, so this is the last dose — worth saying. */
@@ -112,10 +110,10 @@ const natural = new Intl.Collator("en", { numeric: true, sensitivity: "base" });
  * tablet is on the list on its day only. As-needed prescriptions have no day
  * to fall on and stay on the list.
  *
- * Reads three views and two lists, never the tables behind them, so a login that holds only
+ * Reads three views and a few lists, never the tables behind them, so a login that holds only
  * medical.prescriptions Read (the Head of Medical) gets exactly what the list shows and no price,
- * stock level, breed, bio or note (0136; decisions/2026-10-04-medical-role.md). Prescriptions and
- * frequency are read as tables, under their own policies; medicine and resident come through
+ * stock level, breed, bio or note (0136; decisions/2026-10-04-medical-role.md). Prescriptions
+ * are read as a table, under their own policies; medicine and resident come through
  * `medication_list_medications` and `medication_list_residents`.
  *
  * Read-only by construction: nothing here, or on the page, writes.
@@ -128,10 +126,10 @@ export async function loadMedicationList(
 ): Promise<MedicationList> {
   const today = todayIso();
 
-  const [prescriptions, medications, frequencies, placements, roundRows, order] = await Promise.all([
+  const [prescriptions, medications, placements, roundRows, order] = await Promise.all([
     supabase
       .from("prescriptions")
-      .select("id, resident_id, medication_id, frequency_id, dose_quantity, start_date, end_date, notes")
+      .select(`id, resident_id, medication_id, dose_quantity, start_date, end_date, notes, ${SCHEDULE_COLUMNS}`)
       .is("archived_at", null)
       .lte("start_date", today)
       .or(`end_date.is.null,end_date.gte.${today}`)
@@ -141,10 +139,6 @@ export async function loadMedicationList(
       .select("id, name, dose_unit, label_drive_file_id, name_th")
       .returns<MedicationRow[]>(),
     supabase
-      .from("frequency")
-      .select("id, label, label_th, doses_per_day, interval_count, interval_unit")
-      .returns<FrequencyRow[]>(),
-    supabase
       .from("medication_list_residents")
       .select(
         "id, name, thai_name, profile_photo_drive_file_id, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th, zone_colour",
@@ -153,8 +147,14 @@ export async function loadMedicationList(
     // Read as the rounds table and its join table (0137/0138): visible exactly when the prescription is.
     supabase
       .from("prescription_rounds")
-      .select("prescription_id, rounds(key)")
-      .returns<{ prescription_id: string; rounds: { key: string } | { key: string }[] | null }[]>(),
+      .select("prescription_id, dose_quantity, rounds(key)")
+      .returns<
+        {
+          prescription_id: string;
+          dose_quantity: number | string | null;
+          rounds: { key: string } | { key: string }[] | null;
+        }[]
+      >(),
     // The shelter's order of zones and enclosures (Settings), for the groups below.
     loadPlaceOrder(supabase),
   ]);
@@ -162,40 +162,41 @@ export async function loadMedicationList(
   const error =
     prescriptions.error?.message ??
     medications.error?.message ??
-    frequencies.error?.message ??
     placements.error?.message ??
     roundRows.error?.message ??
     null;
   if (error) return { today, round, zones: [], apart: [], error };
 
-  const roundsOf = new Map<string, Set<string>>();
+  // The rounds each prescription is given in, with the amount ticked for each (null = the prescription's own).
+  const roundsOf = new Map<string, Map<string, number | null>>();
   for (const row of roundRows.data ?? []) {
     const joined = Array.isArray(row.rounds) ? row.rounds : row.rounds ? [row.rounds] : [];
-    const set = roundsOf.get(row.prescription_id) ?? new Set<string>();
-    for (const j of joined) set.add(j.key);
-    roundsOf.set(row.prescription_id, set);
+    const map = roundsOf.get(row.prescription_id) ?? new Map<string, number | null>();
+    const amount = row.dose_quantity == null ? null : Number(row.dose_quantity);
+    for (const j of joined) map.set(j.key, amount != null && Number.isFinite(amount) ? amount : null);
+    roundsOf.set(row.prescription_id, map);
   }
 
   const placeOf = new Map((placements.data ?? []).map((p) => [p.id, p]));
   const medicationOf = new Map((medications.data ?? []).map((m) => [m.id, m]));
-  const frequencyOf = new Map((frequencies.data ?? []).map((f) => [f.id, f]));
 
   // Group the prescriptions that fall today by resident.
   const byResident = new Map<string, ListedResident>();
   for (const rx of prescriptions.data ?? []) {
     const medication = medicationOf.get(rx.medication_id);
-    const frequency = rx.frequency_id ? (frequencyOf.get(rx.frequency_id) ?? null) : null;
     const who = placeOf.get(rx.resident_id);
     if (!medication || !who) continue;
-    const due = doseDueState(rx.start_date, frequency, today);
+    const due = doseDueState(rx.start_date, rx, today);
     if (due === "notToday") continue;
-    const held = roundsOf.get(rx.id) ?? new Set<string>();
+    const held = roundsOf.get(rx.id) ?? new Map<string, number | null>();
     const rounds = ROUND_KEYS.filter((k) => held.has(k));
     // As needed has no round by design; anything else with none is flagged, not hidden.
     const place: MedicationPlace =
       due === "asNeeded" ? "asNeeded" : rounds.length === 0 ? "noRound" : "round";
     if (place === "round" && !rounds.includes(round)) continue;
-    const quantity = rx.dose_quantity == null ? null : Number(rx.dose_quantity);
+    // The amount for the round being shown: its own, else the prescription's (as the forecast does, 0284).
+    const own = held.get(round) ?? null;
+    const quantity = own ?? (rx.dose_quantity == null ? null : Number(rx.dose_quantity));
     const resident =
       byResident.get(rx.resident_id) ??
       {
@@ -213,8 +214,8 @@ export async function loadMedicationList(
       name: localLabel(locale, medication.name, medication.name_th),
       doseUnit: medication.dose_unit,
       quantity: quantity != null && Number.isFinite(quantity) ? quantity : null,
-      schedule: frequency,
-      frequencyLabel: frequency ? localLabel(locale, frequency.label, frequency.label_th) : null,
+      schedule: rx,
+      startDate: rx.start_date,
       notes: rx.notes,
       labelFileId: medication.label_drive_file_id,
       lastDay: rx.end_date === today,
