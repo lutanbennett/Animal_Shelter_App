@@ -7,6 +7,7 @@ import { staffLoginHref } from "@/lib/site-hosts";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { createClient } from "@/lib/supabase/server";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
+import { hasPublicShopLinks } from "@/lib/shop/shop-links";
 import { hasLiveAppeals } from "@/lib/appeals/public";
 import { preferredChannels, talkChannels } from "@/lib/site/channels";
 import { loadSiteContent, socialLinks, visitingHoursLines } from "@/lib/site/content";
@@ -75,11 +76,13 @@ export async function PublicHeader({
       data: { user },
     },
     showFriends,
+    showShop,
     liveAppeals,
     site,
   ] = await Promise.all([
     supabase.auth.getUser(),
     hasPublicFriends(),
+    hasPublicShopLinks(supabase),
     hasLiveAppeals(),
     loadSiteContent(supabase),
   ]);
@@ -134,6 +137,14 @@ export async function PublicHeader({
       entry.links.push(
         page.key === "donate" ? { ...pageLink(page, page.menu?.navKey), current: false } : pageLink(page),
       );
+    }
+  }
+  // Shop for the shelter (0285) is not on the page list (the database's hide switch has no key for it),
+  // so it joins Get involved here, once it has an entry to show and only while that section is showing.
+  if (showShop) {
+    const group = allEntries.find((e) => e.kind === "group" && e.key === "get-involved");
+    if (group?.kind === "group") {
+      group.links.push({ key: "shop", href: "/shop", label: t.shop.navLabel, current: false });
     }
   }
   // A group with nothing in it is left out rather than shown as an empty menu.

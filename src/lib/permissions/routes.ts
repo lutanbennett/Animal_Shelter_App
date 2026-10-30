@@ -13,7 +13,7 @@
  * rest, and Settings and Management landing pages with their areas.
  */
 
-import { Activity, Scissors, BadgeCheck, Camera, Laugh, ClipboardCheck, HandHeart, Coins, Globe, Grid3x3, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
+import { Activity, Scissors, BadgeCheck, Camera, Laugh, ClipboardCheck, HandHeart, Coins, Globe, Grid3x3, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingBag, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
 import { CONTACT_ICONS, ENCLOSURE_ICONS, NAV_ICONS, SECTION_ICONS, CLINIC_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "./can";
@@ -372,6 +372,17 @@ export const ROUTES: readonly RouteEntry[] = [
     device: "any",
     menu: false,
     // The website is the Director's job, by day on her phone as Management (Lutan, 2026-10-08).
+    section: "management",
+  },
+  {
+    path: "/admin/shop",
+    activity: "shop.manage",
+    // Read opens the page (0285); every control on it asks edit.
+    level: "read",
+    icon: ShoppingBag,
+    label: (t) => t.nav.shopLinks,
+    device: "any",
+    menu: false,
     section: "management",
   },
   {
