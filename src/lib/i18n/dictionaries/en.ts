@@ -214,7 +214,6 @@ const en = {
       recordVetCare: "Record vet care",
       recordMicrochip: "Record a microchip",
       adoptionNews: "Adoption news",
-      addWhileRecording: "Add to lists while recording",
     },
   },
 
@@ -904,7 +903,6 @@ const en = {
           record_vet_care: "A vet records visits, procedures, blood tests, prescriptions, immunizations and diets. It does not archive records, send to hospital or book visits.",
           record_microchip: "Record or correct a resident's microchip number, and nothing else about the resident.",
           adoption_news: "Record news that an adopter sends about an adopted resident.",
-          add_while_recording: "Add a missing medication, frequency or procedure type from inside a form, so a record is not held up.",
           donations_receipts: "Issue donation receipts, choosing the resident or project a gift is for.",
           bills: "Take in and file the shelter's bills, and see the maintenance jobs they belong to.",
           website: "Change what the public website says.",
