@@ -87,7 +87,7 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
     // maintenance.progress and projects.publish out, and 0187 put a trigger on the four medical tables so
     // archiving needs medical.archive. What is left is not a policy that can be narrowed:
     // stock_receipts is read by the purchasing job by design (0143, check-2ic-role.mjs); and a medication
-    // can be added through stock.medications Edit as well as add_while_recording. Not shown: nobody using
+    // can be added through stock.medications Edit (the add_while_recording card that also carried it was retired, 0287). Not shown: nobody using
     // the app can tell. See docs/decisions/2026-10-11-perm-policy-cleanup.md.
     id: "databaseWider",
     boxes: {

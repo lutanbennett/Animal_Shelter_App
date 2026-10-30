@@ -52,8 +52,7 @@ export type NewCardKey =
   | "view_cashflow"
   | "record_vet_care"
   | "record_microchip"
-  | "adoption_news"
-  | "add_while_recording";
+  | "adoption_news";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -318,9 +317,6 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   },
   record_microchip: { includes: ["view_residents"], bundle: [{ activity: "resident.microchip" }], opens: "/residents" },
   adoption_news: { includes: ["view_residents"], bundle: [{ activity: "resident.adoption_news", level: "edit" }], opens: "/residents" },
-  // Its own card, not part of record_vet_care: the cell is asked by the medication, frequency and procedure-type insert policies (0148), which
-  // anyone recording may need, so it must be givable without the six medical edits. Includes view_medical so it sits where the forms are.
-  add_while_recording: { includes: ["view_medical"], bundle: [{ activity: "reference.add_while_recording" }], opens: "/residents" },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */
@@ -356,7 +352,6 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   record_vet_care: (t) => t.appHome.cards.recordVetCare,
   record_microchip: (t) => t.appHome.cards.recordMicrochip,
   adoption_news: (t) => t.appHome.cards.adoptionNews,
-  add_while_recording: (t) => t.appHome.cards.addWhileRecording,
 };
 
 export const CARDS: Record<CardKey, Card> = {
