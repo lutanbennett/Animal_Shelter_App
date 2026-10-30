@@ -109,7 +109,7 @@
 - [ ] Migration and reading code in one PR? — n/a: no migration here; 0282 must be applied with this code
 - [ ] `--env production --dry-run` clean — deferred: release manager
 - [ ] Production backup — n/a: no migration here
-- [ ] Apply plan stated — 0282 with this release
+- [x] Apply plan stated — 0282 with this release
 
 ### Rollback
 
