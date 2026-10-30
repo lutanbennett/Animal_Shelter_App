@@ -1,4 +1,4 @@
-// 0193 (can_see_drive_file) proved equivalent to the seven selects the photo route used to run, on dev, keeping nothing.
+// 0193 (can_see_drive_file) proved equivalent to the selects (seven, plus the four 0286 folded in) the photo route used to run, on dev, keeping nothing.
 //
 //   node scripts/check-can-see-drive-file.mjs
 //
@@ -18,6 +18,9 @@ const BRANCHES = [
   ["attachments", "drive_file_id"], ["project_photos", "drive_file_id"], ["maintenance_photos", "drive_file_id"],
   ["community_outing_photos", "drive_file_id"], ["shelter_friends", "logo_drive_file_id"],
   ["medication", "label_drive_file_id"], ["stock_medications", "label_drive_file_id"],
+  // 0286 folded these in; the routes used to ask each as a separate select (memes, receipts, the two deceased-resident files)
+  ["memes", "drive_file_id"], ["donation_receipts", "drive_file_id"],
+  ["residents", "deceased_summary_drive_file_id"], ["residents", "deceased_index_drive_file_id"],
 ];
 const oldBody = BRANCHES.map(([t, c]) => `begin if exists (select 1 from ${t} where ${c} = p_id) then return true; end if; exception when insufficient_privilege then null; end;`).join(" ");
 const sql = `
@@ -27,7 +30,9 @@ insert into ids select distinct drive_file_id from (
   select drive_file_id from attachments union all select drive_file_id from project_photos
   union all select drive_file_id from maintenance_photos union all select drive_file_id from community_outing_photos
   union all select logo_drive_file_id from shelter_friends union all select label_drive_file_id from medication
-  union all select label_drive_file_id from stock_medications) s where drive_file_id is not null;
+  union all select label_drive_file_id from stock_medications
+  union all select drive_file_id from memes union all select drive_file_id from donation_receipts
+  union all select deceased_summary_drive_file_id from residents union all select deceased_index_drive_file_id from residents) s where drive_file_id is not null;
 insert into ids values ('no-such-file-id-0000'), ('');
 grant all on ids to anon, authenticated, service_role;
 create temp table r (n serial, who text, total int, old_yes int, new_yes int, mismatches int);
