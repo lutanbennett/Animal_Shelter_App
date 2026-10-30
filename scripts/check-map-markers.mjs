@@ -11,6 +11,7 @@
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { createClient } from "@supabase/supabase-js";
+import { exitWith } from "./lib/exit.mjs";
 
 const root = process.cwd();
 const geo = await import(pathToFileURL(join(root, "src/lib/facility-map/geometry.ts")).href);
@@ -88,4 +89,4 @@ for (const plan of plans.filter((p) => p.kind === "zone")) {
 }
 
 console.log(`${checked} markers checked, ${failures.length} failures`);
-process.exit(failures.length ? 1 : 0);
+await exitWith(failures.length ? 1 : 0);

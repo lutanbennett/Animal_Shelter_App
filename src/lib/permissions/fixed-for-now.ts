@@ -80,39 +80,10 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
     measured: true,
   },
   {
-    // §5 "how much of a resident": these roles used to read resident_who_and_where (0134), not residents, because a
-    // role column (0179, 0180) narrowed them below their own card. CLOSED BY 0259: no role column decides access, so
-    // the box's Read is now exactly what it says. Each of these roles holds view_residents, which grants
-    // resident.record at read, and reads the resident record itself.
-    id: "whoAndWhere",
-    boxes: {
-      volunteer: ["resident.record"],
-      head_of_maintenance: ["resident.record"],
-      head_of_medical: ["resident.record"],
-      second_in_command: ["resident.record"],
-    },
-    shown: true,
-    stays: true,
-    closedBy: null,
-    measured: true,
-  },
-  {
-    // §5 "how much of a contact": 0155 set the 2IC to name_phone, so /contacts reads volunteer_contacts (id,
-    // name, phone) for her, and the contacts table itself refuses her (sees_all_contacts() also asks the
-    // floor). The box says Yes and she does browse the book, but sees name and phone only. Meant to stay:
-    // it is her scope.
-    id: "nameAndPhone",
-    boxes: { second_in_command: ["contacts.browse"] },
-    shown: true,
-    stays: true,
-    closedBy: null,
-    measured: true,
-  },
-  {
     // SHARED ON PURPOSE (Lutan, 2026-10-19: keep the shared read). check-who-does-what.mjs proves each box
     // by the probe's `sharedWith` and reports SHARED, not "cannot be taken away". Older note, same boxes:
     // The screens ask these boxes; the database is looser because another box the role holds opens the same
-    // thing. perm-policy-cleanup (0182) narrowed contacts, friends, clinics and doctors, and split visit.book,
+    // thing. photos.resident_add is proved shared with photos.shelter_add (2026-10-30). perm-policy-cleanup (0182) narrowed contacts, friends, clinics and doctors, and split visit.book,
     // maintenance.progress and projects.publish out, and 0187 put a trigger on the four medical tables so
     // archiving needs medical.archive. What is left is not a policy that can be narrowed:
     // stock_receipts is read by the purchasing job by design (0143, check-2ic-role.mjs); and a medication
@@ -120,11 +91,9 @@ export const FIXED_FOR_NOW: readonly FixedEntry[] = [
     // the app can tell. See docs/decisions/2026-10-11-perm-policy-cleanup.md.
     id: "databaseWider",
     boxes: {
-      management: [
-        "stock.delivery",
-        "reference.add_while_recording",
-      ],
-      second_in_command: ["stock.delivery"],
+      head_of_medical: ["photos.resident_add"],
+      management: ["photos.resident_add"],
+      second_in_command: ["stock.delivery", "photos.resident_add"],
     },
     shown: false,
     stays: true,

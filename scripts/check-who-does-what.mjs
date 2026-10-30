@@ -205,9 +205,10 @@ begin
   insert into immunization_records (resident_id, immunization_type_id, date_administered) select id, (select id from immunization_types limit 1), current_date from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
   insert into resident_diets (resident_id, diet_id, start_date) select id, ${lit(F.DIET)}, current_date - 1 from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
   insert into adoption_updates (resident_id, received_on, channel) select id, current_date, 'visit' from residents where id in (${lit(F.R_IN)}, ${lit(F.R_OUT)});
+  -- A non-Medical sub folder: set_resident_profile_photo refuses a Medical photo (P0001), which made Admin, the control, fail the photos.resident_manage edit probe.
   insert into attachments (id, owner_type, owner_id, drive_file_id, file_name, sub_folder) values
-    (${lit(F.ATT_IN)}, 'resident', ${lit(F.R_IN)}, 'harness-${F.R_IN}', 'x.jpg', 'Medical'),
-    (${lit(F.ATT_OUT)}, 'resident', ${lit(F.R_OUT)}, 'harness-${F.R_OUT}', 'x.jpg', 'Medical');
+    (${lit(F.ATT_IN)}, 'resident', ${lit(F.R_IN)}, 'harness-${F.R_IN}', 'x.jpg', 'Photos'),
+    (${lit(F.ATT_OUT)}, 'resident', ${lit(F.R_OUT)}, 'harness-${F.R_OUT}', 'x.jpg', 'Photos');
 end $setup$;
 create temp table harness_out (k text, res jsonb);
 grant all on harness_out to authenticated, service_role;

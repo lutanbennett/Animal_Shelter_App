@@ -9,6 +9,7 @@
 // calculation: 50x1x7 + 50x1.5x7 + 50x2.5x0.75x7 = 350 + 525 + 656.25 = 1531.25 g.
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { exitWith } from "./lib/exit.mjs";
 
 const { loadEnv, projectRef } = await import(pathToFileURL(join(process.cwd(), "scripts/lib/env.mjs")).href);
 const env = loadEnv("test");
@@ -63,4 +64,4 @@ let fails = 0;
 const check = (ok, what) => { console.log(`${ok ? "ok   " : "FAIL "} ${what}`); if (!ok) fails++; };
 check(get("sizes_found") === "true", "dev has a Small, a Medium and a further resident, none Deceased, Adopted or Fostered (diet_forecast skips those)");
 check(Number(get("delta")) === 1531.25, `forecast delta ${get("delta")} g = hand calculation 1531.25 g`);
-process.exit(fails ? 1 : 0);
+await exitWith(fails ? 1 : 0);
