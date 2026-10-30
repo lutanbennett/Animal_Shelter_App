@@ -17,6 +17,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { exitWith } from "./lib/exit.mjs";
 
 const { loadEnv, projectRef } = await import(pathToFileURL(join(process.cwd(), "scripts/lib/env.mjs")).href);
 const env = loadEnv("test");
@@ -187,5 +188,5 @@ check("audit_rows", "1", "one audit row for the switch change, none for a websit
 check("audit_actor", "ok", "the audit row names the Admin");
 check("audit_shape", "ok", "the audit row carries only the two switches, before and after");
 check("service_ok", "ok", "a script with no login is let through");
-if (fails) { console.log(`\n${fails} FAILED`); process.exit(1); }
-console.log("\nall ok");
+if (fails) { console.log(`\n${fails} FAILED`); await exitWith(1); }
+else console.log("\nall ok");

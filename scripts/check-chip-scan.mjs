@@ -25,6 +25,7 @@ import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { giveCards } from "./lib/user-role.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 // A login holding exactly the residents card (it includes view_residents; the chip offer needs resident.register). Card-shaped; the retired staff role is gone.
 let cleanupCards = async () => {};
@@ -145,6 +146,7 @@ try {
 
 if (failures.length) {
   console.error(`\n${failures.length} expectation(s) failed.`);
-  process.exit(1);
+  await exitWith(1);
+} else {
+  console.log("\nAll expectations held.");
 }
-console.log("\nAll expectations held.");

@@ -12,6 +12,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { exitWith } from "./lib/exit.mjs";
 
 const { loadEnv, projectRef } = await import(pathToFileURL(join(process.cwd(), "scripts/lib/env.mjs")).href);
 const env = loadEnv("test");
@@ -83,24 +84,26 @@ const r = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/quer
 const body = await r.json();
 if (!r.ok || !Array.isArray(body)) {
   console.error(JSON.stringify(body, null, 1));
-  process.exit(1);
+  await exitWith(1);
+} else {
+  const got = Object.fromEntries(body.map((x) => [x.k, x.v]));
+  for (const [k, v] of Object.entries(got)) console.log(`${k}: ${v}`);
+  const want = {
+    diet_forecast_differences: "0",
+    stock_diet_forecast_differences: "0",
+    picker_diet_types_differences: "0",
+    stock_diet_types_differences: "0",
+    triggers_left: "0",
+    functions_left: "0",
+    columns_left: "0",
+    role_home_tiles_left: "0",
+    view_grants_ok: "true",
+  };
+  const bad = Object.entries(want).filter(([k, v]) => got[k] !== v);
+  if (bad.length) {
+    console.error("FAILED:", bad.map(([k]) => k).join(", "));
+    await exitWith(1);
+  } else {
+    console.log("ok");
+  }
 }
-const got = Object.fromEntries(body.map((x) => [x.k, x.v]));
-for (const [k, v] of Object.entries(got)) console.log(`${k}: ${v}`);
-const want = {
-  diet_forecast_differences: "0",
-  stock_diet_forecast_differences: "0",
-  picker_diet_types_differences: "0",
-  stock_diet_types_differences: "0",
-  triggers_left: "0",
-  functions_left: "0",
-  columns_left: "0",
-  role_home_tiles_left: "0",
-  view_grants_ok: "true",
-};
-const bad = Object.entries(want).filter(([k, v]) => got[k] !== v);
-if (bad.length) {
-  console.error("FAILED:", bad.map(([k]) => k).join(", "));
-  process.exit(1);
-}
-console.log("ok");

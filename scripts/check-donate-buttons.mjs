@@ -19,6 +19,7 @@ import { pathToFileURL } from "node:url";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { giveRole } from "./lib/user-role.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -144,6 +145,7 @@ try {
 
 if (failures.length) {
   console.error(`\n${failures.length} expectation(s) failed`);
-  process.exit(1);
+  await exitWith(1);
+} else {
+  console.log("\nall expectations held");
 }
-console.log("\nall expectations held");

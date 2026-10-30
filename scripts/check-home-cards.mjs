@@ -17,6 +17,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { register } from "node:module";
 import { createHash } from "node:crypto";
+import { exitWith } from "./lib/exit.mjs";
 
 const root = process.cwd();
 const src = pathToFileURL(join(root, "src") + "/").href;
@@ -121,5 +122,5 @@ for (const role of roles) {
     else ok(`${role.key} (${lang}): ${tiles.length} tile(s) = its ${held.length} card(s), in order`);
   }
 }
-if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
-console.log("\nall ok");
+if (failed) { console.log(`\n${failed} failed`); await exitWith(1); }
+else console.log("\nall ok");

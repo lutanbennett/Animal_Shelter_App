@@ -7,6 +7,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { exitWith } from "./lib/exit.mjs";
 
 const { loadEnv, projectRef } = await import(pathToFileURL(join(process.cwd(), "scripts/lib/env.mjs")).href);
 const env = loadEnv("test");
@@ -129,5 +130,5 @@ check("volunteer_value", "{}", "the value did not stick");
 for (const k of ["page:home", "page:privacy", "page:r", "page:e", "page:fostr", "foster"]) check(`refused_${k}`, "refused", `${k} refused by the database`);
 check("anon_view", "{page:desexing}", "signed-out read through public_site_content works");
 check("anon_base_rows", "denied", "signed-out read of site_content itself is denied");
-if (fails) { console.log(`\n${fails} FAILED`); process.exit(1); }
-console.log("\nall ok");
+if (fails) { console.log(`\n${fails} FAILED`); await exitWith(1); }
+else console.log("\nall ok");
