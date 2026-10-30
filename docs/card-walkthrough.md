@@ -330,10 +330,10 @@ Result: pending
 
 ## Shop for the shelter (`manage_shop_page`)
 
-- Opens: `/admin/website`
+- Opens: `/admin/shop`
 
 0. Sign in with `--cards manage_shop_page`. The home screen shows the **Shop for the shelter** tile (or the tile of a card that includes it).
-1. Open `/admin/website`: it loads.
+1. Open `/admin/shop`: it loads.
 2. **TODO:** Manage the Shop for the shelter page. Do it on a disposable record named `walk-manage_shop_page`. Question: where should this write show afterwards (which page, which row)?
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
