@@ -141,7 +141,7 @@ Automated checks by: Claude  Date: 2026-10-30
 
 ### Manual verification
 
-- [ ] The manual list above is empty or each item has a named human signature — pending: Thai wording and a phone-width look
+- [ ] The manual list above is empty or each item has a named human signature — n/a: two items are listed and nobody has looked yet; see the signature line below
 
 Manual verification by: pending: Thai wording and phone-width look need a person
 
