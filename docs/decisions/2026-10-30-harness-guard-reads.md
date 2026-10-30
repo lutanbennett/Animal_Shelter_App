@@ -23,7 +23,7 @@ reason**. Scripts that do make a call were converted, in one of three shapes:
   `-dead-schema-drop`, `-appeals-schema`, `-community-dogs-schema`, `-donation-receipts-schema`, `-map-rooms`):
   `await exitWith(n);` then `else {` around the remainder. A module cannot `return` at top level.
 
-## The 14 converted, 11 left alone
+## The 16 converted, 8 left alone, 1 nothing to do
 
 | verdict | scripts |
 |---|---|
@@ -76,7 +76,7 @@ database, dev server on 3002. A red stays red with the same code.
 | medical-jobs-app | 1 | 1 | red before: 1 expectation fails, **undiagnosed, belongs to the later stream, left exactly as it is** |
 
 `check-access-requests-card` took over 60 s (two 61 s waits by design): noted, not characterised.
-The 11 left-alone scripts were not edited, so were not re-run.
+The 8 left-alone scripts were not edited, so were not re-run.
 
 Not touched: `scripts/lib/`, `src/`, any migration, `check-can-see-drive-file`, `check-shop-links`,
 `check-card-walkthrough`, `check-medication-list-due`, `check-who-does-what`.
