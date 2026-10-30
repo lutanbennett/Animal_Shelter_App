@@ -19,6 +19,7 @@
 // Comments are stripped before matching, exactly as check-hard-coded-security.mjs does for src/: the ratchet counts
 // CODE. An SQL comment recording that a column USED to be read is history, not a rule.
 import { loadEnv, parseEnvArg, projectRef } from "./lib/env.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const { name: envName } = parseEnvArg(process.argv.slice(2));
 const env = loadEnv(envName);
@@ -112,4 +113,4 @@ if (Number(admin_cells) !== 0) {
   console.log("ok   Admin holds no cards and no cells, as it must.");
 }
 
-process.exit(failed ? 1 : 0);
+await exitWith(failed ? 1 : 0);

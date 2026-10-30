@@ -6,6 +6,7 @@
 //   node scripts/check-restated-columns.mjs
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { exitWith } from "./lib/exit.mjs";
 import { pathToFileURL } from "node:url";
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
@@ -50,14 +51,18 @@ const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/qu
 const body = await res.json().catch(() => null);
 const msg = body?.message ?? JSON.stringify(body);
 const m = msg.match(/RESULT(\[[\s\S]*\])RESULT/);
-if (!m) { console.log(res.status, msg.slice(0, 2000)); process.exit(1); }
-const rows = JSON.parse(m[1]);
-let bad = 0;
-for (const x of rows) {
-  if (x.want.startsWith("see ")) { console.log(`info ${x.l}: ${x.got}`); continue; }
-  const ok = x.got === x.want;
-  if (!ok) bad++;
-  console.log(`${ok ? "ok  " : "FAIL"} ${x.l}: got ${x.got}${ok ? "" : ` want ${x.want}`}`);
+if (!m) {
+  console.log(res.status, msg.slice(0, 2000));
+  await exitWith(1);
+} else {
+  const rows = JSON.parse(m[1]);
+  let bad = 0;
+  for (const x of rows) {
+    if (x.want.startsWith("see ")) { console.log(`info ${x.l}: ${x.got}`); continue; }
+    const ok = x.got === x.want;
+    if (!ok) bad++;
+    console.log(`${ok ? "ok  " : "FAIL"} ${x.l}: got ${x.got}${ok ? "" : ` want ${x.want}`}`);
+  }
+  console.log(bad ? `${bad} FAILED` : "all held (rolled back, nothing kept)");
+  await exitWith(bad ? 1 : 0);
 }
-console.log(bad ? `${bad} FAILED` : "all held (rolled back, nothing kept)");
-process.exitCode = bad ? 1 : 0;

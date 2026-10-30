@@ -33,7 +33,7 @@ needs an open keep-alive socket, so the safe scripts that make no network call a
 | check-backup-encryption.mjs | 1 | safe (nothing runs after) | - | - |
 | check-backup-folder.mjs | 1 | safe (nothing runs after) | - | - |
 | check-backup-prune.mjs | 1 | safe (nothing runs after) | - | - |
-| check-can-see-drive-file.mjs | 1 | needs a guard | line 78, then `let bad = 0;` | not read: carved out to the can-see-drive-file stream |
+| check-can-see-drive-file.mjs | 1 | needs a guard | line 78, then `let bad = 0;` | swapped, rest wrapped in `else`; the final `process.exitCode` became `await exitWith` (exit 0 before and after) |
 | check-card-walkthrough.mjs | 1 | safe (nothing runs after) | - | - |
 | check-cards-count.mjs | 1 | safe (nothing runs after) | - | - |
 | check-chip-scan.mjs | 1 | needs a guard | line 148, then `console.log("\nAll expectations held.");` | swapped, `else` added |
@@ -64,41 +64,41 @@ needs an open keep-alive socket, so the safe scripts that make no network call a
 | check-migration-grants.mjs | 1 | needs a guard | line 439, then `console.log(`migration grants: ok (${files.length}` | left alone: no network call |
 | check-migration-numbers.mjs | 8 | needs a guard | line 51, then `const TAG = "migration numbers";` | left alone: no network; its exit 3 is the pre-commit hook's refusal contract (8 calls) |
 | check-multi-role-build.mjs | 1 | safe (nothing runs after) | - | - |
-| check-new-policy-role-names.mjs | 4 | needs a guard | line 43, then `const TAG = "new policy role names";` | - |
+| check-new-policy-role-names.mjs | 4 | needs a guard | line 43, then `const TAG = "new policy role names";` | left alone: no network call, so no libuv trap; a swap needs a rewrite for no gain (exits 2/0/1 are usage and verdicts) |
 | check-next-og.mjs | 1 | safe (nothing runs after) | - | - |
 | check-next-path.mjs | 1 | safe (nothing runs after) | - | - |
-| check-no-native-date-input.mjs | 1 | needs a guard | line 30, then `console.log("check-no-native-date-input: ok");` | - |
-| check-no-role-column-security.mjs | 2 | needs a guard | line 29, then `const COLUMNS = "scope_residents|scope_clinical|sc` | - |
-| check-offsite-chip.mjs | 1 | needs a guard | line 160, then `console.log("\nAll expectations held.");` | - |
-| check-phone-width.mjs | 3 | needs a guard | line 253, then `if (args.includes("--clean")) {` | - |
-| check-place-order-roles.mjs | 1 | needs a guard | line 159, then `console.log("\nall held");` | - |
-| check-prerequisites.mjs | 1 | needs a guard | line 33, then `console.log("\nOK: the prerequisite rules refuse a` | - |
-| check-production.mjs | 3 | needs a guard | line 18, then `const wanted = args[0];` | - |
+| check-no-native-date-input.mjs | 1 | needs a guard | line 30, then `console.log("check-no-native-date-input: ok");` | left alone: no network call, so no libuv trap; a swap needs a rewrite for no gain (the only code after the exit is the closing "ok" line) |
+| check-no-role-column-security.mjs | 2 | needs a guard | line 29, then `const COLUMNS = "scope_residents|scope_clinical|sc` | swapped: the final `process.exit` is the last statement after the fetch, now `await exitWith`; the exit-2 guard runs before any network call and stays (exit 0 before and after) |
+| check-offsite-chip.mjs | 1 | needs a guard | line 160, then `console.log("\nAll expectations held.");` | swapped, `else` added (exit 0 before and after) |
+| check-phone-width.mjs | 3 | needs a guard | line 253, then `if (args.includes("--clean")) {` | skipped on purpose: stream 7 (prescription-frequency-drop) edits it; still open for a later stream |
+| check-place-order-roles.mjs | 1 | needs a guard | line 159, then `console.log("\nall held");` | swapped, `else` added (exit 0 before and after) |
+| check-prerequisites.mjs | 1 | needs a guard | line 33, then `console.log("\nOK: the prerequisite rules refuse a` | left alone: no network call, so no libuv trap; a swap needs a rewrite for no gain |
+| check-production.mjs | 3 | needs a guard | line 18, then `const wanted = args[0];` | left alone: no network call, so no libuv trap; a swap needs a rewrite for no gain (it already finishes through `process.exitCode`; the exit 2/0 calls are usage) |
 | check-public-paths.mjs | 1 | safe (nothing runs after) | - | - |
 | check-public-view-owner.mjs | 1 | safe (nothing runs after) | - | - |
-| check-public-views.mjs | 1 | needs a guard | line 43, then `const headers = { apikey: key, Authorization: `Bea` | - |
+| check-public-views.mjs | 1 | needs a guard | line 43, then `const headers = { apikey: key, Authorization: `Bea` | left alone: the one `process.exit(2)` is the missing-env guard before any network call; it already ends through `exitWith` |
 | check-release-guards.mjs | 1 | safe (nothing runs after) | - | - |
-| check-resident-id-search.mjs | 1 | needs a guard | line 105, then `console.log("\nAll expectations held.");` | - |
-| check-resident-sections.mjs | 1 | needs a guard | line 57, then `const root = process.cwd();` | - |
-| check-residents-export.mjs | 2 | needs a guard | line 44, then `if (args.includes("--clean")) {` | - |
-| check-residents-select-all.mjs | 2 | needs a guard | line 43, then `if (args.includes("--clean")) {` | - |
-| check-residents-status-chips.mjs | 1 | needs a guard | line 194, then `console.log("\nAll expectations held.");` | - |
-| check-restated-columns.mjs | 1 | needs a guard | line 53, then `const rows = JSON.parse(m[1]);` | - |
-| check-roles-columns.mjs | 2 | needs a guard | line 98, then `const re = new RegExp(`\\.from\\(\\s*["'\`]${table` | - |
-| check-runtime-config.mjs | 1 | needs a guard | line 32, then `console.log(`check-runtime-config: ${names.length}` | - |
-| check-schema-drift.mjs | 5 | needs a guard | line 36, then `if (againstRef && !/^[a-z0-9]{20}$/.test(againstRe` | - |
-| check-script-integrity.mjs | 1 | needs a guard | line 93, then `console.log("script-integrity: ok");` | - |
-| check-security-role-picker.mjs | 2 | needs a guard | line 43, then `const base = (args.find((a) => /^https?:/.test(a))` | - |
-| check-shelter-dates.mjs | 1 | needs a guard | line 163, then `console.log("\nAll checks passed.");` | - |
+| check-resident-id-search.mjs | 1 | needs a guard | line 105, then `console.log("\nAll expectations held.");` | swapped, `else` added (exit 0 before and after) |
+| check-resident-sections.mjs | 1 | needs a guard | line 57, then `const root = process.cwd();` | left alone: the exit is the `--compare` branch, which only reads two files, and it must stop the capture code below |
+| check-residents-export.mjs | 2 | needs a guard | line 44, then `if (args.includes("--clean")) {` | left alone: exits are the usage `bail` (nothing answering, no socket open) and `--clean`, which measured exit 0 on dev; it already ends through `exitWith` |
+| check-residents-select-all.mjs | 2 | needs a guard | line 43, then `if (args.includes("--clean")) {` | left alone: same reason as check-residents-export; `--clean` measured exit 0 |
+| check-residents-status-chips.mjs | 1 | needs a guard | line 194, then `console.log("\nAll expectations held.");` | swapped, `else` added (exit 0 before and after) |
+| check-restated-columns.mjs | 1 | needs a guard | line 53, then `const rows = JSON.parse(m[1]);` | swapped, rest wrapped in `else`; the final `process.exitCode` became `await exitWith` (exit 0 before and after) |
+| check-roles-columns.mjs | 2 | needs a guard | line 98, then `const re = new RegExp(`\\.from\\(\\s*["'\`]${table` | left alone: no network call, so no libuv trap; a swap needs a rewrite for no gain |
+| check-runtime-config.mjs | 1 | needs a guard | line 32, then `console.log(`check-runtime-config: ${names.length}` | left alone: no network call, so no libuv trap; a swap needs a rewrite for no gain |
+| check-schema-drift.mjs | 5 | needs a guard | line 36, then `if (againstRef && !/^[a-z0-9]{20}$/.test(againstRe` | swapped, `else` added; the early exit-2 argument guards run before any fetch and stay (exit 2 before and after with no production env file; the exit-1 path was not exercised) |
+| check-script-integrity.mjs | 1 | needs a guard | line 93, then `console.log("script-integrity: ok");` | left alone: no network call, so no libuv trap; a swap needs a rewrite for no gain |
+| check-security-role-picker.mjs | 2 | needs a guard | line 43, then `const base = (args.find((a) => /^https?:/.test(a))` | left alone: exit 2 follows a refused connection (no socket open) or runs before any network call; it already ends through `exitWith` |
+| check-shelter-dates.mjs | 1 | needs a guard | line 163, then `console.log("\nAll checks passed.");` | skipped on purpose: stream 7 owns it by name; still open for a later stream |
 | check-site-hosts.mjs | 1 | safe (nothing runs after) | - | - |
-| check-site-links.mjs | 1 | needs a guard | line 46, then `console.log("all ok");` | - |
-| check-test-plan.mjs | 5 | needs a guard | line 123, then `let changed = [];` | - |
+| check-site-links.mjs | 1 | needs a guard | line 46, then `console.log("all ok");` | left alone: no network call, so no libuv trap; a swap needs a rewrite for no gain |
+| check-test-plan.mjs | 5 | needs a guard | line 123, then `let changed = [];` | left alone: no network call, so no libuv trap; a swap needs a rewrite for no gain (it runs in CI and the pre-commit path) |
 | check-theme-contrast.mjs | 1 | safe (nothing runs after) | - | - |
 | check-translate-worker.mjs | 1 | safe (nothing runs after) | - | - |
 | check-units-schema.mjs | 1 | safe (nothing runs after) | - | - |
 | check-units.mjs | 1 | safe (nothing runs after) | - | - |
-| check-upcoming-visits-page.mjs | 1 | needs a guard | line 112, then `console.log("\nAll expectations held.");` | - |
-| check-worker-origin.mjs | 1 | needs a guard | line 219, then `console.log("all cases ok");` | - |
+| check-upcoming-visits-page.mjs | 1 | needs a guard | line 112, then `console.log("\nAll expectations held.");` | swapped, `else` added (exit 0 before and after) |
+| check-worker-origin.mjs | 1 | needs a guard | line 219, then `console.log("all cases ok");` | left alone: no network call, so no libuv trap; a swap needs a rewrite for no gain (the exit-1 is its last statement) |
 | check-worktree-done.mjs | 1 | safe (nothing runs after) | - | - |
 
 ## security-role-picker (app or harness?)

@@ -8,6 +8,7 @@
 // same session. Prints how many ids each role may see, so a vacuous pass (everyone sees nothing) is visible.
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
+import { exitWith } from "./lib/exit.mjs";
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
 const env = loadEnv("test");
@@ -80,11 +81,15 @@ const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/qu
 const body = await res.json().catch(() => null);
 const msg = body?.message ?? JSON.stringify(body);
 const m = msg.match(/RESULT(\[[\s\S]*\])RESULT/);
-if (!m) { console.log(res.status, msg.slice(0, 2000)); process.exit(1); }
-let bad = 0;
-for (const x of JSON.parse(m[1])) {
-  if (x.mm || x.old !== x.new) bad++;
-  console.log(`${x.mm ? "FAIL" : "ok  "} ${x.who.padEnd(24)} ids ${x.total}  old-path may see ${x.old}  rpc may see ${x.new}  disagreements ${x.mm}`);
+if (!m) {
+  console.log(res.status, msg.slice(0, 2000));
+  await exitWith(1);
+} else {
+  let bad = 0;
+  for (const x of JSON.parse(m[1])) {
+    if (x.mm || x.old !== x.new) bad++;
+    console.log(`${x.mm ? "FAIL" : "ok  "} ${x.who.padEnd(24)} ids ${x.total}  old-path may see ${x.old}  rpc may see ${x.new}  disagreements ${x.mm}`);
+  }
+  console.log(bad ? `${bad} FAILED` : "old path and rpc agree for every role (rolled back, nothing kept)");
+  await exitWith(bad ? 1 : 0);
 }
-console.log(bad ? `${bad} FAILED` : "old path and rpc agree for every role (rolled back, nothing kept)");
-process.exitCode = bad ? 1 : 0;

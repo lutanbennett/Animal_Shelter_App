@@ -134,6 +134,8 @@ try {
   }
   // The database, under her JWT: a live weight, then a second the same day, then a dead one.
   const day = new Date(Date.now() - 400 * 86400_000).toISOString().slice(0, 10);
+  // A run that was killed before its cleanup leaves this exact row behind (12.34 kg on this day) and the next run then hits weight_one_per_day: clear only that marker.
+  await service.from("weight").delete().eq("resident_id", live.id).eq("date", day).eq("weight_kg", 12.34);
   const ins = await her.from("weight").insert({ resident_id: live.id, date: day, weight_kg: 12.34 }).select("id").single();
   expect(!ins.error, `she inserts a weight (${ins.error?.message ?? "ok"})`);
   if (ins.data) madeWeights.push(ins.data.id);
