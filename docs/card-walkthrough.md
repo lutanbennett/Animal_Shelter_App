@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-40 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+39 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -147,18 +147,6 @@ Result: pending
 
 Result: pending
 
-## Record a death (`record_death`)
-
-- Opens: `/residents`
-- Also gives: View residents (`view_residents`) (walked under its own heading)
-
-0. Sign in with `--cards record_death`. The home screen shows the **Record a death** tile (or the tile of a card that includes it).
-1. Open `/residents`: it loads.
-2. **TODO:** Record a death. Do it on a disposable record named `walk-record_death`. Question: where should this write show afterwards (which page, which row)?
-3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
-
-Result: pending
-
 ## View medical (`view_medical`)
 
 - Opens: `/residents`
@@ -198,10 +186,11 @@ Result: pending
 9. **Do:** Remove a medical record entered by mistake, and restore it. Use a disposable record named `walk-medical_records`. **Read-back:** Remove, with an optional reason, on any medical row: the row leaves the list and the chart and the page reads "1 removed hidden"; Show removed lists it with Restore, which brings it back (done on a weight entry; answered 2026-10-23).
 10. **Do:** Book a vet visit. Use a disposable record named `walk-medical_records`. **Read-back:** the visit shows on that resident's page and in the shelter's list of visits (/upcoming-visits).
 11. **TODO:** Send to hospital and bring back. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
-12. **See:** See the photos in a resident's Medical folder (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-13. **TODO:** Add a resident's photo to the Medical folder. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
-14. Open `/appointments`: it loads. Confirm the Log procedure, Log blood test, Edit links are offered on every row, and Add prescription and Log weight on a visit whose date has started (a login holding visit.book also sees Book appointment, which this card does not).
-15. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
+12. **TODO:** Record a death. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
+13. **See:** See the photos in a resident's Medical folder (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+14. **TODO:** Add a resident's photo to the Medical folder. Do it on a disposable record named `walk-medical_records`. Question: where should this write show afterwards (which page, which row)?
+15. Open `/appointments`: it loads. Confirm the Log procedure, Log blood test, Edit links are offered on every row, and Add prescription and Log weight on a visit whose date has started (a login holding visit.book also sees Book appointment, which this card does not).
+16. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
