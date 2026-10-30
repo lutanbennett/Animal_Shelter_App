@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useKeptForm } from "@/lib/use-kept-form";
@@ -9,6 +9,7 @@ import { TranslationPanel } from "@/components/TranslationPanel";
 import type { SitePageSlug } from "@/lib/site/pages";
 import type { TranslationRow } from "@/lib/translations/types";
 import { updateSitePage } from "./actions";
+import { BodyToolbar } from "./BodyToolbar";
 import { SitePagePreview, type PagePreviewContext } from "./SitePagePreview";
 
 export type SitePageRow = {
@@ -62,6 +63,7 @@ export function SitePageForm({
   const showStarter = !page.body && Boolean(starterBody);
   const body = showStarter ? starterBody! : page.body;
   const [draft, setDraft] = useState(body);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
   const [titleDraft, setTitleDraft] = useState(page.title);
 
   return (
@@ -96,9 +98,12 @@ export function SitePageForm({
           {p.body}
         </label>
         <p className="text-xs text-muted">{p.bodyHint}</p>
+        <p className="text-xs text-muted">{p.marks.hint}</p>
+        <BodyToolbar target={bodyRef} />
         {showStarter && <p className="text-xs font-medium text-warning">{p.starterNote}</p>}
         <textarea
           id={`${page.slug}-body`}
+          ref={bodyRef}
           name="body"
           form={formId}
           rows={Math.min(24, Math.max(8, body.split("\n").length + 2))}
@@ -129,7 +134,7 @@ export function SitePageForm({
           <p className="text-sm text-danger">{state.error}</p>
         )}
         {state && state.ok && (
-          <p className="text-sm text-success">{state.success}</p>
+          <p data-save-ok className="text-sm text-success">{state.success}</p>
         )}
       </form>
     </div>
