@@ -11,7 +11,7 @@
 | PR | see the PR for this branch |
 | Tested by / date | Claude / 2026-10-30 |
 | Carries a migration? | no |
-| Tested at SHA | `bf8df53b` |
+| Tested at SHA | `40417657` |
 
 ## 1. Scope and risk
 
