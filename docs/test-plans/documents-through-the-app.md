@@ -137,7 +137,7 @@ Automated checks by: Claude  Date: 2026-10-30
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: items 1 and 2 above
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not empty; items 1 and 2 are waiting on a person (see the pending signature below)
 
 Manual verification by: pending: card-limited login and Pi checks above
 
