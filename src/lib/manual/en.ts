@@ -2181,16 +2181,6 @@ const manual: Manual = {
           },
         },
         {
-          id: "frequencies",
-          title: "Frequencies",
-          activity: "reference.types",
-          path: "Settings → Frequencies",
-          steps: [
-            "A read-only record of the older schedules prescriptions were saved with — 2 × a day, Every 1 week, As needed. New and edited prescriptions no longer use this list: they store their own days and times, so nothing is found or added here and nothing needs tidying.",
-            "The medication forecast counts the days chosen on each prescription and the times of day ticked: every scheduled day gives one dose per tick. Four doses a day with Morning, Lunch, Evening and Night ticked counts four; a dose written only in the notes is not counted.",
-          ],
-        },
-        {
           id: "system-status",
           title: "System status",
           activity: "system.status",

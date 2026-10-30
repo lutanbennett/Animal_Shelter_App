@@ -74,7 +74,6 @@ const LABEL_SCREENS: Record<string, (rowId: string) => string[]> = {
   diet_types: () => ["/management/diets", "/admin/diets"],
   medication: () => ["/management/medications", "/admin/medications"],
   item_unit_conversions: () => ["/management/diets", "/management/medications", "/admin/diets", "/admin/medications"],
-  frequency: () => ["/admin/frequencies"],
   immunization_types: () => ["/admin/immunization-types"],
   procedure_types: () => ["/admin/procedure-types"],
   blood_test_types: () => ["/admin/blood-test-types"],
