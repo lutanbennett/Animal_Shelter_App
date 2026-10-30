@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PUBLIC_FRAME } from "@/lib/site/frame";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { driveImageUrl } from "@/lib/google/drive-client";
@@ -85,7 +86,7 @@ export default async function FriendsPage() {
         trail={[{ label: t.publicNav.getInvolved }, { label: t.shelterFriends.navLabel }]}
       />
 
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 sm:px-12">
+      <div className={`${PUBLIC_FRAME} flex flex-col gap-6 py-10`}>
         <div className="flex flex-col gap-2">
           <h1 className="font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl xl:text-[60px]">{f.pageTitle}</h1>
           <p className="max-w-2xl text-lg text-site-ink-soft sm:text-xl">{f.pageSubtitle}</p>

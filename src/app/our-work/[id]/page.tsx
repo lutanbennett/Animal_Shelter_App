@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PUBLIC_FRAME } from "@/lib/site/frame";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CalendarDays, MapPin } from "lucide-react";
@@ -187,7 +188,7 @@ export default async function PublicProjectPage(
           aria-labelledby="more-stories-heading"
           className="border-t border-border bg-surface"
         >
-          <div className="mx-auto flex w-full max-w-6xl flex-col gap-5 px-6 py-10 sm:px-12">
+          <div className={`${PUBLIC_FRAME} flex flex-col gap-5 py-10`}>
             <h2
               id="more-stories-heading"
               data-reveal

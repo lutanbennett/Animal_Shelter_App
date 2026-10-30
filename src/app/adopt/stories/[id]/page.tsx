@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PUBLIC_FRAME } from "@/lib/site/frame";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -45,7 +46,7 @@ export default async function SuccessStoriesPage(props: PageProps<"/adopt/storie
   return (
     <main className="flex flex-1 flex-col font-site text-site-ink">
       <PublicHeader current="adopt" trail={[{ label: t.adopt.adoptNav, href: "/adopt" }, { label: animal.name }]} />
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-5 py-6 lg:py-10">
+      <div className={`${PUBLIC_FRAME} flex flex-col gap-6 py-6 lg:py-10 [&>*]:max-w-3xl`}>
         <BackLink
           href="/adopt"
           className="flex min-h-11 w-fit items-center gap-1.5 rounded-full px-1 text-base font-semibold text-site-ink hover:text-site-action-hover"

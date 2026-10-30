@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PUBLIC_FRAME } from "@/lib/site/frame";
 import Image from "next/image";
 import { PawPrint } from "lucide-react";
 import Link from "next/link";
@@ -137,7 +138,7 @@ export default async function AdoptPage(props: PageProps<"/adopt">) {
     <main className="flex flex-1 flex-col">
       <PublicHeader current="adopt" trail={[{ label: t.adopt.adoptNav }]} />
 
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-6 py-10 sm:px-12">
+      <div className={`${PUBLIC_FRAME} flex flex-col gap-6 py-10`}>
         <div className="flex flex-col gap-2">
           <h1 className="font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl xl:text-[60px]">
             {t.adopt.pageTitle}

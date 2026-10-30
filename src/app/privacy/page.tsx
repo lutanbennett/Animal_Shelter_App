@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PUBLIC_FRAME } from "@/lib/site/frame";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { getSiteOrigin } from "@/lib/site-origin";
@@ -56,7 +57,7 @@ export default async function Page() {
     <main className="flex flex-1 flex-col">
       <PublicHeader trail={[{ label: p.nav }]} />
 
-      <article className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10 sm:px-12">
+      <article className={`${PUBLIC_FRAME} flex flex-col gap-6 py-10 [&>*]:max-w-3xl`}>
         <header className="flex flex-col gap-1">
           <h1 className="font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl xl:text-[60px]">{p.title}</h1>
           <p className="text-sm text-muted">{p.updated}</p>

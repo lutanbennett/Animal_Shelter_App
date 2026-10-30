@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { PUBLIC_FRAME } from "@/lib/site/frame";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { PublicHeader } from "./PublicHeader";
@@ -31,7 +32,7 @@ export async function PublicNotFound() {
   return (
     <main className="flex flex-1 flex-col">
       <PublicHeader />
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-10 sm:px-12">
+      <div className={`${PUBLIC_FRAME} flex flex-col gap-6 py-10 [&>*]:max-w-3xl`}>
         <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-semibold text-foreground">{t.adopt.notFound.heading}</h1>
           <p className="text-muted">{t.adopt.notFound.body}</p>
