@@ -36,6 +36,7 @@ export type NewCardKey =
   | "bills"
   | "website"
   | "website_photos"
+  | "manage_shop_page"
   | "outreach_notes"
   | "assistant"
   | "enclosures"
@@ -221,6 +222,8 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
     bundle: [{ activity: "website.content", level: "read" }, { activity: "website.gallery" }],
     opens: "/admin/website",
   },
+  // 0285: the Shop for the shelter page. Its own activity, not friends.manage: a marketplace link is not a Shelter Friend. The management screen is the app half; until it exists the card opens the website settings.
+  manage_shop_page: { includes: [], bundle: [{ activity: "shop.manage", level: "edit" }], opens: "/admin/website" },
   outreach_notes: { includes: [], bundle: [{ activity: "community.outings", level: "edit" }], opens: "/outreach" },
   // Card review 2 (0268): reads who-and-where and the enclosures to name an animal; assistant.record is dropped (it can do nothing alone).
   assistant: {
@@ -336,6 +339,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   bills: (t) => t.appHome.cards.bills,
   website: (t) => t.appHome.cards.website,
   website_photos: (t) => t.appHome.cards.websitePhotos,
+  manage_shop_page: (t) => t.appHome.cards.manageShopPage,
   outreach_notes: (t) => t.appHome.cards.outreachNotes,
   assistant: (t) => t.appHome.cards.assistant,
   enclosures: (t) => t.appHome.cards.enclosures,
