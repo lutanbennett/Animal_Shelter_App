@@ -26,8 +26,8 @@ exit inside a final `if`; still nothing follows. All 23 ran exit 0 in the sweep.
 
 ## The 51 guard reads: named follow-up, not started
 
-The 51 "needs a guard" scripts in the triage table, minus the two in the browser four's family already
-excluded here. Each needs `else`/`return` read before `exitWith`. Note `check-restated-columns` exited 127
+The 51 "needs a guard" scripts in the triage table.
+Each needs `else`/`return` read before `exitWith`. Note `check-restated-columns` exited 127
 in the first (contaminated) sweep, the libuv crash this helper cures; it is among the 51.
 
 ## Diagnoses
