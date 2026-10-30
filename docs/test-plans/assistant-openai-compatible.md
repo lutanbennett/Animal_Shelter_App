@@ -123,7 +123,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 Automated checks by: Claude  Date: 2026-10-30
 
-- [ ] The manual list above is empty, or checked by a person — pending: Lutan has not followed the runbook
+- [ ] The manual list above is empty, or checked by a person — n/a: the list is not empty; only the person who looked may tick this, and Lutan has not yet
 
 Manual verification by: pending: Lutan to follow the runbook on the laptop
 
