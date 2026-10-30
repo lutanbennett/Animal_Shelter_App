@@ -128,6 +128,8 @@ export function createOpenAiAdapter(opts: OpenAiAdapterOptions): LlmAdapter {
           : {}),
       };
       let res: Response;
+      const ctl = new AbortController();
+      const timer = setTimeout(() => ctl.abort(), timeoutMs);
       try {
         res = await doFetch(`${baseUrl}/chat/completions`, {
           method: "POST",
@@ -136,7 +138,7 @@ export function createOpenAiAdapter(opts: OpenAiAdapterOptions): LlmAdapter {
             ...(opts.apiKey ? { authorization: `Bearer ${opts.apiKey}` } : {}),
           },
           body: JSON.stringify(body),
-          signal: AbortSignal.timeout(timeoutMs),
+          signal: ctl.signal,
         });
       } catch (err) {
         const name = err instanceof Error ? err.name : "";
@@ -147,6 +149,8 @@ export function createOpenAiAdapter(opts: OpenAiAdapterOptions): LlmAdapter {
           "unavailable",
           `The local model server could not be reached at ${baseUrl}. Is it running? (Ollama: open a terminal and run "ollama serve".)`,
         );
+      } finally {
+        clearTimeout(timer);
       }
       if (!res.ok) {
         let detail = "";
