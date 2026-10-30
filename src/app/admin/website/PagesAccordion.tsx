@@ -51,6 +51,10 @@ export function PagesAccordion({ items, canEdit }: { items: PageAccordionItem[];
     window.history.replaceState(null, "", url);
   };
 
+  const setDirty = useCallback((v: boolean) => {
+    dirty.current = v;
+  }, []);
+
   const close = useCallback(() => {
     if (dirty.current && !window.confirm(p.discardConfirm)) return false;
     if (dirty.current && open) setEpoch((e) => ({ ...e, [open]: (e[open] ?? 0) + 1 }));
@@ -111,7 +115,7 @@ export function PagesAccordion({ items, canEdit }: { items: PageAccordionItem[];
               item={item}
               isOpen={open === item.slug}
               epoch={epoch[item.slug] ?? 0}
-              dirty={dirty}
+              onDirty={setDirty}
               onClose={close}
               title={p.editTitle(item.label)}
               closeLabel={p.closeEditor}
@@ -132,7 +136,7 @@ function PageDialog({
   item,
   isOpen,
   epoch,
-  dirty,
+  onDirty,
   onClose,
   title,
   closeLabel,
@@ -140,7 +144,7 @@ function PageDialog({
   item: PageAccordionItem;
   isOpen: boolean;
   epoch: number;
-  dirty: { current: boolean };
+  onDirty: (dirty: boolean) => void;
   onClose: () => boolean;
   title: string;
   closeLabel: string;
@@ -158,11 +162,11 @@ function PageDialog({
     const d = ref.current;
     if (!d || !isOpen) return;
     const watch = new MutationObserver(() => {
-      if (d.querySelector("[data-save-ok]")) dirty.current = false;
+      if (d.querySelector("[data-save-ok]")) onDirty(false);
     });
     watch.observe(d, { childList: true, subtree: true });
     return () => watch.disconnect();
-  }, [isOpen, dirty]);
+  }, [isOpen, onDirty]);
 
   return (
     <dialog
@@ -173,7 +177,7 @@ function PageDialog({
         onClose();
       }}
       onInput={() => {
-        dirty.current = true;
+        onDirty(true);
       }}
       className="m-0 h-dvh max-h-none w-screen max-w-none bg-background p-0 text-foreground backdrop:bg-black/50 md:m-auto md:h-auto md:max-h-[92vh] md:w-[min(56rem,94vw)] md:rounded-lg md:border md:border-border"
     >
