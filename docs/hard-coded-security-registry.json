@@ -547,6 +547,18 @@
       "gates": "Which model id the assistant sends to. Not who may use the assistant."
     },
     {
+      "name": "ASSISTANT_LLM_BASE_URL",
+      "gates": "Where the assistant sends to a self-hosted model. Not who may use the assistant."
+    },
+    {
+      "name": "ASSISTANT_LLM_TIMEOUT_MS",
+      "gates": "How long the assistant waits for a self-hosted model. Not who may use the assistant."
+    },
+    {
+      "name": "ASSISTANT_LLM_API_KEY",
+      "gates": "The optional credential for a self-hosted model server. Not who may use the assistant."
+    },
+    {
       "name": "GOOGLE_DRIVE_ROOT_FOLDER_ID",
       "gates": "Which Drive folder holds photos and files."
     },

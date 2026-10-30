@@ -11,6 +11,9 @@
  * Environment (read here and in `llm-claude.ts`, nowhere else):
  *   ASSISTANT_LLM_PROVIDER  which implementation; "claude" (default).
  *   ASSISTANT_LLM_MODEL     the model id, in ONE place so swapping is config.
+ *   ASSISTANT_LLM_BASE_URL  openai-compatible only: the server's address, up to /v1.
+ *   ASSISTANT_LLM_TIMEOUT_MS  openai-compatible only: how long to wait (default 180000).
+ *   ASSISTANT_LLM_API_KEY   openai-compatible only, optional.
  *   ANTHROPIC_API_KEY       the Claude implementation's key (a metered one:
  *                           the only paid thing in assistant v2).
  *
@@ -68,6 +71,8 @@ export type LlmErrorKind =
   | "rate_limited"
   | "bad_request"
   | "unavailable"
+  | "timeout"
+  | "bad_response"
   | "unknown";
 
 /** Every failure an implementation raises, so callers never see a vendor class. */
@@ -104,6 +109,15 @@ export async function createLlm(): Promise<LlmAdapter> {
     return createClaudeAdapter({
       apiKey: process.env.ANTHROPIC_API_KEY,
       model: process.env.ASSISTANT_LLM_MODEL,
+    });
+  }
+  if (provider === "openai-compatible" || provider === "openai" || provider === "ollama") {
+    const { createOpenAiAdapter } = await import("./llm-openai");
+    return createOpenAiAdapter({
+      baseUrl: process.env.ASSISTANT_LLM_BASE_URL,
+      model: process.env.ASSISTANT_LLM_MODEL,
+      apiKey: process.env.ASSISTANT_LLM_API_KEY,
+      timeoutMs: process.env.ASSISTANT_LLM_TIMEOUT_MS,
     });
   }
   throw new LlmError("not_configured", `ASSISTANT_LLM_PROVIDER "${provider}" is not an implementation this build has.`);
