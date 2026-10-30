@@ -373,6 +373,15 @@ Rules, in order:
    **So ask of every batch: does any stream here change what another stream's checks READ?** If the
    other stream merely has to ignore a red, say so in its brief. If its deliverable is the measurement,
    **move one of them to the next batch** — a decided, small item loses nothing by waiting.
+   **BUT INTERSECT THE TWO FILE LISTS BEFORE YOU MOVE ANYTHING.** Added 2026-10-30, the first time this
+   rule's expensive case came up. One stream was dropping a column **nine `scripts/` files mention**,
+   while another owned `scripts/` — not a red to ignore but one stream editing files the other owns,
+   which by the rule above means moving one. **Intersecting the second stream's actual remaining rows
+   against those nine gave exactly ONE file in both**, and it was `check-phone-width.mjs`, the 2.5–3
+   hour browser check neither stream should run. **So a named carve-out held, nothing moved, and the
+   whole cost was one command.** **A shared DIRECTORY is not a collision; a shared FILE is** — and the
+   difference is one `grep`/intersect away, so measure it rather than reasoning from the folder. Where
+   the intersection really is wide, move one, as above.
 3. **At most one migration-carrying stream per batch** (CLAUDE.md's
    one-in-flight rule, applied per batch because batches are
    sequential). If two items in one batch need schema, either fold them
@@ -577,6 +586,7 @@ Two axes that genuinely do cost, both measured 2026-10-20:
 | **A new surface that ALSO DELETES what it replaces** | **260–330k** | 290,888 — `units-of-measure-app` (2026-10-23), banded 200–270k and **+8% over**. A Settings CRUD screen, **plus** eight call sites moved onto the table, **plus** deleting the two hard-coded lists and their dictionary entries, **plus** both dictionaries, the manual and real browser checks. **The wide deletion is a SECOND job, not a detail of the first** — ask whether the new surface retires something, and if it does, use this row rather than the one above |
 | Builds an instrument / transport path from nothing | **250–320k** | 286,350 — **one reading only, and nothing since has belonged in it. Do not widen a stream into this row because its behaviour sounds new** |
 | **Harness triage — band the COUNT, not the family** | **~85k + ~20k per harness; ~15k each when one cause explains them all** | Measured twice on 2026-10-26, which is why this row exists. Ten database harnesses with mixed causes: **285,783** — 20.1k each above the floor, banded 190–240k as *"a harness family"* and **+19% over**. Eight diets/stock harnesses sharing ONE cause (a rename) **plus** a new production check written from nothing: **206,138** — 15.1k each with the extra script inside that, banded 170–220k and **comfortably inside**. **The count is the unit of work; the framing is not.** Ask how many harnesses, then ask whether one cause explains them — a shared cause discounts about a quarter, because the second harness onwards is a re-run rather than a diagnosis. **AND BAND THE HARNESSES THAT ARE RED, NOT THE HARNESSES THE ITEM NAMES** (added 2026-10-27): a batch briefed as ten found **five already green**, fixed the day before by commits the item did not know about, so the item's list was stale by half. **Run the harnesses as step zero — that is the scope list.** It still cost **228,126** against a 255–310k band because **two of the five were INVESTIGATIONS rather than fixes** (one ran 600 probes across two runs to establish that a harness is a snapshot tool with ~6% run-to-run noise). **Price a diagnosis above a repair**, and expect a harness whose fixtures lean on a role being removed to fail for that reason rather than because the app is wrong. **AND A RESTATE-OR-RETIRE ROW IS A THIRD OF THE PRICE OF A DIAGNOSED ONE: ~6.8k, NOT ~20k** (added 2026-10-29). A stream resolved **eight rows for 54,505 tokens above the floor** — three retired with reasons, three repaired or restated, one never broken, one filed as an app fault. **Every figure in this row above was measured on rows whose causes each had to be DIAGNOSED**, which is the expensive half. Once the cause is understood — a column dropped, a role model removed — restating a check against the new shape, or retiring it with a reason, is cheap and repetitive. **So band a restate batch at `floor + ~7k x rows` and reserve ~20k a row for genuine diagnosis.** The question that picks the rate is: **does this stream have to work out WHY each row is red, or has someone already told it?** |
+| **A GUARD READ — half the restate rate, because someone else already localised it** | **~3.6k per row above the floor** | Measured 2026-10-30 (#1103): **25 rows, 90,107 above its own floor**, of which 16 were converted to `await exitWith(n)` with an `else` around what follows, **8 were left alone with a written reason** (no network call, so no libuv trap) and 1 was already a comment. **"Left alone with a reason" was a third of the work and is a correct verdict** — a brief implying every row must change gets worse answers. **Why it is so much cheaper than the ~6.8k restate rate and the ~20k diagnosis rate: `docs/decisions/2026-10-30-harness-exit-triage.md` had already localised each decision to ONE call site.** So the question that picks the rate is **not** how mechanical the edit looks but **who did the localising** — a row you must first find is a diagnosis, a row someone has pointed at is a read. **And set a hard boundary in rows**: 51 rows at this rate does not finish in one session, 25 does |
 | **An AUDIT or a REPORT over a wide but shallow surface — band it NEAR THE FLOOR whatever its size** | **145–190k** | **PROMOTED FROM HANDOVER `438`** on five readings across two rounds. **The test, and it is one question: if everything here turns out to be FINE, what work is left?** If the answer is "write the list and say so", it is a report. Banded for the SIZE of the surface, three landed 43%, 21% and 17% UNDER (`harness-sweep-batch-6`, `buttons-sweep-4-operations`, `policy-triage-1`, 2026-10-28 morning). Banded as REPORTS the same day, two landed on the bottom edge: `policy-triage-2` **144,682** against 145–185k (ten tables, all deliberate) and `buttons-sweep-5-money-content` **151,124** against 150–190k (five areas audited, one gap). **A sweep that expects to find little is an audit, and an audit is cheap.** Ten harnesses, twenty tables, five areas of button checks: the count of things to LOOK AT does not move this row; only a real repair does |
 | Quick win | 110–170k | 1–3 files; screenshots cost far less than first assumed. **Left as written on Lutan's ruling, 2026-10-11** — the planner had been quoting 130–200k while both measured quick wins (129,320 · 135,901) sat *inside* this band. **The band was right and the quoting was high. Do not reopen it** |
 | Schema PR, single file | **~140–155k** | measured 6×: `cashflow-forecast-function` 139,791 · `drop-leftovers-schema` 143,030 (three unrelated items in one file) · `receipt-issuer-server-side` 143,678 · `map-rooms-schema` 151,273 · `role-floor-schema` 231,297 · `perm-functions-schema` 284,248 |
@@ -1165,6 +1175,16 @@ yield is a stream spending its turns on what you could not work out instead of r
 could.** The band consequence is in *Token estimates*: **a question the stream must SETTLE is judgement
 and bands near the ordinary stream; a question it must build an INSTRUMENT to answer does not.**
 
+**AND WHERE YOU PUT THE QUESTION DECIDES WHETHER IT GETS ANSWERED. PUT IT IN THE NUMBERED
+DELIVERABLES.** Added 2026-10-30, the one failure in five firings of the rule above. The planner asked
+a stream to judge whether a new card's catalogue entry should carry a probe — and wrote the question
+into the brief's **STEP ZERO block** instead of its numbered deliverables. **The
+report-every-deliverable block covers "EVERY numbered deliverable in this brief" and nothing else**, so
+nothing caught the omission: the PR body said nothing about it, CI was green, and the entry was still
+unchanged when the planner found it a batch later. **A question in step zero is CONTEXT, and context is
+not reported on. A question you want ANSWERED is a numbered deliverable, phrased as one.** The fix
+costs nothing — it is the same sentence, moved.
+
 **Write the planner's own evidence into it.** Nine briefs carried this on 2026-10-21
 and it cost almost nothing, because the planner had already done the greps while
 choosing the item — the block is mostly a paste of work already done. **A stream
@@ -1329,6 +1349,40 @@ Added 2026-10-30, on **two instances in two days, both the planner's fault and n
 fixture or a decision file in this repo that does it? Name it by path.** The rules tell a stream how to
 behave; the instruments tell it what not to rebuild. **A grep of `scripts/lib/` and `docs/decisions/` for
 the brief's subject costs a minute and is the cheapest part of writing one.**
+
+### AND A PROHIBITION IS A CLAIM ABOUT THE REPO. BAN THE FILE, NOT THE FOLDER — AND OPEN ANYTHING YOU ASSERT OR FORBID
+
+Added 2026-10-30, after **three instances in one round of the planner asserting something about a file
+it had never opened.** The skill already says a count quoted without its database is not a reading and
+an instrument quoted without reading its query carries false authority. **This is the same fault in the
+brief's own prose, and the most expensive form of it is a BAN.**
+
+- **The planner banned all of `scripts/lib/` in three briefs**, because `exit.mjs` is in there and every
+  stream imports it — **without ever listing the directory.** `readonly-checks.mjs` is also in there and
+  is where *every* production check lives, so the stream whose numbered deliverable was a new
+  production check **found it forbidden by its own brief and asked Lutan, who approved it in chat.** A
+  correct stream, a legitimate deliverable, an interruption caused entirely by an unchecked
+  prohibition.
+- **A brief said to rebuild a function from `0276`'s body** because `grep -l` had listed `0193`, `0218`
+  and `0276` and the planner took the last. **`0276` does not define that function at all.** The stream
+  rebuilt from `0218` and said so. **`grep -l` says a file MENTIONS a symbol, not that it defines it.**
+- **A backlog item quoted a filename out of a PR body** without the planner opening it; the path was
+  wrong, and opening it also **shrank the item**, because two of its four parts turned out to be one
+  edit on one line.
+
+**So: open the thing before a brief forbids, prices or asserts anything about it.** A folder name is
+not a manifest, a `grep -l` listing is not a definition, and another session's PR body is prose. **And
+prefer the narrowest prohibition that protects what you meant** — name `scripts/lib/exit.mjs`, not
+`scripts/lib/`. **Where a ban might be too wide, say so in the brief**: *"if a numbered deliverable
+genuinely needs a file I have forbidden, say so in your PR and do it"* turns an interruption into a
+declared crossing, which is what you wanted anyway.
+
+**AND COUNT INTERRUPTIONS AS A COST OF THE BRIEF, NOT OF THE STREAM.** Two of nine streams that round
+had to ask Lutan something the briefs should have settled, and **nothing in the paperwork recorded
+it** — every PR was green and every deliverable landed. `CLAUDE.md` says a release's target shape is
+**two touches, one answer and one command**, and that a third is a fault to write down. **The same
+arithmetic applies to a batch.** Count them in `.plan-day.md`, and treat a batch that cost an unplanned
+interruption as a briefing defect even when every check is green.
 
 ### WHEN THE PLANNER TOUCHES PRODUCTION ITSELF: three rules, all learned in one morning
 
