@@ -75,3 +75,11 @@ table or write the view; Admin does everything holding no card; deleting a Frien
 Whether commission income has a tax or status implication must be answered before the page is published on production. It does
 not block building. Also still the Director's: which schemes, whether a supplies wish-list, who checks links. Production is
 not touched by this PR (it is three migrations behind on purpose).
+
+## Addendum: the catalogue edit the brief ruled out (Lutan approved it in chat, 2026-10-30)
+
+The brief said the catalogue entry was the app half's. It cannot be: `check-permission-catalogue` (part of `npm run lint`) compares
+`catalogue.ts` with the dev database, and applying 0285 to dev made lint red for every stream until the file agreed. Lutan said yes
+to the minimal edit. Added: `shop.manage` in `catalogue.ts`; `manage_shop_page` in `cards.ts` (opens `/admin/website` until the
+management screen exists, so that is a placeholder for the app half to point at the new screen); English and Thai names and
+descriptions in the dictionaries; the card count in `cards.test.mjs` and `scripts/check-cards-count.mjs` is now forty.

@@ -16,7 +16,7 @@
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence — a table for public shop and Shelter Friend affiliate entries, its card-gated policies and a public view
-- [x] Files/areas touched listed — `supabase/migrations/0285_*.sql`, `scripts/check-shop-links.mjs`, one line in `scripts/check-public-views.mjs`, `docs/hard-coded-security-registry.json`, the decision file, this plan
+- [x] Files/areas touched listed — `supabase/migrations/0285_*.sql`, `scripts/check-shop-links.mjs`, one-line edits to `check-public-views.mjs` and `check-cards-count.mjs`, `src/lib/permissions/` (catalogue and card entry, approved in chat), the two dictionaries, the registry, decision file, this plan
 - [x] Roles affected identified — none today: the card is held by no role until Admin assigns it
 - [x] Out of scope written down — all of `src/`, `src/lib/permissions/`, the page, the management screen, releases
 
@@ -79,7 +79,7 @@
 - [ ] Backlog item ticked — n/a: deliberately open; the app half remains (progress note on the `backlog` branch)
 - [x] Decision recorded — `2026-10-30-affiliate-links-schema.md`
 - [x] `README.md` still accurate — it does not list tables
-- [ ] **Release notes.** — n/a: schema only; no screen reads these tables yet
+- [ ] **Release notes.** — n/a: schema only; no screen reads these tables yet (the card appears in Who does what with no holder)
 - [x] Commit messages say why
 - [x] Claims were measured — harness and check output, not reasoned
 
