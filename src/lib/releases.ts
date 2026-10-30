@@ -89,15 +89,25 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "Settings → Assistant log (Admin only): see what people typed at the assistant that it could not understand or would not do, newest first, filter by what happened and by date, and download them as a spreadsheet with empty columns for the right answer. System status now shows how many each period.",
-  { text: "Settings → Website → Pages: each page now opens in a pop-up from an Edit button (full screen on a phone), and the page text can be made bold, italic, underlined, coloured (dark, orange or green) or larger/smaller with buttons above the text box. Pages written before look exactly the same.", cards: ["website"] },
-  "Donation receipts and a deceased resident's archive: the filed receipt, summary PDF and offline index now open inside the app instead of taking you to Google Drive. You need the same card you needed before; anyone without it is turned away.",
-  "Cashflow: a \"fix\" link for an unpriced item now shows only if you can open the page where the price is entered, instead of leading you to a page that turns you away.",
-  "Settings → Security: the list of people waiting for access no longer runs off the side of a phone screen, so the role menu and the Approve and Deny buttons can all be reached.",
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.40.12",
+    date: "2026-10-30",
+    title: "Prescriptions on a schedule, a Shop page, and the Assistant log",
+    major: false,
+    notes: [
+      "Settings → Assistant log (Admin only): see what people typed at the assistant that it could not understand or would not do, newest first, filter by what happened and by date, and download them as a spreadsheet with empty columns for the right answer. System status now shows how many each period.",
+      { text: "Settings → Website → Pages: each page now opens in a pop-up from an Edit button (full screen on a phone), and the page text can be made bold, italic, underlined, coloured (dark, orange or green) or larger/smaller with buttons above the text box. Pages written before look exactly the same.", cards: ["website"] },
+      "Donation receipts and a deceased resident's archive: the filed receipt, summary PDF and offline index now open inside the app instead of taking you to Google Drive. You need the same card you needed before; anyone without it is turned away.",
+      "Cashflow: a \"fix\" link for an unpriced item now shows only if you can open the page where the price is entered, instead of leading you to a page that turns you away.",
+      "Settings → Security: the list of people waiting for access no longer runs off the side of a phone screen, so the role menu and the Approve and Deny buttons can all be reached.",
+      "Prescriptions now set exactly when a medicine is given: every day or every few days, chosen weekdays, or chosen days of the month, and tick Morning, Lunch, Evening or the new Night round (about 10 pm), each with its own amount. The medication list and the medicine forecast follow it, and existing prescriptions keep the days they had. Settings → Frequencies is gone, because the prescription itself now says how often.",
+      { text: "Settings → Shop for the shelter: list shops, products and Shelter Friends on a public Shop page, with a photo, a note and a rough price, where the shelter earns a small commission when a supporter buys through the link. A new entry starts hidden, and the page and its menu link appear only once something is shown.", cards: ["manage_shop_page"] },
+    ],
+  },
   {
     version: "0.40.11",
     date: "2026-10-29",
