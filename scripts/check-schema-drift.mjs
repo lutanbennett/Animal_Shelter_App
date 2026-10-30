@@ -23,6 +23,7 @@
 // and policies are not compared here; columns are what the app's SQL breaks on.
 
 import { loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const { name: envName, rest } = parseEnvArg(process.argv.slice(2));
 function flag(n) {
@@ -92,6 +93,7 @@ console.log(`${left.size} columns vs ${right.size} columns.`);
 if (lines.length) {
   console.log(lines.join("\n"));
   console.log(`\n${lines.length} difference(s).`);
-  process.exit(1);
+  await exitWith(1);
+} else {
+  console.log("No differences.");
 }
-console.log("No differences.");
