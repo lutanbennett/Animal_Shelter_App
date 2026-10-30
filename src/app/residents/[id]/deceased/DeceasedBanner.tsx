@@ -8,7 +8,7 @@ import { ACTION_ICONS, PLACEMENT_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
-import { driveFileUrl, driveFolderUrl } from "@/lib/google/drive-client";
+import { driveDocumentUrl, driveFolderUrl } from "@/lib/google/drive-client";
 
 export type DeceasedArchive = {
   archivedAt: string | null;
@@ -80,7 +80,7 @@ export function DeceasedBanner({
         {archive.summaryDriveFileId && (
           <a
             className={linkClass}
-            href={driveFileUrl(archive.summaryDriveFileId)}
+            href={driveDocumentUrl(archive.summaryDriveFileId)}
             target="_blank"
             rel="noreferrer noopener"
           >
@@ -91,7 +91,7 @@ export function DeceasedBanner({
         {archive.indexDriveFileId && (
           <a
             className={linkClass}
-            href={driveFileUrl(archive.indexDriveFileId)}
+            href={driveDocumentUrl(archive.indexDriveFileId)}
             target="_blank"
             rel="noreferrer noopener"
           >

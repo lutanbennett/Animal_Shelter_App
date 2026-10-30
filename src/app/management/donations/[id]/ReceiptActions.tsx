@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useConfirm } from "@/components/ConfirmProvider";
-import { driveFileUrl } from "@/lib/google/drive-client";
+import { driveDocumentUrl } from "@/lib/google/drive-client";
 import { RECEIPT_COUNTRIES, type ReceiptCountry } from "@/lib/donations/issuer";
 import { issueReceipt, markReceiptSent, retryDriveFiling, voidReceipt } from "../actions";
 
@@ -131,7 +131,7 @@ export function ReceiptCard({
 
       <p className="text-sm">
         {receipt.driveFileId ? (
-          <a href={driveFileUrl(receipt.driveFileId)} target="_blank" rel="noopener" className="text-primary underline">
+          <a href={driveDocumentUrl(receipt.driveFileId)} target="_blank" rel="noopener" className="text-primary underline">
             {d.driveSaved} · {d.driveOpen}
           </a>
         ) : (
