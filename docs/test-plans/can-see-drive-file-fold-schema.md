@@ -76,7 +76,7 @@
 - [x] Backlog item ticked; searched for can_see_drive_file, memes, donation_receipts in the backlog: no other item closed
 - [x] Decision file docs/decisions/2026-10-30-can-see-drive-file-fold.md
 - [x] README still accurate
-- [ ] Release notes — n/a: nobody would notice; the same files open for the same people
+- [ ] **Release notes.** n/a: nobody would notice; the same files open for the same people
 - [x] Commit messages say why
 - [x] Claims were measured — the check output above
 
