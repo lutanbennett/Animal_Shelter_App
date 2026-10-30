@@ -116,6 +116,16 @@ async function run() {
   // 1. The picker
   await page.goto(`${base}/admin/security`, { waitUntil: "networkidle" });
   check(new URL(page.url()).pathname === "/admin/security", "the test admin reaches Settings -> Security", page.url());
+  // The page fits the 375 px phone: nothing may stick out past the right edge (631 px wide once, 2026-10-30).
+  const wide = await page.evaluate(() => {
+    const limit = document.documentElement.clientWidth + 1;
+    const out = [...document.body.querySelectorAll("*")]
+      .filter((el) => el.getBoundingClientRect().right > limit)
+      .slice(0, 5)
+      .map((el) => `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 80)} right=${Math.round(el.getBoundingClientRect().right)}`);
+    return { scrollWidth: document.documentElement.scrollWidth, clientWidth: document.documentElement.clientWidth, out };
+  });
+  check(wide.scrollWidth <= wide.clientWidth, "Settings -> Security fits the phone width, no sideways scroll", JSON.stringify(wide));
   await openAddPerson(page, "Add person");
   const createOptions = await page.locator("select#role option").allTextContents();
   // Every live role in the roles table is offered, none twice, and the named ones keep the picker's order. The set is read

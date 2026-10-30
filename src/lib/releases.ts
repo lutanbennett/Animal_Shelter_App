@@ -90,6 +90,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   "Cashflow: a \"fix\" link for an unpriced item now shows only if you can open the page where the price is entered, instead of leading you to a page that turns you away.",
+  "Settings → Security: the list of people waiting for access no longer runs off the side of a phone screen, so the role menu and the Approve and Deny buttons can all be reached.",
 ];
 
 /** Newest first. */
