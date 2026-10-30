@@ -63,3 +63,10 @@ cannot exercise it). Streaming was not used or tested. The Pi serves the same co
 ## Not done here
 
 No key was added or requested, no migration, no change to `audit.ts`, no route and no UI. Advisory register unchanged.
+
+## The audit finding this PR raised (GHSA-mrhx-c7xc-m3w5, zod)
+
+The SDK declares `zod` as a peer dependency, so the `zod` that already sat in the lockfile (4.6.5, via the lint plugin) became a
+production dependency and `audit:register` failed on it (high: memory exhaustion validating oversized constrained collections).
+Reachability: this code never calls the SDK's zod helpers, so the flaw is not reachable here. It was fixed anyway, because a
+patched release exists: `npm update zod` moved the lockfile to 4.6.7, nothing else. No register entry was added.
