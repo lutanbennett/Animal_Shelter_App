@@ -72,13 +72,13 @@ function RequestRow({ request, roles }: { request: AccessRequest; roles: RoleOpt
             {request.lastSignInAt && ` · ${r.lastAttempt(formatDateTime(request.lastSignInAt, locale))}`}
           </span>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
           <select
             value={role}
             disabled={isPending}
             onChange={(e) => setRole(e.target.value)}
             aria-label={t.admin.security.table.role}
-            className="rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary disabled:opacity-50"
+            className="min-w-0 max-w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary disabled:opacity-50"
           >
             <option value="">{r.chooseRole}</option>
             {roles.map((role) => (
