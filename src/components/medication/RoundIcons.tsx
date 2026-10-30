@@ -1,7 +1,7 @@
-import { Moon, Sun, Sunrise } from "lucide-react";
+import { Moon, Sun, Sunrise, Sunset } from "lucide-react";
 import { ROUND_KEYS, type RoundKey } from "@/lib/rounds/suggest";
 
-const ICON: Record<RoundKey, typeof Sun> = { morning: Sunrise, lunch: Sun, evening: Moon };
+const ICON: Record<RoundKey, typeof Sun> = { morning: Sunrise, lunch: Sun, evening: Sunset, night: Moon };
 
 /** The icon alone, for the round chooser. */
 export function RoundIcon({ round, className }: { round: RoundKey; className?: string }) {
@@ -10,7 +10,7 @@ export function RoundIcon({ round, className }: { round: RoundKey; className?: s
 }
 
 /**
- * Frequency as a picture: the three rounds of the day as sunrise, sun and moon, the ones this
+ * Frequency as a picture: the four rounds of the day as sunrise, sun, sunset and moon, the ones this
  * dose is given in solid and the others faint, so "twice a day" reads as two lit icons without
  * a word (the helpers read neither Thai nor English). The names are the accessible label.
  */

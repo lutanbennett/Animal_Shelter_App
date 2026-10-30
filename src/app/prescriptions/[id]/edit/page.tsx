@@ -24,7 +24,7 @@ export default async function EditPrescriptionPage(
   const { data: rows, error } = await supabase
     .from("prescriptions")
     .select(
-      "id, resident_id, medication_id, frequency_id, clinic_visit_id, dose_quantity, start_date, end_date, notes",
+      "id, resident_id, medication_id, clinic_visit_id, dose_quantity, start_date, end_date, notes, schedule_unit, schedule_every, schedule_weekdays, schedule_month_days",
     )
     .eq("id", id)
     .limit(1)
@@ -54,7 +54,7 @@ export default async function EditPrescriptionPage(
       .eq("prescription_id", id)
       .returns<{ round_id: string; dose_quantity: number | null }[]>(),
   ]);
-  const { medications, frequencies, clinicVisits, rounds, roundsError } = options;
+  const { medications, clinicVisits, rounds, roundsError } = options;
 
   const resident = residentResult.data?.[0];
   if (!resident) notFound();
@@ -80,7 +80,6 @@ export default async function EditPrescriptionPage(
 
   const loadErrors = [
     [t.prescriptions.couldntLoadMedications, medications.error],
-    [t.prescriptions.couldntLoadFrequencies, frequencies.error],
     [t.prescriptions.couldntLoadVetAppointments, clinicVisits.error],
     [t.prescriptions.couldntLoadRounds, roundsError ? { message: roundsError } : tickedResult.error],
   ] as const;
@@ -111,7 +110,6 @@ export default async function EditPrescriptionPage(
         residentId={residentId}
         residentDisplayName={displayName}
         medications={medications.data ?? []}
-        frequencies={frequencies.data ?? []}
         clinicVisits={clinicVisits.data ?? []}
         rounds={rounds}
         initial={{

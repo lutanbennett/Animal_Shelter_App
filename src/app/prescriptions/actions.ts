@@ -9,7 +9,7 @@ import { loadPermissions } from "@/lib/permissions/load";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { loadUnitList } from "@/lib/unit-list-server";
 import { usableUnit } from "@/lib/unit-list";
-import { parseSchedule, sameSchedule, scheduleLabel, type FrequencySchedule } from "@/lib/prescriptions/frequency";
+import { MAX_DOSES_PER_DAY, parseScheduleForm, type RxSchedule } from "@/lib/prescriptions/schedule";
 import { todayIso } from "@/lib/format";
 
 export type PrescriptionFormState = { error: string } | undefined;
@@ -46,8 +46,8 @@ function writeError(t: Dictionary, error: { code?: string; message: string }): {
 /**
  * Writes the ticked rounds for a prescription, replacing what was there. The new
  * set goes in first and only then are the others removed, so a failure part-way
- * leaves a superset rather than a prescription with no round. The ticks never
- * touch the frequency, which stays the count of doses a day.
+ * leaves a superset rather than a prescription with no round. Each tick is one dose on every
+ * scheduled day.
  */
 async function saveRounds(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -75,6 +75,14 @@ async function saveRounds(
   if (error) return { error: error.message };
 }
 
+/** The prescriptions.schedule_* columns for a write. */
+const scheduleColumns = (s: RxSchedule) => ({
+  schedule_unit: s.schedule_unit,
+  schedule_every: s.schedule_every,
+  schedule_weekdays: s.schedule_weekdays,
+  schedule_month_days: s.schedule_month_days,
+});
+
 type ParsedPrescription = {
   roundIds: string[];
   /** Amount per ticked round; a blank box takes the prescription's dose. */
@@ -85,14 +93,14 @@ type ParsedPrescription = {
   medicationId: string | null;
   newMedicationName: string | null;
   newMedicationUnit: string | null;
-  newSchedule: FrequencySchedule | null;
+  schedule: RxSchedule;
   clinicVisitId: string | null;
   notes: string | null;
 };
 
 /**
  * The field checks shared by create and update: dates, dose, and the
- * pick-or-add-new pairs for medication and frequency. Returns an error
+ * pick-or-add-new pair for medication, and the day pattern with its ticks. Returns an error
  * string or the parsed values; the database repeats the date / dose checks
  * (0027) so a stale form can't slip past them.
  */
@@ -129,25 +137,26 @@ async function parsePrescriptionFields(
     return { error: t.prescriptions.errors.newMedicationUnit };
   }
 
-  // How often (0044): times a day, every N days/weeks/months, or as needed. The frequency
-  // is the count of doses a day; the ticks never feed it. Left blank = no frequency.
-  let newSchedule: FrequencySchedule | null = null;
-  const kind = str(formData, "patternKind");
-  const hasCount = str(formData, "patternDosesPerDay") || str(formData, "patternIntervalCount");
-  if (kind === "asNeeded" || hasCount) {
-    const parsed = parseSchedule({
-      kind,
-      dosesPerDay: str(formData, "patternDosesPerDay"),
-      intervalCount: str(formData, "patternIntervalCount"),
-      intervalUnit: str(formData, "patternIntervalUnit"),
-    });
-    if ("error" in parsed) return { error: t.frequency.errors[parsed.error] };
-    newSchedule = parsed.schedule;
-  }
+  // Which days (0283): every N days, every N weeks on chosen weekdays, every N months on chosen days of the
+  // month, or as needed. The times on those days are the ticked rounds below.
+  const strings = (key: string) => formData.getAll(key).filter((v): v is string => typeof v === "string");
+  const parsedDays = parseScheduleForm({
+    unit: str(formData, "scheduleUnit"),
+    every: str(formData, "scheduleEvery"),
+    weekdays: strings("scheduleWeekday"),
+    monthDays: strings("scheduleMonthDay"),
+  });
+  if ("error" in parsedDays) return { error: t.prescriptions.days.errors[parsedDays.error] };
+  const schedule = parsedDays.schedule;
 
   const roundIds = formData
     .getAll("roundId")
     .filter((v): v is string => typeof v === "string" && /^[0-9a-f-]{36}$/i.test(v));
+  // As needed owes no times; anything else owes one to four (one dose per tick).
+  const recurring = schedule.schedule_unit != null;
+  if (!recurring && roundIds.length > 0) roundIds.length = 0;
+  if (recurring && roundIds.length === 0) return { error: t.prescriptions.days.errors.ticksNone };
+  if (roundIds.length > MAX_DOSES_PER_DAY) return { error: t.prescriptions.days.errors.ticksTooMany };
   const roundDoses: Record<string, number | null> = {};
   for (const id of roundIds) {
     const raw = str(formData, `roundDose_${id}`);
@@ -159,13 +168,8 @@ async function parsePrescriptionFields(
     if (!Number.isFinite(n) || n <= 0) return { error: t.prescriptions.errors.dosePositive };
     roundDoses[id] = n;
   }
-  // The forecast and medication list still read the one prescription amount (a database
-  // function, 0044), so when rounds differ it holds their average: doses a day x average is the
-  // true daily total whenever every dose sits in a ticked round. Equal amounts average to themselves.
-  const effective = roundIds.map((id) => roundDoses[id]);
-  if (effective.length > 0 && effective.every((v): v is number => v != null)) {
-    doseQuantity = Math.round((effective.reduce((x, y) => x + y, 0) / effective.length) * 1000) / 1000;
-  }
+  // The dose above stays as typed. The forecast (0284) and the medication list read each ticked round's own
+  // amount, falling back to this one where a round has none, so nothing averages the amounts any more.
 
   return {
     fields: {
@@ -175,7 +179,7 @@ async function parsePrescriptionFields(
       medicationId,
       newMedicationName,
       newMedicationUnit,
-      newSchedule,
+      schedule,
       clinicVisitId: str(formData, "clinicVisitId"),
       notes: str(formData, "notes"),
       roundIds,
@@ -185,19 +189,16 @@ async function parsePrescriptionFields(
 }
 
 /**
- * Creates the medication and/or frequency the form added inline, returning
- * the ids to write on the prescription. The reference rows are worth
- * keeping even if the prescription write then fails (a typo'd dose
- * shouldn't make the user re-type the medication), so this is
- * deliberately not one transaction with it.
+ * Creates the medication the form added inline, returning the id to write on the
+ * prescription. The reference row is worth keeping even if the prescription write
+ * then fails (a typo'd dose shouldn't make the user re-type the medication), so this
+ * is deliberately not one transaction with it.
  */
-async function ensureReferenceRows(
+async function ensureMedication(
   supabase: Awaited<ReturnType<typeof createClient>>,
   fields: ParsedPrescription,
-  t: Dictionary,
-): Promise<{ error: string } | { medicationId: string; frequencyId: string | null }> {
+): Promise<{ error: string } | { medicationId: string }> {
   let { medicationId } = fields;
-  let frequencyId: string | null = null;
 
   if (!medicationId) {
     // The id is made here, not read back with .select(): a login holding only
@@ -210,28 +211,7 @@ async function ensureReferenceRows(
     medicationId = newId;
   }
 
-  if (fields.newSchedule) {
-    // Reuse the row for this pattern if there is one, so the list does not fill with duplicates.
-    const { data: existing, error: findError } = await supabase
-      .from("frequency")
-      .select("id, doses_per_day, interval_count, interval_unit")
-      .returns<(FrequencySchedule & { id: string })[]>();
-    if (findError) return { error: findError.message };
-    frequencyId = existing?.find((f) => sameSchedule(f, fields.newSchedule!))?.id ?? null;
-    if (!frequencyId) {
-      const { data, error } = await supabase
-        .from("frequency")
-        .insert({ label: scheduleLabel(fields.newSchedule), ...fields.newSchedule })
-        .select("id")
-        .limit(1)
-        .returns<{ id: string }[]>();
-      if (error) return { error: error.message };
-      frequencyId = data?.[0]?.id ?? null;
-      if (!frequencyId) return { error: t.prescriptions.errors.saveFailed };
-    }
-  }
-
-  return { medicationId, frequencyId };
+  return { medicationId };
 }
 
 /**
@@ -255,7 +235,7 @@ export async function createPrescription(
   const { fields } = parsed;
 
   const supabase = await createClient();
-  const refs = await ensureReferenceRows(supabase, fields, t);
+  const refs = await ensureMedication(supabase, fields);
   if ("error" in refs) return refs;
 
   const prescriptionId = crypto.randomUUID();
@@ -263,7 +243,7 @@ export async function createPrescription(
     id: prescriptionId,
     resident_id: residentId,
     medication_id: refs.medicationId,
-    frequency_id: refs.frequencyId,
+    ...scheduleColumns(fields.schedule),
     clinic_visit_id: fields.clinicVisitId,
     dose_quantity: fields.doseQuantity,
     start_date: fields.startDate,
@@ -301,14 +281,15 @@ export async function updatePrescription(
   const { fields } = parsed;
 
   const supabase = await createClient();
-  const refs = await ensureReferenceRows(supabase, fields, t);
+  const refs = await ensureMedication(supabase, fields);
   if ("error" in refs) return refs;
 
   const { data, error } = await supabase
     .from("prescriptions")
     .update({
       medication_id: refs.medicationId,
-      frequency_id: refs.frequencyId,
+      frequency_id: null, // retired: the schedule columns are the truth now (0283)
+      ...scheduleColumns(fields.schedule),
       clinic_visit_id: fields.clinicVisitId,
       dose_quantity: fields.doseQuantity,
       start_date: fields.startDate,

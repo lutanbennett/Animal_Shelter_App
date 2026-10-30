@@ -7,7 +7,7 @@ import { formatDate } from "@/lib/format";
 import { formatDose, statusLabel } from "@/lib/i18n/enum-labels";
 import { placeName } from "@/lib/enclosures/names";
 import { ZoneName } from "@/components/ZoneName";
-import { describeSchedule } from "@/lib/prescriptions/frequency";
+import { describeRxSchedule, wordsFrom } from "@/lib/prescriptions/schedule";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
 import { AmountPicture } from "@/components/medication/AmountPicture";
@@ -65,8 +65,8 @@ export default async function MedicationListPage(props: PageProps<"/operations/m
 
   const dose = (med: ListedMedication) =>
     formatDose(t, med.quantity, med.doseUnit) ?? m.amountMissing;
-  const often = (med: ListedMedication) =>
-    med.schedule ? describeSchedule(t, med.schedule) : (med.frequencyLabel ?? t.frequency.asNeeded);
+  const words = wordsFrom(t.prescriptions.days);
+  const often = (med: ListedMedication) => describeRxSchedule(words, med.schedule, med.startDate);
 
   const pickLine = (line: PickLine) => (
     <li key={line.medicationId + line.doseUnit} className="flex items-center gap-3">
@@ -156,7 +156,7 @@ export default async function MedicationListPage(props: PageProps<"/operations/m
 
       <nav aria-label={m.roundLabel} className="flex flex-col gap-2">
         <p className="text-base font-semibold text-foreground">{m.roundLabel}</p>
-        <ul className="grid grid-cols-3 gap-2">
+        <ul className="grid grid-cols-2 gap-2 sm:grid-cols-4">
           {ROUND_KEYS.map((k) => (
             <li key={k}>
               <Link

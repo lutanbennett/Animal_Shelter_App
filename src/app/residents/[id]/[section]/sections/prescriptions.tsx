@@ -2,6 +2,7 @@ import { formatDate, todayIso } from "@/lib/format";
 import { localLabel } from "@/lib/translations/labels";
 import { formatDose } from "@/lib/i18n/enum-labels";
 import { can } from "@/lib/permissions/can";
+import { SCHEDULE_COLUMNS, describeRxSchedule, wordsFrom, type RxSchedule } from "@/lib/prescriptions/schedule";
 import { RecordRowActions } from "@/components/RecordRowActions";
 import { ArchiveRecordControl } from "@/components/ArchiveRecordControl";
 import { endPrescriptionToday } from "@/app/prescriptions/actions";
@@ -15,7 +16,7 @@ export async function renderPrescriptionsSection(ctx: SectionContext): Promise<R
   const { data, error } = await supabase
     .from("prescriptions")
     .select(
-      "id, start_date, end_date, dose_quantity, notes, medication:picker_medications(name, dose_unit, name_th), frequency(label, label_th), clinic_visits(appointment_date)",
+      `id, start_date, end_date, dose_quantity, notes, medication:picker_medications(name, dose_unit, name_th), ${SCHEDULE_COLUMNS}, prescription_rounds(round:rounds(key, name, name_th, sort_order)), clinic_visits(appointment_date)`,
     )
     .is("archived_at", null)
     .eq("resident_id", id)
@@ -28,8 +29,12 @@ export async function renderPrescriptionsSection(ctx: SectionContext): Promise<R
         dose_quantity: number | null;
         notes: string | null;
         medication: { name: string; dose_unit: string; name_th: string | null } | null;
-        frequency: { label: string; label_th: string | null } | null;
+        prescription_rounds: { round: { key: string; name: string; name_th: string | null; sort_order: number } | null }[];
         clinic_visits: { appointment_date: string } | null;
+        schedule_unit: RxSchedule["schedule_unit"];
+        schedule_every: number | null;
+        schedule_weekdays: number[] | null;
+        schedule_month_days: number[] | null;
       }[]
     >();
   const rxCount = await archivedCount("prescriptions");
@@ -37,7 +42,7 @@ export async function renderPrescriptionsSection(ctx: SectionContext): Promise<R
     ? await supabase
         .from("prescriptions")
         .select(
-          "id, start_date, end_date, dose_quantity, notes, archive_reason, medication:picker_medications(name, dose_unit, name_th), frequency(label, label_th), clinic_visits(appointment_date)",
+          `id, start_date, end_date, dose_quantity, notes, archive_reason, medication:picker_medications(name, dose_unit, name_th), ${SCHEDULE_COLUMNS}, prescription_rounds(round:rounds(key, name, name_th, sort_order)), clinic_visits(appointment_date)`,
         )
         .not("archived_at", "is", null)
         .eq("resident_id", id)
@@ -51,8 +56,12 @@ export async function renderPrescriptionsSection(ctx: SectionContext): Promise<R
             notes: string | null;
             archive_reason: string | null;
             medication: { name: string; dose_unit: string; name_th: string | null } | null;
-            frequency: { label: string; label_th: string | null } | null;
+            prescription_rounds: { round: { key: string; name: string; name_th: string | null; sort_order: number } | null }[];
             clinic_visits: { appointment_date: string } | null;
+        schedule_unit: RxSchedule["schedule_unit"];
+        schedule_every: number | null;
+        schedule_weekdays: number[] | null;
+        schedule_month_days: number[] | null;
           }[]
         >()
     : { data: [] };
@@ -61,6 +70,7 @@ export async function renderPrescriptionsSection(ctx: SectionContext): Promise<R
   // prescription on the date of death (0027), so a deceased resident's
   // list is all expired.
   const today = todayIso();
+  const words = wordsFrom(t.prescriptions.days);
   const rows = data ?? [];
   const current = rows.filter((row) => !row.end_date || row.end_date >= today);
   const expired = rows.filter((row) => row.end_date && row.end_date < today);
@@ -72,6 +82,12 @@ export async function renderPrescriptionsSection(ctx: SectionContext): Promise<R
     archived = false,
   ) => {
     const dose = formatDose(t, row.dose_quantity, row.medication?.dose_unit);
+    const often = describeRxSchedule(words, row, row.start_date);
+    const times = row.prescription_rounds
+      .flatMap((p) => (p.round ? [p.round] : []))
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((r) => localLabel(locale, r.name, r.name_th))
+      .join(", ");
     return (
       <div className="flex flex-col gap-1">
         <div className="flex items-start justify-between gap-3">
@@ -79,11 +95,9 @@ export async function renderPrescriptionsSection(ctx: SectionContext): Promise<R
             <span className="font-medium">
               {(row.medication ? localLabel(locale, row.medication.name, row.medication.name_th) : t.residents.sections.unknownMedication)}
             </span>
-            {(dose || (row.frequency && localLabel(locale, row.frequency.label, row.frequency.label_th))) && (
-              <span className="text-xs text-muted">
-                {[dose, (row.frequency && localLabel(locale, row.frequency.label, row.frequency.label_th))].filter(Boolean).join(" · ")}
-              </span>
-            )}
+            <span className="text-xs text-muted">
+              {[dose, often, row.schedule_unit ? times : null].filter(Boolean).join(" · ")}
+            </span>
           </div>
           <div className="flex flex-col items-end gap-0.5 text-right">
             <span className="text-xs text-muted">
