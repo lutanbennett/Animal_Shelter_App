@@ -41,11 +41,15 @@ export function AssistantDetails({
   const [values, setValues] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    // Captured and stopped here: the slide-over closes on Escape too, and one
+    // Escape should close only this dialog, not the conversation behind it.
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
+      if (e.key !== "Escape") return;
+      e.stopImmediatePropagation();
+      onClose();
     }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => document.removeEventListener("keydown", onKeyDown, true);
   }, [onClose]);
 
   if (typeof document === "undefined") return null;
