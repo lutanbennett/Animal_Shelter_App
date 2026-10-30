@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none. The handover is written every nine streams by the loop in `.claude/skills/plan-day/SKILL.md` step 8; the promotions come from this round's own measurements |
 | Branch / worktree | `claude/planner-handover-483` @ `C:\Development\Animal_Shelter_planner-handover-483` |
 | Dev server | not started — `n/a`, no runtime surface (see §4) |
-| PR | #1086 |
+| PR | #1090 |
 | Tested by / date | Claude (Daily Planner) / 2026-10-30 |
 | Carries a migration? | no |
 | Tested at SHA | `92219ee1` |
