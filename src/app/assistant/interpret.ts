@@ -17,6 +17,13 @@ import { interpretSentence, type InterpretResult } from "@/lib/assistant/interpr
  * keyword parser, so a slow, absent or confused model costs a person nothing
  * but the wait. The confirm card and the write server actions are untouched.
  *
+ * Multi-turn (stream 4): `history` is the earlier sentences of this
+ * conversation as the browser reports them, and `resume` hands back an
+ * exchange that paused on a question, with the person's answer. Neither is
+ * trusted: `interpretSentence` checks both against the rows this person can
+ * see. Nothing is kept on the server between calls, so there is no memory
+ * across conversations: closing the page forgets it.
+ *
  * A sentence longer than MAX_REQUEST_CHARS is not sent: it bounds what one
  * turn can spend. A ceiling per person per day needs somewhere to count, and
  * is left for the release that turns a model on (decision file).
@@ -27,6 +34,10 @@ export async function interpretRequest(input: {
   request: string;
   /** The asker's calendar date, YYYY-MM-DD: the server runs in UTC. */
   today: string;
+  /** Earlier sentences of this conversation (`HistoryLine[]`), most recent last. */
+  history?: unknown;
+  /** A paused exchange (`InterpretResume`) and the person's answer to its question. */
+  resume?: { state: unknown; answer: unknown };
 }): Promise<InterpretResult> {
   try {
     const request = input.request;
@@ -53,6 +64,8 @@ export async function interpretRequest(input: {
       request,
       today: input.today,
       canWrite: context.canWrite,
+      history: input.history,
+      resume: input.resume,
       rows: {
         residents: context.residents,
         enclosures: context.enclosures.map((e) => ({ id: e.id, name: e.name, nameTh: e.name_th })),

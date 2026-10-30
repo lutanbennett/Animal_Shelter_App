@@ -4260,6 +4260,19 @@ const en = {
       "I didn't understand that one. I can send a resident to hospital and back, log a weight, record a death, place a resident with a foster or adopting carer, move a resident, book a clinic visit, and answer \"where is …\", \"who is in …\" and \"what is due this week\". The user manual has the exact sentences.",
     severalMatch: "More than one resident has that name — pick the right one.",
     whichOne: "Which one do you mean?",
+    /** The assistant asking for something the sentence left out (stream 4). */
+    details: {
+      title: "A bit more, please",
+      answer: "Answer",
+      send: "Send",
+      skip: "Skip — I'll fill it in on the form",
+      cancel: "Cancel this",
+      fields: {
+        doctorName: "Doctor",
+        carerName: "Carer",
+        days: "How many days ahead",
+      },
+    },
     fillBlanks: "Check the details, fill in anything missing, then confirm.",
     notAuthorized: "Your account can't use the assistant.",
     volunteerReadOnly:

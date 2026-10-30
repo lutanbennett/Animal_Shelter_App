@@ -10,8 +10,12 @@ import type { AssistantContext } from "@/lib/assistant/data";
 import { recordAssistantTurn, recordRefusedTurn } from "@/app/assistant/actions";
 import { interpretRequest } from "@/app/assistant/interpret";
 import { assistantLookup, type LookupAnswer } from "@/app/assistant/lookups";
+import type { AskField, DetailsAsk, HistoryLine, InterpretResult, InterpretResume } from "@/lib/assistant/interpret";
+import { ActionButton } from "@/components/ActionButton";
+import { MessageCircleQuestionMark } from "lucide-react";
 import { AssistantCard, type AssistantOutcome } from "./AssistantCards";
 import { AssistantAnswer } from "./AssistantAnswers";
+import { AssistantDetails } from "./AssistantDetails";
 import { AssistantInput } from "./AssistantInput";
 import {
   AssistantMessageList,
@@ -33,11 +37,22 @@ import {
  * exactly as it did before the model existed. What reaches the server for a
  * write is still only the confirmed card; a read-only question or the audit
  * row for a turn that ended in neither follows the same path as ever.
+ *
+ * Multi-turn (stream 4): each sentence carries the last few before it, so
+ * "send her to hospital" can mean the resident just weighed; and the model
+ * may stop to ask for a field (`asking`), which the person answers in a
+ * dialog before the card appears. All of it lives in this component's
+ * state and nowhere else: a new page is a new conversation.
  */
+
+/** Earlier sentences sent with each new one. The server caps it again; this only keeps the request small. */
+const HISTORY_SENT = 3;
 
 type TurnState =
   | { kind: "card" }
   | { kind: "pending" }
+  /** The model asked for something; the exchange waits in `resume` until the person answers. */
+  | { kind: "asking"; ask: DetailsAsk; resume: InterpretResume }
   | { kind: "answer"; answer: LookupAnswer }
   | { kind: "error"; message: string }
   | { kind: "done"; message: string; residentId: string | null }
@@ -54,7 +69,50 @@ type Turn = {
   state: TurnState;
   /** Set when a model was asked about this sentence, whatever came of it. */
   trace?: AssistantTrace;
+  /** The earlier sentences this one was sent with, kept so an answer resumes with the same ones. */
+  history?: HistoryLine[];
+  /**
+   * What the person answered the model, for which action. If the model then
+   * fails and the keyword parser takes over, these still fill its card.
+   */
+  answers?: { action: string; fields: AskField[]; values: Record<string, string> };
 };
+
+/** What the model is told about the conversation so far: the outcome of each recent sentence, not its exchange. */
+function historyOf(turns: Turn[]): HistoryLine[] {
+  const lines = turns.flatMap((turn): HistoryLine[] => {
+    const outcome: HistoryLine["outcome"] | null =
+      turn.state.kind === "done"
+        ? "recorded"
+        : turn.state.kind === "answer"
+          ? "answered"
+          : turn.state.kind === "cancelled"
+            ? "cancelled"
+            : turn.state.kind === "card"
+              ? "open"
+              : null;
+    if (!outcome || !turn.parsed) return [];
+    const draft = turn.parsed.draft;
+    const residentId =
+      turn.state.kind === "done" ? turn.state.residentId : "residentId" in draft ? draft.residentId : null;
+    return [{ request: turn.request, outcome, kind: draft.kind, residentId }];
+  });
+  return lines.slice(-HISTORY_SENT);
+}
+
+/** Puts what the person answered into a parser's draft, where it left the field blank. */
+function withAnswers(parsed: ParsedRequest | null, answers: Turn["answers"]): ParsedRequest | null {
+  if (!parsed || !answers || parsed.draft.kind !== answers.action) return parsed;
+  const draft: Record<string, unknown> = { ...parsed.draft };
+  for (const field of answers.fields) {
+    const raw = answers.values[field.name]?.trim();
+    if (!raw || !(field.name in draft) || draft[field.name] !== null) continue;
+    const numeric = field.input === "number" || field.input === "integer";
+    if (numeric && !Number.isFinite(Number(raw))) continue;
+    draft[field.name] = numeric ? Number(raw) : raw;
+  }
+  return { ...parsed, draft: draft as ParsedRequest["draft"] };
+}
 
 export function AssistantConversation({
   context,
@@ -72,6 +130,8 @@ export function AssistantConversation({
   const nextTurnId = useRef(1);
   // Once the server says no model is set up, stop asking it on every sentence.
   const modelOff = useRef(false);
+  // The turn whose question dialog is open. Closing it leaves the question waiting in the conversation.
+  const [askOpen, setAskOpen] = useState<number | null>(null);
 
   const parserData = useMemo(
     () => ({
@@ -107,27 +167,69 @@ export function AssistantConversation({
     }
 
     // The model first; the keyword parser is what every failure falls back to.
-    setTurns((prev) => [...prev, { id, request: trimmed, parsed: null, state: { kind: "pending" } }]);
-    const fallback = (trace?: AssistantTrace) => {
-      const parsed = parseRequest(trimmed, parserData);
+    const history = historyOf(turns);
+    setTurns((prev) => [...prev, { id, request: trimmed, parsed: null, state: { kind: "pending" }, history }]);
+    interpretRequest({ request: trimmed, today: isoLocal(new Date()), history })
+      .then((result) => interpreted(id, trimmed, result))
+      .catch(() => fallback(id, trimmed));
+  }
+
+  /** The model's reply to a sentence or to an answer: a card, a question, or the keyword parser. */
+  function interpreted(id: number, request: string, result: InterpretResult, prior?: Pick<Turn, "trace" | "answers">) {
+    if (!result.ok) {
+      if (result.reason === "not_configured") modelOff.current = true;
+      return fallback(id, request, result.trace ?? prior?.trace, prior?.answers);
+    }
+    if ("ask" in result) {
       setTurns((prev) =>
-        prev.map((turn) => (turn.id === id ? startedTurn(id, trimmed, parsed, trace) : turn)),
+        prev.map((turn) =>
+          turn.id === id
+            ? { ...turn, trace: result.trace, state: { kind: "asking", ask: result.ask, resume: result.resume } }
+            : turn,
+        ),
       );
-      afterParse(id, trimmed, parsed, trace);
+      setAskOpen(id);
+      return;
+    }
+    const parsed: ParsedRequest = {
+      draft: result.draft,
+      intent: result.draft.kind,
+      residentCandidates: result.residentCandidates,
     };
-    interpretRequest({ request: trimmed, today: isoLocal(new Date()) })
-      .then((result) => {
-        if (!result.ok) {
-          if (result.reason === "not_configured") modelOff.current = true;
-          return fallback(result.trace);
-        }
-        const parsed: ParsedRequest = { draft: result.draft, intent: result.draft.kind, residentCandidates: [] };
-        setTurns((prev) =>
-          prev.map((turn) => (turn.id === id ? startedTurn(id, trimmed, parsed, result.trace) : turn)),
-        );
-        afterParse(id, trimmed, parsed, result.trace);
-      })
-      .catch(() => fallback());
+    setTurns((prev) =>
+      prev.map((turn) => (turn.id === id ? { ...turn, ...startedTurn(id, request, parsed, result.trace) } : turn)),
+    );
+    afterParse(id, request, parsed, result.trace);
+  }
+
+  function fallback(id: number, request: string, trace?: AssistantTrace, answers?: Turn["answers"]) {
+    const parsed = withAnswers(parseRequest(request, parserData), answers);
+    setTurns((prev) =>
+      prev.map((turn) => (turn.id === id ? { ...turn, ...startedTurn(id, request, parsed, trace) } : turn)),
+    );
+    afterParse(id, request, parsed, trace);
+  }
+
+  /** The person answered the model's question (or skipped it, with no values): the exchange resumes. */
+  function answer(turn: Turn, values: Record<string, string>) {
+    if (turn.state.kind !== "asking") return;
+    const { ask, resume } = turn.state;
+    setAskOpen(null);
+    const earlier = turn.answers?.action === ask.action ? turn.answers : undefined;
+    const answers = {
+      action: ask.action,
+      fields: [...(earlier?.fields ?? []), ...ask.fields],
+      values: { ...earlier?.values, ...values },
+    };
+    setTurns((prev) => prev.map((t) => (t.id === turn.id ? { ...t, answers, state: { kind: "pending" } } : t)));
+    interpretRequest({
+      request: turn.request,
+      today: isoLocal(new Date()),
+      history: turn.history,
+      resume: { state: resume, answer: values },
+    })
+      .then((result) => interpreted(turn.id, turn.request, result, { trace: turn.trace, answers }))
+      .catch(() => fallback(turn.id, turn.request, turn.trace, answers));
   }
 
   function startedTurn(id: number, request: string, parsed: ParsedRequest | null, trace?: AssistantTrace): Turn {
@@ -238,10 +340,26 @@ export function AssistantConversation({
         {turns.map((turn) => (
           <AssistantTurn key={turn.id} settled={turn.state.kind}>
             <RequestBubble text={turn.request} />
-            <TurnReply turn={turn} context={context} onSettle={settle} />
+            <TurnReply turn={turn} context={context} onSettle={settle} onOpenAsk={() => setAskOpen(turn.id)} />
           </AssistantTurn>
         ))}
       </AssistantMessageList>
+
+      {turns.map((turn) =>
+        turn.id === askOpen && turn.state.kind === "asking" ? (
+          <AssistantDetails
+            key={turn.id}
+            turnId={turn.id}
+            ask={turn.state.ask}
+            onAnswer={(values) => answer(turn, values)}
+            onClose={() => setAskOpen(null)}
+            onCancel={() => {
+              setAskOpen(null);
+              settle(turn, { kind: "cancelled" });
+            }}
+          />
+        ) : null,
+      )}
 
       <AssistantInput
         onSend={submit}
@@ -257,15 +375,28 @@ function TurnReply({
   turn,
   context,
   onSettle,
+  onOpenAsk,
 }: {
   turn: Turn;
   context: AssistantContext;
   onSettle: (turn: Turn, outcome: AssistantOutcome) => void;
+  onOpenAsk: () => void;
 }) {
   const { t } = useI18n();
   const a = t.assistant;
 
   switch (turn.state.kind) {
+    case "asking":
+      return (
+        <ReplyBubble>
+          <p>{turn.state.ask.question || a.details.title}</p>
+          <div className="mt-2">
+            <ActionButton icon={MessageCircleQuestionMark} compact onClick={onOpenAsk}>
+              {a.details.answer}
+            </ActionButton>
+          </div>
+        </ReplyBubble>
+      );
     case "unmatched":
       return <ReplyBubble>{a.cantHelp}</ReplyBubble>;
     case "readOnly":
