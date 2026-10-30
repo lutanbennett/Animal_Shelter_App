@@ -145,7 +145,7 @@ Automated checks by: Claude  Date: 2026-10-30
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person.
+- [ ] The manual list above is empty, or every item in it was checked by a person. — pending: item 1 needs a real model
 
 Manual verification by: pending: item 1 needs a real model, which does not exist yet
 
