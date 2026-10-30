@@ -32,13 +32,12 @@ export const PHOTO_WIDTHS = [160, 400, 800, 1200] as const;
 export type PhotoWidth = (typeof PHOTO_WIDTHS)[number];
 
 /**
- * Link straight to a file in Google Drive's own viewer. Used for the
- * deceased archive's summary PDF and offline index page, which staff open
- * in Drive rather than through the app — unlike photos, these aren't
- * rendered in-page, so there's no throttle to route around.
+ * Link to a staff document (a filed donation receipt, a deceased resident's summary PDF or offline index)
+ * through the app's own route (src/app/api/documents/[fileId]/route.ts), which checks the caller on every
+ * request and serves the Pi's mirror copy when there is one. Open it in a new tab.
  */
-export function driveFileUrl(fileId: string): string {
-  return `https://drive.google.com/file/d/${encodeURIComponent(fileId)}/view`;
+export function driveDocumentUrl(fileId: string): string {
+  return `/api/documents/${encodeURIComponent(fileId)}`;
 }
 
 /** Link to a folder in Drive — the archived resident folder. */
