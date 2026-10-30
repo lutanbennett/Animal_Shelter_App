@@ -16,6 +16,10 @@ export type AssistantActionLog = {
   result: string | null;
   resultTable?: string | null;
   resultRowId?: string | null;
+  /** Version 2: the model that interpreted the request. Null is every version 1 row. */
+  model?: string | null;
+  /** Version 2: the turn's messages and tool calls (shape in interpret.ts). */
+  exchange?: unknown;
 };
 
 /**
@@ -43,6 +47,8 @@ export async function logAssistantAction(
     result: input.result,
     result_table: input.resultTable ?? null,
     result_row_id: input.resultRowId ?? null,
+    model: input.model ?? null,
+    exchange: input.exchange ?? null,
   });
   if (error) {
     console.error("assistant: could not write the audit row —", error.message);
