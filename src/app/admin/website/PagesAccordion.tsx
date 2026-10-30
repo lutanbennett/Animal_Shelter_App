@@ -30,6 +30,8 @@ export function PagesAccordion({ items, canEdit }: { items: PageAccordionItem[];
   const p = t.admin.website.pages;
   const [open, setOpen] = useState<string | null>(null);
   const dirty = useRef(false);
+  // Bumped when unsaved typing is thrown away, so the editor remounts from the saved page.
+  const [epoch, setEpoch] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const fromHash = () => {
@@ -51,13 +53,14 @@ export function PagesAccordion({ items, canEdit }: { items: PageAccordionItem[];
 
   const close = useCallback(() => {
     if (dirty.current && !window.confirm(p.discardConfirm)) return false;
+    if (dirty.current && open) setEpoch((e) => ({ ...e, [open]: (e[open] ?? 0) + 1 }));
     dirty.current = false;
     setOpen(null);
     const url = new URL(window.location.href);
     url.hash = "";
     window.history.replaceState(null, "", url);
     return true;
-  }, [p.discardConfirm]);
+  }, [p.discardConfirm, open]);
 
   const fmt = new Intl.DateTimeFormat(locale === "th" ? "th-TH" : "en-GB", {
     dateStyle: "medium",
@@ -107,6 +110,7 @@ export function PagesAccordion({ items, canEdit }: { items: PageAccordionItem[];
             <PageDialog
               item={item}
               isOpen={open === item.slug}
+              epoch={epoch[item.slug] ?? 0}
               dirty={dirty}
               onClose={close}
               title={p.editTitle(item.label)}
@@ -127,6 +131,7 @@ export function PagesAccordion({ items, canEdit }: { items: PageAccordionItem[];
 function PageDialog({
   item,
   isOpen,
+  epoch,
   dirty,
   onClose,
   title,
@@ -134,6 +139,7 @@ function PageDialog({
 }: {
   item: PageAccordionItem;
   isOpen: boolean;
+  epoch: number;
   dirty: { current: boolean };
   onClose: () => boolean;
   title: string;
@@ -182,7 +188,7 @@ function PageDialog({
           <X className="h-4 w-4" aria-hidden />
         </button>
       </div>
-      <div id={`page-${item.slug}-editor`} className="overflow-y-auto px-4 py-4">
+      <div key={epoch} id={`page-${item.slug}-editor`} className="overflow-y-auto px-4 py-4">
         {item.editor}
       </div>
     </dialog>
