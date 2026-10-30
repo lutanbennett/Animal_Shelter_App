@@ -160,6 +160,15 @@ export default async function CashflowPage(props: PageProps<"/management/cashflo
           // Each link is drawn only for the activity its own page or action asks (fixed-outgoings/actions.ts, admin/website).
           canEditFixedOutgoings={can(perms, "reports.cashflow", "edit")}
           canEditClinicEstimate={can(perms, "website.content", "edit")}
+          // Each "fix N" link goes to a page that asks its own activity; draw it only when that is held.
+          canFix={{
+            food: can(perms, "stock.diets", "edit"),
+            medication: can(perms, "stock.medications", "edit"),
+            immunization: can(perms, "reference.types"),
+            clinic: can(perms, "website.content", "edit"),
+            maintenance: can(perms, "maintenance.jobs", "edit"),
+            fixed: can(perms, "reports.cashflow", "edit"),
+          }}
         />
       )}
     </main>
