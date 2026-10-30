@@ -6,7 +6,7 @@
 | Backlog item | `docs/backlog.md` → none. The handover is a step of the `/plan-day` skill (step 8), not a backlog item |
 | Branch / worktree | `claude/planner-handover-501` @ `C:\Development\Animal_Shelter_planner-handover-501` |
 | Dev server | `n/a: no runtime surface — two Markdown files` |
-| PR | #1107 |
+| PR | #1110 |
 | Tested by / date | Claude (Daily Planner session) / 2026-10-30 |
 | Carries a migration? | no |
 | Tested at SHA | `4b737bf9` |
