@@ -368,6 +368,18 @@ Both deploy paths refuse a commit whose database lacks a migration that is on
 columns. Re-run `--status` afterwards and read `0 pending` and a clean drift
 check before moving on.
 
+**`0292_write_requests.sql` is the one where that refusal is protecting something
+you can name, so do not look for a way round it.** The Pi failover wrapper
+(`src/lib/action-result.ts`, `worker/origin.mjs`) lets the Worker serve a write
+the Pi did not answer, and it is safe to do that ONLY because the database
+refuses the second use of a request id. Deploy that code to an environment where
+`0292` is not applied and every wrapped save fails outright --- `claim_write_request`
+does not exist --- while the Worker is newly willing to replay. The guard already
+stops it; this paragraph is here so the refusal reads as a reason rather than an
+obstacle. Its one hole is the line above: *could not ask* is a warning, not a
+refusal, so read `--status` yourself rather than trusting the deploy to have asked.
+See `docs/decisions/2026-10-31-write-request-wrapper.md`, section 6.
+
 **Pull the main checkout before you apply, not after.** The step above assumes
 `main` is current and does not say so. On `0.20.0` the five migrations were
 applied and the deploy that should have followed within seconds was refused:
