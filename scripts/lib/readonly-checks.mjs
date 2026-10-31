@@ -34,6 +34,45 @@ export function cronVerdict(r) {
   return "trigger fires but no real run was written: the Worker did not reach the app, or the route did not write";
 }
 
+// translations-open: every label pair the check has been taught, as [table, column, English column, Thai column]. Add a row when
+// translatable_labels gains a pair; the check's uncovered list names any registered pair missing from here.
+const TRANSLATION_ARMS = [
+  ["blood_test_types", "name", "name", "name_th"],
+  ["clinics", "name", "name", "name_th"],
+  ["diet_types", "name", "name", "name_th"],
+  ["diets", "name", "name", "name_th"],
+  ["enclosures", "name", "name", "name_th"],
+  ["features", "name", "name", "name_th"],
+  ["fixed_outgoings", "label", "label", "label_th"],
+  ["frequency", "label", "label", "label_th"],
+  ["immunization_types", "name", "name", "name_th"],
+  ["impact_baselines", "label", "label", "label_th"],
+  ["item_unit_conversions", "unit", "unit", "unit_th"],
+  ["map_rooms", "name", "name", "name_th"],
+  ["medication", "name", "name", "name_th"],
+  ["memes", "caption_en", "caption_en", "caption_th"],
+  ["procedure_types", "name", "name", "name_th"],
+  ["project_folders", "name", "name", "name_th"],
+  ["residents", "breed", "breed", "breed_th"],
+  ["residents", "colour", "colour", "colour_th"],
+  ["role_groups", "name", "name", "name_th"],
+  ["roles", "name", "name", "name_th"],
+  ["site_content", "about_photo_alt", "about_photo_alt", "about_photo_alt_th"],
+  ["site_content", "contact_address", "contact_address", "contact_address_th"],
+  ["site_content", "donate_photo_alt", "donate_photo_alt", "donate_photo_alt_th"],
+  ["site_content", "foster_photo_alt", "foster_photo_alt", "foster_photo_alt_th"],
+  ["site_content", "hero_alt", "hero_alt", "hero_alt_th"],
+  ["site_content", "registration_text", "registration_text", "registration_text_th"],
+  ["site_content", "tagline", "tagline", "tagline_th"],
+  ["site_content", "visiting_hours", "visiting_hours", "visiting_hours_th"],
+  ["site_content", "volunteer_photo_alt", "volunteer_photo_alt", "volunteer_photo_alt_th"],
+  ["site_content_photos", "alt", "alt", "alt_th"],
+  ["units", "name", "name", "name_th"],
+  ["zones", "name", "name", "name_th"],
+];
+const TAUGHT_PAIRS = [...new Set(TRANSLATION_ARMS.map(([t, c]) => `('${t}', '${c}')`))].join(", ");
+const ARM_SELECTS = TRANSLATION_ARMS.map(([t, c, en, th], i) => `${i ? "union all " : ""}select '${t}', '${c}', id::text, ${en}, nullif(btrim(${th}), '') from ${t}`).join(String.fromCharCode(10) + "        ");
+
 export const CHECKS = {
   "schema-version": {
     asks: "Which migration was applied last, and how many are applied?",
@@ -369,39 +408,14 @@ export const CHECKS = {
     // to the label_state CTE and give a row with no live Thai and a draft the state 'proposed', counted apart from missing --
     // which is exactly what label_translations() does and what the screen shows. Backlog: ## Security, "Teach translations-open
     // about label drafts". Until then a production 'missing' count silently includes anything waiting, and that is on purpose.
-    sql: `with arm(table_name, column_name, row_id, en, th) as (
-        select 'blood_test_types', 'name', id::text, name, nullif(btrim(name_th), '') from blood_test_types
-        union all select 'clinics', 'name', id::text, name, nullif(btrim(name_th), '') from clinics
-        union all select 'diet_types', 'name', id::text, name, nullif(btrim(name_th), '') from diet_types
-        union all select 'diets', 'name', id::text, name, nullif(btrim(name_th), '') from diets
-        union all select 'enclosures', 'name', id::text, name, nullif(btrim(name_th), '') from enclosures
-        union all select 'features', 'name', id::text, name, nullif(btrim(name_th), '') from features
-        union all select 'fixed_outgoings', 'label', id::text, label, nullif(btrim(label_th), '') from fixed_outgoings
-        union all select 'frequency', 'label', id::text, label, nullif(btrim(label_th), '') from frequency
-        union all select 'immunization_types', 'name', id::text, name, nullif(btrim(name_th), '') from immunization_types
-        union all select 'impact_baselines', 'label', id::text, label, nullif(btrim(label_th), '') from impact_baselines
-        union all select 'item_unit_conversions', 'unit', id::text, unit, nullif(btrim(unit_th), '') from item_unit_conversions
-        union all select 'map_rooms', 'name', id::text, name, nullif(btrim(name_th), '') from map_rooms
-        union all select 'medication', 'name', id::text, name, nullif(btrim(name_th), '') from medication
-        union all select 'memes', 'caption_en', id::text, caption_en, nullif(btrim(caption_th), '') from memes
-        union all select 'procedure_types', 'name', id::text, name, nullif(btrim(name_th), '') from procedure_types
-        union all select 'project_folders', 'name', id::text, name, nullif(btrim(name_th), '') from project_folders
-        union all select 'residents', 'breed', id::text, breed, nullif(btrim(breed_th), '') from residents
-        union all select 'residents', 'colour', id::text, colour, nullif(btrim(colour_th), '') from residents
-        union all select 'role_groups', 'name', id::text, name, nullif(btrim(name_th), '') from role_groups
-        union all select 'roles', 'name', id::text, name, nullif(btrim(name_th), '') from roles
-        union all select 'site_content', 'about_photo_alt', id::text, about_photo_alt, nullif(btrim(about_photo_alt_th), '') from site_content
-        union all select 'site_content', 'contact_address', id::text, contact_address, nullif(btrim(contact_address_th), '') from site_content
-        union all select 'site_content', 'donate_photo_alt', id::text, donate_photo_alt, nullif(btrim(donate_photo_alt_th), '') from site_content
-        union all select 'site_content', 'foster_photo_alt', id::text, foster_photo_alt, nullif(btrim(foster_photo_alt_th), '') from site_content
-        union all select 'site_content', 'hero_alt', id::text, hero_alt, nullif(btrim(hero_alt_th), '') from site_content
-        union all select 'site_content', 'registration_text', id::text, registration_text, nullif(btrim(registration_text_th), '') from site_content
-        union all select 'site_content', 'tagline', id::text, tagline, nullif(btrim(tagline_th), '') from site_content
-        union all select 'site_content', 'visiting_hours', id::text, visiting_hours, nullif(btrim(visiting_hours_th), '') from site_content
-        union all select 'site_content', 'volunteer_photo_alt', id::text, volunteer_photo_alt, nullif(btrim(volunteer_photo_alt_th), '') from site_content
-        union all select 'site_content_photos', 'alt', id::text, alt, nullif(btrim(alt_th), '') from site_content_photos
-        union all select 'units', 'name', id::text, name, nullif(btrim(name_th), '') from units
-        union all select 'zones', 'name', id::text, name, nullif(btrim(name_th), '') from zones),
+    // The arms and the `taught` list are generated from TRANSLATION_ARMS (top of this file), one row each, so they cannot drift apart.
+    // `uncovered` reads `taught`, never `arm`: an arm is a select from a table, and an EMPTY table contributes no rows, so testing
+    // coverage against the arms made a correctly taught pair read as untaught the moment its table was empty (fixed_outgoings on
+    // production, 2026-10-31). Coverage is a property of the list, not of the data. Every table named is still resolved at plan
+    // time, so a table that does not exist stops the check, as before.
+    sql: `with taught(table_name, column_name) as (values ${TAUGHT_PAIRS}),
+      arm(table_name, column_name, row_id, en, th) as (
+        ${ARM_SELECTS}),
       label_state as (
         select l.label_group as grp,
                case when a.th is null then case when l.optional then 'as_typed' else 'missing' end
@@ -430,7 +444,7 @@ export const CHECKS = {
                      from prose_state group by grp having count(*) filter (where state in ('missing', 'stale')) > 0) p)),
         'uncovered', (select coalesce(json_agg(l.table_name || '.' || l.column_name order by l.table_name, l.column_name), '[]'::json)
            from translatable_labels l
-          where not exists (select 1 from arm a where a.table_name = l.table_name and a.column_name = l.column_name)))`,
+          where not exists (select 1 from taught a where a.table_name = l.table_name and a.column_name = l.column_name)))`,
     render: (r) => {
       const missing = r.labels.missing + r.prose.missing;
       const stale = r.labels.stale + r.prose.stale;
