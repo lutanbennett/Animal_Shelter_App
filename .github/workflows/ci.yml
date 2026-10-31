@@ -178,6 +178,12 @@ jobs:
       # A permission prop is never JSX shorthand: a bare `canManage` is always true,
       # which is how #1126's Settings → Website hole was written.
       - run: node scripts/check-permission-props.mjs
+      # No Thai entry is its English copied across (a missing key already fails the
+      # typecheck; a wrong one did not). Imports both dictionaries, so templated and
+      # multi-line entries are compared too. Its second rule — English typed into a
+      # .tsx instead of the dictionary — REPORTS ONLY and carries no stored count;
+      # docs/decisions/2026-10-31-thai-dictionary-check.md says when that flips.
+      - run: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-thai-dictionary.mjs
       # deploy-pi.sh must run the script it just checked out, not the copy bash had open.
       - run: node scripts/pi/check-self-update.mjs
 
