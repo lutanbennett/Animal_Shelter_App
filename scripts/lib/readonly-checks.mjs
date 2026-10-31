@@ -351,11 +351,18 @@ export const CHECKS = {
     // by a later migration shows up as a gap in the CHECK rather than as a silently missing count.
     // If the database is behind on migrations the query stops with "could not run" naming the table it could not find; that is the
     // same finding said another way (`node scripts/apply-migrations.mjs --status --env production`).
+    //
+    // 0293 added label_drafts, so a label with no live Thai but a proposal waiting reads 'proposed' on the screen while this check
+    // still counts it as missing. Teaching it that is deliberately NOT done here: the query would then name label_drafts, and a
+    // database that has not had 0293 applied yet -- production, at the time of writing -- would stop with "could not run" instead of
+    // reporting its counts. It is a line in the app half's brief, and it costs nothing until a draft exists.
     sql: `with arm(table_name, column_name, row_id, en, th) as (
         select 'blood_test_types', 'name', id::text, name, nullif(btrim(name_th), '') from blood_test_types
         union all select 'clinics', 'name', id::text, name, nullif(btrim(name_th), '') from clinics
         union all select 'diet_types', 'name', id::text, name, nullif(btrim(name_th), '') from diet_types
+        union all select 'diets', 'name', id::text, name, nullif(btrim(name_th), '') from diets
         union all select 'enclosures', 'name', id::text, name, nullif(btrim(name_th), '') from enclosures
+        union all select 'features', 'name', id::text, name, nullif(btrim(name_th), '') from features
         union all select 'fixed_outgoings', 'label', id::text, label, nullif(btrim(label_th), '') from fixed_outgoings
         union all select 'frequency', 'label', id::text, label, nullif(btrim(label_th), '') from frequency
         union all select 'immunization_types', 'name', id::text, name, nullif(btrim(name_th), '') from immunization_types
@@ -363,15 +370,24 @@ export const CHECKS = {
         union all select 'item_unit_conversions', 'unit', id::text, unit, nullif(btrim(unit_th), '') from item_unit_conversions
         union all select 'map_rooms', 'name', id::text, name, nullif(btrim(name_th), '') from map_rooms
         union all select 'medication', 'name', id::text, name, nullif(btrim(name_th), '') from medication
+        union all select 'memes', 'caption_en', id::text, caption_en, nullif(btrim(caption_th), '') from memes
         union all select 'procedure_types', 'name', id::text, name, nullif(btrim(name_th), '') from procedure_types
         union all select 'project_folders', 'name', id::text, name, nullif(btrim(name_th), '') from project_folders
         union all select 'residents', 'breed', id::text, breed, nullif(btrim(breed_th), '') from residents
         union all select 'residents', 'colour', id::text, colour, nullif(btrim(colour_th), '') from residents
+        union all select 'role_groups', 'name', id::text, name, nullif(btrim(name_th), '') from role_groups
         union all select 'roles', 'name', id::text, name, nullif(btrim(name_th), '') from roles
+        union all select 'site_content', 'about_photo_alt', id::text, about_photo_alt, nullif(btrim(about_photo_alt_th), '') from site_content
+        union all select 'site_content', 'contact_address', id::text, contact_address, nullif(btrim(contact_address_th), '') from site_content
+        union all select 'site_content', 'donate_photo_alt', id::text, donate_photo_alt, nullif(btrim(donate_photo_alt_th), '') from site_content
+        union all select 'site_content', 'foster_photo_alt', id::text, foster_photo_alt, nullif(btrim(foster_photo_alt_th), '') from site_content
         union all select 'site_content', 'hero_alt', id::text, hero_alt, nullif(btrim(hero_alt_th), '') from site_content
+        union all select 'site_content', 'registration_text', id::text, registration_text, nullif(btrim(registration_text_th), '') from site_content
         union all select 'site_content', 'tagline', id::text, tagline, nullif(btrim(tagline_th), '') from site_content
         union all select 'site_content', 'visiting_hours', id::text, visiting_hours, nullif(btrim(visiting_hours_th), '') from site_content
+        union all select 'site_content', 'volunteer_photo_alt', id::text, volunteer_photo_alt, nullif(btrim(volunteer_photo_alt_th), '') from site_content
         union all select 'site_content_photos', 'alt', id::text, alt, nullif(btrim(alt_th), '') from site_content_photos
+        union all select 'units', 'name', id::text, name, nullif(btrim(name_th), '') from units
         union all select 'zones', 'name', id::text, name, nullif(btrim(name_th), '') from zones),
       label_state as (
         select l.label_group as grp,
