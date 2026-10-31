@@ -476,6 +476,18 @@ it, and it is gitignored (`.gitignore:59`). Confirm rather than assume —
 `ls -d .local` and `git check-ignore -v .local/deploy-<version>.log` — since an
 untracked file in the main checkout is what refused his deploy on `0.38.2`.
 
+**The log file does NOT appear on disk while the build runs, and that is not a
+missing `tee`.** `Tee-Object` buffers, so for the ten minutes that matter
+`ls .local/` shows no `deploy-<version>.log` at all — which looks exactly like a
+deploy started from the bare command, with the pre-build lines heading for the
+scrollback. On `0.41.0` that inference was made and was wrong: he had run the
+handed-over line verbatim. **Read his terminal instead of guessing**
+(`mcp__terminal__read_terminal`, generous `lines`), which has the whole log live,
+including `deploy: production → Supabase project <ref> (<sha>)` and the
+`Next.js version :` banner. Check the file again once the deploy has finished, by
+which time it is written. **Never conclude from an empty `.local/` that the
+handover was ignored**, and never ask him to re-run anything on that basis.
+
 The `deploy: production → Supabase project dbkodyyxxhtygxcxmfcu (<sha>)` line
 was missed for this reason on `0.15.0`, `0.15.1` and `0.16.0` — three releases
 running, each time recorded as a gap and each time settled indirectly. Also read
