@@ -353,9 +353,22 @@ export const CHECKS = {
     // same finding said another way (`node scripts/apply-migrations.mjs --status --env production`).
     //
     // 0293 added label_drafts, so a label with no live Thai but a proposal waiting reads 'proposed' on the screen while this check
-    // still counts it as missing. Teaching it that is deliberately NOT done here: the query would then name label_drafts, and a
-    // database that has not had 0293 applied yet -- production, at the time of writing -- would stop with "could not run" instead of
-    // reporting its counts. It is a line in the app half's brief, and it costs nothing until a draft exists.
+    // still counts it as missing.
+    //
+    // ANSWERED 2026-10-31 BY THE APP HALF, AND THE ANSWER IS "NOT YET": the drafts stay untaught until 0293 and 0294 are applied
+    // to production. docs/decisions/2026-10-31-label-drafts-the-app-half.md gives the reasoning; the short of it is that there is
+    // no graceful version to write. The check SQL is embedded in a do $o$ ... $o$ block (buildQuery, below) and must be one
+    // statement starting with select or with, so every relation it names is resolved when the block is planned. A query that
+    // mentions label_drafts therefore STOPS on a database without the table -- it cannot degrade, be guarded by to_regclass, or
+    // test for the table first -- and a check that stops tells the release manager nothing at all, which is strictly worse than
+    // one that under-reports by a known amount. On production that amount is currently zero, because label_drafts cannot hold a
+    // row on a database that has no such table.
+    //
+    // WHAT TO DO AND WHEN: once "node scripts/apply-migrations.mjs --status --env production" shows 0293 and 0294 applied, add
+    //   left join label_drafts d on d.table_name = a.table_name and d.row_id = a.row_id and d.column_name = a.column_name
+    // to the label_state CTE and give a row with no live Thai and a draft the state 'proposed', counted apart from missing --
+    // which is exactly what label_translations() does and what the screen shows. Backlog: ## Security, "Teach translations-open
+    // about label drafts". Until then a production 'missing' count silently includes anything waiting, and that is on purpose.
     sql: `with arm(table_name, column_name, row_id, en, th) as (
         select 'blood_test_types', 'name', id::text, name, nullif(btrim(name_th), '') from blood_test_types
         union all select 'clinics', 'name', id::text, name, nullif(btrim(name_th), '') from clinics
