@@ -54,6 +54,7 @@ node C:/Development/Animal_Shelter_App/scripts/check-backlog-sections.mjs   # st
 git -C C:/Development/Animal_Shelter_App push
 git -C C:/Development/Animal_Shelter_Backlog merge --ff-only main
 git -C C:/Development/Animal_Shelter_Backlog push
+npm --prefix C:/Development/Animal_Shelter_App ci   # after the pull (the only step that can change package-lock.json), before anything builds
 node C:/Development/Animal_Shelter_App/scripts/worktree.mjs clean   # prunes the Turbopack cache if over 3 GB; refuses (say so, carry on) while next runs there
 ```
 
@@ -61,6 +62,19 @@ node C:/Development/Animal_Shelter_App/scripts/worktree.mjs clean   # prunes the
 
 (The post-merge hook pushes both merges too; the explicit pushes cost
 nothing and do not depend on `core.hooksPath` being set.)
+
+**`npm ci` is the line before `worktree.mjs clean`, and it stays after the pull.** Added 2026-10-31 (backlog
+item *Add `npm ci` to the daily sync*): the pull is the only step that can change `package-lock.json`, and it is
+last of the pushes so a failed install cannot hold back the sync. Without it the main checkout, where a
+release is cut and `gates.mjs` runs, cannot build after a stream adds a dependency, and the failure arrives
+minutes into a build (`Can't resolve '@anthropic-ai/sdk'`). The release path already runs it
+(`docs/release-procedure.md`); this was the daily gap.
+
+**`git merge backlog` conflicts on most days, always the same way, and that is not a sign something has gone
+wrong.** Two days running (edition `528`). A PR ticks an item on `main` the same day the `backlog` branch
+reworded or re-filed it, and `docs/backlog.md` is one item per long line, so git cannot merge two rewrites
+of one line. **Resolve it the same way each time: keep `main`'s ticked line, drop the backlog branch's stale
+`[ ]` copy of it, keep any new item the backlog branch added beside it**, commit, and carry on to the check.
 
 ## 2. What is already in flight
 
@@ -81,6 +95,13 @@ source each figure came from (`PR comment` or `get_usage`). **The stream reports
 out of the bands, exactly as the rules below say. Release-manager and handover PRs post none. **Only
 when a PR has no such comment** (a stream that never merged, or a PR merged by hand) fall back to the
 live reading below, which is now the fallback and keeps every warning it had.
+
+**THE FLOOR IS `tokens − messages`, FROM THAT SAME COMMENT, AND YOU NEVER NEED A LIVE PROCESS FOR IT.**
+Promoted 2026-10-31 from editions `519` and `528`, on nine readings across three batches, each within 1.1k of
+its neighbours: 102,168 · 102,168 · 103,241 (batch 1), then 103,245 on all three of batch 2 (identical to
+the token) and again on all three of batch 4. The floor is the part of a reading you could not rebuild once
+the process had gone; the comment is durable and tied to the PR, so you can. **Re-derive it each batch and never carry the number
+forward** (the planner's own window read 107,369 from its own categories; the drift is upward and slow).
 
 **AND READ EVERY MERGED PR BODY FOR FINDINGS OUTSIDE ITS DELIVERABLE LIST. A STREAM CAN REPORT; ONLY
 YOU CAN FILE.** Added 2026-10-30. #1118 wrote two real findings into its PR body and neither was on any
@@ -465,7 +486,9 @@ text into the scratchpad, then `cat <scratch> > .plan-day.md`** — a redirect i
 an ordinary write, not a delete. Same trick for `docs/planner-handover.md`, and
 for small amendments prefer a node `replace()` over rewriting the file, with a
 guard that exits non-zero when the anchor string is missing. **A heredoc in a chained Bash command is not a third option: backticks and apostrophes in this
-prose break the shell parse** — that failed on 2026-10-21.
+prose break the shell parse** — that failed on 2026-10-21. **And a quoted heredoc collapses `\\` to `\`**: `[^"\\]` reached
+node as `[^"\]` and died as an invalid regular expression (2026-10-31); in prose it would have changed the
+text silently. Script anything with escapes via the Write tool.
 
 **THIS SKILL FILE IS CRLF AND `docs/planner-handover.md` IS LF. Normalise before matching.**
 Added 2026-10-21 **because it recurred.** Edition `267` hit it, fixed it, and recorded it — in its own
@@ -540,6 +563,41 @@ and **a stream in a worktree cannot read production**; the planner ran that half
 planner is the only role that can read production, so a production proof is the planner's time, not
 the stream's band.** Same test for anything else the stream structurally cannot reach: a Worker
 deploy, a Cloudflare setting, a Pi. **Ask who can actually run the proof before you charge for it.**
+
+**AND ASK WHETHER THE ENVIRONMENT HOLDS WHAT THE PROOF NEEDS. If the stream must stand up the apparatus
+first, that is an instrument, at instrument prices.** Added 2026-10-31 (promoted from `519`/`528`).
+`assistant-v2-tools` was banded 150-190k (188-238k adjusted for `medium`) and came in at **440,348**, the worst
+miss in four rounds: to draw the add-a-prescription card it needed a language model, dev has none, so it
+wrote and ran a scripted OpenAI-compatible server from its scratchpad. The brief said "driven in the browser"
+without asking what the card needs in order to draw at all. It fired three more times: a fake model machine
+to observe a wait (`assistant-model-waits`), a worktree that cannot read production (`pi-failover-schema`),
+and "Production: NOT ESTABLISHED" left for the planner (`translations-labels-schema`). **It sits beside three
+rules that each miss it:** *who can run the proof* (the paragraph above, whose corollary, **a production proof
+is the planner's time, not the stream's band**, is already written there), *browser verification adds ~30k*
+(assumes the browser can reach the thing) and *must it build the instrument* (written about the deliverable,
+not the verification). The method is fine: the batch's other two streams, banded the same way, landed inside.
+One question was skipped.
+
+**WHEN A STREAM MUST RECONCILE TWO EXISTING SOURCES OF TRUTH, BAND IT ON THE HARDER SIDE, AND EXPECT THE
+DISAGREEMENTS IT FINDS TO BE THE WORK.** Added 2026-10-31 on three readings, **superseding the judgement rule
+marked below.** Documentation against code, a document against a database, a card against what a page
+actually reads: the count of disagreements is unknown when you band, which is why it reads like an audit and
+costs like a repair. Batch 5, all `opus`/`medium`, against band **+25%**: `translations-labels-app` **+20%**
+(390,251; the document had no row ids and predated `0293`, so two names matched two tables each),
+`assistant-record-card` **+33%** (324,120; a card-only login cannot finish the write it was meant to prove, so
+three logins and a second fault), `assistant-manual-topic` **+28%** (264,796; named twelve of fifteen tools
+and described two wrongly, so an audit of the code banded as prose). **Before banding, ask which two things
+must agree.** The overrun was foreseeable on the first (the planner knew `0293` added overlapping tables).
+
+**SUPERSEDED 2026-10-31: edition `528`'s judgement rule, "a judgement the stream must SETTLE costs more than
+a change it must MAKE: band the shape, then count the judgements and add roughly 15-20k each."** It was
+applied the same day to `translations-labels-app` (205-260k, four judgements on top of the extend-a-screen
+shape) and all three of batch 5 still ran 20-33% over, so counting judgements is not what moves the band.
+It stands as **a special case of the rule above**, since each judgement it counted was a disagreement between
+two sources, and is kept here rather than removed so nobody re-derives it. The four overruns that prompted it
+(`assistant-model-waits` +13%, `pi-failover-schema` +6%, `translations-labels-schema` +19%,
+`pi-failover-wrapper` +8%) remain valid readings. It was only ever written in `528`, which is rewritten on its
+own cadence, so this is where the supersession is recorded.
 
 **BEFORE ANY OF THIS: a figure only counts if the stream FINISHED.** See step 2
 — a blocked stream's number is not evidence about estimating.
@@ -849,6 +907,13 @@ have made those figures worse. The cure is a tighter brief or a spin-out.
   in its own weekly bucket and is routinely unused.
 - **A stream that must discover its own scope** → fix the brief, not the
   dials.
+
+**A `medium` STREAM: BAND AT SONNET/LOW, STATE THE +25% ADJUSTED FIGURE BESIDE IT, AND NEVER QUOTE A LOW BAND AT
+A MEDIUM STREAM WITHOUT SAYING SO.** Promoted 2026-10-31 from `510`/`519`/`528`. It began as an adjustment, not a
+measurement; by `528` it had twelve readings (seven inside, one 0.6% over, four over by 6-19%). The overruns
+that remain are the bands themselves, not this adjustment (see the reconciliation rule in Token estimates).
+**Do not "fix" an overrun by recommending `low` harder: the dials are his, and never blocking paid usage is a
+hard rule (below).**
 
 **State plainly how much evidence there is, because it is thin.** Every
 stream measured before 2026-10-11 ran `claude-opus-5-5` / `medium` and
