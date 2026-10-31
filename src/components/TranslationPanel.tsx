@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState, useTransition } from "react";
+import { useId, useRef, useState, useTransition, type CSSProperties } from "react";
 import { Languages, X } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
 import { BodyToolbar } from "@/components/BodyToolbar";
@@ -84,7 +84,7 @@ export function TranslationPanel({
   // A page's text as the public page draws it (styles, headings, lists), anything else as typed.
   const prose = (value: string, lang: string, className = "") =>
     pageBody ? (
-      <div lang={lang} className={className}>
+      <div lang={lang} style={SITE_LOOK} className={`rounded bg-site-cream px-3 py-2 [&_h3]:font-display ${className}`}>
         <SiteBodyView body={value} size="lg" newTabLabel={t.common.opensInNewTab} />
       </div>
     ) : (
@@ -268,6 +268,18 @@ export function TranslationPanel({
     </div>
   );
 }
+
+/**
+ * The public site's page colours and fonts (globals.css, data-public-site),
+ * so a page text's colours read here as a visitor sees them, whatever theme
+ * the app is in: the site's dark ink would vanish on the app's dark background.
+ */
+const SITE_LOOK = {
+  "--foreground": "var(--site-ink)",
+  "--muted": "var(--site-ink-muted)",
+  colorScheme: "light",
+  fontFamily: "var(--font-source-sans), var(--font-thai), system-ui, sans-serif",
+} as CSSProperties;
 
 const CHIP: Record<TranslationStatus, string> = {
   pending: "border-border text-muted",
