@@ -47,6 +47,20 @@ export function isSitePageSlug(value: string): value is SitePageSlug {
   return (SITE_PAGE_SLUGS as readonly string[]).includes(value);
 }
 
+/**
+ * The pages that take a photo beside their heading (0200). Each is also a site page
+ * slug, so the photo sits on that page's own edit page; the site_content columns are
+ * `<slug>_photo_drive_file_id`, `_alt` and `_alt_th`. Listed once here because the
+ * edit page decides from it whether to draw the photo section and the actions
+ * validate the page they are given against the same list.
+ */
+export const PAGE_PHOTO_SLUGS = ["donate", "foster", "volunteer", "about"] as const;
+export type PagePhotoSlug = (typeof PAGE_PHOTO_SLUGS)[number];
+
+export function isPagePhotoSlug(value: string): value is PagePhotoSlug {
+  return (PAGE_PHOTO_SLUGS as readonly string[]).includes(value);
+}
+
 /** A row of public_site_pages: the page plus its approved translations. */
 export type PublicSitePage = {
   id: string;

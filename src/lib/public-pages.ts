@@ -1,4 +1,5 @@
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import type { SitePageSlug } from "@/lib/site/pages";
 
 /**
  * The public site's pages, listed once. The header menu, the phone menu, the
@@ -40,6 +41,15 @@ export type PublicPage = {
   label: (t: Dictionary) => string;
   /** Home and Privacy: no switch, and the database refuses them in the hidden record (0256). */
   neverHidden?: boolean;
+  /**
+   * The site_pages row whose words this page shows, when one of them does — the page's
+   * Edit button on Settings → Website → Pages opens that editor. The two lists do not
+   * match on purpose: a page can be editable without being a whole page of its own (Our
+   * story is a section of Home, How adoption works a section of Adopt), and a page built
+   * from the database rather than written prose (Appeals, Shop, Desexing, Our work) has
+   * no editor at all and so gets only its Show / Hide switch.
+   */
+  editor?: SitePageSlug;
   /** In the header and phone menu. `group` omitted = a top-level link. */
   menu?: {
     group?: PublicMenuGroup;
@@ -68,6 +78,7 @@ export const PUBLIC_MENU_GROUPS: { key: PublicMenuGroup; label: (t: Dictionary) 
 export const PUBLIC_PAGES: PublicPage[] = [
   {
     key: "home",
+    editor: "our-story",
     href: "/",
     label: (t) => t.publicNav.home,
     neverHidden: true,
@@ -76,6 +87,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
   },
   {
     key: "adopt",
+    editor: "how-to-adopt",
     href: "/adopt",
     label: (t) => t.adopt.adoptNav,
     menu: { group: "adopt", label: (t) => t.publicNav.meetResidents },
@@ -84,6 +96,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
   },
   {
     key: "adopt-international",
+    editor: "international-adoption",
     href: "/adopt/international",
     label: (t) => t.adopt.internationalNav,
     menu: { group: "adopt" },
@@ -92,6 +105,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
   },
   {
     key: "foster",
+    editor: "foster",
     href: "/foster",
     label: (t) => t.adopt.fosterNav,
     menu: { group: "get-involved" },
@@ -100,6 +114,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
   },
   {
     key: "volunteer",
+    editor: "volunteer",
     href: "/volunteer",
     label: (t) => t.adopt.volunteerNav,
     menu: { group: "get-involved" },
@@ -108,6 +123,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
   },
   {
     key: "donate",
+    editor: "donate",
     href: "/donate",
     label: (t) => t.adopt.donateNav,
     menu: { group: "get-involved", label: (t) => t.publicNav.care, navKey: "care" },
@@ -132,6 +148,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
   },
   {
     key: "friends-join",
+    editor: "shelter-friends-join",
     href: "/friends/join",
     label: (t) => t.publicNav.becomeFriend,
     menu: { group: "get-involved" },
@@ -166,6 +183,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
   },
   {
     key: "about",
+    editor: "about",
     href: "/about",
     label: (t) => t.publicNav.about,
     menu: {},

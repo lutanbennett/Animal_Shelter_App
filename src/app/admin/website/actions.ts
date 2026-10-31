@@ -12,7 +12,7 @@ import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
 import { isContactChannel } from "@/lib/site/channels";
-import { isSitePageSlug, type SitePageSlug } from "@/lib/site/pages";
+import { PAGE_PHOTO_SLUGS, isSitePageSlug, type SitePageSlug } from "@/lib/site/pages";
 import { parseBahtAmount, todayIso } from "@/lib/format";
 import {
   checkFacebookUrl,
@@ -51,6 +51,8 @@ const refuse = (error: string): ActionRefusal => ({ ok: false, error });
 /** Every public page reads site_content (the footer), so all of them. */
 function revalidateWebsitePages() {
   revalidatePath("/admin/website");
+  // Each page's wording and its photo are edited on a page of its own, which shows both.
+  revalidatePath("/admin/website/pages/[slug]", "page");
   revalidatePath("/");
   revalidatePath("/adopt");
   revalidatePath("/adopt/[id]", "page");
@@ -929,9 +931,12 @@ export async function removeDonationQr(id: string): Promise<ActionResult> {
   });
 }
 
-/** The three pages that take a photo beside the heading (0200). */
-export type PagePhotoPage = "donate" | "foster" | "volunteer" | "about";
-const PAGE_PHOTO_PAGES: readonly string[] = ["donate", "foster", "volunteer", "about"];
+/**
+ * The pages that take a photo beside the heading (0200), listed once in
+ * src/lib/site/pages.ts: the edit page draws its photo section from the same list these
+ * actions validate against, so the two can't drift.
+ */
+const PAGE_PHOTO_PAGES: readonly string[] = PAGE_PHOTO_SLUGS;
 
 export async function uploadPagePhoto(page: string, formData: FormData): Promise<SiteContentFormState> {
   const { t } = await getT();
