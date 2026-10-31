@@ -176,7 +176,9 @@ fi
 node scripts/pi/write-env.mjs --env "$ENV_NAME"
 "${NICE[@]}" npm ci --no-audit --no-fund   # devDependencies too: next build needs TypeScript and Tailwind
 # Build into .next.new and rename it into place, so the folder the service serves is never
-# rewritten under live requests (next.config.ts reads NEXT_DIST_DIR). The old build keeps serving,
+# rewritten under live requests (next.config.ts reads NEXT_DIST_DIR, and type-checks .next.new's own
+# route types through tsconfig.next-new.json, never the live .next/types: a release that deleted a
+# page used to fail on them, docs/decisions/2026-10-31-pi-build-checks-its-own-types.md). The old build keeps serving,
 # untouched, until the swap; a failed build just deletes .next.new. The cache is seeded from the
 # old build so the build is not slower; bound it first: a 4.4 GB one starved a 4 GB Pi
 # (docs/decisions/2026-10-19-pi-build-cache-bound.md). Ceiling 1024 MB.

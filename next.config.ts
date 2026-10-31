@@ -12,6 +12,14 @@ function gitSha(): string {
   }
 }
 
+// The tsconfig a build type-checks with, by the folder it builds into. Refuses a folder with no
+// tsconfig of its own rather than fall back to tsconfig.build.json, which would check .next's types.
+function buildTsconfig(distDir: string | undefined): string {
+  if (!distDir || distDir === ".next") return "tsconfig.build.json";
+  if (distDir === ".next.new") return "tsconfig.next-new.json";
+  throw new Error(`NEXT_DIST_DIR=${distDir} has no tsconfig that checks its types; see tsconfig.next-new.json`);
+}
+
 const nextConfig: NextConfig = {
   // The Pi deploy builds into .next.new and renames it into place (scripts/pi/deploy-pi.sh), so the
   // folder the service serves is never rewritten under live requests. Unset everywhere else: .next.
@@ -84,7 +92,10 @@ const nextConfig: NextConfig = {
     // CLI before this file loads: production for build/typegen,
     // development for dev, which keeps tsconfig.json (the one Next
     // watches, and the one the editor reads with the live dev types).
-    tsconfigPath: process.env.NODE_ENV === "development" ? "tsconfig.json" : "tsconfig.build.json",
+    // A build into another folder (NEXT_DIST_DIR) must check that folder's types, not the ones in
+    // .next, which belong to whatever build is being served: tsconfig.next-new.json says why.
+    tsconfigPath:
+      process.env.NODE_ENV === "development" ? "tsconfig.json" : buildTsconfig(process.env.NEXT_DIST_DIR),
   },
 
   images: {
