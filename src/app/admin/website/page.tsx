@@ -1,14 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadSiteContent, loadClinicVisitEstimate } from "@/lib/site/content";
-import { SITE_PAGE_PATHS, SITE_PAGE_SLUGS } from "@/lib/site/pages";
-import en from "@/lib/i18n/dictionaries/en";
-import { sitePageStarter } from "@/lib/site/starter";
+import { SITE_PAGE_SLUGS } from "@/lib/site/pages";
 import { loadTranslations, translationKey } from "@/lib/translations/queries";
 import { SiteSettingsForm } from "./SiteSettingsForm";
 import { ClinicVisitEstimate } from "./ClinicVisitEstimate";
-import { SitePageForm, type SitePageRow } from "./SitePageForm";
-import { PagePhotos } from "./PagePhotos";
+import { type SitePageRow } from "./SitePageForm";
 import { HeroPhoto } from "./HeroPhoto";
 import { GalleryPhotos, type GalleryPhotoRow } from "./GalleryPhotos";
 import { FeaturedResident, type FeaturedResidentOption } from "./FeaturedResident";
@@ -17,40 +14,11 @@ import type { ImpactBaselineRow } from "@/lib/site/impact";
 import { DonationChannels } from "./DonationChannels";
 import { CHANNEL_COLUMNS, type DonationChannelRow } from "@/lib/site/donation-channels";
 import { WebsiteTabs, WEBSITE_TABS } from "./WebsiteTabs";
-import { PagesAccordion } from "./PagesAccordion";
-import { PageVisibility } from "./PageVisibility";
+import { PageCards, type PageEditorMeta } from "./PageCards";
 import { PublishedProjects, type PublishedProjectRow } from "./PublishedProjects";
 import Link from "next/link";
 import { requirePermission } from "@/lib/permissions/require";
 import { can } from "@/lib/permissions/can";
-import { hasPublicFriends } from "@/lib/shelter-friends/public";
-
-/** The saved contact details the preview's "get in touch" card is built from. */
-function pickContact(c: NonNullable<Awaited<ReturnType<typeof loadSiteContent>>>) {
-  return {
-    contact_line: c.contact_line,
-    contact_phone: c.contact_phone,
-    contact_email: c.contact_email,
-    facebook_url: c.facebook_url,
-    instagram_url: c.instagram_url,
-    messenger_url: c.messenger_url,
-    whatsapp_number: c.whatsapp_number,
-    x_url: c.x_url,
-    preferred_channels: c.preferred_channels,
-  };
-}
-
-/** The photo an admin chose for Donate, Foster, Volunteer or About, as saved. */
-function pagePhoto(c: NonNullable<Awaited<ReturnType<typeof loadSiteContent>>>, slug: string) {
-  if (slug !== "donate" && slug !== "foster" && slug !== "volunteer" && slug !== "about") return null;
-  const fileId = c[`${slug}_photo_drive_file_id`]?.trim();
-  if (!fileId) return null;
-  return {
-    fileId,
-    alt: c[`${slug}_photo_alt`]?.trim() ?? "",
-    altTh: c[`${slug}_photo_alt_th`]?.trim() ?? "",
-  };
-}
 
 type PublicResidentRow = {
   id: string;
@@ -69,7 +37,6 @@ export default async function WebsitePage({
   // offers is asked of its own activity below, and its actions ask the same one.
   const { perms } = await requirePermission("website.content", "read");
   const canContent = can(perms, "website.content");
-  const canTranslations = can(perms, "translations.manage");
   const canGallery = can(perms, "website.gallery");
   const { tab } = await searchParams;
   const { t } = await getT();
@@ -180,9 +147,21 @@ export default async function WebsitePage({
     current_status: null,
   }));
 
-  // The live preview of an unsaved page edit shows the Shelter Friends mention
-  // on Donate only once there are friends, as the public page does.
-  const friendsPublic = await hasPublicFriends();
+  // What each page's card says about its wording: when it was last edited, and whether a
+  // Thai translation exists but is still empty. The editor itself is a page of its own now
+  // (/admin/website/pages/<slug>), so the tab reads only what the card shows.
+  const pageEditors: Record<string, PageEditorMeta> = Object.fromEntries(
+    pages.map((page) => [
+      page.slug,
+      {
+        updatedAt: page.updated_at,
+        thaiMissing: [
+          translations.get(translationKey(page.id, "title")),
+          translations.get(translationKey(page.id, "body")),
+        ].some((r) => r && !r.text?.trim()),
+      },
+    ]),
+  );
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -230,58 +209,11 @@ export default async function WebsitePage({
               </>
             ),
             pages: (
-              <>
-              <PageVisibility hiddenPages={content.hidden_public_pages} />
-              <PagePhotos
-                photos={{
-                  donate: { fileId: content.donate_photo_drive_file_id, alt: content.donate_photo_alt, altTh: content.donate_photo_alt_th },
-                  foster: { fileId: content.foster_photo_drive_file_id, alt: content.foster_photo_alt, altTh: content.foster_photo_alt_th },
-                  volunteer: { fileId: content.volunteer_photo_drive_file_id, alt: content.volunteer_photo_alt, altTh: content.volunteer_photo_alt_th },
-                  about: { fileId: content.about_photo_drive_file_id, alt: content.about_photo_alt, altTh: content.about_photo_alt_th },
-                }}
+              <PageCards
+                hiddenPages={content.hidden_public_pages}
+                canEdit={canContent}
+                editors={pageEditors}
               />
-              <section className="flex flex-col gap-4">
-                <div>
-                  <h2 className="text-lg font-semibold text-foreground">
-                    {t.admin.website.pages.heading}
-                  </h2>
-                  <p className="text-sm text-muted">{t.admin.website.pages.subtitle}</p>
-                </div>
-                <PagesAccordion
-                  canEdit={canContent}
-                  items={pages.map((page) => {
-                    const tr = [
-                      translations.get(translationKey(page.id, "title")),
-                      translations.get(translationKey(page.id, "body")),
-                    ];
-                    return {
-                      slug: page.slug,
-                      label: t.admin.website.pages.slugs[page.slug],
-                      publicPath: SITE_PAGE_PATHS[page.slug],
-                      updatedAt: page.updated_at,
-                      thaiMissing: tr.some((r) => r && !r.text?.trim()),
-                      editor: (
-                        <SitePageForm
-                          page={page}
-                          translations={{ title: tr[0], body: tr[1] }}
-                          // The panels save through approveTranslation, which asks translations.manage.
-                          canManageTranslations={canTranslations}
-                          // In English whatever language the admin reads the app in:
-                          // pages are written in English and translated through the queue.
-                          starterBody={sitePageStarter(en, page.slug)?.body}
-                          previewContext={{
-                            contact: pickContact(content),
-                            photo: pagePhoto(content, page.slug),
-                            showFriends: page.slug === "donate" && friendsPublic,
-                            thai: tr[0]?.text?.trim() || tr[1]?.text?.trim() ? { title: tr[0]?.text?.trim() ?? "", body: tr[1]?.text?.trim() ?? "" } : null,
-                          }}
-                        />
-                      ),
-                    };
-                  })}
-                />
-              </section>
-              </>
             ),
             donate: <DonationChannels rows={channelsResult.data ?? []} />,
             gallery: (

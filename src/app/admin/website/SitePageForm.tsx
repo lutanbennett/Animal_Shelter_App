@@ -38,12 +38,19 @@ export function SitePageForm({
   page,
   translations,
   canManageTranslations,
+  canEdit = false,
   starterBody,
   previewContext,
 }: {
   page: SitePageRow;
   translations: { title?: TranslationRow; body?: TranslationRow };
   canManageTranslations: boolean;
+  /**
+   * website.content, the activity updateSitePage asks. It defaults to false so a caller that
+   * forgets it offers no Save button rather than one the action then refuses. The boxes are
+   * still shown: reading the page's words is what the Pages tab already needs.
+   */
+  canEdit?: boolean;
   /**
    * The standard text the public page shows while the body is empty
    * (sitePageStarter), put in the box so the admin edits it rather than
@@ -128,9 +135,11 @@ export function SitePageForm({
       </div>
 
       <form id={formId} onSubmit={onSubmit} className="flex items-center gap-3">
-        <ActionButton type="submit" icon={ACTION_ICONS.save} variant="primary" disabled={pending}>
-          {pending ? t.common.saving : t.common.saveChanges}
-        </ActionButton>
+        {canEdit && (
+          <ActionButton type="submit" icon={ACTION_ICONS.save} variant="primary" disabled={pending}>
+            {pending ? t.common.saving : t.common.saveChanges}
+          </ActionButton>
+        )}
         {state && !state.ok && (
           <p className="text-sm text-danger">{state.error}</p>
         )}

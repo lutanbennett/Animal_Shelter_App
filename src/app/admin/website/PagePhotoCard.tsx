@@ -8,28 +8,32 @@ import { useRef, useState, useTransition } from "react";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { PendingPuppy } from "@/components/PuppyLoader";
+import type { PagePhotoSlug } from "@/lib/site/pages";
 import { runUploadAction } from "@/lib/uploads/run-upload-action";
-import { removePagePhoto, savePagePhotoAlt, uploadPagePhoto, type PagePhotoPage } from "./actions";
+import { removePagePhoto, savePagePhotoAlt, uploadPagePhoto } from "./actions";
 
-type Photo = { fileId: string | null; alt: string | null; altTh: string | null };
+export type PagePhoto = { fileId: string | null; alt: string | null; altTh: string | null };
 
-export function PagePhotos({ photos }: { photos: Record<PagePhotoPage, Photo> }) {
-  const { t } = useI18n();
-  const p = t.admin.website.pagePhotos;
-  return (
-    <section className="flex flex-col gap-3">
-      <div>
-        <h2 className="text-lg font-semibold text-foreground">{p.heading}</h2>
-        <p className="text-sm text-muted">{p.subtitle}</p>
-      </div>
-      {(["donate", "foster", "volunteer", "about"] as const).map((page) => (
-        <PagePhoto key={page} page={page} photo={photos[page]} />
-      ))}
-    </section>
-  );
-}
-
-function PagePhoto({ page, photo }: { page: PagePhotoPage; photo: Photo }) {
+/**
+ * The photo beside one page's heading (0200), on that page's own edit page — the four
+ * slots used to sit in one list on the Pages tab, above the editor nobody could reach
+ * without scrolling past them.
+ *
+ * `canEdit` is the activity uploadPagePhoto, removePagePhoto and savePagePhotoAlt all
+ * ask (website.content, read from their bodies in actions.ts). It defaults to false, so
+ * a caller that forgets to pass it offers no control at all rather than a button the
+ * database then refuses. The photo itself is still shown: seeing what is on the page is
+ * reading, and the Pages tab already needs website.content at read to open.
+ */
+export function PagePhotoCard({
+  page,
+  photo,
+  canEdit = false,
+}: {
+  page: PagePhotoSlug;
+  photo: PagePhoto;
+  canEdit?: boolean;
+}) {
   const { t } = useI18n();
   const p = t.admin.website.pagePhotos;
   const confirm = useConfirm();
@@ -70,12 +74,20 @@ function PagePhoto({ page, photo }: { page: PagePhotoPage; photo: Photo }) {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded border border-border bg-surface p-4">
-      <h3 className="text-base font-semibold text-foreground">{p.pages[page]}</h3>
+    <section className="flex flex-col gap-3 rounded border border-border bg-surface p-4">
+      <div>
+        <h2 className="text-lg font-semibold text-foreground">{p.cardHeading}</h2>
+        <p className="text-sm text-muted">{p.cardSubtitle}</p>
+      </div>
 
       <div className="relative aspect-[4/3] w-full max-w-xs overflow-hidden rounded border border-border bg-background">
         {photo.fileId ? (
-          <Image src={driveImageUrl(photo.fileId)} alt={p.pages[page]} fill className="object-cover" />
+          <Image
+            src={driveImageUrl(photo.fileId)}
+            alt={photo.alt?.trim() || p.cardHeading}
+            fill
+            className="object-cover"
+          />
         ) : (
           <div className="flex h-full items-center justify-center p-3 text-center text-sm text-muted">
             {p.noPhoto}
@@ -83,29 +95,31 @@ function PagePhoto({ page, photo }: { page: PagePhotoPage; photo: Photo }) {
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <ActionButton icon={ACTION_ICONS.uploadImage} disabled={isPending} onClick={() => inputRef.current?.click()}>
-          {isPending && <PendingPuppy />}
-          {isPending ? t.common.uploading : p.replace}
-        </ActionButton>
-        {photo.fileId && (
-          <ActionButton variant="danger" icon={ACTION_ICONS.removeImage} disabled={isPending} onClick={handleRemove}>
-            {p.remove}
+      {canEdit && (
+        <div className="flex flex-wrap items-center gap-3">
+          <ActionButton icon={ACTION_ICONS.uploadImage} disabled={isPending} onClick={() => inputRef.current?.click()}>
+            {isPending && <PendingPuppy />}
+            {isPending ? t.common.uploading : p.replace}
           </ActionButton>
-        )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/*"
-          hidden
-          onChange={(e) => {
-            handleFile(e.target.files?.[0]);
-            e.target.value = "";
-          }}
-        />
-      </div>
+          {photo.fileId && (
+            <ActionButton variant="danger" icon={ACTION_ICONS.removeImage} disabled={isPending} onClick={handleRemove}>
+              {p.remove}
+            </ActionButton>
+          )}
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            hidden
+            onChange={(e) => {
+              handleFile(e.target.files?.[0]);
+              e.target.value = "";
+            }}
+          />
+        </div>
+      )}
 
-      {photo.fileId && (
+      {canEdit && photo.fileId && (
         <form action={handleAlt} className="flex flex-col gap-2">
           <p className="text-sm text-muted">{p.altHelp}</p>
           <label className="flex flex-col gap-1 text-sm font-medium text-foreground">
@@ -125,6 +139,6 @@ function PagePhoto({ page, photo }: { page: PagePhotoPage; photo: Photo }) {
       {message && (
         <p className={`text-sm ${message.type === "error" ? "text-danger" : "text-success"}`}>{message.text}</p>
       )}
-    </div>
+    </section>
   );
 }
