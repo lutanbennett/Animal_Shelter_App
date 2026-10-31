@@ -250,13 +250,13 @@ function FindEnclosureBody({ answer }: { answer: FindEnclosureAnswer }) {
   return (
     <div className="flex flex-col gap-2">
       <p className="font-medium">
-        {answer.enclosures.length === 0
+        {answer.total === 0
           ? zone
             ? a.freeNoneInZone(zone, answer.places)
             : a.freeNone(answer.places)
           : zone
-            ? a.freeTitleInZone(zone, answer.enclosures.length)
-            : a.freeTitle(answer.enclosures.length)}
+            ? a.freeTitleInZone(zone, answer.total)
+            : a.freeTitle(answer.total)}
       </p>
       {answer.enclosures.length > 0 && (
         <ul className="flex flex-col gap-1">
@@ -270,6 +270,9 @@ function FindEnclosureBody({ answer }: { answer: FindEnclosureAnswer }) {
             </li>
           ))}
         </ul>
+      )}
+      {answer.total > answer.enclosures.length && (
+        <p className="text-muted">{a.freeMore(answer.total - answer.enclosures.length)}</p>
       )}
       {answer.unknownCapacity > 0 && (
         <p className="text-muted">{a.freeUnknownCapacity(answer.unknownCapacity)}</p>

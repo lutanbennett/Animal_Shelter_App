@@ -147,11 +147,14 @@ test("low risk is a property of the tool, and 'ready' is a second question", () 
   // A blank, a bad reading, or a name that matched several: the card, not the write.
   assert.equal(readyToRecord({ ...weight, weightKg: null }, []), false);
   assert.equal(readyToRecord({ ...weight, weightKg: 0 }, []), false);
-  assert.equal(readyToRecord({ ...weight, date: null }, []), false);
   assert.equal(readyToRecord({ ...weight, residentId: null }, []), false);
+  // A missing date is not a blank: the card would show today and Confirm
+  // would write it, so the skip writes the same row and says which day.
+  assert.ok(readyToRecord({ ...weight, date: null }, []));
   assert.equal(readyToRecord(weight, ["r1", "r2"]), false);
   const imm = { kind: "immunization", residentId: "r1", immunizationTypeIds: ["v1"], date: "2026-10-30" };
   assert.ok(readyToRecord(imm, []));
+  assert.ok(readyToRecord({ ...imm, date: null }, []));
   assert.equal(readyToRecord({ ...imm, immunizationTypeIds: [] }, []), false);
   // Never for a kind that is not low risk, however complete it is.
   assert.equal(readyToRecord({ kind: "death", residentId: "r1", date: "2026-10-30", causeOfDeath: "x" }, []), false);

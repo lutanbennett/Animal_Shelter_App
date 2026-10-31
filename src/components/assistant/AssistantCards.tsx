@@ -365,33 +365,38 @@ export async function recordLowRisk(
   if (!resident) return { error: a.lookups.whichResident };
   const who = `${resident.name} (${resident.code})`;
 
+  // A card with no date shows today and Confirm writes that, so a draft with
+  // no date writes the same row. The reply names the day either way.
+  const date = draft.date ?? viewerToday();
+  const day = formatDate(date, ctx.locale);
+
   if (draft.kind === "weight") {
-    if (draft.weightKg === null || !(draft.weightKg > 0) || !draft.date) return { error: a.fillBlanks };
+    if (draft.weightKg === null || !(draft.weightKg > 0)) return { error: a.fillBlanks };
     const result = await assistantLogWeight({
       residentId: resident.id,
       weightKg: draft.weightKg,
-      date: draft.date,
+      date,
       request: ctx.request,
       trace: ctx.trace,
-      draft,
+      draft: { ...draft, date },
     });
     if ("error" in result) return result;
-    return { kind: "done", message: a.weight.done(who, draft.weightKg), residentId: resident.id };
+    return { kind: "done", message: a.weight.done(who, draft.weightKg, day), residentId: resident.id };
   }
 
   const chosen = ctx.immunizationTypes.filter((ty) => draft.immunizationTypeIds.includes(ty.id));
-  if (chosen.length === 0 || !draft.date) return { error: a.fillBlanks };
+  if (chosen.length === 0) return { error: a.fillBlanks };
   const result = await assistantRecordImmunization({
     residentId: resident.id,
     immunizationTypeIds: chosen.map((ty) => ty.id),
-    date: draft.date,
+    date,
     request: ctx.request,
     trace: ctx.trace,
-    draft,
+    draft: { ...draft, date },
   });
   if ("error" in result) return result;
   const names = chosen.map((ty) => (ctx.locale === "th" && ty.nameTh) || ty.name).join(", ");
-  return { kind: "done", message: immunizationStrings(ctx.locale).done(who, names), residentId: resident.id };
+  return { kind: "done", message: immunizationStrings(ctx.locale).done(who, names, day), residentId: resident.id };
 }
 
 // ---------------------------------------------------------------------------

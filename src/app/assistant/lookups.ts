@@ -21,6 +21,9 @@ import { addDaysIso, todayIso } from "@/lib/format";
 /** Rows per list in a summary: enough to be useful, short enough to read. */
 const SUMMARY_ROWS = 5;
 
+/** The roomiest enclosures the free-space answer lists, before "and N more". */
+const FREE_SHOWN = 8;
+
 /**
  * The three questions that write nothing. They are answered here rather
  * than from the rows the page already loaded, because a question about
@@ -117,8 +120,10 @@ export type FindEnclosureAnswer = {
   /** The zone the question narrowed to, when it named one. */
   zoneName: string | null;
   zoneNameTh: string | null;
-  /** Roomiest first. */
+  /** Roomiest first, the longest list the answer shows. */
   enclosures: FreeEnclosure[];
+  /** How many have room in all, which is more than the list when it was cut short. */
+  total: number;
   /**
    * Enclosures with no capacity recorded, which are left out rather than
    * guessed at — said out loud, because a silent omission reads as "full".
@@ -456,7 +461,11 @@ async function answerFindEnclosure(
       places,
       zoneName: zone?.name ?? null,
       zoneNameTh: zone?.name_th ?? null,
-      enclosures: free,
+      // Roomiest first and cut short: the shelter has 47 enclosures with room
+      // on an ordinary day, and a list that long is not an answer. The count
+      // is kept so the reply can say how many there are in all.
+      enclosures: free.slice(0, FREE_SHOWN),
+      total: free.length,
       unknownCapacity,
     },
   };

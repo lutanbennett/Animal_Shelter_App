@@ -4182,8 +4182,8 @@ const th: Dictionary = {
       title: "บันทึกน้ำหนัก",
       summary: (resident: string, kg: string, date: string) =>
         `บันทึก ${resident} น้ำหนัก ${kg} กก. วันที่ ${date}`,
-      done: (resident: string, kg: number) =>
-        `เรียบร้อย บันทึก ${resident} น้ำหนัก ${kg} กก. แล้ว`,
+      done: (resident: string, kg: number, date: string) =>
+        `เรียบร้อย บันทึก ${resident} น้ำหนัก ${kg} กก. วันที่ ${date} แล้ว`,
     },
     death: {
       title: "บันทึกการตาย",
@@ -4281,6 +4281,7 @@ const th: Dictionary = {
           : `ไม่มีกรงใน ${zone} ที่ว่างพอสำหรับ ${places} ตัว`,
       freeSpaces: (free: number, count: number, capacity: number) =>
         `ว่าง ${free} ที่ (${count} จาก ${capacity})`,
+      freeMore: (count: number) => `ยังมีอีก ${count} กรงที่มีที่ว่าง ดูทั้งหมดได้ในรายการกรง`,
       freeUnknownCapacity: (count: number) =>
         `อีก ${count} กรงยังไม่ได้บันทึกความจุ จึงไม่ถูกนับในรายการนี้`,
       summaryWeight: (kg: number, date: string) => `ชั่งครั้งล่าสุด ${kg} กก. วันที่ ${date}`,

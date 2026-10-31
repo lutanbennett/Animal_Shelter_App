@@ -4322,7 +4322,8 @@ const en = {
       title: "Log weight",
       summary: (resident: string, kg: string, date: string) =>
         `Record ${resident} at ${kg} kg on ${date}`,
-      done: (resident: string, kg: number) => `Done — ${resident} recorded at ${kg} kg.`,
+      done: (resident: string, kg: number, date: string) =>
+        `Done — ${resident} recorded at ${kg} kg on ${date}.`,
     },
     death: {
       title: "Record a death",
@@ -4429,6 +4430,10 @@ const en = {
           : `No enclosure in ${zone} has room for ${places}.`,
       freeSpaces: (free: number, count: number, capacity: number) =>
         `${free} free (${count} of ${capacity})`,
+      freeMore: (count: number) =>
+        count === 1
+          ? "1 more has room — the enclosures list has them all."
+          : `${count} more have room — the enclosures list has them all.`,
       freeUnknownCapacity: (count: number) =>
         count === 1
           ? "1 more has no capacity recorded, so it isn't counted here."

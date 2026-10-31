@@ -262,9 +262,14 @@ export function isLowRiskWrite(kind: Draft["kind"]): boolean {
 
 /**
  * Whether a low-risk draft is complete enough to go in with no card: a
- * resident that is not in doubt, and nothing the card would have asked for
- * left blank. Anything less still gets the card — there is no point skipping
- * a confirm step in order to show a form with a blank in it.
+ * resident that is not in doubt, and nothing the card would have asked the
+ * person to choose left blank. Anything less still gets the card — there is
+ * no point skipping a confirm step in order to show a form with a blank.
+ *
+ * A missing DATE is not a blank: every card fills it with today and Confirm
+ * would write that, so skipping writes exactly the row the person would have
+ * confirmed. The reply says which day it went in on, so it is still checked
+ * — by reading rather than by pressing.
  *
  * It answers false for every other kind, so "low risk" and "ready" are two
  * questions and a caller has to pass both.
@@ -272,10 +277,10 @@ export function isLowRiskWrite(kind: Draft["kind"]): boolean {
 export function readyToRecord(draft: Draft, candidates: readonly string[]): boolean {
   if (candidates.length > 1) return false;
   if (draft.kind === "weight") {
-    return !!draft.residentId && draft.weightKg !== null && draft.weightKg > 0 && !!draft.date;
+    return !!draft.residentId && draft.weightKg !== null && draft.weightKg > 0;
   }
   if (draft.kind === "immunization") {
-    return !!draft.residentId && draft.immunizationTypeIds.length > 0 && !!draft.date;
+    return !!draft.residentId && draft.immunizationTypeIds.length > 0;
   }
   return false;
 }
