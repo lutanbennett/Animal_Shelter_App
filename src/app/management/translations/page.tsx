@@ -14,12 +14,14 @@ import type { Locale } from "@/lib/i18n/locales";
  *  - prose (bios, stories, job descriptions): the `translations` queue the
  *    0056 triggers fill, approved in place with TranslationPanel;
  *  - labels (diet names, setup lists, places, website captions): every row
- *    of `label_translations()` (0166), written with set_label_th().
- * `?show=` is missing (default), stale or all. `?all=1`, the old link for
- * "show approved too", still opens All.
+ *    of `label_translations()` (0166), written with set_label_th(), or
+ *    proposed with propose_label_th() and left waiting until somebody
+ *    approves it (0293/0294).
+ * `?show=` is missing (default), proposed, stale or all. `?all=1`, the old
+ * link for "show approved too", still opens All.
  */
 export default async function TranslationsPage(props: PageProps<"/management/translations">) {
-  const { supabase, perms } = await requirePermission("translations.manage");
+  const { supabase, user, perms } = await requirePermission("translations.manage");
   const { t, locale } = await getT();
   const searchParams = await props.searchParams;
   const asked = typeof searchParams.show === "string" ? searchParams.show : null;
@@ -50,7 +52,14 @@ export default async function TranslationsPage(props: PageProps<"/management/tra
         </p>
       )}
 
-      <TranslationQueue key={show} prose={queue.rows} labels={labels} show={show} canManage={can(perms, "translations.manage")} />
+      <TranslationQueue
+        key={show}
+        prose={queue.rows}
+        labels={labels}
+        show={show}
+        canManage={can(perms, "translations.manage")}
+        viewerId={user.id}
+      />
     </main>
   );
 }

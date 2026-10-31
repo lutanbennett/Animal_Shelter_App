@@ -18,7 +18,13 @@ import {
 } from "@/lib/translations/labels";
 import { isPageBodyField } from "@/lib/site/body";
 import { fieldKey, type TranslationQueueRow, type TranslationRow, type TranslationStatus } from "@/lib/translations/types";
-import { saveLabelTranslation } from "./actions";
+import { formatDate } from "@/lib/format";
+import {
+  approveLabelTranslation,
+  discardLabelDraft,
+  proposeLabelTranslation,
+  saveLabelTranslation,
+} from "./actions";
 
 
 /** Missing = nobody has written it yet (a draft is not written by a person). */
@@ -27,16 +33,30 @@ const PROSE_MISSING: TranslationStatus[] = ["pending", "draft"];
 function proseShown(status: TranslationStatus, show: Show) {
   if (show === "all") return true;
   if (show === "stale") return status === "stale";
+  // Prose has its own draft state — "draft" means a machine wrote it and nobody
+  // has read it — and no label_drafts row, so Waiting never lists prose.
+  if (show === "proposed") return false;
   return PROSE_MISSING.includes(status);
 }
 
-/** "Shown as typed" is a deliberate answer: it is only listed under All, and never counted as missing. */
-function labelShown(status: LabelStatus, show: Show) {
-  if (show === "all") return true;
-  return status === show;
+/** A proposal is waiting on this label, whatever its live Thai says (0293). */
+function hasDraft(item: Pick<LabelItem, "draft_text_th">) {
+  return !!item.draft_text_th;
 }
 
-type Counts = { missing: number; stale: number; asTyped: number };
+/**
+ * "Shown as typed" is a deliberate answer: it is only listed under All, and
+ * never counted as missing. Waiting lists every label carrying a proposal,
+ * including one that already has Thai and a proposed change to it — `status`
+ * describes the live value a reader sees, not the proposal beside it.
+ */
+function labelShown(item: LabelItem, show: Show) {
+  if (show === "all") return true;
+  if (show === "proposed") return hasDraft(item);
+  return item.status === show;
+}
+
+type Counts = { missing: number; stale: number; asTyped: number; proposed: number };
 
 /**
  * Management → Translations: the prose queue and every label, one section
@@ -54,12 +74,20 @@ export function TranslationQueue({
   labels: initialLabels,
   show,
   canManage,
+  viewerId,
 }: {
   prose: TranslationQueueRow[];
   labels: LabelItem[];
   show: Show;
-  /** The activity approveTranslation and clearTranslation ask: translations.manage. */
+  /**
+   * The activity every action on this page asks: translations.manage. The
+   * prose panel, the label's Save, and Propose / Save & approve / Reject all
+   * ask it, so one flag gates them all and a control can never offer what the
+   * database would refuse (Lutan, 2026-10-27).
+   */
   canManage: boolean;
+  /** This login, so a proposal can say whether it was theirs. */
+  viewerId: string | null;
 }) {
   const { t } = useI18n();
   const tr = t.translations;
@@ -71,7 +99,7 @@ export function TranslationQueue({
     const entry = (key: string) => {
       let g = byGroup.get(key);
       if (!g) {
-        g = { prose: [], labels: [], counts: { missing: 0, stale: 0, asTyped: 0 } };
+        g = { prose: [], labels: [], counts: { missing: 0, stale: 0, asTyped: 0, proposed: 0 } };
         byGroup.set(key, g);
       }
       return g;
@@ -87,7 +115,8 @@ export function TranslationQueue({
       if (item.status === "missing") g.counts.missing++;
       if (item.status === "stale") g.counts.stale++;
       if (item.status === "as_typed") g.counts.asTyped++;
-      if (labelShown(item.status, show)) g.labels.push(item);
+      if (hasDraft(item)) g.counts.proposed++;
+      if (labelShown(item, show)) g.labels.push(item);
     }
     return sortGroups(byGroup.keys()).map((key) => ({ key, ...byGroup.get(key)! }));
   }, [prose, labels, show]);
@@ -137,6 +166,9 @@ export function TranslationQueue({
               )}
               <span className={g.counts.missing + g.counts.stale > 0 ? "text-foreground" : "text-muted"}>
                 {tr.groupCounts(g.counts.missing, g.counts.stale)}
+                {g.counts.proposed > 0 && (
+                  <span className="text-primary"> · {tr.proposedCount(g.counts.proposed)}</span>
+                )}
                 {g.counts.asTyped > 0 && <span className="text-muted"> · {tr.asTypedCount(g.counts.asTyped)}</span>}
               </span>
             </li>
@@ -155,7 +187,7 @@ export function TranslationQueue({
             <ul className="flex flex-col gap-3">
               {g.labels.map((item) => (
                 <li key={labelKey(item)}>
-                  <LabelCard item={item} onSaved={onLabelSaved} />
+                  <LabelCard item={item} onSaved={onLabelSaved} canManage={canManage} viewerId={viewerId} />
                 </li>
               ))}
               {g.prose.map((row) => (
@@ -198,24 +230,71 @@ export function TranslationQueue({
 const LABEL_CHIP: Record<LabelStatus, string> = {
   missing: "border-border text-muted",
   as_typed: "border-border bg-background text-muted",
+  proposed: "border-primary/50 bg-primary/10 text-primary",
   stale: "border-warning/60 bg-warning/15 text-foreground",
   current: "border-success/40 bg-success/10 text-success",
 };
 
 /**
- * One label: its English, its Thai in a box ready to type, and where it is
- * used. Saving writes the Thai through set_label_th(), which asks
- * translations.manage and nothing else — so a label whose own list the
- * translator cannot open is still theirs to translate here.
+ * One label: its English, any proposal waiting on it, its Thai in a box ready
+ * to type, and where it is used.
+ *
+ * Three ways out, and all three ask translations.manage, which is what their
+ * own functions ask (0293/0294) — so `canManage` gates every control and none
+ * is ever offered to a login the database would refuse (Lutan, 2026-10-27):
+ *
+ *  - Save publishes straight onto the row (set_label_th(), 0166). An approver
+ *    typing Thai should not have to approve their own words.
+ *  - Propose leaves it waiting in `label_drafts` without touching the row, so
+ *    no reader of the app and no page of the public website can see it until
+ *    somebody approves it. That is the whole design, and this page must not
+ *    weaken it: docs/decisions/2026-10-31-label-drafts-and-unlisted-labels.md.
+ *  - Save & approve publishes what is waiting, and Reject throws it away.
+ *    Approving takes no text: the Thai comes from the draft, so what goes live
+ *    is what was read.
  */
-function LabelCard({ item, onSaved }: { item: LabelItem; onSaved: (item: LabelItem) => void }) {
-  const { t } = useI18n();
+function LabelCard({
+  item,
+  onSaved,
+  canManage,
+  viewerId,
+}: {
+  item: LabelItem;
+  onSaved: (item: LabelItem) => void;
+  canManage: boolean;
+  viewerId: string | null;
+}) {
+  const { t, locale } = useI18n();
   const tr = t.translations;
   const [text, setText] = useState(item.text_th ?? "");
   const [error, setError] = useState<string | null>(null);
   const [savedOnce, setSavedOnce] = useState(false);
+  const [proposedOnce, setProposedOnce] = useState(false);
   const [isPending, startTransition] = useTransition();
   const dirty = text.trim() !== (item.text_th ?? "");
+  const draft = item.draft_text_th;
+  /** The proposal was written against English that has since changed. */
+  const draftStale = !!draft && item.draft_source_text !== item.source_text;
+  const withoutDraft = {
+    draft_text_th: null,
+    draft_source_text: null,
+    draft_proposed_at: null,
+    draft_proposed_by: null,
+  };
+  /** What a label with no live Thai reads as once nothing is waiting on it. */
+  const statusWithoutThai: LabelStatus = item.optional ? "as_typed" : "missing";
+
+  function run(work: () => Promise<{ ok: true } | { ok: false; error: string }>, after: () => void) {
+    setError(null);
+    startTransition(async () => {
+      const result = await work();
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      after();
+    });
+  }
 
   function save() {
     setError(null);
@@ -230,13 +309,73 @@ function LabelCard({ item, onSaved }: { item: LabelItem; onSaved: (item: LabelIt
       const textTh = result.textTh;
       setText(textTh ?? "");
       setSavedOnce(true);
+      setProposedOnce(false);
+      // record_label_sources() clears a draft whose text is what the row now
+      // says, by whatever path it got there (0293), so the page says the same.
+      const spent = !!draft && draft === textTh;
       onSaved({
         ...item,
         text_th: textTh,
         seen_source_text: textTh ? item.source_text : null,
-        status: textTh ? "current" : item.optional ? "as_typed" : "missing",
+        status: textTh ? "current" : draft && !spent ? "proposed" : statusWithoutThai,
+        ...(spent ? withoutDraft : {}),
       });
     });
+  }
+
+  function propose() {
+    const trimmed = text.trim();
+    run(
+      () => proposeLabelTranslation(item.table_name, item.row_id, item.column_name, trimmed),
+      () => {
+        // The proposal now reads in the panel above, so the box goes back to
+        // the live Thai rather than showing the same words twice.
+        setText(item.text_th ?? "");
+        setProposedOnce(true);
+        setSavedOnce(false);
+        onSaved({
+          ...item,
+          status: item.text_th ? item.status : "proposed",
+          draft_text_th: trimmed,
+          draft_source_text: item.source_text,
+          draft_proposed_at: new Date().toISOString(),
+          draft_proposed_by: viewerId,
+        });
+      },
+    );
+  }
+
+  function approve() {
+    run(
+      () => approveLabelTranslation(item.table_name, item.row_id, item.column_name),
+      () => {
+        setText(draft ?? "");
+        setSavedOnce(true);
+        setProposedOnce(false);
+        onSaved({
+          ...item,
+          text_th: draft,
+          seen_source_text: item.source_text,
+          status: "current",
+          ...withoutDraft,
+        });
+      },
+    );
+  }
+
+  function reject() {
+    if (!window.confirm(tr.rejectConfirm)) return;
+    run(
+      () => discardLabelDraft(item.table_name, item.row_id, item.column_name),
+      () => {
+        setProposedOnce(false);
+        onSaved({
+          ...item,
+          status: item.text_th ? item.status : statusWithoutThai,
+          ...withoutDraft,
+        });
+      },
+    );
   }
 
   return (
@@ -267,6 +406,56 @@ function LabelCard({ item, onSaved }: { item: LabelItem; onSaved: (item: LabelIt
         )}
       </div>
 
+      {draft && (
+        <div className="mb-3 rounded border border-primary/40 bg-primary/5 p-3">
+          <p className="text-xs font-medium text-primary">{tr.waitingTitle}</p>
+          <p className="mt-1 text-base text-foreground" lang="th">
+            {draft}
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            {(item.draft_proposed_by && viewerId && item.draft_proposed_by === viewerId
+              ? tr.proposedByYou
+              : tr.proposedBySomeone)(formatDate(item.draft_proposed_at, locale))}
+          </p>
+          {draftStale && (
+            <p className="mt-2 rounded border border-warning/40 bg-warning/10 p-2 text-xs text-foreground">
+              <span className="font-medium">{tr.proposalOutOfDate}</span>
+              {item.draft_source_text && (
+                <>
+                  <br />
+                  <span className="text-muted">{tr.englishWhenProposed}: </span>
+                  <span lang="en">{item.draft_source_text}</span>
+                </>
+              )}
+            </p>
+          )}
+          {canManage && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              <ActionButton
+                type="button"
+                icon={ACTION_ICONS.approve}
+                variant="primary"
+                compact
+                disabled={isPending}
+                onClick={approve}
+              >
+                {tr.approveLabel}
+              </ActionButton>
+              <ActionButton
+                type="button"
+                icon={ACTION_ICONS.deny}
+                variant="danger"
+                compact
+                disabled={isPending}
+                onClick={reject}
+              >
+                {tr.rejectLabel}
+              </ActionButton>
+            </div>
+          )}
+        </div>
+      )}
+
       {item.status === "stale" && item.seen_source_text && (
         <p className="mb-2 rounded border border-warning/40 bg-warning/10 p-2 text-xs text-foreground">
           <span className="font-medium text-muted">{tr.englishWhenTranslated}: </span>
@@ -275,38 +464,56 @@ function LabelCard({ item, onSaved }: { item: LabelItem; onSaved: (item: LabelIt
       )}
       {item.status === "as_typed" && <p className="mb-2 text-xs text-muted">{tr.asTypedHint}</p>}
 
-      <form
-        className="flex flex-col gap-2 sm:flex-row sm:items-end"
-        onSubmit={(e) => {
-          e.preventDefault();
-          save();
-        }}
-      >
-        <label className="flex flex-1 flex-col gap-1 text-xs font-medium text-muted">
-          {tr.thaiField}
-          <input
-            type="text"
-            value={text}
-            onChange={(e) => {
-              setText(e.target.value);
-              setSavedOnce(false);
+      {canManage && (
+        <>
+          <form
+            className="flex flex-col gap-2 sm:flex-row sm:items-end"
+            onSubmit={(e) => {
+              e.preventDefault();
+              save();
             }}
-            placeholder={tr.thaiPlaceholder}
-            lang="th"
-            className="rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
-          />
-        </label>
-        <ActionButton
-          type="submit"
-          icon={ACTION_ICONS.save}
-          variant="primary"
-          compact
-          disabled={isPending || (!dirty && item.status !== "stale")}
-        >
-          {isPending ? t.common.saving : savedOnce && !dirty ? tr.saved : tr.saveLabel}
-        </ActionButton>
-      </form>
-      {item.text_th && <p className="mt-1 text-xs text-muted">{tr.clearHint}</p>}
+          >
+            <label className="flex flex-1 flex-col gap-1 text-xs font-medium text-muted">
+              {tr.thaiField}
+              <input
+                type="text"
+                value={text}
+                onChange={(e) => {
+                  setText(e.target.value);
+                  setSavedOnce(false);
+                  setProposedOnce(false);
+                }}
+                placeholder={tr.thaiPlaceholder}
+                lang="th"
+                className="rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+              />
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <ActionButton
+                type="submit"
+                icon={ACTION_ICONS.save}
+                variant="primary"
+                compact
+                disabled={isPending || (!dirty && item.status !== "stale")}
+              >
+                {isPending ? t.common.saving : savedOnce && !dirty ? tr.saved : tr.saveLabel}
+              </ActionButton>
+              <ActionButton
+                type="button"
+                icon={ACTION_ICONS.send}
+                variant="secondary"
+                compact
+                disabled={isPending || !text.trim()}
+                onClick={propose}
+              >
+                {proposedOnce ? tr.proposedDone : tr.proposeLabel}
+              </ActionButton>
+            </div>
+          </form>
+          <p className="mt-1 text-xs text-muted">{tr.proposeHint}</p>
+          {item.text_th && <p className="mt-1 text-xs text-muted">{tr.clearHint}</p>}
+        </>
+      )}
       {error && <p className="mt-1 text-xs text-danger">{error}</p>}
     </div>
   );

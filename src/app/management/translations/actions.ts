@@ -190,3 +190,98 @@ export async function saveLabelTranslation(
     return { ok: true, textTh: trimmed || null };
   });
 }
+
+/**
+ * Propose a Thai label and leave it waiting (0293's propose_label_th()).
+ *
+ * The row is untouched: the proposal lives in `label_drafts` beside it, so
+ * nothing that reads a `_th` column — and that is dozens of views and the
+ * public website — can see it until somebody approves it. That property is the
+ * whole design: docs/decisions/2026-10-31-label-drafts-and-unlisted-labels.md.
+ *
+ * Asks translations.manage, which is what the function asks today. A separate
+ * translations.propose activity is warranted and deliberately deferred to its
+ * own backlog item, so for now anybody who can propose can also approve.
+ *
+ * Nothing a reader sees changes, so only the queue is revalidated.
+ */
+export async function proposeLabelTranslation(
+  table: string,
+  rowId: string,
+  column: string,
+  text: string,
+): Promise<ActionResult<{ textTh: string | null }>> {
+  const { t } = await getT();
+  return runAction("translations.proposeLabelTranslation", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "translations.manage")) return refuse(t.management.errors.managementAccessRequired);
+    const trimmed = text.trim();
+    if (!trimmed) return refuse(t.translations.errors.proposalRequired);
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("propose_label_th", {
+      p_table: table,
+      p_row_id: rowId,
+      p_column: column,
+      p_text: trimmed,
+    });
+    if (error) return refuse(error.message);
+    // false means the row itself is gone (0294 checks, rather than writing a dead draft).
+    if (data !== true) return refuse(t.translations.errors.labelNotFound);
+    revalidatePath("/management/translations");
+    return { ok: true, textTh: trimmed };
+  });
+}
+
+/**
+ * Publish the Thai that is waiting (0293's approve_label_th()).
+ *
+ * It takes no text: the Thai comes from the draft, never from an argument, so
+ * an approval cannot quietly publish something other than the proposal that
+ * was read. The whole app is revalidated because a label is shown on many
+ * screens, the same reason saveLabelTranslation gives.
+ */
+export async function approveLabelTranslation(
+  table: string,
+  rowId: string,
+  column: string,
+): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("translations.approveLabelTranslation", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "translations.manage")) return refuse(t.management.errors.managementAccessRequired);
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("approve_label_th", {
+      p_table: table,
+      p_row_id: rowId,
+      p_column: column,
+    });
+    if (error) return refuse(error.message);
+    if (data !== true) return refuse(t.translations.errors.labelNotFound);
+    revalidatePath("/", "layout");
+    return { ok: true };
+  });
+}
+
+/**
+ * Throw a proposal away (0293's discard_label_draft()). The row is untouched,
+ * so nothing a reader sees changes and only the queue is revalidated. false
+ * means there was nothing waiting — somebody else got there first.
+ */
+export async function discardLabelDraft(
+  table: string,
+  rowId: string,
+  column: string,
+): Promise<ActionResult> {
+  const { t } = await getT();
+  return runAction("translations.discardLabelDraft", t.common.somethingWentWrong, async () => {
+    if (!can(await loadPermissions(), "translations.manage")) return refuse(t.management.errors.managementAccessRequired);
+    const supabase = await createClient();
+    const { data, error } = await supabase.rpc("discard_label_draft", {
+      p_table: table,
+      p_row_id: rowId,
+      p_column: column,
+    });
+    if (error) return refuse(error.message);
+    if (data !== true) return refuse(t.translations.errors.nothingWaiting);
+    revalidatePath("/management/translations");
+    return { ok: true };
+  });
+}
