@@ -340,6 +340,11 @@ const PINNED = {
   "/admin/diets/[id]": { guards: ['requirePermission("reference.types")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },
   "/admin/diets/ingredients": { guards: ['requirePermission("reference.types")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },
   "/admin/diets/ingredients/[id]": { guards: ['requirePermission("reference.types")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },
+  // Settings → Website → Pages → Edit: one public page's wording and the photo beside its heading,
+  // on a page of its own rather than the popup the Pages tab used to open. Reached only from that
+  // tab, so it carries the same guard as /admin/website; its controls ask website.content (the page
+  // save and the photo) and translations.manage (the panels), each its own action's activity.
+  "/admin/website/pages/[slug]": { guards: ['requirePermission("website.content", "read")'], decides: ["website.content", "translations.manage"] },
   "/bills": { guards: ["if (!canUseBills(perms)) refuseFor(perms)"], decides: ["stock.delivery", "medical.visits", "maintenance.bills"] },
 };
 

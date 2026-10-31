@@ -2347,10 +2347,9 @@ const en = {
         removeConfirm: "Remove the hero photo?",
       },
       pagePhotos: {
-        heading: "Page photos",
-        subtitle:
-          "A photo beside the heading of the Donate, Foster, Volunteer and About pages. A page with no photo simply shows its heading across the full width.",
-        pages: { donate: "Donate page", foster: "Foster page", volunteer: "Volunteer page", about: "About page" },
+        cardHeading: "Photo for this page",
+        cardSubtitle:
+          "It shows beside the page's heading, above it on a phone. A page with no photo simply shows its heading across the full width.",
         noPhoto: "No photo set",
         replace: "Choose photo",
         remove: "Remove",
@@ -2525,7 +2524,7 @@ const en = {
       visibility: {
         heading: "Pages on the website",
         subtitle:
-          "Switch a page, or a whole section, off to take it off the website until you are ready. Nothing is deleted: switch it on again and it comes back as it was. Home and Privacy have no switch because they are always on.",
+          "Every page on the public website. Press Edit to write a page's wording and choose its photo. Switch a page, or a whole section, off to take it off the website until you are ready: nothing is deleted, and switching it on again brings it back as it was. Home and Privacy have no switch because they are always on. A page with no Edit button is built from what you enter elsewhere in the app, so there is no wording to write here.",
         delay:
           "A change can take up to ten minutes to show for visitors, because the website keeps a copy of each page for a short while.",
         otherPages: "Pages with no section",
@@ -2547,9 +2546,9 @@ const en = {
         errors: { unknown: "That page is not one that can be switched." },
       },
       pages: {
-        heading: "Pages",
         subtitle:
-          "The wording of each public page as you write it. The other language's version is written or approved beneath each field — the same translation panel a manager sees on Management → Translations.",
+          "The wording of this page as you write it. The other language's version is written or approved beneath each field — the same translation panel a manager sees on Management → Translations.",
+        back: "Back to Pages",
         thaiMissing: "Thai missing",
         lastEdited: (date: string) => `Edited ${date}`,
         title: "Heading",
@@ -2564,8 +2563,7 @@ const en = {
         previewDonateNote: "The ways to give are not shown here; they appear on the live page as usual.",
         edit: "Edit",
         editTitle: (label: string) => `Edit ${label}`,
-        closeEditor: "Close",
-        discardConfirm: "You have changes that are not saved. Close without saving them?",
+        leaveConfirm: "You have changes that are not saved. Leave this page without saving them?",
         marks: {
           toolbar: "Text style",
           bold: "Bold",
