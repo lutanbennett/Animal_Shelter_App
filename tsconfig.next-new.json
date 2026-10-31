@@ -1,0 +1,12 @@
+{
+  // The type check for a build into .next.new — the Pi deploy (scripts/pi/deploy-pi.sh), chosen by
+  // next.config.ts when NEXT_DIST_DIR=.next.new. tsconfig.build.json lists `.next/types`, which on
+  // the Pi is the LIVE build's: the previous release's route types. A release that deleted a page
+  // then failed TS2307 on a validator.ts still importing it (0.40.12, /admin/frequencies), while
+  // this build's own `.next.new/types` were never checked at all. `extends` stops Next adding its
+  // own include for the dist dir, so the build's types are named here instead of `.next/types`.
+  // `include` replaces the base's list, so keep it in step with tsconfig.json's, minus `.next`.
+  "extends": "./tsconfig.build.json",
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next.new/types/**/*.ts", "**/*.mts"],
+  "exclude": ["node_modules", ".next", ".next.new/dev"]
+}
