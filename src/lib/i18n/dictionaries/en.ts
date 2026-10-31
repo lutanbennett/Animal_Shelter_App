@@ -1613,10 +1613,15 @@ const en = {
       typed: "What was typed",
       about: "About",
       aResident: "A resident",
+      answeredBy: "Answered by",
+      byModel: "A model",
+      byKeyword: "Keyword reader",
       empty: "Nothing in this window. Either the assistant understood everything, or the rows have passed their 90 days.",
       loadFailed: "The log could not be read. Try again in a moment.",
       showing: (v: { count: number }) => `${v.count} shown.`,
       showingLimit: (v: { count: number }) => `The newest ${v.count} are shown. Narrow the dates, or download the file for more.`,
+      split: (v: { model: number; keyword: number }) =>
+        `${v.model} of them a model read, ${v.keyword} the keyword reader.`,
     },
     stocktaking: {
       title: "Stocktaking",

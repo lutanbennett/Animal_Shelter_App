@@ -9,6 +9,11 @@ import { toCsv } from "@/lib/csv";
  *
  * Who may read: Admin only, by the table's policy (`assistant_actions_admin_all`, 0153). Every
  * caller asks the Admin rule first, and a non-Admin login's query returns nothing in any case.
+ *
+ * Which brain answered: `model` (added by 0289) is the model id that produced the interpretation,
+ * and null means the version 1 keyword reader. Without it a miss cannot be read at all — a sentence
+ * the keyword reader could never have placed is not the same finding as one a model got wrong
+ * (docs/decisions/2026-10-31-assistant-model-waits.md).
  */
 
 export const COULD_NOT_HELP_STATUSES = ["unmatched", "refused"] as const;
@@ -32,6 +37,8 @@ export type CouldNotHelpRow = {
   result: string | null;
   result_table: string | null;
   result_row_id: string | null;
+  /** The model id that interpreted the sentence; null = the version 1 keyword reader (0289). */
+  model: string | null;
 };
 
 /** The most the screen draws; the export is allowed more, since a file is for a whole look. */
@@ -72,7 +79,7 @@ export async function loadCouldNotHelp(
 ): Promise<{ rows: CouldNotHelpRow[]; error: string | null }> {
   let q = supabase
     .from("assistant_actions")
-    .select("id, created_at, request_text, intent, draft, status, result, result_table, result_row_id")
+    .select("id, created_at, request_text, intent, draft, status, result, result_table, result_row_id, model")
     .in("status", f.status === "all" ? [...COULD_NOT_HELP_STATUSES] : [f.status])
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -97,6 +104,23 @@ export function assistantOutcome(row: Pick<CouldNotHelpRow, "status" | "intent" 
   if (row.status === "refused") return "refused: this login may not ask the assistant to change records";
   if (row.status === "unmatched") return "no match: no parser placed the sentence";
   return row.result ?? "";
+}
+
+/**
+ * Which brain answered one row. A model id is kept whole for the reader who wants it, but the KIND is
+ * what a screenful is scanned for, so it is answered separately from the string.
+ */
+export type AnsweredBy = { kind: "model"; model: string } | { kind: "keyword" };
+
+export function answeredBy(row: Pick<CouldNotHelpRow, "model">): AnsweredBy {
+  const model = row.model?.trim();
+  return model ? { kind: "model", model } : { kind: "keyword" };
+}
+
+/** The split across a screenful or a file: the one number that makes an eval score readable. */
+export function modelSplit(rows: Pick<CouldNotHelpRow, "model">[]): { model: number; keyword: number } {
+  const model = rows.filter((r) => answeredBy(r).kind === "model").length;
+  return { model, keyword: rows.length - model };
 }
 
 /** Row ids of residents → names, for the screen only. The export carries the id, not the name. */
@@ -128,6 +152,8 @@ export const EVAL_HEADINGS = [
   "status",
   "typed",
   "assistant_did",
+  "answered_by",
+  "model",
   "intent_guessed",
   "resident_id_guessed",
   "correct_intent",
@@ -147,6 +173,8 @@ export function buildEvalCsv(rows: CouldNotHelpRow[]): string {
       r.status,
       r.request_text,
       assistantOutcome(r),
+      answeredBy(r).kind === "model" ? "model" : "keyword reader",
+      r.model ?? "",
       r.intent ?? "",
       inferredResidentId(r) ?? "",
       "",
