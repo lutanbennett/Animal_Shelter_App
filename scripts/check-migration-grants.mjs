@@ -53,6 +53,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { sqlCodeOnly } from "./lib/sql-code-only.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const MIGRATIONS_DIR = path.resolve(here, "..", "supabase", "migrations");
@@ -79,13 +80,8 @@ const GATED_VIEWS = [
   "translation_queue",
 ];
 
-/** Blank out comments and dollar-quoted strings, keeping the rest as is. */
-function stripSql(sql) {
-  return sql
-    .replace(/\/\*[\s\S]*?\*\//g, " ")
-    .replace(/--[^\n]*/g, " ")
-    .replace(/\$([A-Za-z_]\w*)?\$[\s\S]*?\$\1\$/g, " ");
-}
+/** Comments, string literals and dollar-quoted bodies blanked: see scripts/lib/sql-code-only.mjs. */
+const stripSql = (sql) => sqlCodeOnly(sql);
 
 /** `public.foo` / `"foo"` → `foo`; null for another schema. */
 function normalise(name) {
