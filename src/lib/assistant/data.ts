@@ -83,6 +83,7 @@ type ListRow = {
   enclosure_id: string | null;
   enclosure_name: string | null;
   enclosure_name_th: string | null;
+  profile_photo_drive_file_id: string | null;
 };
 
 /**
@@ -105,10 +106,12 @@ export function emptyAssistantContext(
  * keystroke needs a round trip. The rows are the ones the caller's own RLS
  * lets them see.
  *
- * `resident_list_view` carries neither the profile photo nor the enclosure
- * a hospitalised resident came from, so both come alongside it, keyed by
- * resident id — the same two-step the enclosure hub does for its
- * thumbnails.
+ * Residents come from `resident_who_and_where`, the view the who-and-where
+ * activity reads, not `resident_list_view` (whose policy asks the whole
+ * record): a login holding the assistant card with only who-and-where would
+ * otherwise get an empty picker. It carries the profile photo; the enclosure
+ * a hospitalised resident came from is not in it, so that comes alongside,
+ * keyed by resident id.
  *
  * It does no check of its own: the caller checks `can(perms, "assistant.ask")`
  * and only then loads, so a doctor never gets the rows by asking directly
@@ -120,9 +123,9 @@ export async function loadAssistantContext(
 ): Promise<AssistantContext> {
   const [listResult, clinicsResult, options, doctors, carerResult, typesResult] = await Promise.all([
     supabase
-      .from("resident_list_view")
+      .from("resident_who_and_where")
       .select(
-        "resident_id, name, thai_name, resident_code, current_status, enclosure_id, enclosure_name, enclosure_name_th",
+        "resident_id:id, name, thai_name, resident_code, current_status, enclosure_id, enclosure_name, enclosure_name_th, profile_photo_drive_file_id",
       )
       .or(NOT_DECEASED)
       .order("name")
@@ -168,14 +171,7 @@ export async function loadAssistantContext(
   const rows = listResult.data ?? [];
   const ids = rows.map((r) => r.resident_id);
 
-  const [photosResult, stateResult] = await Promise.all([
-    ids.length
-      ? supabase
-          .from("residents")
-          .select("id, profile_photo_drive_file_id")
-          .in("id", ids)
-          .returns<{ id: string; profile_photo_drive_file_id: string | null }[]>()
-      : Promise.resolve({ data: [], error: null }),
+  const [stateResult] = await Promise.all([
     ids.length
       ? supabase
           .from("resident_current_state")
@@ -187,9 +183,6 @@ export async function loadAssistantContext(
       : Promise.resolve({ data: [], error: null }),
   ]);
 
-  const photoOf = new Map(
-    (photosResult.data ?? []).map((r) => [r.id, r.profile_photo_drive_file_id]),
-  );
   const previousOf = new Map(
     (stateResult.data ?? []).map((r) => [
       r.resident_id,
@@ -206,7 +199,7 @@ export async function loadAssistantContext(
     enclosureName: r.enclosure_name,
     enclosureNameTh: r.enclosure_name_th,
     status: r.current_status,
-    photoFileId: photoOf.get(r.resident_id) ?? null,
+    photoFileId: r.profile_photo_drive_file_id,
     // Only meaningful while they're actually in hospital; it is set on
     // every move as well (see the return page).
     hospitalPreviousEnclosureId:
@@ -236,7 +229,6 @@ export async function loadAssistantContext(
     error:
       listResult.error?.message ??
       clinicsResult.error?.message ??
-      photosResult.error?.message ??
       stateResult.error?.message ??
       typesResult.error?.message ??
       medicationResult.error?.message ??
