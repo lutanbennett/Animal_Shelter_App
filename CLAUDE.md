@@ -514,7 +514,8 @@ Know its limits, and say so in the test plan when they bite:
     is not established, so a brief asking for that press must say where. Not turned into a check script: see
     `docs/decisions/2026-10-28-aal1-list-stays-prose.md`.
   If a page you changed does not open, write down which page and what it asked for.
-- **A login holding exactly some cards: `node scripts/dev-signin.mjs --cards <a,b> --port <yours>`, with NO role.** The script
+- **A login holding exactly some cards: `node scripts/dev-signin.mjs --cards <a,b> --port <yours>`, with NO role.** `<a,b>` are **card keys, not activity names** (`website_photos`, not `website.gallery`; on a key it
+  does not know the script refuses and prints the real ones). The script
   **refuses** a role and `--cards` together (`give a role or --cards, not both`). Given `--cards` alone it builds a disposable role
   of its own holding exactly those cards, so no real role is disturbed and no other running stream is signed out. Called twice
   for the same cards it **re-keys** the login, so only the **later** snippet is valid.
@@ -627,7 +628,10 @@ Once a day, before starting streams, in `C:\Development\Animal_Shelter_App`:
 `git merge backlog`, then `node scripts/check-backlog-sections.mjs` (stop with its message if it fails; it reads `main`'s copy of the file, not the backlog worktree's), then `git push`, then
 `git -C ../Animal_Shelter_Backlog merge --ff-only main` (the post-merge
 hook pushes it; `git -C ../Animal_Shelter_Backlog status -sb` should not
-say `ahead`). New streams
+say `ahead`). Then `npm ci` in the main checkout: last, so a failed install cannot hold back the
+push, and after the pull, the only step that can change `package-lock.json`. Skipped, a dependency a merged
+stream added leaves the checkout unable to build, and it fails minutes into a build rather than at the pull
+(a `--no-pi` test deploy died on `@anthropic-ai/sdk`, 2026-10-31). New streams
 branch from `origin/main`, so this is what makes fresh backlog items and
 yesterday's merges visible to them. `/plan-day` does this step.
 
