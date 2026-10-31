@@ -5,7 +5,7 @@ import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { loadAssistantContext } from "@/lib/assistant/data";
 import { createLlm, LlmError } from "@/lib/assistant/llm";
-import { interpretSentence, type InterpretResult } from "@/lib/assistant/interpret";
+import { interpretSentence, stepTimeoutMs, type InterpretResult } from "@/lib/assistant/interpret";
 
 /**
  * Assistant v2: ask the model to turn one sentence into a Draft.
@@ -27,6 +27,13 @@ import { interpretSentence, type InterpretResult } from "@/lib/assistant/interpr
  * A sentence longer than MAX_REQUEST_CHARS is not sent: it bounds what one
  * turn can spend. A ceiling per person per day needs somewhere to count, and
  * is left for the release that turns a model on (decision file).
+ *
+ * How long one model step may take is `stepTimeoutMs`, which is where
+ * ASSISTANT_LLM_TIMEOUT_MS reaches `interpretSentence` — it had no way to
+ * before, so a configured timeout governed only the adapter while the step was
+ * capped at a flat number here. A configured value can now shorten a step; it
+ * cannot lengthen one past the request budget
+ * (docs/decisions/2026-10-31-assistant-model-waits.md).
  */
 const MAX_REQUEST_CHARS = 500;
 
@@ -64,6 +71,7 @@ export async function interpretRequest(input: {
       request,
       today: input.today,
       canWrite: context.canWrite,
+      timeoutMs: stepTimeoutMs(process.env.ASSISTANT_LLM_TIMEOUT_MS),
       // The extra activity a tool declares in its own spec (`needs`), answered
       // from this caller's cards. A tool that asks for one the caller lacks is
       // not in the list the model is given, so it cannot be called at all.

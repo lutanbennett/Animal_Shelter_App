@@ -7,6 +7,7 @@ import { parseRequest, type ParsedRequest } from "@/lib/assistant/parse";
 import { isoLocal } from "@/lib/assistant/text";
 import { isWriteIntent, type AssistantTrace, type Draft } from "@/lib/assistant/types";
 import { isLowRiskWrite, readyToRecord, toolNeeds } from "@/lib/assistant/llm-tools";
+import { ASK_MODEL, mayAskModel, waitAfter, type ModelWait } from "@/lib/assistant/model-wait";
 import type { AssistantContext } from "@/lib/assistant/data";
 import { recordAssistantTurn, recordRefusedTurn } from "@/app/assistant/actions";
 import { interpretRequest } from "@/app/assistant/interpret";
@@ -38,6 +39,11 @@ import {
  * exactly as it did before the model existed. What reaches the server for a
  * write is still only the confirmed card; a read-only question or the audit
  * row for a turn that ended in neither follows the same path as ever.
+ *
+ * What it remembers about the model between sentences is `modelWait`: a build
+ * with no model is asked once and never again, and a model that did not answer
+ * at its address is left alone for a few minutes rather than costing every
+ * sentence the same ten-second wait (`model-wait.ts` holds the reasoning).
  *
  * Multi-turn (stream 4): each sentence carries the last few before it, so
  * "send her to hospital" can mean the resident just weighed; and the model
@@ -144,8 +150,8 @@ export function AssistantConversation({
   // Turn ids are also field ids inside the cards, so they have to be
   // unique for the life of the conversation — a counter, not a clock.
   const nextTurnId = useRef(1);
-  // Once the server says no model is set up, stop asking it on every sentence.
-  const modelOff = useRef(false);
+  // What the last answer said about the model being there at all: see model-wait.ts.
+  const modelWait = useRef<ModelWait>(ASK_MODEL);
   // The turn whose question dialog is open. Closing it leaves the question waiting in the conversation.
   const [askOpen, setAskOpen] = useState<number | null>(null);
 
@@ -177,7 +183,7 @@ export function AssistantConversation({
     const id = nextTurnId.current++;
     setText("");
 
-    if (modelOff.current || !context.canAsk) {
+    if (!context.canAsk || !mayAskModel(modelWait.current, Date.now())) {
       const parsed = parseRequest(trimmed, parserData);
       setTurns((prev) => [...prev, startedTurn(id, trimmed, parsed)]);
       afterParse(id, trimmed, parsed);
@@ -195,7 +201,8 @@ export function AssistantConversation({
   /** The model's reply to a sentence or to an answer: a card, a question, or the keyword parser. */
   function interpreted(id: number, request: string, result: InterpretResult, prior?: Pick<Turn, "trace" | "answers">) {
     if (!result.ok) {
-      if (result.reason === "not_configured") modelOff.current = true;
+      const remember = waitAfter(result, Date.now());
+      if (remember) modelWait.current = remember;
       return fallback(id, request, result.trace ?? prior?.trace, prior?.answers);
     }
     if ("ask" in result) {

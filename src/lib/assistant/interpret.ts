@@ -71,8 +71,35 @@ export const MAX_MALFORMED = 2;
 export const MAX_ASKS = 2;
 /** Earlier sentences of this conversation the model is shown. Older ones are dropped, not summarised. */
 export const MAX_HISTORY = 3;
-/** Milliseconds one model call may take before the turn falls back. */
-export const MODEL_TIMEOUT_MS = 25_000;
+/**
+ * The whole request has to come back inside Cloudflare's limit on a proxied
+ * request, so the per-step cap and MAX_ROUNDS are ONE decision and are derived
+ * from the budget rather than chosen apart from it. The arithmetic and the
+ * reasoning are in docs/decisions/2026-10-31-assistant-model-waits.md.
+ */
+export const REQUEST_BUDGET_MS = 100_000;
+/** Of the budget, what is not the model: auth, the row load, the audit write, the two network legs. */
+export const REQUEST_RESERVE_MS = 20_000;
+/**
+ * Milliseconds one model call may take before the turn falls back: the budget
+ * less the reserve, shared between the legs of one request — 20 s at MAX_ROUNDS
+ * of 4. Lower MAX_ROUNDS and each step gets longer, raise it and each gets
+ * shorter, but the worst case stays inside the budget either way.
+ */
+export const MODEL_TIMEOUT_MS = Math.floor((REQUEST_BUDGET_MS - REQUEST_RESERVE_MS) / MAX_ROUNDS);
+
+/**
+ * The step cap for this request, given ASSISTANT_LLM_TIMEOUT_MS. A configured
+ * value SHORTENS the step; it cannot lengthen it past MODEL_TIMEOUT_MS, because
+ * four steps of a configured 180 s is 720 s and Cloudflare would kill the
+ * request at 100 s with no fallback having run. Anything under a second, and
+ * anything that is not a number, means unset.
+ */
+export function stepTimeoutMs(configured: number | string | undefined): number {
+  const asked = Number(configured);
+  if (!Number.isFinite(asked) || asked < 1000) return MODEL_TIMEOUT_MS;
+  return Math.min(Math.floor(asked), MODEL_TIMEOUT_MS);
+}
 const MAX_MATCHES = 5;
 const MAX_TEXT_IN_EXCHANGE = 2000;
 const MAX_HISTORY_REQUEST_CHARS = 300;
@@ -157,8 +184,13 @@ export type InterpretResult =
     }
   /** The model asked the person for details. Answer with `resume` and the values. */
   | { ok: true; ask: DetailsAsk; resume: InterpretResume; trace: AssistantTrace }
-  /** No draft. `trace` is absent only when no model call was ever made. */
-  | { ok: false; reason: InterpretOutcome | "not_configured"; trace?: AssistantTrace };
+  /**
+   * No draft. `trace` is absent only when no model call was ever made.
+   * `errorKind` is the LlmErrorKind behind a reason of "error", so the browser
+   * can tell a model that is not answering at its address ("unavailable") from
+   * one that answered badly, without reading the opaque exchange.
+   */
+  | { ok: false; reason: InterpretOutcome | "not_configured"; errorKind?: string; trace?: AssistantTrace };
 
 // ---------------------------------------------------------------- prompt
 
@@ -703,6 +735,7 @@ export async function interpretSentence(input: {
   const finish = (outcome: InterpretOutcome, errorKind?: string): InterpretResult => ({
     ok: false,
     reason: outcome,
+    ...(errorKind ? { errorKind } : {}),
     trace: trace(outcome, errorKind),
   });
   const trace = (outcome: InterpretOutcome, errorKind?: string): AssistantTrace => {
