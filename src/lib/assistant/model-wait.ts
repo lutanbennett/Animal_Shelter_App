@@ -53,8 +53,16 @@ export type ModelWait =
 
 export const ASK_MODEL: ModelWait = { kind: "ask" };
 
-/** Whether this sentence goes to the model at all. */
-export function mayAskModel(wait: ModelWait, now: number): boolean {
+/**
+ * Whether this sentence goes to the model at all.
+ *
+ * The clock lives here, not at the call site: `react-hooks/purity` reads a
+ * `Date.now()` anywhere in a component's body as a render-time call, and it is
+ * right to — the conversation's handlers are declared there. The window is this
+ * module's idea anyway, so it owns the clock, and `now` stays injectable for the
+ * test rather than for the caller.
+ */
+export function mayAskModel(wait: ModelWait, now: number = Date.now()): boolean {
   if (wait.kind === "none") return false;
   if (wait.kind === "asleep") return now >= wait.until;
   return true;
@@ -69,7 +77,7 @@ export function mayAskModel(wait: ModelWait, now: number): boolean {
  * A timeout deliberately does not latch: a model that answers slowly is a model
  * that is answering, and the next sentence may be the shorter one.
  */
-export function waitAfter(result: InterpretResult, now: number): ModelWait | null {
+export function waitAfter(result: InterpretResult, now: number = Date.now()): ModelWait | null {
   if (result.ok) return null;
   if (result.reason === "not_configured") return { kind: "none" };
   if (result.reason === "error" && result.errorKind === "unavailable") {

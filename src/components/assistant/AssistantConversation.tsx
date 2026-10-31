@@ -183,7 +183,7 @@ export function AssistantConversation({
     const id = nextTurnId.current++;
     setText("");
 
-    if (!context.canAsk || !mayAskModel(modelWait.current, Date.now())) {
+    if (!context.canAsk || !mayAskModel(modelWait.current)) {
       const parsed = parseRequest(trimmed, parserData);
       setTurns((prev) => [...prev, startedTurn(id, trimmed, parsed)]);
       afterParse(id, trimmed, parsed);
@@ -201,7 +201,7 @@ export function AssistantConversation({
   /** The model's reply to a sentence or to an answer: a card, a question, or the keyword parser. */
   function interpreted(id: number, request: string, result: InterpretResult, prior?: Pick<Turn, "trace" | "answers">) {
     if (!result.ok) {
-      const remember = waitAfter(result, Date.now());
+      const remember = waitAfter(result);
       if (remember) modelWait.current = remember;
       return fallback(id, request, result.trace ?? prior?.trace, prior?.answers);
     }
