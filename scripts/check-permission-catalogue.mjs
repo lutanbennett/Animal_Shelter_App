@@ -103,9 +103,18 @@ for (const f of walk(join(root, "src"))) {
   for (const m of text.matchAll(/\brequirePermission\(\s*"([^"]+)"/g)) used.push([rel, m[1]]);
   for (const m of text.matchAll(/\bactivity:\s*"([^"]+)"/g)) used.push([rel, m[1]]);
 }
+// An activity a later file retires (0291: reference.add_while_recording) may be asked by the files before it, whose policies that
+// file replaced; asked in the retiring file or after it, it is still a fault. Applied files are never edited, so this is the only way.
+const retiredIn = new Map();
+for (const f of migrations) {
+  for (const m of readFileSync(join(migDir, f), "utf8").matchAll(/delete from permission_activities where key = '([a-z_.]+)'/g)) retiredIn.set(m[1], f);
+}
 for (const f of migrations) {
   const sql = readFileSync(join(migDir, f), "utf8");
-  for (const m of sql.matchAll(/\bhas_permission\(\s*'([^']+)'/g)) used.push([f, m[1]]);
+  for (const m of sql.matchAll(/\bhas_permission\(\s*'([^']+)'/g)) {
+    if (retiredIn.has(m[1]) && f < retiredIn.get(m[1])) continue;
+    used.push([f, m[1]]);
+  }
 }
 const unknown = used.filter(([, k]) => !isActivityKey(k));
 eq(`B every activity key written in the app or a migration exists (${used.length} found)`, unknown, []);

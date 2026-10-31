@@ -526,12 +526,7 @@
     {
       "row": 53,
       "label": "Add a missing medication, frequency or procedure type while filling in a form",
-      "keys": [
-        {
-          "activity": "reference.add_while_recording",
-          "level": "yes"
-        }
-      ]
+      "keys": []
     },
     {
       "row": 54,

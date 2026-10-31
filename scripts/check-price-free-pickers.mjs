@@ -1,5 +1,5 @@
 // price-free-pickers (0151): the medicine and diet pickers read picker_medications / picker_diet_types, and the
-// medication and diet_types read policies no longer carry reference.add_while_recording or resident.register.
+// medication and diet_types read policies no longer carry reference.add_while_recording (retired outright, 0291) or resident.register.
 // Against DEV only, one transaction that is always rolled back, each login's own JWT.
 //
 //   node scripts/check-price-free-pickers.mjs            (from the repo root; dev only)
@@ -8,11 +8,11 @@
 // Per principal, 1 = the statement saw or changed a row, 0 = refused:
 //   table read   select from medication / diet_types (what carries cost_per_unit)
 //   view read    select from picker_medications / picker_diet_types (id, name, unit, no price)
-//   add          insert into medication, with no RETURNING (the add-while-recording path)
-// The point: a role holding only the add cell or only the register cell reads the pickers and NOT the
+//   add          insert into medication, with no RETURNING (stock.medications Edit only since 0291)
+// The point: a role holding only the prescriptions read or only the register cell reads the pickers and NOT the
 // price tables; the cells that are meant to see prices (stock.medications, stock.diets) still read both.
 // Then sweeps: the two views expose exactly the columns the decision file lists, and neither select policy names
-// the add cell or the register cell.
+// the retired add cell or the register cell, and the medicine picker no longer names the add cell (0291).
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { randomUUID } from "node:crypto";
@@ -27,8 +27,9 @@ const lit = (id) => `'${id}'::uuid`;
 const CUSTOM = {
   c_none: { cells: [] },
   c_med_read: { cells: [["stock.medications", 1]] },
-  // the add_while_recording card includes view_medical (cards.ts), which reads medical.prescriptions and so can read units (0263)
-  c_add: { cells: [["reference.add_while_recording", 2], ["medical.prescriptions", 1]] },
+  // was c_add (reference.add_while_recording + medical.prescriptions Read) until 0291 retired the add cell; medical.prescriptions Read
+  // is what opened its picker read, and it can read units (0263), so its refused insert is the policy, not the units trigger
+  c_rx_read: { cells: [["medical.prescriptions", 1]] },
   c_diet_read: { cells: [["stock.diets", 1]] },
   c_register: { cells: [["resident.register", 2]] },
   c_vol_medical: {
@@ -55,8 +56,8 @@ const PROBES = {
 // expected 1/0 per principal; anything not listed is 0
 const EXPECT = {
   med_table: ["admin", "c_med_read"],
-  med_view: ["admin", "c_med_read", "c_add", "c_vol_medical"],
-  med_add: ["admin", "c_add"],
+  med_view: ["admin", "c_med_read", "c_rx_read", "c_vol_medical"],
+  med_add: ["admin"],
   diet_table: ["admin", "c_diet_read"],
   diet_view: ["admin", "c_diet_read", "c_register", "c_vol_medical"],
 };
@@ -121,6 +122,8 @@ do $sweep$ begin
   insert into res select 'sweep', 'diet_view_extra', count(*) from information_schema.columns
    where table_schema = 'public' and table_name = 'picker_diet_types'
      and column_name not in ('id', 'name', 'unit', 'name_th'); -- name_th: 0166; the size quantities and the standard flag left with 0243
+  insert into res select 'sweep', 'picker_names_add_cell', count(*) from pg_views
+   where schemaname = 'public' and viewname = 'picker_medications' and definition like '%add_while_recording%';
   insert into res select 'sweep', 'select_names_add_or_register', count(*) from pg_policies
    where schemaname = 'public' and tablename in ('medication', 'diet_types') and cmd = 'SELECT'
      and (coalesce(qual, '') like '%add_while_recording%' or coalesce(qual, '') like '%resident.register%');
@@ -163,6 +166,7 @@ eq("medication_view_cols", 3, "picker_medications has id, name, dose_unit");
 eq("medication_view_extra", 0, "picker_medications has no other column");
 eq("diet_view_cols", 4, "picker_diet_types has its four columns (id, name, unit, name_th; 0243 removed the quantities and the standard flag)");
 eq("diet_view_extra", 0, "picker_diet_types has no other column");
+eq("picker_names_add_cell", 0, "picker_medications no longer names reference.add_while_recording (0291)");
 eq("select_names_add_or_register", 0, "neither select policy names the add cell or the register cell");
 console.log(`\n${ok} checks held, ${fails} failed.`);
 console.log(fails ? "RESULT: RED" : "RESULT: GREEN (the pickers read without prices; only the cells that carry a price read the tables)");

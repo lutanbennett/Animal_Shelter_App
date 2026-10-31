@@ -1069,7 +1069,6 @@ const en = {
         "website.content": "The public website's content",
         "website.gallery": "Add, move and remove the photos in the public website's photo strip",
         "reference.types": "Setup lists: immunization, procedure and blood-test types, frequencies",
-        "reference.add_while_recording": "Add a missing medication, frequency or procedure type from a form",
         "audit.view": "See who changed what",
         "audit.undo": "Undo a change",
         "system.status": "The system status page",
