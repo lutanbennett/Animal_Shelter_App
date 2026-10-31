@@ -82,6 +82,16 @@ out of the bands, exactly as the rules below say. Release-manager and handover P
 when a PR has no such comment** (a stream that never merged, or a PR merged by hand) fall back to the
 live reading below, which is now the fallback and keeps every warning it had.
 
+**AND READ EVERY MERGED PR BODY FOR FINDINGS OUTSIDE ITS DELIVERABLE LIST. A STREAM CAN REPORT; ONLY
+YOU CAN FILE.** Added 2026-10-30. #1118 wrote two real findings into its PR body and neither was on any
+item: that the Worker probably cannot reach a model on the user's own machine (*"reasoned, not tested"*),
+and that its adapter and a sibling stream's replay script **had never been run against each other**. The
+report-every-deliverable block worked exactly as designed — **and saying something in a PR body is not
+filing it.** A stream has no mandate to create backlog items and should not; **you are the only role that
+reads every PR and every item.** Both became one filed item and then a whole stream of the next batch.
+**So after you take the usage line, read the rest of the body**, and file what is not already an item
+before you brief anything. It is two minutes and it is where the next batch's best stream comes from.
+
 **Fallback reading.** For each worktree whose PR has merged, find the
 session in `mcp__ccd_session_mgmt__list_sessions` (match on its folder), then
 call **both** `mcp__ccd_session_mgmt__get_usage` (for `context.tokensUsed`) and
@@ -1219,6 +1229,19 @@ believe was assigned to someone else. A website editor now hides a public page, 
 **So when you tell one stream that something belongs to another, put it in the OTHER stream's brief
 in the same breath** - and if that brief is already written, the work is a backlog item, not a note.
 
+### SWAPPING A STREAM BEFORE ANY SESSION HAS ATTACHED IS FREE, AND CORRECTING A BRIEF THEN IS NOT A RESCOPE
+
+Added 2026-10-30. The user changed a batch's whole target after it was set up. **All three worktrees stood
+at `0` commits with `held: free`**, so one was removed with `worktree.mjs done`, its replacement created, and
+**the other two briefs corrected on disk.** Nothing was lost, no stream ever saw a correction, and all three
+landed inside or under band.
+
+**The distinction matters for the bands.** Step 2 says a brief you corrected **mid-flight** corrupts the
+figure and keeps it out of the bands. **A brief corrected before its session starts does not** — it is simply
+a different brief, and its figure is a clean reading. **So check `worktree.mjs list` for `held` and `ahead`
+before concluding a late change is expensive:** `free` with `0` ahead means the only cost is one `npm ci`.
+**Past that point it is a real mid-flight correction**, with everything step 2 says about it.
+
 ### A MITIGATION YOU WROTE INTO A BRIEF IS A HYPOTHESIS, NOT A FIX
 
 Added 2026-10-22, and it is the planner's single most repeatable error. `purchasing-to-buy-first`
@@ -1331,6 +1354,12 @@ deliverables** — one of them a decision Lutan had made that morning. Nothing c
 it by grepping `main` a day later. **Your PR body must account for EVERY numbered deliverable in this
 brief**, one line each, done or not done and why. A deliverable you skip is a legitimate outcome **said out
 loud** and a fault **left silent**.
+
+**AND BEFORE YOU WRITE "done" AGAINST A DELIVERABLE, OPEN THE FILE AND LOOK.** A PR body is a claim about
+the repository and it is believed by everything downstream. #1113 reported *"`audit.ts` writes both —
+done"*; it was never written, its decision file repeated the claim, and a merged migration's `-- consumer:`
+header pointed at a file that did not consume it. **CI, the test plan, the backlog tick and the usage
+comment were all green.** Accounting for a deliverable is not the same as checking it landed.
 ```
 
 ### A BRIEF THAT NAMES THE RULES BUT NOT THE INSTRUMENTS SENDS A STREAM TO RE-DERIVE WHAT THE REPO KNOWS

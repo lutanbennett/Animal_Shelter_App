@@ -1,156 +1,139 @@
-# Planner handover — edition `501`, 2026-10-30
+# Planner handover — edition `510`, 2026-10-30
 
-**A delta, twenty-eighth edition in this shape. Nine streams** — three batches of three, all in one
-day, all `claude-sonnet-5-5` / `low`. `492`'s subject was *a brief that says what the planner has NOT
-established gets corrected; one that asserts gets obeyed*. **Both its promotions fired, one of them in
-a shape it did not anticipate.** But the round's real subject is the mirror of its own: **the three
-things I got wrong were all claims about files I had not opened — and one of them was a PROHIBITION.**
+**A delta, twenty-ninth edition in this shape. Nine streams** — three batches of three, all in one
+day, all `claude-sonnet-5-5` / `low`. **Six are measured; batch 3 was set up at the end and its
+figures belong to you.** `501`'s subject was *a prohibition is a claim about the repo, and it ages
+and misleads like any other*. **All five of its promotions fired or held.** This round's subject is
+that same sentence with one word changed, because the most expensive thing that happened was a
+claim nobody checked: **a PR BODY is a claim about the repo too.**
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`.**
-**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → `492` → this. **The next slug is `510`.**
+**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → `501` → this. **The next slug is `519`.**
 
 > **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
 > release state, candidates. **Re-read every time, never diffed.**
 
 ---
 
-## THE ONE THING TO READ: A PROHIBITION IS A CLAIM ABOUT THE REPO, AND IT AGES AND MISLEADS LIKE ANY OTHER
+## THE ONE THING TO READ: A PR BODY IS A CLAIM ABOUT THE REPO, AND EVERY INSTRUMENT WE HAVE WILL AGREE WITH IT
 
-The skill already says a count quoted without its database is not a reading, and that an instrument
-quoted without reading its query carries false authority. **This round produced three instances of the
-same fault in a new place: the brief's own assertions about files I had never opened.** Two were
-harmless because I had cited where I read them. **The third cost Lutan an interruption, and it was a
-ban.**
+#1113's PR body says, as its own numbered deliverable 3: *"`audit.ts` writes both — done."*
+**It was never written.** `src/lib/assistant/audit.ts` is 50 lines, its `AssistantActionLog` type has
+no `model` or `exchange` field, its insert sends neither key, and `git log -- src/lib/assistant/audit.ts`
+shows it last changed in `0b87dad2`, a **version 1** commit. `docs/decisions/2026-10-30-assistant-v2-schema.md`
+line 12 repeats the claim, and `0289`'s own `-- consumer:` header names that file. So a merged
+migration points at a consumer that does not consume it.
 
-- **I banned all of `scripts/lib/` in three briefs**, because `exit.mjs` lives there and every stream
-  imports it. **I never listed the directory.** `readonly-checks.mjs` is also in there, and it is
-  where *every* production check lives — so the stream told to add an `assistant-could-not-help`
-  check to `check-production.mjs` found its deliverable forbidden by my own brief, and **asked Lutan,
-  who approved it in chat.** A correct stream, a legitimate deliverable, an interruption caused
-  entirely by a prohibition I had not checked.
-- **I told a stream to rebuild `can_see_drive_file()` from `0276`'s body**, because `grep -l` listed
-  `0193`, `0218` and `0276` and I took the last. **`0276` does not define that function at all.** The
-  stream rebuilt from `0218` and said so in its PR.
-- **I filed a backlog item quoting `public-pages.ts` from a PR body** without opening it. The file is
-  `src/lib/public-pages.ts`, not `src/lib/site/`. **Opening it also shrank the item** — `sitemap:` is
-  a field on the same `PUBLIC_PAGES` entry, so two of its four parts are one edit.
+**Everything that should have caught this reported green:** CI, the test plan, the backlog tick, the
+usage comment — **and the report-every-deliverable block, which the stream followed to the letter.**
+That block asks a stream to *account for* each deliverable. It does not ask it to *re-read the file*
+before writing "done", and this stream did not.
 
-**The rule, and it is cheap: ban the FILE, not the folder — and open anything you are about to assert
-or forbid.** A folder name is not a manifest; a `grep -l` listing says a file mentions a symbol, not
-that it defines it; a PR body is another session's prose.
+**So the fix is one clause, and I put it in all three of batch 3's briefs: _before you write "done"
+against a deliverable, open the file and look._** Check next round whether it fired; it is a
+hypothesis, not a fix.
 
-**The counter-case is the whole argument, because the two things I DID open both paid:**
+**Two things follow that are worth more than the fix.** First, **this is `501`'s lesson one role
+over** — it warned the planner not to assert about files it had not opened, and the same fault
+appeared in a stream's own prose about its own work. **The generalisation is the thing to carry:
+prohibition, count, prior pass, instrument, conclusion, PR body — all claims, all with a clock.**
+Second, **I found it only because I re-read a deliverable list from a batch that had already
+merged.** Nothing routine would have surfaced it.
 
-- **A feared collision dissolved to one file.** Stream 7 drops `frequency_id`, which nine `scripts/`
-  files mention, and stream 8 owns `scripts/`. By the skill's second-axis rule that is the
-  *expensive* case and one of them should have moved to a later batch. **Instead I intersected the
-  remaining guard-read rows against the nine.** Exactly one file is in both — `check-phone-width.mjs`,
-  the three-hour browser check neither should run. **A named carve-out, nothing moved, one command.**
-- **Four of the reds I was about to brief were green.** The harness item named three undiagnosed reds;
-  re-running them found `check-card-grants`, `check-features-schema`, `check-cards-count` and
-  `check-home-cards` all exit 0, closed by that morning's own streams. **I would have priced three
-  diagnoses that no longer existed.**
+## AND THE OTHER HALF: A STREAM CAN **REPORT**; ONLY THE PLANNER CAN **FILE**
 
-**So: before a brief forbids, prices or asserts anything about this repo, open the thing.** Every
-instance above, good and bad, turned on whether I had.
+#1118 did everything right. Its PR body said, outside its deliverable list: *"Worker cannot reach
+localhost/LAN (reasoned, not tested); shape is a Cloudflare tunnel like the Pi's. Not built."* and
+*"the replay stream's files were not in this branch, so the meeting point is unchecked."*
 
-## AND COUNT INTERRUPTIONS AS A COST OF THE BRIEF, NOT OF THE STREAM
+**Both are real, neither was on any backlog item, and both would have gone with the PR.** The
+report-every-deliverable block worked exactly as designed — and **saying something in a PR body is
+not filing it.** A stream has no mandate to create backlog items and should not; the planner is the
+only role that reads every PR and every item.
 
-**Two of nine streams had to ask Lutan something my briefs should have settled** — the `scripts/lib/`
-ban above, and whether to narrow the `add_while_recording` retirement to the card alone when the
-activity turned out to be still asked by live policies. **Neither stream was wrong to ask.** Every PR
-was green, every deliverable landed, and nothing in the paperwork records that the round cost him two
-touches it should not have.
+So, every round: **read each merged PR body for findings OUTSIDE the deliverable list, and file
+them before you brief anything.** I filed these as one item (`181dd4f2`) and it became batch 3's
+stream 8 — a whole stream that existed only because someone read a PR body.
 
-`CLAUDE.md` says the target shape of a release is **two touches, one answer and one command**, and that
-a third is a fault to write down. **The same arithmetic applies to a batch**, and nothing was counting
-it. **Count them, and treat a batch that cost an unplanned interruption as a briefing defect even when
-every check is green.**
+## WHAT `501` ASKED FOR, and what each promotion did
 
-## WHAT `492` ASKED FOR, and what each promotion did
+- **Ban the FILE, not the folder, and open anything you assert or forbid. FIRED, TWICE, AND THE
+  SECOND IS THE INTERESTING ONE.** Every brief this round named `scripts/lib/exit.mjs` rather than
+  banning `scripts/lib/`, and named the one carve-out (`acceptance-matrix-entries.mjs`) in both
+  briefs that could collide over it. **Interruptions: zero across nine streams**, against two the
+  round before. **The second firing is that the rule caught ME** — see the section above; the fault
+  moved from my prohibitions to a stream's PR body, which is the same rule needing a wider name.
+- **"If a numbered deliverable needs a file I have forbidden, say so in your PR and do it." HELD,
+  and it is now load-bearing.** #1118 declared four crossings (`llm.ts` error kinds,
+  `runtime-config.mjs`, `.env.example`, the security registry) and asked nobody. **A declared
+  crossing is the output you want; an interruption is the one you do not.**
+- **An open question belongs in the NUMBERED DELIVERABLES, not step zero. FIRED, AND IT CLOSED ITS
+  OWN FAILURE.** `501` recorded missing the `shop.manage` probe question by putting it in step zero.
+  I moved it into shop's numbered deliverables; that stream is live, so **you confirm it.**
+- **Count interruptions as a cost of the brief. HELD at zero, with one exception that is not a
+  briefing defect:** the classifier refused `gh pr merge` on the release record PR (#1112) as "merge
+  without review", exactly as memory `merge-without-review-block` predicts. **Lutan had to ask for
+  it in chat.** Nothing in the repo fixes that; report it and retry on his word.
+- **Report every deliverable. HELD on six of six, and FAILED ONCE on truthfulness** — see the top.
+  **It is settled mechanism for coverage and not for accuracy.** Say it that way from now on.
 
-- **The second disjointness axis (dev database and check suite, not only files). FIRED THREE TIMES,
-  and it has a NEW HALF.** Twice as its cheap case, told in the brief and held. The third time it
-  would have moved a stream, and **the intersection measurement above is what replaced the move** —
-  promoted into the skill in this PR. **It has still never been tested as the genuine expensive case**,
-  so do not claim the rule is proven; claim only that the cheap case holds and that the expensive case
-  is now worth measuring before acting on.
-- **The positive form of never-upgrading-an-open-question. FIRED FIVE TIMES, FAILED ONCE ON
-  PLACEMENT.** Its best instance: I could not work out how rich-text marks should be *stored* — the
-  body format is deliberately not markdown and needs no escaping — so I wrote the three options I
-  could see into the brief **as options**, named the constraints that came from the item rather than
-  from me, and said I would not guess. It chose inline tags in the existing column, needed no
-  migration, recorded what it gave up, and **landed 10% under.** **The failure: I put one open
-  question in a brief's STEP ZERO block instead of its numbered deliverables**, and the
-  report-every-deliverable rule covers only numbered deliverables — so nobody answered it and the
-  entry it was about is unchanged. **An open question you want ANSWERED is a numbered deliverable; one
-  in step zero is context, and context is not reported on.** Promoted.
-- **Report every deliverable. HELD, nine for nine.** Every stream accounted for every numbered
-  deliverable, including partials said out loud: *"Routes not driven over HTTP"*, *"No cards-login
-  browser drive: no screen existed to check"*, *"I did not re-drive it"*. **Treat it as settled
-  mechanism.**
-- **Name the instruments by path. HELD, four rounds** — and widened usefully: **naming a CLOSED
-  warning is as valuable as naming an open one.** An item still said `check-can-see-drive-file` *"has
-  never been diagnosed … diagnose it first"*; it had been diagnosed the hour before, I said so with
-  the commit, and that stream spent nothing on it and came in **16% under**.
-- **File an item a merge before briefing it. HELD.** Three items filed this round, all a full merge
-  ahead of any brief.
+## THE BAND MISS, AND WHY IT WAS MY OWN SCALE COLUMN TELLING ME
 
-## THE BAND RULE I BROKE WAS ALREADY IN THE SKILL, PUT THERE BY MY OWN PREDECESSOR
+**`assistant-llm-adapter`: banded 145–185k, came in at 239,092 — 29% over, the round's only miss.**
+I used *a new integration on existing machinery*. **There was no existing machinery**: it was the
+first LLM code in the repo, so it wrote the interface, a Claude implementation, the tool derivation,
+mocked tests **and a new CI check**, and had to move `zod` for a high advisory. The skill says
+reserve 250–320k for a stream with no existing piece to extend. **The giveaway was in the scale
+column of my own measurement table — "first LLM code in the repo" — which I wrote and did not read.**
 
-**This is a confirmation, not a finding, and the distinction matters because I nearly wrote it up as
-new.** `492` promoted exactly this sentence into the skill's *Token estimates*: **"a question the
-stream must SETTLE is judgement and bands near the ordinary stream; a question it must build an
-INSTRUMENT to answer does not."**
+**The counterweight, and it is a deliberate reading worth banking:** when Lutan cancelled the Claude
+prototype mid-round I re-banded `assistant-openai-compatible` from 145–185k to **170–215k for BRIEF
+CONTENT, not code shape** — a runbook written for a non-developer, two open questions, a candidate
+comparison. It landed at **166,230**, just under the new band and above the old one's midpoint.
+**Widening for what you put in the brief works.** One reading; a second would promote it.
 
-**I then widened the rich-text band because its storage question was unsettled, and it came in 10%
-under.** The rule was already written, by the edition I had read that morning, and I did not apply it.
+**Floor: ~102k**, from batch 2's own figures (101,932 · 102,268 · 102,366) — remarkably tight, down
+from ~105k. Re-measure; never carry it forward.
 
-**So the fact needs no promotion; the failure mode does.** A rule promoted into the skill is not
-thereby in force — the skill is long, and the sections a planner reads closely are the ones matching
-the fault it is currently worried about. **When you widen a band, say in `.plan-day.md` which rule you
-are applying.** Naming it is what would have caught this: I could not have written "widening because
-the decision is open" beside that sentence without noticing they contradict.
+## A MID-BATCH SWAP BEFORE ANY SESSION ATTACHES IS FREE, AND IT IS NOT A RESCOPE
 
-Meanwhile the round's two real misses were an **unbudgeted proof** (#1098, 21% over, an md5 across
-every live prescription to show nothing changed) and **the ban above**. Neither was a band rule we
-lacked.
+Lutan changed the target mid-round (below). Batch 2 was already set up. **All three worktrees stood
+at zero commits with no session attached**, so I removed one, created its replacement, and
+**corrected the other two briefs on disk**. Nothing was lost and no stream saw a correction.
 
-**One new rate, measured and usable: a GUARD READ costs ~3.6k a row** — 25 rows, 90,107 above its own
-floor. That is **half** the restate-or-retire rate and **a fifth** of the diagnosis rate, and the
-reason is worth more than the number: **the triage table had already localised each decision to one
-call site.** **Ask who localised it before reaching for a rate.** Promoted into the bands table.
+**The distinction matters for the bands:** the skill says a brief you corrected mid-flight corrupts
+the figure. **A brief corrected before the session starts does not** — it is simply a different
+brief. All three landed inside or under. **Check `worktree.mjs list` for `held` and `ahead` before
+concluding a swap is expensive; usually it is not.**
 
-**Still unpromoted, deliberately:** the find-little driven pass at ~5k a step (three readings, no
-fourth in six batches — none was a driven walkthrough), and the unchanged-value proof at ~60–80k (one
-reading; batch 3's stream 7 is its second test).
+## WHEN YOU RECORD HIS WORDS, PIN THE SCOPE — OR THE RECORD IS FALSE
+
+Lutan said *"I would prefer to keep this 100% in house."* **Taken literally that is not true of this
+app**, which runs on Cloudflare, stores data in Supabase and keeps files in Google Drive, none of
+which he was asking to change. He meant the language model and the text typed at it.
+
+I wrote the scope into the item in those words. **Without it, a future session reads "100% in house"
+and opens an argument nobody wanted.** His words are the authority; the scope is the planner's job,
+and it costs one sentence.
+
+## HIS DECISIONS THIS ROUND — all recorded on the backlog; never re-ask
+
+- **No Claude proof of concept, no Anthropic API key. Self-hosted from the start.** *"Let's not do
+  the proof of concept, I'd prefer to look at the options we have to get this onto a self hosted
+  model."* This **confirms** the item's 2026-09-22 hosting direction and cancels only the staging.
+  **The eval set was never Claude's output** — it is the could-not-help log, labelled by hand.
+- **The model runs on hardware he owns. A rented GPU and a hosted endpoint are both ruled out.**
+- **He is buying a PC for his Quest 3**, so the GPU is paid for by the hobby. Advice given: a
+  current-generation NVIDIA card with **16 GB** of its own memory. **The spare i7 laptop (16 GB,
+  integrated graphics) is the build-and-measure box, not the host** — on a CPU the slow part is
+  reading the prompt. Asked whether 32 GB would help, I advised measuring before buying: more RAM
+  only admits a bigger, slower model.
+- **What is still open and is his:** whether the PC stays on, wakes on demand, or is simply
+  sometimes asleep — tolerable, because the keyword parser still answers. And **following the
+  runbook**, which no session can do for him.
 
 ## STATE, RE-READ EVERY TIME
 
-Nothing in this section may be quoted from here. **Re-read it:** open items and their titles from
-`docs/backlog.md`; batches, bands, actuals, mitigations in flight and the next candidates from
-`.plan-day.md`; release and migration state from `apply-migrations.mjs --status --env production`; what
-merged from `gh pr list`; live worktrees from `worktree.mjs list`.
-
-**What is with Lutan** changes daily and is listed in `.plan-day.md` under his decisions — read it
-there. The standing ones that shape sequencing: **the production Worker deploy and the Pi install are
-his by instruction**, so a stream whose work only runs after one of those **must write `n/a` on its
-release note** and name the outstanding step; **the domain move gates two free Cloudflare steps**; and
-**a release has two halves** — a Worker deploy alone does not change what users see, so read the Pi's
-version endpoint against the Worker's rather than trusting a 200.
-
-**THE MIGRATION BACKLOG ON PRODUCTION IS NOW DEEP ENOUGH TO BE ITS OWN RISK, and this is the one piece
-of state worth a sentence rather than a number.** Several pending migrations have app code **already
-merged on `main`**, and at least two must be applied **before** that code ships or a feature breaks
-rather than merely lagging. **Migrations-before-deploy has always been the order; with a queue this
-deep it stops being hygiene and becomes the thing that decides whether the release works.** Read the
-count and the list from `--status --env production` and check each one's consumer header.
-
-**One piece of housekeeping that will bite the next planner:** a merged batch's worktrees stay **HELD**
-while their Claude sessions are open, so the next batch's ports step forward instead of being reused,
-and `worktree.mjs done` must not be forced on them. **Ask Lutan to close those sessions; never tear
-down a HELD folder.**
-
-**NEITHER SUPABASE PAID FEATURE MAY EVER RETURN TO ANY LIST** — session inactivity timeout and
-leaked-password protection are **dropped, not deferred**:
-`docs/decisions/2026-10-29-pro-only-features-are-dropped.md`.
+Everything factual is in `.plan-day.md` and the repo. Do not quote any of it from here.
+Batch 3 is live on ports 3001–3003; its three figures are yours to capture **before those sessions
+are archived**. `docs/self-hosted-model-runbook.md` is written and **not yet followed by anyone**.
