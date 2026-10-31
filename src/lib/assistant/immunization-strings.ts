@@ -9,7 +9,7 @@ export function immunizationStrings(locale: string) {
       title: "บันทึกวัคซีน",
       summary: (resident: string, types: string, date: string) =>
         `บันทึกวัคซีน ${types} ให้ ${resident} วันที่ ${date}`,
-      done: (resident: string, types: string) => `บันทึกวัคซีน ${types} ให้ ${resident} แล้ว`,
+      done: (resident: string, types: string, date: string) => `บันทึกวัคซีน ${types} ให้ ${resident} วันที่ ${date} แล้ว`,
       typesLabel: "วัคซีน",
       typeMissing: "เลือกวัคซีนอย่างน้อยหนึ่งชนิด",
     };
@@ -18,7 +18,7 @@ export function immunizationStrings(locale: string) {
     title: "Record vaccination",
     summary: (resident: string, types: string, date: string) =>
       `Record ${types} for ${resident} on ${date}`,
-    done: (resident: string, types: string) => `Recorded ${types} for ${resident}.`,
+    done: (resident: string, types: string, date: string) => `Recorded ${types} for ${resident} on ${date}.`,
     typesLabel: "Vaccines",
     typeMissing: "Tick at least one vaccine.",
   };

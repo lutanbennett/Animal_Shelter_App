@@ -24,7 +24,12 @@ export type ParserResident = {
 
 export type ParserEnclosure = { id: string; name: string; nameTh: string | null };
 
+export type ParserZone = { id: string; name: string; nameTh: string | null };
+
 export type ParserClinic = { id: string; name: string };
+
+/** A medicine the prescription tool may name. `doseUnit` is what its amount is counted in. */
+export type ParserMedication = { id: string; name: string; nameTh: string | null; doseUnit: string };
 
 export type ParserCarer = { id: string; name: string };
 
@@ -34,11 +39,18 @@ export type ParserImmunizationType = { id: string; name: string; nameTh: string 
 export type ParseContext = {
   residents: ParserResident[];
   enclosures: ParserEnclosure[];
+  /** The physical zones the enclosures sit in, for "is there room in the cat zone?". */
+  zones: ParserZone[];
   clinics: ParserClinic[];
   /** Existing carers only: a new one is never created from a sentence. */
   carers: ParserCarer[];
   /** The vaccines /immunizations/new offers. */
   immunizationTypes: ParserImmunizationType[];
+  /**
+   * The medicines /prescriptions/new offers. Empty for a login without
+   * `medical.prescriptions`, which is not offered the prescription tool either.
+   */
+  medications: ParserMedication[];
   /** The person's own clock, so "tomorrow" is tomorrow where they are. */
   now: Date;
 };
@@ -59,9 +71,12 @@ export type Intent =
   | "rehome"
   | "carer-return"
   | "immunization"
+  | "prescription"
   | "where"
   | "who"
-  | "due";
+  | "due"
+  | "find-enclosure"
+  | "summary";
 
 /** Intents that write; the rest are answered inline with no confirm step. */
 export const WRITE_INTENTS: readonly Intent[] = [
@@ -74,6 +89,7 @@ export const WRITE_INTENTS: readonly Intent[] = [
   "rehome",
   "carer-return",
   "immunization",
+  "prescription",
 ];
 
 export function isWriteIntent(intent: Intent): boolean {
@@ -160,9 +176,46 @@ export type ImmunizationDraft = {
   date: string | null;
 };
 
+/**
+ * A prescription for a resident. The sentence gives the medicine, the amount
+ * and when it starts; which DAYS it falls on stays the card's picker (0283),
+ * because "every other Tuesday" is not something a sentence says reliably.
+ * `timesPerDay` is the one part of the pattern a sentence does say plainly,
+ * so it is here and it chooses the card's round ticks.
+ */
+export type PrescriptionDraft = {
+  kind: "prescription";
+  residentId: string | null;
+  medicationId: string | null;
+  /** Amount per dose, in the medicine's own unit; null when the sentence didn't say. */
+  doseQuantity: number | null;
+  /** Doses a day, 1 to 4 — the round ticks the card starts with. Null reads as one. */
+  timesPerDay: number | null;
+  /** YYYY-MM-DD; null means the card's default, today. */
+  startDate: string | null;
+  /** YYYY-MM-DD; null means open-ended, which is what most courses are. */
+  endDate: string | null;
+  notes: string | null;
+};
+
 export type WhereDraft = { kind: "where"; residentId: string | null };
 
 export type WhoDraft = { kind: "who"; enclosureId: string | null };
+
+/**
+ * "Where is there room?" — the enclosures with places free. Answered from
+ * capacity minus headcount, the same arithmetic the enclosure list shows.
+ */
+export type FindEnclosureDraft = {
+  kind: "find-enclosure";
+  /** One zone only; null means every zone. */
+  zoneId: string | null;
+  /** How many places are needed. Null reads as one. */
+  places: number | null;
+};
+
+/** "Tell me about Panda" — one resident's current state, gathered, read only. */
+export type SummaryDraft = { kind: "summary"; residentId: string | null };
 
 export type DueDraft = {
   kind: "due";
@@ -180,9 +233,12 @@ export type Draft =
   | RehomeDraft
   | CarerReturnDraft
   | ImmunizationDraft
+  | PrescriptionDraft
   | WhereDraft
   | WhoDraft
-  | DueDraft;
+  | DueDraft
+  | FindEnclosureDraft
+  | SummaryDraft;
 
 export type ParseResult = {
   draft: Draft;

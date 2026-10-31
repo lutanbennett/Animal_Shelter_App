@@ -64,14 +64,20 @@ export async function interpretRequest(input: {
       request,
       today: input.today,
       canWrite: context.canWrite,
+      // The extra activity a tool declares in its own spec (`needs`), answered
+      // from this caller's cards. A tool that asks for one the caller lacks is
+      // not in the list the model is given, so it cannot be called at all.
+      holds: (activity) => can(perms, activity, "edit"),
       history: input.history,
       resume: input.resume,
       rows: {
         residents: context.residents,
         enclosures: context.enclosures.map((e) => ({ id: e.id, name: e.name, nameTh: e.name_th })),
+        zones: context.zones.map((z) => ({ id: z.id, name: z.name, nameTh: z.name_th })),
         clinics: context.clinics,
         carers: context.carers,
         immunizationTypes: context.immunizationTypes,
+        medications: context.medications,
       },
     });
   } catch (e) {

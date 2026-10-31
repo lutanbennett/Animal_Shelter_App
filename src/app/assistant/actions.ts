@@ -11,6 +11,7 @@ import {
 import { recordWeight } from "@/lib/weight/record";
 import { recordResidentDeath } from "@/lib/placements/deceased";
 import { recordImmunizations } from "@/app/immunizations/new/actions";
+import { recordPrescription } from "@/app/prescriptions/actions";
 import {
   rehomeResident,
   returnResidentToShelter,
@@ -56,10 +57,12 @@ type WriteInput<T> = T & {
 /**
  * Runs one confirmed write and records it, whichever way it went.
  *
- * The role check is the assistant's own: admin / management / staff write,
- * volunteers get the read-only lookups. It sits on top of — never instead
- * of — the checks inside each helper, which are the same ones the pages
- * run and which RLS backs in the database.
+ * The check is the assistant's own card, `assistant.record`: whoever holds
+ * it may confirm a write, and whoever does not gets the read-only lookups.
+ * No role is read here or anywhere below (CLAUDE.md, "Hard-coded security is
+ * forbidden"). It sits on top of — never instead of — the checks inside each
+ * helper, which are the same ones the pages run and which RLS backs in the
+ * database.
  */
 async function runWrite(
   intent: Intent,
@@ -397,6 +400,63 @@ export async function assistantRecordImmunization(
       revalidatePath("/");
     },
     "immunization_records",
+  );
+}
+
+/**
+ * Same write as /prescriptions/new — `recordPrescription`, which is
+ * `createPrescription` without its redirect, so there is one prescription
+ * write and not two. It checks `medical.prescriptions` itself, on top of the
+ * `assistant.record` check every assistant write makes, and the prescription
+ * tool is withheld from a login without it so this card is never offered to
+ * someone the write would refuse.
+ *
+ * Handed the same FormData the form would send: the day pattern and the
+ * ticked rounds come from the card's own pickers.
+ */
+export async function assistantAddPrescription(
+  input: WriteInput<{
+    residentId: string;
+    medicationId: string;
+    doseQuantity: number | null;
+    startDate: string;
+    endDate: string | null;
+    /** As the form's inputs submit them; `parseScheduleForm` reads this shape. */
+    schedule: { unit: string; every: string; weekdays: string[]; monthDays: string[] };
+    roundIds: string[];
+    notes: string | null;
+  }>,
+): Promise<AssistantResult> {
+  return runWrite(
+    "prescription",
+    input,
+    async (_supabase, t) => {
+      const form = new FormData();
+      form.append("residentId", input.residentId);
+      form.append("medicationId", input.medicationId);
+      if (input.doseQuantity !== null) form.append("doseQuantity", String(input.doseQuantity));
+      form.append("startDate", input.startDate);
+      if (input.endDate) form.append("endDate", input.endDate);
+      form.append("scheduleUnit", input.schedule.unit);
+      form.append("scheduleEvery", input.schedule.every);
+      for (const d of input.schedule.weekdays) form.append("scheduleWeekday", d);
+      for (const d of input.schedule.monthDays) form.append("scheduleMonthDay", d);
+      for (const id of input.roundIds) form.append("roundId", id);
+      // The stamp goes in the notes as every other assistant write does, with
+      // whatever else the sentence said about how to give it in front of it.
+      const stamped = stamp(t, input.request);
+      form.append("notes", input.notes ? `${input.notes}\n${stamped}` : stamped);
+      const result = await recordPrescription(form);
+      return "error" in result ? result : { ok: true as const, id: result.id };
+    },
+    () => {
+      // recordPrescription revalidates the resident's own pages; these are the
+      // lists a new prescription also shows up on.
+      revalidatePath("/operations/medication-list");
+      revalidatePath("/management/medication-list");
+      revalidatePath("/");
+    },
+    "prescriptions",
   );
 }
 

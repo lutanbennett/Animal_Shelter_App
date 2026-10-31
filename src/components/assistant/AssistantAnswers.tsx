@@ -6,8 +6,16 @@ import { formatDate, formatDateTime } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { placeName } from "@/lib/enclosures/names";
 import { statusLabel } from "@/lib/i18n/enum-labels";
+import { localLabel } from "@/lib/translations/labels";
 import type { AssistantResident } from "@/lib/assistant/data";
-import type { DueAnswer, LookupAnswer, WhereAnswer, WhoAnswer } from "@/app/assistant/lookups";
+import type {
+  DueAnswer,
+  FindEnclosureAnswer,
+  LookupAnswer,
+  SummaryAnswer,
+  WhereAnswer,
+  WhoAnswer,
+} from "@/app/assistant/lookups";
 import { ReplyBubble } from "./AssistantMessages";
 
 /**
@@ -233,6 +241,135 @@ function DueBody({
   );
 }
 
+/** "Where is there room?" — the enclosures with places free, roomiest first. */
+function FindEnclosureBody({ answer }: { answer: FindEnclosureAnswer }) {
+  const { t, locale } = useI18n();
+  const a = t.assistant.lookups;
+  const zone = placeName(locale, answer.zoneName, answer.zoneNameTh);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="font-medium">
+        {answer.total === 0
+          ? zone
+            ? a.freeNoneInZone(zone, answer.places)
+            : a.freeNone(answer.places)
+          : zone
+            ? a.freeTitleInZone(zone, answer.total)
+            : a.freeTitle(answer.total)}
+      </p>
+      {answer.enclosures.length > 0 && (
+        <ul className="flex flex-col gap-1">
+          {answer.enclosures.map((e) => (
+            <li key={e.id}>
+              <Link href={`/enclosures/${e.id}`} className="text-primary hover:underline">
+                {placeName(locale, e.name, e.nameTh)}
+              </Link>{" "}
+              — {a.freeSpaces(e.spacesFree, e.residentCount, e.capacity)}
+              {!zone && e.zoneName ? ` · ${placeName(locale, e.zoneName, e.zoneNameTh)}` : ""}
+            </li>
+          ))}
+        </ul>
+      )}
+      {answer.total > answer.enclosures.length && (
+        <p className="text-muted">{a.freeMore(answer.total - answer.enclosures.length)}</p>
+      )}
+      {answer.unknownCapacity > 0 && (
+        <p className="text-muted">{a.freeUnknownCapacity(answer.unknownCapacity)}</p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * "How is Panda doing?" — where they are, then each medical part this login
+ * may read. A part it may not read is not drawn and not mentioned: the
+ * server did not fetch it (lookups.ts), so there is nothing here to hide.
+ */
+function SummaryBody({ answer }: { answer: SummaryAnswer }) {
+  const { t, locale } = useI18n();
+  const a = t.assistant.lookups;
+  const s = answer.sections;
+  const rx = answer.prescriptions;
+  const imm = answer.immunizations;
+
+  return (
+    <div className="flex flex-col gap-3">
+      <WhereBody answer={answer.where} />
+
+      {s.weight && (
+        <p>
+          {answer.weight
+            ? a.summaryWeight(answer.weight.weightKg, formatDate(answer.weight.date, locale))
+            : a.summaryNoWeight}
+        </p>
+      )}
+
+      {s.prescriptions && (
+        <div className="flex flex-col gap-1">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">{a.summaryMedicines}</p>
+          {rx.length === 0 ? (
+            <p className="text-muted">{a.summaryNoMedicines}</p>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {rx.map((r) => (
+                <li key={r.id}>
+                  {localLabel(locale, r.name, r.nameTh) || t.common.dash} —{" "}
+                  {r.endDate
+                    ? a.summaryCourse(formatDate(r.startDate, locale), formatDate(r.endDate, locale))
+                    : a.summaryCourseOpen(formatDate(r.startDate, locale))}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {s.visits && (
+        <div className="flex flex-col gap-1">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">{a.summaryVisits}</p>
+          {!answer.nextVisit && !answer.lastVisit ? (
+            <p className="text-muted">{a.summaryNoVisits}</p>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {answer.nextVisit && (
+                <li>
+                  {a.summaryNextVisit(formatDateTime(answer.nextVisit.when, locale))}
+                  {answer.nextVisit.clinicName ? ` · ${answer.nextVisit.clinicName}` : ""}
+                  {answer.nextVisit.reason ? ` · ${answer.nextVisit.reason}` : ""}
+                </li>
+              )}
+              {answer.lastVisit && (
+                <li className="text-muted">
+                  {a.summaryLastVisit(formatDateTime(answer.lastVisit.when, locale))}
+                  {answer.lastVisit.clinicName ? ` · ${answer.lastVisit.clinicName}` : ""}
+                </li>
+              )}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {s.immunizations && (
+        <div className="flex flex-col gap-1">
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">{a.summaryVaccines}</p>
+          {imm.length === 0 ? (
+            <p className="text-muted">{a.summaryNoVaccines}</p>
+          ) : (
+            <ul className="flex flex-col gap-1">
+              {imm.map((r) => (
+                <li key={r.id}>
+                  {localLabel(locale, r.name ?? "", r.nameTh) || t.common.dash} — {formatDate(r.date, locale)}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AssistantAnswer({
   answer,
   residents,
@@ -246,6 +383,10 @@ export function AssistantAnswer({
         <WhereBody answer={answer} />
       ) : answer.kind === "who" ? (
         <WhoBody answer={answer} />
+      ) : answer.kind === "find-enclosure" ? (
+        <FindEnclosureBody answer={answer} />
+      ) : answer.kind === "summary" ? (
+        <SummaryBody answer={answer} />
       ) : (
         <DueBody answer={answer} residents={residents} />
       )}

@@ -5,6 +5,7 @@ import { can, type Permissions } from "@/lib/permissions/can";
 import { NOT_DECEASED } from "@/lib/residents/status";
 import { loadCarerOptions, type CarerOption } from "@/lib/contacts/carers";
 import { loadDoctorNamesByClinic, type DoctorNamesByClinic } from "@/lib/clinics/doctors";
+import { DRAFT_KINDS, toolNeeds } from "./llm-tools";
 
 /** A resident as the parser matches it and the cards display it. */
 export type AssistantResident = {
@@ -26,6 +27,12 @@ export type AssistantImmunizationType = { id: string; name: string; nameTh: stri
 
 export type AssistantClinic = { id: string; name: string };
 
+/** A medicine the prescription card may pick, with the unit its amount is counted in. */
+export type AssistantMedication = { id: string; name: string; nameTh: string | null; doseUnit: string };
+
+/** One of the medication rounds (0137), in the order the prescription form shows them. */
+export type AssistantRound = { id: string; key: string; name: string; nameTh: string | null };
+
 export type AssistantContext = {
   residents: AssistantResident[];
   zones: ZoneOption[];
@@ -37,12 +44,35 @@ export type AssistantContext = {
   immunizationTypes: AssistantImmunizationType[];
   /** Each clinic's active doctors, for the clinic card's optional Doctor field. */
   doctors: DoctorNamesByClinic;
+  /** The medicines the prescription card offers. Empty without `medical.prescriptions`. */
+  medications: AssistantMedication[];
+  /** Morning / Lunch / Evening / Night, for the prescription card's ticks. Empty likewise. */
+  rounds: AssistantRound[];
   /** assistant.ask: the assistant opens at all (the doctor's role is external, 0070). */
   canAsk: boolean;
   /** assistant.record: may confirm a write; without it, lookups only. */
   canWrite: boolean;
+  /**
+   * For every extra activity a tool declares in its own spec (`needs` in
+   * llm-tools.ts), whether this login holds it — `medical.prescriptions`
+   * today. The browser asks this before drawing that tool's card, so nobody
+   * is offered a button its write would refuse (CLAUDE.md, "A button is
+   * shown only if the login's cards let it do that action"). A key that is
+   * absent reads as no.
+   */
+  toolCards: Readonly<Record<string, boolean>>;
   error: string | null;
 };
+
+/** The answer to every `needs` any tool declares, for this login. */
+function toolCardsOf(perms: Permissions): Record<string, boolean> {
+  const out: Record<string, boolean> = {};
+  for (const kind of DRAFT_KINDS) {
+    const needs = toolNeeds(kind);
+    if (needs) out[needs] = can(perms, needs, "edit");
+  }
+  return out;
+}
 
 type ListRow = {
   resident_id: string;
@@ -63,7 +93,7 @@ type ListRow = {
 export function emptyAssistantContext(
   error: string | null = null,
 ): AssistantContext {
-  return { residents: [], zones: [], enclosures: [], clinics: [], carers: [], immunizationTypes: [], doctors: {}, canAsk: false, canWrite: false, error };
+  return { residents: [], zones: [], enclosures: [], clinics: [], carers: [], immunizationTypes: [], doctors: {}, medications: [], rounds: [], canAsk: false, canWrite: false, toolCards: {}, error };
 }
 
 /**
@@ -111,6 +141,29 @@ export async function loadAssistantContext(
       .order("name")
       .returns<{ id: string; name: string; name_th: string | null }[]>(),
   ]);
+
+  // The prescription tool's own rows, loaded only for a login that holds the
+  // activity its write asks for. Someone who could never press Confirm is
+  // not offered the tool, so there is nothing for them to fill in either.
+  const toolCards = toolCardsOf(perms);
+  const [medicationResult, roundResult] = toolCards["medical.prescriptions"]
+    ? await Promise.all([
+        supabase
+          .from("picker_medications")
+          .select("id, name, name_th, dose_unit")
+          .order("name")
+          .returns<{ id: string; name: string; name_th: string | null; dose_unit: string }[]>(),
+        supabase
+          .from("rounds")
+          .select("id, key, name, name_th")
+          .eq("for_medication", true)
+          .order("sort_order")
+          .returns<{ id: string; key: string; name: string; name_th: string | null }[]>(),
+      ])
+    : [
+        { data: [], error: null },
+        { data: [], error: null },
+      ];
 
   const rows = listResult.data ?? [];
   const ids = rows.map((r) => r.resident_id);
@@ -170,14 +223,24 @@ export async function loadAssistantContext(
     carers: carerResult.carers,
     immunizationTypes: (typesResult.data ?? []).map((ty) => ({ id: ty.id, name: ty.name, nameTh: ty.name_th })),
     doctors,
+    medications: (medicationResult.data ?? []).map((m) => ({
+      id: m.id,
+      name: m.name,
+      nameTh: m.name_th,
+      doseUnit: m.dose_unit,
+    })),
+    rounds: (roundResult.data ?? []).map((r) => ({ id: r.id, key: r.key, name: r.name, nameTh: r.name_th })),
     canAsk: true,
     canWrite: can(perms, "assistant.record"),
+    toolCards,
     error:
       listResult.error?.message ??
       clinicsResult.error?.message ??
       photosResult.error?.message ??
       stateResult.error?.message ??
       typesResult.error?.message ??
+      medicationResult.error?.message ??
+      roundResult.error?.message ??
       options.error,
   };
 }

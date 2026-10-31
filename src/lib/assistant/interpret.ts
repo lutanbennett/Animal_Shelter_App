@@ -24,13 +24,42 @@ import {
   type LlmToolCall,
   type LlmToolDef,
 } from "./llm";
-import { DRAFT_KINDS, draftFromToolCall, draftTools } from "./llm-tools";
-import type { AssistantTrace, Draft, ParseContext } from "./types";
+import type { LevelKey } from "@/lib/permissions/catalogue";
+import {
+  DRAFT_KINDS,
+  LOOKUP_KINDS,
+  draftFromToolCall,
+  draftTools,
+  fieldSpecs,
+  toolNeeds,
+  type LookupKind,
+} from "./llm-tools";
+import { isWriteIntent, type AssistantTrace, type Draft, type ParseContext } from "./types";
 
 export type InterpretRows = Pick<
   ParseContext,
-  "residents" | "enclosures" | "clinics" | "carers" | "immunizationTypes"
+  "residents" | "enclosures" | "zones" | "clinics" | "carers" | "immunizationTypes" | "medications"
 >;
+
+/** The rows an id field of each lookup kind must come from. */
+function idsOf(rows: InterpretRows, kind: LookupKind): string[] {
+  switch (kind) {
+    case "resident":
+      return rows.residents.map((r) => r.id);
+    case "enclosure":
+      return rows.enclosures.map((e) => e.id);
+    case "zone":
+      return rows.zones.map((z) => z.id);
+    case "clinic":
+      return rows.clinics.map((c) => c.id);
+    case "carer":
+      return rows.carers.map((c) => c.id);
+    case "vaccine":
+      return rows.immunizationTypes.map((v) => v.id);
+    case "medication":
+      return rows.medications.map((m) => m.id);
+  }
+}
 
 /** Model calls per leg (from the sentence, or from an answer to the next draft or question). */
 export const MAX_ROUNDS = 4;
@@ -137,7 +166,7 @@ function systemPrompt(today: string, weekday: string): string {
   return [
     "You turn one sentence from a staff member at an animal shelter into exactly one tool call.",
     `Today is ${weekday} ${today}. Resolve dates like "tomorrow" or "last Friday" to YYYY-MM-DD from that.`,
-    "You are given no list of residents, enclosures, clinics, carers or vaccines. Use the lookup tool to find the id of each one the sentence names, then call one action tool with those ids.",
+    "You are given no list of residents, enclosures, zones, clinics, carers, vaccines or medicines. Use the lookup tool to find the id of each one the sentence names, then call one action tool with those ids.",
     "Never invent an id. If a name has no match or several matches, pass null for that field and the person will choose on the form. Never ask the person which resident they meant.",
     `If the action cannot be done without something the sentence did not say (a weight, a cause of death, foster or adopt), you may call ${REQUEST_DETAILS} on its own, naming the action and those fields. Never ask for an id. Never ask again for a field the person has already answered or skipped. For anything else not said, pass null: the person fills it in on the form.`,
     "When the person has answered, call the action tool with their answers.",
@@ -156,13 +185,12 @@ function weekdayOf(iso: string): string {
 
 // ---------------------------------------------------------------- tools
 
-const LOOKUP_KINDS = ["resident", "enclosure", "clinic", "carer", "vaccine"] as const;
-type LookupKind = (typeof LOOKUP_KINDS)[number];
+export { LOOKUP_KINDS, type LookupKind };
 
 const LOOKUP_TOOL: LlmToolDef = {
   name: "lookup",
   description:
-    "Find the id of a resident, enclosure, clinic, carer or vaccine by name or code. Returns up to 5 matches.",
+    "Find the id of a resident, enclosure, zone, clinic, carer, vaccine or medicine by name or code. Returns up to 5 matches.",
   inputSchema: {
     type: "object",
     properties: {
@@ -173,8 +201,6 @@ const LOOKUP_TOOL: LlmToolDef = {
     additionalProperties: false,
   },
 };
-
-const READ_ONLY_KINDS = new Set(["where", "who", "due"]);
 
 function requestDetailsTool(actions: LlmToolDef[]): LlmToolDef {
   return {
@@ -197,38 +223,52 @@ function requestDetailsTool(actions: LlmToolDef[]): LlmToolDef {
 /**
  * Lookup first, then the action tools, then `request_details`. A person who
  * may only ask gets only the questions, and can only be asked about them.
+ *
+ * `holds` answers the extra activity a tool declares in `needs`, and it
+ * **defaults to no**: a caller that forgets to pass it offers the tool to
+ * nobody rather than to everyone (CLAUDE.md, "A button is shown only if the
+ * login's cards let it do that action").
  */
-export function interpretTools(canWrite: boolean): LlmToolDef[] {
-  const actions = draftTools().filter((t) => canWrite || READ_ONLY_KINDS.has(t.name));
+export function interpretTools(canWrite: boolean, holds: (activity: LevelKey) => boolean = () => false): LlmToolDef[] {
+  const actions = draftTools().filter((t) => {
+    const kind = t.name as Draft["kind"];
+    if (isWriteIntent(kind) && !canWrite) return false;
+    const needs = toolNeeds(kind);
+    return needs === null || holds(needs);
+  });
   return [LOOKUP_TOOL, ...actions, requestDetailsTool(actions)];
 }
 
 /**
  * The modal field for one field of an action tool, read off that tool's own
- * JSON schema (llm-tools.ts), so there is no hand-written form per intent.
- * Null for a field that may not be asked: ids and id lists are chosen on the
- * card, from rows, never typed. `llm-tools.ts` does not export its FieldSpec
- * table, so an id is recognised by the `…Id`/`…Ids` naming every Draft uses
- * and `validateToolInput` already relies on.
+ * field table (`fieldSpecs`, llm-tools.ts), so there is no hand-written form
+ * per intent. Null for a field that may not be asked: ids and id lists are
+ * chosen on the card, from rows, never typed.
+ *
+ * It asks the table what a field IS rather than inferring it. Until #1122 it
+ * probed the JSON schema and spotted ids by the `…Id` / `…Ids` naming, which
+ * worked only while every id field happened to be named that way.
  */
 export function askableField(tool: LlmToolDef, name: string): AskField | null {
-  if (/Ids?$/.test(name)) return null;
-  const props = tool.inputSchema.properties as Record<string, Prop>;
-  if (!Object.prototype.hasOwnProperty.call(props, name)) return null;
-  const p = props[name];
-  if (p.enum) return { name, input: "choice", options: p.enum.filter((o): o is string => typeof o === "string") };
-  const types = Array.isArray(p.type) ? p.type : p.type ? [p.type] : [];
-  if (types.includes("array")) return null;
-  if (types.includes("integer")) return { name, input: "integer" };
-  if (types.includes("number")) return { name, input: "number" };
-  if (!types.includes("string")) return null;
-  if (p.pattern) {
-    const re = new RegExp(p.pattern);
-    if (re.test("2026-01-31")) return { name, input: "date" };
-    if (re.test("09:30")) return { name, input: "time" };
-    return null;
+  if (!DRAFT_KINDS.includes(tool.name as Draft["kind"])) return null;
+  const specs = fieldSpecs(tool.name as Draft["kind"]);
+  if (!Object.prototype.hasOwnProperty.call(specs, name)) return null;
+  const f = specs[name];
+  switch (f.type) {
+    case "id":
+    case "id_list":
+      return null;
+    case "choice":
+      return { name, input: "choice", options: [...f.options] };
+    case "number":
+      return { name, input: f.integer ? "integer" : "number" };
+    case "date":
+      return { name, input: "date" };
+    case "time":
+      return { name, input: "time" };
+    case "text":
+      return { name, input: "text" };
   }
-  return { name, input: "text" };
 }
 
 /** The person's answer to one field, made to fit it. Anything that does not fit is null: skipped. */
@@ -276,6 +316,16 @@ export function runLookup(rows: InterpretRows, kind: LookupKind, query: string):
         .filter((e) => has(e.name, q) || has(e.nameTh, q))
         .slice(0, MAX_MATCHES)
         .map((e) => ({ id: e.id, name: e.name }));
+    case "zone":
+      return rows.zones
+        .filter((z) => has(z.name, q) || has(z.nameTh, q))
+        .slice(0, MAX_MATCHES)
+        .map((z) => ({ id: z.id, name: z.name }));
+    case "medication":
+      return rows.medications
+        .filter((m) => has(m.name, q) || has(m.nameTh, q))
+        .slice(0, MAX_MATCHES)
+        .map((m) => ({ id: m.id, name: m.name, unit: m.doseUnit }));
     case "clinic":
       return rows.clinics.filter((c) => has(c.name, q)).slice(0, MAX_MATCHES).map((c) => ({ id: c.id, name: c.name }));
     case "carer":
@@ -331,23 +381,22 @@ export function validateToolInput(tool: LlmToolDef, input: unknown, rows: Interp
   for (const [key, v] of Object.entries(obj)) {
     if (!typeOk(props[key], v)) return `"${key}" has the wrong type or format. Expected ${JSON.stringify(props[key])}.`;
   }
-  const known = (ids: Iterable<string>, id: unknown) => typeof id === "string" && new Set(ids).has(id);
-  const idChecks: [string, Iterable<string>][] = [
-    ["residentId", rows.residents.map((r) => r.id)],
-    ["enclosureId", rows.enclosures.map((e) => e.id)],
-    ["clinicId", rows.clinics.map((c) => c.id)],
-    ["carerId", rows.carers.map((c) => c.id)],
-  ];
-  for (const [field, ids] of idChecks) {
-    if (obj[field] != null && !known(ids, obj[field])) {
-      return `"${field}" is not an id from a lookup. Call lookup and use the id it returns, or pass null.`;
+  // Which fields are ids, and which rows each must come from, comes from the
+  // tool's own field table — so a new id field is checked by construction
+  // rather than when someone remembers to add it to a list here.
+  if (!DRAFT_KINDS.includes(tool.name as Draft["kind"])) return null;
+  for (const [field, f] of Object.entries(fieldSpecs(tool.name as Draft["kind"]))) {
+    if (f.type !== "id" && f.type !== "id_list") continue;
+    const ids = new Set(idsOf(rows, f.of));
+    if (f.type === "id") {
+      if (obj[field] != null && !(typeof obj[field] === "string" && ids.has(obj[field] as string))) {
+        return `"${field}" is not an id from a lookup. Call lookup with kind "${f.of}" and use the id it returns, or pass null.`;
+      }
+      continue;
     }
-  }
-  const list = obj.immunizationTypeIds;
-  if (Array.isArray(list)) {
-    const ids = new Set(rows.immunizationTypes.map((v) => v.id));
-    if (list.some((id) => !ids.has(id as string))) {
-      return `"immunizationTypeIds" holds an id that is not from a lookup. Call lookup with kind "vaccine".`;
+    const list = obj[field];
+    if (Array.isArray(list) && list.some((id) => !ids.has(id as string))) {
+      return `"${field}" holds an id that is not from a lookup. Call lookup with kind "${f.of}".`;
     }
   }
   return null;
@@ -627,6 +676,8 @@ export async function interpretSentence(input: {
   /** The asker's calendar date, YYYY-MM-DD. */
   today: string;
   canWrite: boolean;
+  /** Answers a tool's `needs` activity. Defaults to no, so a tool that asks for one is withheld. */
+  holds?: (activity: LevelKey) => boolean;
   timeoutMs?: number;
   /** Earlier sentences of this conversation, from the browser. Checked, capped at MAX_HISTORY. */
   history?: unknown;
@@ -634,7 +685,7 @@ export async function interpretSentence(input: {
   resume?: { state: unknown; answer: unknown };
 }): Promise<InterpretResult> {
   const { llm, rows } = input;
-  const tools = interpretTools(input.canWrite);
+  const tools = interpretTools(input.canWrite, input.holds);
   const toolByName = new Map(tools.map((t) => [t.name, t]));
   const preface = historyPreface(input.history, rows);
   let messages: LlmMessage[] = [{ role: "user", content: [{ type: "text", text: input.request }] }];

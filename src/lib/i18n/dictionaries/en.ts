@@ -4251,12 +4251,14 @@ const en = {
       `${resident} died yesterday, kidney failure`,
       `Move ${resident} to ${enclosure} today`,
       `Book a clinic visit for ${resident} with ${clinic} on Friday at 10am`,
+      `Tell me about ${resident}`,
+      "Which enclosure has space?",
     ],
     placeholder: "What should happen?",
     send: "Send",
     looking: "Looking...",
     cantHelp:
-      "I didn't understand that one. I can send a resident to hospital and back, log a weight, record a death, place a resident with a foster or adopting carer, move a resident, book a clinic visit, and answer \"where is …\", \"who is in …\" and \"what is due this week\". The user manual has the exact sentences.",
+      "I didn't understand that one. I can send a resident to hospital and back, log a weight, record a vaccination, prescribe a medicine, record a death, place a resident with a foster or adopting carer, move a resident, book a clinic visit, and answer \"where is …\", \"who is in …\", \"what is due this week\", \"which enclosure has space\" and \"tell me about …\". The user manual has the exact sentences.",
     severalMatch: "More than one resident has that name — pick the right one.",
     whichOne: "Which one do you mean?",
     /** The assistant asking for something the sentence left out (stream 4). */
@@ -4270,10 +4272,19 @@ const en = {
         doctorName: "Doctor",
         carerName: "Carer",
         days: "How many days ahead",
+        doseQuantity: "Amount per dose",
+        timesPerDay: "Times a day",
+        startDate: "Start date",
+        endDate: "End date",
+        notes: "Notes",
+        places: "How many places",
       },
     },
     fillBlanks: "Check the details, fill in anything missing, then confirm.",
     notAuthorized: "Your account can't use the assistant.",
+    notYourCard:
+      "Your account can use the assistant, but not for this one — it needs a card you don't hold. Ask someone who does, or use the resident's own page.",
+    recording: "Recording...",
     volunteerReadOnly:
       "Volunteers can ask the assistant questions, but recording this one is for staff and management. Ask someone to record it, or use the resident's own page.",
     move: {
@@ -4311,7 +4322,8 @@ const en = {
       title: "Log weight",
       summary: (resident: string, kg: string, date: string) =>
         `Record ${resident} at ${kg} kg on ${date}`,
-      done: (resident: string, kg: number) => `Done — ${resident} recorded at ${kg} kg.`,
+      done: (resident: string, kg: number, date: string) =>
+        `Done — ${resident} recorded at ${kg} kg on ${date}.`,
     },
     death: {
       title: "Record a death",
@@ -4340,6 +4352,22 @@ const en = {
       carerMissing:
         "Only carers already on the list can be chosen here. To use someone new, add them on the resident's foster / adopt page first.",
       who: (code: string, place: string) => `Code ${code} · now in ${place}`,
+    },
+    prescription: {
+      title: "Prescribe a medicine",
+      summary: (resident: string, medicine: string, start: string) =>
+        `Start ${resident} on ${medicine} from ${start}`,
+      done: (resident: string, medicine: string) => `Done — ${resident} is now prescribed ${medicine}.`,
+      medicationLabel: "Medicine",
+      pickMedication:
+        "Choose the medicine. Only medicines already on the list can be chosen here — to use a new one, add it on the resident's prescriptions page first.",
+      doseLabel: "Amount per dose",
+      doseLabelWithUnit: (unit: string) => `Amount per dose (${unit})`,
+      startLabel: "Starts",
+      endLabel: "Ends (leave blank for an open course)",
+      daysLabel: "Which days",
+      roundsLabel: "Times of day",
+      notesLabel: "Notes",
     },
     fields: {
       resident: "Resident",
@@ -4389,6 +4417,39 @@ const en = {
       dueOverdue: "Overdue",
       dueVisits: "Clinic visits",
       dueJobs: "Maintenance",
+      zoneNotFound: "I couldn't find that zone.",
+      freeTitle: (count: number) =>
+        count === 1 ? "1 enclosure has room:" : `${count} enclosures have room:`,
+      freeTitleInZone: (zone: string, count: number) =>
+        count === 1 ? `1 enclosure in ${zone} has room:` : `${count} enclosures in ${zone} have room:`,
+      freeNone: (places: number) =>
+        places === 1 ? "No enclosure has room at the moment." : `No enclosure has room for ${places}.`,
+      freeNoneInZone: (zone: string, places: number) =>
+        places === 1
+          ? `No enclosure in ${zone} has room at the moment.`
+          : `No enclosure in ${zone} has room for ${places}.`,
+      freeSpaces: (free: number, count: number, capacity: number) =>
+        `${free} free (${count} of ${capacity})`,
+      freeMore: (count: number) =>
+        count === 1
+          ? "1 more has room — the enclosures list has them all."
+          : `${count} more have room — the enclosures list has them all.`,
+      freeUnknownCapacity: (count: number) =>
+        count === 1
+          ? "1 more has no capacity recorded, so it isn't counted here."
+          : `${count} more have no capacity recorded, so they aren't counted here.`,
+      summaryWeight: (kg: number, date: string) => `Last weighed ${kg} kg on ${date}.`,
+      summaryNoWeight: "No weight has been recorded.",
+      summaryMedicines: "Medicines",
+      summaryNoMedicines: "No medicine is prescribed at the moment.",
+      summaryCourse: (from: string, to: string) => `${from} to ${to}`,
+      summaryCourseOpen: (from: string) => `from ${from}, open`,
+      summaryVisits: "Clinic visits",
+      summaryNoVisits: "No clinic visit recorded.",
+      summaryNextVisit: (when: string) => `Next: ${when}`,
+      summaryLastVisit: (when: string) => `Last: ${when}`,
+      summaryVaccines: "Vaccinations",
+      summaryNoVaccines: "No vaccination recorded.",
     },
     panel: {
       open: "Assistant",
