@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **THE ASSISTANT CANNOT NAME AN ANIMAL FOR ANY CARD NARROWED TO WHO-AND-WHERE** (ticked) |
 | Branch / worktree | `claude/assistant-reads-narrow-view` @ `C:\Development\Animal_Shelter_assistant-reads-narrow-view` |
 | Dev server | `http://localhost:3009` |
-| PR | pending: the number is known once the PR is open |
+| PR | #1145 |
 | Tested by / date | Claude / 2026-11-01 |
 | Carries a migration? | no — `0296` stays free; the narrow view already carries every column the lookups read |
 | Tested at SHA | `d656a9a9` (after sync with `origin/main`) |
@@ -83,7 +83,7 @@ By card, not by role. Each row is a login holding exactly the cards named.
 ## 6. Regression
 
 - [x] The pages nearest the change still work — the assistant's "Who is in Cat Enclosure?" listed all five residents; "Which enclosure has space?" answered with counts
-- [ ] Any shared file touched checked from a second page — n/a for `NavLinks.tsx` and `manual/en.ts` (not touched). `src/lib/enclosures/options.ts` is shared by eleven call sites; the assistant's space lookup was loaded from it, and proof 6 shows a resident-record login counts exactly what it did
+- [x] Any shared file touched checked from a second page — not applicable to `NavLinks.tsx` and `manual/en.ts` (not touched). `src/lib/enclosures/options.ts` is shared by eleven call sites; the assistant's space lookup was loaded from it, and proof 6 shows a resident-record login counts exactly what it did
 - [x] Nothing merged from `main` during `sync` was broken by this branch — gates below
 
 ## 7. Documentation
@@ -152,15 +152,15 @@ Automated checks by: Claude  Date: 2026-11-01
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the item above
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the one item is Lutan's, recorded as pending on the signature below
 
 Manual verification by: pending: Lutan assigning the assistant card in Who does what and looking once
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — pending: the PR is not open yet
-- [ ] Handed to the production release manager — pending: after the merge
+- [ ] Checklist pasted into the PR — n/a: the PR links this file
+- [ ] Handed to the production release manager — n/a: done by the release pass after merge
 
 Result: pass
 
