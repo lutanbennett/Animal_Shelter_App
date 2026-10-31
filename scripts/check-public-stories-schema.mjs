@@ -22,11 +22,21 @@ declare
 begin
   select user_id into ua from user_roles where archived_at is null order by user_id limit 1;
   select user_id into ub from user_roles where archived_at is null and user_id <> ua order by user_id limit 1;
-  -- Fixtures by card, not role (rolled back): ua holds exactly the Assistant card (assistant.ask, no assistant.record), ub is Admin,
-  -- which sits outside the card system and so can still record a confirmed action.
+  -- Fixtures by card, not role (rolled back): ua holds exactly the Do Maintenance card, which grants assistant.ask
+  -- and NOT assistant.record (0257:296); ub is Admin, which sits outside the card system and so can still record a
+  -- confirmed action. The card is Do Maintenance and not Assistant because 0295 put assistant.record back on the
+  -- Assistant card (Lutan, 2026-10-31), so an Assistant login now records on purpose. What 0214 asserts is the
+  -- POLICY -- an asker may record only a refusal, and only its own -- so the fixture is whichever card grants the
+  -- ask alone. If Do Maintenance ever gains assistant.record, pick another ask-only card rather than loosening B1.
   delete from user_roles where user_id in (ua, ub);
   insert into roles (key, name, kind, home_path) values ('harness_asker', 'Harness: assistant', 'custom', '/home') returning id into v_role;
-  insert into role_cards (role_id, card) values (v_role, 'assistant');
+  insert into role_cards (role_id, card) values (v_role, 'do_maintenance');
+  if exists (select 1 from card_grants where card = 'do_maintenance' and activity = 'assistant.record') then
+    raise exception 'FAIL B0 the Do Maintenance fixture now grants assistant.record, so B1 would prove nothing';
+  end if;
+  if not exists (select 1 from card_grants where card = 'do_maintenance' and activity = 'assistant.ask') then
+    raise exception 'FAIL B0 the Do Maintenance fixture no longer grants assistant.ask, so B1 would prove nothing';
+  end if;
   insert into user_roles (user_id, role_id) values (ua, v_role);
   insert into user_roles (user_id, role_id) select ub, id from roles where key = 'admin';
 
@@ -81,13 +91,13 @@ begin
   set local role authenticated;
   insert into assistant_actions (user_id, request_text, status) values (ua, 'delete rex', 'refused');
   begin insert into assistant_actions (user_id, request_text, status) values (ua, 'x', 'confirmed');
-    raise exception 'FAIL B1 a login holding only Assistant inserted confirmed';
+    raise exception 'FAIL B1 a login holding the ask and not the record inserted confirmed';
   exception when insufficient_privilege then null; end;
   begin insert into assistant_actions (user_id, request_text, status) values (ub, 'x', 'refused');
-    raise exception 'FAIL B2 a login holding only Assistant inserted for someone else';
+    raise exception 'FAIL B2 a login holding the ask and not the record inserted for someone else';
   exception when insufficient_privilege then null; end;
   select count(*) into v_n from assistant_actions;
-  if v_n <> 0 then raise exception 'FAIL B3 a login holding only Assistant reads % rows', v_n; end if;
+  if v_n <> 0 then raise exception 'FAIL B3 a login holding the ask and not the record reads % rows', v_n; end if;
   reset role;
 
   perform set_config('request.jwt.claims', json_build_object('sub', ub, 'role', 'authenticated')::text, true);
@@ -95,7 +105,7 @@ begin
   insert into assistant_actions (user_id, request_text, status) values (ub, 'x', 'confirmed');
   reset role;
 
-  raise exception 'HARNESS-OK existing rows %, anon sees no more than are ticked; fresh default false; ticked shows 2 photos (Medical excluded) with columns %; non-public resident hidden; surname refused; Assistant card alone: refused own ok, confirmed refused, other-user refused, reads 0; Admin confirmed still ok', v_total, v_cols;
+  raise exception 'HARNESS-OK existing rows %, anon sees no more than are ticked; fresh default false; ticked shows 2 photos (Medical excluded) with columns %; non-public resident hidden; surname refused; ask-only card (Do Maintenance): refused own ok, confirmed refused, other-user refused, reads 0; Admin confirmed still ok', v_total, v_cols;
 end
 $h$;
 rollback;
