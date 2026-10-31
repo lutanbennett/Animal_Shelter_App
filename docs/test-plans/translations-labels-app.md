@@ -8,10 +8,10 @@
 | Backlog item | `docs/backlog.md` → `## Management`, the label-draft item (ticked here) and the twelve-unlisted-columns item (retitled: only the gate is left) |
 | Branch / worktree | `claude/translations-labels-app` @ `C:\Development\Animal_Shelter_translations-labels-app` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3002` |
-| PR | #TBD |
+| PR | #1140 |
 | Tested by / date | Claude (`claude/translations-labels-app`) / 2026-10-31 |
 | Carries a migration? | no — `0293` and `0294` are the schema half and are already on `main` (#1134) |
-| Tested at SHA | `c41c5075` |
+| Tested at SHA | `ef37bd6e` |
 
 ## 1. Scope and risk
 
@@ -37,8 +37,14 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 test=0 build=0`. Paste its closing `gates:` lines below exactly as printed
 
 ```
-=== gates: build exited 0 after 152s
-
+=== gates: typecheck — npm run typecheck
+=== gates: typecheck exited 0 after 9s
+=== gates: lint — npm run lint
+=== gates: lint exited 0 after 94s
+=== gates: test — npm test
+=== gates: test exited 0 after 14s
+=== gates: build — npm run build
+=== gates: build exited 0 after 51s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
@@ -143,8 +149,12 @@ The two rows actually driven are below; the rest are `n/a` with the card reason,
       — `src/lib/i18n/dictionaries/{en,th}.ts` are shared by everything: `/my`, `/management` and the whole sidebar were loaded in **both**
         languages after the change and rendered their own words, not keys.
 - [x] Nothing merged from `main` during `sync` was broken by this branch
-      — `sync` brought in the `assistant-manual-topic` stream (`src/lib/manual/en.ts`, `src/lib/releases.ts`, two docs). `releases.ts` auto-merged
-        with both notes present; gates were run **after** the merge, at the SHA in the header.
+      — **two syncs.** The first brought in the `assistant-manual-topic` stream (`src/lib/manual/en.ts`, `src/lib/releases.ts`, two docs);
+        `releases.ts` auto-merged with both notes present. The second, after the PR was opened and reported `CONFLICTING`, brought in the
+        `backlog` branch's merge into `main`, which carried **this stream's own two new items** plus `main`'s copy of the twelve-columns item
+        as it read before this branch retitled it — so both sides were this stream's. Resolved by keeping the two new items and the retitled
+        version and dropping the stale copy; `check-backlog-sections.mjs` ok, 66 open items. **Gates were re-run after that merge**, at the
+        SHA in the header, and the block above is that run.
 
 ## 7. Documentation
 
