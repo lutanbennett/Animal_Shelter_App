@@ -199,7 +199,7 @@ export function PhotoSection({
                         <TranslationPanel
                           key={captionTranslation.id + captionTranslation.updated_at}
                           row={captionTranslation}
-                          canManage
+                          canManage={canManageTranslations}
                           recordPath={`/projects/${folder.id}`}
                         />
                       )}

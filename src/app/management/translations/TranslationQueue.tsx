@@ -53,10 +53,13 @@ export function TranslationQueue({
   prose: initialProse,
   labels: initialLabels,
   show,
+  canManage,
 }: {
   prose: TranslationQueueRow[];
   labels: LabelItem[];
   show: Show;
+  /** The activity approveTranslation and clearTranslation ask: translations.manage. */
+  canManage: boolean;
 }) {
   const { t } = useI18n();
   const tr = t.translations;
@@ -175,7 +178,7 @@ export function TranslationQueue({
                   <TranslationPanel
                     key={`${row.id}:${row.updated_at}`}
                     row={row}
-                    canManage
+                    canManage={canManage}
                     showOriginal
                     recordPath={row.record_path}
                     defaultOpen={row.status !== "approved"}

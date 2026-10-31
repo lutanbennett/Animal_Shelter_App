@@ -252,7 +252,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
                       </span>
                     )}
                     {r.note && <span className="text-xs text-foreground">{r.note}</span>}
-                    <BillPhotosSection kind="stock_receipt" ownerId={r.id} photos={billPhotos.get(r.id) ?? []} canAdd />
+                    <BillPhotosSection kind="stock_receipt" ownerId={r.id} photos={billPhotos.get(r.id) ?? []} canAdd={can(perms, "stock.delivery")} />
                   </div>
                   <DeleteDeliveryButton id={r.id} label={itemName.get(id) ?? ""} />
                 </li>

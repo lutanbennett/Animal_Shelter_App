@@ -25,10 +25,13 @@ export function MaintenanceBills({
   jobId,
   bills,
   cost,
+  canBills,
 }: {
   jobId: string;
   bills: JobBill[];
   cost: JobCost | null;
+  /** The activity the bill-photo route asks for a maintenance bill: maintenance.bills (mayFileBill). */
+  canBills: boolean;
 }) {
   const { t, locale } = useI18n();
   const b = t.maintenance.bills;
@@ -163,7 +166,7 @@ export function MaintenanceBills({
                   onClick={() => void remove(bill)}
                 />
               </div>
-              <BillPhotosSection kind="maintenance_bill" ownerId={bill.id} photos={bill.photos} canAdd />
+              <BillPhotosSection kind="maintenance_bill" ownerId={bill.id} photos={bill.photos} canAdd={canBills} />
             </li>
           ))}
         </ul>

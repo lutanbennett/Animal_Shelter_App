@@ -3,6 +3,7 @@ import { loadTranslationQueue } from "@/lib/translations/queries";
 import { labelPath, loadLabelTranslations, localLabel, SHOWS, type LabelItem, type LabelRow, type Show } from "@/lib/translations/labels";
 import { placeName } from "@/lib/enclosures/names";
 import { TranslationQueue } from "./TranslationQueue";
+import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Locale } from "@/lib/i18n/locales";
@@ -49,7 +50,7 @@ export default async function TranslationsPage(props: PageProps<"/management/tra
         </p>
       )}
 
-      <TranslationQueue key={show} prose={queue.rows} labels={labels} show={show} />
+      <TranslationQueue key={show} prose={queue.rows} labels={labels} show={show} canManage={can(perms, "translations.manage")} />
     </main>
   );
 }
