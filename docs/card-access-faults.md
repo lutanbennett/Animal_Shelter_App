@@ -768,3 +768,21 @@ Driven in a browser as a login holding only the card (`dev-signin.mjs --cards <c
 - `add_while_recording` (steps 0, 1, 3): its tile shows, `/residents` loads, `/medical/photos` is refused. Step 2 is the finding above.
 
 **Not driven, so not claimed:** the second step (aal2) was never asked for by any page used; file attachments on procedures and blood tests; Thai-language pages.
+
+## Added 2026-10-31 by `claude/assistant-record-card` (the `assistant` card, driven after `0295`)
+
+Driven in a browser on dev at port 3003 as three logins, each holding cards and nothing else
+(`dev-signin.mjs --cards …`), aal1, no page asked for a second step. `0295` put `assistant.record`
+back on the `assistant` card (Lutan, 2026-10-31; `docs/decisions/2026-10-31-assistant-record-card.md`),
+which is what made any of this reachable: before it, every assistant write was refused for every login
+but Admin. The write used `Walkassistant`, a disposable dev resident made for the drive.
+
+**What now works, and is the item's "done when":** holding `assistant, view_residents, record_weight`,
+*"Walkassistant weighs 12.4 kg"* answered *"Done — Walkassistant (R-8383) recorded at 12.4 kg on 31 Oct
+2026."* and really wrote both rows — the `weight` row and a `confirmed` `assistant_actions` row under
+that login's own `user_id`. An assistant write completed end to end by a non-Admin, card-only login.
+
+| Card | Kind | What was found | Needs | Production | Found |
+|---|---|---|---|---|---|
+| `assistant` | offered, then refused | **Held alone, the assistant offers the writes and cannot name an animal.** The write examples and a LOG WEIGHT preview card with Confirm are drawn (`src/lib/assistant/data.ts:234` gates them on `can(perms, "assistant.record")`, correct after `0295`), but the resident picker is empty and the lookup answers *"Which resident do you mean?"*. `src/lib/assistant/data.ts:123` reads `resident_list_view`, a `security_invoker` view over `residents`, whose only select policy (`residents_select_perm`) asks **`resident.record` at read**. The `assistant` card grants `resident.who_and_where`, and so does `record_weight`; of `assistant`, `record_weight` and `view_residents`, only `view_residents` grants `resident.record` (read from `card_grants`). The narrow view that `resident.who_and_where` exists for — `resident_who_and_where` (`0134`, `0192`) — is not what the assistant reads. **So every card narrowed to who-and-where by card review 2 is blind inside the assistant** | point the assistant's resident lookup at `resident_who_and_where`, or grant the read the lookup actually asks. Needs a `src/` file; not built here, and filed on the backlog | not established: a worktree cannot read production | 2026-10-31 dev, driven |
+| `assistant` | by design, recorded so nobody re-files it | Holding `assistant, view_residents`, the weight skipped the confirm (#1129), the write **reached the database** and was refused there: `new row violates row-level security policy for table "weight"`. That is the `assistant.record` gate passing and only `medical.weight` missing. Each assistant write is checked against its own thing's activity **on top of** `assistant.record` (`src/lib/assistant/llm-tools.ts:249`), so a card set needs both. **Not a fault** | none | n/a | 2026-10-31 dev, driven |
