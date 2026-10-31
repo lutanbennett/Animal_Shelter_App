@@ -700,6 +700,16 @@
         "migration": "0285_shop_links.sql",
         "item": "grant to anon",
         "reason": "SELECT on the public view public_shop_links (the public Shop for the shelter page: shown entries, named columns only, Friend name and logo read from public_shelter_friends) and EXECUTE on is_public_drive_file(text), restated with one more branch. Both are the existing public-site pattern (0191); the table shop_links itself is revoked from anon. It lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-10-30-affiliate-links-schema.md."
+      },
+      {
+        "migration": "0292_write_requests.sql",
+        "item": "function claim_write_request definer",
+        "reason": "Pi failover (B) plumbing, not access. Security definer so it can reach write_requests, which has RLS on with no policies and no table rights for anon or authenticated; the function is the only door and it scopes every row to auth.uid(), taken inside the function and never from the caller, so no login can read back another's result. It grants nothing: claiming a request id does not let a login do anything it could not already do, and the write itself is still gated by its own card. Its gate is holds_app_role() -- 'is this login in the app at all', which since 0259 is card-derived (Admin, or a role holding at least one cell) and reads no role key, name or column. There is no activity a person performs here, so there is no card to ask; docs/decisions/2026-10-31-write-requests-schema.md records why inventing one would be the fault. Same shape as my_permissions definer above."
+      },
+      {
+        "migration": "0292_write_requests.sql",
+        "item": "function finish_write_request definer",
+        "reason": "The other half of the same door (see claim_write_request above). Security definer so it can write the first result onto the caller's own open claim in write_requests, scoped to auth.uid(); it grants nothing and asks no card because there is no activity a person performs here. It fails closed: no open claim for this login raises, so a write whose claim is not in the same transaction aborts rather than committing unrecorded. docs/decisions/2026-10-31-write-requests-schema.md."
       }
     ],
     "stubs": [
