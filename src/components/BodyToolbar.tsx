@@ -11,9 +11,11 @@ const button =
 /**
  * Style buttons for the page-text box. Each wraps the selected words in the
  * tags lib/site/body.ts reads ({b}…{/b}); nothing is stored but those tags.
- * The textarea is uncontrolled, so the change is made with setRangeText and
- * announced with an input event, which is what the preview and the leave
- * guard listen to.
+ * The change is made with setRangeText and announced with an input event,
+ * which is what the preview and the leave guard listen to; React's onChange
+ * fires on it too, so a controlled box (TranslationPanel's Thai) works the
+ * same as the website form's uncontrolled one. One toolbar for both, so the
+ * English and the Thai can never offer different styles.
  */
 export function BodyToolbar({ target }: { target: RefObject<HTMLTextAreaElement | null> }) {
   const { t } = useI18n();

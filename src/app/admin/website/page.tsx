@@ -69,6 +69,7 @@ export default async function WebsitePage({
   // offers is asked of its own activity below, and its actions ask the same one.
   const { perms } = await requirePermission("website.content", "read");
   const canContent = can(perms, "website.content");
+  const canTranslations = can(perms, "translations.manage");
   const canGallery = can(perms, "website.gallery");
   const { tab } = await searchParams;
   const { t } = await getT();
@@ -263,8 +264,8 @@ export default async function WebsitePage({
                         <SitePageForm
                           page={page}
                           translations={{ title: tr[0], body: tr[1] }}
-                          // Admin is a superset of management, so always.
-                          canManageTranslations
+                          // The panels save through approveTranslation, which asks translations.manage.
+                          canManageTranslations={canTranslations}
                           // In English whatever language the admin reads the app in:
                           // pages are written in English and translated through the queue.
                           starterBody={sitePageStarter(en, page.slug)?.body}
