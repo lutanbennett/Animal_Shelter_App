@@ -89,6 +89,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "The assistant can now name an animal for someone whose access to residents is limited to who they are and where they live. Before, such a login was offered every request, then found an empty list of residents and could not finish any of them; now it finds the animal, answers where it is and who is in an enclosure, and shows how full each enclosure is. It still cannot see anything beyond name, photo, status and enclosure, and each request still needs its own access to be saved.", cards: ["assistant"] },
 ];
 
 /** Newest first. */

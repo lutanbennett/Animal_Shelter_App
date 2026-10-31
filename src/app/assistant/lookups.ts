@@ -178,24 +178,14 @@ type ListRow = {
   enclosure_name_th: string | null;
   zone_name: string | null;
   zone_name_th: string | null;
+  profile_photo_drive_file_id: string | null;
 };
 
+// resident_who_and_where, not resident_list_view: the narrow view is what the who-and-where
+// activity reads, and it carries the photo, so no second read of `residents` (which asks the
+// whole record) is needed. `id` is aliased so the rows keep the shape they always had.
 const LIST_COLUMNS =
-  "resident_id, name, thai_name, resident_code, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th";
-
-/** The profile photos for a set of residents; the view doesn't carry them. */
-async function photosById(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  ids: string[],
-): Promise<Map<string, string | null>> {
-  if (!ids.length) return new Map();
-  const { data } = await supabase
-    .from("residents")
-    .select("id, profile_photo_drive_file_id")
-    .in("id", ids)
-    .returns<{ id: string; profile_photo_drive_file_id: string | null }[]>();
-  return new Map((data ?? []).map((r) => [r.id, r.profile_photo_drive_file_id]));
-}
+  "resident_id:id, name, thai_name, resident_code, current_status, enclosure_id, enclosure_name, enclosure_name_th, zone_name, zone_name_th, profile_photo_drive_file_id";
 
 /** The carer on a resident's current placement, through the contact view the asker may read. */
 async function carerName(
@@ -227,16 +217,15 @@ async function loadWhere(
 ): Promise<{ error: string } | { where: WhereAnswer }> {
   const { t } = await getT();
   const { data, error } = await supabase
-    .from("resident_list_view")
+    .from("resident_who_and_where")
     .select(LIST_COLUMNS)
-    .eq("resident_id", residentId)
+    .eq("id", residentId)
     .limit(1)
     .returns<ListRow[]>();
   if (error) return { error: error.message };
   const row = data?.[0];
   if (!row) return { error: t.assistant.lookups.residentNotFound };
 
-  const photos = await photosById(supabase, [row.resident_id]);
   const fosterCarer =
     row.current_status === "Fostered"
       ? { name: await carerName(supabase, row.resident_id) }
@@ -249,7 +238,7 @@ async function loadWhere(
         name: row.name,
         thaiName: row.thai_name,
         code: row.resident_code,
-        photoFileId: photos.get(row.resident_id) ?? null,
+        photoFileId: row.profile_photo_drive_file_id,
       },
       status: row.current_status,
       enclosureId: row.enclosure_id,
@@ -283,7 +272,7 @@ async function answerWho(
       .limit(1)
       .returns<{ id: string; name: string; name_th: string | null }[]>(),
     supabase
-      .from("resident_list_view")
+      .from("resident_who_and_where")
       .select(LIST_COLUMNS)
       .eq("enclosure_id", enclosureId)
       .order("name")
@@ -296,10 +285,6 @@ async function answerWho(
   if (!enclosure) return { error: t.assistant.lookups.enclosureNotFound };
 
   const rows = occupantsResult.data ?? [];
-  const photos = await photosById(
-    supabase,
-    rows.map((r) => r.resident_id),
-  );
 
   return {
     answer: {
@@ -310,7 +295,7 @@ async function answerWho(
         name: r.name,
         thaiName: r.thai_name,
         code: r.resident_code,
-        photoFileId: photos.get(r.resident_id) ?? null,
+        photoFileId: r.profile_photo_drive_file_id,
       })),
     },
   };

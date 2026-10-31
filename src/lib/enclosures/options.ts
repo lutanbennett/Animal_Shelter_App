@@ -19,7 +19,7 @@ export type EnclosureOption = {
   name_th: string | null;
   zoneId: string;
   capacity: number | null;
-  /** Residents currently placed here, per resident_list_view. */
+  /** Residents currently placed here, per resident_who_and_where. */
   residentCount: number;
 };
 
@@ -33,8 +33,9 @@ export type EnclosureOption = {
  * move a resident gets its lists without holding facility.enclosures. The views
  * leave the Lifecycle zone out themselves.
  *
- * Counts are tallied from resident_list_view in the request, the same way
- * /enclosures does (see docs/decisions.md, "Enclosure browser").
+ * Counts are tallied from resident_who_and_where in the request (the view a login
+ * holding only who-and-where can read; resident_list_view asks resident.record and
+ * would count nobody for it), the same rows /enclosures counts (see docs/decisions.md, "Enclosure browser").
  *
  * Both lists come in the shelter's order (Settings → Zones and Enclosures,
  * src/lib/enclosures/order.ts): zones, then enclosures zone by zone.
@@ -59,7 +60,7 @@ export async function loadEnclosureOptions(supabase: SupabaseClient) {
         }[]
       >(),
     supabase
-      .from("resident_list_view")
+      .from("resident_who_and_where")
       .select("enclosure_id")
       .not("enclosure_id", "is", null)
       .returns<{ enclosure_id: string }[]>(),
