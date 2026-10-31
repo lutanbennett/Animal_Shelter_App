@@ -1,106 +1,111 @@
-# Release handover — written 2026-10-30 after `0.40.12`
+# Release handover — written 2026-10-31 after `0.41.0`
 
 A **delta**. The durable rules are in `docs/release-procedure.md` and this release's own record is
-`docs/releases/2026-10-30-0-40-12.md`. **Both outrank this file.**
+`docs/releases/2026-10-31-0-41-0.md`. **Both outrank this file.**
 
 ## START HERE
 
-**`0.40.12` is deployed on BOTH environments and verified.** Production Worker and both Pis at
-`7ec19061`; the test Worker at `e078ee78`, which differs only by three backlog commits (code-identity
-diff empty). **289 of 289**, `No drift` on both databases, cron healthy, cache purged and proved on
-both hosts. No email, by Lutan's answer.
+**`0.41.0` is deployed on BOTH environments and verified.** All four surfaces from **one** SHA,
+`73a4bdc5`: both Pi clones (pinned with `--ref`), the production Worker (`a4fadc9c`, tagged `v0.41.0`
+in `wrangler deployments list`) and the test Worker (`6c600aee`). **296 of 296** applied, `No drift`
+on both databases, cron healthy, cache purged and proved byte-for-byte on both hosts.
 
-**Fetch before you say anything about `main`.** This session opened by reporting "nothing to
-release: four documents since `0.40.11`". An hour later it was **25 PRs and seven migrations** — the
-checkout simply had not been fetched. A release manager's first claim is the one everything else is
-planned on.
+**It MAILED** — the first in eleven releases, on Lutan's answer — and the message was confirmed
+**delivered**, not just `sent 1`. Cost him **two touches**, which is the target.
 
-**Re-measure before trusting any of this.** `git fetch`, `git diff --stat 7ec19061..origin/main`,
+**Re-measure before trusting any of this.** `git fetch`, `git diff --stat 73a4bdc5..origin/main`,
 `gh pr list`, `--status --env production`, `node scripts/check-production.mjs all`, `/api/version`.
 
-## The new fault: a Pi build fails whenever a release DELETES a page
+## Read this before the next release: the Anthropic SDK comes out
 
-`deploy-pi.sh` builds into `.next.new`, but `tsconfig.json` includes `.next/types/**/*.ts`, so the
-type check reads the **live** build's `validator.ts`, which still imports the deleted page. `0.40.12`
-removed `/admin/frequencies` and the Pi refused the build (`TS2307 … admin/frequencies/page.js`).
-**The refusal is safe** — the old build keeps serving — **but the migrations were already on**, so
-users stayed on old code against `0288`'s schema for about 20 minutes.
+**Lutan stopped this release to say `@anthropic-ai/sdk` should not be in it** — he had asked for it
+not to be used — then decided: *"you can continue the release, we will take it out in the next
+release."* So **the next release owes its removal**: the dependency, `src/lib/assistant/llm-claude.ts`,
+and the `claude` branch of `src/lib/assistant/llm.ts`. The backlog item is already on `main`
+(`22805187`), filed by the backlog manager.
 
-- **Until the script is fixed, check before every release:** `git diff --diff-filter=D --name-only
-  <prev sha>..HEAD -- 'src/app/**/page.tsx' 'src/app/**/route.ts'`. If anything prints, get
-  `.next/types` moved aside on **both** Pi clones **before** the apply, not after the failure.
-- **You cannot do the move yourself.** The classifier refuses Claude remote writes outside
-  `deploy-pi.sh` (`[Remote Shell Writes]`). It is one `ssh … "mv … && mv …"` line for Lutan — and it
-  is a touch, so ask it in the same round as the email question.
-- The two stale folders are at `~/stale-next-types-{prod,test}-0.40.11` on the Pi; delete them once
-  a later Pi deploy has succeeded. **Backlog item filed** under *Deployment* for the script fix.
+Three things worth knowing before you touch it:
+
+- **It ships dormant today.** One file imports it, behind a dynamic `import()` at `llm.ts:108`,
+  reached only when `ASSISTANT_LLM_PROVIDER` resolves to `claude` **and** `ANTHROPIC_API_KEY` is set.
+  `strip-baked-env` named fourteen variables and none of the assistant LLM ones, so nothing is baked
+  into the production bundle.
+- **One thing nobody has checked: whether `ANTHROPIC_API_KEY` exists as a production Worker
+  secret.** The bundle is clean; the secret store was never read. If it is set, the assistant has
+  been able to make paid calls. **Read it before you conclude anything.**
+- **No check was ever going to catch this.** `scripts/check-llm-vendor-imports.mjs` *permits* that
+  one file by design. Lutan found it by reading a mechanical line in a release report — which is the
+  argument for keeping those lines in.
 
 ## Corrections and closures to the last edition
 
-- **The runbook's `git reset --hard` recipe is CORRECTED** in this PR, after six editions naming it.
-  It now says `git checkout -b claude/record-<version> origin/main`.
-- **New and worth knowing: the cut's worktree may be gone when you come back for the record.** Another
-  session's clean-up removed it minutes after #1111 merged (fully merged branch, free folder). Nothing
-  was lost, but a record written into the husk folder was nearly lost. Check with `git worktree list`.
-- **The seven unassigned cards are now six:** `0287` retired Add while recording.
-- **`doctor-cells` still `MISSING 4 of 13`**, the same four. Expected; read it fresh anyway.
-- **`audit:prod`** still exits 1 on the one `glob` advisory, as expected.
+- **The "Pi build fails when a release DELETES a page" fault did NOT bite, and its check is cheap.**
+  `git diff --diff-filter=D --name-only <prev>..HEAD -- 'src/app/**/page.tsx' 'src/app/**/route.ts'`
+  printed nothing, so there was nothing to do. **#1125 ships the fix**, which by its own nature takes
+  effect on the **next** Pi deploy, not the one that shipped it — so the next release is the first
+  that can rely on it. Keep running the diff until one release has proved it.
+- **The two `~/stale-next-types-{prod,test}-0.40.11` folders on the Pi are now safe to delete**: the
+  previous edition said to wait for a later successful Pi deploy, and this release's two both
+  succeeded. Left in place, because Claude's remote writes outside `deploy-pi.sh` are refused. One
+  `ssh` line for Lutan, worth nothing on its own — **do not spend a touch on it; fold it into some
+  round he is already answering.**
+- **`doctor-cells` now reads `MISSING 3 of 12`, not `4 of 13`.** Nothing was restored and nothing was
+  lost: `0291` retired `reference.add_while_recording` from the expectation list. Same three cells
+  (`photos.resident_add`, `resident.adoption_news`, `resident.microchip`). **A count that shrinks
+  looks exactly like a quiet regression, so read the reason rather than the number.** Still expected,
+  still Lutan's card-by-card testing.
+- **The `audit` job ran for real on the cut PR and passed** — `package.json` changed, so it was not
+  skipped. `audit:prod` still exits 1 on the `glob` advisories; `audit:register` exits **0**, which is
+  the gate since #1055. The 2026-10-25 scoping works: `check-docs-only.mjs:108` writes `docs-only=`
+  and `deps-changed=` together.
+- **`npm ci` in the main checkout was NECESSARY this time**, the first release in several — a new
+  production dependency had landed. The empty-diff reason for skipping it does not hold every
+  release; **run the diff, don't carry the habit.**
 
-## Where things stand
+## New: `0292` is live and the write wrapper is real, on exactly one path
 
-| | |
-|---|---|
-| Live, production | **`0.40.12`** — Worker `49c05161`, Pi at `7ec19061`, endpoints agree, cron healthy |
-| Live, test | **`0.40.12`** — Worker `f09faebe` (built from `e078ee78`), Pi at `7ec19061` |
-| Previous release SHA, for the next range | **`7ec19061c436e7cbca03556493d2a36d8507161e`** |
-| Production database | **`289 applied, 0 pending`**, `No drift`. **Run it yourself** |
-| Dev database | **`289 applied, 0 pending`**, `No drift` |
-| Next free migration number | **`0289`**. Check `origin/main` *and* open `*-schema` PRs anyway |
-| The mail | **None**, correctly. Tenth release running |
-| Cards | `card-grants-applied` and `card-cells-backed` clean |
-
-**Counters:** `npm ci` skipped again on a measured reason (empty `package.json`/lockfile diff);
-`strip-baked-env` at **14** on both, fourth release running; **Server Actions keys** production
-`cbd55beae8d8`, test `ecc41837fc0b`, unchanged. **Releases that mailed: 1 in the last sixteen.**
+`write_requests` is on production, and the Pi failover wrapper is live — but **only
+`/admin/units` is on `WRAPPED_WRITE_PATHS`.** Stream (D), the other 56 `runAction` call sites, is
+outstanding. The release note was written narrowly to match, naming that one screen; **do not widen
+the claim until (D) lands.** `docs/decisions/2026-10-31-write-request-wrapper.md` §6 is the paper.
 
 ## The method that kept paying
 
-**Predict the after-picture, then read it.** `0282` deletes the `record_death` card. Prediction from
-the before-picture: holders of `record_death` without Manage medical lose one cell, Manage medical
-holders gain one, nothing else moves. **Observed exactly that.** It also surfaced a consequence worth
-putting to Lutan before the deploy rather than after: until Manage medical is assigned, only its
-holders and Admin can record a death. He accepted it.
+**Predict the after-picture, then read it.** Predicted before the apply: *no role's permission cells
+move at all*, because `0295` grants on the **`assistant` card** which no role holds, and `0291`'s own
+header records no `card_grants` or `role_permissions` row behind the activity it retires. Observed:
+every figure identical. A prediction that is confirmed costs nothing; one that is wrong is the
+finding.
 
-**A script someone retired can still owe a run.** `0283`'s decision file said to run
-`check-prescription-schedule-backfill.mjs --env production` "before the app stream ships"; #1108
-retired it first. Recovered from history (`7cee2ebd^`), read, run: clean. **When a decision file
-asks for a production check, grep whether it was ever done** before writing a note that depends on it.
+**When a log file is missing, read the terminal.** `.local/deploy-0.41.0.log` did not appear on disk
+while Lutan's build ran — `Tee-Object` buffers — and an `ls` at that moment looked exactly like a
+deploy started without the `tee`. It was not. `mcp__terminal__read_terminal` had the whole log,
+including the pre-build lines. **Now promoted into `docs/release-procedure.md`.**
 
-**Notes owed by an apply go in the cut, and `--verify` then needs a built base.** Plain `--verify`
-fails `nothing invented [7 vs 5]` — correctly. Build the base mechanically (`origin/main`'s file plus
-exactly the added lines), diff it against `origin/main` to show only those lines, then
-`--verify --base <file>`. Method in `docs/test-plans/cut-release-0-40-12.md`.
-
-## Touches: five against two, and three were avoidable
-
-The email answer, the record-a-death answer, the deploy, the Pi `mv`, and Lutan asking for the deploy
-command to be shown on its own. **Avoidable:** the record-a-death question belonged in the first round
-with the email; the Pi `mv` is the fault above; and **the first hand-over put the command in a code
-block in the middle of a paragraph of other prose.** He reads for the command. **Lead with it, alone,
-then say how long it takes and that you are waiting.**
-
-The classifier refused `apply-migrations --env production` once and the plain retry went through.
-**Try once, retry once in the runbook's exact form, then hand it over.**
+**Verify that someone else really filed it.** He said the backlog manager was filing the SDK removal.
+It was there (`22805187`) — but "someone else is handling it" is exactly the claim that leaves an item
+unfiled, and it costs one `git log` to check.
 
 ## In flight and open
 
-- **Manage medical**: give it to whoever records deaths, or decide not to. The record-a-death note is
-  withheld until then (`check-deferred-notes.mjs` will raise it again; the answer is still "open").
-- **Six unassigned cards** from `0280`/`0281`, and the **Translations** card, unchanged.
-- **Seven plans' manual items**, Lutan's choice to ship with them open: mostly Thai wording and phone
-  width. Listed in the record.
-- **`/shop` has not been seen signed out** (`PUBLIC_SITE` is `locked`, and nothing shows until an
-  entry is set to shown).
-- **Carried unchanged, re-measure each:** `0257`'s stale `-- consumer:` header; the restore drill,
-  never exercised; video playback on a real handset. **`tee` under PowerShell still writes UTF-16** —
-  `tr -d '\000'` before grepping.
+- **Manage medical**: still unassigned, so only its holders and Admin can record a death. The
+  record-a-death note is still withheld. Unchanged for two releases — **worth putting to him in the
+  next round he is already answering**, not as a question of its own.
+- **The `assistant` card holds `assistant.record` again (`0295`), and no role holds that card**, so
+  the assistant can write for nobody but Admin until Lutan assigns it on Settings → Who does what.
+  The note is withheld until then. *(The broader unassigned-card count was not re-measured.)*
+- **Fourteen plans' manual items**, shipped open on his decision and grouped in the record. Two
+  clusters do all the work: a bilingual read of Thai wording (5), and a model machine that does not
+  exist (6).
+- **The whole signed-out surface is unverified**, and this release changed **every** public page's
+  frame (#1115) plus added `/shop` to the footer and the search-engine list. `PUBLIC_SITE` is
+  `locked`, so the only page an anonymous visitor reaches is the gate. **The release that unlocks the
+  site inherits all of it at once** — budget for that rather than discovering it.
+- **Nothing behind sign-in was verified either**, on either environment: no account. Date handling for
+  Thailand is in that gap, and the deploy landed at ~23:00 Thai time, the window where a UTC bug shows.
+- **Carried unchanged, re-measure each:** the restore drill, never exercised; video playback on a real
+  handset; `0257`'s stale `-- consumer:` header. **`tee` under PowerShell still writes UTF-16** —
+  `tr -d '\000'` before grepping. (A GNU `tee` from the Bash tool does not; this release's test log is
+  plain.)
+
+**Next free migration number: `0296`.** Check `origin/main` *and* open `*-schema` PRs anyway.
