@@ -20,7 +20,7 @@ real script was run against it. Each of these printed nothing about the file and
 
 Controls: a plain open policy and a plain `grant … to anon` were both flagged by the same harness, so the harness itself works.
 
-**Nothing real was hiding.** On the 36 migrations from `0262` the output is byte-for-byte identical before and after the fix, so the
+**Nothing real was hiding.** On the 34 migrations from `0262` the output is byte-for-byte identical before and after the fix, so the
 blindness had not let a live finding through. That is the whole good news: it was a hole, not a leak. It would have stayed invisible,
 because a green is not investigated.
 
