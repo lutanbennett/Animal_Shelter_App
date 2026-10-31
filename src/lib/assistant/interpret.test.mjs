@@ -12,6 +12,7 @@ import {
   MAX_ROUNDS_PER_SENTENCE,
 } from "./interpret.ts";
 import { LlmError } from "./llm.ts";
+import { isLowRiskWrite, readyToRecord } from "./llm-tools.ts";
 
 const rows = {
   residents: [
@@ -19,10 +20,15 @@ const rows = {
     { id: "r2", name: "Panda Two", thaiName: null, code: "D-002", enclosureId: null, enclosureName: null, enclosureNameTh: null, status: "Resident" },
   ],
   enclosures: [{ id: "e1", name: "A3", nameTh: null }, { id: "e2", name: "B1", nameTh: null }],
+  zones: [{ id: "z1", name: "Dog zone", nameTh: null }],
   clinics: [{ id: "c1", name: "Dr Somchai" }],
   carers: [],
   immunizationTypes: [{ id: "v1", name: "Rabies", nameTh: null }],
+  medications: [{ id: "m1", name: "Amoxicillin", nameTh: null, doseUnit: "tablet" }],
 };
+
+/** A login that holds every extra activity a tool asks for. */
+const holdsAll = () => true;
 
 // A scripted adapter: each complete() pops the next reply and records the request.
 function script(replies) {
@@ -100,11 +106,83 @@ test("wrong types and bad lookups are malformed, not trusted", () => {
 
 test("a person who may only ask is offered only the questions", () => {
   const names = interpretTools(false).map((t) => t.name).sort();
-  assert.deepEqual(names, ["due", "lookup", "request_details", "where", "who"]);
+  assert.deepEqual(names, ["due", "find-enclosure", "lookup", "request_details", "summary", "where", "who"]);
   // The question tool can only be about the actions this person was given.
   const rd = interpretTools(false).find((t) => t.name === "request_details");
-  assert.deepEqual(rd.inputSchema.properties.action.enum, ["where", "who", "due"]);
+  assert.deepEqual(rd.inputSchema.properties.action.enum, ["where", "who", "due", "find-enclosure", "summary"]);
   assert.ok(interpretTools(true).some((t) => t.name === "death"));
+});
+
+test("a tool that asks for an activity of its own is withheld unless the login holds it", () => {
+  // The default is no, so a caller that forgets to answer offers it to nobody.
+  assert.equal(
+    interpretTools(true).some((t) => t.name === "prescription"),
+    false,
+  );
+  assert.equal(
+    interpretTools(true, () => false).some((t) => t.name === "prescription"),
+    false,
+  );
+  assert.ok(interpretTools(true, holdsAll).some((t) => t.name === "prescription"));
+  // It is asked about the activity the write itself checks, and nothing else.
+  const asked = [];
+  interpretTools(true, (activity) => {
+    asked.push(activity);
+    return true;
+  });
+  assert.deepEqual([...new Set(asked)], ["medical.prescriptions"]);
+  // Withheld, it is not a question the model may be asked about either.
+  const rd = interpretTools(true).find((t) => t.name === "request_details");
+  assert.equal(rd.inputSchema.properties.action.enum.includes("prescription"), false);
+});
+
+test("low risk is a property of the tool, and 'ready' is a second question", () => {
+  assert.ok(isLowRiskWrite("weight"));
+  assert.ok(isLowRiskWrite("immunization"));
+  for (const kind of ["move", "clinic", "hospital", "hospital-return", "death", "rehome", "carer-return", "prescription"]) {
+    assert.equal(isLowRiskWrite(kind), false, `${kind} must not skip the confirm`);
+  }
+  const weight = { kind: "weight", residentId: "r1", weightKg: 12.4, date: "2026-10-30" };
+  assert.ok(readyToRecord(weight, []));
+  // A blank, a bad reading, or a name that matched several: the card, not the write.
+  assert.equal(readyToRecord({ ...weight, weightKg: null }, []), false);
+  assert.equal(readyToRecord({ ...weight, weightKg: 0 }, []), false);
+  assert.equal(readyToRecord({ ...weight, date: null }, []), false);
+  assert.equal(readyToRecord({ ...weight, residentId: null }, []), false);
+  assert.equal(readyToRecord(weight, ["r1", "r2"]), false);
+  const imm = { kind: "immunization", residentId: "r1", immunizationTypeIds: ["v1"], date: "2026-10-30" };
+  assert.ok(readyToRecord(imm, []));
+  assert.equal(readyToRecord({ ...imm, immunizationTypeIds: [] }, []), false);
+  // Never for a kind that is not low risk, however complete it is.
+  assert.equal(readyToRecord({ kind: "death", residentId: "r1", date: "2026-10-30", causeOfDeath: "x" }, []), false);
+});
+
+test("an id field is checked against the rows its own spec names", async () => {
+  const tools = new Map(interpretTools(true, holdsAll).map((t) => [t.name, t]));
+  // medicationId is not named like the others and was never on the old hand-written list.
+  assert.match(
+    validateToolInput(tools.get("prescription"), { residentId: "r1", medicationId: "made-up" }, rows),
+    /medicationId.*lookup with kind "medication"/,
+  );
+  assert.equal(
+    validateToolInput(
+      tools.get("prescription"),
+      { residentId: "r1", medicationId: "m1", doseQuantity: 1, timesPerDay: 2, startDate: "2026-10-30", endDate: null, notes: null },
+      rows,
+    ),
+    null,
+  );
+  assert.match(validateToolInput(tools.get("find-enclosure"), { zoneId: "nope", places: 1 }, rows), /zoneId/);
+  assert.equal(validateToolInput(tools.get("find-enclosure"), { zoneId: "z1", places: 2 }, rows), null);
+  // timesPerDay is bounded in the spec, so a nonsense number lands as a blank, not as 99.
+  const { draftFromToolCall } = await import("./llm-tools.ts");
+  assert.equal(draftFromToolCall("prescription", { timesPerDay: 99 }).timesPerDay, null);
+  assert.equal(draftFromToolCall("prescription", { timesPerDay: 3 }).timesPerDay, 3);
+});
+
+test("lookup answers the two new kinds", () => {
+  assert.deepEqual(runLookup(rows, "zone", "dog"), [{ id: "z1", name: "Dog zone" }]);
+  assert.deepEqual(runLookup(rows, "medication", "amox"), [{ id: "m1", name: "Amoxicillin", unit: "tablet" }]);
 });
 
 test("words only: no_draft; refusal: refused", async () => {
@@ -334,4 +412,12 @@ test("the modal's fields come from the tool's own schema", () => {
   assert.equal(askableField(tools.get("rehome"), "carerId"), null);
   assert.equal(askableField(tools.get("immunization"), "immunizationTypeIds"), null);
   assert.equal(askableField(tools.get("weight"), "colour"), null);
+  // Read from the field table, not from the field's name: `medicationId` is an
+  // id and may not be asked, while `startDate` is a date and may (#1122).
+  const rx = new Map(interpretTools(true, holdsAll).map((t) => [t.name, t])).get("prescription");
+  assert.equal(askableField(rx, "medicationId"), null);
+  assert.deepEqual(askableField(rx, "startDate"), { name: "startDate", input: "date" });
+  assert.deepEqual(askableField(rx, "timesPerDay"), { name: "timesPerDay", input: "integer" });
+  assert.deepEqual(askableField(rx, "doseQuantity"), { name: "doseQuantity", input: "number" });
+  assert.equal(askableField(tools.get("lookup"), "query"), null);
 });

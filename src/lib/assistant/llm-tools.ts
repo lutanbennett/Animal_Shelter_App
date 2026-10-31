@@ -260,6 +260,26 @@ export function isLowRiskWrite(kind: Draft["kind"]): boolean {
   return (SPECS[kind] as AnySpec).lowRisk === true;
 }
 
+/**
+ * Whether a low-risk draft is complete enough to go in with no card: a
+ * resident that is not in doubt, and nothing the card would have asked for
+ * left blank. Anything less still gets the card — there is no point skipping
+ * a confirm step in order to show a form with a blank in it.
+ *
+ * It answers false for every other kind, so "low risk" and "ready" are two
+ * questions and a caller has to pass both.
+ */
+export function readyToRecord(draft: Draft, candidates: readonly string[]): boolean {
+  if (candidates.length > 1) return false;
+  if (draft.kind === "weight") {
+    return !!draft.residentId && draft.weightKg !== null && draft.weightKg > 0 && !!draft.date;
+  }
+  if (draft.kind === "immunization") {
+    return !!draft.residentId && draft.immunizationTypeIds.length > 0 && !!draft.date;
+  }
+  return false;
+}
+
 /** The tool list to hand the model: one per intent. */
 export function draftTools(): LlmToolDef[] {
   return DRAFT_KINDS.map((kind) => {

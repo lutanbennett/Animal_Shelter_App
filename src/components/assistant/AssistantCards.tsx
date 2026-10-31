@@ -394,23 +394,6 @@ export async function recordLowRisk(
   return { kind: "done", message: immunizationStrings(ctx.locale).done(who, names), residentId: resident.id };
 }
 
-/**
- * Whether a low-risk draft is complete enough to go in with no card: a
- * resident that is not in doubt, and nothing the card would have asked for
- * left blank. Anything less still gets the card — there is no point skipping
- * a confirm step to show a form with a blank in it.
- */
-export function readyToRecord(draft: Draft, candidates: string[]): boolean {
-  if (candidates.length > 1) return false;
-  if (draft.kind === "weight") {
-    return !!draft.residentId && draft.weightKg !== null && draft.weightKg > 0 && !!draft.date;
-  }
-  if (draft.kind === "immunization") {
-    return !!draft.residentId && draft.immunizationTypeIds.length > 0 && !!draft.date;
-  }
-  return false;
-}
-
 // ---------------------------------------------------------------------------
 // One card per writing intent
 // ---------------------------------------------------------------------------
