@@ -1,6 +1,6 @@
 "use client";
 
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { createUnit } from "./actions";
@@ -10,7 +10,9 @@ const inputClass =
 
 /** Add a unit: its English name, an optional Thai name, and which list offers it. */
 export function CreateUnitForm() {
-  const [state, onSubmit, pending] = useKeptForm(createUnit, undefined);
+  // useWriteForm, not useKeptForm: this save is wrapped (Pi failover (C)), so it
+  // carries a request id and the browser stops waiting after WRITE_WAIT_MS.
+  const [state, onSubmit, pending] = useWriteForm(createUnit, undefined);
   const { t } = useI18n();
   const s = t.admin.units;
 

@@ -1,7 +1,8 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -12,12 +13,25 @@ import { unitKey } from "@/lib/unit-list";
 // Settings → Units (0252): the units of measure an ingredient or a medicine is counted in. Written only by
 // canEditItemSettings (the table's own write policy asks the same). Units are archived, never deleted.
 //
+// PI FAILOVER (C), 2026-10-31: all three writes on this page go through runWriteAction(), which is why
+// "/admin/units" is on WRAPPED_WRITE_PATHS (src/lib/write-requests.ts) and the Worker may replay a save
+// the Pi did not clearly answer. THE RULE: if a fourth write is ever added here, it goes through
+// runWriteAction() too, or the path comes off that list -- a write the Worker replays without a claimed
+// request id is the #250 double write. docs/decisions/2026-10-31-write-request-wrapper.md.
+//
 // RENAMING a unit that rows already use is REFUSED, not cascaded (docs/decisions/2026-10-23-units-of-measure-app.md):
 // diet_types.unit and medication.dose_unit store the NAME as text, a rename cannot be one transaction from here
 // (no migration this stream, and PostgREST has no multi-table transaction), and a half-applied rename or a "g"
 // renamed "kg" would silently change what a stored amount means. The Thai name is display only and always editable.
 
 const refuse = (error: string) => ({ ok: false as const, error });
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 export type UnitFormState = ActionResult<{ success: string }> | undefined;
 
@@ -85,42 +99,48 @@ function isDuplicate(message: string) {
 
 export async function createUnit(_state: UnitFormState, formData: FormData): Promise<UnitFormState> {
   const { t } = await getT();
-  return runAction("units.createUnit", t.common.somethingWentWrong, async () => {
-    const refused = await refusal();
-    if (refused) return refused;
-    const e = t.admin.units.errors;
-    const name = optional(formData.get("name"));
-    if (!name) return refuse(e.nameRequired);
-    const tag = optional(formData.get("usedFor"));
-    const forIngredients = tag === "ingredients" || tag === "both";
-    const forMedicines = tag === "medicines" || tag === "both";
-    if (!forIngredients && !forMedicines) return refuse(e.tagRequired);
+  const supabase = await createClient();
+  return runWriteAction(
+    "units.createUnit",
+    write(t),
+    { id: writeRequestIdFrom(formData), action: "units.createUnit", db: supabase },
+    async () => {
+      const refused = await refusal();
+      if (refused) return refused;
+      const e = t.admin.units.errors;
+      const name = optional(formData.get("name"));
+      if (!name) return refuse(e.nameRequired);
+      const tag = optional(formData.get("usedFor"));
+      const forIngredients = tag === "ingredients" || tag === "both";
+      const forMedicines = tag === "medicines" || tag === "both";
+      if (!forIngredients && !forMedicines) return refuse(e.tagRequired);
 
-    const supabase = await createClient();
-    const { data: last } = await supabase
-      .from("units")
-      .select("sort_order")
-      .order("sort_order", { ascending: false })
-      .limit(1)
-      .maybeSingle<{ sort_order: number }>();
-    const { error } = await supabase.from("units").insert({
-      name,
-      name_th: optional(formData.get("nameTh")),
-      for_ingredients: forIngredients,
-      for_medicines: forMedicines,
-      sort_order: (last?.sort_order ?? 0) + 10,
-    });
-    if (error) return refuse(isDuplicate(error.message) ? e.nameTaken(name) : error.message);
+      const { data: last } = await supabase
+        .from("units")
+        .select("sort_order")
+        .order("sort_order", { ascending: false })
+        .limit(1)
+        .maybeSingle<{ sort_order: number }>();
+      const { error } = await supabase.from("units").insert({
+        name,
+        name_th: optional(formData.get("nameTh")),
+        for_ingredients: forIngredients,
+        for_medicines: forMedicines,
+        sort_order: (last?.sort_order ?? 0) + 10,
+      });
+      if (error) return refuse(isDuplicate(error.message) ? e.nameTaken(name) : error.message);
 
-    revalidateUnitPages();
-    return { ok: true, success: t.admin.units.created(name) };
-  });
+      revalidateUnitPages();
+      return { ok: true, success: t.admin.units.created(name) };
+    },
+  );
 }
 
 /** Rename (refused while in use), Thai name, and the tags (refused for a list the unit is still in use on). */
-export async function updateUnit(id: string, fields: UnitFields): Promise<ActionResult> {
+export async function updateUnit(id: string, requestId: string, fields: UnitFields): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("units.updateUnit", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("units.updateUnit", write(t), { id: requestId, action: "units.updateUnit", db: supabase }, async () => {
     const refused = await refusal();
     if (refused) return refused;
     const e = t.admin.units.errors;
@@ -128,7 +148,6 @@ export async function updateUnit(id: string, fields: UnitFields): Promise<Action
     if (!name) return refuse(e.nameRequired);
     if (!fields.forIngredients && !fields.forMedicines) return refuse(e.tagRequired);
 
-    const supabase = await createClient();
     const { data: current } = await supabase
       .from("units")
       .select("name, for_ingredients, for_medicines")
@@ -162,12 +181,12 @@ export async function updateUnit(id: string, fields: UnitFields): Promise<Action
 }
 
 /** Archive refuses while any ingredient or medicine still has the unit, naming them; restore always works. */
-export async function setUnitArchived(id: string, archived: boolean): Promise<ActionResult> {
+export async function setUnitArchived(id: string, requestId: string, archived: boolean): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("units.setUnitArchived", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("units.setUnitArchived", write(t), { id: requestId, action: "units.setUnitArchived", db: supabase }, async () => {
     const refused = await refusal();
     if (refused) return refused;
-    const supabase = await createClient();
     const { data: current } = await supabase.from("units").select("name").eq("id", id).maybeSingle<{ name: string }>();
     if (!current) return refuse(t.admin.units.errors.notFound);
 
