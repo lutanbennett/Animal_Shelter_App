@@ -4112,12 +4112,14 @@ const th: Dictionary = {
       `${resident} ตายเมื่อวาน ไตวาย`,
       `ย้าย ${resident} ไป ${enclosure} วันนี้`,
       `นัดหมอให้ ${resident} กับ ${clinic} วันศุกร์ 10:00`,
+      `สรุปข้อมูลของ ${resident}`,
+      "กรงไหนมีที่ว่าง",
     ],
     placeholder: "ต้องการให้ทำอะไร?",
     send: "ส่ง",
     looking: "กำลังค้นหา...",
     cantHelp:
-      "ไม่เข้าใจประโยคนี้ ผู้ช่วยทำได้คือ ส่งสัตว์ไปโรงพยาบาลและรับกลับ บันทึกน้ำหนัก บันทึกการตาย ฝากเลี้ยงหรือรับเลี้ยง ย้ายกรง นัดหมอ และตอบคำถามว่า \"…อยู่ไหน\" \"ใครอยู่ใน…\" และ \"สัปดาห์นี้มีอะไรครบกำหนด\" ดูประโยคที่ใช้ได้ทั้งหมดในคู่มือการใช้งาน",
+      "ไม่เข้าใจประโยคนี้ ผู้ช่วยทำได้คือ ส่งสัตว์ไปโรงพยาบาลและรับกลับ บันทึกน้ำหนัก บันทึกวัคซีน สั่งยา บันทึกการตาย ฝากเลี้ยงหรือรับเลี้ยง ย้ายกรง นัดหมอ และตอบคำถามว่า \"…อยู่ไหน\" \"ใครอยู่ใน…\" \"สัปดาห์นี้มีอะไรครบกำหนด\" \"กรงไหนมีที่ว่าง\" และ \"สรุปข้อมูลของ…\" ดูประโยคที่ใช้ได้ทั้งหมดในคู่มือการใช้งาน",
     severalMatch: "มีสัตว์ชื่อนี้มากกว่าหนึ่งตัว กรุณาเลือกตัวที่ถูกต้อง",
     whichOne: "หมายถึงตัวไหน?",
     details: {
@@ -4130,10 +4132,19 @@ const th: Dictionary = {
         doctorName: "หมอ",
         carerName: "ผู้ดูแล",
         days: "ล่วงหน้ากี่วัน",
+        doseQuantity: "ปริมาณต่อครั้ง",
+        timesPerDay: "วันละกี่ครั้ง",
+        startDate: "วันเริ่ม",
+        endDate: "วันสิ้นสุด",
+        notes: "หมายเหตุ",
+        places: "ต้องการกี่ที่",
       },
     },
     fillBlanks: "ตรวจรายละเอียด เติมส่วนที่ขาด แล้วกดยืนยัน",
     notAuthorized: "บัญชีของคุณไม่สามารถใช้ผู้ช่วยได้",
+    notYourCard:
+      "บัญชีของคุณใช้ผู้ช่วยได้ แต่ทำรายการนี้ไม่ได้ เพราะต้องมีการ์ดที่คุณยังไม่มี กรุณาแจ้งผู้ที่มีการ์ดนี้ หรือบันทึกจากหน้าของสัตว์ตัวนั้น",
+    recording: "กำลังบันทึก...",
     volunteerReadOnly:
       "อาสาสมัครถามผู้ช่วยได้ แต่การบันทึกรายการนี้เป็นหน้าที่ของเจ้าหน้าที่และผู้จัดการ กรุณาแจ้งเจ้าหน้าที่ หรือบันทึกจากหน้าของสัตว์ตัวนั้น",
     move: {
@@ -4200,6 +4211,22 @@ const th: Dictionary = {
         "เลือกได้เฉพาะผู้ดูแลที่มีอยู่ในรายการแล้ว หากเป็นคนใหม่ ให้เพิ่มที่หน้าฝากเลี้ยง/รับเลี้ยงของสัตว์ตัวนั้นก่อน",
       who: (code: string, place: string) => `รหัส ${code} · ตอนนี้อยู่ที่ ${place}`,
     },
+    prescription: {
+      title: "สั่งยา",
+      summary: (resident: string, medicine: string, start: string) =>
+        `เริ่มให้ ${resident} ใช้ ${medicine} ตั้งแต่ ${start}`,
+      done: (resident: string, medicine: string) => `เรียบร้อย สั่ง ${medicine} ให้ ${resident} แล้ว`,
+      medicationLabel: "ยา",
+      pickMedication:
+        "เลือกยา เลือกได้เฉพาะยาที่มีอยู่ในรายการแล้ว หากเป็นยาใหม่ ให้เพิ่มที่หน้ายาของสัตว์ตัวนั้นก่อน",
+      doseLabel: "ปริมาณต่อครั้ง",
+      doseLabelWithUnit: (unit: string) => `ปริมาณต่อครั้ง (${unit})`,
+      startLabel: "เริ่มวันที่",
+      endLabel: "สิ้นสุดวันที่ (เว้นว่างถ้ายังไม่กำหนด)",
+      daysLabel: "ให้วันไหน",
+      roundsLabel: "ช่วงเวลาในแต่ละวัน",
+      notesLabel: "หมายเหตุ",
+    },
     fields: {
       resident: "สัตว์",
       enclosure: "ไปกรง",
@@ -4243,6 +4270,31 @@ const th: Dictionary = {
       dueOverdue: "เลยกำหนด",
       dueVisits: "นัดหมอ",
       dueJobs: "งานซ่อมบำรุง",
+      zoneNotFound: "ไม่พบโซนนี้",
+      freeTitle: (count: number) => `มี ${count} กรงที่มีที่ว่าง:`,
+      freeTitleInZone: (zone: string, count: number) => `ใน ${zone} มี ${count} กรงที่มีที่ว่าง:`,
+      freeNone: (places: number) =>
+        places === 1 ? "ตอนนี้ไม่มีกรงที่มีที่ว่าง" : `ไม่มีกรงที่ว่างพอสำหรับ ${places} ตัว`,
+      freeNoneInZone: (zone: string, places: number) =>
+        places === 1
+          ? `ตอนนี้ไม่มีกรงใน ${zone} ที่มีที่ว่าง`
+          : `ไม่มีกรงใน ${zone} ที่ว่างพอสำหรับ ${places} ตัว`,
+      freeSpaces: (free: number, count: number, capacity: number) =>
+        `ว่าง ${free} ที่ (${count} จาก ${capacity})`,
+      freeUnknownCapacity: (count: number) =>
+        `อีก ${count} กรงยังไม่ได้บันทึกความจุ จึงไม่ถูกนับในรายการนี้`,
+      summaryWeight: (kg: number, date: string) => `ชั่งครั้งล่าสุด ${kg} กก. วันที่ ${date}`,
+      summaryNoWeight: "ยังไม่มีการบันทึกน้ำหนัก",
+      summaryMedicines: "ยา",
+      summaryNoMedicines: "ตอนนี้ไม่มียาที่สั่งไว้",
+      summaryCourse: (from: string, to: string) => `${from} ถึง ${to}`,
+      summaryCourseOpen: (from: string) => `ตั้งแต่ ${from} ยังไม่กำหนดวันสิ้นสุด`,
+      summaryVisits: "นัดหมอ",
+      summaryNoVisits: "ยังไม่มีการบันทึกนัดหมอ",
+      summaryNextVisit: (when: string) => `ครั้งถัดไป: ${when}`,
+      summaryLastVisit: (when: string) => `ครั้งล่าสุด: ${when}`,
+      summaryVaccines: "วัคซีน",
+      summaryNoVaccines: "ยังไม่มีการบันทึกวัคซีน",
     },
     panel: {
       open: "ผู้ช่วย",

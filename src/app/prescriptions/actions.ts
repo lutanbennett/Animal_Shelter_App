@@ -216,15 +216,18 @@ async function ensureMedication(
 
 /**
  * Records a prescription, creating the medication first when the form was
- * used to add a new one inline. Two inserts at most.
- * Redirects to the resident's prescriptions tab on success; the deceased
- * lock (0026) and the date / dose checks (0027) are enforced by the
- * database as well as here.
+ * used to add a new one inline. Two inserts at most. The deceased lock
+ * (0026) and the date / dose checks (0027) are enforced by the database as
+ * well as here.
+ *
+ * The write with no redirect in it, so the assistant's prescription card can
+ * run the SAME one and then show its own reply (stream 5). `createPrescription`
+ * below is this plus the redirect the form page wants. The card check stays
+ * here, inside the write, so neither caller can skip it.
  */
-export async function createPrescription(
-  _state: PrescriptionFormState,
+export async function recordPrescription(
   formData: FormData,
-): Promise<PrescriptionFormState> {
+): Promise<{ error: string } | { ok: true; id: string; residentId: string }> {
   const { t } = await getT();
   if (!can(await loadPermissions(), "medical.prescriptions")) return { error: t.common.notAllowed };
   const residentId = str(formData, "residentId");
@@ -255,7 +258,20 @@ export async function createPrescription(
   if (roundsResult) return roundsResult;
 
   revalidateResidentPages(residentId);
-  redirect(`/residents/${residentId}/prescriptions`);
+  return { ok: true, id: prescriptionId, residentId };
+}
+
+/**
+ * The form page's version: the same write, then the redirect to the
+ * resident's prescriptions tab on success.
+ */
+export async function createPrescription(
+  _state: PrescriptionFormState,
+  formData: FormData,
+): Promise<PrescriptionFormState> {
+  const result = await recordPrescription(formData);
+  if ("error" in result) return result;
+  redirect(`/residents/${result.residentId}/prescriptions`);
 }
 
 /**

@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { parseRequest, type ParsedRequest } from "@/lib/assistant/parse";
 import { isoLocal } from "@/lib/assistant/text";
-import { isWriteIntent, type AssistantTrace } from "@/lib/assistant/types";
+import { isWriteIntent, type AssistantTrace, type Draft } from "@/lib/assistant/types";
+import { isLowRiskWrite, toolNeeds } from "@/lib/assistant/llm-tools";
 import type { AssistantContext } from "@/lib/assistant/data";
 import { recordAssistantTurn, recordRefusedTurn } from "@/app/assistant/actions";
 import { interpretRequest } from "@/app/assistant/interpret";
@@ -13,7 +14,7 @@ import { assistantLookup, type LookupAnswer } from "@/app/assistant/lookups";
 import type { AskField, DetailsAsk, HistoryLine, InterpretResult, InterpretResume } from "@/lib/assistant/interpret";
 import { ActionButton } from "@/components/ActionButton";
 import { MessageCircleQuestionMark } from "lucide-react";
-import { AssistantCard, type AssistantOutcome } from "./AssistantCards";
+import { AssistantCard, readyToRecord, recordLowRisk, type AssistantOutcome } from "./AssistantCards";
 import { AssistantAnswer } from "./AssistantAnswers";
 import { AssistantDetails } from "./AssistantDetails";
 import { AssistantInput } from "./AssistantInput";
@@ -48,6 +49,17 @@ import {
 /** Earlier sentences sent with each new one. The server caps it again; this only keeps the request small. */
 const HISTORY_SENT = 3;
 
+/**
+ * Whether this login may use a tool at all: the extra activity the tool
+ * declares in its own spec (`needs`), answered by the server from the
+ * caller's cards. No `needs`, nothing extra to hold. An activity the server
+ * did not answer for reads as no (stream 5).
+ */
+function mayUseTool(context: AssistantContext, kind: Draft["kind"]): boolean {
+  const needs = toolNeeds(kind);
+  return needs === null || context.toolCards[needs] === true;
+}
+
 type TurnState =
   | { kind: "card" }
   | { kind: "pending" }
@@ -60,7 +72,11 @@ type TurnState =
   /** No parser recognised the sentence. */
   | { kind: "unmatched" }
   /** A write, asked by someone who may only ask questions. */
-  | { kind: "readOnly" };
+  | { kind: "readOnly" }
+  /** A write whose own activity this login does not hold — a prescription without `medical.prescriptions`. */
+  | { kind: "noCard" }
+  /** A low-risk write going in without a card. */
+  | { kind: "recording" };
 
 type Turn = {
   id: number;
@@ -121,7 +137,7 @@ export function AssistantConversation({
   context: AssistantContext;
   autoFocus?: boolean;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const a = t.assistant;
   const [text, setText] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
@@ -141,9 +157,11 @@ export function AssistantConversation({
         name: e.name,
         nameTh: e.name_th,
       })),
+      zones: context.zones.map((z) => ({ id: z.id, name: z.name, nameTh: z.name_th })),
       clinics: context.clinics,
       carers: context.carers,
       immunizationTypes: context.immunizationTypes,
+      medications: context.medications,
     }),
     [context],
   );
@@ -233,23 +251,49 @@ export function AssistantConversation({
   }
 
   function startedTurn(id: number, request: string, parsed: ParsedRequest | null, trace?: AssistantTrace): Turn {
-    const state: TurnState = !parsed
-      ? { kind: "unmatched" }
-      : isWriteIntent(parsed.intent)
-        ? context.canWrite
-          ? { kind: "card" }
-          : { kind: "readOnly" }
-        : { kind: "pending" };
-    return { id, request, parsed, state, trace };
+    return { id, request, parsed, state: stateFor(parsed), trace };
+  }
+
+  /**
+   * What happens to a turn once it has a Draft: a card to confirm, a
+   * read-only answer being fetched, a refusal, or — for a low-risk write the
+   * sentence left nothing blank in — the write itself, with no card
+   * (docs/decisions/2026-10-31-assistant-v2-more-tools.md).
+   */
+  function stateFor(parsed: ParsedRequest | null): TurnState {
+    if (!parsed) return { kind: "unmatched" };
+    if (!isWriteIntent(parsed.intent)) return { kind: "pending" };
+    if (!context.canWrite) return { kind: "readOnly" };
+    if (!mayUseTool(context, parsed.draft.kind)) return { kind: "noCard" };
+    if (isLowRiskWrite(parsed.draft.kind) && readyToRecord(parsed.draft, parsed.residentCandidates)) {
+      return { kind: "recording" };
+    }
+    return { kind: "card" };
   }
 
   /** The bookkeeping and the read-only answer that follow once a turn has a Draft, or none. */
   function afterParse(id: number, trimmed: string, parsed: ParsedRequest | null, trace?: AssistantTrace) {
-    const state = startedTurn(id, trimmed, parsed, trace).state;
+    const state = stateFor(parsed);
 
-    if (state.kind === "readOnly") {
+    if (state.kind === "readOnly" || state.kind === "noCard") {
       // Bookkeeping only: a failure here must never touch the refusal shown.
       recordRefusedTurn(trimmed, trace).catch(() => {});
+      return;
+    }
+
+    if (state.kind === "recording" && parsed) {
+      const draft = parsed.draft;
+      if (draft.kind !== "weight" && draft.kind !== "immunization") return;
+      void recordLowRisk(draft, {
+        request: trimmed,
+        trace,
+        residents: context.residents,
+        immunizationTypes: context.immunizationTypes,
+        t,
+        locale,
+      }).then((result) =>
+        update(id, "error" in result ? { kind: "error", message: result.error } : result),
+      );
       return;
     }
 
@@ -269,7 +313,15 @@ export function AssistantConversation({
     if (state.kind !== "pending") return;
 
     const draft = parsed.draft;
-    if (draft.kind !== "where" && draft.kind !== "who" && draft.kind !== "due") return;
+    if (
+      draft.kind !== "where" &&
+      draft.kind !== "who" &&
+      draft.kind !== "due" &&
+      draft.kind !== "find-enclosure" &&
+      draft.kind !== "summary"
+    ) {
+      return;
+    }
     // The server runs on Workers, in UTC; "this week" has to be counted
     // from the calendar date of whoever is asking (backlog d98695a).
     void assistantLookup({
@@ -310,9 +362,9 @@ export function AssistantConversation({
       context.clinics[0]?.name ?? "Dr Somchai",
     )
     .filter((example) => {
-      if (context.canWrite) return true;
       const parsed = parseRequest(example, parserData);
-      return !parsed || !isWriteIntent(parsed.intent);
+      if (!parsed || !isWriteIntent(parsed.intent)) return true;
+      return context.canWrite && mayUseTool(context, parsed.draft.kind);
     });
 
   return (
@@ -401,8 +453,12 @@ function TurnReply({
       return <ReplyBubble>{a.cantHelp}</ReplyBubble>;
     case "readOnly":
       return <ReplyBubble tone="muted">{a.volunteerReadOnly}</ReplyBubble>;
+    case "noCard":
+      return <ReplyBubble tone="muted">{a.notYourCard}</ReplyBubble>;
     case "pending":
       return <PendingBubble label={a.looking} />;
+    case "recording":
+      return <PendingBubble label={a.recording} />;
     case "answer":
       return <AssistantAnswer answer={turn.state.answer} residents={context.residents} />;
     case "error":
@@ -438,6 +494,8 @@ function TurnReply({
             clinics: context.clinics,
             carers: context.carers,
             immunizationTypes: context.immunizationTypes,
+            medications: context.medications,
+            rounds: context.rounds,
             doctors: context.doctors,
             candidates: turn.parsed.residentCandidates,
             onSettle: (outcome) => onSettle(turn, outcome),

@@ -13,6 +13,14 @@
  * that several parsers would claim goes to the most specific one.
  *
  *   - the lookups first, so "where is Panda going" is a question, not a move;
+ *   - "which enclosure has space" before "where is …", because "where is
+ *     there room for two dogs" is a question about enclosures, not about a
+ *     resident; it declines any sentence that names one;
+ *   - the resident summary next, which needs a resident and so cannot claim
+ *     a sentence the other questions want;
+ *   - no parser for a prescription: a medicine, an amount and a frequency in
+ *     one sentence is the model's job, and a wrong guess at a dose is not
+ *     worth the keyword rules (decision file, 2026-10-31);
  *   - death next: "Bella died at the hospital" is a death, not an
  *     admission, and it is the one sentence that must never be misread;
  *   - immunization after death and rehome, before the hospital and
@@ -28,7 +36,7 @@
  *   - move last, as the broadest of them ("put", "shift", "transfer").
  */
 
-import { dueIntent, whereIntent, whoIntent } from "./intents/lookups";
+import { dueIntent, findEnclosureIntent, summaryIntent, whereIntent, whoIntent } from "./intents/lookups";
 import { hospitalIntent, hospitalReturnIntent } from "./intents/hospital";
 import { deathIntent } from "./intents/death";
 import { rehomeIntent } from "./intents/rehome";
@@ -40,6 +48,8 @@ import { moveIntent } from "./intents/move";
 import type { Intent, IntentParser, ParseContext, ParseResult } from "./types";
 
 export const INTENT_PARSERS: readonly IntentParser[] = [
+  findEnclosureIntent,
+  summaryIntent,
   whereIntent,
   whoIntent,
   dueIntent,

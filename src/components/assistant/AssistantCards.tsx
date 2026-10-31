@@ -11,7 +11,19 @@ import { driveImageUrl } from "@/lib/google/drive-client";
 import { placeName } from "@/lib/enclosures/names";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
 import { EnclosurePicker } from "@/components/EnclosurePicker";
-import type { AssistantClinic, AssistantImmunizationType, AssistantResident } from "@/lib/assistant/data";
+import type {
+  AssistantClinic,
+  AssistantImmunizationType,
+  AssistantMedication,
+  AssistantResident,
+  AssistantRound,
+} from "@/lib/assistant/data";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import type { Locale } from "@/lib/i18n/locales";
+import { localLabel } from "@/lib/translations/labels";
+import { parseScheduleForm, scheduleToForm, type ScheduleFormValues } from "@/lib/prescriptions/schedule";
+import { showsRoundTicks, tickVerdict } from "@/lib/prescriptions/rounds";
+import { ScheduleDays } from "@/app/prescriptions/ScheduleDays";
 import { isoLocal } from "@/lib/assistant/text";
 import { doctorNameCore, type DoctorNamesByClinic } from "@/lib/clinics/doctors";
 import type { CarerOption } from "@/lib/contacts/carers";
@@ -25,10 +37,12 @@ import type {
   ClinicVisitDraft,
   WeightDraft,
   ImmunizationDraft,
+  PrescriptionDraft,
   CarerReturnDraft,
   AssistantTrace,
 } from "@/lib/assistant/types";
 import {
+  assistantAddPrescription,
   assistantRecordDeath,
   assistantRehome,
   assistantRecordImmunization,
@@ -73,6 +87,10 @@ export type CardContext = {
   carers: CarerOption[];
   /** The vaccines the immunization card may tick. */
   immunizationTypes: AssistantImmunizationType[];
+  /** The medicines the prescription card may choose. Empty without `medical.prescriptions`. */
+  medications: AssistantMedication[];
+  /** Morning / Lunch / Evening / Night, for the prescription card's ticks. */
+  rounds: AssistantRound[];
   /** Each clinic's active doctors, offered on the clinic card. */
   doctors: DoctorNamesByClinic;
   /** Residents the name could have meant, when it could have meant several. */
@@ -315,6 +333,82 @@ function useCardChrome(ctx: CardContext, residentChosen: boolean) {
     hint: ambiguous ? a.severalMatch : a.fillBlanks,
     hintTone: (ambiguous ? "danger" : "muted") as "danger" | "muted",
   };
+}
+
+// ---------------------------------------------------------------------------
+// The low-risk writes, which may go in without a card
+// ---------------------------------------------------------------------------
+
+/** What a write needs to know besides the draft, when there is no card around it. */
+export type LowRiskContext = {
+  request: string;
+  trace?: AssistantTrace;
+  residents: AssistantResident[];
+  immunizationTypes: AssistantImmunizationType[];
+  t: Dictionary;
+  locale: Locale;
+};
+
+/**
+ * The writes `isLowRiskWrite` marks (llm-tools.ts): one function per intent,
+ * called by that intent's card on Confirm AND by the conversation when it
+ * skips the card. One write path per intent, so the two can never drift —
+ * and the server action, its card check and the database are identical
+ * either way. Skipping the card is a courtesy, never a permission.
+ */
+export async function recordLowRisk(
+  draft: WeightDraft | ImmunizationDraft,
+  ctx: LowRiskContext,
+): Promise<{ error: string } | AssistantOutcome> {
+  const a = ctx.t.assistant;
+  const resident = ctx.residents.find((r) => r.id === draft.residentId);
+  if (!resident) return { error: a.lookups.whichResident };
+  const who = `${resident.name} (${resident.code})`;
+
+  if (draft.kind === "weight") {
+    if (draft.weightKg === null || !(draft.weightKg > 0) || !draft.date) return { error: a.fillBlanks };
+    const result = await assistantLogWeight({
+      residentId: resident.id,
+      weightKg: draft.weightKg,
+      date: draft.date,
+      request: ctx.request,
+      trace: ctx.trace,
+      draft,
+    });
+    if ("error" in result) return result;
+    return { kind: "done", message: a.weight.done(who, draft.weightKg), residentId: resident.id };
+  }
+
+  const chosen = ctx.immunizationTypes.filter((ty) => draft.immunizationTypeIds.includes(ty.id));
+  if (chosen.length === 0 || !draft.date) return { error: a.fillBlanks };
+  const result = await assistantRecordImmunization({
+    residentId: resident.id,
+    immunizationTypeIds: chosen.map((ty) => ty.id),
+    date: draft.date,
+    request: ctx.request,
+    trace: ctx.trace,
+    draft,
+  });
+  if ("error" in result) return result;
+  const names = chosen.map((ty) => (ctx.locale === "th" && ty.nameTh) || ty.name).join(", ");
+  return { kind: "done", message: immunizationStrings(ctx.locale).done(who, names), residentId: resident.id };
+}
+
+/**
+ * Whether a low-risk draft is complete enough to go in with no card: a
+ * resident that is not in doubt, and nothing the card would have asked for
+ * left blank. Anything less still gets the card — there is no point skipping
+ * a confirm step to show a form with a blank in it.
+ */
+export function readyToRecord(draft: Draft, candidates: string[]): boolean {
+  if (candidates.length > 1) return false;
+  if (draft.kind === "weight") {
+    return !!draft.residentId && draft.weightKg !== null && draft.weightKg > 0 && !!draft.date;
+  }
+  if (draft.kind === "immunization") {
+    return !!draft.residentId && draft.immunizationTypeIds.length > 0 && !!draft.date;
+  }
+  return false;
 }
 
 // ---------------------------------------------------------------------------
@@ -795,20 +889,13 @@ function WeightCard({ ctx, draft }: { ctx: CardContext; draft: WeightDraft }) {
     if (!resident || !weightOk || !date) return;
     setError(null);
     startTransition(async () => {
-      const result = await assistantLogWeight({
-        residentId: resident.id,
-        weightKg,
-        date,
-        request: ctx.request,
-        trace: ctx.trace,
-        draft: { ...draft, residentId: resident.id, weightKg, date },
-      });
+      // The same function the conversation calls when it skips this card.
+      const result = await recordLowRisk(
+        { ...draft, residentId: resident.id, weightKg, date },
+        { request: ctx.request, trace: ctx.trace, residents: ctx.residents, immunizationTypes: ctx.immunizationTypes, t, locale },
+      );
       if ("error" in result) return setError(result.error);
-      ctx.onSettle({
-        kind: "done",
-        message: a.weight.done(`${resident.name} (${resident.code})`, weightKg),
-        residentId: resident.id,
-      });
+      ctx.onSettle(result);
     });
   }
 
@@ -1234,25 +1321,13 @@ function ImmunizationCard({ ctx, draft }: { ctx: CardContext; draft: Immunizatio
     if (!resident || chosen.length === 0 || !date) return;
     setError(null);
     startTransition(async () => {
-      const result = await assistantRecordImmunization({
-        residentId: resident.id,
-        immunizationTypeIds: chosen.map((ty) => ty.id),
-        date,
-        request: ctx.request,
-        trace: ctx.trace,
-        draft: {
-          ...draft,
-          residentId: resident.id,
-          immunizationTypeIds: chosen.map((ty) => ty.id),
-          date,
-        },
-      });
+      // The same function the conversation calls when it skips this card.
+      const result = await recordLowRisk(
+        { ...draft, residentId: resident.id, immunizationTypeIds: chosen.map((ty) => ty.id), date },
+        { request: ctx.request, trace: ctx.trace, residents: ctx.residents, immunizationTypes: ctx.immunizationTypes, t, locale },
+      );
       if ("error" in result) return setError(result.error);
-      ctx.onSettle({
-        kind: "done",
-        message: s.done(`${resident.name} (${resident.code})`, chosen.map(label).join(", ")),
-        residentId: resident.id,
-      });
+      ctx.onSettle(result);
     });
   }
 
@@ -1307,6 +1382,198 @@ function ImmunizationCard({ ctx, draft }: { ctx: CardContext; draft: Immunizatio
   );
 }
 
+/**
+ * The prescription card. The sentence gives the medicine, the amount and
+ * when it starts; which DAYS it falls on is the form's own picker (0283),
+ * reused here rather than described in words, and the times on those days
+ * are the round ticks. `timesPerDay` from the sentence pre-ticks that many,
+ * in the order the form shows them.
+ *
+ * Confirm runs `recordPrescription` — `createPrescription` without its
+ * redirect — so this is the prescription form with its fields filled in,
+ * not a second way to write the row.
+ */
+function PrescriptionCard({ ctx, draft }: { ctx: CardContext; draft: PrescriptionDraft }) {
+  const { t, locale } = useI18n();
+  const a = t.assistant;
+  const p = a.prescription;
+  const [residentId, setResidentId] = useState(draft.residentId ?? "");
+  const [medicationId, setMedicationId] = useState(draft.medicationId ?? "");
+  const [dose, setDose] = useState(draft.doseQuantity === null ? "" : String(draft.doseQuantity));
+  const [startDate, setStartDate] = useState(draft.startDate ?? viewerToday());
+  const [endDate, setEndDate] = useState(draft.endDate ?? "");
+  const [notes, setNotes] = useState(draft.notes ?? "");
+  const [schedule, setSchedule] = useState<ScheduleFormValues>(() =>
+    scheduleToForm(null, draft.startDate ?? viewerToday()),
+  );
+  const [roundIds, setRoundIds] = useState<string[]>(() =>
+    ctx.rounds.slice(0, Math.min(Math.max(draft.timesPerDay ?? 1, 1), ctx.rounds.length)).map((r) => r.id),
+  );
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
+  const medication = ctx.medications.find((m) => m.id === medicationId) ?? null;
+  const doseQuantity = dose.trim() === "" ? null : Number(dose);
+  const doseOk = doseQuantity === null || (Number.isFinite(doseQuantity) && doseQuantity > 0);
+  // The form's own validator, so this card and /prescriptions/new agree about
+  // what a day pattern means and when the ticks are owed.
+  const parsedSchedule = parseScheduleForm(schedule);
+  const rx = "schedule" in parsedSchedule ? parsedSchedule.schedule : null;
+  const scheduleOk = "schedule" in parsedSchedule;
+  const ticksShown = showsRoundTicks(rx);
+  const ticksOk = scheduleOk && tickVerdict(rx, roundIds.length) === "ok";
+  const chrome = useCardChrome(ctx, !!residentId);
+  const medicationLabel = (m: AssistantMedication) => localLabel(locale, m.name, m.nameTh);
+
+  function toggleRound(id: string) {
+    setRoundIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
+  function confirm() {
+    if (!resident || !medication || !startDate || !doseOk || !scheduleOk || !ticksOk) return;
+    setError(null);
+    startTransition(async () => {
+      const result = await assistantAddPrescription({
+        residentId: resident.id,
+        medicationId: medication.id,
+        doseQuantity,
+        startDate,
+        endDate: endDate || null,
+        schedule,
+        roundIds: ticksShown ? roundIds : [],
+        notes: notes.trim() || null,
+        request: ctx.request,
+        trace: ctx.trace,
+        draft: {
+          ...draft,
+          residentId: resident.id,
+          medicationId: medication.id,
+          doseQuantity,
+          startDate,
+          endDate: endDate || null,
+          notes: notes.trim() || null,
+        },
+      });
+      if ("error" in result) return setError(result.error);
+      ctx.onSettle({
+        kind: "done",
+        message: p.done(`${resident.name} (${resident.code})`, medicationLabel(medication)),
+        residentId: resident.id,
+      });
+    });
+  }
+
+  return (
+    <Card
+      title={p.title}
+      summary={p.summary(
+        resident ? `${resident.name} (${resident.code})` : a.unknown,
+        medication ? medicationLabel(medication) : a.unknown,
+        startDate ? formatDate(startDate, locale) : a.unknown,
+      )}
+      hint={medication ? chrome.hint : p.pickMedication}
+      hintTone={chrome.hintTone}
+      error={error}
+      pending={pending}
+      canConfirm={!!resident && !!medication && !!startDate && doseOk && scheduleOk && ticksOk}
+      notesStamp={chrome.notesStamp}
+      onConfirm={confirm}
+      onCancel={() => ctx.onSettle({ kind: "cancelled" })}
+    >
+      <ResidentField ctx={ctx} idPrefix="prescription" residentId={residentId} onChange={setResidentId} />
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="flex flex-col gap-1">
+          <label htmlFor={`prescription-${ctx.turnId}-medication`} className="text-sm font-medium text-muted">
+            {p.medicationLabel} <span className="text-danger">*</span>
+          </label>
+          <select
+            id={`prescription-${ctx.turnId}-medication`}
+            value={medicationId}
+            onChange={(e) => setMedicationId(e.target.value)}
+            className={inputClass}
+          >
+            <option value="">{p.pickMedication}</option>
+            {ctx.medications.map((m) => (
+              <option key={m.id} value={m.id}>
+                {medicationLabel(m)}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor={`prescription-${ctx.turnId}-dose`} className="text-sm font-medium text-muted">
+            {medication ? p.doseLabelWithUnit(medication.doseUnit) : p.doseLabel}
+          </label>
+          <input
+            id={`prescription-${ctx.turnId}-dose`}
+            type="number"
+            inputMode="decimal"
+            step="0.01"
+            min="0"
+            value={dose}
+            onChange={(e) => setDose(e.target.value)}
+            className={inputClass}
+          />
+        </div>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <DateField
+          id={`prescription-${ctx.turnId}-start`}
+          label={p.startLabel}
+          value={startDate}
+          onChange={setStartDate}
+        />
+        <div className="flex flex-col gap-1">
+          <label htmlFor={`prescription-${ctx.turnId}-end`} className="text-sm font-medium text-muted">
+            {p.endLabel}
+          </label>
+          <DateInput
+            id={`prescription-${ctx.turnId}-end`}
+            value={endDate}
+            min={startDate || undefined}
+            onChange={(e) => setEndDate(e.target.value)}
+            className={inputClass}
+          />
+        </div>
+      </div>
+      <div className="flex flex-col gap-1">
+        <p className="text-sm font-medium text-muted">{p.daysLabel}</p>
+        <ScheduleDays value={schedule} onChange={setSchedule} startDate={startDate} />
+      </div>
+      {ticksShown && (
+        <fieldset className="flex flex-col gap-1">
+          <legend className="text-sm font-medium text-muted">
+            {p.roundsLabel} <span className="text-danger">*</span>
+          </legend>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            {ctx.rounds.map((r) => (
+              <label key={r.id} className="flex items-center gap-2 text-sm text-foreground">
+                <input type="checkbox" checked={roundIds.includes(r.id)} onChange={() => toggleRound(r.id)} />
+                {localLabel(locale, r.name, r.nameTh)}
+              </label>
+            ))}
+          </div>
+          {!ticksOk && <p className="text-sm text-danger">{t.prescriptions.days.errors.ticksNone}</p>}
+        </fieldset>
+      )}
+      <div className="flex flex-col gap-1">
+        <label htmlFor={`prescription-${ctx.turnId}-notes`} className="text-sm font-medium text-muted">
+          {p.notesLabel}
+        </label>
+        <input
+          id={`prescription-${ctx.turnId}-notes`}
+          type="text"
+          maxLength={200}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          className={inputClass}
+        />
+      </div>
+    </Card>
+  );
+}
+
 export function AssistantCard({ ctx, draft }: { ctx: CardContext; draft: Draft }) {
   switch (draft.kind) {
     case "move":
@@ -1327,6 +1594,8 @@ export function AssistantCard({ ctx, draft }: { ctx: CardContext; draft: Draft }
       return <CarerReturnCard ctx={ctx} draft={draft} />;
     case "immunization":
       return <ImmunizationCard ctx={ctx} draft={draft} />;
+    case "prescription":
+      return <PrescriptionCard ctx={ctx} draft={draft} />;
     default:
       // The lookups never reach a card; they are answered inline.
       return null;

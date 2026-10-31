@@ -75,6 +75,10 @@ export function matchEnclosure(text: string, ctx: ParseContext) {
   return matchByName(text, ctx.enclosures, (e) => [e.name, e.nameTh]);
 }
 
+export function matchZone(text: string, ctx: ParseContext) {
+  return matchByName(text, ctx.zones, (z) => [z.name, z.nameTh]);
+}
+
 const WEEKDAYS_EN = [
   ["sunday", "sun"],
   ["monday", "mon"],
