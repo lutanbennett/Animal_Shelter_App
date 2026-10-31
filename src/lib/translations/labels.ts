@@ -16,9 +16,16 @@ import { canOpen, routeFor } from "@/lib/permissions/routes";
  *  - missing:  English present, Thai empty, the list is not optional
  *  - as_typed: Thai empty on an optional list (a drug or clinic name) — a deliberate answer, not a gap
  *  - stale:    Thai present, and the English changed after it was written (label_sources)
+ *  - proposed: Thai empty, and somebody has proposed some that is waiting to be approved (0293)
  *  - current:  Thai present and written against today's English
+ *
+ * These words describe the LIVE Thai — what a reader of the app sees — so a
+ * label that already has Thai and also has a proposal waiting stays stale or
+ * current and carries the proposal in its draft_* columns. Only a label with
+ * no live Thai at all reads proposed. label_translations() decides that, not
+ * this page: docs/decisions/2026-10-31-label-drafts-and-unlisted-labels.md.
  */
-export type LabelStatus = "missing" | "as_typed" | "stale" | "current";
+export type LabelStatus = "missing" | "as_typed" | "proposed" | "stale" | "current";
 
 /** A row of `label_translations()`. */
 export type LabelRow = {
@@ -34,6 +41,16 @@ export type LabelRow = {
   /** The English the Thai was written against; differs from source_text when stale. */
   seen_source_text: string | null;
   status: LabelStatus;
+  /**
+   * The proposal waiting on this label (`label_drafts`, 0293), or nulls when
+   * none is. It is never the live Thai: the row is untouched until somebody
+   * approves it, so nothing that reads a `_th` column can see it.
+   */
+  draft_text_th: string | null;
+  /** The English the proposal was written against; differs from source_text when the draft went out of date while it waited. */
+  draft_source_text: string | null;
+  draft_proposed_at: string | null;
+  draft_proposed_by: string | null;
 };
 
 /** One label as the page shows it: the row plus where it lives. */
@@ -80,6 +97,13 @@ const LABEL_SCREENS: Record<string, (rowId: string) => string[]> = {
   clinics: () => ["/management/clinics", "/clinics"],
   fixed_outgoings: () => ["/management/cashflow/fixed-outgoings", "/management/cashflow"],
   roles: () => ["/admin/security"],
+  // The five tables 0293 registered. A feature's own page under Who does what
+  // is gated through the parent-path fallback in labelPath().
+  diets: () => ["/management/diets", "/admin/diets"],
+  units: () => ["/admin/units"],
+  features: () => ["/admin/who-does-what/features", "/admin/who-does-what"],
+  role_groups: () => ["/admin/who-does-what"],
+  memes: () => ["/memes"],
 };
 
 export function labelPath(perms: Permissions | null, table: string, rowId: string): string | null {
@@ -105,7 +129,12 @@ export function labelPath(perms: Permissions | null, table: string, rowId: strin
  */
 export const GROUP_ORDER = [
   "website",
+  // 0293 gave memes.caption_en a group of its own: the website is not social media.
+  "social",
   "residents",
+  // An appeal is about a sick resident, so it reads beside them rather than
+  // under a raw table name at the end (0210 queues its prose).
+  "appeals",
   "projects",
   "diets",
   "medications",
@@ -116,6 +145,8 @@ export const GROUP_ORDER = [
   "recurring_jobs",
   "friends",
   "money",
+  // features.name and role_groups.name name the sections of the home screen (0293).
+  "home",
   "roles",
 ];
 
@@ -140,6 +171,9 @@ export function proseGroup(table: string): string {
     // A room's description sits with its name, among the places (0175 registers the name there).
     case "map_rooms":
       return "places";
+    // An appeal's prose (0210): the treatment needed, what the cost covers, the outcome.
+    case "appeals":
+      return "appeals";
     default:
       return table;
   }
@@ -167,6 +201,12 @@ export function localLabel(
   return english ?? "";
 }
 
-/** The page's filters (`?show=`): what nobody has written, what is out of date, everything. */
-export type Show = "missing" | "stale" | "all";
-export const SHOWS: Show[] = ["missing", "stale", "all"];
+/**
+ * The page's filters (`?show=`): what nobody has written, what is waiting to
+ * be approved, what is out of date, everything. `proposed` is its own filter
+ * rather than part of Missing, because the two ask different things of the
+ * reader — Missing needs Thai typed, proposed needs one press — and a list of
+ * what is waiting is the whole point of the draft step.
+ */
+export type Show = "missing" | "proposed" | "stale" | "all";
+export const SHOWS: Show[] = ["missing", "proposed", "stale", "all"];
