@@ -142,6 +142,8 @@ export const PROBES = [
   { activity: "stock.delivery", level: "edit", sql: `insert into stock_receipts (item_kind, medication_id, quantity) values ('medication', ${MED}, 1)` },
   { activity: "stock.delivery", level: "read", sharedWith: ["stock.purchasing"], sql: `select 1 from stock_receipts where id = $RECEIPT` },
   { activity: "stock.medications", level: "edit", sql: `update medication set cost_per_unit = cost_per_unit where id = ${MED}` },
+  // 0291: a medication insert asks stock.medications Edit alone (it was shared with the retired reference.add_while_recording).
+  { activity: "stock.medications", level: "edit", sql: `insert into medication (name, dose_unit) values ('Probe medication', current_setting('harness.med_unit', true))`, refusedBy: ["P0001"] /* check_unit_in_units (0252) reads units as the caller, so a role that cannot read them is refused there first, with a message about units */ },
   { activity: "stock.medications", level: "read", sql: `select cost_per_unit from medication where id = ${MED}`, known: [{ id: "N1", roles: ["doctor"] }] },
   { activity: "stock.diets", level: "edit", sql: `update diet_types set notes = 'probe' where id = $DIET` },
   { activity: "stock.diets", level: "read", sql: `select cost_per_unit from diet_types where id = $DIET`, known: [{ id: "C10", roles: ["doctor"] }] },
@@ -161,13 +163,14 @@ export const PROBES = [
   { activity: "reference.types", level: "edit", sql: `update immunization_types set cost = cost where id = (select id from immunization_types limit 1)`, known: [{ id: "C3", roles: ["doctor"] }] },
   { activity: "reference.types", level: "edit", sql: `insert into immunization_types (name, interval_months) values ('Probe type', 12)`, known: [{ id: "C3", roles: ["doctor"] }] },
   { activity: "reference.types", level: "edit", sql: `update blood_test_types set name = name where id = (select id from blood_test_types limit 1)` },
-  { activity: "reference.add_while_recording", level: "edit", sharedWith: ["stock.medications"], sql: `insert into medication (name, dose_unit) values ('Probe medication', current_setting('harness.med_unit', true))`, refusedBy: ["P0001"] /* check_unit_in_units (0252) reads units as the caller, so a role that cannot read them is refused there first, with a message about units */ },
-  { activity: "reference.add_while_recording", level: "edit", sql: `insert into frequency (label) values ('Probe frequency')` },
-  { activity: "reference.add_while_recording", level: "edit", sql: `insert into procedure_types (name) values ('Probe procedure')` },
+  // 0291 retired reference.add_while_recording; these two inserts now ask reference.types Edit and nothing else.
+  { activity: "reference.types", level: "edit", sql: `insert into frequency (label) values ('Probe frequency')` },
+  { activity: "reference.types", level: "edit", sql: `insert into procedure_types (name) values ('Probe procedure')` },
   { activity: "audit.view", level: "edit", sql: `select 1 from audit_log limit 1` },
-  // 0285: shop_links' four policies ask shop.manage and nothing else. Edit only: a read needs a row, dev has none,
-  // and the fixtures are check-who-does-what.mjs's (docs/decisions/2026-10-30-shop-page-finish.md).
+  // 0285: shop_links' four policies ask shop.manage and nothing else. The read runs against $SHOP, a fixture row of
+  // check-who-does-what.mjs (dev has no shop_links row of its own; docs/decisions/2026-10-30-shop-page-finish.md).
   { activity: "shop.manage", level: "edit", sql: `insert into shop_links (title, link_url) values ('Probe shop', 'https://example.invalid/probe')` },
+  { activity: "shop.manage", level: "read", sql: `select 1 from shop_links where id = $SHOP` },
 ];
 
 // A statement a read on a Yes/No activity: "read" there means "needs Yes".

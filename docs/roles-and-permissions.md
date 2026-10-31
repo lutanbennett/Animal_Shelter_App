@@ -371,7 +371,7 @@ Admin is shown for completeness; it is never stored (§6).
 | **Settings** | | | | | | | | | |
 | `website.content` | The public website's content | E/R | E | E | – | – | – | 33 | Management added by `0163` (Lutan, 2026-10-08): the Director runs the website by day as Management. The 2IC deliberately not. `site_content`, `site_content_photos` and `site_pages` write on this cell since `0163` |
 | `reference.types` | Setup lists: immunization, procedure and blood-test types, frequencies | E/R | E | – | – | – | – | 34 | |
-| `reference.add_while_recording` | Add a missing medication, frequency or procedure type from a form | Y/N | Y | Y | Y | Y | – | 34 | *Split*, finding A1 |
+| ~~`reference.add_while_recording`~~ | **RETIRED 2026-10-31 (`0291`).** Was: add a missing medication, frequency or procedure type from a form | Y/N | – | – | – | – | – | 34 | Lutan, 2026-10-30: *"Missing medication added by admin only as part of system configuration"*. Card gone in `0287`, activity in `0291`; the policies that asked it ask only their other cell. `docs/decisions/2026-10-31-retire-add-while-recording-activity.md` |
 | `audit.view` | See who changed what | Y/N | Y | – | – | – | – | 35 | |
 | `audit.undo` | Undo a change | Y/N | Y | – | – | – | – | 35 | *Split* |
 | `system.status` | The system status page | Y/N | Y | – | – | – | – | 36 | |
@@ -1222,10 +1222,10 @@ A vet's read of the four recurring tables was inside the dropped role list, so i
 
 | Table | Activity | Note |
 |---|---|---|
-| `medication` | read `stock.medications` Read or `reference.add_while_recording`; insert the same, with Edit; update and delete `stock.medications` Edit | The lookup cell, not the prescription cell: `medical.prescriptions` is held by the 2IC and Head of Medical, who read names and stock through price-free views and must not read the table. **N1 stays open** (staff read prices through the add-while-recording cell) |
+| `medication` | read `stock.medications` Read or `reference.add_while_recording`; insert the same, with Edit (the add cell left the read in `0151` and the insert in `0291`, which retired it); update and delete `stock.medications` Edit | The lookup cell, not the prescription cell: `medical.prescriptions` is held by the 2IC and Head of Medical, who read names and stock through price-free views and must not read the table. **N1 stays open** (staff read prices through the add-while-recording cell) |
 | `diet_types` | read `stock.diets` Read or `resident.register`; write `stock.diets` Edit | The intake form's diet picker is staff's way in. **N2 stays open** for the same reason |
-| `frequency` | read unchanged (`0136`); insert `reference.add_while_recording` or `reference.types` Edit; update and delete `reference.types` Edit | Management could update and delete a frequency by hand; it cannot now |
-| `procedure_types` | read `medical.procedures`, `reference.types` or `reference.add_while_recording`; insert the add cell or `reference.types` Edit; update and delete `reference.types` Edit | |
+| `frequency` | read unchanged (`0136`); insert `reference.add_while_recording` or `reference.types` Edit (`reference.types` Edit alone since `0291`); update and delete `reference.types` Edit | Management could update and delete a frequency by hand; it cannot now |
+| `procedure_types` | read `medical.procedures`, `reference.types` or `reference.add_while_recording`; insert the add cell or `reference.types` Edit (the add cell gone from both since `0291`); update and delete `reference.types` Edit | |
 | `blood_test_types`, `immunization_types` | read `medical.blood_tests` / `medical.immunizations` Read or `reference.types` Read; write `reference.types` Edit | The vet's own policies stay (C3, C10) |
 
 **Converted in `0149` (`perm-convert-work`).**
@@ -1504,10 +1504,10 @@ means §6: not a cell.
 | undo-deceased | `placement.death_withdraw` |
 | immunizations | `medical.immunizations` |
 | vet-visits | `visit.book`, `medical.visits` |
-| prescriptions | `medical.prescriptions`, `reference.add_while_recording` |
+| prescriptions | `medical.prescriptions` (`reference.add_while_recording` retired, `0291`) |
 | diet | `medical.diet` |
 | weight | `medical.weight` |
-| procedures | `medical.procedures`, `reference.add_while_recording` |
+| procedures | `medical.procedures` (`reference.add_while_recording` retired, `0291`) |
 | blood-tests | `medical.blood_tests` |
 | archive-records | `medical.archive` |
 | resident-photos | `photos.resident_add`, `photos.resident_manage`, `photos.resident_publish` |

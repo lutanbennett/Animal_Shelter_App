@@ -56,17 +56,17 @@ export const CHECKS = {
     render: (rows) => rows.map((x) => `${x.role}: ${x.cards.length ? x.cards.join(", ") : "(no cards)"}`),
   },
   "doctor-cells": {
-    asks: "Does the doctor role hold the 13 cells migration 0230 gave it, at that level or higher?",
+    asks: "Does the doctor role hold the 12 cells migration 0230 gave it that still exist, at that level or higher? (0230 gave 13; 0291 retired reference.add_while_recording, which no role can hold.)",
     sql: `select json_build_object('missing', coalesce((select json_agg(w.activity order by w.activity)
         from (values ('resident.record',1),('resident.adoption_news',1),('resident.microchip',2),('visit.book',2),
           ('medical.visits',2),('medical.procedures',2),('medical.blood_tests',2),('medical.prescriptions',2),
           ('medical.immunizations',2),('medical.weight',2),('medical.diet',2),
-          ('photos.resident_add',2),('reference.add_while_recording',2)) as w(activity, level)
+          ('photos.resident_add',2)) as w(activity, level)
         where not exists (select 1 from role_permissions p join roles r on r.id = p.role_id
           where r.key = 'doctor' and p.activity = w.activity and p.level >= w.level)), '[]'::json),
       'role_exists', exists (select 1 from roles where key = 'doctor'))`,
     render: (r) => !r.role_exists ? ["There is no doctor role."]
-      : r.missing.length ? [`MISSING ${r.missing.length} of 13: ${r.missing.join(", ")}`] : ["All 13 doctor cells are present."],
+      : r.missing.length ? [`MISSING ${r.missing.length} of 12: ${r.missing.join(", ")}`] : ["All 12 doctor cells are present."],
     failed: (r) => !r.role_exists || r.missing.length > 0,
   },
   "role-cards-coverage": {

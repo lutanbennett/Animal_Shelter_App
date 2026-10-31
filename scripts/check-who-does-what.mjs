@@ -90,7 +90,7 @@ const PRINCIPALS = ["admin", ...ROLES];
 const PROBES = ALL_PROBES.filter((p) => !p.expect);
 
 const F = {};
-for (const k of ["R_IN", "R_OUT", "BARE", "CATEGORY", "DEAD", "ENC", "ZONE", "JOB", "PROJECT", "CLINIC", "OTHER_CLINIC", "DOCTOR", "DOCTOR2", "CONTACT", "CARER", "FRIEND", "RECEIPT", "DIET", "IMM_TYPE", "OUTGOING", "JOB_NONE", "JOB_ALL", "ATT_IN", "ATT_OUT"]) F[k] = randomUUID();
+for (const k of ["R_IN", "R_OUT", "BARE", "CATEGORY", "DEAD", "ENC", "ZONE", "JOB", "PROJECT", "CLINIC", "OTHER_CLINIC", "DOCTOR", "DOCTOR2", "CONTACT", "CARER", "FRIEND", "RECEIPT", "DIET", "IMM_TYPE", "OUTGOING", "JOB_NONE", "JOB_ALL", "ATT_IN", "ATT_OUT", "SHOP"]) F[k] = randomUUID();
 const ID = Object.fromEntries(PRINCIPALS.map((p) => [p, randomUUID()]));
 const cat = await query("select id from project_folders where top_level_category = 'Events' and parent_folder_id is null limit 1");
 F.CATEGORY = cat.body?.[0]?.id;
@@ -193,6 +193,8 @@ begin
   insert into project_folders (id, top_level_category, name, parent_folder_id) values (${lit(F.PROJECT)}, 'Events', 'Harness project', ${lit(F.CATEGORY)});
   insert into stock_receipts (id, item_kind, medication_id, quantity) values (${lit(F.RECEIPT)}, 'medication', (select id from medication order by id limit 1), 1);
   insert into fixed_outgoings (id, label, monthly_amount) values (${lit(F.OUTGOING)}, 'Harness outgoing', 1);
+  -- dev has no shop_links row, so shop.manage's read probe reads this one (0285; hidden, so the public view never lists it)
+  insert into shop_links (id, title, link_url) values (${lit(F.SHOP)}, 'Harness shop', 'https://example.invalid/harness');
   insert into recurring_jobs (id, title, time_of_day, link_path, repeat, weekdays, starts_on) values
     (${lit(F.JOB_NONE)}, 'Harness job none', 'morning', '/', 'weekly', '{1,2,3,4,5,6,7}', current_date - 7),
     (${lit(F.JOB_ALL)}, 'Harness job all', 'morning', '/', 'weekly', '{1,2,3,4,5,6,7}', current_date - 7);

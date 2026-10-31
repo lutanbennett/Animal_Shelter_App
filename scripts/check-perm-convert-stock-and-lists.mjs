@@ -6,12 +6,12 @@
 //   node scripts/check-perm-convert-stock-and-lists.mjs --verbose  (also list every case)
 //
 // For each table, each principal's read / update / insert / delete (1 = took effect, 0 = refused):
-//   medication          read stock.medications Read or reference.add_while_recording; insert the same with Edit;
-//                       update and delete stock.medications Edit
+//   medication          read stock.medications Read; insert, update and delete stock.medications Edit
 //   diets          read stock.diets Read or resident.register; write stock.diets Edit
-//   frequency           read medical.prescriptions Read (+ clinical scope) or reference.types Read; insert the add cell or
-//                       reference.types Edit; update and delete reference.types Edit
-//   procedure_types     read medical.procedures / reference.types Read / the add cell; insert the add cell or reference.types Edit
+//   frequency           read medical.prescriptions Read (+ clinical scope) or reference.types Read; write reference.types Edit
+//   procedure_types     read medical.procedures or reference.types Read; write reference.types Edit
+// (0291 retired reference.add_while_recording, "the add cell", from medication, frequency and procedure_types: no role can hold it,
+// so its principal is gone and a sweep asserts no policy on these tables names it.)
 //   blood_test_types    read medical.blood_tests or reference.types Read; write reference.types Edit
 //   immunization_types  read reference.types Read (0155; medical.immunizations reads picker_immunization_types); write reference.types Edit
 // The vet (a doctor login since 0172) keeps what its own doctor_* policies give it, unchanged (C3, C10). Then structural sweeps: no policy on these
@@ -39,7 +39,6 @@ const CUSTOM = {
   c_none: { cells: [] },
   c_med_read: { cells: [["stock.medications", 1]] },
   c_med_edit: { cells: [["stock.medications", 2]] },
-  c_add: { cells: [["reference.add_while_recording", 2]] },
   c_diet_read: { cells: [["stock.diets", 1]] },
   c_diet_edit: { cells: [["stock.diets", 2]] },
   c_register: { cells: [["resident.register", 2]] },
@@ -54,7 +53,7 @@ const CUSTOM = {
     cells: [["medical.prescriptions", 2], ["medical.diet", 2], ["medical.procedures", 2], ["medical.blood_tests", 2], ["medical.immunizations", 2], ["stock.count", 2], ["stock.delivery", 2], ["stock.purchasing", 2]],
   },
 };
-// Staff left with 0173: each outcome it had is also another principal's (c_add on medication, management elsewhere).
+// Staff left with 0173: each outcome it had is also another principal's (management).
 const REAL = ["admin", "vet"];
 // Management, the volunteer and the doctor have LIVE cells (Settings > Who does what), so they are not probed: the harness
 // probes admin, no role and the custom roles, whose cells it writes itself.
@@ -77,10 +76,10 @@ const T = {
 // expected "RUID" per principal; anything not listed is 0000
 const A = "1111", RO = "1000", RI = "1010", I = "0010";
 const EXPECT = {
-  medication: { admin: A, management: A, vet: RI, c_med_read: RO, c_med_edit: A, c_add: I }, // 0151: the add cell no longer reads the table
+  medication: { admin: A, management: A, vet: RI, c_med_read: RO, c_med_edit: A },
   diets: { admin: A, c_diet_read: RO, c_diet_edit: A, c_register: RO, c_vol_medical: RO }, // 0239: diets are recipes with no prices, readable by whoever picks one (stock.diets, resident.register, medical.diet)
-  frequency: { admin: A, management: RI, vet: RI, c_types_read: RO, c_types_edit: A, c_add: I, c_rx_read: RO, c_vol_medical: RO },
-  procedure_types: { admin: A, management: RI, vet: RI, c_add: RI, c_proc_read: RO, c_types_read: RO, c_types_edit: A, c_vol_medical: RO },
+  frequency: { admin: A, management: RI, vet: RI, c_types_read: RO, c_types_edit: A, c_rx_read: RO, c_vol_medical: RO },
+  procedure_types: { admin: A, management: RI, vet: RI, c_proc_read: RO, c_types_read: RO, c_types_edit: A, c_vol_medical: RO },
   blood_test_types: { admin: A, management: RO, vet: RO, c_blood_read: RO, c_types_read: RO, c_types_edit: A, c_vol_medical: RO },
   immunization_types: { admin: A, vet: A, c_types_read: RO, c_types_edit: A }, // 0155: medical.immunizations reads picker_immunization_types, not the table (it carries a price)
 };
@@ -111,7 +110,7 @@ begin
       execute p_sql; get diagnostics v = row_count;
     exception when insufficient_privilege then v := -1;
       -- check_unit_in_units() looks the unit up under the CALLER's own read of units, so a login with no units read is stopped
-      -- there, before the policy is asked (-3). See the known fault below.
+      -- there, before the policy is asked (-3).
       when others then v := case when sqlerrm like 'There is no unit called%' then -3 else -2 end;
     end;
     reset role;
@@ -162,6 +161,9 @@ do $sweep$ begin
   insert into res select 'sweep', 'price_tables_ask_medical', 'count', count(*) from pg_policies
    where schemaname = 'public' and tablename in ('medication') and policyname like '%\\_perm'
      and (coalesce(qual,'') || coalesce(with_check,'')) like '%medical.%';
+  insert into res select 'sweep', 'names_add_cell', 'count', count(*) from pg_policies
+   where schemaname = 'public' and tablename in (${tableList})
+     and (coalesce(qual,'') || coalesce(with_check,'')) like '%add_while_recording%';
   insert into res select 'sweep', 'perm_policies', 'count', count(*) from pg_policies
    where schemaname = 'public' and tablename in (${tableList}) and policyname like '%\\_perm';
 end $sweep$;
@@ -181,11 +183,9 @@ if (!m) throw new Error(`no result (status ${res.status}): ${msg.slice(0, 1500)}
 const rows = JSON.parse(m[1]);
 const get = (who, tbl, cmd) => rows.find((r) => r.who === who && r.tbl === tbl && r.cmd === cmd)?.n;
 
-// KNOWN GENUINE FAULT, filed in docs/card-access-faults.md (2026-10-26): a login whose only cell is reference.add_while_recording
-// cannot add a medication, because the BEFORE INSERT trigger check_unit_in_units() reads `units` as the caller and units_select_perm
-// does not list that cell. The policy allows the insert; the trigger refuses it with "There is no unit called ...". Counted, not failed;
-// if the database starts letting it through, n becomes 1 and the line below turns into an ordinary pass.
-let fails = 0, ok = 0, known = 0;
+// The known fault this harness used to count (docs/card-access-faults.md, 2026-10-26: a login holding only reference.add_while_recording
+// was stopped by the units trigger) closed with 0291, which retired that cell: no login can hold it, so there is nothing left to count.
+let fails = 0, ok = 0;
 const fail = (s) => { fails++; console.log(`FAIL  ${s}`); };
 const pass = (s) => { ok++; if (verbose) console.log(`ok    ${s}`); };
 for (const [tbl] of Object.entries(T)) {
@@ -195,7 +195,6 @@ for (const [tbl] of Object.entries(T)) {
       const n = get(who, tbl, cmd);
       const label = `${tbl} ${cmd} as ${who}: ${exp[i] ? "allowed" : "refused"}`;
       if (n === -2) fail(`${label} - the statement itself errored (-2); the fixture is wrong, not the policy`);
-      else if (n === -3 && exp[i] && tbl === "medication" && who === "c_add") { known++; if (verbose) console.log(`known ${label} - GENUINE FAULT, docs/card-access-faults.md`); }
       else if (n === -3 && exp[i]) fail(`${label} - stopped by the unit lookup (-3)`);
       else if ((n >= 1) === Boolean(exp[i])) pass(label);
       else fail(`${label} - got ${n}`);
@@ -206,7 +205,8 @@ const sweep = (k) => get("sweep", k, "count");
 if (sweep("names_mgmt_or_staff") === 0) pass("no policy on these tables names management or staff"); else fail(`${sweep("names_mgmt_or_staff")} policy(ies) still name management or staff`);
 if (sweep("bare_has_permission") === 0) pass("every new policy wraps has_permission() in (select ...)"); else fail(`${sweep("bare_has_permission")} policy(ies) call has_permission() bare`);
 if (sweep("price_tables_ask_medical") === 0) pass("the medication policies ask no medical.* cell"); else fail(`${sweep("price_tables_ask_medical")} price-table policy(ies) ask a medical.* cell`);
+if (sweep("names_add_cell") === 0) pass("no policy on these tables names reference.add_while_recording (retired, 0291)"); else fail(`${sweep("names_add_cell")} policy(ies) still name reference.add_while_recording`);
 if (sweep("perm_policies") === 24) pass("24 *_perm policies"); else fail(`expected 24 *_perm policies, found ${sweep("perm_policies")}`);
-console.log(`\n${ok} checks held, ${fails} failed, ${known} known fault(s) (docs/card-access-faults.md).`);
+console.log(`\n${ok} checks held, ${fails} failed.`);
 console.log(fails ? "RESULT: RED" : "RESULT: GREEN (each table answers as its cell says; the medical-cell role reads no price table; no role narrows a cell any more)");
 process.exitCode = fails ? 1 : 0;

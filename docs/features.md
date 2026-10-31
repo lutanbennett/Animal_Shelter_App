@@ -352,7 +352,7 @@ ________________________________________________________________
 7. **Blood test types**. `/admin/blood-test-types` · `reference.types`
 8. **Medication option lists** (see Stock). `/admin/medications` · `reference.types`
 9. **Frequencies**. `/admin/frequencies` · `reference.types`
-10. **Add a missing option while recording**. · `reference.add_while_recording`
+10. ~~**Add a missing option while recording**~~. Retired 2026-10-31 (`0291`): a missing medication, frequency or procedure type is added by Admin on the reference screens above.
 11. **Translations**: manage, view. `/management/translations` · `translations.manage`, `translations.view`
 12. **My account**: password, home screen icons, language. `/account/password`, `/account/home-screen-icons`
 13. **Manual, sign-in, no-access**. `/manual`, `/login`, `/login/forgot`, `/login/request`, `/no-access`, `/home`, `/home/[role]`, `/home/group/[id]`, `/admin`
@@ -373,7 +373,7 @@ ________________________________________________________________
 
 Done from the code: every route in the registry and every activity appears above.
 
-**Activities with no card** (reachable only by Admin or a role given the single permission): `placement.death_withdraw`, `projects.folders`, `projects.photos`, `projects.publish`, `stock.usage`, `stock.medications`, `stock.diets`, `stock.correct`, `translations.manage`, `translations.view`, `reference.types`, `reference.add_while_recording`, `audit.view`, `audit.undo`, `system.status`, `maintenance.delete`, `appeal.medical_photo`.
+**Activities with no card** (reachable only by Admin or a role given the single permission): `placement.death_withdraw`, `projects.folders`, `projects.photos`, `projects.publish`, `stock.usage`, `stock.medications`, `stock.diets`, `stock.correct`, `translations.manage`, `translations.view`, `reference.types`, `audit.view`, `audit.undo`, `system.status`, `maintenance.delete`, `appeal.medical_photo`.
 
 **Registry pages with no card opening them** (reached from menus or landings): `/projects`, `/contacts`, `/clinics`, `/management/shelter-friends`, `/management/desexing-drives`, `/management/clinics`, `/operations/feeding-list`, `/management/medications`, `/management/diets`, `/management/stock-usage`, `/management/cashflow`, `/management/translations`, `/admin/enclosures`, `/admin/zones`, `/admin/facility-map`, `/admin/immunization-types`, `/admin/procedure-types`, `/admin/blood-test-types`, `/admin/medications`, `/admin/diets`, `/admin/frequencies`, `/admin/recent-changes`, `/admin/status`.
 

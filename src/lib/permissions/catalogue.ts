@@ -98,7 +98,6 @@ export const ACTIVITIES = [
   { key: "assistant.record", kind: "yesno", area: "assistant", sort: 49, requires: [], probes: [] },
   { key: "website.content", kind: "level", area: "settings", sort: 50, requires: [], probes: [] },
   { key: "reference.types", kind: "level", area: "settings", sort: 51, requires: [], probes: [] },
-  { key: "reference.add_while_recording", kind: "yesno", area: "settings", sort: 52, requires: [], probes: [] },
   { key: "audit.view", kind: "yesno", area: "settings", sort: 53, requires: [], probes: [] },
   { key: "audit.undo", kind: "yesno", area: "settings", sort: 54, requires: [], probes: [] },
   { key: "system.status", kind: "yesno", area: "settings", sort: 55, requires: [], probes: [] },
