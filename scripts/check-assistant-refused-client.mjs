@@ -1,4 +1,5 @@
-// A refused-write row from a login holding only the Assistant card, against DEV (policy 0214, client: assistant-refused-row).
+// A refused-write row from a login holding a card that grants the ask and not the record, against DEV
+// (policy 0214, client: assistant-refused-row).
 //
 //   node scripts/check-assistant-refused-client.mjs [--keep]
 //
@@ -37,8 +38,11 @@ try {
   const { data, error } = await service.auth.admin.createUser({ email, password, email_confirm: true });
   if (error) throw error;
   userId = data.user.id;
-  // a login holding exactly the Assistant card (assistant.ask) and nothing else
-  const { error: roleErr, cleanup } = await giveCards(service, userId, ["assistant"]);
+  // A login holding exactly the Do Maintenance card, which grants assistant.ask and NOT assistant.record (0257:296).
+  // It was the Assistant card until 0295 put assistant.record back on it (Lutan, 2026-10-31), at which point an
+  // Assistant login records on purpose. What 0214 asserts is the POLICY — an asker may record only a refusal, and
+  // only its own — so the fixture has to be whichever card grants the ask alone, not whichever card is named after it.
+  const { error: roleErr, cleanup } = await giveCards(service, userId, ["do_maintenance"]);
   cleanupCards = cleanup;
   if (roleErr) throw roleErr;
 
@@ -47,7 +51,7 @@ try {
   if (inErr) throw inErr;
 
   const { error: e1 } = await me.from("assistant_actions").insert({ request_text: text, intent: null, draft: null, status: "refused", result: null });
-  expect(!e1, `a login holding only the Assistant card: its bare 'refused' insert succeeds (${e1?.message ?? "no error"})`);
+  expect(!e1, `a login holding the ask and not the record: its bare 'refused' insert succeeds (${e1?.message ?? "no error"})`);
   const { data: back } = await me.from("assistant_actions").select("id").eq("request_text", text);
   expect((back ?? []).length === 0, "that login cannot read the row back");
   const { error: e2 } = await me.from("assistant_actions").insert({ request_text: text, status: "confirmed" });

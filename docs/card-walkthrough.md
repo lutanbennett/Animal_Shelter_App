@@ -357,9 +357,10 @@ Result: pending
 0. Sign in with `--cards assistant`. The home screen shows the **Assistant** tile (or the tile of a card that includes it).
 1. Open `/assistant`: it loads.
 2. **Do:** Ask the assistant a question. Use a disposable record named `walk-assistant`. **Read-back:** the answer shows in the assistant panel opened by the Assistant button in the header, and writes no row to any page.
-3. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-4. **See:** Enclosures and zones (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-5. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
+3. **Do:** Record something through the assistant. Use a disposable record named `walk-assistant`. **Read-back:** ask it to record a weight for the disposable resident, then press Confirm on the card it shows. The weight really appears on that resident's Weight page (/residents/<id>/weight), and Cancel writes nothing. A weight and an immunization skip the confirm step and are written straight away (#1129), so for those the read-back is the reply naming the date it used (0295 is what makes any of this reach the database for a card-only login).
+4. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+5. **See:** Enclosures and zones (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+6. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 

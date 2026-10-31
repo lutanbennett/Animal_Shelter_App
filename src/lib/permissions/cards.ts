@@ -224,11 +224,15 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // 0285: the Shop for the shelter page. Its own activity, not friends.manage: a marketplace link is not a Shelter Friend. Opens the management screen that edits the public /shop page.
   manage_shop_page: { includes: [], bundle: [{ activity: "shop.manage", level: "edit" }], opens: "/admin/shop" },
   outreach_notes: { includes: [], bundle: [{ activity: "community.outings", level: "edit" }], opens: "/outreach" },
-  // Card review 2 (0268): reads who-and-where and the enclosures to name an animal; assistant.record is dropped (it can do nothing alone).
+  // Card review 2 (0268): reads who-and-where and the enclosures to name an animal. It also dropped
+  // assistant.record ("it can do nothing alone"), true then and wrong now: 0295 puts it back (Lutan,
+  // 2026-10-31), because the assistant writes ten kinds of thing and every one asks assistant.record.
+  // Asking and acting are the one card on purpose; a separate card for acting is a later item.
   assistant: {
     includes: [],
     bundle: [
       { activity: "assistant.ask" },
+      { activity: "assistant.record" },
       { activity: "resident.who_and_where", level: "read" },
       { activity: "facility.enclosures", level: "read" },
     ],
