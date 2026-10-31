@@ -318,7 +318,7 @@ export function FolderView({
                     <TranslationPanel
                       key={summaryTranslation.id + summaryTranslation.updated_at}
                       row={summaryTranslation}
-                      canManage
+                      canManage={canManageTranslations}
                     />
                   )}
                   {canPublish && (

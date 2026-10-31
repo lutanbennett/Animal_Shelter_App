@@ -175,6 +175,9 @@ jobs:
       # Public hostnames (site-hosts.ts) and public pages (public-paths.ts) are each one list.
       - run: node scripts/check-site-hosts.mjs
       - run: node scripts/check-public-paths.mjs
+      # A permission prop is never JSX shorthand: a bare `canManage` is always true,
+      # which is how #1126's Settings → Website hole was written.
+      - run: node scripts/check-permission-props.mjs
       # deploy-pi.sh must run the script it just checked out, not the copy bash had open.
       - run: node scripts/pi/check-self-update.mjs
 

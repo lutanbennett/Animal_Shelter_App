@@ -146,7 +146,7 @@ export default async function EditClinicVisitPage(props: PageProps<"/clinic-visi
         <section className="flex max-w-2xl flex-col gap-2">
           <h2 className="text-lg font-semibold text-foreground">{t.bills.photo.title}</h2>
           <p className="text-xs text-muted">{t.bills.photo.hint}</p>
-          <BillPhotosSection kind="clinic_visit" ownerId={visit.id} photos={billPhotos} canAdd />
+          <BillPhotosSection kind="clinic_visit" ownerId={visit.id} photos={billPhotos} canAdd={showBills} />
         </section>
       )}
     </main>

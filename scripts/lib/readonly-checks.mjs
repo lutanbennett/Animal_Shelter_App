@@ -338,6 +338,99 @@ export const CHECKS = {
       ? rows.map((x) => `${x.table}: nobody can ${x.command}${x.dead.length ? ` (only dead policies: ${x.dead.join(", ")})` : " (no policy)"}`)
       : ["Every table with row security has a live policy for all four commands."],
   },
+  "translations-open": {
+    asks: "Management → Translations, as it reports itself: how many rows are MISSING (a label with no Thai on a list that is not optional, or a prose row nobody has approved) and how many are OUT OF DATE (the English changed after the translation was written), by group? Counts and group names only — no bio, no story, no name.",
+    // The page builds this from label_translations() and the translation queue (src/app/management/translations/TranslationQueue.tsx):
+    // missing = labels with status 'missing' + prose rows whose status is 'pending' or 'draft' (a machine draft is not written by a
+    // person); stale = labels with status 'stale' + prose rows whose status is 'stale'. "Shown as typed" is a deliberate answer and
+    // is counted apart, never as missing.
+    //
+    // label_translations() itself cannot be called here: it is security definer and returns nothing to a session holding no
+    // translations permission, which is every session this harness opens. So the registered label pairs are read directly, one
+    // UNION arm each, and `uncovered` names any pair in translatable_labels this list has not been taught — so a label registered
+    // by a later migration shows up as a gap in the CHECK rather than as a silently missing count.
+    // If the database is behind on migrations the query stops with "could not run" naming the table it could not find; that is the
+    // same finding said another way (`node scripts/apply-migrations.mjs --status --env production`).
+    sql: `with arm(table_name, column_name, row_id, en, th) as (
+        select 'blood_test_types', 'name', id::text, name, nullif(btrim(name_th), '') from blood_test_types
+        union all select 'clinics', 'name', id::text, name, nullif(btrim(name_th), '') from clinics
+        union all select 'diet_types', 'name', id::text, name, nullif(btrim(name_th), '') from diet_types
+        union all select 'enclosures', 'name', id::text, name, nullif(btrim(name_th), '') from enclosures
+        union all select 'fixed_outgoings', 'label', id::text, label, nullif(btrim(label_th), '') from fixed_outgoings
+        union all select 'frequency', 'label', id::text, label, nullif(btrim(label_th), '') from frequency
+        union all select 'immunization_types', 'name', id::text, name, nullif(btrim(name_th), '') from immunization_types
+        union all select 'impact_baselines', 'label', id::text, label, nullif(btrim(label_th), '') from impact_baselines
+        union all select 'item_unit_conversions', 'unit', id::text, unit, nullif(btrim(unit_th), '') from item_unit_conversions
+        union all select 'map_rooms', 'name', id::text, name, nullif(btrim(name_th), '') from map_rooms
+        union all select 'medication', 'name', id::text, name, nullif(btrim(name_th), '') from medication
+        union all select 'procedure_types', 'name', id::text, name, nullif(btrim(name_th), '') from procedure_types
+        union all select 'project_folders', 'name', id::text, name, nullif(btrim(name_th), '') from project_folders
+        union all select 'residents', 'breed', id::text, breed, nullif(btrim(breed_th), '') from residents
+        union all select 'residents', 'colour', id::text, colour, nullif(btrim(colour_th), '') from residents
+        union all select 'roles', 'name', id::text, name, nullif(btrim(name_th), '') from roles
+        union all select 'site_content', 'hero_alt', id::text, hero_alt, nullif(btrim(hero_alt_th), '') from site_content
+        union all select 'site_content', 'tagline', id::text, tagline, nullif(btrim(tagline_th), '') from site_content
+        union all select 'site_content', 'visiting_hours', id::text, visiting_hours, nullif(btrim(visiting_hours_th), '') from site_content
+        union all select 'site_content_photos', 'alt', id::text, alt, nullif(btrim(alt_th), '') from site_content_photos
+        union all select 'zones', 'name', id::text, name, nullif(btrim(name_th), '') from zones),
+      label_state as (
+        select l.label_group as grp,
+               case when a.th is null then case when l.optional then 'as_typed' else 'missing' end
+                    when s.source_text is distinct from a.en then 'stale' else 'current' end as state
+          from arm a
+          join translatable_labels l on l.table_name = a.table_name and l.column_name = a.column_name
+          left join label_sources s on s.table_name = a.table_name and s.row_id = a.row_id and s.column_name = a.column_name
+         where nullif(btrim(a.en), '') is not null),
+      prose_state as (
+        select t.table_name as grp, case when t.status in ('pending', 'draft') then 'missing'
+                                         when t.status = 'stale' then 'stale' else 'current' end as state
+          from translation_queue t)
+      select json_build_object(
+        'labels', json_build_object(
+          'missing', (select count(*) from label_state where state = 'missing'),
+          'stale', (select count(*) from label_state where state = 'stale'),
+          'as_typed', (select count(*) from label_state where state = 'as_typed'),
+          'by_group', (select coalesce(json_agg(json_build_object('group', g.grp, 'missing', g.m, 'stale', g.s) order by g.grp), '[]'::json)
+             from (select grp, count(*) filter (where state = 'missing') as m, count(*) filter (where state = 'stale') as s
+                     from label_state group by grp having count(*) filter (where state in ('missing', 'stale')) > 0) g)),
+        'prose', json_build_object(
+          'missing', (select count(*) from prose_state where state = 'missing'),
+          'stale', (select count(*) from prose_state where state = 'stale'),
+          'by_table', (select coalesce(json_agg(json_build_object('table', p.grp, 'missing', p.m, 'stale', p.s) order by p.grp), '[]'::json)
+             from (select grp, count(*) filter (where state = 'missing') as m, count(*) filter (where state = 'stale') as s
+                     from prose_state group by grp having count(*) filter (where state in ('missing', 'stale')) > 0) p)),
+        'uncovered', (select coalesce(json_agg(l.table_name || '.' || l.column_name order by l.table_name, l.column_name), '[]'::json)
+           from translatable_labels l
+          where not exists (select 1 from arm a where a.table_name = l.table_name and a.column_name = l.column_name)))`,
+    render: (r) => {
+      const missing = r.labels.missing + r.prose.missing;
+      const stale = r.labels.stale + r.prose.stale;
+      return [
+        `${missing} missing, ${stale} out of date (${r.labels.missing}/${r.labels.stale} labels, ${r.prose.missing}/${r.prose.stale} prose); ${r.labels.as_typed} labels are shown as typed on purpose.`,
+        ...r.labels.by_group.map((g) => `   label ${g.group}: ${g.missing} missing, ${g.stale} out of date`),
+        ...r.prose.by_table.map((p) => `   prose ${p.table}: ${p.missing} missing, ${p.stale} out of date`),
+        r.uncovered.length
+          ? `NOT COUNTED — ${r.uncovered.length} registered label(s) this check has not been taught: ${r.uncovered.join(", ")}. Add an arm for each.`
+          : "Every registered label pair is counted.",
+      ];
+    },
+    // Flags only the blind spot. A backlog of untranslated wording is the shelter's to work through, not a fault.
+    failed: (r) => r.uncovered.length > 0,
+  },
+  "translations-unlisted": {
+    asks: "Which Thai columns does the database hold that Management → Translations never lists? (A `_th` column on a base table with no row in translatable_labels.) Column names only.",
+    // Every table added since 0166 that carries its Thai in a paired column had to be registered by hand, and several were not, so
+    // their wording is invisible to the one screen that exists for translating. Names the columns; deciding which are deliberate
+    // (a seeded vocabulary whose Thai ships with it) is a person's job.
+    sql: `select coalesce(json_agg(c.table_name || '.' || c.column_name order by c.table_name, c.column_name), '[]'::json)
+      from information_schema.columns c
+      join information_schema.tables t on t.table_schema = c.table_schema and t.table_name = c.table_name and t.table_type = 'BASE TABLE'
+     where c.table_schema = 'public' and c.column_name like '%\\_th'
+       and not exists (select 1 from translatable_labels l where l.table_name = c.table_name and l.th_column = c.column_name)`,
+    render: (rows) => rows.length
+      ? [`${rows.length} Thai column(s) no one can reach from Translations:`, ...rows.map((x) => `   ${x}`)]
+      : ["Every Thai column on a base table is registered on Translations."],
+  },
   "assistant-could-not-help": {
     asks: "What has the assistant failed to answer? Counts of the 'unmatched' (no parser placed the sentence) and 'refused' rows it keeps for 90 days, and the newest 25 with id, date, status and what was typed. Names no login and no resident; the typed text is exactly as typed. Informational: it flags nothing.",
     // Reads assistant_actions (0070), the rows Settings -> Assistant log lists. The retention rule (0227) keeps these two statuses 90 days.

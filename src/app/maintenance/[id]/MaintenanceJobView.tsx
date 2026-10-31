@@ -161,7 +161,7 @@ export function MaintenanceJobView({
           <TranslationPanel
             key={titleTranslation.id + titleTranslation.updated_at}
             row={titleTranslation}
-            canManage
+            canManage={canManageTranslations}
           />
         )}
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted">
@@ -278,7 +278,7 @@ export function MaintenanceJobView({
             disabled={isPending}
             onRemove={removeAttachment}
           />
-          {canBills && <MaintenanceBills jobId={job.id} bills={bills} cost={cost} />}
+          {canBills && <MaintenanceBills jobId={job.id} bills={bills} cost={cost} canBills={canBills} />}
         </div>
 
         <aside className="flex flex-col gap-4">
@@ -305,7 +305,7 @@ export function MaintenanceJobView({
               <TranslationPanel
                 key={descriptionTranslation.id + descriptionTranslation.updated_at}
                 row={descriptionTranslation}
-                canManage
+                canManage={canManageTranslations}
               />
             )}
           </div>
