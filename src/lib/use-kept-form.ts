@@ -32,10 +32,18 @@ function isRefusal(state: unknown): boolean {
  *   <form onSubmit={onSubmit}> …
  *
  * Use it for every form that submits a Server Action; never `action={…}`.
+ * For a form whose action goes through runWriteAction(), use useWriteForm()
+ * (src/lib/use-write-form.ts), which is this plus a request id and a limit on
+ * how long the browser waits.
+ *
+ * `extraFields` is read on every submit and appended to the FormData before
+ * the action sees it. That is how the write request id reaches a Server
+ * Action: React makes the POST itself, so the app cannot add a header to it.
  */
 export function useKeptForm<State, Payload extends FormData = FormData>(
   action: (state: Awaited<State>, payload: Payload) => State | Promise<State>,
   initialState: Awaited<State>,
+  extraFields?: () => Record<string, string>,
 ) {
   const formRef = useRef<HTMLFormElement | null>(null);
   const [state, dispatch, pending] = useActionState(
@@ -60,6 +68,7 @@ export function useKeptForm<State, Payload extends FormData = FormData>(
         ? submitter
         : undefined,
     ) as Payload;
+    for (const [k, v] of Object.entries(extraFields?.() ?? {})) data.set(k, v);
     startTransition(() => dispatch(data));
   }
 

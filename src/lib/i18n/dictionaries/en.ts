@@ -44,6 +44,15 @@ const en = {
     alreadyExists: "That already exists.",
     notAllowed: "You don't have permission to do that.",
     notAccepted: "The database didn't accept those values. Check the form and try again.",
+    // Pi failover (C): a save whose claim committed with no result, so nobody
+    // can say whether it happened (src/lib/action-result.ts runWriteAction, and
+    // the browser giving up after WRITE_WAIT_MS). Pressing Save again is safe:
+    // the same request id comes back with the first attempt's own answer.
+    saveUnknown:
+      "We couldn't tell whether that saved. Press Save again to find out — it will not be saved twice.",
+    // The browser sent no write request id, so this page is running an older
+    // version of the app and a reload fixes it.
+    reloadToSave: "This page needs reloading before it can save. Reload it and try again.",
     // Any Drive call whose token or client is dead (drive-errors.ts).
     driveNotConnected: "Photo storage is not connected — tell an admin.",
     driveFailed: "Google Drive didn't accept that. Try again in a minute.",

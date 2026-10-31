@@ -28,13 +28,18 @@
 //      requests without it) and the response streamed back. ~2 ms of CPU.
 //      Tunnel down (530), app down behind the tunnel (502) or a gateway
 //      timeout → step 3, for a GET/HEAD/OPTIONS, as is one that gets no
-//      answer at all within ORIGIN_TIMEOUT_MS. A POST goes to step 3 only
-//      on the 530: the edge found no tunnel to hand it to, so it never
-//      reached the Pi, and sign-in and saving keep working with the Pi off
-//      the network (2026-10-02). On anything else it is NOT retried — the
-//      Pi may have already recorded the intake, and a second copy is worse
-//      than an error the user can see — it is answered with a 503
-//      (worker/origin.mjs).
+//      answer at all within ORIGIN_TIMEOUT_MS. A POST goes to step 3 in two
+//      cases. One: the 530, where the edge found no tunnel to hand it to, so
+//      it never reached the Pi, and sign-in and saving keep working with the
+//      Pi off the network (2026-10-02). Two, since (C) of the Pi failover
+//      programme: its path is on WRAPPED_WRITE_PATHS
+//      (src/lib/write-requests.ts), where every write carries a request id
+//      the database refuses a second time (0292), so replaying a write the
+//      Pi already applied comes back as that first write's own answer. Such
+//      a write is time-bounded like a read, too. On any other path a failed
+//      write is still NOT retried — the Pi may have already recorded the
+//      intake, and a second copy is worse than an error the user can see —
+//      it is answered with a 503 (worker/origin.mjs).
 //
 //   3. Itself: the OpenNext handler that has served the site so far, at
 //      full CPU cost. With ORIGIN_HOST unset this is the only step, and the

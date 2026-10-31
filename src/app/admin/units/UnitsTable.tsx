@@ -6,6 +6,7 @@ import { useConfirm } from "@/components/ConfirmProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { UnitRow } from "@/lib/unit-list";
+import { useWriteCall } from "@/lib/use-write-form";
 import { setUnitArchived, updateUnit } from "./actions";
 
 export type UnitTableRow = UnitRow & { ingredientCount: number; medicineCount: number };
@@ -24,6 +25,11 @@ function UnitRowItem({ unit }: { unit: UnitTableRow }) {
   const [forMedicines, setForMedicines] = useState(unit.forMedicines);
   const [message, setMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  // ONE useWriteCall PER ACTION, never shared: a request id kept from an unknown
+  // Save and then sent to Archive is the same id against a different action,
+  // which the database refuses outright (0292).
+  const writeSave = useWriteCall();
+  const writeArchive = useWriteCall();
 
   const tag = unit.forIngredients && unit.forMedicines ? s.tags.both : unit.forIngredients ? s.tags.ingredients : s.tags.medicines;
 
@@ -39,7 +45,7 @@ function UnitRowItem({ unit }: { unit: UnitTableRow }) {
   function save() {
     setMessage(null);
     startTransition(async () => {
-      const result = await updateUnit(unit.id, { name, nameTh, forIngredients, forMedicines });
+      const result = await writeSave((requestId) => updateUnit(unit.id, requestId, { name, nameTh, forIngredients, forMedicines }));
       if (!result.ok) {
         setMessage(result.error);
         return;
@@ -54,7 +60,7 @@ function UnitRowItem({ unit }: { unit: UnitTableRow }) {
     if (!unit.archived && !inUse && !(await confirm({ body: s.archiveConfirm(unit.name) }))) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await setUnitArchived(unit.id, !unit.archived);
+      const result = await writeArchive((requestId) => setUnitArchived(unit.id, requestId, !unit.archived));
       if (!result.ok) setMessage(result.error);
     });
   }

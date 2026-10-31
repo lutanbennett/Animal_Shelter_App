@@ -20,6 +20,7 @@
  */
 import http from "node:http";
 import { fetchFromOrigin, originOrLocal, ORIGIN_DOWN_STATUSES, NEVER_ARRIVED_STATUSES } from "../worker/origin.mjs";
+import { exitWith } from "./lib/exit.mjs";
 
 const env = { ORIGIN_HOST: "origin.test", ORIGIN_KEY: "k" };
 const realFetch = globalThis.fetch;
@@ -192,6 +193,102 @@ async function through(host, method, extraEnv = {}) {
   await down.close();
 }
 
+// ── Part 2b: PI FAILOVER (C), the wrapped-write replay rule ─────────────────
+// A write whose path is on WRAPPED_WRITE_PATHS carries a request id the
+// database refuses a second time (0292), so replaying it here cannot apply it
+// twice. That is what turns the "power cut, first seconds" and "Pi up but
+// sick" rows of the failover table from refused into served. A path NOT on
+// the list must behave exactly as it did before, which the cases above pin.
+{
+  const { isWrappedWritePath, WRAPPED_WRITE_PATHS, ORIGIN_ATTEMPT_MS } = await import("../src/lib/write-requests.ts");
+  check("the wrapped-write list is not empty", WRAPPED_WRITE_PATHS.length > 0);
+  check("/admin/units is wrapped", isWrappedWritePath("/admin/units"));
+  check("a near miss is not wrapped", !isWrappedWritePath("/admin/unitsx") && !isWrappedWritePath("/admin") && !isWrappedWritePath("/residents/new"));
+  check("the Worker default and the browser wait agree on the Pi attempt", ORIGIN_ATTEMPT_MS === 20_000, `got ${ORIGIN_ATTEMPT_MS}`);
+
+  // With the list empty every case below would post to an UNWRAPPED path, and
+  // an unwrapped write is deliberately given no timeout, so the harness would
+  // hang rather than report. The failure above is the finding; stop here.
+  const wrapped = WRAPPED_WRITE_PATHS[0];
+  if (!wrapped) {
+    console.error("WRAPPED_WRITE_PATHS is empty; the replay-rule cases cannot run");
+    await exitWith(1);
+  } else {
+    /** One write to a wrapped path through originOrLocal. */
+    const wroteThrough = async (host, extraEnv = {}) => {
+      const rendered = [];
+      const { response, servedBy } = await originOrLocal(
+        new Request(`http://lannacare.test${wrapped}`, { method: "POST", body: "name=Cooper" }),
+        { ORIGIN_HOST: host, ORIGIN_KEY: "k", ...extraEnv },
+        async (forLocal) => { rendered.push(await forLocal.text()); return new Response("rendered locally", { status: 200 }); },
+      );
+      return { response, servedBy, rendered };
+    };
+
+    {
+      // The "Pi up but sick" row: cloudflared answers for a Pi that may already
+      // have written. Before (C) this was refused; now it is served.
+      const o = await origin((_req, res) => res.writeHead(504).end("gateway timeout"));
+      const post = await wroteThrough(o.host);
+      check("wrapped POST, origin answers 504: rendered locally with its body",
+        post.servedBy === "worker" && post.response.status === 200 && post.rendered[0] === "name=Cooper",
+        JSON.stringify({ by: post.servedBy, status: post.response.status, rendered: post.rendered }));
+      await o.close();
+    }
+    {
+      // The "power cut, first seconds" row: the connection dies after the write
+      // was read. The Pi may have applied it; the request id makes that safe.
+      const o = await origin((req) => req.socket.destroy());
+      const post = await wroteThrough(o.host);
+      check("wrapped POST, origin takes the write then drops the connection: rendered locally",
+        post.servedBy === "worker" && post.rendered.length === 1, JSON.stringify({ by: post.servedBy, rendered: post.rendered.length }));
+      check("  …and the write really had arrived at the Pi as well", o.seen.length === 1 && o.seen[0].body === "name=Cooper", JSON.stringify(o.seen));
+      await o.close();
+    }
+    {
+      // The wedge drill: the Pi accepts and never answers. An unwrapped write
+      // has no signal at all here (checked below); a wrapped one is bounded.
+      const o = await origin(() => {});
+      const post = await wroteThrough(o.host, { ORIGIN_TIMEOUT_MS: "300" });
+      check("wrapped POST, origin accepts and never answers: rendered locally after ORIGIN_TIMEOUT_MS",
+        post.servedBy === "worker" && post.rendered[0] === "name=Cooper", JSON.stringify({ by: post.servedBy, rendered: post.rendered }));
+      await o.close();
+    }
+    {
+      // And the other half of that, which must NOT be "tidied" to match: an
+      // unwrapped write is given no timeout, because it has nowhere to go when
+      // the time is up. If this ever fails, read worker/origin.mjs before
+      // changing it — a bounded unwrapped write would answer 503 while the Pi
+      // is still writing.
+      const o = await origin(() => {});
+      const race = await Promise.race([
+        through(o.host, "POST", { ORIGIN_TIMEOUT_MS: "300" }).then(() => "answered"),
+        new Promise((r) => setTimeout(() => r("still waiting"), 1200)),
+      ]);
+      check("unwrapped POST, origin accepts and never answers: still waiting well past ORIGIN_TIMEOUT_MS", race === "still waiting", race);
+      await o.close();
+    }
+    {
+      const o = await origin((_req, res) => res.writeHead(303, { location: "/admin/units" }).end());
+      const post = await wroteThrough(o.host);
+      check("wrapped POST, the Pi answers: passed through, never rendered locally",
+        post.response.status === 303 && post.servedBy === "pi" && post.rendered.length === 0,
+        JSON.stringify({ status: post.response.status, by: post.servedBy, rendered: post.rendered.length }));
+      await o.close();
+    }
+    {
+      const o = await origin((_req, res) => res.writeHead(504).end("gateway timeout"));
+      const get = await originOrLocal(
+        new Request(`http://lannacare.test${wrapped}`, { method: "GET" }),
+        { ORIGIN_HOST: o.host, ORIGIN_KEY: "k" },
+        async () => new Response("rendered locally", { status: 200 }),
+      );
+      check("wrapped GET, origin answers 504: rendered locally, as every GET always has", get.servedBy === "worker");
+      await o.close();
+    }
+  }
+}
+
 // ── Part 3: the Pi's own check (src/lib/origin-key.ts) ──────────────────────
 // Fail-open gate: nothing on a screen shows it broken, so it is pinned here.
 {
@@ -216,6 +313,9 @@ async function through(host, method, extraEnv = {}) {
 globalThis.fetch = realFetch;
 if (failures) {
   console.error(`${failures} case(s) wrong`);
-  process.exit(1);
+} else {
+  console.log("all cases ok");
 }
-console.log("all cases ok");
+// Part 2 makes real fetches, so the exit goes through the shared helper
+// (docs/decisions/2026-10-16-shared-exit-helper.md).
+await exitWith(failures ? 1 : 0);

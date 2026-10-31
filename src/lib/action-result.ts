@@ -78,3 +78,141 @@ export async function runAction<R extends object>(
     return unexpectedFailure(where, error, message);
   }
 }
+
+/**
+ * Pi failover (C): the shared wrapper a write goes through so that replaying
+ * it on the Worker cannot apply it twice.
+ *
+ * READ THIS BEFORE TRUSTING IT. The schema paper
+ * (docs/decisions/2026-10-31-write-requests-schema.md, requirement 1) asks
+ * that each write reach the database as ONE statement or RPC that claims,
+ * writes and finishes. A wrapper AROUND an arbitrary `body` CANNOT do that:
+ * `body` is ordinary JavaScript making its own PostgREST calls, each of which
+ * is its own transaction, and supabase-js offers no transaction handle. So
+ * this wrapper does NOT give the one-transaction guarantee, and it does not
+ * pretend to. docs/decisions/2026-10-31-write-request-wrapper.md sets out what
+ * it gives instead, what it costs, and what (D) must do per path to recover
+ * the guarantee. The short version:
+ *
+ *   - It can never apply a write twice, and can never report a replay as a
+ *     fresh success. Those are the two failures that matter.
+ *   - What it loses is availability, not correctness: a process that dies
+ *     between the claim and the write leaves a claim with no result, and the
+ *     retry is then told "we cannot tell" although it was in fact free.
+ *
+ * The three answers claim_write_request() gives are all handled here, and
+ * `in_flight` is a refusal in the person's words -- never a success, and never
+ * a licence to write again.
+ */
+
+/** Just enough of a Supabase client to reach the two database functions. */
+export type WriteRequestRpc = {
+  rpc(
+    fn: string,
+    args: Record<string, unknown>,
+  ): PromiseLike<{ data: unknown; error: { message: string; code?: string } | null }>;
+};
+
+/** The words runWriteAction() needs, from the dictionary's `common`. */
+export type WriteMessages = {
+  somethingWentWrong: (ref: string) => string;
+  /** The claim committed with no result: the save may or may not have happened. */
+  saveUnknown: string;
+  /** The browser sent no usable request id, so this page's JavaScript is stale. */
+  reloadToSave: string;
+};
+
+type ClaimAnswer =
+  | { status: "claimed" }
+  | { status: "replay"; action?: string; result?: unknown }
+  | { status: "in_flight"; action?: string };
+
+function claimAnswer(data: unknown): ClaimAnswer | null {
+  if (typeof data !== "object" || data === null) return null;
+  const status = (data as { status?: unknown }).status;
+  return status === "claimed" || status === "replay" || status === "in_flight" ? (data as ClaimAnswer) : null;
+}
+
+/**
+ * Run a write once, however many times it is sent.
+ *
+ * `request.id` is the browser's own v4 id for this save attempt
+ * (src/lib/write-requests.ts). `request.action` is the write path's name, and
+ * is recorded so that the same id arriving against a DIFFERENT action is
+ * refused by the database rather than answered with the other path's result.
+ * `request.db` is the caller's own Supabase client, so the claim, the write
+ * and the finish all run as the same signed-in login.
+ *
+ * Call it instead of runAction() for a write, and put the page's address on
+ * WRAPPED_WRITE_PATHS only once EVERY write that page hosts calls it.
+ */
+export async function runWriteAction<R extends object>(
+  where: string,
+  messages: WriteMessages,
+  request: { id: string | null; action: string; db: WriteRequestRpc },
+  body: () => Promise<ActionResult<R>>,
+): Promise<ActionResult<R>> {
+  const { id, action, db } = request;
+
+  // No id means this browser is running JavaScript from before the sweep, and
+  // the page's address may already be on WRAPPED_WRITE_PATHS -- so proceeding
+  // would let the Worker replay a write that was never claimed. Refusing is
+  // the fail-closed answer and a reload fixes it.
+  if (!id) {
+    console.error(`[${where}] refused: no write request id`);
+    return { ok: false, error: messages.reloadToSave };
+  }
+
+  let claimed;
+  try {
+    claimed = await db.rpc("claim_write_request", { p_request_id: id, p_action: action });
+  } catch (error) {
+    unstable_rethrow(error);
+    return unexpectedFailure(`${where} claim`, error, messages.somethingWentWrong);
+  }
+  if (claimed.error) {
+    // Nothing was written: the claim is the first thing that happens. A 22023
+    // here is the same id against another action, which is a bug in the caller
+    // (schema paper, requirement 4) and must not be retried.
+    return unexpectedFailure(`${where} claim`, claimed.error, messages.somethingWentWrong);
+  }
+  const answer = claimAnswer(claimed.data);
+  if (!answer) {
+    return unexpectedFailure(`${where} claim`, new Error(`unrecognised claim answer ${JSON.stringify(claimed.data)}`), messages.somethingWentWrong);
+  }
+  if (answer.status === "replay") {
+    // The first attempt finished. Hand back exactly what it answered -- the
+    // database stored the action's own result, so this is the same object the
+    // first caller got, refusal included.
+    return answer.result as ActionResult<R>;
+  }
+  if (answer.status === "in_flight") {
+    // A claim that committed without a result. We do not know whether the
+    // write landed, so the person is told to check. NEVER a success here.
+    console.error(`[${where}] write request ${id} is in flight: claimed with no result`);
+    return { ok: false, error: messages.saveUnknown };
+  }
+
+  let result: ActionResult<R>;
+  try {
+    result = await body();
+  } catch (error) {
+    unstable_rethrow(error);
+    // The claim is deliberately LEFT OPEN. A throw cannot tell "the write
+    // never happened" from "it happened and the answer was lost", so the next
+    // attempt must read in_flight and say it cannot tell, rather than write
+    // again. This is the availability cost named at the top of this block.
+    return unexpectedFailure(where, error, messages.somethingWentWrong);
+  }
+
+  // The body decided, so the answer is deterministic and worth storing --
+  // including a refusal, so a replay of a refused save is refused the same way
+  // instead of being tried afresh.
+  const finished = await db.rpc("finish_write_request", { p_request_id: id, p_result: result });
+  if (finished.error) {
+    // The write itself is done; saying otherwise would be a lie. The claim
+    // stays open, so a later attempt with this id reads in_flight.
+    console.error(`[${where}] finish_write_request failed for ${id}:`, finished.error);
+  }
+  return result;
+}
