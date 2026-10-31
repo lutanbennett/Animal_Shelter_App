@@ -1202,8 +1202,8 @@ export const ENTRIES = {
       activity: "Hide a public page, then show it again",
       needs: "website.content",
       device: "desktop",
-      do: "Open Settings → Website → Pages, press Hide beside Desexing drives, wait up to ten minutes, then open the public site signed out. Press Show to bring it back.",
-      expect: "The page is gone from the menu, the footer and the sitemap, and its address shows Not found. After Show it is all back. Home and Privacy have no switch.",
+      do: "Open Settings → Website → Pages, press Hide on the Desexing drives card, wait up to ten minutes, then open the public site signed out. Press Show to bring it back.",
+      expect: "The page is gone from the menu, the footer and the sitemap, and its address shows Not found. After Show it is all back. Home and Privacy are listed as always on, with no switch.",
     },
     {
       activity: "Check a hidden page before switching it on",
