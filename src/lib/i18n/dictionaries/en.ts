@@ -7146,6 +7146,7 @@ const en = {
     previousOriginal: "Original when this was translated",
     currentOriginal: "Original now",
     placeholder: (lang: string) => `Write the ${lang} version here…`,
+    lookPreview: (lang: string) => `How the ${lang} will look`,
     approve: "Save & approve",
     clear: "Remove translation",
     clearConfirm:

@@ -16,6 +16,7 @@ import {
   type Show,
   SHOWS,
 } from "@/lib/translations/labels";
+import { isPageBodyField } from "@/lib/site/body";
 import { fieldKey, type TranslationQueueRow, type TranslationRow, type TranslationStatus } from "@/lib/translations/types";
 import { saveLabelTranslation } from "./actions";
 
@@ -179,6 +180,7 @@ export function TranslationQueue({
                     recordPath={row.record_path}
                     defaultOpen={row.status !== "approved"}
                     onChange={onProseChange}
+                    pageBody={isPageBodyField(row)}
                   />
                 </li>
               ))}

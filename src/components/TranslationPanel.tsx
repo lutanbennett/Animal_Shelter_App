@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useRef, useState, useTransition, type CSSProperties } from "react";
 import { Languages, X } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
+import { BodyToolbar } from "@/components/BodyToolbar";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ACTION_ICONS } from "@/components/hub-icons";
+import { SiteBodyView } from "@/components/SiteBodyView";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { TranslationRow, TranslationStatus } from "@/lib/translations/types";
 import {
@@ -28,6 +30,11 @@ import {
  *    its status, under the original — or a note that there isn't one.
  * The caller renders the original itself; `showOriginal` adds it here,
  * which the queue page wants and the record pages don't.
+ *
+ * `pageBody` is for a website page's text (lib/site/body.ts's format): the
+ * original, the translation and a live preview of the typed translation are
+ * drawn as the public page draws them, and the editor gets the same style
+ * toolbar as the English. Off by default, so every other field stays plain.
  */
 export function TranslationPanel({
   row,
@@ -36,6 +43,7 @@ export function TranslationPanel({
   recordPath,
   defaultOpen = false,
   onChange,
+  pageBody = false,
 }: {
   row: TranslationRow;
   canManage: boolean;
@@ -46,6 +54,8 @@ export function TranslationPanel({
   defaultOpen?: boolean;
   /** Called with the saved row; the queue drops approved rows from its list. */
   onChange?: (row: TranslationRow) => void;
+  /** The field is a website page's text: styles and formatted previews (see above). */
+  pageBody?: boolean;
 }) {
   const { t, locale } = useI18n();
   const [current, setCurrent] = useState(row);
@@ -54,6 +64,8 @@ export function TranslationPanel({
   const [error, setError] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const textRef = useRef<HTMLTextAreaElement>(null);
+  const textId = useId();
 
   const tr = t.translations;
   const targetName = tr.language[current.target_lang];
@@ -68,6 +80,18 @@ export function TranslationPanel({
   // the page, and whether one is still owed is a manager's concern.
   // A machine draft is the managers' to check; nobody else is shown it as if it were settled.
   if (!canManage && (!readsTranslation || !current.text || isMachineDraft)) return null;
+
+  // A page's text as the public page draws it (styles, headings, lists), anything else as typed.
+  const prose = (value: string, lang: string, className = "") =>
+    pageBody ? (
+      <div lang={lang} style={SITE_LOOK} className={`rounded bg-site-cream px-3 py-2 [&_h3]:font-display ${className}`}>
+        <SiteBodyView body={value} size="lg" newTabLabel={t.common.opensInNewTab} />
+      </div>
+    ) : (
+      <p lang={lang} className={`whitespace-pre-line text-foreground ${className}`}>
+        {value}
+      </p>
+    );
 
   function save() {
     setError(null);
@@ -126,7 +150,7 @@ export function TranslationPanel({
       {showOriginal && (
         <div className="flex flex-col gap-1">
           <span className="text-xs text-muted">{tr.original(sourceName)}</span>
-          <p className="whitespace-pre-line text-foreground">{current.source_text}</p>
+          {prose(current.source_text, current.source_lang)}
         </div>
       )}
 
@@ -134,14 +158,12 @@ export function TranslationPanel({
         <div className="grid gap-2 rounded border border-warning/40 bg-warning/10 p-2 text-xs sm:grid-cols-2">
           <div>
             <span className="font-medium text-muted">{tr.previousOriginal}</span>
-            <p className="mt-0.5 whitespace-pre-line text-foreground">
-              {current.reviewed_source_text}
-            </p>
+            {prose(current.reviewed_source_text, current.source_lang, "mt-0.5")}
           </div>
           {!showOriginal && (
             <div>
               <span className="font-medium text-muted">{tr.currentOriginal}</span>
-              <p className="mt-0.5 whitespace-pre-line text-foreground">{current.source_text}</p>
+              {prose(current.source_text, current.source_lang, "mt-0.5")}
             </div>
           )}
         </div>
@@ -155,17 +177,46 @@ export function TranslationPanel({
             save();
           }}
         >
-          <label className="flex flex-col gap-1 text-xs font-medium text-muted">
-            {tr.translationInto(targetName)}
+          <div className="flex flex-col gap-1">
+            <label htmlFor={textId} className="text-xs font-medium text-muted">
+              {tr.translationInto(targetName)}
+            </label>
+            {/* Drawn only in the editor, which only canManage opens: the same check approveTranslation asks. */}
+            {pageBody && canManage && (
+              <>
+                <p className="text-xs text-muted">{t.admin.website.pages.marks.hint}</p>
+                <BodyToolbar target={textRef} />
+              </>
+            )}
             <textarea
+              id={textId}
+              ref={textRef}
               value={text}
               onChange={(e) => setText(e.target.value)}
-              rows={Math.min(8, Math.max(3, Math.ceil(current.source_text.length / 70)))}
+              rows={
+                pageBody
+                  ? Math.min(20, Math.max(6, text.split("\n").length + 2))
+                  : Math.min(8, Math.max(3, Math.ceil(current.source_text.length / 70)))
+              }
               placeholder={tr.placeholder(targetName)}
               lang={current.target_lang}
               className="rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
             />
-          </label>
+          </div>
+          {pageBody && (
+            <div className={`grid gap-3 rounded border border-border bg-background p-3 ${showOriginal ? "" : "md:grid-cols-2"}`}>
+              {!showOriginal && (
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-muted">{tr.original(sourceName)}</span>
+                  {prose(current.source_text, current.source_lang)}
+                </div>
+              )}
+              <div className="flex flex-col gap-1">
+                <span className="text-xs font-medium text-muted">{tr.lookPreview(targetName)}</span>
+                {text.trim() ? prose(text, current.target_lang) : <p className="text-xs text-muted">{tr.noTranslation(targetName)}</p>}
+              </div>
+            </div>
+          )}
           {error && <p className="text-xs text-danger">{error}</p>}
           <div className="flex flex-wrap justify-end gap-2">
             {current.text && (
@@ -199,9 +250,7 @@ export function TranslationPanel({
           </div>
         </form>
       ) : current.text ? (
-        <p lang={current.target_lang} className="whitespace-pre-line text-foreground">
-          {current.text}
-        </p>
+        prose(current.text, current.target_lang)
       ) : (
         <p className="text-xs text-muted">{tr.noTranslation(targetName)}</p>
       )}
@@ -219,6 +268,18 @@ export function TranslationPanel({
     </div>
   );
 }
+
+/**
+ * The public site's page colours and fonts (globals.css, data-public-site),
+ * so a page text's colours read here as a visitor sees them, whatever theme
+ * the app is in: the site's dark ink would vanish on the app's dark background.
+ */
+const SITE_LOOK = {
+  "--foreground": "var(--site-ink)",
+  "--muted": "var(--site-ink-muted)",
+  colorScheme: "light",
+  fontFamily: "var(--font-source-sans), var(--font-thai), system-ui, sans-serif",
+} as CSSProperties;
 
 const CHIP: Record<TranslationStatus, string> = {
   pending: "border-border text-muted",

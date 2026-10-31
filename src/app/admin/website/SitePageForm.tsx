@@ -9,7 +9,7 @@ import { TranslationPanel } from "@/components/TranslationPanel";
 import type { SitePageSlug } from "@/lib/site/pages";
 import type { TranslationRow } from "@/lib/translations/types";
 import { updateSitePage } from "./actions";
-import { BodyToolbar } from "./BodyToolbar";
+import { BodyToolbar } from "@/components/BodyToolbar";
 import { SitePagePreview, type PagePreviewContext } from "./SitePagePreview";
 
 export type SitePageRow = {
@@ -122,6 +122,7 @@ export function SitePageForm({
             row={translations.body}
             canManage={canManageTranslations}
             recordPath="/admin/website"
+            pageBody
           />
         )}
       </div>

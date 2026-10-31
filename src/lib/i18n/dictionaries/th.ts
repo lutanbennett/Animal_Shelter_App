@@ -6923,6 +6923,7 @@ const th: Dictionary = {
     previousOriginal: "ต้นฉบับตอนที่แปล",
     currentOriginal: "ต้นฉบับปัจจุบัน",
     placeholder: (lang: string) => `เขียนฉบับภาษา${lang}ที่นี่…`,
+    lookPreview: (lang: string) => `ภาษา${lang}จะแสดงแบบนี้`,
     approve: "บันทึกและอนุมัติ",
     clear: "ลบคำแปล",
     clearConfirm:

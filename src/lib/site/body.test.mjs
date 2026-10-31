@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseBody, parseInline, stripMarks, bodyLead } from "./body.ts";
+import { parseBody, parseInline, stripMarks, bodyLead, isPageBodyField } from "./body.ts";
 
 test("text typed before inline marks existed is one plain run", () => {
   const t = "Plain words, with *stars*, (brackets) and <b>html</b>.";
@@ -37,4 +37,25 @@ test("block rules and lead are unchanged and the lead is free of tags", () => {
     { type: "paragraph", text: "P" },
   ]);
   assert.equal(bodyLead("{b}Hello{/b} world"), "Hello world");
+});
+
+test("only a page's text takes the style toolbar in its translation", () => {
+  assert.equal(isPageBodyField({ table_name: "site_pages", column_name: "body" }), true);
+  assert.equal(isPageBodyField({ table_name: "site_pages", column_name: "title" }), false);
+  assert.equal(isPageBodyField({ table_name: "residents", column_name: "bio" }), false);
+});
+
+test("Thai marks parse like the English, and unsafe Thai stays as typed", () => {
+  assert.deepEqual(parseInline("{b}สวัสดี{/b} {c:accent}{s:large}ครับ{/s}{/c}"), [
+    { type: "mark", tag: "b", arg: undefined, children: [{ type: "text", text: "สวัสดี" }] },
+    { type: "text", text: " " },
+    {
+      type: "mark",
+      tag: "c",
+      arg: "accent",
+      children: [{ type: "mark", tag: "s", arg: "large", children: [{ type: "text", text: "ครับ" }] }],
+    },
+  ]);
+  const unsafe = "<script>alert(1)</script> [ลิงก์](javascript:alert(1))";
+  assert.deepEqual(parseInline(unsafe), [{ type: "text", text: unsafe }]);
 });

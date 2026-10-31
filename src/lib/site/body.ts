@@ -45,6 +45,16 @@ export function parseBody(body: string | null | undefined): BodyBlock[] {
   return blocks;
 }
 
+/**
+ * Whether a translatable field is written in this format, so its translation
+ * gets the style toolbar and a formatted preview. Only a page's text is: every
+ * other translated field (bios, stories, labels, page headings) is shown as
+ * plain text.
+ */
+export function isPageBodyField(row: { table_name: string; column_name: string }): boolean {
+  return row.table_name === "site_pages" && row.column_name === "body";
+}
+
 /** The first paragraph, for cards and Open Graph descriptions. */
 export function bodyLead(body: string | null | undefined, maxLength = 200): string {
   const first = parseBody(body).find((b) => b.type === "paragraph");
