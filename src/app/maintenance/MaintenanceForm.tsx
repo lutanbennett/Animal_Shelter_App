@@ -13,6 +13,8 @@ import {
   useDeferredUploads,
   type PendingFile,
 } from "@/components/DeferredUploads";
+import { useWriteCall } from "@/lib/use-write-form";
+import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import type { EnclosureOption, ZoneOption } from "@/lib/enclosures/options";
@@ -72,6 +74,9 @@ export function MaintenanceForm({
   cancelHref: string;
 }) {
   const { t, locale } = useI18n();
+  // One per action (use-write-form.ts): a kept create id must never reach the update.
+  const createWrite = useWriteCall();
+  const updateWrite = useWriteCall();
   const f = t.maintenance.fields;
   const fm = t.maintenance.form;
   const router = useRouter();
@@ -230,8 +235,14 @@ export function MaintenanceForm({
     startTransition(async () => {
       const result =
         mode === "create"
-          ? await createMaintenanceJob(formData)
-          : await updateMaintenanceJob(formData);
+          ? await createWrite((id) => {
+              formData.set(WRITE_REQUEST_FIELD, id);
+              return createMaintenanceJob(formData);
+            })
+          : await updateWrite((id) => {
+              formData.set(WRITE_REQUEST_FIELD, id);
+              return updateMaintenanceJob(formData);
+            });
       if (!result.ok) {
         setError(result.error);
         return;

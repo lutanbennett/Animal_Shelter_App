@@ -3,10 +3,20 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { parseBahtAmount, todayIso } from "@/lib/format";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
+
+// PI FAILOVER (D), 2026-11-01: every write here goes through runWriteAction() (docs/decisions/2026-11-01-write-paths-tail-a.md).
+// A write added to this file goes through it too, or the page addresses it sits on can never be listed.
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 export type BillDetails = { amount: string; date: string; note: string };
 
@@ -26,10 +36,14 @@ function revalidate(jobId: string) {
  * Creates a bill on a job: the row first (the amount lives here), then the page uploads the photo
  * against its id. A bill needs an amount, because the job's actual cost is the sum of them.
  */
-export async function addJobBill(jobId: string, input: BillDetails): Promise<ActionResult<{ billId: string }>> {
+export async function addJobBill(jobId: string, input: BillDetails, requestId: string | null): Promise<ActionResult<{ billId: string }>> {
   const { t } = await getT();
   const e = t.maintenance.bills.errors;
-  return runAction<{ billId: string }>("maintenance.addJobBill", t.common.somethingWentWrong, async () => {
+  return runWriteAction<{ billId: string }>(
+    "maintenance.addJobBill",
+    write(t),
+    { id: requestId, action: "maintenance.addJobBill", db: await createClient() },
+    async () => {
     if (!(await mayBill())) return { ok: false, error: e.notAuthorized };
     const amount = parseBahtAmount(input.amount);
     if (!amount.ok || amount.value == null) return { ok: false, error: e.amountInvalid };
@@ -52,10 +66,14 @@ export async function addJobBill(jobId: string, input: BillDetails): Promise<Act
 }
 
 /** Removes a bill and its photo rows; the files stay in Drive's Bills folder, as for an inbox card. */
-export async function deleteJobBill(jobId: string, billId: string): Promise<ActionResult> {
+export async function deleteJobBill(jobId: string, billId: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.maintenance.bills.errors;
-  return runAction("maintenance.deleteJobBill", t.common.somethingWentWrong, async () => {
+  return runWriteAction(
+    "maintenance.deleteJobBill",
+    write(t),
+    { id: requestId, action: "maintenance.deleteJobBill", db: await createClient() },
+    async () => {
     if (!(await mayBill())) return { ok: false, error: e.notAuthorized };
     const supabase = await createClient();
     const { error: photoError } = await supabase

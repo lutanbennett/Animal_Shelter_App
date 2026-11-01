@@ -8,6 +8,7 @@ import { RowActionButton } from "@/components/RowAction";
 import { BillPhotosSection } from "@/components/BillPhotosSection";
 import { uploadAttachmentFile } from "@/components/AttachmentUploader";
 import { useConfirm } from "@/components/ConfirmProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatBahtExact, formatDate } from "@/lib/format";
 import type { JobBill, JobCost } from "@/lib/maintenance/bills";
@@ -34,6 +35,8 @@ export function MaintenanceBills({
   canBills: boolean;
 }) {
   const { t, locale } = useI18n();
+  const addWrite = useWriteCall();
+  const deleteWrite = useWriteCall();
   const b = t.maintenance.bills;
   const router = useRouter();
   const confirm = useConfirm();
@@ -49,7 +52,7 @@ export function MaintenanceBills({
   const save = () =>
     startTransition(async () => {
       setError(null);
-      const result = await addJobBill(jobId, { amount, date, note });
+      const result = await addWrite((id) => addJobBill(jobId, { amount, date, note }, id));
       if (!result.ok) {
         setError(result.error);
         return;
@@ -73,7 +76,7 @@ export function MaintenanceBills({
     if (!(await confirm({ body: b.deleteConfirm(formatBahtExact(bill.amount, locale)), confirmLabel: t.common.delete }))) return;
     startTransition(async () => {
       setError(null);
-      const result = await deleteJobBill(jobId, bill.id);
+      const result = await deleteWrite((id) => deleteJobBill(jobId, bill.id, id));
       if (!result.ok) setError(result.error);
       router.refresh();
     });
