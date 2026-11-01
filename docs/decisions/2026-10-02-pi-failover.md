@@ -26,6 +26,12 @@ can retry on the Worker) delivers. This supersedes the paper's own recommendatio
   is to be removed when the drills are finished.
 - Every service was restarted after its drill and `systemctl is-active` showed `cloudflared`, `lanna-care`,
   `lanna-care-test` all `active`.
+- **The fourth row was run differently, on 2026-11-01**, and the differences matter when the rows are
+  compared: **240 attempts, not 85**; the probe ran from the PC rather than the Pi, because the
+  temporary sudoers rule above was removed on 2026-10-29 and the probe can no longer stop services;
+  Lutan pulled the plug with no shutdown; and the probe carried a **write-request id per attempt**,
+  which did not exist in October. See "The power-pull row is NOT like-for-like" below. After it the
+  Pi was back with `cloudflared`, `lanna-care` and `lanna-care-test` all `active`.
 
 ## Results
 
@@ -34,9 +40,42 @@ can retry on the Worker) delivers. This supersedes the paper's own recommendatio
 | `cloudflared` stopped (stop issued 16:50:42) | **Falls back in about 1 s.** One write got a 503 `pi-timeout` (250 ms, did not land) at 16:50:43; from 16:50:44 the Worker answered every save (47 of 47 returned 200 and landed, 1.0–3.6 s each). Back on the Pi at 16:51:31, one second after the start. | 1 of 85 | 0 | none |
 | `lanna-care-test` stopped (16:52:26, the stop took 16 s to finish) | **Never falls back.** During the 16 s shutdown, saves alternated between landing and 503; from 16:52:27 to the restart at 16:53:27 every save was a 503 `pi-timeout` in 100–325 ms. | 53 of 85 | 0 | none |
 | app wedged (`SIGSTOP`, 16:54:03) | **No answer at all.** Every save hung to the probe's own 30 s limit and the edge sent nothing in that time. After `SIGCONT` (16:54:50) the Pi drained its queue and answered, some saves 20 s or more late. | 16 | **4**: they hit the 30 s timeout, then landed once the app resumed | none |
-| **power pulled** | **Pending: Lutan at the Pi.** Not run, nothing recorded. | | | |
+| **power pulled** (2026-11-01, Lutan at the Pi, no shutdown; 240 attempts, not 85) | **Covered for 11 s, then not at all for 44 s. Outage 55.6 s; from power back to serving again about 20 s.** The first failed save **had already been written** — the Pi wrote the row and died before answering. The Worker then covered **7 of 11 attempts over 11 s**. After that the Worker **stopped covering for 44 s**: every save a 503 in 250–370 ms with **no `x-lanna-served-by` header at all**, which `worker/origin.mjs` always sets, so those replies did not come from our Worker and something at Cloudflare's edge answered before it ran. | 46 of 240 | **2**: they landed although the client saw a failure | **none** |
 
 Duplicates were checked by name: every attempt has a unique name and no name appears twice.
+
+### The power-pull row is NOT like-for-like with the other three. Read it on its own.
+
+The first three rows were measured on 2026-10-28, **before the write-request wrapper existed**
+(`runWriteAction()`, `docs/decisions/2026-10-31-write-request-wrapper.md`). The power-pull row was
+measured on 2026-11-01, after it. **The app changed between them, not just the instrument**, so the
+four rows are four different systems and reading them as a series gives a false answer — in
+particular, "zero duplicates" in this row is the wrapper doing its job, not a property of a power
+cut, and the earlier rows' zeros were measured when nothing was there to help.
+
+What the row does say, and it is the headline: **194 landed, 46 refused, 2 landed although the client
+saw a failure, and ZERO duplicates.** The write-request id did exactly the job option 1 exists for.
+
+Two faults came out of the drill, each with its own backlog item:
+
+- **The Worker's cover has a hole in the middle of an outage** (Architecture). It covered the first
+  11 s and then nothing for 44 s. That is the most important thing the drill found and it is not
+  fixed here.
+- **`scripts/pi/drill-probe.mjs` was dead and failed silently** (PI FAILOVER): it sent no
+  `__writeRequest`, and `runWriteAction` fails closed on a write with no request id, so every attempt
+  returned a clean-looking 200 while nothing landed. A six-second dry run against a healthy Pi gave
+  6 of 6 refused in exactly that shape. The row above was taken with a corrected copy that sends a
+  fresh uuid per attempt, as a real browser save does; the committed probe is fixed in the same PR
+  as this row. Unchanged across the pull it would have recorded "85 of 85 writes refused" as a fact
+  about power loss.
+
+### Timing caveat for this row, and for any outage post-mortem on this Pi
+
+**The Pi's real-time clock has no battery.** It boots believing it is 1970, restores a stale saved
+time, and is corrected by NTP only once the network is up. So **wall-clock stamps from the first
+seconds after a power cut are wrong**, and a reading taken from them is wrong in a way that looks
+tidy. The first reading of the 20 s figure was taken that way and had to be redone; the figure above
+comes from the journal's **monotonic** stamps, which no clock step can touch.
 
 **What these say.**
 - The one row that works today is the one the paper expected. A stopped tunnel is a 1-second refusal window, not a long one.
@@ -71,3 +110,6 @@ What that does and does not show:
   CPU ms for the three heaviest saves with `wrangler tail` (needs Lutan's login). If they fit under 10 ms, route every write
   to the Worker and skip the sweep. If any does not, build (B)–(D) as planned.
 - **Not covered by any of this:** the power-cut row, which still needs Lutan at the Pi.
+  **SUPERSEDED 2026-11-01: the power-cut row is run** (above), so no drill is waiting on Lutan. What
+  it added to the list of what is left is the Worker's 44-second hole, which is an Architecture item
+  of its own and is not part of (B), (C) or (D).
