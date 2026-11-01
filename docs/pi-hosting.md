@@ -544,8 +544,16 @@ The clone uses the first 64 GB of the 1.8 TB drive (`sda1`, `sda2`); the mirror 
 **encrypted** partition made from the free space. The clone half stays unencrypted on purpose
 (`docs/decisions/2026-10-02-spare-boot-drive-not-encrypted.md`).
 
-1. Make partition 3 from the free space (`sudo fdisk /dev/disk/by-id/usb-Seagate_BUP_Slim_BK_NA97757A-0:0`,
-   `n`, `p`, `3`, defaults, `w`), then `sudo partprobe`. This does not touch `sda1` or `sda2`.
+1. Make partition 3 from the free space. **Read the drive's own `by-id` path first** —
+   `ls -l /dev/disk/by-id/ | grep usb`, or `cat /etc/default/lanna-spare`, which records the drive
+   the clone actually uses — then `sudo fdisk /dev/disk/by-id/usb-<that one>`, `n`, `p`, `3`,
+   defaults, `w`, then `sudo partprobe`. This does not touch `sda1` or `sda2`.
+   **Why this step names no drive** (changed 2026-11-01): it used to carry one particular drive's
+   `by-id` string. That is wrong twice over. `fdisk` is destructive, and a hard-coded device in a
+   destructive command is a command that quietly points at the wrong disk the day the drive is
+   replaced — which is the same reason this section already says to mount **by UUID**, never
+   `/dev/sda`, and why steps 2 and 3 take `<that partition's by-id path>` rather than a literal. And
+   a `by-id` string carries the drive's serial number, which does not belong in a public repository.
 2. `sudo cryptsetup luksFormat <that partition's by-id path>` (choose a passphrase; store it with
    the backup key, not on the Pi), then `sudo cryptsetup open <path> lanna-mirror`,
    `sudo mkfs.ext4 -L lanna-mirror /dev/mapper/lanna-mirror`.
