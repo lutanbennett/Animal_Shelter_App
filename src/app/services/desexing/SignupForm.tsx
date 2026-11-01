@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { DRIVE_SPECIES, PET_SEXES, type SignupFields } from "@/lib/desexing/form";
+import { useWriteCall } from "@/lib/use-write-form";
 import { signUpForDrive } from "./actions";
 
 const inputClass =
@@ -21,6 +22,7 @@ export function SignupForm({ driveId, species }: { driveId: string; species: str
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const write = useWriteCall();
   const [fields, setFields] = useState<SignupFields>({
     driveId,
     ownerName: "",
@@ -58,7 +60,7 @@ export function SignupForm({ driveId, species }: { driveId: string; species: str
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const result = await signUpForDrive(fields);
+      const result = await write((requestId) => signUpForDrive(fields, requestId));
       if (!result.ok) return setError(result.error);
       setDone(true);
     });

@@ -150,11 +150,12 @@ test("only a v4 uuid counts as a request id", () => {
   assert.equal(writeRequestIdFrom(form), id);
 });
 
-test("the wrapped-write list matches real URLs, and holds the three unlisted addresses out", () => {
+test("the wrapped-write list matches real URLs, and holds the two unlisted addresses out", () => {
   assert.ok(isWrappedWritePath("/admin/units"));
   assert.ok(isWrappedWritePath("/residents/42/edit"));
   assert.ok(!isWrappedWritePath("/admin/unitsx"));
-  for (const held of ["/admin/security", "/admin/security/verify", "/services/desexing"]) assert.ok(!isWrappedWritePath(held));
+  for (const held of ["/admin/security", "/admin/security/verify"]) assert.ok(!isWrappedWritePath(held));
+  assert.ok(isWrappedWritePath("/services/desexing"));
 });
 
 test("Next's own control-flow throws pass straight through, redirect included", async () => {
