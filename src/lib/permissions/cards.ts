@@ -47,6 +47,7 @@ export type NewCardKey =
   | "my_tasks"
   | "who_does_what"
   | "translations"
+  | "propose_translations"
   | "food_forecast"
   | "medicine_forecast"
   | "view_cashflow"
@@ -296,7 +297,26 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // Lutan, 2026-10-27: "Management will also do translations so a card is required for this" (0271). Who holds it is assigned in Who does what.
   translations: {
     includes: [],
-    bundle: [{ activity: "translations.view" }, { activity: "translations.manage" }],
+    bundle: [
+      { activity: "translations.view" },
+      { activity: "translations.manage" },
+      // 0296 split proposing from approving. Without this line every holder of this card would press
+      // Save-as-proposal and have the database refuse it, which is the half-working card 0295 closed.
+      { activity: "translations.propose" },
+    ],
+    opens: "/management/translations",
+  },
+  // 0296: propose a Thai label and nothing else. This is the card the proposing path is for -- a session or
+  // the machine-translation caller -- and the point of it is what it does NOT grant: translations.manage, so
+  // a holder cannot approve a proposal, its own included. translations.view comes with it because proposing
+  // blind is not a usable card: label_translations() is what lists the labels to propose against.
+  // KNOWN GAP, recorded in docs/decisions/2026-11-01-translations-propose-schema.md: /management/translations
+  // is registered on translations.manage, so a holder of THIS card alone gets no tile and cannot open the
+  // screen. Closing it is routes.ts gaining alsoActivity: "translations.propose" and the page guarding with
+  // requireAnyPermission, which is the app half's job (that page is another stream's file this batch).
+  propose_translations: {
+    includes: [],
+    bundle: [{ activity: "translations.propose" }, { activity: "translations.view" }],
     opens: "/management/translations",
   },
   // Card review 2, his answers of 2026-10-28 (0280): three cards, each at READ, because the diet list, the medicine list and the cashflow
@@ -350,6 +370,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   my_tasks: (t) => t.appHome.cards.myTasks,
   who_does_what: (t) => t.appHome.cards.whoDoesWhat,
   translations: (t) => t.appHome.cards.translations,
+  propose_translations: (t) => t.appHome.cards.proposeTranslations,
   food_forecast: (t) => t.appHome.cards.foodForecast,
   medicine_forecast: (t) => t.appHome.cards.medicineForecast,
   view_cashflow: (t) => t.appHome.cards.viewCashflow,
