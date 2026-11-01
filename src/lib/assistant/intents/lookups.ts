@@ -64,12 +64,42 @@ export const dueIntent: IntentParser = {
 const SPACE_RE =
   /(?<![a-z])(space|spaces|room|free|empty|vacant|available)(?![a-z])|ว่าง|ที่ว่าง/i;
 
-/** "room for 2", "space for two dogs", "2 dogs". Nothing found reads as one. */
-function placesWanted(text: string): number | null {
-  const forN = text.match(/(?:for|สำหรับ)\s+(\d{1,2})(?![\d])/);
-  if (forN) return Number(forN[1]);
-  const nAnimals = text.match(/(\d{1,2})\s*(?:dogs?|cats?|animals?|residents?|ตัว)/);
-  return nAnimals ? Number(nAnimals[1]) : null;
+/** Numbers a shelter would say aloud, to twenty, in English and Thai; recognition only, never shown. */
+const NUMBER_WORDS: Record<string, number> = {
+  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+  eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16,
+  seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20,
+  หนึ่ง: 1, สอง: 2, สาม: 3, สี่: 4, ห้า: 5, หก: 6, เจ็ด: 7, แปด: 8, เก้า: 9, สิบ: 10,
+};
+const THAI_DIGITS = "๐๑๒๓๔๕๖๗๘๙";
+const QUANTITY = "\\d{1,2}|[" + THAI_DIGITS + "]{1,2}|" + Object.keys(NUMBER_WORDS).join("|");
+const ANIMAL = "(?:dogs?|cats?|animals?|residents?|ตัว)";
+const WANTED_RE = new RegExp(
+  "(?:(?:for|สำหรับ)\\s*(" + QUANTITY + ")(?![\\w\\d])|(" + QUANTITY + ")\\s*" + ANIMAL + ")",
+  "i",
+);
+/** A quantity that is plainly being asked for but that this parser cannot read. */
+const UNREADABLE_RE = new RegExp(
+  "(?:for|สำหรับ)\\s+(?:(?:a\\s+)?(?:few|couple|several|some|many|multiple|lots|bunch)|\\d{3,}|(?:thirty|forty|fifty|sixty|hundred)\\w*)(?:\\s+of)?\\s+" +
+    ANIMAL,
+  "i",
+);
+
+function readQuantity(token: string): number {
+  const thai = [...token].map((c) => THAI_DIGITS.indexOf(c));
+  if (thai.every((d) => d >= 0)) return Number(thai.join(""));
+  return /^\d+$/.test(token) ? Number(token) : NUMBER_WORDS[token.toLowerCase()];
+}
+
+/**
+ * "room for 2", "space for two dogs", "2 dogs". No quantity at all reads as one
+ * (null). A quantity that is there but cannot be read ("room for a few dogs") is
+ * "unreadable", so the question is declined rather than answered for one.
+ */
+function placesWanted(text: string): number | null | "unreadable" {
+  const m = text.match(WANTED_RE);
+  if (m) return readQuantity(m[1] ?? m[2]);
+  return UNREADABLE_RE.test(text) ? "unreadable" : null;
 }
 
 /**
@@ -88,8 +118,10 @@ export const findEnclosureIntent: IntentParser = {
     if (!SPACE_RE.test(text)) return null;
     const resident = matchResident(text, ctx.residents);
     if (resident.id || resident.candidates.length) return null;
+    const places = placesWanted(text);
+    if (places === "unreadable") return null;
     return {
-      draft: { kind: "find-enclosure", zoneId: matchZone(text, ctx).id, places: placesWanted(text) },
+      draft: { kind: "find-enclosure", zoneId: matchZone(text, ctx).id, places },
       residentCandidates: [],
     };
   },

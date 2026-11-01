@@ -34,6 +34,19 @@ test("'which enclosure has space' is the free-space question, with the zone and 
   assert.equal(parseRequest("where is there room for a new dog?", ctx).intent, "find-enclosure");
 });
 
+test("free-space: numbers in words, Thai numerals, and a quantity it cannot read", () => {
+  const places = (t) => parseRequest(t, ctx)?.draft.places;
+  assert.equal(places("is there room for two dogs in the cat zone?"), 2);
+  assert.equal(places("space for Three cats"), 3);
+  assert.equal(places("any room for twelve animals"), 12);
+  assert.equal(places("มีที่ว่างสำหรับสองตัวไหม"), 2);
+  assert.equal(places("ที่ว่างสำหรับ ๓ ตัว"), 3);
+  assert.equal(places("room for 2 dogs"), 2);
+  assert.equal(places("where is there room for a new dog?"), null);
+  // A quantity that is there but unreadable is declined, not answered for one.
+  assert.equal(parseRequest("is there room for a few dogs?", ctx), null);
+});
+
 test("a sentence that names a resident is not the free-space question", () => {
   // "where can I put Panda" is a move, and the move parser should have it.
   const parsed = parseRequest("where is there room for Panda?", ctx);
