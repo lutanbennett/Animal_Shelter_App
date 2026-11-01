@@ -5,6 +5,8 @@ import { ActionButton } from "@/components/ActionButton";
 import { startTransition, useActionState, useState, type FormEvent } from "react";
 import { changeOwnPassword, type ChangePasswordState } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
+import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
 import { localizedValidity } from "@/lib/i18n/validity";
 
 const inputClass =
@@ -27,10 +29,14 @@ export function ChangePasswordForm({
   const [current, setCurrent] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const save = useWriteCall();
   const [state, formAction, pending] = useActionState(
     async (prev: ChangePasswordState, formData: FormData) => {
-      const next = await changeOwnPassword(prev, formData);
-      if (next && "success" in next) {
+      const next = await save((requestId) => {
+        formData.set(WRITE_REQUEST_FIELD, requestId);
+        return changeOwnPassword(prev, formData);
+      });
+      if (next.ok) {
         setCurrent("");
         setPassword("");
         setConfirm("");
@@ -104,8 +110,8 @@ export function ChangePasswordForm({
         />
       </div>
 
-      {state && "error" in state && <p className="text-sm text-danger">{state.error}</p>}
-      {state && "success" in state && <p className="text-sm text-success">{p.changed}</p>}
+      {state && !state.ok && <p className="text-sm text-danger">{state.error}</p>}
+      {state?.ok && <p className="text-sm text-success">{p.changed}</p>}
 
       <div>
         <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save}
