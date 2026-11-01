@@ -8,7 +8,7 @@ const stub = (impl) => { globalThis.fetch = impl; };
 test.afterEach(() => { globalThis.fetch = realFetch; });
 
 const get = () => new Request("https://site.example/adopt");
-const post = () => new Request("https://site.example/admin/security", { method: "POST", body: "payload" });
+const post = () => new Request("https://site.example/zzz-unlisted", { method: "POST", body: "payload" });
 
 test("a good answer from the Pi is passed through", async () => {
   stub(async () => new Response("hi", { status: 200 }));
