@@ -38,7 +38,7 @@ export type CardWaitResult = ActionResult<{ left: true }>;
 export async function startCardWait(job: string, formData: FormData): Promise<CardWaitResult> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
+  return runWriteAction<{ left: true }>(
     "scan.startCardWait",
     write(t),
     { id: writeRequestIdFrom(formData), action: "scan.startCardWait", db: supabase },
@@ -63,7 +63,7 @@ export async function startCardWait(job: string, formData: FormData): Promise<Ca
 export async function stopCardWait(formData: FormData): Promise<ActionResult<{ cleared: true }>> {
   const { t } = await getT();
   const supabase = await createClient();
-  return runWriteAction(
+  return runWriteAction<{ cleared: true }>(
     "scan.stopCardWait",
     write(t),
     { id: writeRequestIdFrom(formData), action: "scan.stopCardWait", db: supabase },
