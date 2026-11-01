@@ -1,9 +1,11 @@
 # Planner handover — edition `546`, 2026-11-01
 
-**A delta, thirty-third edition in this shape. Six streams in two batches** — 9 and 10, all built,
-merged and measured, every PR green on its own head commit. **Two things changed that outrank anything
-in the bands:** the dials are now the planner's, and `537`'s central banding advice was wrong within
-hours of being written. This round's subject is why five of those six streams overran:
+**A delta, thirty-third edition in this shape. AMENDED the same day it was written: it first covered
+batches 9 and 10, and batch 11 merged eighteen minutes after it did.** So it now carries **nine streams
+in three batches**, all built, merged and measured, every PR green on its own head commit. **Two things
+changed that outrank anything in the bands:** the dials are now the planner's, and `537`'s central
+banding advice was wrong within hours of being written. The subject is why five of the first six streams
+overran — **and the amendment below is why the obvious correction to that was ALSO wrong:**
 
 > **A RULING YOU ASK A STREAM TO MAKE BECOMES AN INSTRUMENT. Band it as one.** The skill's *"must it
 > build the instrument? Dear. Widen."* is written about deliverables. **It applies to the QUESTIONS a
@@ -36,6 +38,31 @@ same size, no ruling, smallest miss of the three.
 **It sits beside, and is sharper than, the reconciliation rule.** That rule asks *which two things must
 agree*; this asks *who has to obey the answer*. Where both apply, this one moved the number more.
 
+## THE AMENDMENT: THE PLANNER RAISED THE BANDS AND BATCH 11 CAME IN UNDER THEM
+
+**Batch 10 ran 17–54% over, so batch 11's bands were raised. All three of batch 11 then landed UNDER:**
+`write-paths-list` **215,119** against 275–350k (**22% under**), `translations-propose-app` **215,708**
+against 250–310k (**14% under**), `assistant-raw-db-message` **155,569** against 165–210k (**6% under**).
+All `sonnet`/`low`, none compacted or rescoped, all finished. Figures and floors in `.plan-day.md`.
+
+**The correction was real and was applied to the wrong batch, and it is the SAME axis both times: how
+much must the stream FIND OUT?**
+
+- **Batch 10 was asked to RULE**, and a verdict the toolchain must enforce is an instrument. That is
+  this edition's subject and it stands.
+- **Batch 11 was asked to EXECUTE decisions batch 10 had already written down.** #1160's handover named
+  the files and the exact lines; five decision files told the listing stream what every wrapped module
+  had concluded; and the assistant fix turned out to live in **one** shared write path, so it was done
+  once rather than twelve times.
+- **The worst miss was the one that looked biggest.** 146 addresses to verify read as the largest stream
+  of the programme and was banded 275–350k. It was **mechanical**, because the understanding had already
+  been done and handed over.
+
+**So: NEVER RAISE A BAND FOR THE SIZE OF A SURFACE.** A huge surface with the thinking already done
+lands near the floor; a small surface with a verdict to enforce does not. This is the existing *"a brief
+that hands over the cause, the decision and the shape of the fix lands near the floor"* rule, and these
+three are its strongest evidence yet — **three for three, on the widest surface the programme has had.**
+
 ## THE FINDING OF THE ROUND: A COUNT IS ONLY AS GOOD AS THE QUESTION BEHIND IT
 
 Twice in one round the planner produced a frightening number that meant nothing, and both times the
@@ -48,11 +75,10 @@ real answer was one.
   normal case and the entire point of one. **The question that matters is SERVER-SIDE importers, and the
   answer is ONE** — and it is a *different* fault, a **claim inside a claim** rather than an unclaimed
   path. Filed.
-- **The same shape, same day, on Lutan's own tooling.** He asked why new sessions default to Opus. The
-  planner found a `lastModelUsage` record naming Opus on the one folder in question and told him that
-  was the cause. **It is a cost ledger, not a preference**: across 999 folder entries exactly one has a
-  record and **no worktree has ever had one.** A record that agrees with your hypothesis is not
-  evidence.
+- **The same shape, same day, on Lutan's own tooling:** a `lastModelUsage` record naming Opus was
+  reported to him as the cause of new sessions opening on Opus. **It is a cost ledger, not a
+  preference** — one record across 999 folder entries, none on any worktree. **A record that agrees
+  with your hypothesis is not evidence.** The measurements are in #1167.
 
 **Same family as *a count quoted without its database*, one step earlier: a count quoted without its
 QUESTION.** The cheap habit is to say out loud what the number would mean if it came back large, before
@@ -71,7 +97,9 @@ memory**. Nothing he or Claude can edit sets it.
 
 **So the planner now starts the batch's sessions itself**, passing `model` and `effort`, with `cwd` on
 the existing worktree and `use_worktree: false`. **Tried this round: refused once, then passed on all
-three.** Full procedure and the verification table are in `.plan-day.md`.
+three — and it has since worked on a second batch and been MERGED AS A RULE** into `CLAUDE.md`'s
+workstream step 1 and the skill's steps 7 and 8 (#1167). Full procedure and the verification tables are
+in `.plan-day.md`.
 
 **Three consequences, and the third is the one for you:**
 
@@ -89,23 +117,19 @@ three.** Full procedure and the verification table are in `.plan-day.md`.
 
 ## WHAT `537` ASKED FOR, and what each warning did
 
-- **Its own subject — an item's count of a textual fault is a lower bound — NOT TESTED.** No stream in
-  either batch was a textual-count item. It stands unrefuted and unconfirmed; **do not report it as
-  fired.**
-- **The reconciliation rule: fired, fourth and fifth rounds.** Still right about shape, still light on
-  amount, and **now superseded in the specific case where the answer must be enforced** (above).
-- **"A stream can REPORT; only the planner can FILE": fired, and it changed character.** Batch 9 gave
-  two findings on no item (a new Thai string shipped unreviewed hours after a Thai speaker passed 91
-  labels; a wrapped multi-row action is not atomic, so a failure between rows tells the person *"can't
-  tell"*). **Batch 10's streams then filed their own leavings properly** — the redacted-result item, the
-  anon-`id` item, the rewritten app-half item — leaving the planner only the nested claim. **Keep the
-  pass; expect it to find less as the streams get better at it.**
-- **"Say which branch your count was measured on": NEW last round, FIRED, and it was the best one.** All
-  three said so unprompted and #1162 gave a **three-column table** — planner's merged `main`, its own
-  branch, merged `main` plus itself. **Two streams' branch counts do not combine**, which is why the
-  backlog item read 60 when the truth was 30. **Keep it permanently.**
-- **"Read the usage fields rather than `unmeasured`": NEW, FIRED.** All three of batch 10 reported real
-  numbers after #1154 lost four, and two volunteered that they had started on Opus.
+- **Its own subject — an item's count of a textual fault is a lower bound — NOT TESTED**, as no stream
+  was a textual-count item. Unrefuted and unconfirmed; **do not report it as fired.** Batch 12's
+  wording stream is the first that will test it.
+- **The reconciliation rule: fired, fourth and fifth rounds**, and **superseded where the answer must be
+  enforced** (above).
+- **"A stream can REPORT; only the planner can FILE": fired, and it changed character.** Batch 9 left
+  two findings on no item; **batch 10's streams then filed their own leavings properly**, leaving the
+  planner only one. **Keep the pass; expect it to find less as the streams get better at it.**
+- **"Say which branch your count was measured on" and "read the usage fields rather than
+  `unmeasured`": both NEW, both FIRED twice.** Two streams' branch counts do not combine — which is why
+  a backlog item read 60 when the truth was 30 — and #1162's three-column table is the shape to copy.
+  **Both are now standing practice and are promotion candidates for the skill**, so the next edition
+  should cite them rather than re-explain them.
 - **An open question in the numbered deliverables: fired, seven rounds, no miss.**
 - **"No wrapping stream lists anything": HELD across five streams and now RETIRED** — the listing stream
   exists, so the rule has done its job.
@@ -121,10 +145,18 @@ is its own filed item: **`/admin/security` and `/admin/security/verify`** stay o
 TOTP secret and a temporary password and a wrapped result is stored for seven days — **a secret must not
 sit there**; **`/services/desexing`** writes as anon and the claim needs `auth.uid()`.
 
-**What is left is the switch-on, and it is live now as batch 11's first stream.** Every stream so far
-added **nothing** to the path list on purpose, so none changed runtime behaviour. **The list holds one
-address today.** The stream taking it to the rest is the first in the programme a person can feel, and
-its brief opens by saying so. **Read its PR before briefing anything else in this area.**
+**AND THE SWITCH-ON HAS HAPPENED: #1165 put 146 of the app's 149 addresses on the path list**, where
+before it held **one**. Every earlier stream added nothing to it on purpose, so none changed runtime
+behaviour; that one is the first in the programme a person can feel, and **the app now leans on the
+Worker fallback on almost every page.**
+
+**WHICH MAKES THE NEXT THING THE MOST SERIOUS ITEM ON THE BOARD, and it is NOT a stream:** the
+power-pull drill measured the fallback answering 7 of 11 saves over about 11 seconds and then stopping,
+with 44 seconds of 503s carrying **no `x-lanna-served-by` header at all** — so those replies never came
+from our Worker. **Settling it needs `wrangler tail` during a repeat drill, which needs Lutan's login
+and Lutan at the Pi.** Band a stream for the *instrument* that captures what the next drill needs, never
+for the diagnosis. **Do not let a brief touch the timing constants:** "about eleven seconds" looks like a
+timeout and the measurement says it is not one.
 
 ## STATE, RE-READ EVERY TIME
 
