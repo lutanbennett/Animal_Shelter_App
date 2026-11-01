@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → `## Security`, the `Manage medical` card description, and `## Security`, the two `assistant.*ReadOnly` strings |
 | Branch / worktree | `claude/access-wording-fixes` @ `C:\Development\Animal_Shelter_access-wording-fixes` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3006` |
-| PR | #TBD |
+| PR | #1151 |
 | Tested by / date | Claude (stream `access-wording-fixes`) / 2026-11-01 |
 | Carries a migration? | no |
 | Tested at SHA | e2a76a98 (the copy change), plus the docs and release-note commit that follows it |
