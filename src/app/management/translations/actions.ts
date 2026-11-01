@@ -5,7 +5,7 @@ import { runAction, type ActionResult } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { ROW_COLUMNS, type TranslationRow } from "@/lib/translations/types";
-import { sameLinks } from "@/lib/site/links";
+import { linkTargets, sameLinks } from "@/lib/site/links";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 
@@ -79,7 +79,14 @@ export async function approveTranslation(
       .returns<{ source_text: string }[]>();
     if (!current?.[0]) return refuse(t.translations.errors.notFound);
     // A link is an address, and an address must not be translated.
-    if (!sameLinks(current[0].source_text, trimmed)) return refuse(t.translations.errors.linksDiffer);
+    if (!sameLinks(current[0].source_text, trimmed)) {
+      // Say which addresses differ: an invented link and an English edit look the same without this.
+      const want = linkTargets(current[0].source_text);
+      const got = linkTargets(trimmed);
+      const added = [...new Set(got.filter((h) => !want.includes(h)))].join(", ");
+      const removed = [...new Set(want.filter((h) => !got.includes(h)))].join(", ");
+      return refuse(t.translations.errors.linksDiffer(added, removed));
+    }
 
     const now = new Date().toISOString();
     const { data, error } = await supabase

@@ -7270,7 +7270,8 @@ const en = {
     openRecord: "Open record",
     errors: {
       textRequired: "Write the translation before approving it.",
-      linksDiffer: "The links in the translation must match the English exactly. Keep the address part of each [words](address) unchanged and translate only the words.",
+      linksDiffer: (added: string, removed: string) =>
+        `The translation's links are not the same as the English's.${added ? ` It has links the English does not: ${added}.` : ""}${removed ? ` It is missing links the English has: ${removed}.` : ""} If the English was edited after this was written, the English is what changed. Remove or add the links so both match, keeping each address exactly as it is.`,
       notFound: "That translation no longer exists — the original may have been cleared.",
       labelNotFound: "That item no longer exists — it may have been deleted.",
       proposalRequired: "Write the Thai before proposing it.",

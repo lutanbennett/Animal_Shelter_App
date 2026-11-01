@@ -17,6 +17,8 @@
 //   machine  — shown to staff labelled, never reviewed: translate literally,
 //              and keep drug names, doses, units and dates exactly as written.
 
+import { linkTargets } from "../src/lib/site/links.ts";
+
 const LANG_NAME = { en: "English", th: "Thai" };
 
 export const PROMPTS = {
@@ -190,6 +192,20 @@ export function checkOutput(source, out, { to, tier }) {
     for (const n of numbers(source)) {
       if (!present.has(n)) throw new OutputRejected(`the number ${n} is missing from the output`);
     }
+  }
+
+  // Links, every tier: an address is never translated, so the set must be the source's exactly.
+  // Same shape as the numbers rule, and it catches a dropped link as well as an invented one.
+  // (The approve-time guard, sameLinks(), is the last line of defence and is untouched.)
+  const want = linkTargets(source);
+  const got = linkTargets(out);
+  const missing = want.filter((h) => !got.includes(h));
+  const invented = got.filter((h) => !want.includes(h));
+  if (missing.length || invented.length || want.length !== got.length) {
+    const parts = [];
+    if (invented.length) parts.push(`it added ${[...new Set(invented)].join(", ")}`);
+    if (missing.length) parts.push(`it dropped ${[...new Set(missing)].join(", ")}`);
+    throw new OutputRejected(`the links differ from the source: ${parts.join("; ") || "a link was repeated or removed"}`);
   }
   return out;
 }
