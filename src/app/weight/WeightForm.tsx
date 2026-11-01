@@ -4,7 +4,7 @@ import { ActionButton } from "@/components/ActionButton";
 import { ActionLink } from "@/components/ActionLink";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useState } from "react";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { createWeight, saveWeightEdit } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, formatWeightKg, todayIso, weightUnit } from "@/lib/format";
@@ -55,7 +55,7 @@ export function WeightForm({
   initial?: WeightInitial | null;
 }) {
   const editing = initial !== null;
-  const [state, onSubmit, pending] = useKeptForm(
+  const [state, onSubmit, pending] = useWriteForm(
     editing ? saveWeightEdit : createWeight,
     undefined,
   );
