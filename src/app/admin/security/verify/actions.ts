@@ -1,16 +1,15 @@
 "use server";
 
-// NOT WRAPPED, DELIBERATELY (docs/decisions/2026-11-01-write-paths-tail-b.md, section 3). startTwoStepSetup hands the
-// browser the TOTP secret, and finish_write_request() would keep a wrapped action's whole result for seven days in
-// write_requests.result. A secret must not be stored there. confirmTwoStep could be claimed, but a code is single-use
-// and this screen needs a real authenticator to drive, so it is not changed blind. /admin/security/verify must not go
-// on WRAPPED_WRITE_PATHS until the wrapper can store a redacted result.
+// PI FAILOVER (D), 2026-11-01 (docs/decisions/2026-11-01-redacted-write-result.md). startTwoStepSetup hands the browser the
+// TOTP secret, which write_requests.result would keep for seven days, so it passes storedAs: the database keeps a
+// refusal, and a REPLAY is refused in plain words rather than re-run (a re-run would delete the factor the screen shows).
 
 import { redirect } from "next/navigation";
 import type { AuthError } from "@supabase/supabase-js";
 import {
-  runAction,
+  runWriteAction,
   unexpectedFailure,
+  type WriteMessages,
   type ActionRefusal,
   type ActionResult,
 } from "@/lib/action-result";
@@ -22,6 +21,7 @@ import {
   totpIssuer,
   trustedTotpFactors,
 } from "@/lib/auth/two-step";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -34,6 +34,13 @@ import { getT } from "@/lib/i18n/get-t";
  * factor to your own login only, and a code only raises your own session.
  * They still need an admin, since only admins open Security.
  */
+
+/** The words runWriteAction() needs. */
+const write = (t: Awaited<ReturnType<typeof getT>>["t"]): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 const refuse = (error: string): ActionRefusal => ({ ok: false, error });
 
@@ -53,13 +60,13 @@ export type TwoStepSetup = ActionResult<{
  * wants friendly names unique per login, and the QR code on screen should
  * always be the one that counts.
  */
-export async function startTwoStepSetup(): Promise<TwoStepSetup> {
+export async function startTwoStepSetup(requestId: string | null): Promise<TwoStepSetup> {
   const { t } = await getT();
   const e = t.admin.security.twoStep.errors;
-  return runAction("security.startTwoStepSetup", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("security.startTwoStepSetup", write(t), { id: requestId, action: "security.startTwoStepSetup", db: supabase }, async () => {
     if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
-    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -90,7 +97,7 @@ export async function startTwoStepSetup(): Promise<TwoStepSetup> {
       qrCode: `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`,
       secret: data.totp.secret,
     };
-  });
+  }, { storedAs: () => refuse(e.setupAlreadyStarted) });
 }
 
 export type ConfirmTwoStepState = ActionResult | undefined;
@@ -117,7 +124,8 @@ export async function confirmTwoStep(
 ): Promise<ConfirmTwoStepState> {
   const { t } = await getT();
   const e = t.admin.security.twoStep.errors;
-  const result = await runAction("security.confirmTwoStep", t.common.somethingWentWrong, async () => {
+  const claimDb = await createClient();
+  const result = await runWriteAction("security.confirmTwoStep", write(t), { id: writeRequestIdFrom(formData), action: "security.confirmTwoStep", db: claimDb }, async () => {
     if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const code = ((formData.get("code") as string | null) ?? "").replace(/\s+/g, "");
@@ -156,7 +164,7 @@ export async function confirmTwoStep(
     }
     return { ok: true };
   });
-  // Outside runAction: nothing to catch, and the redirect is the success.
+  // Outside runWriteAction: nothing to catch, and the redirect is the success.
   if (result.ok) redirect("/admin/security");
   return result;
 }
