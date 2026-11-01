@@ -141,7 +141,7 @@ Automated checks by: Claude  Date: 2026-11-01
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item was checked by a person — pending: Thai wording needs a Thai reader
+- [ ] The manual list above is empty, or every item was checked by a person — n/a: one item, the Thai wording, is left for a Thai reader
 
 Manual verification by: pending: Thai wording check
 
