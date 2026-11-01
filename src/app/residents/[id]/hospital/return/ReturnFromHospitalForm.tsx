@@ -3,7 +3,7 @@
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { useRef, useState } from "react";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import Link from "next/link";
 import { returnFromHospital } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -47,7 +47,7 @@ export function ReturnFromHospitalForm({
 }) {
   const { t, locale } = useI18n();
   const r = t.residents.hospitalReturn;
-  const [state, submit, pending] = useKeptForm(
+  const [state, submit, pending] = useWriteForm(
     returnFromHospital.bind(null, residentId),
     undefined,
   );
