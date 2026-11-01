@@ -162,13 +162,11 @@ declare
   lost      text;
   v_holders integer;
 begin
-  select count(*) into v_holders
-    from public.role_cards rc join public.roles ro on ro.id = rc.role_id
-   where rc.card = 'translations' and ro.kind <> 'fixed';
-  raise notice '0296 the translations card is held by % role(s) that are not fixed', v_holders;
+  select count(*) into v_holders from public.role_cards rc where rc.card = 'translations';
+  raise notice '0296 the translations card is held by % role(s)', v_holders;
   raise notice '0296 no role is given the new propose_translations card here, which waits on Settings then Who does what';
 
-  for r in select id, key from public.roles where kind <> 'fixed' order by key loop
+  for r in select ro.id from public.roles ro order by ro.id loop
     select string_agg(rp.activity || ':' || rp.level, ', ' order by rp.activity) into gained
       from public.role_permissions rp
      where rp.role_id = r.id
@@ -180,7 +178,7 @@ begin
        and not exists (select 1 from public.role_permissions rp
                         where rp.role_id = r.id and rp.activity = p.activity and rp.level = p.level);
     if gained is not null or lost is not null then
-      raise notice '0296 % | now: % | no longer: %', r.key, coalesce(gained, '-'), coalesce(lost, '-');
+      raise notice '0296 role % | now: % | no longer: %', r.id, coalesce(gained, '-'), coalesce(lost, '-');
     end if;
   end loop;
 
