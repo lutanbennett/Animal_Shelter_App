@@ -2,9 +2,8 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { setLocale } from "@/lib/i18n/set-locale";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import type { Locale } from "@/lib/i18n/locales";
+import { localeCookie, type Locale } from "@/lib/i18n/locales";
 
 const TONES = {
   app: {
@@ -34,8 +33,11 @@ export function LanguageSwitcher({ tone = "app" }: { tone?: keyof typeof TONES }
 
   function handleChange(next: Locale) {
     if (next === locale || isPending) return;
-    startTransition(async () => {
-      await setLocale(next);
+    startTransition(() => {
+      // Pi failover (D): written here rather than by a Server Action, so the
+      // switcher puts no write on the address of whatever page it is drawn on.
+      // The reason, and why this is not a weakening, is on localeCookie().
+      document.cookie = localeCookie(next);
       router.refresh();
     });
   }

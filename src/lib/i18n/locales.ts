@@ -32,3 +32,33 @@ export function initialLocaleCookie(
 export function isLocale(value: string | undefined | null): value is Locale {
   return !!value && (locales as readonly string[]).includes(value);
 }
+
+/** A year, the same as the proxy's own cookie and the toggle's before it. */
+export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+
+/**
+ * The `document.cookie` string that sets the language, for the toggle in the
+ * browser.
+ *
+ * PI FAILOVER (D), 2026-11-01: the toggle used to call a `setLocale` Server
+ * Action, and a Server Action POSTs to the address of the page the person is
+ * on -- so the switcher put a write on every address in the app, including the
+ * public site's, and no page could go on WRAPPED_WRITE_PATHS while it did. It
+ * could not simply be wrapped: `claim_write_request()` is revoked from `anon`
+ * and raises for a login `holds_app_role()` answers false for
+ * (0292_write_requests.sql), and this toggle is drawn for signed-out visitors
+ * on the public site. Wrapping it would have broken the language switch for
+ * exactly the people who use it most.
+ *
+ * So it writes the cookie from the browser instead. The cookie has never been
+ * httpOnly -- not here and not in src/proxy.ts -- so this is the same value
+ * written by the same party that already owned it, and the server side is
+ * unchanged: `getLocale()` still reads it and still passes it through
+ * `isLocale()`, so a tampered value falls back to the default.
+ *
+ * Pure, and the attributes are kept beside the proxy's so the two cannot
+ * drift. docs/decisions/2026-11-01-header-writes-wrapped.md.
+ */
+export function localeCookie(locale: Locale): string {
+  return `${localeCookieName}=${locale}; path=/; max-age=${LOCALE_COOKIE_MAX_AGE}; samesite=lax`;
+}
