@@ -7,6 +7,7 @@ import { deleteImmunizationType, updateImmunizationType } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
+import { useWriteCall } from "@/lib/use-write-form";
 import { formatBahtPrice, parseBahtAmount } from "@/lib/format";
 import { parseStockCount } from "@/lib/management/stock";
 
@@ -44,6 +45,9 @@ function ImmunizationTypeRowItem({
     { type: "error" | "success"; text: string } | null
   >(null);
   const [isPending, startTransition] = useTransition();
+  // ONE useWriteCall PER ACTION, never shared (0292 refuses one id against two actions).
+  const writeSave = useWriteCall();
+  const writeDelete = useWriteCall();
 
   function handleSave() {
     setMessage(null);
@@ -74,15 +78,17 @@ function ImmunizationTypeRowItem({
       return;
     }
     startTransition(async () => {
-      const result = await updateImmunizationType(immunizationType.id, {
-        name,
-        nameTh,
-        isMandatory,
-        intervalMonths: parsedInterval,
-        cost: parsedCost.value,
-        // Sent only when changed, so a rename does not restamp the count.
-        ...(parsedStock.value !== immunizationType.stock_on_hand ? { stockOnHand: parsedStock.value } : {}),
-      });
+      const result = await writeSave((requestId) =>
+        updateImmunizationType(immunizationType.id, requestId, {
+          name,
+          nameTh,
+          isMandatory,
+          intervalMonths: parsedInterval,
+          cost: parsedCost.value,
+          // Sent only when changed, so a rename does not restamp the count.
+          ...(parsedStock.value !== immunizationType.stock_on_hand ? { stockOnHand: parsedStock.value } : {}),
+        }),
+      );
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -97,7 +103,7 @@ function ImmunizationTypeRowItem({
       return;
     setMessage(null);
     startTransition(async () => {
-      const result = await deleteImmunizationType(immunizationType.id);
+      const result = await writeDelete((requestId) => deleteImmunizationType(immunizationType.id, requestId));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
       }

@@ -7,6 +7,7 @@ import { deleteEnclosure, moveEnclosure, sortEnclosuresByName, updateEnclosure }
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
+import { useWriteCall } from "@/lib/use-write-form";
 import { inShelterOrder } from "@/lib/enclosures/order";
 
 /** In the shelter's order (the page sorts them), Lifecycle last. */
@@ -31,13 +32,14 @@ function ZoneHeading({ zone, count }: { zone: ZoneOption; count: number }) {
   const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const writeSort = useWriteCall();
   const isSystem = zone.name === "Lifecycle";
 
   async function handleSortByName() {
     if (!await confirm({ body: t.admin.placeOrder.sortEnclosuresConfirm(zone.name), confirmLabel: t.admin.placeOrder.sortByName })) return;
     setError(null);
     startTransition(async () => {
-      const result = await sortEnclosuresByName(zone.id);
+      const result = await writeSort((requestId) => sortEnclosuresByName(zone.id, requestId));
       if (!result.ok) setError(result.error);
     });
   }
@@ -89,6 +91,10 @@ function EnclosureRowItem({
   );
   const [notes, setNotes] = useState(enclosure.notes ?? "");
   const [editing, setEditing] = useState(false);
+  // ONE useWriteCall PER ACTION, never shared (0292 refuses one id against two actions).
+  const writeSave = useWriteCall();
+  const writeDelete = useWriteCall();
+  const writeMove = useWriteCall();
   const [message, setMessage] = useState<
     { type: "error" | "success"; text: string } | null
   >(null);
@@ -108,13 +114,15 @@ function EnclosureRowItem({
       return;
     }
     startTransition(async () => {
-      const result = await updateEnclosure(enclosure.id, {
-        name,
-        nameTh: nameTh || null,
-        zoneId,
-        capacity: parsedCapacity,
-        notes: notes || null,
-      });
+      const result = await writeSave((requestId) =>
+        updateEnclosure(enclosure.id, requestId, {
+          name,
+          nameTh: nameTh || null,
+          zoneId,
+          capacity: parsedCapacity,
+          notes: notes || null,
+        }),
+      );
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -128,7 +136,7 @@ function EnclosureRowItem({
     if (!await confirm({ body: t.admin.enclosures.deleteConfirm(enclosure.name), confirmLabel: t.common.delete })) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await deleteEnclosure(enclosure.id);
+      const result = await writeDelete((requestId) => deleteEnclosure(enclosure.id, requestId));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
       }
@@ -138,7 +146,7 @@ function EnclosureRowItem({
   function handleMove(direction: "up" | "down") {
     setMessage(null);
     startTransition(async () => {
-      const result = await moveEnclosure(enclosure.id, direction);
+      const result = await writeMove((requestId) => moveEnclosure(enclosure.id, direction, requestId));
       if (!result.ok) setMessage({ type: "error", text: result.error });
     });
   }

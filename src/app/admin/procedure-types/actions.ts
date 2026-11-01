@@ -2,18 +2,28 @@
 
 import { refresh, revalidatePath } from "next/cache";
 import {
-  runAction,
+  runWriteAction,
   type ActionRefusal,
   type ActionResult,
+  type WriteMessages,
 } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 
 export type ProcedureTypeFormState = ActionResult<{ success: string }> | undefined;
 
 const refuse = (error: string): ActionRefusal => ({ ok: false, error });
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 function revalidateProcedureTypePages() {
   revalidatePath("/admin/procedure-types");
@@ -42,13 +52,12 @@ export async function createProcedureType(
   formData: FormData,
 ): Promise<ProcedureTypeFormState> {
   const { t } = await getT();
-  return runAction("procedureTypes.createProcedureType", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("procedureTypes.createProcedureType", write(t), { id: writeRequestIdFrom(formData), action: "procedureTypes.createProcedureType", db: supabase }, async () => {
     if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const name = (formData.get("name") as string | null)?.trim();
     if (!name) return refuse(t.admin.procedureTypes.errors.nameRequired);
-
-    const supabase = await createClient();
     // Optional: an empty Thai name means Thai readers see the English (0166).
     const nameTh = (formData.get("nameTh") as string | null)?.trim() || null;
     const { error } = await supabase.from("procedure_types").insert({ name, name_th: nameTh });
@@ -62,16 +71,16 @@ export async function createProcedureType(
 
 export async function updateProcedureType(
   id: string,
+  requestId: string,
   fields: { name: string; nameTh: string },
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("procedureTypes.updateProcedureType", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("procedureTypes.updateProcedureType", write(t), { id: requestId, action: "procedureTypes.updateProcedureType", db: supabase }, async () => {
     if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const name = fields.name.trim();
     if (!name) return refuse(t.admin.procedureTypes.errors.nameRequired);
-
-    const supabase = await createClient();
     const { error } = await supabase
       .from("procedure_types")
       .update({ name, name_th: fields.nameTh.trim() || null })
@@ -83,9 +92,10 @@ export async function updateProcedureType(
   });
 }
 
-export async function deleteProcedureType(id: string): Promise<ActionResult> {
+export async function deleteProcedureType(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("procedureTypes.deleteProcedureType", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("procedureTypes.deleteProcedureType", write(t), { id: requestId, action: "procedureTypes.deleteProcedureType", db: supabase }, async () => {
     if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     // procedures.procedure_type_id has no cascade: a type that has ever been
@@ -95,8 +105,6 @@ export async function deleteProcedureType(id: string): Promise<ActionResult> {
     if (count > 0) {
       return refuse(t.admin.procedureTypes.errors.hasProcedures(count));
     }
-
-    const supabase = await createClient();
     const { error } = await supabase
       .from("procedure_types")
       .delete()
@@ -114,16 +122,16 @@ export async function deleteProcedureType(id: string): Promise<ActionResult> {
  */
 export async function mergeProcedureType(
   fromId: string,
+  requestId: string,
   intoId: string,
 ): Promise<ActionResult<{ count: number }>> {
   const { t } = await getT();
-  return runAction("procedureTypes.mergeProcedureType", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("procedureTypes.mergeProcedureType", write(t), { id: requestId, action: "procedureTypes.mergeProcedureType", db: supabase }, async () => {
     if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
     if (fromId === intoId) {
       return refuse(t.admin.procedureTypes.errors.mergeSelf);
     }
-
-    const supabase = await createClient();
     const { data, error } = await supabase.rpc("merge_procedure_type", {
       p_from: fromId,
       p_into: intoId,

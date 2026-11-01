@@ -8,6 +8,7 @@ import { doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { UnitSelect } from "@/components/UnitSelect";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
+import { useWriteCall } from "@/lib/use-write-form";
 import { deleteMedication, mergeMedication, updateMedicationDefinition } from "./actions";
 
 /** One row of Settings → Medications: the option-list half of a medication. */
@@ -44,6 +45,10 @@ function MedicationRowItem({
   const [mergeInto, setMergeInto] = useState("");
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [isPending, startTransition] = useTransition();
+  // ONE useWriteCall PER ACTION, never shared (0292 refuses one id against two actions).
+  const writeSave = useWriteCall();
+  const writeDelete = useWriteCall();
+  const writeMerge = useWriteCall();
 
   function reset() {
     setName(medication.name);
@@ -69,7 +74,7 @@ function MedicationRowItem({
     }
     setMessage(null);
     startTransition(async () => {
-      const result = await updateMedicationDefinition(medication.id, { name, nameTh, doseUnit });
+      const result = await writeSave((requestId) => updateMedicationDefinition(medication.id, requestId, { name, nameTh, doseUnit }));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -83,7 +88,7 @@ function MedicationRowItem({
     if (!(await confirm({ body: m.deleteConfirm(medication.name), confirmLabel: t.common.delete }))) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await deleteMedication(medication.id);
+      const result = await writeDelete((requestId) => deleteMedication(medication.id, requestId));
       if (!result.ok) setMessage({ type: "error", text: result.error });
     });
   }
@@ -96,7 +101,7 @@ function MedicationRowItem({
     }
     setMessage(null);
     startTransition(async () => {
-      const result = await mergeMedication(medication.id, target.id);
+      const result = await writeMerge((requestId) => mergeMedication(medication.id, requestId, target.id));
       // This row disappears on revalidation; nothing to reset.
       if (!result.ok) setMessage({ type: "error", text: result.error });
     });
