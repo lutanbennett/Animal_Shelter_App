@@ -32,7 +32,7 @@ for (const k of CARD_KEYS) {
   for (const e of CARDS[k].bundle) if (!known.has(e.activity)) fail(`card ${k} names an activity the catalogue lacks: ${e.activity}`);
   for (const i of CARDS[k].includes) if (!CARDS[i]) fail(`card ${k} includes ${i}, which is not a card`);
 }
-if (CARD_KEYS.length !== 39) fail(`the agreed set is thirty-nine cards (thirty-nine after record_death was folded into Manage medical, 0282; Manage shop page, 0285, makes forty; add_while_recording retired, 0287, makes thirty-nine again); cards.ts has ${CARD_KEYS.length}`);
-else if (!failed) console.log("ok   cards.ts has the thirty-nine agreed cards, all naming real activities");
+if (CARD_KEYS.length !== 40) fail(`the agreed set is forty cards (thirty-nine after record_death was folded into Manage medical, 0282; Manage shop page, 0285, makes forty; add_while_recording retired, 0287, makes thirty-nine again; Propose a Thai label, 0296, makes forty); cards.ts has ${CARD_KEYS.length}`);
+else if (!failed) console.log("ok   cards.ts has the forty agreed cards, all naming real activities");
 
 await exitWith(failed ? 1 : 0);

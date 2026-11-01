@@ -102,6 +102,11 @@ export const ACTIVITIES = [
   { key: "audit.undo", kind: "yesno", area: "settings", sort: 54, requires: [], probes: [] },
   { key: "system.status", kind: "yesno", area: "settings", sort: 55, requires: [], probes: [] },
   { key: "translations.view", kind: "yesno", area: "management", sort: 56, requires: [], probes: [] },
+  // 0296: proposing a Thai label, which is NOT approving one. propose_label_th() asks this while
+  // approve_label_th() keeps asking translations.manage, so a proposing caller cannot publish.
+  // Sort 74, not a number beside 47 and 56: sort is the matrix position AND is compared per key with
+  // the migration that seeded it, so renumbering would put every later activity out of step.
+  { key: "translations.propose", kind: "yesno", area: "management", sort: 74, requires: [], probes: [] },
   { key: "contacts.browse", kind: "yesno", area: "contacts", sort: 57, requires: [], probes: [] },
   { key: "friends.view", kind: "yesno", area: "contacts", sort: 58, requires: [], probes: [] },
   { key: "community.outings", kind: "level", area: "projects", sort: 59, requires: [], probes: [] },
