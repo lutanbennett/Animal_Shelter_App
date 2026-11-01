@@ -535,12 +535,8 @@
       "gates": "The service-role key; see serviceRoleSites."
     },
     {
-      "name": "ANTHROPIC_API_KEY",
-      "gates": "The metered key for the assistant's model calls. Who may use the assistant is decided by its cards; this only supplies the credential."
-    },
-    {
       "name": "ASSISTANT_LLM_PROVIDER",
-      "gates": "Which model implementation the assistant uses. Not who may use the assistant."
+      "gates": "Which model implementation the assistant uses; openai-compatible is the only one. Not who may use the assistant."
     },
     {
       "name": "ASSISTANT_LLM_MODEL",

@@ -10,9 +10,9 @@
 // when the sentence should get no draft; correct_answer is the resident id the draft should carry
 // (blank = resident agreement not scored). Rows with correct_intent blank are skipped.
 //
-// WHICH MODEL: whatever createLlm() builds from ASSISTANT_LLM_PROVIDER / ASSISTANT_LLM_MODEL (and
-// ANTHROPIC_API_KEY for claude). It goes through the LlmAdapter interface only, so a self-hosted
-// implementation runs here unchanged. --fixture uses a scripted stand-in, not a model.
+// WHICH MODEL: whatever createLlm() builds from ASSISTANT_LLM_MODEL (and ASSISTANT_LLM_BASE_URL for
+// a server that is not the local default). It goes through the LlmAdapter interface only, so a
+// second self-hosted implementation would run here unchanged. --fixture uses a scripted stand-in, not a model.
 //
 // LIMIT: the model is given the draft tools but no resident lookup, so resident agreement only
 // scores a model that can name the id itself (a fixture, or a lookup tool added later).

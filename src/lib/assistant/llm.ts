@@ -2,20 +2,26 @@
  * The assistant's one door to a language model (assistant v2, stream 2).
  *
  * Provider-neutral on purpose: nothing in this file names a vendor, and no
- * vendor type may appear in a signature here. `llm-claude.ts` is the Claude
- * implementation; a later stream adds an OpenAI-compatible one (a self-hosted
- * model is the direction) behind the same interface and the same env switch.
- * `scripts/check-llm-vendor-imports.mjs` fails the build if anything outside
- * the adapter files imports a vendor SDK.
+ * vendor type may appear in a signature here. `llm-openai.ts` is the one
+ * implementation: the OpenAI-compatible chat-completions shape that Ollama,
+ * llama.cpp's server and vLLM all speak, over plain `fetch` with no vendor
+ * SDK. The model runs on the shelter's own machine, which is why there is no
+ * metered key anywhere in assistant v2
+ * (`docs/decisions/2026-11-01-drop-anthropic-sdk.md`). The interface and the
+ * `ASSISTANT_LLM_PROVIDER` switch stay, so a second in-house runtime can be
+ * added behind them. `scripts/check-llm-vendor-imports.mjs` fails the build if
+ * ANY file imports a model vendor's SDK -- it now allows none.
  *
- * Environment (read here and in `llm-claude.ts`, nowhere else):
- *   ASSISTANT_LLM_PROVIDER  which implementation; "claude" (default).
+ * Environment (read here and in `llm-openai.ts`, nowhere else):
+ *   ASSISTANT_LLM_PROVIDER  which implementation; "openai-compatible" (default).
  *   ASSISTANT_LLM_MODEL     the model id, in ONE place so swapping is config.
- *   ASSISTANT_LLM_BASE_URL  openai-compatible only: the server's address, up to /v1.
- *   ASSISTANT_LLM_TIMEOUT_MS  openai-compatible only: how long to wait (default 180000).
- *   ASSISTANT_LLM_API_KEY   openai-compatible only, optional.
- *   ANTHROPIC_API_KEY       the Claude implementation's key (a metered one:
- *                           the only paid thing in assistant v2).
+ *   ASSISTANT_LLM_BASE_URL  the server's address, up to /v1 (default: Ollama's local one).
+ *   ASSISTANT_LLM_TIMEOUT_MS  how long to wait (default 180000).
+ *   ASSISTANT_LLM_API_KEY   optional; most local servers need none.
+ *
+ * With ASSISTANT_LLM_MODEL unset, `createLlm()` raises
+ * LlmError("not_configured") and the keyword assistant carries on, which is
+ * what every environment does today.
  *
  * Spend guard: the adapter caps the OUTPUT of every call (`maxTokens`,
  * default 1024, never above MAX_TOKENS_CEILING whatever the caller asks).
@@ -103,14 +109,7 @@ export function clampMaxTokens(asked: number | undefined): number {
 
 /** The adapter the environment asks for. Throws LlmError("not_configured") when it cannot build one. */
 export async function createLlm(): Promise<LlmAdapter> {
-  const provider = (process.env.ASSISTANT_LLM_PROVIDER ?? "claude").trim().toLowerCase();
-  if (provider === "claude") {
-    const { createClaudeAdapter } = await import("./llm-claude");
-    return createClaudeAdapter({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-      model: process.env.ASSISTANT_LLM_MODEL,
-    });
-  }
+  const provider = (process.env.ASSISTANT_LLM_PROVIDER ?? "openai-compatible").trim().toLowerCase();
   if (provider === "openai-compatible" || provider === "openai" || provider === "ollama") {
     const { createOpenAiAdapter } = await import("./llm-openai");
     return createOpenAiAdapter({
