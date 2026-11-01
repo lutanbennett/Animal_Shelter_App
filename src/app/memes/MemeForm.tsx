@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useWriteCall } from "@/lib/use-write-form";
+import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
@@ -38,6 +40,9 @@ export function MemeForm({
   residents: ResidentOption[];
 }) {
   const { t } = useI18n();
+  // One per action (use-write-form.ts): a kept create id must never reach the update.
+  const createWrite = useWriteCall();
+  const updateWrite = useWriteCall();
   const f = t.memes.form;
   const router = useRouter();
   const [fields, setFields] = useState<MemeFields>(initial);
@@ -79,13 +84,20 @@ export function MemeForm({
         const result = await runUploadAction(
           file!,
           { fileTooLarge: f.errors.fileTooLarge, processingFailed: f.errors.uploadFailed },
-          () => createMeme(data),
+          () =>
+            createWrite((id) => {
+              data.set(WRITE_REQUEST_FIELD, id);
+              return createMeme(data);
+            }),
         );
         if (!result.ok) return setError(result.error);
         router.push(`/memes/${result.id}`);
         return;
       }
-      const result = await updateMeme(memeId!, data);
+      const result = await updateWrite((id) => {
+        data.set(WRITE_REQUEST_FIELD, id);
+        return updateMeme(memeId!, data);
+      });
       if (!result.ok) return setError(result.error);
       router.push(`/memes/${memeId}`);
       router.refresh();

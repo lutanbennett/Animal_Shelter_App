@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Download, ExternalLink, Share2 } from "lucide-react";
+import { useWriteCall } from "@/lib/use-write-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ActionButton } from "@/components/ActionButton";
 import { ActionLink } from "@/components/ActionLink";
@@ -47,6 +48,9 @@ const labelClass = "text-sm font-medium text-muted";
  */
 export function MemeView({ meme, canEdit, today }: { meme: ViewMeme; canEdit: boolean; today: string }) {
   const { t, locale } = useI18n();
+  const shareWrite = useWriteCall();
+  const removeShareWrite = useWriteCall();
+  const archiveWrite = useWriteCall();
   const m = t.memes;
   const router = useRouter();
   const confirm = useConfirm();
@@ -64,7 +68,7 @@ export function MemeView({ meme, canEdit, today }: { meme: ViewMeme; canEdit: bo
   function record() {
     setMessage(null);
     startTransition(async () => {
-      const result = await recordMemeShare(meme.id, { platform, sharedOn, postUrl, note });
+      const result = await shareWrite((id) => recordMemeShare(meme.id, { platform, sharedOn, postUrl, note }, id));
       if (!result.ok) return setMessage({ ok: false, text: result.error });
       setRecording(false);
       setPostUrl("");
@@ -79,7 +83,7 @@ export function MemeView({ meme, canEdit, today }: { meme: ViewMeme; canEdit: bo
     if (!ok) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await removeMemeShare(meme.id, shareId);
+      const result = await removeShareWrite((id) => removeMemeShare(meme.id, shareId, id));
       if (!result.ok) return setMessage({ ok: false, text: result.error });
       setMessage({ ok: true, text: m.share.removed });
       router.refresh();
@@ -93,7 +97,7 @@ export function MemeView({ meme, canEdit, today }: { meme: ViewMeme; canEdit: bo
     }
     setMessage(null);
     startTransition(async () => {
-      const result = await setMemeArchived(meme.id, archived);
+      const result = await archiveWrite((id) => setMemeArchived(meme.id, archived, id));
       if (!result.ok) return setMessage({ ok: false, text: result.error });
       setMessage({ ok: true, text: archived ? m.page.archived : m.page.restored });
       router.refresh();

@@ -7,6 +7,7 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { FileDropZone, PendingFileList, useDeferredUploads } from "@/components/DeferredUploads";
 import { driveImageUrl } from "@/lib/google/drive-client";
+import { useWriteCall } from "@/lib/use-write-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { OutingPhoto } from "@/lib/outreach/outings";
 import { MakeMemeLink } from "@/components/MakeMemeLink";
@@ -20,6 +21,9 @@ import { deleteOuting, deleteOutingPhoto, setOutingPhotoPublic } from "../../act
  */
 export function OutingPhotos({ outingId, photos, canMakeMeme = false }: { outingId: string; photos: OutingPhoto[]; canMakeMeme?: boolean }) {
   const { t } = useI18n();
+  const publicWrite = useWriteCall();
+  const deletePhotoWrite = useWriteCall();
+  const deleteOutingWrite = useWriteCall();
   const o = t.outreach;
   const router = useRouter();
   const confirm = useConfirm();
@@ -63,7 +67,7 @@ export function OutingPhotos({ outingId, photos, canMakeMeme = false }: { outing
                     disabled={pending}
                     onChange={(e) => {
                       const next = e.target.checked;
-                      run(() => setOutingPhotoPublic(p.id, next));
+                      run(() => publicWrite((id) => setOutingPhotoPublic(p.id, next, id)));
                     }}
                     className="size-5"
                   />
@@ -74,7 +78,7 @@ export function OutingPhotos({ outingId, photos, canMakeMeme = false }: { outing
                   disabled={pending}
                   onClick={() =>
                     void confirm({ body: o.removePhotoConfirm, confirmLabel: o.removePhoto }).then((ok) => {
-                      if (ok) run(() => deleteOutingPhoto(p.id));
+                      if (ok) run(() => deletePhotoWrite((id) => deleteOutingPhoto(p.id, id)));
                     })
                   }
                   className="inline-flex min-h-11 items-center text-sm text-danger hover:underline disabled:opacity-50"
@@ -125,7 +129,7 @@ export function OutingPhotos({ outingId, photos, canMakeMeme = false }: { outing
           disabled={pending}
           onClick={() =>
             void confirm({ body: o.deleteConfirm, confirmLabel: o.delete }).then((ok) => {
-              if (ok) run(() => deleteOuting(outingId), () => router.push("/outreach"));
+              if (ok) run(() => deleteOutingWrite((id) => deleteOuting(outingId, id)), () => router.push("/outreach"));
             })
           }
         >

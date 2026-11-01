@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useWriteCall } from "@/lib/use-write-form";
+import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
@@ -156,6 +158,7 @@ export function MemeMaker({
   residentLabel: string;
 }) {
   const { t } = useI18n();
+  const createWrite = useWriteCall();
   const m = t.memes.maker;
   const router = useRouter();
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -205,11 +208,14 @@ export function MemeMaker({
       data.set("sourceKind", sourceKind);
       if (sourceFileId) data.set("sourceFileId", sourceFileId);
       data.set("file", new File([blob], "meme.jpg", { type: "image/jpeg" }));
-      const result = await createMeme(data);
+      const result = await createWrite((id) => {
+        data.set(WRITE_REQUEST_FIELD, id);
+        return createMeme(data);
+      });
       if (!result.ok) return setError(result.error);
       router.push(`/memes/${result.id}`);
     });
-  }, [top, bottom, sourceKind, sourceFileId, residentLabel, router, m]);
+  }, [top, bottom, sourceKind, sourceFileId, residentLabel, router, m, createWrite]);
 
   const choice = <T extends string>(label: string, value: T, set: (v: T) => void, options: [T, string][]) => (
     <fieldset className="flex flex-col gap-1">
