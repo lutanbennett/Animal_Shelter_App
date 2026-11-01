@@ -1,14 +1,25 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { databaseFailure, runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, databaseFailure, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
 import { getT } from "@/lib/i18n/get-t";
+import { writeRequestIdFrom } from "@/lib/write-requests";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { todayIso } from "@/lib/format";
 import { HELP_KINDS, isPlaceKind, type HelpKind } from "@/lib/outreach/outings";
+
+// PI FAILOVER (D), 2026-11-01: every write here goes through runWriteAction() (docs/decisions/2026-11-01-write-paths-tail-a.md).
+// A write added to this file goes through it too, or the page addresses it sits on can never be listed.
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 /*
  * Outreach visit notes (0169). Every write is the person's own session, so
@@ -117,7 +128,11 @@ function parseOuting(formData: FormData, t: T): Omit<OutingFields, "place_id"> |
 
 export async function createOuting(formData: FormData): Promise<ActionResult<{ outingId: string }>> {
   const { t } = await getT();
-  return runAction("outreach.createOuting", t.common.somethingWentWrong, async () => {
+  return runWriteAction(
+    "outreach.createOuting",
+    write(t),
+    { id: writeRequestIdFrom(formData), action: "outreach.createOuting", db: await createClient() },
+    async () => {
     if (!can(await loadPermissions(), "community.outings")) return refuse(t.outreach.errors.notAuthorized);
     const fields = parseOuting(formData, t);
     if ("error" in fields) return refuse(fields.error);
@@ -143,7 +158,11 @@ export async function createOuting(formData: FormData): Promise<ActionResult<{ o
 
 export async function updateOuting(formData: FormData): Promise<ActionResult<{ outingId: string }>> {
   const { t } = await getT();
-  return runAction("outreach.updateOuting", t.common.somethingWentWrong, async () => {
+  return runWriteAction(
+    "outreach.updateOuting",
+    write(t),
+    { id: writeRequestIdFrom(formData), action: "outreach.updateOuting", db: await createClient() },
+    async () => {
     if (!can(await loadPermissions(), "community.outings")) return refuse(t.outreach.errors.notAuthorized);
     const outingId = str(formData, "outingId");
     if (!outingId) return refuse(t.outreach.errors.notFound);
@@ -174,9 +193,13 @@ export async function updateOuting(formData: FormData): Promise<ActionResult<{ o
  * photos' Drive files in the bin. The database goes first and is the record;
  * a Drive failure after that leaves an orphaned file, not a wrong figure.
  */
-export async function deleteOuting(outingId: string): Promise<ActionResult> {
+export async function deleteOuting(outingId: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("outreach.deleteOuting", t.common.somethingWentWrong, async () => {
+  return runWriteAction(
+    "outreach.deleteOuting",
+    write(t),
+    { id: requestId, action: "outreach.deleteOuting", db: await createClient() },
+    async () => {
     if (!can(await loadPermissions(), "community.outings")) return refuse(t.outreach.errors.notAuthorized);
     const supabase = await createClient();
     const { data: photos } = await supabase
@@ -213,9 +236,13 @@ export async function deleteOuting(outingId: string): Promise<ActionResult> {
  * table), so this is the Director's "never public unless ticked" kept as a
  * recorded wish until a public view exists.
  */
-export async function setOutingPhotoPublic(photoId: string, isPublic: boolean): Promise<ActionResult> {
+export async function setOutingPhotoPublic(photoId: string, isPublic: boolean, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("outreach.setOutingPhotoPublic", t.common.somethingWentWrong, async () => {
+  return runWriteAction(
+    "outreach.setOutingPhotoPublic",
+    write(t),
+    { id: requestId, action: "outreach.setOutingPhotoPublic", db: await createClient() },
+    async () => {
     if (!can(await loadPermissions(), "community.outings")) return refuse(t.outreach.errors.notAuthorized);
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -231,9 +258,13 @@ export async function setOutingPhotoPublic(photoId: string, isPublic: boolean): 
   });
 }
 
-export async function deleteOutingPhoto(photoId: string): Promise<ActionResult> {
+export async function deleteOutingPhoto(photoId: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("outreach.deleteOutingPhoto", t.common.somethingWentWrong, async () => {
+  return runWriteAction(
+    "outreach.deleteOutingPhoto",
+    write(t),
+    { id: requestId, action: "outreach.deleteOutingPhoto", db: await createClient() },
+    async () => {
     if (!can(await loadPermissions(), "community.outings")) return refuse(t.outreach.errors.notAuthorized);
     const supabase = await createClient();
     const { data, error } = await supabase

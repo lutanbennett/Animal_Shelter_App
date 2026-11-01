@@ -7,6 +7,15 @@ import type { ScanCardStrings } from "./scan-card-strings";
 import { residentCodeFrom } from "@/lib/tags/links";
 import type { CardWaitJob } from "@/lib/residents/card-wait";
 import { startCardWait, stopCardWait } from "./scan-actions";
+import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
+import { useWriteCall } from "@/lib/use-write-form";
+
+/** The request id travels in a form field, so these two actions take a FormData holding only that. */
+const idForm = (requestId: string) => {
+  const form = new FormData();
+  form.set(WRITE_REQUEST_FIELD, requestId);
+  return form;
+};
 
 /**
  * "Scan card" for the resident picker (docs/decisions/2026-10-16-name-card-scanning.md).
@@ -81,6 +90,9 @@ export function ScanCardButton<R extends ScannableResident>({
   const [state, setState] = useState<"idle" | "waiting" | "unreadable" | "unknown" | "denied">("idle");
   const [marker, setMarker] = useState<"off" | "on" | "refused">("off");
   const abort = useRef<AbortController | null>(null);
+  // One per action (use-write-form.ts): an id kept from an unknown start must never reach stop.
+  const startWait = useWriteCall();
+  const stopWait = useWriteCall();
 
   useEffect(() => {
     return () => abort.current?.abort();
@@ -93,7 +105,7 @@ export function ScanCardButton<R extends ScannableResident>({
         {marker !== "on" ? (
           <button
             type="button"
-            onClick={async () => setMarker((await startCardWait(job)).ok ? "on" : "refused")}
+            onClick={async () => setMarker((await startWait((id) => startCardWait(job, idForm(id)))).ok ? "on" : "refused")}
             className="flex min-h-12 items-center justify-center gap-2 rounded-lg border border-primary px-4 text-base font-medium text-primary"
           >
             <Nfc aria-hidden className="h-5 w-5" />
@@ -107,8 +119,8 @@ export function ScanCardButton<R extends ScannableResident>({
             <button
               type="button"
               onClick={async () => {
-                await stopCardWait();
-                setMarker("off");
+                const done = await stopWait((id) => stopCardWait(idForm(id)));
+                setMarker(done.ok ? "off" : "on");
               }}
               className="inline-flex min-h-11 items-center self-start text-sm font-medium text-primary hover:underline"
             >

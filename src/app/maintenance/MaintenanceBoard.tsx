@@ -7,6 +7,7 @@ import { ArrowRight, CalendarClock, Camera, Plus, UserRound } from "lucide-react
 import { useConfirm } from "@/components/ConfirmProvider";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS, ENCLOSURE_ICONS } from "@/components/hub-icons";
+import { useWriteCall } from "@/lib/use-write-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { placeName } from "@/lib/enclosures/names";
 import { addDaysIso, formatBaht, formatDate, todayIso } from "@/lib/format";
@@ -76,6 +77,7 @@ export function MaintenanceBoard({
   initialFilters: Filters;
 }) {
   const { t, locale } = useI18n();
+  const statusWrite = useWriteCall();
   const m = t.maintenance;
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -165,7 +167,7 @@ export function MaintenanceBoard({
     setDriveWarning(null);
     startTransition(async () => {
       moveOptimistically({ jobId, status });
-      const result = await setMaintenanceStatus(jobId, status);
+      const result = await statusWrite((id) => setMaintenanceStatus(jobId, status, id));
       if (!result.ok) setError(result.error);
       else if (result.driveWarning) setDriveWarning(result.driveWarning);
       router.refresh();

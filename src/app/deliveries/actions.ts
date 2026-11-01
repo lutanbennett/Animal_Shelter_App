@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { runWriteAction, type ActionResult } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { resolveDeliveryLines, type DeliveryLineInput } from "@/lib/management/delivery-lines";
@@ -12,6 +14,28 @@ import {
   type DeliveryKind,
   type DeliveryTiming,
 } from "@/lib/management/stock-receipts";
+
+// PI FAILOVER (D), 2026-11-01: every write here goes through runWriteAction() via wrapped(), which is what lets the
+// Worker replay a save the Pi did not clearly answer (docs/decisions/2026-11-01-write-paths-tail-a.md). A new write
+// added to this file goes through wrapped() too, with its own action name.
+async function wrapped<R extends object>(
+  action: string,
+  requestId: string | null,
+  body: (t: Dictionary) => Promise<ActionResult<R>>,
+): Promise<ActionResult<R>> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction<R>(
+    action,
+    {
+      somethingWentWrong: t.common.somethingWentWrong,
+      saveUnknown: t.common.saveUnknown,
+      reloadToSave: t.common.reloadToSave,
+    },
+    { id: requestId, action, db: supabase },
+    () => body(t),
+  );
+}
 
 export type DeliveryInput = {
   kind: DeliveryKind;
@@ -26,7 +50,7 @@ export type DeliveryInput = {
   note: string;
 };
 
-export type DeliveryResult = { ok: true; id?: string } | { ok: false; error: string };
+export type DeliveryResult = ActionResult<{ id?: string }>;
 
 function revalidateStockPages() {
   revalidatePath("/deliveries");
@@ -43,86 +67,88 @@ function revalidateStockPages() {
  * Returns rather than throws, for the stocktake sheet's reason: the form
  * shows this wording, not a production server-action error.
  */
-export async function recordDelivery(input: DeliveryInput): Promise<DeliveryResult> {
-  const { t } = await getT();
-  const e = t.deliveries.errors;
-  const supabase = await createClient();
+export async function recordDelivery(input: DeliveryInput, requestId: string | null): Promise<ActionResult<{ id?: string }>> {
+  return wrapped<{ id?: string }>("deliveries.recordDelivery", requestId, async (t) => {
+    const e = t.deliveries.errors;
+    const supabase = await createClient();
 
-  if (!can(await loadPermissions(), "stock.delivery")) return { ok: false, error: e.notAuthorized };
+    if (!can(await loadPermissions(), "stock.delivery")) return { ok: false, error: e.notAuthorized };
 
-  if (input.kind !== "medication" && input.kind !== "diet") return { ok: false, error: e.itemRequired };
-  if (!input.itemId) return { ok: false, error: e.itemRequired };
-  // The factor is stamped from the conversion as it is NOW and stored with the
-  // row (entered, 0118); history never looks it up again.
-  const itemKind = input.kind === "medication" ? "medication" : "diet";
-  const conversions = await loadConversions(supabase, itemKind, [input.itemId]);
-  if (conversions.error) return { ok: false, error: `${e.failed}: ${conversions.error}` };
-  const baseUnit = await supabase
-    .from(itemKind === "medication" ? "stock_medications" : "stock_diet_types")
-    .select(itemKind === "medication" ? "unit:dose_unit" : "unit")
-    .eq("id", input.itemId)
-    .maybeSingle<{ unit: string }>();
-  const resolved = resolveDeliveryLines(
-    Array.isArray(input.lines) ? input.lines : [],
-    conversions.data[input.itemId] ?? [],
-    baseUnit.data ? [baseUnit.data.unit] : [],
-  );
-  if (!resolved.ok) {
-    const error =
-      resolved.reason === "unknownUnit" ? t.units.errors.unknownUnit
-      : resolved.reason === "costInvalid" ? e.costInvalid
-      : resolved.reason === "costIncomplete" ? e.costIncomplete
-      : e.quantityInvalid;
-    return { ok: false, error };
-  }
-  if (!(resolved.base > 0)) return { ok: false, error: e.quantityInvalid };
+    if (input.kind !== "medication" && input.kind !== "diet") return { ok: false, error: e.itemRequired };
+    if (!input.itemId) return { ok: false, error: e.itemRequired };
+    // The factor is stamped from the conversion as it is NOW and stored with the
+    // row (entered, 0118); history never looks it up again.
+    const itemKind = input.kind === "medication" ? "medication" : "diet";
+    const conversions = await loadConversions(supabase, itemKind, [input.itemId]);
+    if (conversions.error) return { ok: false, error: `${e.failed}: ${conversions.error}` };
+    const baseUnit = await supabase
+      .from(itemKind === "medication" ? "stock_medications" : "stock_diet_types")
+      .select(itemKind === "medication" ? "unit:dose_unit" : "unit")
+      .eq("id", input.itemId)
+      .maybeSingle<{ unit: string }>();
+    const resolved = resolveDeliveryLines(
+      Array.isArray(input.lines) ? input.lines : [],
+      conversions.data[input.itemId] ?? [],
+      baseUnit.data ? [baseUnit.data.unit] : [],
+    );
+    if (!resolved.ok) {
+      const error =
+        resolved.reason === "unknownUnit" ? t.units.errors.unknownUnit
+        : resolved.reason === "costInvalid" ? e.costInvalid
+        : resolved.reason === "costIncomplete" ? e.costIncomplete
+        : e.quantityInvalid;
+      return { ok: false, error };
+    }
+    if (!(resolved.base > 0)) return { ok: false, error: e.quantityInvalid };
 
-  const idColumn = input.kind === "medication" ? "medication_id" : "diet_type_id";
-  const { data: counts, error: countsError } = await supabase
-    .from("stock_counts")
-    .select("counted_at")
-    .neq("source", "correction")
-    .eq(idColumn, input.itemId)
-    .returns<{ counted_at: string }[]>();
-  if (countsError) return { ok: false, error: `${e.failed}: ${countsError.message}` };
+    const idColumn = input.kind === "medication" ? "medication_id" : "diet_type_id";
+    const { data: counts, error: countsError } = await supabase
+      .from("stock_counts")
+      .select("counted_at")
+      .neq("source", "correction")
+      .eq(idColumn, input.itemId)
+      .returns<{ counted_at: string }[]>();
+    if (countsError) return { ok: false, error: `${e.failed}: ${countsError.message}` };
 
-  const timing = input.timing === "before" || input.timing === "after" ? input.timing : null;
-  const at = receivedAtFor(input.date, (counts ?? []).map((c) => c.counted_at), timing);
-  if (!at.ok) return { ok: false, error: e[at.reason] };
+    const timing = input.timing === "before" || input.timing === "after" ? input.timing : null;
+    const at = receivedAtFor(input.date, (counts ?? []).map((c) => c.counted_at), timing);
+    if (!at.ok) return { ok: false, error: e[at.reason] };
 
-  const note = input.note.trim();
-  const { data: inserted, error } = await supabase.from("stock_receipts").insert({
-    item_kind: input.kind === "medication" ? "medication" : "diet_type",
-    [idColumn]: input.itemId,
-    quantity: resolved.base,
-    entered: resolved.entered,
-    ...(at.value ? { received_at: at.value } : {}),
-    supplier_contact_id: input.supplierId || null,
-    cost: resolved.cost,
-    note: note || null,
-  }).select("id").single();
-  if (error) return { ok: false, error: `${e.failed}: ${error.message}` };
+    const note = input.note.trim();
+    const { data: inserted, error } = await supabase.from("stock_receipts").insert({
+      item_kind: input.kind === "medication" ? "medication" : "diet_type",
+      [idColumn]: input.itemId,
+      quantity: resolved.base,
+      entered: resolved.entered,
+      ...(at.value ? { received_at: at.value } : {}),
+      supplier_contact_id: input.supplierId || null,
+      cost: resolved.cost,
+      note: note || null,
+    }).select("id").single();
+    if (error) return { ok: false, error: `${e.failed}: ${error.message}` };
 
-  revalidateStockPages();
-  // The id lets the caller file a bill on the delivery; without it the bill never attaches.
-  return { ok: true, id: inserted?.id };
+    revalidateStockPages();
+    // The id lets the caller file a bill on the delivery; without it the bill never attaches.
+    return { ok: true, id: inserted?.id };
+  });
 }
 
 /** A delivery typed wrong is deleted and recorded again (0096 allows both). */
-export async function deleteDelivery(id: string): Promise<DeliveryResult> {
-  const { t } = await getT();
-  const e = t.deliveries.errors;
-  const supabase = await createClient();
+export async function deleteDelivery(id: string, requestId: string | null): Promise<ActionResult<{ id?: string }>> {
+  return wrapped<{ id?: string }>("deliveries.deleteDelivery", requestId, async (t) => {
+    const e = t.deliveries.errors;
+    const supabase = await createClient();
 
-  if (!can(await loadPermissions(), "stock.delivery")) return { ok: false, error: e.notAuthorized };
+    if (!can(await loadPermissions(), "stock.delivery")) return { ok: false, error: e.notAuthorized };
 
-  const { error, count } = await supabase
-    .from("stock_receipts")
-    .delete({ count: "exact" })
-    .eq("id", id);
-  if (error) return { ok: false, error: `${e.failed}: ${error.message}` };
-  if (!count) return { ok: false, error: e.gone };
+    const { error, count } = await supabase
+      .from("stock_receipts")
+      .delete({ count: "exact" })
+      .eq("id", id);
+    if (error) return { ok: false, error: `${e.failed}: ${error.message}` };
+    if (!count) return { ok: false, error: e.gone };
 
-  revalidateStockPages();
-  return { ok: true };
+    revalidateStockPages();
+    return { ok: true };
+  });
 }

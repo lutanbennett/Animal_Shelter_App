@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { runWriteAction } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
@@ -10,7 +12,9 @@ import { getSiteOrigin } from "@/lib/site-origin";
 import { syncVisitToCalendar } from "@/lib/clinics/calendar-sync";
 import { loadClinicScope, scopeAllowsClinic } from "@/lib/clinics/scope";
 
-export type ClinicVisitEditState = { error: string } | undefined;
+// PI FAILOVER (D): the one write here goes through runWriteAction(); the redirect is taken AFTER it returns, so a
+// replay of a saved request redirects too instead of leaving an open claim (the wrapper rethrows a redirect).
+export type ClinicVisitEditState = { ok: false; error: string } | undefined;
 
 const STATUSES = ["scheduled", "completed", "cancelled"] as const;
 
@@ -34,79 +38,92 @@ export async function updateClinicVisit(
 ): Promise<ClinicVisitEditState> {
   const { t } = await getT();
   const e = t.vetVisits.errors;
-  if (!can(await loadPermissions(), "medical.visits")) return { error: e.notAuthorized };
-
-  const visitId = str(formData, "visitId");
-  const residentId = str(formData, "residentId");
-  if (!visitId || !residentId) return { error: e.notFound };
-
-  const clinicId = str(formData, "clinicId");
-  if (!clinicId) return { error: e.selectVet };
-
-  const appointmentDateLocal = str(formData, "appointmentDate");
-  if (!appointmentDateLocal) return { error: e.enterDateTime };
-  const appointmentDate = new Date(appointmentDateLocal);
-  if (Number.isNaN(appointmentDate.getTime())) return { error: e.invalidDate };
-
-  const status = str(formData, "status") ?? "scheduled";
-  if (!STATUSES.includes(status as (typeof STATUSES)[number])) return { error: e.invalidStatus };
-
-  const costRaw = str(formData, "cost");
-  let cost: number | null = null;
-  if (costRaw) {
-    cost = Number(costRaw.replace(/[,\s]/g, ""));
-    if (!Number.isFinite(cost) || cost < 0) return { error: e.invalidCost };
-    cost = Math.round(cost * 100) / 100;
-  }
-
   const supabase = await createClient();
-  // Same rule as the page (src/lib/clinics/scope.ts): a doctor login may
-  // keep the visit's current clinic or choose another of its own, nothing else.
-  const scope = await loadClinicScope(supabase);
-  if (scope.kind === "unlinked") return { error: t.vetVisits.noClinicForAccount };
-  let doctorName = str(formData, "doctorName");
-  if (scope.kind === "clinics") {
-    const { data: current } = await supabase
-      .from("clinic_visits")
-      .select("clinic_id, doctor_name")
-      .eq("id", visitId)
-      .limit(1)
-      .returns<{ clinic_id: string | null; doctor_name: string | null }[]>();
-    if (!scopeAllowsClinic(scope, clinicId, current?.[0]?.clinic_id)) return { error: e.notYourClinic };
-    // Locked Doctor (Lutan, 2026-10-01): the visit's own doctor stays, a
-    // visit with none becomes the doctor login's own. Not trusted from the form.
-    if (scope.doctorName) doctorName = current?.[0]?.doctor_name ?? scope.doctorName;
-  }
+  const result = await runWriteAction<{ redirectTo: string }>(
+    "clinicVisits.update",
+    {
+      somethingWentWrong: t.common.somethingWentWrong,
+      saveUnknown: t.common.saveUnknown,
+      reloadToSave: t.common.reloadToSave,
+    },
+    { id: writeRequestIdFrom(formData), action: "clinicVisits.update", db: supabase },
+    async () => {
+      if (!can(await loadPermissions(), "medical.visits")) return { ok: false, error: e.notAuthorized };
 
-  const { data, error } = await supabase
-    .from("clinic_visits")
-    .update({
-      clinic_id: clinicId,
-      appointment_date: appointmentDate.toISOString(),
-      status,
-      reason: str(formData, "reason"),
-      // str() trims and turns blank into null, as 0074's comment promises.
-      doctor_name: doctorName,
-      notes: str(formData, "notes"),
-      cost,
-    })
-    .eq("id", visitId)
-    .eq("resident_id", residentId)
-    .select("id")
-    .returns<{ id: string }[]>();
-  // 0107: a visit with prescriptions linked cannot move past today.
-  if (error?.code === "23514" && error.message.includes("prescriptions_visit_not_in_future")) {
-    return { error: e.prescriptionsBlockFuture };
-  }
-  if (error) return { error: error.message };
-  if (!data || data.length === 0) return { error: e.notAuthorized };
+      const visitId = str(formData, "visitId");
+      const residentId = str(formData, "residentId");
+      if (!visitId || !residentId) return { ok: false, error: e.notFound };
 
-  // Saved first; the calendar is second and can never undo it (calendar-sync.ts). A failure is left on the visit.
-  await syncVisitToCalendar(visitId, (await getSiteOrigin())?.origin ?? null);
+      const clinicId = str(formData, "clinicId");
+      if (!clinicId) return { ok: false, error: e.selectVet };
 
-  revalidatePath(`/residents/${residentId}`);
-  revalidatePath(`/residents/${residentId}/clinic-visits`);
-  revalidatePath(`/clinics/${clinicId}`, "page");
-  revalidatePath("/clinics");
-  redirect(`/residents/${residentId}/clinic-visits`);
+      const appointmentDateLocal = str(formData, "appointmentDate");
+      if (!appointmentDateLocal) return { ok: false, error: e.enterDateTime };
+      const appointmentDate = new Date(appointmentDateLocal);
+      if (Number.isNaN(appointmentDate.getTime())) return { ok: false, error: e.invalidDate };
+
+      const status = str(formData, "status") ?? "scheduled";
+      if (!STATUSES.includes(status as (typeof STATUSES)[number])) return { ok: false, error: e.invalidStatus };
+
+      const costRaw = str(formData, "cost");
+      let cost: number | null = null;
+      if (costRaw) {
+        cost = Number(costRaw.replace(/[,\s]/g, ""));
+        if (!Number.isFinite(cost) || cost < 0) return { ok: false, error: e.invalidCost };
+        cost = Math.round(cost * 100) / 100;
+      }
+
+      // Same rule as the page (src/lib/clinics/scope.ts): a doctor login may
+      // keep the visit's current clinic or choose another of its own, nothing else.
+      const scope = await loadClinicScope(supabase);
+      if (scope.kind === "unlinked") return { ok: false, error: t.vetVisits.noClinicForAccount };
+      let doctorName = str(formData, "doctorName");
+      if (scope.kind === "clinics") {
+        const { data: current } = await supabase
+          .from("clinic_visits")
+          .select("clinic_id, doctor_name")
+          .eq("id", visitId)
+          .limit(1)
+          .returns<{ clinic_id: string | null; doctor_name: string | null }[]>();
+        if (!scopeAllowsClinic(scope, clinicId, current?.[0]?.clinic_id)) return { ok: false, error: e.notYourClinic };
+        // Locked Doctor (Lutan, 2026-10-01): the visit's own doctor stays, a
+        // visit with none becomes the doctor login's own. Not trusted from the form.
+        if (scope.doctorName) doctorName = current?.[0]?.doctor_name ?? scope.doctorName;
+      }
+
+      const { data, error } = await supabase
+        .from("clinic_visits")
+        .update({
+          clinic_id: clinicId,
+          appointment_date: appointmentDate.toISOString(),
+          status,
+          reason: str(formData, "reason"),
+          // str() trims and turns blank into null, as 0074's comment promises.
+          doctor_name: doctorName,
+          notes: str(formData, "notes"),
+          cost,
+        })
+        .eq("id", visitId)
+        .eq("resident_id", residentId)
+        .select("id")
+        .returns<{ id: string }[]>();
+      // 0107: a visit with prescriptions linked cannot move past today.
+      if (error?.code === "23514" && error.message.includes("prescriptions_visit_not_in_future")) {
+        return { ok: false, error: e.prescriptionsBlockFuture };
+      }
+      if (error) return { ok: false, error: error.message };
+      if (!data || data.length === 0) return { ok: false, error: e.notAuthorized };
+
+      // Saved first; the calendar is second and can never undo it (calendar-sync.ts). A failure is left on the visit.
+      await syncVisitToCalendar(visitId, (await getSiteOrigin())?.origin ?? null);
+
+      revalidatePath(`/residents/${residentId}`);
+      revalidatePath(`/residents/${residentId}/clinic-visits`);
+      revalidatePath(`/clinics/${clinicId}`, "page");
+      revalidatePath("/clinics");
+      return { ok: true, redirectTo: `/residents/${residentId}/clinic-visits` };
+    },
+  );
+  if (result.ok) redirect(result.redirectTo);
+  return result;
 }

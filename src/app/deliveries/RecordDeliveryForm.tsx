@@ -11,6 +11,7 @@ import { defaultUnit, type UnitConversion } from "@/lib/units";
 import { packTotal, parseDeliveryQuantity, type DeliveryKind, type DeliveryTiming } from "@/lib/management/stock-receipts";
 import { previewBase } from "@/lib/management/delivery-lines";
 import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
+import { useWriteCall } from "@/lib/use-write-form";
 import { recordDelivery } from "./actions";
 import { attachCardToDelivery } from "@/app/bills/actions";
 import { BillPhotoField } from "@/components/BillPhotoField";
@@ -64,6 +65,8 @@ export function RecordDeliveryForm({
 }) {
   const formId = useId();
   const { t, locale } = useI18n();
+  const recordWrite = useWriteCall();
+  const attachWrite = useWriteCall();
   const d = t.deliveries;
   const f = d.form;
 
@@ -106,7 +109,7 @@ export function RecordDeliveryForm({
     setMessage(null);
     const saved = { name: item?.name ?? "", quantity: String(together ?? 0), unit: item?.unit ?? "" };
     startTransition(async () => {
-      const result = await recordDelivery({
+      const result = await recordWrite((requestId) => recordDelivery({
         kind,
         itemId,
         lines: lines.map((l) => ({ quantity: l.quantity, unit: l.unit, cost: l.cost })),
@@ -114,7 +117,7 @@ export function RecordDeliveryForm({
         timing: countedThatDay ? timing : null,
         supplierId,
         note,
-      });
+      }, requestId));
       if (!result.ok) {
         setMessage({ ok: false, text: result.error });
         return;
@@ -123,7 +126,7 @@ export function RecordDeliveryForm({
       // The bill: a card it was recorded from moves onto the delivery, and photos picked here are filed on it.
       let billNote = "";
       if (result.id && cardId) {
-        const moved = await attachCardToDelivery(cardId, result.id);
+        const moved = await attachWrite((requestId) => attachCardToDelivery(cardId, result.id!, requestId));
         if (!moved.ok) billNote = moved.error;
         setCardId(null);
       }

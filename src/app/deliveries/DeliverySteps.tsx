@@ -16,6 +16,7 @@ import {
   type DeliveryTiming,
 } from "@/lib/management/stock-receipts";
 import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
+import { useWriteCall } from "@/lib/use-write-form";
 import { recordDelivery } from "./actions";
 import { attachCardToDelivery } from "@/app/bills/actions";
 import { BillPhotoField } from "@/components/BillPhotoField";
@@ -66,6 +67,8 @@ export function DeliverySteps({
   const { t, locale } = useI18n();
   const d = t.deliveries;
   const s = d.steps;
+  const recordWrite = useWriteCall();
+  const attachWrite = useWriteCall();
 
   const [step, setStep] = useState<Step>("kind");
   const [kind, setKind] = useState<DeliveryKind>(initialKind);
@@ -146,7 +149,7 @@ export function DeliverySteps({
     setError(null);
     const done = { name: item?.name ?? "", quantity: String(together ?? 0), unit: item?.unit ?? "" };
     startTransition(async () => {
-      const result = await recordDelivery({
+      const result = await recordWrite((requestId) => recordDelivery({
         kind,
         itemId,
         lines: lines.map((l) => ({ quantity: l.quantity, unit: l.unit, cost: l.cost })),
@@ -154,7 +157,7 @@ export function DeliverySteps({
         timing: countedThatDay ? timing : null,
         supplierId,
         note,
-      });
+      }, requestId));
       if (!result.ok) {
         setError(result.error);
         return;
@@ -163,7 +166,7 @@ export function DeliverySteps({
       // The bill: a card it was recorded from moves onto the delivery, and photos picked here are filed on it.
       let billNote = "";
       if (result.id && cardId) {
-        const moved = await attachCardToDelivery(cardId, result.id);
+        const moved = await attachWrite((requestId) => attachCardToDelivery(cardId, result.id!, requestId));
         if (!moved.ok) billNote = moved.error;
         setCardId(null);
       }

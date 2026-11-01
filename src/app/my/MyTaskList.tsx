@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { CalendarClock, Check, Clock, Hourglass, MessageSquarePlus, SkipForward, Undo2, UserPlus, Users } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
 import { ENCLOSURE_ICONS, NAV_ICONS } from "@/components/hub-icons";
+import { useWriteCall } from "@/lib/use-write-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -86,6 +87,7 @@ export function MyTaskList({
   canEditMaintenance: boolean;
 }) {
   const { t, locale } = useI18n();
+  const statusWrite = useWriteCall();
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -122,7 +124,7 @@ export function MyTaskList({
     setUndoable(status === "Completed" ? { kind: "maintenance", task, previous } : null);
     startTransition(async () => {
       setOptimistic({ key: task.key, status });
-      const result = await setMaintenanceStatus(jobId, status);
+      const result = await statusWrite((id) => setMaintenanceStatus(jobId, status, id));
       if (!result.ok) {
         setError(result.error);
         setUndoable(null);
@@ -176,7 +178,7 @@ export function MyTaskList({
       const result =
         item.kind === "recurring" && item.occursOn
           ? await recordRecurringJob(item.jobId, item.occursOn, null, null)
-          : await setMaintenanceStatus(item.jobId, "In Progress");
+          : await statusWrite((id) => setMaintenanceStatus(item.jobId, "In Progress", id));
       if (!result.ok) {
         setError(result.error);
         setTakenBack((keys) => keys.filter((key) => key !== item.key));

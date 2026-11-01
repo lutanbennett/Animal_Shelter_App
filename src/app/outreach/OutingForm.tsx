@@ -13,6 +13,8 @@ import {
   type PendingFile,
 } from "@/components/DeferredUploads";
 import { WizardNav, WizardProgress } from "@/app/residents/new/WizardChrome";
+import { useWriteCall } from "@/lib/use-write-form";
+import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { todayIso } from "@/lib/format";
 import { HELP_KINDS, PLACE_KINDS, type CommunityPlace, type HelpKind, type Outing } from "@/lib/outreach/outings";
@@ -43,6 +45,8 @@ export function OutingForm({
   initial?: Outing;
 }) {
   const { t } = useI18n();
+  const createWrite = useWriteCall();
+  const updateWrite = useWriteCall();
   const o = t.outreach;
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
@@ -111,7 +115,15 @@ export function OutingForm({
     const formData = new FormData(event.currentTarget);
     setError(null);
     startTransition(async () => {
-      const result = mode === "create" ? await createOuting(formData) : await updateOuting(formData);
+      const result = mode === "create"
+          ? await createWrite((id) => {
+              formData.set(WRITE_REQUEST_FIELD, id);
+              return createOuting(formData);
+            })
+          : await updateWrite((id) => {
+              formData.set(WRITE_REQUEST_FIELD, id);
+              return updateOuting(formData);
+            });
       if (!result.ok) {
         setError(result.error);
         return;

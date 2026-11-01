@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { writeRequestIdFrom } from "@/lib/write-requests";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
@@ -13,6 +15,15 @@ import { checkMemeFields, checkPostUrl, parseTags, MEME_NOTE_MAX, type MemeField
 import { isPlatform } from "@/lib/memes/platforms";
 import { resolveSource } from "@/lib/memes/source-server";
 import { isSourceKind, type SourceKind } from "@/lib/memes/sources";
+
+// PI FAILOVER (D), 2026-11-01: every write here goes through runWriteAction() (docs/decisions/2026-11-01-write-paths-tail-a.md).
+// A write added to this file goes through it too, or the page addresses it sits on can never be listed.
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 /**
  * The meme library's writes (0223). Every one asks can() for a sentence; the database asks has_permission() for the
@@ -54,7 +65,11 @@ async function trashQuietly(fileId: string) {
 export async function createMeme(formData: FormData): Promise<ActionResult<{ id: string }>> {
   const { t } = await getT();
   const e = t.memes.form.errors;
-  return runAction<{ id: string }>("memes.create", t.common.somethingWentWrong, async () => {
+  return runWriteAction<{ id: string }>(
+    "memes.create",
+    write(t),
+    { id: writeRequestIdFrom(formData), action: "memes.create", db: await createClient() },
+    async () => {
     const perms = await loadPermissions();
     if (!can(perms, "social.library")) return { ok: false, error: e.notAllowed };
 
@@ -145,7 +160,11 @@ export async function createMeme(formData: FormData): Promise<ActionResult<{ id:
 export async function updateMeme(id: string, formData: FormData): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.memes.form.errors;
-  return runAction("memes.update", t.common.somethingWentWrong, async () => {
+  return runWriteAction(
+    "memes.update",
+    write(t),
+    { id: writeRequestIdFrom(formData), action: "memes.update", db: await createClient() },
+    async () => {
     const perms = await loadPermissions();
     if (!can(perms, "social.library")) return { ok: false, error: e.notAllowed };
     if (!UUID.test(id)) return { ok: false, error: e.notFound };
@@ -193,10 +212,14 @@ export async function updateMeme(id: string, formData: FormData): Promise<Action
 }
 
 /** Archive (or bring back) a meme: `archived` flips, nothing is deleted, and its shares stay. */
-export async function setMemeArchived(id: string, archived: boolean): Promise<ActionResult> {
+export async function setMemeArchived(id: string, archived: boolean, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.memes.form.errors;
-  return runAction("memes.archive", t.common.somethingWentWrong, async () => {
+  return runWriteAction(
+    "memes.archive",
+    write(t),
+    { id: requestId, action: "memes.archive", db: await createClient() },
+    async () => {
     const perms = await loadPermissions();
     if (!can(perms, "social.library")) return { ok: false, error: e.notAllowed };
     if (!UUID.test(id)) return { ok: false, error: e.notFound };
@@ -215,10 +238,14 @@ export async function setMemeArchived(id: string, archived: boolean): Promise<Ac
 export type ShareInput = { platform: string; sharedOn: string; postUrl: string; note: string };
 
 /** Record where and when a meme was posted. recorded_by is stamped by the database. */
-export async function recordMemeShare(memeId: string, input: ShareInput): Promise<ActionResult<{ id: string }>> {
+export async function recordMemeShare(memeId: string, input: ShareInput, requestId: string | null): Promise<ActionResult<{ id: string }>> {
   const { t } = await getT();
   const e = t.memes.share.errors;
-  return runAction<{ id: string }>("memes.recordShare", t.common.somethingWentWrong, async () => {
+  return runWriteAction<{ id: string }>(
+    "memes.recordShare",
+    write(t),
+    { id: requestId, action: "memes.recordShare", db: await createClient() },
+    async () => {
     const perms = await loadPermissions();
     if (!can(perms, "social.library")) return { ok: false, error: t.memes.form.errors.notAllowed };
     if (!UUID.test(memeId)) return { ok: false, error: t.memes.form.errors.notFound };
@@ -254,9 +281,13 @@ export async function recordMemeShare(memeId: string, input: ShareInput): Promis
 }
 
 /** Take a share record off (a mistaken entry). The post itself is untouched. */
-export async function removeMemeShare(memeId: string, shareId: string): Promise<ActionResult> {
+export async function removeMemeShare(memeId: string, shareId: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("memes.removeShare", t.common.somethingWentWrong, async () => {
+  return runWriteAction(
+    "memes.removeShare",
+    write(t),
+    { id: requestId, action: "memes.removeShare", db: await createClient() },
+    async () => {
     const perms = await loadPermissions();
     if (!can(perms, "social.library")) return { ok: false, error: t.memes.form.errors.notAllowed };
     if (!UUID.test(memeId) || !UUID.test(shareId)) return { ok: false, error: t.memes.share.errors.notFound };

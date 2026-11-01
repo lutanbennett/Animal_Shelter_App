@@ -16,6 +16,7 @@ import type { TranslationRow } from "@/lib/translations/types";
 import { MakeMemeLink } from "@/components/MakeMemeLink";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { FileTypeIcon } from "@/components/FileTypeIcon";
+import { useWriteCall } from "@/lib/use-write-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { fileKind } from "@/lib/uploads/file-kind";
 import { placeName } from "@/lib/enclosures/names";
@@ -73,6 +74,9 @@ export function MaintenanceJobView({
   translations: TranslationRow[];
 }) {
   const { t, locale } = useI18n();
+  const deleteJobWrite = useWriteCall();
+  const statusWrite = useWriteCall();
+  const deleteFileWrite = useWriteCall();
   const confirm = useConfirm();
   // The reader's language when a manager has approved it, else as written.
   const titleTranslation = translations.find((row) => row.column_name === "title") ?? null;
@@ -97,7 +101,7 @@ export function MaintenanceJobView({
     setDeleting(true);
     startTransition(async () => {
       // Redirects to the board on success; only a refusal comes back.
-      const result = await deleteMaintenanceJob(job.id);
+      const result = await deleteJobWrite((id) => deleteMaintenanceJob(job.id, id));
       setDeleting(false);
       if (!result.ok) setError(result.error);
     });
@@ -109,7 +113,7 @@ export function MaintenanceJobView({
     setDriveWarning(null);
     setOptimisticStatus(next);
     startTransition(async () => {
-      const result = await setMaintenanceStatus(job.id, next);
+      const result = await statusWrite((id) => setMaintenanceStatus(job.id, next, id));
       setOptimisticStatus(null);
       if (!result.ok) setError(result.error);
       else if (result.driveWarning) setDriveWarning(result.driveWarning);
@@ -121,7 +125,7 @@ export function MaintenanceJobView({
     if (!await confirm({ body: t.common.removeFileConfirm(fileName), confirmLabel: t.common.remove })) return;
     setError(null);
     startTransition(async () => {
-      const result = await deleteMaintenanceAttachment(job.id, attachmentId);
+      const result = await deleteFileWrite((id) => deleteMaintenanceAttachment(job.id, attachmentId, id));
       if (!result.ok) setError(result.error);
       router.refresh();
     });

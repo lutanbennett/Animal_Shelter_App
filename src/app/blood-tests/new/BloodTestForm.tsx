@@ -5,6 +5,8 @@ import { ActionButton } from "@/components/ActionButton";
 import { useState, useTransition, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { createBloodTest } from "./actions";
+import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
+import { useWriteCall } from "@/lib/use-write-form";
 import {
   FileDropZone,
   PendingFileList,
@@ -63,6 +65,7 @@ export function BloodTestForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const save = useWriteCall();
   const [saved, setSaved] = useState<{ bloodTestId: string; date: string } | null>(null);
   const [dateTouched, setDateTouched] = useState(false);
   const [date, setDate] = useState(() => {
@@ -94,9 +97,12 @@ export function BloodTestForm({
     const formData = new FormData(event.currentTarget);
     setError(null);
     startTransition(async () => {
-      const result = await createBloodTest(undefined, formData);
-      if (!result || "error" in result) {
-        setError(result?.error ?? t.bloodTests.errors.saveFailed);
+      const result = await save((requestId) => {
+        formData.set(WRITE_REQUEST_FIELD, requestId);
+        return createBloodTest(undefined, formData);
+      });
+      if (!result.ok) {
+        setError(result.error ?? t.bloodTests.errors.saveFailed);
         return;
       }
       setSaved({ bloodTestId: result.bloodTestId, date: result.date });

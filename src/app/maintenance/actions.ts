@@ -2,12 +2,23 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
 import { getT } from "@/lib/i18n/get-t";
+import { writeRequestIdFrom } from "@/lib/write-requests";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { syncJobFolderAfterChange } from "@/lib/maintenance/drive-sync";
 import { isMaintenanceStatus, type MaintenanceStatus } from "@/lib/maintenance/status";
+
+// PI FAILOVER (D), 2026-11-01: every write here goes through runWriteAction() (docs/decisions/2026-11-01-write-paths-tail-a.md).
+// A write added to this file goes through it too, or the page addresses it sits on can never be listed.
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 type JobSaved = { jobId: string; driveWarning: string | null };
 
@@ -150,7 +161,11 @@ async function parseFields(
  */
 export async function createMaintenanceJob(formData: FormData): Promise<ActionResult<JobSaved>> {
   const { t } = await getT();
-  return runAction("maintenance.createMaintenanceJob", t.common.somethingWentWrong, async () => {
+  return runWriteAction(
+    "maintenance.createMaintenanceJob",
+    write(t),
+    { id: writeRequestIdFrom(formData), action: "maintenance.createMaintenanceJob", db: await createClient() },
+    async () => {
     const parsed = await parseFields(formData);
     if ("error" in parsed) return refuse(parsed.error);
     const { fields } = parsed;
@@ -190,7 +205,11 @@ export async function createMaintenanceJob(formData: FormData): Promise<ActionRe
  */
 export async function updateMaintenanceJob(formData: FormData): Promise<ActionResult<JobSaved>> {
   const { t } = await getT();
-  return runAction("maintenance.updateMaintenanceJob", t.common.somethingWentWrong, async () => {
+  return runWriteAction(
+    "maintenance.updateMaintenanceJob",
+    write(t),
+    { id: writeRequestIdFrom(formData), action: "maintenance.updateMaintenanceJob", db: await createClient() },
+    async () => {
     const jobId = str(formData, "jobId");
     if (!jobId) return refuse(t.maintenance.errors.notFound);
 
@@ -249,9 +268,14 @@ export async function updateMaintenanceJob(formData: FormData): Promise<ActionRe
 export async function setMaintenanceStatus(
   jobId: string,
   status: string,
+  requestId: string | null,
 ): Promise<ActionResult<{ driveWarning: string | null }>> {
   const { t } = await getT();
-  return runAction("maintenance.setMaintenanceStatus", t.common.somethingWentWrong, async () => {
+  return runWriteAction(
+    "maintenance.setMaintenanceStatus",
+    write(t),
+    { id: requestId, action: "maintenance.setMaintenanceStatus", db: await createClient() },
+    async () => {
     if (!isMaintenanceStatus(status)) return refuse(t.maintenance.errors.invalidStatus);
 
     const supabase = await createClient();
@@ -282,9 +306,15 @@ export async function setMaintenanceStatus(
  * only a refusal ever comes back.
  * RLS (maintenance.delete, 0179) is what stops a role without it: their delete matches no row.
  */
-export async function deleteMaintenanceJob(jobId: string): Promise<ActionResult> {
+export async function deleteMaintenanceJob(jobId: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("maintenance.deleteMaintenanceJob", t.common.somethingWentWrong, async () => {
+  // The redirect is taken AFTER the wrapper returns: runWriteAction() rethrows a redirect and would leave the claim
+  // open, so a replay of a delete that did happen would answer "cannot tell" instead of finishing the same way.
+  const result = await runWriteAction<object>(
+    "maintenance.deleteMaintenanceJob",
+    write(t),
+    { id: requestId, action: "maintenance.deleteMaintenanceJob", db: await createClient() },
+    async () => {
     const supabase = await createClient();
 
     const { data: rows } = await supabase
@@ -335,19 +365,22 @@ export async function deleteMaintenanceJob(jobId: string): Promise<ActionResult>
     }
 
     revalidateJob(jobId, job.enclosure_id);
-    // runAction passes redirect's control-flow throw straight through.
-    redirect("/maintenance");
+    return { ok: true };
   });
+  if (result.ok) redirect("/maintenance");
+  return result;
 }
 
 export async function deleteMaintenanceAttachment(
   jobId: string,
   attachmentId: string,
+  requestId: string | null,
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction(
+  return runWriteAction(
     "maintenance.deleteMaintenanceAttachment",
-    t.common.somethingWentWrong,
+    write(t),
+    { id: requestId, action: "maintenance.deleteMaintenanceAttachment", db: await createClient() },
     async () => {
       const supabase = await createClient();
 

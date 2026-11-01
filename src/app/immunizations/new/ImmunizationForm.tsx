@@ -3,7 +3,7 @@
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { useMemo, useState } from "react";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { ResidentPicker } from "@/components/ResidentPicker";
 import { formatDate, todayIso } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -46,7 +46,7 @@ export function ImmunizationForm({
   enclosures: EnclosureOption[];
   preselectedResidentIds: string[];
 }) {
-  const [state, onSubmit, pending] = useKeptForm(
+  const [state, onSubmit, pending] = useWriteForm(
     recordImmunizations,
     undefined,
   );
@@ -90,7 +90,7 @@ export function ImmunizationForm({
 
   return (
     <div className="flex max-w-3xl flex-col gap-6">
-      {state && "success" in state && (
+      {state?.ok && (
         <div className="flex flex-col gap-3 rounded-lg border border-success/40 bg-success/10 p-4">
           <p className="text-sm font-medium text-success">
             {t.immunizations.resultHeading(state.records.length)}
@@ -305,7 +305,7 @@ export function ImmunizationForm({
           </p>
         )}
 
-        {state && "error" in state && (
+        {state && !state.ok && (
           <p className="text-sm text-danger">{state.error}</p>
         )}
 

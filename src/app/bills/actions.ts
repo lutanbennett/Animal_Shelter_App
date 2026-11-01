@@ -3,11 +3,34 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { parseBahtAmount, todayIso } from "@/lib/format";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { canUseBills } from "@/lib/bills/access";
-import type { ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult } from "@/lib/action-result";
+
+// PI FAILOVER (D), 2026-11-01: every write here goes through runWriteAction() via wrapped(), which is what lets the
+// Worker replay a save the Pi did not clearly answer (docs/decisions/2026-11-01-write-paths-tail-a.md). A new write
+// added to this file goes through wrapped() too, with its own action name.
+async function wrapped<R extends object>(
+  action: string,
+  requestId: string | null,
+  body: (t: Dictionary) => Promise<ActionResult<R>>,
+): Promise<ActionResult<R>> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction<R>(
+    action,
+    {
+      somethingWentWrong: t.common.somethingWentWrong,
+      saveUnknown: t.common.saveUnknown,
+      reloadToSave: t.common.reloadToSave,
+    },
+    { id: requestId, action, db: supabase },
+    () => body(t),
+  );
+}
 
 export type CardDetails = { amount: string; date: string; note: string };
 export type MatchKind = "stock_receipt" | "clinic_visit";
@@ -26,22 +49,23 @@ async function mayMatch(kind: MatchKind): Promise<boolean> {
 }
 
 /** Saves what was typed on a card without matching it, so a half-done card keeps its figures. */
-export async function saveCard(cardId: string, input: CardDetails): Promise<ActionResult> {
-  const { t } = await getT();
-  const e = t.bills.errors;
-  if (!canUseBills(await loadPermissions())) return { ok: false, error: e.notAuthorized };
-  const amount = parseBahtAmount(input.amount);
-  if (!amount.ok) return { ok: false, error: e.costInvalid };
+export async function saveCard(cardId: string, input: CardDetails, requestId: string | null): Promise<ActionResult> {
+  return wrapped<object>("bills.saveCard", requestId, async (t) => {
+    const e = t.bills.errors;
+    if (!canUseBills(await loadPermissions())) return { ok: false, error: e.notAuthorized };
+    const amount = parseBahtAmount(input.amount);
+    if (!amount.ok) return { ok: false, error: e.costInvalid };
 
-  const supabase = await createClient();
-  const { error, count } = await supabase
-    .from("bills_inbox")
-    .update({ amount: amount.value, bill_date: input.date || null, note: input.note.trim() || null }, { count: "exact" })
-    .eq("id", cardId);
-  if (error) return { ok: false, error: `${e.failed}: ${error.message}` };
-  if (!count) return { ok: false, error: e.gone };
-  revalidateBills();
-  return { ok: true };
+    const supabase = await createClient();
+    const { error, count } = await supabase
+      .from("bills_inbox")
+      .update({ amount: amount.value, bill_date: input.date || null, note: input.note.trim() || null }, { count: "exact" })
+      .eq("id", cardId);
+    if (error) return { ok: false, error: `${e.failed}: ${error.message}` };
+    if (!count) return { ok: false, error: e.gone };
+    revalidateBills();
+    return { ok: true };
+  });
 }
 
 /**
@@ -55,24 +79,26 @@ export async function matchBill(
   kind: MatchKind,
   targetId: string,
   input: CardDetails,
+  requestId: string | null,
 ): Promise<ActionResult> {
-  const { t } = await getT();
-  const e = t.bills.errors;
-  if (!(await mayMatch(kind))) return { ok: false, error: e.notAuthorized };
-  const amount = parseBahtAmount(input.amount);
-  if (!amount.ok) return { ok: false, error: e.costInvalid };
+  return wrapped<object>("bills.matchBill", requestId, async (t) => {
+    const e = t.bills.errors;
+    if (!(await mayMatch(kind))) return { ok: false, error: e.notAuthorized };
+    const amount = parseBahtAmount(input.amount);
+    if (!amount.ok) return { ok: false, error: e.costInvalid };
 
-  const supabase = await createClient();
-  if (amount.value != null) {
-    const { error, count } = await supabase
-      .from(kind === "stock_receipt" ? "stock_receipts" : "clinic_visits")
-      .update({ cost: amount.value }, { count: "exact" })
-      .eq("id", targetId);
-    if (error) return { ok: false, error: `${e.failed}: ${error.message}` };
-    if (!count) return { ok: false, error: e.targetGone };
-  }
+    const supabase = await createClient();
+    if (amount.value != null) {
+      const { error, count } = await supabase
+        .from(kind === "stock_receipt" ? "stock_receipts" : "clinic_visits")
+        .update({ cost: amount.value }, { count: "exact" })
+        .eq("id", targetId);
+      if (error) return { ok: false, error: `${e.failed}: ${error.message}` };
+      if (!count) return { ok: false, error: e.targetGone };
+    }
 
-  return moveCardTo(cardId, kind, targetId);
+    return moveCardTo(cardId, kind, targetId);
+  });
 }
 
 /**
@@ -81,46 +107,47 @@ export async function matchBill(
  * bill. The bill is made first and removed again if the photos then fail to move, so a retry starts
  * clean and the card is never lost. Management's and Admin's only (maintenance.bills).
  */
-export async function matchBillToJob(cardId: string, jobId: string, input: CardDetails): Promise<ActionResult> {
-  const { t } = await getT();
-  const e = t.bills.errors;
-  const perms = await loadPermissions();
-  if (!perms || !can(perms, "maintenance.bills")) {
-    return { ok: false, error: e.notAuthorized };
-  }
-  const amount = parseBahtAmount(input.amount);
-  if (!amount.ok) return { ok: false, error: e.costInvalid };
-  if (amount.value == null) return { ok: false, error: e.amountNeeded };
+export async function matchBillToJob(cardId: string, jobId: string, input: CardDetails, requestId: string | null): Promise<ActionResult> {
+  return wrapped<object>("bills.matchBillToJob", requestId, async (t) => {
+    const e = t.bills.errors;
+    const perms = await loadPermissions();
+    if (!perms || !can(perms, "maintenance.bills")) {
+      return { ok: false, error: e.notAuthorized };
+    }
+    const amount = parseBahtAmount(input.amount);
+    if (!amount.ok) return { ok: false, error: e.costInvalid };
+    if (amount.value == null) return { ok: false, error: e.amountNeeded };
 
-  const supabase = await createClient();
-  const { data: bill, error } = await supabase
-    .from("maintenance_bills")
-    .insert({
-      maintenance_id: jobId,
-      amount: amount.value,
-      bill_date: input.date || todayIso(),
-      note: input.note.trim() || null,
-    })
-    .select("id")
-    .single<{ id: string }>();
-  if (error || !bill) return { ok: false, error: error?.code === "23503" ? e.targetGone : `${e.failed}: ${error?.message ?? ""}` };
+    const supabase = await createClient();
+    const { data: bill, error } = await supabase
+      .from("maintenance_bills")
+      .insert({
+        maintenance_id: jobId,
+        amount: amount.value,
+        bill_date: input.date || todayIso(),
+        note: input.note.trim() || null,
+      })
+      .select("id")
+      .single<{ id: string }>();
+    if (error || !bill) return { ok: false, error: error?.code === "23503" ? e.targetGone : `${e.failed}: ${error?.message ?? ""}` };
 
-  const { error: moveError } = await supabase
-    .from("attachments")
-    .update({ owner_type: "maintenance_bill", owner_id: bill.id })
-    .eq("owner_type", "bill_inbox")
-    .eq("owner_id", cardId);
-  if (moveError) {
-    await supabase.from("maintenance_bills").delete().eq("id", bill.id);
-    return { ok: false, error: `${e.failed}: ${moveError.message}` };
-  }
+    const { error: moveError } = await supabase
+      .from("attachments")
+      .update({ owner_type: "maintenance_bill", owner_id: bill.id })
+      .eq("owner_type", "bill_inbox")
+      .eq("owner_id", cardId);
+    if (moveError) {
+      await supabase.from("maintenance_bills").delete().eq("id", bill.id);
+      return { ok: false, error: `${e.failed}: ${moveError.message}` };
+    }
 
-  const { error: deleteError } = await supabase.from("bills_inbox").delete().eq("id", cardId);
-  if (deleteError) return { ok: false, error: `${e.failed}: ${deleteError.message}` };
+    const { error: deleteError } = await supabase.from("bills_inbox").delete().eq("id", cardId);
+    if (deleteError) return { ok: false, error: `${e.failed}: ${deleteError.message}` };
 
-  revalidateBills();
-  revalidatePath(`/maintenance/${jobId}`);
-  return { ok: true };
+    revalidateBills();
+    revalidatePath(`/maintenance/${jobId}`);
+    return { ok: true };
+  });
 }
 
 /** Moves the card's photos onto the record and deletes the card. Used by matchBill and by "record a new delivery from this bill". */
@@ -144,29 +171,31 @@ async function moveCardTo(cardId: string, kind: MatchKind, targetId: string): Pr
 }
 
 /** A new delivery was recorded from a card (Record a delivery, opened from the card): file the card's photos on it. */
-export async function attachCardToDelivery(cardId: string, receiptId: string): Promise<ActionResult> {
-  const { t } = await getT();
-  if (!(await mayMatch("stock_receipt"))) return { ok: false, error: t.bills.errors.notAuthorized };
-  return moveCardTo(cardId, "stock_receipt", receiptId);
+export async function attachCardToDelivery(cardId: string, receiptId: string, requestId: string | null): Promise<ActionResult> {
+  return wrapped<object>("bills.attachCardToDelivery", requestId, async (t) => {
+    if (!(await mayMatch("stock_receipt"))) return { ok: false, error: t.bills.errors.notAuthorized };
+    return moveCardTo(cardId, "stock_receipt", receiptId);
+  });
 }
 
 /** A bill photographed by mistake. The photos' rows go with the card; the files stay in Drive's Bills folder. */
-export async function deleteCard(cardId: string): Promise<ActionResult> {
-  const { t } = await getT();
-  const e = t.bills.errors;
-  if (!canUseBills(await loadPermissions())) return { ok: false, error: e.notAuthorized };
+export async function deleteCard(cardId: string, requestId: string | null): Promise<ActionResult> {
+  return wrapped<object>("bills.deleteCard", requestId, async (t) => {
+    const e = t.bills.errors;
+    if (!canUseBills(await loadPermissions())) return { ok: false, error: e.notAuthorized };
 
-  const supabase = await createClient();
-  const { error: photoError } = await supabase
-    .from("attachments")
-    .delete()
-    .eq("owner_type", "bill_inbox")
-    .eq("owner_id", cardId);
-  if (photoError) return { ok: false, error: `${e.failed}: ${photoError.message}` };
+    const supabase = await createClient();
+    const { error: photoError } = await supabase
+      .from("attachments")
+      .delete()
+      .eq("owner_type", "bill_inbox")
+      .eq("owner_id", cardId);
+    if (photoError) return { ok: false, error: `${e.failed}: ${photoError.message}` };
 
-  const { error, count } = await supabase.from("bills_inbox").delete({ count: "exact" }).eq("id", cardId);
-  if (error) return { ok: false, error: `${e.failed}: ${error.message}` };
-  if (!count) return { ok: false, error: e.gone };
-  revalidateBills();
-  return { ok: true };
+    const { error, count } = await supabase.from("bills_inbox").delete({ count: "exact" }).eq("id", cardId);
+    if (error) return { ok: false, error: `${e.failed}: ${error.message}` };
+    if (!count) return { ok: false, error: e.gone };
+    revalidateBills();
+    return { ok: true };
+  });
 }

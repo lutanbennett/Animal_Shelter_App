@@ -9,6 +9,7 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 import { uploadAttachmentFile } from "@/components/AttachmentUploader";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
+import { useWriteCall } from "@/lib/use-write-form";
 import { deleteCard, matchBill, matchBillToJob, saveCard, type SuggestionKind } from "./actions";
 import { DateInput } from "@/components/DateInput";
 
@@ -141,6 +142,11 @@ function CardView({
   const [pending, startTransition] = useTransition();
   const [adding, setAdding] = useState(false);
   const pageInput = useRef<HTMLInputElement>(null);
+  // One useWriteCall per action (use-write-form.ts): an id kept from an unknown Save must never reach Delete.
+  const saveWrite = useWriteCall();
+  const deleteWrite = useWriteCall();
+  const matchWrite = useWriteCall();
+  const matchJobWrite = useWriteCall();
 
   const details = { amount, date, note };
   const byNearness = [...suggestions].sort(
@@ -254,13 +260,11 @@ function CardView({
                     type="button"
                     disabled={pending}
                     onClick={() =>
-                      run(
-                        () =>
-                          s.kind === "maintenance_job"
-                            ? matchBillToJob(card.id, s.id, details)
-                            : matchBill(card.id, s.kind, s.id, details),
-                        b.matchDone,
-                      )
+                      run(() => {
+                        if (s.kind === "maintenance_job") return matchJobWrite((id) => matchBillToJob(card.id, s.id, details, id));
+                        const kind = s.kind;
+                        return matchWrite((id) => matchBill(card.id, kind, s.id, details, id));
+                      }, b.matchDone)
                     }
                     className="flex min-h-11 w-full flex-col items-start rounded border border-border px-3 py-2 text-left text-sm hover:bg-surface-hover disabled:opacity-50"
                   >
@@ -285,7 +289,7 @@ function CardView({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <ActionButton icon={ACTION_ICONS.save} disabled={pending} onClick={() => run(() => saveCard(card.id, details), b.saved)}>
+        <ActionButton icon={ACTION_ICONS.save} disabled={pending} onClick={() => run(() => saveWrite((id) => saveCard(card.id, details, id)), b.saved)}>
           {b.save}
         </ActionButton>
         <ActionButton
@@ -293,7 +297,7 @@ function CardView({
           icon={ACTION_ICONS.delete}
           disabled={pending}
           onClick={() => {
-            if (window.confirm(b.deleteConfirm)) run(() => deleteCard(card.id), b.deleted);
+            if (window.confirm(b.deleteConfirm)) run(() => deleteWrite((id) => deleteCard(card.id, id)), b.deleted);
           }}
         >
           {b.deleteCard}
