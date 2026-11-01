@@ -1,28 +1,28 @@
-# Feature test plan — planner handover `537`
+# Feature test plan — planner handover `546`
 
 ## Header
 
 | | |
 |---|---|
-| Feature | `docs/planner-handover.md` rewritten as edition `537`: a delta over `528` covering batches 6, 7 and 8 |
+| Feature | `docs/planner-handover.md` rewritten as edition `546`: a delta over `537` covering batches 9 and 10 |
 | Backlog item | `docs/backlog.md` → none. The handover is the planner skill's step 8, not a backlog item; the counter reaching nine is what makes it due |
-| Branch / worktree | `claude/handover-537` @ `C:\Development\Animal_Shelter_handover-537` |
+| Branch / worktree | `claude/planner-handover-546` @ `C:\Development\Animal_Shelter_planner-handover-546` |
 | Dev server | not started — `n/a: one markdown file, no runtime surface` |
-| PR | #1153 |
+| PR | #1164 |
 | Tested by / date | Claude (Daily Planner) / 2026-11-01 |
 | Carries a migration? | no |
-| Tested at SHA | `19561c92` |
+| Tested at SHA | `af976b28` |
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for — *one file, `docs/planner-handover.md`, replaced with edition `537`.* There is no backlog item, as the header says
+- [x] Change is described in one sentence, and it matches what the backlog item asked for — *one file, `docs/planner-handover.md`, replaced with edition `546`.* There is no backlog item, as the header says
 - [x] Files/areas touched listed — `docs/planner-handover.md` and this plan. **No `src/`, no `scripts/`, no `supabase/migrations/`, no `worker/`, no workflow, no `CLAUDE.md`, and not the planner skill**
 - [x] Access affected identified — **none.** The handover grants and denies nothing: it is read by one chat and outranks nothing, which it says in its own opening lines. No card, activity, policy or page changes. *(Stated by card rather than by role, per `CLAUDE.md`: there is no card-derived behaviour here)*
-- [x] Anything explicitly **out of scope** written down — the facts `537` says to promote are **not** promoted in this PR; `528`'s judgement rule was already superseded in the skill by #1143, and nothing else here edits the skill or `CLAUDE.md`. Length: **144 lines**, inside the skill's ~150 target, measured with `wc -l` rather than estimated
+- [x] Anything explicitly **out of scope** written down — the one fact this edition says to promote, that the planner now sets the streams' dials, is **named and deliberately not applied here**: it belongs in the plan-day skill's step 7 and in the `CLAUDE.md` line that says Lutan opens a session per worktree, and changing either is his to approve and its own PR. Length: **149 lines**, inside the skill's ~150 target, measured with `wc -l` rather than estimated
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — the worktree was cut from `origin/main` minutes earlier, so it was already current
+- [x] `node scripts/worktree.mjs sync` — run on this branch before the gates; output in the PR body
 - [x] `node scripts/gates.mjs` ends:
 
 ```
@@ -67,18 +67,18 @@ grouping of cards and every assignment will be rebuilt).
 
 ## 6. Regression
 
-- [x] The pages nearest the change still work — `n/a` would be wrong: `docs/` is read by `scripts/check-test-plan.mjs` and `scripts/check-docs-only.mjs`, so the four gates were run in full rather than skipped as a documentation change. All four exited 0
-- [x] Any shared file touched checked from a second, unrelated place — the predecessor's claims were checked against the repo rather than carried: the floor figures come from this round's own `stream-usage:` comments, the `(D)` remainder from `check-wrapped-write-paths.mjs --all`, and the two `42501` errors from #1150's own measurement. **Every figure in `537` has a named source**
+- [x] The pages nearest the change still work — `n/a` would be wrong: `docs/` is read by `scripts/check-test-plan.mjs` and `scripts/check-docs-only.mjs`, so the four gates were run in full rather than skipped as a documentation change
+- [x] Any shared file touched checked from a second, unrelated place — the predecessor's claims were checked against the repo rather than carried, and **two of them did not survive**: `537` said to band at `medium` because twenty-one streams had ignored a Sonnet/low recommendation, and all six streams since ran `sonnet`/`low`; and its own lead subject was not tested at all this round, which `546` says in those words rather than reporting it as fired. Every figure in `546` has a named source: the band verdicts are computed from the `stream-usage:` comments against the bands in `.plan-day.md`, the floor figures are `tokens − messages` from those same comments, the `(D)` remainder is from `check-wrapped-write-paths.mjs --all` on merged `main`, the one-address path list is `src/lib/write-requests.ts:87` read directly, and the server-side import count is from a script run over `src/`
 - [x] Nothing merged from `main` during `sync` was broken by this branch — the branch is one commit of markdown on top of `origin/main`
 
 ## 7. Documentation
 
 - [ ] Backlog item ticked **on this branch** — `n/a: the handover is the skill's step 8, not a backlog item`
-- [x] Non-obvious design choices added as a new file in `docs/decisions/` — `n/a` would be wrong, but no new file is needed: the two choices this edition makes about itself (which subject to lead with, and that `528`'s judgement rule is cited as superseded rather than re-argued) are stated in the document's own opening and are its subject matter. **The durable facts it names for promotion are listed in the document, deliberately not applied here** — editing the skill changes every future session and is its own PR
+- [x] Non-obvious design choices added as a new file in `docs/decisions/` — `n/a` would be wrong, but no new file is needed: the choice this edition makes about itself, leading with the ruling-becomes-an-instrument finding rather than with the dial change, is stated in its own opening and is its subject matter. **The fact it names for promotion is deliberately not applied here**, for the reason given in section 1
 - [x] `README.md` still accurate — it says nothing about the handover
 - [ ] **Release notes.** — `n/a: nobody at the shelter would notice. This is a handover document read by one planning chat; it touches no page, no card and no data`
 - [x] Commit messages say why, not just what
-- [x] **Claims in commit messages and decision files were measured, not reasoned** — the three counts in the lead table (57 sentences and 6 `path:` lines, 12 of 15 deliberate, ~30 more strings with at least 3 false) are the streams' own reported measurements, each attributed; the band verdicts are computed from the `stream-usage:` comments against the bands in `.plan-day.md`; the line count is `wc -l`
+- [x] **Claims in commit messages and decision files were measured, not reasoned** — the three band misses in the lead table are computed from the streams' own posted usage lines; the "one address" in the path list was read from the file; the "exactly one server-side importer" figure replaced a first measurement that returned dozens and meant nothing, and `546` says so rather than quoting the larger number; the line count is `wc -l`
 
 ## 8. Pre-production gate
 
