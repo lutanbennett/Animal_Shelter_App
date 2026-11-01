@@ -12,7 +12,8 @@ import {
 } from "@/lib/placements/hospital";
 import { recordWeight } from "@/lib/weight/record";
 import { recordResidentDeath } from "@/lib/placements/deceased";
-import { recordImmunizations } from "@/app/immunizations/new/actions";
+import { writeImmunizations } from "@/lib/immunizations/record";
+import { getLocale } from "@/lib/i18n/get-locale";
 import { recordPrescription } from "@/lib/prescriptions/record";
 import {
   rehomeResident,
@@ -434,16 +435,16 @@ export async function assistantRecordImmunization(
   return runWrite(
     "immunization",
     input,
-    async (_supabase, t) => {
+    async (supabase, t) => {
+      // One claim: runWrite() above holds it. writeImmunizations() claims nothing (it is not an action), and this form
+      // carries no `__writeRequest` on purpose -- see docs/decisions/2026-11-01-nested-claim-one-write.md.
       const form = new FormData();
       form.append("residentIds", input.residentId);
       for (const id of input.immunizationTypeIds) form.append("immunizationTypeIds", id);
       form.append("dateAdministered", input.date);
       form.append("notes", stamp(t, input.request));
-      const result = await recordImmunizations(undefined, form);
-      if (!result || "error" in result) {
-        return { error: result?.error ?? t.assistant.notAuthorized };
-      }
+      const result = await writeImmunizations(supabase, t, await getLocale(), form);
+      if (!result.ok) return { error: result.error };
       return { ok: true as const, id: result.records[0]?.id ?? "" };
     },
     () => {
