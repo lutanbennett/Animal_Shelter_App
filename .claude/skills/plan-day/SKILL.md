@@ -984,6 +984,50 @@ takes a minute):
    fresh session needs; CLAUDE.md covers the rest — **except the
    pre-push test-plan block below, which every brief must carry.**
 
+### START THE SESSIONS YOURSELF, WITH THE DIALS SET — but check how the turn arrived first
+
+**Lutan, 2026-11-01: *"I had to change those three streams manually"*, and then, asked whether the
+planner should do it: *"Yes, try it next batch."*** Every batch creates three new folders, every new
+session opens on Opus, and he was re-dialling three times a batch — a cost no plan had recorded, because
+dials are read back *after* the fact, where a hand-set one and an inherited one look identical.
+
+**Measured, so do not re-derive it: nothing in the settings cascade fixes this.** `model` in
+`~/.claude/settings.json` is **inert for the Code tab** (set it, `get_settings` reads it back, a new
+session still opens on Opus), and **there is no per-folder model memory** — `lastModelUsage` in
+`~/.claude.json` is a **cost ledger**, with a record on one folder out of 999 and none on any worktree.
+A planner once read that single record as the cause and told him so; it was wrong.
+
+**So, once the worktrees and briefs exist:**
+
+1. **Start ONE session** with `start_session`: `initiation: "user_asked"`, `context: "fresh"`, `cwd` set
+   to the worktree folder, `use_worktree: false`, `model` and `effort` from your own band table, the
+   brief as `prompt`, and `background` (which "fresh" requires, at 80+ characters). A cheaper model
+   family than yours and an effort at or below yours are both permitted.
+2. **Read it back with `get_session` before starting the rest.** A session that starts is not a session
+   on the right dial, and that is the entire reason for trialling one first.
+3. **Then start the others the same way**, and say in the finishing message that the dials are already
+   set — otherwise he re-dials them out of habit.
+
+**IT ONLY WORKS FROM A TURN HE TYPED IN THE DESKTOP APP.** Over Remote Control the call is refused
+outright — *"for now you can start a session only on a message typed in the desktop app"* — whatever
+folder or dials you pass. **That is a condition, not a fault.** When it is refused, fall back at once to
+naming the folder and the port and letting him open the session, and record the refusal. **Do not ask him
+to name each folder in chat merely to satisfy the `cwd` parameter.**
+
+**AND THE BANDING CONSEQUENCE, WHICH IS THE PART THAT WILL BE FORGOTTEN: a dial you set is not evidence
+of his choice.** `get_session` reporting `sonnet`/`low` now says what the **planner** chose. A
+`stream-usage:` figure remains a clean reading of **scale**, but **no model finding can be drawn from it
+any more** — so stop writing model advice, band at `low`, and state the `medium` figure beside it. The
+twenty-one-stream model observation in handover `537` was built on dials *he* picked, and that era ended
+the moment the planner took the dials.
+
+**They are also now LINKED sessions**, which changes two things. They appear as rows in the planner's
+chat and it is continued when each ends a turn. And **a note is that session's report, not proof**:
+check the PR or the diff before telling him a stream is done, and **check its window before accepting
+"I stopped because the session grew large"** — the stop-and-hand-over rule in the briefs is for a session
+well past halfway, and on 2026-11-01 two streams stopped short of a PR at 20% and 13%, which is simply
+premature.
+
 ### Every brief ends with this block, verbatim
 
 **Lutan, 2026-10-12: "the streams seem to be making errors in the test plan
@@ -1578,10 +1622,11 @@ then brief anyone.**
 
 ## 8. Finish
 
-One line per stream: folder, port, and that the session should be opened
-on that folder — its first move is to read `.brief.md`. Then one line
-saying that once these have merged, running `/plan-day` again sets up the
-next batch without re-planning.
+One line per stream: folder, port, and **who started the session** — you
+did, with the dials already set (step 7), or, where that was refused, that
+he should open one on that folder himself. Either way its first move is to
+read `.brief.md`. Then one line saying that once these have merged, running
+`/plan-day` again sets up the next batch without re-planning.
 
 **At nine or more workstreams since handover**, end by telling the user, in
 this order: (1) update `docs/planner-handover.md` now, in this chat, while the
