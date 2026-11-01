@@ -1,5 +1,9 @@
 "use server";
 
+// write-requests: replay-safe -- signs a person in (GoTrue) or starts Google sign-in before any session exists, so
+// claim_write_request() has no auth.uid() to claim as; a second run makes a second session and changes nothing in the
+// app database. docs/decisions/2026-11-01-write-paths-tail-b.md, section 3.
+
 import { redirect } from "next/navigation";
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { safeNextPath } from "@/lib/auth/next-path";

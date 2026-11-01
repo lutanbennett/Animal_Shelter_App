@@ -1,5 +1,9 @@
 "use server";
 
+// write-requests: replay-safe -- asks GoTrue to email a recovery link before any session exists, so there is nothing to
+// claim as; a second run sends a second email, bounded by Supabase's own rate limit, and changes nothing in the app
+// database. docs/decisions/2026-11-01-write-paths-tail-b.md, section 3.
+
 import { getSiteOrigin } from "@/lib/site-origin";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";

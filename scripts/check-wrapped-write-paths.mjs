@@ -52,6 +52,18 @@
  * called it read-only because the question it answers is, and it inserts an
  * audit row on every call.
  *
+ * REPLAY-SAFE MODULES THAT CANNOT CLAIM (added 2026-11-01, tail B). The second declaration is for a write that
+ * claim_write_request() cannot guard because no one is signed in yet: it claims as auth.uid() and is revoked
+ * from anon, so the sign-in form and the password-reset request have nothing to claim as. Such a module may say
+ *
+ *   // write-requests: replay-safe -- <why a second run does no harm, and why it cannot claim>
+ *
+ * It is guarded exactly as read-only is (a write-shaped call of its own refuses it) and printed in its own
+ * section on every run, because it is a stronger claim than read-only: this module DOES something, and the
+ * declaration is that doing it twice is harmless. It is for GoTrue calls made before a session exists. It is
+ * not for an app-database write, which can always be claimed by someone signed in, and it is not for a write
+ * whose replay is merely unlikely. docs/decisions/2026-11-01-write-paths-tail-b.md has the three it was written for.
+ *
  *   node scripts/check-wrapped-write-paths.mjs            # the listed paths
  *   node scripts/check-wrapped-write-paths.mjs --all      # every page
  *   node scripts/check-wrapped-write-paths.mjs --prefix /admin
@@ -108,7 +120,7 @@ const isActionModule = (file) => /^["']use server["']/.test(source.get(file) ?? 
 /** A write-shaped call in a module's OWN source; see the header on the limits. */
 const WRITE_SHAPES = [".insert(", ".update(", ".upsert(", ".delete(", ".updateUser("];
 
-const DECLARATION = /^\s*\/\/\s*write-requests:\s*read-only\s*(?:--|—)\s*(.+?)\s*$/m;
+const DECLARATION = /^\s*\/\/\s*write-requests:\s*(read-only|replay-safe)\s*(?:--|—)\s*(.+?)\s*$/m;
 
 /**
  * The module with its comments taken out, so PROSE about runWriteAction() is
@@ -124,10 +136,11 @@ function code(text) {
  * Does this module satisfy the rule, and how?
  *
  *   { how: "wrapped" }                        it calls runWriteAction()
- *   { how: "declared", why }                  it declares itself read-only, and
- *                                             shows no write-shaped call
- *   { how: "refused", why, shape }            it declares itself read-only and
- *                                             DOES show one -- a fault
+ *   { how: "declared", kind, why }            it declares itself read-only (or
+ *                                             replay-safe), and shows no
+ *                                             write-shaped call
+ *   { how: "refused", kind, why, shape }      it declares itself and DOES show
+ *                                             a write-shaped call -- a fault
  *   null                                      an unwrapped write
  */
 function verdictFor(file) {
@@ -141,8 +154,8 @@ function verdictFor(file) {
     const shape = WRITE_SHAPES.find((s) => body.includes(s));
     // Fail closed: the declaration is worth nothing against evidence of a write.
     return shape
-      ? { how: "refused", why: declared[1], shape }
-      : { how: "declared", why: declared[1] };
+      ? { how: "refused", kind: declared[1], why: declared[2], shape }
+      : { how: "declared", kind: declared[1], why: declared[2] };
   }
 
   return body.includes("runWriteAction") ? { how: "wrapped" } : null;
@@ -205,6 +218,7 @@ for (const page of pages.sort()) {
 }
 
 const declarations = new Map();
+const replaySafe = new Map();
 const refusals = new Map();
 
 for (const row of report) {
@@ -213,10 +227,16 @@ for (const row of report) {
   for (const mod of row.modules) {
     const verdict = verdictFor(mod);
     const actions = [...(source.get(mod) ?? "").matchAll(/^export async function (\w+)/gm)].map((m) => m[1]);
-    if (verdict?.how === "declared") declarations.set(mod, verdict.why);
+    if (verdict?.how === "declared") (verdict.kind === "replay-safe" ? replaySafe : declarations).set(mod, verdict.why);
     if (verdict?.how === "refused") refusals.set(mod, verdict);
     const mark2 =
-      verdict?.how === "wrapped" ? "ok  " : verdict?.how === "declared" ? "read" : "NOT ";
+      verdict?.how === "wrapped"
+        ? "ok  "
+        : verdict?.how === "declared"
+          ? verdict.kind === "replay-safe"
+            ? "safe"
+            : "read"
+          : "NOT ";
     console.log(`    ${mark2} ${mod}  ${actions.join(", ")}`);
   }
 }
@@ -229,10 +249,17 @@ if (declarations.size > 0) {
   for (const [mod, why] of declarations) console.log(`  ${mod}: ${why}`);
 }
 
+if (replaySafe.size > 0) {
+  console.log("");
+  console.log("declared replay-safe (writes, but no signed-in login to claim as, and a second run does no harm),");
+  console.log("which this check takes on trust:");
+  for (const [mod, why] of replaySafe) console.log(`  ${mod}: ${why}`);
+}
+
 if (refusals.size > 0) {
   console.log("");
-  console.log("A read-only declaration was REFUSED -- the module writes:");
-  for (const [mod, { shape }] of refusals) console.log(`  ${mod}: declares read-only but calls ${shape}`);
+  console.log("A declaration was REFUSED -- the module writes:");
+  for (const [mod, { kind, shape }] of refusals) console.log(`  ${mod}: declares ${kind} but calls ${shape}`);
   console.log("Wrap the write through runWriteAction(), or take the declaration off and say what it does.");
 }
 
