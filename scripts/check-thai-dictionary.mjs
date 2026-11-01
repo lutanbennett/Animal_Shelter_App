@@ -32,21 +32,32 @@
  *     from the dictionary makes its line here fail as unused.
  *
  * RULE 2 — English typed into a .tsx instead of going through the dictionary
- *          (REPORTS ONLY; does not fail the build. Read why.)
+ *          (FAILS the build since 2026-11-01; it reported only before that.)
  *   `CLAUDE.md`'s test for a check worth building is that a PASSING TREE HAS
- *   NONE. This tree does not pass: there is a real backlog of literal English
- *   copy in components, which is why the sweep that found it was told to
- *   measure rather than fix. A rule that went red today would be red for
- *   weeks, and a red people are emailed about hourly is one they filter — the
- *   exact fault `test-plan` was rescued from.
+ *   NONE. When this rule was written the tree did not pass — 15 strings in 3
+ *   files — so it printed its count and returned no verdict, because a rule
+ *   that went red for weeks is one people filter, the exact fault `test-plan`
+ *   was rescued from.
  *
- *   So this rule PRINTS its count and its grouped list and returns no verdict.
- *   It carries NO stored number, so it cannot rot and it cannot quietly accept
- *   a new one. When the backlog item (*English typed straight into a page or
- *   component*, under `## Architecture`) has cleared the list, set
- *   RULE_2_BLOCKS to true — one line — and it becomes an ordinary gate.
+ *   The backlog item has now cleared the list, so RULE_2_BLOCKS is true and
+ *   this is an ordinary gate: a new piece of English typed into a component
+ *   fails the build on the PR that types it. Two of the fifteen went through
+ *   the dictionary; the other thirteen were deliberate and are named in
+ *   RULE_2_ALLOWED below, one reason each, never as a count. CLEARED does not
+ *   mean "no English left in any .tsx" — it means every piece this rule can
+ *   see is either translated or named with its reason.
+ *
+ *   What this rule CANNOT see, and the residue is far larger than the 15 it
+ *   could: it reads .tsx files only, through JSX text and seven attributes.
+ *   English in a .ts file, in a template literal, in a server action's
+ *   message or in a setCustomValidity() call is invisible to it. Measured
+ *   2026-11-01: 900 prose-shaped English strings in 107 .ts files (438 the
+ *   English manual edition, 204 the release notes, both English by design
+ *   today, so ~258 elsewhere), plus 161 in .tsx files this rule's own
+ *   matcher does not reach. Its own backlog item, under ## Architecture.
  *
  *   docs/decisions/2026-10-31-thai-dictionary-check.md
+ *   docs/decisions/2026-11-01-rule-2-allow-list-and-gate.md
  *
  *   node scripts/check-thai-dictionary.mjs           both rules
  *   node scripts/check-thai-dictionary.mjs --list    rule 2's full list, not the top groups
@@ -61,8 +72,50 @@ const root = path.resolve(here, "..");
 const src = path.join(root, "src");
 const showAll = process.argv.includes("--list");
 
-/** Rule 2 reports rather than blocks until the backlog item has cleared it. */
-const RULE_2_BLOCKS = false;
+/** Rule 2's list is cleared (2026-11-01), so it is an ordinary gate. */
+const RULE_2_BLOCKS = true;
+
+/**
+ * Rule 2's deliberate English, by NAME and never as a count — the same shape
+ * rule 1's ALLOWED uses, and for the reason `CLAUDE.md` gives: a baseline
+ * count rots, a named record does not.
+ *
+ * Keyed by the file's repo path, and an entry is one of two kinds:
+ *
+ * - `declares` + `whole`: the WHOLE file is deliberately English, and it says
+ *   so itself. `declares` is a phrase the file must still contain, so the
+ *   allowance rests on the file's own statement of intent rather than on this
+ *   script's opinion of it: delete that statement and the file goes red here
+ *   instead of staying quietly exempt. Used where a per-string list would be
+ *   a lie — resident-summary-pdf.tsx holds about thirty English labels and
+ *   rule 2's matcher happens to catch twelve of them, so listing those twelve
+ *   would imply the other eighteen were faults and would need editing every
+ *   time somebody adds a two-word label to a file that is English on purpose.
+ * - `strings`: named lines with a reason each. This is the normal kind; reach
+ *   for the whole-file kind only when the file itself declares its intent.
+ *
+ * Either kind is reported as STALE, and fails, when the file has gone, when
+ * the declaration it rests on has gone, when a whole-file entry's file no
+ * longer holds any English at all, or when a named string is no longer there.
+ */
+const RULE_2_ALLOWED = {
+  "src/lib/archive/resident-summary-pdf.tsx": {
+    declares: "Deliberately English-only in its labels",
+    whole:
+      "the deceased resident's permanent archive record, which must not read differently " +
+      "depending on the language the person recording the death had the app set to; it takes " +
+      "no locale and no dictionary at all, and its dates are a fixed format for the same reason",
+  },
+  "src/components/DateInput.tsx": {
+    strings: {
+      "HH:MM":
+        "the shape to type in the time box, not words — the same notation in every language, " +
+        "like the DD/MM/YYYY beside it, which docs/decisions/2026-10-13-date-input.md fixes on " +
+        "every device and in Thai too. The two names a screen reader reads out on this field " +
+        "ARE translated (t.common.openCalendar, t.common.timeField)",
+    },
+  },
+};
 
 /**
  * Entries whose Thai is deliberately the English string. One line each, with
@@ -286,47 +339,103 @@ function englishIn(source) {
 function ruleTwo() {
   const files = tsxFiles(src).filter((f) => !f.includes(`${path.sep}i18n${path.sep}`));
   const byArea = new Map();
-  let total = 0;
   const rows = [];
+  const allowedRows = [];
+  const stale = [];
+  let faults = 0;
+  let allowed = 0;
+
+  // Which allow-list entries the tree actually bore out, so the rest are stale.
+  const seenFile = new Set();
+  const seenString = new Set();
 
   for (const file of files) {
-    const hits = englishIn(readFileSync(file, "utf8"));
+    const source = readFileSync(file, "utf8");
+    const hits = englishIn(source);
     if (!hits.length) continue;
     const rel = path.relative(root, file).replaceAll("\\", "/");
+    const entry = RULE_2_ALLOWED[rel];
+
+    if (entry?.declares && source.includes(entry.declares)) {
+      seenFile.add(rel);
+      allowed += hits.length;
+      allowedRows.push({ rel, hits, why: entry.whole });
+      continue;
+    }
+
+    const left = [];
+    for (const h of hits) {
+      const why = entry?.strings?.[h];
+      if (why) {
+        seenString.add(`${rel}\u0000${h}`);
+        allowed += 1;
+        allowedRows.push({ rel, hits: [h], why });
+      } else {
+        left.push(h);
+      }
+    }
+    if (!left.length) continue;
+
     const area = rel.split("/").slice(0, 3).join("/");
-    byArea.set(area, (byArea.get(area) ?? 0) + hits.length);
-    total += hits.length;
-    rows.push({ rel, hits });
+    byArea.set(area, (byArea.get(area) ?? 0) + left.length);
+    faults += left.length;
+    rows.push({ rel, hits: left });
   }
 
-  console.log(
-    `\nrule 2 (reports only): ${total} pieces of English text written into ` +
-      `${rows.length} of ${files.length} .tsx files instead of the dictionary`,
-  );
-  if (!total) return 0;
+  for (const [rel, entry] of Object.entries(RULE_2_ALLOWED)) {
+    if (entry.declares) {
+      if (!seenFile.has(rel)) {
+        stale.push(
+          `RULE_2_ALLOWED["${rel}"] is stale — the file is gone, holds no English this rule can see, ` +
+            `or no longer says ${JSON.stringify(entry.declares)}; drop the entry or restore the file's own statement`,
+        );
+      }
+      continue;
+    }
+    for (const text of Object.keys(entry.strings ?? {})) {
+      if (!seenString.has(`${rel}\u0000${text}`)) {
+        stale.push(`RULE_2_ALLOWED["${rel}"] ${JSON.stringify(text)} is stale — that string is no longer there; drop the line`);
+      }
+    }
+  }
 
   if (showAll) {
-    for (const { rel, hits } of rows.sort((a, b) => b.hits.length - a.hits.length)) {
-      console.log(`  ${rel} (${hits.length})`);
-      for (const h of hits) console.log(`      ${JSON.stringify(h)}`);
+    for (const { rel, hits, why } of allowedRows) {
+      console.log(`  allowed  ${rel}${hits.length > 1 ? ` (${hits.length} strings)` : ` ${JSON.stringify(hits[0])}`} — ${why}`);
     }
-  } else {
+  }
+  for (const { rel, hits } of rows.sort((a, b) => b.hits.length - a.hits.length)) {
+    console.log(`FAIL ${rel} — ${hits.length} ${hits.length === 1 ? "piece" : "pieces"} of English typed in, not in the dictionary`);
+    for (const h of hits) console.log(`     ${JSON.stringify(h)}`);
+    console.log(`     put the wording in src/lib/i18n/dictionaries/, or name it in RULE_2_ALLOWED with the reason`);
+  }
+  for (const line of stale) console.log(`FAIL ${line}`);
+
+  console.log(
+    `\nrule 2: ${faults + allowed} pieces of English text in ${files.length} .tsx files — ` +
+      `${allowed} allowed by name, ${faults} to translate` +
+      (stale.length ? `, ${stale.length} stale allow-list ${stale.length === 1 ? "entry" : "entries"}` : ""),
+  );
+  if (faults && !showAll) {
     const areas = [...byArea].sort((a, b) => b[1] - a[1]);
     for (const [area, n] of areas.slice(0, 15)) console.log(`  ${String(n).padStart(4)}  ${area}`);
     if (areas.length > 15) console.log(`        … and ${areas.length - 15} more areas`);
-    console.log(`  (--list prints every line; the backlog item under ## Architecture owns the fixing)`);
   }
-  return total;
+  return faults + stale.length;
 }
 
 /* ------------------------------------------------------------------ run */
 
 const faults = await ruleOne();
-const reported = ruleTwo();
+const typedIn = ruleTwo();
 
-if (faults) {
-  console.log(`\nNOT CLEAN — ${faults} Thai ${faults === 1 ? "entry needs" : "entries need"} attention above`);
+if (faults || typedIn) {
+  const parts = [];
+  if (faults) parts.push(`${faults} Thai ${faults === 1 ? "entry" : "entries"}`);
+  if (typedIn) parts.push(`${typedIn} typed-in ${typedIn === 1 ? "string" : "strings"}`);
+  console.log(`\nNOT CLEAN — ${parts.join(" and ")} to fix above`);
 } else {
-  console.log(`\nevery Thai entry is either translated, wordless or allowed by name`);
+  console.log(`\nevery Thai entry is either translated, wordless or allowed by name,`);
+  console.log(`and every piece of English in a .tsx is either translated or allowed by name`);
 }
-await exitWith(faults || (RULE_2_BLOCKS && reported) ? 1 : 0);
+await exitWith(faults || (RULE_2_BLOCKS && typedIn) ? 1 : 0);

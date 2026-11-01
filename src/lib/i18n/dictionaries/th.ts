@@ -29,6 +29,8 @@ const th: Dictionary = {
     change: "เปลี่ยน",
     clearDate: "ล้าง",
     clearDateLabel: (field: string) => `ล้าง${field}`,
+    openCalendar: "เปิดปฏิทิน",
+    timeField: "เวลา (24 ชั่วโมง)",
     done: "เสร็จสิ้น",
     dash: "—",
     saved: "บันทึกแล้ว",

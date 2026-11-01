@@ -28,6 +28,13 @@ const en = {
     change: "Change",
     clearDate: "Clear",
     clearDateLabel: (field: string) => `Clear ${field}`,
+    // The two names a screen reader reads out on a date field
+    // (components/DateInput.tsx): the native picker sitting invisibly over the
+    // calendar button, and the time box beside a date. The DD/MM/YYYY and
+    // HH:MM placeholders beside them are notation, not words, and stay the
+    // same in every language (docs/decisions/2026-10-13-date-input.md).
+    openCalendar: "Open calendar",
+    timeField: "Time, 24-hour",
     done: "Done",
     dash: "—",
     saved: "Saved.",
