@@ -113,7 +113,7 @@ function Shot({ topic, images }: { topic: ManualTopic; images: ManualImages }) {
   );
 }
 
-function ManualDocument({ manual, cards, all, images, perms }: { manual: Manual; cards: readonly ManualCard[]; all: boolean; images: ManualImages; perms?: Permissions | null }) {
+function ManualDocument({ manual, cards, cardsHeading, all, images, perms }: { manual: Manual; cards: readonly ManualCard[]; cardsHeading: string; all: boolean; images: ManualImages; perms?: Permissions | null }) {
   const labelOf = new Map(cards.map((c) => [c.key, c.label]));
   const scope = all ? "Full edition" : "Your cards' edition";
   return (
@@ -125,7 +125,7 @@ function ManualDocument({ manual, cards, all, images, perms }: { manual: Manual;
         <Text style={styles.version}>{manual.version}</Text>
 
         <View style={{ marginTop: 18 }}>
-          <Text style={styles.h2}>Cards at a glance</Text>
+          <Text style={styles.h2}>{cardsHeading}</Text>
           {cards.map((c) => (
             <View key={c.key} style={styles.roleRow} wrap={false}>
               <Text style={styles.roleName}>{c.label}</Text>
@@ -196,7 +196,7 @@ function TopicCardsLine({ topic, labelOf, filter }: { topic: ManualTopic; labelO
 /** Renders the manual to PDF bytes. No permissions known = everything. */
 export async function renderManualPdf(
   manual: Manual,
-  options: { cards: readonly ManualCard[]; all: boolean; images: ManualImages; perms?: Permissions | null },
+  options: { cards: readonly ManualCard[]; cardsHeading: string; all: boolean; images: ManualImages; perms?: Permissions | null },
 ): Promise<Uint8Array> {
   const buffer = await renderToBuffer(<ManualDocument manual={manual} {...options} />);
   return new Uint8Array(buffer);

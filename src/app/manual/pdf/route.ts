@@ -89,7 +89,10 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const pdf = await renderManualPdf(manual, { cards, all, images, perms });
+  // The card names and their one-liners below the heading already come from
+  // the reader's dictionary, so the heading over them does too: a Thai reader
+  // saw บัตรงานโดยสรุป on /manual and "Cards at a glance" on the PDF of it.
+  const pdf = await renderManualPdf(manual, { cards, cardsHeading: t.manualPage.cardsAtAGlance, all, images, perms });
   return new NextResponse(Buffer.from(pdf), {
     headers: {
       "Content-Type": "application/pdf",
