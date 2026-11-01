@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { runWriteAction, type WriteMessages } from "@/lib/action-result";
+import { databaseText } from "@/lib/assistant/refusal";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { moveResidentToEnclosure } from "@/lib/placements/move";
@@ -146,7 +147,12 @@ async function runWrite(
         exchange: input.trace?.exchange ?? null,
       });
 
-      if ("error" in result) return { ok: false, error: result.error };
+      if ("error" in result) {
+        const raw = databaseText(result.error);
+        if (raw === "refused") return { ok: false, error: t.assistant.cardRefused };
+        if (raw === "other") return { ok: false, error: t.common.somethingWentWrong };
+        return { ok: false, error: result.error };
+      }
       revalidate();
       return { ok: true };
     },
