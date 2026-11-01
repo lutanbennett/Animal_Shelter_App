@@ -86,6 +86,9 @@ function refuseArgs() {
     );
   }
   if (devLogin && envName !== "test") return "--dev-login only works with --env test; it creates and deletes a login.";
+  if (accessToken && accessToken.split(".").length !== 3) {
+    return "--access-token is not a JWT (a token has three dot-separated parts); nothing was sent.";
+  }
   if (devLogin && accessToken) return "give --dev-login or --access-token, not both.";
   if (apply && envName === "production" && value("--confirm") !== "production") {
     return "writing drafts to production needs --confirm production as well as --apply.";
@@ -313,7 +316,11 @@ async function run() {
         for (const [group, n] of perGroup(result.landed)) console.log(`   drafted ${group}: ${n}`);
         for (const r of result.refused) console.log(`   REFUSED ${r.where} (${r.group}): ${r.why}`);
         if (result.refused.length) code = 1;
-        console.log("\nEvery one is a draft waiting on Management → Translations. Nothing was published.");
+        if (result.landed.length) {
+          console.log(`\n${result.landed.length} draft(s) now wait on Management → Translations. Nothing was published.`);
+        } else {
+          console.log("\nNothing landed: no draft was written. Nothing was published.");
+        }
       } finally {
         await session.remove();
       }
