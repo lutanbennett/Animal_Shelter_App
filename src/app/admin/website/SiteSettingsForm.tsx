@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { SiteContent } from "@/lib/site/content";
 import {
@@ -30,7 +30,7 @@ const inputClass =
  * ways are language-neutral. The long-form pages are SitePageForm.
  */
 export function SiteSettingsForm({ content }: { content: SiteContent }) {
-  const [state, onSubmit, pending] = useKeptForm(updateSiteContent, undefined);
+  const [state, onSubmit, pending] = useWriteForm(updateSiteContent, undefined);
   const { t } = useI18n();
   const s = t.admin.website.settings;
 

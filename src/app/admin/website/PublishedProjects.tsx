@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { projectCategoryLabel } from "@/lib/i18n/enum-labels";
 import { formatDate } from "@/lib/format";
 import { unpublishProject } from "./actions";
@@ -34,13 +35,14 @@ export function PublishedProjects({ projects }: { projects: PublishedProjectRow[
   const confirm = useConfirm();
   const p = t.admin.website.published;
   const [isPending, startTransition] = useTransition();
+  const saveUnpublish = useWriteCall();
   const [message, setMessage] = useState<string | null>(null);
 
   async function handleRemove(project: PublishedProjectRow) {
     if (!await confirm({ body: p.removeConfirm(project.name) })) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await unpublishProject(project.id);
+      const result = await saveUnpublish((requestId) => unpublishProject(project.id, requestId));
       if (!result.ok) setMessage(result.error);
     });
   }

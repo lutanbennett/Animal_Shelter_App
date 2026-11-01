@@ -2,15 +2,18 @@
 
 import { revalidatePath } from "next/cache";
 import {
-  runAction,
+  runWriteAction,
   type ActionRefusal,
   type ActionResult,
+  type WriteMessages,
 } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { mapLinkLeadsSomewhere } from "@/lib/contacts/map-preview";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { isContactChannel } from "@/lib/site/channels";
 import { PAGE_PHOTO_SLUGS, isSitePageSlug, type SitePageSlug } from "@/lib/site/pages";
 import { parseBahtAmount, todayIso } from "@/lib/format";
@@ -48,6 +51,16 @@ export type SiteContentFormState = ActionResult<{ success: string }> | undefined
 
 const refuse = (error: string): ActionRefusal => ({ ok: false, error });
 
+// PI FAILOVER (D), 2026-11-01: every write here goes through runWriteAction()
+// (docs/decisions/2026-11-01-write-paths-tail-b.md). Three shapes, by how the browser calls it:
+//   - a form (useWriteForm) or an upload of a FormData: the id travels IN the FormData, signature unchanged;
+//   - a direct call with arguments: the request id is the LAST argument.
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
+
 /** Every public page reads site_content (the footer), so all of them. */
 function revalidateWebsitePages() {
   revalidatePath("/admin/website");
@@ -72,13 +85,13 @@ function revalidateWebsitePages() {
  * and records the change in Recent changes. Visitors see it within about ten minutes (the
  * edge cache); there is no purge on save (docs/decisions/2026-10-25-hiding-public-pages.md).
  */
-export async function setPublicPageHidden(entry: string, hide: boolean): Promise<ActionResult> {
+export async function setPublicPageHidden(entry: string, hide: boolean, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("website.setPublicPageHidden", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.setPublicPageHidden", write(t), { id: requestId, action: "website.setPublicPageHidden", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
     if (!hideableEntries().includes(entry)) return refuse(t.admin.website.visibility.errors.unknown);
 
-    const supabase = await createClient();
     const { data, error: readError } = await supabase
       .from("site_content")
       .select("hidden_public_pages")
@@ -113,12 +126,13 @@ export async function setPublicPageHidden(entry: string, hide: boolean): Promise
  */
 export async function unpublishProject(
   folderId: string,
+  requestId: string,
 ): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  return runAction("website.unpublishProject", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.unpublishProject", write(t), { id: requestId, action: "website.unpublishProject", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("project_folders")
       .update({ is_public: false })
@@ -142,7 +156,8 @@ export async function updateSiteContent(
   formData: FormData,
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
-  return runAction("website.updateSiteContent", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.updateSiteContent", write(t), { id: writeRequestIdFrom(formData), action: "website.updateSiteContent", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const text = (name: string) => (formData.get(name) as string | null)?.trim() ?? "";
@@ -218,7 +233,6 @@ export async function updateSiteContent(
       };
     }
 
-    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -270,13 +284,13 @@ export async function updateClinicVisitEstimate(
   formData: FormData,
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
-  return runAction("website.updateClinicVisitEstimate", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.updateClinicVisitEstimate", write(t), { id: writeRequestIdFrom(formData), action: "website.updateClinicVisitEstimate", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const estimate = parseBahtAmount(formData.get("clinicVisitEstimate") as string | null);
     if (!estimate.ok) return refuse(t.admin.website.vetVisit.invalid);
 
-    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -311,11 +325,11 @@ export async function updateSitePage(
   formData: FormData,
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
-  return runAction("website.updateSitePage", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.updateSitePage", write(t), { id: writeRequestIdFrom(formData), action: "website.updateSitePage", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
     if (!isSitePageSlug(slug)) return refuse(t.admin.website.pages.unknownPage);
 
-    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -349,12 +363,13 @@ export async function updateSitePage(
  */
 export async function setFeaturedResident(
   residentId: string | null,
+  requestId: string,
 ): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  return runAction("website.setFeaturedResident", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.setFeaturedResident", write(t), { id: requestId, action: "website.setFeaturedResident", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-    const supabase = await createClient();
 
     if (residentId) {
       const { data: visible, error: lookupError } = await supabase
@@ -446,9 +461,10 @@ async function trashInDrive(fileId: string) {
   }
 }
 
-export async function uploadHeroPhoto(formData: FormData): Promise<SiteContentFormState> {
+export async function uploadHeroPhoto(formData: FormData): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  return runAction("website.uploadHeroPhoto", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.uploadHeroPhoto", write(t), { id: writeRequestIdFrom(formData), action: "website.uploadHeroPhoto", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.gallery")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const file = formData.get("file");
@@ -466,7 +482,6 @@ export async function uploadHeroPhoto(formData: FormData): Promise<SiteContentFo
       return refuse(await driveErrorMessage(err, t.admin.website.errors.uploadFailed));
     }
 
-    const supabase = await createClient();
     const { data: current } = await supabase
       .from("site_content")
       .select("hero_drive_file_id")
@@ -487,12 +502,12 @@ export async function uploadHeroPhoto(formData: FormData): Promise<SiteContentFo
   });
 }
 
-export async function removeHeroPhoto(): Promise<ActionResult> {
+export async function removeHeroPhoto(requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("website.removeHeroPhoto", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.removeHeroPhoto", write(t), { id: requestId, action: "website.removeHeroPhoto", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.gallery")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-    const supabase = await createClient();
     const { data: current } = await supabase
       .from("site_content")
       .select("hero_drive_file_id")
@@ -512,9 +527,10 @@ export async function removeHeroPhoto(): Promise<ActionResult> {
   });
 }
 
-export async function uploadGalleryPhoto(formData: FormData): Promise<SiteContentFormState> {
+export async function uploadGalleryPhoto(formData: FormData): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  return runAction("website.uploadGalleryPhoto", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.uploadGalleryPhoto", write(t), { id: writeRequestIdFrom(formData), action: "website.uploadGalleryPhoto", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.gallery")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const file = formData.get("file");
@@ -534,7 +550,6 @@ export async function uploadGalleryPhoto(formData: FormData): Promise<SiteConten
       return refuse(await driveErrorMessage(err, t.admin.website.errors.uploadFailed));
     }
 
-    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -563,12 +578,12 @@ export async function uploadGalleryPhoto(formData: FormData): Promise<SiteConten
   });
 }
 
-export async function deleteGalleryPhoto(photoId: string): Promise<ActionResult> {
+export async function deleteGalleryPhoto(photoId: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("website.deleteGalleryPhoto", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.deleteGalleryPhoto", write(t), { id: requestId, action: "website.deleteGalleryPhoto", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.gallery")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-    const supabase = await createClient();
     const { data: photo } = await supabase
       .from("site_content_photos")
       .select("drive_file_id")
@@ -598,12 +613,13 @@ export async function deleteGalleryPhoto(photoId: string): Promise<ActionResult>
 export async function moveGalleryPhoto(
   photoId: string,
   direction: "up" | "down",
+  requestId: string,
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("website.moveGalleryPhoto", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.moveGalleryPhoto", write(t), { id: requestId, action: "website.moveGalleryPhoto", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.gallery")) return refuse(t.admin.security.errors.adminAccessRequired);
 
-    const supabase = await createClient();
     const { data: photos } = await supabase
       .from("site_content_photos")
       .select("id, sort_order")
@@ -651,7 +667,8 @@ export async function updateImpactBaseline(
   formData: FormData,
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
-  return runAction("website.updateImpactBaseline", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.updateImpactBaseline", write(t), { id: writeRequestIdFrom(formData), action: "website.updateImpactBaseline", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const text = (name: string) => (formData.get(name) as string | null)?.trim() ?? "";
@@ -690,7 +707,6 @@ export async function updateImpactBaseline(
       date = rawDate;
     }
 
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("impact_baselines")
       .update({ baseline_count: count, baseline_date: date, since_year: sinceYear })
@@ -736,7 +752,8 @@ export async function saveDonationChannel(
   formData: FormData,
 ): Promise<SiteContentFormState> {
   const { t } = await getT();
-  return runAction("website.saveDonationChannel", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.saveDonationChannel", write(t), { id: writeRequestIdFrom(formData), action: "website.saveDonationChannel", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
     const d = t.admin.website.donate;
 
@@ -772,7 +789,6 @@ export async function saveDonationChannel(
     if (way === "promptpay" && !fields.promptpay_id) return refuse(d.errors.promptpayRequired);
 
     const row = { way, label, note: text("note") || null, ...fields };
-    const supabase = await createClient();
 
     if (id) {
       const { data, error } = await supabase
@@ -806,11 +822,11 @@ export async function saveDonationChannel(
 }
 
 /** Show or hide a way on /donate. Hiding keeps everything typed. */
-export async function setDonationChannelShown(id: string, shown: boolean): Promise<ActionResult> {
+export async function setDonationChannelShown(id: string, shown: boolean, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("website.setDonationChannelShown", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.setDonationChannelShown", write(t), { id: requestId, action: "website.setDonationChannelShown", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("donation_channels")
       .update({ shown })
@@ -825,11 +841,11 @@ export async function setDonationChannelShown(id: string, shown: boolean): Promi
 }
 
 /** Move a way one place up or down; the order is renumbered so equal numbers never stick. */
-export async function moveDonationChannel(id: string, direction: "up" | "down"): Promise<ActionResult> {
+export async function moveDonationChannel(id: string, direction: "up" | "down", requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("website.moveDonationChannel", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.moveDonationChannel", write(t), { id: requestId, action: "website.moveDonationChannel", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("donation_channels")
       .select("id, sort_order")
@@ -855,11 +871,11 @@ export async function moveDonationChannel(id: string, direction: "up" | "down"):
   });
 }
 
-export async function deleteDonationChannel(id: string): Promise<ActionResult> {
+export async function deleteDonationChannel(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("website.deleteDonationChannel", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.deleteDonationChannel", write(t), { id: requestId, action: "website.deleteDonationChannel", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
-    const supabase = await createClient();
     const { data: current } = await supabase
       .from("donation_channels")
       .select("qr_drive_file_id")
@@ -876,15 +892,15 @@ export async function deleteDonationChannel(id: string): Promise<ActionResult> {
 }
 
 /** The PromptPay QR picture for a PromptPay way. Replaces the old one (to Drive's trash). */
-export async function uploadDonationQr(formData: FormData): Promise<SiteContentFormState> {
+export async function uploadDonationQr(formData: FormData): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  return runAction("website.uploadDonationQr", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.uploadDonationQr", write(t), { id: writeRequestIdFrom(formData), action: "website.uploadDonationQr", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
     const id = (formData.get("id") as string | null)?.trim() ?? "";
     const file = formData.get("file");
     if (!(file instanceof File) || file.size === 0) return refuse(t.admin.website.errors.noFile);
 
-    const supabase = await createClient();
     const { data: current } = await supabase
       .from("donation_channels")
       .select("way, qr_drive_file_id")
@@ -911,11 +927,11 @@ export async function uploadDonationQr(formData: FormData): Promise<SiteContentF
   });
 }
 
-export async function removeDonationQr(id: string): Promise<ActionResult> {
+export async function removeDonationQr(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("website.removeDonationQr", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.removeDonationQr", write(t), { id: requestId, action: "website.removeDonationQr", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
-    const supabase = await createClient();
     const { data: current } = await supabase
       .from("donation_channels")
       .select("qr_drive_file_id")
@@ -938,9 +954,10 @@ export async function removeDonationQr(id: string): Promise<ActionResult> {
  */
 const PAGE_PHOTO_PAGES: readonly string[] = PAGE_PHOTO_SLUGS;
 
-export async function uploadPagePhoto(page: string, formData: FormData): Promise<SiteContentFormState> {
+export async function uploadPagePhoto(page: string, formData: FormData): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  return runAction("website.uploadPagePhoto", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.uploadPagePhoto", write(t), { id: writeRequestIdFrom(formData), action: "website.uploadPagePhoto", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
     if (!PAGE_PHOTO_PAGES.includes(page)) return refuse(t.common.somethingWentWrong("page-photo"));
 
@@ -957,7 +974,6 @@ export async function uploadPagePhoto(page: string, formData: FormData): Promise
     }
 
     const column = `${page}_photo_drive_file_id`;
-    const supabase = await createClient();
     const { data: current } = await supabase
       .from("site_content")
       .select(column)
@@ -980,14 +996,14 @@ export async function uploadPagePhoto(page: string, formData: FormData): Promise
   });
 }
 
-export async function removePagePhoto(page: string): Promise<ActionResult> {
+export async function removePagePhoto(page: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("website.removePagePhoto", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.removePagePhoto", write(t), { id: requestId, action: "website.removePagePhoto", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
     if (!PAGE_PHOTO_PAGES.includes(page)) return refuse(t.common.somethingWentWrong("page-photo"));
 
     const column = `${page}_photo_drive_file_id`;
-    const supabase = await createClient();
     const { data: current } = await supabase
       .from("site_content")
       .select(column)
@@ -1010,9 +1026,10 @@ export async function removePagePhoto(page: string): Promise<ActionResult> {
   });
 }
 
-export async function savePagePhotoAlt(page: string, formData: FormData): Promise<SiteContentFormState> {
+export async function savePagePhotoAlt(page: string, formData: FormData): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  return runAction("website.savePagePhotoAlt", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("website.savePagePhotoAlt", write(t), { id: writeRequestIdFrom(formData), action: "website.savePagePhotoAlt", db: supabase }, async () => {
     if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
     if (!PAGE_PHOTO_PAGES.includes(page)) return refuse(t.common.somethingWentWrong("page-photo"));
 
@@ -1020,7 +1037,6 @@ export async function savePagePhotoAlt(page: string, formData: FormData): Promis
       const v = String(formData.get(name) ?? "").trim().slice(0, 300);
       return v === "" ? null : v;
     };
-    const supabase = await createClient();
     const { error } = await supabase
       .from("site_content")
       .update({ [`${page}_photo_alt`]: clean("alt"), [`${page}_photo_alt_th`]: clean("alt_th") })
