@@ -4305,6 +4305,8 @@ const en = {
     },
     fillBlanks: "Check the details, fill in anything missing, then confirm.",
     notAuthorized: "Your account can't use the assistant.",
+    cardRefused:
+      "Your cards don't let you make this change, so nothing was saved. Ask someone whose cards cover it, or use the resident's own page.",
     notYourCard:
       "Your account can use the assistant, but not for this one — it needs a card you don't hold. Ask someone who does, or use the resident's own page.",
     recording: "Recording...",
