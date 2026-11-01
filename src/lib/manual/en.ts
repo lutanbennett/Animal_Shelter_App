@@ -466,7 +466,7 @@ const manual: Manual = {
           steps: [
             "To find an animal by their chip, open Residents. A USB or Bluetooth chip reader types the 15 digits and presses Enter, so scan straight into the Search box, where the cursor already is on a computer, or click the Scan a chip box and scan there; both work the same. A known chip opens that resident straight away, whatever the place, zone or deceased filters say. An unknown chip says so and, where your cards include \"Register a new resident (intake)\", offers New resident with this chip, which starts intake with the number filled in. Typing the 15 digits works just as well, spaces and dashes included. Phones cannot read the usual 134.2 kHz chips, so use a reader.",
             "The chip shows under the resident's name on their hub, and at the top of their Clinic visits and Procedures pages and a visit's Edit page, so it is in front of a doctor wherever they work. It is also in the summary PDF and offline index filed when a resident dies.",
-            "To record or correct a chip, tap Record chip (or Correct, beside a number already recorded), scan or type the number, add the date it was implanted if you know it, and tap Save chip. It needs the card \"Record or correct a microchip number\"; a login that works by its own clinic can do it for any resident its clinics treat. With the full record at Edit you can also enter it under Edit resident or on the Health step of intake.",
+            "To record or correct a chip, tap Record chip (or Correct, beside a number already recorded), scan or type the number, add the date it was implanted if you know it, and tap Save chip. It needs \"Record or correct a microchip number\"; a login that works by its own clinic can do it for any resident its clinics treat. With the full record at Edit you can also enter it under Edit resident or on the Health step of intake.",
             "After you log a Microchipping procedure, you are asked Record the chip number? straight away, with the implant date set to the procedure's date. Scan the chip and tap Save chip, or tap Not now to do it later from the hub.",
             "To remove a number recorded in error, open the form, clear the number and tap Save chip. The implant date is removed with it.",
           ],
@@ -687,7 +687,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "warning",
-              text: "Double-check you have the right resident before confirming. Withdrawing a recorded death afterwards needs the card \"Withdraw a death recorded in error\", and the mistake stays in the resident's history.",
+              text: "Double-check you have the right resident before confirming. Withdrawing a recorded death afterwards needs \"Withdraw a death recorded in error\", and the mistake stays in the resident's history.",
             },
           ],
         },
@@ -1046,7 +1046,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "Approving is recorded with your name and the time. Approving needs the card \"Approve or remove the photos waiting in Photos to approve\". Without it you can see your photo is waiting, but not approve it.",
+              text: "Approving is recorded with your name and the time. Approving needs \"Approve or remove the photos waiting in Photos to approve\". Without it you can see your photo is waiting, but not approve it.",
             },
           ],
         },
