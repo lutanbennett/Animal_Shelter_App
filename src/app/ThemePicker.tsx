@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { THEMES, THEME_PREVIEW, themeAttribute, parseTheme, type Theme } from "@/lib/theme/themes";
-import { setOwnTheme } from "./account/theme/actions";
+import { createClient } from "@/lib/supabase/client";
+import { THEMES, THEME_METADATA_KEY, THEME_PREVIEW, themeAttribute, parseTheme, type Theme } from "@/lib/theme/themes";
 
 /** The theme the page is showing now: the attribute the layout (or a pick) set on <html>. */
 function currentTheme(): Theme {
@@ -26,10 +27,33 @@ function apply(theme: Theme) {
  * A radio group of four rows rather than swatches in a line: each row is
  * full-width with its name, so Thai labels never widen the menu (its width is
  * fixed, batch 72), and each preview shows that theme's own colours.
+ *
+ * PI FAILOVER (D), 2026-11-01: THE SAVE MOVED OUT OF A SERVER ACTION AND INTO
+ * THE BROWSER, which is why `src/app/account/theme/actions.ts` is gone.
+ *
+ * The account menu is in the shared header, so this control is on EVERY
+ * signed-in address; a Server Action POSTs to the address of the page the
+ * person is on, so while this was one, no page in the app could go on
+ * WRAPPED_WRITE_PATHS until it was wrapped. It could not simply be wrapped:
+ * `claim_write_request()` raises for a login `holds_app_role()` answers false
+ * for (0292_write_requests.sql), and this menu is drawn for every signed-in
+ * login -- including one that has not been given a role yet, which reaches
+ * /account/password to set its first password. Wrapping would have met that
+ * login with "something went wrong" where the theme saves today. So the write
+ * left the address instead of being wrapped at it: there is now nothing here
+ * for the Worker to replay, which is strictly stronger than a claim.
+ *
+ * It is the same call the server action made -- `auth.updateUser` merging one
+ * key into the person's own `user_metadata`, under their own session, no
+ * service role -- and the same shape `SignOutButton` already uses for
+ * `auth.signOut()`. Nothing is granted here and nothing is trusted: the value
+ * is read back through `parseTheme()` in the root layout, so a tampered one
+ * renders as the default. docs/decisions/2026-11-01-header-writes-wrapped.md.
  */
 export function ThemePicker() {
   const { t } = useI18n();
   const labels = t.header.theme;
+  const router = useRouter();
   const [theme, setTheme] = useState<Theme>(() => (typeof document === "undefined" ? "dark" : currentTheme()));
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -41,12 +65,22 @@ export function ThemePicker() {
     setError(null);
     apply(next);
     startTransition(async () => {
-      const result = await setOwnTheme(next).catch(() => ({ error: labels.failed }));
-      if ("error" in result) {
+      // Saving the default stores null, which removes the key rather than
+      // recording "dark" -- as the server action did.
+      const supabase = createClient();
+      const { error: failed } = await supabase.auth
+        .updateUser({ data: { [THEME_METADATA_KEY]: next === "dark" ? null : next } })
+        .catch(() => ({ error: new Error("theme") }));
+      if (failed) {
         setTheme(previous);
         apply(previous);
-        setError(result.error);
+        setError(labels.failed);
+        return;
       }
+      // The root layout renders the attribute from user_metadata, so the next
+      // server render has to re-read it; the server action called
+      // revalidatePath("/", "layout") for the same reason.
+      router.refresh();
     });
   }
 

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { runWriteAction, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { moveResidentToEnclosure } from "@/lib/placements/move";
@@ -30,10 +31,25 @@ import type { AssistantTrace, Draft, Intent } from "@/lib/assistant/types";
 import { syncVisitToCalendar } from "@/lib/clinics/calendar-sync";
 import { getSiteOrigin } from "@/lib/site-origin";
 
-export type AssistantResult = { error: string } | { ok: true };
+/**
+ * PI FAILOVER (D): `{ ok: false, error }` rather than the bare `{ error }` it
+ * was, so a card's Confirm can go through useWriteCall() -- which asks for a
+ * result with an `ok` on it. Every call site discriminates on `"error" in
+ * result`, which reads the same either way, so nothing else moved.
+ */
+export type AssistantResult = { ok: false; error: string } | { ok: true };
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 type T = Awaited<ReturnType<typeof getT>>["t"];
+
+/** The words runWriteAction() needs; the same three for every write here. */
+function writeMessages(t: T): WriteMessages {
+  return {
+    somethingWentWrong: t.common.somethingWentWrong,
+    saveUnknown: t.common.saveUnknown,
+    reloadToSave: t.common.reloadToSave,
+  };
+}
 
 /**
  * Stamped into the notes so the hub history shows where a row came from.
@@ -52,6 +68,11 @@ type WriteInput<T> = T & {
   draft: Draft;
   /** Set when a model interpreted the sentence; absent for the keyword parser. */
   trace?: AssistantTrace;
+  /**
+   * PI FAILOVER (D): the browser's own id for this save attempt
+   * (src/lib/write-requests.ts), from one useWriteCall() per card.
+   */
+  requestId: string;
 };
 
 /**
@@ -63,48 +84,73 @@ type WriteInput<T> = T & {
  * forbidden"). It sits on top of — never instead of — the checks inside each
  * helper, which are the same ones the pages run and which RLS backs in the
  * database.
+ *
+ * PI FAILOVER (D), 2026-11-01: this is the ONE place all ten of the panel's
+ * writes pass through, so it is the one place that had to learn
+ * runWriteAction() — the shared header hosts the panel on every signed-in
+ * address, so until these were wrapped no page in the app could go on
+ * WRAPPED_WRITE_PATHS at all
+ * (docs/decisions/2026-11-01-header-writes-wrapped.md).
+ *
+ * THE CLAIM IS OUTSIDE EVERYTHING, INCLUDING THE CARD CHECK AND THE AUDIT ROW.
+ * That is deliberate: `logAssistantAction` inserts a row on the refusal path
+ * too, so a refused confirm is a write like any other, and a replay that
+ * re-ran it would leave two audit rows for one press. Inside the body, a
+ * replay returns the first attempt's own answer and reaches none of it.
+ *
+ * `action` is `assistant.<intent>`, one name per write path, so the same id
+ * arriving against a different card is refused by claim_write_request()
+ * rather than answered with the other path's result.
  */
 async function runWrite(
   intent: Intent,
-  input: { request: string; draft: Draft; trace?: AssistantTrace },
+  input: { request: string; draft: Draft; trace?: AssistantTrace; requestId: string },
   write: (supabase: Supabase, t: T) => Promise<{ error: string } | { ok: true; id: string }>,
   revalidate: () => void,
   resultTable: string,
 ): Promise<AssistantResult> {
   const { t } = await getT();
   const supabase = await createClient();
+  const action = `assistant.${intent}`;
 
-  if (!can(await loadPermissions(), "assistant.record")) {
-    const error = t.assistant.notAuthorized;
-    await logAssistantAction(supabase, {
-      requestText: input.request,
-      intent,
-      draft: input.draft,
-      status: "confirmed",
-      result: error,
-      model: input.trace?.model ?? null,
-      exchange: input.trace?.exchange ?? null,
-    });
-    return { error };
-  }
+  return runWriteAction<object>(
+    action,
+    writeMessages(t),
+    { id: input.requestId, action, db: supabase },
+    async () => {
+      if (!can(await loadPermissions(), "assistant.record")) {
+        const error = t.assistant.notAuthorized;
+        await logAssistantAction(supabase, {
+          requestText: input.request,
+          intent,
+          draft: input.draft,
+          status: "confirmed",
+          result: error,
+          model: input.trace?.model ?? null,
+          exchange: input.trace?.exchange ?? null,
+        });
+        return { ok: false, error };
+      }
 
-  const result = await write(supabase, t);
+      const result = await write(supabase, t);
 
-  await logAssistantAction(supabase, {
-    requestText: input.request,
-    intent,
-    draft: input.draft,
-    status: "confirmed",
-    result: "error" in result ? result.error : "ok",
-    resultTable: "error" in result ? null : resultTable,
-    resultRowId: "error" in result ? null : result.id || null,
-    model: input.trace?.model ?? null,
-    exchange: input.trace?.exchange ?? null,
-  });
+      await logAssistantAction(supabase, {
+        requestText: input.request,
+        intent,
+        draft: input.draft,
+        status: "confirmed",
+        result: "error" in result ? result.error : "ok",
+        resultTable: "error" in result ? null : resultTable,
+        resultRowId: "error" in result ? null : result.id || null,
+        model: input.trace?.model ?? null,
+        exchange: input.trace?.exchange ?? null,
+      });
 
-  if ("error" in result) return result;
-  revalidate();
-  return { ok: true };
+      if ("error" in result) return { ok: false, error: result.error };
+      revalidate();
+      return { ok: true };
+    },
+  );
 }
 
 function revalidateResident(residentId: string) {
@@ -465,6 +511,14 @@ export async function assistantAddPrescription(
  * parser recognised the sentence at all. Recorded from the browser because
  * that is where they happen — and the unmatched ones are the rows version
  * 2 is measured on (0070).
+ *
+ * PI FAILOVER (D): an insert is a write, so it is wrapped like the rest —
+ * otherwise no address could be listed. `requestId` is a FRESH id per call,
+ * minted at the call site rather than kept by useWriteCall(); the reason is in
+ * the decision file, and the short version is that there is no retry here to
+ * keep an id for. Nothing presses this twice: the result is discarded, so a
+ * kept id would be spent on the NEXT turn and replay this one's answer,
+ * silently losing that turn's row.
  */
 export async function recordAssistantTurn(input: {
   request: string;
@@ -472,17 +526,27 @@ export async function recordAssistantTurn(input: {
   draft: Draft | null;
   status: Extract<AssistantActionStatus, "cancelled" | "unmatched">;
   trace?: AssistantTrace;
-}): Promise<void> {
+  requestId: string;
+}): Promise<AssistantResult> {
+  const { t } = await getT();
   const supabase = await createClient();
-  await logAssistantAction(supabase, {
-    requestText: input.request,
-    intent: input.intent,
-    draft: input.draft,
-    status: input.status,
-    result: null,
-    model: input.trace?.model ?? null,
-    exchange: input.trace?.exchange ?? null,
-  });
+  return runWriteAction<object>(
+    "assistant.recordTurn",
+    writeMessages(t),
+    { id: input.requestId, action: "assistant.recordTurn", db: supabase },
+    async () => {
+      await logAssistantAction(supabase, {
+        requestText: input.request,
+        intent: input.intent,
+        draft: input.draft,
+        status: input.status,
+        result: null,
+        model: input.trace?.model ?? null,
+        exchange: input.trace?.exchange ?? null,
+      });
+      return { ok: true };
+    },
+  );
 }
 
 /**
@@ -494,19 +558,37 @@ export async function recordAssistantTurn(input: {
  * `refused` on their own row and nothing else, and they cannot read it back,
  * so this is a bare insert with no `.select()`. Fire-and-forget: it never
  * throws, so the refusal they see is unaffected by the bookkeeping.
+ *
+ * PI FAILOVER (D): wrapped, with a fresh id per call for the same reason as
+ * recordAssistantTurn above. It still never throws and still returns nothing
+ * the caller acts on — the refusal shown to the person does not depend on the
+ * bookkeeping landing.
  */
-export async function recordRefusedTurn(request: string, trace?: AssistantTrace): Promise<void> {
+export async function recordRefusedTurn(
+  request: string,
+  requestId: string,
+  trace?: AssistantTrace,
+): Promise<void> {
   try {
+    const { t } = await getT();
     const supabase = await createClient();
-    await logAssistantAction(supabase, {
-      requestText: request,
-      intent: null,
-      draft: null,
-      status: "refused",
-      result: null,
-      model: trace?.model ?? null,
-      exchange: trace?.exchange ?? null,
-    });
+    await runWriteAction<object>(
+      "assistant.recordRefused",
+      writeMessages(t),
+      { id: requestId, action: "assistant.recordRefused", db: supabase },
+      async () => {
+        await logAssistantAction(supabase, {
+          requestText: request,
+          intent: null,
+          draft: null,
+          status: "refused",
+          result: null,
+          model: trace?.model ?? null,
+          exchange: trace?.exchange ?? null,
+        });
+        return { ok: true };
+      },
+    );
   } catch (e) {
     console.error("assistant: could not record the refusal —", e);
   }

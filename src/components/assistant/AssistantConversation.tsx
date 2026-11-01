@@ -10,6 +10,14 @@ import { isLowRiskWrite, readyToRecord, toolNeeds } from "@/lib/assistant/llm-to
 import { ASK_MODEL, mayAskModel, waitAfter, type ModelWait } from "@/lib/assistant/model-wait";
 import type { AssistantContext } from "@/lib/assistant/data";
 import { recordAssistantTurn, recordRefusedTurn } from "@/app/assistant/actions";
+// Pi failover (D): a FRESH id at each of the four call sites below, not a kept
+// one from useWriteCall(). Nothing here can be pressed twice -- every call is
+// fire-and-forget bookkeeping or a one-shot answer whose result is handed
+// straight to the turn -- so there is no retry to keep an id for, and a kept
+// id would be spent on the NEXT turn and replay this one's answer, silently
+// losing that turn's row. The cards, which DO have a Confirm a person presses
+// again, use useWriteCall(). docs/decisions/2026-11-01-header-writes-wrapped.md.
+import { newWriteRequestId } from "@/lib/write-requests";
 import { interpretRequest } from "@/app/assistant/interpret";
 import { assistantLookup, type LookupAnswer } from "@/app/assistant/lookups";
 import type { AskField, DetailsAsk, HistoryLine, InterpretResult, InterpretResume } from "@/lib/assistant/interpret";
@@ -284,21 +292,25 @@ export function AssistantConversation({
 
     if (state.kind === "readOnly" || state.kind === "noCard") {
       // Bookkeeping only: a failure here must never touch the refusal shown.
-      recordRefusedTurn(trimmed, trace).catch(() => {});
+      recordRefusedTurn(trimmed, newWriteRequestId(), trace).catch(() => {});
       return;
     }
 
     if (state.kind === "recording" && parsed) {
       const draft = parsed.draft;
       if (draft.kind !== "weight" && draft.kind !== "immunization") return;
-      void recordLowRisk(draft, {
-        request: trimmed,
-        trace,
-        residents: context.residents,
-        immunizationTypes: context.immunizationTypes,
-        t,
-        locale,
-      }).then((result) =>
+      void recordLowRisk(
+        draft,
+        {
+          request: trimmed,
+          trace,
+          residents: context.residents,
+          immunizationTypes: context.immunizationTypes,
+          t,
+          locale,
+        },
+        newWriteRequestId(),
+      ).then((result) =>
         update(id, "error" in result ? { kind: "error", message: result.error } : result),
       );
       return;
@@ -313,6 +325,7 @@ export function AssistantConversation({
         draft: null,
         status: "unmatched",
         trace,
+        requestId: newWriteRequestId(),
       });
       return;
     }
@@ -335,6 +348,7 @@ export function AssistantConversation({
       request: trimmed,
       draft,
       today: isoLocal(new Date()),
+      requestId: newWriteRequestId(),
     }).then((result) => {
       update(
         id,
@@ -354,6 +368,7 @@ export function AssistantConversation({
         draft: turn.parsed?.draft ?? null,
         status: "cancelled",
         trace: turn.trace,
+        requestId: newWriteRequestId(),
       });
       return;
     }

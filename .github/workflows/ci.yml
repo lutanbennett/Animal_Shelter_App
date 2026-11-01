@@ -221,6 +221,28 @@ jobs:
           node-version: 22
       - run: node scripts/check-hard-coded-security.mjs
 
+  # THE WHOLE-PAGE RULE for the Pi failover replay list: does every write reachable at each path on
+  # WRAPPED_WRITE_PATHS go through runWriteAction()? A listed path with one unwrapped write is the #250 double
+  # write — the Worker's rule is method plus path (worker/origin.mjs mayReplayWrite), so it replays the write
+  # without a claim and the save lands twice.
+  #
+  # It BLOCKS, and it is the check that would have caught /admin/units being listed with the shared header's
+  # twelve unwrapped writes reachable at it. It could not be wired in when it was written (#1149) because it
+  # correctly reported that breach, so it would have failed every build; the header stream closed the breach
+  # and switched it on (docs/decisions/2026-11-01-header-writes-wrapped.md). Reads only the repo, like
+  # cards-count. Nothing here is advisory: fail closed, take the path off the list, or wrap the write.
+  wrapped-write-paths:
+    needs: changes
+    if: needs.changes.outputs.docs-only != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - run: node scripts/check-wrapped-write-paths.mjs
+
   # The card walkthrough (docs/card-walkthrough.md) is generated from cards.ts: fails when a card has no steps or the
   # file is out of date. Reads only the repo, like cards-count (docs/decisions/2026-10-22-card-walkthrough-generated.md).
   card-walkthrough:
