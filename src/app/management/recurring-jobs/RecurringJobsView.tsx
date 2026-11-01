@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { AlertTriangle, CalendarClock, Clock, Hourglass, Link2, Plus, Users } from "lucide-react";
 import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
 import { roleKeyLabel } from "@/lib/i18n/enum-labels";
@@ -189,6 +190,9 @@ function JobCard({ summary, onEdit }: { summary: JobSummary; onEdit: () => void 
   const rj = t.management.recurringJobs;
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const setRecurringJobActiveCall = useWriteCall();
+  const deleteRecurringJobCall = useWriteCall();
   const [error, setError] = useState<string | null>(null);
   const { job } = summary;
   const stranded = job.active && summary.liveAssignees === 0;
@@ -234,7 +238,7 @@ function JobCard({ summary, onEdit }: { summary: JobSummary; onEdit: () => void 
           />
           <RowActionButton
             disabled={isPending}
-            onClick={() => run(() => setRecurringJobActive(job.id, !job.active))}
+            onClick={() => run(() => setRecurringJobActiveCall((requestId) => setRecurringJobActive(job.id, !job.active, requestId)))}
             label={job.active ? rj.pause : rj.resume}
             word={job.active ? rj.pause : rj.resume}
             subject={job.title}
@@ -243,7 +247,7 @@ function JobCard({ summary, onEdit }: { summary: JobSummary; onEdit: () => void 
           <RowActionButton
             disabled={isPending}
             onClick={async () => {
-              if (await confirm({ body: rj.confirmDelete(job.title), confirmLabel: t.common.delete })) run(async () => deleteRecurringJob(job.id));
+              if (await confirm({ body: rj.confirmDelete(job.title), confirmLabel: t.common.delete })) run(async () => deleteRecurringJobCall((requestId) => deleteRecurringJob(job.id, requestId)));
             }}
             label={rj.delete}
             word={rj.delete}
@@ -328,6 +332,8 @@ function HandOver({ people, from, today }: { people: PersonOption[]; from: TeamM
   const h = t.management.recurringJobs.handOver;
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const handOverRecurringJobsCall = useWriteCall();
   const [fromId, setFromId] = useState("");
   const [toIds, setToIds] = useState<Set<string>>(new Set());
   const [mode, setMode] = useState<"dates" | "permanent">("dates");
@@ -342,14 +348,14 @@ function HandOver({ people, from, today }: { people: PersonOption[]; from: TeamM
     event.preventDefault();
     setResult(null);
     startTransition(async () => {
-      const outcome = await handOverRecurringJobs({
+      const outcome = await handOverRecurringJobsCall((requestId) => handOverRecurringJobs({
         fromUserId: fromId,
         toUserIds: [...toIds],
         mode,
         startDate,
         endDate,
         note,
-      });
+      }, requestId));
       if (!outcome.ok) {
         setResult({ error: outcome.error });
         return;
@@ -496,6 +502,8 @@ function Covered({ covered }: { covered: CoveredDate[] }) {
   const c = t.management.recurringJobs.covered;
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const handBackRecurringJobCall = useWriteCall();
   const [error, setError] = useState<string | null>(null);
 
   return (
@@ -529,7 +537,7 @@ function Covered({ covered }: { covered: CoveredDate[] }) {
                 onClick={() =>
                   startTransition(async () => {
                     setError(null);
-                    const result = await handBackRecurringJob(row.jobId, row.occursOn);
+                    const result = await handBackRecurringJobCall((requestId) => handBackRecurringJob(row.jobId, row.occursOn, requestId));
                     if (!result.ok) setError(result.error);
                     router.refresh();
                   })
