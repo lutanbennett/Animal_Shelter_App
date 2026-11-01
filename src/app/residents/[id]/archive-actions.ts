@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult } from "@/lib/action-result";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { createClient } from "@/lib/supabase/server";
@@ -41,13 +41,14 @@ export async function archiveMedicalRecord(
   residentId: string,
   id: string,
   reason: string | null,
+  requestId: string,
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("medicalArchive.archive", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("medicalArchive.archive", { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave }, { id: requestId, action: "medicalArchive.archive", db: supabase }, async () => {
     const a = t.recordArchive;
     if (!isMedicalArchiveKind(kind)) return refuse(a.errors.notAllowed);
     if (!can(await loadPermissions(), "medical.archive")) return refuse(a.errors.notAllowed);
-    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -84,14 +85,14 @@ export async function restoreMedicalRecord(
   kind: MedicalArchiveKind,
   residentId: string,
   id: string,
+  requestId: string,
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("medicalArchive.restore", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("medicalArchive.restore", { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave }, { id: requestId, action: "medicalArchive.restore", db: supabase }, async () => {
     const a = t.recordArchive;
     if (!isMedicalArchiveKind(kind)) return refuse(a.errors.notAllowed);
     if (!can(await loadPermissions(), "medical.archive")) return refuse(a.errors.notAllowed);
-    const supabase = await createClient();
-
     const { data, error } = await supabase
       .from(MEDICAL_ARCHIVE_TABLES[kind])
       .update({ archived_at: null, archived_by: null, archive_reason: null })

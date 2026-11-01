@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { archiveMedicalRecord, restoreMedicalRecord } from "@/app/residents/[id]/archive-actions";
 import type { MedicalArchiveKind } from "@/lib/medical-archive/kinds";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { X } from "lucide-react";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
@@ -39,6 +40,9 @@ export function ArchiveRecordControl({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
+  const saveArchive = useWriteCall();
+  const saveRestore = useWriteCall();
+
   function run(action: () => ReturnType<typeof archiveMedicalRecord>) {
     setError(null);
     startTransition(async () => {
@@ -57,7 +61,7 @@ export function ArchiveRecordControl({
       {archived ? (
         <RowActionButton
           disabled={isPending}
-          onClick={() => run(() => restoreMedicalRecord(kind, residentId, id))}
+          onClick={() => run(() => saveRestore((rid) => restoreMedicalRecord(kind, residentId, id, rid)))}
           label={a.restore}
           subject={subject}
           icon={ACTION_ICONS.restore}
@@ -67,7 +71,7 @@ export function ArchiveRecordControl({
           className="flex min-w-56 flex-col gap-2 rounded border border-border bg-surface p-2 text-left"
           onSubmit={(e) => {
             e.preventDefault();
-            run(() => archiveMedicalRecord(kind, residentId, id, reason));
+            run(() => saveArchive((rid) => archiveMedicalRecord(kind, residentId, id, reason, rid)));
           }}
         >
           <label className="flex flex-col gap-1 text-xs font-medium text-muted">
