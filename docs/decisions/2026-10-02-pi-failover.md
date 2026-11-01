@@ -77,6 +77,12 @@ seconds after a power cut are wrong**, and a reading taken from them is wrong in
 tidy. The first reading of the 20 s figure was taken that way and had to be redone; the figure above
 comes from the journal's **monotonic** stamps, which no clock step can touch.
 
+**About 6 of those 20 seconds are a `cloudflared` boot race**, measured from the same journal on
+2026-11-01 and filed as its own backlog item (*`cloudflared` loses a race at boot and only its own
+restart saves it*): it starts as soon as `network-online.target` is reached, fails on a DNS lookup
+because the router is not answering yet, and is rescued only by its own restart. So the 20 s is not
+a floor — part of it is a fault with an owner.
+
 **What these say.**
 - The one row that works today is the one the paper expected. A stopped tunnel is a 1-second refusal window, not a long one.
 - A stopped or wedged app is **never** handed to the Worker, and the wedge shows exactly why a plain retry is unsafe:
