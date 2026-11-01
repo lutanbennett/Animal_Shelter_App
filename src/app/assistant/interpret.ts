@@ -1,5 +1,14 @@
 "use server";
 
+// write-requests: read-only -- it asks the model to read one sentence and hands
+// back a Draft. It records nothing: unlike assistantLookup next door, which
+// looked read-only and inserts an audit row, the turn is recorded later by
+// whichever write or record action the browser goes on to call. So there is no
+// write here to put through runWriteAction(), and a replay of this POST on the
+// Worker costs a model call and changes nothing.
+// scripts/check-wrapped-write-paths.mjs reads this line; the decision file
+// docs/decisions/2026-11-01-header-writes-wrapped.md says what it is worth.
+
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
