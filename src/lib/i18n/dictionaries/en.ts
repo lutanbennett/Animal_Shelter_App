@@ -906,7 +906,7 @@ const en = {
           view_residents: "See who the residents are and where they are, without changing anything.",
           residents: "The full resident record: change it, register new arrivals, microchips, moves, fostering and adoption, and add and manage photos (new photos wait for approval).",
           translations: "Check and approve the Thai translations of stories, bios and labels, and write them in.",
-          medical_records: "Add and change a resident's medical history: visits, procedures, blood tests, prescriptions, immunizations, weight and diet, book vet visits, and record a death (the record is closed from that day; only Admin can withdraw a death). Includes View medical.",
+          medical_records: "Add and change a resident's medical history: visits, procedures, blood tests, prescriptions, immunizations, weight and diet, book vet visits, and record a death (the record is closed from that day; withdrawing it afterwards is a separate permission of its own, \"Withdraw a death recorded in error\"). Includes View medical.",
           view_medical: "Read a resident's medical history (visits, procedures, blood tests, prescriptions, immunizations, weight and diet) and the clinic list, without changing anything.",
           book_clinic_visits: "Book a vet visit, change its date or time or cancel it (it cannot delete one), and read the resident's medical history for reference.",
           contacts: "Add and change the directory of contacts, clinics and doctors. Includes View contacts.",
@@ -4258,7 +4258,7 @@ const en = {
     pageSubtitle:
       "Say what you want done in plain words. The assistant fills a form in from your sentence and shows it to you first — nothing is written until you confirm it. It understands a fixed list of requests; the user manual lists every one.",
     pageSubtitleReadOnly:
-      "Ask where a resident is, who is in an enclosure, or what is due. Recording changes is for staff and management.",
+      "Ask where a resident is, who is in an enclosure, or what is due. Recording something through the assistant is a separate permission, and this account does not have it.",
     tryTitle: "Try something like",
     examples: (resident: string, enclosure: string, clinic: string) => [
       `Where is ${resident}?`,
@@ -4305,7 +4305,7 @@ const en = {
       "Your account can use the assistant, but not for this one — it needs a card you don't hold. Ask someone who does, or use the resident's own page.",
     recording: "Recording...",
     volunteerReadOnly:
-      "Volunteers can ask the assistant questions, but recording this one is for staff and management. Ask someone to record it, or use the resident's own page.",
+      "Your account can ask the assistant questions, but recording something through it is a separate permission it does not have. Ask someone who can record it, or use the resident's own page.",
     move: {
       title: "Move resident",
       summary: (resident: string, from: string, to: string, date: string) =>
