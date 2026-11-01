@@ -67,7 +67,7 @@ import { handleReleaseRequest } from "./release-mail.mjs";
 import { originOrLocal } from "./origin.mjs";
 import { handleCspReport } from "./csp-report.mjs";
 import { withSecurityHeaders } from "./security-headers.mjs";
-import { runTranslations } from "./translations.mjs";
+import { runLabelDrafts, runTranslations } from "./translations.mjs";
 import { recordHeartbeat, finishHeartbeat } from "./heartbeat.mjs";
 import { isEdgeCachedPage } from "../src/lib/public-paths.ts";
 import { localeFromAcceptLanguage } from "../src/lib/i18n/locales.ts";
@@ -194,6 +194,8 @@ const worker = {
     // Machine-drafted translations (worker/translations.mjs) share the trigger.
     // After the alerts so they can never delay one; runTranslations does not throw.
     await runTranslations(env);
+    // Labels: signs in as the machine login if one is configured, else does nothing.
+    await runLabelDrafts(env);
     await finishHeartbeat(env, beat, controller.cron, stages);
   },
 };

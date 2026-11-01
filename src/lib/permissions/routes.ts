@@ -346,6 +346,8 @@ export const ROUTES: readonly RouteEntry[] = [
   {
     path: "/management/translations",
     activity: "translations.manage",
+    // The Propose a Thai label card opens the screen too (0296); only its propose control is drawn for it.
+    alsoActivity: "translations.propose",
     icon: Languages,
     label: (t) => t.nav.translations,
     device: "any",

@@ -217,3 +217,102 @@ export async function runTranslations(env, { fetchImpl = fetch, now = Date.now()
   log(`translations: drafted ${summary.drafted}, failed ${summary.failed}, skipped ${summary.skipped}${summary.note ? ` (${summary.note})` : ""}`);
   return summary;
 }
+
+// ---------------------------------------------------------------------------
+// Labels: the short words (diet names, places, website captions) that have no Thai.
+//
+// Prose above is written with the service key. A label cannot be: propose_label_th() asks
+// has_permission('translations.propose'), which answers from auth.uid(), and the service key has
+// none (measured 2026-11-01: 42501). So this half SIGNS IN as an ordinary machine login holding
+// the Propose a Thai label card (0296) and nothing else, and calls the same functions a person's
+// screen does. The access comes from the card and from nothing else: take the card away and this
+// stops. It can only PROPOSE: approve_label_th() asks translations.manage, which the login lacks,
+// so every proposal still waits for a person. docs/decisions/2026-11-01-translations-propose-app.md.
+//
+// Configuration, all three required, otherwise it does nothing and says so in one log line:
+//   LABEL_DRAFT_EMAIL     the machine login's address        (plain var)
+//   LABEL_DRAFT_PASSWORD  its password                       (Wrangler secret)
+//   SUPABASE_ANON_KEY     the project's public anon key      (plain var; sign-in needs it)
+// Per run it drafts at most LABEL_DRAFT_BATCH (default 2) labels, in the same spirit as BATCH above.
+// ---------------------------------------------------------------------------
+
+export const DEFAULT_LABEL_BATCH = 2;
+
+/** Which of the three settings are absent. Empty means a login is configured. */
+export function missingLabelLogin(env) {
+  return ["LABEL_DRAFT_EMAIL", "LABEL_DRAFT_PASSWORD", "SUPABASE_ANON_KEY"].filter((k) => !env[k]);
+}
+
+export async function runLabelDrafts(env, { fetchImpl = fetch, log = console.log } = {}) {
+  const summary = { proposed: 0, failed: 0, note: null };
+  try {
+    const missing = missingLabelLogin(env);
+    if (missing.length || !env.SUPABASE_URL) {
+      summary.note = "no label login configured; skipped";
+      return summary;
+    }
+    const picked = pickEngine(env);
+    if (!picked.engine) {
+      summary.note = `not running: ${picked.reason}`;
+      return summary;
+    }
+    const base = env.SUPABASE_URL.replace(/\/$/, "");
+
+    const signIn = await fetchImpl(`${base}/auth/v1/token?grant_type=password`, {
+      method: "POST",
+      headers: { apikey: env.SUPABASE_ANON_KEY, "content-type": "application/json" },
+      body: JSON.stringify({ email: env.LABEL_DRAFT_EMAIL, password: env.LABEL_DRAFT_PASSWORD }),
+    });
+    if (!signIn.ok) {
+      summary.note = `label login could not sign in (${signIn.status})`;
+      return summary;
+    }
+    const { access_token: token } = await signIn.json();
+    if (!token) {
+      summary.note = "label login could not sign in (no token)";
+      return summary;
+    }
+    const call = async (fn, body) => {
+      const response = await fetchImpl(`${base}/rest/v1/rpc/${fn}`, {
+        method: "POST",
+        headers: { apikey: env.SUPABASE_ANON_KEY, authorization: `Bearer ${token}`, "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) throw new Error(`supabase rpc ${fn} → ${response.status}`);
+      return response.json();
+    };
+
+    // 'missing' is a label with no live Thai and no proposal waiting; anything else is left alone.
+    const rows = await call("label_translations", {});
+    const batch = intVar(env.LABEL_DRAFT_BATCH, DEFAULT_LABEL_BATCH);
+    const todo = rows.filter((r) => r.status === "missing" && r.source_text?.trim()).slice(0, batch);
+
+    for (const row of todo) {
+      let text;
+      try {
+        text = await translate(env, picked, { text: row.source_text, from: "en", to: "th", tier: "machine" }, fetchImpl);
+      } catch (err) {
+        summary.failed += 1;
+        log(`labels: ${row.table_name}.${row.column_name} ${row.row_id}: ${err?.message ?? err}`);
+        if (!(err instanceof OutputRejected)) {
+          summary.note = "engine error; stopped this run early";
+          break;
+        }
+        continue;
+      }
+      const landed = await call("propose_label_th", {
+        p_table: row.table_name,
+        p_row_id: row.row_id,
+        p_column: row.column_name,
+        p_text: text,
+      });
+      if (landed === true) summary.proposed += 1;
+    }
+  } catch (err) {
+    summary.note = `error: ${err?.message ?? err}`;
+    console.error(`labels: ${summary.note}`);
+    return summary;
+  }
+  log(`labels: proposed ${summary.proposed}, failed ${summary.failed}${summary.note ? ` (${summary.note})` : ""}`);
+  return summary;
+}
