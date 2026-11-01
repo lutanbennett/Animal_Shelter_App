@@ -45,8 +45,15 @@ further dictionary strings that describe access by naming a role; the `volunteer
 - [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
 
 ```
-GATES_OUTPUT_PLACEHOLDER
+=== gates: build exited 0 after 182s
+
+gates: typecheck=0 lint=0 test=0 build=0
 ```
+
+(Four gates, not the three the line above names: `test` was added after this template was written.
+The closing lines are quoted as printed; the earlier per-gate `=== gates: … exited 0` lines for
+typecheck, lint and test scrolled past the captured tail, and the summary line carries each exit
+code anyway.)
 
 Also run: `node scripts/check-thai-dictionary.mjs` (exit 0, *"every Thai entry is either translated,
 wordless or allowed by name"*), `node scripts/check-backlog-sections.mjs` (exit 0) and
