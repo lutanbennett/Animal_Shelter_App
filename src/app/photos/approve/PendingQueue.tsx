@@ -10,6 +10,7 @@ import { placeName } from "@/lib/enclosures/names";
 import { formatDate } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import type { PickableResident } from "@/lib/medical/residents";
 import type { PendingPhoto } from "@/lib/photos/pending";
 import { assignPendingPhoto, discardPendingPhoto } from "./pending-actions";
@@ -29,6 +30,9 @@ export function PendingQueue({ photos, residents, loadError }: { photos: Pending
   const p = t.photoApproval.pending;
   const confirm = useConfirm();
   const [busy, startTransition] = useTransition();
+  // One per action: an id kept from an unknown Assign sent to Discard is refused by claim_write_request().
+  const saveAssign = useWriteCall();
+  const saveDiscard = useWriteCall();
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   // Per photo: who is chosen, whether to keep it private, whether the search is open and what was typed.
   const [chosen, setChosen] = useState<Record<string, Chosen[]>>({});
@@ -53,7 +57,7 @@ export function PendingQueue({ photos, residents, loadError }: { photos: Pending
     const approve = !priv[photo.id];
     startTransition(async () => {
       setMessage(null);
-      const result = await assignPendingPhoto(photo.id, who.map((c) => c.id), approve);
+      const result = await saveAssign((requestId) => assignPendingPhoto(photo.id, who.map((c) => c.id), approve, requestId));
       setMessage(
         result.ok
           ? { ok: true, text: result.driveWarning ?? p.assigned(result.assigned, approve) }
@@ -73,7 +77,7 @@ export function PendingQueue({ photos, residents, loadError }: { photos: Pending
     if (!ok) return;
     startTransition(async () => {
       setMessage(null);
-      const result = await discardPendingPhoto(photo.id);
+      const result = await saveDiscard((requestId) => discardPendingPhoto(photo.id, requestId));
       setMessage(result.ok ? { ok: true, text: result.driveWarning ?? p.discarded } : { ok: false, text: result.error });
     });
   }

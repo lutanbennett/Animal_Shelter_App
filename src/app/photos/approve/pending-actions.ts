@@ -1,11 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { ensureResidentPhotosFolder, getDriveClient } from "@/lib/google/drive";
 import { dateToYymm, PHOTO_CATEGORIES, type PhotoCategory } from "@/lib/google/drive-client";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { loadPermissions } from "@/lib/permissions/load";
 import { can } from "@/lib/permissions/can";
 import { isUuid } from "@/lib/tags/links";
@@ -13,6 +14,13 @@ import { bangkokDate } from "@/lib/photos/dates";
 
 /** A photo of one animal is in at most this many residents' folders; a group shot is a handful, not a crowd. */
 const MAX_RESIDENTS = 8;
+
+/** The words runWriteAction() needs. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 function revalidateQueue() {
   revalidatePath("/photos/approve");
@@ -41,12 +49,15 @@ export async function assignPendingPhoto(
   pendingId: string,
   residentIds: string[],
   approve: boolean,
+  requestId: string,
 ): Promise<ActionResult<{ assigned: number; driveWarning?: string }>> {
   const { t } = await getT();
   const e = t.photoApproval.pending.errors;
-  return runAction<{ assigned: number; driveWarning?: string }>(
+  const supabase = await createClient();
+  return runWriteAction<{ assigned: number; driveWarning?: string }>(
     "photos.assignPending",
-    t.common.somethingWentWrong,
+    write(t),
+    { id: requestId, action: "photos.assignPending", db: supabase },
     async () => {
       const perms = await loadPermissions();
       if (!can(perms, "photos.approve")) return { ok: false, error: t.photoApproval.errors.notAllowed };
@@ -54,7 +65,6 @@ export async function assignPendingPhoto(
       if (!isUuid(pendingId) || chosen.length === 0 || !chosen.every(isUuid)) return { ok: false, error: e.nobodyChosen };
       if (chosen.length > MAX_RESIDENTS) return { ok: false, error: e.tooMany(MAX_RESIDENTS) };
 
-      const supabase = await createClient();
       const [{ data: pendingRows }, { data: residentRows }] = await Promise.all([
         supabase
           .from("pending_photos")
@@ -148,14 +158,14 @@ export async function assignPendingPhoto(
  * Throws a pending photo away: the row goes first, then the file is trashed in Drive (the order of Remove on a waiting
  * photo, #701). Drive's bin keeps it 30 days. If Drive then fails, the person is told the file is still there.
  */
-export async function discardPendingPhoto(pendingId: string): Promise<ActionResult<{ driveWarning?: string }>> {
+export async function discardPendingPhoto(pendingId: string, requestId: string): Promise<ActionResult<{ driveWarning?: string }>> {
   const { t } = await getT();
-  return runAction<{ driveWarning?: string }>("photos.discardPending", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction<{ driveWarning?: string }>("photos.discardPending", write(t), { id: requestId, action: "photos.discardPending", db: supabase }, async () => {
     const perms = await loadPermissions();
     if (!can(perms, "photos.approve")) return { ok: false, error: t.photoApproval.errors.notAllowed };
     if (!isUuid(pendingId)) return { ok: false, error: t.photoApproval.pending.errors.gone };
 
-    const supabase = await createClient();
     const { data: gone, error } = await supabase
       .from("pending_photos")
       .delete()
@@ -186,10 +196,12 @@ export async function discardPendingPhoto(pendingId: string): Promise<ActionResu
 export async function reassignWaitingPhoto(
   attachmentId: string,
   residentId: string,
+  requestId: string,
 ): Promise<ActionResult<{ driveWarning?: string }>> {
   const { t } = await getT();
   const e = t.photoApproval.errors;
-  return runAction<{ driveWarning?: string }>("photos.reassignWaiting", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction<{ driveWarning?: string }>("photos.reassignWaiting", write(t), { id: requestId, action: "photos.reassignWaiting", db: supabase }, async () => {
     const perms = await loadPermissions();
     // The database lets a login with photos.resident_manage change a waiting photo's owner; the approval page is
     // for logins that may publish. Both are asked, so the sentence comes from here and not a bare refusal.
@@ -198,7 +210,6 @@ export async function reassignWaitingPhoto(
     }
     if (!isUuid(attachmentId) || !isUuid(residentId)) return { ok: false, error: e.notWaiting };
 
-    const supabase = await createClient();
     const [{ data: rows }, { data: residentRows }] = await Promise.all([
       supabase
         .from("attachments")

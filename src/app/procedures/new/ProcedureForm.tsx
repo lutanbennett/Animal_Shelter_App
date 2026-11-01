@@ -14,6 +14,8 @@ import {
   type PendingFile,
 } from "@/components/DeferredUploads";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
+import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
 import { formatDate, todayIso } from "@/lib/format";
 import { visitDate } from "@/lib/clinics/linkable";
 import { MicrochipForm } from "@/components/MicrochipForm";
@@ -60,6 +62,8 @@ export function ProcedureForm({
   const { t, locale } = useI18n();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  // The one write on this form (procedures.create).
+  const save = useWriteCall();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState<{
     procedureId: string;
@@ -113,8 +117,12 @@ export function ProcedureForm({
     const formData = new FormData(event.currentTarget);
     setError(null);
     startTransition(async () => {
-      const result = await createProcedure(undefined, formData);
-      if (!result || "error" in result) {
+      // set(), not append(): a retry of the same attempt must never send two ids.
+      const result = await save((requestId) => {
+        formData.set(WRITE_REQUEST_FIELD, requestId);
+        return createProcedure(undefined, formData);
+      });
+      if (!result || !result.ok) {
         setError(result?.error ?? t.procedures.errors.saveFailed);
         return;
       }
