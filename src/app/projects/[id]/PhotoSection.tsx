@@ -15,6 +15,7 @@ import type { TranslationRow } from "@/lib/translations/types";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { FileTypeIcon } from "@/components/FileTypeIcon";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { fileKind } from "@/lib/uploads/file-kind";
 import type { ProjectFolder, ProjectPhoto } from "@/lib/projects/queries";
 import { deleteProjectPhoto, setProjectCoverPhoto, updateProjectPhotoCaption } from "../actions";
@@ -50,6 +51,10 @@ export function PhotoSection({
   const [removing, setRemoving] = useState<ProjectPhoto | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  // One per action: an id kept from an unknown caption save sent to another action is refused by claim_write_request().
+  const saveCaption = useWriteCall();
+  const saveCover = useWriteCall();
+  const saveDelete = useWriteCall();
 
   function run(action: () => Promise<ActionResult>, after?: () => void) {
     setError(null);
@@ -145,7 +150,7 @@ export function PhotoSection({
                         e.preventDefault();
                         const formData = new FormData(e.currentTarget);
                         run(
-                          () => updateProjectPhotoCaption(folder.id, photo.id, formData),
+                          () => saveCaption((requestId) => updateProjectPhotoCaption(folder.id, photo.id, formData, requestId)),
                           () => setEditing(null),
                         );
                       }}
@@ -189,7 +194,7 @@ export function PhotoSection({
                               subject={caption ?? photo.file_name ?? p.fileFallback}
                               disabled={isPending}
                               onClick={() =>
-                                run(() => setProjectCoverPhoto(folder.id, isCover ? null : photo.id))
+                                run(() => saveCover((requestId) => setProjectCoverPhoto(folder.id, isCover ? null : photo.id, requestId)))
                               }
                             />
                           )}
@@ -225,7 +230,7 @@ export function PhotoSection({
         onCancel={() => setRemoving(null)}
         onConfirm={() => {
           if (!removing) return;
-          run(() => deleteProjectPhoto(folder.id, removing.id), () => setRemoving(null));
+          run(() => saveDelete((requestId) => deleteProjectPhoto(folder.id, removing.id, requestId)), () => setRemoving(null));
         }}
       />
     </section>

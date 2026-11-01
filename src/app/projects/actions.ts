@@ -1,10 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import {
@@ -20,6 +21,14 @@ type ProjectOutcome = {
 };
 
 const refuse = (error: string) => ({ ok: false as const, error });
+
+// PI FAILOVER (D), 2026-11-01: every write here goes through runWriteAction()
+// (docs/decisions/2026-11-01-write-paths-tail-b.md). Each action takes the request id as its LAST argument.
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 function str(formData: FormData, key: string): string | null {
   const value = formData.get(key);
@@ -55,13 +64,14 @@ function revalidateFolder(folderId: string | null, parentId: string | null) {
 export async function createProjectFolder(
   parentId: string,
   formData: FormData,
+  requestId: string,
 ): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  return runAction("projects.createProjectFolder", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction<ProjectOutcome>("projects.createProjectFolder", write(t), { id: requestId, action: "projects.createProjectFolder", db: supabase }, async () => {
     const name = str(formData, "name");
     if (!name) return refuse(t.projects.errors.nameRequired);
 
-    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -94,13 +104,14 @@ export async function createProjectFolder(
 export async function renameProjectFolder(
   folderId: string,
   formData: FormData,
+  requestId: string,
 ): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  return runAction("projects.renameProjectFolder", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction<ProjectOutcome>("projects.renameProjectFolder", write(t), { id: requestId, action: "projects.renameProjectFolder", db: supabase }, async () => {
     const name = str(formData, "name");
     if (!name) return refuse(t.projects.errors.nameRequired);
 
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("project_folders")
       .update({ name, name_th: str(formData, "nameTh") })
@@ -122,10 +133,11 @@ export async function renameProjectFolder(
 export async function updateProjectFolderInfo(
   folderId: string,
   formData: FormData,
+  requestId: string,
 ): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  return runAction("projects.updateProjectFolderInfo", t.common.somethingWentWrong, async () => {
-
+  const supabase = await createClient();
+  return runWriteAction<ProjectOutcome>("projects.updateProjectFolderInfo", write(t), { id: requestId, action: "projects.updateProjectFolderInfo", db: supabase }, async () => {
     const projectDate = str(formData, "projectDate");
     if (projectDate && Number.isNaN(new Date(projectDate).getTime())) {
       return refuse(t.projects.errors.invalidDate);
@@ -133,7 +145,6 @@ export async function updateProjectFolderInfo(
 
     // projects.publish owns the website switch (0182): without it the form leaves is_public as it is.
     const canPublish = can(await loadPermissions(), "projects.publish");
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("project_folders")
       .update({
@@ -159,10 +170,11 @@ export async function updateProjectFolderInfo(
 export async function setProjectFolderPublic(
   folderId: string,
   isPublic: boolean,
+  requestId: string,
 ): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  return runAction("projects.setProjectFolderPublic", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
+  const supabase = await createClient();
+  return runWriteAction<ProjectOutcome>("projects.setProjectFolderPublic", write(t), { id: requestId, action: "projects.setProjectFolderPublic", db: supabase }, async () => {
     const { data, error } = await supabase
       .from("project_folders")
       .update({ is_public: isPublic })
@@ -182,11 +194,11 @@ export async function setProjectFolderPublic(
 export async function moveProjectFolder(
   folderId: string,
   newParentId: string,
+  requestId: string,
 ): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  return runAction("projects.moveProjectFolder", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
-
+  const supabase = await createClient();
+  return runWriteAction<ProjectOutcome>("projects.moveProjectFolder", write(t), { id: requestId, action: "projects.moveProjectFolder", db: supabase }, async () => {
     const { data: before } = await supabase
       .from("project_folders")
       .select("parent_folder_id")
@@ -217,11 +229,10 @@ export async function moveProjectFolder(
  * Only an empty folder can be deleted — no subfolders, no photos — so
  * nothing in Drive is ever removed except the (empty) folder itself.
  */
-export async function deleteProjectFolder(folderId: string): Promise<ActionResult<ProjectOutcome>> {
+export async function deleteProjectFolder(folderId: string, requestId: string): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  return runAction("projects.deleteProjectFolder", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
-
+  const supabase = await createClient();
+  return runWriteAction<ProjectOutcome>("projects.deleteProjectFolder", write(t), { id: requestId, action: "projects.deleteProjectFolder", db: supabase }, async () => {
     const { data: rows } = await supabase
       .from("project_folder_summary")
       .select("id, parent_folder_id, drive_folder_id, child_count, photo_count")
@@ -261,11 +272,11 @@ export async function deleteProjectFolder(folderId: string): Promise<ActionResul
 export async function setProjectCoverPhoto(
   folderId: string,
   attachmentId: string | null,
+  requestId: string,
 ): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  return runAction("projects.setProjectCoverPhoto", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
-
+  const supabase = await createClient();
+  return runWriteAction<ProjectOutcome>("projects.setProjectCoverPhoto", write(t), { id: requestId, action: "projects.setProjectCoverPhoto", db: supabase }, async () => {
     if (attachmentId) {
       const { data: photo } = await supabase
         .from("attachments")
@@ -298,10 +309,11 @@ export async function updateProjectPhotoCaption(
   folderId: string,
   attachmentId: string,
   formData: FormData,
+  requestId: string,
 ): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  return runAction("projects.updateProjectPhotoCaption", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
+  const supabase = await createClient();
+  return runWriteAction<ProjectOutcome>("projects.updateProjectPhotoCaption", write(t), { id: requestId, action: "projects.updateProjectPhotoCaption", db: supabase }, async () => {
     const { data, error } = await supabase
       .from("attachments")
       .update({ caption: str(formData, "caption") })
@@ -322,11 +334,11 @@ export async function updateProjectPhotoCaption(
 export async function deleteProjectPhoto(
   folderId: string,
   attachmentId: string,
+  requestId: string,
 ): Promise<ActionResult<ProjectOutcome>> {
   const { t } = await getT();
-  return runAction("projects.deleteProjectPhoto", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
-
+  const supabase = await createClient();
+  return runWriteAction<ProjectOutcome>("projects.deleteProjectPhoto", write(t), { id: requestId, action: "projects.deleteProjectPhoto", db: supabase }, async () => {
     const { data: rows, error: selectError } = await supabase
       .from("attachments")
       .select("id, drive_file_id")

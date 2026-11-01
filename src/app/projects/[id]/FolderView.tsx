@@ -20,6 +20,7 @@ import { TranslationPanel } from "@/components/TranslationPanel";
 import { localizedFromRow } from "@/lib/translations/localize";
 import type { TranslationRow } from "@/lib/translations/types";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { projectCategoryLabel } from "@/lib/i18n/enum-labels";
 import { formatDate } from "@/lib/format";
 import type { ProjectFolder, ProjectFolderPath, ProjectPhoto } from "@/lib/projects/queries";
@@ -88,6 +89,11 @@ export function FolderView({
   const info = t.projects.info;
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  // One per action: an id kept from an unknown rename sent to another action is refused by claim_write_request().
+  const saveRename = useWriteCall();
+  const saveInfo = useWriteCall();
+  const savePublic = useWriteCall();
+  const saveDelete = useWriteCall();
   const [error, setError] = useState<string | null>(null);
   const [driveWarning, setDriveWarning] = useState<string | null>(null);
   // The switch's answer, shown at once; the server's copy catches up on refresh.
@@ -135,7 +141,7 @@ export function FolderView({
             onSubmit={(e) => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
-              run(() => renameProjectFolder(folder.id, formData), () => setMode("view"));
+              run(() => saveRename((requestId) => renameProjectFolder(folder.id, formData, requestId)), () => setMode("view"));
             }}
           >
             <h2 className="text-sm font-medium text-muted">{f.renameTitle}</h2>
@@ -259,7 +265,7 @@ export function FolderView({
                   onSubmit={(e) => {
                     e.preventDefault();
                     const formData = new FormData(e.currentTarget);
-                    run(() => updateProjectFolderInfo(folder.id, formData), () => setMode("view"));
+                    run(() => saveInfo((requestId) => updateProjectFolderInfo(folder.id, formData, requestId)), () => setMode("view"));
                   }}
                 >
                   <label className="flex flex-col gap-1 text-xs font-medium text-muted">
@@ -330,7 +336,7 @@ export function FolderView({
                         onChange={(e) => {
                           const to = e.target.checked;
                           setPublicOverride({ from: folder.is_public, to });
-                          run(() => setProjectFolderPublic(folder.id, to));
+                          run(() => savePublic((requestId) => setProjectFolderPublic(folder.id, to, requestId)));
                         }}
                         className="h-4 w-4 accent-primary"
                       />
@@ -380,7 +386,7 @@ export function FolderView({
         onCancel={() => setDeleteOpen(false)}
         onConfirm={() =>
           run(
-            () => deleteProjectFolder(folder.id),
+            () => saveDelete((requestId) => deleteProjectFolder(folder.id, requestId)),
             (parentId) => {
               setDeleteOpen(false);
               router.push(parentId ? `/projects/${parentId}` : "/projects");

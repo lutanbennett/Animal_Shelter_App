@@ -7,6 +7,7 @@ import { Folder, FolderPlus, Globe, Image as ImageIcon, X } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { projectCategoryLabel } from "@/lib/i18n/enum-labels";
 import { formatDate } from "@/lib/format";
 import type { ProjectFolder } from "@/lib/projects/queries";
@@ -111,6 +112,7 @@ export function NewFolderCard({ parentId }: { parentId: string }) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const saveCreate = useWriteCall();
 
   if (!open) {
     return (
@@ -133,7 +135,7 @@ export function NewFolderCard({ parentId }: { parentId: string }) {
         const formData = new FormData(e.currentTarget);
         setError(null);
         startTransition(async () => {
-          const result = await createProjectFolder(parentId, formData);
+          const result = await saveCreate((requestId) => createProjectFolder(parentId, formData, requestId));
           if (!result.ok) {
             setError(result.error);
             return;
