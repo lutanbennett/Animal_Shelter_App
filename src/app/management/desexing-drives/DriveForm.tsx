@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { DateInput } from "@/components/DateInput";
 import { DRIVE_SPECIES, DRIVE_STATUSES, type DriveFields } from "@/lib/desexing/form";
 import { createDrive, deleteDrive, saveDrive } from "./actions";
@@ -19,6 +20,10 @@ export function DriveForm({ mode, driveId, initial }: { mode: "new" | "edit"; dr
   const router = useRouter();
   const [fields, setFields] = useState<DriveFields>(initial);
   const [pending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const saveDriveCall = useWriteCall();
+  const deleteDriveCall = useWriteCall();
+  const createDriveCall = useWriteCall();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -35,12 +40,12 @@ export function DriveForm({ mode, driveId, initial }: { mode: "new" | "edit"; dr
     setSaved(false);
     startTransition(async () => {
       if (mode === "new") {
-        const result = await createDrive(fields);
+        const result = await createDriveCall((requestId) => createDrive(fields, requestId));
         if (!result.ok) return setError(result.error);
         router.push(`/management/desexing-drives/${result.id}`);
         return;
       }
-      const result = await saveDrive(driveId!, fields);
+      const result = await saveDriveCall((requestId) => saveDrive(driveId!, fields, requestId));
       if (!result.ok) return setError(result.error);
       setSaved(true);
       router.refresh();
@@ -50,7 +55,7 @@ export function DriveForm({ mode, driveId, initial }: { mode: "new" | "edit"; dr
   function remove() {
     setError(null);
     startTransition(async () => {
-      const result = await deleteDrive(driveId!);
+      const result = await deleteDriveCall((requestId) => deleteDrive(driveId!, requestId));
       if (!result.ok) return setError(result.error);
       router.push("/management/desexing-drives");
     });

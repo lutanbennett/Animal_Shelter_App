@@ -13,6 +13,7 @@ import {
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { contactTypeLabel } from "@/lib/i18n/enum-labels";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { checkFacebookUrl, checkHttpsUrl, FACEBOOK_HOSTS, type LinkCheck } from "@/lib/links/validate";
 import {
   FRIEND_CONTACT_TYPES,
@@ -173,6 +174,9 @@ function FriendWizardForm({
   const card = t.shelterFriends.card;
   const form = t.management.contacts.createForm;
   const [pending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const uploadFriendLogoCall = useWriteCall();
+  const addShelterFriendCall = useWriteCall();
 
   // What was typed before a refresh, read once. This component only renders
   // on the client (see FriendWizard), so sessionStorage is there.
@@ -405,7 +409,7 @@ function FriendWizardForm({
           };
     startTransition(async () => {
       try {
-        const saved = await addShelterFriend({
+        const saved = await addShelterFriendCall((requestId) => addShelterFriend({
           contact,
           publish,
           fields: {
@@ -417,7 +421,7 @@ function FriendWizardForm({
             friendSince: "",
             ...draft.optIns,
           },
-        });
+        }, requestId));
         if (!saved.ok) {
           setSaveError(saved.error);
           return;
@@ -429,7 +433,7 @@ function FriendWizardForm({
           const formData = new FormData();
           formData.append("file", logo);
           const uploaded = await runUploadAction(logo, t.admin.website.errors, () =>
-            uploadFriendLogo(saved.friendId, formData),
+            uploadFriendLogoCall((requestId) => uploadFriendLogo(saved.friendId, formData, requestId)),
           );
           logoOutcome = uploaded.ok ? "uploaded" : { error: uploaded.error };
         }

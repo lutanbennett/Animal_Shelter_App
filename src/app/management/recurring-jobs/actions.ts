@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, runAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { addDaysIso, todayIso } from "@/lib/format";
 import {
   isRepeat,
@@ -25,6 +26,13 @@ import {
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
+
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 function revalidateRecurring() {
@@ -42,10 +50,11 @@ export async function recordRecurringJob(
   occursOn: string,
   outcome: "done" | "skipped" | null,
   note: string | null,
+  requestId: string,
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("recurringJobs.recordRecurringJob", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
+  const supabase = await createClient();
+  return runWriteAction("recurringJobs.recordRecurringJob", write(t), { id: requestId, action: "recurringJobs.recordRecurringJob", db: supabase }, async () => {
     const { error } = await supabase.rpc("record_recurring_job", {
       p_job_id: jobId,
       p_occurs_on: occursOn,
@@ -255,9 +264,11 @@ export type SaveResult = ActionResult<{ id: string }> | { ok: false; error: stri
 export async function saveRecurringJob(
   id: string | null,
   fields: RecurringJobFields,
+  requestId: string,
 ): Promise<SaveResult> {
   const { t } = await getT();
-  return runAction("recurringJobs.saveRecurringJob", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("recurringJobs.saveRecurringJob", write(t), { id: requestId, action: "recurringJobs.saveRecurringJob", db: supabase }, async () => {
     if (!can(await loadPermissions(), "recurring.manage")) return refuse(t.management.errors.managementAccessRequired);
     const e = t.management.recurringJobs.errors;
 
@@ -285,7 +296,6 @@ export async function saveRecurringJob(
       active: fields.active,
     };
 
-    const supabase = await createClient();
     // Before the row is written, so pointing the link at a page someone on the
     // team cannot open is refused whole rather than saved half-way.
     const assigneeIds = [...new Set(fields.assigneeIds)];
@@ -314,11 +324,11 @@ export async function saveRecurringJob(
 }
 
 /** Pause (nothing shows, overdue included) or resume (overdue restarts today — the 0095 trigger). */
-export async function setRecurringJobActive(id: string, active: boolean): Promise<ActionResult> {
+export async function setRecurringJobActive(id: string, active: boolean, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("recurringJobs.setRecurringJobActive", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("recurringJobs.setRecurringJobActive", write(t), { id: requestId, action: "recurringJobs.setRecurringJobActive", db: supabase }, async () => {
     if (!can(await loadPermissions(), "recurring.manage")) return refuse(t.management.errors.managementAccessRequired);
-    const supabase = await createClient();
     const { error } = await supabase.from("recurring_jobs").update({ active }).eq("id", id);
     if (error) return refuse(error.message);
     revalidateRecurring();
@@ -327,11 +337,11 @@ export async function setRecurringJobActive(id: string, active: boolean): Promis
 }
 
 /** Only a job nobody has ever acted on can go; one with history is paused or ended instead (0095). */
-export async function deleteRecurringJob(id: string): Promise<ActionResult> {
+export async function deleteRecurringJob(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("recurringJobs.deleteRecurringJob", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("recurringJobs.deleteRecurringJob", write(t), { id: requestId, action: "recurringJobs.deleteRecurringJob", db: supabase }, async () => {
     if (!can(await loadPermissions(), "recurring.manage")) return refuse(t.management.errors.managementAccessRequired);
-    const supabase = await createClient();
     const { error } = await supabase.from("recurring_jobs").delete().eq("id", id);
     if (error) return refuse(await explain(error.message));
     revalidateRecurring();
@@ -344,11 +354,11 @@ export async function deleteRecurringJob(id: string): Promise<ActionResult> {
 // ---------------------------------------------------------------------------
 
 /** Gives one date back to the job's usual team. */
-export async function handBackRecurringJob(jobId: string, occursOn: string): Promise<ActionResult> {
+export async function handBackRecurringJob(jobId: string, occursOn: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("recurringJobs.handBackRecurringJob", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("recurringJobs.handBackRecurringJob", write(t), { id: requestId, action: "recurringJobs.handBackRecurringJob", db: supabase }, async () => {
     if (!can(await loadPermissions(), "recurring.manage")) return refuse(t.management.errors.managementAccessRequired);
-    const supabase = await createClient();
     const { error } = await supabase.rpc("reassign_recurring_job", {
       p_job_id: jobId,
       p_occurs_on: occursOn,
@@ -384,16 +394,16 @@ export type HandOverInput = {
  * permanent: the person is swapped out of every job's usual team. The way to
  * clear jobs stranded by an archived login.
  */
-export async function handOverRecurringJobs(input: HandOverInput): Promise<ActionResult<{ changed: number; failed: string[] }>> {
+export async function handOverRecurringJobs(input: HandOverInput, requestId: string): Promise<ActionResult<{ changed: number; failed: string[] }>> {
   const { t } = await getT();
-  return runAction("recurringJobs.handOverRecurringJobs", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("recurringJobs.handOverRecurringJobs", write(t), { id: requestId, action: "recurringJobs.handOverRecurringJobs", db: supabase }, async () => {
     if (!can(await loadPermissions(), "recurring.manage")) return refuse(t.management.errors.managementAccessRequired);
     const e = t.management.recurringJobs.errors;
     const toIds = [...new Set(input.toUserIds)].filter((id) => id !== input.fromUserId);
     if (!input.fromUserId) return refuse(e.handOverFromRequired);
     if (toIds.length === 0) return refuse(e.handOverToRequired);
 
-    const supabase = await createClient();
     const { jobs, error } = await loadRecurringJobs(supabase);
     if (error) return refuse(error);
 

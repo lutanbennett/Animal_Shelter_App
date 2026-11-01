@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { useConfirm } from "@/components/ConfirmProvider";
 import type { AppealStatus } from "@/lib/appeals/state";
 import { closeAppeal, deleteDraftAppeal, moveAppeal, type AppealTransition } from "./actions";
@@ -42,13 +43,17 @@ export function AppealControls({
   const router = useRouter();
   const confirm = useConfirm();
   const [pending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const closeAppealCall = useWriteCall();
+  const deleteDraftAppealCall = useWriteCall();
+  const moveAppealCall = useWriteCall();
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [outcomeText, setOutcomeText] = useState(outcome ?? "");
 
   function move(move: AppealTransition, done: string) {
     setMessage(null);
     startTransition(async () => {
-      const result = await moveAppeal(appealId, move);
+      const result = await moveAppealCall((requestId) => moveAppeal(appealId, move, requestId));
       if (!result.ok) return setMessage({ type: "error", text: result.error });
       setMessage({ type: "ok", text: done });
       router.refresh();
@@ -64,7 +69,7 @@ export function AppealControls({
     if (!(await confirm({ body: c.confirm, confirmLabel: c.button }))) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await closeAppeal(appealId, outcomeText);
+      const result = await closeAppealCall((requestId) => closeAppeal(appealId, outcomeText, requestId));
       if (!result.ok) return setMessage({ type: "error", text: result.error });
       setMessage({ type: "ok", text: c.closed });
       router.refresh();
@@ -75,7 +80,7 @@ export function AppealControls({
     if (!(await confirm({ body: t.appealsAdmin.danger.deleteConfirm, confirmLabel: t.common.delete }))) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await deleteDraftAppeal(appealId);
+      const result = await deleteDraftAppealCall((requestId) => deleteDraftAppeal(appealId, requestId));
       if (!result.ok) return setMessage({ type: "error", text: result.error });
       router.push("/management/appeals");
     });

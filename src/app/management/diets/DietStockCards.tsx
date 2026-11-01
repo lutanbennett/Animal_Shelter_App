@@ -3,6 +3,7 @@
 import { ActionButton } from "@/components/ActionButton";
 import { useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { formatBaht, formatBahtPrice, formatUnitCost, parseUnitCost, UNIT_COST_DECIMALS } from "@/lib/format";
 import { dietUnitLabel } from "@/lib/i18n/enum-labels";
 import { formatQuantity } from "@/lib/diets/options";
@@ -80,6 +81,9 @@ function DietCard({
   const unit = dietUnitLabel(t, dietType.unit);
   const [mode, setMode] = useState<"view" | "edit" | "count">("view");
   const [cost, setCost] = useState("");
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const updateDietTypeStockCall = useWriteCall();
+  const updateDietStockSettingsCall = useWriteCall();
   const [leadDays, setLeadDays] = useState("");
   const [safetyValue, setSafetyValue] = useState("");
   const [safetyUnit, setSafetyUnit] = useState("");
@@ -119,12 +123,12 @@ function DietCard({
     }
     setMessage(null);
     startTransition(async () => {
-      const result = await updateDietStockSettings(dietType.id, {
+      const result = await updateDietStockSettingsCall((requestId) => updateDietStockSettings(dietType.id, {
         costPerUnit: cost,
         reorderLeadDays: leadDays,
         safetyStock: safetyValue,
         safetyUnit,
-      });
+      }, requestId));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -141,7 +145,7 @@ function DietCard({
     }
     setMessage(null);
     startTransition(async () => {
-      const result = await updateDietTypeStock(dietType.id, count);
+      const result = await updateDietTypeStockCall((requestId) => updateDietTypeStock(dietType.id, count, requestId));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;

@@ -4,6 +4,7 @@ import { ActionButton } from "@/components/ActionButton";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { useRef, useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { doseUnitLabel } from "@/lib/i18n/enum-labels";
 import { formatBahtPrice, formatUnitCost, parseUnitCost, UNIT_COST_DECIMALS } from "@/lib/format";
 import {
@@ -89,6 +90,11 @@ function MedicationCard({
   const unit = doseUnitLabel(t, medication.dose_unit);
   const [mode, setMode] = useState<"view" | "edit" | "count">("view");
   const [cost, setCost] = useState("");
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const updateMedicationStockCall = useWriteCall();
+  const uploadMedicationLabelCall = useWriteCall();
+  const removeMedicationLabelCall = useWriteCall();
+  const updateMedicationStockSettingsCall = useWriteCall();
   const [leadDays, setLeadDays] = useState("");
   const [safetyValue, setSafetyValue] = useState("");
   const [safetyUnit, setSafetyUnit] = useState("");
@@ -131,12 +137,12 @@ function MedicationCard({
     }
     setMessage(null);
     startTransition(async () => {
-      const result = await updateMedicationStockSettings(medication.id, {
+      const result = await updateMedicationStockSettingsCall((requestId) => updateMedicationStockSettings(medication.id, {
         costPerUnit: cost,
         reorderLeadDays: leadDays,
         safetyStock: safetyValue,
         safetyUnit,
-      });
+      }, requestId));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -153,7 +159,7 @@ function MedicationCard({
     }
     setMessage(null);
     startTransition(async () => {
-      const result = await updateMedicationStock(medication.id, count);
+      const result = await updateMedicationStockCall((requestId) => updateMedicationStock(medication.id, count, requestId));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -169,7 +175,7 @@ function MedicationCard({
     setMessage(null);
     startTransition(async () => {
       const result = await runUploadAction(file, t.admin.website.errors, () =>
-        uploadMedicationLabel(medication.id, formData),
+        uploadMedicationLabelCall((requestId) => uploadMedicationLabel(medication.id, formData, requestId)),
       );
       setMessage(result.ok ? { type: "success", text: result.success } : { type: "error", text: result.error });
     });
@@ -179,7 +185,7 @@ function MedicationCard({
     if (!(await confirm({ body: m.label.removeConfirm(medication.name), confirmLabel: m.label.remove }))) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await removeMedicationLabel(medication.id);
+      const result = await removeMedicationLabelCall((requestId) => removeMedicationLabel(medication.id, requestId));
       setMessage(result.ok ? { type: "success", text: result.success } : { type: "error", text: result.error });
     });
   }

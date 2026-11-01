@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { saveAppealPhotos } from "./actions";
 
@@ -32,6 +33,8 @@ export function AppealPhotosEditor({
   const p = t.appealsAdmin.photos;
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const saveAppealPhotosCall = useWriteCall();
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [state, setState] = useState<Record<string, { isCover: boolean; isGraphic: boolean; medicalOk: boolean }>>(
     Object.fromEntries(chosen.map((c) => [c.attachmentId, { isCover: c.isCover, isGraphic: c.isGraphic, medicalOk: c.medicalOk }])),
@@ -64,11 +67,10 @@ export function AppealPhotosEditor({
   function save() {
     setMessage(null);
     startTransition(async () => {
-      const result = await saveAppealPhotos(
+      const result = await saveAppealPhotosCall((requestId) => saveAppealPhotos(
         appealId,
         cover,
-        picked.map((c) => ({ attachmentId: c.attachmentId, isGraphic: state[c.attachmentId].isGraphic, medicalOk: state[c.attachmentId].medicalOk })),
-      );
+        picked.map((c) => ({ attachmentId: c.attachmentId, isGraphic: state[c.attachmentId].isGraphic, medicalOk: state[c.attachmentId].medicalOk })), requestId));
       if (!result.ok) return setMessage({ type: "error", text: result.error });
       setMessage({ type: "ok", text: p.saved });
       router.refresh();

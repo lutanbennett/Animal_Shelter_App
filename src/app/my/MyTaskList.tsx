@@ -88,6 +88,8 @@ export function MyTaskList({
 }) {
   const { t, locale } = useI18n();
   const statusWrite = useWriteCall();
+  // Done, Skip and Undo are the one action; one per action, never shared with statusWrite.
+  const recurringWrite = useWriteCall();
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -148,7 +150,7 @@ export function MyTaskList({
     setUndoable(outcome ? { kind: "recurring", task, outcome } : null);
     startTransition(async () => {
       if (outcome) setOptimistic({ key: task.key, hidden: true });
-      const result = await recordRecurringJob(jobId, occursOn, outcome, note);
+      const result = await recurringWrite((id) => recordRecurringJob(jobId, occursOn, outcome, note, id));
       if (!result.ok) {
         setError(result.error);
         setUndoable(null);
@@ -174,10 +176,11 @@ export function MyTaskList({
     setError(null);
     setTakenBack((keys) => [...keys, item.key]);
     if (undoable?.task.key === item.key) setUndoable(null);
+    const occursOn = item.kind === "recurring" ? item.occursOn : null;
     startTransition(async () => {
       const result =
-        item.kind === "recurring" && item.occursOn
-          ? await recordRecurringJob(item.jobId, item.occursOn, null, null)
+        occursOn
+          ? await recurringWrite((id) => recordRecurringJob(item.jobId, occursOn, null, null, id))
           : await statusWrite((id) => setMaintenanceStatus(item.jobId, "In Progress", id));
       if (!result.ok) {
         setError(result.error);

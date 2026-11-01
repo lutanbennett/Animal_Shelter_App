@@ -1,13 +1,21 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { ROW_COLUMNS, type TranslationRow } from "@/lib/translations/types";
 import { linkTargets, sameLinks } from "@/lib/site/links";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -58,15 +66,16 @@ function revalidateFor(row: TranslationRow, recordPathHint?: string | null) {
 export async function approveTranslation(
   id: string,
   text: string,
+  requestId: string,
   recordPathHint?: string | null,
 ): Promise<ActionResult<{ row: TranslationRow }>> {
   const { t } = await getT();
-  return runAction("translations.approveTranslation", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("translations.approveTranslation", write(t), { id: requestId, action: "translations.approveTranslation", db: supabase }, async () => {
     if (!can(await loadPermissions(), "translations.manage")) return refuse(t.management.errors.managementAccessRequired);
     const trimmed = text.trim();
     if (!trimmed) return refuse(t.translations.errors.textRequired);
 
-    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -118,12 +127,13 @@ export async function approveTranslation(
  */
 export async function clearTranslation(
   id: string,
+  requestId: string,
   recordPathHint?: string | null,
 ): Promise<ActionResult<{ row: TranslationRow }>> {
   const { t } = await getT();
-  return runAction("translations.clearTranslation", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("translations.clearTranslation", write(t), { id: requestId, action: "translations.clearTranslation", db: supabase }, async () => {
     if (!can(await loadPermissions(), "translations.manage")) return refuse(t.management.errors.managementAccessRequired);
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("translations")
       .update({
@@ -169,13 +179,14 @@ export async function saveLabelTranslation(
   rowId: string,
   column: string,
   text: string,
+  requestId: string,
   reconfirm = false,
 ): Promise<ActionResult<{ textTh: string | null }>> {
   const { t } = await getT();
-  return runAction("translations.saveLabelTranslation", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("translations.saveLabelTranslation", write(t), { id: requestId, action: "translations.saveLabelTranslation", db: supabase }, async () => {
     if (!can(await loadPermissions(), "translations.manage")) return refuse(t.management.errors.managementAccessRequired);
     const trimmed = text.trim();
-    const supabase = await createClient();
     if (reconfirm && trimmed) {
       const { error: clearError } = await supabase.rpc("set_label_th", {
         p_table: table,
@@ -217,13 +228,14 @@ export async function proposeLabelTranslation(
   rowId: string,
   column: string,
   text: string,
+  requestId: string,
 ): Promise<ActionResult<{ textTh: string | null }>> {
   const { t } = await getT();
-  return runAction("translations.proposeLabelTranslation", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("translations.proposeLabelTranslation", write(t), { id: requestId, action: "translations.proposeLabelTranslation", db: supabase }, async () => {
     if (!can(await loadPermissions(), "translations.manage")) return refuse(t.management.errors.managementAccessRequired);
     const trimmed = text.trim();
     if (!trimmed) return refuse(t.translations.errors.proposalRequired);
-    const supabase = await createClient();
     const { data, error } = await supabase.rpc("propose_label_th", {
       p_table: table,
       p_row_id: rowId,
@@ -250,11 +262,12 @@ export async function approveLabelTranslation(
   table: string,
   rowId: string,
   column: string,
+  requestId: string,
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("translations.approveLabelTranslation", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("translations.approveLabelTranslation", write(t), { id: requestId, action: "translations.approveLabelTranslation", db: supabase }, async () => {
     if (!can(await loadPermissions(), "translations.manage")) return refuse(t.management.errors.managementAccessRequired);
-    const supabase = await createClient();
     const { data, error } = await supabase.rpc("approve_label_th", {
       p_table: table,
       p_row_id: rowId,
@@ -276,11 +289,12 @@ export async function discardLabelDraft(
   table: string,
   rowId: string,
   column: string,
+  requestId: string,
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("translations.discardLabelDraft", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("translations.discardLabelDraft", write(t), { id: requestId, action: "translations.discardLabelDraft", db: supabase }, async () => {
     if (!can(await loadPermissions(), "translations.manage")) return refuse(t.management.errors.managementAccessRequired);
-    const supabase = await createClient();
     const { data, error } = await supabase.rpc("discard_label_draft", {
       p_table: table,
       p_row_id: rowId,

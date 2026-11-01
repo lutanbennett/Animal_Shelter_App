@@ -5,6 +5,7 @@ import { useConfirm } from "@/components/ConfirmProvider";
 import { Fragment, useMemo, useState, useTransition } from "react";
 import { formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import type { ActionResult } from "@/lib/action-result";
 import { likelyDuplicates } from "@/lib/clinics/doctors";
 import { ACTION_ICONS } from "@/components/hub-icons";
@@ -67,6 +68,11 @@ function DoctorRowItem({
   const confirm = useConfirm();
   const d = t.management.vetDoctors;
   const [name, setName] = useState(doctor.name);
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const mergeDoctorsCall = useWriteCall();
+  const deleteDoctorCall = useWriteCall();
+  const setDoctorActiveCall = useWriteCall();
+  const renameDoctorCall = useWriteCall();
   const [mode, setMode] = useState<"view" | "edit" | "merge">("view");
   const [mergeInto, setMergeInto] = useState("");
   const [message, setMessage] = useState<
@@ -108,7 +114,7 @@ function DoctorRowItem({
     ) {
       return;
     }
-    run(() => renameDoctor(clinicId, doctor.id, next), t.common.saved);
+    run(() => renameDoctorCall((requestId) => renameDoctor(clinicId, doctor.id, next, requestId)), t.common.saved);
   }
 
   function openMerge() {
@@ -121,12 +127,12 @@ function DoctorRowItem({
     const target = mergeTargets.find((row) => row.id === mergeInto);
     if (!target) return;
     if (!await confirm({ body: d.mergeConfirm(doctor.name, target.name, doctor.visit_count, target.clinics) })) return;
-    run(() => mergeDoctors(clinicId, doctor.id, target.id));
+    run(() => mergeDoctorsCall((requestId) => mergeDoctors(clinicId, doctor.id, target.id, requestId)));
   }
 
   async function handleDelete() {
     if (!await confirm({ body: d.deleteConfirm(doctor.name), confirmLabel: t.common.delete })) return;
-    run(() => deleteDoctor(clinicId, doctor.id));
+    run(() => deleteDoctorCall((requestId) => deleteDoctor(clinicId, doctor.id, requestId)));
   }
 
   const renamedPreview = name.trim().replace(/\s+/g, " ");
@@ -237,7 +243,7 @@ function DoctorRowItem({
                 <RowActionButton
                   disabled={isPending || (doctor.hasLogin && !isAdmin)}
                   onClick={() =>
-                    run(() => setDoctorActive(clinicId, doctor.id, !doctor.active))
+                    run(() => setDoctorActiveCall((requestId) => setDoctorActive(clinicId, doctor.id, !doctor.active, requestId)))
                   }
                   label={doctor.active ? d.markLeft : d.markActive}
                   hint={

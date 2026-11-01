@@ -11,7 +11,20 @@
 //   cookie-file holds "sb-...-auth-token=base64-..." (the cookie dev-signin prints; never commit it)
 // output: one line per attempt on stdout, then a summary; also appended to .local/drill-<case>.log
 // Test and production share the Pi and tunnel; the test site writes to the DEV database only.
+//
+// ALWAYS DRY-RUN THIS AGAINST A HEALTHY PI BEFORE TRUSTING ANY DRILL — six seconds is enough, and
+// every attempt must say landed=yes. It is cheap and it is not optional, because this probe has
+// already failed in the one way that produces a confident wrong answer rather than an error.
+// WHAT WENT WRONG (2026-11-01): it sent no request-id field, and runWriteAction() in
+// src/lib/action-result.ts fails CLOSED on a write with no id ("refused: no write request id"), so
+// every attempt came back a clean-looking 200 while NOTHING landed. A dry run showed 6 of 6 refused;
+// run unchanged across a power pull it would have recorded "85 of 85 writes refused" as a fact about
+// power loss. The fix is the WRITE_REQUEST_FIELD line in attempt() below: a fresh id per attempt,
+// exactly as a real browser save sends one. If a later change to the app moves that field or adds
+// another one the server insists on, this probe goes quietly dead again in the same shape — which is
+// why the dry run is the rule and why a run that lands nothing now says so loudly.
 import { readFileSync, appendFileSync, mkdirSync } from "node:fs";
+import { WRITE_REQUEST_FIELD, newWriteRequestId } from "../../src/lib/write-requests.ts";
 
 const [drillCase, secondsArg, cookieFile, site = "https://test.lannacare.org"] = process.argv.slice(2);
 if (!drillCase || !secondsArg || !cookieFile) throw new Error("usage: drill-probe.mjs <case> <seconds> <cookie-file> [site]");
@@ -37,6 +50,7 @@ async function attempt(n) {
   form.set("$ACTION_KEY", "k");
   form.set("name", name);
   form.set("usedFor", "ingredients");
+  form.set(WRITE_REQUEST_FIELD, newWriteRequestId()); // fresh per attempt: without it the write is refused and still answers 200
   const row = { n, name, at: stamp(started), status: "", ms: 0, servedBy: "none", landed: null };
   try {
     const res = await fetch(`${site}/admin/units`, { method: "POST", body: form, headers: { cookie }, signal: AbortSignal.timeout(30000) });
@@ -70,4 +84,20 @@ console.log(lines.join("\n"));
 appendFileSync(logFile, `# ${drillCase} ${new Date().toISOString()}\n${lines.join("\n")}\n`);
 const byServer = {};
 for (const a of attempts) byServer[a.servedBy] = (byServer[a.servedBy] ?? 0) + 1;
-console.log(`\nattempts=${attempts.length} landed=${attempts.filter((a) => a.landed).length} not-landed=${attempts.filter((a) => !a.landed).length} by-server=${JSON.stringify(byServer)}`);
+const landedCount = attempts.filter((a) => a.landed).length;
+console.log(`\nattempts=${attempts.length} landed=${landedCount} not-landed=${attempts.length - landedCount} by-server=${JSON.stringify(byServer)}`);
+
+// A run that lands NOTHING is far more likely to be a broken probe than a real result, so say so
+// instead of printing a tidy summary somebody will write down. See the header.
+if (attempts.length > 0 && landedCount === 0) {
+  console.log(
+    "\n*** NOTHING LANDED. THE PROBE IS PROBABLY BROKEN — DO NOT RECORD THIS AS A DRILL RESULT. ***\n" +
+      "A real outage refuses some saves, not every one. Check first that the app still accepts this\n" +
+      "write at all: run the probe for six seconds against a HEALTHY Pi and expect landed=yes every\n" +
+      "time. If that also lands nothing, the probe is what is wrong — a clean 200 with nothing\n" +
+      "written is what a refused write looks like from outside (see the header). Other things to\n" +
+      "check: the cookie file is current (dev-signin's cookie lasts 50 minutes), ACTION_ID still\n" +
+      "matches the build, and the site argument points where you think it does.",
+  );
+  process.exitCode = 1;
+}

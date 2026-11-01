@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { SIGNUP_STATUSES, type SignupStatus } from "@/lib/desexing/form";
 import { deleteSignup, setSignupStatus } from "./actions";
 
@@ -12,6 +13,9 @@ export function SignupControls({ id, driveId, status }: { id: string; driveId: s
   const a = t.desexingAdmin;
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const deleteSignupCall = useWriteCall();
+  const setSignupStatusCall = useWriteCall();
   const [error, setError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);
 
@@ -30,7 +34,7 @@ export function SignupControls({ id, driveId, status }: { id: string; driveId: s
         <select
           value={status}
           disabled={pending}
-          onChange={(e) => run(() => setSignupStatus(id, driveId, e.target.value as SignupStatus))}
+          onChange={(e) => run(() => setSignupStatusCall((requestId) => setSignupStatus(id, driveId, e.target.value as SignupStatus, requestId)))}
           className="min-h-11 rounded border border-border bg-background px-2 text-sm text-foreground"
         >
           {SIGNUP_STATUSES.map((s) => (
@@ -41,7 +45,7 @@ export function SignupControls({ id, driveId, status }: { id: string; driveId: s
       {confirm ? (
         <span className="flex items-center gap-2 text-sm text-foreground">
           {a.signups.removeConfirm}
-          <button type="button" disabled={pending} onClick={() => run(() => deleteSignup(id, driveId))} className="min-h-11 rounded border border-danger px-3 text-danger">
+          <button type="button" disabled={pending} onClick={() => run(() => deleteSignupCall((requestId) => deleteSignup(id, driveId, requestId)))} className="min-h-11 rounded border border-danger px-3 text-danger">
             {t.common.confirm}
           </button>
           <button type="button" onClick={() => setConfirm(false)} className="min-h-11 px-2 text-muted underline">

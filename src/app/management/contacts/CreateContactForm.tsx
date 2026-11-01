@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { contactTypeLabel } from "@/lib/i18n/enum-labels";
@@ -18,7 +18,7 @@ const inputClass =
  * "Added: <name>" shown, and Cancel links back; without it the form stays put.
  */
 export function CreateContactForm({ listHref }: { listHref?: string }) {
-  const [state, onSubmit, pending] = useKeptForm(createContact, undefined);
+  const [state, onSubmit, pending] = useWriteForm(createContact, undefined);
   const { t } = useI18n();
   const router = useRouter();
   const f = t.management.contacts.createForm;

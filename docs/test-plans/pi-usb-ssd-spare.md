@@ -5,6 +5,26 @@ Filled from `docs/test-plan-template.md`. Guided session with Lutan at the Pi on
 step. **The first USB drive turned out to be a counterfeit and was rejected, so the
 clone script has never run against a good drive and no boot test has happened.**
 
+**BOTH HALVES OF THAT SENTENCE ARE NOW FALSE. CORRECTED 2026-11-01 — read this before
+believing anything below about the drive.** A good drive was fitted and `init` was run;
+`spare-clone.timer` has been cloning weekly ever since (it succeeded at 05:04 on
+2026-11-01, hours before the boot test). **The boot test ran and PASSED on 2026-11-01**
+with Lutan at the Pi: with the NVMe physically out the Pi booted `/dev/sda2`, all three
+services came up `active`, `vcgencmd get_throttled` was `0x0`, and both sites answered
+`x-lanna-served-by: pi`; the NVMe was refitted and root re-verified as `nvme0n1p2`
+afterwards, with the spare present, unmounted and the weekly timer still armed. No hand
+clone was taken first, on purpose: the drive was booted exactly as the unattended weekly
+job leaves it, which is the state a real failure would rely on and so the stronger test.
+**It is a proven spare.** Also measured, and it corrects `docs/pi-hosting.md`: running
+from the USB drive is **not** slow — 0.10–0.35 s a page on USB against 0.08–0.21 s on
+the NVMe, because the time is network, not disk.
+
+**Why this correction is at the top rather than folded into the lines below.** On
+2026-10-31 a session believed this document over the machine, told Lutan the drive was
+empty, and offered to wipe it for use as a rescue disk — which would have destroyed the
+only spare. The dated lines below are left exactly as they were written, because they were
+true on the day; this paragraph is what is true now.
+
 ---
 
 ## Header

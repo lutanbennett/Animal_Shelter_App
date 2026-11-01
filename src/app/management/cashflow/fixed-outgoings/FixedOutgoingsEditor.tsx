@@ -4,6 +4,7 @@ import { useConfirm } from "@/components/ConfirmProvider";
 import { useState, useTransition } from "react";
 import { formatBaht, formatMonth } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { RowActionButton } from "@/components/RowAction";
@@ -50,6 +51,10 @@ export function FixedOutgoingsEditor({ lines, max }: { lines: FixedOutgoing[]; m
   const [fields, setFields] = useState<FixedOutgoingFields>(BLANK);
   const [notice, setNotice] = useState<Notice>(null);
   const [pending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const updateFixedOutgoingCall = useWriteCall();
+  const deleteFixedOutgoingCall = useWriteCall();
+  const createFixedOutgoingCall = useWriteCall();
 
   const NEW = "new";
   const full = lines.length >= max;
@@ -85,16 +90,16 @@ export function FixedOutgoingsEditor({ lines, max }: { lines: FixedOutgoing[]; m
   }
 
   function save() {
-    if (editing === NEW) run(() => createFixedOutgoing(fields));
+    if (editing === NEW) run(() => createFixedOutgoingCall((requestId) => createFixedOutgoing(fields, requestId)));
     else if (editing) {
       const id = editing;
-      run(() => updateFixedOutgoing(id, fields));
+      run(() => updateFixedOutgoingCall((requestId) => updateFixedOutgoing(id, fields, requestId)));
     }
   }
 
   async function remove(line: FixedOutgoing) {
     if (!await confirm({ body: m.confirmDelete(line.label), confirmLabel: t.common.delete })) return;
-    run(() => deleteFixedOutgoing(line.id));
+    run(() => deleteFixedOutgoingCall((requestId) => deleteFixedOutgoing(line.id, requestId)));
   }
 
   const set = <K extends keyof FixedOutgoingFields>(key: K, value: FixedOutgoingFields[K]) =>
