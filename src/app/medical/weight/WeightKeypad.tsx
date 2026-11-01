@@ -1,6 +1,6 @@
 "use client";
 
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { weightUnit } from "@/lib/format";
 import { saveMedicalWeight } from "./actions";
@@ -19,7 +19,7 @@ export function WeightKeypad({
 }) {
   const { t, locale } = useI18n();
   const w = t.medicalJobs.weight;
-  const [state, onSubmit, pending] = useKeptForm(saveMedicalWeight, undefined);
+  const [state, onSubmit, pending] = useWriteForm(saveMedicalWeight, undefined);
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
