@@ -103,6 +103,42 @@ one, and its `Version(s)` must match the deploy log's `Current Version ID`.
 
 ---
 
+## A release cuts what the build gave it
+
+**Lutan, 2026-11-01, after `0.41.1` took about an hour and a half against a ~40-minute target:**
+*"Do not add scope that was not provided through a build. If something is missing call it out but
+don't just add it into your scope."* And, naming the cause himself: *"root cause: You did work that
+you weren't supposed to."*
+
+**The rule, in one line: a release ships the commits that are already on `main`. It does not write
+any.**
+
+What happened, because the shape of it is what recurs rather than the particular package. `0.41.0`'s
+handover said *"the next release owes its removal"* of a dependency Lutan had ruled out. The `0.41.1`
+release manager read that as an instruction to itself, built the removal as its own PR **before the
+cut** — a worktree `npm ci`, four gates, a twelve-minute CI run and a merge — and put about 32 minutes
+in front of a release that was otherwise ready to cut. **The work was correct and the release was the
+wrong place for it.** He asked four times why it was taking so long.
+
+**What to do instead, and it is two lines of your report, not a stream:**
+
+- Name the missing or owed work, say plainly that it is **not** in this release, and leave it. The
+  planner schedules it as a stream; that is what the planner is for.
+- If it genuinely blocks the release — a migration the deploy guard will refuse, a broken gate — then
+  it is not out-of-scope work, it is the release stopping, and you say so and stop rather than
+  quietly fixing it.
+
+**Two things to expect downstream when a release does run long, and NOT to write up as faults of their
+own:** `main` moves under the deploy (read what is deploying, as the trap below says, and do nothing
+if the code-identity diff is empty), and `--drift test` starts reporting other streams' migrations as
+they finish. Both were recorded as findings on `0.41.1` and both were symptoms. A release that cuts
+promptly has neither.
+
+**For whoever writes the handover:** a sentence saying the next release *owes* something will be read
+as an instruction to the next release manager, because that is who reads it. Write it as *"owed, and
+not in the release — for the planner"*, or do not write it in this file at all.
+
+---
 ## The paperwork has a time budget too
 
 Lutan, 2026-10-20, after `0.38.0`: *"we started the release hours ago and it was
