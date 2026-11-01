@@ -1,20 +1,24 @@
 #!/usr/bin/env node
 /**
- * Nothing outside the LLM adapter may import a vendor SDK.
+ * NO file may import a model vendor's SDK. There is no allow-list.
  *
  *   node scripts/check-llm-vendor-imports.mjs
  *
- * The provider-neutral interface (src/lib/assistant/llm.ts) is only neutral
- * while the one file that knows a vendor is the only file that does. Scans
- * src/, worker/ and scripts/ for an import, require or dynamic import of a
- * known vendor package; the allowed files are listed below. Reads files
- * only, no network, so a bare process.exit is safe.
+ * The assistant's model runs on the shelter's own machine, so no vendor
+ * package has any business in this repository
+ * (docs/decisions/2026-11-01-drop-anthropic-sdk.md). This check used to allow
+ * one file, src/lib/assistant/llm-claude.ts, which is why it could not catch
+ * the Anthropic SDK reaching production in 0.41.0; that file is gone and the
+ * exception with it. The one implementation, src/lib/assistant/llm-openai.ts,
+ * speaks the OpenAI-compatible wire shape over plain fetch and imports
+ * nothing. Scans src/, worker/ and scripts/ for an import, require or dynamic
+ * import of a known vendor package. Reads files only, no network, so a bare
+ * process.exit is safe.
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
 const VENDORS = ["@anthropic-ai/", "openai", "@google/generative-ai", "@google/genai", "@mistralai/", "cohere-ai", "ollama", "groq-sdk"];
-const ALLOWED = new Set(["src/lib/assistant/llm-claude.ts"]);
 const ROOTS = ["src", "worker", "scripts"];
 const SELF = "scripts/check-llm-vendor-imports.mjs";
 
@@ -44,15 +48,15 @@ for (const r of ROOTS) {
     scanned++;
     const lines = readFileSync(f, "utf8").split("\n");
     lines.forEach((line, i) => {
-      if (IMPORT.test(line) && !ALLOWED.has(name)) problems.push(`${name}:${i + 1} imports a vendor SDK: ${line.trim()}`);
+      if (IMPORT.test(line)) problems.push(`${name}:${i + 1} imports a vendor SDK: ${line.trim()}`);
     });
   }
 }
 
 if (problems.length) {
-  console.log("FAIL: a vendor SDK is imported outside the adapter (allowed: " + [...ALLOWED].join(", ") + ")");
+  console.log("FAIL: a model vendor's SDK is imported. No file may import one -- the model runs on the shelter's own machine.");
   for (const p of problems) console.log("  " + p);
   process.exit(1);
 }
-console.log(`ok: no vendor SDK imported outside the adapter (${scanned} files scanned)`);
+console.log(`ok: no model vendor's SDK is imported anywhere (${scanned} files scanned)`);
 process.exit(0);

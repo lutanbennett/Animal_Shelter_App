@@ -1,5 +1,15 @@
 # Assistant v2 stream 2: the provider-neutral LLM adapter
 
+> **SUPERSEDED IN PART, 2026-11-01 — every Claude passage below is history.** `llm-claude.ts`,
+> `@anthropic-ai/sdk` and `ANTHROPIC_API_KEY` are gone, and `ASSISTANT_LLM_PROVIDER` now defaults to
+> `openai-compatible`. The rule is that the assistant's model runs on the shelter's own machine, so no
+> model vendor's package belongs in this repository and `check-llm-vendor-imports.mjs` allows none.
+> `docs/decisions/2026-11-01-drop-anthropic-sdk.md` is the paper. **What still stands:** the
+> `LlmAdapter` interface, the `ASSISTANT_LLM_PROVIDER` switch, the `Draft`-derived tool definitions,
+> the output clamp, and the reasoning about where a per-person spend ceiling belongs. This stream was
+> briefed while the plan was still "build against the Claude API first"; the no-Claude decision was
+> recorded 45 minutes after it merged, which is how the SDK reached `0.41.0`.
+
 2026-10-30. Stream `assistant-llm-adapter`, step two of `2026-10-30-assistant-v2-scoping.md`. A seam with no caller: nothing in
 the app calls it yet (stream 3 does), so no user sees a change.
 
@@ -23,9 +33,9 @@ the SDK; `scripts/check-llm-vendor-imports.mjs` (part of `npm run lint`) fails i
 
 | Name | Meaning |
 |---|---|
-| `ASSISTANT_LLM_PROVIDER` | `claude` when unset |
-| `ASSISTANT_LLM_MODEL` | the model id, **one place**; defaults to `DEFAULT_CLAUDE_MODEL` (`claude-opus-5-5`) |
-| `ANTHROPIC_API_KEY` | unset: `createLlm()` throws `not_configured` and the keyword assistant carries on |
+| `ASSISTANT_LLM_PROVIDER` | ~~`claude` when unset~~ — **superseded**: `openai-compatible` when unset |
+| `ASSISTANT_LLM_MODEL` | the model id, **one place**; ~~defaults to `DEFAULT_CLAUDE_MODEL`~~ — **superseded**: no default, and unset means `not_configured` |
+| ~~`ANTHROPIC_API_KEY`~~ | **superseded 2026-11-01: removed.** It was never set in any environment, and the production Worker's secret list was read on 2026-11-01 to prove it |
 
 The model id comes from the Claude SDK reference, not from the backlog item's `claude-opus-5`. Which model the shelter runs is
 Lutan's choice once the eval set exists. Not measured here: effort and thinking are left at the model's defaults.
