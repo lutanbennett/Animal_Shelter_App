@@ -5,11 +5,13 @@ import { useState, useTransition } from "react";
 import { RowActionButton } from "@/components/RowAction";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { deleteDelivery } from "./actions";
 
 /** A delivery typed wrong is deleted and recorded again. */
 export function DeleteDeliveryButton({ id, label }: { id: string; label: string }) {
   const { t } = useI18n();
+  const save = useWriteCall();
   const confirm = useConfirm();
   const d = t.deliveries;
   const [pending, startTransition] = useTransition();
@@ -27,7 +29,7 @@ export function DeleteDeliveryButton({ id, label }: { id: string; label: string 
           if (!await confirm({ body: d.recent.deleteConfirm(label), confirmLabel: t.common.delete })) return;
           setError(null);
           startTransition(async () => {
-            const result = await deleteDelivery(id);
+            const result = await save((requestId) => deleteDelivery(id, requestId));
             if (!result.ok) setError(result.error);
           });
         }}
