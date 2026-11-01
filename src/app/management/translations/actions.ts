@@ -217,9 +217,9 @@ export async function saveLabelTranslation(
  * public website — can see it until somebody approves it. That property is the
  * whole design: docs/decisions/2026-10-31-label-drafts-and-unlisted-labels.md.
  *
- * Asks translations.manage, which is what the function asks today. A separate
- * translations.propose activity is warranted and deliberately deferred to its
- * own backlog item, so for now anybody who can propose can also approve.
+ * Asks translations.propose, which is what the function asks (0296). Approving
+ * and discarding still ask translations.manage, so a login can propose without
+ * being able to publish.
  *
  * Nothing a reader sees changes, so only the queue is revalidated.
  */
@@ -233,7 +233,7 @@ export async function proposeLabelTranslation(
   const { t } = await getT();
   const supabase = await createClient();
   return runWriteAction("translations.proposeLabelTranslation", write(t), { id: requestId, action: "translations.proposeLabelTranslation", db: supabase }, async () => {
-    if (!can(await loadPermissions(), "translations.manage")) return refuse(t.management.errors.managementAccessRequired);
+    if (!can(await loadPermissions(), "translations.propose")) return refuse(t.management.errors.managementAccessRequired);
     const trimmed = text.trim();
     if (!trimmed) return refuse(t.translations.errors.proposalRequired);
     const { data, error } = await supabase.rpc("propose_label_th", {

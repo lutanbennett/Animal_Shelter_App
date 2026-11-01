@@ -50,3 +50,26 @@ test("runTranslations does nothing, and touches no network, without configuratio
   assert.equal(out.drafted, 0);
   assert.match(out.note, /not set/);
 });
+
+import { runLabelDrafts, missingLabelLogin } from "./translations.mjs";
+
+test("runLabelDrafts: no login configured means skip, with no network", async () => {
+  const fetchImpl = async () => { throw new Error("no network in this test"); };
+  const out = await runLabelDrafts({ SUPABASE_URL: "https://x.supabase.co" }, { fetchImpl, log: () => {} });
+  assert.equal(out.proposed, 0);
+  assert.match(out.note, /no label login configured/);
+  assert.deepEqual(missingLabelLogin({ LABEL_DRAFT_EMAIL: "a" }), ["LABEL_DRAFT_PASSWORD", "SUPABASE_ANON_KEY"]);
+});
+
+test("runLabelDrafts: a refused sign-in is reported and nothing else is called", async () => {
+  const urls = [];
+  const fetchImpl = async (u) => { urls.push(String(u)); return new Response("{}", { status: 400 }); };
+  const env = {
+    SUPABASE_URL: "https://x.supabase.co", SUPABASE_ANON_KEY: "k", LABEL_DRAFT_EMAIL: "m@x", LABEL_DRAFT_PASSWORD: "p",
+    AI: {}, TRANSLATE_ENGINE: "workers-ai",
+  };
+  const out = await runLabelDrafts(env, { fetchImpl, log: () => {} });
+  assert.equal(out.proposed, 0);
+  assert.match(out.note, /could not sign in|not running/);
+  assert.ok(urls.every((u) => u.includes("/auth/v1/token")));
+});

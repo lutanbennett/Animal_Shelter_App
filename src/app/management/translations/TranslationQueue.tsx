@@ -75,6 +75,7 @@ export function TranslationQueue({
   labels: initialLabels,
   show,
   canManage,
+  canPropose,
   viewerId,
 }: {
   prose: TranslationQueueRow[];
@@ -87,6 +88,8 @@ export function TranslationQueue({
    * database would refuse (Lutan, 2026-10-27).
    */
   canManage: boolean;
+  /** translations.propose: only the Propose control and the field it reads from (0296). */
+  canPropose: boolean;
   /** This login, so a proposal can say whether it was theirs. */
   viewerId: string | null;
 }) {
@@ -188,7 +191,7 @@ export function TranslationQueue({
             <ul className="flex flex-col gap-3">
               {g.labels.map((item) => (
                 <li key={labelKey(item)}>
-                  <LabelCard item={item} onSaved={onLabelSaved} canManage={canManage} viewerId={viewerId} />
+                  <LabelCard item={item} onSaved={onLabelSaved} canManage={canManage} canPropose={canPropose} viewerId={viewerId} />
                 </li>
               ))}
               {g.prose.map((row) => (
@@ -258,11 +261,13 @@ function LabelCard({
   item,
   onSaved,
   canManage,
+  canPropose,
   viewerId,
 }: {
   item: LabelItem;
   onSaved: (item: LabelItem) => void;
   canManage: boolean;
+  canPropose: boolean;
   viewerId: string | null;
 }) {
   const { t, locale } = useI18n();
@@ -470,13 +475,15 @@ function LabelCard({
       )}
       {item.status === "as_typed" && <p className="mb-2 text-xs text-muted">{tr.asTypedHint}</p>}
 
-      {canManage && (
+      {(canManage || canPropose) && (
         <>
           <form
             className="flex flex-col gap-2 sm:flex-row sm:items-end"
             onSubmit={(e) => {
               e.preventDefault();
-              save();
+              // Enter saves for a login that may; one that may only propose proposes.
+              if (canManage) save();
+              else if (canPropose && text.trim()) propose();
             }}
           >
             <label className="flex flex-1 flex-col gap-1 text-xs font-medium text-muted">
@@ -495,29 +502,33 @@ function LabelCard({
               />
             </label>
             <div className="flex flex-wrap gap-2">
-              <ActionButton
-                type="submit"
-                icon={ACTION_ICONS.save}
-                variant="primary"
-                compact
-                disabled={isPending || (!dirty && item.status !== "stale")}
-              >
-                {isPending ? t.common.saving : savedOnce && !dirty ? tr.saved : tr.saveLabel}
-              </ActionButton>
-              <ActionButton
-                type="button"
-                icon={ACTION_ICONS.send}
-                variant="secondary"
-                compact
-                disabled={isPending || !text.trim()}
-                onClick={propose}
-              >
-                {proposedOnce ? tr.proposedDone : tr.proposeLabel}
-              </ActionButton>
+              {canManage && (
+                <ActionButton
+                  type="submit"
+                  icon={ACTION_ICONS.save}
+                  variant="primary"
+                  compact
+                  disabled={isPending || (!dirty && item.status !== "stale")}
+                >
+                  {isPending ? t.common.saving : savedOnce && !dirty ? tr.saved : tr.saveLabel}
+                </ActionButton>
+              )}
+              {canPropose && (
+                <ActionButton
+                  type="button"
+                  icon={ACTION_ICONS.send}
+                  variant="secondary"
+                  compact
+                  disabled={isPending || !text.trim()}
+                  onClick={propose}
+                >
+                  {proposedOnce ? tr.proposedDone : tr.proposeLabel}
+                </ActionButton>
+              )}
             </div>
           </form>
           <p className="mt-1 text-xs text-muted">{tr.proposeHint}</p>
-          {item.text_th && <p className="mt-1 text-xs text-muted">{tr.clearHint}</p>}
+          {item.text_th && canManage && <p className="mt-1 text-xs text-muted">{tr.clearHint}</p>}
         </>
       )}
       {error && <p className="mt-1 text-xs text-danger">{error}</p>}

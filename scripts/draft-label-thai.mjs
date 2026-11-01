@@ -4,27 +4,21 @@
 //   node scripts/draft-label-thai.mjs --env production --out x.json   survey production and write the list
 //   node scripts/draft-label-thai.mjs --drafts x.json                 check a filled-in list, write nothing
 //   node scripts/draft-label-thai.mjs --drafts x.json --apply --dev-login
-//   node scripts/draft-label-thai.mjs --drafts x.json --apply --access-token <jwt> --env production --confirm production
+//   node scripts/draft-label-thai.mjs --drafts x.json --apply --login --env production --confirm production
 //
 // Nothing is written without --apply, and --apply can only ever reach label_drafts: every write goes
 // through propose_label_th() (0293), which does not read, lock or touch the row, so no label a shelter
 // user reads changes and every proposal waits for someone to press Approve. approve_label_th() is a
 // person's action and is not called from here, ever.
 //
-// WHY A SCRIPT AND NOT THE TRANSLATION CRON, which already drafts prose every fifteen minutes through
-// worker/translations.mjs. Because the cron cannot write a label draft at all, and that is measured,
-// not assumed (dev, 2026-11-01):
-//
-//   service-role rpc propose_label_th  -> 42501 translations.manage is required to propose a Thai label
-//   service-role insert into label_drafts -> 42501 permission denied for table label_drafts
-//
-// has_permission() answers from auth.uid(), and the Worker holds the service key and no session, so it
-// has no uid; 0293 grants service_role select on label_drafts and nothing more. Teaching the cron labels
-// therefore needs either the translations.propose activity 0293's own header names (which needs a row in
-// permission_activities AND an entry in src/lib/permissions/catalogue.ts, plus a card to carry it) or a
-// grant letting the service key write drafts. Both are schema, and schema lands first as its own PR.
-// A script can hold a session, so it can do today what the cron cannot do without a migration and a
-// Worker deploy. docs/decisions/2026-11-01-label-thai-drafts-by-script.md argues this at length.
+// WHICH LOGIN. propose_label_th() asks has_permission('translations.propose') (0296), which answers
+// from auth.uid(); the service key has no uid and is refused (42501, measured 2026-11-01), so this script
+// signs in as a login that holds the "Propose a Thai label" card. Give it with --login: the address and
+// password are read from LABEL_DRAFT_EMAIL and LABEL_DRAFT_PASSWORD in the environment (never from the
+// command line, so they stay out of the shell history). That is the same machine login the Worker uses
+// (worker/translations.mjs, runLabelDrafts), and it can only PROPOSE: approving still asks
+// translations.manage. There is no hand-copied --access-token any more; copying one out of DevTools was
+// the procedure this replaced. docs/decisions/2026-11-01-translations-propose-app.md.
 //
 // WHERE THE THAI COMES FROM: not from here. No engine is reachable from a checkout — the `ai` binding
 // in worker/translate-engines.mjs is a Worker runtime binding, OLLAMA_URL is unset, and there is no
@@ -60,7 +54,9 @@ const draftsFile = value("--drafts");
 const outFile = value("--out");
 const apply = flag("--apply");
 const devLogin = flag("--dev-login");
-const accessToken = value("--access-token");
+const useLogin = flag("--login");
+const loginEmail = process.env.LABEL_DRAFT_EMAIL;
+const loginPassword = process.env.LABEL_DRAFT_PASSWORD;
 
 // A label that is "shown as typed on purpose" (optional, no Thai) is a deliberate answer, not a gap.
 // It is counted apart here exactly as the Translations screen and translations-open count it, and it is
@@ -71,25 +67,24 @@ const STATES = ["missing", "proposed", "stale", "as_typed", "current"];
 function usage(message) {
   console.error(`${message}\n`);
   console.error("  node scripts/draft-label-thai.mjs [--env test|production] [--out <file>]");
-  console.error("  node scripts/draft-label-thai.mjs --drafts <file> [--apply] [--dev-login | --access-token <jwt>]");
+  console.error("  node scripts/draft-label-thai.mjs --drafts <file> [--apply] [--dev-login | --login]");
   return 2;
 }
 
 /** The reason this invocation cannot run, or undefined. Answered before anything is read or written. */
 function refuseArgs() {
   if (apply && !draftsFile) return "--apply needs --drafts <file>: there is nothing to write without one.";
-  if (apply && !devLogin && !accessToken) {
+  if (apply && !devLogin && !useLogin) {
     return (
-      "--apply needs a session. propose_label_th() asks has_permission('translations.manage'), which answers from\n" +
-      "auth.uid(), so the service key cannot call it (measured: 42501 permission denied). Give --access-token <jwt>\n" +
-      "from a signed-in login holding the translations card, or --dev-login on dev to have one made and removed."
+      "--apply needs a session. propose_label_th() asks has_permission('translations.propose'), which answers from\n" +
+      "auth.uid(), so the service key cannot call it (measured: 42501 permission denied). Give --login, with\n" +
+      "LABEL_DRAFT_EMAIL and LABEL_DRAFT_PASSWORD set to a login holding the Propose a Thai label card, or\n" +
+      "--dev-login on dev to have one made and removed."
     );
   }
   if (devLogin && envName !== "test") return "--dev-login only works with --env test; it creates and deletes a login.";
-  if (accessToken && accessToken.split(".").length !== 3) {
-    return "--access-token is not a JWT (a token has three dot-separated parts); nothing was sent.";
-  }
-  if (devLogin && accessToken) return "give --dev-login or --access-token, not both.";
+  if (useLogin && (!loginEmail || !loginPassword)) return "--login needs LABEL_DRAFT_EMAIL and LABEL_DRAFT_PASSWORD in the environment; nothing was sent.";
+  if (devLogin && useLogin) return "give --dev-login or --login, not both.";
   if (apply && envName === "production" && value("--confirm") !== "production") {
     return "writing drafts to production needs --confirm production as well as --apply.";
   }
@@ -188,7 +183,7 @@ function report(rows) {
 // ---------------------------------------------------------------------------
 
 /**
- * A disposable login holding EXACTLY the translations card, for --dev-login. It is deleted again in
+ * A disposable login holding EXACTLY the propose_translations card (the machine login's own shape), for --dev-login. It is deleted again in
  * the finally block whatever happens, and its throwaway role with it: this is the harness pattern in
  * scripts/lib/user-role.mjs, not a login anyone signs in with. The password is random and never printed.
  */
@@ -197,7 +192,7 @@ async function devSession() {
   const password = randomBytes(24).toString("base64url");
   const { data: made, error } = await service.auth.admin.createUser({ email, password, email_confirm: true });
   if (error) throw new Error(`could not make a dev login: ${error.message}`);
-  const { error: cardError, cleanup } = await giveCards(service, made.user.id, ["translations"]);
+  const { error: cardError, cleanup } = await giveCards(service, made.user.id, ["propose_translations"]);
   // The login goes first and the throwaway role second, the order giveCards' own comment asks for.
   const remove = async () => {
     const { error: delError } = await service.auth.admin.deleteUser(made.user.id);
@@ -206,7 +201,7 @@ async function devSession() {
   };
   if (cardError) {
     await remove();
-    throw new Error(`could not give the dev login the translations card: ${cardError.message}`);
+    throw new Error(`could not give the dev login the propose_translations card: ${cardError.message}`);
   }
   const anon = createClient(url, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false } });
   const { data: signed, error: signError } = await anon.auth.signInWithPassword({ email, password });
@@ -215,6 +210,14 @@ async function devSession() {
     throw new Error(`could not sign the dev login in: ${signError.message}`);
   }
   return { token: signed.session.access_token, remove };
+}
+
+/** Sign in as the configured machine login (--login). Nothing is created or removed. */
+async function loginSession() {
+  const anon = createClient(url, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+  const { data, error } = await anon.auth.signInWithPassword({ email: loginEmail, password: loginPassword });
+  if (error) throw new Error();
+  return { token: data.session.access_token, remove: async () => {} };
 }
 
 /** The proposals in the file, each checked against what the database says now and against checkOutput. */
@@ -309,7 +312,7 @@ async function run() {
     if (!apply) {
       console.log(`\nDry run: nothing written. Add --apply (and a session) to propose these ${ready.length} as drafts.`);
     } else if (ready.length) {
-      const session = devLogin ? await devSession() : { token: accessToken, remove: async () => {} };
+      const session = devLogin ? await devSession() : await loginSession();
       try {
         const result = await land(ready, session.token);
         console.log(`\nProposed ${result.landed.length} draft(s); ${result.refused.length} refused.`);
