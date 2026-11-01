@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { runAction, type ActionRefusal, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionRefusal, type ActionResult, type WriteMessages } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { checkHttpsUrl, linkErrorText } from "@/lib/links/validate";
@@ -17,6 +19,13 @@ import { trashShopPhoto, uploadShopPhoto } from "@/lib/shop/upload";
  */
 
 const refuse = (error: string): ActionRefusal => ({ ok: false, error });
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 export type ShopSaved = ActionResult<{ success?: string }>;
 
 function revalidateShop() {
@@ -39,14 +48,14 @@ function text(formData: FormData, name: string) {
  */
 export async function saveShopLink(_state: ShopSaved | undefined, formData: FormData): Promise<ShopSaved> {
   const { t } = await getT();
-  return runAction("shop.save", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("shop.save", write(t), { id: writeRequestIdFrom(formData), action: "shop.save", db: supabase }, async () => {
     const m = t.shop.manage;
     if (!(await allowed())) return refuse(m.noPermission);
 
     const id = text(formData, "id");
     const friendId = text(formData, "friend_id");
     const title = text(formData, "title");
-    const supabase = await createClient();
 
     // On an edit the kind is the stored one, never the request's.
     let isFriend = !!friendId;
@@ -108,11 +117,11 @@ export async function saveShopLink(_state: ShopSaved | undefined, formData: Form
 }
 
 /** Show or hide an entry on /shop. Hiding keeps everything typed; the database keeps a hidden entry from anon. */
-export async function setShopLinkShown(id: string, shown: boolean): Promise<ActionResult> {
+export async function setShopLinkShown(id: string, shown: boolean, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("shop.setShown", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("shop.setShown", write(t), { id: requestId, action: "shop.setShown", db: supabase }, async () => {
     if (!(await allowed())) return refuse(t.shop.manage.noPermission);
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("shop_links")
       .update({ shown })
@@ -127,11 +136,11 @@ export async function setShopLinkShown(id: string, shown: boolean): Promise<Acti
 }
 
 /** Move an entry one place up or down; the order is renumbered so equal numbers never stick. */
-export async function moveShopLink(id: string, direction: "up" | "down"): Promise<ActionResult> {
+export async function moveShopLink(id: string, direction: "up" | "down", requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("shop.move", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("shop.move", write(t), { id: requestId, action: "shop.move", db: supabase }, async () => {
     if (!(await allowed())) return refuse(t.shop.manage.noPermission);
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("shop_links")
       .select("id")
@@ -154,11 +163,11 @@ export async function moveShopLink(id: string, direction: "up" | "down"): Promis
   });
 }
 
-export async function deleteShopLink(id: string): Promise<ActionResult> {
+export async function deleteShopLink(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("shop.delete", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("shop.delete", write(t), { id: requestId, action: "shop.delete", db: supabase }, async () => {
     if (!(await allowed())) return refuse(t.shop.manage.noPermission);
-    const supabase = await createClient();
     const { data: current } = await supabase
       .from("shop_links")
       .select("photo_drive_file_id")
@@ -177,14 +186,13 @@ export async function deleteShopLink(id: string): Promise<ActionResult> {
 /** The photo of a shop or product. Replaces the old one (to Drive's trash). A Friend's picture is its logo, not set here. */
 export async function uploadShopPhotoAction(formData: FormData): Promise<ShopSaved> {
   const { t } = await getT();
-  return runAction("shop.uploadPhoto", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("shop.uploadPhoto", write(t), { id: writeRequestIdFrom(formData), action: "shop.uploadPhoto", db: supabase }, async () => {
     const m = t.shop.manage;
     if (!(await allowed())) return refuse(m.noPermission);
     const id = text(formData, "id");
     const file = formData.get("file");
     if (!(file instanceof File) || file.size === 0) return refuse(m.errors.noFile);
-
-    const supabase = await createClient();
     const { data: current } = await supabase
       .from("shop_links")
       .select("friend_id, photo_drive_file_id")
@@ -207,11 +215,11 @@ export async function uploadShopPhotoAction(formData: FormData): Promise<ShopSav
   });
 }
 
-export async function removeShopPhoto(id: string): Promise<ActionResult> {
+export async function removeShopPhoto(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("shop.removePhoto", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("shop.removePhoto", write(t), { id: requestId, action: "shop.removePhoto", db: supabase }, async () => {
     if (!(await allowed())) return refuse(t.shop.manage.noPermission);
-    const supabase = await createClient();
     const { data: current } = await supabase
       .from("shop_links")
       .select("photo_drive_file_id")

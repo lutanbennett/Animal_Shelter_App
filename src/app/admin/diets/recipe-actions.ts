@@ -1,9 +1,11 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { loadPermissions } from "@/lib/permissions/load";
 import { canEditItemSettings } from "@/lib/permissions/item-settings";
 
@@ -12,6 +14,13 @@ import { canEditItemSettings } from "@/lib/permissions/item-settings";
 // /management/diets. Admin only, as the rest of the page.
 
 const refuse = (error: string) => ({ ok: false as const, error });
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 export type RecipeFormState = ActionResult<{ success: string; id: string }> | undefined;
 
@@ -61,13 +70,13 @@ async function residentRecordCount(supabase: Supabase, dietId: string) {
 
 export async function createRecipe(_state: RecipeFormState, formData: FormData): Promise<RecipeFormState> {
   const { t } = await getT();
+  const supabase = await createClient();
   const e = t.admin.diets.recipes.errors;
-  return runAction("diets.createRecipe", t.common.somethingWentWrong, async () => {
+  return runWriteAction("diets.createRecipe", write(t), { id: writeRequestIdFrom(formData), action: "diets.createRecipe", db: supabase }, async () => {
     const refused = await refusal();
     if (refused) return refused;
     const name = optional(formData.get("name"));
     if (!name) return refuse(e.nameRequired);
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("diets")
       .insert({
@@ -83,15 +92,15 @@ export async function createRecipe(_state: RecipeFormState, formData: FormData):
   });
 }
 
-export async function updateRecipe(id: string, fields: RecipeFields): Promise<ActionResult> {
+export async function updateRecipe(id: string, fields: RecipeFields, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
+  const supabase = await createClient();
   const e = t.admin.diets.recipes.errors;
-  return runAction("diets.updateRecipe", t.common.somethingWentWrong, async () => {
+  return runWriteAction("diets.updateRecipe", write(t), { id: requestId, action: "diets.updateRecipe", db: supabase }, async () => {
     const refused = await refusal();
     if (refused) return refused;
     const name = optional(fields.name);
     if (!name) return refuse(e.nameRequired);
-    const supabase = await createClient();
     const { error } = await supabase
       .from("diets")
       .update({ name, name_th: optional(fields.nameTh), notes: optional(fields.notes) })
@@ -107,12 +116,12 @@ export async function updateRecipe(id: string, fields: RecipeFields): Promise<Ac
  * the old flag is cleared first; if the second statement fails the shelter is
  * left with no standard, which the page says out loud, never with two.
  */
-export async function setStandardRecipe(id: string): Promise<ActionResult> {
+export async function setStandardRecipe(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("diets.setStandardRecipe", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("diets.setStandardRecipe", write(t), { id: requestId, action: "diets.setStandardRecipe", db: supabase }, async () => {
     const refused = await refusal();
     if (refused) return refused;
-    const supabase = await createClient();
     const cleared = await supabase.from("diets").update({ is_standard: false }).eq("is_standard", true);
     if (cleared.error) return refuse(cleared.error.message);
     const { error } = await supabase.from("diets").update({ is_standard: true }).eq("id", id);
@@ -122,12 +131,12 @@ export async function setStandardRecipe(id: string): Promise<ActionResult> {
   });
 }
 
-export async function deleteRecipe(id: string): Promise<ActionResult> {
+export async function deleteRecipe(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("diets.deleteRecipe", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("diets.deleteRecipe", write(t), { id: requestId, action: "diets.deleteRecipe", db: supabase }, async () => {
     const refused = await refusal();
     if (refused) return refused;
-    const supabase = await createClient();
     const { count, error: countError } = await residentRecordCount(supabase, id);
     if (countError) return refuse(countError.message);
     if (count > 0) return refuse(t.admin.diets.recipes.errors.inUse(count));
@@ -139,16 +148,16 @@ export async function deleteRecipe(id: string): Promise<ActionResult> {
 }
 
 /** Adds the ingredient to the recipe or changes its amount per serving (one line per ingredient). */
-export async function saveRecipeLine(dietId: string, fields: RecipeLineFields): Promise<ActionResult> {
+export async function saveRecipeLine(dietId: string, fields: RecipeLineFields, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
+  const supabase = await createClient();
   const e = t.admin.diets.recipes.errors;
-  return runAction("diets.saveRecipeLine", t.common.somethingWentWrong, async () => {
+  return runWriteAction("diets.saveRecipeLine", write(t), { id: requestId, action: "diets.saveRecipeLine", db: supabase }, async () => {
     const refused = await refusal();
     if (refused) return refused;
     if (!fields.ingredientId) return refuse(e.pickIngredient);
     const qty = Number(optional(fields.qty) ?? "");
     if (!Number.isFinite(qty) || qty <= 0) return refuse(e.amountsInvalid);
-    const supabase = await createClient();
     // A serving unit with no conversion is refused by a trigger (0239).
     const { error } = await supabase.from("diet_ingredients").upsert(
       {
@@ -166,15 +175,15 @@ export async function saveRecipeLine(dietId: string, fields: RecipeLineFields): 
 }
 
 /** Sets how many servings a small, medium and large dog gets in a day. */
-export async function saveServings(dietId: string, fields: ServingsFields): Promise<ActionResult> {
+export async function saveServings(dietId: string, fields: ServingsFields, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
+  const supabase = await createClient();
   const e = t.admin.diets.recipes.errors;
-  return runAction("diets.saveServings", t.common.somethingWentWrong, async () => {
+  return runWriteAction("diets.saveServings", write(t), { id: requestId, action: "diets.saveServings", db: supabase }, async () => {
     const refused = await refusal();
     if (refused) return refused;
     const [small, medium, large] = [fields.small, fields.medium, fields.large].map((v) => Number(optional(v) ?? ""));
     if ([small, medium, large].some((q) => !Number.isFinite(q) || q <= 0)) return refuse(e.servingsInvalid);
-    const supabase = await createClient();
     // Amounts live in qty_per_serving, so changing the servings changes no ingredient line.
     const { error } = await supabase
       .from("diets")
@@ -186,12 +195,12 @@ export async function saveServings(dietId: string, fields: ServingsFields): Prom
   });
 }
 
-export async function removeRecipeLine(dietId: string, ingredientId: string): Promise<ActionResult> {
+export async function removeRecipeLine(dietId: string, ingredientId: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("diets.removeRecipeLine", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("diets.removeRecipeLine", write(t), { id: requestId, action: "diets.removeRecipeLine", db: supabase }, async () => {
     const refused = await refusal();
     if (refused) return refused;
-    const supabase = await createClient();
     const lines = await supabase
       .from("diet_ingredients")
       .select("diet_type_id", { count: "exact", head: true })

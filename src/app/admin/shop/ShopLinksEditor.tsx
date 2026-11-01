@@ -6,7 +6,8 @@ import { useConfirm } from "@/components/ConfirmProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { driveImageUrl } from "@/lib/google/drive-client";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteCall, useWriteForm } from "@/lib/use-write-form";
+import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { runUploadAction } from "@/lib/uploads/run-upload-action";
 import type { FriendChoice, ShopLinkRow } from "@/lib/shop/shop-links";
@@ -71,6 +72,12 @@ function EntryCard({ row, isFirst, isLast, canEdit }: { row: ShopLinkRow; isFirs
   const confirm = useConfirm();
   const m = t.shop.manage;
   const [pending, startTransition] = useTransition();
+  // ONE useWriteCall PER ACTION, never shared: an id kept from an unknown press
+  // and then sent to another action is refused outright by claim_write_request()
+  // (0292). Move up and Move down are the SAME action, so they share one.
+  const writeMove = useWriteCall();
+  const writeShown = useWriteCall();
+  const writeDelete = useWriteCall();
   const [error, setError] = useState<string | null>(null);
   const name = row.friend?.name ?? row.title ?? "";
 
@@ -94,17 +101,17 @@ function EntryCard({ row, isFirst, isLast, canEdit }: { row: ShopLinkRow; isFirs
         </span>
         {canEdit && (
           <>
-            <ActionButton compact icon={ACTION_ICONS.moveUp} disabled={pending || isFirst} onClick={() => run(() => moveShopLink(row.id, "up"))}>
+            <ActionButton compact icon={ACTION_ICONS.moveUp} disabled={pending || isFirst} onClick={() => run(() => writeMove((requestId) => moveShopLink(row.id, "up", requestId)))}>
               {m.moveUp}
             </ActionButton>
-            <ActionButton compact icon={ACTION_ICONS.moveDown} disabled={pending || isLast} onClick={() => run(() => moveShopLink(row.id, "down"))}>
+            <ActionButton compact icon={ACTION_ICONS.moveDown} disabled={pending || isLast} onClick={() => run(() => writeMove((requestId) => moveShopLink(row.id, "down", requestId)))}>
               {m.moveDown}
             </ActionButton>
             <ActionButton
               compact
               icon={row.shown ? ACTION_ICONS.unpublish : ACTION_ICONS.publish}
               disabled={pending}
-              onClick={() => run(() => setShopLinkShown(row.id, !row.shown))}
+              onClick={() => run(() => writeShown((requestId) => setShopLinkShown(row.id, !row.shown, requestId)))}
             >
               {row.shown ? m.hide : m.show}
             </ActionButton>
@@ -124,7 +131,7 @@ function EntryCard({ row, isFirst, isLast, canEdit }: { row: ShopLinkRow; isFirs
             disabled={pending}
             onClick={async () => {
               if (!(await confirm({ body: m.confirmDelete(name) }))) return;
-              run(() => deleteShopLink(row.id));
+              run(() => writeDelete((requestId) => deleteShopLink(row.id, requestId)));
             }}
           >
             {m.remove}
@@ -150,7 +157,8 @@ function ReadOnlyEntry({ row }: { row: ShopLinkRow }) {
 function EntryForm({ row, friends }: { row: ShopLinkRow | null; friends?: FriendChoice[] }) {
   const { t } = useI18n();
   const m = t.shop.manage;
-  const [state, onSubmit, pending] = useKeptForm(saveShopLink, undefined);
+  // useWriteForm, not useKeptForm: this save is wrapped (Pi failover (D)).
+  const [state, onSubmit, pending] = useWriteForm(saveShopLink, undefined);
   const isFriend = !!friends || !!row?.friend_id;
 
   return (
@@ -208,6 +216,8 @@ function PhotoPicture({ row }: { row: ShopLinkRow }) {
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const writeUpload = useWriteCall();
+  const writeRemovePhoto = useWriteCall();
 
   function handleFile(file: File | undefined) {
     if (!file) return;
@@ -216,7 +226,13 @@ function PhotoPicture({ row }: { row: ShopLinkRow }) {
     formData.append("id", row.id);
     formData.append("file", file);
     startTransition(async () => {
-      const result = await runUploadAction(file, t.admin.website.errors, () => uploadShopPhotoAction(formData));
+      // The upload builds its own FormData, so the request id is put in by hand
+      // rather than by useWriteForm. set(), not append(), so a retry of the same
+      // attempt does not send two ids.
+      const result = await writeUpload((requestId) => {
+        formData.set(WRITE_REQUEST_FIELD, requestId);
+        return runUploadAction(file, t.admin.website.errors, () => uploadShopPhotoAction(formData));
+      });
       if (result && "error" in result) setMessage({ type: "error", text: result.error });
       else setMessage({ type: "success", text: m.photoUpdated });
     });
@@ -248,7 +264,7 @@ function PhotoPicture({ row }: { row: ShopLinkRow }) {
             onClick={async () => {
               if (!(await confirm({ body: m.removePhoto }))) return;
               startTransition(async () => {
-                const result = await removeShopPhoto(row.id);
+                const result = await writeRemovePhoto((requestId) => removeShopPhoto(row.id, requestId));
                 if (!result.ok) setMessage({ type: "error", text: result.error });
               });
             }}
