@@ -236,10 +236,9 @@ two or three at once; more than that and merging becomes the bottleneck.
    `node scripts/gates.mjs` (typecheck, lint, test, build — four gates; prints each exit code), then open the PR
    with `gh pr create` (signed in as the user; fall back to GitHub in the
    user's Chrome if `gh` is missing). CI runs the
-   same three checks. Once the user says so, merge it — **except for a
-   release's own two PRs, which Claude merges itself the moment CI is
-   green, without asking** (see "Release PRs merge without asking"
-   below).
+   same three checks. **Then merge it yourself as soon as every check is
+   green — every PR, feature PRs included. Do not ask.** Lutan's decision,
+   2026-11-01, asked directly (see "Every PR merges on green" below).
 
    **Record your own usage on the PR, immediately before `gh pr merge`.** A feature stream (not a
    release cut or record, not a handover) calls `mcp__ccd_session_mgmt__get_usage` and
@@ -338,12 +337,51 @@ two or three at once; more than that and merging becomes the bottleneck.
    clears. `/clean-streams` does this round in one go: it checks each
    leftover's PR is merged, asks, then `done`s the ones confirmed.
 
-## Release PRs and the handovers merge without asking
+## Every PR merges on green
 
-**A release's own two PRs — the cut and the record — are merged by Claude
-as soon as CI is green, with no approval round-trip.** Lutan's decision,
-2026-10-13, after `0.28.0` cost him five interventions where two were
-genuinely his.
+**Claude merges its own PR as soon as every check is green, with no
+approval round-trip. Every PR: feature PRs, a release's two, the
+handovers.** Lutan's decision, **2026-11-01**, asked directly — the
+question was whether a feature PR should keep waiting for his go, and the
+answer was *merge on green*.
+
+**It had already stopped being a gate in practice, which is why he was
+asked.** On 2026-10-31 all three of batch 6's streams merged themselves on
+full green without being told to, each having first checked the CI run's
+commit matched its own head. Nothing went wrong, and the rule as written
+said they should have waited — so either the rule or the behaviour was
+wrong, and he settled it. **The three batch-7 briefs were corrected the
+same day**, before their sessions opened.
+
+**What the merge is still conditional on, and none of this is softened:**
+
+- **Every check green on YOUR head commit.** Read it rather than assume it:
+  `gh run view <id> --json status,conclusion,headSha` and confirm
+  `headSha` is the commit you pushed last. **A green run against an older
+  commit is not a green run**, and silent CI on a pushed commit means the
+  PR has gone CONFLICTING, not that it is still running.
+- **`audit` showing `skipped`** on a PR with no `package.json` change is
+  normal, **and is not a pass** — it means nothing was checked, on purpose.
+- **A red check is never merged past**, on any PR. A red `test-plan` is
+  always somebody's real mistake and never "nobody has signed yet"; a red
+  `audit` on a PR that ran it is a real finding to read.
+- **If `gh pr merge` is refused** (auto mode sometimes refuses it as *Merge
+  Without Review*), **say so plainly and leave the PR green and ready.**
+  Never get the change onto `main` by another path.
+
+**What this does NOT change:** the gates, the seven CI checks, the test
+plans and `gh pr create` are all exactly as they were. What is removed is
+Claude *waiting* for a yes on a PR that has already passed every one of
+them.
+
+### The history, which is why this section is long
+
+The release side got here first, and the reasoning is worth keeping because
+it is the reasoning that was eventually applied to everything.
+
+**A release's own two PRs — the cut and the record — have been merged by
+Claude as soon as CI is green since Lutan's decision of 2026-10-13**, after
+`0.28.0` cost him five interventions where two were genuinely his.
 
 **The same now applies to the two handover documents' PRs**
 (`docs/planner-handover.md` and `docs/release-handover.md`) — Lutan,
@@ -389,8 +427,12 @@ Three things about this worth not re-deriving:
   the user says so". A session reading both followed the stricter one and
   asked. They now agree.
 
-**Everything else still needs his go**: feature PRs are unchanged, and a
-red check is never merged past on any PR, release or not.
+**SUPERSEDED 2026-11-01 by the decision at the top of this section**, which
+extended merge-on-green to every PR. What this line used to say — *"feature
+PRs are unchanged"* — is no longer true, and it is kept rather than deleted
+because a session reading an older decision file or test plan will meet the
+old rule and need to know which way it went. **What it got right and still
+holds: a red check is never merged past on any PR, release or not.**
 
 ## Testing
 
