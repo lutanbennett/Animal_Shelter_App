@@ -6,7 +6,8 @@ import type { ClinicRef, ResidentRef } from "@/lib/clinics/calendar-import-match
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { formatDate } from "@/lib/format";
 import type { Locale } from "@/lib/i18n/locales";
-import { confirmCalendarEntry, dismissCalendarEntry } from "./confirm-actions";
+import { ConfirmEntryForm } from "./ConfirmEntryForm";
+import { DismissEntryButton } from "./DismissEntryButton";
 import { shelterTime } from "@/lib/clinics/shelter-visits";
 
 /**
@@ -50,7 +51,7 @@ export function ConfirmList({
               <p className="font-medium text-foreground break-words">{it.title || "—"}</p>
               <p className="text-sm text-muted">{when}</p>
               <p className="text-sm text-danger">{c.reasons[d.reason]}</p>
-              <form action={confirmCalendarEntry} className="flex flex-col gap-3">
+              <ConfirmEntryForm>
                 <input type="hidden" name="eventId" value={it.eventId} />
                 <label className="flex flex-col gap-1 text-sm">
                   <span className="text-muted">{c.clinic}</span>
@@ -98,11 +99,9 @@ export function ConfirmList({
                   <button type="submit" disabled={it.allDay} className="min-h-11 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50">
                     {c.confirm}
                   </button>
-                  <button type="submit" formAction={dismissCalendarEntry} formNoValidate className="min-h-11 rounded-md border border-border px-4 text-sm">
-                    {c.dismiss}
-                  </button>
+                  <DismissEntryButton eventId={it.eventId}>{c.dismiss}</DismissEntryButton>
                 </div>
-              </form>
+              </ConfirmEntryForm>
             </li>
           );
         })}
