@@ -52,6 +52,10 @@
  * called it read-only because the question it answers is, and it inserts an
  * audit row on every call.
  *
+ * ROW-KEYED (added 2026-11-01, desexing-anon-id). `// write-requests: row-keyed -- <why>` is for an anon write whose row
+ * carries the request id as its own primary key (`id: requestId`), so a replay is a key conflict, not a second row.
+ * Unlike the other two it must show a write; it is refused unless the module also shows `id: requestId`.
+ *
  * REPLAY-SAFE MODULES THAT CANNOT CLAIM (added 2026-11-01, tail B). The second declaration is for a write that
  * claim_write_request() cannot guard because no one is signed in yet: it claims as auth.uid() and is revoked
  * from anon, so the sign-in form and the password-reset request have nothing to claim as. Such a module may say
@@ -120,7 +124,7 @@ const isActionModule = (file) => /^["']use server["']/.test(source.get(file) ?? 
 /** A write-shaped call in a module's OWN source; see the header on the limits. */
 const WRITE_SHAPES = [".insert(", ".update(", ".upsert(", ".delete(", ".updateUser("];
 
-const DECLARATION = /^\s*\/\/\s*write-requests:\s*(read-only|replay-safe)\s*(?:--|—)\s*(.+?)\s*$/m;
+const DECLARATION = /^\s*\/\/\s*write-requests:\s*(read-only|replay-safe|row-keyed)\s*(?:--|—)\s*(.+?)\s*$/m;
 
 /**
  * The module with its comments taken out, so PROSE about runWriteAction() is
@@ -151,6 +155,13 @@ function verdictFor(file) {
   // module either has writes to wrap or declares it has none, never both.
   const declared = text.match(DECLARATION);
   if (declared) {
+    // row-keyed: the request id IS the row's primary key, so a replay conflicts instead of duplicating. It is the one
+    // declaration that must show a write, and the guard is that it also shows the id being used as the key.
+    if (declared[1] === "row-keyed") {
+      return /\bid:\s*requestId\b/.test(body) && WRITE_SHAPES.some((s) => body.includes(s))
+        ? { how: "declared", kind: declared[1], why: declared[2] }
+        : { how: "refused", kind: declared[1], why: declared[2], shape: "(no `id: requestId` on a write)" };
+    }
     const shape = WRITE_SHAPES.find((s) => body.includes(s));
     // Fail closed: the declaration is worth nothing against evidence of a write.
     return shape
@@ -227,15 +238,15 @@ for (const row of report) {
   for (const mod of row.modules) {
     const verdict = verdictFor(mod);
     const actions = [...(source.get(mod) ?? "").matchAll(/^export async function (\w+)/gm)].map((m) => m[1]);
-    if (verdict?.how === "declared") (verdict.kind === "replay-safe" ? replaySafe : declarations).set(mod, verdict.why);
+    if (verdict?.how === "declared") (verdict.kind === "read-only" ? declarations : replaySafe).set(mod, verdict.why);
     if (verdict?.how === "refused") refusals.set(mod, verdict);
     const mark2 =
       verdict?.how === "wrapped"
         ? "ok  "
         : verdict?.how === "declared"
-          ? verdict.kind === "replay-safe"
-            ? "safe"
-            : "read"
+          ? verdict.kind === "read-only"
+            ? "read"
+            : "safe"
           : "NOT ";
     console.log(`    ${mark2} ${mod}  ${actions.join(", ")}`);
   }

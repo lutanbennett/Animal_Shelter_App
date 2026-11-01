@@ -1,10 +1,9 @@
 "use server";
 
-// NOT WRAPPED, DELIBERATELY (docs/decisions/2026-11-01-write-paths-tail-b.md, section 4). A visitor writes as anon, and
-// claim_write_request() needs auth.uid() and is revoked from anon. The row cannot carry the request id as its own id
-// either: anon's insert grant omits `id` (0233). A replay would add a second row and take a second place against the
-// drive's capacity. The fix is a migration (grant insert (id) to anon, then treat a primary-key conflict as done), which
-// this stream was told not to add. Until it lands, /services/desexing must not go on WRAPPED_WRITE_PATHS.
+// write-requests: row-keyed -- the visitor writes as anon, so claim_write_request() has no auth.uid() to claim as.
+// Instead the browser's request id is the sign-up row's own id (0297): a replay finds the row already there (the gate
+// trigger skips it, or the primary key refuses it) and is answered as done, so it takes no second place.
+// docs/decisions/2026-11-01-desexing-anon-id.md.
 
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { databaseFailure, runAction, type ActionRefusal, type ActionResult } from "@/lib/action-result";
@@ -13,6 +12,7 @@ import { hiddenPagesOf, isPageHidden } from "@/lib/public-pages";
 import { loadSiteContent } from "@/lib/site/content";
 import { checkSignup, signupRefusalKey, type SignupFields } from "@/lib/desexing/form";
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const refuse = (error: string): ActionRefusal => ({ ok: false, error });
 
 /**
@@ -23,9 +23,10 @@ const refuse = (error: string): ActionRefusal => ({ ok: false, error });
  * asks for nothing back, because anon has no SELECT on sign-ups and the page
  * must never echo a person's details. Not revalidating: the page is read live.
  */
-export async function signUpForDrive(fields: SignupFields): Promise<ActionResult> {
+export async function signUpForDrive(fields: SignupFields, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
   return runAction("desexing.signup", t.common.somethingWentWrong, async () => {
+    if (!UUID.test(requestId)) return refuse(t.common.somethingWentWrong("desexing.signup"));
     const checked = checkSignup(fields);
     if (!checked.ok) return refuse(t.desexing.errors[checked.problem]);
 
@@ -40,8 +41,9 @@ export async function signUpForDrive(fields: SignupFields): Promise<ActionResult
     if (!site) return refuse(t.common.somethingWentWrong("desexing.signup"));
     if (isPageHidden("desexing", hiddenPagesOf(site.hidden_public_pages))) return refuse(t.desexing.errors.pageHidden);
 
-    const { error } = await anon.from("desexing_drive_signups").insert(checked.signup);
-    if (error) {
+    const { error } = await anon.from("desexing_drive_signups").insert({ id: requestId, ...checked.signup });
+    // 23505: the same request id arrived twice at once and the first wrote the row. That is done, not an error.
+    if (error && error.code !== "23505") {
       const key = signupRefusalKey(error.message);
       if (key) return refuse(t.desexing.errors[key]);
       return databaseFailure("desexing.signup", error, t.common);

@@ -225,6 +225,7 @@ export const WRAPPED_WRITE_PATHS = [
   "/residents/[id]/rehome",
   "/residents/[id]/rehome/return",
   "/residents/new",
+  "/services/desexing",
   "/shop",
   "/stocktake",
   "/upcoming-visits",
