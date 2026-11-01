@@ -16,7 +16,6 @@ test("write examples are offered only with assistant.record and the tool's own a
   );
   // The gate the card itself goes through, and its default: an activity the
   // server did not answer for reads as no, never as yes.
-  assert.match(view, /if \(!context\.canWrite\) return \{ kind: "readOnly" \};/);
   assert.match(view, /if \(!mayUseTool\(context, parsed\.draft\.kind\)\) return \{ kind: "noCard" \};/);
   assert.match(view, /return needs === null \|\| context\.toolCards\[needs\] === true;/);
   assert.ok(read("../../lib/assistant/data.ts").includes('canWrite: can(perms, "assistant.record")'));

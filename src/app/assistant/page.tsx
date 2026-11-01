@@ -31,7 +31,7 @@ export default async function AssistantPage() {
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{t.assistant.pageTitle}</h1>
         <p className="text-sm text-muted">
-          {context.canWrite ? t.assistant.pageSubtitle : t.assistant.pageSubtitleReadOnly}
+          {context.canAsk ? t.assistant.pageSubtitle : null}
         </p>
       </div>
 

@@ -11,7 +11,7 @@
 | PR | see the PR that carries this file |
 | Tested by / date | Claude / 2026-11-01 |
 | Carries a migration? | no |
-| Tested at SHA | `__SHA__` |
+| Tested at SHA | `35a14c5f` |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,11 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Output redirected to a file:
 
 ```
-__GATES__
+=== gates: typecheck exited 0 after 20s
+=== gates: lint exited 0 after 124s
+=== gates: test exited 0 after 17s
+=== gates: build exited 0 after 67s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
@@ -129,6 +133,7 @@ Harness evidence (`src/lib/action-result.test.mjs`, 17 pass): the secret never a
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
+| 2 | info | worker/origin.test.mjs used /admin/security as its example unlisted address | fixed — now uses an address that is not listed |
 | 1 | info | The existing list test asserted the two addresses were NOT wrapped | fixed — it now asserts they are |
 
 ## Left for manual verification

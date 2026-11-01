@@ -1,24 +1,24 @@
-# Feature test plan — planner handover `546`, amended
+# Feature test plan — planner handover `555`
 
 ## Header
 
 | | |
 |---|---|
-| Feature | `docs/planner-handover.md` **amended in place**: `546` first covered batches 9 and 10, and batch 11 merged eighteen minutes after it did. It now carries nine streams in three batches, and two sections that had gone stale within the hour are corrected |
-| Backlog item | `docs/backlog.md` → none. **The counter is 3 of 9, so this is NOT the next edition falling due** — it is a correction to the live one, which merged before the batch it should have measured |
-| Branch / worktree | `claude/handover-546-amend` @ `C:\Development\Animal_Shelter_handover-546-amend` |
+| Feature | `docs/planner-handover.md` rewritten as edition `555`: a delta over `546` covering batches 12 and 13 merged and measured, batch 14 set up, and one unplanned stream |
+| Backlog item | `docs/backlog.md` → none. The handover is the planner skill's step 8, not a backlog item; **the counter reached 10 — three batches of three plus one unplanned stream that shipped a PR — which is what makes this edition due** |
+| Branch / worktree | `claude/handover-555` @ `C:\Development\Animal_Shelter_handover-555` |
 | Dev server | not started — `n/a: one markdown file, no runtime surface` |
-| PR | #1169 |
+| PR | #1180 |
 | Tested by / date | Claude (Daily Planner) / 2026-11-01 |
 | Carries a migration? | no |
-| Tested at SHA | `cede6773` |
+| Tested at SHA | `4b556a01` |
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for — *one file, `docs/planner-handover.md`, amended so edition `546` carries batch 11.* There is no backlog item, as the header says
+- [x] Change is described in one sentence, and it matches what the backlog item asked for — *one file, `docs/planner-handover.md`, replaced with edition `555`.* There is no backlog item, as the header says
 - [x] Files/areas touched listed — `docs/planner-handover.md` and this plan. **No `src/`, no `scripts/`, no `supabase/migrations/`, no `worker/`, no workflow, no `CLAUDE.md`, and not the planner skill**
 - [x] Access affected identified — **none.** The handover grants and denies nothing: it is read by one chat and outranks nothing, which it says in its own opening lines. No card, activity, policy or page changes. *(Stated by card rather than by role, per `CLAUDE.md`: there is no card-derived behaviour here)*
-- [x] Anything explicitly **out of scope** written down — **the two standing mitigations this edition now names as promotion candidates are deliberately NOT promoted here**: editing the skill changes every future session, and batch 13 has a stream for trimming it. The dial fact that the previous version of this line deferred **has since been promoted, in #1167.** Nothing in this PR touches the skill or `CLAUDE.md`. Length: **181 lines** against the ~150 target, measured with `wc -l` — **over, and accepted as defect 1 below rather than chased**
+- [x] Anything explicitly **out of scope** written down — **the one-line `CLAUDE.md` fix this edition names is deliberately NOT made here**: `CLAUDE.md` carries only the first of the two session-start conditions, and the skill now carries both, so the gap is recorded for whoever is next in that file rather than bundled into a handover PR. Nothing here touches the skill or `CLAUDE.md`. Length: **136 lines**, inside the ~150 target, measured with `wc -l` — **no trimming pass was opened, per the skill's own rule that one costs a round-trip and saves nothing**
 
 ## 2. Automated gates
 
@@ -78,7 +78,7 @@ grouping of cards and every assignment will be rebuilt).
 - [x] `README.md` still accurate — it says nothing about the handover
 - [ ] **Release notes.** — `n/a: nobody at the shelter would notice. This is a handover document read by one planning chat; it touches no page, no card and no data`
 - [x] Commit messages say why, not just what
-- [x] **Claims in commit messages and decision files were measured, not reasoned** — the three band misses in the lead table are computed from the streams' own posted usage lines; the "one address" in the path list was read from the file; the "exactly one server-side importer" figure replaced a first measurement that returned dozens and meant nothing, and `546` says so rather than quoting the larger number; the line count is `wc -l`
+- [x] **Claims in commit messages and decision files were measured, not reasoned** — the band verdicts are each stream's own posted `stream-usage:` comment read against the band recorded in `.plan-day.md` at setup; **the production-pending finding is `apply-migrations.mjs --status --env production`, run by the planner, which reported 297 applied and 1 pending**; the 1707-to-1686 line counts and the 42-strings figure are the streams' own reported measurements, each attributed; the skill-and-`CLAUDE.md` condition gap was read from both files; the line count is `wc -l`
 
 ## 8. Pre-production gate
 
@@ -88,8 +88,8 @@ grouping of cards and every assignment will be rebuilt).
 
 | # | Severity | What | Status |
 |---|---|---|---|
-| 1 | low | **181 lines against the skill's ~150 target** | **accepted, not chased.** The skill says a little over is fine, 200+ is the signal to cut content, and that a trimming pass is the most expensive place to spend the budget the number protects. One pass was attempted and saved **five lines for a round-trip**, which is the named anti-pattern. This edition carries three batches rather than two; the real lever is promotion, which is batch 13's stream |
-| 2 | low | **The gates refused twice before they would run** — `node_modules/.bin` had no `next`, `tsc` or `eslint` | **fixed, and the cause was mine.** `worktree.mjs new` was started with a bare `&` and its `npm ci` was then raced by a second one, leaving `node_modules` half-written (`ENOTEMPTY` on two packages). Neither `npm ci`, `Remove-Item -Recurse -Force` nor the first `rm -rf` cleared it, and **no process held the folder** — checked properly with `Win32_Process` command lines after a first check wrongly filtered on `Path`, which for a node process is `node.exe`'s own location rather than its working directory. A second `rm -rf` pass cleared it and the install then succeeded, so it was a filesystem transient. **The script refusing with a precise reason, instead of reporting four false failures, is the behaviour the silent-check rule is after** |
+| 1 | — | none | The length came in at 136 against the ~150 target, so the defect recorded on the previous edition does not recur |
+| 2 | — | none | The `node_modules` race recorded on the previous edition did **not** recur: the install was left to finish on its own and verified by checking for `next`, `tsc` and `eslint` in `node_modules/.bin` before the gates were run, rather than racing it with a second `npm ci` |
 
 ## Left for manual verification
 

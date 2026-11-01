@@ -88,7 +88,6 @@ type TurnState =
   /** No parser recognised the sentence. */
   | { kind: "unmatched" }
   /** A write, asked by someone who may only ask questions. */
-  | { kind: "readOnly" }
   /** A write whose own activity this login does not hold — a prescription without `medical.prescriptions`. */
   | { kind: "noCard" }
   /** A low-risk write going in without a card. */
@@ -280,7 +279,6 @@ export function AssistantConversation({
   function stateFor(parsed: ParsedRequest | null): TurnState {
     if (!parsed) return { kind: "unmatched" };
     if (!isWriteIntent(parsed.intent)) return { kind: "pending" };
-    if (!context.canWrite) return { kind: "readOnly" };
     if (!mayUseTool(context, parsed.draft.kind)) return { kind: "noCard" };
     if (isLowRiskWrite(parsed.draft.kind) && readyToRecord(parsed.draft, parsed.residentCandidates)) {
       return { kind: "recording" };
@@ -292,7 +290,7 @@ export function AssistantConversation({
   function afterParse(id: number, trimmed: string, parsed: ParsedRequest | null, trace?: AssistantTrace) {
     const state = stateFor(parsed);
 
-    if (state.kind === "readOnly" || state.kind === "noCard") {
+    if (state.kind === "noCard") {
       // Bookkeeping only: a failure here must never touch the refusal shown.
       recordRefusedTurn(trimmed, newWriteRequestId(), trace).catch(() => {});
       return;
@@ -497,8 +495,6 @@ function TurnReply({
       );
     case "unmatched":
       return <ReplyBubble>{a.cantHelp}</ReplyBubble>;
-    case "readOnly":
-      return <ReplyBubble tone="muted">{a.volunteerReadOnly}</ReplyBubble>;
     case "noCard":
       return <ReplyBubble tone="muted">{a.notYourCard}</ReplyBubble>;
     case "pending":
