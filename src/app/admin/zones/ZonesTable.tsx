@@ -11,6 +11,7 @@ import { inShelterOrder } from "@/lib/enclosures/order";
 import { ZoneDot } from "@/components/ZoneName";
 import { swatchFor } from "@/lib/zones/palette";
 import { ZoneColourPicker } from "./ZoneColourPicker";
+import { useWriteCall } from "@/lib/use-write-form";
 
 export type ZoneRow = {
   id: string;
@@ -44,11 +45,17 @@ function ZoneRowItem({
     { type: "error" | "success"; text: string } | null
   >(null);
   const [isPending, startTransition] = useTransition();
+  // ONE useWriteCall PER ACTION, never shared: a request id kept from an unknown
+  // Save and then sent to Delete is the same id against a different action,
+  // which claim_write_request() refuses outright (0292).
+  const writeSave = useWriteCall();
+  const writeMove = useWriteCall();
+  const writeDelete = useWriteCall();
 
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      const result = await updateZone(zone.id, name, nameTh || null, internal, colour || null);
+      const result = await writeSave((requestId) => updateZone(zone.id, requestId, name, nameTh || null, internal, colour || null));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -61,7 +68,7 @@ function ZoneRowItem({
   function handleMove(direction: "up" | "down") {
     setMessage(null);
     startTransition(async () => {
-      const result = await moveZone(zone.id, direction);
+      const result = await writeMove((requestId) => moveZone(zone.id, requestId, direction));
       if (!result.ok) setMessage({ type: "error", text: result.error });
     });
   }
@@ -70,7 +77,7 @@ function ZoneRowItem({
     if (!await confirm({ body: t.admin.zones.deleteConfirm(zone.name), confirmLabel: t.common.delete })) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await deleteZone(zone.id);
+      const result = await writeDelete((requestId) => deleteZone(zone.id, requestId));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
       }
@@ -230,6 +237,7 @@ export function ZonesTable({ zones }: { zones: ZoneRow[] }) {
   const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const writeSort = useWriteCall();
 
   // The shelter's order; Lifecycle has none (0161), so it sorts last and is not counted.
   const ordered = inShelterOrder(zones);
@@ -239,7 +247,7 @@ export function ZonesTable({ zones }: { zones: ZoneRow[] }) {
     if (!await confirm({ body: t.admin.placeOrder.sortZonesConfirm, confirmLabel: t.admin.placeOrder.sortByName })) return;
     setError(null);
     startTransition(async () => {
-      const result = await sortZonesByName();
+      const result = await writeSort((requestId) => sortZonesByName(requestId));
       if (!result.ok) setError(result.error);
     });
   }
