@@ -144,26 +144,32 @@ two print sites and the header; its exit codes are unchanged and it still exits 
 
 ## 6. The check, before and after (deliverable 6)
 
-**Measured on this branch only, not on merged `main`.** Stream 19 is wrapping `management/**` at the same time,
-so the merged figure will be lower still, and this is the same mistake that left the backlog claiming 60 when it
-was 30.
+`node scripts/check-wrapped-write-paths.mjs --all`, three measurements, and **which tree each is on matters**
+(this is the mistake that left the backlog claiming 60 when it was 30):
 
-| | before | after |
+| | as cut (this branch only) | after `sync` (merged `main` + this branch, at `6d5a516b`) |
 |---|---|---|
-| modules unwrapped | 30 | **17** |
-| addresses blocked | 47 | **32** |
-| addresses complete | 102 | **117** (of 149) |
+| modules unwrapped | 30 → **17** | **3** |
+| addresses blocked | 47 → **32** | **3** |
+| addresses complete | 102 → **117** (of 149) | **146** (of 149) |
 
-Of the 17 still unwrapped, **14 are `management/**`** (stream 19's) and **3 are mine on purpose**:
-`admin/security/actions.ts`, `admin/security/verify/actions.ts` and `services/desexing/actions.ts`.
+The first column is the brief's own comparison: the planner's 30 / 47 / 102 is on merged `main` at 08:40 UTC, and
+the 17 / 32 / 117 is **this branch alone**, so 14 of the 17 were stream 19's `management/**` files and 3 were mine.
+Stream 19 merged (#1159) while this PR was open, and `sync` brought it in, so the second column is the first
+measurement of the union. **It is still not merged `main`**: it is merged `main` plus this PR, which is the
+state the PR will be in once it merges, and it holds only if nothing else lands first.
 
-**For stream 22, as a fact and not a listing (deliverable 5).** The addresses this branch moved from blocked to
-complete, by the check's own output (15): `/account/password`, `/admin/status`, `/login`, `/login/forgot`,
+**The three that remain are mine and on purpose:** `admin/security/actions.ts`, `admin/security/verify/actions.ts`
+and `services/desexing/actions.ts` (sections 3 and 4). They block exactly three addresses, `/admin/security`,
+`/admin/security/verify` and `/services/desexing`, which **must not be listed**.
+
+**For stream 22, as a fact and not a listing (deliverable 5).** Nothing was added to `WRAPPED_WRITE_PATHS`. On the
+merged tree **every address except those three is complete by the check's own output**. The addresses this branch
+alone moved from blocked to complete (15): `/account/password`, `/admin/status`, `/login`, `/login/forgot`,
 `/login/request`, `/photos/approve`, `/prescriptions/[id]/edit`, `/prescriptions/new`, `/procedures/new`,
 `/projects`, `/residents/[id]/[section]`, `/stocktake`, `/upcoming-visits`, `/weight/[id]/edit`, `/weight/new`.
-**29** other addresses are blocked **only** by `management/**` files. **Three are blocked by my deliberate
-exceptions and must not be listed until those are resolved:** `/admin/security`, `/admin/security/verify`,
-`/services/desexing`. Nothing was added to the list.
+The check is a reachability heuristic over imports and cannot see a write inside an imported helper; the two
+helpers that matter here are named in section 2.
 
 ## 7. What was driven, and what was not
 
