@@ -7,7 +7,7 @@ import { loadPermissions } from "@/lib/permissions/load";
 import { getT } from "@/lib/i18n/get-t";
 import { getDriveClient } from "@/lib/google/drive";
 import { refreshDeceasedArchiveIfNeeded } from "@/lib/archive/refresh-deceased-archive";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult } from "@/lib/action-result";
 import { isIsoDate, isFutureDate } from "@/lib/placements/dates";
 import {
   isAdoptionUpdateChannel,
@@ -52,11 +52,12 @@ export async function saveAdoptionUpdate(
   residentId: string,
   updateId: string | null,
   input: AdoptionUpdateInput,
+  requestId: string,
 ): Promise<ActionResult<{ id: string }>> {
   const { t } = await getT();
   const e = t.adoptionUpdates.errors;
-  return runAction<{ id: string }>("adoptionUpdates.save", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
+  const supabase = await createClient();
+  return runWriteAction<{ id: string }>("adoptionUpdates.save", { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave }, { id: requestId, action: "adoptionUpdates.save", db: supabase }, async () => {
     const [perms, { count: adoptCount, error: adoptError }] = await Promise.all([
       loadPermissions(),
       supabase
@@ -118,11 +119,12 @@ export async function saveAdoptionUpdate(
 export async function deleteAdoptionUpdate(
   residentId: string,
   updateId: string,
+  requestId: string,
 ): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.adoptionUpdates.errors;
-  return runAction("adoptionUpdates.delete", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
+  const supabase = await createClient();
+  return runWriteAction("adoptionUpdates.delete", { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave }, { id: requestId, action: "adoptionUpdates.delete", db: supabase }, async () => {
     if (!can(await loadPermissions(), "resident.adoption_news")) return { ok: false, error: e.notAuthorized };
 
     const { data: photos, error: photosError } = await supabase

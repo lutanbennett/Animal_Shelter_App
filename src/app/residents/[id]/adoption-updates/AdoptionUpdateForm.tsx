@@ -11,6 +11,7 @@ import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
 import { uploadResidentPhoto } from "@/components/PhotoUploader";
 import { ADOPTION_UPDATE_CHANNELS } from "@/lib/adoption-updates/options";
 import { saveAdoptionUpdate } from "./actions";
+import { useWriteCall } from "@/lib/use-write-form";
 import { textareaClass } from "@/components/textareaClass";
 import { DateInput } from "@/components/DateInput";
 
@@ -88,6 +89,7 @@ export function AdoptionUpdateForm({
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const save = useWriteCall();
 
   function patchPhoto(key: string, patch: Partial<PhotoItem>) {
     setPhotos((prev) => prev.map((p) => (p.key === key ? { ...p, ...patch } : p)));
@@ -142,15 +144,22 @@ export function AdoptionUpdateForm({
     }
     setPending(true);
     try {
-      const result = await saveAdoptionUpdate(residentId, savedId, {
-        receivedOn,
-        senderContactId: senderId || null,
-        channel,
-        note: note || null,
-        sharePublicly,
-        publicStory: publicStory || null,
-        publicFirstName: publicFirstName || null,
-      });
+      const result = await save((id) =>
+        saveAdoptionUpdate(
+          residentId,
+          savedId,
+          {
+            receivedOn,
+            senderContactId: senderId || null,
+            channel,
+            note: note || null,
+            sharePublicly,
+            publicStory: publicStory || null,
+            publicFirstName: publicFirstName || null,
+          },
+          id,
+        ),
+      );
       if (!result.ok) {
         setError(result.error);
         return;

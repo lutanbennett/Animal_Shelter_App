@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { ensureResidentPhotosFolder, getDriveClient } from "@/lib/google/drive";
 import { driveErrorMessage } from "@/lib/google/drive-errors";
@@ -41,10 +41,11 @@ function revalidateResident(residentId: string) {
 export async function setProfilePhoto(
   residentId: string,
   driveFileId: string,
+  requestId: string,
 ): Promise<PhotoActionState> {
   const { t } = await getT();
-  return runAction<{ archiveWarning?: string }>("residents.setProfilePhoto", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
+  const supabase = await createClient();
+  return runWriteAction<{ archiveWarning?: string }>("residents.setProfilePhoto", { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave }, { id: requestId, action: "residents.setProfilePhoto", db: supabase }, async () => {
     const refused = await setResidentProfilePhoto(supabase, t, residentId, driveFileId);
     if (refused) return { ok: false, error: refused.error };
 
@@ -58,10 +59,11 @@ export async function setProfilePhoto(
 export async function deletePhoto(
   residentId: string,
   attachmentId: string,
+  requestId: string,
 ): Promise<PhotoActionState> {
   const { t } = await getT();
-  return runAction<{ archiveWarning?: string }>("residents.deletePhoto", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
+  const supabase = await createClient();
+  return runWriteAction<{ archiveWarning?: string }>("residents.deletePhoto", { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave }, { id: requestId, action: "residents.deletePhoto", db: supabase }, async () => {
     const { data: driveFileId, error } = await supabase.rpc(
       "delete_resident_photo",
       { p_attachment_id: attachmentId },
@@ -105,10 +107,11 @@ export async function movePhotoToFolder(
   residentId: string,
   attachmentId: string,
   targetCategory: PhotoCategory,
+  requestId: string,
 ): Promise<PhotoActionState> {
   const { t } = await getT();
-  return runAction<{ archiveWarning?: string }>("residents.movePhotoToFolder", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
+  const supabase = await createClient();
+  return runWriteAction<{ archiveWarning?: string }>("residents.movePhotoToFolder", { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave }, { id: requestId, action: "residents.movePhotoToFolder", db: supabase }, async () => {
 
     // Drive is not RLS-protected, so this runs before any Drive call.
     const perms = await loadPermissions();
@@ -246,9 +249,11 @@ export async function markPhotosPosted(
   residentId: string,
   attachmentIds: string[],
   input: { platform: string; sharedOn: string; postUrl: string; note: string },
+  requestId: string,
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("residents.markPhotosPosted", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("residents.markPhotosPosted", { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave }, { id: requestId, action: "residents.markPhotosPosted", db: supabase }, async () => {
     const ids = Array.from(new Set(attachmentIds)).filter((id) => typeof id === "string" && id.length > 0);
     if (ids.length === 0) return { ok: false, error: t.photos.posted.errors.nothingSelected };
     if (!isSocialPlatform(input.platform)) return { ok: false, error: t.photos.posted.errors.choosePlatform };
@@ -260,7 +265,6 @@ export async function markPhotosPosted(
     const note = input.note.trim();
     if (note.length > 500) return { ok: false, error: t.photos.posted.errors.noteTooLong };
 
-    const supabase = await createClient();
     // Only this resident's own photos: an id from another resident's gallery (or a meme's) is refused here, so the
     // rows written always belong to the page they were marked from.
     const { data: owned } = await supabase
@@ -293,10 +297,10 @@ export async function markPhotosPosted(
 }
 
 /** Undo: deletes one share row. The policy decides who may; a row that is not an attachment's is never touched. */
-export async function undoPhotoPosted(residentId: string, shareId: string): Promise<ActionResult> {
+export async function undoPhotoPosted(residentId: string, shareId: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("residents.undoPhotoPosted", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
+  const supabase = await createClient();
+  return runWriteAction("residents.undoPhotoPosted", { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave }, { id: requestId, action: "residents.undoPhotoPosted", db: supabase }, async () => {
     const { data, error } = await supabase
       .from("social_shares")
       .delete()
