@@ -1,13 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { databaseFailure, runAction, type ActionRefusal, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, databaseFailure, type ActionRefusal, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { checkAppeal, publishBlocker, type AppealFields, type AppealProblem } from "@/lib/appeals/form";
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 /**
  * Staff actions for sponsorship drives (0210). Every one asks appeal.run
@@ -63,14 +70,14 @@ async function loadRow(supabase: Supabase, id: string) {
 }
 
 /** Creates a draft. Nothing is public until it is published. */
-export async function createAppeal(fields: AppealFields): Promise<ActionResult<{ id: string }>> {
+export async function createAppeal(fields: AppealFields, requestId: string): Promise<ActionResult<{ id: string }>> {
   const { t } = await getT();
-  return runAction("appeals.create", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("appeals.create", write(t), { id: requestId, action: "appeals.create", db: supabase }, async () => {
     if (!(await allowed())) return refuse(t.common.notAllowed);
     const checked = checkAppeal(fields);
     if (!checked.ok) return refuse(problemText(t, checked.problem, checked.line));
 
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("appeals")
       .insert({ ...checked.appeal, status: "draft", published: false })
@@ -83,14 +90,14 @@ export async function createAppeal(fields: AppealFields): Promise<ActionResult<{
 }
 
 /** Saves the words, target, deadline, style and links. The resident never changes. */
-export async function saveAppeal(id: string, fields: AppealFields): Promise<ActionResult> {
+export async function saveAppeal(id: string, fields: AppealFields, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("appeals.save", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("appeals.save", write(t), { id: requestId, action: "appeals.save", db: supabase }, async () => {
     if (!(await allowed())) return refuse(t.common.notAllowed);
     const checked = checkAppeal(fields);
     if (!checked.ok) return refuse(problemText(t, checked.problem, checked.line));
 
-    const supabase = await createClient();
     const changes: Partial<typeof checked.appeal> = { ...checked.appeal };
     delete changes.resident_id;
     const { data, error } = await supabase
@@ -120,12 +127,13 @@ export async function saveAppealPhotos(
   id: string,
   coverAttachmentId: string | null,
   photos: PhotoChoice[],
+  requestId: string,
 ): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.appealsAdmin.errors;
-  return runAction("appeals.photos", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("appeals.photos", write(t), { id: requestId, action: "appeals.photos", db: supabase }, async () => {
     if (!(await allowed())) return refuse(t.common.notAllowed);
-    const supabase = await createClient();
     const { data: row, error: rErr } = await loadRow(supabase, id);
     if (rErr) return databaseFailure("appeals.photos.load", rErr, t.common);
     if (!row) return refuse(e.notFound);
@@ -200,12 +208,12 @@ export type AppealTransition = "publish" | "unpublish" | "fund" | "reopen";
  * longer asking. reopen: funded to live. Closing has its own action because it
  * needs the outcome; a closed appeal does not reopen.
  */
-export async function moveAppeal(id: string, move: AppealTransition): Promise<ActionResult> {
+export async function moveAppeal(id: string, move: AppealTransition, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.appealsAdmin.errors;
-  return runAction("appeals.move", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("appeals.move", write(t), { id: requestId, action: "appeals.move", db: supabase }, async () => {
     if (!(await allowed())) return refuse(t.common.notAllowed);
-    const supabase = await createClient();
     const { data: row, error: rErr } = await loadRow(supabase, id);
     if (rErr) return databaseFailure("appeals.move.load", rErr, t.common);
     if (!row) return refuse(e.notFound);
@@ -238,14 +246,14 @@ export async function moveAppeal(id: string, move: AppealTransition): Promise<Ac
  * the outcome and no ways to give, and the donation form refuses new gifts
  * for it. An appeal that was never published is deleted instead, not closed.
  */
-export async function closeAppeal(id: string, outcome: string): Promise<ActionResult> {
+export async function closeAppeal(id: string, outcome: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.appealsAdmin.errors;
-  return runAction("appeals.close", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("appeals.close", write(t), { id: requestId, action: "appeals.close", db: supabase }, async () => {
     if (!(await allowed())) return refuse(t.common.notAllowed);
     const note = outcome.trim();
     if (!note) return refuse(e.outcome);
-    const supabase = await createClient();
     const { data: row, error: rErr } = await loadRow(supabase, id);
     if (rErr) return databaseFailure("appeals.close.load", rErr, t.common);
     if (!row) return refuse(e.notFound);
@@ -260,12 +268,12 @@ export async function closeAppeal(id: string, outcome: string): Promise<ActionRe
 }
 
 /** Deletes a draft with no gifts. The database refuses one that has gifts (on delete restrict). */
-export async function deleteDraftAppeal(id: string): Promise<ActionResult> {
+export async function deleteDraftAppeal(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.appealsAdmin.errors;
-  return runAction("appeals.delete", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("appeals.delete", write(t), { id: requestId, action: "appeals.delete", db: supabase }, async () => {
     if (!(await allowed())) return refuse(t.common.notAllowed);
-    const supabase = await createClient();
     const { data: row, error: rErr } = await loadRow(supabase, id);
     if (rErr) return databaseFailure("appeals.delete.load", rErr, t.common);
     if (!row) return refuse(e.notFound);
@@ -292,14 +300,15 @@ export async function deleteDraftAppeal(id: string): Promise<ActionResult> {
 export async function moveGiftsToAppeal(
   appealId: string,
   donationIds: string[],
+  requestId: string,
 ): Promise<ActionResult<{ moved: number }>> {
   const { t } = await getT();
   const e = t.appealsAdmin.errors;
-  return runAction("appeals.moveGifts", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("appeals.moveGifts", write(t), { id: requestId, action: "appeals.moveGifts", db: supabase }, async () => {
     const perms = await loadPermissions();
     if (!can(perms, "appeal.run") || !can(perms, "donation.receipt")) return refuse(t.common.notAllowed);
     if (donationIds.length === 0) return refuse(e.nothingToMove);
-    const supabase = await createClient();
     const { data: row, error: rErr } = await loadRow(supabase, appealId);
     if (rErr) return databaseFailure("appeals.moveGifts.load", rErr, t.common);
     if (!row) return refuse(e.notFound);
@@ -325,13 +334,13 @@ export async function moveGiftsToAppeal(
  * The way back for a gift counted on an appeal by mistake: it returns to the
  * appeal's resident, and stops counting at once. Never deletes the gift.
  */
-export async function moveGiftOutOfAppeal(appealId: string, donationId: string): Promise<ActionResult> {
+export async function moveGiftOutOfAppeal(appealId: string, donationId: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.appealsAdmin.errors;
-  return runAction("appeals.moveGiftOut", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("appeals.moveGiftOut", write(t), { id: requestId, action: "appeals.moveGiftOut", db: supabase }, async () => {
     const perms = await loadPermissions();
     if (!can(perms, "appeal.run") || !can(perms, "donation.receipt")) return refuse(t.common.notAllowed);
-    const supabase = await createClient();
     const { data: row, error: rErr } = await loadRow(supabase, appealId);
     if (rErr) return databaseFailure("appeals.moveGiftOut.load", rErr, t.common);
     if (!row) return refuse(e.notFound);

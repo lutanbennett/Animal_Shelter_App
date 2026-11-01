@@ -1,11 +1,20 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
-import { runAction, unexpectedFailure, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, unexpectedFailure, type ActionResult, type WriteMessages } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -48,14 +57,14 @@ export async function addDoctor(
   formData: FormData,
 ): Promise<DoctorFormState> {
   const { t } = await getT();
-  return runAction("doctors.addDoctor", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("doctors.addDoctor", write(t), { id: writeRequestIdFrom(formData), action: "doctors.addDoctor", db: supabase }, async () => {
     if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
     const d = t.management.vetDoctors;
 
     const name = tidy(formData.get("name") as string | null);
     if (!name) return refuse(d.errors.nameRequired);
 
-    const supabase = await createClient();
     // A doctor has no clinic of its own (0172): the person first, then the link here.
     const { data: created, error } = await supabase
       .from("doctors")
@@ -89,14 +98,14 @@ export async function addExistingDoctor(
   formData: FormData,
 ): Promise<DoctorFormState> {
   const { t } = await getT();
-  return runAction("doctors.addExistingDoctor", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("doctors.addExistingDoctor", write(t), { id: writeRequestIdFrom(formData), action: "doctors.addExistingDoctor", db: supabase }, async () => {
     if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
     const d = t.management.vetDoctors;
 
     const doctorId = formData.get("doctorId");
     if (typeof doctorId !== "string" || !doctorId) return refuse(d.errors.pickDoctor);
 
-    const supabase = await createClient();
     const { data: doctor } = await supabase
       .from("doctors")
       .select("name")
@@ -127,16 +136,17 @@ export async function renameDoctor(
   clinicId: string,
   id: string,
   rawName: string,
+  requestId: string,
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("doctors.renameDoctor", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("doctors.renameDoctor", write(t), { id: requestId, action: "doctors.renameDoctor", db: supabase }, async () => {
     if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
     const d = t.management.vetDoctors;
 
     const name = tidy(rawName);
     if (!name) return refuse(d.errors.nameRequired);
 
-    const supabase = await createClient();
     const { error } = await supabase.from("doctors").update({ name }).eq("id", id);
     if (error) {
       return refuse(error.code === UNIQUE_VIOLATION ? d.errors.renameClash(name) : error.message);
@@ -156,11 +166,12 @@ export async function setDoctorActive(
   clinicId: string,
   id: string,
   active: boolean,
+  requestId: string,
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("doctors.setDoctorActive", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("doctors.setDoctorActive", write(t), { id: requestId, action: "doctors.setDoctorActive", db: supabase }, async () => {
     if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("doctor_clinics")
       .update({ active })
@@ -188,13 +199,14 @@ export async function mergeDoctors(
   clinicId: string,
   fromId: string,
   intoId: string,
+  requestId: string,
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("doctors.mergeDoctors", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("doctors.mergeDoctors", write(t), { id: requestId, action: "doctors.mergeDoctors", db: supabase }, async () => {
     if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
     if (fromId === intoId) return refuse(t.management.vetDoctors.errors.mergeSelf);
 
-    const supabase = await createClient();
     const { error } = await supabase.rpc("merge_doctors", {
       p_from: fromId,
       p_into: intoId,
@@ -211,11 +223,11 @@ export async function mergeDoctors(
  * they are marked as left instead. A doctor who works nowhere else, and has
  * no login, goes entirely.
  */
-export async function deleteDoctor(clinicId: string, id: string): Promise<ActionResult> {
+export async function deleteDoctor(clinicId: string, id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("doctors.deleteDoctor", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("doctors.deleteDoctor", write(t), { id: requestId, action: "doctors.deleteDoctor", db: supabase }, async () => {
     if (!can(await loadPermissions(), "clinics.doctors")) return refuse(t.management.errors.managementAccessRequired);
-    const supabase = await createClient();
     const { count, error: countError } = await supabase
       .from("clinic_visits")
       .select("id", { count: "exact", head: true })

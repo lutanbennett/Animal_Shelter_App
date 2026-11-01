@@ -8,6 +8,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { SiteBodyView } from "@/components/SiteBodyView";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import type { TranslationRow, TranslationStatus } from "@/lib/translations/types";
 import {
   approveTranslation,
@@ -64,6 +65,9 @@ export function TranslationPanel({
   const [error, setError] = useState<string | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
   const [isPending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const approveCall = useWriteCall();
+  const clearCall = useWriteCall();
   const textRef = useRef<HTMLTextAreaElement>(null);
   const textId = useId();
 
@@ -96,7 +100,7 @@ export function TranslationPanel({
   function save() {
     setError(null);
     startTransition(async () => {
-      const result = await approveTranslation(current.id, text, recordPath);
+      const result = await approveCall((requestId) => approveTranslation(current.id, text, requestId, recordPath));
       if (!result.ok) {
         setError(result.error);
         return;
@@ -111,7 +115,7 @@ export function TranslationPanel({
   function clear() {
     setError(null);
     startTransition(async () => {
-      const result = await clearTranslation(current.id, recordPath);
+      const result = await clearCall((requestId) => clearTranslation(current.id, requestId, recordPath));
       setConfirmClear(false);
       if (!result.ok) {
         setError(result.error);

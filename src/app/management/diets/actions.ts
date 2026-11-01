@@ -1,9 +1,10 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { parseUnitCost } from "@/lib/format";
 import { parseLeadDays, parseStockCount } from "@/lib/management/stock";
 import { resolveSafetyStock } from "@/lib/management/purchasing";
@@ -11,6 +12,13 @@ import { loadConversions } from "@/lib/units-server";
 import { moveInCupboardOrder } from "@/lib/management/cupboard-order-server";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -48,16 +56,16 @@ function revalidateDietPages() {
  * Cost, reorder lead time and safety stock. A price rise flows straight
  * through to the forecast and Cashflow, which is the point.
  */
-export async function updateDietStockSettings(id: string, fields: DietStockFields): Promise<ActionResult> {
+export async function updateDietStockSettings(id: string, fields: DietStockFields, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("diets.updateDietStockSettings", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("diets.updateDietStockSettings", write(t), { id: requestId, action: "diets.updateDietStockSettings", db: supabase }, async () => {
     if (!can(await loadPermissions(), "stock.diets")) return refuse(t.management.errors.managementAccessRequired);
     const cost = parseUnitCost(fields.costPerUnit);
     if (!cost.ok) return refuse(t.management.diets.errors.costInvalid);
     const leadDays = parseLeadDays(fields.reorderLeadDays);
     if (!leadDays.ok) return refuse(t.management.stock.errors.leadDaysInvalid);
 
-    const supabase = await createClient();
     const { data: row, error: rowError } = await supabase
       .from("diet_types")
       .select("unit")
@@ -103,14 +111,14 @@ export async function updateDietStockSettings(id: string, fields: DietStockField
  * the count as taken now — re-saving the same figure is a count that
  * confirmed it (0083). Blank clears it back to "not counted".
  */
-export async function updateDietTypeStock(id: string, count: string): Promise<ActionResult> {
+export async function updateDietTypeStock(id: string, count: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("diets.updateDietTypeStock", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("diets.updateDietTypeStock", write(t), { id: requestId, action: "diets.updateDietTypeStock", db: supabase }, async () => {
     if (!can(await loadPermissions(), "stock.diets")) return refuse(t.management.errors.managementAccessRequired);
     const parsed = parseStockCount(count);
     if (!parsed.ok) return refuse(t.management.stock.errors.countInvalid);
 
-    const supabase = await createClient();
     // One way in (0112): see updateMedicationStock.
     const { error } = await supabase.rpc("record_stock_correction", {
       p_kind: "diet_type",
@@ -128,9 +136,10 @@ export async function updateDietTypeStock(id: string, count: string): Promise<Ac
  * stocktake sheet walks. The stock cell's, not Settings': where a sack sits
  * in the store is how the shelter runs, and the 2IC sets it on a phone.
  */
-export async function moveDietType(id: string, direction: "up" | "down"): Promise<ActionResult> {
+export async function moveDietType(id: string, direction: "up" | "down", requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("diets.moveDietType", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("diets.moveDietType", write(t), { id: requestId, action: "diets.moveDietType", db: supabase }, async () => {
     if (!can(await loadPermissions(), "stock.diets")) return refuse(t.management.errors.managementAccessRequired);
     const { error } = await moveInCupboardOrder(await createClient(), "diet_types", id, direction);
     if (error) return refuse(error);

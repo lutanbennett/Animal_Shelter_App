@@ -6,6 +6,7 @@ import { Fragment, useState, useTransition } from "react";
 import Link from "next/link";
 import { deleteClinic, updateClinic } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
 
@@ -28,6 +29,9 @@ function ClinicRowItem({ clinic }: { clinic: ClinicRow }) {
   const { t } = useI18n();
   const confirm = useConfirm();
   const [name, setName] = useState(clinic.name);
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const deleteClinicCall = useWriteCall();
+  const updateClinicCall = useWriteCall();
   const [nameTh, setNameTh] = useState(clinic.name_th ?? "");
   const [contactInfo, setContactInfo] = useState(clinic.contact_info ?? "");
   const [notes, setNotes] = useState(clinic.notes ?? "");
@@ -47,7 +51,7 @@ function ClinicRowItem({ clinic }: { clinic: ClinicRow }) {
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      const result = await updateClinic(clinic.id, { name, nameTh, contactInfo, notes });
+      const result = await updateClinicCall((requestId) => updateClinic(clinic.id, { name, nameTh, contactInfo, notes }, requestId));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -61,7 +65,7 @@ function ClinicRowItem({ clinic }: { clinic: ClinicRow }) {
     if (!await confirm({ body: t.management.vets.deleteConfirm(clinic.name), confirmLabel: t.common.delete })) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await deleteClinic(clinic.id);
+      const result = await deleteClinicCall((requestId) => deleteClinic(clinic.id, requestId));
       if (!result.ok) setMessage({ type: "error", text: result.error });
     });
   }

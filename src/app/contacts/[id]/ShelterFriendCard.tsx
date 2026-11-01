@@ -11,6 +11,7 @@ import { TranslationPanel } from "@/components/TranslationPanel";
 import { isArchived, type AddressMap, type Contact } from "@/lib/contacts/contacts";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { PendingPuppy } from "@/components/PuppyLoader";
 import { checkFacebookUrl, checkHttpsUrl, FACEBOOK_HOSTS, type LinkCheck } from "@/lib/links/validate";
 import {
@@ -96,6 +97,13 @@ export function ShelterFriendCard({
   const f = t.shelterFriends;
   const c = f.card;
   const [isPending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const setFriendPublishedCall = useWriteCall();
+  const deleteFriendCall = useWriteCall();
+  const updateFriendCall = useWriteCall();
+  const removeFriendLogoCall = useWriteCall();
+  const uploadFriendLogoCall = useWriteCall();
+  const createFriendCall = useWriteCall();
   // `at: "logo"` puts the message under the logo row. It used to show only
   // below Save, a screen away on a phone, so a failed upload (2026-09-25)
   // looked like nothing happened, or like the form had gone wrong.
@@ -151,7 +159,7 @@ export function ShelterFriendCard({
             icon={ACTION_ICONS.add}
             variant="primary"
             disabled={isPending}
-            onClick={() => run(() => createFriend(contact.id), () => setEditing(true))}
+            onClick={() => run(() => createFriendCall((requestId) => createFriend(contact.id, requestId)), () => setEditing(true))}
           >
             {isPending ? c.making : c.make}
           </ActionButton>
@@ -245,7 +253,7 @@ export function ShelterFriendCard({
               icon={friend.published ? ACTION_ICONS.unpublish : ACTION_ICONS.publish}
               variant={friend.published ? "secondary" : "primary"}
               disabled={isPending}
-              onClick={() => run(() => setFriendPublished(friend.id, !friend.published))}
+              onClick={() => run(() => setFriendPublishedCall((requestId) => setFriendPublished(friend.id, !friend.published, requestId)))}
             >
               {friend.published ? c.unpublish : c.publish}
             </ActionButton>
@@ -294,7 +302,7 @@ export function ShelterFriendCard({
               disabled={isPending}
               onClick={async () => {
                 if (await confirm({ body: c.removeConfirm(contact.name) })) {
-                  run(() => deleteFriend(friend.id), () => setDraft(null));
+                  run(() => deleteFriendCall((requestId) => deleteFriend(friend.id, requestId)), () => setDraft(null));
                 }
               }}
             >
@@ -368,7 +376,7 @@ export function ShelterFriendCard({
             // "Saved." after Save read as done; on a draft it wasn't.
             run(
               async () => {
-                const result = await updateFriend(friend.id, fields);
+                const result = await updateFriendCall((requestId) => updateFriend(friend.id, fields, requestId));
                 return result.ok && !friend.published
                   ? { ok: true as const, success: c.savedDraft }
                   : result;
@@ -408,7 +416,7 @@ export function ShelterFriendCard({
                   disabled={isPending}
                   onClick={async () => {
                     if (await confirm({ body: c.removeLogoConfirm })) {
-                      run(() => removeFriendLogo(friend.id), undefined, "logo");
+                      run(() => removeFriendLogoCall((requestId) => removeFriendLogo(friend.id, requestId)), undefined, "logo");
                     }
                   }}
                 >
@@ -429,7 +437,7 @@ export function ShelterFriendCard({
                   run(
                     () =>
                       runUploadAction(file, t.admin.website.errors, () =>
-                        uploadFriendLogo(friend.id, formData),
+                        uploadFriendLogoCall((requestId) => uploadFriendLogo(friend.id, formData, requestId)),
                       ),
                     undefined,
                     "logo",

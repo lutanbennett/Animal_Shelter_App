@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { archiveContact, restoreContact } from "@/app/management/contacts/actions";
 import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { isArchived } from "@/lib/contacts/contacts";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
@@ -39,6 +40,9 @@ export function ArchiveContactControl({
   const { t } = useI18n();
   const a = t.contacts.archive;
   const [open, setOpen] = useState(false);
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const archiveContactCall = useWriteCall();
+  const restoreContactCall = useWriteCall();
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -65,7 +69,7 @@ export function ArchiveContactControl({
         iconOnly ? (
           <RowActionButton
             disabled={isPending}
-            onClick={() => run(() => restoreContact(contact.id))}
+            onClick={() => run(() => restoreContactCall((requestId) => restoreContact(contact.id, requestId)))}
             label={a.restore}
             subject={contact.name}
             icon={ACTION_ICONS.restore}
@@ -74,7 +78,7 @@ export function ArchiveContactControl({
           <ActionButton
             icon={ACTION_ICONS.restore}
             disabled={isPending}
-            onClick={() => run(() => restoreContact(contact.id))}
+            onClick={() => run(() => restoreContactCall((requestId) => restoreContact(contact.id, requestId)))}
           >
             {a.restore}
           </ActionButton>
@@ -84,7 +88,7 @@ export function ArchiveContactControl({
           className="flex min-w-56 flex-col gap-2 rounded border border-border bg-surface p-2"
           onSubmit={(e) => {
             e.preventDefault();
-            run(() => archiveContact(contact.id, reason));
+            run(() => archiveContactCall((requestId) => archiveContact(contact.id, reason, requestId)));
           }}
         >
           <label className="flex flex-col gap-1 text-xs font-medium text-muted">

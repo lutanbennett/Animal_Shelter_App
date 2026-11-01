@@ -1,12 +1,12 @@
 "use client";
 
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { createClinic } from "./actions";
 
 export function CreateClinicForm() {
-  const [state, onSubmit, pending] = useKeptForm(createClinic, undefined);
+  const [state, onSubmit, pending] = useWriteForm(createClinic, undefined);
   const { t } = useI18n();
 
   return (

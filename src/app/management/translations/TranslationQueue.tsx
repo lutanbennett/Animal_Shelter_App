@@ -7,6 +7,7 @@ import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { TranslationPanel } from "@/components/TranslationPanel";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import {
   labelKey,
   proseGroup,
@@ -271,6 +272,11 @@ function LabelCard({
   const [savedOnce, setSavedOnce] = useState(false);
   const [proposedOnce, setProposedOnce] = useState(false);
   const [isPending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const saveLabelCall = useWriteCall();
+  const proposeLabelCall = useWriteCall();
+  const approveLabelCall = useWriteCall();
+  const discardLabelCall = useWriteCall();
   const dirty = text.trim() !== (item.text_th ?? "");
   const draft = item.draft_text_th;
   /** The proposal was written against English that has since changed. */
@@ -301,7 +307,7 @@ function LabelCard({
     startTransition(async () => {
       // Saving an out-of-date label unchanged says "the Thai is still right".
       const reconfirm = item.status === "stale" && !dirty;
-      const result = await saveLabelTranslation(item.table_name, item.row_id, item.column_name, text, reconfirm);
+      const result = await saveLabelCall((requestId) => saveLabelTranslation(item.table_name, item.row_id, item.column_name, text, requestId, reconfirm));
       if (!result.ok) {
         setError(result.error);
         return;
@@ -326,7 +332,7 @@ function LabelCard({
   function propose() {
     const trimmed = text.trim();
     run(
-      () => proposeLabelTranslation(item.table_name, item.row_id, item.column_name, trimmed),
+      () => proposeLabelCall((requestId) => proposeLabelTranslation(item.table_name, item.row_id, item.column_name, trimmed, requestId)),
       () => {
         // The proposal now reads in the panel above, so the box goes back to
         // the live Thai rather than showing the same words twice.
@@ -347,7 +353,7 @@ function LabelCard({
 
   function approve() {
     run(
-      () => approveLabelTranslation(item.table_name, item.row_id, item.column_name),
+      () => approveLabelCall((requestId) => approveLabelTranslation(item.table_name, item.row_id, item.column_name, requestId)),
       () => {
         setText(draft ?? "");
         setSavedOnce(true);
@@ -366,7 +372,7 @@ function LabelCard({
   function reject() {
     if (!window.confirm(tr.rejectConfirm)) return;
     run(
-      () => discardLabelDraft(item.table_name, item.row_id, item.column_name),
+      () => discardLabelCall((requestId) => discardLabelDraft(item.table_name, item.row_id, item.column_name, requestId)),
       () => {
         setProposedOnce(false);
         onSaved({

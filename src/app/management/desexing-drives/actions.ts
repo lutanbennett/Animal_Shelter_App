@@ -1,12 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { databaseFailure, runAction, type ActionRefusal, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, databaseFailure, type ActionRefusal, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { SIGNUP_STATUSES, checkDrive, type DriveFields, type SignupStatus } from "@/lib/desexing/form";
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 /**
  * Staff actions for desexing drives (0233). Each asks website.content first;
@@ -22,13 +30,13 @@ function revalidateDrives(id?: string) {
   if (id) revalidatePath(`/management/desexing-drives/${id}`);
 }
 
-export async function createDrive(fields: DriveFields): Promise<ActionResult<{ id: string }>> {
+export async function createDrive(fields: DriveFields, requestId: string): Promise<ActionResult<{ id: string }>> {
   const { t } = await getT();
-  return runAction("desexing.createDrive", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("desexing.createDrive", write(t), { id: requestId, action: "desexing.createDrive", db: supabase }, async () => {
     if (!(await allowed())) return refuse(t.common.notAllowed);
     const checked = checkDrive(fields);
     if (!checked.ok) return refuse(t.desexingAdmin.errors[checked.problem]);
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("desexing_drives")
       .insert(checked.drive)
@@ -40,13 +48,13 @@ export async function createDrive(fields: DriveFields): Promise<ActionResult<{ i
   });
 }
 
-export async function saveDrive(id: string, fields: DriveFields): Promise<ActionResult> {
+export async function saveDrive(id: string, fields: DriveFields, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("desexing.saveDrive", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("desexing.saveDrive", write(t), { id: requestId, action: "desexing.saveDrive", db: supabase }, async () => {
     if (!(await allowed())) return refuse(t.common.notAllowed);
     const checked = checkDrive(fields);
     if (!checked.ok) return refuse(t.desexingAdmin.errors[checked.problem]);
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("desexing_drives")
       .update(checked.drive)
@@ -61,11 +69,11 @@ export async function saveDrive(id: string, fields: DriveFields): Promise<Action
 }
 
 /** Deleting a drive deletes its sign-ups with it (on delete cascade); the page asks first. */
-export async function deleteDrive(id: string): Promise<ActionResult> {
+export async function deleteDrive(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("desexing.deleteDrive", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("desexing.deleteDrive", write(t), { id: requestId, action: "desexing.deleteDrive", db: supabase }, async () => {
     if (!(await allowed())) return refuse(t.common.notAllowed);
-    const supabase = await createClient();
     const { error } = await supabase.from("desexing_drives").delete().eq("id", id);
     if (error) return databaseFailure("desexing.deleteDrive", error, t.common);
     revalidateDrives(id);
@@ -73,12 +81,12 @@ export async function deleteDrive(id: string): Promise<ActionResult> {
   });
 }
 
-export async function setSignupStatus(id: string, driveId: string, status: SignupStatus): Promise<ActionResult> {
+export async function setSignupStatus(id: string, driveId: string, status: SignupStatus, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("desexing.setSignupStatus", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("desexing.setSignupStatus", write(t), { id: requestId, action: "desexing.setSignupStatus", db: supabase }, async () => {
     if (!(await allowed())) return refuse(t.common.notAllowed);
     if (!SIGNUP_STATUSES.includes(status)) return refuse(t.common.notAccepted);
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("desexing_drive_signups")
       .update({ status })
@@ -93,11 +101,11 @@ export async function setSignupStatus(id: string, driveId: string, status: Signu
 }
 
 /** Removing a sign-up frees the place (junk, or a duplicate). */
-export async function deleteSignup(id: string, driveId: string): Promise<ActionResult> {
+export async function deleteSignup(id: string, driveId: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("desexing.deleteSignup", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("desexing.deleteSignup", write(t), { id: requestId, action: "desexing.deleteSignup", db: supabase }, async () => {
     if (!(await allowed())) return refuse(t.common.notAllowed);
-    const supabase = await createClient();
     const { error } = await supabase.from("desexing_drive_signups").delete().eq("id", id);
     if (error) return databaseFailure("desexing.deleteSignup", error, t.common);
     revalidateDrives(driveId);

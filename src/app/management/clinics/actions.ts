@@ -1,11 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -35,12 +44,12 @@ export async function createClinic(
   formData: FormData,
 ): Promise<ClinicFormState> {
   const { t } = await getT();
-  return runAction("clinics.createClinic", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("clinics.createClinic", write(t), { id: writeRequestIdFrom(formData), action: "clinics.createClinic", db: supabase }, async () => {
     if (!can(await loadPermissions(), "clinics.list")) return refuse(t.management.errors.managementAccessRequired);
     const name = optional(formData.get("name"));
     if (!name) return refuse(t.management.vets.errors.nameRequired);
 
-    const supabase = await createClient();
     const { error } = await supabase.from("clinics").insert({
       name,
       name_th: optional(formData.get("nameTh")),
@@ -55,14 +64,14 @@ export async function createClinic(
   });
 }
 
-export async function updateClinic(id: string, fields: ClinicFields): Promise<ActionResult> {
+export async function updateClinic(id: string, fields: ClinicFields, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("clinics.updateClinic", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("clinics.updateClinic", write(t), { id: requestId, action: "clinics.updateClinic", db: supabase }, async () => {
     if (!can(await loadPermissions(), "clinics.list")) return refuse(t.management.errors.managementAccessRequired);
     const name = optional(fields.name);
     if (!name) return refuse(t.management.vets.errors.nameRequired);
 
-    const supabase = await createClient();
     const { error } = await supabase
       .from("clinics")
       .update({
@@ -79,11 +88,11 @@ export async function updateClinic(id: string, fields: ClinicFields): Promise<Ac
   });
 }
 
-export async function deleteClinic(id: string): Promise<ActionResult> {
+export async function deleteClinic(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("clinics.deleteClinic", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("clinics.deleteClinic", write(t), { id: requestId, action: "clinics.deleteClinic", db: supabase }, async () => {
     if (!can(await loadPermissions(), "clinics.list")) return refuse(t.management.errors.managementAccessRequired);
-    const supabase = await createClient();
 
     // clinic_visits.clinic_id has no cascade, so a clinic with history can't go:
     // the visits are the resident's medical record. Say so up front instead

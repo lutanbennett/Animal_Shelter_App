@@ -5,6 +5,7 @@ import { ActionButton } from "@/components/ActionButton";
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { formatDate, todayIso } from "@/lib/format";
 import { roleKeyLabel } from "@/lib/i18n/enum-labels";
 import {
@@ -68,6 +69,8 @@ export function RecurringJobForm({
   const rj = t.management.recurringJobs;
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const saveRecurringJobCall = useWriteCall();
   const [error, setError] = useState<string | null>(null);
 
   const today = todayIso();
@@ -189,7 +192,7 @@ export function RecurringJobForm({
     event.preventDefault();
     setError(null);
     startTransition(async () => {
-      const result = await saveRecurringJob(job?.id ?? null, {
+      const result = await saveRecurringJobCall((requestId) => saveRecurringJob(job?.id ?? null, {
         title,
         description,
         timeOfDay,
@@ -198,7 +201,7 @@ export function RecurringJobForm({
         dependsOnJobId: dependsOn || null,
         assigneeIds: [...assigneeIds],
         active,
-      });
+      }, requestId));
       if (!result.ok) {
         setError(result.error);
         if ("id" in result && !job) router.refresh();

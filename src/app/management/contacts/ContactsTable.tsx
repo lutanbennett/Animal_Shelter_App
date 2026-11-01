@@ -13,6 +13,7 @@ import { ArchivedBadge } from "@/components/ArchivedBadge";
 import { FriendBadge } from "@/components/FriendBadge";
 import { formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { contactTypeLabel } from "@/lib/i18n/enum-labels";
 import {
   addressText,
@@ -57,6 +58,9 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
   const a = t.contacts.archive;
   const archived = isArchived(contact);
   const [name, setName] = useState(contact.name);
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const deleteContactCall = useWriteCall();
+  const updateContactCall = useWriteCall();
   const [type, setType] = useState<ContactType>(contact.type);
   const [phone, setPhone] = useState(contact.phone ?? "");
   const [email, setEmail] = useState(contact.email ?? "");
@@ -95,7 +99,7 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      const result = await updateContact(contact.id, {
+      const result = await updateContactCall((requestId) => updateContact(contact.id, {
         name,
         type,
         phone,
@@ -106,7 +110,7 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
         address,
         mapUrl,
         notes,
-      });
+      }, requestId));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -120,7 +124,7 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
     if (!await confirm({ body: c.deleteConfirm(contact.name), confirmLabel: t.common.delete })) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await deleteContact(contact.id);
+      const result = await deleteContactCall((requestId) => deleteContact(contact.id, requestId));
       if (!result.ok) setMessage({ type: "error", text: result.error });
     });
   }

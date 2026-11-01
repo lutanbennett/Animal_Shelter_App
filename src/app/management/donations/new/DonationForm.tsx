@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { ResidentPicker, type ResidentOption } from "@/components/ResidentPicker";
 import { formatBahtExact } from "@/lib/format";
 import {
@@ -60,6 +61,9 @@ export function DonationForm({
   const [adding, setAdding] = useState(false);
   const [newDonor, setNewDonor] = useState({ name: "", email: "", phone: "", line: "", note: "" });
   const [addError, setAddError] = useState<string | null>(null);
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const createDonorCall = useWriteCall();
+  const recordCall = useWriteCall();
   const [fields, setFields] = useState<DonationFields>({
     receivedOn: today,
     donorName: "",
@@ -113,7 +117,7 @@ export function DonationForm({
   function addDonor() {
     setAddError(null);
     startTransition(async () => {
-      const r = await createSupporter(newDonor);
+      const r = await createDonorCall((requestId) => createSupporter(newDonor, requestId));
       if (!r.ok) return setAddError(r.error);
       setSupporters((p) => [...p, r.supporter]);
       applySupporter(r.supporter);
@@ -126,7 +130,7 @@ export function DonationForm({
     setError(null);
     const sent = inKind ? { ...fields, lines: fields.lines.map((l) => ({ ...l, amount: "" })) } : fields;
     startTransition(async () => {
-      const result = await recordDonation(sent);
+      const result = await recordCall((requestId) => recordDonation(sent, requestId));
       if (!result.ok) {
         setError(result.error);
         return;

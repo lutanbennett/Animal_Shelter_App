@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { databaseFailure, runAction, type ActionRefusal, type ActionResult } from "@/lib/action-result";
+import { databaseFailure, runWriteAction, type ActionRefusal, type ActionResult, type WriteMessages } from "@/lib/action-result";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
@@ -15,6 +16,13 @@ import { checkSupporter, SUPPORTER_COLUMNS, type SupporterFields, type Supporter
  */
 
 const refuse = (error: string): ActionRefusal => ({ ok: false, error });
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function revalidateDonors(id?: string) {
@@ -23,13 +31,13 @@ function revalidateDonors(id?: string) {
 }
 
 /** Adds a donor. Also used inline from the donation form, which gets the new row back. */
-export async function createSupporter(fields: SupporterFields): Promise<ActionResult<{ supporter: SupporterRow }>> {
+export async function createSupporter(fields: SupporterFields, requestId: string): Promise<ActionResult<{ supporter: SupporterRow }>> {
   const { t } = await getT();
-  return runAction("donors.create", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("donors.create", write(t), { id: requestId, action: "donors.create", db: supabase }, async () => {
     if (!can(await loadPermissions(), "donation.receipt")) return refuse(t.common.notAllowed);
     const checked = checkSupporter(fields);
     if (!checked.ok) return refuse(t.donations.donors.errors[checked.problem]);
-    const supabase = await createClient();
     const { data, error } = await supabase.from("supporters").insert(checked.supporter).select(SUPPORTER_COLUMNS).single<SupporterRow>();
     if (error) return databaseFailure("donors.create", error, t.common);
     revalidateDonors();
@@ -37,14 +45,14 @@ export async function createSupporter(fields: SupporterFields): Promise<ActionRe
   });
 }
 
-export async function updateSupporter(id: string, fields: SupporterFields): Promise<ActionResult> {
+export async function updateSupporter(id: string, fields: SupporterFields, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("donors.update", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("donors.update", write(t), { id: requestId, action: "donors.update", db: supabase }, async () => {
     if (!can(await loadPermissions(), "donation.receipt")) return refuse(t.common.notAllowed);
     if (!UUID.test(id)) return refuse(t.donations.donors.errors.notFound);
     const checked = checkSupporter(fields);
     if (!checked.ok) return refuse(t.donations.donors.errors[checked.problem]);
-    const supabase = await createClient();
     const { data, error } = await supabase.from("supporters").update(checked.supporter).eq("id", id).select("id").maybeSingle();
     if (error) return databaseFailure("donors.update", error, t.common);
     if (!data) return refuse(t.donations.donors.errors.notFound);
@@ -54,12 +62,12 @@ export async function updateSupporter(id: string, fields: SupporterFields): Prom
 }
 
 /** Soft-archive (or bring back). Gifts keep their link and their history. */
-export async function setSupporterArchived(id: string, archived: boolean): Promise<ActionResult> {
+export async function setSupporterArchived(id: string, archived: boolean, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("donors.archive", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("donors.archive", write(t), { id: requestId, action: "donors.archive", db: supabase }, async () => {
     if (!can(await loadPermissions(), "donation.receipt")) return refuse(t.common.notAllowed);
     if (!UUID.test(id)) return refuse(t.donations.donors.errors.notFound);
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("supporters")
       .update({ archived_at: archived ? new Date().toISOString() : null })

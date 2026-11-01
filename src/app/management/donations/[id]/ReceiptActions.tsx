@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { driveDocumentUrl } from "@/lib/google/drive-client";
 import { RECEIPT_COUNTRIES, type ReceiptCountry } from "@/lib/donations/issuer";
@@ -56,6 +57,10 @@ export function ReceiptCard({
         : null,
   );
   const [voiding, setVoiding] = useState(false);
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const voidCall = useWriteCall();
+  const retryCall = useWriteCall();
+  const sentCall = useWriteCall();
   const [reason, setReason] = useState("");
 
   const pdfUrl = `/management/donations/receipts/${receipt.id}/pdf`;
@@ -103,7 +108,7 @@ export function ReceiptCard({
     }
     if (!(await confirm({ body: d.voidConfirm(receipt.number), confirmLabel: d.void }))) return;
     setVoiding(false);
-    run(() => voidReceipt(receipt.id, reason));
+    run(() => voidCall((requestId) => voidReceipt(receipt.id, reason, requestId)));
   }
 
   return (
@@ -139,7 +144,7 @@ export function ReceiptCard({
         )}
       </p>
       {!receipt.driveFileId && (
-        <button type="button" disabled={pending} onClick={() => run(() => retryDriveFiling(receipt.id), d.driveSaved)} className={`${button} self-start`}>
+        <button type="button" disabled={pending} onClick={() => run(() => retryCall((requestId) => retryDriveFiling(receipt.id, requestId)), d.driveSaved)} className={`${button} self-start`}>
           {d.driveRetry}
         </button>
       )}
@@ -147,7 +152,7 @@ export function ReceiptCard({
       {live && (
         <div className="flex flex-wrap gap-2 border-t border-border pt-3">
           {!receipt.sentOn && (
-            <button type="button" disabled={pending} onClick={() => run(() => markReceiptSent(receipt.id))} className={primary}>
+            <button type="button" disabled={pending} onClick={() => run(() => sentCall((requestId) => markReceiptSent(receipt.id, requestId)))} className={primary}>
               {d.markSent}
             </button>
           )}
@@ -192,11 +197,13 @@ export function IssueReceipt({ donationId, defaultCountry, again }: { donationId
   const [country, setCountry] = useState<ReceiptCountry>(defaultCountry);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const issueCall = useWriteCall();
 
   function issue() {
     setError(null);
     startTransition(async () => {
-      const result = await issueReceipt(donationId, country);
+      const result = await issueCall((requestId) => issueReceipt(donationId, country, requestId));
       if (!result.ok) {
         setError(result.error);
         return;

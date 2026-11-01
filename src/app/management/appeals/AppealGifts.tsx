@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { formatBahtExact, formatDate } from "@/lib/format";
 import { moveGiftOutOfAppeal, moveGiftsToAppeal } from "./actions";
@@ -39,6 +40,9 @@ export function AppealGifts({
   const router = useRouter();
   const confirm = useConfirm();
   const [pending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const moveGiftOutOfAppealCall = useWriteCall();
+  const moveGiftsToAppealCall = useWriteCall();
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set());
 
@@ -60,7 +64,7 @@ export function AppealGifts({
     if (!(await confirm({ body: g.moveConfirm(ids.length, money(pickedTotal)) }))) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await moveGiftsToAppeal(appealId, ids);
+      const result = await moveGiftsToAppealCall((requestId) => moveGiftsToAppeal(appealId, ids, requestId));
       if (!result.ok) return setMessage({ type: "error", text: result.error });
       setPicked(new Set());
       setMessage({ type: "ok", text: g.moved(result.moved) });
@@ -72,7 +76,7 @@ export function AppealGifts({
     if (!(await confirm({ body: g.moveOutConfirm }))) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await moveGiftOutOfAppeal(appealId, id);
+      const result = await moveGiftOutOfAppealCall((requestId) => moveGiftOutOfAppeal(appealId, id, requestId));
       if (!result.ok) return setMessage({ type: "error", text: result.error });
       setMessage({ type: "ok", text: g.movedOut });
       router.refresh();
