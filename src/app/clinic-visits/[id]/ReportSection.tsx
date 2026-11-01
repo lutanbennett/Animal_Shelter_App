@@ -12,6 +12,8 @@ import { PhotoViewer } from "@/components/PhotoViewer";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { removeVisitReport } from "./report-actions";
+import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
+import { useWriteCall } from "@/lib/use-write-form";
 
 export type ReportPage = { id: string; driveFileId: string; name: string; isPdf: boolean; caption: string | null };
 
@@ -35,6 +37,7 @@ export function ReportSection({
   const router = useRouter();
   const confirm = useConfirm();
   const inputRef = useRef<HTMLInputElement>(null);
+  const removeReport = useWriteCall();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [date, setDate] = useState(defaultDate);
@@ -63,7 +66,11 @@ export function ReportSection({
   const remove = async (page: ReportPage) => {
     if (!(await confirm({ body: r.removeConfirm, confirmLabel: r.remove }))) return;
     startTransition(async () => {
-      const result = await removeVisitReport(visitId, page.id);
+      const result = await removeReport((requestId) => {
+        const form = new FormData();
+        form.set(WRITE_REQUEST_FIELD, requestId);
+        return removeVisitReport(visitId, page.id, form);
+      });
       if (!result.ok) setError(result.error ?? r.removeFailed);
       else router.refresh();
     });

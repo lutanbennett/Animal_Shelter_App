@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -9,11 +10,15 @@ import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
 
 /** Removes one page of a visit's doctor's report. Only ever a 'report' row: a bill is never removed from here. */
-export async function removeVisitReport(visitId: string, attachmentId: string): Promise<ActionResult> {
+export async function removeVisitReport(visitId: string, attachmentId: string, formData: FormData): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("clinicVisits.removeReport", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction<object>(
+    "clinicVisits.removeReport",
+    { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave },
+    { id: writeRequestIdFrom(formData), action: "clinicVisits.removeReport", db: supabase },
+    async () => {
     if (!can(await loadPermissions(), "medical.visits", "edit")) return { ok: false, error: t.common.notAllowed };
-    const supabase = await createClient();
     const { data: found } = await supabase
       .from("attachments")
       .select("id, drive_file_id")
@@ -38,5 +43,6 @@ export async function removeVisitReport(visitId: string, attachmentId: string): 
     }
     revalidatePath(`/clinic-visits/${visitId}`);
     return { ok: true };
-  });
+    },
+  );
 }

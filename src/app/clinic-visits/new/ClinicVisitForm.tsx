@@ -3,7 +3,7 @@
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { useState } from "react";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { bookClinicVisit } from "./actions";
 import { ResidentPicker, type ResidentOption } from "@/components/ResidentPicker";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -45,7 +45,7 @@ export function ClinicVisitForm({
   /** A page from the known list (booking-return.ts) to go back to after saving; "" for the usual place. */
   returnTo: string;
 }) {
-  const [state, onSubmit, pending] = useKeptForm(bookClinicVisit, undefined);
+  const [state, onSubmit, pending] = useWriteForm(bookClinicVisit, undefined);
   const { t } = useI18n();
   const [selectedIds, setSelectedIds] = useState<string[]>(
     preselectedResidentIds,

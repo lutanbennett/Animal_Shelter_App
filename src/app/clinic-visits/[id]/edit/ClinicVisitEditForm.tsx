@@ -4,7 +4,7 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import Link from "next/link";
 import { useState } from "react";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { updateClinicVisit } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { ClinicOption } from "@/app/clinic-visits/new/ClinicVisitForm";
@@ -62,7 +62,7 @@ export function ClinicVisitEditForm({
   residentDisplayName: string;
   cancelHref: string;
 }) {
-  const [state, onSubmit, pending] = useKeptForm(updateClinicVisit, undefined);
+  const [state, onSubmit, pending] = useWriteForm(updateClinicVisit, undefined);
   const { t } = useI18n();
   const v = t.vetVisits;
   const [clinicId, setClinicId] = useState(fixedClinic?.id ?? visit.clinic_id ?? "");

@@ -1,5 +1,8 @@
 "use server";
 
+// write-requests: read-only -- loadEnclosurePanel only selects (loadEnclosureDetails) and hands back what the
+// enclosure page itself would show; it records nothing, so a replay of it is harmless by construction.
+
 import { runAction, type ActionResult } from "@/lib/action-result";
 import { loadEnclosureDetails, type EnclosureDetails } from "@/lib/enclosures/details";
 import { getT } from "@/lib/i18n/get-t";

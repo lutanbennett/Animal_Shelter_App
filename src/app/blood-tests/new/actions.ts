@@ -1,23 +1,34 @@
 "use server";
 
-import { databaseFailure } from "@/lib/action-result";
+import { databaseFailure, runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { isFutureDate, isIsoDate } from "@/lib/placements/dates";
 
-export type BloodTestFormState =
-  | { error: string }
-  | { success: true; bloodTestId: string; date: string }
-  | undefined;
+// PI FAILOVER (D): the one write on this page goes through runWriteAction()
+// (docs/decisions/2026-11-01-write-paths-tail-a.md). A second write added here goes through it too.
+export type BloodTestFormState = ActionResult<{ bloodTestId: string; date: string }> | undefined;
 
 export async function createBloodTest(
   _state: BloodTestFormState,
   formData: FormData,
-): Promise<BloodTestFormState> {
+): Promise<ActionResult<{ bloodTestId: string; date: string }>> {
   const { t } = await getT();
-  if (!can(await loadPermissions(), "medical.blood_tests")) return { error: t.common.notAllowed };
+  const supabase = await createClient();
+  const messages: WriteMessages = {
+    somethingWentWrong: t.common.somethingWentWrong,
+    saveUnknown: t.common.saveUnknown,
+    reloadToSave: t.common.reloadToSave,
+  };
+  return runWriteAction<{ bloodTestId: string; date: string }>(
+    "bloodTests.create",
+    messages,
+    { id: writeRequestIdFrom(formData), action: "bloodTests.create", db: supabase },
+    async () => {
+  if (!can(await loadPermissions(), "medical.blood_tests")) return { ok: false, error: t.common.notAllowed };
   const residentId = formData.get("residentId");
   const clinicVisitId = formData.get("clinicVisitId");
   const bloodTestTypeId = formData.get("bloodTestTypeId");
@@ -25,23 +36,22 @@ export async function createBloodTest(
   const results = formData.get("results");
 
   if (typeof residentId !== "string" || !residentId) {
-    return { error: t.bloodTests.errors.missingResident };
+    return { ok: false, error: t.bloodTests.errors.missingResident };
   }
   if (typeof bloodTestTypeId !== "string" || !bloodTestTypeId) {
-    return { error: t.bloodTests.errors.selectType };
+    return { ok: false, error: t.bloodTests.errors.selectType };
   }
   if (typeof date !== "string" || !date) {
-    return { error: t.bloodTests.errors.enterDate };
+    return { ok: false, error: t.bloodTests.errors.enterDate };
   }
 
   if (!isIsoDate(date) || Number.isNaN(new Date(date).getTime())) {
-    return { error: t.bloodTests.errors.invalidDate };
+    return { ok: false, error: t.bloodTests.errors.invalidDate };
   }
   if (isFutureDate(date, new Date())) {
-    return { error: t.bloodTests.errors.dateInFuture };
+    return { ok: false, error: t.bloodTests.errors.dateInFuture };
   }
 
-  const supabase = await createClient();
   const { data, error } = await supabase
     .from("blood_tests")
     .insert({
@@ -62,8 +72,10 @@ export async function createBloodTest(
 
   const row = data?.[0];
   if (!row) {
-    return { error: t.bloodTests.errors.saveFailed };
+    return { ok: false, error: t.bloodTests.errors.saveFailed };
   }
 
-  return { success: true, bloodTestId: row.id, date: row.date };
+  return { ok: true, bloodTestId: row.id, date: row.date };
+    },
+  );
 }

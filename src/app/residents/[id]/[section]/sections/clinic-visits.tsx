@@ -11,7 +11,7 @@ import { RowActionLink } from "@/components/RowAction";
 import { placementActionsFor } from "@/lib/placements/available";
 import type { SectionContext } from "./types";
 import { calendarConfigured } from "@/lib/clinics/calendar-sync";
-import { retryCalendarSync } from "@/app/clinic-visits/calendar-actions";
+import { RetryCalendarForm } from "@/app/clinic-visits/RetryCalendarForm";
 import { RecordList } from "./shared";
 
 export async function renderClinicVisitsSection(ctx: SectionContext): Promise<React.ReactNode> {
@@ -141,14 +141,7 @@ export async function renderClinicVisitsSection(ctx: SectionContext): Promise<Re
             {calendarState(row) === "off" && <span className="text-xs text-muted">{sv.calendarOff}</span>}
             {calendarState(row) === "sent" && <span className="text-xs text-muted">{sv.inCalendar}</span>}
             {calendarState(row) === "waiting" && (
-              <form action={retryCalendarSync} className="flex flex-wrap items-center justify-end gap-2">
-                <input type="hidden" name="visitId" value={row.id} />
-                <input type="hidden" name="residentId" value={id} />
-                <span className="text-xs text-muted">{sv.notInCalendar}</span>
-                {can(perms, "medical.visits") && (
-                  <button type="submit" className="text-xs font-medium text-primary hover:underline">{sv.retryCalendar}</button>
-                )}
-              </form>
+              <RetryCalendarForm visitId={row.id} residentId={id} canRetry={can(perms, "medical.visits")} />
             )}
             {!isDeceased && (
               <>
