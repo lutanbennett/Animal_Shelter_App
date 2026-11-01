@@ -1,9 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { databaseFailure, runAction, type ActionRefusal, type ActionResult } from "@/lib/action-result";
+import { databaseFailure, runWriteAction, type ActionRefusal, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { MIN_SHAPE_AREA, parseShape, shapeArea, type Point } from "@/lib/facility-map/geometry";
@@ -21,6 +22,13 @@ import { userNameOf } from "@/lib/auth/user-name";
 
 const refuse = (error: string): ActionRefusal => ({ ok: false, error });
 
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
+
 function refreshMapViews() {
   revalidatePath("/admin/facility-map");
   revalidatePath("/enclosures");
@@ -33,12 +41,14 @@ function refreshMapViews() {
  */
 export async function saveShape(
   target: "zone" | "enclosure",
+  requestId: string,
   id: string,
   shape: Point[] | null,
 ): Promise<ActionResult<{ shape: Point[] | null }>> {
   const { t } = await getT();
+  const supabase = await createClient();
   const e = t.admin.facilityMap.errors;
-  return runAction("facilityMap.saveShape", t.common.somethingWentWrong, async () => {
+  return runWriteAction("facilityMap.saveShape", write(t), { id: requestId, action: "facilityMap.saveShape", db: supabase }, async () => {
     if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     let value: Point[] | null = null;
@@ -47,8 +57,6 @@ export async function saveShape(
       if (!value) return refuse(e.badShape);
       if (shapeArea(value) < MIN_SHAPE_AREA) return refuse(e.tooSmall);
     }
-
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from(target === "zone" ? "zones" : "enclosures")
       .update({ map_shape: value })
@@ -88,20 +96,20 @@ function roomNames(name: string, nameTh: string, e: RoomErrors): { name: string;
  */
 export async function addRoom(
   mapId: string,
+  requestId: string,
   name: string,
   nameTh: string,
   shape: Point[],
 ): Promise<ActionResult<{ id: string; name: string; name_th: string | null; shape: Point[] }>> {
   const { t } = await getT();
+  const supabase = await createClient();
   const e = t.admin.facilityMap.errors;
-  return runAction("facilityMap.addRoom", t.common.somethingWentWrong, async () => {
+  return runWriteAction("facilityMap.addRoom", write(t), { id: requestId, action: "facilityMap.addRoom", db: supabase }, async () => {
     if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
     const names = roomNames(name, nameTh, e);
     if (typeof names === "string") return refuse(names);
     const value = roomShape(shape, e);
     if (typeof value === "string") return refuse(value);
-
-    const supabase = await createClient();
     // The room is what it is (names); where it is drawn is its placement on this plan (0198).
     const { data, error } = await supabase.from("map_rooms").insert(names).select("id").single<{ id: string }>();
     if (error) return databaseFailure("facilityMap.addRoom", error, t.common);
@@ -123,15 +131,14 @@ export async function addRoom(
  * Draws a room on the plan that is open: a plan it is already on is reshaped, one it is not on gains a
  * placement. Other plans keep their own outline of it. One row per (room, plan), so this is an upsert.
  */
-export async function saveRoomShape(id: string, mapId: string, shape: Point[]): Promise<ActionResult<{ shape: Point[] }>> {
+export async function saveRoomShape(id: string, mapId: string, shape: Point[], requestId: string): Promise<ActionResult<{ shape: Point[] }>> {
   const { t } = await getT();
+  const supabase = await createClient();
   const e = t.admin.facilityMap.errors;
-  return runAction("facilityMap.saveRoomShape", t.common.somethingWentWrong, async () => {
+  return runWriteAction("facilityMap.saveRoomShape", write(t), { id: requestId, action: "facilityMap.saveRoomShape", db: supabase }, async () => {
     if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
     const value = roomShape(shape, e);
     if (typeof value === "string") return refuse(value);
-
-    const supabase = await createClient();
     const { error } = await supabase
       .from("map_room_placements")
       .upsert({ room_id: id, map_id: mapId, shape: value }, { onConflict: "room_id,map_id" });
@@ -152,18 +159,18 @@ export async function saveRoomShape(id: string, mapId: string, shape: Point[]): 
  */
 export async function saveRoomDetails(
   id: string,
+  requestId: string,
   fields: { name: string; nameTh: string; description: string },
 ): Promise<ActionResult<{ name: string; name_th: string | null; description: string | null }>> {
   const { t } = await getT();
+  const supabase = await createClient();
   const e = t.admin.facilityMap.errors;
-  return runAction("facilityMap.saveRoomDetails", t.common.somethingWentWrong, async () => {
+  return runWriteAction("facilityMap.saveRoomDetails", write(t), { id: requestId, action: "facilityMap.saveRoomDetails", db: supabase }, async () => {
     if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
     const names = roomNames(fields.name, fields.nameTh, e);
     if (typeof names === "string") return refuse(names);
     const description = cleanRoomDescription(fields.description);
     if ((description?.length ?? 0) > ROOM_DESCRIPTION_MAX) return refuse(e.roomDescriptionTooLong);
-
-    const supabase = await createClient();
     const { data, error } = await supabase.from("map_rooms").update({ ...names, description }).eq("id", id).select("id");
     if (error) return databaseFailure("facilityMap.saveRoomDetails", error, t.common);
     if (!data?.length) return refuse(e.notFound);
@@ -175,13 +182,12 @@ export async function saveRoomDetails(
 }
 
 /** Takes a room off one plan. Only the placement goes: the room, its text and its other plans stay. */
-export async function removeRoomPlacement(roomId: string, mapId: string): Promise<ActionResult> {
+export async function removeRoomPlacement(roomId: string, mapId: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
+  const supabase = await createClient();
   const e = t.admin.facilityMap.errors;
-  return runAction("facilityMap.removeRoomPlacement", t.common.somethingWentWrong, async () => {
+  return runWriteAction("facilityMap.removeRoomPlacement", write(t), { id: requestId, action: "facilityMap.removeRoomPlacement", db: supabase }, async () => {
     if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
-
-    const supabase = await createClient();
     const { data, error } = await supabase.from("map_room_placements").delete().eq("room_id", roomId).eq("map_id", mapId).select("id");
     if (error) return databaseFailure("facilityMap.removeRoomPlacement", error, t.common);
     if (!data?.length) return refuse(e.notFound);
@@ -192,12 +198,11 @@ export async function removeRoomPlacement(roomId: string, mapId: string): Promis
 }
 
 /** Deletes a room from every plan it is on: its outlines (they cascade), names and description. */
-export async function deleteRoom(id: string): Promise<ActionResult> {
+export async function deleteRoom(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("facilityMap.deleteRoom", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("facilityMap.deleteRoom", write(t), { id: requestId, action: "facilityMap.deleteRoom", db: supabase }, async () => {
     if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
-
-    const supabase = await createClient();
     const { error } = await supabase.from("map_rooms").delete().eq("id", id);
     if (error) return databaseFailure("facilityMap.deleteRoom", error, t.common);
 
@@ -317,10 +322,11 @@ async function readPlan(supabase: Supabase, planId: string) {
  * so a failure part-way leaves the plan as it was and a replace can be undone. With shapes=clear, the
  * shapes on the plan are recorded in the plan's history first, then taken off.
  */
-export async function uploadPlan(form: FormData): Promise<ActionResult<{ id: string }>> {
+export async function uploadPlan(form: FormData, requestId: string): Promise<ActionResult<{ id: string }>> {
   const { t } = await getT();
+  const supabase = await createClient();
   const e = t.admin.facilityMap.errors;
-  return runAction("facilityMap.uploadPlan", t.common.somethingWentWrong, async () => {
+  return runWriteAction("facilityMap.uploadPlan", write(t), { id: requestId, action: "facilityMap.uploadPlan", db: supabase }, async () => {
     if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const file = form.get("file");
@@ -329,8 +335,6 @@ export async function uploadPlan(form: FormData): Promise<ActionResult<{ id: str
     const checked = planImageProblem(bytes);
     if ("problem" in checked) return refuse(problemText(e, checked.problem));
     const { type, width, height } = checked.info;
-
-    const supabase = await createClient();
     const by = await who(supabase);
     const mode = form.get("mode");
 
@@ -394,13 +398,12 @@ export async function uploadPlan(form: FormData): Promise<ActionResult<{ id: str
  * (anything placed on the new picture since is taken off, because it was placed on a layout that is
  * no longer shown). Only the latest replace, and only while the plan still shows its picture.
  */
-export async function undoReplace(planId: string): Promise<ActionResult> {
+export async function undoReplace(planId: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
+  const supabase = await createClient();
   const e = t.admin.facilityMap.errors;
-  return runAction("facilityMap.undoReplace", t.common.somethingWentWrong, async () => {
+  return runWriteAction("facilityMap.undoReplace", write(t), { id: requestId, action: "facilityMap.undoReplace", db: supabase }, async () => {
     if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
-
-    const supabase = await createClient();
     const { data: plan, error: readError } = await readPlan(supabase, planId);
     if (readError) return databaseFailure("facilityMap.undoReplace", readError, t.common);
     if (!plan) return refuse(e.notFound);
@@ -434,12 +437,11 @@ function problemText(e: { wrongType: string; tooLarge: string; pictureTooSmall: 
 }
 
 /** Drops a plan. The shapes drawn on it stay on their enclosures and come back if a plan is added again. */
-export async function removePlan(planId: string): Promise<ActionResult> {
+export async function removePlan(planId: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("facilityMap.removePlan", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("facilityMap.removePlan", write(t), { id: requestId, action: "facilityMap.removePlan", db: supabase }, async () => {
     if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
-
-    const supabase = await createClient();
     const { error } = await supabase.from("facility_maps").delete().eq("id", planId);
     if (error) return databaseFailure("facilityMap.removePlan", error, t.common);
 
