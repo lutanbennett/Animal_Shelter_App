@@ -5,7 +5,7 @@ import { ActionButton } from "@/components/ActionButton";
 import { RowActionButton } from "@/components/RowAction";
 import Link from "next/link";
 import { useState } from "react";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { createPrescription, updatePrescription } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, todayIso } from "@/lib/format";
@@ -85,7 +85,7 @@ export function PrescriptionForm({
   initial?: PrescriptionInitial | null;
   cancelHref: string;
 }) {
-  const [state, onSubmit, pending] = useKeptForm(
+  const [state, onSubmit, pending] = useWriteForm(
     mode === "create" ? createPrescription : updatePrescription,
     undefined,
   );
