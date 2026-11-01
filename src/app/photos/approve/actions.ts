@@ -1,15 +1,23 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { loadPermissions } from "@/lib/permissions/load";
 import { can } from "@/lib/permissions/can";
 
 /** The most one tap may approve: a page is never "everything", and a long list is looked at in pieces. */
 const MAX_BATCH = 50;
+
+/** The words runWriteAction() needs. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 function revalidateQueue() {
   revalidatePath("/photos/approve");
@@ -21,16 +29,16 @@ function revalidateQueue() {
  * (attachments_approval_stamp, 0217), and refuses a login that may not publish. The check here is for a sentence,
  * not the rule.
  */
-export async function approvePhotos(ids: string[]): Promise<ActionResult<{ approved: number }>> {
+export async function approvePhotos(ids: string[], requestId: string): Promise<ActionResult<{ approved: number }>> {
   const { t } = await getT();
-  return runAction<{ approved: number }>("photos.approve", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction<{ approved: number }>("photos.approve", write(t), { id: requestId, action: "photos.approve", db: supabase }, async () => {
     const perms = await loadPermissions();
     if (!can(perms, "photos.approve")) return { ok: false, error: t.photoApproval.errors.notAllowed };
     const chosen = [...new Set(ids)];
     if (chosen.length === 0) return { ok: false, error: t.photoApproval.errors.nothingChosen };
     if (chosen.length > MAX_BATCH) return { ok: false, error: t.photoApproval.errors.tooMany(MAX_BATCH) };
 
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("attachments")
       .update({ approved_at: new Date().toISOString() })
@@ -56,13 +64,13 @@ export async function approvePhotos(ids: string[]): Promise<ActionResult<{ appro
  * It refuses a photo that is no longer waiting: a stale page must never be able to remove one that is already on
  * the website.
  */
-export async function removeWaitingPhoto(attachmentId: string): Promise<ActionResult<{ driveWarning?: string }>> {
+export async function removeWaitingPhoto(attachmentId: string, requestId: string): Promise<ActionResult<{ driveWarning?: string }>> {
   const { t } = await getT();
-  return runAction<{ driveWarning?: string }>("photos.removeWaiting", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction<{ driveWarning?: string }>("photos.removeWaiting", write(t), { id: requestId, action: "photos.removeWaiting", db: supabase }, async () => {
     const perms = await loadPermissions();
     if (!can(perms, "photos.approve")) return { ok: false, error: t.photoApproval.errors.notAllowed };
 
-    const supabase = await createClient();
     const { data: waiting } = await supabase
       .from("attachments")
       .select("id")

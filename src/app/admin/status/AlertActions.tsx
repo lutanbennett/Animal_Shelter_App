@@ -5,6 +5,7 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { type AlertActionResult, runAlertCheckNow, sendTestAlertNow } from "./actions";
 
 /**
@@ -18,6 +19,9 @@ export function AlertActions({ onPi = false }: { onPi?: boolean }) {
   const a = t.admin.status.alerts;
   const [result, setResult] = useState<AlertActionResult | null>(null);
   const [isPending, startTransition] = useTransition();
+  // One per action: an id kept from an unknown run must never reach the test send.
+  const saveRun = useWriteCall();
+  const saveTest = useWriteCall();
 
   function run(action: () => Promise<AlertActionResult>) {
     setResult(null);
@@ -34,14 +38,14 @@ export function AlertActions({ onPi = false }: { onPi?: boolean }) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap gap-2">
-        <ActionButton icon={ACTION_ICONS.refresh} disabled={isPending || onPi} onClick={() => run(runAlertCheckNow)}>
+        <ActionButton icon={ACTION_ICONS.refresh} disabled={isPending || onPi} onClick={() => run(() => saveRun((requestId) => runAlertCheckNow(requestId)))}>
           {a.runNow}
         </ActionButton>
         <ActionButton
           icon={ACTION_ICONS.send}
           disabled={isPending}
           onClick={async () => {
-            if (await confirm({ body: onPi ? a.testConfirmPi : a.testConfirm })) run(sendTestAlertNow);
+            if (await confirm({ body: onPi ? a.testConfirmPi : a.testConfirm })) run(() => saveTest((requestId) => sendTestAlertNow(requestId)));
           }}
         >
           {a.sendTest}

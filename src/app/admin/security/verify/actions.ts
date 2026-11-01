@@ -1,5 +1,11 @@
 "use server";
 
+// NOT WRAPPED, DELIBERATELY (docs/decisions/2026-11-01-write-paths-tail-b.md, section 3). startTwoStepSetup hands the
+// browser the TOTP secret, and finish_write_request() would keep a wrapped action's whole result for seven days in
+// write_requests.result. A secret must not be stored there. confirmTwoStep could be claimed, but a code is single-use
+// and this screen needs a real authenticator to drive, so it is not changed blind. /admin/security/verify must not go
+// on WRAPPED_WRITE_PATHS until the wrapper can store a redacted result.
+
 import { redirect } from "next/navigation";
 import type { AuthError } from "@supabase/supabase-js";
 import {

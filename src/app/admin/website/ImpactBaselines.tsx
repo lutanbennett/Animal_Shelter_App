@@ -3,7 +3,7 @@
 import { useConfirm } from "@/components/ConfirmProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { todayIso } from "@/lib/format";
 import type { ImpactBaselineRow } from "@/lib/site/impact";
@@ -40,7 +40,7 @@ function BaselineForm({ row }: { row: ImpactBaselineRow }) {
   const { t } = useI18n();
   const confirm = useConfirm();
   const i = t.admin.website.impact;
-  const [state, onSubmit, pending] = useKeptForm(updateImpactBaseline, undefined);
+  const [state, onSubmit, pending] = useWriteForm(updateImpactBaseline, undefined);
   // What the live count adds after the date (public_impact_figures, 0156 and 0169); every other
   // figure is the baseline alone.
   const countedNote =

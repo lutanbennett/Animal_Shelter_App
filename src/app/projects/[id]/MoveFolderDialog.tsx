@@ -6,6 +6,7 @@ import { ChevronRight, Folder, FolderInput } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { projectCategoryLabel } from "@/lib/i18n/enum-labels";
 import { PROJECT_CATEGORIES, type ProjectFolder } from "@/lib/projects/queries";
 import { moveProjectFolder } from "../actions";
@@ -38,6 +39,7 @@ function MoveFolderDialogBody({ folder, allFolders, onClose, onMoved }: MoveFold
   const [selected, setSelected] = useState<string | null>(folder.parent_folder_id);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const saveMove = useWriteCall();
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -149,7 +151,7 @@ function MoveFolderDialogBody({ folder, allFolders, onClose, onMoved }: MoveFold
               if (!selected) return;
               setError(null);
               startTransition(async () => {
-                const result = await moveProjectFolder(folder.id, selected);
+                const result = await saveMove((requestId) => moveProjectFolder(folder.id, selected, requestId));
                 if (!result.ok) {
                   setError(result.error);
                   return;

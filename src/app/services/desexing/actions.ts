@@ -1,5 +1,11 @@
 "use server";
 
+// NOT WRAPPED, DELIBERATELY (docs/decisions/2026-11-01-write-paths-tail-b.md, section 4). A visitor writes as anon, and
+// claim_write_request() needs auth.uid() and is revoked from anon. The row cannot carry the request id as its own id
+// either: anon's insert grant omits `id` (0233). A replay would add a second row and take a second place against the
+// drive's capacity. The fix is a migration (grant insert (id) to anon, then treat a primary-key conflict as done), which
+// this stream was told not to add. Until it lands, /services/desexing must not go on WRAPPED_WRITE_PATHS.
+
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { databaseFailure, runAction, type ActionRefusal, type ActionResult } from "@/lib/action-result";
 import { getT } from "@/lib/i18n/get-t";

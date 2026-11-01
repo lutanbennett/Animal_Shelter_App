@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { speciesLabel } from "@/lib/i18n/enum-labels";
 import { ResidentPicker, type ResidentOption } from "@/components/ResidentPicker";
 import { setFeaturedResident } from "./actions";
@@ -31,6 +32,7 @@ export function FeaturedResident({
 }) {
   const { t } = useI18n();
   const [isPending, startTransition] = useTransition();
+  const saveFeatured = useWriteCall();
   const [message, setMessage] = useState<
     { type: "error" | "success"; text: string } | null
   >(null);
@@ -40,7 +42,7 @@ export function FeaturedResident({
   function save(residentId: string | null) {
     setMessage(null);
     startTransition(async () => {
-      const result = await setFeaturedResident(residentId);
+      const result = await saveFeatured((requestId) => setFeaturedResident(residentId, requestId));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
       } else {

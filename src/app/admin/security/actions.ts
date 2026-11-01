@@ -1,5 +1,12 @@
 "use server";
 
+// NOT WRAPPED, DELIBERATELY (docs/decisions/2026-11-01-write-paths-tail-b.md, section 3). createUser and
+// issueTemporaryPassword return the temporary password to the browser, and finish_write_request() would keep a wrapped
+// action's whole result for seven days in write_requests.result: a password must not be stored there. The other
+// fourteen could be claimed, but this file needs a two-step session to drive (a dev sign-in is aal1 only), and it is
+// the screen where an untested change costs most. /admin/security must not go on WRAPPED_WRITE_PATHS until the
+// wrapper can store a redacted result and the file can be driven.
+
 import { refresh, revalidatePath } from "next/cache";
 import type { AuthError } from "@supabase/supabase-js";
 import {

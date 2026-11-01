@@ -7,6 +7,8 @@ import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
+import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
 import { PendingPuppy } from "@/components/PuppyLoader";
 import type { PagePhotoSlug } from "@/lib/site/pages";
 import { runUploadAction } from "@/lib/uploads/run-upload-action";
@@ -38,6 +40,10 @@ export function PagePhotoCard({
   const p = t.admin.website.pagePhotos;
   const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
+  // One per action: an id kept from an unknown save and sent to another action is refused by claim_write_request().
+  const saveUpload = useWriteCall();
+  const saveRemove = useWriteCall();
+  const saveAlt = useWriteCall();
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -48,7 +54,10 @@ export function PagePhotoCard({
     formData.append("file", file);
     startTransition(async () => {
       const result = await runUploadAction(file, t.admin.website.errors, () =>
-        uploadPagePhoto(page, formData),
+        saveUpload((requestId) => {
+          formData.set(WRITE_REQUEST_FIELD, requestId);
+          return uploadPagePhoto(page, formData);
+        }),
       );
       if (result && "error" in result) setMessage({ type: "error", text: result.error });
       else setMessage({ type: "success", text: p.updated });
@@ -59,7 +68,7 @@ export function PagePhotoCard({
     if (!await confirm({ body: p.removeConfirm })) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await removePagePhoto(page);
+      const result = await saveRemove((requestId) => removePagePhoto(page, requestId));
       if (!result.ok) setMessage({ type: "error", text: result.error });
     });
   }
@@ -67,7 +76,10 @@ export function PagePhotoCard({
   function handleAlt(formData: FormData) {
     setMessage(null);
     startTransition(async () => {
-      const result = await savePagePhotoAlt(page, formData);
+      const result = await saveAlt((requestId) => {
+        formData.set(WRITE_REQUEST_FIELD, requestId);
+        return savePagePhotoAlt(page, formData);
+      });
       if (result && "error" in result) setMessage({ type: "error", text: result.error });
       else setMessage({ type: "success", text: t.common.saved });
     });

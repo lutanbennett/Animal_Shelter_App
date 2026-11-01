@@ -12,7 +12,7 @@ import {
 import { recordWeight } from "@/lib/weight/record";
 import { recordResidentDeath } from "@/lib/placements/deceased";
 import { recordImmunizations } from "@/app/immunizations/new/actions";
-import { recordPrescription } from "@/app/prescriptions/actions";
+import { recordPrescription } from "@/lib/prescriptions/record";
 import {
   rehomeResident,
   returnResidentToShelter,

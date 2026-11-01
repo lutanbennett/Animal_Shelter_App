@@ -6,6 +6,8 @@ import { startTransition, useActionState, useState, type FormEvent } from "react
 import { changeOwnName, type ChangeNameState } from "./actions";
 import { MAX_NAME_LENGTH } from "@/lib/auth/user-name";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
+import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
 
 const inputClass =
   "rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
@@ -13,7 +15,13 @@ const inputClass =
 /** The signed-in person's own name, beside Change password. Controlled, like that form, so a refusal keeps what was typed. */
 export function ChangeNameForm({ initialName }: { initialName: string }) {
   const [name, setName] = useState(initialName);
-  const [state, formAction, pending] = useActionState(changeOwnName, undefined as ChangeNameState);
+  const save = useWriteCall();
+  const [state, formAction, pending] = useActionState(async (prev: ChangeNameState, formData: FormData) => {
+    return save((requestId) => {
+      formData.set(WRITE_REQUEST_FIELD, requestId);
+      return changeOwnName(prev, formData);
+    });
+  }, undefined as ChangeNameState);
   const { t } = useI18n();
   const n = t.account.name;
 
@@ -41,8 +49,8 @@ export function ChangeNameForm({ initialName }: { initialName: string }) {
         className={inputClass}
       />
       <p className="text-xs text-muted">{n.hint}</p>
-      {state && "error" in state && <p className="text-sm text-danger">{state.error}</p>}
-      {state && "success" in state && <p className="text-sm text-success">{n.saved}</p>}
+      {state && !state.ok && <p className="text-sm text-danger">{state.error}</p>}
+      {state?.ok && <p className="text-sm text-success">{n.saved}</p>}
       <div>
         <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save} disabled={pending}>
           {pending ? t.common.saving : n.submit}

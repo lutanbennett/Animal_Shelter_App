@@ -7,8 +7,10 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { DONATION_WAYS, type DonationWay } from "@/lib/links/donation";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
+import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
 import { runUploadAction } from "@/lib/uploads/run-upload-action";
 import type { DonationChannelRow } from "@/lib/site/donation-channels";
 import {
@@ -72,6 +74,10 @@ function ChannelCard({ row, isFirst, isLast }: { row: DonationChannelRow; isFirs
   const confirm = useConfirm();
   const d = t.admin.website.donate;
   const [pending, startTransition] = useTransition();
+  // One per action: an id kept from an unknown save and sent to another action is refused by claim_write_request().
+  const saveMove = useWriteCall();
+  const saveShown = useWriteCall();
+  const saveDelete = useWriteCall();
   const [error, setError] = useState<string | null>(null);
 
   function run(action: () => Promise<{ ok: boolean } | { ok: false; error: string }>) {
@@ -91,17 +97,17 @@ function ChannelCard({ row, isFirst, isLast }: { row: DonationChannelRow; isFirs
         {!row.shown && (
           <span className="rounded bg-warning/15 px-2 py-1 text-xs font-medium text-foreground">{d.hidden}</span>
         )}
-        <ActionButton compact icon={ACTION_ICONS.moveUp} disabled={pending || isFirst} onClick={() => run(() => moveDonationChannel(row.id, "up"))}>
+        <ActionButton compact icon={ACTION_ICONS.moveUp} disabled={pending || isFirst} onClick={() => run(() => saveMove((requestId) => moveDonationChannel(row.id, "up", requestId)))}>
           {d.moveUp}
         </ActionButton>
-        <ActionButton compact icon={ACTION_ICONS.moveDown} disabled={pending || isLast} onClick={() => run(() => moveDonationChannel(row.id, "down"))}>
+        <ActionButton compact icon={ACTION_ICONS.moveDown} disabled={pending || isLast} onClick={() => run(() => saveMove((requestId) => moveDonationChannel(row.id, "down", requestId)))}>
           {d.moveDown}
         </ActionButton>
         <ActionButton
           compact
           icon={row.shown ? ACTION_ICONS.unpublish : ACTION_ICONS.publish}
           disabled={pending}
-          onClick={() => run(() => setDonationChannelShown(row.id, !row.shown))}
+          onClick={() => run(() => saveShown((requestId) => setDonationChannelShown(row.id, !row.shown, requestId)))}
         >
           {row.shown ? d.hide : d.show}
         </ActionButton>
@@ -119,7 +125,7 @@ function ChannelCard({ row, isFirst, isLast }: { row: DonationChannelRow; isFirs
           disabled={pending}
           onClick={async () => {
             if (!(await confirm({ body: d.deleteConfirm(row.label) }))) return;
-            run(() => deleteDonationChannel(row.id));
+            run(() => saveDelete((requestId) => deleteDonationChannel(row.id, requestId)));
           }}
         >
           {d.delete}
@@ -155,7 +161,7 @@ function AddChannel() {
 function ChannelForm({ way, row }: { way: DonationWay; row: DonationChannelRow | null }) {
   const { t } = useI18n();
   const d = t.admin.website.donate;
-  const [state, onSubmit, pending] = useKeptForm(saveDonationChannel, undefined);
+  const [state, onSubmit, pending] = useWriteForm(saveDonationChannel, undefined);
   const fieldLabel = {
     url: d.link,
     bank_name: d.bankName,
@@ -207,6 +213,9 @@ function QrPicture({ row }: { row: DonationChannelRow }) {
   const confirm = useConfirm();
   const d = t.admin.website.donate;
   const [pending, startTransition] = useTransition();
+  // One per action: an id kept from an unknown save and sent to another action is refused by claim_write_request().
+  const saveUpload = useWriteCall();
+  const saveRemove = useWriteCall();
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -217,7 +226,12 @@ function QrPicture({ row }: { row: DonationChannelRow }) {
     formData.append("id", row.id);
     formData.append("file", file);
     startTransition(async () => {
-      const result = await runUploadAction(file, t.admin.website.errors, () => uploadDonationQr(formData));
+      const result = await runUploadAction(file, t.admin.website.errors, () =>
+        saveUpload((requestId) => {
+          formData.set(WRITE_REQUEST_FIELD, requestId);
+          return uploadDonationQr(formData);
+        }),
+      );
       if (result && "error" in result) setMessage({ type: "error", text: result.error });
       else setMessage({ type: "success", text: d.qrUpdated });
     });
@@ -251,7 +265,7 @@ function QrPicture({ row }: { row: DonationChannelRow }) {
             onClick={async () => {
               if (!(await confirm({ body: d.qrRemoveConfirm }))) return;
               startTransition(async () => {
-                const result = await removeDonationQr(row.id);
+                const result = await saveRemove((requestId) => removeDonationQr(row.id, requestId));
                 if (!result.ok) setMessage({ type: "error", text: result.error });
               });
             }}

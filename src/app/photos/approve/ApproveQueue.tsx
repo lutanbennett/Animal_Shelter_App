@@ -9,6 +9,7 @@ import { useConfirm } from "@/components/ConfirmProvider";
 import { formatDate } from "@/lib/format";
 import { driveImageUrl, videoUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import type { WaitingPhoto } from "@/lib/photos/approval";
 import { ResidentPicker } from "@/app/medical/ResidentPicker";
 import type { PickableResident } from "@/lib/medical/residents";
@@ -42,6 +43,10 @@ export function ApproveQueue({
   const router = useRouter();
   const confirm = useConfirm();
   const [pending, startTransition] = useTransition();
+  // One per action: an id kept from an unknown save and sent to another action is refused by claim_write_request().
+  const saveApprove = useWriteCall();
+  const saveReassign = useWriteCall();
+  const saveRemove = useWriteCall();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [changing, setChanging] = useState<string | null>(null);
@@ -79,7 +84,7 @@ export function ApproveQueue({
     }
     startTransition(async () => {
       setMessage(null);
-      const result = await approvePhotos(ids);
+      const result = await saveApprove((requestId) => approvePhotos(ids, requestId));
       if (result.ok) {
         setSelected(new Set());
         setMessage({ ok: true, text: q.approved(result.approved) });
@@ -93,7 +98,7 @@ export function ApproveQueue({
   function reassign(photo: WaitingPhoto, to: PickableResident) {
     startTransition(async () => {
       setMessage(null);
-      const result = await reassignWaitingPhoto(photo.id, to.id);
+      const result = await saveReassign((requestId) => reassignWaitingPhoto(photo.id, to.id, requestId));
       setChanging(null);
       setChangeQuery("");
       if (result.ok) {
@@ -116,7 +121,7 @@ export function ApproveQueue({
     if (!ok) return;
     startTransition(async () => {
       setMessage(null);
-      const result = await removeWaitingPhoto(photo.id);
+      const result = await saveRemove((requestId) => removeWaitingPhoto(photo.id, requestId));
       if (result.ok) {
         setSelected((prev) => {
           const next = new Set(prev);

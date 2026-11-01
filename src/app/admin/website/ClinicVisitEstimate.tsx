@@ -2,7 +2,7 @@
 
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { updateClinicVisitEstimate } from "./actions";
 
@@ -17,7 +17,7 @@ import { updateClinicVisitEstimate } from "./actions";
  * and the forecast then shows clinic visits as a gap rather than as zero.
  */
 export function ClinicVisitEstimate({ estimate }: { estimate: number | null }) {
-  const [state, onSubmit, pending] = useKeptForm(
+  const [state, onSubmit, pending] = useWriteForm(
     updateClinicVisitEstimate,
     undefined,
   );

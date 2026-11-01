@@ -7,6 +7,7 @@ import { ExternalLink, Pencil } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import {
   hiddenPagesOf,
   isPageHidden,
@@ -57,6 +58,7 @@ export function PageCards({
   const router = useRouter();
   const hidden = hiddenPagesOf(hiddenPages);
   const [pending, startTransition] = useTransition();
+  const saveHidden = useWriteCall();
   const [error, setError] = useState<string | null>(null);
 
   // The editor used to open in a popup on this tab, so a shared link was #<slug> (or the older
@@ -76,7 +78,7 @@ export function PageCards({
   function toggle(entry: string, hide: boolean) {
     setError(null);
     startTransition(async () => {
-      const result = await setPublicPageHidden(entry, hide);
+      const result = await saveHidden((requestId) => setPublicPageHidden(entry, hide, requestId));
       if (!result.ok && "error" in result) setError(result.error);
     });
   }

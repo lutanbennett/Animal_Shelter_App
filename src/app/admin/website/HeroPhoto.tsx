@@ -7,6 +7,8 @@ import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
+import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
 import { PendingPuppy } from "@/components/PuppyLoader";
 import { runUploadAction } from "@/lib/uploads/run-upload-action";
 import { removeHeroPhoto, uploadHeroPhoto } from "./actions";
@@ -22,6 +24,9 @@ export function HeroPhoto({
   const { t } = useI18n();
   const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
+  // One per action: an id kept from an unknown save and sent to another action is refused by claim_write_request().
+  const saveUpload = useWriteCall();
+  const saveRemove = useWriteCall();
   const [message, setMessage] = useState<
     { type: "error" | "success"; text: string } | null
   >(null);
@@ -34,7 +39,10 @@ export function HeroPhoto({
     formData.append("file", file);
     startTransition(async () => {
       const result = await runUploadAction(file, t.admin.website.errors, () =>
-        uploadHeroPhoto(formData),
+        saveUpload((requestId) => {
+          formData.set(WRITE_REQUEST_FIELD, requestId);
+          return uploadHeroPhoto(formData);
+        }),
       );
       if (result && "error" in result) {
         setMessage({ type: "error", text: result.error });
@@ -48,7 +56,7 @@ export function HeroPhoto({
     if (!await confirm({ body: t.admin.website.hero.removeConfirm })) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await removeHeroPhoto();
+      const result = await saveRemove((requestId) => removeHeroPhoto(requestId));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
       }

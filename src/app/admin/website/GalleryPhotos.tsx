@@ -8,6 +8,8 @@ import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
+import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
 import { PendingPuppy } from "@/components/PuppyLoader";
 import { runUploadAction } from "@/lib/uploads/run-upload-action";
 import { deleteGalleryPhoto, moveGalleryPhoto, uploadGalleryPhoto } from "./actions";
@@ -19,6 +21,10 @@ export function GalleryPhotos({ photos, canEdit }: { photos: GalleryPhotoRow[]; 
   const { t } = useI18n();
   const confirm = useConfirm();
   const [isPending, startTransition] = useTransition();
+  // One per action: an id kept from an unknown save and sent to another action is refused by claim_write_request().
+  const saveUpload = useWriteCall();
+  const saveDelete = useWriteCall();
+  const saveMove = useWriteCall();
   const [message, setMessage] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   // The photo waits here until it has a description: the public page needs one for visitors who cannot see it.
@@ -40,7 +46,10 @@ export function GalleryPhotos({ photos, canEdit }: { photos: GalleryPhotoRow[]; 
     formData.append("alt_th", altTh.trim());
     startTransition(async () => {
       const result = await runUploadAction(file, t.admin.website.errors, () =>
-        uploadGalleryPhoto(formData),
+        saveUpload((requestId) => {
+          formData.set(WRITE_REQUEST_FIELD, requestId);
+          return uploadGalleryPhoto(formData);
+        }),
       );
       if (result && "error" in result) setMessage(result.error);
       else {
@@ -55,7 +64,7 @@ export function GalleryPhotos({ photos, canEdit }: { photos: GalleryPhotoRow[]; 
     if (!await confirm({ body: t.admin.website.gallery.removeConfirm })) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await deleteGalleryPhoto(photoId);
+      const result = await saveDelete((requestId) => deleteGalleryPhoto(photoId, requestId));
       if (!result.ok) setMessage(result.error);
     });
   }
@@ -63,7 +72,7 @@ export function GalleryPhotos({ photos, canEdit }: { photos: GalleryPhotoRow[]; 
   function handleMove(photoId: string, direction: "up" | "down") {
     setMessage(null);
     startTransition(async () => {
-      const result = await moveGalleryPhoto(photoId, direction);
+      const result = await saveMove((requestId) => moveGalleryPhoto(photoId, direction, requestId));
       if (!result.ok) setMessage(result.error);
     });
   }

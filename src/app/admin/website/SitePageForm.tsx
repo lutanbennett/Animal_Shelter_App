@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { TranslationPanel } from "@/components/TranslationPanel";
 import type { SitePageSlug } from "@/lib/site/pages";
@@ -60,7 +60,7 @@ export function SitePageForm({
   /** What the live preview needs besides the typed text (read on the server). */
   previewContext: PagePreviewContext;
 }) {
-  const [state, onSubmit, pending] = useKeptForm(
+  const [state, onSubmit, pending] = useWriteForm(
     updateSitePage.bind(null, page.slug),
     undefined,
   );

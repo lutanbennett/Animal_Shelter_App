@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { runWriteAction, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { enteredTotal, resolveEntered, type EnteredLine } from "@/lib/units";
@@ -43,10 +45,32 @@ export type SaveStocktakeResult =
 export async function saveStocktake(
   medication: StocktakeCount[],
   diet: StocktakeCount[],
+  requestId: string,
 ): Promise<SaveStocktakeResult> {
+  // PI FAILOVER (D), 2026-11-01: wrapped (docs/decisions/2026-11-01-write-paths-tail-b.md). record_stocktake() is
+  // one RPC, so the claim and the write are two calls but a replay returns the first answer and never re-counts.
   const { t } = await getT();
-  const e = t.stocktake.errors;
   const supabase = await createClient();
+  const messages: WriteMessages = {
+    somethingWentWrong: t.common.somethingWentWrong,
+    saveUnknown: t.common.saveUnknown,
+    reloadToSave: t.common.reloadToSave,
+  };
+  return runWriteAction<{ medicationUpdated: number; dietUpdated: number; countedAt: string }>(
+    "stocktake.save",
+    messages,
+    { id: requestId, action: "stocktake.save", db: supabase },
+    () => saveStocktakeBody(t, supabase, medication, diet),
+  );
+}
+
+async function saveStocktakeBody(
+  t: Dictionary,
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  medication: StocktakeCount[],
+  diet: StocktakeCount[],
+): Promise<SaveStocktakeResult> {
+  const e = t.stocktake.errors;
 
   if (!can(await loadPermissions(), "stock.count")) return { ok: false, error: e.notAuthorized };
 

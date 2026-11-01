@@ -27,6 +27,7 @@ import {
 } from "@/lib/management/stocktake";
 import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
 import type { StocktakingSwitches } from "@/lib/management/stocktaking-switches";
+import { useWriteCall } from "@/lib/use-write-form";
 import { saveStocktake } from "./actions";
 import { StocktakeCards } from "./StocktakeCards";
 import { SizeCounter, describeLines } from "./SizeCounter";
@@ -115,6 +116,7 @@ export function StocktakeSheet({
   const [query, setQuery] = useState("");
   const [reviewing, setReviewing] = useState(false);
   const [pending, startTransition] = useTransition();
+  const saveCounts = useWriteCall();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const isPhone = useSyncExternalStore(
     subscribePhone,
@@ -242,7 +244,7 @@ export function StocktakeSheet({
     startTransition(async () => {
       let result: Awaited<ReturnType<typeof saveStocktake>>;
       try {
-        result = await saveStocktake(medication, diet);
+        result = await saveCounts((requestId) => saveStocktake(medication, diet, requestId));
       } catch {
         // No signal: the request never arrived. Nothing was saved and
         // nothing is lost — the counts are still here (and on the phone).
