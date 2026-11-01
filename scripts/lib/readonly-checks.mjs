@@ -391,23 +391,22 @@ export const CHECKS = {
     // If the database is behind on migrations the query stops with "could not run" naming the table it could not find; that is the
     // same finding said another way (`node scripts/apply-migrations.mjs --status --env production`).
     //
-    // 0293 added label_drafts, so a label with no live Thai but a proposal waiting reads 'proposed' on the screen while this check
-    // still counts it as missing.
+    // 0293 added label_drafts: a label with no live Thai but a proposal waiting reads 'proposed' on the screen, and since
+    // 2026-11-01 it reads 'proposed' here too, counted apart from missing exactly as label_translations() counts it.
     //
-    // ANSWERED 2026-10-31 BY THE APP HALF, AND THE ANSWER IS "NOT YET": the drafts stay untaught until 0293 and 0294 are applied
-    // to production. docs/decisions/2026-10-31-label-drafts-the-app-half.md gives the reasoning; the short of it is that there is
-    // no graceful version to write. The check SQL is embedded in a do $o$ ... $o$ block (buildQuery, below) and must be one
-    // statement starting with select or with, so every relation it names is resolved when the block is planned. A query that
-    // mentions label_drafts therefore STOPS on a database without the table -- it cannot degrade, be guarded by to_regclass, or
-    // test for the table first -- and a check that stops tells the release manager nothing at all, which is strictly worse than
-    // one that under-reports by a known amount. On production that amount is currently zero, because label_drafts cannot hold a
-    // row on a database that has no such table.
-    //
-    // WHAT TO DO AND WHEN: once "node scripts/apply-migrations.mjs --status --env production" shows 0293 and 0294 applied, add
-    //   left join label_drafts d on d.table_name = a.table_name and d.row_id = a.row_id and d.column_name = a.column_name
-    // to the label_state CTE and give a row with no live Thai and a draft the state 'proposed', counted apart from missing --
-    // which is exactly what label_translations() does and what the screen shows. Backlog: ## Security, "Teach translations-open
-    // about label drafts". Until then a production 'missing' count silently includes anything waiting, and that is on purpose.
+    // WHY IT WAITED, AND WHAT RELEASED IT. The app half asked for this on 2026-10-31 and deliberately answered "not yet"
+    // (docs/decisions/2026-10-31-label-drafts-the-app-half.md): this check's SQL is embedded in a do $o$ ... $o$ block
+    // (buildQuery, below) and must be ONE statement starting with select or with, so every relation it names is resolved when
+    // that block is planned. A query mentioning label_drafts therefore STOPS on a database without the table -- it cannot
+    // degrade, be guarded by to_regclass, or test for the table first -- and a check that stops tells the release manager
+    // nothing at all, which is strictly worse than one that under-reports by a known amount. Production had no such table, so
+    // naming it would have broken the check there to report a figure that was zero anyway.
+    // 0293 and 0294 are now applied to production (296 of 296, 2026-11-01, confirmed with
+    // "node scripts/apply-migrations.mjs --status --env production"), so the table exists everywhere this check runs and the
+    // join is safe. THE CAVEAT DOES NOT EXPIRE: a check may name only relations every database it is pointed at already has,
+    // so a relation a migration has not yet reached production must still stay out of here until it has.
+    // What the waiting cost, measured on dev 2026-10-31: the check said 383 missing where the screen said 311 missing and 72
+    // waiting -- the proposals were silently counted as nobody having done the work.
     // The arms and the `taught` list are generated from TRANSLATION_ARMS (top of this file), one row each, so they cannot drift apart.
     // `uncovered` reads `taught`, never `arm`: an arm is a select from a table, and an EMPTY table contributes no rows, so testing
     // coverage against the arms made a correctly taught pair read as untaught the moment its table was empty (fixed_outgoings on
@@ -418,11 +417,13 @@ export const CHECKS = {
         ${ARM_SELECTS}),
       label_state as (
         select l.label_group as grp,
-               case when a.th is null then case when l.optional then 'as_typed' else 'missing' end
+               case when a.th is null then case when d.row_id is not null then 'proposed'
+                                               when l.optional then 'as_typed' else 'missing' end
                     when s.source_text is distinct from a.en then 'stale' else 'current' end as state
           from arm a
           join translatable_labels l on l.table_name = a.table_name and l.column_name = a.column_name
           left join label_sources s on s.table_name = a.table_name and s.row_id = a.row_id and s.column_name = a.column_name
+          left join label_drafts d on d.table_name = a.table_name and d.row_id = a.row_id and d.column_name = a.column_name
          where nullif(btrim(a.en), '') is not null),
       prose_state as (
         select t.table_name as grp, case when t.status in ('pending', 'draft') then 'missing'
@@ -432,10 +433,12 @@ export const CHECKS = {
         'labels', json_build_object(
           'missing', (select count(*) from label_state where state = 'missing'),
           'stale', (select count(*) from label_state where state = 'stale'),
+          'proposed', (select count(*) from label_state where state = 'proposed'),
           'as_typed', (select count(*) from label_state where state = 'as_typed'),
-          'by_group', (select coalesce(json_agg(json_build_object('group', g.grp, 'missing', g.m, 'stale', g.s) order by g.grp), '[]'::json)
-             from (select grp, count(*) filter (where state = 'missing') as m, count(*) filter (where state = 'stale') as s
-                     from label_state group by grp having count(*) filter (where state in ('missing', 'stale')) > 0) g)),
+          'by_group', (select coalesce(json_agg(json_build_object('group', g.grp, 'missing', g.m, 'stale', g.s, 'proposed', g.p) order by g.grp), '[]'::json)
+             from (select grp, count(*) filter (where state = 'missing') as m, count(*) filter (where state = 'stale') as s,
+                          count(*) filter (where state = 'proposed') as p
+                     from label_state group by grp having count(*) filter (where state in ('missing', 'stale', 'proposed')) > 0) g)),
         'prose', json_build_object(
           'missing', (select count(*) from prose_state where state = 'missing'),
           'stale', (select count(*) from prose_state where state = 'stale'),
@@ -449,8 +452,9 @@ export const CHECKS = {
       const missing = r.labels.missing + r.prose.missing;
       const stale = r.labels.stale + r.prose.stale;
       return [
-        `${missing} missing, ${stale} out of date (${r.labels.missing}/${r.labels.stale} labels, ${r.prose.missing}/${r.prose.stale} prose); ${r.labels.as_typed} labels are shown as typed on purpose.`,
-        ...r.labels.by_group.map((g) => `   label ${g.group}: ${g.missing} missing, ${g.stale} out of date`),
+        `${missing} missing, ${stale} out of date (${r.labels.missing}/${r.labels.stale} labels, ${r.prose.missing}/${r.prose.stale} prose); ` +
+          `${r.labels.proposed} labels have Thai proposed and waiting for someone to approve it; ${r.labels.as_typed} labels are shown as typed on purpose.`,
+        ...r.labels.by_group.map((g) => `   label ${g.group}: ${g.missing} missing, ${g.stale} out of date, ${g.proposed} waiting to be approved`),
         ...r.prose.by_table.map((p) => `   prose ${p.table}: ${p.missing} missing, ${p.stale} out of date`),
         r.uncovered.length
           ? `NOT COUNTED — ${r.uncovered.length} registered label(s) this check has not been taught: ${r.uncovered.join(", ")}. Add an arm for each.`
