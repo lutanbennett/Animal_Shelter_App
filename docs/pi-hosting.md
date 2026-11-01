@@ -191,6 +191,57 @@ updates. Re-runnable.
 - **Rollback to Worker-only**: set `ORIGIN_HOST` back to `""` and
   `npm run deploy:prod`. The Pi can stay running; nothing reaches it.
 
+## Troubleshooting: SSH cannot reach the Pi, but the website is perfectly fine
+
+**The signature, and it is specific.** From one machine, on its **cable**, the Pi answers on
+nothing at all — not SSH, not any other port, not even ping — while **the same cable reaches the
+router and every other device normally**, and the Pi answers that same machine over Wi-Fi
+instantly. The website never falters, because the tunnel is **outbound** from the Pi and never
+touches the path that is broken.
+
+**The cause, found 2026-10-31 after about five hours: PORT ISOLATION was switched on on the wired
+switch the Pi is plugged into.** With it on, every port reaches the **uplink** but no port reaches
+another port, and the two machines happened to be in adjacent ports. One toggle in the switch's
+settings fixed it immediately. The switch was believed to be unmanaged; it is not. (Which switch
+and which setting is in Lutan's network notes on his Desktop, not in this public repo.)
+
+**Check it in one minute, before theorising about either end.** From the machine that cannot
+reach the Pi: ping the **gateway**, then ping **any other device on the same wire**. Reaching
+*only* the gateway is the signature of port isolation.
+
+- **Bind the ping to the interface's own ADDRESS, not to the interface.** On Windows
+  `ping -S <that interface's address> <target>`; on Linux `ping -I <address>`, never `-I eth0`.
+  On a machine with both a cable and Wi-Fi, an unbound ping silently leaves by the other
+  interface and reports a success that means nothing. **That mistake was made twice on the night
+  and once again on 2026-11-01, and every time it inverted the conclusion.**
+- **To prove WHERE the packets die, needing no `sudo`:** run `ss -tnH state syn-recv` on the Pi
+  while the other machine tries to connect. If the SYNs **arrive and sit half-open**, the loss is
+  on the **return** path, not the way in. Then `ip neigh show dev eth0` on the Pi: it showed the
+  other machine's wired address `FAILED` while its Wi-Fi address was `REACHABLE`.
+- **Eliminated by measurement, so nobody re-walks it:** the segmenting firewall and its ACL
+  (unplugged entirely, no change), an address handed out by the wrong DHCP server (survived a
+  reboot onto a new address), both machines being dual-homed, a firewall on the Pi (there is
+  **none** installed — no `ufw`, no `nftables`, no `fail2ban`), the USB ethernet adapter's
+  checksum offload (disabled, no change), and three VPN/remote-desktop services on the PC
+  (stopped or uninstalled, no change).
+- **A related trap on the Pi itself:** it used to carry `eth0` and `wlan0` on the same subnet with
+  two default routes, which masked the fault and made the answer change between attempts. The
+  Pi's Wi-Fi radio has been **off** since 2026-11-01, when it moved behind its own firewall.
+
+**The lesson, which would have found it in ten minutes:** when **one** destination fails from
+**one** machine, test from a **second machine** and from the **far end** before theorising about
+either end.
+
+**Before any hands-on session at the Pi, check this precondition in one line** — from the machine
+you will actually work from, on the connection you will actually use:
+
+```bash
+ssh lutan@lanna-pi.local hostname
+```
+
+It was assumed rather than checked on 2026-10-31, and the whole evening went on this fault instead
+of on the three tests that were planned.
+
 ## The Pi is sick and nobody can sign in
 
 **This is the emergency switch. It is not the fix.** The permanent fix is the failover work in
@@ -348,10 +399,24 @@ on the Pi" rule no longer holds, so:
 
 ## Spare boot drive (USB SSD)
 
-**Status 2026-10-02: script, timer and these steps are in; the boot test has not been
-done, so this is not yet a spare.** A clone nobody has booted is not a spare. The
-acceptance for the backlog item is: with the NVMe out, the Pi boots from the USB drive
-and `curl -sI https://lannacare.org/` says `x-lanna-served-by: pi`.
+**Status 2026-11-01: this IS a spare, and it is proven.** The boot test below ran with
+Lutan at the Pi: with the NVMe physically out the Pi booted `/dev/sda2`, `cloudflared`,
+`lanna-care` and `lanna-care-test` all came up `active`, `vcgencmd get_throttled` was
+`0x0`, and both sites answered `x-lanna-served-by: pi`. The NVMe was then refitted and
+root re-verified as `nvme0n1p2`, with the spare present, unmounted, and
+`spare-clone.timer` still armed. **No hand clone was taken first, on purpose:** the
+weekly job had succeeded at 05:04 that morning, so the drive was booted exactly as the
+unattended job leaves it, which is the state a real failure would rely on.
+
+**Superseded, kept so nobody re-reads an old copy as current — status 2026-10-02:**
+*"script, timer and these steps are in; the boot test has not been done, so this is not
+yet a spare."* A clone nobody has booted is not a spare, and from 2026-10-02 until
+2026-11-01 that was the true state. **It stayed written here after it stopped being
+true, and it cost something:** on 2026-10-31 a session believed this paragraph over the
+machine, told Lutan the drive was empty, and offered to wipe it for use as a rescue
+disk, which would have destroyed the only spare. If you are about to act on a status
+line in this file, read the Pi first — `scripts/pi/spare-clone.sh status` answers in a
+second.
 
 **What it is.** A USB SSD holding a bootable clone of the NVMe: the OS, `/etc`, and
 everything that is not in git (the two env files, the `cloudflared` credentials and config,
@@ -380,7 +445,10 @@ should restore the database from it when a Drive copy exists.
    `/etc/default/lanna-spare`, **never `/dev/sda`**, so a different drive that enumerates
    first is not touched. The mount by UUID requirement does not arise: nothing mounts the
    spare except the clone script, and the clone's own `fstab` uses PARTUUIDs.
-4. Do the **boot test** below once, then record the date here.
+4. Do the **boot test** below once, then record the date here. **Done 2026-11-01** (the
+   status paragraph at the top of this section has what it showed). Re-do it after any
+   change to the boot chain — a bootloader update, a new `BOOT_ORDER`, a different drive —
+   not on a schedule.
 
 ### Keeping it current
 
@@ -424,7 +492,13 @@ and that `/boot/firmware` on the USB drive has `cmdline.txt` naming its own `PAR
 3. Leave the USB drive in a **blue** port. Power on. It boots from the spare in about a minute.
 4. `ssh lutan@lanna-pi.local`. Check `findmnt /` is `/dev/sda2`, then
    `systemctl is-active lanna-care cloudflared` and the `curl` from the boot test.
-5. The site now runs from the spare, at USB speed. **Fit a replacement NVMe**, then copy
+5. The site now runs from the spare, and **it is not noticeably slower** — measured
+   2026-11-01 while booted from the USB drive: **0.10–0.35 s a page on USB against
+   0.08–0.21 s on the NVMe**, because what a page costs here is network, not disk. (This
+   replaces an earlier "at USB speed" warning, which overstated it and could put somebody
+   off running from the spare for longer than they needed to. Running on the spare is a
+   fine place to be for a few days; the reason to get off it is that it is then your only
+   copy, not that it is slow.) **Fit a replacement NVMe**, then copy
    back onto it with `sudo rpi-clone nvme0n1 -f` (as in "Building the box": it erases the
    destination; read the two disk lines before typing `yes`). Reboot; `findmnt /` should be
    `nvme0n1p2`. Then re-run `sudo scripts/pi/spare-clone.sh` to make the spare current again.
@@ -470,8 +544,16 @@ The clone uses the first 64 GB of the 1.8 TB drive (`sda1`, `sda2`); the mirror 
 **encrypted** partition made from the free space. The clone half stays unencrypted on purpose
 (`docs/decisions/2026-10-02-spare-boot-drive-not-encrypted.md`).
 
-1. Make partition 3 from the free space (`sudo fdisk /dev/disk/by-id/usb-Seagate_BUP_Slim_BK_NA97757A-0:0`,
-   `n`, `p`, `3`, defaults, `w`), then `sudo partprobe`. This does not touch `sda1` or `sda2`.
+1. Make partition 3 from the free space. **Read the drive's own `by-id` path first** —
+   `ls -l /dev/disk/by-id/ | grep usb`, or `cat /etc/default/lanna-spare`, which records the drive
+   the clone actually uses — then `sudo fdisk /dev/disk/by-id/usb-<that one>`, `n`, `p`, `3`,
+   defaults, `w`, then `sudo partprobe`. This does not touch `sda1` or `sda2`.
+   **Why this step names no drive** (changed 2026-11-01): it used to carry one particular drive's
+   `by-id` string. That is wrong twice over. `fdisk` is destructive, and a hard-coded device in a
+   destructive command is a command that quietly points at the wrong disk the day the drive is
+   replaced — which is the same reason this section already says to mount **by UUID**, never
+   `/dev/sda`, and why steps 2 and 3 take `<that partition's by-id path>` rather than a literal. And
+   a `by-id` string carries the drive's serial number, which does not belong in a public repository.
 2. `sudo cryptsetup luksFormat <that partition's by-id path>` (choose a passphrase; store it with
    the backup key, not on the Pi), then `sudo cryptsetup open <path> lanna-mirror`,
    `sudo mkfs.ext4 -L lanna-mirror /dev/mapper/lanna-mirror`.
