@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { CalendarDays } from "lucide-react";
 import { autoSlash, badDateMessage, dmyToIso, isoToDmy, normalizeTime } from "@/lib/date-input";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 // A browser draws <input type="date"> in ITS OWN language, so a Chrome set to
 // English (United States) shows mm/dd/yyyy whatever the page says. These two
@@ -31,6 +32,7 @@ function outOfRange(iso: string, min?: string | number, max?: string | number) {
 
 /** Drop-in for `<input type="date">`: same props, `onChange` gets `e.target.value` as ISO. */
 export function DateInput({ value, defaultValue, onChange, className, name, min, max, required, disabled, id, ...rest }: Props) {
+  const { t } = useI18n();
   const [text, setText] = useState(isoToDmy((value ?? defaultValue ?? "") as string));
   const visible = useRef<HTMLInputElement>(null);
   const picker = useRef<HTMLInputElement>(null);
@@ -91,7 +93,7 @@ export function DateInput({ value, defaultValue, onChange, className, name, min,
           ref={picker}
           type="date"
           tabIndex={-1}
-          aria-label="Open calendar"
+          aria-label={t.common.openCalendar}
           disabled={disabled}
           min={min}
           max={max}
@@ -114,6 +116,7 @@ export function DateInput({ value, defaultValue, onChange, className, name, min,
 
 /** Drop-in for `<input type="datetime-local">`: DD/MM/YYYY plus a 24-hour HH:MM, submitted as `YYYY-MM-DDTHH:MM`. */
 export function DateTimeInput({ value, defaultValue, onChange, className, name, required, disabled, id, min, max, ...rest }: Props) {
+  const { t } = useI18n();
   const start = (value ?? defaultValue ?? "") as string;
   const [date, setDate] = useState(isoToDmy(start.slice(0, 10)));
   const [time, setTime] = useState(start.slice(11, 16));
@@ -165,7 +168,7 @@ export function DateTimeInput({ value, defaultValue, onChange, className, name, 
         inputMode="numeric"
         autoComplete="off"
         placeholder="HH:MM"
-        aria-label="Time, 24-hour"
+        aria-label={t.common.timeField}
         maxLength={5}
         required={required}
         disabled={disabled}
