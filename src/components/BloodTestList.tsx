@@ -10,6 +10,7 @@ import { AttachmentUploader } from "@/components/AttachmentUploader";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { RowActionButton } from "@/components/RowAction";
 import { FileTypeIcon } from "@/components/FileTypeIcon";
+import { useWriteCall } from "@/lib/use-write-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { fileKind } from "@/lib/uploads/file-kind";
 import { formatDate } from "@/lib/format";
@@ -51,12 +52,13 @@ export function BloodTestList({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const confirm = useConfirm();
+  const remove = useWriteCall();
   const [attachingTo, setAttachingTo] = useState<string | null>(null);
 
   async function removeAttachment(attachmentId: string, fileName: string) {
     if (!await confirm({ body: t.common.removeFileConfirm(fileName), confirmLabel: t.common.remove })) return;
     startTransition(async () => {
-      const result = await deleteBloodTestAttachment(residentId, attachmentId);
+      const result = await remove((id) => deleteBloodTestAttachment(residentId, attachmentId, id));
       if (result.ok) router.refresh();
     });
   }

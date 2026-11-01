@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult } from "@/lib/action-result";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -13,12 +13,16 @@ export type ProcedureActionState = ActionResult;
 export async function deleteProcedureAttachment(
   residentId: string,
   attachmentId: string,
+  requestId: string,
 ): Promise<ProcedureActionState> {
   const { t } = await getT();
-  return runAction("residents.deleteProcedureAttachment", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction(
+    "residents.deleteProcedureAttachment",
+    { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave },
+    { id: requestId, action: "residents.deleteProcedureAttachment", db: supabase },
+    async () => {
     if (!can(await loadPermissions(), "medical.procedures")) return { ok: false, error: t.common.notAllowed };
-    const supabase = await createClient();
-
     const { data: attachment, error: selectError } = await supabase
       .from("attachments")
       .select("id, drive_file_id")
@@ -59,5 +63,6 @@ export async function deleteProcedureAttachment(
     revalidatePath(`/residents/${residentId}`);
     revalidatePath(`/residents/${residentId}/procedures`);
     return { ok: true };
-  });
+    },
+  );
 }

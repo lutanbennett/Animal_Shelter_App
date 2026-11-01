@@ -1,7 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { databaseFailure, runAction, type ActionRefusal } from "@/lib/action-result";
+import { databaseFailure, runWriteAction, type ActionRefusal } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { RESIDENT_SIZES, type ResidentSize } from "@/lib/i18n/enum-labels";
@@ -30,7 +31,12 @@ export async function recordIntake(
   formData: FormData,
 ): Promise<IntakeState> {
   const { t } = await getT();
-  return runAction<never>("residents.recordIntake", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  // PI FAILOVER (D): the success path REDIRECTS, and a redirect throws, which would leave the claim open and
+  // make a replay read "we cannot tell". So the body returns where to go, the result is stored, and the
+  // redirect happens after runWriteAction() has finished the claim. record_intake() is one transaction;
+  // the chip update after it is a second write, and a failure there is handled in the body as before.
+  const done = await runWriteAction<{ redirectTo: string }>("residents.recordIntake", { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave }, { id: writeRequestIdFrom(formData), action: "residents.recordIntake", db: supabase }, async () => {
     const name = str(formData, "name");
     const intakeDate = str(formData, "intakeDate");
 
@@ -87,7 +93,6 @@ export async function recordIntake(
       return { ok: false, error: t.residents.new.errors.microchipInvalid };
     }
 
-    const supabase = await createClient();
     if (chip.microchip_number) {
       const { data: taken } = await supabase
         .from("residents")
@@ -140,9 +145,11 @@ export async function recordIntake(
       // sends them to the edit page to fix the chip rather than losing the intake.
       if (chipError) {
         console.error("residents.recordIntake chip", isDuplicateChipError(chipError), chipError.message);
-        redirect(`/residents/${resident.id}/edit`);
+        return { ok: true, redirectTo: `/residents/${resident.id}/edit` };
       }
     }
-    redirect(`/residents/${resident.id}`);
+    return { ok: true, redirectTo: `/residents/${resident.id}` };
   });
+  if (done.ok) redirect(done.redirectTo);
+  return done;
 }

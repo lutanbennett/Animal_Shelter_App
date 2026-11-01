@@ -8,6 +8,8 @@ import { setResidentMicrochip } from "@/app/residents/[id]/microchip/actions";
 import { MicrochipFields } from "@/components/MicrochipFields";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
+import { useWriteCall } from "@/lib/use-write-form";
+import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
 
 /**
  * Record, correct or clear one resident's chip through
@@ -37,13 +39,17 @@ export function MicrochipForm({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const save = useWriteCall();
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
     setError(null);
     startTransition(async () => {
-      const result = await setResidentMicrochip(residentId, formData);
+      const result = await save((id) => {
+        formData.set(WRITE_REQUEST_FIELD, id);
+        return setResidentMicrochip(residentId, formData);
+      });
       if (!result.ok) {
         setError(result.error);
         return;

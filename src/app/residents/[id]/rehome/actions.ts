@@ -2,12 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { runAction, type ActionRefusal } from "@/lib/action-result";
+import { runWriteAction, type ActionRefusal, type WriteMessages } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { rehomeResident, type RehomeKind } from "@/lib/placements/rehome";
 
 export type RehomeState = ActionRefusal | undefined;
+
+/** The words runWriteAction() needs. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 function str(formData: FormData, key: string): string | null {
   const value = formData.get(key);
@@ -27,40 +36,50 @@ export async function rehome(
   formData: FormData,
 ): Promise<RehomeState> {
   const { t } = await getT();
-  return runAction<never>("residents.rehome", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
+  const supabase = await createClient();
+  // PI FAILOVER (D): the success path REDIRECTS, and a redirect throws, which would leave the claim open and
+  // make a replay read "we cannot tell". So the body returns where to go, the result is stored, and the
+  // redirect happens after runWriteAction() has finished the claim.
+  const done = await runWriteAction<{ redirectTo: string }>(
+    "residents.rehome",
+    write(t),
+    { id: writeRequestIdFrom(formData), action: "residents.rehome", db: supabase },
+    async () => {
 
-    // The carer picker posts either an existing contact id or the fields for
-    // a new one, and says which with carerMode.
-    const newCarer =
-      str(formData, "carerMode") === "new"
-        ? {
-            name: str(formData, "newCarerName") ?? "",
-            phone: str(formData, "newCarerPhone"),
-            email: str(formData, "newCarerEmail"),
-            lineId: str(formData, "newCarerLineId"),
-          }
-        : null;
+      // The carer picker posts either an existing contact id or the fields for
+      // a new one, and says which with carerMode.
+      const newCarer =
+        str(formData, "carerMode") === "new"
+          ? {
+              name: str(formData, "newCarerName") ?? "",
+              phone: str(formData, "newCarerPhone"),
+              email: str(formData, "newCarerEmail"),
+              lineId: str(formData, "newCarerLineId"),
+            }
+          : null;
 
-    const result = await rehomeResident(supabase, t, {
-      residentId,
-      kind: (str(formData, "kind") ?? "") as RehomeKind,
-      carerId: newCarer ? null : str(formData, "carerId"),
-      newCarer,
-      date: str(formData, "date") ?? "",
-      notes: str(formData, "notes"),
-    });
-    if ("error" in result) return { ok: false, error: result.error };
+      const result = await rehomeResident(supabase, t, {
+        residentId,
+        kind: (str(formData, "kind") ?? "") as RehomeKind,
+        carerId: newCarer ? null : str(formData, "carerId"),
+        newCarer,
+        date: str(formData, "date") ?? "",
+        notes: str(formData, "notes"),
+      });
+      if ("error" in result) return { ok: false, error: result.error };
 
-    revalidatePath("/residents");
-    revalidatePath(`/residents/${residentId}`);
-    revalidatePath(`/residents/${residentId}/housing`);
-    // Occupancy on the enclosure browser and both enclosure hubs changes too.
-    revalidatePath("/enclosures", "layout");
-    // The animal drops off the public adoption pages and the home page's
-    // counts; without this the Adopt page kept listing it (F-20).
-    revalidatePath("/adopt", "layout");
-    revalidatePath("/");
-    redirect(`/residents/${residentId}`);
-  });
+      revalidatePath("/residents");
+      revalidatePath(`/residents/${residentId}`);
+      revalidatePath(`/residents/${residentId}/housing`);
+      // Occupancy on the enclosure browser and both enclosure hubs changes too.
+      revalidatePath("/enclosures", "layout");
+      // The animal drops off the public adoption pages and the home page's
+      // counts; without this the Adopt page kept listing it (F-20).
+      revalidatePath("/adopt", "layout");
+      revalidatePath("/");
+      return { ok: true, redirectTo: `/residents/${residentId}` };
+    },
+  );
+  if (done.ok) redirect(done.redirectTo);
+  return done;
 }

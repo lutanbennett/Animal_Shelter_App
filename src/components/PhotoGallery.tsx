@@ -37,6 +37,7 @@ import {
   undoPhotoPosted,
 } from "@/app/residents/[id]/photos/actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { SOCIAL_PLATFORMS, platformsOf, type SharesByPhoto, type SocialPlatform } from "@/lib/social-shares";
 
 /**
@@ -122,11 +123,14 @@ function MarkPostedForm({
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const saveMark = useWriteCall();
 
   function save() {
     setError(null);
     startTransition(async () => {
-      const result = await markPhotosPosted(residentId, attachmentIds, { platform, sharedOn, postUrl, note });
+      const result = await saveMark((rid) =>
+        markPhotosPosted(residentId, attachmentIds, { platform, sharedOn, postUrl, note }, rid),
+      );
       if (!result.ok) setError(result.error);
       else onDone();
     });
@@ -269,6 +273,11 @@ export function PhotoGallery({
   const [markingSelected, setMarkingSelected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  // One per action: an id kept from an unknown save must never reach a different action.
+  const saveProfile = useWriteCall();
+  const saveDelete = useWriteCall();
+  const saveMove = useWriteCall();
+  const saveUndo = useWriteCall();
 
   useEffect(() => {
     if (!openPhoto) return;
@@ -298,7 +307,7 @@ export function PhotoGallery({
   function handleSetProfile() {
     if (!openPhoto) return;
     startTransition(async () => {
-      const result = await setProfilePhoto(residentId, openPhoto.drive_file_id);
+      const result = await saveProfile((rid) => setProfilePhoto(residentId, openPhoto.drive_file_id, rid));
       if (!result.ok) setError(result.error);
       else if (result.archiveWarning) setError(result.archiveWarning);
       else close();
@@ -308,7 +317,7 @@ export function PhotoGallery({
   function handleDelete() {
     if (!openPhoto) return;
     startTransition(async () => {
-      const result = await deletePhoto(residentId, openPhoto.id);
+      const result = await saveDelete((rid) => deletePhoto(residentId, openPhoto.id, rid));
       if (!result.ok) setError(result.error);
       else if (result.archiveWarning) setError(result.archiveWarning);
       else close();
@@ -318,7 +327,7 @@ export function PhotoGallery({
   function handleMove() {
     if (!openPhoto || !moveTarget) return;
     startTransition(async () => {
-      const result = await movePhotoToFolder(residentId, openPhoto.id, moveTarget);
+      const result = await saveMove((rid) => movePhotoToFolder(residentId, openPhoto.id, moveTarget, rid));
       if (!result.ok) setError(result.error);
       else if (result.archiveWarning) setError(result.archiveWarning);
       else close();
@@ -328,7 +337,7 @@ export function PhotoGallery({
   function handleUndo(shareId: string) {
     setError(null);
     startTransition(async () => {
-      const result = await undoPhotoPosted(residentId, shareId);
+      const result = await saveUndo((rid) => undoPhotoPosted(residentId, shareId, rid));
       if (!result.ok) setError(result.error);
     });
   }

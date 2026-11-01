@@ -3,7 +3,7 @@
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { useRef, useState } from "react";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import Link from "next/link";
 import { Check } from "lucide-react";
 import { updateResident } from "./actions";
@@ -92,7 +92,7 @@ export function EditResidentForm({
   /** Current computed age (server-side, so it matches what the hub shows). */
   ageNow: number | null;
 }) {
-  const [state, submit, pending] = useKeptForm(
+  const [state, submit, pending] = useWriteForm(
     updateResident.bind(null, resident.id),
     undefined,
   );

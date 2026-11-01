@@ -7,6 +7,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton, RowActionLink } from "@/components/RowAction";
 import { deleteAdoptionUpdate } from "./actions";
+import { useWriteCall } from "@/lib/use-write-form";
 
 /** Edit and Delete on one update; the confirm says how many photos go with it. */
 export function AdoptionUpdateActions({
@@ -26,12 +27,13 @@ export function AdoptionUpdateActions({
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const remove = useWriteCall();
 
   function handleDelete() {
     setError(null);
     startTransition(async () => {
       try {
-        const result = await deleteAdoptionUpdate(residentId, updateId);
+        const result = await remove((id) => deleteAdoptionUpdate(residentId, updateId, id));
         if (!result.ok) setError(result.error);
       } catch (err) {
         console.error("Deleting adoption update failed:", err);

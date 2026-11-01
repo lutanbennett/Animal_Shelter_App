@@ -3,7 +3,7 @@
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { placeLine } from "@/components/ZoneName";
 import { ActionButton } from "@/components/ActionButton";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import Link from "next/link";
 import { sendToHospital } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -32,7 +32,7 @@ export function SendToHospitalForm({
 }) {
   const { t, locale } = useI18n();
   const h = t.residents.hospital;
-  const [state, onSubmit, pending] = useKeptForm(
+  const [state, onSubmit, pending] = useWriteForm(
     sendToHospital.bind(null, residentId),
     undefined,
   );

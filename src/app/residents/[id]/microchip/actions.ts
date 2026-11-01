@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { todayIso } from "@/lib/format";
@@ -25,14 +26,19 @@ export async function setResidentMicrochip(
 ): Promise<ActionResult<{ cleared: boolean }>> {
   const { t } = await getT();
   const e = t.residents.hub.chipForm.errors;
-  return runAction<{ cleared: boolean }>("residents.setResidentMicrochip", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  // PI FAILOVER (D): the request id travels in the form (WRITE_REQUEST_FIELD), as for a form action.
+  return runWriteAction<{ cleared: boolean }>(
+    "residents.setResidentMicrochip",
+    { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave },
+    { id: writeRequestIdFrom(formData), action: "residents.setResidentMicrochip", db: supabase },
+    async () => {
     const chip = readMicrochip(formData);
     if ("invalid" in chip) return { ok: false, error: e.invalid };
     if (chip.microchip_implanted_on && chip.microchip_implanted_on > todayIso()) {
       return { ok: false, error: e.implantedInFuture };
     }
 
-    const supabase = await createClient();
     const { error } = await supabase.rpc("set_resident_microchip", {
       p_resident_id: residentId,
       p_number: chip.microchip_number,
@@ -51,5 +57,6 @@ export async function setResidentMicrochip(
     revalidatePath("/clinic-visits", "layout");
     revalidatePath("/appointments");
     return { ok: true, cleared: chip.microchip_number === null };
-  });
+    },
+  );
 }
