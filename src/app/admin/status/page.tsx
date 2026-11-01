@@ -1,6 +1,4 @@
 import { Suspense, type ReactNode } from "react";
-import { ACTION_ICONS } from "@/components/hub-icons";
-import { ActionButton } from "@/components/ActionButton";
 import Link from "next/link";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
@@ -15,7 +13,7 @@ import { type CheckResult, type CheckState, runCheck } from "@/lib/status/run";
 import { USAGE_PERIODS, getUsageReport, parsePeriod, type UsagePeriod } from "@/lib/status/usage";
 import { createClient } from "@/lib/supabase/server";
 import { countStalePending } from "@/lib/photos/pending";
-import { checkNow } from "./actions";
+import { CheckNowButton } from "./CheckNowButton";
 import { renderedBy } from "@/lib/status/runtime";
 import { AlertActions } from "./AlertActions";
 import { requirePermission } from "@/lib/permissions/require";
@@ -44,16 +42,7 @@ export default async function SystemStatusPage(props: PageProps<"/admin/status">
           <h1 className="text-2xl font-semibold text-foreground">{s.title}</h1>
           <p className="text-sm text-muted">{s.subtitle}</p>
         </div>
-        <form
-          action={async () => {
-            "use server";
-            await checkNow();
-          }}
-        >
-          <ActionButton type="submit" icon={ACTION_ICONS.refresh}>
-            {s.checkNow}
-          </ActionButton>
-        </form>
+        <CheckNowButton />
       </div>
 
       <section className="flex flex-col gap-3">
