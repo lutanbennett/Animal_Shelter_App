@@ -4261,8 +4261,6 @@ const en = {
     pageTitle: "Assistant",
     pageSubtitle:
       "Say what you want done in plain words. The assistant fills a form in from your sentence and shows it to you first — nothing is written until you confirm it. It understands a fixed list of requests; the user manual lists every one.",
-    pageSubtitleReadOnly:
-      "Ask where a resident is, who is in an enclosure, or what is due. Recording something through the assistant is a separate permission, and this account does not have it.",
     tryTitle: "Try something like",
     examples: (resident: string, enclosure: string, clinic: string) => [
       `Where is ${resident}?`,
@@ -4310,8 +4308,6 @@ const en = {
     notYourCard:
       "Your account can use the assistant, but not for this one — it needs a card you don't hold. Ask someone who does, or use the resident's own page.",
     recording: "Recording...",
-    volunteerReadOnly:
-      "Your account can ask the assistant questions, but recording something through it is a separate permission it does not have. Ask someone who can record it, or use the resident's own page.",
     move: {
       title: "Move resident",
       summary: (resident: string, from: string, to: string, date: string) =>
