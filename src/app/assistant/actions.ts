@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { runWriteAction, type WriteMessages } from "@/lib/action-result";
+import { runWriteAction, unexpectedFailure, type WriteMessages } from "@/lib/action-result";
 import { databaseText } from "@/lib/assistant/refusal";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -150,7 +150,7 @@ async function runWrite(
       if ("error" in result) {
         const raw = databaseText(result.error);
         if (raw === "refused") return { ok: false, error: t.assistant.cardRefused };
-        if (raw === "other") return { ok: false, error: t.common.somethingWentWrong };
+        if (raw === "other") return unexpectedFailure(`assistant.${intent}`, result.error, t.common.somethingWentWrong);
         return { ok: false, error: result.error };
       }
       revalidate();
