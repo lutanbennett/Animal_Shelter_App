@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
 import { recordIntake } from "./actions";
@@ -204,7 +204,7 @@ export function IntakeForm({
   initialStep?: number;
   chip?: string | null;
 }) {
-  const [state, onSubmit, pending] = useKeptForm(recordIntake, undefined);
+  const [state, onSubmit, pending] = useWriteForm(recordIntake, undefined);
   const { t, locale } = useI18n();
   const [enclosureId, setEnclosureId] = useState("");
   const [warningFor, setWarningFor] = useState<EnclosureOption | null>(null);

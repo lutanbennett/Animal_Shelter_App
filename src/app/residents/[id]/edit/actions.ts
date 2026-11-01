@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { runAction, type ActionRefusal } from "@/lib/action-result";
+import { runWriteAction, type ActionRefusal, type ActionResult } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -44,9 +45,14 @@ export async function updateResident(
   formData: FormData,
 ): Promise<EditResidentState> {
   const { t } = await getT();
-  return runAction<never>("residents.updateResident", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
-
+  const supabase = await createClient();
+  // PI FAILOVER (D): the success path REDIRECTS, and a redirect throws, which would leave the claim open and
+  // make a replay read "we cannot tell". So the body returns where to go, the result is stored, and the
+  // redirect happens after runWriteAction() has finished the claim. NOT ONE TRANSACTION: the resident
+  // update, the profile photo and the housing move are separate writes (see the file's own comment on the
+  // move); a failure between them leaves the claim open and a retry reads "we cannot tell" rather than
+  // writing the earlier parts again.
+  const done = await runWriteAction<{ redirectTo: string }>("residents.updateResident", { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave }, { id: writeRequestIdFrom(formData), action: "residents.updateResident", db: supabase }, async () => {
     // RLS would silently match zero rows for a volunteer/doctor rather than
     // error, so check the activity up front and give a real message.
     if (!can(await loadPermissions(), "resident.record")) {
@@ -220,8 +226,10 @@ export async function updateResident(
     // Name/visibility changes show up on the public adoption pages too.
     revalidatePath("/adopt");
     revalidatePath(`/adopt/${residentId}`);
-    redirect(`/residents/${residentId}`);
+    return { ok: true, redirectTo: `/residents/${residentId}` };
   });
+  if (done.ok) redirect(done.redirectTo);
+  return done;
 }
 
 /**
@@ -234,7 +242,7 @@ async function updateDeceasedResident(
   t: Awaited<ReturnType<typeof getT>>["t"],
   residentId: string,
   formData: FormData,
-): Promise<ActionRefusal> {
+): Promise<ActionResult<{ redirectTo: string }>> {
   const { data: currentRows } = await supabase
     .from("residents")
     .select("profile_photo_drive_file_id")
@@ -272,5 +280,5 @@ async function updateDeceasedResident(
   revalidatePath(`/residents/${residentId}`);
   revalidatePath(`/residents/${residentId}/photos`);
   const archiveFlag = refresh.error ? "?archive=stale" : refresh.photoMissing ? "?archive=nophoto" : "";
-  redirect(`/residents/${residentId}${archiveFlag}`);
+  return { ok: true, redirectTo: `/residents/${residentId}${archiveFlag}` };
 }
