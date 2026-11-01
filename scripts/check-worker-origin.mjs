@@ -204,6 +204,7 @@ async function through(host, method, extraEnv = {}) {
   check("the wrapped-write list is not empty", WRAPPED_WRITE_PATHS.length > 0);
   check("/admin/units is wrapped", isWrappedWritePath("/admin/units"));
   check("a near miss is not wrapped", !isWrappedWritePath("/admin/unitsx") && !isWrappedWritePath("/admin/security") && !isWrappedWritePath("/services/desexing"));
+  check("a [id] entry matches the real URL a browser posts to", isWrappedWritePath("/projects/7c2cd392-79d7") && isWrappedWritePath("/residents/42/edit") && !isWrappedWritePath("/residents/42/a/b"));
   check("the Worker default and the browser wait agree on the Pi attempt", ORIGIN_ATTEMPT_MS === 20_000, `got ${ORIGIN_ATTEMPT_MS}`);
 
   // With the list empty every case below would post to an UNWRAPPED path, and
