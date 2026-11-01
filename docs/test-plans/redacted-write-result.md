@@ -161,7 +161,7 @@ Automated checks by: Claude  Date: 2026-11-01
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: seven presses by a person holding an authenticator
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet; seven presses are outstanding and are carried as `pending:` on the signature line below
 
 Manual verification by: pending: seven presses by a person holding an authenticator
 
