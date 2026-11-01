@@ -40,8 +40,8 @@ export function AppealGifts({
   const router = useRouter();
   const confirm = useConfirm();
   const [pending, startTransition] = useTransition();
-  const moveGiftOutOfAppealCall = useWriteCall();
   // One per action: a request id kept from an unknown save must never reach another action.
+  const moveGiftOutOfAppealCall = useWriteCall();
   const moveGiftsToAppealCall = useWriteCall();
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [picked, setPicked] = useState<Set<string>>(new Set());

@@ -7,6 +7,7 @@ import { FriendBadge } from "@/components/FriendBadge";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { RowActionButton } from "@/components/RowAction";
@@ -32,6 +33,9 @@ export function FriendsOrder({ friends }: { friends: FriendOrderRow[] }) {
   const { t } = useI18n();
   const f = t.shelterFriends;
   const [isPending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const moveFriendCall = useWriteCall();
+  const setFriendPublishedCall = useWriteCall();
   const [error, setError] = useState<string | null>(null);
 
   function run(action: () => Promise<ActionResult>) {
@@ -100,7 +104,7 @@ export function FriendsOrder({ friends }: { friends: FriendOrderRow[] }) {
                 <ActionButton
                   compact
                   disabled={isPending}
-                  onClick={() => run(() => setFriendPublished(friend.id, !friend.published))}
+                  onClick={() => run(() => setFriendPublishedCall((requestId) => setFriendPublished(friend.id, !friend.published, requestId)))}
                   aria-label={`${friend.published ? f.card.unpublish : f.card.publish}: ${name}`}
                   icon={friend.published ? ACTION_ICONS.unpublish : ACTION_ICONS.publish}
                 >
@@ -108,14 +112,14 @@ export function FriendsOrder({ friends }: { friends: FriendOrderRow[] }) {
                 </ActionButton>
                 <RowActionButton
                   disabled={isPending || index === 0}
-                  onClick={() => run(() => moveFriend(friend.id, "up"))}
+                  onClick={() => run(() => moveFriendCall((requestId) => moveFriend(friend.id, "up", requestId)))}
                   label={f.manage.moveUp(name)}
                   word={f.manage.moveUpWord}
                   icon={ACTION_ICONS.moveUp}
                 />
                 <RowActionButton
                   disabled={isPending || index === friends.length - 1}
-                  onClick={() => run(() => moveFriend(friend.id, "down"))}
+                  onClick={() => run(() => moveFriendCall((requestId) => moveFriend(friend.id, "down", requestId)))}
                   label={f.manage.moveDown(name)}
                   word={f.manage.moveDownWord}
                   icon={ACTION_ICONS.moveDown}

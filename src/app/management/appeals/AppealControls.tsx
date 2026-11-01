@@ -43,9 +43,9 @@ export function AppealControls({
   const router = useRouter();
   const confirm = useConfirm();
   const [pending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
   const closeAppealCall = useWriteCall();
   const deleteDraftAppealCall = useWriteCall();
-  // One per action: a request id kept from an unknown save must never reach another action.
   const moveAppealCall = useWriteCall();
   const [message, setMessage] = useState<{ type: "ok" | "error"; text: string } | null>(null);
   const [outcomeText, setOutcomeText] = useState(outcome ?? "");

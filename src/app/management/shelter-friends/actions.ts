@@ -1,7 +1,7 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
-import { runAction, type ActionRefusal, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionRefusal, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
@@ -24,6 +24,13 @@ import {
 import { driveErrorMessage } from "@/lib/google/drive-errors";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 /**
  * Writes to shelter_friends (0076). Admin and management only, which is
@@ -134,12 +141,12 @@ async function nextSortOrder(supabase: Awaited<ReturnType<typeof createClient>>)
  * opted out (the table's defaults), placed last in the public order.
  * Offered only where canBecomeFriend() says — the one gate.
  */
-export async function createFriend(contactId: string): Promise<ActionResult<{ success: string }>> {
+export async function createFriend(contactId: string, requestId: string): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  return runAction("shelterFriends.createFriend", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("shelterFriends.createFriend", write(t), { id: requestId, action: "shelterFriends.createFriend", db: supabase }, async () => {
     if (!can(await loadPermissions(), "friends.manage")) return refuse(t.management.errors.managementAccessRequired);
     const e = t.shelterFriends.errors;
-    const supabase = await createClient();
 
     const { data: contacts, error: contactError } = await supabase
       .from("contacts")
@@ -171,15 +178,16 @@ export async function createFriend(contactId: string): Promise<ActionResult<{ su
 export async function updateFriend(
   id: string,
   fields: FriendFields,
+  requestId: string,
 ): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  return runAction("shelterFriends.updateFriend", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("shelterFriends.updateFriend", write(t), { id: requestId, action: "shelterFriends.updateFriend", db: supabase }, async () => {
     if (!can(await loadPermissions(), "friends.manage")) return refuse(t.management.errors.managementAccessRequired);
 
     const checked = checkFriendFields(t, fields);
     if (!checked.columns) return refuse(checked.error);
 
-    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -235,16 +243,18 @@ export async function addShelterFriend(input: {
   contact: WizardContact;
   fields: FriendFields;
   publish: boolean;
-}): Promise<ActionResult<{ success: string; friendId: string; contactId: string; name: string }>> {
+},
+  requestId: string,
+): Promise<ActionResult<{ success: string; friendId: string; contactId: string; name: string }>> {
   const { t } = await getT();
-  return runAction("shelterFriends.addShelterFriend", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("shelterFriends.addShelterFriend", write(t), { id: requestId, action: "shelterFriends.addShelterFriend", db: supabase }, async () => {
     if (!can(await loadPermissions(), "friends.manage")) return refuse(t.management.errors.managementAccessRequired);
     const e = t.shelterFriends.errors;
 
     const checked = checkFriendFields(t, input.fields);
     if (!checked.columns) return refuse(checked.error);
 
-    const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -337,11 +347,12 @@ export async function addShelterFriend(input: {
 export async function setFriendPublished(
   id: string,
   published: boolean,
+  requestId: string,
 ): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  return runAction("shelterFriends.setFriendPublished", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("shelterFriends.setFriendPublished", write(t), { id: requestId, action: "shelterFriends.setFriendPublished", db: supabase }, async () => {
     if (!can(await loadPermissions(), "friends.manage")) return refuse(t.management.errors.managementAccessRequired);
-    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from("shelter_friends")
@@ -364,11 +375,11 @@ export async function setFriendPublished(
  * created with the same sort_order (or reordered by hand in the database)
  * still move by exactly one place. A handful of rows at shelter scale.
  */
-export async function moveFriend(id: string, direction: "up" | "down"): Promise<ActionResult> {
+export async function moveFriend(id: string, direction: "up" | "down", requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("shelterFriends.moveFriend", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("shelterFriends.moveFriend", write(t), { id: requestId, action: "shelterFriends.moveFriend", db: supabase }, async () => {
     if (!can(await loadPermissions(), "friends.manage")) return refuse(t.management.errors.managementAccessRequired);
-    const supabase = await createClient();
 
     const { data: rows, error: loadError } = await supabase
       .from("shelter_friends")
@@ -419,9 +430,11 @@ async function trashInDrive(fileId: string) {
 export async function uploadFriendLogo(
   id: string,
   formData: FormData,
+  requestId: string,
 ): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  return runAction("shelterFriends.uploadFriendLogo", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("shelterFriends.uploadFriendLogo", write(t), { id: requestId, action: "shelterFriends.uploadFriendLogo", db: supabase }, async () => {
     if (!can(await loadPermissions(), "friends.manage")) return refuse(t.management.errors.managementAccessRequired);
     const w = t.admin.website.errors;
 
@@ -438,7 +451,6 @@ export async function uploadFriendLogo(
     const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
     if (!rootId) return refuse(w.driveNotConfigured);
 
-    const supabase = await createClient();
     const current = await friendContactId(supabase, id);
     if (!current) return refuse(t.shelterFriends.errors.notFound);
 
@@ -484,11 +496,11 @@ export async function uploadFriendLogo(
   });
 }
 
-export async function removeFriendLogo(id: string): Promise<ActionResult<{ success: string }>> {
+export async function removeFriendLogo(id: string, requestId: string): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  return runAction("shelterFriends.removeFriendLogo", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("shelterFriends.removeFriendLogo", write(t), { id: requestId, action: "shelterFriends.removeFriendLogo", db: supabase }, async () => {
     if (!can(await loadPermissions(), "friends.manage")) return refuse(t.management.errors.managementAccessRequired);
-    const supabase = await createClient();
 
     const current = await friendContactId(supabase, id);
     if (!current) return refuse(t.shelterFriends.errors.notFound);
@@ -510,11 +522,11 @@ export async function removeFriendLogo(id: string): Promise<ActionResult<{ succe
  * its prose and translations go with it (0076's drop_translations
  * trigger). The contact, and anything else pointing at it, stays.
  */
-export async function deleteFriend(id: string): Promise<ActionResult<{ success: string }>> {
+export async function deleteFriend(id: string, requestId: string): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  return runAction("shelterFriends.deleteFriend", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("shelterFriends.deleteFriend", write(t), { id: requestId, action: "shelterFriends.deleteFriend", db: supabase }, async () => {
     if (!can(await loadPermissions(), "friends.manage")) return refuse(t.management.errors.managementAccessRequired);
-    const supabase = await createClient();
 
     const current = await friendContactId(supabase, id);
     if (!current) return refuse(t.shelterFriends.errors.notFound);

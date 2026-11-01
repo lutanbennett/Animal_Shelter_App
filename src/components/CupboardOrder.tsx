@@ -27,6 +27,7 @@ export function CupboardOrder({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   // Up and down are the one action, so they share a request id; it is kept only while a press is unresolved.
+  // One per action: a request id kept from an unknown save must never reach another action.
   const moveCall = useWriteCall();
 
   function run(id: string, direction: "up" | "down") {

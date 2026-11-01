@@ -81,8 +81,8 @@ function DietCard({
   const unit = dietUnitLabel(t, dietType.unit);
   const [mode, setMode] = useState<"view" | "edit" | "count">("view");
   const [cost, setCost] = useState("");
-  const updateDietTypeStockCall = useWriteCall();
   // One per action: a request id kept from an unknown save must never reach another action.
+  const updateDietTypeStockCall = useWriteCall();
   const updateDietStockSettingsCall = useWriteCall();
   const [leadDays, setLeadDays] = useState("");
   const [safetyValue, setSafetyValue] = useState("");

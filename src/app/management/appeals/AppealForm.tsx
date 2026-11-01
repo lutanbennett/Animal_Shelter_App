@@ -39,8 +39,8 @@ export function AppealForm({
   const router = useRouter();
   const [fields, setFields] = useState<AppealFields>(initial);
   const [pending, startTransition] = useTransition();
-  const saveAppealCall = useWriteCall();
   // One per action: a request id kept from an unknown save must never reach another action.
+  const saveAppealCall = useWriteCall();
   const createAppealCall = useWriteCall();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);

@@ -90,10 +90,10 @@ function MedicationCard({
   const unit = doseUnitLabel(t, medication.dose_unit);
   const [mode, setMode] = useState<"view" | "edit" | "count">("view");
   const [cost, setCost] = useState("");
+  // One per action: a request id kept from an unknown save must never reach another action.
   const updateMedicationStockCall = useWriteCall();
   const uploadMedicationLabelCall = useWriteCall();
   const removeMedicationLabelCall = useWriteCall();
-  // One per action: a request id kept from an unknown save must never reach another action.
   const updateMedicationStockSettingsCall = useWriteCall();
   const [leadDays, setLeadDays] = useState("");
   const [safetyValue, setSafetyValue] = useState("");

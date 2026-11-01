@@ -68,10 +68,10 @@ function DoctorRowItem({
   const confirm = useConfirm();
   const d = t.management.vetDoctors;
   const [name, setName] = useState(doctor.name);
+  // One per action: a request id kept from an unknown save must never reach another action.
   const mergeDoctorsCall = useWriteCall();
   const deleteDoctorCall = useWriteCall();
   const setDoctorActiveCall = useWriteCall();
-  // One per action: a request id kept from an unknown save must never reach another action.
   const renameDoctorCall = useWriteCall();
   const [mode, setMode] = useState<"view" | "edit" | "merge">("view");
   const [mergeInto, setMergeInto] = useState("");

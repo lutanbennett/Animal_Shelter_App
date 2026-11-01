@@ -29,8 +29,8 @@ function ClinicRowItem({ clinic }: { clinic: ClinicRow }) {
   const { t } = useI18n();
   const confirm = useConfirm();
   const [name, setName] = useState(clinic.name);
-  const deleteClinicCall = useWriteCall();
   // One per action: a request id kept from an unknown save must never reach another action.
+  const deleteClinicCall = useWriteCall();
   const updateClinicCall = useWriteCall();
   const [nameTh, setNameTh] = useState(clinic.name_th ?? "");
   const [contactInfo, setContactInfo] = useState(clinic.contact_info ?? "");

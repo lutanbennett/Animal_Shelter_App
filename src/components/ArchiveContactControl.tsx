@@ -40,8 +40,8 @@ export function ArchiveContactControl({
   const { t } = useI18n();
   const a = t.contacts.archive;
   const [open, setOpen] = useState(false);
-  const archiveContactCall = useWriteCall();
   // One per action: a request id kept from an unknown save must never reach another action.
+  const archiveContactCall = useWriteCall();
   const restoreContactCall = useWriteCall();
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);

@@ -51,9 +51,9 @@ export function FixedOutgoingsEditor({ lines, max }: { lines: FixedOutgoing[]; m
   const [fields, setFields] = useState<FixedOutgoingFields>(BLANK);
   const [notice, setNotice] = useState<Notice>(null);
   const [pending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
   const updateFixedOutgoingCall = useWriteCall();
   const deleteFixedOutgoingCall = useWriteCall();
-  // One per action: a request id kept from an unknown save must never reach another action.
   const createFixedOutgoingCall = useWriteCall();
 
   const NEW = "new";

@@ -58,8 +58,8 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
   const a = t.contacts.archive;
   const archived = isArchived(contact);
   const [name, setName] = useState(contact.name);
-  const deleteContactCall = useWriteCall();
   // One per action: a request id kept from an unknown save must never reach another action.
+  const deleteContactCall = useWriteCall();
   const updateContactCall = useWriteCall();
   const [type, setType] = useState<ContactType>(contact.type);
   const [phone, setPhone] = useState(contact.phone ?? "");

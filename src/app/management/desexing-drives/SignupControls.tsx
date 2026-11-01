@@ -13,8 +13,8 @@ export function SignupControls({ id, driveId, status }: { id: string; driveId: s
   const a = t.desexingAdmin;
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const deleteSignupCall = useWriteCall();
   // One per action: a request id kept from an unknown save must never reach another action.
+  const deleteSignupCall = useWriteCall();
   const setSignupStatusCall = useWriteCall();
   const [error, setError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState(false);

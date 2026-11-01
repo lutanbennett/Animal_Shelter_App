@@ -197,6 +197,7 @@ export function IssueReceipt({ donationId, defaultCountry, again }: { donationId
   const [country, setCountry] = useState<ReceiptCountry>(defaultCountry);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  // One per action: a request id kept from an unknown save must never reach another action.
   const issueCall = useWriteCall();
 
   function issue() {
