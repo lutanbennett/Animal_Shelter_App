@@ -6,6 +6,7 @@ import { ArrowDown, ArrowUp, X } from "lucide-react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { RowActionButton } from "@/components/RowAction";
 import type { ActionResult } from "@/lib/action-result";
+import { useWriteCall } from "@/lib/use-write-form";
 import { addFeature, moveFeature, removeFeature, renameFeature, setCardFeature } from "./actions";
 
 /**
@@ -25,6 +26,7 @@ export function FeaturesPanel({ features, cards, canEdit, locked }: { features: 
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const writeCardFeature = useWriteCall();
   const known = new Set(features.map((f) => f.id));
 
   function run(step: () => Promise<ActionResult>) {
@@ -70,7 +72,7 @@ export function FeaturesPanel({ features, cards, canEdit, locked }: { features: 
                 aria-label={fc.featureFor(c.label)}
                 value={c.feature && known.has(c.feature) ? c.feature : ""}
                 disabled={!canEdit || pending}
-                onChange={(e) => run(() => setCardFeature(c.key, e.target.value || null))}
+                onChange={(e) => run(() => writeCardFeature((requestId) => setCardFeature(c.key, e.target.value || null, requestId)))}
                 className={field}
               >
                 <option value="">{fc.unsorted}</option>
@@ -107,6 +109,10 @@ function FeatureRow({
   const fc = t.admin.whoDoesWhat.features;
   const [name, setName] = useState(feature.name);
   const [nameTh, setNameTh] = useState(feature.nameTh);
+  // ONE useWriteCall PER ACTION, never shared (0292 refuses one id against two actions).
+  const writeRename = useWriteCall();
+  const writeMove = useWriteCall();
+  const writeRemove = useWriteCall();
   const dirty = name !== feature.name || nameTh !== feature.nameTh;
   return (
     <li className="flex flex-col gap-2 rounded-lg border border-border bg-surface p-3">
@@ -126,14 +132,14 @@ function FeatureRow({
             type="button"
             aria-label={fc.saveFor(feature.name)}
             disabled={pending || !dirty || !name.trim()}
-            onClick={() => run(() => renameFeature(feature.id, name, nameTh))}
+            onClick={() => run(() => writeRename((requestId) => renameFeature(feature.id, name, nameTh, requestId)))}
             className="min-h-11 rounded-md border border-primary bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
           >
             {fc.save}
           </button>
-          {!first && <RowActionButton icon={ArrowUp} label={fc.moveUpFor(feature.name)} disabled={pending} onClick={() => run(() => moveFeature(feature.id, "up"))} />}
-          {!last && <RowActionButton icon={ArrowDown} label={fc.moveDownFor(feature.name)} disabled={pending} onClick={() => run(() => moveFeature(feature.id, "down"))} />}
-          <RowActionButton icon={X} tone="danger" label={fc.removeFor(feature.name)} disabled={pending} onClick={() => run(() => removeFeature(feature.id))} />
+          {!first && <RowActionButton icon={ArrowUp} label={fc.moveUpFor(feature.name)} disabled={pending} onClick={() => run(() => writeMove((requestId) => moveFeature(feature.id, "up", requestId)))} />}
+          {!last && <RowActionButton icon={ArrowDown} label={fc.moveDownFor(feature.name)} disabled={pending} onClick={() => run(() => writeMove((requestId) => moveFeature(feature.id, "down", requestId)))} />}
+          <RowActionButton icon={X} tone="danger" label={fc.removeFor(feature.name)} disabled={pending} onClick={() => run(() => writeRemove((requestId) => removeFeature(feature.id, requestId)))} />
         </div>
       )}
     </li>
@@ -146,6 +152,7 @@ function AddFeatureForm({ pending, onAdded }: { pending: boolean; onAdded: () =>
   const [name, setName] = useState("");
   const [nameTh, setNameTh] = useState("");
   const [busy, startAdd] = useTransition();
+  const writeAddFeature = useWriteCall();
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
   return (
     <details className="text-sm">
@@ -158,7 +165,7 @@ function AddFeatureForm({ pending, onAdded }: { pending: boolean; onAdded: () =>
           const added = name.trim();
           setResult(null);
           startAdd(async () => {
-            const r = await addFeature(name, nameTh);
+            const r = await writeAddFeature((requestId) => addFeature(name, nameTh, requestId));
             if (r.ok) {
               setName("");
               setNameTh("");
