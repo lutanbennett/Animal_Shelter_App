@@ -2,7 +2,8 @@
 
 import { refresh, revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { databaseFailure } from "@/lib/action-result";
+import { databaseFailure, runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
@@ -11,7 +12,16 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { todayIso } from "@/lib/format";
 import { implausibleDiet } from "@/lib/diets/plausible";
 
-export type DietFormState = { error: string; confirm?: true } | undefined;
+// PI FAILOVER (D), 2026-11-01: every write here goes through runWriteAction() (docs/decisions/2026-11-01-write-paths-tail-a.md).
+// The redirects are taken AFTER the wrapper returns, because it rethrows one and would leave the claim open.
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
+
+export type DietFormState = { ok: false; error: string; confirm?: true } | undefined;
 
 function str(formData: FormData, key: string): string | null {
   const value = formData.get(key);
@@ -90,7 +100,7 @@ function parseDietFields(formData: FormData, t: Dictionary): { error: string } |
 function bigDietWarning(formData: FormData, fields: ParsedDiet, t: Dictionary): DietFormState {
   if (formData.get("confirmBig") === "on") return undefined;
   const why = implausibleDiet({ mealsPerDay: fields.mealsPerDay, portionFactor: fields.portionFactor });
-  return why ? { error: t.diets.errors.bigDiet, confirm: true } : undefined;
+  return why ? { ok: false, error: t.diets.errors.bigDiet, confirm: true } : undefined;
 }
 
 /**
@@ -100,30 +110,39 @@ function bigDietWarning(formData: FormData, fields: ParsedDiet, t: Dictionary): 
  */
 export async function createDiet(_state: DietFormState, formData: FormData): Promise<DietFormState> {
   const { t } = await getT();
-  if (!can(await loadPermissions(), "medical.diet")) return { error: t.common.notAllowed };
-  const residentId = str(formData, "residentId");
-  if (!residentId) return { error: t.diets.errors.missingResident };
-
-  const parsed = parseDietFields(formData, t);
-  if ("error" in parsed) return parsed;
-  const { fields } = parsed;
-
   const supabase = await createClient();
-  const big = bigDietWarning(formData, fields, t);
-  if (big) return big;
-  const { error } = await supabase.from("resident_diets").insert({
-    resident_id: residentId,
-    diet_id: fields.dietId,
-    start_date: fields.startDate,
-    end_date: fields.endDate,
-    meals_per_day: fields.mealsPerDay,
-    portion_factor: fields.portionFactor,
-    notes: fields.notes,
-  });
-  if (error) return databaseFailure("diets.write", error, t.common);
+  const result = await runWriteAction<{ redirectTo: string }>(
+    "diets.create",
+    write(t),
+    { id: writeRequestIdFrom(formData), action: "diets.create", db: supabase },
+    async () => {
+      if (!can(await loadPermissions(), "medical.diet")) return { ok: false, error: t.common.notAllowed };
+      const residentId = str(formData, "residentId");
+      if (!residentId) return { ok: false, error: t.diets.errors.missingResident };
 
-  revalidateResidentPages(residentId);
-  redirect(`/residents/${residentId}/diet`);
+      const parsed = parseDietFields(formData, t);
+      if ("error" in parsed) return { ok: false, error: parsed.error };
+      const { fields } = parsed;
+
+      const big = bigDietWarning(formData, fields, t);
+      if (big) return big;
+      const { error } = await supabase.from("resident_diets").insert({
+        resident_id: residentId,
+        diet_id: fields.dietId,
+        start_date: fields.startDate,
+        end_date: fields.endDate,
+        meals_per_day: fields.mealsPerDay,
+        portion_factor: fields.portionFactor,
+        notes: fields.notes,
+      });
+      if (error) return databaseFailure("diets.write", error, t.common);
+
+      revalidateResidentPages(residentId);
+      return { ok: true, redirectTo: `/residents/${residentId}/diet` };
+    },
+  );
+  if (result.ok) redirect(result.redirectTo);
+  return result;
 }
 
 /**
@@ -133,39 +152,48 @@ export async function createDiet(_state: DietFormState, formData: FormData): Pro
  */
 export async function updateDiet(_state: DietFormState, formData: FormData): Promise<DietFormState> {
   const { t } = await getT();
-  if (!can(await loadPermissions(), "medical.diet")) return { error: t.common.notAllowed };
-  const residentId = str(formData, "residentId");
-  if (!residentId) return { error: t.diets.errors.missingResident };
-  const dietId = str(formData, "dietId");
-  if (!dietId) return { error: t.diets.errors.missingDiet };
-
-  const parsed = parseDietFields(formData, t);
-  if ("error" in parsed) return parsed;
-  const { fields } = parsed;
-
   const supabase = await createClient();
-  const big = bigDietWarning(formData, fields, t);
-  if (big) return big;
-  const { data, error } = await supabase
-    .from("resident_diets")
-    .update({
-      diet_id: fields.dietId,
-      start_date: fields.startDate,
-      end_date: fields.endDate,
-      meals_per_day: fields.mealsPerDay,
-      portion_factor: fields.portionFactor,
-      notes: fields.notes,
-    })
-    .eq("id", dietId)
-    .eq("resident_id", residentId)
-    .select("id")
-    .returns<{ id: string }[]>();
-  if (error) return databaseFailure("diets.write", error, t.common);
-  // RLS filters rather than rejects: a volunteer's update matches no rows.
-  if (!data || data.length === 0) return { error: t.diets.errors.saveFailed };
+  const result = await runWriteAction<{ redirectTo: string }>(
+    "diets.update",
+    write(t),
+    { id: writeRequestIdFrom(formData), action: "diets.update", db: supabase },
+    async () => {
+      if (!can(await loadPermissions(), "medical.diet")) return { ok: false, error: t.common.notAllowed };
+      const residentId = str(formData, "residentId");
+      if (!residentId) return { ok: false, error: t.diets.errors.missingResident };
+      const dietId = str(formData, "dietId");
+      if (!dietId) return { ok: false, error: t.diets.errors.missingDiet };
 
-  revalidateResidentPages(residentId);
-  redirect(`/residents/${residentId}/diet`);
+      const parsed = parseDietFields(formData, t);
+      if ("error" in parsed) return { ok: false, error: parsed.error };
+      const { fields } = parsed;
+
+      const big = bigDietWarning(formData, fields, t);
+      if (big) return big;
+      const { data, error } = await supabase
+        .from("resident_diets")
+        .update({
+          diet_id: fields.dietId,
+          start_date: fields.startDate,
+          end_date: fields.endDate,
+          meals_per_day: fields.mealsPerDay,
+          portion_factor: fields.portionFactor,
+          notes: fields.notes,
+        })
+        .eq("id", dietId)
+        .eq("resident_id", residentId)
+        .select("id")
+        .returns<{ id: string }[]>();
+      if (error) return databaseFailure("diets.write", error, t.common);
+      // RLS filters rather than rejects: a volunteer's update matches no rows.
+      if (!data || data.length === 0) return { ok: false, error: t.diets.errors.saveFailed };
+
+      revalidateResidentPages(residentId);
+      return { ok: true, redirectTo: `/residents/${residentId}/diet` };
+    },
+  );
+  if (result.ok) redirect(result.redirectTo);
+  return result;
 }
 
 /**
@@ -177,22 +205,26 @@ export async function updateDiet(_state: DietFormState, formData: FormData): Pro
 export async function endDietToday(
   residentId: string,
   dietId: string,
-): Promise<{ error: string } | undefined> {
+  requestId: string | null,
+): Promise<ActionResult> {
   const { t } = await getT();
-  if (!can(await loadPermissions(), "medical.diet")) return { error: t.common.notAllowed };
-  const today = todayIso();
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("resident_diets")
-    .update({ end_date: today })
-    .eq("id", dietId)
-    .eq("resident_id", residentId)
-    .lte("start_date", today)
-    .select("id")
-    .returns<{ id: string }[]>();
-  if (error) return databaseFailure("diets.write", error, t.common);
-  if (!data || data.length === 0) return { error: t.diets.errors.saveFailed };
+  return runWriteAction<object>("diets.endToday", write(t), { id: requestId, action: "diets.endToday", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "medical.diet")) return { ok: false, error: t.common.notAllowed };
+    const today = todayIso();
+    const { data, error } = await supabase
+      .from("resident_diets")
+      .update({ end_date: today })
+      .eq("id", dietId)
+      .eq("resident_id", residentId)
+      .lte("start_date", today)
+      .select("id")
+      .returns<{ id: string }[]>();
+    if (error) return databaseFailure("diets.write", error, t.common);
+    if (!data || data.length === 0) return { ok: false, error: t.diets.errors.saveFailed };
 
-  revalidateResidentPages(residentId);
-  refresh();
+    revalidateResidentPages(residentId);
+    refresh();
+    return { ok: true };
+  });
 }

@@ -4,7 +4,7 @@ import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import Link from "next/link";
 import { useState } from "react";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { createDiet, updateDiet } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { dietUnitLabel, sizeLabel } from "@/lib/i18n/enum-labels";
@@ -53,7 +53,7 @@ export function DietForm({
   initial?: DietInitial | null;
   cancelHref: string;
 }) {
-  const [state, onSubmit, pending] = useKeptForm(
+  const [state, onSubmit, pending] = useWriteForm(
     mode === "create" ? createDiet : updateDiet,
     undefined,
   );
