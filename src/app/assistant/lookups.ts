@@ -1,5 +1,6 @@
 "use server";
 
+import { runWriteAction } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { logAssistantAction } from "@/lib/assistant/audit";
@@ -574,14 +575,34 @@ async function answerSummary(
 
 /**
  * Answers one read-only question and records the turn, as every other
- * intent does. `result_table` / `result_row_id` stay null: a lookup wrote
- * nothing (0070).
+ * intent does. `result_table` / `result_row_id` stay null: the ANSWER wrote no
+ * row of its own (0070).
+ *
+ * PI FAILOVER (D), 2026-11-01: THE QUESTION IS READ-ONLY; THIS ACTION IS NOT.
+ * It records the turn, and recording the turn is an insert into
+ * `assistant_actions`, so this is a write and is wrapped like every other.
+ * `docs/decisions/2026-11-01-write-paths-admin-sweep.md` listed this module
+ * among "the assistant's two read modules" and
+ * `scripts/check-wrapped-write-paths.mjs` reported it as a module-granularity
+ * false positive; it was neither. Nothing above but the sentence quoted above
+ * said so, and that sentence is about the answer, not the row.
+ *
+ * The wrapper goes AROUND the answer and the audit row together, so a replay
+ * hands back the first attempt's own answer and leaves exactly one row. The
+ * card check stays outside it: it writes nothing, so a refused lookup spends
+ * no id.
+ *
+ * `LookupResult` is deliberately left as it was rather than reshaped to
+ * `ActionResult`: six helpers in this file and six branches below return it,
+ * and the answer travels back through one line here instead.
  */
 export async function assistantLookup(input: {
   request: string;
   draft: WhereDraft | WhoDraft | DueDraft | FindEnclosureDraft | SummaryDraft;
   /** The asker's own calendar date, YYYY-MM-DD; see `answerDue`. */
   today: string;
+  /** Pi failover (D): the browser's own id for this attempt. */
+  requestId: string;
 }): Promise<LookupResult> {
   const { t } = await getT();
   const supabase = await createClient();
@@ -589,6 +610,30 @@ export async function assistantLookup(input: {
   const perms = await loadPermissions();
   if (!perms || !can(perms, "assistant.ask")) return { error: t.assistant.notAuthorized };
 
+  const wrapped = await runWriteAction<{ lookup: LookupResult }>(
+    "assistant.lookup",
+    {
+      somethingWentWrong: t.common.somethingWentWrong,
+      saveUnknown: t.common.saveUnknown,
+      reloadToSave: t.common.reloadToSave,
+    },
+    { id: input.requestId, action: "assistant.lookup", db: supabase },
+    async () => ({ ok: true, lookup: await answerAndRecord(supabase, t, perms, input) }),
+  );
+  return wrapped.ok ? wrapped.lookup : { error: wrapped.error };
+}
+
+/** The answer and its audit row: one claim covers both (see above). */
+async function answerAndRecord(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  t: Awaited<ReturnType<typeof getT>>["t"],
+  perms: Permissions,
+  input: {
+    request: string;
+    draft: WhereDraft | WhoDraft | DueDraft | FindEnclosureDraft | SummaryDraft;
+    today: string;
+  },
+): Promise<LookupResult> {
   const { draft } = input;
   const result =
     draft.kind === "where"

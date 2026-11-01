@@ -6,6 +6,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { formatDate, formatDateTime } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { placeName } from "@/lib/enclosures/names";
@@ -355,14 +356,24 @@ export type LowRiskContext = {
  * skips the card. One write path per intent, so the two can never drift —
  * and the server action, its card check and the database are identical
  * either way. Skipping the card is a courtesy, never a permission.
+ *
+ * PI FAILOVER (D): it takes the request id rather than minting one, because
+ * it DISPATCHES TO TWO DIFFERENT ACTIONS by `draft.kind` — `assistant.weight`
+ * and `assistant.immunization`. An id kept from one and sent to the other is
+ * refused outright by claim_write_request(), correctly
+ * (docs/decisions/2026-10-31-write-requests-schema.md, requirement 4), so
+ * each caller holds one useWriteCall() PER ACTION and hands in the right one's
+ * id. `ok` is on the result so a caller can pass this straight to
+ * useWriteCall(), which asks for it.
  */
 export async function recordLowRisk(
   draft: WeightDraft | ImmunizationDraft,
   ctx: LowRiskContext,
-): Promise<{ error: string } | AssistantOutcome> {
+  requestId: string,
+): Promise<{ ok: false; error: string } | ({ ok: true } & AssistantOutcome)> {
   const a = ctx.t.assistant;
   const resident = ctx.residents.find((r) => r.id === draft.residentId);
-  if (!resident) return { error: a.lookups.whichResident };
+  if (!resident) return { ok: false, error: a.lookups.whichResident };
   const who = `${resident.name} (${resident.code})`;
 
   // A card with no date shows today and Confirm writes that, so a draft with
@@ -371,7 +382,7 @@ export async function recordLowRisk(
   const day = formatDate(date, ctx.locale);
 
   if (draft.kind === "weight") {
-    if (draft.weightKg === null || !(draft.weightKg > 0)) return { error: a.fillBlanks };
+    if (draft.weightKg === null || !(draft.weightKg > 0)) return { ok: false, error: a.fillBlanks };
     const result = await assistantLogWeight({
       residentId: resident.id,
       weightKg: draft.weightKg,
@@ -379,13 +390,14 @@ export async function recordLowRisk(
       request: ctx.request,
       trace: ctx.trace,
       draft: { ...draft, date },
+      requestId,
     });
     if ("error" in result) return result;
-    return { kind: "done", message: a.weight.done(who, draft.weightKg, day), residentId: resident.id };
+    return { ok: true, kind: "done", message: a.weight.done(who, draft.weightKg, day), residentId: resident.id };
   }
 
   const chosen = ctx.immunizationTypes.filter((ty) => draft.immunizationTypeIds.includes(ty.id));
-  if (chosen.length === 0) return { error: a.fillBlanks };
+  if (chosen.length === 0) return { ok: false, error: a.fillBlanks };
   const result = await assistantRecordImmunization({
     residentId: resident.id,
     immunizationTypeIds: chosen.map((ty) => ty.id),
@@ -393,10 +405,16 @@ export async function recordLowRisk(
     request: ctx.request,
     trace: ctx.trace,
     draft: { ...draft, date },
+    requestId,
   });
   if ("error" in result) return result;
   const names = chosen.map((ty) => (ctx.locale === "th" && ty.nameTh) || ty.name).join(", ");
-  return { kind: "done", message: immunizationStrings(ctx.locale).done(who, names, day), residentId: resident.id };
+  return {
+    ok: true,
+    kind: "done",
+    message: immunizationStrings(ctx.locale).done(who, names, day),
+    residentId: resident.id,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -411,6 +429,8 @@ function MoveCard({ ctx, draft }: { ctx: CardContext; draft: MoveDraft }) {
   const [date, setDate] = useState(draft.date ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // Pi failover (D): one useWriteCall per action, never shared — assistant.move.
+  const save = useWriteCall();
 
   const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
   const target = ctx.enclosures.find((e) => e.id === enclosureId) ?? null;
@@ -423,14 +443,17 @@ function MoveCard({ ctx, draft }: { ctx: CardContext; draft: MoveDraft }) {
     if (!resident || !target || !date) return;
     setError(null);
     startTransition(async () => {
-      const result = await assistantMove({
-        residentId: resident.id,
-        enclosureId: target.id,
-        moveDate: date,
-        request: ctx.request,
-        trace: ctx.trace,
-        draft: { ...draft, residentId: resident.id, enclosureId: target.id, date },
-      });
+      const result = await save((requestId) =>
+        assistantMove({
+          residentId: resident.id,
+          enclosureId: target.id,
+          moveDate: date,
+          request: ctx.request,
+          trace: ctx.trace,
+          draft: { ...draft, residentId: resident.id, enclosureId: target.id, date },
+          requestId,
+        }),
+      );
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
@@ -508,6 +531,8 @@ function ClinicCard({ ctx, draft }: { ctx: CardContext; draft: ClinicVisitDraft 
   });
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // Pi failover (D): one useWriteCall per action, never shared — assistant.clinic.
+  const save = useWriteCall();
 
   const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
   const clinic = ctx.clinics.find((c) => c.id === clinicId) ?? null;
@@ -537,24 +562,27 @@ function ClinicCard({ ctx, draft }: { ctx: CardContext; draft: ClinicVisitDraft 
     if (!resident || !clinic || !when) return;
     setError(null);
     startTransition(async () => {
-      const result = await assistantBookClinicVisit({
-        residentId: resident.id,
-        clinicId: clinic.id,
-        appointmentIso: when.toISOString(),
-        reason: reason || null,
-        doctorName: doctor || null,
-        request: ctx.request,
-        trace: ctx.trace,
-        draft: {
-          ...draft,
+      const result = await save((requestId) =>
+        assistantBookClinicVisit({
           residentId: resident.id,
           clinicId: clinic.id,
-          date,
-          time,
+          appointmentIso: when.toISOString(),
           reason: reason || null,
           doctorName: doctor || null,
-        },
-      });
+          request: ctx.request,
+          trace: ctx.trace,
+          draft: {
+            ...draft,
+            residentId: resident.id,
+            clinicId: clinic.id,
+            date,
+            time,
+            reason: reason || null,
+            doctorName: doctor || null,
+          },
+          requestId,
+        }),
+      );
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
@@ -695,6 +723,8 @@ function HospitalCard({ ctx, draft }: { ctx: CardContext; draft: HospitalDraft }
   const [date, setDate] = useState(draft.date ?? viewerToday());
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // Pi failover (D): one useWriteCall per action, never shared — assistant.hospital.
+  const save = useWriteCall();
 
   const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
   const chrome = useCardChrome(ctx, !!residentId);
@@ -703,13 +733,16 @@ function HospitalCard({ ctx, draft }: { ctx: CardContext; draft: HospitalDraft }
     if (!resident || !date) return;
     setError(null);
     startTransition(async () => {
-      const result = await assistantSendToHospital({
-        residentId: resident.id,
-        date,
-        request: ctx.request,
-        trace: ctx.trace,
-        draft: { ...draft, residentId: resident.id, date },
-      });
+      const result = await save((requestId) =>
+        assistantSendToHospital({
+          residentId: resident.id,
+          date,
+          request: ctx.request,
+          trace: ctx.trace,
+          draft: { ...draft, residentId: resident.id, date },
+          requestId,
+        }),
+      );
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
@@ -778,6 +811,8 @@ function HospitalReturnCard({
   const [date, setDate] = useState(draft.date ?? viewerToday());
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // Pi failover (D): one useWriteCall per action, never shared — assistant.hospital-return.
+  const save = useWriteCall();
 
   const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
   const target = ctx.enclosures.find((e) => e.id === enclosureId) ?? null;
@@ -793,14 +828,17 @@ function HospitalReturnCard({
     if (!resident || !target || !date) return;
     setError(null);
     startTransition(async () => {
-      const result = await assistantReturnFromHospital({
-        residentId: resident.id,
-        enclosureId: target.id,
-        date,
-        request: ctx.request,
-        trace: ctx.trace,
-        draft: { ...draft, residentId: resident.id, enclosureId: target.id, date },
-      });
+      const result = await save((requestId) =>
+        assistantReturnFromHospital({
+          residentId: resident.id,
+          enclosureId: target.id,
+          date,
+          request: ctx.request,
+          trace: ctx.trace,
+          draft: { ...draft, residentId: resident.id, enclosureId: target.id, date },
+          requestId,
+        }),
+      );
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
@@ -867,6 +905,8 @@ function WeightCard({ ctx, draft }: { ctx: CardContext; draft: WeightDraft }) {
   const [date, setDate] = useState(draft.date ?? viewerToday());
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // Pi failover (D): one useWriteCall per action, never shared — assistant.weight.
+  const save = useWriteCall();
 
   const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
   const weightKg = Number(weight);
@@ -878,9 +918,12 @@ function WeightCard({ ctx, draft }: { ctx: CardContext; draft: WeightDraft }) {
     setError(null);
     startTransition(async () => {
       // The same function the conversation calls when it skips this card.
-      const result = await recordLowRisk(
-        { ...draft, residentId: resident.id, weightKg, date },
-        { request: ctx.request, trace: ctx.trace, residents: ctx.residents, immunizationTypes: ctx.immunizationTypes, t, locale },
+      const result = await save((requestId) =>
+        recordLowRisk(
+          { ...draft, residentId: resident.id, weightKg, date },
+          { request: ctx.request, trace: ctx.trace, residents: ctx.residents, immunizationTypes: ctx.immunizationTypes, t, locale },
+          requestId,
+        ),
       );
       if ("error" in result) return setError(result.error);
       ctx.onSettle(result);
@@ -988,6 +1031,8 @@ function DeathCard({ ctx, draft }: { ctx: CardContext; draft: DeathDraft }) {
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // Pi failover (D): one useWriteCall per action, never shared — assistant.death.
+  const save = useWriteCall();
 
   const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
   const chrome = useCardChrome(ctx, !!residentId);
@@ -996,14 +1041,17 @@ function DeathCard({ ctx, draft }: { ctx: CardContext; draft: DeathDraft }) {
     if (!resident || !date) return;
     setError(null);
     startTransition(async () => {
-      const result = await assistantRecordDeath({
-        residentId: resident.id,
-        date,
-        causeOfDeath: cause.trim() || null,
-        request: ctx.request,
-        trace: ctx.trace,
-        draft: { ...draft, residentId: resident.id, date, causeOfDeath: cause.trim() || null },
-      });
+      const result = await save((requestId) =>
+        assistantRecordDeath({
+          residentId: resident.id,
+          date,
+          causeOfDeath: cause.trim() || null,
+          request: ctx.request,
+          trace: ctx.trace,
+          draft: { ...draft, residentId: resident.id, date, causeOfDeath: cause.trim() || null },
+          requestId,
+        }),
+      );
       setConfirming(false);
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
@@ -1087,6 +1135,8 @@ function RehomeCard({ ctx, draft }: { ctx: CardContext; draft: RehomeDraft }) {
   const [date, setDate] = useState(draft.date ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // Pi failover (D): one useWriteCall per action, never shared — assistant.rehome.
+  const save = useWriteCall();
 
   const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
   const carer = ctx.carers.find((c) => c.id === carerId) ?? null;
@@ -1096,21 +1146,24 @@ function RehomeCard({ ctx, draft }: { ctx: CardContext; draft: RehomeDraft }) {
     if (!resident || !carer || !kind || !date) return;
     setError(null);
     startTransition(async () => {
-      const result = await assistantRehome({
-        residentId: resident.id,
-        rehomeKind: kind,
-        carerId: carer.id,
-        date,
-        request: ctx.request,
-        trace: ctx.trace,
-        draft: {
-          ...draft,
+      const result = await save((requestId) =>
+        assistantRehome({
           residentId: resident.id,
           rehomeKind: kind,
           carerId: carer.id,
           date,
-        },
-      });
+          request: ctx.request,
+          trace: ctx.trace,
+          draft: {
+            ...draft,
+            residentId: resident.id,
+            rehomeKind: kind,
+            carerId: carer.id,
+            date,
+          },
+          requestId,
+        }),
+      );
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
@@ -1202,6 +1255,8 @@ function CarerReturnCard({ ctx, draft }: { ctx: CardContext; draft: CarerReturnD
   const [date, setDate] = useState(draft.date ?? viewerToday());
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // Pi failover (D): one useWriteCall per action, never shared — assistant.carer-return.
+  const save = useWriteCall();
 
   const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
   const target = ctx.enclosures.find((e) => e.id === enclosureId) ?? null;
@@ -1214,14 +1269,17 @@ function CarerReturnCard({ ctx, draft }: { ctx: CardContext; draft: CarerReturnD
     if (!resident || !target || !date) return;
     setError(null);
     startTransition(async () => {
-      const result = await assistantReturnFromCarer({
-        residentId: resident.id,
-        enclosureId: target.id,
-        date,
-        request: ctx.request,
-        trace: ctx.trace,
-        draft: { ...draft, residentId: resident.id, enclosureId: target.id, date },
-      });
+      const result = await save((requestId) =>
+        assistantReturnFromCarer({
+          residentId: resident.id,
+          enclosureId: target.id,
+          date,
+          request: ctx.request,
+          trace: ctx.trace,
+          draft: { ...draft, residentId: resident.id, enclosureId: target.id, date },
+          requestId,
+        }),
+      );
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
@@ -1295,6 +1353,8 @@ function ImmunizationCard({ ctx, draft }: { ctx: CardContext; draft: Immunizatio
   const [date, setDate] = useState(draft.date ?? viewerToday());
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // Pi failover (D): one useWriteCall per action, never shared — assistant.immunization.
+  const save = useWriteCall();
 
   const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
   const chosen = ctx.immunizationTypes.filter((ty) => typeIds.includes(ty.id));
@@ -1310,9 +1370,12 @@ function ImmunizationCard({ ctx, draft }: { ctx: CardContext; draft: Immunizatio
     setError(null);
     startTransition(async () => {
       // The same function the conversation calls when it skips this card.
-      const result = await recordLowRisk(
-        { ...draft, residentId: resident.id, immunizationTypeIds: chosen.map((ty) => ty.id), date },
-        { request: ctx.request, trace: ctx.trace, residents: ctx.residents, immunizationTypes: ctx.immunizationTypes, t, locale },
+      const result = await save((requestId) =>
+        recordLowRisk(
+          { ...draft, residentId: resident.id, immunizationTypeIds: chosen.map((ty) => ty.id), date },
+          { request: ctx.request, trace: ctx.trace, residents: ctx.residents, immunizationTypes: ctx.immunizationTypes, t, locale },
+          requestId,
+        ),
       );
       if ("error" in result) return setError(result.error);
       ctx.onSettle(result);
@@ -1399,6 +1462,8 @@ function PrescriptionCard({ ctx, draft }: { ctx: CardContext; draft: Prescriptio
   );
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // Pi failover (D): one useWriteCall per action, never shared — assistant.prescription.
+  const save = useWriteCall();
 
   const resident = ctx.residents.find((r) => r.id === residentId) ?? null;
   const medication = ctx.medications.find((m) => m.id === medicationId) ?? null;
@@ -1422,27 +1487,30 @@ function PrescriptionCard({ ctx, draft }: { ctx: CardContext; draft: Prescriptio
     if (!resident || !medication || !startDate || !doseOk || !scheduleOk || !ticksOk) return;
     setError(null);
     startTransition(async () => {
-      const result = await assistantAddPrescription({
-        residentId: resident.id,
-        medicationId: medication.id,
-        doseQuantity,
-        startDate,
-        endDate: endDate || null,
-        schedule,
-        roundIds: ticksShown ? roundIds : [],
-        notes: notes.trim() || null,
-        request: ctx.request,
-        trace: ctx.trace,
-        draft: {
-          ...draft,
+      const result = await save((requestId) =>
+        assistantAddPrescription({
           residentId: resident.id,
           medicationId: medication.id,
           doseQuantity,
           startDate,
           endDate: endDate || null,
+          schedule,
+          roundIds: ticksShown ? roundIds : [],
           notes: notes.trim() || null,
-        },
-      });
+          request: ctx.request,
+          trace: ctx.trace,
+          draft: {
+            ...draft,
+            residentId: resident.id,
+            medicationId: medication.id,
+            doseQuantity,
+            startDate,
+            endDate: endDate || null,
+            notes: notes.trim() || null,
+          },
+          requestId,
+        }),
+      );
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
