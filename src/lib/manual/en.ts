@@ -63,7 +63,7 @@ const manual: Manual = {
       title: "Getting started",
       icon: BookOpen,
       intro:
-        "The app runs in a web browser on a phone, tablet or computer — nothing to install. On a phone it works as a field tool: find a resident, log what you did, add photos. On a computer you get the extra columns, filters and the Management and Settings sections. Settings' setup pages — zones, enclosures, immunization types, frequencies, the facility map, and the medication and diet lists — are wide tables made for a computer, so on a phone they show a \"Best on a larger screen\" note first, and their tiles say \"Larger screen\". If it can't wait, tap Show anyway and the page is all there. Management's pages, which Management and the 2IC open on a phone during the day, work on a phone with no note.",
+        "The app runs in a web browser on a phone, tablet or computer — nothing to install. On a phone it works as a field tool: find a resident, log what you did, add photos. On a computer you get the extra columns, filters and the Management and Settings sections. Settings' setup pages — zones, enclosures, immunization types, frequencies, the facility map, and the medication and diet lists — are wide tables made for a computer, so on a phone they show a \"Best on a larger screen\" note first, and their tiles say \"Larger screen\". If it can't wait, tap Show anyway and the page is all there. Management's pages work on a phone with no note, so the day's work can be done from a phone.",
       topics: [
         {
           id: "sign-in",
@@ -318,7 +318,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "Doctors and volunteers aren't given maintenance jobs.",
+              text: "A maintenance job is listed here only while your cards let you read the maintenance board. Assigned to a login without that, it never appears.",
             },
           ],
         },
@@ -360,11 +360,11 @@ const manual: Manual = {
           activity: "recurring.do_own",
           path: "My tasks → Recurring jobs",
           intro:
-            "Recurring jobs are the routine management has set to come round on a calendar — the Monday stocktake, ordering medication after it, the monthly worming. Each date appears on your list for its day: staff can be given one as well as management. Doctors are not given recurring jobs — a doctor's work comes from their clinic visits.",
+            "Recurring jobs are the routine management has set to come round on a calendar — the Monday stocktake, ordering medication after it, the monthly worming. Each date appears on your list for its day. Only people whose cards let them open the screen the job is done on are offered it, so a login that cannot open that screen is never given the job.",
           steps: [
             "Recurring jobs are listed first on My tasks, grouped like the rest: Overdue, Due today and Coming up (the next seven days). Each shows its time of day (morning, afternoon, evening or any time), its date, and who else is on it.",
             "When the job is done on a particular screen, tap its title to go there — a stocktake job opens the Stocktake page, on the right tab.",
-            "If a job says “your role isn't given this job”, it was given to you by mistake — a job given to a doctor, or a maintenance job given to a volunteer. Its title doesn't link anywhere, because the page may only refuse you. Ask management to give it to someone else; you can still skip a date meanwhile.",
+            "If a job says “your role isn't given this job”, it was given to you by mistake — the screen it is done on is not one your cards open. Its title doesn't link anywhere, because the page may only refuse you. Ask whoever sets up recurring jobs to give it to someone else; you can still skip a date meanwhile.",
             "Tap Done when you have done it, or Skip when it isn't happening this time (for example the shelter is closed). To leave a note with it — what was short, why it was skipped — tap Add a note first. Either way the row leaves the list, with Undo in case it was the wrong one.",
             "A job that is waiting for another one shows “Waiting for …”, for example ordering medication waiting for the stocktake the same morning. It goes away as soon as that job is marked done or skipped. You can still mark it done if you have done it anyway.",
             "A date nobody marked stays on the list as overdue, with how many days late it is, until someone marks it done or skipped. Dates ahead can be skipped but not marked done before their day.",
@@ -429,11 +429,11 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "A volunteer's list is who and where only: name, ID, enclosure, zone and status. Their spreadsheet download holds only those columns (plus species and sex). There is no microchip search or No microchip filter, no ticking residents, no new resident and no pencil, and no search by other names.",
+              text: "If your cards give you \"Who a resident is and where they are, nothing more\" and not the full record, the list is who and where only: name, ID, enclosure, zone and status. The spreadsheet download holds only those columns (plus species and sex). There is no microchip search or No microchip filter, no ticking residents, no new resident and no pencil, and no search by other names.",
             },
             {
               kind: "note",
-              text: "Signed in as a doctor, the list is your clinics': every resident your clinics have a clinic visit, prescription, procedure or blood test for — a cancelled visit included — plus every resident you were the doctor for at a clinic you have since left, and no one else. You can read those but not change them: you add and change records only at the clinics you work at now. The line under the heading names the clinic. A resident appears once the shelter books them a visit with you, and their hub shows all of their history, other clinics' visits included. A doctor who works at more than one clinic sees the residents of all of them; the line under the heading names the clinics. A Doctor login not linked to a doctor sees no residents until an admin links it (Accounts and roles).",
+              text: "On a login that works by its own clinic, the list is your clinics': every resident your clinics have a clinic visit, prescription, procedure or blood test for — a cancelled visit included — plus every resident you were the doctor for at a clinic you have since left, and no one else. You can read those but not change them: you add and change records only at the clinics you work at now. The line under the heading names the clinic. A resident appears once the shelter books them a visit with you, and their hub shows all of their history, other clinics' visits included. A login whose doctor works at more than one clinic sees the residents of all of them; the line under the heading names the clinics. A clinic login not linked to a doctor record sees no residents until an admin links it (Accounts and roles).",
             },
           ],
         },
@@ -446,9 +446,9 @@ const manual: Manual = {
             "Every resident has a name card with an NFC chip. Hold the top of your phone to it (an iPhone XS or later, or an Android phone with NFC on) and the resident's page opens. What you see depends on who you are, but never less than a visitor sees.",
           steps: [
             "Signed out, or signed in only to test the public website: you see the resident's public card, the same as any visitor: photo, name, age, temperament and the rest of what the website shows.",
-            "Admin, Management, Staff, and a doctor whose clinic treats that resident: the tap opens the resident's full page, with the record your role may read.",
-            "The 2IC, the Heads and volunteers: you see the public card, plus where the resident lives and a button for each job you can do for that resident (for example Add Medical Photos or Record Weight). The medical record itself is not shown to these roles.",
-            "A doctor looking at a resident their clinics do not treat sees the public card instead of an error.",
+            "If your cards include \"A resident's details, housing and history\" — or the resident is one your own clinic treats — the tap opens the resident's full page, with as much of the record as your cards let you read.",
+            "Without that card, you see the public card, plus where the resident lives and a button for each job your own cards let you do for that resident (for example Add Medical Photos or Record Weight). The medical record itself is not shown.",
+            "A clinic login looking at a resident its clinics do not treat sees the public card instead of an error.",
             "If you are signed in on another browser, the card opens the public page in the one your phone uses. Sign in there once and stay signed in.",
             "Picking a resident for Add Medical Photos or Record Weight with a card. Whatever the phone, you can type the code printed on the card (R-0042) in the search box, or paste the card's link, and only that resident is shown. If no resident you can pick has that code, the page says so and shows nobody.",
             "Android phone (Chrome, NFC on): tap Scan card, then hold the back of the phone to the card. The job opens for that resident. A card that is not for a resident you can pick here, or cannot be read, says so and picks nobody.",
@@ -462,11 +462,11 @@ const manual: Manual = {
           activity: "resident.microchip",
           path: "Residents → Scan a chip, or a resident's hub",
           intro:
-            "A microchip number is exactly 15 digits, and no two residents can share one. It is for staff, Management and doctors only: the public website says only whether an animal is microchipped, never the number.",
+            "A microchip number is exactly 15 digits, and no two residents can share one. The number shows wherever a resident's record is open to you; the public website says only whether an animal is microchipped, never the number.",
           steps: [
-            "To find an animal by their chip, open Residents. A USB or Bluetooth chip reader types the 15 digits and presses Enter, so scan straight into the Search box, where the cursor already is on a computer, or click the Scan a chip box and scan there; both work the same. A known chip opens that resident straight away, whatever the place, zone or deceased filters say. An unknown chip says so and, for staff, offers New resident with this chip, which starts intake with the number filled in. Typing the 15 digits works just as well, spaces and dashes included. Phones cannot read the usual 134.2 kHz chips, so use a reader.",
+            "To find an animal by their chip, open Residents. A USB or Bluetooth chip reader types the 15 digits and presses Enter, so scan straight into the Search box, where the cursor already is on a computer, or click the Scan a chip box and scan there; both work the same. A known chip opens that resident straight away, whatever the place, zone or deceased filters say. An unknown chip says so and, where your cards include \"Register a new resident (intake)\", offers New resident with this chip, which starts intake with the number filled in. Typing the 15 digits works just as well, spaces and dashes included. Phones cannot read the usual 134.2 kHz chips, so use a reader.",
             "The chip shows under the resident's name on their hub, and at the top of their Clinic visits and Procedures pages and a visit's Edit page, so it is in front of a doctor wherever they work. It is also in the summary PDF and offline index filed when a resident dies.",
-            "To record or correct a chip, tap Record chip (or Correct, beside a number already recorded), scan or type the number, add the date it was implanted if you know it, and tap Save chip. Admins, staff and doctors can do this; a doctor can for any resident their clinics treat. Staff can also enter it under Edit resident or on the Health step of intake.",
+            "To record or correct a chip, tap Record chip (or Correct, beside a number already recorded), scan or type the number, add the date it was implanted if you know it, and tap Save chip. It needs the card \"Record or correct a microchip number\"; a login that works by its own clinic can do it for any resident its clinics treat. With the full record at Edit you can also enter it under Edit resident or on the Health step of intake.",
             "After you log a Microchipping procedure, you are asked Record the chip number? straight away, with the implant date set to the procedure's date. Scan the chip and tap Save chip, or tap Not now to do it later from the hub.",
             "To remove a number recorded in error, open the form, clear the number and tap Save chip. The implant date is removed with it.",
           ],
@@ -542,7 +542,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "A volunteer's page for a resident is smaller: photo, name, ID, species, sex, status and the enclosure and zone, and a link to the enclosure. Everything else on the hub, and everything it links to, is not opened to a volunteer.",
+              text: "With \"Who a resident is and where they are, nothing more\" instead of the full record, the page is smaller: photo, name, ID, species, sex, status and the enclosure and zone, and a link to the enclosure. Everything else on the hub, and everything it links to, is not opened.",
             },
           ],
         },
@@ -577,7 +577,7 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "A resident returned to the shelter keeps the updates from their time away, and the card stays on their hub. Doctors can read updates but not add them.",
+              text: "A resident returned to the shelter keeps the updates from their time away, and the card stays on their hub. \"News from an adopter\" at Read lets you read updates without adding them.",
             },
           ],
         },
@@ -687,7 +687,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "warning",
-              text: "Double-check you have the right resident before confirming. Only an admin can withdraw a recorded death afterwards, and the mistake stays in the resident's history.",
+              text: "Double-check you have the right resident before confirming. Withdrawing a recorded death afterwards needs the card \"Withdraw a death recorded in error\", and the mistake stays in the resident's history.",
             },
           ],
         },
@@ -733,7 +733,7 @@ const manual: Manual = {
       title: "Medical records",
       icon: HeartPulse,
       intro:
-        "Six kinds of medical record hang off each resident. All of them are reached from the resident hub's medical cards, or from a clinic visit so the record is linked to that visit. Staff can read all of these; adding to them is for doctors, staff, management and admins as noted.",
+        "Six kinds of medical record hang off each resident. All of them are reached from the resident hub's medical cards, or from a clinic visit so the record is linked to that visit. Each kind is its own card: reading it and adding to it are the Read and Edit of that card, as noted under each one.",
       topics: [
         {
           id: "immunizations",
@@ -828,7 +828,7 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "Signed in as a doctor, the form offers only your own clinics: one clinic is shown by name, two or more are a short list to choose from. The Doctor field is you — filled in and locked, because a visit you record is yours; staff and admins still choose any doctor at the clinic. If your account hasn't been linked to a doctor yet the form says so — ask a shelter admin to link it (Accounts and roles).",
+              text: "On a login that works by its own clinic, the form offers only your own clinics: one clinic is shown by name, two or more are a short list to choose from. The Doctor field is you — filled in and locked, because a visit you record is yours; every other login still chooses any doctor at the clinic. If your account hasn't been linked to a doctor yet the form says so — ask a shelter admin to link it (Accounts and roles).",
             },
           ],
         },
@@ -890,9 +890,9 @@ const manual: Manual = {
           id: "record-weight",
           title: "Record Weight on a phone",
           activity: "medical.weight",
-          path: "Home → Record Weight (the Head of Medical)",
+          path: "Home → Record Weight",
           intro:
-            "The Head of Medical's own weighing page, built for a phone with the scales in front of you. It shows who to weigh and takes the reading, and nothing else: it does not open the animal's medical record.",
+            "The weighing page behind the Record Weight tile, built for a phone with the scales in front of you. It shows who to weigh and takes the reading, and nothing else: it does not open the animal's medical record.",
           steps: [
             "Tap Record Weight on your home screen. At the top is Weigh these first.",
             "Weigh these first is everyone the vet saw yesterday or today who has had no weight recorded since that visit. Each one shows its photo, name, R-code, where it lives, and which clinic and what time (\"Novel, yesterday 09:30\"), so you know why it is on the list. The ones waiting longest are first.",
@@ -949,7 +949,7 @@ const manual: Manual = {
             "A removed record leaves the list and everything built from it: the weight chart, the medication and cost forecasts, stock usage, the vaccinated and in-treatment counts, and the public website. It is not gone. If you remove the newest dose of a vaccine, the resident's next-due date goes back to the dose before it.",
             "Under each list, 'N removed hidden' appears when something has been removed. Tap Show removed to see those records below the live ones, greyed out with the reason, and Restore to bring one back. Hide removed puts the list back as it was.",
             "A removed weight or immunization no longer holds its day, so you can enter the correct one straight away. If you then restore the old one while a new one has taken its day, Restore says so and does nothing; remove or correct the new one first.",
-            "Doctors don't see Remove. A doctor who enters something by mistake asks the shelter to remove it. A deceased resident's record is closed, so nothing on it can be removed or restored.",
+            "Remove is shown only where your cards include \"Remove a medical record entered by mistake, and restore it\". Without it, something entered by mistake is removed by asking someone who holds that card. A deceased resident's record is closed, so nothing on it can be removed or restored.",
             "Photos and other attachments are not removed this way — they are still deleted from their own row.",
           ],
         },
@@ -971,7 +971,7 @@ const manual: Manual = {
           path: "Resident hub → Photos",
           steps: [
             "Open the Photos card on the hub.",
-            "Choose the Drive folder the batch belongs in and, optionally, the date taken. A doctor's photos always go in Medical, so a doctor sees no folder choice.",
+            "Choose the Drive folder the batch belongs in and, optionally, the date taken. Where the only photo card held is \"Add a resident's photo to the Medical folder\", photos always go in Medical and there is no folder choice.",
             "Medical photos never appear on the website — use Medical for operations, teeth, wounds and anything else that should stay inside the shelter. Photos in the other folders show on the resident's public page once they are on the website.",
             "Drop photos on the upload area or tap it to choose from your phone. You can select several at once.",
             "The first photo ever uploaded becomes the profile photo. To change it, hover or tap a photo and choose Set as profile photo, or pick one on the Edit page. A Medical photo can't be chosen as the profile photo, because the profile photo is what the website shows. If the first photo was a Medical one, it stays the profile photo inside the app but the website shows no photo — choose one from another folder to give the resident a picture there.",
@@ -1023,7 +1023,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "Only a login that may manage a resident's photos (Admin and Management) sees Mark as posted and Undo. Everyone who can see the photos sees the Posted labels, so a volunteer can tell which pictures have been used.",
+              text: "Mark as posted and Undo are shown only where your cards include \"Refile or remove a photo, choose the profile photo\". Everyone who can see the photos sees the Posted labels, so anyone can tell which pictures have been used.",
             },
           ],
         },
@@ -1046,7 +1046,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "Approving is recorded with your name and the time. Only a login that may publish photos can approve; a volunteer can see their photo is waiting but cannot approve it.",
+              text: "Approving is recorded with your name and the time. Approving needs the card \"Approve or remove the photos waiting in Photos to approve\". Without it you can see your photo is waiting, but not approve it.",
             },
           ],
         },
@@ -1063,7 +1063,7 @@ const manual: Manual = {
             "Tap a photo, then tap who is in it. Search by name, R-code or enclosure, or tap one of the quick choices: the residents you tagged last, and the others in the same enclosure. The photo is saved to that resident straight away, and the next photo is picked for you.",
             "Five photos of one dog? Tap All to the same resident, then tap the dog once. Tap One photo at a time to go back.",
             "Two dogs in one picture? Tap the photo again and tap the second dog. The photo is saved once for each of them.",
-            "Check the Folder above the photos. It starts on Shelter. Medical photos never go on the website. If your login can only file in Medical (the Head of Medical), that is the only choice.",
+            "Check the Folder above the photos. It starts on Shelter. Medical photos never go on the website. If your cards let you file only in Medical, that is the only choice.",
             "A photo that says Not saved has a Try again button. Leave the page only when every photo is tagged and saved: if you try to leave with photos still waiting, the app asks first.",
           ],
           callouts: [
@@ -1073,7 +1073,7 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "If your role may file Shelter photos but not publish them (a volunteer), there is no Folder choice: every photo goes in Shelter, and it waits for Management to approve it before the website can show it. Staff see it on the resident's Photos tab marked Waiting for approval; it cannot be the profile photo until it is approved.",
+              text: "If your cards include \"Add a resident's photo to the Shelter folder only\" but not approving, there is no Folder choice: every photo goes in Shelter, and it waits for someone holding \"Approve or remove the photos waiting in Photos to approve\" before the website can show it. Anyone who can read the resident's Photos tab sees it marked Waiting for approval; it cannot be the profile photo until it is approved.",
             },
           ],
         },
@@ -1215,7 +1215,7 @@ const manual: Manual = {
             "Link for this enclosure's QR code: the address to program into the QR code on the enclosure. Tap Copy link, or select the address by hand. The enclosure browser has the same copy icon on every card, for doing a batch.",
             "Someone who scans the QR code while signed in lands on this page. A visitor sees a public page instead: the enclosure's name and Thai name, its zone, and a card for each resident living there — tap one for that resident's public card, the same page their RFID card opens. Nothing else is shown: no capacity, notes or maintenance. An empty enclosure says nobody is living there at the moment. Hospital, Fostered and the other Lifecycle statuses have no public page.",
             "The Maintenance card shows open jobs on this enclosure, with Log maintenance to add one already pointed at this enclosure.",
-            "Admins can change the name, Thai name, capacity and notes under Settings → Enclosures.",
+            "With \"Enclosures and zones\" at Edit you can change the name, Thai name, capacity and notes under Settings → Enclosures.",
           ],
           screenshot: {
             src: "/manual/enclosure-hub.png",
@@ -1241,7 +1241,7 @@ const manual: Manual = {
           steps: [
             "Step 1, What is wrong: give the job a title, e.g. \"Gate latch broken\", describe what needs doing, and add photos of the problem as it is now. They upload when you save.",
             "Step 2, Where: pick the zone and enclosure, or tick Zone-wide for something like a fence line or drainage.",
-            "Step 3, Who and when: set the status, a due date and an estimated cost in baht if known, and tick everyone it's assigned to — anyone with a login who does the work (staff, volunteers, management). A big job can go to a team.",
+            "Step 3, Who and when: set the status, a due date and an estimated cost in baht if known, and tick everyone it's assigned to — any login that has not been archived is offered. A big job can go to a team.",
             "Step 4, Review: check everything, use Edit to change a step, then tap Save job. Back never loses what you typed, and nothing is saved until this last step.",
           ],
           screenshot: {
@@ -1256,10 +1256,10 @@ const manual: Manual = {
           activityLevel: "read",
           path: "Operations → Maintenance",
           steps: [
-            "Staff open on the jobs assigned to them; switch Assigned to from Me to Everyone to see the whole board (management and admin start there). Filter by zone or enclosure. Completed jobs from the last 30 days are shown; tick Show all completed jobs for older ones.",
+            "The board opens on the jobs assigned to you, unless your cards include \"Mark anyone's recurring job done or skipped\", which starts it on Everyone. Switch Assigned to between Me and Everyone at any time. Filter by zone or enclosure. Completed jobs from the last 30 days are shown; tick Show all completed jobs for older ones.",
             "On a computer, drag a job card to another column to change its status. On a phone, tap Move job on under the job, choose where it goes (Move to In progress, Blocked, Completed or Not started), and confirm — the question says in words what will happen. Use the status chips at the top to look at one status, such as Completed, and move a job back from there. Cards are coloured when a job is overdue, due soon, or blocked.",
             "Tap a card to open the job: edit its details, record the actual cost, and add Before and After photos. Who it's assigned to is shown under the title and on the card.",
-            "A job logged by mistake can be deleted from its page (Delete job, bottom right) by Admin, Management and the 2IC; the Head of Maintenance completes jobs but does not delete them. Its photos and Drive folder go with it and it can't be undone — for a job that was real but is finished, mark it Completed instead.",
+            "A job logged by mistake can be deleted from its page (Delete job, bottom right) where your cards include \"Delete a maintenance job for good\". \"Move a job on: in progress, blocked, completed\" completes jobs but does not delete them. Its photos and Drive folder go with it and it can't be undone — for a job that was real but is finished, mark it Completed instead.",
           ],
           screenshot: {
             src: "/manual/maintenance-board.png",
@@ -1268,7 +1268,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "The board, its jobs and their photos are for staff and management; a volunteer does not see them.",
+              text: "The board, its jobs and their photos need \"Maintenance jobs: log, change, assign, cost\" at Read. Without it the board is not opened at all.",
             },
           ],
         },
@@ -1384,7 +1384,7 @@ const manual: Manual = {
           activity: "contacts.browse",
           path: "Operations → Contacts",
           steps: [
-            "Open Operations from the menu and tap Contacts to find carers, volunteers and suppliers. Search by name, phone, email or chat ID, and filter by type. Contacts is for Management and the 2IC. The 2IC sees each person's name and phone number and nothing else — no address, email or notes. Staff and volunteers do not have the page: if you need a carer's number, ask Management. (Choosing a carer on intake or rehoming still works for staff.)",
+            "Open Operations from the menu and tap Contacts to find carers, volunteers and suppliers. Search by name, phone, email or chat ID, and filter by type. The page needs \"Browse the contacts book\". On that card alone you see each person's name and phone number and nothing else — no address, email or notes; the full record, and adding or archiving a contact, come with \"Contacts\" under Management. Without either card the page is not opened: ask someone who holds one for a carer's number. (Choosing a carer on intake or rehoming does not need it.)",
             "Each contact has one-tap buttons: Call, LINE, Messenger, WhatsApp, Email and Map — handy on a phone.",
             "A contact's page shows their written address with a small map under it. The map comes from their Map link; tap it to open the place in Google Maps — the Maps app on a phone. If the Map link no longer leads anywhere, there is no map and no Map button, and the page says so: paste a fresh link into Map link under Management → Contacts.",
             "Tap a contact for their page, including the residents currently fostered or adopted with them and past placements.",
@@ -1410,7 +1410,7 @@ const manual: Manual = {
       title: "Management",
       icon: ClipboardList,
       intro:
-        "Mostly for the management and admin roles: the monthly reporting dashboard and the reference lists the rest of the app picks from. Stocktake and recording deliveries are here too, for staff.",
+        "The monthly reporting dashboard and the reference lists the rest of the app picks from. Stocktake and recording deliveries are reached from here too. You see a tile only for the pages your own cards open.",
       topics: [
         {
           id: "dashboard",
@@ -1620,10 +1620,10 @@ const manual: Manual = {
           activity: "stock.medications",
           path: "Management → Medication stock; the list itself is Settings → Medications",
           steps: [
-            "Medications live on two pages. Settings → Medications is the list itself, which only an admin can change: names, units, merging duplicates, and the units each one is bought and counted in. Management → Medication stock is what changes day to day: how much is in the cupboard, the price, when to reorder, the label photo and the forecast. Each page has a link to the other at the top (an admin sees both).",
+            "Medications live on two pages. Settings → Medications is the list itself, changed by a login whose cards include the setup lists: names, units, merging duplicates, and the units each one is bought and counted in. Management → Medication stock is what changes day to day: how much is in the cupboard, the price, when to reorder, the label photo and the forecast. Each page has a link to the other at the top, shown when your cards open both.",
             "On Settings → Medications, the table is the product list the prescription form offers. Add one with its name and unit (tablet vs suspension are two medications); rename or fix a unit with Edit. That unit is the medication's base unit: doses, prescriptions and the forecast stay in it. A new medication is not priced: set its price on Medication stock.",
             "Under that table, Units of measure lists each medication with its base unit — tablet, ml…. Open one and tap Add a unit to say how it is bought or counted: a name (bag (20 kg)), how many of the base unit one holds, and whether you buy it in this size and whether it is the unit it is counted in. An item can be bought in several sizes — 20, 14 and 10 kg bags, say: tick We buy it in this size on each one, and This is the size we usually buy on just one. Record a delivery and Purchasing open on the usual size, and every size can still be chosen. To change the usual size, tick it on another size. A factor can be approximate — a cup of kibble varies with the brand and the scoop — so use your usual measure. A unit can't be named like the base unit. Correcting a factor later is safe: deliveries and counts already saved keep the amount they were saved with.",
-            "The unit a medication is given in (tablet, ml, drop…) comes from Settings → Units, where an admin adds, renames and archives the units and chooses which are offered for medicines. A unit a medication is already measured in can't be renamed or archived until those medications move to another unit.",
+            "The unit a medication is given in (tablet, ml, drop…) comes from Settings → Units, where the setup-lists card adds, renames and archives the units and chooses which are offered for medicines. A unit a medication is already measured in can't be renamed or archived until those medications move to another unit.",
             "Merge… on Settings → Medications folds a duplicate into the one to keep — its prescriptions move across. Only medications with the same unit can be merged.",
             "Management → Medication stock shows one card per medication, in cupboard order (below). When an item has a unit it is bought in, its cost per unit shows the pack price beside it — ฿0.035 per ml (฿35 per bottle) — so a small figure reads against what you actually pay. Tap Price and reorder to set the cost per unit (up to 4 decimal places), the reorder lead time and the safety stock. Where a delivery with a cost has been recorded, the cost per unit is worked out from what was actually paid on the latest one (it says so on the card, and a donated delivery with no cost is ignored); the typed price is used for a medication with no priced delivery. Under the cards, Price per pack lists each medication that has a unit it is bought in: enter the price per bag, box or bottle and the cost per base unit is worked out and saved from it. In stock also shows the amount in the purchase unit (≈ 2.4 bags).",
             "Next N days shows how much of each medication current prescriptions will need. For any other period — next month's order, say — enter From and To dates above the table and tap Show window; a column for that period is added beside the fixed ones.",
@@ -1647,9 +1647,9 @@ const manual: Manual = {
           activity: "stock.diets",
           path: "Management → Diet stock; the list itself is Settings → Diets",
           steps: [
-            "Diets live on two pages. Settings → Diets is where an admin keeps the diets (recipes) and the ingredients they are made of; Management → Diet stock is what changes day to day: how much of each ingredient is in the cupboard, the price, when to reorder and the food forecast. Each page has a link to the other at the top (an admin sees both).",
+            "Diets live on two pages. Settings → Diets is where the setup-lists card keeps the diets (recipes) and the ingredients they are made of; Management → Diet stock is what changes day to day: how much of each ingredient is in the cupboard, the price, when to reorder and the food forecast. Each page has a link to the other at the top, shown when your cards open both.",
             "Settings → Diets is a recipe book with two tabs: Diets (recipes) and Ingredients. Diets shows a card for each diet: its name, a Standard badge if it is the standard one, how many residents are on it and, in plain words, what a medium dog gets in a day (1 cup kibble · 1.5 cups chicken · 1.5 cups rice). Tap Add a diet, give it a name (Diabetic, say) and you land on that diet's own page. There, Add ingredient opens a small form: choose the ingredient, choose what it is measured in (its own unit, or a cup, a bag…) and enter how much goes in ONE serving. A diet is written as one serving (1 serving = 0.5 cup kibble, 1 egg, 0.5 cup rice, 50 g chicken), and a serving is one day's food. Under the list, Servings by size says how many servings a small, medium and large animal gets in a day (1, 1.5 and 2 to start with; change them for a diet that needs it, then tap Save servings). Each line also shows what that works out to per day for each size, and an animal's own portion setting is multiplied on top. Each line has Edit and Remove. Total daily serve adds the lines up for each size (Medium: 4 cups), so a recipe that does not add up is easy to see. On the feeding list each meal shows the day's amount divided by the meals a day, with the day's total beside it. Purchasing orders each ingredient in its own pack size, not the diet. Rename, Make Standard and Delete are on the diet's page too. A diet on any resident's record can't be deleted, and the last ingredient of a diet residents are on can't be removed — add its replacement first. Edit an amount and it flows straight through to the forecast.",
-            "What an ingredient is bought and counted in (g, ml, can, each…) comes from Settings → Units, an admin's list of the units of measure. To count something in a new unit — each, for eggs — open Settings → Units, type the unit, add a Thai name if you want one, choose Ingredients (or Medicines, or Both) and tap Add unit; the ingredient forms offer it straight away. A unit that an ingredient or medicine already uses can't be renamed (every amount saved against it would change meaning) or archived; the page says which ones use it, so add the new unit, move those over, then archive the old one. Where a recipe counts things with each, it reads as just the number: Egg 1.",
+            "What an ingredient is bought and counted in (g, ml, can, each…) comes from Settings → Units, the setup-lists card's list of the units of measure. To count something in a new unit — each, for eggs — open Settings → Units, type the unit, add a Thai name if you want one, choose Ingredients (or Medicines, or Both) and tap Add unit; the ingredient forms offer it straight away. A unit that an ingredient or medicine already uses can't be renamed (every amount saved against it would change meaning) or archived; the page says which ones use it, so add the new unit, move those over, then archive the old one. Where a recipe counts things with each, it reads as just the number: Egg 1.",
             "The Ingredients tab lists the things you buy and count, each with what it is bought and counted in (g, ml, a can, a sachet…) and how many diets use it. Tap Add an ingredient for a small form: a name, an optional Thai name and its unit. A new ingredient starts at ฿0: set its price on Management → Diet stock (there is a link on the ingredient's page). Tap an ingredient to open its page: its details, the ways it is measured, and the diets that use it. Under Ways to measure it, tap Add a unit to add a cup, a scoop or a bag and say how much of the ingredient it holds — 1 cup weighs about 120 g — so a recipe can say 1.5 cups while stock is still counted in grams. Tick We buy it in this size on each pack size you buy (20, 14 and 10 kg bags, say), and This is the size we usually buy on just one; Purchasing and delivery open on the usual size. A measure is only ever approximate — a cup of kibble varies with the brand and the scoop — so use your usual measure. Correcting it later is safe: deliveries and counts already saved keep the amount they were saved with. An ingredient that is in a diet can't be deleted; take it out of the diet first.",
             "One diet is the shelter's standard, marked Standard beside its name: what residents are fed unless someone says otherwise. A resident on anything else shows as a special diet on the enclosure cards. To change which diet is the standard, open that diet's page in Settings → Diets, tap Make Standard and confirm — the old one stops being the standard at the same moment. If no diet is marked, a note above the diets says so.",
             "Management → Diet stock shows one card per ingredient, in cupboard order. When a diet has a unit it is bought in, its cost per unit shows the pack price beside it — ฿0.035 per g (฿35 per kg). Tap Price and reorder to set the cost per unit (up to 4 decimal places, so a sack priced per gram fits), the reorder lead time and the safety stock — a price rise flows straight through to the forecast and Cashflow. Where a delivery with a cost has been recorded, the cost per unit is worked out from what was actually paid on the latest one (it says so on the card, and a donated delivery with no cost is ignored); the typed price is used for a diet with no priced delivery. Under the cards, Price per pack lists each diet that has a unit it is bought in: enter the price per bag and the cost per base unit is worked out and saved from it. In stock also shows the amount in the purchase unit (≈ 2.4 bags).",
@@ -1670,11 +1670,11 @@ const manual: Manual = {
           title: "The medication list",
           activity: "medical.prescriptions",
           activityLevel: "read",
-          path: "Home → Administer Medication (Head of Medical), or Operations → Medication list",
+          path: "Home → Administer Medication, or Operations → Medication list",
           intro:
             "One list of who needs medicine today and how much, built for a phone while you walk round the enclosures. It is for reading: nothing on it is ticked off, and the app does not record that a dose was given.",
           steps: [
-            "The Head of Medical signs in to a Home with one button, Administer Medication, and taps it. Everyone else opens Operations from the menu and taps Medication list. The date at the top is today at the shelter.",
+            "Where the Administer Medication card is held, Home has that tile: tap it. Otherwise open Operations from the menu and tap Medication list. The date at the top is today at the shelter.",
             "The list is grouped by zone, then by enclosure, in the order you would walk them, and each enclosure shows its animals. Each animal has a photo and name at the top, so you treat the right one.",
             "Under the animal, each medicine shows a photo of its box or bottle label (added under Management → Medication stock), the amount to give, and how often. If a medicine has no label photo, only its name shows.",
             "A medicine given on chosen days (every other day, Monday and Thursday, the 1st and the 15th) shows only on the days it falls due, counted from the day the prescription started. A medicine marked as needed is always shown. Last day of the course appears on a medicine whose prescription ends today.",
@@ -1715,11 +1715,11 @@ const manual: Manual = {
           id: "stocktake",
           title: "Doing a stocktake",
           activity: "stock.count",
-          path: "Operations → Stocktake, or Home → Do Stocktaking (the 2IC)",
+          path: "Operations → Stocktake, or Home → Do Stocktaking",
           intro:
             "One sheet for counting every medication and diet, built to be used on a phone while you walk the shelves. Nothing is saved until you tap Save at the end, and everything saved together gets the same time.",
           steps: [
-            "Open Operations from the menu and tap Stocktake — the 2IC taps Do Stocktaking on Home — (managers can also use the link at the top of Management → Medication stock or → Diet stock). Switch between Medications and Food with the tabs at the top; counts you have typed on one tab are kept while you look at the other.",
+            "Open Operations from the menu and tap Stocktake — or tap Do Stocktaking on Home, where that card is held, or use the link at the top of Management → Medication stock or → Diet stock. Switch between Medications and Food with the tabs at the top; counts you have typed on one tab are kept while you look at the other.",
             "Items come in the order they sit in the cupboard, so you can walk the shelves from one end to the other. Management sets that order under Cupboard order on Management → Medication stock and → Diet stock; two items with the same place are in name order.",
             "An item that comes in several sizes (kibble in 20, 14, 10 and 5 kg bags, say) is counted one size at a time: a row for each size with a big minus and plus button, and a last row for loose stock that is not in a bag or box. Tap plus once for every bag you can see; you never type a weight. Under the rows, Together adds it up in plain words (10 bags of 20 kg, 4 of 10 kg, 3 of 14 kg and 1 of 5 kg is 287 kg). A count of 0 is a real answer: tap plus and minus again to say there are none of that size, or leave it untouched to leave it alone. Clear this count empties the item's rows again.",
             "A bag or box that is already open is not a whole one, so do not count it in the rows. Under them, Is a bag or box already open? lets you pick its size and roughly how full it is: About full, About half, About a quarter or Nearly empty. That is an estimate and the screen says so (Together then reads about). Counting an open bag as a whole one is the mistake to avoid: the forecast would then say there is food for longer than there is. If two are open, tap Another one is open.",
@@ -1731,7 +1731,7 @@ const manual: Manual = {
             "If the figure hasn't changed, tap Same as last time instead of retyping it. That records a fresh count of the same figure, and for an item counted in sizes it repeats the sizes too, not only the total. Typing a number turns the tick off, and tapping the tick clears what you typed, so a row is always one or the other.",
             "Tap Review and save. The summary lists every item you counted, old → new, with changes of half or more marked Big change and shown first — check those before saving. Tap Save to save the whole sheet in one go: either every count is saved or none is.",
             "If you try to leave the page with counts that aren't saved, you are asked first.",
-            "Staff and managers also see Record a delivery at the top of the page, for stock that has just arrived (see Recording a delivery).",
+            "Record a delivery shows at the top of the page, for stock that has just arrived, where your cards include \"Record a delivery\" (see Recording a delivery).",
           ],
           callouts: [
             {
@@ -1769,12 +1769,12 @@ const manual: Manual = {
           id: "purchasing",
           title: "Purchasing: what to buy",
           activity: "stock.purchasing",
-          path: "Management → Purchasing, or Home → Do the Purchasing (the 2IC)",
+          path: "Management → Purchasing, or Home → Do the Purchasing",
           intro:
             "Works out how much of each medicine and food to buy for a week, two weeks or a month, so whoever orders does not do the arithmetic by hand. Every row shows its working, so nobody has to trust a bare number.",
           steps: [
             "On a phone it is one screen. At the top, pick how long the stock should last (1 week, 2 weeks or 1 month). Anything never counted is assumed to have none on the shelf, is shown in yellow, and a box above has a button to the stocktake. That box also names any never-counted item with nothing to buy, which is not on the list: its \"nothing to buy\" is a guess until it is counted. Below that are two folds, Medicines and Food, because they are bought at different shops: open one and it lists what to buy from each supplier, the amount (in whole bags or boxes where the item has them). Each item shows just its name and amount; tap it to open what is left against what is needed and The working, which shows how the amount was worked out. Print and Download CSV are at the bottom. Nothing is typed or saved, and the app does not place the order. The rest of this topic describes the table that a computer shows, which works the same way.",
-            "Open it from the Management page, or from the Purchasing link at the top of Management → Medication stock or → Diet stock; the 2IC taps Do the Purchasing on Home. Pick the Period: 1 week, 2 weeks or 1 month, counted from today.",
+            "Open it from the Management page, or from the Purchasing link at the top of Management → Medication stock or → Diet stock; Home has a Do the Purchasing tile where that card is held. Pick the Period: 1 week, 2 weeks or 1 month, counted from today.",
             "Each row is one medicine or food. The working says what was counted and when, how much has probably been used since (the prescriptions' and diets' forecast, the same one Days of stock uses), how much has been received since (the deliveries recorded under Deliveries), and so how much should be on the shelf now. The second line says what the period needs: the forecast use over the period, plus the item's safety stock.",
             "Buy is what is needed minus what should be on the shelf now, never below zero. If the item has a unit it is bought in (set under Units of measure on Settings → Medications or → Diets, e.g. a 20 kg bag), the amount is rounded up to whole packs, and the amount in the item's own unit is shown beside it.",
             "When an item is bought in more than one size, the usual size is the answer in the Buy column and underneath it Or about gives the same need in the other sizes (Or about 4 × bag (14 kg) (56 kg)). Every size is rounded up to whole bags, so it is never less than you need, and the amount in brackets says how much that really comes to. The sizes are listed cheapest first, working the cost out for the whole bags from the latest delivery that paid for that size; a size nobody has bought with a price yet comes after the priced ones, the closest fit first. It does not choose for you: it shows what each size would come to.",
@@ -1813,11 +1813,11 @@ const manual: Manual = {
           id: "deliveries",
           title: "Recording a delivery",
           activity: "stock.delivery",
-          path: "Operations → Deliveries, or Home → Record a Delivery (the 2IC)",
+          path: "Operations → Deliveries, or Home → Record a Delivery",
           intro:
             "Record each medication or food as it arrives, so Stock between counts can work out what was actually used. Recording a delivery doesn't change the stock count — the next stocktake does.",
           steps: [
-            "Open Operations from the menu and tap Deliveries (it is next to Stocktake), or start from Home (the 2IC taps Record a Delivery). The Stocktake page also has a Record a delivery button at the top.",
+            "Open Operations from the menu and tap Deliveries (it is next to Stocktake), or start from Home, which has a Record a Delivery tile where that card is held. The Stocktake page also has a Record a delivery button at the top.",
             "On a phone it is one question at a time, with a Back button on every screen that keeps what you have typed: what arrived (Medicine or Food), which one (type part of the name; a medicine with a label photo shows it, to match the box in your hand), how much, when, then a few optional details, and last a sentence saying what will be recorded. Tap Record this delivery only when that sentence is right. When it is saved, Record another item starts the next one with the day and supplier already as they were. On a larger screen the same questions are one form: pick Medication or Food, then the item. Enter the quantity. If the item has other units set up under Settings → Medications or → Diets (bags, boxes), pick the unit the delivery came in — the one it is bought in is chosen for you — and the amount in the item's own unit is shown beside it and saved with it. With no other units, the quantity is in the item's own unit, as before. If it came in packs, fill in Came in packs? (2 × 50, say) and the quantity is worked out for you.",
             "Arrived on is today unless you change it; a delivery can't be dated in the future. If the item was counted in a stocktake that day, you are asked whether the delivery was already on the shelf when it was counted, so it is set against the right stocktake.",
             "A delivery can come in more than one size. After the first size, tap Add another size and fill in the next one: 2 bags of 20 kg, then 1 bag of 14 kg, then 3 bags of 5 kg. Each size has its own amount and, if you want it, its own cost; the screen adds them up for you (All sizes together: 69 kg) and you never work out kilos yourself. Price every size or none: a delivery with some sizes priced and others left empty is refused, because the empty ones would make the price per kilo look too low. Type 0 on a size that was donated. Remove this size takes one off again. On a phone, the cost of each size is asked on the details screen, one box per size.",
@@ -1827,7 +1827,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "Stocktake and deliveries are both for staff and above, and for the 2IC; a volunteer does neither. The 2IC sees the stock figures, and never the price of a medicine or a diet.",
+              text: "Counting the stock and recording a delivery are two cards, \"Count the stock\" and \"Record a delivery\", and either can be held without the other. Prices show only where your cards also include \"The medication list: prices, labels, reorder levels\" or \"The diet list and the food forecast\".",
             },
           ],
         },
@@ -1835,7 +1835,7 @@ const manual: Manual = {
           id: "bills",
           title: "Bills: photos of receipts for purchases and clinic visits",
           activity: "stock.delivery",
-          path: "Operations → Deliveries → Bills (also a Home tile for some roles)",
+          path: "Operations → Deliveries → Bills (also a Home tile where the Bills card is held)",
           intro:
             "A bill here is the paper from a shop or a clinic, kept as a photo with what it cost. (Donation receipts are something else: those are the shelter's own receipts to donors.) You can photograph a bill when you record the delivery or finish the visit, or do them all at once at night or at the end of the week.",
           steps: [
@@ -1862,7 +1862,7 @@ const manual: Manual = {
           activity: "maintenance.bills",
           path: "Operations → Maintenance → open a job → Bills",
           intro:
-            "A bill here is the receipt for paint, timber or a tradesman, kept against the job it was for. The job's actual cost is the total of its bills, so the cost builds itself as receipts come in. Only Management and Admin see this section and the amounts; the Head of Maintenance and the 2IC see the job as before, with no bills.",
+            "A bill here is the receipt for paint, timber or a tradesman, kept against the job it was for. The job's actual cost is the total of its bills, so the cost builds itself as receipts come in. The section and the amounts show only where your cards include \"Add and see a maintenance job's bills and costs\"; without it the job reads as before, with no bills.",
           steps: [
             "Open the job (from the board on a computer, or the list on a phone) and find Bills under the photos. Tap Add a bill.",
             "Type the amount, change the date if the bill is not from today, and add a note such as \"paint, Thai Watsadu\". Tap Take or choose a photo (on a phone this opens the camera), then Save bill. A long bill can have more pages: tap Add another page under the bill.",
@@ -1888,12 +1888,12 @@ const manual: Manual = {
             "Tap New recurring job. Say what to do, the time of day, and optionally instructions and the screen it is done on (for a stocktake, Stocktake — Medications or — Diets; Other page… takes any page of this app, starting with /).",
             "Choose how it repeats: weekly on the days you tick (every 2 weeks for fortnightly), monthly on a day of the month, or monthly on a weekday such as the first Monday or the last Friday. Every 3 months makes it quarterly. Set the start date and, if it stops, an end date.",
             "Check Next dates under the rule before saving. It is worked out by the same rule My tasks uses, so if the first date isn't the one you expect, the rule needs changing. Fortnightly counts from the week the job starts in: a fortnightly Monday job starting on a Wednesday first falls twelve days later, not five.",
-            "Tick who does it. Several people make a team: all of them see it, and any one can mark it done. Only people who can still sign in are offered — and never doctors, whose work comes from their clinic visits rather than the shelter's routine. The screen the job is done on narrows it further: a maintenance job or a delivery lists admin, management and staff; a Management or Settings page lists only those who can open it; a stocktake lists the same three; a job with no screen lists admin, management, staff and volunteers. The line under Assigned to says which roles are listed.",
+            "Tick who does it. Several people make a team: all of them see it, and any one can mark it done. Only people who can still sign in are offered, and the screen the job is done on narrows it further: a job that links to a page offers only people whose cards open that page and let them do its work, and a job with no screen offers everyone. The line under Assigned to says who is listed.",
             "To make one job follow another the same day — order medication after the stocktake — choose the first under Do after. On a day both fall, the second shows “Waiting for …” until the first is done or skipped.",
             "Each job in the list shows its rule, who it is with, its next three dates, and how many missed dates are still open. Pause stops it showing anywhere, missed dates included; Resume starts again from today, so the paused weeks don't come back as missed. Changing when it repeats also starts the missed-dates count again from today.",
             "Someone off sick or on leave: under Hand over, choose them, These dates only, the dates, who covers, and a reason. Every one of their dates in that range goes to the cover (anyone else on the job stays on it), and the jobs themselves don't change, so the week after goes back to normal. Handed-over dates are listed under Handed to someone else, where Give back undoes one.",
             "Someone who has left: a job whose only people have left is marked in red at the top of the page. Edit it and tick someone else, or use Hand over with From now on to move all of that person's jobs at once.",
-            "Someone who can't be given the job: a job given to a doctor, or to someone whose role can't open its screen — set up before the list was filtered, or its screen changed since — is also marked in red, naming them. Edit it, untick them (they are shown struck through) and tick someone who can; the job can't be saved while they are on it. Hand over refuses the same way: a date or job that would go to someone who can't be given it is listed under Some couldn't be handed over, with the reason, and the rest go ahead.",
+            "Someone who can't be given the job: someone whose cards can't open its screen — set up before the list was filtered, or its screen changed since — is also marked in red, naming them. Edit it, untick them (they are shown struck through) and tick someone who can; the job can't be saved while they are on it. Hand over refuses the same way: a date or job that would go to someone who can't be given it is listed under Some couldn't be handed over, with the reason, and the rest go ahead.",
             "Recently done lists the latest dates marked done or skipped, with who marked them, when, and their note — the record that the stocktake happened.",
           ],
           callouts: [
@@ -1954,8 +1954,9 @@ const manual: Manual = {
           path: "Management → Translations",
           steps: [
             "The app's own buttons and headings are in both languages already. This page is for everything someone typed in one language that a reader of the other language also sees. It holds two kinds. Long text: a resident's hook line, bio, temperament, past story and ideal home, a project's story and photo captions, the website's pages, maintenance and recurring jobs. Short names: diets, medicines, vaccines, procedures, blood tests, how-often labels, stock units, clinics, zones and enclosures, project folders, fixed outgoings and the website's captions.",
-            "The page is in sections, one per kind (Website, Residents, Projects, Diets, Medications, Setup lists, Places and so on). The box at the top says how many are missing and how many are out of date in each; tap a section's name to jump to it. Missing shows what nobody has translated yet, Out of date what was translated before the English changed, and All shows everything, including what is done.",
-            "For a short name, type the Thai in the box and press Save. Each card says where the name is used, with a link to its own list. You can translate a name here even when its list is not one you can open: translating a name never changes the list itself, only its Thai. To take a Thai name away, empty the box and press Save. When the English has changed, the card shows the English the Thai was written for; correct the Thai, or press Save as it is if it is still right.",
+            "The page is in sections, one per kind (Website, Residents, Projects, Diets, Medications, Setup lists, Places and so on). The box at the top says how many in each are missing, how many are out of date and how many are waiting; tap a section's name to jump to it. Show, above that box, has four choices: Missing is what nobody has translated yet, Waiting is a short name someone has proposed Thai for that nobody has approved, Out of date is what was translated before the English changed, and All shows everything, including what is done. Waiting lists short names only — long text is never proposed this way.",
+            "For a short name, type the Thai in the box and then choose. Save puts it on screen straight away, everywhere a Thai reader sees that name. Propose leaves it here for someone to read and approve first: it is not written onto the name, so nobody sees it anywhere in the app or on the public website until it is approved, and the button then reads Proposed. Each card says where the name is used, with a link to its own list. You can translate a name here even when its list is not one you can open: translating a name never changes the list itself, only its Thai. To take a Thai name away, empty the box and press Save. When the English has changed, the card shows the English the Thai was written for; correct the Thai, or press Save as it is if it is still right.",
+            "A name with a proposal waiting shows it in a box above the Thai field — the proposed Thai, and whether you or someone else proposed it, with the date — and two more buttons. Save & approve publishes exactly what is in that box: it takes nothing from the Thai field, so what goes live is the wording you have just read. Reject throws the proposal away and asks you to confirm first; either way the Thai that is live now is unchanged. If the English has moved on since the proposal was written, the box warns you and shows the English it was written for. A name that already has Thai can still carry a proposed change, and the live Thai stays until someone approves it.",
             "A website page's text has the same style buttons as its English (Bold, Italic, Underline, a colour, a size) above its Thai box, here and on the page's own edit page under Settings → Website → Pages. The English and How the Thai will look are drawn as the public page shows them, so match the bold words and colours by eye; in the box the styles show as tags such as {b}…{/b}. Every other long text is plain and has no style buttons.",
             "Medicine and clinic names are mostly drug, brand or proper names that read the same in Thai, so an empty one says Shown as typed rather than missing, and it is not counted. Give one Thai only if it should read differently, such as Subcutaneous Fluids.",
             "For long text, write the translation in the box and tap Save & approve. Only an approved translation is shown to readers of that language; until then they see the original. Remove translation takes one down. The same box appears under the text on the resident's page, on the project folder and on the maintenance job, so you can translate right after writing without coming here. Nobody has to translate internal notes (weights, clinic visits, prescriptions): those stay as typed.",
@@ -1984,7 +1985,7 @@ const manual: Manual = {
             "Someone signing in with Google for the first time is turned away with \"hasn't been given access yet\" and appears under Access requests at the top of the page. Choose a role and tap Approve, then ask them to try again — or Deny to remove the account. If their Google email matches a login you created, the two are linked automatically.",
             "Each person is one row: their name, email and last sign-in on the left, and every role they hold as a chip beside it, the main one marked \"main\". To change the main role, tap the main chip and choose another role. The … menu on the row holds the things you do now and then: Edit name, Link a doctor record, Issue temporary password, 2-step reset, Archive and Delete. Issue temporary password does what it says — their old password stops working and they choose a new one at their next sign-in. You can't change your own role, reset your own password here or delete yourself; change your own password from Change password at the bottom of the menu.",
             "A Doctor login gets its clinics from a doctor. Open the … menu on their row and choose Link a doctor record: link the account to a doctor already on the lists, or choose Create a doctor from this login and tick the clinics they work at. The account's clinics are then that doctor's clinics — a doctor who works at two clinics sees and records for both, and for no others. To change where they work, edit the doctor on the clinic's Doctors page (Management → Clinics), not here. A Doctor login not linked to a doctor sees no residents and can't record visits, so it's flagged. Unlink, or archiving the account, leaves the doctor and all their visits exactly as they were. Most doctors will never have a login at all; that is normal.",
-            "Lanna's roles are Admin, Management, 2IC, Head of Maintenance, Head of Medical, Doctor and Volunteer. Every one of them can be chosen — when you add a person, under Access requests, and from a person's main or Add a role pop-up — and each person's row shows their own roles, so a 2IC reads 2IC. What each role can do is set in the app's roles, not on this page. Staff was retired in October 2026 because it confused things.",
+            "The roles offered here are the shelter's own, named whatever the shelter calls them. Every one of them can be chosen — when you add a person, under Access requests, and from a person's main or Add a role pop-up — and each person's row shows their own roles under those names. What a role can do is the cards it holds on Who does what, not anything set on this page.",
             "One person can do two jobs for a while — the Head of Medical covering the Head of Maintenance, say — on the one login. On their row, tap + Add a role at the end of their chips, choose the second role in the pop-up and, if you know it, the last day, then Add. They then have both roles' access: both sets of tiles on their home, both menus, and the jobs of both on the rota and My tasks. Each added role is a chip showing \"until 30 Oct\" with a small ✕ beside it; the ✕ ends it at once. The last day still counts, and the role stops the day after, on its own. Covers ending within the week are listed above the list so nobody is caught out. Admin can't be added as a second role — give it as the main role — and archiving a person archives all their roles.",
             "Public viewer is for testing the website as a visitor while the testing sites are closed to the public: it signs in, sees every public page exactly as a stranger will once the site is open, and never sees the app — any app address sends it to the home page, and the public header offers only Sign out. Give it to testers, never to staff.",
             "When someone leaves, Archive them rather than delete: they can no longer sign in, they disappear from the maintenance Assigned to list, and their name stays on the jobs they did. Archive is in the … menu. Archived accounts are tucked into a collapsed Left the shelter list at the bottom, with Restore in their … menu. Delete is for accounts made by mistake — it removes them from past jobs too.",
@@ -2092,7 +2093,7 @@ const manual: Manual = {
             "Hide a page and it leaves the menu, the phone menu and the footer; the home page stops linking to it (a block that only leads to that page goes too); it leaves the sitemap that search engines read; and its address shows the ordinary Not found page to everyone who is not signed in as someone who can edit the website. Nothing is deleted: Show brings it back as it was.",
             "Hide a whole section and every page in it goes, with the section's menu heading. Show the section again and the pages come back, except any you also hid by themselves. A page hidden only because of its section says so.",
             "Home and Privacy have no switch and are always on: Privacy is what the Google sign-in screen links to. Hiding the Donate page also removes the Donate button from the top of every page.",
-            "You can still open a hidden page while signed in as someone who can edit the website. A bar at the top says This page is hidden from the public, so you can check it before you switch it on. Anyone else, including a volunteer's login, sees Not found.",
+            "You can still open a hidden page while signed in as someone who can edit the website. A bar at the top says This page is hidden from the public, so you can check it before you switch it on. Every other login sees Not found.",
             "A hidden Desexing drives page also refuses a sign-up that arrives some other way, so nobody can enrol in a drive nobody can see.",
           ],
           callouts: [
@@ -2140,7 +2141,7 @@ const manual: Manual = {
             "Settings → Enclosures lists the enclosures under their zone, in the zone's order. The arrows move an enclosure up or down within its own zone only; to put it in another zone, edit it and choose the zone, and it goes to the end of that zone's list.",
             "Sort A-Z (numbers in order) puts a list in alphabetical order with numbers read as numbers, so Enclosure 2 comes before Enclosure 10. It is a starting point to move things from, and asks first because it replaces the order you have set. On Settings → Enclosures each zone has its own.",
             "A new zone goes to the end of the zones, and a new enclosure to the end of its zone, until you move it.",
-            "The Thai name is what staff reading the app in Thai see everywhere a zone or enclosure is shown — the residents list, the hub, the enclosure browser, the maintenance board and every picker. Leave it blank and the English name is used. The English name stays the one Google Drive folders and the app's own logic go by, so renaming in Thai never moves anything.",
+            "The Thai name is what anyone reading the app in Thai sees everywhere a zone or enclosure is shown — the residents list, the hub, the enclosure browser, the maintenance board and every picker. Leave it blank and the English name is used. The English name stays the one Google Drive folders and the app's own logic go by, so renaming in Thai never moves anything.",
             "The Lifecycle zone and its pseudo-enclosures (Hospital, Fostered, Adopted, Deceased, Unassigned) are used by the app's status logic and can't be edited; their Thai names are built in. They take no place in the order either: they are always last on these pages and keep their fixed place as the status cards at the top of the Enclosures page.",
           ],
           screenshot: {
@@ -2190,7 +2191,7 @@ const manual: Manual = {
           activity: "reference.types",
           path: "Settings → Procedure Types",
           steps: [
-            "The list the procedure form offers — X-ray, ultrasound, teeth cleaning, nail clipping. Staff and doctors can add a type inline when logging a procedure, so this is where duplicates and misspellings get tidied up.",
+            "The list the procedure form offers — X-ray, ultrasound, teeth cleaning, nail clipping. A type can be added inline when logging a procedure, so this is where duplicates and misspellings get tidied up.",
             "Rename a type in place, or Merge… a duplicate into the one to keep — its procedures move across. A type with logged procedures can't be deleted; merge it instead.",
           ],
           screenshot: {
