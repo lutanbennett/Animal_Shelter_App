@@ -11,7 +11,7 @@
 | PR | see the PR this plan is committed on |
 | Tested by / date | Claude (automated), 2026-11-01 |
 | Carries a migration? | yes |
-| Tested at SHA | SHA_PLACEHOLDER |
+| Tested at SHA | c7d7fec9 |
 
 ## 1. Scope and risk
 
@@ -140,4 +140,6 @@ Result: pass
 
 `check-wrapped-write-paths.mjs --all`: before 3 unwrapped / 146 of 149 complete; after 2 unwrapped (the security pair) / 147 listed / 147 of 149 complete, measured on this branch. `check-hard-coded-security.mjs`: `no coded security outside the Admin bypass` before and after.
 
-GATES_PLACEHOLDER
+```
+gates: typecheck=0 lint=0 test=0 build=0
+```
