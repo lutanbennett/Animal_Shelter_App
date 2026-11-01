@@ -1,9 +1,10 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { parseUnitCost } from "@/lib/format";
 import { parseLeadDays, parseStockCount } from "@/lib/management/stock";
 import { resolveSafetyStock } from "@/lib/management/purchasing";
@@ -20,6 +21,13 @@ import {
 import { driveErrorMessage } from "@/lib/google/drive-errors";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -68,9 +76,11 @@ function revalidateLabelPages() {
 export async function updateMedicationStockSettings(
   id: string,
   fields: MedicationStockFields,
+  requestId: string,
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("medications.updateMedicationStockSettings", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("medications.updateMedicationStockSettings", write(t), { id: requestId, action: "medications.updateMedicationStockSettings", db: supabase }, async () => {
     if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
     // Re-checked here, not only on the card: blank clears the price back to
     // "not priced yet", but a bad number must not become one.
@@ -79,7 +89,6 @@ export async function updateMedicationStockSettings(
     const leadDays = parseLeadDays(fields.reorderLeadDays);
     if (!leadDays.ok) return refuse(t.management.stock.errors.leadDaysInvalid);
 
-    const supabase = await createClient();
     const { data: row, error: rowError } = await supabase
       .from("medication")
       .select("dose_unit")
@@ -126,14 +135,14 @@ export async function updateMedicationStockSettings(
  * the count as taken now — re-saving the same figure is a count that
  * confirmed it (0083). Blank clears it back to "not counted".
  */
-export async function updateMedicationStock(id: string, count: string): Promise<ActionResult> {
+export async function updateMedicationStock(id: string, count: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("medications.updateMedicationStock", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("medications.updateMedicationStock", write(t), { id: requestId, action: "medications.updateMedicationStock", db: supabase }, async () => {
     if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
     const parsed = parseStockCount(count);
     if (!parsed.ok) return refuse(t.management.stock.errors.countInvalid);
 
-    const supabase = await createClient();
     // One way in (0112): the function sets the figure and writes the history
     // row, marked as a correction so usage maths does not treat it as a count.
     const { error } = await supabase.rpc("record_stock_correction", {
@@ -183,9 +192,11 @@ async function currentLabel(supabase: Awaited<ReturnType<typeof createClient>>, 
 export async function uploadMedicationLabel(
   id: string,
   formData: FormData,
+  requestId: string,
 ): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  return runAction("medications.uploadMedicationLabel", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("medications.uploadMedicationLabel", write(t), { id: requestId, action: "medications.uploadMedicationLabel", db: supabase }, async () => {
     if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
     const w = t.admin.website.errors;
 
@@ -202,7 +213,6 @@ export async function uploadMedicationLabel(
     const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
     if (!rootId) return refuse(w.driveNotConfigured);
 
-    const supabase = await createClient();
     const current = await currentLabel(supabase, id);
     if (!current) return refuse(t.management.medications.errors.notFound);
 
@@ -248,11 +258,11 @@ export async function uploadMedicationLabel(
   });
 }
 
-export async function removeMedicationLabel(id: string): Promise<ActionResult<{ success: string }>> {
+export async function removeMedicationLabel(id: string, requestId: string): Promise<ActionResult<{ success: string }>> {
   const { t } = await getT();
-  return runAction("medications.removeMedicationLabel", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("medications.removeMedicationLabel", write(t), { id: requestId, action: "medications.removeMedicationLabel", db: supabase }, async () => {
     if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
-    const supabase = await createClient();
 
     const current = await currentLabel(supabase, id);
     if (!current) return refuse(t.management.medications.errors.notFound);
@@ -271,9 +281,10 @@ export async function removeMedicationLabel(id: string): Promise<ActionResult<{ 
  * stocktake sheet walks. The stock cell's, not Settings': where a box sits
  * on the shelf is how the shelter runs, and the 2IC sets it on a phone.
  */
-export async function moveMedication(id: string, direction: "up" | "down"): Promise<ActionResult> {
+export async function moveMedication(id: string, direction: "up" | "down", requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("medications.moveMedication", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("medications.moveMedication", write(t), { id: requestId, action: "medications.moveMedication", db: supabase }, async () => {
     if (!can(await loadPermissions(), "stock.medications")) return refuse(t.management.errors.managementAccessRequired);
     const { error } = await moveInCupboardOrder(await createClient(), "medication", id, direction);
     if (error) return refuse(error);

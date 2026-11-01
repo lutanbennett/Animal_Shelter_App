@@ -1,6 +1,6 @@
 "use client";
 
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { addDoctor, addExistingDoctor } from "./actions";
@@ -16,8 +16,8 @@ import type { ElsewhereDoctor } from "./DoctorsTable";
  * stay one person.
  */
 export function AddDoctorForm({ clinicId, elsewhere }: { clinicId: string; elsewhere: ElsewhereDoctor[] }) {
-  const [state, onSubmit, pending] = useKeptForm(addDoctor.bind(null, clinicId), undefined);
-  const [existingState, existingSubmit, existingPending] = useKeptForm(
+  const [state, onSubmit, pending] = useWriteForm(addDoctor.bind(null, clinicId), undefined);
+  const [existingState, existingSubmit, existingPending] = useWriteForm(
     addExistingDoctor.bind(null, clinicId),
     undefined,
   );

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
 
@@ -19,18 +20,20 @@ export function CupboardOrder({
   move,
 }: {
   items: CupboardOrderItem[];
-  move: (id: string, direction: "up" | "down") => Promise<ActionResult>;
+  move: (id: string, direction: "up" | "down", requestId: string) => Promise<ActionResult>;
 }) {
   const { t } = useI18n();
   const o = t.management.stock.order;
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  // Up and down are the one action, so they share a request id; it is kept only while a press is unresolved.
+  const moveCall = useWriteCall();
 
   function run(id: string, direction: "up" | "down") {
     setError(null);
     startTransition(async () => {
       try {
-        const result = await move(id, direction);
+        const result = await moveCall((requestId) => move(id, direction, requestId));
         if (!result.ok) setError(result.error);
       } catch (err) {
         setError(err instanceof Error ? err.message : t.common.failedToSave);

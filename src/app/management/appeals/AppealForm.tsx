@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { DateInput } from "@/components/DateInput";
 import { parseBaht } from "@/lib/donations/donations";
 import { APPEAL_STYLES, type AppealFields, type AppealStyle } from "@/lib/appeals/form";
@@ -38,6 +39,9 @@ export function AppealForm({
   const router = useRouter();
   const [fields, setFields] = useState<AppealFields>(initial);
   const [pending, startTransition] = useTransition();
+  const saveAppealCall = useWriteCall();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const createAppealCall = useWriteCall();
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
@@ -55,12 +59,12 @@ export function AppealForm({
     setSaved(false);
     startTransition(async () => {
       if (mode === "new") {
-        const result = await createAppeal(fields);
+        const result = await createAppealCall((requestId) => createAppeal(fields, requestId));
         if (!result.ok) return setError(result.error);
         router.push(`/management/appeals/${result.id}`);
         return;
       }
-      const result = await saveAppeal(appealId!, fields);
+      const result = await saveAppealCall((requestId) => saveAppeal(appealId!, fields, requestId));
       if (!result.ok) return setError(result.error);
       setSaved(true);
       router.refresh();

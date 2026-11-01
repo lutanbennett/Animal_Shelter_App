@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { insertContact } from "@/lib/contacts/create";
 import { mapLinkLeadsSomewhere } from "@/lib/contacts/map-preview";
 import {
@@ -14,6 +16,13 @@ import {
 } from "@/lib/contacts/contacts";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -51,13 +60,13 @@ export async function createContact(
   formData: FormData,
 ): Promise<ContactFormState> {
   const { t } = await getT();
-  return runAction("contacts.createContact", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("contacts.createContact", write(t), { id: writeRequestIdFrom(formData), action: "contacts.createContact", db: supabase }, async () => {
     if (!can(await loadPermissions(), "contacts.directory")) return refuse(t.management.errors.managementAccessRequired);
     const text = (key: string) => {
       const value = formData.get(key);
       return typeof value === "string" ? value : null;
     };
-    const supabase = await createClient();
     const created = await insertContact(supabase, t, {
       name: text("name"),
       type: text("type"),
@@ -90,9 +99,10 @@ async function countPlacements(
   return count ?? 0;
 }
 
-export async function updateContact(id: string, fields: ContactFields): Promise<ActionResult> {
+export async function updateContact(id: string, fields: ContactFields, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("contacts.updateContact", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("contacts.updateContact", write(t), { id: requestId, action: "contacts.updateContact", db: supabase }, async () => {
     if (!can(await loadPermissions(), "contacts.directory")) return refuse(t.management.errors.managementAccessRequired);
     const name = optional(fields.name);
     if (!name) return refuse(t.management.contacts.errors.nameRequired);
@@ -102,7 +112,6 @@ export async function updateContact(id: string, fields: ContactFields): Promise<
     const place = contactAddressFields(fields.address, fields.mapUrl);
     if (!place.ok) return refuse(t.management.contacts.errors[place.error]);
 
-    const supabase = await createClient();
 
     // A new or changed Map link must lead to a place; one already saved is
     // left alone, so fixing a phone number never stalls on an old link.
@@ -162,13 +171,13 @@ export async function updateContact(id: string, fields: ContactFields): Promise<
  * as current, and an archived current carer is a contradiction. Return or
  * move the resident first.
  */
-export async function archiveContact(id: string, reason: string | null): Promise<ActionResult> {
+export async function archiveContact(id: string, reason: string | null, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("contacts.archiveContact", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("contacts.archiveContact", write(t), { id: requestId, action: "contacts.archiveContact", db: supabase }, async () => {
     if (!can(await loadPermissions(), "contacts.directory")) return refuse(t.management.errors.managementAccessRequired);
     const a = t.contacts.archive;
 
-    const supabase = await createClient();
 
     const { count: inCare, error: inCareError } = await supabase
       .from("placement_history")
@@ -208,11 +217,11 @@ export async function archiveContact(id: string, reason: string | null): Promise
  * exist while archived_at is set, so clearing archived_at alone is
  * rejected by the database.
  */
-export async function restoreContact(id: string): Promise<ActionResult> {
+export async function restoreContact(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("contacts.restoreContact", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("contacts.restoreContact", write(t), { id: requestId, action: "contacts.restoreContact", db: supabase }, async () => {
     if (!can(await loadPermissions(), "contacts.directory")) return refuse(t.management.errors.managementAccessRequired);
-    const supabase = await createClient();
     const { data, error } = await supabase
       .from("contacts")
       .update({ archived_at: null, archived_by: null, archive_reason: null })
@@ -227,11 +236,11 @@ export async function restoreContact(id: string): Promise<ActionResult> {
   });
 }
 
-export async function deleteContact(id: string): Promise<ActionResult> {
+export async function deleteContact(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("contacts.deleteContact", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("contacts.deleteContact", write(t), { id: requestId, action: "contacts.deleteContact", db: supabase }, async () => {
     if (!can(await loadPermissions(), "contacts.directory")) return refuse(t.management.errors.managementAccessRequired);
-    const supabase = await createClient();
 
     // placement_history.carer_id doesn't cascade, and it's history worth
     // keeping — say so rather than surfacing the foreign-key error.
