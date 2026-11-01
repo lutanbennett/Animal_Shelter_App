@@ -11,7 +11,7 @@
 | PR | #1152 |
 | Tested by / date | Claude (automated and browser-driven), 2026-11-01 |
 | Carries a migration? | no |
-| Tested at SHA | `2d9f1ff1` |
+| Tested at SHA | `238c4c2e` (the gates ran on this tree; only this header line and the PR number changed after) |
 
 ## 1. Scope and risk
 
