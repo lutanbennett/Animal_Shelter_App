@@ -195,10 +195,11 @@ async function devSession() {
   const { data: made, error } = await service.auth.admin.createUser({ email, password, email_confirm: true });
   if (error) throw new Error(`could not make a dev login: ${error.message}`);
   const { error: cardError, cleanup } = await giveCards(service, made.user.id, ["translations"]);
+  // The login goes first and the throwaway role second, the order giveCards' own comment asks for.
   const remove = async () => {
-    await cleanup();
     const { error: delError } = await service.auth.admin.deleteUser(made.user.id);
     if (delError) console.error(`  could not delete the dev login ${email}: ${delError.message}`);
+    await cleanup();
   };
   if (cardError) {
     await remove();
@@ -241,7 +242,9 @@ function readDrafts(file, rows) {
     try {
       text = checkOutput(row.en, cleanOutput(d.text_th), { to: "th", tier: "machine" });
     } catch (e) {
-      refused.push({ where, group: row.group, why: e.message });
+      // checkOutput's wording speaks of "the model" because the engine seam is where it comes from;
+      // the prefix says so, since the Thai in the file may equally have been typed by a person.
+      refused.push({ where, group: row.group, why: `checkOutput: ${e.message}` });
       continue;
     }
     ready.push({ ...row, text, replacing: row.state === "proposed" });
