@@ -1,153 +1,144 @@
-# Planner handover — edition `528`, 2026-10-31
+# Planner handover — edition `537`, 2026-11-01
 
-**A delta, thirty-first edition in this shape. Nine streams** — batch 3 measured, batch 4 built and
-measured, batch 5 set up, all in one day. **All six measured streams ran `opus` / `medium` again**, which
-makes twelve running that have ignored a Sonnet/low recommendation. `519`'s subject was *does the
-environment hold what the proof needs?* — **it fired three more times and belongs in the skill.** This
-round's subject is the one that has now cost four overruns in two batches:
+**A delta, thirty-second edition in this shape. Nine streams in one day** — batches 6, 7 and 8, all
+built, merged and measured, every PR green on its own head commit. **All nine ran `opus` / `medium`**,
+which makes twenty-one running that have ignored a Sonnet/low recommendation: **stop recommending it and
+band at `medium`.** `528`'s subject was *you are banding the wrong noun*, and its answer — count the
+judgements, add 15–20k each — **was tested and did not hold**, so it has already been superseded in the
+skill by the reconciliation rule. This round's subject is where that rule now bites:
 
-> **A judgement the stream must SETTLE costs more than a change it must MAKE.** Five readings. Band the
-> shape, then **count the judgements and add roughly 15–20k each.**
+> **AN ITEM'S OWN COUNT OF A TEXTUAL FAULT IS A LOWER BOUND, ALWAYS.** Three readings. Whoever wrote the
+> item counted the instances they tripped over. **Measure before you band.**
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`.**
-**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → `519` → this. **The next slug is `537`.**
+**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → `528` → this. **The next slug is `546`.**
 
 > **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
 > release state, candidates. **Re-read every time, never diffed.**
 
 ---
 
-## THE ONE THING TO READ: YOU ARE BANDING THE WRONG NOUN
+## THE ONE THING TO READ: THE SMALL ITEM IS WHERE THE OVERRUNS LIVE NOW
 
-Four overruns in two batches, and when I lined up their causes they were the same sentence each time. I
-priced **what the stream would change** and then asked it for **what the stream would decide.**
+The reconciliation rule held on the big streams and slipped on every one I called small. Three streams,
+three items that each quoted a count of strings or sentences, **and all three counts were wrong in the
+same direction:**
 
-| stream | banded as | what it actually did | miss |
+| stream | the item said | it actually was | miss |
 |---|---|---|---|
-| `assistant-model-waits` | three specified changes | three judgements + a fake model machine | **+13%** |
-| `pi-failover-schema` | one migration, four decisions | ten proofs where two were asked, a registry declaration, a check fault diagnosed | **+6%** |
-| `translations-labels-schema` | one migration, three decisions | **two** migrations, fourteen proofs where three were asked, **four corrections to the item read from the database** | **+19%** |
-| `pi-failover-wrapper` | settle one question by reading | **disproved the premise**, then wrote up what *would* work and handed it on | **+8%** |
+| `manual-access-by-cards` | *"about fourteen sentences"* | **57 sentences and 6 `path:` lines** | **+7%** |
+| `thai-hardcoded-strings` | *"15 strings in 3 files"* | 15 — but **12 were deliberate**, and ~419 more are invisible to the check | inside |
+| `access-wording-fixes` | *"three dictionary strings"* | three, **plus about thirty more, at least three of them false** | **+9%** |
 
-**The `+25%` adjustment for a `medium` stream is not what slipped** — twelve readings now, seven inside,
-one 0.6% over, four over by 6–19%. **The base bands slipped, in one direction, for one reason.**
+I banded all three on the item's number. **The number is never the work**, for a reason that is
+structural rather than careless: a textual fault is filed by whoever **tripped over** an instance of it,
+so the count records their path through the file, not the file. **And the item's count is the one thing
+you can check in a minute** — `check-thai-dictionary.mjs --list` and a `grep` of the dictionaries each
+gave the real figure before any briefing.
 
-**What I did about it, and it is the first real test:** `translations-labels-app` is banded 205–260k by
-counting four judgements at ~15–20k each **on top of** the extend-a-screen shape, and `.plan-day.md` says
-so in writing. **Read its actual figure against that reasoning before you reuse the rule.** If it lands
-inside, the rule has its first reading; if it lands under, I have over-corrected and you should say so.
+**So the habit: for any item that quotes a count of strings, sentences, rows or call sites, run the
+measurement yourself first and band on YOUR number.** It is the same rule as *a count quoted without its
+database is not a reading*, one step earlier. **And where the measurement is the deliverable, say so** —
+I made it deliverable 5 on two of these three and both came back with the real figure, which is where
+the thirty and the 419 came from.
 
-**And the planner's half, which is cheaper than the arithmetic:** a judgement is not a thing you can
-accidentally include. **It is in your own brief, in a sentence you wrote.** Count them before you band.
+## THE FINDING OF THE ROUND: THREE DOCUMENTS IN A ROW SAID A WRITE WAS A READ
 
-## THE SINGLE BEST RESULT OF THE ROUND, AND IT WAS A SENTENCE SAYING "I DON'T KNOW"
+`src/app/assistant/lookups.ts` inserts an `assistant_actions` row on every call (line 610). **#1149's PR
+body, #1149's decision file and the (C) sweep paper all describe it as a read-only module**, each having
+inherited it from the last. #1152 opened the file, found the insert, and wrapped it — *"it is on every
+address, it is not idempotent, and anyone working from either document would have left it unwrapped."*
 
-`0292`'s schema paper demanded each write reach the database as **one statement or RPC**. I could see no
-way a wrapper around `runAction()` — which takes an arbitrary async body — could give that, and **I had not
-established that there was no way.** So the brief said the tension in those words, and added that *"a
-shared wrapper cannot give the guarantee for an arbitrary body, so here is what it CAN give and here is
-what (D) must do per path"* **is a passing answer.**
+`528` carried *"an instrument that exists is not an instrument that is right"*. **This is the same fault
+one level up: a DOCUMENT that describes a module is not the module**, and documents inherit from each
+other far more readily than checks do. The question that catches it is the one #1152 was asked —
+**"how many of these are writes? count them"** — and the brief got that right only because I had noticed
+a smaller discrepancy in the same body (13 exports against 12 writes) and wrote it in as a question.
 
-It came back having **disproved the requirement**: three transactions over a wrapper, no transaction handle
-in supabase-js, and being already-an-RPC does not help because those bodies read first. Its decision file is
-titled *"why it is NOT one transaction"*, names the two routes that **would** give it, and hands both to (D).
+**The transferable half for you: when a brief quotes another stream's PR body, say that is where it came
+from.** All three of this round's corrections — `ThemePicker`'s real home, the write count, the plain-GET
+fetch-patch note — came back because the brief said *"#1149's PR body says X"* rather than *"X"*.
 
-**An assertion either way would have been obeyed.** Had I written *"build the one-transaction wrapper"*, it
-would have built something that looked right and silently was not — in the one programme where a double
-write is the whole risk. **This is `519`'s positive-form clause at its highest value yet: write your open
-questions as questions.** It is one clause and it buys a stream spending its turns on what you could not
-work out rather than re-deriving what you could.
+## WHAT `528` ASKED FOR, and what each warning did
 
-## WHAT `519` ASKED FOR, and what each warning did
+- **Its own subject — count the judgements, add 15–20k each — FAILED THE SAME DAY IT WAS WRITTEN.** All
+  three of batch 5 ran 20–33% over with it applied. **It is now a special case of the reconciliation rule
+  in the skill, marked superseded in place rather than deleted.** Do not re-derive it.
+- **The reconciliation rule: FIRED, three consecutive rounds, and it is the first band rule here derived
+  and confirmed twice.** Batch 6 two inside (the third compacted, excluded); batch 7 one inside, two over
+  7–9%; batch 8 two inside, one over 9%. **Every overrun was a job whose shape changed under the stream.**
+  It is right about the shape and still a little light on the amount — **do not widen it again on one
+  round's evidence.**
+- **"Does the environment hold what the proof needs?" FIRED A FIFTH TIME, in a new shape: the WORKTREE
+  itself.** Lutan said stream 14 could write production drafts; it could not, because
+  `scripts/worktree.mjs` copies `.env.local` and `.dev.vars` into a worktree and **not**
+  `.env.deploy.production`. Nothing to do with permissions. **So "the planner runs the production half"
+  is not a convention, it is where the credentials live** — and the four other shapes are in the skill.
+- **"The floor is `tokens − messages`." Nine readings became fifteen**, and the drift is visible: batch 6
+  read 104.0–105.1k, batches 7 and 8 **104.6–106.1k**. It is in the skill. **Re-derive, never carry.**
+- **"A stream can REPORT; only the planner can FILE." FIRED, and this was its best round.** Four findings
+  were in PR bodies and on no item: the assistant's seventh resident read, the raw database message a
+  policy refusal shows a person, the skill's own 65-line growth, and — mine, from #1149 — that applying
+  `0292` is what makes the header breach live. **Keep the pass. It produced batch 8's first stream.**
+- **An open question in the NUMBERED DELIVERABLES: FIRED, five rounds, no miss.** Three this round, and
+  **all three came back answered against me**: the cron cannot draft labels at all (measured, two `42501`s),
+  `/admin/units` can honestly stay listed, and `ThemePicker` lives one component deeper than stated.
+- **"Ban the file, not the folder." HELD, six rounds.** **"Count interruptions as a cost of the brief":
+  one, and it was mine** — see below.
+- **The declared-crossing clause: FIRED THREE TIMES IN ONE PR**, none silently, including two writes moved
+  **off** the Server Action path rather than half-wrapped, with the reason each served.
+- **The release-note truth rule: HELD on all nine.** Every one answered §7 `n/a` with the outstanding step
+  named. Nothing promised a shelter user anything that had not shipped.
 
-- **"Does the environment hold what the proof needs?" FIRED THREE MORE TIMES, all small, and it is now
-  four shapes deep.** `assistant-model-waits` built a fake model machine to observe a wait;
-  `pi-failover-schema` had to state that a worktree cannot read production; and this round
-  **`translations-labels-schema` wrote "Production: NOT ESTABLISHED" against its own D2 and left it to
-  me.** **I ran both production reads this round** (migration status, and the translation counts). **Promote
-  it into the skill's `Token estimates` beside *must it build the instrument*, and promote its corollary:
-  the planner is the only role that can read production, so a production proof is the planner's time, not
-  the stream's band.**
-- **"The floor is `tokens − messages`; you never need a live process." CONFIRMED AGAIN, and now nine
-  readings.** Batch 4 read **103,245 · 103,245 · 103,245** — identical to the token on all three, the second
-  batch running to do that. **It is settled. Promote it into step 2 and stop re-proving it.** My own
-  planner session read 107,369 from its own categories; the drift is upward and slow. Re-derive, never carry.
-- **"Some of these may be correct." FIRED** — see the section above, in its strongest form yet.
-- **"A stream can REPORT; only the planner can FILE." FIRED, AND THE RUN OF FILING NOTHING ENDED.** Batch 3
-  left me nothing because every stream filed its own, and `.plan-day.md` called that the system working.
-  **It was the exception.** Batch 4's bodies held **three** findings on no item: two *found, not fixed*
-  button gates, and the `translations.propose` split that #1134 named as warranted and could not build.
-  **Two rounds of nothing is not a trend. Keep the pass; it is two minutes.**
-- **The declared-crossing clause. FIRED FOUR TIMES IN ONE BATCH, none silently** — three paths in one PR
-  with the reason each served, and eleven `UNION` arms in another **with the reason a release manager would
-  otherwise have lost the translation counts entirely.** Mechanism. Keep it in every brief.
-- **An open question belongs in the NUMBERED DELIVERABLES. FIRED, four rounds, no miss**, and I used it
-  deliberately this round for the one question most likely to be quietly skipped (whether to teach a
-  production check about drafts). **Settled; stop re-testing it.**
-- **Count interruptions as a cost of the brief. ZERO FOR FOUR CONSECUTIVE BATCHES — twelve streams.**
-  Nothing a brief should have settled reached Lutan. This is the longest it has held.
-- **"Ban the file, not the folder." HELD, five rounds.** `scripts/lib/exit.mjs` named by path in every
-  brief; nobody re-diagnosed the libuv trap and one stream switched its harness to `await exitWith()`.
-- **"Re-read the title of any item YOU changed the facts of." HELD, and it was the backlog conflict that
-  caught it** rather than a title sweep — see below.
-- **ONE MITIGATION WAS NEVER EXERCISED, and I am recording it as untested rather than held.** I named
-  `src/lib/releases.ts` as shared between two streams with *"keep both lines"* written in. **Stream 1 chose
-  to add no release note at all** (production is behind, so a note would have been false), so no conflict
-  ever arose. **A mitigation nothing tested has told you nothing.** Keep it; say so again next round.
+## HIS DECISION THAT CHANGES HOW YOU WORK: EVERY PR MERGES ON GREEN
 
-## A FINDING CAN BE TRUE IN A PR BODY AND FALSE FROM THE CHECK, AND BOTH BE RIGHT
+**Decided 2026-11-01, asked directly, and it is in `CLAUDE.md` as "Every PR merges on green"** (#1146).
+Feature PRs included. **Do not ask for a merge again.**
 
-#1134's body says `fixed_outgoings.label` is already covered in `readonly-checks.mjs`. I ran
-`translations-open` on production and it reported that pair as **"not taught"**. The arm is there, on line
-366. **Neither is lying.**
+It was put to him because batch 6's three streams **merged themselves** on full green while the merge
+train still said a feature PR waits for his go — so either the rule or the behaviour was wrong, and only
+he could say which. The conditions are written beside it: green on the PR's **own head commit**, read
+rather than assumed; `skipped` is not a pass; never past a red; a refused `gh pr merge` is reported, not
+worked around. **Major versus minor and the production Worker deploy stay his.**
 
-`uncovered` is `not exists (select 1 from arm …)`, and each arm is `select … from <table>` with **no
-`where`**. So an **empty table contributes zero arm rows**, its arm is invisible to the coverage test, and a
-correctly registered label reads as untaught. **Coverage is being tested against the data instead of against
-the code.** It will spread the moment `0293` reaches production, where `memes` and `site_content_photos` may
-legitimately be empty — and a check that cries wolf about its own coverage is the one nobody reads.
+**The interruption this cost, and it is the lesson:** batch 7's three briefs were written before he
+answered and all three said *"wait for Lutan's go"*. I corrected them on disk **before their sessions
+opened**, so no stream read the superseded instruction — and by the skill's own rule that is not a
+rescope. **But a brief is a copy of the rules, and a copy goes stale the moment the rules move.** When
+you change a rule mid-round, the briefs already on disk are the first thing to fix.
 
-**This is the skill's "an instrument that exists is not an instrument that is right" in a shape it does not
-list: the check's own SELF-DESCRIPTION was wrong, not its count.** Filed, with the fix (test the arm list)
-and a note to fold it in with the string-literal item, which is the same class.
+## THE PROGRAMME THIS ROUND UNBLOCKED, AND WHAT IS LEFT OF IT
 
-**The transferable habit:** when a PR body and a check disagree, **do not pick a side — read the query.**
-One minute settled it, and the alternative was filing a correct stream's claim as a false one.
+The Pi-failover (D) sweep was blocked by something nobody had seen: **a Server Action POSTs to the
+address of the page the person is ON**, and the shared header is on every signed-in page, so every
+address in the app had unwrapped writes reachable at it and `/admin/units` sat on `WRAPPED_WRITE_PATHS`
+in breach. **#1149 found it and added nothing to the list; #1152 closed it**, and
+`scripts/check-wrapped-write-paths.mjs` now **blocks in CI**.
 
-## ONE SMALL THING I GOT WRONG, NOW IN THREE BRIEFS
-
-I wrote `node scripts/dev-signin.mjs --cards website.gallery` into a brief. **`website.gallery` is an
-activity; the card key is `website_photos`.** The stream read the script's refusal, which prints the real
-keys, corrected it in its PR, and drove the negative case properly. **`--cards` takes CARD KEYS.** It cost
-nothing because the stream checked, which is the argument for naming the command in the brief at all.
-
-## FOR THE SKILL'S STEP 1: THE BACKLOG MERGE NOW CONFLICTS EVERY DAY, AND ALWAYS THE SAME WAY
-
-Two days running. A PR ticks an item on `main` the same day the `backlog` branch reworded or re-filed it,
-`docs/backlog.md` is one item per long line, and git cannot merge two rewrites of one line. **Both times the
-resolution was the same: keep `main`'s ticked line, drop the backlog branch's stale `[ ]` copy, keep any new
-item the backlog branch added beside it.** Ninety seconds once you know; a rediscovery each morning if not.
-**Worth one line in step 1** so nobody treats it as a sign something has gone wrong.
-
-## HIS DECISIONS THIS ROUND — all in `.plan-day.md`; never re-ask
-
-- **`assistant.record` goes on the `assistant` card**, restoring `0257`'s pairing. No new card to assign.
-- **The release waits until AFTER batch 5**, asked directly with six migrations pending.
-- **Batch 5 = all three streams as planned.**
-- **He merged #1132 himself** after it was held for the bilingual read. **Never ask him what he read.**
+**So (D) is measured rather than guessed, and the measurement is not what the previous plan assumed:**
+`node scripts/check-wrapped-write-paths.mjs --all` reports **60 action modules still unwrapped, blocking
+80 of the app's 149 page addresses**, with 18 of the 26 admin addresses complete. **And the split by area
+does not match the whole-page rule** — three admin addresses reach writes under `src/app/management/**`
+through shared components, so the areas are not independently finishable. **Re-sequence before briefing
+it**, and brief from the decision files rather than the item. The check's own named limit: it cannot see
+a write inside an imported helper, which is exactly how `assistantLookup` hid.
 
 ## STATE, RE-READ EVERY TIME
 
 Everything below is read from the repo and is stale the moment it is written. **Re-read it; never diff it.**
 
-- `main`, open item count, the highest migration and how far production is behind: in `.plan-day.md`'s own
-  state block, and **all four moved during this round** — the schema stream shipped two migration files, not
-  one, so the next number is not what the previous plan said.
-- **A release is the next step after batch 5, and nothing can deploy until it runs:** `scripts/deploy.mjs`
-  refuses any commit whose migrations are not all applied. **Major versus minor is his and mails every
-  admin; the production Worker deploy is his.**
-- **(D) is now measured, not guessed:** `grep -rl "runAction\|runWriteAction" src/` gives the split by area,
-  so it is four finishable streams. **Brief them from `docs/decisions/2026-10-31-write-request-wrapper.md`,
-  not from the item**, and remember every (D) stream appends to the one path list in `worker/origin.mjs` —
-  so no more than two in a batch.
-- **One worktree is still HELD** by an open session whose PR has merged. Ask before tearing it down.
+- `main`, the open item count, the highest migration and how far production is behind: `.plan-day.md`'s
+  own state block. **No batch this round carried a migration at all**, which is unusual and will not hold.
+- **A release is the natural next step and it is open again**, asked once batch 8 is in. **Major versus
+  minor is his and mails every admin; the production Worker deploy is his.**
+- **ONE THING IS OWED TO HIM AND IS NOT A BRIEFABLE STREAM:** production has 91 labels with no Thai, and
+  `scripts/draft-label-thai.mjs` (new, #1150) is the tool. The survey runs from the main checkout; the Thai
+  itself comes from whoever has the list, since **no engine is reachable from a checkout**; and landing the
+  drafts needs an `--access-token` for a production login holding `translations.manage`. **That token is
+  his, and it is the only manual step.** Nothing is published — `propose_label_th()` never touches the live
+  row.
+- **Two worktrees are HELD** by sessions whose PRs merged (`assistant-record-card`, `write-paths-admin`),
+  and `header-writes-wrapped` will join them. **Both are leftovers, not unsubmitted work** — a squash merge
+  leaves a branch ahead for ever, so `ahead` is not the test; the PR is. **Ask before tearing one down.**
+- **The backlog merge conflicted on both syncs today**, the same shape both times, resolved as the skill
+  now prescribes. It is routine; do not treat it as a signal.
