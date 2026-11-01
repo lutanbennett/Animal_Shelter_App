@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { databaseFailure, runAction, type ActionRefusal, type ActionResult } from "@/lib/action-result";
+import { databaseFailure, runWriteAction, type ActionRefusal, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -23,6 +23,13 @@ import type { DonationReceiptRow } from "@/lib/donations/donations";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 const refuse = (error: string): ActionRefusal => ({ ok: false, error });
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 export type IssuedReceipt = { donationId: string; receiptId: string; number: string; savedToDrive: boolean };
 
@@ -92,16 +99,16 @@ async function issue(
 }
 
 /** The form: records the gift and issues its receipt in one go. */
-export async function recordDonation(fields: DonationFields): Promise<ActionResult<IssuedReceipt>> {
+export async function recordDonation(fields: DonationFields, requestId: string): Promise<ActionResult<IssuedReceipt>> {
   const { t } = await getT();
-  return runAction("donations.recordDonation", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("donations.recordDonation", write(t), { id: requestId, action: "donations.recordDonation", db: supabase }, async () => {
     if (!can(await loadPermissions(), "donation.receipt")) return refuse(t.common.notAllowed);
 
     const checked = checkDonation(fields, todayIso());
     if (!checked.ok) return refuse(problemText(t, checked.problem, checked.line));
     const { lines, country, ...donation } = checked.donation;
 
-    const supabase = await createClient();
     if (donation.designation_appeal_id) {
       // RLS lets only a login that runs appeals read one, so "not found" also covers "not yours to use".
       const { data: appeal, error: aErr } = await supabase
@@ -131,21 +138,22 @@ export async function recordDonation(fields: DonationFields): Promise<ActionResu
 }
 
 /** A new receipt for a donation whose last one was voided (or never issued). */
-export async function issueReceipt(donationId: string, country: string): Promise<ActionResult<IssuedReceipt>> {
+export async function issueReceipt(donationId: string, country: string, requestId: string): Promise<ActionResult<IssuedReceipt>> {
   const { t } = await getT();
-  return runAction("donations.issueReceipt", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("donations.issueReceipt", write(t), { id: requestId, action: "donations.issueReceipt", db: supabase }, async () => {
     if (!can(await loadPermissions(), "donation.receipt")) return refuse(t.common.notAllowed);
     if (!isReceiptCountry(country)) return refuse(t.donations.errors.country);
-    return issue(await createClient(), t, donationId, country);
+    return issue(supabase, t, donationId, country);
   });
 }
 
 /** Files a receipt that Drive refused the first time. */
-export async function retryDriveFiling(receiptId: string): Promise<ActionResult<{ savedToDrive: boolean }>> {
+export async function retryDriveFiling(receiptId: string, requestId: string): Promise<ActionResult<{ savedToDrive: boolean }>> {
   const { t } = await getT();
-  return runAction("donations.retryDriveFiling", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("donations.retryDriveFiling", write(t), { id: requestId, action: "donations.retryDriveFiling", db: supabase }, async () => {
     if (!can(await loadPermissions(), "donation.receipt")) return refuse(t.common.notAllowed);
-    const supabase = await createClient();
     const row = await loadReceipt(supabase, receiptId);
     if (!row) return refuse(t.donations.errors.notFound);
     const savedToDrive = await fileReceiptOnDrive(supabase, row);
@@ -155,11 +163,11 @@ export async function retryDriveFiling(receiptId: string): Promise<ActionResult<
 }
 
 /** The Director confirms she has sent it to the donor. */
-export async function markReceiptSent(receiptId: string): Promise<ActionResult> {
+export async function markReceiptSent(receiptId: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("donations.markReceiptSent", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("donations.markReceiptSent", write(t), { id: requestId, action: "donations.markReceiptSent", db: supabase }, async () => {
     if (!can(await loadPermissions(), "donation.receipt")) return refuse(t.common.notAllowed);
-    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     const { data, error } = await supabase
       .from("donation_receipts")
@@ -179,13 +187,13 @@ export async function markReceiptSent(receiptId: string): Promise<ActionResult> 
  * The copy on Drive is replaced by one stamped VOID, so Drive never holds a
  * clean copy of a cancelled receipt.
  */
-export async function voidReceipt(receiptId: string, reason: string): Promise<ActionResult<{ savedToDrive: boolean }>> {
+export async function voidReceipt(receiptId: string, reason: string, requestId: string): Promise<ActionResult<{ savedToDrive: boolean }>> {
   const { t } = await getT();
-  return runAction("donations.voidReceipt", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("donations.voidReceipt", write(t), { id: requestId, action: "donations.voidReceipt", db: supabase }, async () => {
     if (!can(await loadPermissions(), "donation.receipt")) return refuse(t.common.notAllowed);
     const why = reason.trim();
     if (!why) return refuse(t.donations.errors.voidReason);
-    const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     const { data: row, error } = await supabase
       .from("donation_receipts")

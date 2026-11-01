@@ -1,7 +1,8 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { dietUnitLabel, doseUnitLabel } from "@/lib/i18n/enum-labels";
@@ -12,6 +13,13 @@ import { canEditItemSettings } from "@/lib/permissions/item-settings";
 import { loadPermissions } from "@/lib/permissions/load";
 
 const refuse = (error: string) => ({ ok: false as const, error });
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 export type ConversionFields = {
   unit: string;
@@ -71,10 +79,12 @@ export async function saveConversion(
   itemId: string,
   id: string | null,
   fields: ConversionFields,
+  requestId: string,
 ): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.units.errors;
-  return runAction("units.saveConversion", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("units.saveConversion", write(t), { id: requestId, action: "units.saveConversion", db: supabase }, async () => {
     if (kind !== "medication" && kind !== "diet") return refuse(e.failed);
     // Settings → Medications / Diets since the split of 2026-10-08: Admin only (item-settings.ts).
     if (!canEditItemSettings(await loadPermissions(), kind)) return refuse(e.notAuthorized);
@@ -82,7 +92,6 @@ export async function saveConversion(
     const base = await baseUnitOf(kind, itemId);
     if (!base) return refuse(e.gone);
 
-    const supabase = await createClient();
     const existing = await loadConversions(supabase, kind, [itemId]);
     if (existing.error) return refuse(`${e.failed}: ${existing.error}`);
     const others = existing.data[itemId] ?? [];
@@ -121,13 +130,13 @@ export async function saveConversion(
 }
 
 /** Safe for history for the same reason editing is: past rows keep their own copy of the factor. */
-export async function deleteConversion(kind: ItemKind, id: string): Promise<ActionResult> {
+export async function deleteConversion(kind: ItemKind, id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.units.errors;
-  return runAction("units.deleteConversion", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("units.deleteConversion", write(t), { id: requestId, action: "units.deleteConversion", db: supabase }, async () => {
     if (kind !== "medication" && kind !== "diet") return refuse(e.failed);
     if (!canEditItemSettings(await loadPermissions(), kind)) return refuse(e.notAuthorized);
-    const supabase = await createClient();
     // Only a conversion of this kind: the check above was for this kind.
     const { error, count } = await supabase
       .from("item_unit_conversions")
@@ -151,10 +160,12 @@ export async function setPricePerPurchaseUnit(
   kind: ItemKind,
   itemId: string,
   price: string,
+  requestId: string,
 ): Promise<ActionResult<{ costPerBase: number }>> {
   const { t } = await getT();
   const e = t.units.errors;
-  return runAction("units.setPricePerPurchaseUnit", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("units.setPricePerPurchaseUnit", write(t), { id: requestId, action: "units.setPricePerPurchaseUnit", db: supabase }, async () => {
     if (kind !== "medication" && kind !== "diet") return refuse(e.failed);
     // A price is the stock half's (Management), as the cost per unit is.
     if (!can(await loadPermissions(), kind === "medication" ? "stock.medications" : "stock.diets")) {
@@ -164,7 +175,6 @@ export async function setPricePerPurchaseUnit(
     const amount = Number(typed);
     if (!typed || !Number.isFinite(amount)) return refuse(e.priceInvalid);
 
-    const supabase = await createClient();
     const conversions = await loadConversions(supabase, kind, [itemId]);
     if (conversions.error) return refuse(`${e.failed}: ${conversions.error}`);
     const purchase = defaultUnit(conversions.data[itemId] ?? [], "purchase");

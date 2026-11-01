@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { Check, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import { formatBahtPrice, roundUnitCost } from "@/lib/format";
 import { formatQuantity } from "@/lib/diets/options";
 import { defaultUnit, pricePerPurchaseUnit, type ItemKind, type UnitConversion } from "@/lib/units";
@@ -113,6 +114,10 @@ export function ItemUnits({
   const [price, setPrice] = useState("");
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const saveConversionCall = useWriteCall();
+  const deleteConversionCall = useWriteCall();
+  const priceCall = useWriteCall();
 
   const purchase = defaultUnit(item.conversions, "purchase");
   const priced = pricePerPurchaseUnit(item.costPerBase, item.conversions);
@@ -174,7 +179,7 @@ export function ItemUnits({
                   set={set}
                   pending={pending}
                   wasDefault={c.isDefaultPurchase ?? false}
-                  onSave={() => run(() => saveConversion(kind, item.id, c.id, fields), () => setEditingId(null))}
+                  onSave={() => run(() => saveConversionCall((requestId) => saveConversion(kind, item.id, c.id, fields, requestId)), () => setEditingId(null))}
                   onCancel={() => setEditingId(null)}
                 />
               </li>
@@ -197,7 +202,7 @@ export function ItemUnits({
                       disabled={pending}
                       onClick={async () => {
                         if (!await confirm({ body: u.deleteConfirm(c.unit), confirmLabel: t.common.delete })) return;
-                        run(() => deleteConversion(kind, c.id));
+                        run(() => deleteConversionCall((requestId) => deleteConversion(kind, c.id, requestId)));
                       }}
                     >
                       {u.delete}
@@ -217,7 +222,7 @@ export function ItemUnits({
             set={set}
             pending={pending}
             wasDefault={false}
-            onSave={() => run(() => saveConversion(kind, item.id, null, fields), () => setEditingId(null))}
+            onSave={() => run(() => saveConversionCall((requestId) => saveConversion(kind, item.id, null, fields, requestId)), () => setEditingId(null))}
             onCancel={() => setEditingId(null)}
           />
         ) : (
@@ -260,7 +265,7 @@ export function ItemUnits({
                 icon={Check}
                 compact
                 disabled={pending || !price.trim()}
-                onClick={() => run(() => setPricePerPurchaseUnit(kind, item.id, price), () => setPrice(""))}
+                onClick={() => run(() => priceCall((requestId) => setPricePerPurchaseUnit(kind, item.id, price, requestId)), () => setPrice(""))}
               >
                 {u.price.set}
               </ActionButton>

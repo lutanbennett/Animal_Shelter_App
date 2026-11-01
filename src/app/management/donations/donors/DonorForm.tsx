@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import { useWriteCall } from "@/lib/use-write-form";
 import type { SupporterFields } from "@/lib/donations/supporters";
 import { createSupporter, setSupporterArchived, updateSupporter } from "./actions";
 
@@ -19,6 +20,10 @@ export function DonorForm({ id, initial, archived = false }: { id?: string; init
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [pending, startTransition] = useTransition();
+  // One per action: a request id kept from an unknown save must never reach another action.
+  const updateCall = useWriteCall();
+  const createCall = useWriteCall();
+  const archiveCall = useWriteCall();
   const set = (k: keyof SupporterFields, v: string) => setFields((p) => ({ ...p, [k]: v }));
 
   function save() {
@@ -26,12 +31,12 @@ export function DonorForm({ id, initial, archived = false }: { id?: string; init
     setSaved(false);
     startTransition(async () => {
       if (id) {
-        const r = await updateSupporter(id, fields);
+        const r = await updateCall((requestId) => updateSupporter(id, fields, requestId));
         if (!r.ok) return setError(r.error);
         setSaved(true);
         router.refresh();
       } else {
-        const r = await createSupporter(fields);
+        const r = await createCall((requestId) => createSupporter(fields, requestId));
         if (!r.ok) return setError(r.error);
         router.push(`/management/donations/donors/${r.supporter.id}`);
       }
@@ -42,7 +47,7 @@ export function DonorForm({ id, initial, archived = false }: { id?: string; init
     if (!id) return;
     setError(null);
     startTransition(async () => {
-      const r = await setSupporterArchived(id, !archived);
+      const r = await archiveCall((requestId) => setSupporterArchived(id, !archived, requestId));
       if (!r.ok) return setError(r.error);
       router.refresh();
     });
