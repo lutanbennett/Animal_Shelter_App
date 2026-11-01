@@ -11,12 +11,12 @@
 | PR | see the PR this plan is committed on |
 | Tested by / date | Claude (automated), 2026-11-01 |
 | Carries a migration? | no |
-| Tested at SHA | SHA_HERE |
+| Tested at SHA | dd14a8e9 |
 
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the backlog item asked for — 146 addresses go on `WRAPPED_WRITE_PATHS`, so the Worker replays a POST on each after the Pi fails to answer it clearly
-- [x] Files/areas touched listed — `src/lib/write-requests.ts` (the list, and `isWrappedWritePath()` now treats a `[name]` segment as any one segment, and `"/"` as exact); `scripts/check-worker-origin.mjs` (its "unwrapped" subject path and near-miss case, plus one `[id]` case); `docs/backlog.md`; a decision file; this plan. No action module, no `worker/`, no migration, no change to `runWriteAction()`
+- [x] Files/areas touched listed — `src/lib/write-requests.ts` (the list, and `isWrappedWritePath()` now treats a `[name]` segment as any one segment, and `"/"` as exact); `worker/origin.test.mjs` and `src/lib/action-result.test.mjs` (two unit tests that assumed the old one-path list); `scripts/check-worker-origin.mjs` (its "unwrapped" subject path and near-miss case, plus one `[id]` case); `docs/backlog.md`; a decision file; this plan. No action module, no `worker/`, no migration, no change to `runWriteAction()`
 - [x] Roles affected identified — **by card, not by role**: no permission or control changed; the listing changes only what the Worker does when the Pi does not answer a save
 - [x] Anything explicitly **out of scope** written down — the three held-back addresses (`/admin/security`, `/admin/security/verify`, `/services/desexing`); wrapping anything; the nested claim in `assistant/actions.ts`; stream 23's permission change on `/management/translations`
 
@@ -144,5 +144,5 @@ Result: pass
 `node scripts/check-wrapped-write-paths.mjs` ends `every path on WRAPPED_WRITE_PATHS has all its reachable writes wrapped (146 listed)`; `--all` reports 3 unwrapped addresses (`/admin/security`, `/admin/security/verify`, `/services/desexing`), 146 complete, 149 rows. `node scripts/check-worker-origin.mjs` ends `all cases ok`.
 
 ```
-GATES_HERE
+gates: typecheck=0 lint=0 test=0 build=0
 ```
