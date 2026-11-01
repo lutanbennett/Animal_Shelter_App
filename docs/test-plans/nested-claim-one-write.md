@@ -148,6 +148,6 @@ Automated checks by: Claude  Date: 2026-11-01
 
 ### Manual verification
 
-pending: row 1 of Left for manual verification needs a person with the assistant open
+Manual verification by: pending: row 1 of Left for manual verification needs a person with the assistant open
 
 Result: pass
