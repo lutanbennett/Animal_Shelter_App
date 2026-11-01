@@ -2,12 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import {
-  runAction,
+  runWriteAction,
   type ActionRefusal,
   type ActionResult,
+  type WriteMessages,
 } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { SYSTEM_ZONE } from "@/lib/enclosures/options";
@@ -17,12 +20,20 @@ export type EnclosureFormState = ActionResult<{ success: string }> | undefined;
 
 const refuse = (error: string): ActionRefusal => ({ ok: false, error });
 
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
+
 export async function createEnclosure(
   _state: EnclosureFormState,
   formData: FormData,
 ): Promise<EnclosureFormState> {
   const { t } = await getT();
-  return runAction("enclosures.createEnclosure", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("enclosures.createEnclosure", write(t), { id: writeRequestIdFrom(formData), action: "enclosures.createEnclosure", db: supabase }, async () => {
     if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const name = (formData.get("name") as string | null)?.trim();
@@ -41,8 +52,6 @@ export async function createEnclosure(
         return refuse(t.admin.enclosures.errors.capacityNonNegative);
       }
     }
-
-    const supabase = await createClient();
     const { error } = await supabase
       .from("enclosures")
       .insert({ name, name_th: nameTh, zone_id: zoneId, capacity, notes });
@@ -56,6 +65,7 @@ export async function createEnclosure(
 
 export async function updateEnclosure(
   id: string,
+  requestId: string,
   fields: {
     name: string;
     nameTh: string | null;
@@ -65,12 +75,11 @@ export async function updateEnclosure(
   },
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("enclosures.updateEnclosure", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("enclosures.updateEnclosure", write(t), { id: requestId, action: "enclosures.updateEnclosure", db: supabase }, async () => {
     if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
     if (!fields.name.trim()) return refuse(t.admin.enclosures.errors.nameRequired);
     if (!fields.zoneId) return refuse(t.admin.enclosures.errors.selectZone);
-
-    const supabase = await createClient();
     const { error } = await supabase
       .from("enclosures")
       .update({
@@ -88,12 +97,11 @@ export async function updateEnclosure(
   });
 }
 
-export async function deleteEnclosure(id: string): Promise<ActionResult> {
+export async function deleteEnclosure(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("enclosures.deleteEnclosure", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("enclosures.deleteEnclosure", write(t), { id: requestId, action: "enclosures.deleteEnclosure", db: supabase }, async () => {
     if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
-
-    const supabase = await createClient();
     const { error } = await supabase.from("enclosures").delete().eq("id", id);
 
     if (error) return refuse(error.message);
@@ -141,11 +149,11 @@ async function saveEnclosureOrder(
 }
 
 /** Move up / Move down within the enclosure's own zone, never across zones. */
-export async function moveEnclosure(id: string, direction: "up" | "down"): Promise<ActionResult> {
+export async function moveEnclosure(id: string, direction: "up" | "down", requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("enclosures.moveEnclosure", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("enclosures.moveEnclosure", write(t), { id: requestId, action: "enclosures.moveEnclosure", db: supabase }, async () => {
     if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
-    const supabase = await createClient();
     const { data: enclosure, error } = await supabase
       .from("enclosures")
       .select("zone_id")
@@ -163,11 +171,11 @@ export async function moveEnclosure(id: string, direction: "up" | "down"): Promi
 }
 
 /** Sort A-Z (numbers in order) within one zone, as a starting point to move from. */
-export async function sortEnclosuresByName(zoneId: string): Promise<ActionResult> {
+export async function sortEnclosuresByName(zoneId: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("enclosures.sortEnclosuresByName", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("enclosures.sortEnclosuresByName", write(t), { id: requestId, action: "enclosures.sortEnclosuresByName", db: supabase }, async () => {
     if (!can(await loadPermissions(), "facility.enclosures")) return refuse(t.admin.security.errors.adminAccessRequired);
-    const supabase = await createClient();
     const loaded = await loadZoneEnclosures(supabase, zoneId);
     if (loaded.error) return refuse(loaded.error);
     if (!loaded.rows) return refuse(t.admin.placeOrder.lifecycleRefused);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { UnitSelect } from "@/components/UnitSelect";
@@ -8,7 +8,7 @@ import { createMedication } from "./actions";
 
 /** Name and unit only: the price, reorder lead and safety stock are set on Management → Medication stock. */
 export function CreateMedicationForm() {
-  const [state, onSubmit, pending] = useKeptForm(createMedication, undefined);
+  const [state, onSubmit, pending] = useWriteForm(createMedication, undefined);
   const { t } = useI18n();
   const m = t.management.medications;
 

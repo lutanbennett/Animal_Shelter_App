@@ -8,6 +8,7 @@ import { planHeight, pointsAttr, type Point } from "@/lib/facility-map/geometry"
 import { PLAN_MAX_BYTES, PLAN_MAX_SIDE } from "@/lib/facility-map/plan-image";
 import type { MapPlan } from "@/lib/facility-map/types";
 import { runUploadAction } from "@/lib/uploads/run-upload-action";
+import { useWriteCall } from "@/lib/use-write-form";
 import { uploadPlan } from "./actions";
 import type { EditorZone } from "./MapEditor";
 
@@ -68,13 +69,13 @@ export async function preparePlanFile(file: Blob): Promise<PreparedPlan | null> 
 }
 
 /** Sends a prepared picture to `uploadPlan`, with every failure as a sentence. */
-export async function sendPlan(prepared: PreparedPlan, fields: Record<string, string>, errors: { fileTooLarge: string; processingFailed: string }) {
+export async function sendPlan(prepared: PreparedPlan, fields: Record<string, string>, errors: { fileTooLarge: string; processingFailed: string }, requestId: string) {
   const ext = prepared.blob.type === "image/png" ? "png" : prepared.blob.type === "image/jpeg" ? "jpg" : "webp";
   const file = new File([prepared.blob], `plan.${ext}`, { type: prepared.blob.type });
   const form = new FormData();
   form.set("file", file);
   for (const [k, v] of Object.entries(fields)) form.set(k, v);
-  return runUploadAction(file, errors, () => uploadPlan(form));
+  return runUploadAction(file, errors, () => uploadPlan(form, requestId));
 }
 
 /** The hidden file input and the button that opens it. `accept="image/*"` offers the camera on a phone. */
@@ -137,6 +138,7 @@ export function AddPlan({
   const [prepared, setPrepared] = usePrepared();
   const [busy, setBusy] = useState<"preparing" | "uploading" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const writeUpload = useWriteCall();
 
   if (targets.length === 0) return null;
   const chosen = targets.some((x) => x.id === target) ? target : targets[0].id;
@@ -191,7 +193,9 @@ export function AddPlan({
               if (!prepared) return;
               setBusy("uploading");
               setError(null);
-              const r = await sendPlan(prepared, { mode: "add", zoneId: chosen }, { fileTooLarge: m.errors.tooLarge, processingFailed: m.errors.uploadFailed });
+              const r = await writeUpload((requestId) =>
+                sendPlan(prepared, { mode: "add", zoneId: chosen }, { fileTooLarge: m.errors.tooLarge, processingFailed: m.errors.uploadFailed }, requestId),
+              );
               setBusy(null);
               if (!r.ok) setError(r.error);
               else {
@@ -237,6 +241,7 @@ export function ReplacePlan({
   const [keep, setKeep] = useState(true);
   const [busy, setBusy] = useState<"preparing" | "uploading" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const writeUpload = useWriteCall();
 
   const reshaped = prepared ? Math.abs(prepared.width / prepared.height / (plan.width / plan.height) - 1) > 0.02 : false;
   const shapesOnPlan = placed + roomsPlaced;
@@ -328,10 +333,13 @@ export function ReplacePlan({
               onClick={async () => {
                 setBusy("uploading");
                 setError(null);
-                const r = await sendPlan(
-                  prepared,
-                  { mode: "replace", planId: plan.id, shapes: keep ? "keep" : "clear" },
-                  { fileTooLarge: m.errors.tooLarge, processingFailed: m.errors.uploadFailed },
+                const r = await writeUpload((requestId) =>
+                  sendPlan(
+                    prepared,
+                    { mode: "replace", planId: plan.id, shapes: keep ? "keep" : "clear" },
+                    { fileTooLarge: m.errors.tooLarge, processingFailed: m.errors.uploadFailed },
+                    requestId,
+                  ),
                 );
                 setBusy(null);
                 if (!r.ok) setError(r.error);

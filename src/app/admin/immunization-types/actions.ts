@@ -2,12 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import {
-  runAction,
+  runWriteAction,
   type ActionRefusal,
   type ActionResult,
+  type WriteMessages,
 } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { parseBahtAmount } from "@/lib/format";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -15,6 +18,13 @@ import { loadPermissions } from "@/lib/permissions/load";
 export type ImmunizationTypeFormState = ActionResult<{ success: string }> | undefined;
 
 const refuse = (error: string): ActionRefusal => ({ ok: false, error });
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 type IntervalResult = { ok: true; value: number | null } | { ok: false };
 
@@ -32,7 +42,8 @@ export async function createImmunizationType(
   formData: FormData,
 ): Promise<ImmunizationTypeFormState> {
   const { t } = await getT();
-  return runAction("immunizationTypes.createImmunizationType", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("immunizationTypes.createImmunizationType", write(t), { id: writeRequestIdFrom(formData), action: "immunizationTypes.createImmunizationType", db: supabase }, async () => {
     if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const name = (formData.get("name") as string | null)?.trim();
@@ -47,8 +58,6 @@ export async function createImmunizationType(
     // Optional: a vaccine can be listed before anyone knows what it costs.
     const cost = parseBahtAmount(formData.get("cost") as string | null);
     if (!cost.ok) return refuse(t.admin.immunizationTypes.errors.costInvalid);
-
-    const supabase = await createClient();
     const { error } = await supabase.from("immunization_types").insert({
       name,
       // Optional: empty means Thai readers see the English (0166).
@@ -67,6 +76,7 @@ export async function createImmunizationType(
 
 export async function updateImmunizationType(
   id: string,
+  requestId: string,
   fields: {
     name: string;
     nameTh: string;
@@ -82,7 +92,8 @@ export async function updateImmunizationType(
   },
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("immunizationTypes.updateImmunizationType", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("immunizationTypes.updateImmunizationType", write(t), { id: requestId, action: "immunizationTypes.updateImmunizationType", db: supabase }, async () => {
     if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
     if (!fields.name.trim()) {
       return refuse(t.admin.immunizationTypes.errors.nameRequired);
@@ -98,8 +109,6 @@ export async function updateImmunizationType(
     if (fields.stockOnHand != null && !(fields.stockOnHand >= 0)) {
       return refuse(t.admin.immunizationTypes.errors.stockInvalid);
     }
-
-    const supabase = await createClient();
     const { error } = await supabase
       .from("immunization_types")
       .update({
@@ -119,12 +128,11 @@ export async function updateImmunizationType(
   });
 }
 
-export async function deleteImmunizationType(id: string): Promise<ActionResult> {
+export async function deleteImmunizationType(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("immunizationTypes.deleteImmunizationType", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("immunizationTypes.deleteImmunizationType", write(t), { id: requestId, action: "immunizationTypes.deleteImmunizationType", db: supabase }, async () => {
     if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
-
-    const supabase = await createClient();
     const { error } = await supabase
       .from("immunization_types")
       .delete()

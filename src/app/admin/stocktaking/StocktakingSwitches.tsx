@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { StocktakingSwitches as Switches } from "@/lib/management/stocktaking-switches";
+import { useWriteCall } from "@/lib/use-write-form";
 import { setStocktakingSwitch, type StocktakingArea } from "./actions";
 
 const AREAS: StocktakingArea[] = ["food", "medical"];
@@ -14,12 +15,13 @@ export function StocktakingSwitches({ switches }: { switches: Switches }) {
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState<StocktakingArea | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const writeSwitch = useWriteCall();
 
   function change(area: StocktakingArea, enabled: boolean) {
     setBusy(area);
     setMessage(null);
     startTransition(async () => {
-      const result = await setStocktakingSwitch(area, enabled);
+      const result = await writeSwitch((requestId) => setStocktakingSwitch(area, enabled, requestId));
       setBusy(null);
       setMessage(
         result.ok

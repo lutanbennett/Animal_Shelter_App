@@ -6,7 +6,7 @@ import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { UnitSelect } from "@/components/UnitSelect";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { createDietType } from "./actions";
 import { createRecipe } from "./recipe-actions";
 import { Sheet, sheetInputClass } from "./Sheet";
@@ -32,7 +32,8 @@ export function AddDietButton() {
   const { t } = useI18n();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [state, onSubmit, pending] = useKeptForm(async (prev: Parameters<typeof createRecipe>[0], data: FormData) => {
+  // useWriteForm, not useKeptForm: these saves are wrapped (Pi failover (D)).
+  const [state, onSubmit, pending] = useWriteForm(async (prev: Parameters<typeof createRecipe>[0], data: FormData) => {
     const result = await createRecipe(prev, data);
     if (result?.ok) {
       setOpen(false);
@@ -75,7 +76,7 @@ export function AddIngredientButton() {
   const { t } = useI18n();
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [state, onSubmit, pending] = useKeptForm(async (prev: Parameters<typeof createDietType>[0], data: FormData) => {
+  const [state, onSubmit, pending] = useWriteForm(async (prev: Parameters<typeof createDietType>[0], data: FormData) => {
     const result = await createDietType(prev, data);
     if (result?.ok) {
       setOpen(false);

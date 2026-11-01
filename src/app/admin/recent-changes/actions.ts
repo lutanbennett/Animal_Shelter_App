@@ -1,7 +1,7 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
-import { runAction, unexpectedFailure, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, unexpectedFailure, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import {
   changedColumns,
   currentImage,
@@ -13,11 +13,19 @@ import {
 } from "@/lib/audit/recent-changes";
 import { editPlan, undoKind } from "@/lib/audit/undo";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 
 const refuse = (error: string) => ({ ok: false as const, error });
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 function revalidateFor(table: AuditedTable, image: Image) {
   revalidatePath("/admin/recent-changes");
@@ -50,9 +58,10 @@ function revalidateFor(table: AuditedTable, image: Image) {
  * and restoring a deleted row's image is only the right row if nothing has
  * happened to it since. The way round is to undo the newer change first.
  */
-export async function undoChange(auditId: number): Promise<ActionResult> {
+export async function undoChange(auditId: number, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("recentChanges.undo", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("recentChanges.undo", write(t), { id: requestId, action: "recentChanges.undo", db: supabase }, async () => {
     const u = t.admin.recentChanges.undo;
     if (!Number.isSafeInteger(auditId) || auditId <= 0) return refuse(u.errors.gone);
     if (!can(await loadPermissions(), "audit.undo")) return refuse(t.admin.security.errors.adminAccessRequired);
@@ -64,8 +73,6 @@ export async function undoChange(auditId: number): Promise<ActionResult> {
       if (error.code === "42501") return refuse(t.common.notAllowed);
       return unexpectedFailure(`recentChanges.undo.${step}`, error, t.common.somethingWentWrong);
     };
-
-    const supabase = await createClient();
     const { data: entry } = await supabase
       .from("audit_log")
       .select("id, table_name, row_id, op, old_row, new_row")

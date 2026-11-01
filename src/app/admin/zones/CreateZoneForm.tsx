@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { ZoneColourPicker } from "./ZoneColourPicker";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
@@ -9,7 +9,9 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { createZone } from "./actions";
 
 export function CreateZoneForm() {
-  const [state, onSubmit, pending] = useKeptForm(createZone, undefined);
+  // useWriteForm, not useKeptForm: this save is wrapped (Pi failover (D)), so it
+  // carries a request id and the browser stops waiting after WRITE_WAIT_MS.
+  const [state, onSubmit, pending] = useWriteForm(createZone, undefined);
   const { t } = useI18n();
   // Controlled, so the form's reset after a successful add has to clear it too.
   const [colour, setColour] = useState("");

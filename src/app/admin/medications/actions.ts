@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { loadUnitList } from "@/lib/unit-list-server";
 import { usableUnit } from "@/lib/unit-list";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -14,6 +16,13 @@ import { canEditItemSettings } from "@/lib/permissions/item-settings";
 // and can no longer rename or re-unit a medication.
 
 const refuse = (error: string) => ({ ok: false as const, error });
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 export type MedicationFormState = ActionResult<{ success: string }> | undefined;
 
@@ -68,15 +77,14 @@ export async function createMedication(
   formData: FormData,
 ): Promise<MedicationFormState> {
   const { t } = await getT();
-  return runAction("medications.createMedication", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("medications.createMedication", write(t), { id: writeRequestIdFrom(formData), action: "medications.createMedication", db: supabase }, async () => {
     const refused = await refusal();
     if (refused) return refused;
     const name = optional(formData.get("name"));
     if (!name) return refuse(t.management.medications.errors.nameRequired);
     const doseUnit = await medicineUnit(optional(formData.get("doseUnit")));
     if (!doseUnit) return refuse(t.management.medications.errors.unitInvalid);
-
-    const supabase = await createClient();
     const { error } = await supabase.from("medication").insert({ name, name_th: optional(formData.get("nameTh")), dose_unit: doseUnit });
     if (error) return refuse(error.message);
 
@@ -92,18 +100,18 @@ export async function createMedication(
  */
 export async function updateMedicationDefinition(
   id: string,
+  requestId: string,
   fields: MedicationDefinition,
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("medications.updateMedicationDefinition", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("medications.updateMedicationDefinition", write(t), { id: requestId, action: "medications.updateMedicationDefinition", db: supabase }, async () => {
     const refused = await refusal();
     if (refused) return refused;
     const name = optional(fields.name);
     if (!name) return refuse(t.management.medications.errors.nameRequired);
     const doseUnit = await medicineUnit(optional(fields.doseUnit));
     if (!doseUnit) return refuse(t.management.medications.errors.unitInvalid);
-
-    const supabase = await createClient();
     const { error } = await supabase.from("medication").update({ name, name_th: optional(fields.nameTh), dose_unit: doseUnit }).eq("id", id);
     if (error) return refuse(error.message);
     revalidateMedicationPages();
@@ -111,9 +119,10 @@ export async function updateMedicationDefinition(
   });
 }
 
-export async function deleteMedication(id: string): Promise<ActionResult> {
+export async function deleteMedication(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("medications.deleteMedication", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("medications.deleteMedication", write(t), { id: requestId, action: "medications.deleteMedication", db: supabase }, async () => {
     const refused = await refusal();
     if (refused) return refused;
     // prescriptions.medication_id has no cascade: a medication that has ever
@@ -121,8 +130,6 @@ export async function deleteMedication(id: string): Promise<ActionResult> {
     // of surfacing the foreign-key error.
     const count = await countPrescriptions(id);
     if (count > 0) return refuse(t.management.medications.errors.hasPrescriptions(count));
-
-    const supabase = await createClient();
     const { error } = await supabase.from("medication").delete().eq("id", id);
     if (error) return refuse(error.message);
     revalidateMedicationPages();
@@ -138,15 +145,15 @@ export async function deleteMedication(id: string): Promise<ActionResult> {
  */
 export async function mergeMedication(
   fromId: string,
+  requestId: string,
   intoId: string,
 ): Promise<ActionResult<{ count: number }>> {
   const { t } = await getT();
-  return runAction("medications.mergeMedication", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("medications.mergeMedication", write(t), { id: requestId, action: "medications.mergeMedication", db: supabase }, async () => {
     const refused = await refusal();
     if (refused) return refused;
     if (fromId === intoId) return refuse(t.management.medications.errors.mergeSelf);
-
-    const supabase = await createClient();
     const { data: pair, error: pairError } = await supabase
       .from("medication")
       .select("id, dose_unit")

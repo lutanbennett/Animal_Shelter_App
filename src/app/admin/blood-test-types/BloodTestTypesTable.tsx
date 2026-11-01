@@ -6,6 +6,7 @@ import { Fragment, useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
+import { useWriteCall } from "@/lib/use-write-form";
 import {
   deleteBloodTestType,
   mergeBloodTestType,
@@ -41,6 +42,12 @@ function BloodTestTypeRowItem({
     { type: "error" | "success"; text: string } | null
   >(null);
   const [isPending, startTransition] = useTransition();
+  // ONE useWriteCall PER ACTION, never shared: an id kept from an unknown Save and
+  // then sent to Delete is the same id against a different action, which
+  // claim_write_request() refuses outright (0292).
+  const writeSave = useWriteCall();
+  const writeDelete = useWriteCall();
+  const writeMerge = useWriteCall();
 
   function reset() {
     setName(bloodTestType.name);
@@ -52,7 +59,7 @@ function BloodTestTypeRowItem({
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      const result = await updateBloodTestType(bloodTestType.id, { name, nameTh });
+      const result = await writeSave((requestId) => updateBloodTestType(bloodTestType.id, requestId, { name, nameTh }));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -66,7 +73,7 @@ function BloodTestTypeRowItem({
     if (!await confirm({ body: p.deleteConfirm(bloodTestType.name), confirmLabel: t.common.delete })) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await deleteBloodTestType(bloodTestType.id);
+      const result = await writeDelete((requestId) => deleteBloodTestType(bloodTestType.id, requestId));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
       }
@@ -87,7 +94,7 @@ function BloodTestTypeRowItem({
     }
     setMessage(null);
     startTransition(async () => {
-      const result = await mergeBloodTestType(bloodTestType.id, target.id);
+      const result = await writeMerge((requestId) => mergeBloodTestType(bloodTestType.id, requestId, target.id));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
       }

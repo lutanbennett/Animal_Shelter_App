@@ -20,6 +20,7 @@ import {
   updateRecipe,
   type RecipeLineFields,
 } from "./recipe-actions";
+import { useWriteCall } from "@/lib/use-write-form";
 import { Sheet, sheetInputClass } from "./Sheet";
 
 const labelClass = "flex flex-col gap-1 text-sm font-medium text-muted";
@@ -50,6 +51,7 @@ function LineSheet({
   const [fields, setFields] = useState<RecipeLineFields>(initial ?? EMPTY_LINE);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const writeLine = useWriteCall();
   const ingredient = ingredients.find((i) => i.id === fields.ingredientId);
   const set = (key: keyof RecipeLineFields) => (value: string) => setFields((prev) => ({ ...prev, [key]: value }));
 
@@ -62,7 +64,7 @@ function LineSheet({
   function save() {
     setMessage(null);
     startTransition(async () => {
-      const result = await saveRecipeLine(dietId, fields);
+      const result = await writeLine((requestId) => saveRecipeLine(dietId, fields, requestId));
       if (!result.ok) {
         setMessage(result.error);
         return;
@@ -147,11 +149,12 @@ function RenameSheet({ open, recipe, onClose }: { open: boolean; recipe: BookRec
   const [fields, setFields] = useState({ name: recipe.name, nameTh: recipe.nameTh ?? "", notes: recipe.notes ?? "" });
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const writeRename = useWriteCall();
   const set = (key: keyof typeof fields) => (value: string) => setFields((prev) => ({ ...prev, [key]: value }));
   function save() {
     setMessage(null);
     startTransition(async () => {
-      const result = await updateRecipe(recipe.id, fields);
+      const result = await writeRename((requestId) => updateRecipe(recipe.id, fields, requestId));
       if (!result.ok) {
         setMessage(result.error);
         return;
@@ -201,13 +204,14 @@ function ServingsEditor({ recipe }: { recipe: BookRecipe }) {
   });
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
+  const writeServings = useWriteCall();
   const labels: Record<Size, string> = { small: r.small, medium: r.medium, large: r.large };
   async function save() {
     setMessage(null);
     const typed = { small: Number(fields.small), medium: Number(fields.medium), large: Number(fields.large) };
     if (implausibleServings(typed) && !(await confirm({ body: b.servingsConfirm }))) return;
     startTransition(async () => {
-      const result = await saveServings(recipe.id, fields);
+      const result = await writeServings((requestId) => saveServings(recipe.id, fields, requestId));
       setMessage(result.ok ? { ok: true, text: b.servingsSaved } : { ok: false, text: result.error });
     });
   }
@@ -258,6 +262,10 @@ export function RecipeDetail({
   const b = t.admin.diets.book;
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // ONE useWriteCall PER ACTION, never shared (0292 refuses one id against two actions).
+  const writeStandard = useWriteCall();
+  const writeDelete = useWriteCall();
+  const writeRemoveLine = useWriteCall();
   const [renaming, setRenaming] = useState(false);
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -281,13 +289,13 @@ export function RecipeDetail({
 
   async function handleMakeStandard() {
     if (!(await confirm({ body: r.standardConfirm(recipe.name, standardName) }))) return;
-    run(() => setStandardRecipe(recipe.id));
+    run(() => writeStandard((requestId) => setStandardRecipe(recipe.id, requestId)));
   }
 
   async function handleDelete() {
     if (!(await confirm({ body: r.deleteConfirm(recipe.name), confirmLabel: t.common.delete }))) return;
     run(
-      () => deleteRecipe(recipe.id),
+      () => writeDelete((requestId) => deleteRecipe(recipe.id, requestId)),
       () => router.push("/admin/diets"),
     );
   }
@@ -370,7 +378,7 @@ export function RecipeDetail({
                   />
                   <RowActionButton
                     disabled={pending}
-                    onClick={() => run(() => removeRecipeLine(recipe.id, line.ingredientId))}
+                    onClick={() => run(() => writeRemoveLine((requestId) => removeRecipeLine(recipe.id, line.ingredientId, requestId)))}
                     label={r.removeLine}
                     subject={ingredient.name}
                     icon={ACTION_ICONS.delete}

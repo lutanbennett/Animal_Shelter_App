@@ -8,7 +8,8 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { RowActionButton } from "@/components/RowAction";
 import type { ActionResult } from "@/lib/action-result";
 import { GROUP_ICON_KEYS, groupIcon } from "@/lib/home/group-icons";
-import { runCardOp, type CardOp } from "./CardControls";
+import { useWriteCall } from "@/lib/use-write-form";
+import { runCardOp, useCardOpWrite, type CardOp } from "./CardControls";
 import { addGroup, moveGroup, removeGroup, setCardFeature, setCardGroup } from "./actions";
 
 /**
@@ -68,6 +69,13 @@ export function CardBoard({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [over, setOver] = useState<string | null>(null);
+  // ONE useWriteCall PER ACTION, never shared (0292 refuses one id against two actions).
+  // A step list is awaited one at a time, so each step gets its own fresh id.
+  const writeFor = useCardOpWrite();
+  const writeCardGroup = useWriteCall();
+  const writeCardFeature = useWriteCall();
+  const writeMoveGroup = useWriteCall();
+  const writeRemoveGroup = useWriteCall();
   // One box filters both columns by name and description. Reordering stays on the full lists.
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
@@ -98,7 +106,7 @@ export function CardBoard({
       router.refresh();
     });
   }
-  const cardOps = (ops: CardOp[]) => run(ops.map((op) => () => runCardOp(op)));
+  const cardOps = (ops: CardOp[]) => run(ops.map((op) => () => writeFor(op)((requestId) => runCardOp(op, requestId))));
 
   const dragStart = (key: string, from: "held" | "library") => (e: React.DragEvent) => {
     e.dataTransfer.setData("text/plain", `${from}:${key}`);
@@ -124,7 +132,7 @@ export function CardBoard({
     }
     const card = held.find((h) => h.key === p.key);
     if (!card) return;
-    if ((card.group ?? null) !== place) return run([() => setCardGroup(roleKey, p.key, place)]);
+    if ((card.group ?? null) !== place) return run([() => writeCardGroup((requestId) => setCardGroup(roleKey, p.key, place, requestId))]);
     if (!target || target === p.key) return;
     // Reordering is the Move buttons pressed as many times as it takes: each step is the same action and the same audit row.
     const keys = inPlace(place).map((h) => h.key);
@@ -191,7 +199,7 @@ export function CardBoard({
                 title={fc.featureFor(tl.label)}
                 value={tl.feature ?? ""}
                 disabled={pending}
-                onChange={(e) => run([() => setCardFeature(tl.key, e.target.value || null)])}
+                onChange={(e) => run([() => writeCardFeature((requestId) => setCardFeature(tl.key, e.target.value || null, requestId))])}
                 className="min-h-11 min-w-0 max-w-full rounded-md border border-border bg-background px-2 text-sm text-foreground"
               >
                 <option value="">{fc.unsorted}</option>
@@ -215,7 +223,7 @@ export function CardBoard({
                   title={gc.placeFor(tl.label)}
                   value={tl.group ?? ""}
                   disabled={pending}
-                  onChange={(e) => run([() => setCardGroup(roleKey, tl.key, e.target.value || null)])}
+                  onChange={(e) => run([() => writeCardGroup((requestId) => setCardGroup(roleKey, tl.key, e.target.value || null, requestId))])}
                   className="min-h-11 min-w-0 max-w-full rounded-md border border-border bg-background px-2 text-sm text-foreground"
                 >
                   {places.map((pl) => (
@@ -293,11 +301,11 @@ export function CardBoard({
                   <h3 className="min-w-0 flex-1 text-base font-semibold text-foreground [overflow-wrap:anywhere]">{g.label}</h3>
                   {canEdit && (
                     <div className="flex flex-wrap gap-1">
-                      {gi > 0 && <RowActionButton icon={ArrowUp} label={gc.moveUpFor(g.label)} disabled={pending} onClick={() => run([() => moveGroup(roleKey, g.id, "up")])} />}
+                      {gi > 0 && <RowActionButton icon={ArrowUp} label={gc.moveUpFor(g.label)} disabled={pending} onClick={() => run([() => writeMoveGroup((requestId) => moveGroup(roleKey, g.id, "up", requestId))])} />}
                       {gi < groups.length - 1 && (
-                        <RowActionButton icon={ArrowDown} label={gc.moveDownFor(g.label)} disabled={pending} onClick={() => run([() => moveGroup(roleKey, g.id, "down")])} />
+                        <RowActionButton icon={ArrowDown} label={gc.moveDownFor(g.label)} disabled={pending} onClick={() => run([() => writeMoveGroup((requestId) => moveGroup(roleKey, g.id, "down", requestId))])} />
                       )}
-                      <RowActionButton icon={X} tone="danger" label={gc.removeFor(g.label)} disabled={pending} onClick={() => run([() => removeGroup(roleKey, g.id)])} />
+                      <RowActionButton icon={X} tone="danger" label={gc.removeFor(g.label)} disabled={pending} onClick={() => run([() => writeRemoveGroup((requestId) => removeGroup(roleKey, g.id, requestId))])} />
                     </div>
                   )}
                 </div>
@@ -341,6 +349,7 @@ function AddGroupForm({ roleKey, pending, onAdded }: { roleKey: string; pending:
   const [name, setName] = useState("");
   const [nameTh, setNameTh] = useState("");
   const [busy, startAdd] = useTransition();
+  const writeAddGroup = useWriteCall();
   // The result is drawn under the button that caused it: the board-wide error sits above the cards, out of sight from here.
   const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null);
   const [icon, setIcon] = useState<string>(GROUP_ICON_KEYS[0]);
@@ -356,7 +365,7 @@ function AddGroupForm({ roleKey, pending, onAdded }: { roleKey: string; pending:
           const added = name.trim();
           setResult(null);
           startAdd(async () => {
-            const r = await addGroup(roleKey, name, nameTh, icon);
+            const r = await writeAddGroup((requestId) => addGroup(roleKey, name, nameTh, icon, requestId));
             if (r.ok) {
               setName("");
               setNameTh("");

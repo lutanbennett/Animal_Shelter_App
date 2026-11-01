@@ -2,18 +2,28 @@
 
 import { refresh, revalidatePath } from "next/cache";
 import {
-  runAction,
+  runWriteAction,
   type ActionRefusal,
   type ActionResult,
+  type WriteMessages,
 } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 
 export type BloodTestTypeFormState = ActionResult<{ success: string }> | undefined;
 
 const refuse = (error: string): ActionRefusal => ({ ok: false, error });
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 function revalidateBloodTestTypePages() {
   revalidatePath("/admin/blood-test-types");
@@ -42,13 +52,12 @@ export async function createBloodTestType(
   formData: FormData,
 ): Promise<BloodTestTypeFormState> {
   const { t } = await getT();
-  return runAction("bloodTestTypes.createBloodTestType", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("bloodTestTypes.createBloodTestType", write(t), { id: writeRequestIdFrom(formData), action: "bloodTestTypes.createBloodTestType", db: supabase }, async () => {
     if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const name = (formData.get("name") as string | null)?.trim();
     if (!name) return refuse(t.admin.bloodTestTypes.errors.nameRequired);
-
-    const supabase = await createClient();
     // Optional: an empty Thai name means Thai readers see the English (0166).
     const nameTh = (formData.get("nameTh") as string | null)?.trim() || null;
     const { error } = await supabase.from("blood_test_types").insert({ name, name_th: nameTh });
@@ -62,16 +71,16 @@ export async function createBloodTestType(
 
 export async function updateBloodTestType(
   id: string,
+  requestId: string,
   fields: { name: string; nameTh: string },
 ): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("bloodTestTypes.updateBloodTestType", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("bloodTestTypes.updateBloodTestType", write(t), { id: requestId, action: "bloodTestTypes.updateBloodTestType", db: supabase }, async () => {
     if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const name = fields.name.trim();
     if (!name) return refuse(t.admin.bloodTestTypes.errors.nameRequired);
-
-    const supabase = await createClient();
     const { error } = await supabase
       .from("blood_test_types")
       .update({ name, name_th: fields.nameTh.trim() || null })
@@ -83,9 +92,10 @@ export async function updateBloodTestType(
   });
 }
 
-export async function deleteBloodTestType(id: string): Promise<ActionResult> {
+export async function deleteBloodTestType(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("bloodTestTypes.deleteBloodTestType", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("bloodTestTypes.deleteBloodTestType", write(t), { id: requestId, action: "bloodTestTypes.deleteBloodTestType", db: supabase }, async () => {
     if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
 
     // blood_tests.blood_test_type_id has no cascade: a type that has ever been
@@ -95,8 +105,6 @@ export async function deleteBloodTestType(id: string): Promise<ActionResult> {
     if (count > 0) {
       return refuse(t.admin.bloodTestTypes.errors.hasBloodTests(count));
     }
-
-    const supabase = await createClient();
     const { error } = await supabase
       .from("blood_test_types")
       .delete()
@@ -114,16 +122,16 @@ export async function deleteBloodTestType(id: string): Promise<ActionResult> {
  */
 export async function mergeBloodTestType(
   fromId: string,
+  requestId: string,
   intoId: string,
 ): Promise<ActionResult<{ count: number }>> {
   const { t } = await getT();
-  return runAction("bloodTestTypes.mergeBloodTestType", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("bloodTestTypes.mergeBloodTestType", write(t), { id: requestId, action: "bloodTestTypes.mergeBloodTestType", db: supabase }, async () => {
     if (!can(await loadPermissions(), "reference.types")) return refuse(t.admin.security.errors.adminAccessRequired);
     if (fromId === intoId) {
       return refuse(t.admin.bloodTestTypes.errors.mergeSelf);
     }
-
-    const supabase = await createClient();
     const { data, error } = await supabase.rpc("merge_blood_test_type", {
       p_from: fromId,
       p_into: intoId,

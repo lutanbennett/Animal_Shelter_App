@@ -25,6 +25,7 @@ import {
 import type { MapPlan } from "@/lib/facility-map/types";
 import { formatDateTime } from "@/lib/format";
 import { ROOM_DESCRIPTION_MAX, ROOM_NAME_MAX } from "@/lib/facility-map/rooms";
+import { useWriteCall } from "@/lib/use-write-form";
 import { addRoom, deleteRoom, removePlan, removeRoomPlacement, saveRoomDetails, saveRoomShape, saveShape, undoReplace } from "./actions";
 import { AddPlan, ReplacePlan } from "./PlanUpload";
 
@@ -170,6 +171,15 @@ export function MapEditor({
   const roomsPlaced = roomItems.filter((i) => shapes[i.id]).length;
   const overlay = items.flatMap((i) => (shapes[i.id] ? [{ id: i.id, name: i.name, shape: shapes[i.id]! }] : []));
   const [planBusy, setPlanBusy] = useState(false);
+  // ONE useWriteCall PER ACTION, never shared: an id kept from an unknown save and
+  // then sent to another action is refused outright by claim_write_request() (0292).
+  const writeUndoReplace = useWriteCall();
+  const writeShape = useWriteCall();
+  const writeAddRoom = useWriteCall();
+  const writeRoomShape = useWriteCall();
+  const writeRemovePlacement = useWriteCall();
+  const writeDeleteRoom = useWriteCall();
+  const writeRemovePlan = useWriteCall();
 
 
   async function undoLastReplace(p: EditorPlan) {
@@ -177,7 +187,7 @@ export function MapEditor({
     if (!(await confirm({ body: p.undo.cleared ? m.undoConfirmCleared : m.undoConfirmKept, confirmLabel: m.undoReplace }))) return;
     setPlanBusy(true);
     setMessage(null);
-    const r = await undoReplace(p.id);
+    const r = await writeUndoReplace((requestId) => undoReplace(p.id, requestId));
     setPlanBusy(false);
     if (!r.ok) setMessage({ kind: "error", text: r.error });
     else router.refresh();
@@ -217,7 +227,7 @@ export function MapEditor({
   async function save(item: Item, shape: Point[] | null) {
     setSaving(true);
     setMessage(null);
-    const result = await saveShape(item.target === "zone" ? "zone" : "enclosure", item.id, shape);
+    const result = await writeShape((requestId) => saveShape(item.target === "zone" ? "zone" : "enclosure", requestId, item.id, shape));
     setSaving(false);
     if (!result.ok) {
       setMessage({ kind: "error", text: result.error });
@@ -238,7 +248,7 @@ export function MapEditor({
     setSaving(true);
     setMessage(null);
     if (item.id === NEW_ROOM && newRoom) {
-      const r = await addRoom(plan.id, newRoom.name, newRoom.name_th, shape);
+      const r = await writeAddRoom((requestId) => addRoom(plan.id, requestId, newRoom.name, newRoom.name_th, shape));
       setSaving(false);
       if (!r.ok) {
         setMessage({ kind: "error", text: r.error });
@@ -250,7 +260,7 @@ export function MapEditor({
       return roomKey(r.id);
     }
     if (!room) return null;
-    const r = await saveRoomShape(room.id, plan.id, shape);
+    const r = await writeRoomShape((requestId) => saveRoomShape(room.id, plan.id, shape, requestId));
     setSaving(false);
     if (!r.ok) {
       setMessage({ kind: "error", text: r.error });
@@ -305,7 +315,7 @@ export function MapEditor({
     if (!(await confirm({ body: m.removeFromPlanConfirm(item.name, here), confirmLabel: m.removeFromPlan }))) return;
     setSaving(true);
     setMessage(null);
-    const r = await removeRoomPlacement(room.id, plan.id);
+    const r = await writeRemovePlacement((requestId) => removeRoomPlacement(room.id, plan.id, requestId));
     setSaving(false);
     if (!r.ok) {
       setMessage({ kind: "error", text: r.error });
@@ -324,7 +334,7 @@ export function MapEditor({
     if (!(await confirm({ body: m.deleteRoomConfirm(item.name, planNames), confirmLabel: m.deleteRoom }))) return;
     setSaving(true);
     setMessage(null);
-    const r = await deleteRoom(room.id);
+    const r = await writeDeleteRoom((requestId) => deleteRoom(room.id, requestId));
     setSaving(false);
     if (!r.ok) {
       setMessage({ kind: "error", text: r.error });
@@ -459,7 +469,7 @@ export function MapEditor({
               className={btn}
               onClick={async () => {
                 if (!(await confirm({ body: m.removePlanConfirm, confirmLabel: m.removePlan }))) return;
-                const r = await removePlan(plan.id);
+                const r = await writeRemovePlan((requestId) => removePlan(plan.id, requestId));
                 if (!r.ok) setMessage({ kind: "error", text: r.error });
                 else {
                   setPlanId(null);
@@ -910,6 +920,7 @@ function RoomDetails({
   const [name, setName] = useState(room.name);
   const [nameTh, setNameTh] = useState(room.name_th ?? "");
   const [description, setDescription] = useState(room.description ?? "");
+  const writeRoomDetails = useWriteCall();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const changed = name !== room.name || nameTh !== (room.name_th ?? "") || description !== (room.description ?? "");
@@ -922,7 +933,7 @@ function RoomDetails({
           e.preventDefault();
           setError(null);
           setPending(true);
-          const r = await saveRoomDetails(room.id, { name, nameTh, description });
+          const r = await writeRoomDetails((requestId) => saveRoomDetails(room.id, requestId, { name, nameTh, description }));
           setPending(false);
           if (!r.ok) setError(r.error);
           else onSaved({ name: r.name, name_th: r.name_th, description: r.description });

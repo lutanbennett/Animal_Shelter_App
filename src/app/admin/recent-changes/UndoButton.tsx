@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
+import { useWriteCall } from "@/lib/use-write-form";
 import { undoChange } from "./actions";
 
 type Words = {
@@ -21,6 +22,7 @@ export function UndoButton({ id, confirmText, words }: { id: number; confirmText
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  const writeUndo = useWriteCall();
 
   if (!asking) {
     return (
@@ -47,7 +49,7 @@ export function UndoButton({ id, confirmText, words }: { id: number; confirmText
           disabled={pending}
           onClick={() =>
             start(async () => {
-              const r = await undoChange(id);
+              const r = await writeUndo((requestId) => undoChange(id, requestId));
               if (r.ok) setAsking(false);
               else setError(r.error);
             })

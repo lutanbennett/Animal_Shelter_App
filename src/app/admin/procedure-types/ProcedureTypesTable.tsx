@@ -6,6 +6,7 @@ import { Fragment, useState, useTransition } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { RowActionButton } from "@/components/RowAction";
+import { useWriteCall } from "@/lib/use-write-form";
 import {
   deleteProcedureType,
   mergeProcedureType,
@@ -41,6 +42,10 @@ function ProcedureTypeRowItem({
     { type: "error" | "success"; text: string } | null
   >(null);
   const [isPending, startTransition] = useTransition();
+  // ONE useWriteCall PER ACTION, never shared (0292 refuses one id against two actions).
+  const writeSave = useWriteCall();
+  const writeDelete = useWriteCall();
+  const writeMerge = useWriteCall();
 
   function reset() {
     setName(procedureType.name);
@@ -52,7 +57,7 @@ function ProcedureTypeRowItem({
   function handleSave() {
     setMessage(null);
     startTransition(async () => {
-      const result = await updateProcedureType(procedureType.id, { name, nameTh });
+      const result = await writeSave((requestId) => updateProcedureType(procedureType.id, requestId, { name, nameTh }));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
         return;
@@ -66,7 +71,7 @@ function ProcedureTypeRowItem({
     if (!await confirm({ body: p.deleteConfirm(procedureType.name), confirmLabel: t.common.delete })) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await deleteProcedureType(procedureType.id);
+      const result = await writeDelete((requestId) => deleteProcedureType(procedureType.id, requestId));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
       }
@@ -87,7 +92,7 @@ function ProcedureTypeRowItem({
     }
     setMessage(null);
     startTransition(async () => {
-      const result = await mergeProcedureType(procedureType.id, target.id);
+      const result = await writeMerge((requestId) => mergeProcedureType(procedureType.id, requestId, target.id));
       if (!result.ok) {
         setMessage({ type: "error", text: result.error });
       }

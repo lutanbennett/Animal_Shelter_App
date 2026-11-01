@@ -1,7 +1,8 @@
 "use server";
 
 import { refresh, revalidatePath } from "next/cache";
-import { runAction, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
@@ -17,6 +18,13 @@ import { canEditItemSettings } from "@/lib/permissions/item-settings";
 // read by anything; the columns stay until the cleanup migration.
 
 const refuse = (error: string) => ({ ok: false as const, error });
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
 
 export type DietTypeFormState = ActionResult<{ success: string; id: string }> | undefined;
 
@@ -102,13 +110,12 @@ export async function createDietType(
   formData: FormData,
 ): Promise<DietTypeFormState> {
   const { t } = await getT();
-  return runAction("diets.createDietType", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("diets.createDietType", write(t), { id: writeRequestIdFrom(formData), action: "diets.createDietType", db: supabase }, async () => {
     const refused = await refusal();
     if (refused) return refused;
     const parsed = await parseFields(fieldsFromForm(formData), t);
     if (parsed.error !== undefined) return refuse(parsed.error);
-
-    const supabase = await createClient();
     const { data, error } = await supabase.from("diet_types").insert(parsed.row).select("id").single<{ id: string }>();
     if (error) return refuse(error.message);
 
@@ -122,15 +129,14 @@ export async function createDietType(
  * mean (their quantity is in this unit, and the size default is read live),
  * which is the point: a corrected portion should flow through to the forecast.
  */
-export async function updateDietDefinition(id: string, fields: DietDefinitionFields): Promise<ActionResult> {
+export async function updateDietDefinition(id: string, fields: DietDefinitionFields, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("diets.updateDietDefinition", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("diets.updateDietDefinition", write(t), { id: requestId, action: "diets.updateDietDefinition", db: supabase }, async () => {
     const refused = await refusal();
     if (refused) return refused;
     const parsed = await parseFields(fields, t);
     if (parsed.error !== undefined) return refuse(parsed.error);
-
-    const supabase = await createClient();
     const { error } = await supabase.from("diet_types").update(parsed.row).eq("id", id);
     if (error) return refuse(error.message);
     revalidateDietPages();
@@ -138,15 +144,15 @@ export async function updateDietDefinition(id: string, fields: DietDefinitionFie
   });
 }
 
-export async function deleteDietType(id: string): Promise<ActionResult> {
+export async function deleteDietType(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("diets.deleteDietType", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("diets.deleteDietType", write(t), { id: requestId, action: "diets.deleteDietType", db: supabase }, async () => {
     const refused = await refusal();
     if (refused) return refused;
     // An ingredient in a diet is part of what was fed and
     // bought. Say so instead of surfacing the
     // foreign-key error.
-    const supabase = await createClient();
     const inDiets = await supabase.from("diet_ingredients").select("diet_id", { count: "exact", head: true }).eq("diet_type_id", id);
     if (inDiets.error) return refuse(inDiets.error.message);
     if ((inDiets.count ?? 0) > 0) return refuse(t.management.diets.errors.inRecipes(inDiets.count ?? 0));

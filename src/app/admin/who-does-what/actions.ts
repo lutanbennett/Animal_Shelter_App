@@ -1,11 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { databaseFailure, runAction, type ActionResult } from "@/lib/action-result";
+import { databaseFailure, runWriteAction, type ActionResult, type WriteMessages } from "@/lib/action-result";
 import { hasAdminRole } from "@/lib/auth/require-admin";
 import { hasTwoStep } from "@/lib/auth/two-step";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { isCardKey, type CardKey } from "@/lib/permissions/cards";
 import { isGroupIconKey } from "@/lib/home/group-icons";
 import { holderNames } from "./roles";
@@ -23,6 +24,19 @@ import { holderNames } from "./roles";
  *   Admin is the only editor, with the authenticator app (so there is always someone able to edit).
  * has_permission(), the policies and can() are not touched: they read role_permissions, as before.
  */
+// PI FAILOVER (D), 2026-11-01: all fourteen writes here go through runWriteAction(), so a change the
+// Pi did not clearly answer can be served by the Worker without being applied twice. THE RULE: a
+// fifteenth write goes through it too, or this page never reaches WRAPPED_WRITE_PATHS.
+// The claim is made on a client of this action's own; guard() opens another for the body. Both are
+// the admin's own session, which is what runWriteAction() asks for.
+
+/** The words runWriteAction() needs; the same three for every write here. */
+const write = (t: Dictionary): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
+
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 type Dict = Awaited<ReturnType<typeof getT>>["t"];
 
@@ -86,9 +100,10 @@ async function apply(supabase: Supabase, roleId: string, cards: CardKey[], where
   return { ok: true };
 }
 
-export async function addCard(roleKey: string, card: string): Promise<ActionResult> {
+export async function addCard(roleKey: string, card: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("whoDoesWhat.addCard", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("whoDoesWhat.addCard", write(t), { id: requestId, action: "whoDoesWhat.addCard", db: supabase }, async () => {
     const g = await guard(t, roleKey);
     if (!g.ok) return g;
     if (!isCardKey(card)) return { ok: false, error: t.common.somethingWentWrong("card") };
@@ -100,9 +115,10 @@ export async function addCard(roleKey: string, card: string): Promise<ActionResu
   });
 }
 
-export async function removeCard(roleKey: string, card: string): Promise<ActionResult> {
+export async function removeCard(roleKey: string, card: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("whoDoesWhat.removeCard", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("whoDoesWhat.removeCard", write(t), { id: requestId, action: "whoDoesWhat.removeCard", db: supabase }, async () => {
     const g = await guard(t, roleKey);
     if (!g.ok) return g;
     const cards = await currentCards(g.supabase, g.roleId);
@@ -114,9 +130,10 @@ export async function removeCard(roleKey: string, card: string): Promise<ActionR
   });
 }
 
-export async function moveCard(roleKey: string, card: string, direction: "up" | "down"): Promise<ActionResult> {
+export async function moveCard(roleKey: string, card: string, direction: "up" | "down", requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("whoDoesWhat.moveCard", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("whoDoesWhat.moveCard", write(t), { id: requestId, action: "whoDoesWhat.moveCard", db: supabase }, async () => {
     const g = await guard(t, roleKey);
     if (!g.ok) return g;
     const cards = await currentCards(g.supabase, g.roleId);
@@ -159,9 +176,10 @@ async function currentGroups(supabase: Supabase, roleId: string): Promise<GroupR
   return error ? null : (data ?? []);
 }
 
-export async function addGroup(roleKey: string, name: string, nameTh: string, icon: string): Promise<ActionResult> {
+export async function addGroup(roleKey: string, name: string, nameTh: string, icon: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("whoDoesWhat.addGroup", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("whoDoesWhat.addGroup", write(t), { id: requestId, action: "whoDoesWhat.addGroup", db: supabase }, async () => {
     const c = t.admin.whoDoesWhat.groups;
     const g = await guard(t, roleKey);
     if (!g.ok) return g;
@@ -180,9 +198,10 @@ export async function addGroup(roleKey: string, name: string, nameTh: string, ic
 }
 
 /** Remove a group. Its cards go back onto the home (the foreign key's on delete set null); the role keeps every card. */
-export async function removeGroup(roleKey: string, groupId: string): Promise<ActionResult> {
+export async function removeGroup(roleKey: string, groupId: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("whoDoesWhat.removeGroup", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("whoDoesWhat.removeGroup", write(t), { id: requestId, action: "whoDoesWhat.removeGroup", db: supabase }, async () => {
     const g = await guard(t, roleKey);
     if (!g.ok) return g;
     const { error } = await g.supabase.from("role_groups").delete().eq("role_id", g.roleId).eq("id", groupId);
@@ -191,9 +210,10 @@ export async function removeGroup(roleKey: string, groupId: string): Promise<Act
   });
 }
 
-export async function moveGroup(roleKey: string, groupId: string, direction: "up" | "down"): Promise<ActionResult> {
+export async function moveGroup(roleKey: string, groupId: string, direction: "up" | "down", requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("whoDoesWhat.moveGroup", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("whoDoesWhat.moveGroup", write(t), { id: requestId, action: "whoDoesWhat.moveGroup", db: supabase }, async () => {
     const g = await guard(t, roleKey);
     if (!g.ok) return g;
     const groups = await currentGroups(g.supabase, g.roleId);
@@ -213,9 +233,10 @@ export async function moveGroup(roleKey: string, groupId: string, direction: "up
 }
 
 /** Put a held card in a group, or back on the home (groupId null). Only where it shows changes; what it gives does not. */
-export async function setCardGroup(roleKey: string, card: string, groupId: string | null): Promise<ActionResult> {
+export async function setCardGroup(roleKey: string, card: string, groupId: string | null, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("whoDoesWhat.setCardGroup", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("whoDoesWhat.setCardGroup", write(t), { id: requestId, action: "whoDoesWhat.setCardGroup", db: supabase }, async () => {
     const g = await guard(t, roleKey);
     if (!g.ok) return g;
     if (!isCardKey(card)) return { ok: false, error: t.common.somethingWentWrong("card") };
@@ -241,9 +262,10 @@ export async function setCardGroup(roleKey: string, card: string, groupId: strin
  * (Admin at the authenticator-app step) enforce it and audit_roles logs the flip. guard() above refuses Admin and the
  * public viewer, which never lose the menu.
  */
-export async function setShowMenu(roleKey: string, show: boolean): Promise<ActionResult> {
+export async function setShowMenu(roleKey: string, show: boolean, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("whoDoesWhat.setShowMenu", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("whoDoesWhat.setShowMenu", write(t), { id: requestId, action: "whoDoesWhat.setShowMenu", db: supabase }, async () => {
     const g = await guard(t, roleKey);
     if (!g.ok) return g;
     const { error } = await g.supabase.from("roles").update({ show_menu: show }).eq("id", g.roleId);
@@ -260,9 +282,10 @@ export async function setShowMenu(roleKey: string, show: boolean): Promise<Actio
  * cascade) and the role, and role_cards, role_permissions, role_groups and role_home_tiles cascade. audit_log keeps the
  * DELETE with the role's name and contents, which is why a role never needed archiving (0272).
  */
-export async function deleteRole(roleKey: string): Promise<ActionResult> {
+export async function deleteRole(roleKey: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("whoDoesWhat.deleteRole", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("whoDoesWhat.deleteRole", write(t), { id: requestId, action: "whoDoesWhat.deleteRole", db: supabase }, async () => {
     const g = await guard(t, roleKey);
     if (!g.ok) return g;
     const d = t.admin.whoDoesWhat.deleteRole;
@@ -321,9 +344,10 @@ function featureKey(name: string, taken: Set<string>): string {
   return key;
 }
 
-export async function addFeature(name: string, nameTh: string): Promise<ActionResult> {
+export async function addFeature(name: string, nameTh: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("whoDoesWhat.addFeature", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("whoDoesWhat.addFeature", write(t), { id: requestId, action: "whoDoesWhat.addFeature", db: supabase }, async () => {
     const c = t.admin.whoDoesWhat.features;
     const g = await featureGuard(t);
     if (!g.ok) return g;
@@ -341,9 +365,10 @@ export async function addFeature(name: string, nameTh: string): Promise<ActionRe
   });
 }
 
-export async function renameFeature(id: string, name: string, nameTh: string): Promise<ActionResult> {
+export async function renameFeature(id: string, name: string, nameTh: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("whoDoesWhat.renameFeature", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("whoDoesWhat.renameFeature", write(t), { id: requestId, action: "whoDoesWhat.renameFeature", db: supabase }, async () => {
     const c = t.admin.whoDoesWhat.features;
     const g = await featureGuard(t);
     if (!g.ok) return g;
@@ -358,9 +383,10 @@ export async function renameFeature(id: string, name: string, nameTh: string): P
   });
 }
 
-export async function moveFeature(id: string, direction: "up" | "down"): Promise<ActionResult> {
+export async function moveFeature(id: string, direction: "up" | "down", requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("whoDoesWhat.moveFeature", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("whoDoesWhat.moveFeature", write(t), { id: requestId, action: "whoDoesWhat.moveFeature", db: supabase }, async () => {
     const g = await featureGuard(t);
     if (!g.ok) return g;
     const features = await currentFeatures(g.supabase);
@@ -380,9 +406,10 @@ export async function moveFeature(id: string, direction: "up" | "down"): Promise
 }
 
 /** Delete a feature. Its cards become Not yet sorted (on delete set null): none is lost and no role's access changes. */
-export async function removeFeature(id: string): Promise<ActionResult> {
+export async function removeFeature(id: string, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("whoDoesWhat.removeFeature", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("whoDoesWhat.removeFeature", write(t), { id: requestId, action: "whoDoesWhat.removeFeature", db: supabase }, async () => {
     const g = await featureGuard(t);
     if (!g.ok) return g;
     const { error } = await g.supabase.from("features").delete().eq("id", id);
@@ -392,9 +419,10 @@ export async function removeFeature(id: string): Promise<ActionResult> {
 }
 
 /** Put a card under a feature, or back in Not yet sorted (featureId null). The one mapping is shared by every role. */
-export async function setCardFeature(card: string, featureId: string | null): Promise<ActionResult> {
+export async function setCardFeature(card: string, featureId: string | null, requestId: string): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("whoDoesWhat.setCardFeature", t.common.somethingWentWrong, async () => {
+  const supabase = await createClient();
+  return runWriteAction("whoDoesWhat.setCardFeature", write(t), { id: requestId, action: "whoDoesWhat.setCardFeature", db: supabase }, async () => {
     const g = await featureGuard(t);
     if (!g.ok) return g;
     if (!isCardKey(card)) return { ok: false, error: t.common.somethingWentWrong("card") };

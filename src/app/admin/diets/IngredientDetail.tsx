@@ -13,6 +13,7 @@ import { UnitSelect } from "@/components/UnitSelect";
 import { dayAmount, type DietServings } from "@/lib/diets/servings";
 import { amountText, type BookIngredient, type BookLine } from "@/lib/diets/recipe-book";
 import { deleteDietType, updateDietDefinition, type DietDefinitionFields } from "./actions";
+import { useWriteCall } from "@/lib/use-write-form";
 import { sheetInputClass } from "./Sheet";
 
 const labelClass = "flex flex-col gap-1 text-sm font-medium text-muted";
@@ -43,6 +44,9 @@ export function IngredientDetail({
   });
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
+  // ONE useWriteCall PER ACTION, never shared (0292 refuses one id against two actions).
+  const writeSave = useWriteCall();
+  const writeDelete = useWriteCall();
   const set = (key: keyof DietDefinitionFields) => (value: string) => setFields((prev) => ({ ...prev, [key]: value }));
   const blocked = usedBy.length > 0 || records > 0;
   const ownLabel = dietUnitLabel(t, ingredient.unit);
@@ -50,7 +54,7 @@ export function IngredientDetail({
   function save() {
     setMessage(null);
     startTransition(async () => {
-      const result = await updateDietDefinition(ingredient.id, fields);
+      const result = await writeSave((requestId) => updateDietDefinition(ingredient.id, fields, requestId));
       setMessage(result.ok ? { ok: true, text: t.common.saved } : { ok: false, text: result.error });
     });
   }
@@ -59,7 +63,7 @@ export function IngredientDetail({
     if (!(await confirm({ body: m.deleteConfirm(ingredient.name), confirmLabel: t.common.delete }))) return;
     setMessage(null);
     startTransition(async () => {
-      const result = await deleteDietType(ingredient.id);
+      const result = await writeDelete((requestId) => deleteDietType(ingredient.id, requestId));
       if (!result.ok) {
         setMessage({ ok: false, text: result.error });
         return;

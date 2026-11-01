@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useWriteCall } from "@/lib/use-write-form";
 import { addCard, deleteRole, moveCard, removeCard, setShowMenu } from "./actions";
 
 /**
@@ -13,12 +14,27 @@ type Op =
   | { kind: "up" | "down"; roleKey: string; card: string };
 
 /** The one place a card change is made, shared by the buttons and a drop: a drop is exactly what the button does. */
-export function runCardOp(op: Op) {
+export function runCardOp(op: Op, requestId: string) {
   return op.kind === "add"
-    ? addCard(op.roleKey, op.card)
+    ? addCard(op.roleKey, op.card, requestId)
     : op.kind === "remove"
-      ? removeCard(op.roleKey, op.card)
-      : moveCard(op.roleKey, op.card, op.kind);
+      ? removeCard(op.roleKey, op.card, requestId)
+      : moveCard(op.roleKey, op.card, op.kind, requestId);
+}
+
+/**
+ * Pi failover (D): the useWriteCall for an op, picked by its kind.
+ *
+ * runCardOp dispatches to THREE different actions, so it must not be fed from one
+ * useWriteCall: an id kept from an unknown Add and then sent to Remove is the same id
+ * against a different action, which claim_write_request() refuses outright (0292). Up and
+ * Down are both whoDoesWhat.moveCard -- one action -- so they correctly share one.
+ */
+export function useCardOpWrite() {
+  const add = useWriteCall();
+  const remove = useWriteCall();
+  const move = useWriteCall();
+  return (op: Op) => (op.kind === "add" ? add : op.kind === "remove" ? remove : move);
 }
 
 export type CardOp = Op;
@@ -27,6 +43,7 @@ export function CardButton({ op, label, ariaLabel, danger }: { op: Op; label: st
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const writeFor = useCardOpWrite();
   // One branch per kind: two conflicting colour utilities on one element are settled by stylesheet order, not string order.
   const tone = danger
     ? "border-danger text-danger"
@@ -42,7 +59,7 @@ export function CardButton({ op, label, ariaLabel, danger }: { op: Op; label: st
         onClick={() => {
           setError(null);
           startTransition(async () => {
-            const result = await runCardOp(op);
+            const result = await writeFor(op)((requestId) => runCardOp(op, requestId));
             if (!result.ok) setError(result.error);
             router.refresh();
           });
@@ -65,11 +82,12 @@ export function ShowMenuToggle({ roleKey, show, onLabel, offLabel }: { roleKey: 
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const writeShowMenu = useWriteCall();
   const choose = (next: boolean) => {
     if (next === show) return;
     setError(null);
     startTransition(async () => {
-      const result = await setShowMenu(roleKey, next);
+      const result = await writeShowMenu((requestId) => setShowMenu(roleKey, next, requestId));
       if (!result.ok) setError(result.error);
       router.refresh();
     });
@@ -105,6 +123,7 @@ export function DeleteRoleButton({ roleKey, label, ariaLabel, confirmText, yesLa
   const [pending, startTransition] = useTransition();
   const [asking, setAsking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const writeDeleteRole = useWriteCall();
   return (
     <div className="flex flex-col gap-2">
       {!asking ? (
@@ -120,7 +139,7 @@ export function DeleteRoleButton({ roleKey, label, ariaLabel, confirmText, yesLa
               disabled={pending}
               onClick={() =>
                 startTransition(async () => {
-                  const result = await deleteRole(roleKey);
+                  const result = await writeDeleteRole((requestId) => deleteRole(roleKey, requestId));
                   if (!result.ok) { setError(result.error); setAsking(false); }
                   router.replace("/admin/who-does-what");
                   router.refresh();
