@@ -1,6 +1,6 @@
 "use client";
 
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -11,7 +11,7 @@ import { roleOptionLabel, type RoleOption } from "./role-options";
 
 /** `roles`: the live roles a login may be given, read from `roles` by the page (role-options.ts). */
 export function CreateUserForm({ roles }: { roles: RoleOption[] }) {
-  const [state, onSubmit, pending] = useKeptForm(createUser, undefined);
+  const [state, onSubmit, pending] = useWriteForm(createUser, undefined);
   const { t, locale } = useI18n();
 
   return (

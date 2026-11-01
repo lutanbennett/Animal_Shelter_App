@@ -8,6 +8,7 @@ import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { createDoctorForLogin, linkDoctor, unlinkDoctor } from "./actions";
 import type { ClinicOption, SecurityUser } from "./UsersTable";
+import { useSecurityWrite } from "./use-security-write";
 
 export type DoctorOption = { id: string; name: string; clinics: string[] };
 
@@ -34,6 +35,7 @@ export function DoctorLoginLink({
   const confirm = useConfirm();
   const v = t.admin.security.table.vetDoctor;
   const [isPending, startTransition] = useTransition();
+  const send = useSecurityWrite();
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [creating, setCreating] = useState(false);
   const [pick, setPick] = useState("");
@@ -61,7 +63,7 @@ export function DoctorLoginLink({
   async function handleUnlink() {
     if (!user.doctor) return;
     if (!(await confirm({ body: v.unlinkConfirm(user.doctor.name, user.email) }))) return;
-    run(() => unlinkDoctor(user.id), v.unlinked);
+    run(() => send(`unlink:${user.id}`, (id) => unlinkDoctor(user.id, id)), v.unlinked);
   }
 
   return (
@@ -104,7 +106,7 @@ export function DoctorLoginLink({
                   compact
                   icon={ACTION_ICONS.link}
                   disabled={disabled || isPending || !pick}
-                  onClick={() => run(() => linkDoctor(user.id, pick), v.linked, () => setPick(""))}
+                  onClick={() => run(() => send(`link:${user.id}:${pick}`, (id) => linkDoctor(user.id, pick, id)), v.linked, () => setPick(""))}
                 >
                   {v.link}
                 </ActionButton>
@@ -150,7 +152,7 @@ export function DoctorLoginLink({
                   icon={ACTION_ICONS.add}
                   disabled={isPending || !name.trim()}
                   onClick={() =>
-                    run(() => createDoctorForLogin(user.id, name, picked), v.created, () => setCreating(false))
+                    run(() => send(`createDoctor:${user.id}:${name}:${picked.join(",")}`, (id) => createDoctorForLogin(user.id, name, picked, id)), v.created, () => setCreating(false))
                   }
                 >
                   {v.createButton}

@@ -1864,6 +1864,7 @@ const en = {
         cantDeleteOwnAccount: "You can't delete your own account.",
         cantArchiveOwnAccount: "You can't archive your own account.",
         cantResetOwnPassword: "Change your own password from the Change password page instead.",
+        secretShownOnce: "This was already done when you pressed it, but the temporary password is shown only once and is not kept. Issue a new temporary password if you still need one.",
         adminAccessRequired: "Admin access required.",
         hasRecords:
           "This person has records in the system, so they can't be deleted. Archive them instead.",
@@ -1910,6 +1911,7 @@ const en = {
           alreadySetUp:
             "An authenticator app is already set up for your login. Reload the page and enter its code.",
           couldntStart: "Couldn't start the setup. Check your connection and try again.",
+          setupAlreadyStarted: "Setup was already started by that press, and the key is shown only once. Reload this page and press Start again for a new one.",
           codeFormat: "Enter the 6 digits the app shows.",
           noFactor: "This QR code has expired. Reload the page and start the setup again.",
           wrongCode:

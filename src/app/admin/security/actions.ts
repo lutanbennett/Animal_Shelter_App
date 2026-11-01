@@ -1,20 +1,19 @@
 "use server";
 
-// NOT WRAPPED, DELIBERATELY (docs/decisions/2026-11-01-write-paths-tail-b.md, section 3). createUser and
-// issueTemporaryPassword return the temporary password to the browser, and finish_write_request() would keep a wrapped
-// action's whole result for seven days in write_requests.result: a password must not be stored there. The other
-// fourteen could be claimed, but this file needs a two-step session to drive (a dev sign-in is aal1 only), and it is
-// the screen where an untested change costs most. /admin/security must not go on WRAPPED_WRITE_PATHS until the
-// wrapper can store a redacted result and the file can be driven.
+// PI FAILOVER (D), 2026-11-01: every write here goes through runWriteAction() (docs/decisions/2026-11-01-redacted-write-result.md).
+// createUser and issueTemporaryPassword return a temporary password, which write_requests.result would keep for seven
+// days, so those two pass storedAs: the person who pressed gets the password, the database keeps a plain-words refusal.
 
 import { refresh, revalidatePath } from "next/cache";
 import type { AuthError } from "@supabase/supabase-js";
 import {
-  runAction,
+  runWriteAction,
   unexpectedFailure,
+  type WriteMessages,
   type ActionRefusal,
   type ActionResult,
 } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { hasAdminRole } from "@/lib/auth/require-admin";
 import {
   APPROVED_FACTOR,
@@ -71,6 +70,18 @@ async function openSetupForNewAdmin(userId: string, role: GivableRole) {
 }
 
 type T = Awaited<ReturnType<typeof getT>>["t"];
+
+/** The words runWriteAction() needs. */
+const write = (t: T): WriteMessages => ({
+  somethingWentWrong: t.common.somethingWentWrong,
+  saveUnknown: t.common.saveUnknown,
+  reloadToSave: t.common.reloadToSave,
+});
+
+/** The claim: this login's own client, so the claim, the write and the finish run as the same signed-in admin. */
+async function claim(action: string, id: string | null) {
+  return { id, action, db: await createClient() };
+}
 
 const refuse = (error: string): ActionRefusal => ({ ok: false, error });
 
@@ -166,7 +177,7 @@ export async function createUser(
 ): Promise<CreateUserState> {
   const { t, locale } = await getT();
   const e = t.admin.security.errors;
-  return runAction("security.createUser", t.common.somethingWentWrong, async () => {
+  return runWriteAction("security.createUser", write(t), await claim("security.createUser", writeRequestIdFrom(formData)), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
 
@@ -215,7 +226,7 @@ export async function createUser(
       temporaryPassword,
       email,
     };
-  });
+  }, { storedAs: () => refuse(e.secretShownOnce) });
 }
 
 /**
@@ -227,9 +238,9 @@ export async function createUser(
  * the name from the Google profile, so for a Google login the next sign-in
  * may put Google's back; this is for password logins and test accounts.
  */
-export async function setUserName(userId: string, rawName: string): Promise<ActionResult> {
+export async function setUserName(userId: string, rawName: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("security.setUserName", t.common.somethingWentWrong, async () => {
+  return runWriteAction("security.setUserName", write(t), await claim("security.setUserName", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
 
@@ -254,9 +265,9 @@ export async function setUserName(userId: string, rawName: string): Promise<Acti
  * request queue. Same write as changing a role; kept separate so the
  * queue reads as what it is. The person signs in again and gets through.
  */
-export async function approveAccessRequest(userId: string, roleKey: string): Promise<ActionResult> {
+export async function approveAccessRequest(userId: string, roleKey: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("security.approveAccessRequest", t.common.somethingWentWrong, async () => {
+  return runWriteAction("security.approveAccessRequest", write(t), await claim("security.approveAccessRequest", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
     const role = await givableRole(roleKey);
@@ -273,9 +284,9 @@ export async function approveAccessRequest(userId: string, roleKey: string): Pro
   });
 }
 
-export async function updateUserRole(userId: string, roleKey: string): Promise<ActionResult> {
+export async function updateUserRole(userId: string, roleKey: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("security.updateUserRole", t.common.somethingWentWrong, async () => {
+  return runWriteAction("security.updateUserRole", write(t), await claim("security.updateUserRole", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
     const role = await givableRole(roleKey);
@@ -311,9 +322,9 @@ function parseCoverEnd(raw: string | null): { ok: true; date: string | null } | 
  * by the database; nothing here widens anything. Admin and the public viewer are refused here for a clear message
  * and by a trigger regardless. Audited like any role change (audit_user_roles); granted_by records who.
  */
-export async function addExtraRole(userId: string, roleKey: string, endsOn: string | null): Promise<ActionResult> {
+export async function addExtraRole(userId: string, roleKey: string, endsOn: string | null, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("security.addExtraRole", t.common.somethingWentWrong, async () => {
+  return runWriteAction("security.addExtraRole", write(t), await claim("security.addExtraRole", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
     const role = await givableRole(roleKey);
@@ -347,9 +358,9 @@ export async function addExtraRole(userId: string, roleKey: string, endsOn: stri
 }
 
 /** Ends a cover now: deletes the additional row (the audit log keeps it). The main role is never removed here. */
-export async function removeExtraRole(userId: string, roleKey: string): Promise<ActionResult> {
+export async function removeExtraRole(userId: string, roleKey: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("security.removeExtraRole", t.common.somethingWentWrong, async () => {
+  return runWriteAction("security.removeExtraRole", write(t), await claim("security.removeExtraRole", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
     const role = await givableRole(roleKey).then((r) => r ?? null);
@@ -390,10 +401,10 @@ async function loadDoctorLogin(userId: string, t: T) {
   return { denied: null, admin };
 }
 
-export async function linkDoctor(userId: string, doctorId: string): Promise<ActionResult> {
+export async function linkDoctor(userId: string, doctorId: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.admin.security.errors;
-  return runAction("security.linkDoctor", t.common.somethingWentWrong, async () => {
+  return runWriteAction("security.linkDoctor", write(t), await claim("security.linkDoctor", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
 
@@ -438,10 +449,11 @@ export async function createDoctorForLogin(
   userId: string,
   rawName: string,
   clinicIds: string[],
+  requestId: string | null,
 ): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.admin.security.errors;
-  return runAction("security.createDoctorForLogin", t.common.somethingWentWrong, async () => {
+  return runWriteAction("security.createDoctorForLogin", write(t), await claim("security.createDoctorForLogin", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
 
@@ -497,9 +509,9 @@ export async function createDoctorForLogin(
 }
 
 /** Unlinks the login; the doctor and every visit stay as they are. */
-export async function unlinkDoctor(userId: string): Promise<ActionResult> {
+export async function unlinkDoctor(userId: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("security.unlinkDoctor", t.common.somethingWentWrong, async () => {
+  return runWriteAction("security.unlinkDoctor", write(t), await claim("security.unlinkDoctor", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
 
@@ -520,10 +532,11 @@ export async function unlinkDoctor(userId: string): Promise<ActionResult> {
  */
 export async function issueTemporaryPassword(
   userId: string,
+  requestId: string | null,
 ): Promise<ActionResult<{ temporaryPassword: string }>> {
   const { t } = await getT();
   const e = t.admin.security.errors;
-  return runAction("security.issueTemporaryPassword", t.common.somethingWentWrong, async () => {
+  return runWriteAction("security.issueTemporaryPassword", write(t), await claim("security.issueTemporaryPassword", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
     if (await isCurrentUser(userId)) return refuse(e.cantResetOwnPassword);
@@ -546,7 +559,7 @@ export async function issueTemporaryPassword(
 
     revalidateSecurity();
     return { ok: true, temporaryPassword };
-  });
+  }, { storedAs: () => refuse(e.secretShownOnce) });
 }
 
 /**
@@ -555,9 +568,9 @@ export async function issueTemporaryPassword(
  * so nothing lets them in, and the assignee picker
  * stops offering them. Reversible with restoreUser().
  */
-export async function archiveUser(userId: string): Promise<ActionResult> {
+export async function archiveUser(userId: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("security.archiveUser", t.common.somethingWentWrong, async () => {
+  return runWriteAction("security.archiveUser", write(t), await claim("security.archiveUser", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
     if (await isCurrentUser(userId)) return refuse(t.admin.security.errors.cantArchiveOwnAccount);
@@ -575,9 +588,9 @@ export async function archiveUser(userId: string): Promise<ActionResult> {
   });
 }
 
-export async function restoreUser(userId: string): Promise<ActionResult> {
+export async function restoreUser(userId: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
-  return runAction("security.restoreUser", t.common.somethingWentWrong, async () => {
+  return runWriteAction("security.restoreUser", write(t), await claim("security.restoreUser", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
 
@@ -604,10 +617,10 @@ export async function restoreUser(userId: string): Promise<ActionResult> {
  * what that answer means here; the refusal points to Archive instead
  * (docs/decisions.md, 2026-09-26).
  */
-export async function deleteUser(userId: string): Promise<ActionResult> {
+export async function deleteUser(userId: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.admin.security.errors;
-  return runAction("security.deleteUser", t.common.somethingWentWrong, async () => {
+  return runWriteAction("security.deleteUser", write(t), await claim("security.deleteUser", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
     if (await isCurrentUser(userId)) return refuse(e.cantDeleteOwnAccount);
@@ -636,10 +649,10 @@ export async function deleteUser(userId: string): Promise<ActionResult> {
  * cannot delete a real person; deleteUser is for those, and refuses
  * anyone with records.
  */
-export async function dismissAccessRequest(userId: string): Promise<ActionResult> {
+export async function dismissAccessRequest(userId: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.admin.security.errors;
-  return runAction("security.dismissAccessRequest", t.common.somethingWentWrong, async () => {
+  return runWriteAction("security.dismissAccessRequest", write(t), await claim("security.dismissAccessRequest", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
     if (await isCurrentUser(userId)) return refuse(e.cantDeleteOwnAccount);
@@ -672,10 +685,10 @@ export async function dismissAccessRequest(userId: string): Promise<ActionResult
  * (docs/decisions.md, 2026-09-27). A session the person already has open
  * drops to aal1 at its next token refresh, within the hour.
  */
-export async function resetTwoStep(userId: string): Promise<ActionResult> {
+export async function resetTwoStep(userId: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.admin.security.errors;
-  return runAction("security.resetTwoStep", t.common.somethingWentWrong, async () => {
+  return runWriteAction("security.resetTwoStep", write(t), await claim("security.resetTwoStep", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
 
@@ -714,10 +727,10 @@ export async function resetTwoStep(userId: string): Promise<ActionResult> {
  * half-finished set-up, or one enrolled around the app — is removed so the
  * person starts clean. A login that has a trusted app uses Reset instead.
  */
-export async function allowTwoStepSetup(userId: string): Promise<ActionResult> {
+export async function allowTwoStepSetup(userId: string, requestId: string | null): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.admin.security.errors;
-  return runAction("security.allowTwoStepSetup", t.common.somethingWentWrong, async () => {
+  return runWriteAction("security.allowTwoStepSetup", write(t), await claim("security.allowTwoStepSetup", requestId), async () => {
     const denied = await refuseUnlessAdmin(t);
     if (denied) return denied;
 

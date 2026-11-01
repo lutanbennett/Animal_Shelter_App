@@ -103,6 +103,8 @@ export const WRAPPED_WRITE_PATHS = [
   "/admin/procedure-types",
   "/admin/recent-changes",
   "/admin/role-draft",
+  "/admin/security",
+  "/admin/security/verify",
   "/admin/shop",
   "/admin/status",
   "/admin/stocktaking",

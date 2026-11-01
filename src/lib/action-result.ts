@@ -134,6 +134,19 @@ function claimAnswer(data: unknown): ClaimAnswer | null {
 }
 
 /**
+ * Optional. Omitted, the whole result is stored and replayed, exactly as before; every caller written before this
+ * existed passes nothing and is unchanged.
+ */
+export type WriteOptions<R extends object> = {
+  /**
+   * What to store in write_requests.result INSTEAD of a successful result, for a write whose success carries a secret
+   * (a temporary password, a TOTP key). The caller returns the answer a REPLAY should get, usually a refusal in plain
+   * words saying the secret was shown once. The person who pressed still receives the real result.
+   */
+  storedAs: (success: { ok: true } & R) => ActionResult<object>;
+};
+
+/**
  * Run a write once, however many times it is sent.
  *
  * `request.id` is the browser's own v4 id for this save attempt
@@ -151,6 +164,7 @@ export async function runWriteAction<R extends object>(
   messages: WriteMessages,
   request: { id: string | null; action: string; db: WriteRequestRpc },
   body: () => Promise<ActionResult<R>>,
+  options?: WriteOptions<R>,
 ): Promise<ActionResult<R>> {
   const { id, action, db } = request;
 
@@ -208,7 +222,10 @@ export async function runWriteAction<R extends object>(
   // The body decided, so the answer is deterministic and worth storing --
   // including a refusal, so a replay of a refused save is refused the same way
   // instead of being tried afresh.
-  const finished = await db.rpc("finish_write_request", { p_request_id: id, p_result: result });
+  // A caller whose success carries a secret supplies storedAs(): what is kept for seven days is its answer, not the
+  // secret, and a replay is handed that. Only a success is passed through it; a refusal holds no secret.
+  const stored = result.ok && options?.storedAs ? options.storedAs(result) : result;
+  const finished = await db.rpc("finish_write_request", { p_request_id: id, p_result: stored });
   if (finished.error) {
     // The write itself is done; saying otherwise would be a lie. The claim
     // stays open, so a later attempt with this id reads in_flight.

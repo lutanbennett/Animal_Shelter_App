@@ -150,11 +150,11 @@ test("only a v4 uuid counts as a request id", () => {
   assert.equal(writeRequestIdFrom(form), id);
 });
 
-test("the wrapped-write list matches real URLs, and holds the two unlisted addresses out", () => {
+test("the wrapped-write list matches real URLs, and lists the security screens now that their secrets are redacted", () => {
   assert.ok(isWrappedWritePath("/admin/units"));
   assert.ok(isWrappedWritePath("/residents/42/edit"));
   assert.ok(!isWrappedWritePath("/admin/unitsx"));
-  for (const held of ["/admin/security", "/admin/security/verify"]) assert.ok(!isWrappedWritePath(held));
+  for (const listed of ["/admin/security", "/admin/security/verify"]) assert.ok(isWrappedWritePath(listed));
   assert.ok(isWrappedWritePath("/services/desexing"));
 });
 
@@ -165,4 +165,46 @@ test("Next's own control-flow throws pass straight through, redirect included", 
     () => runWriteAction("t", messages, { id, action: "a", db: d }, async () => { throw redirect; }),
     (e) => e === redirect,
   );
+});
+
+// Redacted result (stream redacted-write-result): storedAs changes what is KEPT, never what the caller is handed,
+// and omitting it leaves every earlier caller exactly as it was.
+
+test("storedAs keeps a redacted answer in the database and hands the person the real one", async () => {
+  const d = db({ status: "claimed" });
+  const real = { ok: true, temporaryPassword: "s3cret-Pass" };
+  const result = await runWriteAction("t", messages, { id, action: "a", db: d }, async () => real, {
+    storedAs: () => ({ ok: false, error: "shown once" }),
+  });
+  assert.deepEqual(result, real, "the person who pressed still gets the password");
+  assert.deepEqual(d.calls[1].args.p_result, { ok: false, error: "shown once" });
+  assert.ok(!JSON.stringify(d.calls).includes("s3cret-Pass"), "the secret never reaches an rpc call");
+});
+
+test("storedAs is not applied to a refusal, which holds no secret", async () => {
+  const d = db({ status: "claimed" });
+  let called = 0;
+  const result = await runWriteAction("t", messages, { id, action: "a", db: d }, async () => ({ ok: false, error: "no" }), {
+    storedAs: () => { called++; return { ok: false, error: "x" }; },
+  });
+  assert.deepEqual(result, { ok: false, error: "no" });
+  assert.equal(called, 0);
+  assert.deepEqual(d.calls[1].args.p_result, { ok: false, error: "no" });
+});
+
+test("a replay of a redacted write returns the stored refusal and never runs the body", async () => {
+  const d = db({ status: "replay", action: "a", result: { ok: false, error: "shown once" } });
+  let ran = 0;
+  const result = await runWriteAction("t", messages, { id, action: "a", db: d }, async () => { ran++; return { ok: true }; }, {
+    storedAs: () => ({ ok: false, error: "shown once" }),
+  });
+  assert.deepEqual(result, { ok: false, error: "shown once" });
+  assert.equal(ran, 0);
+});
+
+test("without storedAs the stored result is the whole result, as before", async () => {
+  const d = db({ status: "claimed" });
+  const real = { ok: true, success: "saved", extra: 1 };
+  await runWriteAction("t", messages, { id, action: "a", db: d }, async () => real);
+  assert.deepEqual(d.calls[1].args.p_result, real);
 });

@@ -28,6 +28,7 @@ import type { ActionResult } from "@/lib/action-result";
 import { formatDate as formatDay, formatDateTime as formatDate } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { roleOptionLabel, type RoleOption } from "./role-options";
+import { useSecurityWrite } from "./use-security-write";
 
 /** An additional role (a cover, 0196): in force until `endsOn` inclusive; null = no end. */
 export type ExtraRole = { role: string; startsOn: string | null; endsOn: string | null };
@@ -89,6 +90,7 @@ function UserRow({
   const [issuedPassword, setIssuedPassword] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
   const [isPending, startTransition] = useTransition();
+  const send = useSecurityWrite();
   const archived = !!user.archivedAt;
   // Admin is read from the role's own flag (roles.is_admin), never from its key or name.
   const roleIsAdmin = roles.find((r) => r.key === role)?.isAdmin ?? false;
@@ -136,7 +138,7 @@ function UserRow({
     setRole(nextRole);
     setModal(null);
     run(
-      () => updateUserRole(user.id, nextRole),
+      () => send(`role:${user.id}:${nextRole}`, (id) => updateUserRole(user.id, nextRole, id)),
       t.admin.security.table.failedToUpdateRole,
       () => setMessage({ type: "success", text: t.admin.security.table.roleUpdated }),
       () => setRole(previous),
@@ -152,7 +154,7 @@ function UserRow({
 
   function handleAddExtra() {
     run(
-      () => addExtraRole(user.id, pickKey, extraEnds || null),
+      () => send(`addExtra:${user.id}:${pickKey}:${extraEnds}`, (id) => addExtraRole(user.id, pickKey, extraEnds || null, id)),
       w.failedToAdd,
       () => {
         closeModal();
@@ -164,7 +166,7 @@ function UserRow({
   async function handleRemoveExtra(key: string) {
     if (!(await confirm({ body: w.removeConfirm(labelOf(key), user.email) }))) return;
     run(
-      () => removeExtraRole(user.id, key),
+      () => send(`removeExtra:${user.id}:${key}`, (id) => removeExtraRole(user.id, key, id)),
       w.failedToRemove,
       () => setMessage({ type: "success", text: w.removed }),
     );
@@ -172,7 +174,7 @@ function UserRow({
 
   function handleSaveName() {
     run(
-      () => setUserName(user.id, name),
+      () => send(`name:${user.id}:${name}`, (id) => setUserName(user.id, name, id)),
       t.admin.security.table.failedToSaveName,
       () => {
         closeModal();
@@ -185,7 +187,7 @@ function UserRow({
     if (!(await confirm({ body: t.admin.security.table.issueConfirm(user.email) }))) return;
     setIssuedPassword(null);
     run(
-      () => issueTemporaryPassword(user.id),
+      () => send(`issuePassword:${user.id}`, (id) => issueTemporaryPassword(user.id, id)),
       t.admin.security.table.failedToResetPassword,
       (result) => setIssuedPassword(result.temporaryPassword),
     );
@@ -197,7 +199,7 @@ function UserRow({
       : t.admin.security.table.resetTwoStepConfirm(user.email);
     if (!(await confirm({ body: confirmText }))) return;
     run(
-      () => resetTwoStep(user.id),
+      () => send(`resetTwoStep:${user.id}`, (id) => resetTwoStep(user.id, id)),
       t.admin.security.table.failedToResetTwoStep,
       () => setMessage({ type: "success", text: t.admin.security.table.twoStepReset }),
     );
@@ -206,7 +208,7 @@ function UserRow({
   /** An admin vouching for a first set-up (src/lib/auth/two-step.ts); no confirm, nothing is lost. */
   function handleAllowTwoStepSetup() {
     run(
-      () => allowTwoStepSetup(user.id),
+      () => send(`allowTwoStep:${user.id}`, (id) => allowTwoStepSetup(user.id, id)),
       t.admin.security.table.failedToAllowTwoStep,
       () => setMessage({ type: "success", text: t.admin.security.table.twoStepSetupAllowed }),
     );
@@ -214,16 +216,16 @@ function UserRow({
 
   async function handleArchive() {
     if (!(await confirm({ body: t.admin.security.table.archiveConfirm(user.email) }))) return;
-    run(() => archiveUser(user.id), t.admin.security.table.failedToArchiveUser);
+    run(() => send(`archive:${user.id}`, (id) => archiveUser(user.id, id)), t.admin.security.table.failedToArchiveUser);
   }
 
   function handleRestore() {
-    run(() => restoreUser(user.id), t.admin.security.table.failedToRestoreUser);
+    run(() => send(`restore:${user.id}`, (id) => restoreUser(user.id, id)), t.admin.security.table.failedToRestoreUser);
   }
 
   async function handleDelete() {
     if (!(await confirm({ body: t.admin.security.table.deleteConfirm(user.email), confirmLabel: t.common.delete }))) return;
-    run(() => deleteUser(user.id), t.admin.security.table.failedToDeleteUser);
+    run(() => send(`delete:${user.id}`, (id) => deleteUser(user.id, id)), t.admin.security.table.failedToDeleteUser);
   }
 
   const icon = (Icon: (typeof ACTION_ICONS)[keyof typeof ACTION_ICONS]) => <Icon size={16} aria-hidden="true" />;

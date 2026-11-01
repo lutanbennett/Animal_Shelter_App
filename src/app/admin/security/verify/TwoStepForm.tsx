@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
+import { useSecurityWrite } from "../use-security-write";
 import { confirmTwoStep, startTwoStepSetup } from "./actions";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ActionButton } from "@/components/ActionButton";
@@ -21,16 +22,17 @@ type Setup = { factorId: string; qrCode: string; secret: string };
 export function TwoStepForm({ enrolled }: { enrolled: boolean }) {
   const { t } = useI18n();
   const s = t.admin.security.twoStep;
-  const [state, onSubmit, confirming] = useKeptForm(confirmTwoStep, undefined);
+  const [state, onSubmit, confirming] = useWriteForm(confirmTwoStep, undefined);
   const [setup, setSetup] = useState<Setup | null>(null);
   const [setupError, setSetupError] = useState<string | null>(null);
   const [starting, startTransition] = useTransition();
+  const send = useSecurityWrite();
 
   function begin() {
     setSetupError(null);
     startTransition(async () => {
       try {
-        const result = await startTwoStepSetup();
+        const result = await send("startSetup", (id) => startTwoStepSetup(id));
         if (result.ok) setSetup(result);
         else setSetupError(result.error);
       } catch {

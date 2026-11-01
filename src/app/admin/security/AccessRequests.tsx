@@ -9,6 +9,7 @@ import type { ActionResult } from "@/lib/action-result";
 import { formatDateTime } from "@/lib/format";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { roleOptionLabel, type RoleOption } from "./role-options";
+import { useSecurityWrite } from "./use-security-write";
 
 export type AccessRequest = {
   id: string;
@@ -28,18 +29,19 @@ function RequestRow({ request, roles }: { request: AccessRequest; roles: RoleOpt
   const [role, setRole] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const send = useSecurityWrite();
 
   function approve() {
     if (!role) {
       setError(r.chooseRole);
       return;
     }
-    run(() => approveAccessRequest(request.id, role), t.admin.security.table.failedToUpdateRole);
+    run(() => send(`approve:${request.id}:${role}`, (id) => approveAccessRequest(request.id, role, id)), t.admin.security.table.failedToUpdateRole);
   }
 
   async function deny() {
     if (!await confirm({ body: r.denyConfirm(request.email) })) return;
-    run(() => dismissAccessRequest(request.id), t.admin.security.table.failedToDeleteUser);
+    run(() => send(`dismiss:${request.id}`, (id) => dismissAccessRequest(request.id, id)), t.admin.security.table.failedToDeleteUser);
   }
 
   /**
