@@ -1,6 +1,6 @@
 "use client";
 
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import Link from "next/link";
 import { FileText, FolderOpen, Globe, HeartCrack } from "lucide-react";
 import { retryDeceasedArchive, retryDeceasedRestore } from "./actions";
@@ -50,7 +50,7 @@ export function DeceasedBanner({
 }) {
   const { t, locale } = useI18n();
   const d = t.residents.deceased;
-  const [state, onSubmit, pending] = useKeptForm(
+  const [state, onSubmit, pending] = useWriteForm(
     retryDeceasedArchive.bind(null, residentId),
     undefined,
   );
@@ -183,7 +183,7 @@ export function DeceasedRestoreNotice({
 }) {
   const { t } = useI18n();
   const u = t.residents.deceased.undo;
-  const [state, onSubmit, pending] = useKeptForm(
+  const [state, onSubmit, pending] = useWriteForm(
     retryDeceasedRestore.bind(null, residentId),
     undefined,
   );

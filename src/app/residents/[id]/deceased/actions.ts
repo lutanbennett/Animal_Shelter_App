@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { runAction, type ActionRefusal, type ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionRefusal, type ActionResult } from "@/lib/action-result";
+import { writeRequestIdFrom } from "@/lib/write-requests";
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -56,9 +57,11 @@ export async function recordDeath(
   formData: FormData,
 ): Promise<RecordDeathState> {
   const { t } = await getT();
-  return runAction<never>("residents.recordDeath", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
-
+  const supabase = await createClient();
+  // PI FAILOVER (D): the success path REDIRECTS, and a redirect throws, which would leave the claim open and
+  // make a replay read "we cannot tell". So the body returns where to go, the result is stored, and the
+  // redirect happens after runWriteAction() has finished the claim.
+  const done = await runWriteAction<{ redirectTo: string }>("residents.recordDeath", { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave }, { id: writeRequestIdFrom(formData), action: "residents.recordDeath", db: supabase }, async () => {
     const result = await recordResidentDeath(supabase, t, {
       residentId,
       date: str(formData, "date") ?? "",
@@ -70,8 +73,10 @@ export async function recordDeath(
     await archiveDeceasedResident(supabase, residentId);
 
     revalidateResident(residentId);
-    redirect(`/residents/${residentId}`);
+    return { ok: true, redirectTo: `/residents/${residentId}` };
   });
+  if (done.ok) redirect(done.redirectTo);
+  return done;
 }
 
 /**
@@ -83,12 +88,12 @@ export async function recordDeath(
 export async function retryDeceasedArchive(
   residentId: string,
   state: RetryArchiveState,
+  formData: FormData,
 ): Promise<RetryArchiveState> {
   void state;
   const { t } = await getT();
-  return runAction("residents.retryDeceasedArchive", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
-
+  const supabase = await createClient();
+  return runWriteAction("residents.retryDeceasedArchive", { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave }, { id: writeRequestIdFrom(formData), action: "residents.retryDeceasedArchive", db: supabase }, async () => {
     if (!can(await loadPermissions(), "placement.death")) {
       return { ok: false, error: t.residents.deceased.notAuthorized };
     }
@@ -117,9 +122,11 @@ export async function undoDeath(
   formData: FormData,
 ): Promise<UndoDeathState> {
   const { t } = await getT();
-  return runAction<never>("residents.undoDeath", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
-
+  const supabase = await createClient();
+  // PI FAILOVER (D): the success path REDIRECTS, and a redirect throws, which would leave the claim open and
+  // make a replay read "we cannot tell". So the body returns where to go, the result is stored, and the
+  // redirect happens after runWriteAction() has finished the claim.
+  const done = await runWriteAction<{ redirectTo: string }>("residents.undoDeath", { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave }, { id: writeRequestIdFrom(formData), action: "residents.undoDeath", db: supabase }, async () => {
     const result = await undoResidentDeath(supabase, t, {
       residentId,
       reason: str(formData, "reason"),
@@ -129,8 +136,10 @@ export async function undoDeath(
     await restoreDeceasedResident(supabase, residentId);
 
     revalidateResident(residentId);
-    redirect(`/residents/${residentId}`);
+    return { ok: true, redirectTo: `/residents/${residentId}` };
   });
+  if (done.ok) redirect(done.redirectTo);
+  return done;
 }
 
 /**
@@ -141,12 +150,12 @@ export async function undoDeath(
 export async function retryDeceasedRestore(
   residentId: string,
   state: RetryRestoreState,
+  formData: FormData,
 ): Promise<RetryRestoreState> {
   void state;
   const { t } = await getT();
-  return runAction("residents.retryDeceasedRestore", t.common.somethingWentWrong, async () => {
-    const supabase = await createClient();
-
+  const supabase = await createClient();
+  return runWriteAction("residents.retryDeceasedRestore", { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave }, { id: writeRequestIdFrom(formData), action: "residents.retryDeceasedRestore", db: supabase }, async () => {
     if (!can(await loadPermissions(), "placement.death_withdraw")) {
       return { ok: false, error: t.residents.deceased.undo.notAuthorized };
     }

@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { placeLine } from "@/components/ZoneName";
-import { useKeptForm } from "@/lib/use-kept-form";
+import { useWriteForm } from "@/lib/use-write-form";
 import { HeartCrack, X } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
 import { ActionLink } from "@/components/ActionLink";
@@ -31,7 +31,7 @@ export function RecordDeathForm({
 }) {
   const { t, locale } = useI18n();
   const d = t.residents.deceased;
-  const [state, submit, pending] = useKeptForm(
+  const [state, submit, pending] = useWriteForm(
     recordDeath.bind(null, residentId),
     undefined,
   );
