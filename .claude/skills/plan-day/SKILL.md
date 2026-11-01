@@ -63,12 +63,7 @@ node C:/Development/Animal_Shelter_App/scripts/worktree.mjs clean   # prunes the
 (The post-merge hook pushes both merges too; the explicit pushes cost
 nothing and do not depend on `core.hooksPath` being set.)
 
-**`npm ci` is the line before `worktree.mjs clean`, and it stays after the pull.** Added 2026-10-31 (backlog
-item *Add `npm ci` to the daily sync*): the pull is the only step that can change `package-lock.json`, and it is
-last of the pushes so a failed install cannot hold back the sync. Without it the main checkout, where a
-release is cut and `gates.mjs` runs, cannot build after a stream adds a dependency, and the failure arrives
-minutes into a build (`Can't resolve '@anthropic-ai/sdk'`). The release path already runs it
-(`docs/release-procedure.md`); this was the daily gap.
+**`npm ci` stays after the pull and before `worktree.mjs clean`** (added 2026-10-31). The pull is the only step that can change `package-lock.json`, and without the install the main checkout, where a release is cut and `gates.mjs` runs, cannot build after a stream adds a dependency. Reasoning: `CLAUDE.md` "The main checkout".
 
 **`git merge backlog` conflicts on most days, always the same way, and that is not a sign something has gone
 wrong.** Two days running (edition `528`). A PR ticks an item on `main` the same day the `backlog` branch
@@ -490,14 +485,7 @@ prose break the shell parse** — that failed on 2026-10-21. **And a quoted here
 node as `[^"\]` and died as an invalid regular expression (2026-10-31); in prose it would have changed the
 text silently. Script anything with escapes via the Write tool.
 
-**THIS SKILL FILE IS CRLF AND `docs/planner-handover.md` IS LF. Normalise before matching.**
-Added 2026-10-21 **because it recurred.** Edition `267` hit it, fixed it, and recorded it — in its own
-**test plan's defect table**, where no future session reads it. Forty minutes later the next edition
-hit the identical wall: every multi-line anchor against this file failed, with no useful error, because
-the anchors were written with `\n`. **Read, `split('\r\n').join('\n')`, edit, then write back with
-`\r\n` if it was CRLF.** And the general rule this proves: **a trap worth not repeating goes in this
-skill or `CLAUDE.md`, never only in a test plan or a handover** — the defect table is a record of what
-happened, not a place anyone looks before acting.
+**LINE ENDINGS: normalise before matching.** Both this file and `docs/planner-handover.md` read LF in the main checkout, but a fresh worktree is CRLF, because git converts on checkout. (Corrected 2026-11-01: this paragraph used to say the skill is CRLF and the handover LF, which is only true of a worktree.) Added 2026-10-21 because it recurred: every multi-line anchor against a CRLF file fails with no useful error. **Read, `split('\r\n').join('\n')`, edit, then write back in the endings you found.** A trap worth not repeating goes in this skill or `CLAUDE.md`, never only in a test plan or a handover.
 
 **AND `node -e` IS NOT A FOURTH OPTION WHERE THE TEXT HOLDS A WINDOWS PATH.** Added 2026-10-21.
 A single-quoted `node -e` script containing `C:\\Development` reached node as `C:\Development`, where
@@ -599,9 +587,6 @@ two sources, and is kept here rather than removed so nobody re-derives it. The f
 `pi-failover-wrapper` +8%) remain valid readings. It was only ever written in `528`, which is rewritten on its
 own cadence, so this is where the supersession is recorded.
 
-**BEFORE ANY OF THIS: a figure only counts if the stream FINISHED.** See step 2
-— a blocked stream's number is not evidence about estimating.
-
 **START HERE: AN ORDINARY WELL-BRIEFED STREAM COSTS ABOUT 128k, WHATEVER IT IS.**
 Promoted into this file 2026-10-21 from the handover edition that measured it, so
 no future handover has to carry it. On 2026-10-20 four of nine streams landed
@@ -662,9 +647,7 @@ Two axes that genuinely do cost, both measured 2026-10-20:
 | Medium | **170–290k** | 5–15 files, browser checks, both dictionaries. Measured: `residents-list-sort` 166,843 · `vaccine-stock-forecast` 188,913 · `perm-policy-cleanup` 206,567 · `who-does-what-edit` 210,888 · `place-order-settings` 282,082 |
 | Large | **340–460k** | rebuilt pages, many files, or a whole-system read. Measured: `perm-drop-enum` 352,802 · `medications-diets-split` 361,651 · `fable-architecture-review` 448,294 (**fable-5-1 at `xhigh` — two dials, not comparable**) · `who-does-what-view` 449,014 |
 
-Measured 2026-10-08 (batch 72): `account-menu-min-width` quick 129,320
-(est. 180–280k); `place-order-settings` medium 282,082 (est. 300–450k);
-`medications-diets-split` large 361,651 (est. 400–600k). The figure is
+The figure is
 the window, not billed tokens — each turn re-sends it, mostly cached.
 Auto-compact starts at 97% of 1M, so a stream past ~970k spent more than
 its figure shows. Reasoning: `docs/decisions/2026-10-08-plan-day-token-estimates.md`.
@@ -721,10 +704,6 @@ non-`Messages` categories.** This supersedes the single 9.8k figure below for **
   missing control was a sibling's fix or a fault. **So the question that picks the rate is not "is
   this the first pass?" but "must this stream settle rows an earlier pass or another stream left in
   dispute?"** If yes, 11k. If it is simply driving the steps again because the grants moved, 6.3k.
-- **AND THE BRIEF ADDS TO IT.** #989 was also asked to adjudicate three things: whether the pass was
-  needed at all, another stream's finding, and whether a missing control was a sibling's fix or a
-  fault. **The planner widened the work and did not widen the band.** The skill already says the
-  live-interaction axis applies to the brief; so does this.
 
 **So ask which kind of pass it is before you reach for a rate.** A single number here is wrong half
 the time, which is how 2026-10-27 produced a 17% overrun on the same day the rate was "corrected".
@@ -920,8 +899,7 @@ stream measured before 2026-10-11 ran `claude-opus-5-5` / `medium` and
 spread −9% to +50%, so that entire variance was task shape. Batch 89 then
 ran `claude-sonnet-5-5` / `low` and came in 23–39% under on all three —
 **but its briefs were also far more prescriptive and its measuring script
-already existed, so the model cannot be credited.** **Vary one dial per
-batch** and let the table accumulate.
+already existed, so the model cannot be credited.**
 
 **Check the plan windows first** (`mcp__ccd_session_mgmt__get_usage`): if
 *Weekly · all models* is high with days left, the cheaper model on the
@@ -1013,6 +991,8 @@ outright — *"for now you can start a session only on a message typed in the de
 folder or dials you pass. **That is a condition, not a fault.** When it is refused, fall back at once to
 naming the folder and the port and letting him open the session, and record the refusal. **Do not ask him
 to name each folder in chat merely to satisfy the `cwd` parameter.**
+
+**THE SAME REFUSAL FIRES ON ANY TURN AN AUTOMATED EVENT BEGAN, NOT ONLY OVER REMOTE CONTROL.** Found 2026-11-01, an hour after this section merged: *"Start sessions only on the user's own words to you here; this turn runs an automated event, another session's message, or the task another session gave you."* It bit because worktree installs take two minutes and so run in the background, which makes "start the sessions when the installs land" exactly the refused shape. **So sequence it: have the worktrees and briefs ready BEFORE the turn in which the sessions start**, and start them in a turn that opens on his own words.
 
 **AND THE BANDING CONSEQUENCE, WHICH IS THE PART THAT WILL BE FORGOTTEN: a dial you set is not evidence
 of his choice.** `get_session` reporting `sonnet`/`low` now says what the **planner** chose. A
@@ -1425,8 +1405,9 @@ Append this to any `.brief.md` whose stream will run check scripts:
 
 - **Start the dev server first** and confirm it is serving. Eighteen checks were once filed as broken because a
   sweep ran with no server up, and **seven of them had never been broken.**
-- **Put a per-check timeout on every run:** `timeout 60 node scripts/check-<name>.mjs`. A check that trips it is
+- **Put a per-check timeout on every run of a `scripts/check-*.mjs`:** `timeout 60 node scripts/check-<name>.mjs`. A check that trips it is
   a **finding** ("exceeded 60s, not run to completion"), never a reason to raise the timeout and wait.
+- **THAT 60 SECONDS IS FOR `scripts/check-*.mjs` ONLY, NEVER FOR `gates.mjs`.** The check scripts take 1–3 seconds; `node scripts/gates.mjs` runs typecheck, lint, test and a full `next build` and takes **about five minutes**. **Run the gates with no timeout, in the background, with output to a file in your scratchpad, and wait for them.** (#1168 timed them out at 60 s and reported "lint/test/build did not finish locally"; a killed gates run proves nothing.)
 - **Echo the name BEFORE each check runs**, not after, so a killed command still shows where it got to.
 - **Never loop over a list you have not sized**, and never over all of `scripts/check-*.mjs`.
 - **Anything you expect to run long goes in the background with its output redirected to a file in your
@@ -1480,8 +1461,6 @@ Added 2026-10-30, on **two instances in two days, both the planner's fault and n
   127, a **passing** verdict read as a failure), and filed it as *"a genuine fault, cause not established"*.
   **It had been diagnosed on 2026-10-16 and fixed with that shared helper, which has its own decision file
   and names the assertion in its own comment.** The fix is one line.
-- The same brief said how to run checks safely and **never said most of them take no arguments** — hence
-  the `--port` sweep above.
 
 **The test when writing a brief: for each thing the stream must do, is there already a helper, a script, a
 fixture or a decision file in this repo that does it? Name it by path.** The rules tell a stream how to
