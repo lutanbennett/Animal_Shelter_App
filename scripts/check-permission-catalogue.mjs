@@ -494,7 +494,6 @@ const ADMIN_CHECK = /\b(?:requireAdminUser|assertAdminRole|hasAdminRole|refuseUn
 const NO_ACTIVITY = {
   "services/desexing/actions.ts": "the public sign-up, signed out by definition: written as the anon role with insert-only column grants (0233), so the database gate decides; it never reads a sign-up back",
   "account/password/actions.ts": "changes the signed-in user's own password and name; its one service-role call clears their own must-change flag after the password check",
-  "account/theme/actions.ts": "the signed-in user's own display preference, in their own auth metadata",
   "medical/scan-actions.ts": "leaves or clears a five-minute waiting cookie and nothing else; startCardWait refuses unless canOpen(perms, route) for the job's own page, and /scan/arrive re-checks it at the redirect",
   "login/actions.ts": "signed out by definition: the sign-in itself",
   "login/forgot/actions.ts": "signed out by definition: asks for a reset email",
