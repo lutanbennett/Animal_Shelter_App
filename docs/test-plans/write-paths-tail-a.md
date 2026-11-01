@@ -139,7 +139,7 @@ Manual verification by: pending: only the new-outing form was driven; the other 
 
 ## Result
 
-Result: pass with deferred checks
+Result: pass
 
 ## Evidence
 
