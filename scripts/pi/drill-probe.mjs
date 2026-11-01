@@ -10,6 +10,11 @@
 // usage: node scripts/pi/drill-probe.mjs <case> <seconds> <cookie-file> [site]
 //   cookie-file holds "sb-...-auth-token=base64-..." (the cookie dev-signin prints; never commit it)
 // output: one line per attempt on stdout, then a summary; also appended to .local/drill-<case>.log
+// DETAIL (stream failover-probe-captures): the summary lines stay short on purpose. Every attempt's FULL response
+// headers, and the body of any non-2xx reply (first BODY_CAP chars, marked when cut), go to
+// .local/drill-<case>.detail.jsonl, one JSON object per attempt. The first non-2xx reply is also printed in full
+// under the summary, so one screen answers "who replied" without opening the file. No header is singled out as
+// proof of anything: read them all (server, cf-ray, cf-cache-status, content-type, x-lanna-served-by...).
 // Test and production share the Pi and tunnel; the test site writes to the DEV database only.
 //
 // ALWAYS DRY-RUN THIS AGAINST A HEALTHY PI BEFORE TRUSTING ANY DRILL — six seconds is enough, and
@@ -37,8 +42,10 @@ const ACTION_ID = "607e1b04c24472ed9e1e8d92b3fba808354b3d8f50"; // createUnit; r
 const run = Date.now().toString(36);
 mkdirSync(".local", { recursive: true });
 const logFile = `.local/drill-${drillCase}.log`;
+const detailFile = `.local/drill-${drillCase}.detail.jsonl`;
 const stamp = (d) => d.toISOString().slice(11, 23);
 
+const BODY_CAP = 2000;
 const attempts = [];
 async function attempt(n) {
   const name = `drill-${run}-${n}`;
@@ -51,12 +58,16 @@ async function attempt(n) {
   form.set("name", name);
   form.set("usedFor", "ingredients");
   form.set(WRITE_REQUEST_FIELD, newWriteRequestId()); // fresh per attempt: without it the write is refused and still answers 200
-  const row = { n, name, at: stamp(started), status: "", ms: 0, servedBy: "none", landed: null };
+  const row = { n, name, at: stamp(started), status: "", ms: 0, servedBy: "none", landed: null, headers: null, body: null };
   try {
     const res = await fetch(`${site}/admin/units`, { method: "POST", body: form, headers: { cookie }, signal: AbortSignal.timeout(30000) });
     row.status = String(res.status);
     row.servedBy = res.headers.get("x-lanna-served-by") ?? "none";
-    await res.arrayBuffer().catch(() => {});
+    row.headers = Object.fromEntries(res.headers.entries());
+    const text = await res.text().catch((e) => `<body unreadable: ${e?.name ?? e}>`);
+    if (!res.ok) {
+      row.body = text.length === 0 ? "<empty body>" : text.length > BODY_CAP ? `${text.slice(0, BODY_CAP)}\n<truncated: ${text.length} chars in all, first ${BODY_CAP} shown>` : text;
+    }
   } catch (e) {
     row.status = `error:${e?.cause?.code ?? e?.name ?? e}`;
   }
@@ -82,6 +93,11 @@ for (const a of attempts) a.landed = landed.has(a.name);
 const lines = attempts.map((a) => `${a.at} ${a.status} ${a.ms}ms served-by=${a.servedBy} landed=${a.landed ? "yes" : "NO"}`);
 console.log(lines.join("\n"));
 appendFileSync(logFile, `# ${drillCase} ${new Date().toISOString()}\n${lines.join("\n")}\n`);
+appendFileSync(detailFile, attempts.map((a) => JSON.stringify({ n: a.n, at: a.at, status: a.status, ms: a.ms, landed: a.landed, headers: a.headers, body: a.body })).join("\n") + "\n");
+const bad = attempts.find((a) => a.body !== null || a.status.startsWith("error:"));
+if (bad) {
+  console.log(`\nFIRST NON-2xx: ${bad.at} ${bad.status} ${bad.ms}ms\nheaders: ${JSON.stringify(bad.headers)}\nbody (first 300; the file has up to 2000): ${(bad.body ?? "<none: no response>").slice(0, 300)}\nall attempts in full: ${detailFile}`);
+} else console.log(`\nno non-2xx replies. headers for every attempt: ${detailFile}`);
 const byServer = {};
 for (const a of attempts) byServer[a.servedBy] = (byServer[a.servedBy] ?? 0) + 1;
 const landedCount = attempts.filter((a) => a.landed).length;
