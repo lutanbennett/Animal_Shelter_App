@@ -159,7 +159,7 @@ Manual verification by: pending: item 1 above, a person pressing one write of ea
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — n/a: the PR carries this file; pasting happens at PR creation
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — n/a: not yet — the release manager reads the plan from the merged PR
 
 Result: pass with accepted defects
 
