@@ -917,9 +917,9 @@ const en = {
           publish_shelter_friends: "Publish Shelter Friends to the public website and take them down. Includes View contacts.",
           recurring_jobs: "Set up recurring jobs and mark any of them done.",
           dashboard: "The management dashboard, with the resident, clinic visit and maintenance job counts it reports.",
-          food_forecast: "See how much of each food is in the cupboard and what the residents will eat and what that costs, without changing anything. Changing the list is Admin's.",
-          medicine_forecast: "See how much of each medicine is in the cupboard and what the prescriptions will use and what that costs, without changing anything. Changing the list is Admin's.",
-          view_cashflow: "See what the shelter is about to spend, in one place, without changing anything. Changing the fixed outgoings is Admin's.",
+          food_forecast: "See how much of each food is in the cupboard and what the residents will eat and what that costs, without changing anything. Changing the list needs two permissions together: \"Setup lists: immunization, procedure and blood-test types, frequencies\" and \"The diet list and the food forecast\".",
+          medicine_forecast: "See how much of each medicine is in the cupboard and what the prescriptions will use and what that costs, without changing anything. Changing the list needs two permissions together: \"Setup lists: immunization, procedure and blood-test types, frequencies\" and \"The medication list: prices, labels, reorder levels\".",
+          view_cashflow: "See what the shelter is about to spend, in one place, without changing anything. Changing the fixed outgoings is a separate permission, \"Cashflow and fixed outgoings\".",
           record_vet_care: "A vet records visits, procedures, blood tests, prescriptions, immunizations and diets. It does not archive records, send to hospital or book visits.",
           record_microchip: "Record or correct a resident's microchip number, and nothing else about the resident.",
           adoption_news: "Record news that an adopter sends about an adopted resident.",
@@ -2567,7 +2567,7 @@ const en = {
       },
       pages: {
         subtitle:
-          "The wording of this page as you write it. The other language's version is written or approved beneath each field — the same translation panel a manager sees on Management → Translations.",
+          "The wording of this page as you write it. The other language's version is written or approved beneath each field — the same translation panel as on Management → Translations.",
         back: "Back to Pages",
         thaiMissing: "Thai missing",
         lastEdited: (date: string) => `Edited ${date}`,
@@ -2751,7 +2751,7 @@ const en = {
       panelTitle: "Price per pack",
       panelIntro:
         "For an item bought in a bag, box or bottle: enter what one costs and the price per base unit is worked out from it. The units themselves are set up under Settings.",
-      noPurchaseUnits: "No item has a unit it is bought in yet. An admin sets one up under Settings → Medications or Diets.",
+      noPurchaseUnits: "No item has a unit it is bought in yet. Set one up under Settings → Medications or Diets, which need \"Setup lists: immunization, procedure and blood-test types, frequencies\" together with the permission for that list.",
     },
     entry: {
       unit: "Unit",
@@ -2762,7 +2762,7 @@ const en = {
     },
     onHand: (quantity: string, unit: string) => `≈ ${quantity} ${unit}`,
     errors: {
-      notAuthorized: "Only an admin can change units of measure (Settings → Medications or Diets).",
+      notAuthorized: "Changing units of measure (Settings → Medications or Diets) needs \"Setup lists: immunization, procedure and blood-test types, frequencies\" together with the permission for that list: \"The medication list: prices, labels, reorder levels\" or \"The diet list and the food forecast\".",
       unitRequired: "Give the unit a name.",
       factorInvalid: "How many base units it holds must be a number above 0.",
       sameAsBase: (base: string) => `“${base}” is already this item's base unit. Name a different unit.`,
@@ -2793,8 +2793,8 @@ const en = {
     blankHint:
       "Leave a row blank if you didn't count it — it stays as it was. If the figure hasn't changed, tap Same as last time.",
     noItems: {
-      medication: "No medications yet. An admin adds them under Settings → Medications.",
-      diet: "No diets yet. An admin adds them under Settings → Diets.",
+      medication: "No medications yet. They are added under Settings → Medications, which needs \"Setup lists: immunization, procedure and blood-test types, frequencies\" together with \"The medication list: prices, labels, reorder levels\".",
+      diet: "No diets yet. They are added under Settings → Diets, which needs \"Setup lists: immunization, procedure and blood-test types, frequencies\" together with \"The diet list and the food forecast\".",
     },
     noMatches: (query: string) => `Nothing matches “${query}”.`,
     notCounted: "Never counted",
@@ -2832,7 +2832,7 @@ const en = {
     saved: (n: number, when: string) => `Saved ${n} ${n === 1 ? "count" : "counts"}, counted ${when}.`,
     leaveWarning: "You have counts that aren't saved. Leave and lose them?",
     errors: {
-      notAuthorized: "Your role can't record a stocktake. Ask a manager.",
+      notAuthorized: "This login can't record a stocktake: it needs the permission \"Count the stock\".",
       stale:
         "Nothing was saved: an item on the sheet has been deleted since the page opened. Reload the page — your counts will need entering again.",
       countInvalid: "Nothing was saved: every count must be a number, 0 or more.",
@@ -3077,7 +3077,7 @@ const en = {
         `The latest ${n}. A delivery typed wrong is deleted and recorded again.`,
     },
     errors: {
-      notAuthorized: "Your role can't record deliveries. Ask a member of staff or a manager.",
+      notAuthorized: "This login can't record deliveries: it needs the permission \"Record a delivery\".",
       itemRequired: "Choose what arrived.",
       quantityInvalid: "Enter the quantity, a number above 0, in the item's own unit.",
       costInvalid: "Cost must be a number, 0 or more — or leave it blank.",
@@ -3484,7 +3484,7 @@ const en = {
       pickTotal: (amount: string) => `Total ${amount}`,
       noRoundHeading: "No round set",
       noRoundNote:
-        "These have no round ticked, so they would appear in no round. Ask Management to set one.",
+        "These have no round ticked, so they would appear in no round. Someone who can edit them needs to set one.",
       asNeededHeading: "As needed",
       asNeededNote: "Given only when the doctor says so; not part of any round.",
       amountPicture: (amount: string) => `Amount: ${amount}`,
@@ -3520,7 +3520,7 @@ const en = {
       noPhoto: "No photo",
       noRoundTag: "No meal set on this diet",
       noRoundNote:
-        "These dogs' diets have no meal ticked, so they are counted in every meal. Ask Management to set one.",
+        "These dogs' diets have no meal ticked, so they are counted in every meal. Someone who can edit them needs to set one.",
       noLines: "This diet has no ingredients yet.",
       apartHeading: "Not in a zone today",
       apartNote:
@@ -4062,7 +4062,7 @@ const en = {
         unit: (unit: string) => `Measured in ${unit}`,
         costHint: (unit: string) => `Baht for one ${unit}, not one pack. Up to 4 decimal places. Blank = not priced yet.`,
         editPrice: "Price and reorder",
-        none: "No medications yet. An admin adds them under Settings → Medications.",
+        none: "No medications yet. They are added under Settings → Medications, which needs \"Setup lists: immunization, procedure and blood-test types, frequencies\" together with \"The medication list: prices, labels, reorder levels\".",
       },
       couldntLoad: "Couldn't load medications",
       couldntLoadUsage: "Couldn't load prescription counts",
@@ -4601,7 +4601,7 @@ const en = {
       upcoming: (n: number) => `${n} upcoming`,
       overdue: (n: number) => `${n} overdue`,
       nothingScheduled: "Nothing scheduled",
-      noVets: "No clinics yet — a manager can add them under Management → Clinics.",
+      noVets: "No clinics yet — they are added under Management → Clinics, which needs the permission \"The list of clinics\".",
     },
     hub: {
       backToVets: "← Back to clinics",
@@ -4690,7 +4690,7 @@ const en = {
     },
     list: {
       inCare: (n: number) => `${n} in care`,
-      noContacts: "No contacts yet — a manager can add them under Management → Contacts.",
+      noContacts: "No contacts yet — they are added under Management → Contacts, which needs the permission \"Contacts\".",
       noMatches: "No contacts match.",
       count: (shown: number, total: number) =>
         shown === total ? `${total} contact${total === 1 ? "" : "s"}` : `${shown} of ${total}`,
@@ -4705,13 +4705,13 @@ const en = {
       mapLinkBroken:
         "This map link doesn't open a map any more, so no map is shown. In Google Maps, find the place, tap Share, and paste the new link into Map link under Management → Contacts.",
       notes: "Notes",
-      noDetails: "No contact details recorded — a manager can add them under Management → Contacts.",
+      noDetails: "No contact details recorded — they are added under Management → Contacts, which needs the permission \"Contacts\".",
       residentsInCare: "Residents in care",
       residentsInCareDetail:
         "Fostered or adopted residents living with this carer right now.",
       noResidentsInCare: "No residents are with this carer at the moment.",
       notACarer:
-        "Only contacts of type Carer can foster or adopt residents. A manager can change the type under Management → Contacts.",
+        "Only contacts of type Carer can foster or adopt residents. The type is changed under Management → Contacts, which needs the permission \"Contacts\".",
       since: (date: string) => `since ${date}`,
       pastPlacements: "Past placements",
       pastPlacementsDetail: "Residents who used to live with this carer.",
@@ -5075,7 +5075,7 @@ const en = {
     folderLabel: "Folder",
     goesIn: (folder: string) => `These go in the ${folder} folder.`,
     medicalNever: "Medical photos never go on the website.",
-    waitsNote: "Your photos wait for Management to look at them. Nobody outside the shelter sees them until then.",
+    waitsNote: "Your photos wait until they are approved. Nobody outside the shelter sees them until then.",
     savedWaiting: "Saved, waiting for approval",
     tagged: (done: number, total: number) => `${done} of ${total} tagged`,
     allDone: "All photos are tagged and saved.",
@@ -5098,7 +5098,7 @@ const en = {
     enclosure: {
       iKnow: "I know who it is",
       dontKnow: "I don't know, tag the enclosure",
-      help: "Tap the zone, then the enclosure you were standing in. Management will choose the animal.",
+      help: "Tap the zone, then the enclosure you were standing in. Whoever approves the photos will choose the animal.",
       recent: "Tagged last",
       zone: "Zone",
       which: (zone: string) => `Which enclosure in ${zone}?`,
@@ -5182,7 +5182,7 @@ const en = {
       retry: "Try again",
       remove: "Hide",
       notFound: "That resident isn't in the list. Go back and tap one.",
-      closed: "This record is closed, so no photo can be added here. Ask Management.",
+      closed: "This record is closed, so no photo can be added here.",
       back: "Back to the list",
       count: (n: number) => (n === 1 ? "1 photo saved" : `${n} photos saved`),
       noView: "This card adds photos but does not show them again. Anyone whose card shows Medical photos can see them on the resident's Photos page.",
@@ -5209,7 +5209,7 @@ const en = {
       perDayTotal: (amount: string) => `${amount} a day`,
       eatsAt: (rounds: string) => `Fed: ${rounds}`,
       noRoundHeading: "No meal time set",
-      noRoundNote: "These have no meal time ticked, so they are shown in every meal. Ask Management to set one.",
+      noRoundNote: "These have no meal time ticked, so they are shown in every meal. Someone who can edit them needs to set one.",
       amountMissing: "Amount not recorded",
       apartHeading: "Not in an enclosure today",
       apartNote:
@@ -5440,7 +5440,7 @@ const en = {
       "Open this from a resident's Diet page so the diet is recorded against the right resident.",
     residentNotFound: "Resident not found.",
     couldntLoadDietTypes: "Couldn't load diets",
-    noDietTypes: "No diets have been set up yet — an admin adds them under Settings → Diets.",
+    noDietTypes: "No diets have been set up yet — they are added under Settings → Diets, which needs \"Setup lists: immunization, procedure and blood-test types, frequencies\" together with \"The diet list and the food forecast\".",
     forResident: (name: string) => `For ${name}`,
     dietType: "Diet",
     selectDietType: "Select a diet",
@@ -5835,7 +5835,7 @@ const en = {
       },
       sending: "Sending...",
       sendButton: "Send to hospital",
-      notAuthorized: "Only staff and admins can send residents to hospital.",
+      notAuthorized: "You can't send residents to hospital: it needs the permission \"Send to hospital and bring back\".",
       errors: {
         enterDate: "Enter the date admitted.",
         dateInFuture: "The date admitted can't be in the future.",
@@ -5870,7 +5870,7 @@ const en = {
       },
       returning: "Returning...",
       returnButton: "Return from hospital",
-      notAuthorized: "Only staff and admins can return residents from hospital.",
+      notAuthorized: "You can't return residents from hospital: it needs the permission \"Send to hospital and bring back\".",
       errors: {
         selectEnclosure: "Select the enclosure to return to.",
         enterDate: "Enter the date returned.",
@@ -5895,7 +5895,7 @@ const en = {
         "This resident has died — their record is closed and can no longer be changed.",
       editLimited:
         "This resident has died. Their bio and photos can still be updated — everything else in the record is closed. The archive in Drive is refreshed after each change.",
-      notAuthorized: "Only staff and admins can record a death.",
+      notAuthorized: "You can't record a death: it needs the permission \"Record a death\".",
       fields: {
         date: "Date of death",
         causeOfDeath: "Cause of death",
@@ -5915,7 +5915,7 @@ const en = {
       },
       confirm: {
         title: (name: string) => `Record ${name} as deceased?`,
-        body: "Only an admin can withdraw this afterwards.",
+        body: "Withdrawing it afterwards is a separate permission, \"Withdraw a death recorded in error\".",
         confirmButton: "Yes, record the death",
       },
       banner: {
@@ -5946,7 +5946,7 @@ const en = {
         pageTitle: (name: string) => `Withdraw ${name}'s recorded death`,
         pageSubtitle:
           "For a death recorded in error — the wrong resident, or one that didn't happen. The record reopens where it was, with what the death cancelled put back. If the death did happen but a detail is wrong, this is not the tool: the reversal stays in the history.",
-        notAuthorized: "Only an admin can withdraw a recorded death.",
+        notAuthorized: "You can't withdraw a recorded death: it needs the permission \"Withdraw a death recorded in error\".",
         bannerHint: "Recorded in error?",
         bannerLink: "Withdraw this death",
         recordedAs: "Recorded as",
@@ -6012,7 +6012,7 @@ const en = {
       },
       moving: "Moving...",
       moveButton: "Move resident",
-      notAuthorized: "Only staff, volunteers and admins can move residents.",
+      notAuthorized: "You can't move residents: it needs the permission \"Move a resident to another enclosure\".",
       warning: {
         title: {
           near: "This enclosure is nearly full",
@@ -6090,7 +6090,7 @@ const en = {
         foster: "Record foster",
         adopt: "Record adoption",
       },
-      notAuthorized: "Only staff and admins can foster out or adopt out residents.",
+      notAuthorized: "You can't foster out or adopt out residents: it needs the permission \"Foster, adopt, return to the shelter\".",
       errors: {
         selectKind: "Choose whether this is a foster or an adoption.",
         selectCarer: "Select the carer, or add a new one.",
@@ -6135,7 +6135,7 @@ const en = {
       },
       returning: "Returning...",
       returnButton: "Return to shelter",
-      notAuthorized: "Only staff and admins can return residents to the shelter.",
+      notAuthorized: "You can't return residents to the shelter: it needs the permission \"Foster, adopt, return to the shelter\".",
       errors: {
         selectEnclosure: "Select the enclosure to return to.",
         enterDate: "Enter the date returned.",
@@ -6189,7 +6189,7 @@ const en = {
         selectAriaLabel: (name: string) => `Use ${name} as profile photo`,
       },
       saving: "Saving...",
-      notAuthorized: "Only staff and admins can edit resident details.",
+      notAuthorized: "You can't edit resident details: it needs the permission \"A resident's details, housing and history\".",
       errors: {
         nameRequired: "Name is required.",
         ageMustBeNumber: "Estimated age must be a number.",
@@ -6358,7 +6358,7 @@ const en = {
   /** /no-access: where a page's role check sends a signed-in app user it refuses. */
   noAccess: {
     pageTitle: "You don't have access to this page",
-    body: "Your role doesn't include it. If you need it for your work, ask a manager or an admin.",
+    body: "Your login's cards don't include this page. If you need it for your work, ask an Admin, who gives out the cards.",
     goToMy: "Go to My tasks",
   },
 
@@ -6480,7 +6480,7 @@ const en = {
       handedToYou: "handed to you",
       handedToYouBecause: (note: string) => `handed to you: ${note}`,
       notYet: "Can be marked done on the day",
-      cannotDo: "your role isn’t given this job — ask management to reassign it",
+      cannotDo: "you can't be given this job — ask someone who can set up recurring jobs to reassign it",
       waitingConfirm: {
         title: (waitingFor: string) => `“${waitingFor}” is still open`,
         body: (title: string, waitingFor: string) =>
@@ -6565,7 +6565,7 @@ const en = {
       teamCount: (n: number) => (n === 1 ? "1 person" : `${n} people`),
       noAssignees: "No one to assign to yet — accounts are made under Settings → Security.",
       archivedMember: "(no longer here — untick to reassign)",
-      assignedHint: "Tick everyone doing the work — staff, volunteers, management; a fence can take three people. Accounts are made under Settings → Security.",
+      assignedHint: "Tick everyone doing the work; a fence can take three people. Accounts are made under Settings → Security.",
       titlePlaceholder: "e.g. Gate latch broken",
       descriptionPlaceholder: "What needs doing, what's been tried, who to contact…",
       zoneWideToggle: "Zone-wide job (no single enclosure)",
@@ -6782,7 +6782,7 @@ const en = {
     backToParent: (name: string) => `← Back to ${name}`,
     couldntLoad: "Couldn't load projects",
     notFound: "That folder doesn't exist.",
-    readOnly: "You can browse and add photos; staff manage the folders.",
+    readOnly: "You can browse and add photos; managing the folders is a separate permission, \"Project folders and their stories\".",
     search: {
       placeholder: "Search folders…",
       results: (n: number) => `${n} folder${n === 1 ? "" : "s"} found`,
@@ -7082,7 +7082,7 @@ const en = {
       senderHint: "The adopter is chosen for you. Change it if someone else in the family sent it.",
       channel: "Came in by",
       note: "What they said",
-      staffOnlyBadge: "Staff only. Never published.",
+      staffOnlyBadge: "Internal only. Never published.",
       publicBadge: "Goes on the website",
       publish: {
         legend: "Publish to the website",
@@ -7093,7 +7093,7 @@ const en = {
         story: "Words to publish",
         storyPlaceholder: "Mango loves her new garden and sleeps on the sofa every night.",
         storyHint:
-          "Write or paste only what the adopter agreed to share. Do not copy from \"What they said\" above: that is for staff.",
+          "Write or paste only what the adopter agreed to share. Do not copy from \"What they said\" above: that is internal.",
         firstName: "First name to show (optional)",
         firstNameHint: "One word, typed by you. Leave empty to show no name. Never a surname.",
         photosNote:
@@ -7115,7 +7115,7 @@ const en = {
       done: "Done",
     },
     errors: {
-      notAuthorized: "Only admin, management and staff can add or change adoption updates.",
+      notAuthorized: "You can't add or change adoption updates: it needs the permission \"News from an adopter\".",
       neverAdopted: "This resident has never been adopted, so there is no adopter to hear from.",
       dateRequired: "Enter the date the update was received.",
       dateInFuture: "The date received can't be in the future.",
@@ -7625,14 +7625,14 @@ const en = {
     joinLink: "Become a Shelter Friend",
     /** Signed-in staff only, on /friends: why a profile they saved isn't here. */
     staffDrafts: {
-      label: "Only signed-in staff see this",
+      label: "Only signed-in users see this",
       count: (n: number) =>
         n === 1
           ? "1 Shelter Friend profile is a draft, so it isn't shown here."
           : `${n} Shelter Friend profiles are drafts, so they aren't shown here.`,
       publishFrom: "Publish from",
       manageLink: "Management → Shelter Friends",
-      askManager: "A manager can publish them.",
+      askManager: "Publishing needs the permission \"Shelter Friends: add, publish, unpublish\".",
     },
     /** A card whose profile has no prose yet still says why it is there. */
     fallbackBlurb: "A friend of the shelter.",
@@ -7685,7 +7685,7 @@ const en = {
       unpublish: "Unpublish",
       viewOnSite: "View on the website",
       editProfile: "Edit profile",
-      readOnly: "A manager can change this profile under Management.",
+      readOnly: "Changing this profile needs the permission \"Shelter Friends: add, publish, unpublish\".",
       archivedHidden:
         "This contact is archived, so their card is off the website until they are restored.",
       blurb: "What they do for the shelter",
@@ -8200,7 +8200,7 @@ const en = {
       hasGifts: "This appeal has gifts recorded against it, so it cannot be deleted.",
       nothingToMove: "Nothing was moved. The gift may already have changed; reload the page.",
       photoMedical: "A photo filed under Medical can be shown on an appeal only when you choose it as a medical photo.",
-      photoMedicalPermission: "You are not allowed to show a medical photo on an appeal. Ask an Admin.",
+      photoMedicalPermission: "You are not allowed to show a medical photo on an appeal: it needs the permission \"Show a medical photo on a fundraising appeal (public on that appeal)\".",
       photoOther: "One of those photos cannot be used on this appeal. Reload the page and choose again.",
     },
   },

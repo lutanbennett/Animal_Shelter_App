@@ -45,7 +45,7 @@ export function DeceasedBanner({
   causeOfDeath: string | null;
   archive: DeceasedArchive;
   canRetryArchive: boolean;
-  /** Admin only — whoever holds placement.death_withdraw. */
+  /** Whoever holds placement.death_withdraw (an ordinary catalogue activity; Admin passes by the Admin rule). */
   canUndo: boolean;
 }) {
   const { t, locale } = useI18n();
