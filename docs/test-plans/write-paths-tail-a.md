@@ -133,7 +133,9 @@ analysis by card in section 1, not by role.
 |---|---|---|
 | Press each wrapped control once: bills save/match/delete, blood test save, visit book/edit/report remove/calendar retry, delivery record/delete, diet create/update/end today, immunization record, maintenance create/edit/status/delete/file/bill, medical weight save, meme create/edit/archive/share, outreach edit/photo/delete, scan-card wait start/stop | the pages that host them | Lutan |
 
-Manual verification by: n/a: nobody has looked at these screens yet; signed by the person who does.
+Automated checks by: Claude  Date: 2026-11-01
+
+Manual verification by: pending: only the new-outing form was driven; the other fourteen modules have not been pressed by a person.
 
 ## Result
 
