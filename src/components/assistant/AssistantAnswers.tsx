@@ -17,6 +17,7 @@ import type {
   WhoAnswer,
 } from "@/app/assistant/lookups";
 import { ReplyBubble } from "./AssistantMessages";
+import { ResidentCandidates } from "./ResidentCandidates";
 
 /**
  * The answers to the three questions that write nothing. No card, no
@@ -373,10 +374,25 @@ function SummaryBody({ answer }: { answer: SummaryAnswer }) {
 export function AssistantAnswer({
   answer,
   residents,
+  candidates = [],
+  onPick,
 }: {
-  answer: LookupAnswer;
+  /** Null while a name is still ambiguous: the picker is drawn in its place. */
+  answer: LookupAnswer | null;
   residents: AssistantResident[];
+  candidates?: string[];
+  onPick?: (id: string) => void;
 }) {
+  if (!answer) {
+    const several = candidates
+      .map((id) => residents.find((r) => r.id === id))
+      .filter((r): r is AssistantResident => !!r);
+    return (
+      <ReplyBubble>
+        <ResidentCandidates candidates={several} onPick={onPick ?? (() => {})} />
+      </ReplyBubble>
+    );
+  }
   return (
     <ReplyBubble>
       {answer.kind === "where" ? (

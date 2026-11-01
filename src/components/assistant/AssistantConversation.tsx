@@ -80,6 +80,8 @@ type TurnState =
   /** The model asked for something; the exchange waits in `resume` until the person answers. */
   | { kind: "asking"; ask: DetailsAsk; resume: InterpretResume }
   | { kind: "answer"; answer: LookupAnswer }
+  /** A name matched several residents: asked which, rather than guessed or answered in words. */
+  | { kind: "pick"; draft: Draft; candidates: string[] }
   | { kind: "error"; message: string }
   | { kind: "done"; message: string; residentId: string | null }
   | { kind: "cancelled" }
@@ -334,6 +336,14 @@ export function AssistantConversation({
 
     const draft = parsed.draft;
     if (
+      (draft.kind === "where" || draft.kind === "summary") &&
+      !draft.residentId &&
+      parsed.residentCandidates.length > 1
+    ) {
+      update(id, { kind: "pick", draft, candidates: parsed.residentCandidates });
+      return;
+    }
+    if (
       draft.kind !== "where" &&
       draft.kind !== "who" &&
       draft.kind !== "due" &&
@@ -344,6 +354,11 @@ export function AssistantConversation({
     }
     // The server runs on Workers, in UTC; "this week" has to be counted
     // from the calendar date of whoever is asking (backlog d98695a).
+    runLookup(id, trimmed, draft);
+  }
+
+  function runLookup(id: number, trimmed: string, draft: Draft) {
+    if (draft.kind !== "where" && draft.kind !== "who" && draft.kind !== "due" && draft.kind !== "find-enclosure" && draft.kind !== "summary") return;
     void assistantLookup({
       request: trimmed,
       draft,
@@ -357,6 +372,13 @@ export function AssistantConversation({
           : { kind: "answer", answer: result.answer },
       );
     });
+  }
+
+  /** The person chose which resident they meant: the question is asked again, about that one. */
+  function pickResident(turn: Turn, residentId: string) {
+    if (turn.state.kind !== "pick") return;
+    update(turn.id, { kind: "pending" });
+    runLookup(turn.id, turn.request, { ...turn.state.draft, residentId } as Draft);
   }
 
   function settle(turn: Turn, outcome: AssistantOutcome) {
@@ -414,7 +436,7 @@ export function AssistantConversation({
         {turns.map((turn) => (
           <AssistantTurn key={turn.id} settled={turn.state.kind}>
             <RequestBubble text={turn.request} />
-            <TurnReply turn={turn} context={context} onSettle={settle} onOpenAsk={() => setAskOpen(turn.id)} />
+            <TurnReply turn={turn} context={context} onSettle={settle} onPick={(rid) => pickResident(turn, rid)} onOpenAsk={() => setAskOpen(turn.id)} />
           </AssistantTurn>
         ))}
       </AssistantMessageList>
@@ -449,11 +471,13 @@ function TurnReply({
   turn,
   context,
   onSettle,
+  onPick,
   onOpenAsk,
 }: {
   turn: Turn;
   context: AssistantContext;
   onSettle: (turn: Turn, outcome: AssistantOutcome) => void;
+  onPick: (residentId: string) => void;
   onOpenAsk: () => void;
 }) {
   const { t } = useI18n();
@@ -481,6 +505,17 @@ function TurnReply({
       return <PendingBubble label={a.looking} />;
     case "recording":
       return <PendingBubble label={a.recording} />;
+    case "pick": {
+      const state = turn.state;
+      return (
+        <AssistantAnswer
+          answer={null}
+          residents={context.residents}
+          candidates={state.candidates}
+          onPick={onPick}
+        />
+      );
+    }
     case "answer":
       return <AssistantAnswer answer={turn.state.answer} residents={context.residents} />;
     case "error":
