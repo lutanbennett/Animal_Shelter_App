@@ -128,7 +128,7 @@ Automated checks by: Claude  Date: 2026-11-01
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the dev-signin check of Undo
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the one listed item is still pending a person
 
 Manual verification by: pending: dev-signin --cards check of Undo on /admin/recent-changes
 
