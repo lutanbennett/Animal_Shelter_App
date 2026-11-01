@@ -19,6 +19,7 @@ import { formatDateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 import { DateInput } from "@/components/DateInput";
 
@@ -36,7 +37,9 @@ type T = Awaited<ReturnType<typeof getT>>["t"];
  * for one opened row only and why the paging has no total.
  */
 export default async function RecentChangesPage(props: PageProps<"/admin/recent-changes">) {
-  await requirePermission("audit.view");
+  const { perms } = await requirePermission("audit.view");
+  // Undo is a different card from looking (undoChange asks audit.undo): drawn only when held.
+  const canUndo = can(perms, "audit.undo");
   const { t, locale } = await getT();
   const s = t.admin.recentChanges;
   const filters = parseFilters(await props.searchParams);
@@ -248,7 +251,7 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
                         {isOpen ? s.hideValues : s.showValues}
                       </Link>
                       {isOpen && <Detail detail={detail} s={s} changed={e.changed} op={e.op} />}
-                      <UndoCell e={e} newest={newest.get(`${e.table}:${e.rowId}`)} s={s} />
+                      <UndoCell e={e} newest={newest.get(`${e.table}:${e.rowId}`)} s={s} canUndo={canUndo} />
                     </td>
                   </tr>
                 );
@@ -275,14 +278,17 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
 }
 
 function UndoCell({
+  canUndo,
   e,
   newest,
   s,
 }: {
+  canUndo: boolean;
   e: AuditEntry;
   newest: number | undefined;
   s: T["admin"]["recentChanges"];
 }) {
+  if (!canUndo) return null;
   const what = undoKind(e);
   const u = s.undo;
   if (what === "added") return null;
