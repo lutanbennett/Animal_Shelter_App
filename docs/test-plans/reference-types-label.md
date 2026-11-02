@@ -6,7 +6,7 @@
 |---|---|
 | Feature | reference-types-label |
 | Backlog item | `docs/backlog.md` → reference.types label |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/reference-types-label` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | see GitHub |
 | Tested by / date | Claude / 2026-11-02 |
@@ -50,7 +50,7 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 - [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) — n/a: wording-only change, no schema or behaviour
 - [ ] File is re-runnable (`if not exists` / `or r — n/a: wording-only change, no schema or behaviour
 - [ ] Existing rows still read correctly after the — n/a: wording-only change, no schema or behaviour
-- [ ] **Constraints and defaults exercised against — deferred: release manager
+- [ ] **Constraints and defaults exercised against — n/a: no migration
 - [ ] Down-migration written, or the reason one is — n/a: wording-only change, no schema or behaviour
 - [ ] Production apply plan stated for the release — n/a: wording-only change, no schema or behaviour
 
@@ -203,11 +203,8 @@ Automated checks by: Claude  Date: 2026-11-02
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
