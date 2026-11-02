@@ -5,20 +5,20 @@
 | | |
 |---|---|
 | Feature | control-listing-sweep-3 |
-| Backlog item | `docs/backlog.md` → "Re-list the action controls on the pages the Pi-failover sweep touched" and "ONE PLACE LEFT: THE WEBSITE PAGE EDITOR" |
+| Backlog item | `docs/backlog.md` → control-listing item, STILL OWED clause (resident, management, shared modules, tails) |
 | Branch / worktree | `claude/control-listing-sweep` @ `C:\Development\Animal_Shelter_control-listing-sweep` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | see PR |
 | Tested by / date | Claude, 2026-11-02 |
 | Carries a migration? | no |
-| Tested at SHA | 6725e107 |
+| Tested at SHA | 69a0f8fc |
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence: list every action control on the named admin addresses against the activity its action asks; no code change was needed
-- [x] Files/areas touched: `docs/decisions/2026-11-02-control-listing-sweep-3.md` only
+- [x] Change is described in one sentence: list controls on resident, management and shared-component pages against the activity their action asks, plus #1197 tag pickers; no code change was needed
+- [x] Files/areas touched: `docs/decisions/2026-11-02-control-listing-sweep-3.md` and this plan only
 - [x] Activities affected: none changed; read only
-- [x] Out of scope: resident, management, shared-module and tail pages (not reached, named in the decision file)
+- [x] Out of scope: pages named under "Not reached" in the decision file
 
 ## 2. Automated gates
 
@@ -45,7 +45,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — n/a: the only code change hides one button for a login without `audit.undo`; not driven in a browser, see Left for manual verification
+- [ ] Happy path works end to end — n/a: no code changed; not driven in a browser, see Left for manual verification
 - [ ] Data persists — n/a: no write path changed
 - [ ] Create / edit / delete — n/a: no write path changed
 - [ ] Empty state — n/a: unchanged
@@ -59,7 +59,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 | n/a: no code changed | - | - | - |
 
 - [ ] Every role above tested — n/a: not driven in a browser; code-read only, listed under manual verification
-- [ ] A login without access is blocked server-side — n/a: no server check changed; `undoChange` still asks `audit.undo`
+- [ ] A login without access is blocked server-side — n/a: no server check changed; `no server check touched
 
 ## 5. Cross-cutting
 
@@ -72,7 +72,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ## 6. Regression
 
-- [ ] Nearest pages still work — n/a: typecheck and build only; recent-changes page not loaded
+- [ ] Nearest pages still work — n/a: typecheck and build only; no page changed
 - [ ] Shared file touched checked from a second page — n/a: no shared file touched
 - [x] Nothing merged from `main` during `sync` was broken by this branch: branch is on current `main`
 
@@ -102,7 +102,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] Production dry-run — n/a: no migration
 - [ ] Destructive migration backup — n/a: no migration
 - [ ] Apply plan — n/a: no migration
-- [ ] Rollback position stated — n/a: draw-only change, revert the commit
+- [ ] Rollback position stated — n/a: docs only, revert the commit
 
 ## Defects found
 
