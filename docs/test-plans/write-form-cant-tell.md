@@ -11,7 +11,7 @@
 | PR | see GitHub |
 | Tested by / date | Claude / 2026-11-02 |
 | Carries a migration? | no |
-| Tested at SHA | ff7236c5 |
+| Tested at SHA | f755e7be |
 
 ## 1. Scope and risk
 
@@ -44,24 +44,24 @@ indistinguishable from one that passed.
 
 Per `CLAUDE.md`, schema lands as its own PR before the feature.
 
-- [ ] Migration number is one above the highest on — n/a: wording-only change, no schema or behaviour
-- [ ] `node scripts/apply-migrations.mjs --status` — n/a: wording-only change, no schema or behaviour
-- [ ] `node scripts/apply-migrations.mjs --dry-run — n/a: wording-only change, no schema or behaviour
-- [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) — n/a: wording-only change, no schema or behaviour
-- [ ] File is re-runnable (`if not exists` / `or r — n/a: wording-only change, no schema or behaviour
-- [ ] Existing rows still read correctly after the — n/a: wording-only change, no schema or behaviour
+- [ ] Migration number is one above the highest on — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
+- [ ] `node scripts/apply-migrations.mjs --status` — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
+- [ ] `node scripts/apply-migrations.mjs --dry-run — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
+- [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
+- [ ] File is re-runnable (`if not exists` / `or r — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
+- [ ] Existing rows still read correctly after the — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
 - [ ] **Constraints and defaults exercised against — n/a: no migration
-- [ ] Down-migration written, or the reason one is — n/a: wording-only change, no schema or behaviour
-- [ ] Production apply plan stated for the release — n/a: wording-only change, no schema or behaviour
+- [ ] Down-migration written, or the reason one is — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
+- [ ] Production apply plan stated for the release — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — n/a: wording-only change, no schema or behaviour
-- [ ] Data persists — reload the page and the chan — n/a: wording-only change, no schema or behaviour
-- [ ] Create / edit / delete all exercised (whiche — n/a: wording-only change, no schema or behaviour
-- [ ] Empty state renders sensibly (no rows yet) — n/a: wording-only change, no schema or behaviour
-- [ ] Invalid input is rejected with a readable me — n/a: wording-only change, no schema or behaviour
-- [ ] Boundary cases checked (long text, zero, neg — n/a: wording-only change, no schema or behaviour
+- [ ] Happy path works end to end — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
+- [ ] Data persists — reload the page and the chan — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
+- [ ] Create / edit / delete all exercised (whiche — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
+- [ ] Empty state renders sensibly (no rows yet) — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
+- [ ] Invalid input is rejected with a readable me — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
+- [ ] Boundary cases checked (long text, zero, neg — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
 
 ### Role access matrix
 
@@ -87,30 +87,30 @@ animal — and do not re-derive this list by grepping for quoted strings; read t
 | volunteer | | | |
 | signed out | | | |
 
-- [ ] Every role above tested — n/a: wording-only change, no schema or behaviour
-- [ ] A role that should not have access is blocke — n/a: wording-only change, no schema or behaviour
+- [ ] Every role above tested — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
+- [ ] A role that should not have access is blocke — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
 
 ## 5. Cross-cutting
 
-- [ ] Nav entry correct (`src/app/NavLinks.tsx`) — — n/a: wording-only change, no schema or behaviour
+- [ ] Nav entry correct (`src/app/NavLinks.tsx`) — — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
 - [ ] Manual updated (`src/lib/manual/en — n/a: label text only, no manual topic or translation-queue content
 - [ ] Translatable strings go through th — n/a: label text only, no manual topic or translation-queue content
-- [ ] Mobile viewport (375px) — no overflow, contr — n/a: wording-only change, no schema or behaviour
-- [ ] Browser console clean — no errors or React w — n/a: wording-only change, no schema or behaviour
-- [ ] Network clean — no unexpected 4xx/5xx on the — n/a: wording-only change, no schema or behaviour
+- [ ] Mobile viewport (375px) — no overflow, contr — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
+- [ ] Browser console clean — no errors or React w — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
+- [ ] Network clean — no unexpected 4xx/5xx on the — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
 
 ## 6. Regression
 
-- [ ] The pages nearest the change still work (lis — n/a: wording-only change, no schema or behaviour
-- [ ] Any shared file touched (`NavLinks.tsx`, `ma — n/a: wording-only change, no schema or behaviour
-- [ ] Nothing merged from `main` during `sync` was — n/a: wording-only change, no schema or behaviour
+- [ ] The pages nearest the change still work (lis — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
+- [ ] Any shared file touched (`NavLinks.tsx`, `ma — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
+- [ ] Nothing merged from `main` during `sync` was — n/a: no schema; behaviour covered by write-unknown.test.mjs, not a page-level change
 
 ## 7. Documentation
 
 - [x] Backlog item ticked in `docs/backlog.md` **on this branch** (follow-ups go on the `backlog` branch instead)
 - [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`)
 - [x] `README.md` still accurate
-- [x] **Release notes.** `unreleased` has a card-tagged line (who_does_what)
+- [ ] **Release notes.** n/a: the browser check of a real "can't tell" is still pending, so no note promises it yet
 - [x] Commit messages say why, not just what
 - [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** No gate reads prose: `typecheck`, `lint`, `build` and this checklist all pass with a confidently wrong explanation in the commit that ships the fix, and the wrong explanation is what the next person inherits. Worth real attention on timezone, concurrency and floating-point work, where intuition is unusually unreliable and a plausible story is easy to tell
 
@@ -226,9 +226,9 @@ empty signature quietly passing.
 A red `test-plan` that says what it is waiting for is a red people act on. An
 illegible one is a red people learn to ignore.
 
-- [ ] manual list — n/a: nothing for a person to look at beyond Thai review noted in PR
+- [ ] manual list — pending: a person must provoke a real "can't tell" on dev (stop the Pi write mid-save) and see the reload offer
 
-Manual verification by: n/a: wording only; Thai needs a bilingual read, tracked by the standing item
+Manual verification by: pending: browser press of Save twice after a real "can't tell"; new Thai strings need bilingual read
 
 ### Result
 
@@ -239,6 +239,10 @@ Manual verification by: n/a: wording only; Thai needs a bilingual read, tracked 
 Result: pass
 
 
+
+```
+gates: typecheck=0 lint=0 test=0 build=0
+```
 
 ```
 gates: typecheck=0 lint=0 test=0 build=0
