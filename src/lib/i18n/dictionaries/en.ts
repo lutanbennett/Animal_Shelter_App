@@ -56,7 +56,7 @@ const en = {
     // the browser giving up after WRITE_WAIT_MS). Pressing Save again is safe:
     // the same request id comes back with the first attempt's own answer.
     saveUnknown:
-      "We couldn't tell whether that saved. Press Save again to find out — it will not be saved twice.",
+      "We couldn't tell whether that saved. Look at the page to see if your changes are there. If they are not, reload the page and enter them again.",
     // The browser sent no write request id, so this page is running an older
     // version of the app and a reload fixes it.
     reloadToSave: "This page needs reloading before it can save. Reload it and try again.",
