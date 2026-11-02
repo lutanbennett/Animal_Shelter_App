@@ -21,7 +21,7 @@ export function ResidentCandidates({
   const { t, locale } = useI18n();
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-sm font-medium text-muted">{t.assistant.whichOne}</p>
+      <p className="text-sm font-medium text-muted">{candidates.length === 1 ? t.assistant.didYouMean : t.assistant.whichOne}</p>
       <ul className="flex flex-wrap gap-2">
         {candidates.map((r) => (
           <li key={r.id}>

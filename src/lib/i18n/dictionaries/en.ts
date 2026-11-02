@@ -4288,6 +4288,7 @@ const en = {
       "I didn't understand that one. I can send a resident to hospital and back, log a weight, record a vaccination, prescribe a medicine, record a death, place a resident with a foster or adopting carer, move a resident, book a clinic visit, and answer \"where is …\", \"who is in …\", \"what is due this week\", \"which enclosure has space\" and \"tell me about …\". The user manual has the exact sentences.",
     severalMatch: "More than one resident has that name — pick the right one.",
     whichOne: "Which one do you mean?",
+    didYouMean: "Did you mean this one?",
     /** The assistant asking for something the sentence left out (stream 4). */
     details: {
       title: "A bit more, please",
