@@ -140,9 +140,19 @@ Everything below is read from the repo and is stale the moment it is written. **
   figures and the full band reasoning: **`.plan-day.md`'s own blocks.**
 - **BATCH 3 IS RUNNING AND ITS RESULTS ARE IN NO EDITION YET.** Three streams, the plan's last.
   **Read their `stream-usage:` comments and PR bodies at the next `/plan-day` before anything else.**
-- **ONLY 3 OF 9 FIGURES THIS PLAN WERE CLEAN BAND READINGS**; four were `rescoped=yes`. **That rate is
-  itself a symptom of the false-premise finding above** — a brief whose premise dissolves is a rescope by
-  definition. **Fixing the negatives should raise the number of usable readings.**
+- **SIX OF THE NINE FIGURES ARE CLEAN BAND READINGS AND ALL SIX LANDED INSIDE. Three were
+  `rescoped=yes` and are kept out of the bands.** **CORRECTED 2026-11-02, after this edition first
+  merged saying *"only 3 of 9 … four were rescoped"* — both numbers were wrong.** That line was written
+  at batch 3's setup, when only six figures existed: three clean and **three** rescoped. So it
+  mis-stated the count even against what was then known, and its denominator implied all nine.
+  **Batch 3 then came in 3 of 3 clean and 3 of 3 inside.** Figures: `.plan-day.md`.
+- **THE RESCOPE RATE IS NOT NOISE ABOUT THE BANDS — IT IS THE FALSE-NEGATIVES FINDING, MEASURED.** All
+  three rescopes had the same cause: a premise in the item that dissolved (a migration not needed, a
+  migration needed after all, a regression that did not exist). **A brief whose premise dissolves is a
+  rescope by definition, so fixing the negatives should raise the usable-reading count directly.**
+- **Why this correction is its own PR rather than left to `600`:** a planner reading this tomorrow would
+  band against a wrong rate, and **a wrong number carrying a document's authority is the expensive
+  kind** — which is this plan's own lesson, so the edition should not be the thing that breaks it.
 - **THE AUDIT ROW HELD A FOURTH TIME and its caveat is STILL untested.** A sweep that must **REPAIR**
   what it finds has never been measured, because four sweeps running have found almost nothing to repair.
   **Leave the caveat standing, worded as repair.**
