@@ -11,6 +11,8 @@ import { loadTranslations } from "@/lib/translations/queries";
 import { placeName } from "@/lib/enclosures/names";
 import { SECTION_READS } from "@/lib/residents/section-reads";
 import { getT } from "@/lib/i18n/get-t";
+import { loadMentions, loadNoteTags, loadSourceLabels, noteKey } from "@/lib/note-tags/load";
+import { MentionedIn } from "./MentionedIn";
 import { isMedicalFolder } from "@/lib/google/drive-client";
 import { canBrowseMemes, loadResidentMemes } from "@/lib/memes/queries";
 import type { AppealStatus } from "@/lib/appeals/state";
@@ -263,6 +265,19 @@ export default async function ResidentPage(
   // The memes featuring this resident (0223): only for a login holding social.library at Read. Many roles can open
   // this page and must not learn a meme exists here, so the gate is pinned on this list as it is on the library
   // (docs/decisions/2026-10-18-meme-library-app.md). null = no list drawn at all.
+  // Hashtag links (resident_note_tags): the names tagged in this resident's own notes, and the notes on other
+  // residents that tag this one. Only a login holding resident.record at read can read either (the policies ask it).
+  const canSeeLinks = can(perms, "resident.record", "read");
+  const [noteTagMap, mentions] = canSeeLinks
+    ? await Promise.all([
+        loadNoteTags(supabase, id),
+        loadSourceLabels(supabase).then((labels) => loadMentions(supabase, id, labels)),
+      ])
+    : [new Map(), []];
+  const ownNoteTags = Object.fromEntries(
+    ["behaviour_notes", "temperament_notes", "past_story_notes"].map((c) => [c, noteTagMap.get(noteKey("residents", c, id)) ?? []]),
+  );
+
   const memes = canBrowseMemes(perms) ? await loadResidentMemes(supabase, id) : null;
 
   // The header photo's viewer: the same attachments the Photos tab lists, minus the Medical
@@ -354,6 +369,8 @@ export default async function ResidentPage(
         canAdd:
           can(perms, "resident.adoption_news") && (adoptCountResult.count ?? 0) > 0,
       }}
+      noteTags={ownNoteTags}
+      mentionedIn={<MentionedIn mentions={mentions} />}
       now={new Date().toISOString()}
       tagOrigin={tagOrigin}
     />

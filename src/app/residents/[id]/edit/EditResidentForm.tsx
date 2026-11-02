@@ -26,6 +26,8 @@ import { MicrochipFields } from "@/components/MicrochipFields";
 import { todayIso } from "@/lib/format";
 import { HOOK_LINE_MAX, IDEAL_HOME_MAX } from "@/lib/residents/adoption-profile";
 import { textareaClass } from "@/components/textareaClass";
+import { TagNoteField } from "@/components/TagNoteField";
+import type { NoteTag } from "@/lib/note-tags/text";
 import { DateInput } from "@/components/DateInput";
 
 export type HousingState = {
@@ -80,6 +82,8 @@ export function EditResidentForm({
   zones,
   enclosures,
   ageNow,
+  canTagNotes = false,
+  noteTags = { temperament_notes: [], past_story_notes: [], behaviour_notes: [] },
 }: {
   resident: EditableResident;
   photos: PhotoRow[];
@@ -87,6 +91,10 @@ export function EditResidentForm({
   /** Card-derived: the return pages ask placement.hospital / placement.rehome. Default false. */
   canReturnFromHospital?: boolean;
   canReturnFromCarer?: boolean;
+  /** Card-derived: the save asks resident.record, and so does tagging in these notes. Default false. */
+  canTagNotes?: boolean;
+  /** The residents already tagged in each note, so editing keeps their links. */
+  noteTags?: Record<"temperament_notes" | "past_story_notes" | "behaviour_notes", NoteTag[]>;
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
   /** Current computed age (server-side, so it matches what the hub shows). */
@@ -557,12 +565,15 @@ export function EditResidentForm({
             >
               {f.temperament}
             </label>
-            <textarea
+            <TagNoteField
               id="temperamentNotes"
               name="temperamentNotes"
               rows={3}
               defaultValue={resident.temperament_notes ?? ""}
               className={textareaClass}
+              canTag={canTagNotes}
+              initialTags={noteTags.temperament_notes}
+              selfId={resident.id}
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -572,12 +583,15 @@ export function EditResidentForm({
             >
               {f.pastStory}
             </label>
-            <textarea
+            <TagNoteField
               id="pastStoryNotes"
               name="pastStoryNotes"
               rows={3}
               defaultValue={resident.past_story_notes ?? ""}
               className={textareaClass}
+              canTag={canTagNotes}
+              initialTags={noteTags.past_story_notes}
+              selfId={resident.id}
             />
           </div>
           <div className="flex flex-col gap-1 sm:col-span-2">
@@ -587,12 +601,15 @@ export function EditResidentForm({
             >
               {f.behaviourNotes}
             </label>
-            <textarea
+            <TagNoteField
               id="behaviourNotes"
               name="behaviourNotes"
               rows={3}
               defaultValue={resident.behaviour_notes ?? ""}
               className={textareaClass}
+              canTag={canTagNotes}
+              initialTags={noteTags.behaviour_notes}
+              selfId={resident.id}
             />
           </div>
         </div>

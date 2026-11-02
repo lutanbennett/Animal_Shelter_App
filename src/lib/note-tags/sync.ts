@@ -76,3 +76,12 @@ export async function setNoteTagsArchived(
     .in("source_row_id", rowIds as string[]);
   return error ? { ok: false, code: error.code ?? null } : { ok: true };
 }
+
+/** The words for a failed link write: the note itself WAS saved, so say that. Null when it worked. */
+export function noteTagFailure(
+  result: NoteTagResult,
+  words: { couldntSave: string; notAllowed: string },
+): string | null {
+  if (result.ok) return null;
+  return result.code === "42501" ? words.notAllowed : words.couldntSave;
+}

@@ -2,6 +2,7 @@ import { requireFullResident } from "@/lib/residents/who-and-where";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { loadNoteTags, noteKey } from "@/lib/note-tags/load";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { getT } from "@/lib/i18n/get-t";
@@ -82,6 +83,7 @@ export default async function EditResidentPage(
     ? `${resident.name} (${resident.thai_name})`
     : resident.name;
   const canEdit = can(perms, "resident.record");
+  const noteTagMap = canEdit ? await loadNoteTags(supabase, resident.id) : new Map();
   const status = statusResult.data?.[0];
   const currentStatus = stateResult.data?.[0]?.current_status ?? null;
   const housing: HousingState = {
@@ -135,6 +137,12 @@ export default async function EditResidentPage(
           housing={housing}
           canReturnFromHospital={can(perms, "placement.hospital")}
           canReturnFromCarer={can(perms, "placement.rehome")}
+          canTagNotes={can(perms, "resident.record")}
+          noteTags={{
+            temperament_notes: noteTagMap.get(noteKey("residents", "temperament_notes", resident.id)) ?? [],
+            past_story_notes: noteTagMap.get(noteKey("residents", "past_story_notes", resident.id)) ?? [],
+            behaviour_notes: noteTagMap.get(noteKey("residents", "behaviour_notes", resident.id)) ?? [],
+          }}
           zones={options.zones}
           enclosures={options.enclosures}
           ageNow={estimatedAgeNow(

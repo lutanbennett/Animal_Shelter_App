@@ -50,6 +50,8 @@ import { TranslationPanel } from "@/components/TranslationPanel";
 import { placeName } from "@/lib/enclosures/names";
 import { residentTagPath } from "@/lib/tags/links";
 import type { TranslationRow } from "@/lib/translations/types";
+import { NoteText } from "@/components/NoteText";
+import type { NoteTag } from "@/lib/note-tags/text";
 
 export type Resident = {
   id: string;
@@ -186,6 +188,8 @@ export function ResidentHub({
   canManageTranslations,
   canSetMicrochip,
   translations,
+  noteTags,
+  mentionedIn,
   currentPlacementSince,
   carerName,
   hospitalPreviousEnclosureName,
@@ -258,6 +262,10 @@ export function ResidentHub({
   /** Memes featuring this resident (0223), newest first; null when this login may not browse the library. */
   memes: { id: string; drive_file_id: string; title: string; platforms: Platform[] }[] | null;
   adoptionUpdates: AdoptionUpdatesSummary;
+  /** Tagged residents in this resident's own notes, by column (behaviour_notes, ...). */
+  noteTags: Record<string, NoteTag[]>;
+  /** The "Mentioned in" list, drawn by the server. */
+  mentionedIn: ReactNode;
   /** Server-computed timestamp (ISO string) — avoids calling Date.now() during render. */
   now: string;
   /** Origin for the RFID-card link (src/lib/tags/origin.ts). */
@@ -448,10 +456,10 @@ export function ResidentHub({
   const bioFields = [
     { label: t.residents.hub.bioLabels.hookLine, value: resident.hook_line, translation: translationFor("hook_line") },
     { label: t.residents.hub.bioLabels.bio, value: resident.bio, translation: translationFor("bio") },
-    { label: t.residents.hub.bioLabels.temperament, value: resident.temperament_notes, translation: translationFor("temperament_notes") },
-    { label: t.residents.hub.bioLabels.pastStory, value: resident.past_story_notes, translation: translationFor("past_story_notes") },
+    { label: t.residents.hub.bioLabels.temperament, value: resident.temperament_notes, column: "temperament_notes", translation: translationFor("temperament_notes") },
+    { label: t.residents.hub.bioLabels.pastStory, value: resident.past_story_notes, column: "past_story_notes", translation: translationFor("past_story_notes") },
     { label: t.residents.hub.bioLabels.idealHome, value: resident.ideal_home, translation: translationFor("ideal_home") },
-    { label: t.residents.hub.bioLabels.behaviour, value: resident.behaviour_notes, translation: null },
+    { label: t.residents.hub.bioLabels.behaviour, value: resident.behaviour_notes, column: "behaviour_notes", translation: null },
   ].filter((f) => f.value);
 
   // The adoption recommendation (0060), set fields only — what /adopt/[id]
@@ -763,7 +771,9 @@ export function ResidentHub({
                     <dt className="text-xs font-medium text-muted">
                       {f.label}
                     </dt>
-                    <dd className="whitespace-pre-line text-sm text-foreground">{f.value}</dd>
+                    <dd className="whitespace-pre-line text-sm text-foreground">
+                      {f.value && "column" in f && f.column ? <NoteText text={f.value} tags={noteTags[f.column] ?? []} /> : f.value}
+                    </dd>
                     {f.translation && (
                       <dd className="mt-1">
                         <TranslationPanel
@@ -950,6 +960,7 @@ export function ResidentHub({
             </div>
           </section>
         )}
+        {mentionedIn}
       </div>
     </main>
   );

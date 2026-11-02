@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "not allowed" }, { status: 403 });
   }
   const q = (new URL(request.url).searchParams.get("q") ?? "").trim().slice(0, 40);
-  const safe = q.replace(/[%_,()\]/g, " ").trim();
+  const safe = q.replace(/[%_,()\\]/g, " ").trim();
   const supabase = await createClient();
   let query = supabase.from("residents").select("id, name, resident_code").order("name").limit(8);
   if (safe) query = query.or(`name.ilike.${safe}%,resident_code.ilike.${safe}%`);
