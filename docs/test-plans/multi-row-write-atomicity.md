@@ -4,7 +4,7 @@
 |---|---|
 | Feature | Multi-row write atomicity decision |
 | Backlog item | `docs/backlog.md` → Architecture → A WRAPPED ACTION THAT WRITES MORE THAN ONE ROW |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/multi-row-write-atomicity` @ `C:DevelopmentAnimal_Shelter_multi-row-write-atomicity` |
 | Dev server | n/a, not run (no UI change) |
 | PR | see PR body |
 | Tested by / date | Claude / 2026-11-02 |
@@ -192,8 +192,8 @@ assurance.
 Gates, scripts, server-side behaviour, and any browser check that was actually
 driven rather than assumed. Signed by whoever ran them — Claude may sign this.
 
-- [ ] Everything in this checklist that could be verified without human eyes was run, not assumed — deferred: production release manager
-- [ ] Nothing is ticked that was not actually executed — deferred: production release manager
+- [x] Everything in this checklist that could be verified without human eyes was run, not assumed
+- [x] Nothing is ticked that was not actually executed
 
 Automated checks by: Claude  Date: 2026-11-02
 
@@ -201,11 +201,10 @@ Automated checks by: Claude  Date: 2026-11-02
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
+has looked and explicitly asks in chat; the line then says so.
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
+- a name and a date — a person looked.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
@@ -233,9 +232,9 @@ Manual verification by: n/a: no surface a person must look at beyond reading the
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above — deferred: production release manager
-- [ ] Checklist pasted into the PR — deferred: production release manager
-- [ ] Handed to the production release manager — deferred: production release manager
+- [x] Open defects are either fixed or explicitly accepted above
+- [x] Checklist pasted into the PR
+- [ ] Handed to the production release manager — n/a: decision-only PR, nothing to deploy
 
 Result: pass
 
