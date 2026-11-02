@@ -6,7 +6,7 @@
 |---|---|
 | Feature | Assistant: a name that is only part of a resident's name shows the which-one picker |
 | Backlog item | `docs/backlog.md` → THE ASSISTANT SAYS "CANNOT HELP" WHEN A NAME IS ONLY PART OF A RESIDENT'S NAME |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/assistant-partial-name-picker` @ `C:\Development\Animal_Shelter_assistant-partial-name-picker` |
 | Dev server | `http://localhost:3003` |
 | PR | see PR |
 | Tested by / date | Claude / 2026-11-02 |
@@ -38,6 +38,10 @@ indistinguishable from one that passed.
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0` (output pasted below)
+
+```
+gates: typecheck=0 lint=0 test=0 build=0
+```
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
@@ -203,31 +207,7 @@ Automated checks by: Claude  Date: 2026-11-02
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
-Three valid states:
-
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
-- `n/a: <reason>` — there was nothing to look at.
-- `pending: <what is outstanding>` — the work is done and something genuinely
-  needs a person who has not got to it yet. **This does not fail the check**
-  (changed 2026-09-24): it is the normal state for most of a PR's life, and a
-  check that is permanently red is one people learn to filter. The checker prints
-  *awaiting manual verification: <what>* and exits 0, so the outstanding item is
-  on the record without drowning the signal. What still fails is a plan that is
-  missing, incomplete or self-contradictory. Use `pending:` rather than reaching
-  for `n/a` — green is no longer something you have to buy, and an `n/a` over a
-  real outstanding item is a false assurance about the one thing you could not
-  verify. **Nothing ships on a `pending:`** — the release manager's pre-deploy
-  pass is what holds that line, not CI.
-
-`n/a:` and `pending:` take **no `Date:` segment** — there is no date to record, so
-write the line and stop. A trailing `Date: —` is accepted too, since existing
-plans use it. A bare *name* with no date is still rejected, which is what stops an
-empty signature quietly passing.
-
-A red `test-plan` that says what it is waiting for is a red people act on. An
-illegible one is a red people learn to ignore.
+has looked and explicitly asks in chat; the line then says so.
 
 - [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the  — n/a: nothing for a person to look at beyond what was driven
 
