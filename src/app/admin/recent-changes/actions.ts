@@ -15,8 +15,7 @@ import { editPlan, undoKind } from "@/lib/audit/undo";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { createClient } from "@/lib/supabase/server";
-import { can } from "@/lib/permissions/can";
-import { loadPermissions } from "@/lib/permissions/load";
+import { hasAdminRole } from "@/lib/auth/require-admin";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
@@ -64,7 +63,7 @@ export async function undoChange(auditId: number, requestId: string): Promise<Ac
   return runWriteAction("recentChanges.undo", write(t), { id: requestId, action: "recentChanges.undo", db: supabase }, async () => {
     const u = t.admin.recentChanges.undo;
     if (!Number.isSafeInteger(auditId) || auditId <= 0) return refuse(u.errors.gone);
-    if (!can(await loadPermissions(), "audit.undo")) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!(await hasAdminRole())) return refuse(t.admin.security.errors.adminAccessRequired);
 
     const writeFailure = (step: string, error: { code?: string }) => {
       if (error.code === "23505") return refuse(u.errors.slotTaken);

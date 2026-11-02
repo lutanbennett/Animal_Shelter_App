@@ -38,3 +38,11 @@ test("role-cards-coverage and cards-union read card_grants, not a literal", asyn
     assert.doesNotMatch(sql, /values \(/);
   }
 });
+
+test("activities-grantable reads card_grants against permission_activities, not a literal", async () => {
+  const { buildQuery } = await import("./lib/readonly-checks.mjs");
+  const sql = buildQuery("activities-grantable");
+  assert.match(sql, /permission_activities/);
+  assert.match(sql, /card_grants/);
+  assert.doesNotMatch(sql, /values \(/);
+});

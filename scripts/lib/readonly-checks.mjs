@@ -176,6 +176,16 @@ export const CHECKS = {
          ...r.unapplied.map((x) => `${x.activity}: backed by a card but missing from ${x.holders} holders`)],
     failed: (r) => r.unbacked.length + r.unapplied.length > 0,
   },
+  "activities-grantable": {
+    asks: "For each activity in the catalogue: can any card grant it at all? Lists every activity no card_grants row names (the mirror of role-cards-coverage, which asks whether a card does nothing; this asks whether an activity can be had from a card). Admin passes every activity by its own rule and is not a card, so an activity only Admin may do is not an activity: it is an Admin check in code. None is correct.",
+    sql: `select coalesce(json_agg(a.key order by a.key), '[]'::json)
+      from permission_activities a
+      where not exists (select 1 from card_grants g where g.activity = a.key)`,
+    render: (rows) => rows.length
+      ? rows.map((k) => `${k}: no card grants it, so only Admin can ever do it`)
+      : ["Every activity in the catalogue is granted by at least one card."],
+    failed: (rows) => rows.length > 0,
+  },
   "fault-residents-lifecycle": {
     asks: "TRANSIENT CONTEXT, not a finding — SUPERSEDED as a fault check by `card-lifecycle-enclosures`, which asks the card question and guards the invariant. Kept only to show who is affected today: Which roles hold the Residents card or a placement cell but not facility.enclosures at read? (They cannot move, hospitalise, foster/adopt or record a death: the enclosure lookup is refused.)",
     sql: `select coalesce(json_agg(json_build_object('role', r.key,

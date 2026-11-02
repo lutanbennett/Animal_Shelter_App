@@ -133,7 +133,7 @@ export default async function AdminPage() {
     },
   ];
   const tiles = allTiles.filter((tile) => {
-    if (tile.href === "/admin/security" || tile.href === "/admin/stocktaking" || tile.href === "/admin/assistant") return perms.isAdmin;
+    if (tile.href === "/admin/security" || tile.href === "/admin/stocktaking" || tile.href === "/admin/assistant" || tile.href === "/admin/recent-changes") return perms.isAdmin;
     if (tile.href === WHO_DOES_WHAT_PATH) return opensWhoDoesWhat(perms);
     const route = routeFor(tile.href);
     return !!route && canOpen(perms, route);

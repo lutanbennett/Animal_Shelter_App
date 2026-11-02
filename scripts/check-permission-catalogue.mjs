@@ -60,6 +60,8 @@ const eq = (name, got, want) => {
 // ---- the database side, from the migrations ----
 const migDir = join(root, "supabase/migrations");
 const migrations = readdirSync(migDir).filter((f) => f.endsWith(".sql")).sort();
+const RETIRE = /delete from permission_activities where key (?:= '([a-z_.]+)'|in \(([^)]*)\))/g;
+const retiredKeys = (m) => (m[1] ? [m[1]] : [...m[2].matchAll(/'([a-z_.]+)'/g)].map((x) => x[1]));
 const seeded = new Map(); // key -> { kind, area, sort }
 const seededCells = []; // [role, activity, level]; a cell seeded for 'vet' is the doctor's (0172 renamed the key)
 for (const f of migrations) {
@@ -72,9 +74,9 @@ for (const f of migrations) {
     seededCells.push([m[1] === "vet" ? "doctor" : m[1], m[2], Number(m[3])]);
   }
   // a later file retiring an activity (0212: facility.map) takes it, and its cells, out of what the database holds
-  for (const m of sql.matchAll(/delete from permission_activities where key = '([a-z_.]+)'/g)) {
-    seeded.delete(m[1]);
-    for (let i = seededCells.length - 1; i >= 0; i--) if (seededCells[i][1] === m[1]) seededCells.splice(i, 1);
+  for (const m of sql.matchAll(RETIRE)) for (const k of retiredKeys(m)) {
+    seeded.delete(k);
+    for (let i = seededCells.length - 1; i >= 0; i--) if (seededCells[i][1] === k) seededCells.splice(i, 1);
   }
 }
 
@@ -107,7 +109,7 @@ for (const f of walk(join(root, "src"))) {
 // file replaced; asked in the retiring file or after it, it is still a fault. Applied files are never edited, so this is the only way.
 const retiredIn = new Map();
 for (const f of migrations) {
-  for (const m of readFileSync(join(migDir, f), "utf8").matchAll(/delete from permission_activities where key = '([a-z_.]+)'/g)) retiredIn.set(m[1], f);
+  for (const m of readFileSync(join(migDir, f), "utf8").matchAll(RETIRE)) for (const k of retiredKeys(m)) retiredIn.set(k, f);
 }
 for (const f of migrations) {
   const sql = readFileSync(join(migDir, f), "utf8");
@@ -325,6 +327,8 @@ const PINNED = {
   // and seeing another role's home screen.
   // Settings → Assistant log: Admin only, no card (docs/decisions/2026-10-30-assistant-could-not-help-log.md).
   "/admin/assistant": { guards: ["requireAdminUser()"], decides: [] },
+  // Settings → Recent changes: Admin only, on purpose (Lutan, 2026-11-02); audit.view and audit.undo retired in 0302.
+  "/admin/recent-changes": { guards: ["requireAdminUser()"], decides: [] },
   "/admin/security": { guards: ["requireAdminUser()"], decides: [] },
   "/admin/security/verify": { guards: ["requireAdminUser()"], decides: [] },
   // Settings → Stocktaking (stocktaking-switches-app): the two ON/OFF switches. Admin at 2-step, like Security.

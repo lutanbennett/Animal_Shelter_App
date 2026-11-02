@@ -345,7 +345,7 @@ ________________________________________________________________
 
 1. **Who does what (roles, cards, permissions)**. `/admin/who-does-what`, `/admin/who-does-what/details`, `/admin/role-draft` · Admin
 2. **Security and two-step sign-in**. `/admin/security`, `/admin/security/verify`
-3. **Recent changes (audit log) and undo**. `/admin/recent-changes` · `audit.view`, `audit.undo`
+3. **Recent changes (audit log) and undo**. `/admin/recent-changes` · Admin only, outside the card system (`audit.view` and `audit.undo` retired, 0302)
 4. **System status**. `/admin/status` · `system.status`
 5. **Immunization types**. `/admin/immunization-types` · `reference.types`
 6. **Procedure types**. `/admin/procedure-types` · `reference.types`
@@ -375,7 +375,7 @@ Done from the code: every route in the registry and every activity appears above
 
 **Activities with no card** (reachable only by Admin or a role given the single permission): `placement.death_withdraw`, `projects.folders`, `projects.photos`, `projects.publish`, `stock.usage`, `stock.medications`, `stock.diets`, `stock.correct`, `translations.manage`, `translations.view`, `reference.types`, `audit.view`, `audit.undo`, `system.status`, `maintenance.delete`, `appeal.medical_photo`.
 
-**Registry pages with no card opening them** (reached from menus or landings): `/projects`, `/contacts`, `/clinics`, `/management/shelter-friends`, `/management/desexing-drives`, `/management/clinics`, `/operations/feeding-list`, `/management/medications`, `/management/diets`, `/management/stock-usage`, `/management/cashflow`, `/management/translations`, `/admin/enclosures`, `/admin/zones`, `/admin/facility-map`, `/admin/immunization-types`, `/admin/procedure-types`, `/admin/blood-test-types`, `/admin/medications`, `/admin/diets`, `/admin/frequencies`, `/admin/recent-changes`, `/admin/status`.
+**Registry pages with no card opening them** (reached from menus or landings): `/projects`, `/contacts`, `/clinics`, `/management/shelter-friends`, `/management/desexing-drives`, `/management/clinics`, `/operations/feeding-list`, `/management/medications`, `/management/diets`, `/management/stock-usage`, `/management/cashflow`, `/management/translations`, `/admin/enclosures`, `/admin/zones`, `/admin/facility-map`, `/admin/immunization-types`, `/admin/procedure-types`, `/admin/blood-test-types`, `/admin/medications`, `/admin/diets`, `/admin/frequencies`, `/admin/status`.
 
 **Features reached by more than one card:** Resident information (2 plus 7 hidden copies), Medical information (4), Photos (5), Stock (3), Finances (3).
 
