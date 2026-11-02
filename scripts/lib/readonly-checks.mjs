@@ -10,14 +10,15 @@
 // Adding a check = adding an entry here. Results are counts, keys and names of settings, never residents or people.
 
 
+import { sqlCodeOnly } from "./sql-code-only.mjs";
+
 const FORBIDDEN = /\b(insert|update|delete|truncate|drop|alter|create|grant|revoke|copy|call|do|vacuum|reindex|set|nextval|setval|pg_terminate_backend|pg_cancel_backend)\b/i;
 
-/** Throws unless `sql` is one SELECT/WITH statement with no write keyword. Quoted strings are ignored. */
+/** Throws unless `sql` is one SELECT/WITH statement with no write keyword. Reads the SQL through sqlCodeOnly(), so a `--`, `;` or keyword inside a
+ * string literal or a comment is not code, and a `--` inside a string cannot truncate the line and hide a write keyword after it. Dollar-quoted bodies are
+ * blanked: they are literals to a SELECT, and the one way to run a body (`do`, `create function`) is itself forbidden. */
 export function assertSelectOnly(name, sql) {
-  const bare = sql
-    .replace(/--.*$/gm, "")
-    .replace(/'(?:[^']|'')*'/g, "''")
-    .replace(/"[^"]*"/g, '""');
+  const bare = sqlCodeOnly(sql, { dollarBodies: "blank" }).replace(/"[^"]*"/g, '""');
   if (/;/.test(bare)) throw new Error(`check "${name}": more than one statement`);
   if (!/^\s*(select|with)\b/i.test(bare)) throw new Error(`check "${name}": must start with select or with`);
   const hit = FORBIDDEN.exec(bare);

@@ -6,8 +6,9 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { sqlCodeOnly } from "./lib/sql-code-only.mjs";
 
-const strip = (s) => s.replace(/--[^\n]*/g, "");
+const strip = (s) => sqlCodeOnly(s, { dollarBodies: "keep", strings: "keep" });
 
 /** name -> [{ name, required }] from the newest `create [or replace] function`. */
 export function functionInputs(sqlFiles) {

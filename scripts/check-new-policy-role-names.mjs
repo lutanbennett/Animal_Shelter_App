@@ -31,6 +31,7 @@
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { MIGRATIONS_DIR, MIGRATION_NAME, parseLsTree } from "./lib/migrations.mjs";
+import { sqlCodeOnly } from "./lib/sql-code-only.mjs";
 import { unguardedScopeCalls } from "./lib/scope-guard.mjs";
 
 const args = process.argv.slice(2);
@@ -60,27 +61,40 @@ export const findLooseScopePolicies = (sql) => findPolicies(sql, (text) => ungua
 
 /** Every create/alter policy for which `test(text)` is truthy (an array counts only when non-empty). */
 function findPolicies(sql, test, MARKER) {
+  // Two same-length readings of the file: `blank` (string contents blanked) says where a statement ends, so a `;` inside a literal does
+  // not split one; `code` (strings kept, comments blanked) is what the tests read, so 'admin'::app_role is still seen but a `--` inside
+  // a string no longer truncates the line. Bodies of do $$ … $$ are kept: a policy created inside one must not hide.
+  const blank = sqlCodeOnly(sql, { dollarBodies: "keep" });
+  const code = sqlCodeOnly(sql, { dollarBodies: "keep", strings: "keep" });
   const found = [];
   let carried = []; // comment lines since the last statement ended, which belong to the next one
-  const chunks = sql.split(";");
-  for (const [i, chunk] of chunks.entries()) {
-    const lines = chunk.split("\n");
+  let at = 0;
+  const chunks = blank.split(";");
+  for (const [i, c] of chunks.entries()) {
+    const rawLines = sql.slice(at, at + c.length).split("\n");
+    const codeLines = code.slice(at, at + c.length).split("\n");
+    at += c.length + 1;
+    // A marker counts only where the code reading has gone blank to the end of the line, i.e. it is a comment and not text in a string.
+    const markerOf = (k) => {
+      const m = rawLines[k].match(MARKER);
+      return m && !codeLines[k].slice(m.index).trim() ? m[1].trim() : null;
+    };
     // A comment on the same line as the closing `;` belongs to the statement that just ended.
-    const trailing = i > 0 ? lines.shift().match(MARKER) : null;
-    if (trailing && found.length && !found.at(-1).marker) found.at(-1).marker = trailing[1].trim();
-    const code = [];
+    const trailing = i > 0 ? markerOf(0) : null;
+    if (i > 0) { rawLines.shift(); codeLines.shift(); }
+    if (trailing && found.length && !found.at(-1).marker) found.at(-1).marker = trailing;
+    const out = [];
     let marker = null;
-    for (const line of lines) {
-      const m = line.match(MARKER);
-      if (m) marker = m[1].trim();
-      const stripped = line.replace(/--[^\r\n]*/, "");
-      if (stripped.trim()) code.push(stripped);
-      else if (!code.length && line.trim().startsWith("--")) carried.push(line);
+    for (const [k, line] of rawLines.entries()) {
+      marker = markerOf(k) ?? marker;
+      const stripped = codeLines[k].trimEnd();
+      if (stripped.trim()) out.push(stripped);
+      else if (!out.length && line.trim().startsWith("--")) carried.push(markerOf(k) ?? "");
     }
-    const text = code.join("\n");
+    const text = out.join("\n");
     const hit = /^\s*(create|alter)\s+policy\b/i.test(text) ? test(text) : false;
     if (Array.isArray(hit) ? hit.length : hit) {
-      const above = carried.map((l) => l.match(MARKER)?.[1].trim()).find(Boolean);
+      const above = carried.find(Boolean);
       found.push({ head: text.trim().split("\n")[0].trim(), marker: marker ?? above ?? null, fns: Array.isArray(hit) ? hit : [] });
     }
     if (text.trim()) carried = [];
