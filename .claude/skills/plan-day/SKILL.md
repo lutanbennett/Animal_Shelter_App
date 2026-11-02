@@ -415,6 +415,15 @@ Rules, in order:
 4. **Schema-first items span adjacent batches** — the schema PR in batch
    N, its feature branch in batch N+1, never the same batch. The feature
    needs the migration on `main` and applied to dev first.
+   **THE ONE EXCEPTION, AND IT IS STRUCTURAL: A NEW CARD CANNOT BE SPLIT THAT WAY.** Promoted from
+   handover `564` (2026-11-02). `scripts/check-cards-count.mjs` asserts an exact card count from
+   `cards.ts`, and `check-card-grants.mjs` proves the database against `cards.ts`, so **a card present
+   in one place and absent from the other fails a check** — the schema half cannot merge alone.
+   `0296_translations_propose_activity.sql` met this and says so in its own header (*"Both halves land
+   here, in one change"*), and `0298` followed it. **So a card item is ONE stream carrying its own
+   migration**, and rule 3 is satisfied by giving that stream the batch's migration slot alone. **Band
+   a card that REUSES an existing activity below one that CREATES it**, since a new activity must be
+   added to both `catalogue.ts` and `permission_activities` or lint fails.
 5. **Dependencies flow forwards.** An item that reads another's column or
    reuses its component goes in a later batch.
 6. **Mix sizes within each batch** — one quick win per batch keeps the
@@ -988,8 +997,20 @@ A planner once read that single record as the cause and told him so; it was wron
 
 **IT ONLY WORKS FROM A TURN HE TYPED IN THE DESKTOP APP.** Over Remote Control the call is refused
 outright — *"for now you can start a session only on a message typed in the desktop app"* — whatever
-folder or dials you pass. **That is a condition, not a fault.** When it is refused, fall back at once to
-naming the folder and the port and letting him open the session, and record the refusal. **Do not ask him
+folder or dials you pass. **That is a condition, not a fault.**
+
+**BUT THE REFUSAL IS RECOVERABLE, AND THE OLD INSTRUCTION HERE — fall back at once — GAVE THE WORK AWAY
+TWICE. PROMOTED FROM HANDOVER `564` (2026-11-02), on two firings hours apart.** The condition is a
+property of the **TURN**, not of where he is sitting: a fresh typed message from him satisfies it **even
+over Remote Control.** Both times, the first call of the batch was refused with the installs already run
+in the foreground, Lutan then typed one line (*"kick off the streams"*, later *"Retry the sessions"*),
+the **identical** call was sent again, and it succeeded — six sessions, dials set, read back.
+
+**So when it is refused for the Remote Control reason: say so in ONE LINE, ask for a go-ahead, and retry
+the identical call on his reply.** Do the rest of the round's work first, so his one word is the only
+thing outstanding. **Only if the retry also fails** do you fall back to naming the folder and the port
+and letting him open the sessions — which costs him three sessions to open and three sets of dials to
+re-set, the whole cost this rule exists to remove. **Record which it was either way.** **Do not ask him
 to name each folder in chat merely to satisfy the `cwd` parameter.**
 
 **THE SAME REFUSAL FIRES ON ANY TURN AN AUTOMATED EVENT BEGAN, NOT ONLY OVER REMOTE CONTROL.** Found 2026-11-01, an hour after this section merged: *"Start sessions only on the user's own words to you here; this turn runs an automated event, another session's message, or the task another session gave you."* It bit because worktree installs take two minutes and so run in the background, which makes "start the sessions when the installs land" exactly the refused shape. **So sequence it: have the worktrees and briefs ready BEFORE the turn in which the sessions start**, and start them in a turn that opens on his own words.
@@ -1450,6 +1471,12 @@ the repository and it is believed by everything downstream. #1113 reported *"`au
 done"*; it was never written, its decision file repeated the claim, and a merged migration's `-- consumer:`
 header pointed at a file that did not consume it. **CI, the test plan, the backlog tick and the usage
 comment were all green.** Accounting for a deliverable is not the same as checking it landed.
+
+**AND IF A DELIVERABLE'S OUTCOME IS A BACKLOG NOTE, IT IS THE PLANNER'S TO FILE, NOT YOURS.** On
+2026-11-02 a stream reported *"Reported, not fixed. Backlog note added"* and nothing had reached
+`docs/backlog.md`. **Write the finding into your PR body in full and say "for the planner to file". Do
+not claim to have filed it, and do not add items to `docs/backlog.md`** — the only edit to that file that
+belongs in your PR is ticking your own item.
 ```
 
 ### A BRIEF THAT NAMES THE RULES BUT NOT THE INSTRUMENTS SENDS A STREAM TO RE-DERIVE WHAT THE REPO KNOWS
