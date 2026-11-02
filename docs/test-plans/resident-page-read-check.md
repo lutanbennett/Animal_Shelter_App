@@ -6,7 +6,7 @@
 |---|---|
 | Feature | Resident hub states resident.record read for hashtag links |
 | Backlog item | `docs/backlog.md` → Security, PAGE-LEVEL can(resident.record, "read") DROPPED |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/resident-page-read-check` @ `C:DevelopmentAnimal_Shelter_resident-page-read-check` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3006` |
 | PR | pending: opened after this commit |
 | Tested by / date | Claude / 2026-11-02 |
@@ -37,7 +37,7 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, each `<N>` that gate's own exit code, and every `<N>` is `0`.** Run it yourself and paste its closing lines **exactly as your run printed them**, in a fenced block under this line: the `=== gates: <name> exited <N> after <S>s` line for each gate as well as the final `gates:` line. **Never type the final line from this description or copy it from another plan.** The shape here is deliberately not a line you could paste: the per-gate `after <S>s` timings are the part only a real run has. `check-test-plan.mjs` cannot tell a pasted run from a typed one, so this wording is the only guard (`docs/decisions/2026-11-02-gates-line-four-gates.md`). They are the evidence, and running the script again regenerates them
+- [x] `node scripts/gates.mjs` ends with the four-gate line below, each exit code 0. Pasted exactly as printed.
 
 ```
 === gates: typecheck exited 0 after 84s
@@ -211,11 +211,11 @@ Automated checks by: Claude  Date: 2026-11-02
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
+has looked and explicitly asks in chat; the line then says so, e.g. a person —
+confirmed in chat; line written by Claude at their request  Date: the date.
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
+- a person  Date: the date — a person looked. The date is required here.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
