@@ -37,7 +37,7 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, each `<N>` that gate's own exit code, and every `<N>` is `0`.** Run it yourself and paste its closing lines **exactly as your run printed them**, in a fenced block under this line: the `=== gates: <name> exited <N> after <S>s` line for each gate as well as the final `gates:` line. **Never type the final line from this description or copy it from another plan.** The shape here is deliberately not a line you could paste: the per-gate `after <S>s` timings are the part only a real run has. `check-test-plan.mjs` cannot tell a pasted run from a typed one, so this wording is the only guard (`docs/decisions/2026-11-02-gates-line-four-gates.md`). They are the evidence, and running the script again regenerates them
+- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, each `<N>` that gate's own exit code, and every `<N>` is `0`.** Run it yourself and paste its closing lines **exactly as your run printed them**, in a fenced block under this line: the `=== gates: NAME exited <N> after <S>s` line for each gate as well as the final `gates:` line. **Never type the final line from this description or copy it from another plan.** The shape here is deliberately not a line you could paste: the per-gate `after <S>s` timings are the part only a real run has. `check-test-plan.mjs` cannot tell a pasted run from a typed one, so this wording is the only guard (`docs/decisions/2026-11-02-gates-line-four-gates.md`). They are the evidence, and running the script again regenerates them
 
 ```
 === gates: typecheck exited 0 after 132s
@@ -212,11 +212,11 @@ Automated checks by: Claude (Daily Planner session)  Date: 2026-11-02
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
+has looked and explicitly asks in chat; the line then says so, e.g. `NAME —
+confirmed in chat; line written by Claude at their request  Date: DATE`.
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
+- `NAME  Date: DATE` — a person looked. The date is required here.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
@@ -250,4 +250,4 @@ Manual verification by: n/a: docs only — one Markdown document changed, with n
 
 Result: pass
 
-Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
+Release manager acknowledgement: n/a: a planner handover ships no build and precedes no deploy, so there is nothing for a release manager to acknowledge
