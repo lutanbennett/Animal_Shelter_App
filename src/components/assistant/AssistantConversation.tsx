@@ -336,7 +336,7 @@ export function AssistantConversation({
     if (
       (draft.kind === "where" || draft.kind === "summary") &&
       !draft.residentId &&
-      parsed.residentCandidates.length > 1
+      parsed.residentCandidates.length > 0
     ) {
       update(id, { kind: "pick", draft, candidates: parsed.residentCandidates });
       return;

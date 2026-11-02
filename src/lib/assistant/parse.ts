@@ -36,7 +36,7 @@
  *   - move last, as the broadest of them ("put", "shift", "transfer").
  */
 
-import { dueIntent, findEnclosureIntent, summaryIntent, whereIntent, whoIntent } from "./intents/lookups";
+import { dueIntent, findEnclosureIntent, listResidentsIntent, summaryIntent, whereIntent, whoIntent } from "./intents/lookups";
 import { hospitalIntent, hospitalReturnIntent } from "./intents/hospital";
 import { deathIntent } from "./intents/death";
 import { rehomeIntent } from "./intents/rehome";
@@ -52,6 +52,7 @@ export const INTENT_PARSERS: readonly IntentParser[] = [
   summaryIntent,
   whereIntent,
   whoIntent,
+  listResidentsIntent,
   dueIntent,
   deathIntent,
   carerReturnIntent,

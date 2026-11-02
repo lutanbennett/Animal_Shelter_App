@@ -68,7 +68,32 @@ export function matchResident(
 ): { id: string | null; candidates: string[] } {
   const byCode = matchByName(text, residents, (r) => [r.code]);
   if (byCode.id || byCode.candidates.length) return byCode;
-  return matchByName(text, residents, (r) => [r.name, r.thaiName]);
+  const byName = matchByName(text, residents, (r) => [r.name, r.thaiName]);
+  if (byName.id || byName.candidates.length) return byName;
+  return { id: null, candidates: nearNameMatches(text, residents) };
+}
+
+/**
+ * The fallback when no whole name is in the sentence: residents whose Latin
+ * name has a WORD the sentence also says, so "Gigi" finds "Gigi (1)",
+ * "Gigi (2)" and "Gigi Blue". The boundary rule
+ * (docs/decisions/2026-11-02-assistant-partial-name-picker.md):
+ *  - a name's words are its runs of a-z/0-9, so brackets, spaces and
+ *    punctuation are separators, never part of a word;
+ *  - a word counts only if it has a letter (the "1" in "Gigi (1)" is a
+ *    disambiguator, not a name) and is at least 2 characters;
+ *  - it must stand alone in the sentence, as `mentions` already requires;
+ *  - Thai names are not looked at: they keep their substring rule.
+ * The result is ALWAYS a list to confirm, even for one resident, and never
+ * an id: a near match is a guess.
+ */
+function nearNameMatches(text: string, residents: ParserResident[]): string[] {
+  const ids: string[] = [];
+  for (const r of residents) {
+    const words = (r.name ?? "").toLowerCase().match(/[a-z0-9]+/g) ?? [];
+    if (words.some((w) => w.length >= 2 && /[a-z]/.test(w) && mentions(text, w))) ids.push(r.id);
+  }
+  return ids;
 }
 
 export function matchEnclosure(text: string, ctx: ParseContext) {
