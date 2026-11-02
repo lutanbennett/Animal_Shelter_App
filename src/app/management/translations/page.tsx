@@ -4,7 +4,7 @@ import { labelPath, loadLabelTranslations, localLabel, SHOWS, type LabelItem, ty
 import { placeName } from "@/lib/enclosures/names";
 import { TranslationQueue } from "./TranslationQueue";
 import { can } from "@/lib/permissions/can";
-import { requireAnyPermission } from "@/lib/permissions/require";
+import { requirePermission } from "@/lib/permissions/require";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Locale } from "@/lib/i18n/locales";
 
@@ -21,7 +21,7 @@ import type { Locale } from "@/lib/i18n/locales";
  * link for "show approved too", still opens All.
  */
 export default async function TranslationsPage(props: PageProps<"/management/translations">) {
-  const { supabase, user, perms } = await requireAnyPermission(["translations.manage", "translations.propose"]);
+  const { supabase, user, perms } = await requirePermission("translations.view");
   const { t, locale } = await getT();
   const searchParams = await props.searchParams;
   const asked = typeof searchParams.show === "string" ? searchParams.show : null;

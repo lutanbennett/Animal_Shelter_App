@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-40 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+41 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -471,6 +471,17 @@ Result: pending
 2. **TODO:** Suggest a label's Thai, for someone else to approve. Do it on a disposable record named `walk-propose_translations`. Question: where should this write show afterwards (which page, which row)?
 3. **TODO:** See the website's translations. Do it on a disposable record named `walk-propose_translations`. Question: where should this write show afterwards (which page, which row)?
 4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## See the Thai queue (`view_translations`)
+
+- Opens: `/management/translations`
+
+0. Sign in with `--cards view_translations`. The home screen shows the **See the Thai queue** tile (or the tile of a card that includes it).
+1. Open `/management/translations`: it loads.
+2. **TODO:** See the website's translations. Do it on a disposable record named `walk-view_translations`. Question: where should this write show afterwards (which page, which row)?
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 

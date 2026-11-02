@@ -48,6 +48,7 @@ export type NewCardKey =
   | "who_does_what"
   | "translations"
   | "propose_translations"
+  | "view_translations"
   | "food_forecast"
   | "medicine_forecast"
   | "view_cashflow"
@@ -310,13 +311,17 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // the machine-translation caller -- and the point of it is what it does NOT grant: translations.manage, so
   // a holder cannot approve a proposal, its own included. translations.view comes with it because proposing
   // blind is not a usable card: label_translations() is what lists the labels to propose against.
-  // KNOWN GAP, recorded in docs/decisions/2026-11-01-translations-propose-schema.md: /management/translations
-  // is registered on translations.manage, so a holder of THIS card alone gets no tile and cannot open the
-  // screen. Closing it is routes.ts gaining alsoActivity: "translations.propose" and the page guarding with
-  // requireAnyPermission, which is the app half's job (that page is another stream's file this batch).
+  // The screen opens on translations.view, which this card holds (routes.ts, 0298), so a holder of this card alone gets the tile.
   propose_translations: {
     includes: [],
     bundle: [{ activity: "translations.propose" }, { activity: "translations.view" }],
+    opens: "/management/translations",
+  },
+  // 0298: read the Thai queue and its drafts and nothing else. Someone who reads Thai can be asked to check the queue
+  // without being handed the power to propose, approve, reject or save: no translations.manage, no translations.propose.
+  view_translations: {
+    includes: [],
+    bundle: [{ activity: "translations.view" }],
     opens: "/management/translations",
   },
   // Card review 2, his answers of 2026-10-28 (0280): three cards, each at READ, because the diet list, the medicine list and the cashflow
@@ -371,6 +376,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   who_does_what: (t) => t.appHome.cards.whoDoesWhat,
   translations: (t) => t.appHome.cards.translations,
   propose_translations: (t) => t.appHome.cards.proposeTranslations,
+  view_translations: (t) => t.appHome.cards.viewTranslations,
   food_forecast: (t) => t.appHome.cards.foodForecast,
   medicine_forecast: (t) => t.appHome.cards.medicineForecast,
   view_cashflow: (t) => t.appHome.cards.viewCashflow,

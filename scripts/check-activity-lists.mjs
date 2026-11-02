@@ -34,7 +34,6 @@ const ALLOWED = new Map([
   ["scripts/check-permission-catalogue.mjs", "compares catalogue.ts to the database"],
   ["scripts/gen-card-walkthrough.mjs", "describes cards by activity"],
   ["src/app/photos/add/page.tsx", "the activities that open this page (requireAnyPermission), as routes.ts gates it"],
-  ["src/app/management/translations/page.tsx", "the activities that open this page (requireAnyPermission), as routes.ts gates it"],
   ["src/lib/home/add-photos-card.test.mjs", "pins what cards.ts gives this card"],
   ["src/lib/home/approve-photos-card.test.mjs", "pins what cards.ts gives (and withholds from) this card"],
   ["scripts/check-activity-lists.mjs", "this file"],
