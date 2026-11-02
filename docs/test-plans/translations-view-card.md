@@ -11,7 +11,7 @@
 | PR | see the PR this plan is committed on |
 | Tested by / date | Claude (automated), 2026-11-02 |
 | Carries a migration? | yes: 0298 |
-| Tested at SHA | 62e4c530 |
+| Tested at SHA | 8e3091f0 |
 
 ## 1. Scope and risk
 
@@ -134,4 +134,8 @@ Result: pass
 
 ## Evidence
 
-GATES_PLACEHOLDER
+```
+gates: typecheck=0 lint=0 test=0 build=0
+```
+
+`check-cards-count`, `check-card-grants`, `check-permission-catalogue`, `check-activity-lists`, `check-roles-columns`, `check-test-plan` all ok. The first gates run failed typecheck and test (missing card description, card-count test); both fixed and re-run clean.
