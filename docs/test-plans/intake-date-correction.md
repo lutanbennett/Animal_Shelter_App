@@ -154,7 +154,7 @@ Automated checks by: Claude  Date: 2026-11-02
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: someone who reads Thai
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the one item (the Thai wording) is awaiting a person, recorded as pending on the signature line below
 
 Manual verification by: pending: a Thai speaker to read the new Thai wording
 
