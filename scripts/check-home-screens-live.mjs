@@ -33,10 +33,16 @@ const url = env.NEXT_PUBLIC_SUPABASE_URL;
 const service = createClient(url, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } });
 
 if (cleanupFile) {
-  const { ids } = JSON.parse(readFileSync(cleanupFile, "utf8"));
+  const { ids, roleIds } = JSON.parse(readFileSync(cleanupFile, "utf8"));
   for (const id of ids) {
     const { error } = await service.auth.admin.deleteUser(id);
     console.log(error ? `could not delete ${id}: ${error.message}` : `deleted ${id}`);
+  }
+  for (const roleId of roleIds ?? []) {
+    await service.from("user_roles").delete().eq("role_id", roleId);
+    await service.from("role_cards").delete().eq("role_id", roleId);
+    const { error } = await service.from("roles").delete().eq("id", roleId);
+    console.log(error ? `could not delete role ${roleId}: ${error.message}` : `deleted role ${roleId}`);
   }
   await exitWith(0);
 } else {
@@ -170,7 +176,10 @@ if (cleanupFile) {
     expect((out.location ?? "").startsWith("/login"), `signed out: sent to sign in (${out.status} → ${out.location})`);
   } finally {
     if (keepFile) {
-      writeFileSync(keepFile, JSON.stringify({ ids: made, accounts: kept }, null, 2));
+      // The throwaway role is kept with the logins that hold it; --cleanup removes both.
+      const roleIds = [];
+      for (const c of cleanups) if (c.roleId) roleIds.push(c.roleId);
+      writeFileSync(keepFile, JSON.stringify({ ids: made, roleIds, accounts: kept }, null, 2));
       console.log(`  kept ${made.length} throwaway login(s); cookies and ids in ${keepFile}. Delete with --cleanup ${keepFile}`);
     } else {
       for (const id of made) {

@@ -18,7 +18,24 @@ export async function giveRole(service, userId, roleKey, extra = {}) {
 //
 // The role key carries a random suffix, so two harnesses never share one and nothing is left behind
 // as long as cleanup() runs (dev-signin's leftovers are what filled the dev database with orphans).
+//
+// A run that is killed (timeout, closed terminal) never reaches its finally, so giveCards also sweeps first:
+// any harness_cards_ role older than STALE_AFTER_MS belongs to a dead run and is removed here. A real run takes
+// minutes, so a role this old is never one another harness is using. Test fixtures only; no access is read from them.
+const STALE_AFTER_MS = 2 * 60 * 60 * 1000;
+export async function sweepStaleHarnessRoles(service) {
+  const cutoff = new Date(Date.now() - STALE_AFTER_MS).toISOString();
+  const { data: stale } = await service.from("roles").select("id").like("key", "harness\\_cards\\_%").lt("created_at", cutoff);
+  for (const { id } of stale ?? []) {
+    await service.from("user_roles").delete().eq("role_id", id);
+    await service.from("role_cards").delete().eq("role_id", id);
+    await service.from("roles").delete().eq("id", id);
+  }
+  return (stale ?? []).length;
+}
+
 export async function giveCards(service, userId, cardKeys) {
+  await sweepStaleHarnessRoles(service);
   const key = `harness_cards_${Math.random().toString(36).slice(2, 10)}`;
   const { error: upErr } = await service
     .from("roles")
@@ -32,6 +49,7 @@ export async function giveCards(service, userId, cardKeys) {
     const { error } = await service.from("roles").delete().eq("id", made.id);
     if (error) console.error(`  could not delete throwaway role ${key}: ${error.message}`);
   };
+  cleanup.roleId = made?.id;
   if (madeErr) return { error: madeErr, cleanup };
   const { error: setErr } = await service.rpc("set_role_cards", { p_role: made.id, p_cards: cardKeys });
   if (setErr) return { error: setErr, cleanup };
