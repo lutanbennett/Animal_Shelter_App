@@ -61,7 +61,7 @@ is the extension, its own item). Whoever extends the check can import `classify(
 
 ## The user-facing number, 2026-11-02
 
-**78 strings in 20 files are definitely read by a shelter user and have no Thai** (56+9+5+8), out of
+**78 strings in 30 files are definitely read by a shelter user and have no Thai** (56+9+5+8), out of
 261. **A further 11 are "maybe"**; and **17 are an administrator's** (decision below). So extending the
 check to `.ts` is a **small-to-medium job: roughly 80–110 messages, concentrated** — 56 of the 78 are the
 same dozen upload/download phrases repeated across 14 routes ("No file provided.", "File is larger than
