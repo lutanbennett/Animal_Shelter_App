@@ -1,5 +1,6 @@
 "use client";
 
+import { TagNoteField } from "@/components/TagNoteField";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { placeLine } from "@/components/ZoneName";
 import { ActionButton } from "@/components/ActionButton";
@@ -45,6 +46,7 @@ export function RehomeForm({
   fromHospitalCarerName,
   defaultKind,
   today,
+  canTagNotes = false,
 }: {
   residentId: string;
   current: RehomeCurrent;
@@ -58,6 +60,8 @@ export function RehomeForm({
   defaultKind: RehomeKind;
   /** YYYY-MM-DD, server-computed so the max attribute matches the server's check. */
   today: string;
+  /** canTagNote(perms, ["placement.rehome"]): the save asks placement.rehome. Default false. */
+  canTagNotes?: boolean;
 }) {
   const { t, locale } = useI18n();
   const r = t.residents.rehome;
@@ -167,7 +171,7 @@ export function RehomeForm({
           <label htmlFor="notes" className="text-sm font-medium text-muted">
             {r.fields.notes}
           </label>
-          <textarea
+          <TagNoteField
             id="notes"
             name="notes"
             rows={3}
@@ -177,6 +181,9 @@ export function RehomeForm({
                 : r.fields.notesPlaceholderAdopt
             }
             className={textareaClass}
+            canTag={canTagNotes}
+            initialTags={[]}
+            selfId={residentId}
           />
         </div>
       </fieldset>

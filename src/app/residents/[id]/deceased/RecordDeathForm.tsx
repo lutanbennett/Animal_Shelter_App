@@ -1,5 +1,6 @@
 "use client";
 
+import { TagNoteField } from "@/components/TagNoteField";
 import { useRef, useState } from "react";
 import { placeLine } from "@/components/ZoneName";
 import { useWriteForm } from "@/lib/use-write-form";
@@ -22,12 +23,15 @@ export function RecordDeathForm({
   displayName,
   current,
   today,
+  canTagNotes = false,
 }: {
   residentId: string;
   displayName: string;
   current: CurrentLocation;
   /** YYYY-MM-DD, server-computed so the max attribute matches the server's check. */
   today: string;
+  /** canTagNote(perms, ["placement.death"]): the save asks placement.death. Default false. */
+  canTagNotes?: boolean;
 }) {
   const { t, locale } = useI18n();
   const d = t.residents.deceased;
@@ -107,12 +111,15 @@ export function RecordDeathForm({
             <label htmlFor="notes" className="text-sm font-medium text-muted">
               {t.common.notes}
             </label>
-            <textarea
+            <TagNoteField
               id="notes"
               name="notes"
               rows={3}
               placeholder={d.fields.notesPlaceholder}
               className={textareaClass}
+              canTag={canTagNotes}
+              initialTags={[]}
+              selfId={residentId}
             />
           </div>
         </fieldset>

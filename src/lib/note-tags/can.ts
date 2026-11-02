@@ -7,7 +7,7 @@ import type { ActivityKey, LevelKey } from "@/lib/permissions/catalogue";
  * shows a resident the login could not already open. Pass the activities the note's own save action asks, read from
  * that action, never guessed. Admin passes through can() as everywhere.
  */
-export function canTagNote(perms: Permissions | null | undefined, saveActivities: readonly LevelKey[]): boolean {
+export function canTagNote(perms: Permissions | null | undefined, saveActivities: readonly ActivityKey[]): boolean {
   if (!can(perms, "resident.record", "read")) return false;
   return saveActivities.some((activity) => can(perms, activity as LevelKey, "edit"));
 }

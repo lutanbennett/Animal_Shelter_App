@@ -1,5 +1,6 @@
 "use server";
 
+import { syncNoteTagsOrMessage } from "@/lib/note-tags/sync";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { runWriteAction, type ActionRefusal, type WriteMessages } from "@/lib/action-result";
@@ -53,6 +54,17 @@ export async function moveResident(
         notes: str(formData, "notes"),
       });
       if ("error" in result) return { ok: false, error: result.error };
+      {
+        const tagFailure = await syncNoteTagsOrMessage(
+          supabase,
+          { table: "placement_history", column: "notes", rowId: result.id, residentId },
+          formData,
+          "notes",
+          str(formData, "notes"),
+          t.residents.tags,
+        );
+        if (tagFailure) return { ok: false, error: tagFailure };
+      }
 
       revalidatePath("/residents");
       revalidatePath(`/residents/${residentId}`);

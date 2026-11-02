@@ -1,4 +1,5 @@
 import { requireFullResident } from "@/lib/residents/who-and-where";
+import { canTagNote } from "@/lib/note-tags/can";
 import Link from "next/link";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -99,6 +100,7 @@ export default async function RecordDeathPage(
         </p>
       ) : (
         <RecordDeathForm
+          canTagNotes={canTagNote(perms, ["placement.death"])}
           residentId={id}
           displayName={displayName}
           current={{

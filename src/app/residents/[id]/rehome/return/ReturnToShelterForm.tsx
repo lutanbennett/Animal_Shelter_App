@@ -1,5 +1,6 @@
 "use client";
 
+import { TagNoteField } from "@/components/TagNoteField";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { useRef, useState } from "react";
@@ -30,6 +31,7 @@ export function ReturnToShelterForm({
   zones,
   enclosures,
   today,
+  canTagNotes = false,
 }: {
   residentId: string;
   /** "Fostered" or "Adopted". */
@@ -49,6 +51,8 @@ export function ReturnToShelterForm({
   enclosures: EnclosureOption[];
   /** YYYY-MM-DD, server-computed so the max attribute matches the server's check. */
   today: string;
+  /** canTagNote(perms, ["placement.rehome"]): the save asks placement.rehome. Default false. */
+  canTagNotes?: boolean;
 }) {
   const { t, locale } = useI18n();
   const r = t.residents.shelterReturn;
@@ -150,12 +154,15 @@ export function ReturnToShelterForm({
             <label htmlFor="notes" className="text-sm font-medium text-muted">
               {r.fields.notes}
             </label>
-            <textarea
+            <TagNoteField
               id="notes"
               name="notes"
               rows={3}
               placeholder={r.fields.notesPlaceholder}
               className={textareaClass}
+              canTag={canTagNotes}
+              initialTags={[]}
+              selfId={residentId}
             />
           </div>
         </fieldset>
