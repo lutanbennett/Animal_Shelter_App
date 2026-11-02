@@ -22,8 +22,33 @@ import { estimatedAgeNow, todayIso } from "@/lib/format";
 import { moveResidentToEnclosure } from "@/lib/placements/move";
 import { refreshDeceasedArchiveIfNeeded } from "@/lib/archive/refresh-deceased-archive";
 import { setResidentProfilePhoto } from "@/lib/residents/profile-photo";
+import { noteTagFailure, syncNoteTags } from "@/lib/note-tags/sync";
 
 export type EditResidentState = ActionRefusal | undefined;
+
+/** The three resident notes that take a #tag: form field, column. */
+const TAGGED_NOTES = [
+  ["temperamentNotes", "temperament_notes"],
+  ["pastStoryNotes", "past_story_notes"],
+  ["behaviourNotes", "behaviour_notes"],
+] as const;
+
+/** Writes (and removes) the resident-note links in the same save as the notes. Null when fine, else words. */
+async function syncResidentNoteTags(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  t: Awaited<ReturnType<typeof getT>>["t"],
+  residentId: string,
+  formData: FormData,
+): Promise<string | null> {
+  for (const [field, column] of TAGGED_NOTES) {
+    const failed = noteTagFailure(
+      await syncNoteTags(supabase, { table: "residents", column, rowId: residentId, residentId }, formData, field, str(formData, field)),
+      t.residents.tags,
+    );
+    if (failed) return failed;
+  }
+  return null;
+}
 
 function str(formData: FormData, key: string): string | null {
   const value = formData.get(key);
@@ -191,6 +216,9 @@ export async function updateResident(
     }
     if (!updated?.[0]) return { ok: false, error: t.residents.edit.errors.notFound };
 
+    const tagFailure = await syncResidentNoteTags(supabase, t, residentId, formData);
+    if (tagFailure) return { ok: false, error: tagFailure };
+
     // Profile photo goes through the one helper, so the Medical refusal and
     // the RPC's "file must belong to this resident" check (0013) stay in one place.
     const profilePhotoDriveFileId = str(formData, "profilePhotoDriveFileId");
@@ -265,6 +293,9 @@ async function updateDeceasedResident(
     .returns<{ id: string }[]>();
   if (error) return { ok: false, error: error.message };
   if (!updated?.[0]) return { ok: false, error: t.residents.edit.errors.notFound };
+
+  const tagFailure = await syncResidentNoteTags(supabase, t, residentId, formData);
+  if (tagFailure) return { ok: false, error: tagFailure };
 
   const profilePhotoDriveFileId = str(formData, "profilePhotoDriveFileId");
   if (profilePhotoDriveFileId && profilePhotoDriveFileId !== current.profile_photo_drive_file_id) {

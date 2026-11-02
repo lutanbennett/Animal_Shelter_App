@@ -1,5 +1,7 @@
 "use client";
 
+import { TagNoteField } from "@/components/TagNoteField";
+import type { NoteTag } from "@/lib/note-tags/text";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { useMemo, useState } from "react";
@@ -39,12 +41,15 @@ export function ImmunizationForm({
   zones,
   enclosures,
   preselectedResidentIds,
+  canTagNotes = false,
 }: {
   residents: ResidentOption[];
   immunizationTypes: ImmunizationTypeOption[];
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
   preselectedResidentIds: string[];
+  /** canTagNote(perms, ["medical.immunizations"]): the save asks medical.immunizations. Default false. */
+  canTagNotes?: boolean;
 }) {
   const [state, onSubmit, pending] = useWriteForm(
     recordImmunizations,
@@ -286,12 +291,15 @@ export function ImmunizationForm({
           <label htmlFor="notes" className="text-sm font-medium text-muted">
             {t.immunizations.notes}
           </label>
-          <textarea
+          <TagNoteField
             id="notes"
             name="notes"
             rows={3}
             placeholder={t.immunizations.notesPlaceholder}
             className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+            canTag={canTagNotes}
+            initialTags={[]}
+            selfId={undefined}
           />
         </div>
 

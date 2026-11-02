@@ -1,4 +1,5 @@
 import { Minus, TrendingDown, TrendingUp } from "lucide-react";
+import { NoteText } from "@/components/NoteText";
 import { formatDate, formatWeightDelta, formatWeightKg } from "@/lib/format";
 import { can } from "@/lib/permissions/can";
 import { ArchiveRecordControl } from "@/components/ArchiveRecordControl";
@@ -10,7 +11,7 @@ import type { SectionContext } from "./types";
 import { RecordList } from "./shared";
 
 export async function renderWeightSection(ctx: SectionContext): Promise<React.ReactNode> {
-  const { id, isDeceased, perms, t, locale, supabase, showArchived, canArchive, archivedCount, archivedToggle, archivedList } = ctx;
+  const { id, isDeceased, perms, t, locale, supabase, showArchived, canArchive, archivedCount, archivedToggle, archivedList, noteTags } = ctx;
   const { data, error } = await supabase
     .from("weight")
     .select("id, date, weight_kg, notes, clinic_visits(appointment_date)")
@@ -131,7 +132,7 @@ export async function renderWeightSection(ctx: SectionContext): Promise<React.Re
                   )}`}
               </span>
             </div>
-            {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
+            {row.notes && <span className="text-xs text-muted"><NoteText text={row.notes} tags={noteTags("weight", "notes", row.id)} /></span>}
             {(!isDeceased || canArchive("weight")) && (
               <div className="flex items-start justify-end gap-3">
                 {!isDeceased && can(perms, "medical.weight") && (
@@ -169,7 +170,7 @@ export async function renderWeightSection(ctx: SectionContext): Promise<React.Re
                 )}`}
             </span>
           </div>
-          {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
+          {row.notes && <span className="text-xs text-muted"><NoteText text={row.notes} tags={noteTags("weight", "notes", row.id)} /></span>}
           {canArchive("weight") && (
             <div className="flex justify-end">
               <ArchiveRecordControl

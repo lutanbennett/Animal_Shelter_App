@@ -2,6 +2,7 @@ import type { createClient } from "@/lib/supabase/server";
 import type { getT } from "@/lib/i18n/get-t";
 import type { loadPermissions } from "@/lib/permissions/load";
 import type { MedicalArchiveKind } from "@/lib/medical-archive/kinds";
+import type { NoteTag } from "@/lib/note-tags/text";
 
 /**
  * What the page has loaded once and hands to whichever section renderer it picks: the resident, their
@@ -26,6 +27,8 @@ export type SectionContext = {
   locale: Awaited<ReturnType<typeof getT>>["locale"];
   supabase: Awaited<ReturnType<typeof createClient>>;
   showArchived: boolean;
+  /** The #tags written in one note of this resident's (resident_note_tags); [] when none or not readable. */
+  noteTags: (table: string, column: string, rowId: string) => NoteTag[];
   photoSelect: string;
   contactEmbed: (withArchive?: boolean) => string;
   canArchive: (kind: MedicalArchiveKind) => boolean;

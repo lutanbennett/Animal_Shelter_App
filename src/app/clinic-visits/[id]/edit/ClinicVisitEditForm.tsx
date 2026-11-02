@@ -1,5 +1,7 @@
 "use client";
 
+import { TagNoteField } from "@/components/TagNoteField";
+import type { NoteTag } from "@/lib/note-tags/text";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import Link from "next/link";
@@ -48,8 +50,13 @@ export function ClinicVisitEditForm({
   doctorNamesByClinic,
   residentDisplayName,
   cancelHref,
+  canTagNotes = false,
+  noteTags = [],
 }: {
   visit: ClinicVisitInitial;
+  /** canTagNote(perms, ["medical.visits"]): the save asks medical.visits. Default false. */
+  canTagNotes?: boolean;
+  noteTags?: NoteTag[];
   clinics: ClinicOption[];
   /** A doctor login's only current clinic, when that is the only one on offer (src/lib/clinics/scope.ts). */
   fixedClinic: ClinicOption | null;
@@ -178,13 +185,16 @@ export function ClinicVisitEditForm({
         <label htmlFor="notes" className="text-sm font-medium text-muted">
           {v.notes}
         </label>
-        <textarea
+        <TagNoteField
           id="notes"
           name="notes"
           rows={3}
           defaultValue={visit.notes ?? ""}
           placeholder={v.notesPlaceholder}
           className={inputClass}
+          canTag={canTagNotes}
+          initialTags={noteTags}
+          selfId={visit.resident_id}
         />
       </div>
 

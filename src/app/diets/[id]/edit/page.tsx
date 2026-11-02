@@ -6,11 +6,13 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadDietOptions } from "@/lib/diets/recipes";
 import { DietForm, type DietInitial } from "../../DietForm";
+import { canTagNote } from "@/lib/note-tags/can";
+import { loadTagsForNote } from "@/lib/note-tags/sync";
 import { loadDietResident } from "../../resident";
 
 /** Reached from a row's Edit link on the resident's Diet tab. */
 export default async function EditDietPage(props: PageProps<"/diets/[id]/edit">) {
-  await requirePermission("medical.diet");
+  const { perms } = await requirePermission("medical.diet");
   const { id } = await props.params;
   const { t, locale } = await getT();
   const supabase = await createClient();
@@ -63,6 +65,8 @@ export default async function EditDietPage(props: PageProps<"/diets/[id]/edit">)
 
       <DietForm
         mode="edit"
+        canTagNotes={canTagNote(perms, ["medical.diet"])}
+        noteTags={await loadTagsForNote(supabase, "resident_diets", "notes", diet.id)}
         residentId={diet.resident_id}
         residentDisplayName={resident.displayName}
         residentSize={resident.size}

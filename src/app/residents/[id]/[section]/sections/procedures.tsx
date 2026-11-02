@@ -45,6 +45,7 @@ export async function renderProceduresSection(ctx: SectionContext): Promise<Reac
     id: row.id,
     date: row.date,
     notes: row.notes,
+    noteTags: ctx.noteTags("procedures", "notes", row.id),
     procedure_types: row.procedure_types && { name: localLabel(locale, row.procedure_types.name, row.procedure_types.name_th) },
     clinic_visits: row.clinic_visits,
     attachments: (procedureFiles ?? [])

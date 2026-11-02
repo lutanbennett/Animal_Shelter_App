@@ -1,4 +1,5 @@
 import { formatDate, todayIso } from "@/lib/format";
+import { NoteText } from "@/components/NoteText";
 import { dietUnitLabel, sizeLabel } from "@/lib/i18n/enum-labels";
 import { can } from "@/lib/permissions/can";
 import { RecordRowActions } from "@/components/RecordRowActions";
@@ -12,7 +13,7 @@ import type { SectionContext } from "./types";
 import { Placeholder, RecordList } from "./shared";
 
 export async function renderDietSection(ctx: SectionContext): Promise<React.ReactNode> {
-  const { id, resident, isDeceased, perms, t, locale, supabase } = ctx;
+  const { id, resident, isDeceased, perms, t, locale, supabase, noteTags } = ctx;
   const [{ data, error }, recipes] = await Promise.all([
     supabase
       .from("resident_diets")
@@ -84,7 +85,7 @@ export async function renderDietSection(ctx: SectionContext): Promise<React.Reac
             )}
           </div>
         </div>
-        {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
+        {row.notes && <span className="text-xs text-muted"><NoteText text={row.notes} tags={noteTags("resident_diets", "notes", row.id)} /></span>}
         {!isDeceased && can(perms, "medical.diet") && (
           <RecordRowActions
             editHref={`/diets/${row.id}/edit`}

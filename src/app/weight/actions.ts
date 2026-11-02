@@ -10,6 +10,7 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { recordWeight, updateWeight } from "@/lib/weight/record";
+import { syncNoteTagsOrMessage } from "@/lib/note-tags/sync";
 
 // PI FAILOVER (D), 2026-11-01: both writes here go through runWriteAction()
 // (docs/decisions/2026-11-01-write-paths-tail-b.md).
@@ -85,6 +86,18 @@ export async function createWeight(
           });
       if ("error" in result) return { ok: false, error: result.error };
 
+      if (!replaceWeightId || str(formData, "notes") !== null) {
+        const tagFailure = await syncNoteTagsOrMessage(
+          supabase,
+          { table: "weight", column: "notes", rowId: result.id, residentId },
+          formData,
+          "notes",
+          str(formData, "notes"),
+          t.residents.tags,
+        );
+        if (tagFailure) return { ok: false, error: tagFailure };
+      }
+
       return saved(residentId);
     },
   );
@@ -119,6 +132,18 @@ export async function saveWeightEdit(
         notes: str(formData, "notes"),
       });
       if ("error" in result) return { ok: false, error: result.error };
+
+      {
+        const tagFailure = await syncNoteTagsOrMessage(
+          supabase,
+          { table: "weight", column: "notes", rowId: result.id, residentId },
+          formData,
+          "notes",
+          str(formData, "notes"),
+          t.residents.tags,
+        );
+        if (tagFailure) return { ok: false, error: tagFailure };
+      }
 
       return saved(residentId);
     },

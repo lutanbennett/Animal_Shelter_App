@@ -11,6 +11,7 @@ import { loadPermissions } from "@/lib/permissions/load";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { todayIso } from "@/lib/format";
 import { implausibleDiet } from "@/lib/diets/plausible";
+import { syncNoteTagsOrMessage } from "@/lib/note-tags/sync";
 
 // PI FAILOVER (D), 2026-11-01: every write here goes through runWriteAction() (docs/decisions/2026-11-01-write-paths-tail-a.md).
 // The redirects are taken AFTER the wrapper returns, because it rethrows one and would leave the claim open.
@@ -126,7 +127,9 @@ export async function createDiet(_state: DietFormState, formData: FormData): Pro
 
       const big = bigDietWarning(formData, fields, t);
       if (big) return big;
+      const newDietId = crypto.randomUUID();
       const { error } = await supabase.from("resident_diets").insert({
+        id: newDietId,
         resident_id: residentId,
         diet_id: fields.dietId,
         start_date: fields.startDate,
@@ -136,6 +139,18 @@ export async function createDiet(_state: DietFormState, formData: FormData): Pro
         notes: fields.notes,
       });
       if (error) return databaseFailure("diets.write", error, t.common);
+
+      {
+        const tagFailure = await syncNoteTagsOrMessage(
+          supabase,
+          { table: "resident_diets", column: "notes", rowId: newDietId, residentId },
+          formData,
+          "notes",
+          fields.notes,
+          t.residents.tags,
+        );
+        if (tagFailure) return { ok: false, error: tagFailure };
+      }
 
       revalidateResidentPages(residentId);
       return { ok: true, redirectTo: `/residents/${residentId}/diet` };
@@ -187,6 +202,18 @@ export async function updateDiet(_state: DietFormState, formData: FormData): Pro
       if (error) return databaseFailure("diets.write", error, t.common);
       // RLS filters rather than rejects: a volunteer's update matches no rows.
       if (!data || data.length === 0) return { ok: false, error: t.diets.errors.saveFailed };
+
+      {
+        const tagFailure = await syncNoteTagsOrMessage(
+          supabase,
+          { table: "resident_diets", column: "notes", rowId: dietId, residentId },
+          formData,
+          "notes",
+          fields.notes,
+          t.residents.tags,
+        );
+        if (tagFailure) return { ok: false, error: tagFailure };
+      }
 
       revalidateResidentPages(residentId);
       return { ok: true, redirectTo: `/residents/${residentId}/diet` };

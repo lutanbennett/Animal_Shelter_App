@@ -1,5 +1,6 @@
 "use server";
 
+import { syncNoteTagsOrMessage } from "@/lib/note-tags/sync";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { runWriteAction } from "@/lib/action-result";
@@ -113,6 +114,18 @@ export async function updateClinicVisit(
       }
       if (error) return { ok: false, error: error.message };
       if (!data || data.length === 0) return { ok: false, error: e.notAuthorized };
+
+      {
+        const tagFailure = await syncNoteTagsOrMessage(
+          supabase,
+          { table: "clinic_visits", column: "notes", rowId: visitId, residentId },
+          formData,
+          "notes",
+          str(formData, "notes"),
+          t.residents.tags,
+        );
+        if (tagFailure) return { ok: false, error: tagFailure };
+      }
 
       // Saved first; the calendar is second and can never undo it (calendar-sync.ts). A failure is left on the visit.
       await syncVisitToCalendar(visitId, (await getSiteOrigin())?.origin ?? null);

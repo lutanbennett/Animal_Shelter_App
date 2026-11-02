@@ -1,4 +1,5 @@
 import { requireFullResident } from "@/lib/residents/who-and-where";
+import { canTagNote } from "@/lib/note-tags/can";
 import Link from "next/link";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -117,6 +118,7 @@ export default async function MoveResidentPage(
         </p>
       ) : (
         <MoveResidentForm
+          canTagNotes={canTagNote(perms, ["placement.move"])}
           residentId={id}
           current={{
             enclosureId: status?.enclosure_id ?? null,

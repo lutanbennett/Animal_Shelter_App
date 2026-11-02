@@ -8,6 +8,8 @@ import { todayIso } from "@/lib/format";
 import { SECTION_ICONS } from "@/components/hub-icons";
 import { loadSenderOptions } from "@/lib/adoption-updates/queries";
 import { AdoptionUpdateForm } from "./AdoptionUpdateForm";
+import { canTagNote } from "@/lib/note-tags/can";
+import { loadTagsForNote } from "@/lib/note-tags/sync";
 
 /** The add and correct pages: same checks, same form. */
 export async function AdoptionUpdatePage({
@@ -97,6 +99,8 @@ export async function AdoptionUpdatePage({
           otherContacts={senders.otherContacts}
           defaultSenderId={senders.defaultSenderId}
           today={todayIso()}
+          canTagNotes={canTagNote(perms, ["resident.adoption_news"])}
+          initialNoteTags={update ? await loadTagsForNote(supabase, "adoption_updates", "note", update.id) : []}
         />
       )}
     </main>

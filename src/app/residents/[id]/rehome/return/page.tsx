@@ -1,4 +1,5 @@
 import { requireFullResident } from "@/lib/residents/who-and-where";
+import { canTagNote } from "@/lib/note-tags/can";
 import Link from "next/link";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -141,6 +142,7 @@ export default async function ReturnToShelterPage(
         </p>
       ) : (
         <ReturnToShelterForm
+          canTagNotes={canTagNote(perms, ["placement.rehome"])}
           residentId={id}
           status={currentStatus ?? "Fostered"}
           carerName={carerResult?.data?.[0]?.name ?? null}

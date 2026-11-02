@@ -5,11 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadDietOptions } from "@/lib/diets/recipes";
 import { DietForm } from "../DietForm";
+import { canTagNote } from "@/lib/note-tags/can";
 import { loadDietResident } from "../resident";
 
 /** Reached from the resident's Diet tab or the hub's Diet card. */
 export default async function NewDietPage(props: PageProps<"/diets/new">) {
-  await requirePermission("medical.diet");
+  const { perms } = await requirePermission("medical.diet");
   const searchParams = await props.searchParams;
   const { t, locale } = await getT();
 
@@ -74,6 +75,7 @@ export default async function NewDietPage(props: PageProps<"/diets/new">) {
       )}
 
       <DietForm
+        canTagNotes={canTagNote(perms, ["medical.diet"])}
         residentId={residentId}
         residentDisplayName={resident.displayName}
         residentSize={resident.size}

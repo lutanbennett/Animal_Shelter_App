@@ -8,6 +8,7 @@ import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+import { syncNoteTagsOrMessage } from "@/lib/note-tags/sync";
 import { isFutureDate, isIsoDate } from "@/lib/placements/dates";
 
 // PI FAILOVER (D), 2026-11-01: the write here goes through runWriteAction()
@@ -127,6 +128,16 @@ export async function createProcedure(
       if (error) return databaseFailure("procedures.create", error, t.common);
       const row = data?.[0];
       if (!row) return { ok: false, error: t.procedures.errors.saveFailed };
+
+      const tagFailure = await syncNoteTagsOrMessage(
+        supabase,
+        { table: "procedures", column: "notes", rowId: row.id, residentId },
+        formData,
+        "notes",
+        str(formData, "notes"),
+        t.residents.tags,
+      );
+      if (tagFailure) return { ok: false, error: tagFailure };
 
       revalidatePath(`/residents/${residentId}`);
       revalidatePath(`/residents/${residentId}/procedures`);

@@ -1,5 +1,7 @@
 "use client";
 
+import { TagNoteField } from "@/components/TagNoteField";
+import type { NoteTag } from "@/lib/note-tags/text";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { useState } from "react";
@@ -32,6 +34,7 @@ export function ClinicVisitForm({
   preselectedResidentIds,
   preselectedClinicId,
   returnTo,
+  canTagNotes = false,
 }: {
   residents: ResidentOption[];
   clinics: ClinicOption[];
@@ -44,6 +47,8 @@ export function ClinicVisitForm({
   preselectedClinicId: string;
   /** A page from the known list (booking-return.ts) to go back to after saving; "" for the usual place. */
   returnTo: string;
+  /** canTagNote(perms, ["medical.visits"]): a tag is a link row in the visit's notes, saved under medical.visits. Default false. */
+  canTagNotes?: boolean;
 }) {
   const [state, onSubmit, pending] = useWriteForm(bookClinicVisit, undefined);
   const { t } = useI18n();
@@ -176,12 +181,15 @@ export function ClinicVisitForm({
         <label htmlFor="notes" className="text-sm font-medium text-muted">
           {t.vetVisits.notes}
         </label>
-        <textarea
+        <TagNoteField
           id="notes"
           name="notes"
           rows={3}
           placeholder={t.vetVisits.notesPlaceholder}
           className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+          canTag={canTagNotes}
+          initialTags={[]}
+          selfId={undefined}
         />
       </div>
 

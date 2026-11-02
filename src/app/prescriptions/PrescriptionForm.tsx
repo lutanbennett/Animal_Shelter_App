@@ -1,5 +1,7 @@
 "use client";
 
+import { TagNoteField } from "@/components/TagNoteField";
+import type { NoteTag } from "@/lib/note-tags/text";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { RowActionButton } from "@/components/RowAction";
@@ -74,6 +76,8 @@ export function PrescriptionForm({
   preselectedClinicVisitId = null,
   initial = null,
   cancelHref,
+  canTagNotes = false,
+  noteTags = [],
 }: {
   mode?: "create" | "edit";
   residentId: string;
@@ -84,6 +88,9 @@ export function PrescriptionForm({
   preselectedClinicVisitId?: string | null;
   initial?: PrescriptionInitial | null;
   cancelHref: string;
+  /** canTagNote(perms, ["medical.prescriptions"]): the save asks medical.prescriptions. Default false. */
+  canTagNotes?: boolean;
+  noteTags?: NoteTag[];
 }) {
   const [state, onSubmit, pending] = useWriteForm(
     mode === "create" ? createPrescription : updatePrescription,
@@ -412,13 +419,16 @@ export function PrescriptionForm({
         <label htmlFor="notes" className="text-sm font-medium text-muted">
           {t.prescriptions.notes}
         </label>
-        <textarea
+        <TagNoteField
           id="notes"
           name="notes"
           rows={3}
           placeholder={t.prescriptions.notesPlaceholder}
           defaultValue={initial?.notes ?? ""}
           className={inputClass}
+          canTag={canTagNotes}
+          initialTags={noteTags}
+          selfId={residentId}
         />
       </div>
 

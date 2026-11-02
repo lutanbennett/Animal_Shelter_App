@@ -32,7 +32,8 @@ export type RehomeResidentInput = {
   notes: string | null;
 };
 
-export type RehomeResidentResult = { error: string } | { ok: true };
+/** id is the placement_history row that was written (its notes can carry #tags). */
+export type RehomeResidentResult = { error: string } | { ok: true; id: string };
 
 export type ReturnToShelterInput = {
   residentId: string;
@@ -43,7 +44,7 @@ export type ReturnToShelterInput = {
   notes: string | null;
 };
 
-export type ReturnToShelterResult = { error: string } | { ok: true };
+export type ReturnToShelterResult = { error: string } | { ok: true; id: string };
 
 const KIND_ENCLOSURE: Record<RehomeKind, string> = {
   foster: FOSTERED_ENCLOSURE,
@@ -200,7 +201,9 @@ export async function rehomeResident(
     carerId = newId;
   }
 
+  const placementId = crypto.randomUUID();
   const { error } = await supabase.from("placement_history").insert({
+    id: placementId,
     resident_id: input.residentId,
     placement_type: KIND_PLACEMENT_TYPE[input.kind],
     start_date: startDate,
@@ -226,7 +229,7 @@ export async function rehomeResident(
       .eq("id", input.residentId);
   }
 
-  return { ok: true };
+  return { ok: true, id: placementId };
 }
 
 /**
@@ -303,7 +306,9 @@ export async function returnResidentToShelter(
     data: { user },
   } = await supabase.auth.getUser();
 
+  const placementId = crypto.randomUUID();
   const { error } = await supabase.from("placement_history").insert({
+    id: placementId,
     resident_id: input.residentId,
     placement_type: "ReturnToShelter",
     start_date: startDate,
@@ -315,5 +320,5 @@ export async function returnResidentToShelter(
   });
   if (error) return { error: error.message };
 
-  return { ok: true };
+  return { ok: true, id: placementId };
 }

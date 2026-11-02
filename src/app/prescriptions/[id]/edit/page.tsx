@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadPrescriptionOptions } from "@/lib/prescriptions/options";
 import { PrescriptionForm, type PrescriptionInitial } from "../../PrescriptionForm";
+import { canTagNote } from "@/lib/note-tags/can";
+import { loadTagsForNote } from "@/lib/note-tags/sync";
 
 /**
  * Reached from a row's Edit link on the resident's Prescriptions tab. Same
@@ -16,7 +18,7 @@ import { PrescriptionForm, type PrescriptionInitial } from "../../PrescriptionFo
 export default async function EditPrescriptionPage(
   props: PageProps<"/prescriptions/[id]/edit">,
 ) {
-  await requirePermission("medical.prescriptions");
+  const { perms } = await requirePermission("medical.prescriptions");
   const { id } = await props.params;
   const { t, locale } = await getT();
   const supabase = await createClient();
@@ -107,6 +109,8 @@ export default async function EditPrescriptionPage(
 
       <PrescriptionForm
         mode="edit"
+        canTagNotes={canTagNote(perms, ["medical.prescriptions"])}
+        noteTags={await loadTagsForNote(supabase, "prescriptions", "notes", prescription.id)}
         residentId={residentId}
         residentDisplayName={displayName}
         medications={medications.data ?? []}

@@ -1,4 +1,5 @@
 import { requireFullResident } from "@/lib/residents/who-and-where";
+import { canTagNote } from "@/lib/note-tags/can";
 import Link from "next/link";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -118,6 +119,7 @@ export default async function ReturnFromHospitalPage(
         </p>
       ) : (
         <ReturnFromHospitalForm
+          canTagNotes={canTagNote(perms, ["placement.hospital"])}
           residentId={id}
           admittedOn={placementResult.data?.[0]?.start_date ?? null}
           previousEnclosure={previousEnclosure}

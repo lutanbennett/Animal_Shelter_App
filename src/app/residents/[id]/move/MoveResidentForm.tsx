@@ -1,5 +1,6 @@
 "use client";
 
+import { TagNoteField } from "@/components/TagNoteField";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { placeLine } from "@/components/ZoneName";
 import { ActionButton } from "@/components/ActionButton";
@@ -34,11 +35,14 @@ export function MoveResidentForm({
   current,
   zones,
   enclosures,
+  canTagNotes = false,
 }: {
   residentId: string;
   current: CurrentLocation;
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
+  /** canTagNote(perms, ["placement.move"]): the save asks placement.move. Default false. */
+  canTagNotes?: boolean;
 }) {
   const { t, locale } = useI18n();
   const m = t.residents.move;
@@ -122,12 +126,15 @@ export function MoveResidentForm({
             <label htmlFor="notes" className="text-sm font-medium text-muted">
               {t.common.notes}
             </label>
-            <textarea
+            <TagNoteField
               id="notes"
               name="notes"
               rows={3}
               placeholder={m.fields.notesPlaceholder}
               className={textareaClass}
+              canTag={canTagNotes}
+              initialTags={[]}
+              selfId={residentId}
             />
           </div>
         </fieldset>

@@ -1,3 +1,5 @@
+import { canTagNote } from "@/lib/note-tags/can";
+import { loadTagsForNote } from "@/lib/note-tags/sync";
 import { requirePermission } from "@/lib/permissions/require";
 import { ActionLink } from "@/components/ActionLink";
 import { ACTION_ICONS } from "@/components/hub-icons";
@@ -133,6 +135,8 @@ export default async function EditClinicVisitPage(props: PageProps<"/clinic-visi
       )}
 
       <ClinicVisitEditForm
+        canTagNotes={canTagNote(perms, ["medical.visits"])}
+        noteTags={await loadTagsForNote(supabase, "clinic_visits", "notes", visit.id)}
         visit={{ ...visit, cost: visit.cost == null ? null : Number(visit.cost) }}
         clinics={clinics}
         fixedClinic={scope.kind === "clinics" && clinics.length === 1 ? clinics[0] : null}

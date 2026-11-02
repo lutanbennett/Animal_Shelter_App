@@ -1,3 +1,4 @@
+import { canTagNote } from "@/lib/note-tags/can";
 import { requirePermission } from "@/lib/permissions/require";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
@@ -11,7 +12,7 @@ import { ClinicVisitForm, type ResidentOption, type ClinicOption } from "./Clini
 export default async function NewClinicVisitPage(
   props: PageProps<"/clinic-visits/new">,
 ) {
-  await requirePermission("visit.book");
+  const { perms } = await requirePermission("visit.book");
   const searchParams = await props.searchParams;
   const { t, locale } = await getT();
 
@@ -90,6 +91,7 @@ export default async function NewClinicVisitPage(
       )}
 
       <ClinicVisitForm
+        canTagNotes={canTagNote(perms, ["medical.visits"])}
         residents={residents}
         clinics={clinics}
         fixedClinic={scope.kind === "clinics" && clinics.length === 1 ? clinics[0] : null}

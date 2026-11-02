@@ -1,5 +1,7 @@
 "use server";
 
+import { syncNoteTagsOrMessage } from "@/lib/note-tags/sync";
+import { TAGS_FIELD_SUFFIX } from "@/lib/note-tags/text";
 import { redirect } from "next/navigation";
 import { databaseFailure, runWriteAction } from "@/lib/action-result";
 import { writeRequestIdFrom } from "@/lib/write-requests";
@@ -69,6 +71,7 @@ export async function bookClinicVisit(
       // trusted from the form (Lutan, 2026-10-01).
       if (scope.kind === "clinics" && scope.doctorName) doctorName = scope.doctorName;
 
+      const bookedFrom = new Date(Date.now() - 60_000).toISOString();
       const { error } = await supabase.rpc("schedule_bulk_appointments", {
         p_resident_ids: residentIds,
         p_clinic_id: clinicId,
@@ -82,6 +85,31 @@ export async function bookClinicVisit(
       });
 
       if (error) return databaseFailure("clinicVisits.create", error, t.common);
+
+      // The booking function returns no ids, so the visits it just made are found by what it was given. One note,
+      // many visits: the picked tags go on each visit's own links. Only asked for when the form offered tagging.
+      if (formData.get("notes" + TAGS_FIELD_SUFFIX) !== null) {
+        const { data: made } = await supabase
+          .from("clinic_visits")
+          .select("id, resident_id")
+          .in("resident_id", residentIds)
+          .eq("clinic_id", clinicId)
+          .eq("appointment_date", appointmentDate.toISOString())
+          .gte("created_at", bookedFrom)
+          .is("archived_at", null)
+          .returns<{ id: string; resident_id: string }[]>();
+        for (const visit of made ?? []) {
+          const tagFailure = await syncNoteTagsOrMessage(
+            supabase,
+            { table: "clinic_visits", column: "notes", rowId: visit.id, residentId: visit.resident_id },
+            formData,
+            "notes",
+            typeof notes === "string" && notes ? notes : null,
+            t.residents.tags,
+          );
+          if (tagFailure) return { ok: false, error: tagFailure };
+        }
+      }
 
       // Saved first; the calendar is second and can never undo it. The booking function returns no ids, so
       // this sends whatever is out of date (calendar-sync.ts), which is these visits.

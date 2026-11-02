@@ -17,7 +17,8 @@ export type RecordDeathInput = {
   notes: string | null;
 };
 
-export type RecordDeathResult = { error: string } | { ok: true };
+/** id is the placement_history row that was written (its notes can carry #tags). */
+export type RecordDeathResult = { error: string } | { ok: true; id: string };
 
 /**
  * Records a Deceased placement into the Lifecycle/Deceased pseudo-enclosure.
@@ -93,7 +94,9 @@ export async function recordResidentDeath(
     data: { user },
   } = await supabase.auth.getUser();
 
+  const placementId = crypto.randomUUID();
   const { error } = await supabase.from("placement_history").insert({
+    id: placementId,
     resident_id: input.residentId,
     placement_type: "Deceased",
     start_date: startDate,
@@ -108,7 +111,7 @@ export async function recordResidentDeath(
   });
   if (error) return { error: error.message };
 
-  return { ok: true };
+  return { ok: true, id: placementId };
 }
 
 export type UndoDeathInput = {

@@ -1,3 +1,4 @@
+import { canTagNote } from "@/lib/note-tags/can";
 import { requirePermission } from "@/lib/permissions/require";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
@@ -144,6 +145,7 @@ export default async function NewProcedurePage(props: PageProps<"/procedures/new
       )}
 
       <ProcedureForm
+        canTagNotes={canTagNote(perms, ["medical.procedures"])}
         residentId={residentId}
         residentDisplayName={displayName}
         microchip={

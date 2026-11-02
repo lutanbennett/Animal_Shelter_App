@@ -6,6 +6,7 @@ import { contactNameEmbed } from "@/lib/contacts/visibility";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { sectionRead } from "@/lib/residents/section-reads";
+import { loadNoteTags, noteKey } from "@/lib/note-tags/load";
 import { requireFullResident } from "@/lib/residents/who-and-where";
 import { residentPhotoSelect } from "@/lib/adoption-updates/options";
 import { type MedicalArchiveKind } from "@/lib/medical-archive/kinds";
@@ -146,6 +147,10 @@ export default async function ResidentSectionPage(
     );
 
 
+  // Hashtag links written on this resident's notes. The link policies decide which a login may read (the note's own
+  // read activity and resident.record), so a login without them simply gets none.
+  const tagMap = await loadNoteTags(supabase, id);
+
   const ctx: SectionContext = {
     id,
     resident,
@@ -156,6 +161,7 @@ export default async function ResidentSectionPage(
     locale,
     supabase,
     showArchived,
+    noteTags: (table, column, rowId) => tagMap.get(noteKey(table, column, rowId)) ?? [],
     photoSelect,
     contactEmbed,
     canArchive,
