@@ -226,6 +226,7 @@ const en = {
       whoDoesWhat: "Who does what",
       translations: "Translations",
       proposeTranslations: "Propose a Thai label",
+      viewTranslations: "See the Thai queue",
       foodForecast: "See the food forecast",
       medicineForecast: "See the medicine forecast",
       viewCashflow: "View cashflow",

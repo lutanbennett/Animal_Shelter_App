@@ -345,9 +345,10 @@ export const ROUTES: readonly RouteEntry[] = [
   },
   {
     path: "/management/translations",
-    activity: "translations.manage",
-    // The Propose a Thai label card opens the screen too (0296); only its propose control is drawn for it.
-    alsoActivity: "translations.propose",
+    // Opens on READING the queue (0298). Every card that touches this screen holds translations.view (translations,
+    // propose_translations, view_translations), so one activity opens it and none needs an alsoActivity. The controls
+    // on the page each ask their own activity (manage, propose) and are drawn only for a holder of that.
+    activity: "translations.view",
     icon: Languages,
     label: (t) => t.nav.translations,
     device: "any",

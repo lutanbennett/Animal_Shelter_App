@@ -203,6 +203,7 @@ const th: Dictionary = {
       whoDoesWhat: "ใครทำอะไร",
       translations: "การแปล",
       proposeTranslations: "เสนอคำแปลป้ายกำกับภาษาไทย",
+      viewTranslations: "ดูคิวคำแปลภาษาไทย",
       foodForecast: "ดูการคาดการณ์อาหาร",
       medicineForecast: "ดูการคาดการณ์ยา",
       viewCashflow: "ดูกระแสเงินสด",
