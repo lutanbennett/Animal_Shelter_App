@@ -1,23 +1,17 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Which clinics this session may record a clinic visit against. The
- * shelter's own people book against any clinic. A login whose role has the
- * "own clinic" clinical scope (a doctor login) books against the clinics
- * its doctor currently works at (doctors.user_id, active doctor_clinics
- * links: current_user_clinic_ids(), 0172), set by an admin in Settings →
- * Security; a doctor may work at several. A doctor login with no current
- * clinic is refused rather than shown every clinic: Lutan's call,
- * 2026-09-27 (docs/decisions.md).
+ * Which clinics this session may record a clinic visit against.
  *
- * `doctorName` is the linked doctor's own name, which the Doctor field is
- * locked to when a doctor login records a visit (Lutan, 2026-10-01).
+ * TODAY THIS IS "ANY CLINIC" FOR EVERY LOGIN. current_user_clinic_ids() has answered a constant
+ * '{}' since 0264 (supabase/migrations/0264_inert_security_leftovers.sql:629), because the
+ * narrowing it used to do was keyed on a role column, which no longer exists. An empty answer
+ * becomes { kind: "any" } below, so the "clinics" and "unlinked" branches are unreachable.
+ * No live RLS policy on clinic_visits narrows by clinic either: insert asks visit.book and
+ * update asks medical.visits (0264:76-78, 153). Who may book is decided by those cards alone.
+ * See docs/decisions/2026-11-02-clinic-scope-inert.md.
  *
- * This is the forms' and actions' rule for booking and editing. RLS agrees
- * (writes need a current clinic, current_clinic_resident_ids()) but reads
- * reach further: a doctor login also sees its own patients at any clinic it
- * has worked at (current_doctor_resident_ids(), 0172). /residents uses this
- * scope only to say whose list it is.
+ * `doctorName` is only ever set on the unreachable "clinics" branch.
  */
 export type ClinicScope =
   | { kind: "any" }
