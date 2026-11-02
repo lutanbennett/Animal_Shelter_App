@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → **#TAGS IN A RESIDENT'S NOTES LINK TWO RESIDENTS BOTH WAYS** (left open, schema half struck in place) |
 | Branch / worktree | `claude/resident-tags-schema` @ `C:\Development\Animal_Shelter_resident-tags-schema` |
 | Dev server | not started — no UI surface in this PR |
-| PR | #1193 |
+| PR | #1194 |
 | Tested by / date | Claude / 2026-11-02 |
 | Carries a migration? | yes — `0299_resident_note_tags.sql` and `0300_resident_note_tags_owner_check_refuses_cleanly.sql` |
 | Tested at SHA | `b7b48e53` |
