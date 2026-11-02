@@ -73,8 +73,8 @@ release manager before `npm run deploy:prod`.
 ## 2. Automated gates
 
 Run in the feature worktree, after `node scripts/worktree.mjs sync`, with
-`node scripts/gates.mjs`. It exists because of the traps below: it runs all three
-gates even when one fails, prints each one's own exit code, and refuses to start
+`node scripts/gates.mjs`. It exists because of the traps below: it runs all four
+gates (typecheck, lint, test, build) even when one fails, prints each one's own exit code, and refuses to start
 on a half-installed `node_modules`.
 
 **Tick these on the exit code, not on output that looks plausible.** Two ways a
@@ -87,8 +87,8 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [ ] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [ ] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed. They are the evidence, and running the script again regenerates them
-- [ ] CI green on the PR (runs the same three). **This one cannot be true in the commit that creates the PR**, so write it `n/a: not yet — the PR does not exist at this commit` and **leave it there.** Changed 2026-10-20: ticking it in a follow-up commit used to be the rule, and that commit **invalidated its own evidence** — a new HEAD means a new run, so every PR in this repository paid two full CI cycles to transcribe a result GitHub already records permanently against the commit. A tick here attests to nothing a reader can check better by looking at the PR. **What must still happen, and is a merge step rather than a checklist line: before merging, read the run for your current HEAD (`gh run view <id> --json status,conclusion,headSha`) and confirm its `headSha` matches.** Merging on an older run's strength merges a commit whose CI never finished. **Do not pre-tick this line either** — a green you have not seen is the exact failure this checklist exists to prevent
+- [ ] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, each `<N>` that gate's own exit code, and every `<N>` is `0`.** Run it yourself and paste its closing lines **exactly as your run printed them**, in a fenced block under this line: the `=== gates: <name> exited <N> after <S>s` line for each gate as well as the final `gates:` line. **Never type the final line from this description or copy it from another plan.** The shape here is deliberately not a line you could paste: the per-gate `after <S>s` timings are the part only a real run has. `check-test-plan.mjs` cannot tell a pasted run from a typed one, so this wording is the only guard (`docs/decisions/2026-11-02-gates-line-four-gates.md`). They are the evidence, and running the script again regenerates them
+- [ ] CI green on the PR (runs the same four gates, among its other checks). **This one cannot be true in the commit that creates the PR**, so write it `n/a: not yet — the PR does not exist at this commit` and **leave it there.** Changed 2026-10-20: ticking it in a follow-up commit used to be the rule, and that commit **invalidated its own evidence** — a new HEAD means a new run, so every PR in this repository paid two full CI cycles to transcribe a result GitHub already records permanently against the commit. A tick here attests to nothing a reader can check better by looking at the PR. **What must still happen, and is a merge step rather than a checklist line: before merging, read the run for your current HEAD (`gh run view <id> --json status,conclusion,headSha`) and confirm its `headSha` matches.** Merging on an older run's strength merges a commit whose CI never finished. **Do not pre-tick this line either** — a green you have not seen is the exact failure this checklist exists to prevent
 
 ## 3. Schema and data — *skip if no migration*
 
