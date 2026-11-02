@@ -11,7 +11,7 @@
 | PR | see the PR |
 | Tested by / date | Claude / 2026-11-02 |
 | Carries a migration? | yes — `0301_retire_audit_activities.sql` |
-| Tested at SHA | c1ef3633 |
+| Tested at SHA | 62922be0 |
 
 ## 1. Scope and risk
 
