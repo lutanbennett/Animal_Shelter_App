@@ -11,7 +11,7 @@
 | PR | see GitHub |
 | Tested by / date | Claude / 2026-11-02 |
 | Carries a migration? | no |
-| Tested at SHA | 6725e107 |
+| Tested at SHA | ff7236c5 |
 
 ## 1. Scope and risk
 
@@ -242,3 +242,7 @@ Manual verification by: n/a: wording only; Thai needs a bilingual read, tracked 
 Result: pass
 
 
+
+```
+gates: typecheck=0 lint=0 test=0 build=0
+```
