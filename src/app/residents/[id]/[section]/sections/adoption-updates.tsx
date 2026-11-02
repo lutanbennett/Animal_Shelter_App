@@ -1,4 +1,5 @@
 import { formatDate } from "@/lib/format";
+import { NoteText } from "@/components/NoteText";
 import { can } from "@/lib/permissions/can";
 import { loadPhotoShares } from "@/lib/social-shares";
 import { PhotoGallery, type PhotoRow } from "@/components/PhotoGallery";
@@ -10,7 +11,7 @@ import type { SectionContext } from "./types";
 import { Placeholder } from "./shared";
 
 export async function renderAdoptionUpdatesSection(ctx: SectionContext): Promise<React.ReactNode> {
-  const { id, resident, residentState, perms, t, locale, supabase, photoSelect, contactEmbed } = ctx;
+  const { id, resident, residentState, perms, t, locale, supabase, photoSelect, contactEmbed, noteTags } = ctx;
   // Shown for any resident who has ever been adopted, not only one
   // adopted now: a resident returned to the shelter keeps the news from
   // their time away, and it can still arrive late (0097 leaves where
@@ -126,7 +127,7 @@ export async function renderAdoptionUpdatesSection(ctx: SectionContext): Promise
                   )}
                 </div>
                 {update.note && (
-                  <p className="whitespace-pre-line text-foreground">{update.note}</p>
+                  <p className="whitespace-pre-line text-foreground"><NoteText text={update.note} tags={noteTags("adoption_updates", "note", update.id)} /></p>
                 )}
                 {update.share_publicly && update.public_story && (
                   <p className="whitespace-pre-line rounded border border-danger/30 bg-danger/5 p-2 text-foreground">

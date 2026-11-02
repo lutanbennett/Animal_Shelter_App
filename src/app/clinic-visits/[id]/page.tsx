@@ -1,3 +1,5 @@
+import { NoteText } from "@/components/NoteText";
+import { loadTagsForNote } from "@/lib/note-tags/sync";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requirePermission } from "@/lib/permissions/require";
@@ -212,7 +214,7 @@ export default async function ClinicVisitPage(props: PageProps<"/clinic-visits/[
         {field(v.when, formatDateTime(visit.appointment_date, locale))}
         {field(v.status, <span className="capitalize">{appointmentStatusLabel(t, visit.status)}</span>)}
         {field(v.cost, visit.cost == null ? null : formatBaht(Number(visit.cost), locale))}
-        <div className="sm:col-span-2">{field(v.notes, visit.notes ? <span className="whitespace-pre-wrap">{visit.notes}</span> : null)}</div>
+        <div className="sm:col-span-2">{field(v.notes, visit.notes ? <span className="whitespace-pre-wrap"><NoteText text={visit.notes} tags={await loadTagsForNote(supabase, "clinic_visits", "notes", visit.id)} /></span> : null)}</div>
       </dl>
 
       {scope.kind !== "clinics" && (

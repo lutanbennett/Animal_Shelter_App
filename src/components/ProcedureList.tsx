@@ -1,5 +1,7 @@
 "use client";
 
+import { NoteText } from "@/components/NoteText";
+import type { NoteTag } from "@/lib/note-tags/text";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Paperclip, X } from "lucide-react";
@@ -25,6 +27,8 @@ export type ProcedureRow = {
   id: string;
   date: string;
   notes: string | null;
+  /** Residents tagged in the notes (resident_note_tags), shown as links. */
+  noteTags?: NoteTag[];
   procedure_types: { name: string } | null;
   clinic_visits: { appointment_date: string; reason: string | null } | null;
   attachments: ProcedureAttachmentRow[];
@@ -102,7 +106,7 @@ export function ProcedureList({
 
             {procedure.notes && (
               <p className="whitespace-pre-wrap text-sm text-foreground">
-                {procedure.notes}
+                <NoteText text={procedure.notes} tags={procedure.noteTags} />
               </p>
             )}
 

@@ -1,4 +1,5 @@
 import { formatDate } from "@/lib/format";
+import { NoteText } from "@/components/NoteText";
 import { placeName } from "@/lib/enclosures/names";
 import { placementTypeLabel } from "@/lib/i18n/enum-labels";
 import { ActionLink } from "@/components/ActionLink";
@@ -9,7 +10,7 @@ import type { SectionContext } from "./types";
 import { RecordList } from "./shared";
 
 export async function renderHousingSection(ctx: SectionContext): Promise<React.ReactNode> {
-  const { id, residentState, isDeceased, t, locale, supabase, contactEmbed } = ctx;
+  const { id, residentState, isDeceased, t, locale, supabase, contactEmbed, noteTags } = ctx;
   // placement_history has two FKs to enclosures (enclosure_id and
   // previous_enclosure_id), so each embed has to name its FK or
   // PostgREST rejects the whole query as ambiguous.
@@ -108,7 +109,7 @@ export async function renderHousingSection(ctx: SectionContext): Promise<React.R
                 {t.residents.deceased.banner.cause(row.cause_of_death)}
               </span>
             )}
-            {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
+            {row.notes && <span className="text-xs text-muted"><NoteText text={row.notes} tags={noteTags("placement_history", "notes", row.id)} /></span>}
           </div>
         )}
       />

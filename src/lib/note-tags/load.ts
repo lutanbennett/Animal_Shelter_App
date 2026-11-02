@@ -58,7 +58,7 @@ type MentionRow = {
 };
 
 /** Source tables whose rows can be archived: a link to an archived note is not listed (a login that cannot edit the note cannot archive its link). */
-const ARCHIVABLE = new Set(["weight", "prescriptions", "clinic_visits", "immunization_records", "adoption_updates"]);
+const ARCHIVABLE = new Set(["weight", "prescriptions", "clinic_visits", "immunization_records"]);
 
 /**
  * "Mentioned in" for one resident: the live links pointing at them. The note text is read from its own table, so the

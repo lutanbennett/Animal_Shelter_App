@@ -1,4 +1,5 @@
 import { formatDate, todayIso } from "@/lib/format";
+import { NoteText } from "@/components/NoteText";
 import { localLabel } from "@/lib/translations/labels";
 import { formatDose } from "@/lib/i18n/enum-labels";
 import { can } from "@/lib/permissions/can";
@@ -12,7 +13,7 @@ import type { SectionContext } from "./types";
 import { Placeholder, RecordList } from "./shared";
 
 export async function renderPrescriptionsSection(ctx: SectionContext): Promise<React.ReactNode> {
-  const { id, isDeceased, perms, t, locale, supabase, showArchived, canArchive, archivedCount, archivedToggle, archivedList } = ctx;
+  const { id, isDeceased, perms, t, locale, supabase, showArchived, canArchive, archivedCount, archivedToggle, archivedList, noteTags } = ctx;
   const { data, error } = await supabase
     .from("prescriptions")
     .select(
@@ -120,7 +121,7 @@ export async function renderPrescriptionsSection(ctx: SectionContext): Promise<R
             )}
           </div>
         </div>
-        {row.notes && <span className="text-xs text-muted">{row.notes}</span>}
+        {row.notes && <span className="text-xs text-muted"><NoteText text={row.notes} tags={noteTags("prescriptions", "notes", row.id)} /></span>}
         {!isDeceased && !archived && can(perms, "medical.prescriptions") && (
           <RecordRowActions
             editHref={`/prescriptions/${row.id}/edit`}

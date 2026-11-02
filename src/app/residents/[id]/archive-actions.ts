@@ -6,6 +6,7 @@ import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
+import { setNoteTagsArchived } from "@/lib/note-tags/sync";
 import {
   MEDICAL_ARCHIVE_SECTIONS,
   MEDICAL_ARCHIVE_TABLES,
@@ -69,6 +70,10 @@ export async function archiveMedicalRecord(
 
     if (error) return refuse(error.message);
     if (!data?.length) return refuse(a.errors.cannotArchive);
+    // The note's #tag links are archived with it, so they stop showing under Mentioned in. The link policy asks the
+    // note's own save activity, which a login holding only medical.archive may not have: then this matches no row, and
+    // Mentioned in still hides the link because it reads the note's own archived_at (note-tags/load.ts).
+    await setNoteTagsArchived(supabase, MEDICAL_ARCHIVE_TABLES[kind], [id], true);
     revalidate(kind, residentId);
     return { ok: true };
   });
@@ -106,6 +111,7 @@ export async function restoreMedicalRecord(
       return refuse(error.message);
     }
     if (!data?.length) return refuse(a.errors.cannotRestore);
+    await setNoteTagsArchived(supabase, MEDICAL_ARCHIVE_TABLES[kind], [id], false);
     revalidate(kind, residentId);
     return { ok: true };
   });
