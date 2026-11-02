@@ -89,6 +89,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The messages under a date or time box when what you typed is not a real date, is outside the allowed dates, or is not a 24-hour time now appear in Thai when the app is in Thai. Before, those three were always in English.",
 ];
 
 /** Newest first. */

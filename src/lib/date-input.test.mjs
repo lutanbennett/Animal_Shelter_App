@@ -29,11 +29,11 @@ test("time", () => {
   assert.equal(normalizeTime("24:00"), "");
 });
 test("an impossible day is named as such, a bad format is not", async () => {
-  const { badDateMessage } = await import("./date-input.ts");
-  assert.match(badDateMessage("31/04/2026"), /no day 31/);
-  assert.match(badDateMessage("29/02/2027"), /1 to 28/);
-  assert.match(badDateMessage("10/13/2026"), /not a month/);
-  assert.match(badDateMessage("abc"), /DD\/MM\/YYYY/);
+  const { badDateReason } = await import("./date-input.ts");
+  assert.deepEqual(badDateReason("31/04/2026"), { kind: "noSuchDay", day: 31, last: 30 });
+  assert.deepEqual(badDateReason("29/02/2027"), { kind: "noSuchDay", day: 29, last: 28 });
+  assert.deepEqual(badDateReason("10/13/2026"), { kind: "notAMonth", month: "13" });
+  assert.deepEqual(badDateReason("abc"), { kind: "format" });
 });
 test("test logins are recognised by the reserved .test domain only", async () => {
   const { isTestLogin } = await import("./auth/test-login.ts");
