@@ -91,11 +91,16 @@ than treating it as a new fault.** Do not re-raise the allow rule unprompted.
   most of the work: a bilingual read of new Thai, and pages whose write paths were converted but never
   pressed by hand. **The desexing form is the one worth a real look**, because this release made its
   behaviour live and it is the only public page in the eight notes.
-- **Manage medical is still unassigned, and no role holds the `translations` or `assistant` card.** So the
-  death-recording note stays withheld, and several of the last releases' notes reach nobody but Admin.
-  **Four editions have now listed this.** It was put to him in the closing round of this release; if he
-  has not answered, **say it once and stop listing it** — it is a Settings → Who does what action, not a
-  release matter.
+- **ANSWERED 2026-11-02 BY LUTAN, ASKED DIRECTLY: *leave them.* STOP RAISING IT.** Put to him in the
+  closing round of `0.41.2` — five cards are held by no role (`manage_medical`, `translations`,
+  `propose_translations`, the new `view_translations`, and `assistant`), with the consequence spelled out:
+  the death-recording note stays withheld, and several notes from the last three releases reach nobody but
+  Admin. He chose to leave them. **It is his action on Settings → Who does what, not a release matter, and
+  it is not a defect, a gap or a decision anyone is owed.** Four editions listed it as open before it was
+  ever asked, which is the fault `CLAUDE.md` names: nobody re-asks a question they believe is already with
+  him, so a false block is silent. **Do not re-raise it, do not record it as outstanding, and do not
+  assign a card to "fix" it.** If a future release's note is withheld for the same reason, say so in that
+  release's record in one line and move on.
 - **The whole signed-out surface is still unverified** and `PUBLIC_SITE` is `locked`. `0.41.0` changed
   every public page's frame. **The release that unlocks the site inherits all of it at once.**
 - **Nothing behind sign-in was verified**, on either environment: no account. Date handling for Thailand
