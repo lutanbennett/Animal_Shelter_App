@@ -67,7 +67,7 @@ test("in_flight is a refusal, never a success and never a second write", async (
       return { ok: true };
     }),
   );
-  assert.deepEqual(result, { ok: false, error: "could not tell" });
+  assert.deepEqual(result, { ok: false, error: "could not tell", cannotTell: true });
   assert.equal(ran, 0);
 });
 

@@ -204,7 +204,8 @@ export async function runWriteAction<R extends object>(
     // A claim that committed without a result. We do not know whether the
     // write landed, so the person is told to check. NEVER a success here.
     console.error(`[${where}] write request ${id} is in flight: claimed with no result`);
-    return { ok: false, error: messages.saveUnknown };
+    const unknown: ActionRefusal & { cannotTell: true } = { ok: false, error: messages.saveUnknown, cannotTell: true };
+    return unknown;
   }
 
   let result: ActionResult<R>;
