@@ -30,6 +30,17 @@ test("rounds.name_th is named in the gate, with a reason, and is not flagged", (
   assert.equal(r.unlisted.length, 0);
 });
 
+test("live half: shares DELIBERATE, fails on a gap, passes when only deliberate columns remain", async () => {
+  const { liveUnlisted } = await import("./check-translations-unlisted.mjs");
+  const { CHECKS } = await import("./lib/readonly-checks.mjs");
+  const c = CHECKS["translations-unlisted"];
+  assert.deepEqual(liveUnlisted(["cats.name_th", "rounds.name_th"]), { unlisted: ["cats.name_th"], deliberate: ["rounds.name_th"] });
+  assert.equal(c.failed(["cats.name_th"]), true);
+  assert.equal(c.failed(["rounds.name_th", "label_drafts.text_th"]), false);
+  assert.equal(c.failed([]), false);
+  assert.match(c.render(["cats.name_th"]).join("\n"), /cats\.name_th/);
+});
+
 test("today's migrations are clean", () => {
   const r = scan(load("supabase/migrations"));
   assert.ok(r.declared.size > 20);

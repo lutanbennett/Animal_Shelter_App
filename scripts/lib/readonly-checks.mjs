@@ -11,6 +11,7 @@
 
 
 import { sqlCodeOnly } from "./sql-code-only.mjs";
+import { liveUnlisted } from "../check-translations-unlisted.mjs";
 
 const FORBIDDEN = /\b(insert|update|delete|truncate|drop|alter|create|grant|revoke|copy|call|do|vacuum|reindex|set|nextval|setval|pg_terminate_backend|pg_cancel_backend)\b/i;
 
@@ -485,9 +486,17 @@ export const CHECKS = {
       join information_schema.tables t on t.table_schema = c.table_schema and t.table_name = c.table_name and t.table_type = 'BASE TABLE'
      where c.table_schema = 'public' and c.column_name like '%\\_th'
        and not exists (select 1 from translatable_labels l where l.table_name = c.table_name and l.th_column = c.column_name)`,
-    render: (rows) => rows.length
-      ? [`${rows.length} Thai column(s) no one can reach from Translations:`, ...rows.map((x) => `   ${x}`)]
-      : ["Every Thai column on a base table is registered on Translations."],
+    // The exception list is the file check's own DELIBERATE, imported, so the two cannot drift. A gap not named there fails.
+    render: (rows) => {
+      const { unlisted, deliberate } = liveUnlisted(rows);
+      return [
+        ...(unlisted.length
+          ? [`${unlisted.length} Thai column(s) no one can reach from Translations:`, ...unlisted.map((x) => `   ${x}`)]
+          : ["Every Thai column on a base table is registered on Translations or named as deliberate."]),
+        ...(deliberate.length ? [`Named as deliberate in check-translations-unlisted.mjs, so not counted: ${deliberate.join(", ")}.`] : []),
+      ];
+    },
+    failed: (rows) => liveUnlisted(rows).unlisted.length > 0,
   },
   "assistant-could-not-help": {
     asks: "What has the assistant failed to answer? Counts of the 'unmatched' (no parser placed the sentence) and 'refused' rows it keeps for 90 days, and the newest 25 with id, date, status and what was typed. Names no login and no resident; the typed text is exactly as typed. Informational: it flags nothing.",

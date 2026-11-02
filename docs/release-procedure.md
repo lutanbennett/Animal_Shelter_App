@@ -446,6 +446,24 @@ following it is what opens the window. **Merge, pull, apply, deploy, in that
 order**, and confirm `git status -sb` says neither ahead nor behind before the
 apply rather than after it.
 
+### Thai columns nobody can reach (after the apply, production and test)
+
+```bash
+node scripts/check-production.mjs translations-unlisted
+node scripts/check-production.mjs translations-unlisted --env test
+```
+
+The CI job `translations-unlisted` reads migration files only, so it cannot see a `_th`
+column applied to a live database another way, or one that predates it. This is the
+live half: read-only, exit 1 and the column names if the database holds a `_th` column
+that no `translatable_labels` row names and that is not in `DELIBERATE` (imported from
+`scripts/check-translations-unlisted.mjs`, so the two cannot drift). Run it after the
+apply, so a column the release adds and registers is judged as registered. Run it on
+both: test is the database every stream shares, so a hand-applied column shows there
+first. A name printed is a stop: register it in a migration, or name it in `DELIBERATE`
+with a reason. Not a CI job; CI has no live database to ask
+(`docs/decisions/2026-11-02-translations-unlisted-live-half.md`).
+
 ### Snapshot what the migration will change, before applying it
 
 Promoted here after `0.40.2`, where the lesson was learned and half-missed in the
