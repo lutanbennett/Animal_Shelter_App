@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadPrescriptionOptions } from "@/lib/prescriptions/options";
 import { PrescriptionForm } from "../PrescriptionForm";
+import { canTagNote } from "@/lib/note-tags/can";
 
 /**
  * Reached from the resident's Prescriptions tab, the hub's prescriptions
@@ -14,7 +15,7 @@ import { PrescriptionForm } from "../PrescriptionForm";
 export default async function NewPrescriptionPage(
   props: PageProps<"/prescriptions/new">,
 ) {
-  await requirePermission("medical.prescriptions");
+  const { perms } = await requirePermission("medical.prescriptions");
   const searchParams = await props.searchParams;
   const { t, locale } = await getT();
 
@@ -119,6 +120,7 @@ export default async function NewPrescriptionPage(
       )}
 
       <PrescriptionForm
+        canTagNotes={canTagNote(perms, ["medical.prescriptions"])}
         residentId={residentId}
         residentDisplayName={displayName}
         medications={medications.data ?? []}

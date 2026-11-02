@@ -20,6 +20,7 @@ import {
   writePrescription,
 } from "@/lib/prescriptions/record";
 import { todayIso } from "@/lib/format";
+import { syncNoteTagsOrMessage } from "@/lib/note-tags/sync";
 
 // PI FAILOVER (D), 2026-11-01: all three writes here go through runWriteAction()
 // (docs/decisions/2026-11-01-write-paths-tail-b.md). The shared write (and the assistant's `recordPrescription`)
@@ -51,6 +52,17 @@ export async function createPrescription(
     async () => {
       const result = await writePrescription(supabase, t, formData);
       if ("error" in result) return { ok: false, error: result.error };
+      {
+        const tagFailure = await syncNoteTagsOrMessage(
+          supabase,
+          { table: "prescriptions", column: "notes", rowId: result.id, residentId: result.residentId },
+          formData,
+          "notes",
+          str(formData, "notes"),
+          t.residents.tags,
+        );
+        if (tagFailure) return { ok: false, error: tagFailure };
+      }
       return { ok: true, redirectTo: `/residents/${result.residentId}/prescriptions` };
     },
   );
@@ -109,6 +121,18 @@ export async function updatePrescription(
       if (!data || data.length === 0) return { ok: false, error: t.prescriptions.errors.saveFailed };
       const roundsResult = await saveRounds(supabase, prescriptionId, fields.roundIds, fields.roundDoses);
       if (roundsResult) return { ok: false, error: roundsResult.error };
+
+      {
+        const tagFailure = await syncNoteTagsOrMessage(
+          supabase,
+          { table: "prescriptions", column: "notes", rowId: prescriptionId, residentId: residentId },
+          formData,
+          "notes",
+          str(formData, "notes"),
+          t.residents.tags,
+        );
+        if (tagFailure) return { ok: false, error: tagFailure };
+      }
 
       revalidateResidentPages(residentId);
       return { ok: true, redirectTo: `/residents/${residentId}/prescriptions` };
