@@ -31,6 +31,7 @@ import {
   type ReviewGroup,
 } from "./WizardChrome";
 import { textareaClass } from "@/components/textareaClass";
+import { TagNoteField } from "@/components/TagNoteField";
 import { DateInput } from "@/components/DateInput";
 
 export type DietTypeOption = { id: string; name: string; is_standard: boolean };
@@ -196,6 +197,7 @@ export function IntakeForm({
   dietTypes,
   initialStep = 0,
   chip = null,
+  canTagNotes = false,
 }: {
   zones: ZoneOption[];
   enclosures: EnclosureOption[];
@@ -203,6 +205,8 @@ export function IntakeForm({
   dietTypes: DietTypeOption[];
   initialStep?: number;
   chip?: string | null;
+  /** canTagNote(perms, ["resident.register"]): the intake save asks resident.register. Default false. */
+  canTagNotes?: boolean;
 }) {
   const [state, onSubmit, pending] = useWriteForm(recordIntake, undefined);
   const { t, locale } = useI18n();
@@ -487,12 +491,14 @@ export function IntakeForm({
             <label htmlFor="notes" className="text-sm font-medium text-muted">
               {t.residents.new.fields.intakeNotes}
             </label>
-            <textarea
+            <TagNoteField
               id="notes"
               name="notes"
               rows={2}
               placeholder={t.residents.new.fields.intakeNotesPlaceholder}
               className={inputClass}
+              canTag={canTagNotes}
+              initialTags={[]}
             />
           </div>
           <label className="flex items-center gap-2 text-sm text-foreground">

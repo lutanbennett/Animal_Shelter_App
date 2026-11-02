@@ -10,11 +10,12 @@ import {
 } from "./IntakeForm";
 import { isValidMicrochip, stripToDigits } from "@/lib/residents/microchip";
 import { parseStepParam } from "./steps";
+import { canTagNote } from "@/lib/note-tags/can";
 
 export default async function NewResidentPage(
   props: PageProps<"/residents/new">,
 ) {
-  await requirePermission("resident.register");
+  const { perms } = await requirePermission("resident.register");
   const supabase = await createClient();
   const { t, locale } = await getT();
   const searchParams = await props.searchParams;
@@ -63,6 +64,7 @@ export default async function NewResidentPage(
       )}
 
       <IntakeForm
+        canTagNotes={canTagNote(perms, ["resident.register"])}
         zones={options.zones}
         enclosures={options.enclosures}
         origins={origins}

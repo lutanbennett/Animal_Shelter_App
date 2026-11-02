@@ -1,3 +1,4 @@
+import { stripTagMarkup } from "@/lib/note-tags/text";
 import { residentText } from "@/lib/residents/labels";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -135,11 +136,8 @@ export default async function ResidentCardPage(props: PageProps<"/r/[code]">) {
   const d = t.adopt.details;
   const text = {
     bio: localizedField(locale, resident.bio, resident.translations, "bio"),
-    temperament: localizedField(
-      locale,
-      resident.temperament_notes,
-      resident.translations,
-      "temperament_notes",
+    temperament: stripTagMarkup(
+      localizedField(locale, resident.temperament_notes, resident.translations, "temperament_notes"),
     ),
   };
 

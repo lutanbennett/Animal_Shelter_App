@@ -1,5 +1,6 @@
 "use server";
 
+import { syncNoteTagsOrMessage } from "@/lib/note-tags/sync";
 import { redirect } from "next/navigation";
 import { databaseFailure, runWriteAction, type ActionRefusal } from "@/lib/action-result";
 import { writeRequestIdFrom } from "@/lib/write-requests";
@@ -136,6 +137,28 @@ export async function recordIntake(
     // record_intake returns the new `residents` row (not a setof), so
     // PostgREST hands it back as a single object, not an array.
     const resident = data as unknown as { id: string };
+    // The intake note lives on the Intake placement row record_intake just wrote; link its tags there.
+    const { data: intakeRows } = await supabase
+      .from("placement_history")
+      .select("id")
+      .eq("resident_id", resident.id)
+      .eq("placement_type", "Intake")
+      .limit(1)
+      .returns<{ id: string }[]>();
+    const intakeRowId = intakeRows?.[0]?.id;
+    const tagFailure = intakeRowId
+      ? await syncNoteTagsOrMessage(
+          supabase,
+          { table: "placement_history", column: "notes", rowId: intakeRowId, residentId: resident.id },
+          formData,
+          "notes",
+          str(formData, "notes"),
+          t.residents.tags,
+        )
+      : null;
+    // The resident and the note are saved; a failed link write cannot be shown on a redirect, so it is logged
+    // (the person can tag again from the note, which is not editable here, so the link is simply absent).
+    if (tagFailure) console.error("residents.recordIntake note tags", tagFailure);
     if (chip.microchip_number || chip.microchip_implanted_on) {
       const { error: chipError } = await supabase
         .from("residents")

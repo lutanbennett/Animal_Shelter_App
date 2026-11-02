@@ -87,3 +87,12 @@ export function openTagQuery(value: string, caret: number): { start: number; que
   if (query.includes("\n") || query.length > 40) return null;
   return { start: hash, query };
 }
+
+/**
+ * The public site shows a tagged name as an ordinary name (decision 2026-11-02, tags-remaining-boxes): no link and no
+ * lookup, so nothing on the public pages points at another resident. The "#" is dropped from every "#word" that starts
+ * a word, wherever it came from (the original or an approved translation).
+ */
+export function stripTagMarkup(text: string): string {
+  return text.replace(/(^|\s)#(?=\S)/g, "$1");
+}

@@ -1,3 +1,4 @@
+import { stripTagMarkup } from "@/lib/note-tags/text";
 import { residentText } from "@/lib/residents/labels";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -139,9 +140,9 @@ export default async function PublicResidentPage(
   // The mockup's story is how they came to us, then what they're like now:
   // the past story first, then the bio and temperament notes.
   const story = [
-    field(resident.past_story_notes, "past_story_notes"),
+    stripTagMarkup(field(resident.past_story_notes, "past_story_notes")),
     field(resident.bio, "bio"),
-    field(resident.temperament_notes, "temperament_notes"),
+    stripTagMarkup(field(resident.temperament_notes, "temperament_notes")),
   ].filter(Boolean);
 
   // Profile photo first (it's the resident's chosen cover shot), then the
