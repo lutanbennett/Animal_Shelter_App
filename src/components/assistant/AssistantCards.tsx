@@ -261,7 +261,7 @@ function ResidentField({
     .map((id) => ctx.residents.find((r) => r.id === id))
     .filter((r): r is AssistantResident => !!r);
 
-  if (candidates.length > 1 && !residentId) {
+  if (candidates.length > 0 && !residentId) {
     return <ResidentCandidates candidates={candidates} onPick={onChange} />;
   }
   return (
@@ -278,7 +278,7 @@ function ResidentField({
 function useCardChrome(ctx: CardContext, residentChosen: boolean) {
   const { t } = useI18n();
   const a = t.assistant;
-  const ambiguous = ctx.candidates.length > 1 && !residentChosen;
+  const ambiguous = ctx.candidates.length > 0 && !residentChosen;
   return {
     notesStamp: a.notesStamp(ctx.request),
     hint: ambiguous ? a.severalMatch : a.fillBlanks,
