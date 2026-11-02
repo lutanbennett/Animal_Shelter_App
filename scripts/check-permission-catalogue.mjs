@@ -327,7 +327,7 @@ const PINNED = {
   // and seeing another role's home screen.
   // Settings → Assistant log: Admin only, no card (docs/decisions/2026-10-30-assistant-could-not-help-log.md).
   "/admin/assistant": { guards: ["requireAdminUser()"], decides: [] },
-  // Settings → Recent changes: Admin only, on purpose (Lutan, 2026-11-02); audit.view and audit.undo retired in 0302.
+  // Settings → Recent changes: Admin only, on purpose (Lutan, 2026-11-02); audit.view and audit.undo retired in 0301.
   "/admin/recent-changes": { guards: ["requireAdminUser()"], decides: [] },
   "/admin/security": { guards: ["requireAdminUser()"], decides: [] },
   "/admin/security/verify": { guards: ["requireAdminUser()"], decides: [] },

@@ -10,13 +10,13 @@
 | Dev server | not driven in the browser (see section 4) |
 | PR | see the PR |
 | Tested by / date | Claude / 2026-11-02 |
-| Carries a migration? | yes — `0302_retire_audit_activities.sql` |
+| Carries a migration? | yes — `0301_retire_audit_activities.sql` |
 | Tested at SHA | c1ef3633 |
 
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the backlog item asked for — Recent changes is Admin-only honestly, two ungrantable activities retired, and a check for any activity no card grants
-- [x] Files/areas touched listed — recent-changes page and actions, `/admin` landing, catalogue, routes, both dictionaries, manual topic, `0302`, `permission-probes.mjs`, `check-permission-catalogue.mjs`, `readonly-checks.mjs`, docs
+- [x] Files/areas touched listed — recent-changes page and actions, `/admin` landing, catalogue, routes, both dictionaries, manual topic, `0301`, `permission-probes.mjs`, `check-permission-catalogue.mjs`, `readonly-checks.mjs`, docs
 - [x] Roles affected identified — Admin unchanged; no card ever granted either activity, so no other login could open the page
 - [x] Anything explicitly **out of scope** written down — the ten other ungranted activities the new check reports are left for Lutan; `cards.ts` and `recent-changes.ts` untouched
 
@@ -35,15 +35,15 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ## 3. Schema and data — *skip if no migration*
 
-- [x] Migration number is one above the highest on `main` — `0302`, assigned by the planner (the sibling stream owns `0301`)
-- [x] `--status` reviewed before applying — dev had only 0302 pending
+- [x] Migration number is one above the highest on `main` — `0301`, assigned by the planner (the sibling stream owns `0301`)
+- [x] `--status` reviewed before applying — dev had only 0301 pending
 - [x] `--dry-run` reviewed — `ok`
-- [x] Applied to **dev** and recorded in `schema_migrations` — `applying 0302_retire_audit_activities.sql … ok`
+- [x] Applied to **dev** and recorded in `schema_migrations` — `applying 0301_retire_audit_activities.sql … ok`
 - [x] File is re-runnable — guard then `delete … where key in`, a no-op on a second run
 - [x] Existing rows still read correctly after the change — only two `permission_activities` rows deleted; the guard proved no `card_grants` or `role_permissions` row named either
 - [ ] Constraints and defaults exercised in a `begin; … rollback;` harness — n/a: the migration adds no constraint or default; its own guard and post-check raise on any holder or any policy or view naming the keys, and passed on dev
 - [x] Down-migration — not needed: nothing granted these activities, and nothing asked them
-- [x] Production apply plan — `0302` on `dbkodyyxxhtygxcxmfcu` with the next release; code and migration are order-independent (check A is a lint, not runtime)
+- [x] Production apply plan — `0301` on `dbkodyyxxhtygxcxmfcu` with the next release; code and migration are order-independent (check A is a lint, not runtime)
 
 ## 4. Functional checks
 
@@ -119,7 +119,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] Migration and code that reads it in one PR? — n/a: the code does not read the migration's effect; either order works
 - [ ] `--env production --dry-run` clean — deferred: release manager
 - [ ] Destructive migration backup — n/a: deletes two unused catalogue rows, guarded
-- [ ] Apply plan stated — deferred: release manager, `0302` with the next release
+- [ ] Apply plan stated — deferred: release manager, `0301` with the next release
 
 ### Rollback
 
@@ -129,7 +129,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 | # | Severity | What | Status |
 |---|---|---|---|
-| 1 | info | The backlog item said no migration was needed; check A requires one | fixed — `0302`, recorded in the decision file |
+| 1 | info | The backlog item said no migration was needed; check A requires one | fixed — `0301`, recorded in the decision file |
 | 2 | info | `activities-grantable` reports ten other ungranted activities | deferred to backlog — listed in the PR for the planner to file |
 
 ## Left for manual verification

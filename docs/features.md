@@ -345,7 +345,7 @@ ________________________________________________________________
 
 1. **Who does what (roles, cards, permissions)**. `/admin/who-does-what`, `/admin/who-does-what/details`, `/admin/role-draft` · Admin
 2. **Security and two-step sign-in**. `/admin/security`, `/admin/security/verify`
-3. **Recent changes (audit log) and undo**. `/admin/recent-changes` · Admin only, outside the card system (`audit.view` and `audit.undo` retired, 0302)
+3. **Recent changes (audit log) and undo**. `/admin/recent-changes` · Admin only, outside the card system (`audit.view` and `audit.undo` retired, 0301)
 4. **System status**. `/admin/status` · `system.status`
 5. **Immunization types**. `/admin/immunization-types` · `reference.types`
 6. **Procedure types**. `/admin/procedure-types` · `reference.types`
