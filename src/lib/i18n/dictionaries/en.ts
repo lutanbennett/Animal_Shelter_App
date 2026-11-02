@@ -57,6 +57,10 @@ const en = {
     // the same request id comes back with the first attempt's own answer.
     saveUnknown:
       "We couldn't tell whether that saved. Look at the page to see if your changes are there. If they are not, reload the page and enter them again.",
+    saveStillUnknown:
+      "Nothing was sent this time. We still can't tell whether the earlier save worked. Reload the page to check; if your changes are missing, enter them again.",
+    saveReloadConfirm:
+      "We still can't tell whether the earlier save worked, and pressing Save again can't find out. Reload the page now to check? Anything you have typed since will be lost.",
     // The browser sent no write request id, so this page is running an older
     // version of the app and a reload fixes it.
     reloadToSave: "This page needs reloading before it can save. Reload it and try again.",
