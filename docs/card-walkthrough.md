@@ -74,7 +74,7 @@ Result: pending
 2. **Do:** Maintenance jobs: log, change, assign, cost. Use a disposable record named `walk-do_maintenance`. **Read-back:** the job is on /maintenance (and on /my once assigned); status is changed on /maintenance/<id>, and assignee, zone, due date and the Estimated / Actual cost on /maintenance/<id>/edit (the cost reads back on the job page). No delete control is offered to this card.
 3. **Do:** Move a job on: in progress, blocked, completed. Use a disposable record named `walk-do_maintenance`. **Read-back:** the job sits in its new column on /maintenance after a reload.
 4. **Do:** Mark your own recurring jobs done or skipped. Use a disposable record named `walk-do_maintenance`. **Read-back:** the task shows as done (or skipped) on /my after a reload.
-5. **See:** Enclosures and zones (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+5. **See:** Enclosures, zones and the facility map (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 6. **Do:** Add and remove a job's photos. Use a disposable record named `walk-do_maintenance`. **Read-back:** the job page /maintenance/<id> counts the photo under Before (the problem as found) or After (the finished work).
 7. **Do:** Ask the assistant a question. Use a disposable record named `walk-do_maintenance`. **Read-back:** the answer shows in the assistant panel opened by the Assistant button in the header, and writes no row to any page.
 8. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
@@ -121,7 +121,7 @@ Result: pending
 0. Sign in with `--cards view_residents`. The home screen shows the **View residents** tile (or the tile of a card that includes it).
 1. Open `/residents`: it loads.
 2. **See:** A resident's details, housing and history (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-3. **See:** Enclosures and zones (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+3. **See:** Enclosures, zones and the facility map (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
@@ -359,7 +359,7 @@ Result: pending
 2. **Do:** Ask the assistant a question. Use a disposable record named `walk-assistant`. **Read-back:** the answer shows in the assistant panel opened by the Assistant button in the header, and writes no row to any page.
 3. **Do:** Record something through the assistant. Use a disposable record named `walk-assistant`. **Read-back:** ask it to record a weight for the disposable resident, then press Confirm on the card it shows. The weight really appears on that resident's Weight page (/residents/<id>/weight), and Cancel writes nothing. A weight and an immunization skip the confirm step and are written straight away (#1129), so for those the read-back is the reply naming the date it used (0295 is what makes any of this reach the database for a card-only login).
 4. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-5. **See:** Enclosures and zones (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+5. **See:** Enclosures, zones and the facility map (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 6. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
@@ -370,7 +370,7 @@ Result: pending
 
 0. Sign in with `--cards enclosures`. The home screen shows the **Enclosures** tile (or the tile of a card that includes it).
 1. Open `/enclosures`: it loads.
-2. **See:** Enclosures and zones (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+2. **See:** Enclosures, zones and the facility map (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 3. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 4. **Refused:** open `/stocktake` (the page of **Do Stocktaking**, which this login does not hold). Expect a refusal or redirect, not the page.
 

@@ -1054,7 +1054,7 @@ const en = {
         "shop.manage": "Manage the Shop for the shelter page",
         "photos.shelter_add": "Add a resident's photo to the Shelter folder only (shown on the website once approved)",
         "photos.approve": "Approve or remove the photos waiting in Photos to approve",
-        "facility.enclosures": "Enclosures and zones",
+        "facility.enclosures": "Enclosures, zones and the facility map",
         "maintenance.jobs": "Maintenance jobs: log, change, assign, cost",
         "maintenance.progress": "Move a job on: in progress, blocked, completed",
         "maintenance.photos": "Add and remove a job's photos",

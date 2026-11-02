@@ -1215,7 +1215,7 @@ const manual: Manual = {
             "Link for this enclosure's QR code: the address to program into the QR code on the enclosure. Tap Copy link, or select the address by hand. The enclosure browser has the same copy icon on every card, for doing a batch.",
             "Someone who scans the QR code while signed in lands on this page. A visitor sees a public page instead: the enclosure's name and Thai name, its zone, and a card for each resident living there — tap one for that resident's public card, the same page their RFID card opens. Nothing else is shown: no capacity, notes or maintenance. An empty enclosure says nobody is living there at the moment. Hospital, Fostered and the other Lifecycle statuses have no public page.",
             "The Maintenance card shows open jobs on this enclosure, with Log maintenance to add one already pointed at this enclosure.",
-            "With \"Enclosures and zones\" at Edit you can change the name, Thai name, capacity and notes under Settings → Enclosures.",
+            "With \"Enclosures, zones and the facility map\" at Edit you can change the name, Thai name, capacity and notes under Settings → Enclosures.",
           ],
           screenshot: {
             src: "/manual/enclosure-hub.png",
