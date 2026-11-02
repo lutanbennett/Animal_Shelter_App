@@ -416,6 +416,17 @@ obstacle. Its one hole is the line above: *could not ask* is a warning, not a
 refusal, so read `--status` yourself rather than trusting the deploy to have asked.
 See `docs/decisions/2026-10-31-write-request-wrapper.md`, section 6.
 
+The other direction is guarded by a check, not by anyone remembering. Which pages'
+writes go through the wrapper is a machine-checked list: the blocking CI job
+`wrapped-write-paths` (`scripts/check-wrapped-write-paths.mjs`) fails the build if a
+page on `WRAPPED_WRITE_PATHS` carries a write that is not wrapped, the shared header
+included (`docs/decisions/2026-11-01-header-writes-wrapped.md`, section 6). So by
+the time a release reaches this step that job has been green on every commit in it,
+and applying `0292` and deploying opens nothing. There is no separate stop here:
+read `--status` and carry on. If that job is red on the release commit, the release
+is not ready; that is a stop like any red check. Do not empty `WRAPPED_WRITE_PATHS`
+to clear a failure: `scripts/check-worker-origin.mjs` asserts it is non-empty.
+
 **Pull the main checkout before you apply, not after.** The step above assumes
 `main` is current and does not say so. On `0.20.0` the five migrations were
 applied and the deploy that should have followed within seconds was refused:
