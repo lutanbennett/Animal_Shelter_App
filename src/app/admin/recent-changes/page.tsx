@@ -19,8 +19,7 @@ import { formatDateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { can } from "@/lib/permissions/can";
-import { requirePermission } from "@/lib/permissions/require";
+import { requireAdminUser } from "@/lib/auth/require-admin";
 import { DateInput } from "@/components/DateInput";
 
 type T = Awaited<ReturnType<typeof getT>>["t"];
@@ -37,9 +36,9 @@ type T = Awaited<ReturnType<typeof getT>>["t"];
  * for one opened row only and why the paging has no total.
  */
 export default async function RecentChangesPage(props: PageProps<"/admin/recent-changes">) {
-  const { perms } = await requirePermission("audit.view");
-  // Undo is a different card from looking (undoChange asks audit.undo): drawn only when held.
-  const canUndo = can(perms, "audit.undo");
+  await requireAdminUser();
+  // Admin only, outside the card system: Admin may also undo (undoChange asks the same Admin rule).
+  const canUndo = true;
   const { t, locale } = await getT();
   const s = t.admin.recentChanges;
   const filters = parseFilters(await props.searchParams);

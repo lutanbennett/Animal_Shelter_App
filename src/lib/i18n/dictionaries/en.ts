@@ -1095,8 +1095,6 @@ const en = {
         "website.content": "The public website's content",
         "website.gallery": "Add, move and remove the photos in the public website's photo strip",
         "reference.types": "Setup lists: immunization, procedure and blood-test types, frequencies, medications, diets, units",
-        "audit.view": "See who changed what",
-        "audit.undo": "Undo a change",
         "system.status": "The system status page",
         "roles.view": "See which cards each role holds on Who does what",
         "resident.who_and_where": "Who a resident is and where they are, nothing more",

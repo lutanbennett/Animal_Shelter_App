@@ -1152,7 +1152,6 @@ export const ENTRIES = {
   "recent-changes": [
     {
       activity: "Find who changed a record, and undo the change",
-      needs: "audit.view",
       device: "desktop",
       do: "Open Recent changes, filter by who and date, open a line and tap Undo this change.",
       expect: "The record goes back to its old values. Undo is offered only on the newest change to a record.",

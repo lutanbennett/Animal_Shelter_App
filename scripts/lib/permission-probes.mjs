@@ -166,7 +166,6 @@ export const PROBES = [
   // 0291 retired reference.add_while_recording; these two inserts now ask reference.types Edit and nothing else.
   { activity: "reference.types", level: "edit", sql: `insert into frequency (label) values ('Probe frequency')` },
   { activity: "reference.types", level: "edit", sql: `insert into procedure_types (name) values ('Probe procedure')` },
-  { activity: "audit.view", level: "edit", sql: `select 1 from audit_log limit 1` },
   // 0285: shop_links' four policies ask shop.manage and nothing else. The read runs against $SHOP, a fixture row of
   // check-who-does-what.mjs (dev has no shop_links row of its own; docs/decisions/2026-10-30-shop-page-finish.md).
   { activity: "shop.manage", level: "edit", sql: `insert into shop_links (title, link_url) values ('Probe shop', 'https://example.invalid/probe')` },
@@ -174,7 +173,7 @@ export const PROBES = [
 ];
 
 // A statement a read on a Yes/No activity: "read" there means "needs Yes".
-// (audit.view and system.status are Yes/No activities probed by reading.)
+// (system.status is a Yes/No activity probed by reading.)
 // Marked so the runner knows the SQL is a select though the level is edit.
 // (Handled by the runner: a select statement counts rows; a write counts rows too.)
 
@@ -213,7 +212,6 @@ export const NO_DB_PROBE = {
   "translations.view": "management and staff read the table through this cell, but a doctor and a volunteer still read it through their own legacy policies (doctor_read_translations, volunteer_read_translations, perm-convert-vet's), so a read probe would report them as differences that are not this cell's; check-app-access-gate.mjs reads it under every login instead",
   "assistant.ask": "app code and the model call; no database statement",
   "assistant.record": "app code; each thing it records is checked against that thing's own activity",
-  "audit.undo": "app code replaying the audit log through the ordinary table policies",
 };
 for (const k of Object.keys(NO_DB_PROBE)) if (NO_DB_PROBE[k] === undefined) delete NO_DB_PROBE[k];
 

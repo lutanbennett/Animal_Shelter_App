@@ -1998,7 +1998,7 @@ const manual: Manual = {
         {
           id: "recent-changes",
           title: "Who changed what (Recent changes)",
-          activity: "audit.view",
+          adminOnly: true,
           path: "Settings → Recent changes",
           steps: [
             "Every add, edit, archive and delete on residents, contacts, prescriptions, clinic visits, weights, files and vaccinations — and on the home page impact figures, facility plans, roles and permissions — is recorded automatically, with who did it and when. Recent changes lists them newest first, 50 at a time. Tap Older changes for the next page.",

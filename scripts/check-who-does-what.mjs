@@ -116,7 +116,7 @@ const sqlOf = (p) => resolveLookups(p.sql).replace("$R_IN_FILE", `${F.R_IN}`).re
   return lit(v);
 });
 const KIND = Object.fromEntries(ACTIVITIES.map((a) => [a.key, a.kind]));
-// A Yes/No activity has one level, 2, even where its probe reads (friends.view, audit.view).
+// A Yes/No activity has one level, 2, even where its probe reads (friends.view).
 const need = (p) => (p.level === "read" && KIND[p.activity] === "level" ? 1 : 2);
 const allowsAt = (level, p) => level >= need(p);
 // The SQL that turns one role's cell into the opposite answer for this probe.

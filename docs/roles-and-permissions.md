@@ -1533,7 +1533,7 @@ means §6: not a cell.
 | deliveries | `stock.delivery` |
 | recurring-jobs | `recurring.manage` |
 | translations | `translations.manage` |
-| recent-changes | `audit.view`, `audit.undo` |
+| recent-changes | none: Admin only (`audit.view` and `audit.undo` retired, 0301) |
 | website | `website.content` |
 | immunization-types, procedure-types, blood-test-types, frequencies | `reference.types` |
 | system-status | `system.status` |

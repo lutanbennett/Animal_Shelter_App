@@ -49,7 +49,7 @@ test("Admin sees every topic without holding any card", () => {
 });
 
 test("an activity no card grants is Admin's alone, not shown to everyone as unassigned", () => {
-  const topic = { id: "s", title: "s", activity: "audit.view" };
+  const topic = { id: "s", title: "s", activity: "no.card.grants.this" };
   assert.deepEqual(cardsOfTopic(topic), { kind: "cards", cards: [] });
   assert.equal(topicView(topic, holding("record_weight")), "notMine");
   assert.equal(topicView(topic, admin), "mine");

@@ -464,14 +464,6 @@ export const ROUTES: readonly RouteEntry[] = [
     menu: false,
   },
   {
-    path: "/admin/recent-changes",
-    activity: "audit.view",
-    icon: History,
-    label: (t) => t.nav.recentChanges,
-    device: "any",
-    menu: false,
-  },
-  {
     path: "/admin/status",
     activity: "system.status",
     icon: Activity,
