@@ -36,7 +36,8 @@ export async function correctIntakeDate(_state: IntakeDateState, formData: FormD
       const { data, error } = await supabase.rpc("correct_intake_date", { p_resident_id: residentId, p_new_date: newDate });
       if (error) {
         if (error.code === "42501") return { ok: false as const, error: s.notAllowed };
-        if (error.code === "P0001") return { ok: false as const, error: error.message };
+        // P0001: the function's own refusals. 23001: the closed-record lock ("This resident is deceased"), also a plain sentence.
+        if (error.code === "P0001" || error.code === "23001") return { ok: false as const, error: error.message };
         return unexpectedFailure("intakeDate.correct", error, t.common.somethingWentWrong);
       }
       const r = data as { intake_date: string; new_date: string };
