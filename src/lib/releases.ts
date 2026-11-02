@@ -90,6 +90,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   "Messages about Google Drive no longer tell you to ask an admin. When photo storage is not connected, the message now says it is a server setting that no card can change and points you to the System status page; when a photo file is left behind in Drive, it says anyone who can open the shelter’s Drive folder can delete or move it. The Thai for these messages is our own wording and has not yet been read by a Thai speaker.",
+  "A clinic visit booked by asking the assistant now appears on the shelter calendar. Until now the visit was saved in the app but never sent to the calendar, with no message to say so. Visits booked through the assistant before this release are still in the app, but may be missing from the calendar: if one matters, check the resident’s clinic visits and add it by hand.",
 ];
 
 /** Newest first. */
