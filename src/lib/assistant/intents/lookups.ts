@@ -146,3 +146,25 @@ export const summaryIntent: IntentParser = {
     };
   },
 };
+
+const LIST_RE =
+  /(?<![a-z])(all|every|each|list|show|any)(?![a-z])[^?]*(?<![a-z])(residents?|dogs?|cats?|animals?)(?![a-z])/i;
+
+/**
+ * "Give me all the Gigi residents" — the list form. It is answered by the
+ * picker of whoever the name could mean (the same "which one?" a shared name
+ * gets), so nothing is read until one is chosen. Needs a resident, whole or
+ * near, to be this sentence.
+ */
+export const listResidentsIntent: IntentParser = {
+  intent: "where",
+  parse(text, ctx) {
+    if (!LIST_RE.test(text)) return null;
+    const resident = matchResident(text, ctx.residents);
+    if (!resident.id && resident.candidates.length === 0) return null;
+    return {
+      draft: { kind: "where", residentId: resident.id },
+      residentCandidates: resident.candidates,
+    };
+  },
+};
