@@ -1,5 +1,7 @@
 "use client";
 
+import { TagNoteField } from "@/components/TagNoteField";
+import type { NoteTag } from "@/lib/note-tags/text";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import Link from "next/link";
@@ -44,6 +46,8 @@ export function DietForm({
   diets,
   initial = null,
   cancelHref,
+  canTagNotes = false,
+  noteTags = [],
 }: {
   mode?: "create" | "edit";
   residentId: string;
@@ -52,6 +56,9 @@ export function DietForm({
   diets: DietOption[];
   initial?: DietInitial | null;
   cancelHref: string;
+  /** canTagNote(perms, ["medical.diet"]): the save asks medical.diet. Default false. */
+  canTagNotes?: boolean;
+  noteTags?: NoteTag[];
 }) {
   const [state, onSubmit, pending] = useWriteForm(
     mode === "create" ? createDiet : updateDiet,
@@ -186,13 +193,16 @@ export function DietForm({
         <label htmlFor="notes" className="text-sm font-medium text-muted">
           {t.diets.notes}
         </label>
-        <textarea
+        <TagNoteField
           id="notes"
           name="notes"
           rows={3}
           placeholder={t.diets.notesPlaceholder}
           defaultValue={initial?.notes ?? ""}
           className={inputClass}
+          canTag={canTagNotes}
+          initialTags={noteTags}
+          selfId={residentId}
         />
       </div>
 
