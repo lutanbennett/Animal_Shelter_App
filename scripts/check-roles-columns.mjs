@@ -18,9 +18,11 @@
 //   - a select reached through a helper that receives the table name as an argument
 //   - columns added outside supabase/migrations (the dashboard, a manual SQL run), and views (a view is not a `create table`)
 //   - whether production has the migration yet: that is `node scripts/apply-migrations.mjs --status --env production`
+// The SQL is read through sqlCodeOnly (a `--` or `;` inside a string is not code); dollar bodies are KEPT so DDL inside a do $$ block is still seen.
 // Exits 1 when a selected column is not created by any migration, 0 otherwise.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { sqlCodeOnly } from "./lib/sql-code-only.mjs";
 
 const root = process.cwd();
 const args = process.argv.slice(2);
@@ -32,7 +34,7 @@ const stripSqlComments = (s) => s.replace(/--[^\n]*/g, "");
 const name = (s) => s.replace(/^public\./i, "").replace(/"/g, "").toLowerCase();
 
 const migDir = join(root, "supabase/migrations");
-const migrations = readdirSync(migDir).filter((f) => f.endsWith(".sql")).sort().map((f) => ({ f, sql: stripSqlComments(readFileSync(join(migDir, f), "utf8")) }));
+const migrations = readdirSync(migDir).filter((f) => f.endsWith(".sql")).sort().map((f) => ({ f, sql: sqlCodeOnly(readFileSync(join(migDir, f), "utf8"), { dollarBodies: "keep" }) }));
 
 function columnsOf(table) {
   const cols = new Map(); // column -> migration that last created it
