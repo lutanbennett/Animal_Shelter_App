@@ -82,16 +82,24 @@ export function matchResident(
  *    punctuation are separators, never part of a word;
  *  - a word counts only if it has a letter (the "1" in "Gigi (1)" is a
  *    disambiguator, not a name) and is at least 2 characters;
+ *  - it is not a word every sentence carries ("the", "all", "residents"),
+ *    or "The Quokka" would answer to any question;
  *  - it must stand alone in the sentence, as `mentions` already requires;
  *  - Thai names are not looked at: they keep their substring rule.
  * The result is ALWAYS a list to confirm, even for one resident, and never
  * an id: a near match is a guess.
  */
+const FILLER = new Set(
+  "the and all any can you give show list tell about for from with what where who how when which this that them these those his her its has have was are not put move into out too some every each".split(" ").concat(
+    "resident residents dog dogs cat cats animal animals puppy puppies kitten kittens name named called".split(" "),
+  ),
+);
+
 function nearNameMatches(text: string, residents: ParserResident[]): string[] {
   const ids: string[] = [];
   for (const r of residents) {
     const words = (r.name ?? "").toLowerCase().match(/[a-z0-9]+/g) ?? [];
-    if (words.some((w) => w.length >= 2 && /[a-z]/.test(w) && mentions(text, w))) ids.push(r.id);
+    if (words.some((w) => w.length >= 2 && /[a-z]/.test(w) && !FILLER.has(w) && mentions(text, w))) ids.push(r.id);
   }
   return ids;
 }

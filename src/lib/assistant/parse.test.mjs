@@ -126,3 +126,9 @@ test("Thai names keep the substring rule and are not near-matched", () => {
   const th = { ...gigi, residents: [{ ...gigi.residents[0], name: "จีจี้", thaiName: "จีจี้" }] };
   assert.equal(parseRequest("tell me about จี", th), null);
 });
+
+test("a filler word in a name is not a near match: 'The Quokka' does not answer 'all the residents'", () => {
+  const c = { ...gigi, residents: [{ ...gigi.residents[0], id: "q1", name: "The Quokka" }, ...gigi.residents] };
+  const p = parseRequest("Can you give me all the Gigi residents", c);
+  assert.deepEqual(p.residentCandidates, ["g1", "g2", "g3"]);
+});
