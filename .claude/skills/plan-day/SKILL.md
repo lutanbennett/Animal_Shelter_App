@@ -496,6 +496,24 @@ text silently. Script anything with escapes via the Write tool.
 
 **LINE ENDINGS: normalise before matching.** Both this file and `docs/planner-handover.md` read LF in the main checkout, but a fresh worktree is CRLF, because git converts on checkout. (Corrected 2026-11-01: this paragraph used to say the skill is CRLF and the handover LF, which is only true of a worktree.) Added 2026-10-21 because it recurred: every multi-line anchor against a CRLF file fails with no useful error. **Read, `split('\r\n').join('\n')`, edit, then write back in the endings you found.** A trap worth not repeating goes in this skill or `CLAUDE.md`, never only in a test plan or a handover.
 
+**AND FOR A TRACKED FILE, WRITE LF — DO NOT ECHO WHAT YOU READ. THIS COST A WHOLE-FILE MERGE CONFLICT
+ON 2026-11-02.** The paragraph above is right for `.plan-day.md`, which is gitignored and local. It is
+**wrong for anything git tracks**, because `core.autocrlf=true` here: git **stores LF** and checks out
+CRLF. A planner script that preserved the endings it read committed LF into the `backlog` branch while
+`main`'s blob for `docs/backlog.md` still held CRLF, so **every line differed and `git merge backlog`
+returned ONE conflict hunk covering the whole file.**
+
+**Two things make this expensive if you meet it unprepared.** Rewriting the working copy with CRLF and
+committing changes **nothing** — `autocrlf` normalises it straight back. And **neither side can be taken
+wholesale**: that day `backlog` carried six items `main` lacked while `main` carried two ticks
+`backlog` lacked.
+
+**The method, which cost one command once written:** read both blobs with
+`git show <rev>:docs/backlog.md`, normalise both to LF, compare them **item line by item line** (key on
+the text after the checkbox, so a tick alone shows as a matched pair), build the resolution from the side
+with more content, apply the other side's changes by substitution, and **guard that every item line of
+`main`'s survives**. Commit from the main checkout, which stores LF and ends the drift.
+
 **AND `node -e` IS NOT A FOURTH OPTION WHERE THE TEXT HOLDS A WINDOWS PATH.** Added 2026-10-21.
 A single-quoted `node -e` script containing `C:\\Development` reached node as `C:\Development`, where
 JS read `\D` as an escape and the anchor silently became `C:Development` — the replacement then failed
@@ -512,8 +530,22 @@ fixed the ordering, so a later run does not have to re-derive it.
 Keep the statuses current: mark a batch when you set it up, and mark it
 merged on a later run once its PRs are in.
 
-Keep a line `Workstreams since handover: <n> (last handover <date>)`: add
+Keep a line `Streams set up in this plan: <n> of <total> (last handover <slug>, <date>)`: add
 the batch's stream count when you set it up.
+
+**THE COUNTER IS TIED TO THE PLAN, NOT TO AN INDEPENDENT COUNT OF NINE. CHANGED 2026-11-02 ON LUTAN'S
+INSTRUCTION — *"can we sync these counters up to avoid confusion"*.** It used to count streams since the
+last handover and fire at nine, which **drifted out of step with the plan** because it carried streams
+over from the previous plan: on 2026-11-02 the plan's nine were all set up while the counter read 3, and
+the planner told him in the same breath that nine streams were done and that no handover was due.
+**Both statements were true of different nines, which is exactly the confusion.**
+
+**So: one plan is one handover.** The counter counts streams set up **in the current plan**, against that
+plan's own total, and **the handover is written when the plan's LAST batch is set up** — not at nine.
+A plan is usually three batches of three, so this is usually still nine; where a plan holds fewer
+buildable items (*"nine is a target, not a quota"*), the handover still comes at its end. **Reset to
+`0 of <total>` with the new slug and date once it is written**, and count an unplanned stream that
+shipped a PR into the plan it ran inside.
 
 **ADD IT WHEN YOU SET THE BATCH UP, AND ONLY THEN. Re-planning a batch is not a stream.**
 Added 2026-10-21, after this counter read **12** for a round of **three batches of three** — Lutan
@@ -1634,11 +1666,17 @@ he should open one on that folder himself. Either way its first move is to
 read `.brief.md`. Then one line saying that once these have merged, running
 `/plan-day` again sets up the next batch without re-planning.
 
-**At nine or more workstreams since handover**, end by telling the user, in
+**WHEN THE PLAN'S LAST BATCH IS SET UP** — see the counter rule in step 6, changed 2026-11-02 so this
+fires at the plan boundary rather than at an independent count of nine — end by telling the user, in
 this order: (1) update `docs/planner-handover.md` now, in this chat, while the
 context exists — offer to do it; (2) then start a fresh chat for the next
-`/plan-day`. Reset the counter to 0 with today's date once the handover is
+`/plan-day`. Reset the counter with the new slug and today's date once the handover is
 written. Why: `docs/decisions/2026-10-08-planner-handover-counter.md`.
+
+**Write it at SETUP of the last batch, not after it merges, and say in the edition that its results are
+not in it.** That is the one asymmetry the change leaves: the final batch's figures land in the NEXT
+edition, which is already true of any batch still running when an edition is written, and `546` and
+`564` both met it. **Say so in the edition rather than implying coverage you do not have.**
 
 ### THE HANDOVER IS A DELTA, AND IT HAS A LENGTH TARGET
 
