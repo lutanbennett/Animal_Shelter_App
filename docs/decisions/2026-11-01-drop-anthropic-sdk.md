@@ -74,6 +74,14 @@ refuses a non-private address would also refuse a model server on another machin
 put to him in the `0.42.0` release round and filed on the backlog under *Security* either way. What it is
 **not** is a regression from this PR: the switch behaved this way before and after.
 
+**ANSWERED 2026-11-01 (Lutan): leave it.** He chose not to restrict the address, for the reason above: a
+check that refuses a non-private address would also refuse a model server on another machine he may
+legitimately want. This is an **accepted risk, not open work**: the backlog item that recorded it was
+closed on 2026-11-02 at his request, because an item nobody may act on only inflated the open count. Do
+not put it to him again. If it is ever built, the shape to consider is a check on the **host** in
+`ASSISTANT_LLM_BASE_URL` (private ranges, `localhost`, `.local`), not on the provider name, which is
+already free-form.
+
 ## What a user sees
 
 Nothing. `ASSISTANT_LLM_MODEL` is unset in every environment, so `createLlm()` raised
