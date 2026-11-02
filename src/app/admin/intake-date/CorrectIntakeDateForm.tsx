@@ -1,6 +1,7 @@
 "use client";
 
 import { useWriteForm } from "@/lib/use-write-form";
+import { DateInput } from "@/components/DateInput";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { correctIntakeDate } from "./actions";
 
@@ -27,10 +28,9 @@ export function CorrectIntakeDateForm({
       <input type="hidden" name="residentId" value={residentId} />
       <div className="flex flex-col gap-1">
         <label htmlFor="new-intake-date" className="text-sm font-medium text-muted">{s.newDate}</label>
-        <input
+        <DateInput
           id="new-intake-date"
           name="newDate"
-          type="date"
           required
           defaultValue={currentDate}
           className="rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
