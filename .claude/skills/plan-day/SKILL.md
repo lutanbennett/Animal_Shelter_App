@@ -607,6 +607,24 @@ is the planner's time, not the stream's band**, is already written there), *brow
 not the verification). The method is fine: the batch's other two streams, banded the same way, landed inside.
 One question was skipped.
 
+**NAMING A RISK IN THE BAND PARAGRAPH IS NOT PRICING IT – AND A QUESTION WHOSE ANSWER IS *STRUCTURE* IS A
+BUILD.** Added 2026-11-02 on two overruns in one plan, both the planner's. `resident-tags-schema` went
+**+24%** (197,992 against 125–160k) and `resident-tags-app` **+32%** (357,695 against 210–270k), and
+`.plan-day.md` had **predicted the first in words while banding against it**: *"the genuine unknown is
+deliverable 5, the note-identity key, which is design work the planner deliberately did not do."* It was
+then banded as a schema PR with nothing left to discover plus proof.
+
+**What that open question actually cost, because the answer was structure rather than a verdict:** a new
+registry table, eleven rows in it, a trigger (no foreign key can tie a row id across many tables) and two
+functions for the policies to call. **That is a second schema object with its own policy surface.**
+
+**So the existing pair of rules gains a third case.** A question the stream must SETTLE bands near the
+ordinary stream; one needing an INSTRUMENT does not; **and one whose answer is a TABLE, A TRIGGER OR A
+FUNCTION bands as the shape PLUS that structure.** **The test before banding any open question you wrote
+into a brief: can it be answered in a sentence in the decision file, or only by adding something to the
+database?** If the latter, price the something. **And read your own band paragraph back – if it names
+an unknown, the band must contain it.**
+
 **WHEN A STREAM MUST RECONCILE TWO EXISTING SOURCES OF TRUTH, BAND IT ON THE HARDER SIDE, AND EXPECT THE
 DISAGREEMENTS IT FINDS TO BE THE WORK.** Added 2026-10-31 on three readings, **superseding the judgement rule
 marked below.** Documentation against code, a document against a database, a card against what a page
@@ -676,12 +694,13 @@ Two axes that genuinely do cost, both measured 2026-10-20:
 | Schema with a public write path / RLS to get right | **145–185k** | 159,976 |
 | Replacing an existing screen | **155–200k** | 169,220 |
 | Reads very widely and edits many call sites | **185–250k** | 200,612 — **reading widely is cheap; editing many call sites is what cost** |
-| **Creates a new surface people submit data through** | **200–270k** | 235,561 |
+| **Creates a new surface people submit data through** | **200–270k** | 235,561 – **one** new surface. For a surface wired into SEVERAL EXISTING forms use the row below |
+| **One new surface REPLICATED ACROSS N EXISTING FORMS – band the surface once, then add per form** | **the row above + ~15–20k per existing form** | 357,695 – `resident-tags-app` (2026-11-02), banded 200–270k and **+32% over**. One `#` tag picker, then **wired into NINE existing note boxes and their nine save actions**, each with its own activity and save path, plus a *Mentioned in* list, a shared text module with tests, and three card-only logins driven on dev. Its `Messages` was **254,040**, four times its batch neighbours', with `compacted=no` – so a genuine build, not a remainder. **The question that picks this row over the one above: how many EXISTING forms must change to offer the new thing?** One screen is the row above; nine is a different job. **The planner had the number – its own brief listed the eleven boxes in a table – and banded that table as one surface** |
 | **A new surface that ALSO DELETES what it replaces** | **260–330k** | 290,888 — `units-of-measure-app` (2026-10-23), banded 200–270k and **+8% over**. A Settings CRUD screen, **plus** eight call sites moved onto the table, **plus** deleting the two hard-coded lists and their dictionary entries, **plus** both dictionaries, the manual and real browser checks. **The wide deletion is a SECOND job, not a detail of the first** — ask whether the new surface retires something, and if it does, use this row rather than the one above |
 | Builds an instrument / transport path from nothing | **250–320k** | 286,350 — **one reading only, and nothing since has belonged in it. Do not widen a stream into this row because its behaviour sounds new** |
 | **Harness triage — band the COUNT, not the family** | **~85k + ~20k per harness; ~15k each when one cause explains them all** | Measured twice on 2026-10-26, which is why this row exists. Ten database harnesses with mixed causes: **285,783** — 20.1k each above the floor, banded 190–240k as *"a harness family"* and **+19% over**. Eight diets/stock harnesses sharing ONE cause (a rename) **plus** a new production check written from nothing: **206,138** — 15.1k each with the extra script inside that, banded 170–220k and **comfortably inside**. **The count is the unit of work; the framing is not.** Ask how many harnesses, then ask whether one cause explains them — a shared cause discounts about a quarter, because the second harness onwards is a re-run rather than a diagnosis. **AND BAND THE HARNESSES THAT ARE RED, NOT THE HARNESSES THE ITEM NAMES** (added 2026-10-27): a batch briefed as ten found **five already green**, fixed the day before by commits the item did not know about, so the item's list was stale by half. **Run the harnesses as step zero — that is the scope list.** It still cost **228,126** against a 255–310k band because **two of the five were INVESTIGATIONS rather than fixes** (one ran 600 probes across two runs to establish that a harness is a snapshot tool with ~6% run-to-run noise). **Price a diagnosis above a repair**, and expect a harness whose fixtures lean on a role being removed to fail for that reason rather than because the app is wrong. **AND A RESTATE-OR-RETIRE ROW IS A THIRD OF THE PRICE OF A DIAGNOSED ONE: ~6.8k, NOT ~20k** (added 2026-10-29). A stream resolved **eight rows for 54,505 tokens above the floor** — three retired with reasons, three repaired or restated, one never broken, one filed as an app fault. **Every figure in this row above was measured on rows whose causes each had to be DIAGNOSED**, which is the expensive half. Once the cause is understood — a column dropped, a role model removed — restating a check against the new shape, or retiring it with a reason, is cheap and repetitive. **So band a restate batch at `floor + ~7k x rows` and reserve ~20k a row for genuine diagnosis.** The question that picks the rate is: **does this stream have to work out WHY each row is red, or has someone already told it?** |
 | **A GUARD READ — half the restate rate, because someone else already localised it** | **~3.6k per row above the floor** | Measured 2026-10-30 (#1103): **25 rows, 90,107 above its own floor**, of which 16 were converted to `await exitWith(n)` with an `else` around what follows, **8 were left alone with a written reason** (no network call, so no libuv trap) and 1 was already a comment. **"Left alone with a reason" was a third of the work and is a correct verdict** — a brief implying every row must change gets worse answers. **Why it is so much cheaper than the ~6.8k restate rate and the ~20k diagnosis rate: `docs/decisions/2026-10-30-harness-exit-triage.md` had already localised each decision to ONE call site.** So the question that picks the rate is **not** how mechanical the edit looks but **who did the localising** — a row you must first find is a diagnosis, a row someone has pointed at is a read. **And set a hard boundary in rows**: 51 rows at this rate does not finish in one session, 25 does |
-| **An AUDIT or a REPORT over a wide but shallow surface — band it NEAR THE FLOOR whatever its size** | **145–190k** | **PROMOTED FROM HANDOVER `438`** on five readings across two rounds. **The test, and it is one question: if everything here turns out to be FINE, what work is left?** If the answer is "write the list and say so", it is a report. Banded for the SIZE of the surface, three landed 43%, 21% and 17% UNDER (`harness-sweep-batch-6`, `buttons-sweep-4-operations`, `policy-triage-1`, 2026-10-28 morning). Banded as REPORTS the same day, two landed on the bottom edge: `policy-triage-2` **144,682** against 145–185k (ten tables, all deliberate) and `buttons-sweep-5-money-content` **151,124** against 150–190k (five areas audited, one gap). **A sweep that expects to find little is an audit, and an audit is cheap.** Ten harnesses, twenty tables, five areas of button checks: the count of things to LOOK AT does not move this row; only a real repair does |
+| **An AUDIT or a REPORT over a wide but shallow surface — band it NEAR THE FLOOR whatever its size** | **145–190k** | **PROMOTED FROM HANDOVER `438`** on five readings across two rounds. **The test, and it is one question: if everything here turns out to be FINE, what work is left?** If the answer is "write the list and say so", it is a report. Banded for the SIZE of the surface, three landed 43%, 21% and 17% UNDER (`harness-sweep-batch-6`, `buttons-sweep-4-operations`, `policy-triage-1`, 2026-10-28 morning). Banded as REPORTS the same day, two landed on the bottom edge: `policy-triage-2` **144,682** against 145–185k (ten tables, all deliberate) and `buttons-sweep-5-money-content` **151,124** against 150–190k (five areas audited, one gap). **A sweep that expects to find little is an audit, and an audit is cheap.** Ten harnesses, twenty tables, five areas of button checks: the count of things to LOOK AT does not move this row; only a real repair does. **CONFIRMED AGAIN 2026-11-02, and this time against a DELIBERATE over-band: `control-listing-sweep-2` was given 160–200k rather than this row *because its named list was long* (~22 addresses) and came in at 138,872 – under even this row's floor.** Third sweep running to land under an audit band. **So the LENGTH OF THE LIST does not move it either; stop widening for it.** **The caveat, which is the honest half: all three of those sweeps found almost nothing, so nothing was repaired. An audit that finds real gaps is still untested, and if one comes in over, that is why** |
 | Quick win | 110–170k | 1–3 files; screenshots cost far less than first assumed. **Left as written on Lutan's ruling, 2026-10-11** — the planner had been quoting 130–200k while both measured quick wins (129,320 · 135,901) sat *inside* this band. **The band was right and the quoting was high. Do not reopen it** |
 | Schema PR, single file | **~140–155k** | measured 6×: `cashflow-forecast-function` 139,791 · `drop-leftovers-schema` 143,030 (three unrelated items in one file) · `receipt-issuer-server-side` 143,678 · `map-rooms-schema` 151,273 · `role-floor-schema` 231,297 · `perm-functions-schema` 284,248 |
 | **Schema PR with code — SPLITS, do not quote one band** | **160–185k** a view or function rewrite plus a named handful of readers · **230–285k** permissions work across many call sites | Corrected 2026-10-21. `diets-sheet-schema` rewrote `special_diet_list`, changed `record_intake` and moved **four named app files** onto recipes: banded 230–285k off the two readings below and came in at **166,331, 28% UNDER.** Those two readings (`role-floor-schema`, `perm-functions-schema`) were **permissions** changes rippling through many call sites, which is a different job. **Ask how many readers the item NAMES**: a named handful is the lower band. **The permissions half now has a third reading and held:** `card-decisions-schema` (2026-10-26) moved four card reads onto narrower grants, added a card and changed two delete policies across many policy call sites — banded 230–285k, came in at **295,409, +3.7% over**, which is the band working rather than failing |
@@ -1060,6 +1079,54 @@ check the PR or the diff before telling him a stream is done, and **check its wi
 "I stopped because the session grew large"** — the stop-and-hand-over rule in the briefs is for a session
 well past halfway, and on 2026-11-01 two streams stopped short of a PR at 20% and 13%, which is simply
 premature.
+
+### ONE GO FOR ALL NINE: he triggers the PLAN, not each batch
+
+**Lutan, 2026-11-02: *"can we set it up so I give you a single go for all 9 streams and you sequence
+them in the correct order rather than me having to start you off for each batch"*.** Until then each
+batch needed a fresh typed message from him, so a plan of nine cost him **three** goes, and the second
+and third were pure ceremony: the plan was already decided and he was only supplying the trigger.
+
+**WHAT THIS CHANGES: ONLY WHO PULLS THE TRIGGER. Nothing about the sequencing, the cap or the batches.**
+
+- **Still three batches of three, still one batch's worktrees at a time.** `CLAUDE.md` caps live
+  worktrees at two or three because merging is the bottleneck. **"A single go for all nine" is NEVER a
+  licence to create nine worktrees**, and a future planner reading his words that way has misread them:
+  the whole request is that *the planner* sequences them.
+- **Every ordering rule in step 4 still decides the order** – schema before its app half, one
+  migration a batch, one dictionary stream a batch, a census never beside a stream editing what it
+  counts. **He asked for the sequencing to be the planner's job, which it already was; what he removed
+  is his own three-times-a-plan involvement.**
+- **The plan is still PRESENTED and batch 1 still CONFIRMED** (step 5's one `AskUserQuestion`). That is
+  his steer on priorities and he did not ask to lose it. Answering it happens inside the turn his own
+  message opened, so it satisfies the turn condition below.
+
+**HOW IT WORKS, AND THE ONE THING THAT COULD STOP IT.** The section above says a start is refused on a
+turn an automated event began – and a batch finishing reaches the planner as exactly that, a
+`<side-sessions-event>`. **But there is a carve-out for this case: a `<side-sessions-event>` turn that
+follows the user's own turn (or another such turn) MAY start a session for a step he asked to have in
+its own session.** A chain of those events traces back to his single go, so batches 2 and 3 are startable
+on them.
+
+**TREAT THAT AS A HYPOTHESIS UNTIL A BATCH HAS ACTUALLY STARTED THAT WAY.** The carve-out is written
+down; **nobody has used it to start a batch.** This file's own rule applies to the planner's mitigations
+as much as to a brief's: **check whether it FIRED, and write down which way it went.**
+
+**AND THE FALLBACK IS EXACTLY WHAT HE HAS TODAY, SO THE DOWNSIDE IS ZERO:** if the start is refused, say
+so in **one line**, ask for a go-ahead, and **retry the identical call** on his reply – which has
+worked both times it was needed. **Do the whole round's other work first** (actuals, findings, sync,
+worktrees, briefs) so his one word is the only thing outstanding.
+
+**WHAT STILL STOPS THE CHAIN, AND MUST: A DECISION THAT IS HIS.** One go is a trigger, not a mandate to
+drive through a blocker. **If a batch's results raise something that genuinely blocks the next batch**
+– a question only he can answer, a fault that makes the next item wrong, a red nobody has read
+– **stop and ask, exactly as before.** Say in one line that the chain is paused and on what. **A
+single go buys him fewer interruptions, not fewer answers**, and steamrolling a blocker to honour it
+would be the worst possible reading of the instruction.
+
+**The counter and the handover are unchanged:** the counter still counts streams set up in the plan, and
+the handover is still written when the plan's **last batch is set up** – which under this mode
+happens without him typing anything, so **say in the edition that nobody asked for it.**
 
 ### Every brief ends with this block, verbatim
 
