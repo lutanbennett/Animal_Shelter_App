@@ -226,7 +226,7 @@ empty signature quietly passing.
 A red `test-plan` that says what it is waiting for is a red people act on. An
 illegible one is a red people learn to ignore.
 
-- [ ] manual list — pending: a person must provoke a real "can't tell" on dev (stop the Pi write mid-save) and see the reload offer
+- [ ] manual list — n/a: see the Manual verification line; a person must provoke a real "can't tell" on dev (stop the Pi write mid-save) and see the reload offer
 
 Manual verification by: pending: browser press of Save twice after a real "can't tell"; new Thai strings need bilingual read
 
