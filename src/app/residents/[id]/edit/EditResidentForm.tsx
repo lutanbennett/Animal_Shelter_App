@@ -83,6 +83,7 @@ export function EditResidentForm({
   enclosures,
   ageNow,
   canTagNotes = false,
+  canTagMoveNotes = false,
   noteTags = { temperament_notes: [], past_story_notes: [], behaviour_notes: [] },
 }: {
   resident: EditableResident;
@@ -93,6 +94,8 @@ export function EditResidentForm({
   canReturnFromCarer?: boolean;
   /** Card-derived: the save asks resident.record, and so does tagging in these notes. Default false. */
   canTagNotes?: boolean;
+  /** canTagNote(perms, ["placement.move"]): the move asks placement.move. Default false. */
+  canTagMoveNotes?: boolean;
   /** The residents already tagged in each note, so editing keeps their links. */
   noteTags?: Record<"temperament_notes" | "past_story_notes" | "behaviour_notes", NoteTag[]>;
   zones: ZoneOption[];
@@ -462,12 +465,15 @@ export function EditResidentForm({
                     >
                       {t.common.notes}
                     </label>
-                    <textarea
+                    <TagNoteField
                       id="moveNotes"
                       name="moveNotes"
                       rows={2}
                       placeholder={t.residents.move.fields.notesPlaceholder}
                       className={textareaClass}
+                      canTag={canTagMoveNotes}
+                      initialTags={[]}
+                      selfId={resident.id}
                     />
                   </div>
                 </div>

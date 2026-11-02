@@ -1,3 +1,4 @@
+import { stripTagMarkup } from "@/lib/note-tags/text";
 import type { Metadata } from "next";
 import { PUBLIC_FRAME } from "@/lib/site/frame";
 import { notFound } from "next/navigation";
@@ -78,7 +79,9 @@ export default async function JourneyPage(props: PageProps<"/adopt/journey/[id]"
     year: "numeric",
   });
   const bio = localizedField(locale, card?.bio, card?.translations, "bio");
-  const temperament = localizedField(locale, card?.temperament_notes, card?.translations, "temperament_notes");
+  const temperament = stripTagMarkup(
+    localizedField(locale, card?.temperament_notes, card?.translations, "temperament_notes"),
+  );
 
   return (
     <main className="flex flex-1 flex-col font-site text-site-ink">

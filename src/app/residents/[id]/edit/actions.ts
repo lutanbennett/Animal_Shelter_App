@@ -22,7 +22,7 @@ import { estimatedAgeNow, todayIso } from "@/lib/format";
 import { moveResidentToEnclosure } from "@/lib/placements/move";
 import { refreshDeceasedArchiveIfNeeded } from "@/lib/archive/refresh-deceased-archive";
 import { setResidentProfilePhoto } from "@/lib/residents/profile-photo";
-import { noteTagFailure, syncNoteTags } from "@/lib/note-tags/sync";
+import { noteTagFailure, syncNoteTags, syncNoteTagsOrMessage } from "@/lib/note-tags/sync";
 
 export type EditResidentState = ActionRefusal | undefined;
 
@@ -244,6 +244,15 @@ export async function updateResident(
         notes: str(formData, "moveNotes"),
       });
       if ("error" in moved) return { ok: false, error: moved.error };
+      const moveTagFailure = await syncNoteTagsOrMessage(
+        supabase,
+        { table: "placement_history", column: "notes", rowId: moved.id, residentId },
+        formData,
+        "moveNotes",
+        str(formData, "moveNotes"),
+        t.residents.tags,
+      );
+      if (moveTagFailure) return { ok: false, error: moveTagFailure };
       revalidatePath(`/residents/${residentId}/housing`);
       revalidatePath("/enclosures", "layout");
     }

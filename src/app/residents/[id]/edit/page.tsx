@@ -2,6 +2,7 @@ import { requireFullResident } from "@/lib/residents/who-and-where";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { canTagNote } from "@/lib/note-tags/can";
 import { loadNoteTags, noteKey } from "@/lib/note-tags/load";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -138,6 +139,7 @@ export default async function EditResidentPage(
           canReturnFromHospital={can(perms, "placement.hospital")}
           canReturnFromCarer={can(perms, "placement.rehome")}
           canTagNotes={can(perms, "resident.record")}
+          canTagMoveNotes={canTagNote(perms, ["placement.move"])}
           noteTags={{
             temperament_notes: noteTagMap.get(noteKey("residents", "temperament_notes", resident.id)) ?? [],
             past_story_notes: noteTagMap.get(noteKey("residents", "past_story_notes", resident.id)) ?? [],
