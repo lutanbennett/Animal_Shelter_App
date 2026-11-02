@@ -131,6 +131,21 @@ jobs:
           node-version: 22
       - run: node scripts/check-migration-numbers.mjs --base origin/${{ github.base_ref }}
 
+  # A `_th` column a migration adds must be registered in translatable_labels (or named as deliberate in the script), or
+  # no manager can translate it from Management -> Translations. Blocking: it reads only the migration files, so it
+  # cannot fail for a reason outside the pull request. See docs/decisions/2026-11-02-translations-unlisted-ci-gate.md.
+  translations-unlisted:
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.docs-only != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+      - run: node scripts/check-translations-unlisted.mjs
+
   # A migration added on this branch must not create a policy that names a role
   # (current_user_role() or an app_role literal): policies ask what you may do,
   # not who you are. Static, reads only the added SQL files, so it needs no
