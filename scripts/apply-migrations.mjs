@@ -21,6 +21,10 @@
 //       # rule; 0077 is the catch-up grant) — everything after is still checked.
 //       # Whether those early objects end up with the right grants is NOT
 //       # verified by this (docs/decisions/2026-10-22-all-history-flag.md).
+//   node scripts/apply-migrations.mjs --forget 0302_old_name.sql
+//       # dev (test) only: delete ONE schema_migrations row whose file is not on origin/main
+//       # (a migration applied under a number and renumbered before merge). Refuses production/uat,
+//       # a name with a file on origin/main, and a name that is not recorded. Touches nothing else.
 //   node scripts/apply-migrations.mjs --baseline 0027_prescriptions.sql
 //       # mark every file up to and including that one as applied WITHOUT
 //       # running it — for a database that was migrated by hand before this
@@ -96,6 +100,20 @@ const uptoIndex = args.indexOf("--upto");
 const upto = uptoIndex >= 0 ? args[uptoIndex + 1] : null;
 if (uptoIndex >= 0 && (!upto || upto.startsWith("--"))) {
   console.error("--upto needs a migration filename, e.g. --upto 0180_something.sql");
+  process.exit(2);
+}
+const forgetIndex = args.indexOf("--forget");
+const forget = forgetIndex >= 0 ? args[forgetIndex + 1] : null;
+if (forgetIndex >= 0 && (!forget || forget.startsWith("--"))) {
+  console.error("--forget needs a migration filename, e.g. --forget 0302_old_name.sql");
+  process.exit(2);
+}
+if (forget && (statusOnly || drift || dryRun || allHistory || baseline || upto)) {
+  console.error("--forget stands alone: give it no other mode flag.");
+  process.exit(2);
+}
+if (forget && envName !== "test") {
+  console.error(`--forget is for the dev database only (--env test); refusing ${envName}. Nothing was sent to any database.`);
   process.exit(2);
 }
 const readOnly = statusOnly || drift;
@@ -268,6 +286,24 @@ if (drift) {
   }
   console.log(gaps ? `Drift: ${envName} and origin/main disagree.` : `No drift: ${envName} matches origin/main.`);
   process.exit(gaps ? 1 : 0);
+}
+
+if (forget) {
+  if (mainBlobs.has(forget)) {
+    console.error(`--forget ${forget}: that file IS on origin/main (${mainSha}), so the row is not an orphan. Nothing was deleted.`);
+    process.exit(2);
+  }
+  if (!fetched.ok) {
+    console.error("--forget: could not fetch origin/main, so an orphan cannot be proved. Nothing was deleted.");
+    process.exit(2);
+  }
+  if (!applied.has(forget)) {
+    console.error(`--forget ${forget}: no such row in schema_migrations. Nothing was deleted.`);
+    process.exit(2);
+  }
+  await query(`delete from schema_migrations where filename = ${literal(forget)};`);
+  console.log(`Deleted one schema_migrations row: ${forget} (no file of that name on origin/main ${mainSha}).`);
+  process.exit(0);
 }
 
 if (baseline) {
