@@ -6,7 +6,8 @@
 // Why it exists: registering a label is a hand step nobody is told about, and since 0166 it was missed twelve times, so
 // twelve columns were invisible to Management -> Translations. This reads only the repo, so CI can run it on every pull
 // request and it blocks the one that adds an unregistered column. The live-database version is
-// `check-production.mjs translations-unlisted`; it catches a column that arrived any other way, but only when a person runs it.
+// `node scripts/check-production.mjs translations-unlisted [--env test]`; it shares DELIBERATE (imported, not copied), fails on a
+// gap, and catches a column that arrived any other way, but only when a person runs it (release procedure, section 5).
 //
 // Fails (exit 1) on any `_th` column declared by a migration that no translatable_labels row names and that is not in
 // DELIBERATE. It never reports and passes: a gap is a failure.
@@ -44,6 +45,12 @@ export function scan(files) {
   }
   const unlisted = [...declared].filter(([k]) => !registered.has(k) && !(k in DELIBERATE));
   return { declared, registered, unlisted };
+}
+
+/** The live half's filter: `rows` are `table.col_th` names the database holds that no translatable_labels row names.
+ * Splits them by the same DELIBERATE map the file check uses (check-production.mjs translations-unlisted). */
+export function liveUnlisted(rows) {
+  return { unlisted: rows.filter((k) => !(k in DELIBERATE)), deliberate: rows.filter((k) => k in DELIBERATE) };
 }
 
 export function load(dir) {
