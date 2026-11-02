@@ -54,7 +54,8 @@ export type NewCardKey =
   | "view_cashflow"
   | "record_vet_care"
   | "record_microchip"
-  | "adoption_news";
+  | "adoption_news"
+  | "correct_intake_date";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -346,6 +347,9 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   },
   record_microchip: { includes: ["view_residents"], bundle: [{ activity: "resident.microchip" }], opens: "/residents" },
   adoption_news: { includes: ["view_residents"], bundle: [{ activity: "resident.adoption_news", level: "edit" }], opens: "/residents" },
+  // 0302 (Lutan, 2026-11-02): correct a resident's intake date, moving the four dates the intake stamped with it. It includes
+  // view_residents so the page can find a resident by name or code. Who holds it is assigned in Who does what.
+  correct_intake_date: { includes: ["view_residents"], bundle: [{ activity: "resident.correct_intake_date" }], opens: "/admin/intake-date" },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */
@@ -383,6 +387,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   record_vet_care: (t) => t.appHome.cards.recordVetCare,
   record_microchip: (t) => t.appHome.cards.recordMicrochip,
   adoption_news: (t) => t.appHome.cards.adoptionNews,
+  correct_intake_date: (t) => t.appHome.cards.correctIntakeDate,
 };
 
 export const CARDS: Record<CardKey, Card> = {
