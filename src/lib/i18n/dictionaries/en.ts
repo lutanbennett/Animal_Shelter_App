@@ -65,7 +65,7 @@ const en = {
     // version of the app and a reload fixes it.
     reloadToSave: "This page needs reloading before it can save. Reload it and try again.",
     // Any Drive call whose token or client is dead (drive-errors.ts).
-    driveNotConnected: "Photo storage is not connected — tell an admin.",
+    driveNotConnected: "Photo storage is not connected. That is a server setting no card can change, so tell whoever looks after the server. The System status page shows what is wrong.",
     driveFailed: "Google Drive didn't accept that. Try again in a minute.",
     system: "(system)",
     name: "Name",
@@ -4882,7 +4882,7 @@ const en = {
         unsupportedFileType: (type: string) => `That file type (${type}) is not an image this app accepts.`,
         fileTooLarge: "Larger than 15 MB — choose a smaller copy.",
         uploadFailed: "The image could not be saved to Google Drive. Try again.",
-        driveNotConfigured: "Google Drive is not set up on this server. Ask an admin.",
+        driveNotConfigured: "Google Drive is not set up on this server. That is a server setting no card can change, so tell whoever looks after the server.",
         notAllowed: "Your role cannot change the meme library.",
         saveFailed: "The meme could not be saved. Try again.",
         notFound: "That meme is no longer here.",
@@ -5005,7 +5005,7 @@ const en = {
     removeConsequence: "The file is deleted from the shelter's Google Drive. It stays in Drive's bin for 30 days.",
     removeConfirm: "Remove photo",
     removed: "Photo removed.",
-    driveLeftBehind: "The photo is removed here, but its file is still in Google Drive. Ask an admin to delete it there.",
+    driveLeftBehind: "The photo is removed here, but its file is still in Google Drive. Anyone who can open the shelter's Google Drive folder can delete it there.",
     /** Photos tagged to an enclosure by someone who did not know the animal (0218). */
     pending: {
       heading: (n: number) => (n === 1 ? "1 photo tagged to an enclosure" : `${n} photos tagged to an enclosure`),
@@ -5049,7 +5049,7 @@ const en = {
         residentGone: "One of the residents could not be found. Nothing was changed.",
         driveFailed: "Google Drive did not answer. Nothing was changed. Try again.",
         assignFailed: "The photo could not be assigned. Nothing was changed. Try again.",
-        leftInUnsorted: "The photo is assigned, but its file is still in the Unsorted folder in Google Drive. The photo shows as normal. Ask an admin to move it.",
+        leftInUnsorted: "The photo is assigned, but its file is still in the Unsorted folder in Google Drive. The photo shows as normal. Anyone who can open the shelter's Google Drive folder can move it.",
         discardFailed: "The photo could not be discarded. Nothing was changed.",
         reassignFailed: "The photo could not be moved. Nothing was changed.",
         leftInOldFolder: "The photo is moved here, but its file is still in the old resident's folder in Google Drive. The photo shows as normal.",
@@ -6990,7 +6990,7 @@ const en = {
         "This is the profile photo. Choose a different profile photo before moving it to Medical.",
       moveFailed: "Couldn't move the photo in Google Drive. Try again.",
       moveIncomplete:
-        "The photo moved in Google Drive, but saving its new folder failed — Drive and the record now disagree. Try moving it again, or tell an admin.",
+        "The photo moved in Google Drive, but saving its new folder failed — Drive and the record now disagree. Try moving it again, or tell someone who can open the shelter's Google Drive folder.",
     },
     filter: {
       label: "Show photos",
@@ -7101,7 +7101,7 @@ const en = {
       senderHint: "The adopter is chosen for you. Change it if someone else in the family sent it.",
       channel: "Came in by",
       note: "What they said",
-      staffOnlyBadge: "Internal only. Never published.",
+      internalOnlyBadge: "Internal only. Never published.",
       publicBadge: "Goes on the website",
       publish: {
         legend: "Publish to the website",
@@ -7647,7 +7647,7 @@ const en = {
     joinLine: "Run a business and want to help?",
     joinLink: "Become a Shelter Friend",
     /** Signed-in staff only, on /friends: why a profile they saved isn't here. */
-    staffDrafts: {
+    draftsNotice: {
       label: "Only signed-in users see this",
       count: (n: number) =>
         n === 1
@@ -7655,7 +7655,7 @@ const en = {
           : `${n} Shelter Friend profiles are drafts, so they aren't shown here.`,
       publishFrom: "Publish from",
       manageLink: "Management → Shelter Friends",
-      askManager: "Publishing needs the permission \"Shelter Friends: add, publish, unpublish\".",
+      needsPublishPermission: "Publishing needs the permission \"Shelter Friends: add, publish, unpublish\".",
     },
     /** A card whose profile has no prose yet still says why it is there. */
     fallbackBlurb: "A friend of the shelter.",

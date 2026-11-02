@@ -100,18 +100,18 @@ export default async function FriendsPage() {
 
         {drafts && (
           <p className="rounded border border-dashed border-primary/40 bg-background px-4 py-3 text-sm text-foreground">
-            <span className="block text-xs font-medium text-muted">{f.staffDrafts.label}</span>
-            {f.staffDrafts.count(drafts.count)}{" "}
+            <span className="block text-xs font-medium text-muted">{f.draftsNotice.label}</span>
+            {f.draftsNotice.count(drafts.count)}{" "}
             {drafts.canPublish ? (
               <>
-                {f.staffDrafts.publishFrom}{" "}
+                {f.draftsNotice.publishFrom}{" "}
                 <Link href="/management/shelter-friends" className="text-primary hover:underline">
-                  {f.staffDrafts.manageLink}
+                  {f.draftsNotice.manageLink}
                 </Link>
                 .
               </>
             ) : (
-              f.staffDrafts.askManager
+              f.draftsNotice.needsPublishPermission
             )}
           </p>
         )}
