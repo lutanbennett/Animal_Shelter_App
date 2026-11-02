@@ -99,6 +99,7 @@ export const WRAPPED_WRITE_PATHS = [
   "/admin/enclosures",
   "/admin/facility-map",
   "/admin/immunization-types",
+  "/admin/intake-date",
   "/admin/medications",
   "/admin/procedure-types",
   "/admin/recent-changes",

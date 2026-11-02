@@ -457,6 +457,34 @@ const manual: Manual = {
           ],
         },
         {
+          id: "correct-intake-date",
+          title: "Correcting a resident's intake date",
+          activity: "resident.correct_intake_date",
+          path: "Settings → Correct an intake date",
+          intro:
+            "If an intake date was typed wrongly, this page fixes it everywhere at once. The date moves on the resident, on the first place they lived, on the starting diet, on the intake weight and on the date the age was estimated, in one go, so the record never shows a resident living somewhere or eating something before they arrived.",
+          steps: [
+            "Open Settings and tap Correct an intake date. It needs the card \"Correct an intake date\".",
+            "Type the resident's name or code (R-0042) and tap Find, then tap the right resident.",
+            "The page shows the intake date now, and a list of the records that will move with it. Check it is the resident you mean.",
+            "Choose the corrected date and tap Save the corrected date. The page confirms the old and new date.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Only the records the intake made move: the first place, and the diet and weight still dated the old intake date. A later diet change, move, weighing or clinic visit is never touched.",
+            },
+            {
+              kind: "note",
+              text: "If the new date would fall after a later move, diet, weight or clinic visit, the save is refused and the message names that record. Correct or remove it first, or choose an earlier date. A date in the future is refused too.",
+            },
+            {
+              kind: "note",
+              text: "The place the resident came from keeps its own date, because other residents can share it.",
+            },
+          ],
+        },
+        {
           id: "microchip",
           title: "Scanning a microchip",
           activity: "resident.microchip",

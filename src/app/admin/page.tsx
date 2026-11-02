@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Activity, Grid3x3, History } from "lucide-react";
+import { Activity, CalendarClock, Grid3x3, History } from "lucide-react";
 import { DriveStatus } from "./DriveStatus";
 import { can } from "@/lib/permissions/can";
 import { canOpen, routeFor } from "@/lib/permissions/routes";
@@ -86,6 +86,13 @@ export default async function AdminPage() {
       label: t.nav.diets,
       description: t.admin.landing.tiles.diets,
       icon: SECTION_ICONS.diet,
+      phoneNote: t.largerScreen.tileLabel,
+    },
+    {
+      href: "/admin/intake-date",
+      label: t.nav.intakeDate,
+      description: t.admin.landing.tiles.intakeDate,
+      icon: CalendarClock,
       phoneNote: t.largerScreen.tileLabel,
     },
     {
