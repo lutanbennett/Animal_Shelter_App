@@ -286,7 +286,7 @@ export function AdoptionUpdateForm({
         <label htmlFor="note" className="text-sm font-medium text-muted">
           {a.form.note}{" "}
           <span className="rounded-full bg-surface-hover px-2 py-0.5 text-xs font-semibold text-foreground">
-            {a.form.staffOnlyBadge}
+            {a.form.internalOnlyBadge}
           </span>
         </label>
         <TagNoteField
