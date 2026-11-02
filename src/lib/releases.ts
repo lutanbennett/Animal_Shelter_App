@@ -89,6 +89,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "On Who does what, the box \"Setup lists\" now says everything it hands over: the immunization, procedure and blood-test lists and frequencies, and also the Medications, Diets and Units lists. Before, the name mentioned only the first three, so it was easy to give a role the box without realising it also opened the other three. Nothing about who can do what has changed.", cards: ["who_does_what"] },
   "The messages under a date or time box when what you typed is not a real date, is outside the allowed dates, or is not a 24-hour time now appear in Thai when the app is in Thai. Before, those three were always in English.",
 ];
 
