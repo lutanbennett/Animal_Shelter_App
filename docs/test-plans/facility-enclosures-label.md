@@ -11,7 +11,7 @@
 | PR | see GitHub |
 | Tested by / date | Claude / 2026-11-02 |
 | Carries a migration? | no |
-| Tested at SHA | c1483c7e |
+| Tested at SHA | 8358f6cc |
 
 ## 1. Scope and risk
 
