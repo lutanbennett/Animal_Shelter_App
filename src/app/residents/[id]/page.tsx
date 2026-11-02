@@ -266,14 +266,12 @@ export default async function ResidentPage(
   // this page and must not learn a meme exists here, so the gate is pinned on this list as it is on the library
   // (docs/decisions/2026-10-18-meme-library-app.md). null = no list drawn at all.
   // Hashtag links (resident_note_tags): the names tagged in this resident's own notes, and the notes on other
-  // residents that tag this one. Only a login holding resident.record at read can read either (the policies ask it).
-  const canSeeLinks = can(perms, "resident.record", "read");
-  const [noteTagMap, mentions] = canSeeLinks
-    ? await Promise.all([
-        loadNoteTags(supabase, id),
-        loadSourceLabels(supabase).then((labels) => loadMentions(supabase, id, labels)),
-      ])
-    : [new Map(), []];
+  // residents that tag this one. No page-level check on purpose: the link policies ask resident.record at read and the
+  // note's own read activity, so a login without them gets no rows (Mentioned in then draws nothing).
+  const [noteTagMap, mentions] = await Promise.all([
+    loadNoteTags(supabase, id),
+    loadSourceLabels(supabase).then((labels) => loadMentions(supabase, id, labels)),
+  ]);
   const ownNoteTags = Object.fromEntries(
     ["behaviour_notes", "temperament_notes", "past_story_notes"].map((c) => [c, noteTagMap.get(noteKey("residents", c, id)) ?? []]),
   );

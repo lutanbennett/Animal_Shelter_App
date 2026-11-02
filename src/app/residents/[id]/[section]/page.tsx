@@ -7,7 +7,6 @@ import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { sectionRead } from "@/lib/residents/section-reads";
 import { loadNoteTags, noteKey } from "@/lib/note-tags/load";
-import type { NoteTag } from "@/lib/note-tags/text";
 import { requireFullResident } from "@/lib/residents/who-and-where";
 import { residentPhotoSelect } from "@/lib/adoption-updates/options";
 import { type MedicalArchiveKind } from "@/lib/medical-archive/kinds";
@@ -148,8 +147,9 @@ export default async function ResidentSectionPage(
     );
 
 
-  // Hashtag links written on this resident's notes; only a login holding resident.record at read can read them.
-  const tagMap = can(perms, "resident.record", "read") ? await loadNoteTags(supabase, id) : new Map<string, NoteTag[]>();
+  // Hashtag links written on this resident's notes. The link policies decide which a login may read (the note's own
+  // read activity and resident.record), so a login without them simply gets none.
+  const tagMap = await loadNoteTags(supabase, id);
 
   const ctx: SectionContext = {
     id,
