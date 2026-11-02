@@ -1,123 +1,120 @@
-# Planner handover — edition `573`, 2026-11-02
+# Planner handover — edition `582`, 2026-11-02
 
-**A delta over `564`, written the same day and deliberately early, because the counter changed.** It
-carries **batch 2's results** — which `564` could not, having been written while batch 2 ran — and
-batch 3's setup. Batch 1 is in `564`.
+**A delta over `573`.** It carries the **previous plan's batch 3** (which `573` could not, having been
+written while that batch ran), **this plan's batches 1 and 2 in full**, and **batch 3's setup**.
 
-> **ONE PLAN IS ONE HANDOVER NOW. Lutan, 2026-11-02: *"can we sync these counters up to avoid
-> confusion"*.** The counter no longer counts to nine on its own; it counts streams set up **in the
-> current plan** and the edition is written when the plan's **last batch** is set up.
-
-> **AND THE BAND LESSON OF THE ROUND: a brief that says "a recorded decision is a complete outcome"
-> has REMOVED the expensive half — band it as an audit, not as the change it decided against.**
+> **THE LEAD: ONE GO FOR ALL NINE. Lutan, 2026-11-02: *"can we set it up so I give you a single go for
+> all 9 streams and you sequence them in the correct order rather than me having to start you off for
+> each batch"*.** Written into the skill (step 7, *ONE GO FOR ALL NINE*). **It changes only who pulls
+> the trigger** — not the sequencing, not the cap of three live worktrees, not the batches.
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`.**
-**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → this. **The next slug is `582`, due when the
-next plan's last batch is set up.** **Batch 3's figures are not in this edition; `582` carries them.**
+**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → this. **The next slug is `591`, due when the
+next plan's last batch is set up.** **Batch 3's figures are NOT in this edition; `591` carries them.**
 
 > **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
 > release state, candidates. **Re-read every time, never diffed.**
 
 ---
 
-## THE ONE THING TO READ: WHY THERE WERE TWO NINES, AND WHAT WAS DONE ABOUT IT
+## THE ONE GO: HOW IT IS MEANT TO WORK, AND THE ONE THING THAT COULD STOP IT
 
-**The plan's shape is nine items in three batches of three. The handover counter counted streams since
-the last handover and fired at nine — and it carried streams over from the previous plan, so the two
-drifted.** By the end of 2026-11-02 the plan's nine were all set up while the counter read 3, and **the
-planner told Lutan in one message that nine streams were done AND that no handover was due.** Both were
-true, of different nines. He asked for them synced.
+**A plan of nine used to cost him three goes, and the second and third were ceremony** — the plan was
+already decided and he was only supplying a trigger. The skill now says: he triggers the **plan**, the
+planner sequences the **batches**.
 
-**The counter is now `Streams set up in this plan: <n> of <total>`, and the trigger is the plan's last
-batch going up.** Usually still nine, but it cannot drift, because the boundary is the plan's own end.
-**Changed in the skill: step 6's counter rule and step 8's trigger.**
+**The mechanism, and read the skill rather than re-deriving it:** a batch finishing reaches the planner
+as a `<side-sessions-event>`, which is normally a refused shape for starting a session — **but there is a
+carve-out for a `<side-sessions-event>` turn that follows the user's own turn, or another such turn.** A
+chain of them traces back to his single go.
 
-**Why the plan boundary and not the other way round:** a plan is a meaningful unit — roughly one
-release, one planning conversation — and a handover's job is to hand over a round. **An arbitrary ninth
-stream is not a boundary of anything.**
+**TREAT IT AS A HYPOTHESIS. Nobody has started a batch that way yet**, and this file's own rule — a
+mitigation is a hypothesis until it fires — applies to the planner's own process as much as to a brief's.
+**The fallback is exactly what he has today** (say so in one line, ask, retry the identical call, which
+has worked both times), **so the downside is zero and the upside is two fewer interruptions a plan.**
 
-**And the asymmetry it leaves, which is not new:** the edition is written at the last batch's **setup**,
-so that batch's figures land in the next one. That was already true of any batch still running when an
-edition was written — `546` and `564` both met it. **Say so in the edition rather than implying coverage
-you do not have.** This one says it twice, above.
+**WHAT MUST STILL STOP THE CHAIN: a decision that is his.** One go is a trigger, not a mandate to drive
+through a blocker. **Right now there is a live example** — see the `/adopt` decision below.
 
-**This edition is itself the first application**, written early for that reason rather than appended to
-`564` as an amendment. **An amendment that nearly doubles its edition is a new edition in substance**,
-and treating it as one keeps both inside the length target.
+## THE BAND FINDINGS, BOTH PROMOTED INTO THE SKILL RATHER THAN CARRIED HERE
 
-## THE BAND FINDING, AND IT IS THE PLANNER'S OWN BRIEF WORDING THAT CAUSED IT
+**Two overruns in one plan, both the planner's own mis-sizing, and neither a stream's fault.**
 
-**All three of batch 2 came in under band, two of them badly — the band being wrong, not the work being
-cheap.** Figures in `.plan-day.md`.
+- **NAMING A RISK IS NOT PRICING IT.** `resident-tags-schema` went **+24%**, and `.plan-day.md` had
+  predicted it *in words* while banding against it: *"the genuine unknown is deliverable 5 … design work
+  the planner deliberately did not do."* It was then banded as a schema PR with nothing left to discover.
+  **The general rule, now in the skill: a question whose answer is STRUCTURE — a table, a trigger, a
+  function — is a BUILD, not a judgement.** The test: can it be answered in a sentence in the decision
+  file, or only by adding something to the database?
+- **A NEW TYPING SURFACE REPLICATED ACROSS N EXISTING FORMS IS N× THE WIRING.** `resident-tags-app` went
+  **+32%** on the *creates a new surface* row, which was measured on **one** new form. It built one picker
+  and wired it into **nine** existing note boxes and their nine save actions. **New row in the skill: the
+  surface once, then ~15–20k per existing form.** The planner had the number — its own brief listed the
+  eleven boxes in a table — and banded that table as one surface.
+- **AND THE AUDIT ROW HELD A THIRD TIME, against a deliberate over-band.** `control-listing-sweep-2` was
+  given 160–200k *because its list was long* and came in at 138,872, under even the audit row's floor.
+  **So the length of the list does not move that row either.** The honest caveat is in the skill: all
+  three sweeps found almost nothing, so **an audit that finds real repairs is still untested.**
 
-**A stream told that a recorded decision, or a tick with a reason, is a COMPLETE OUTCOME lands near the
-floor, because the brief has removed the expensive half.** Two of the three were told exactly that, in
-those words (*"do not go looking for something to edit in order to feel finished"*). One came in **25%
-under** a band that had priced the possibility it would build something **which its own hard boundary
-then forbade**. The brief and the band were written in the same sitting and disagreed with each other.
+## THE PLANNER BRIEFED A STREAM FOR WORK THAT HAD MERGED SIX HOURS EARLIER
 
-**So: when a brief's boundary says the deliverable is a decision, a report or a tick, band it as an
-AUDIT.** Same axis as *do not band a stream for a proof it cannot run* — applied to a limit the planner
-wrote rather than one the environment imposed.
+**`website-editor-canedit` built nothing, opened no PR, and that was the correct outcome.** PR #1182 had
+already fixed it at **00:19Z**, as read-only fields in `SitePageForm.tsx`, with its own decision file.
 
-**The third stream must not be folded into that**: it genuinely built, and still came in 18% under a
-band carrying a browser-verification allowance **it did not spend**, reporting the drive as `pending`
-for a person instead. **An allowance for a drive that does not happen is an over-band, and honest
-reporting is what makes it visible.**
+**Two causes, both repeatable, and the second is the one to fix:**
 
-## WHAT `564`'s WARNINGS DID
+1. **The planner grepped the WRONG FILE** — `canEdit` in `PageEditPanel.tsx`, when the item says *the
+   form*, which is `SitePageForm.tsx`. **A grep of the wrong file is not a grep**, and it returned the
+   empty result that felt like proof.
+2. **It did not run the two commands its own rule requires** — `ls docs/decisions/ | grep -i <subject>`
+   and `git log -S`. **Either names #1182 at once.** They were written into the stream's step zero and
+   **not executed by the planner itself. Writing a check into a brief is not running it.**
 
-- **Its lead — a refused session start is recoverable by a retry — HELD, AND HAS A CHEAPER POSITIVE
-  FORM.** Batch 3 was **never refused**, because Lutan typed `/plan-day` **with "and start the streams"
-  in the same message**, so the instruction was in his own words in the turn that acted on it. **The
-  condition really is about the turn.** Tally: **six batches succeeded, four refusals, two of those
-  recovered by a retry, one batch never refused.**
-- **Its second finding — a stream may CLAIM a filing it did not make — ANSWERED, and the fix is
-  mechanism.** The brief line added that morning fired on **all three** of batch 2 and is in batch 3's
-  briefs: each wrote its finding into the PR body, said *"for the planner to file"*, and touched
-  `docs/backlog.md` only to tick its own item.
-- **The gates-wait block: TESTED AT LAST, AND IT FAILED.** `564` said it was untested on the case it was
-  written for. **Five streams across two batches have now ended a turn waiting** — three on the gates,
-  two on CI — **and all five needed a nudge.** Batch 3's briefs name both and tell the stream to poll CI
-  itself. **If it fails a third time the brief is not the lever.**
-- **And the red those two CI waits sat on was real:** both had left unfilled `<name>` and `<yyyy-mm-dd>`
-  placeholders, having skipped the brief's own run-the-checker-first step. **A red `test-plan` is always
-  a real mistake** — third round confirming it.
-- **The hypothesis rule: fired again, and this time it caught the PLANNER'S reading.** A brief reasoned
-  from its item's claim about which activity a screen asks, traced it into a card-derived gate, and
-  concluded a swap would work — **marked in the brief as reasoned, not measured.** The item was wrong
-  and so was the brief: the page checks Admin and nothing else. **An assertion would have been obeyed
-  and a read narrowed for no reason.** Three rounds running; the cost is one sentence.
-- **An open question in the numbered deliverables: fired, eleven rounds.** All six streams carried one.
+**Cost: ~12k and one `npm ci`.** That stream's whole session was 115,689 with **12,197 `Messages`** — about
+12k above its floor to establish the work existed and stop. **Against a 110–140k build and a second
+implementation of a solved problem, that is the step-zero block's clearest payout yet.** It is 1 of 1 on
+catching a stale item. **Batch 3's three items each got both commands before a word was written**, and
+that caught two live scope changes (see `.plan-day.md`).
 
-## WHAT THE READ-EVERY-PR-BODY PASS BOUGHT — three filings, two of which changed an answer
+## WHAT `573`'s WARNINGS DID
 
-Details in `.plan-day.md`; what they **mean** is this.
+- **The gates/CI-wait block: CLOSED, and not by rewording.** `573` said *"if it fails a third time the
+  brief is not the lever"* — it had failed five times. **It was replaced with a numbered final
+  deliverable** (*gates green, pushed, PR open, CI green on my own head commit, usage comment posted,
+  merged*), which makes an unfinished finish an **unreported deliverable** that the
+  report-every-deliverable block already catches. **Batch 2: 3 of 3 unaided**, including one that reported
+  mid-wait and then merged itself. **Three rewordings went 4 of 10; one numbered deliverable went 3 of 3.**
+  In batch 3's briefs too — **check it a second time before promoting it.**
+- **The refused session start: HELD, and never fired.** Three batches in a row, his own message carried
+  the instruction. **Tally: nine batches succeeded, four refusals, two recovered by a verbatim retry, three
+  batches never refused.** The single-go mode above is the next test of the same condition.
+- **"A stream may claim a filing it did not make": HELD on all six streams.** Every one wrote its findings
+  into its PR body with *"for the planner to file"* and touched `docs/backlog.md` only to tick its own item.
+  **Treat it as mechanism.**
+- **The hypothesis rule: fired twice, and BOTH TIMES THE PLANNER WAS WRONG AND SAID SO FIRST.** It guessed
+  a second migration was the enum two-file rule (it was a trigger fix to an already-applied file) and
+  guessed a level bug in the website editor (`can()` defaults to `edit`, so there was none). **Both were
+  marked as reasoning rather than findings, so both were cheap.** Twelve rounds.
+- **An open question in the numbered deliverables: fired, thirteen rounds.** All six streams carried one,
+  and #1191's answer **changed its own deliverable**.
+- **The line-endings whole-file conflict: did NOT recur.** Writing **LF for anything git tracks** worked.
+  `git merge backlog` conflicted once all day, on content, and resolved the documented way.
 
-- **A fault a stream finds is often worse than the one it was sent for.** The Save button cannot succeed
-  after a "can't tell": the request id is kept, so every press loops until the page is reloaded, and the
-  old wording told people to press again. **The item leads with the trap, because the obvious fix is
-  wrong** — clearing the id would run a write that may already have landed, the double write the whole
-  failover programme exists to prevent. **This is the state a power cut produces**, so the one moment
-  that machinery does its job is the moment the screen traps the person.
-- **A finding can REORDER its own item.** The Thai check cannot usefully be extended until the API route
-  bodies have keys and callers, because the largest cluster of untranslated English is there and returns
-  fixed English — so the check would report a fault nobody could act on.
-- **An activity carried by NO card is the MIRROR of the fault the rule is about, and nothing checks for
-  it:** `role-cards-coverage` asks whether a card does nothing, not whether an activity can be granted.
-  Two were found, so a screen is Admin-only **by omission rather than design.** **It carries a decision
-  that is Lutan's, and the item says to ask rather than guess.**
+## THREE NEW COSTS WORTH NOT REPEATING
 
-## A TRAP THAT COST A WHOLE-FILE CONFLICT, NOW IN THE SKILL
-
-`git merge backlog` returned **one conflict hunk covering the entire file.** Not content:
-`core.autocrlf=true`, so git stores LF, and `main`'s blob for `docs/backlog.md` held CRLF while the
-`backlog` branch's held LF. **The planner's own amendment scripts caused it by preserving whatever
-endings they read** — right for the gitignored `.plan-day.md`, wrong for anything git tracks.
-
-**The method is in the skill now** (promoted with this edition), because two obvious moves fail:
-rewriting the working copy with CRLF changes nothing, and neither side can be taken wholesale — one
-carried six items the other lacked, the other two ticks.
+- **BOTH OF THE PLANNER'S MID-FLIGHT MESSAGES WERE STALE.** After #1193 merged, both live streams were
+  told to `sync` before pushing; **both had already synced and both said so.** The serial-sync rule is
+  right, but **a stream about to push has already done it.** `worktree.mjs list`'s `unpushed` and `behind`
+  columns answer that *before* the message is written. **Two interruptions of working sessions, bought
+  nothing.**
+- **A TOO-WIDE BAN COST A PAGE-LEVEL PERMISSION CHECK, for the second time in three weeks.** #1197 needed
+  a page-level `can(resident.record, "read")`, found `check-permission-catalogue.mjs` pins each page's
+  activity list, and **could not update it because its brief banned all of `scripts/`.** It dropped the
+  check and declared the crossing. **The escape worked; the boundary was still wrong. Ban the FILE.**
+  Filed as its own `## Security` item.
+- **A STREAM TICKED AN ITEM THAT WAS 9 OF 11 DONE, and the planner UN-TICKED it.** *"Every free-text note
+  box on a resident"* is what the item and Lutan both say. **A ticked item whose work is part done reads as
+  finished and nobody re-reads it** — the invisibility fault that costs most.
 
 ## STATE, RE-READ EVERY TIME
 
@@ -125,25 +122,30 @@ Everything below is read from the repo and is stale the moment it is written. **
 
 - `main`, the open item count, the highest migration, how far production is behind, and every batch's
   figures: `.plan-day.md`'s own blocks.
-- **BATCH 3 IS RUNNING AND ITS RESULTS ARE IN NO EDITION YET.** Three streams, the last batch of its
-  plan. **Read their `stream-usage:` comments and PR bodies at the next `/plan-day` before anything
-  else**, and note two of its briefs deliberately forbid touching a thing another item owns.
-- **ONE MIGRATION IS ON DEV AND NOT ON PRODUCTION**, filed under `## Deployment (before go-live)`.
-  `scripts/deploy.mjs` refuses a production deploy until every migration on `main` is applied, so
-  whoever cuts the next release meets it as an ordinary step. **Read `--status` first; the runner applies
-  every pending file.**
-- **THE PRODUCTION APPLY IS LUTAN'S.** The classifier refuses
-  `apply-migrations.mjs --env production` as `[Production Deploy]`; he was asked and chose to run it
-  himself. **Read the status and the dry run, then give him the command at the moment he needs it — never
-  earlier.** It worked first time.
+- **BATCH 3 IS RUNNING AND ITS RESULTS ARE IN NO EDITION YET.** Three streams, the plan's last.
+  **Read their `stream-usage:` comments and PR bodies at the next `/plan-day` before anything else.**
+- **A DECISION IS WAITING ON LUTAN AND IT BLOCKS WORK: `temperament_notes` and `past_story_notes` ARE
+  SHOWN ON THE PUBLIC `/adopt` PAGE**, so a `#Name` typed in one appears as text on the public site naming
+  another resident. Strip tags from public output, render them as plain names, or forbid tags in those two
+  boxes. **Asked, not answered. Nothing else on that item should be wired until it is settled**, and it is
+  the live example of what pauses the single-go chain.
+- **THREE MIGRATIONS ARE ON DEV AND NOT ON PRODUCTION** (`0298`, `0299`, `0300`), under
+  `## Deployment (before go-live)`. `scripts/deploy.mjs` refuses a production deploy until every migration
+  on `main` is applied. **Read `--status` first; the runner applies every pending file. THE PRODUCTION
+  APPLY IS LUTAN'S** — the classifier refuses it as `[Production Deploy]` — so read the status and the dry
+  run, then give him the command **at the moment he needs it, never earlier.**
 - **A release is the release manager's.** Lutan, 2026-11-01: *"I will get the release manager to do the
   release."* **Do not cut one, do not prepare one, do not put it to him as a decision he owes.** Major
   versus minor and the production Worker deploy remain his.
-- **The Pi-failover sweep is finished at 149 of 149 addresses, and that is NOT the failover working end
-  to end.** The fallback stops covering after about eleven seconds; it needs a repeat power-pull drill
-  with `wrangler tail`, which needs Lutan at the Pi. **Not a stream. Do not brief one.**
-- **Leftover worktrees accumulate fast.** `/clean-streams` does the round. **`ahead` is not the test; the
-  PR is** — except where `list` says `UNMERGED WORK`, which is unsubmitted work and must not be touched.
-- **Interruptions: two, both the planner's and both cheap** — a refused production apply and a refused
-  session start. **Count them as briefing and setup costs, never as a stream's.** **A third was the
-  planner's own confusion over the two nines**, which is what this edition's lead exists to prevent.
+- **FIVE BATCHES OF UNREVIEWED THAI now queue behind one bilingual read**, the newest being wording a
+  worker meets *while typing*. **That accumulation is itself the argument for the item's own durable half:**
+  whether new Thai strings should queue somewhere a Thai reader sees them.
+- **The Pi-failover sweep is finished at 149 of 149 addresses, and that is NOT the failover working end to
+  end.** The fallback stops covering after about eleven seconds; it needs a repeat power-pull drill with
+  `wrangler tail`, which needs Lutan at the Pi. **Not a stream. Do not brief one.**
+- **Leftover worktrees accumulate fast and were cleared twice today.** `/clean-streams` does the round.
+  **`ahead` is not the test; the PR is** — except where `list` says `UNMERGED WORK`. **A stream can merge
+  DURING a cleanup round**, so the re-list at the end is what catches it, not bookkeeping.
+- **Interruptions: ZERO across batches 1 and 2** — no refused start, no refused command, nothing a brief
+  should have settled. **The two stale sync messages were the planner interrupting the STREAMS**, which is
+  the same defect pointing the other way, and it belongs in the count.
