@@ -119,7 +119,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 Automated checks by: Claude  Date: 2026-11-02
 
-- [ ] The manual list above is empty, or every item was checked by a person — pending: nobody has looked at the bubble in a browser
+- [ ] The manual list above is empty, or every item was checked by a person — n/a: the list is not empty and nobody has looked yet; the signature below is pending
 
 Manual verification by: pending: a person types a bad date and an out-of-range date in a date box in English and Thai
 
