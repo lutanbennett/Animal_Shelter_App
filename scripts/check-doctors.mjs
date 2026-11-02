@@ -165,7 +165,8 @@ begin
   insert into doctors (name, user_id) values ('Harness login doctor', v_doctoruser) returning id into v_d3;
   insert into doctor_clinics (clinic_id, doctor_id) values (v_clinic, v_d3);
   perform set_config('request.jwt.claims', json_build_object('sub', v_doctoruser, 'role', 'authenticated')::text, true);
-  if current_user_clinic_ids() is distinct from array[v_clinic] then raise exception 'FAIL I current_user_clinic_ids for the doctor: %', current_user_clinic_ids(); end if;
+  -- 0264 made current_user_clinic_ids() a constant {} for every login (the clinic-scoped doctor reads are gone), so a linked doctor login gets {} too.
+  if current_user_clinic_ids() is distinct from '{}'::uuid[] then raise exception 'FAIL I current_user_clinic_ids for the doctor: %', current_user_clinic_ids(); end if;
   perform set_config('request.jwt.claims', json_build_object('sub', v_mgmt, 'role', 'authenticated')::text, true);
   if current_user_clinic_ids() <> '{}'::uuid[] then raise exception 'FAIL I current_user_clinic_ids for management'; end if;
   perform set_config('request.jwt.claims', '{}', true);
