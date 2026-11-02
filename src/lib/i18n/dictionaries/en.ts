@@ -910,6 +910,7 @@ const en = {
           translations: "Check and approve the Thai translations of stories, bios and labels, and write them in.",
           propose_translations:
             "Suggest the Thai for a label and leave it waiting for someone to approve. It cannot approve a suggestion, its own included, and it cannot change the Thai the app is showing today.",
+          view_translations: "Read the Thai queue and the suggestions waiting in it, without changing anything: nothing to suggest, approve, reject or save.",
           medical_records: "Add and change a resident's medical history: visits, procedures, blood tests, prescriptions, immunizations, weight and diet, book vet visits, and record a death (the record is closed from that day; withdrawing it afterwards is a separate permission of its own, \"Withdraw a death recorded in error\"). Includes View medical.",
           view_medical: "Read a resident's medical history (visits, procedures, blood tests, prescriptions, immunizations, weight and diet) and the clinic list, without changing anything.",
           book_clinic_visits: "Book a vet visit, change its date or time or cancel it (it cannot delete one), and read the resident's medical history for reference.",
