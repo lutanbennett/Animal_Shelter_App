@@ -11,7 +11,7 @@
 | PR | see the PR this plan is committed on |
 | Tested by / date | Claude (automated), 2026-11-02 |
 | Carries a migration? | yes, `0302_correct_intake_date.sql` |
-| Tested at SHA | f1786f78 |
+| Tested at SHA | 09c242aa |
 
 ## 1. Scope and risk
 
@@ -122,7 +122,13 @@ Analysis by card, not by role (`CLAUDE.md`).
 
 ## Evidence
 
-GATES_BLOCK
+```
+=== gates: typecheck exited 0 after 16s
+=== gates: lint exited 0 after 109s
+=== gates: test exited 0 after 20s
+=== gates: build exited 0 after 90s
+gates: typecheck=0 lint=0 test=0 build=0
+```
 
 ## Defects found
 
