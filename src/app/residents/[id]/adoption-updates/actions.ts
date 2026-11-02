@@ -8,6 +8,8 @@ import { getT } from "@/lib/i18n/get-t";
 import { getDriveClient } from "@/lib/google/drive";
 import { refreshDeceasedArchiveIfNeeded } from "@/lib/archive/refresh-deceased-archive";
 import { runWriteAction, type ActionResult } from "@/lib/action-result";
+import { noteTagFailure, syncNoteTagPicks } from "@/lib/note-tags/sync";
+import type { NoteTag } from "@/lib/note-tags/text";
 import { isIsoDate, isFutureDate } from "@/lib/placements/dates";
 import {
   isAdoptionUpdateChannel,
@@ -20,6 +22,8 @@ export type AdoptionUpdateInput = {
   senderContactId: string | null;
   channel: string;
   note: string | null;
+  /** The residents picked from the # list in the note; null when the box did not offer tagging (links are left alone). */
+  noteTags?: NoteTag[] | null;
   /** Publishes to the internet. Only ever true when a person ticked it (0214). */
   sharePublicly: boolean;
   /** The words the adopter agreed to publish. Never the staff note. */
@@ -105,6 +109,19 @@ export async function saveAdoptionUpdate(
     const saved = data?.[0];
     if (!saved) return { ok: false, error: e.notFound };
 
+    if (input.noteTags) {
+      const tagFailure = noteTagFailure(
+        await syncNoteTagPicks(
+          supabase,
+          { table: "adoption_updates", column: "note", rowId: saved.id, residentId },
+          input.noteTags,
+          row.note,
+        ),
+        t.residents.tags,
+      );
+      if (tagFailure) return { ok: false, error: tagFailure };
+    }
+
     revalidateResident(residentId);
     return { ok: true, id: saved.id };
   });
@@ -159,6 +176,8 @@ export async function deleteAdoptionUpdate(
       .select("id");
     if (error) throw error;
     if (!deleted?.length) return { ok: false, error: e.notFound };
+    // The links went with the note: no foreign key can cascade across the note tables (0299).
+    await supabase.from("resident_note_tags").delete().eq("source_table", "adoption_updates").eq("source_row_id", updateId);
 
     if ((photos ?? []).length > 0) await refreshDeceasedArchiveIfNeeded(supabase, residentId);
     revalidateResident(residentId);

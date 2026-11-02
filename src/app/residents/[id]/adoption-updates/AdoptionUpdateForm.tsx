@@ -1,5 +1,7 @@
 "use client";
 
+import { TagNoteField } from "@/components/TagNoteField";
+import type { NoteTag } from "@/lib/note-tags/text";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { RowActionButton } from "@/components/RowAction";
@@ -49,6 +51,8 @@ export function AdoptionUpdateForm({
   otherContacts,
   defaultSenderId,
   today,
+  canTagNotes = false,
+  initialNoteTags = [],
 }: {
   residentId: string;
   /** The update being corrected, or null to add one. */
@@ -70,6 +74,9 @@ export function AdoptionUpdateForm({
   defaultSenderId: string | null;
   /** YYYY-MM-DD, server-computed so max matches the server's check. */
   today: string;
+  /** canTagNote(perms, ["resident.adoption_news"]): the save asks resident.adoption_news. Default false. */
+  canTagNotes?: boolean;
+  initialNoteTags?: NoteTag[];
 }) {
   const { t } = useI18n();
   const a = t.adoptionUpdates;
@@ -83,6 +90,7 @@ export function AdoptionUpdateForm({
   );
   const [channel, setChannel] = useState(update?.channel ?? "");
   const [note, setNote] = useState(update?.note ?? "");
+  const [noteTags, setNoteTags] = useState<NoteTag[]>(initialNoteTags);
   const [sharePublicly, setSharePublicly] = useState(update?.share_publicly ?? false);
   const [publicStory, setPublicStory] = useState(update?.public_story ?? "");
   const [publicFirstName, setPublicFirstName] = useState(update?.public_first_name ?? "");
@@ -153,6 +161,7 @@ export function AdoptionUpdateForm({
             senderContactId: senderId || null,
             channel,
             note: note || null,
+            noteTags: canTagNotes ? noteTags : null,
             sharePublicly,
             publicStory: publicStory || null,
             publicFirstName: publicFirstName || null,
@@ -280,13 +289,18 @@ export function AdoptionUpdateForm({
             {a.form.staffOnlyBadge}
           </span>
         </label>
-        <textarea
+        <TagNoteField
           id="note"
+          name="note"
           rows={4}
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
+          defaultValue={update?.note ?? ""}
+          onTextChange={setNote}
+          onTagsChange={setNoteTags}
           placeholder={a.form.notePlaceholder}
           className={textareaClass}
+          canTag={canTagNotes}
+          initialTags={initialNoteTags}
+          selfId={residentId}
         />
       </div>
 

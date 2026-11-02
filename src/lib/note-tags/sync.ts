@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { parseTagField, tagsPresentIn, TAGS_FIELD_SUFFIX } from "./text";
+import { parseTagField, tagsPresentIn, TAGS_FIELD_SUFFIX, type NoteTag } from "./text";
 
 /**
  * Writes the links for one note, in the same save as the note itself (resident_note_tags, 0299). Call it right after
@@ -24,7 +24,17 @@ export async function syncNoteTags(
 ): Promise<NoteTagResult> {
   const raw = formData.get(fieldName + TAGS_FIELD_SUFFIX);
   if (raw === null) return { ok: true };
-  const keep = tagsPresentIn(text, parseTagField(raw)).filter((tag) => tag.id !== note.residentId);
+  return syncNoteTagPicks(supabase, note, parseTagField(raw), text);
+}
+
+/** The same, for a form that sends its picks as data rather than as the hidden field (the adoption-news form). */
+export async function syncNoteTagPicks(
+  supabase: SupabaseClient,
+  note: NoteRef,
+  picks: readonly NoteTag[],
+  text: string | null,
+): Promise<NoteTagResult> {
+  const keep = tagsPresentIn(text, picks).filter((tag) => tag.id !== note.residentId);
 
   const { data: existing, error: readError } = await supabase
     .from("resident_note_tags")

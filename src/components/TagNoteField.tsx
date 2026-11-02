@@ -27,6 +27,8 @@ export function TagNoteField({
   canTag = false,
   initialTags = [],
   selfId,
+  onTextChange,
+  onTagsChange,
 }: {
   name: string;
   id?: string;
@@ -40,6 +42,9 @@ export function TagNoteField({
   initialTags?: readonly NoteTag[];
   /** The resident the note is written on, never offered as a tag. */
   selfId?: string;
+  /** For a form that keeps the note in state rather than reading the box on submit. */
+  onTextChange?: (value: string) => void;
+  onTagsChange?: (tags: NoteTag[]) => void;
 }) {
   const { t } = useI18n();
   const reactId = useId();
@@ -91,7 +96,9 @@ export function TagNoteField({
     const pos = open.start + written.length;
     el.setSelectionRange(pos, pos);
     el.focus();
-    setPicks((current) => (current.some((p) => p.id === match.id) ? current : [...current, { id: match.id, name: match.name }]));
+    const next2 = picks.some((p) => p.id === match.id) ? picks : [...picks, { id: match.id, name: match.name }];
+    setPicks(next2);
+    onTagsChange?.(next2);
     setOpen(null);
     setMatches(null);
   }
@@ -108,7 +115,10 @@ export function TagNoteField({
         defaultValue={defaultValue}
         required={required}
         className={className}
-        onInput={refresh}
+        onInput={(e) => {
+          onTextChange?.(e.currentTarget.value);
+          refresh();
+        }}
         onClick={refresh}
         onKeyUp={(e) => {
           if (e.key === "Escape") setOpen(null);
