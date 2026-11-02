@@ -11,7 +11,7 @@
 | PR | #1193 |
 | Tested by / date | Claude / 2026-11-02 |
 | Carries a migration? | yes — `0299_resident_note_tags.sql` and `0300_resident_note_tags_owner_check_refuses_cleanly.sql` |
-| Tested at SHA | `SHA_HERE` |
+| Tested at SHA | `b7b48e53` |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,7 @@
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 build=0`. Paste its closing `gates:` lines below exactly as printed:
 
 ```
-GATES_OUTPUT_HERE
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
