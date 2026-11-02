@@ -1,0 +1,8 @@
+# 2026-11-02 — `facility.enclosures` label names the facility map
+
+The label read "Enclosures and zones" but the card is registered on four routes: `/enclosures`, `/admin/enclosures`, `/admin/zones` and `/admin/facility-map` (`routes.ts:159, 393, 401, 409`). It is now "Enclosures, zones and the facility map".
+
+- **Why this wording:** same list form as `reference.types` (`2026-11-02-reference-types-label.md`): the matrix row is one line with no description slot. Not split into two activities (that is a permissions change, not wording).
+- **Quotations:** the old string occurred once in `en.ts`, once (Thai) in `th.ts`'s `facility.enclosures` key, once in `docs/roles-and-permissions.md`, and once in the manual (`src/lib/manual/en.ts`, "With "Enclosures and zones" at Edit…"), which names the card; all four updated. Old decision files, test plans and card reports keep the old string (history).
+- **Drift re-check (label against routes), activities with more than one route:** `reference.types` (6, fixed by #1190), `clinics.list` ("The list of clinics": `/clinics`, `/management/clinics`, covered), `medical.visits` (`/appointments`, `/upcoming-visits`, covered), `medical.diet` ("A resident's diet": `/operations/feeding-list`, `/medical/diets`, arguably covered). **`website.content` ("The public website's content") is also registered on `/management/desexing-drives`, which the label does not obviously cover — for the planner to file, not changed here.** So `facility.enclosures` is not quite the last one.
+- **Thai** ("กรง โซน และแผนผังของศูนย์") is the author's own and has not been read by a Thai speaker; it needs the bilingual read.

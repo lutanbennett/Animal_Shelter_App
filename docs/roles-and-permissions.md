@@ -330,7 +330,7 @@ Admin is shown for completeness; it is never stored (§6).
 | `photos.resident_manage` | Refile or remove a photo, choose the profile photo | Y/N | Y | Y | Y | – | – | 15 | *Split*, finding A3 |
 | `photos.resident_publish` | Put a resident's photo on the public website | Y/N | Y | Y | Y | – | – | 15 | *Split*, finding A5. Today it is not a separate act: filing a photo anywhere but Medical publishes it. Lutan's answer 8: at Lanna, Management and Admin only |
 | **Enclosures** | | | | | | | | | |
-| `facility.enclosures` | Enclosures and zones | E/R | E | R | R | – | R | 16 | Edit is Settings → Zones and Enclosures |
+| `facility.enclosures` | Enclosures, zones and the facility map | E/R | E | R | R | – | R | 16 | Edit is Settings → Zones and Enclosures |
 | **Maintenance** | | | | | | | | | |
 | `maintenance.jobs` | Maintenance jobs: log, edit, assign, cost | E/R | E | E | E | – | – | 17 | |
 | `maintenance.progress` | Move a job on: in progress, blocked, completed | Y/N | Y | Y | Y | – | – | 17 | *Split.* Lets someone finish a job without managing the board |
