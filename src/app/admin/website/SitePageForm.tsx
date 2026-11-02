@@ -47,8 +47,8 @@ export function SitePageForm({
   canManageTranslations: boolean;
   /**
    * website.content, the activity updateSitePage asks. It defaults to false so a caller that
-   * forgets it offers no Save button rather than one the action then refuses. The boxes are
-   * still shown: reading the page's words is what the Pages tab already needs.
+   * forgets it offers no Save button rather than one the action then refuses. The title and
+   * body boxes stay, read-only, so the words can still be read; the style toolbar is not drawn.
    */
   canEdit?: boolean;
   /**
@@ -86,6 +86,7 @@ export function SitePageForm({
           name="title"
           form={formId}
           required
+          readOnly={!canEdit}
           defaultValue={page.title}
           onChange={(e) => setTitleDraft(e.target.value)}
           className={`${inputClass} sm:w-96`}
@@ -105,14 +106,15 @@ export function SitePageForm({
           {p.body}
         </label>
         <p className="text-xs text-muted">{p.bodyHint}</p>
-        <p className="text-xs text-muted">{p.marks.hint}</p>
-        <BodyToolbar target={bodyRef} />
+        {canEdit && <p className="text-xs text-muted">{p.marks.hint}</p>}
+        {canEdit && <BodyToolbar target={bodyRef} />}
         {showStarter && <p className="text-xs font-medium text-warning">{p.starterNote}</p>}
         <textarea
           id={`${page.slug}-body`}
           ref={bodyRef}
           name="body"
           form={formId}
+          readOnly={!canEdit}
           rows={Math.min(24, Math.max(8, body.split("\n").length + 2))}
           defaultValue={body}
           onChange={(e) => setDraft(e.target.value)}
