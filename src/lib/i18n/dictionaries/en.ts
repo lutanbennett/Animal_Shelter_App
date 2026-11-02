@@ -5480,6 +5480,22 @@ const en = {
   },
 
   residents: {
+    /** #tags in a resident's notes (2026-11-02): a hash and a name links another resident, both ways. */
+    tags: {
+      hint: "Type # and a name to link another resident.",
+      listLabel: "Residents matching what you typed",
+      noMatch: "No resident found",
+      searching: "Searching…",
+      searchFailed: "Couldn't search residents just now.",
+      pick: (name: string) => `Link ${name}`,
+      mentionedIn: "Mentioned in",
+      mentionedInHint: "Notes on other residents that tag this one.",
+      writtenOn: (name: string) => `On ${name}`,
+      writtenBy: (name: string) => `by ${name}`,
+      openResident: (name: string) => `Open ${name}`,
+      couldntSave: "The note was saved, but its resident links could not be.",
+      notAllowed: "The note was saved, but you are not allowed to link residents in it.",
+    },
     new: {
       pageTitle: "Resident Intake",
       pageSubtitle:

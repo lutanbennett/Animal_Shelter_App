@@ -5305,6 +5305,22 @@ const th: Dictionary = {
   },
 
   residents: {
+    /** #tags in a resident's notes (2026-11-02). Thai written by Claude, not yet read by a Thai speaker. */
+    tags: {
+      hint: "พิมพ์ # แล้วตามด้วยชื่อ เพื่อเชื่อมโยงกับสัตว์ตัวอื่น",
+      listLabel: "สัตว์ที่ตรงกับที่พิมพ์",
+      noMatch: "ไม่พบสัตว์",
+      searching: "กำลังค้นหา…",
+      searchFailed: "ค้นหาสัตว์ไม่ได้ในขณะนี้",
+      pick: (name: string) => `เชื่อมโยง ${name}`,
+      mentionedIn: "ถูกกล่าวถึงใน",
+      mentionedInHint: "บันทึกของสัตว์ตัวอื่นที่แท็กตัวนี้",
+      writtenOn: (name: string) => `ของ ${name}`,
+      writtenBy: (name: string) => `โดย ${name}`,
+      openResident: (name: string) => `เปิดดู ${name}`,
+      couldntSave: "บันทึกแล้ว แต่เชื่อมโยงสัตว์ไม่สำเร็จ",
+      notAllowed: "บันทึกแล้ว แต่คุณไม่มีสิทธิ์เชื่อมโยงสัตว์ในบันทึกนี้",
+    },
     new: {
       pageTitle: "รับสัตว์เข้าใหม่",
       pageSubtitle:
