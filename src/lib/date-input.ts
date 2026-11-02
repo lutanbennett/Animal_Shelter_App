@@ -40,18 +40,26 @@ export function normalizeTime(text: string): string {
   return `${String(h).padStart(2, "0")}:${m[2]}`;
 }
 
+/** Why a typed date was refused; the caller words it from the dictionary. */
+export type BadDate =
+  | { kind: "notAMonth"; month: string }
+  | { kind: "noSuchDay"; day: number; last: number }
+  | { kind: "format" };
+
 /**
- * Why `text` is not a date: the day does not exist (31/04/2026), or the
- * format is wrong. Only called for text `dmyToIso` refused.
+ * Why `text` is not a date: the month or day does not exist (31/04/2026), or
+ * the format is wrong. Only called for text `dmyToIso` refused. Returns a
+ * reason, not words, so this pure helper needs no dictionary and the English
+ * and Thai both live in `t.validation`.
  */
-export function badDateMessage(text: string): string {
+export function badDateReason(text: string): BadDate {
   const m = /^\s*(\d{1,2})[/.\-\s](\d{1,2})[/.\-\s](\d{4})\s*$/.exec(text);
   if (m) {
     const day = Number(m[1]);
     const month = Number(m[2]);
-    if (month < 1 || month > 12) return `${m[2]} is not a month. Months run from 1 to 12.`;
+    if (month < 1 || month > 12) return { kind: "notAMonth", month: m[2] };
     const last = new Date(Date.UTC(Number(m[3]), month, 0)).getUTCDate();
-    if (day < 1 || day > last) return `That month has no day ${day}. Pick a day from 1 to ${last}.`;
+    if (day < 1 || day > last) return { kind: "noSuchDay", day, last };
   }
-  return "Enter a date as DD/MM/YYYY, for example 13/10/2026.";
+  return { kind: "format" };
 }

@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { CalendarDays } from "lucide-react";
-import { autoSlash, badDateMessage, dmyToIso, isoToDmy, normalizeTime } from "@/lib/date-input";
+import { autoSlash, badDateReason, dmyToIso, isoToDmy, normalizeTime } from "@/lib/date-input";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 // A browser draws <input type="date"> in ITS OWN language, so a Chrome set to
@@ -24,10 +25,17 @@ type Props = InputProps & {
 
 
 
-function outOfRange(iso: string, min?: string | number, max?: string | number) {
-  if (min && iso < String(min).slice(0, 10)) return `Date must be ${isoToDmy(String(min).slice(0, 10))} or later.`;
-  if (max && iso > String(max).slice(0, 10)) return `Date must be ${isoToDmy(String(max).slice(0, 10))} or earlier.`;
+function outOfRange(v: Dictionary["validation"], iso: string, min?: string | number, max?: string | number) {
+  if (min && iso < String(min).slice(0, 10)) return v.notBefore(isoToDmy(String(min).slice(0, 10)));
+  if (max && iso > String(max).slice(0, 10)) return v.notAfter(isoToDmy(String(max).slice(0, 10)));
   return "";
+}
+
+function badDateMessage(v: Dictionary["validation"], text: string) {
+  const why = badDateReason(text);
+  if (why.kind === "notAMonth") return v.dateNotAMonth(why.month);
+  if (why.kind === "noSuchDay") return v.dateNoSuchDay(why.day, why.last);
+  return v.dateFormat;
 }
 
 /** Drop-in for `<input type="date">`: same props, `onChange` gets `e.target.value` as ISO. */
@@ -46,9 +54,9 @@ export function DateInput({ value, defaultValue, onChange, className, name, min,
   }
 
   useEffect(() => {
-    const msg = text === "" ? "" : iso === "" ? badDateMessage(text) : outOfRange(iso, min, max);
+    const msg = text === "" ? "" : iso === "" ? badDateMessage(t.validation, text) : outOfRange(t.validation, iso, min, max);
     visible.current?.setCustomValidity(msg);
-  }, [text, iso, min, max]);
+  }, [text, iso, min, max, t]);
 
   function commit(next: string) {
     setText(next);
@@ -135,8 +143,8 @@ export function DateTimeInput({ value, defaultValue, onChange, className, name, 
   }
 
   useEffect(() => {
-    timeRef.current?.setCustomValidity(time === "" || timeOk ? "" : "Enter a 24-hour time as HH:MM, for example 14:30.");
-  }, [time, timeOk]);
+    timeRef.current?.setCustomValidity(time === "" || timeOk ? "" : t.validation.timeFormat);
+  }, [time, timeOk, t]);
 
   function emit(d: string, t: string) {
     const di = dmyToIso(d);
