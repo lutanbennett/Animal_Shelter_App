@@ -10,6 +10,8 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate, formatWeightKg, todayIso, weightUnit } from "@/lib/format";
 import { visitDate, type LinkableVisit } from "@/lib/clinics/linkable";
 import { DateInput } from "@/components/DateInput";
+import { TagNoteField } from "@/components/TagNoteField";
+import type { NoteTag } from "@/lib/note-tags/text";
 
 export type ClinicVisitOption = LinkableVisit;
 
@@ -42,6 +44,8 @@ export function WeightForm({
   previousReading = null,
   readings,
   initial = null,
+  canTagNotes = false,
+  noteTags = [],
 }: {
   residentId: string;
   residentDisplayName: string;
@@ -53,6 +57,9 @@ export function WeightForm({
   /** The resident's other readings — never the one being edited. */
   readings: ExistingReading[];
   initial?: WeightInitial | null;
+  /** canTagNote(perms, ["medical.weight"]): the save asks medical.weight. Default false. */
+  canTagNotes?: boolean;
+  noteTags?: NoteTag[];
 }) {
   const editing = initial !== null;
   const [state, onSubmit, pending] = useWriteForm(
@@ -193,13 +200,16 @@ export function WeightForm({
         <label htmlFor="notes" className="text-sm font-medium text-muted">
           {t.weight.notes}
         </label>
-        <textarea
+        <TagNoteField
           id="notes"
           name="notes"
           rows={3}
           placeholder={t.weight.notesPlaceholder}
           defaultValue={initial?.notes ?? ""}
           className={inputClass}
+          canTag={canTagNotes}
+          initialTags={noteTags}
+          selfId={residentId}
         />
       </div>
 

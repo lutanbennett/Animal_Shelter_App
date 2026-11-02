@@ -85,3 +85,33 @@ export function noteTagFailure(
   if (result.ok) return null;
   return result.code === "42501" ? words.notAllowed : words.couldntSave;
 }
+
+/** syncNoteTags + noteTagFailure in one: null when the links are in step with the note, else words for the person. */
+export async function syncNoteTagsOrMessage(
+  supabase: SupabaseClient,
+  note: NoteRef,
+  formData: FormData,
+  fieldName: string,
+  text: string | null,
+  words: { couldntSave: string; notAllowed: string },
+): Promise<string | null> {
+  return noteTagFailure(await syncNoteTags(supabase, note, formData, fieldName, text), words);
+}
+
+/** The picks already stored on one note, for handing back to its edit box. */
+export async function loadTagsForNote(
+  supabase: SupabaseClient,
+  table: string,
+  column: string,
+  rowId: string,
+): Promise<{ id: string; name: string }[]> {
+  const { data } = await supabase
+    .from("resident_note_tags")
+    .select("to_resident_id, to:residents!resident_note_tags_to_resident_id_fkey(name)")
+    .eq("source_table", table)
+    .eq("source_column", column)
+    .eq("source_row_id", rowId)
+    .is("archived_at", null)
+    .returns<{ to_resident_id: string; to: { name: string } | null }[]>();
+  return (data ?? []).filter((r) => r.to).map((r) => ({ id: r.to_resident_id, name: r.to!.name }));
+}

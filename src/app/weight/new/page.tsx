@@ -7,9 +7,10 @@ import { getT } from "@/lib/i18n/get-t";
 import { formatDate, formatWeightKg } from "@/lib/format";
 import { loadLinkableVisits } from "@/lib/clinics/linkable";
 import { WeightForm, type ExistingReading } from "../WeightForm";
+import { canTagNote } from "@/lib/note-tags/can";
 
 export default async function NewWeightPage(props: PageProps<"/weight/new">) {
-  await requirePermission("medical.weight");
+  const { perms } = await requirePermission("medical.weight");
   const searchParams = await props.searchParams;
   const { t, locale } = await getT();
 
@@ -130,6 +131,7 @@ export default async function NewWeightPage(props: PageProps<"/weight/new">) {
       )}
 
       <WeightForm
+        canTagNotes={canTagNote(perms, ["medical.weight"])}
         residentId={residentId}
         residentDisplayName={displayName}
         clinicVisits={clinicVisitsResult.visits}

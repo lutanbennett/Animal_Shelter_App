@@ -6,6 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { loadLinkableVisits } from "@/lib/clinics/linkable";
 import { WeightForm, type ExistingReading, type WeightInitial } from "../../WeightForm";
+import { canTagNote } from "@/lib/note-tags/can";
+import { loadTagsForNote } from "@/lib/note-tags/sync";
 
 /**
  * Reached from a reading's Edit link on the resident's Weight tab, from
@@ -16,7 +18,7 @@ import { WeightForm, type ExistingReading, type WeightInitial } from "../../Weig
  * page says so instead of offering a form the database (0026) would reject.
  */
 export default async function EditWeightPage(props: PageProps<"/weight/[id]/edit">) {
-  await requirePermission("medical.weight");
+  const { perms } = await requirePermission("medical.weight");
   const { id } = await props.params;
   const { t } = await getT();
   const supabase = await createClient();
@@ -101,6 +103,8 @@ export default async function EditWeightPage(props: PageProps<"/weight/[id]/edit
       )}
 
       <WeightForm
+        canTagNotes={canTagNote(perms, ["medical.weight"])}
+        noteTags={await loadTagsForNote(supabase, "weight", "notes", reading.id)}
         residentId={residentId}
         residentDisplayName={displayName}
         clinicVisits={visitsResult.visits}
