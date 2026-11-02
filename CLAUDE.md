@@ -596,6 +596,18 @@ HTML form: Save submits a GET with every field in the address bar and saves noth
 - **A plain-GET form submission in the pane is a symptom of this, not a finding.** Do not file it as
   an app fault or a `docs/card-access-faults.md` row.
 
+## Measuring the public site: load moves the score
+
+**From PR #1207 (`docs/decisions/2026-11-02-public-site-speed-bisect.md`).** Lighthouse on this machine moves a score
+**12–17 points** with machine load, which produced a false "the public site has got slower" finding and cost a whole
+bisect stream.
+
+- **Never benchmark this site while any other stream is building.**
+- **Interleave the variants rather than measuring in commit order**, so drift cannot line up with one variant.
+- **Bracket the run with the baseline twice**; if the two baselines disagree, the drift shows and the run is not a reading.
+- **Record the machine load beside every figure.** A timing without its machine load is not a reading, exactly as a count
+  without its database is not one.
+
 ## A red `audit` check is not a blocker, and never has been
 
 CI's `audit` job (`npm run audit:prod`) reports known-vulnerable

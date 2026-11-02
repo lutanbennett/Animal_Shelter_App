@@ -67,7 +67,7 @@ release manager before `npm run deploy:prod`.
 
 - [ ] Change is described in one sentence, and it matches what the backlog item asked for
 - [ ] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs)
-- [ ] Roles affected identified: admin / staff / doctor / volunteer / resident / signed-out public
+- [ ] Cards affected identified (the cards whose behaviour changes; who holds them today is labelled context only), plus whether admin and the signed-out public are affected
 - [ ] Anything explicitly **out of scope** written down, so the release manager is not surprised
 
 ## 2. Automated gates
@@ -115,34 +115,32 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 
 ### Role access matrix
 
-Sign in as each role that matters and record what they see. Unauthorised access
+Sign in as each login that matters and record what they see. Unauthorised access
 must be refused by the server, not merely hidden in the UI — hit the URL
 directly rather than checking whether the nav entry is hidden. That distinction
 is what found the cashflow money bug: the page redirected correctly, and the RPC
 behind it did not.
 
-These are all of them. Roles are rows of the `roles` table, not an enum (`app_role`
-was dropped by `0181`). The live ones are admin, management, second_in_command,
-head_of_maintenance, head_of_medical, doctor, volunteer and public_viewer; `staff` is
-retired (`0173`). **There is no `resident` role** — in this app a resident is an
-animal — and do not re-derive this list by grepping for quoted strings; read the
-`roles` table (or `/admin/who-does-what`).
+Analyse by CARD, not by role (`CLAUDE.md`, *All analysis is by CARD, never by role*): roles are
+a transient grouping of cards and get rebuilt, so a row naming one stops being true. Test a
+login holding exactly the card under test (`node scripts/dev-signin.mjs --cards <card> --port <yours>`,
+card keys, not activity names), plus admin (outside the card system) and signed out. Where a page
+needs two cards together, put both on one row. Do not name `staff` (retired, `0173`) or `resident`
+(not a role: a resident is an animal). Read card keys from `/admin/who-does-what`.
 
-| Role | Can reach | Expected | Result |
+| Login (card(s) held) | Can reach | Expected | Result |
 |---|---|---|---|
 | admin | | | |
-| management | | | |
-| staff | | | |
-| doctor | | | |
-| volunteer | | | |
+| exactly `<card key>` | | | |
+| exactly `<card key>` | | | |
 | signed out | | | |
 
-- [ ] Every role above tested
-- [ ] A role that should not have access is blocked server-side (hitting the URL directly fails)
+- [ ] Every login above tested
+- [ ] A login that should not have access is blocked server-side (hitting the URL directly fails)
 
 ## 5. Cross-cutting
 
-- [ ] Nav entry correct (`src/app/NavLinks.tsx`) — appears for the right roles, no dead links
+- [ ] Nav entry correct (`src/app/NavLinks.tsx`) — appears for the right cards, no dead links
 - [ ] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual`
 - [ ] Translatable strings go through the translation path, checked at `/management/translations`
 - [ ] Mobile viewport (375px) — no overflow, controls reachable

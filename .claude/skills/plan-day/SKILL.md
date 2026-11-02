@@ -488,8 +488,12 @@ the auto-mode classifier** as irreversible local destruction (2026-10-21), so
 neither "just write it" nor "`rm` then write" works. **What works: Write the new
 text into the scratchpad, then `cat <scratch> > .plan-day.md`** — a redirect is
 an ordinary write, not a delete. Same trick for `docs/planner-handover.md`, and
-for small amendments prefer a node `replace()` over rewriting the file, with a
-guard that exits non-zero when the anchor string is missing. **A heredoc in a chained Bash command is not a third option: backticks and apostrophes in this
+for small amendments prefer a node script over rewriting the file, using **`out.split(from).join(to)`, never `replace(from, to)`**,
+with a guard that exits non-zero when the anchor string is missing. `replace()` reads `$` specially in `to`:
+`$'` means everything after the match, `` $` `` everything before, `$$` a literal `$`. Replacement text quoting SQL
+(`do $guard$ … $guard$`) therefore silently consumed a chunk of the file, and the next anchor failed. `split/join` is always
+literal. **The per-anchor guard is what limited the damage to nothing** (it exited non-zero and wrote nothing); without it
+the replacement would have reported success and corrupted the file, so never drop the guard. **A heredoc in a chained Bash command is not a third option: backticks and apostrophes in this
 prose break the shell parse** — that failed on 2026-10-21. **And a quoted heredoc collapses `\\` to `\`**: `[^"\\]` reached
 node as `[^"\]` and died as an invalid regular expression (2026-10-31); in prose it would have changed the
 text silently. Script anything with escapes via the Write tool.
@@ -1207,6 +1211,20 @@ of care catches by eye.
 **Do not change `scripts/check-test-plan.mjs` to be more forgiving instead.**
 That script's strictness is deliberate and `CLAUDE.md` documents at length why it
 must not be loosened or given `continue-on-error`. The fix belongs in the brief.
+
+### Every brief also carries the finishing sequence as a numbered deliverable
+
+Write this into every brief's numbered deliverables, adapted only in wording. It went **6 of 6** across 2026-11-02's batches
+2 and 3, against 4 of 10 for three rewordings of the old gates/CI-wait block. What matters is the read step, not the run:
+
+```markdown
+**THE FINISHING SEQUENCE, AS A DELIVERABLE WITH ITS OWN READ STEP.** Run `node scripts/gates.mjs` **in the
+background**, output redirected to a file in your scratchpad, and **wait for it** (typecheck, lint, test and a full
+`next build`, about five minutes). **Then `cat` that file yourself and paste the four-gate line with its four exit
+codes into your PR body.** Do **not** end a turn saying you are waiting to be notified: nothing will notify you. Two
+streams did exactly that on 2026-11-02 and sat idle until nudged. Reading the file is the deliverable, not running
+the command.
+```
 
 ### Every brief also OPENS with this block, verbatim
 
