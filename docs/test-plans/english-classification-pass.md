@@ -214,3 +214,18 @@ Automated checks by: Claude  Date: 2026-11-02
 Nothing to look at: the change adds a report script and a decision file.
 
 
+
+
+- [x] The manual list above is empty, or every item in it was checked by a person — n/a: the list is empty
+
+Manual verification by: n/a: nothing for a person to look at; the list above is empty
+
+### Result
+
+- [x] Open defects are either fixed or explicitly accepted above
+- [ ] Checklist pasted into the PR — n/a: not yet — the PR does not exist at this commit
+- [ ] Handed to the production release manager — n/a: not a release
+
+Result: pass
+
+Release manager acknowledgement: n/a: not a release
