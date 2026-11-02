@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-41 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+42 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -555,6 +555,18 @@ Result: pending
 0. Sign in with `--cards adoption_news`. The home screen shows the **Adoption news** tile (or the tile of a card that includes it).
 1. Open `/residents`: it loads.
 2. **Do:** News from an adopter. Use a disposable record named `walk-adoption_news`. **Read-back:** only an adopted resident has the control: /residents/<id>/adoption-updates lists the new update first, with its date and channel (LINE, Facebook, Email, Visit); text marked staff only is never published (answered 2026-10-23).
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Correct an intake date (`correct_intake_date`)
+
+- Opens: `/admin/intake-date`
+- Also gives: View residents (`view_residents`) (walked under its own heading)
+
+0. Sign in with `--cards correct_intake_date`. The home screen shows the **Correct an intake date** tile (or the tile of a card that includes it).
+1. Open `/admin/intake-date`: it loads.
+2. **TODO:** Correct a resident's intake date. Do it on a disposable record named `walk-correct_intake_date`. Question: where should this write show afterwards (which page, which row)?
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending

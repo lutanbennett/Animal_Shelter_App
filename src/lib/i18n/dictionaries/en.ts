@@ -136,6 +136,7 @@ const en = {
     bloodTestTypes: "Blood Test Types",
     frequencies: "Frequencies",
     units: "Units",
+    intakeDate: "Correct an intake date",
     vets: "Clinics",
     medications: "Medications",
     medicationList: "Medication list",
@@ -237,6 +238,7 @@ const en = {
       recordVetCare: "Record vet care",
       recordMicrochip: "Record a microchip",
       adoptionNews: "Adoption news",
+      correctIntakeDate: "Correct an intake date",
     },
   },
 
@@ -761,6 +763,30 @@ const en = {
   },
 
   admin: {
+    intakeDate: {
+      title: "Correct an intake date",
+      subtitle:
+        "Use this when a resident's intake date was typed wrongly. Find the resident, pick the right date and save: the date moves everywhere the intake stamped it, in one go, so the record cannot disagree with itself.",
+      searchLabel: "Resident name or code",
+      searchPlaceholder: "For example Biscuit or R-0042",
+      searchButton: "Find",
+      noMatch: "No resident matches that.",
+      noIntakeDate: "no intake date",
+      currentIntake: "Intake date now",
+      willMove: "These records move with it",
+      recordIntake: (d: string) => `The resident's intake date (${d})`,
+      recordAge: (d: string) => `The date the age was estimated (${d})`,
+      recordPlacement: (place: string | null, d: string) => `The first place, ${place ?? "Unassigned"}, from ${d}`,
+      recordDiet: (name: string, d: string) => `The starting diet, ${name}, from ${d}`,
+      recordWeight: (kg: number, d: string) => `The intake weight, ${kg} kg, on ${d}`,
+      leftAlone:
+        "A later diet change, move, weighing or clinic visit is never moved. If the new date would fall after one of them, the save is refused and says which. The place the resident came from keeps its own date, because other residents can share it.",
+      newDate: "Correct intake date",
+      save: "Save the corrected date",
+      saved: (from: string, to: string) => `Intake date moved from ${from} to ${to}.`,
+      notAllowed: "Your cards do not let you correct an intake date.",
+      chooseDate: "Choose the corrected date.",
+    },
     /**
      * Settings → Who does what: every activity × every live role, view only (who-does-what-view).
      * Activity names are the people-facing half of the catalogue (src/lib/permissions/catalogue.ts keeps
@@ -929,6 +955,7 @@ const en = {
           record_vet_care: "A vet records visits, procedures, blood tests, prescriptions, immunizations and diets. It does not archive records, send to hospital or book visits.",
           record_microchip: "Record or correct a resident's microchip number, and nothing else about the resident.",
           adoption_news: "Record news that an adopter sends about an adopted resident.",
+          correct_intake_date: "Correct the date a resident was taken in, and move the dates the intake stamped with it: the first place, the starting diet, the intake weight and the age estimate. Nothing else about the resident changes.",
           donations_receipts: "Issue donation receipts, choosing the resident or project a gift is for.",
           bills: "Take in and file the shelter's bills, and see the maintenance jobs they belong to.",
           website: "Change what the public website says.",
@@ -1032,6 +1059,7 @@ const en = {
         "resident.register": "Register a new resident (intake)",
         "resident.microchip": "Record or correct a microchip number",
         "resident.adoption_news": "News from an adopter",
+        "resident.correct_intake_date": "Correct a resident's intake date",
         "placement.move": "Move a resident to another enclosure",
         "placement.hospital": "Send to hospital and bring back",
         "placement.rehome": "Foster, adopt, return to the shelter",
@@ -1154,6 +1182,8 @@ const en = {
           "The medication list prescriptions are written from: names, units, merging duplicates, and the units each is bought and counted in.",
         units:
           "The units of measure an ingredient or a medicine is counted in. Add one, such as each for eggs, and the forms offer it straight away.",
+        intakeDate:
+          "Fix a resident's intake date when it was typed wrongly. Their first place, starting diet, intake weight and age estimate move with it.",
         diets:
           "The food list staff pick from: names, units, the daily amount for each size, the standard diet, and the units each is bought and counted in.",
         security:

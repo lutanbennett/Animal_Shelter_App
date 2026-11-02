@@ -287,6 +287,15 @@ export const ENTRIES = {
       expect: "The number shows under the resident's name. Fewer than 15 digits, or a number another resident has, is refused.",
     },
   ],
+  "correct-intake-date": [
+    {
+      activity: "Correct a resident's intake date",
+      needs: "resident.correct_intake_date",
+      device: "desktop",
+      do: "In Settings tap Correct an intake date, find a test resident, pick an earlier date and tap Save the corrected date.",
+      expect: "The page confirms the move, and the resident's intake date, first place, starting diet and intake weight all show the new date. A date after a later move, diet, weight or clinic visit is refused and names it.",
+    },
+  ],
   intake: [
     {
       activity: "Register a new resident (intake)",
