@@ -231,8 +231,8 @@ export async function assistantBookClinicVisit(
       });
       if (error) return { error: error.message };
       // The RPC books for a list of residents, so it answers with a list
-      // of ids; the assistant only ever sends one.
-      const id = Array.isArray(data) ? data[0] : data;
+      // of visit rows; the assistant only ever sends one.
+      const id = (Array.isArray(data) ? data[0] : data)?.id;
       // Saved first; the calendar is second and can never undo it (calendar-sync.ts).
       if (typeof id === "string" && id) await syncVisitToCalendar(id, (await getSiteOrigin())?.origin ?? null);
       return { ok: true, id: typeof id === "string" ? id : "" };
