@@ -11,7 +11,7 @@
 | PR | see PR body |
 | Tested by / date | Claude (stream `access-wording-pile-b`) / 2026-11-02 |
 | Carries a migration? | no |
-| Tested at SHA | SHA_HERE |
+| Tested at SHA | de5fe6e7 |
 
 ## 1. Scope and risk
 
@@ -35,7 +35,13 @@ Out of scope: manual prose, `can.ts`, the untraced update/delete policy behind `
 - [ ] CI green on the PR (runs the same three) — n/a: not yet — the PR does not exist at this commit
 
 ```
-GATES_HERE
+gates: typecheck exited 0 after 90s
+gates: lint exited 0 after 153s
+gates: test exited 0 after 18s
+gates: build exited 0 after 249s
+gates: typecheck=0 lint=0 test=0 build=0
+
+(typecheck ran just before the release-note line was added to releases.ts; lint, test and build ran after it.)
 ```
 
 Also run: `node scripts/check-thai-dictionary.mjs` (exit 0, *"every Thai entry is either translated,
