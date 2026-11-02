@@ -1,31 +1,39 @@
-# Feature test plan — planner handover `573`
+# Feature test plan — planner handover `600`
 
 ## Header
 
 | | |
 |---|---|
-| Feature | `docs/planner-handover.md` rewritten as edition `573`, carrying batch 2's results — **plus the change that prompted it: the handover counter is tied to the plan rather than to an independent count of nine** (`.claude/skills/plan-day/SKILL.md`, step 6's counter rule and step 8's trigger), **plus the line-endings trap promoted into the same skill** |
-| Backlog item | `docs/backlog.md` → none. The handover is the planner skill's step 8, not a backlog item. **The counter change is Lutan's instruction of 2026-11-02 in chat** (*"can we sync these counters up to avoid confusion"*), not an item either |
-| Branch / worktree | `claude/handover-564-amend` @ `C:\Development\Animal_Shelter_handover-564-amend` — **the branch was named before this became `573` rather than an amendment to `564`; the name is stale and the PR says so** |
-| Dev server | not started — `n/a: two markdown files, no runtime surface` |
+| Feature | `docs/planner-handover.md` rewritten as edition `600`, carrying this plan's batches 1 and 2 in full and batch 3's setup. **One file; no skill change, no `CLAUDE.md` change** |
+| Backlog item | `docs/backlog.md` → none. The handover is the planner skill's step 8, not a backlog item |
+| Branch / worktree | `claude/handover-600` @ `C:\Development\Animal_Shelter_handover-600` |
+| Dev server | not started — `n/a: one markdown file, no runtime surface` |
 | PR | #TBD |
-| Tested by / date | Claude (Daily Planner) / 2026-11-02 |
+| Tested by / date | Claude (Planner) / 2026-11-02 |
 | Carries a migration? | no |
-| Tested at SHA | `874c58ad` |
+| Tested at SHA | `71fc294c` |
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for — *edition `573` written, and the handover counter re-tied to the plan boundary so the two nines cannot drift apart.* There is no backlog item, as the header says
-- [x] Files/areas touched listed — `docs/planner-handover.md`, `.claude/skills/plan-day/SKILL.md` and this plan. **No `src/`, no `scripts/`, no `supabase/migrations/`, no `worker/`, no workflow, no `CLAUDE.md`**
-- [x] Access affected identified — **none.** Neither file grants nor denies anything: the handover is read by one chat and outranks nothing, which it says in its own opening lines, and the skill is instructions for a planning session. No card, activity, policy or page changes. *(Stated by card rather than by role, per `CLAUDE.md`: there is no card-derived behaviour here)*
-- [x] Anything explicitly **out of scope** written down — **(a)** `CLAUDE.md` still names only the first of the two session-start conditions; recorded on `564`'s plan and still not fixed here, because it does not belong in a handover PR. **(b)** This PR deliberately does **not** amend `564`: the material was first written as a 124-line amendment to a 163-line edition, which **is a new edition in substance**, so `564` was restored untouched with `git checkout --` and `573` written instead. **Length: 150 lines**, measured with `wc -l`, inside the ~150 target — **and the split is what achieved that**, which is the point recorded in the edition itself. **(c)** The skill grows by 44 lines on purpose; promotion is what keeps the handover short
+- [x] Change is described in one sentence, and it matches what the backlog item asked for — *edition `600` written as a delta over `591`, leading on the one-go carve-out having been tested and refused, and on a brief block that did not hold.* There is no backlog item, as the header says
+- [x] Files/areas touched listed — **`docs/planner-handover.md` and this plan, and nothing else.** No `src/`, no `scripts/`, no `supabase/migrations/`, no `worker/`, no workflow, no `CLAUDE.md`, no `.claude/skills/`. `git diff --stat origin/main..HEAD` shows one file, 123 insertions and 146 deletions
+- [x] Access affected identified — **none.** The handover grants and denies nothing: it is read by one planning chat, it outranks nothing (it says so in its own opening lines), and it is rewritten every plan. No card, activity, policy, page, tile or control changes. *(Stated by card rather than by role, per `CLAUDE.md`: there is no card-derived behaviour here)*
+- [x] Anything explicitly **out of scope** written down — **(a)** The two promotions the edition recommends are deliberately **not** made here: the finishing deliverable into the skill's brief blocks (17 of 17 and still hand-written), and the gates-read step as a numbered deliverable. **Both belong in a PR that changes the skill**, which is the `process-docs-fixes` item this plan swapped out, and doing them in a handover PR is exactly the mixing of a process-doc change with another kind of work that `docs/decisions/2026-10-29-folded-process-docs-get-their-own-pr.md` warns against. **(b)** Batch 3's figures are not in the edition and it says so in its own second paragraph; the next edition carries them. **(c)** Length: **152 lines**, measured with `wc -l`, against the ~150 target and the ~160 ship-it threshold, and **shorter than its predecessor's 175** — so no trimming pass was opened, per the skill's own instruction not to spend round-trips on wordsmithing
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `n/a` would be wrong: the branch was created from `origin/main` minutes earlier and `git push` reported the branch as new, so there was nothing to merge in. The gates were run in full regardless
+- [x] `node scripts/worktree.mjs sync` — `n/a` would be wrong: the worktree was created from `origin/main` minutes earlier and `git push` reported the branch as new, so there was nothing to merge in. The gates were run in full regardless
 - [x] `node scripts/gates.mjs` ends:
 
 ```
+=== gates: typecheck — npm run typecheck
+=== gates: typecheck exited 0 after 100s
+=== gates: lint — npm run lint
+=== gates: lint exited 0 after 140s
+=== gates: test — npm test
+=== gates: test exited 0 after 15s
+=== gates: build — npm run build
+=== gates: build exited 0 after 128s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
@@ -37,7 +45,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — `n/a: no runtime surface; the deliverables are two markdown files`
+- [ ] Happy path works end to end — `n/a: no runtime surface; the deliverable is one markdown file`
 - [ ] Data persists — `n/a: no runtime surface`
 - [ ] Create / edit / delete all exercised — `n/a: no runtime surface`
 - [ ] Empty state renders sensibly — `n/a: no runtime surface`
@@ -51,15 +59,15 @@ grouping of cards and every assignment will be rebuilt).
 
 | Card | Can reach | Expected | Result |
 |---|---|---|---|
-| *(none)* | nothing changes | both files are developer documents read by a planning chat, not app surfaces: no card opens either, no card is read by either, and no page, tile, control, activity or policy is touched | as expected — no card-derived behaviour exists to test |
+| *(none)* | nothing changes | the handover is a developer document read by a planning chat, not an app surface: no card opens it, no card is read by it, and no page, tile, control, activity or policy is touched | as expected — no card-derived behaviour exists to test |
 
-- [x] Every card above tested — vacuously: the diff is two markdown files and this plan
+- [x] Every card above tested — vacuously: the diff is one markdown file and this plan
 - [ ] A card that should not have access is blocked server-side — `n/a: no server surface in this PR`
 
 ## 5. Cross-cutting
 
 - [ ] Nav entry correct — `n/a: no nav change`
-- [ ] Manual updated — `n/a: these are documents for the planning chat, not something a shelter user does`
+- [ ] Manual updated — `n/a: this is a document for the planning chat, not something a shelter user does`
 - [ ] Translatable strings go through the translation path — `n/a: no user-facing string`
 - [ ] Mobile viewport (375px) — `n/a: no UI`
 - [ ] Browser console clean — `n/a: no UI`
@@ -67,36 +75,36 @@ grouping of cards and every assignment will be rebuilt).
 
 ## 6. Regression
 
-- [x] The pages nearest the change still work — `n/a` would be wrong: `docs/` is read by `scripts/check-test-plan.mjs` and `scripts/check-docs-only.mjs`, and `.claude/skills/` is outside both, so the four gates were run in full rather than skipped as a documentation change
-- [x] Any shared file touched checked from a second, unrelated place — **the skill is the shared file, and all four edits to it were anchored against text read from the file itself, each with a guard that exits non-zero when the anchor is missing.** All four passed on the first run. **The two counter edits were read in place first** (step 6 at the `Workstreams since handover` line, step 8 at the `At nine or more workstreams` line) so the change lands on the sentences that actually carried the rule rather than beside them. **And the restore was verified, not assumed:** after `git checkout -- docs/planner-handover.md` the script asserted the file contained ``edition `564` `` before writing `573` over it, so no part of the discarded amendment survives
-- [x] Nothing merged from `main` during `sync` was broken by this branch — nothing was merged; the branch is two commits of markdown on top of `origin/main`
+- [x] The pages nearest the change still work — `n/a` would be wrong: `docs/` is read by `scripts/check-test-plan.mjs` and `scripts/check-docs-only.mjs`, so the four gates were run in full rather than skipped as a documentation change. All four exited 0 at this SHA
+- [x] Any shared file touched checked from a second, unrelated place — **the handover is the only file touched, and it is read by exactly one consumer: the next planning chat.** The thing worth checking instead is that it does not contradict the documents that outrank it, so each of its claims about the rules was read back against its source: the merge-on-green and test-plan rules against `CLAUDE.md`, the band and brief-block rules against `.claude/skills/plan-day/SKILL.md`, and the counter and handover-trigger rules against step 6 and step 8 of that skill. **The edition states in its own opening lines that it outranks none of them**
+- [x] Nothing merged from `main` during `sync` was broken by this branch — nothing was merged; the branch is one commit of markdown on top of `origin/main`
 
 ## 7. Documentation
 
-- [ ] Backlog item ticked **on this branch** — `n/a: the handover is the skill's step 8, not a backlog item, and the counter change came from Lutan in chat`
-- [x] Non-obvious design choices added as a new file in `docs/decisions/` — `n/a` would be wrong, but no new file is needed: **the design choice is the subject of the edition's own lead section**, which sets out why the plan boundary was kept and the counter moved to it rather than the other way round, and the skill passages carry the reasoning where a planner will meet it. `docs/decisions/2026-10-08-planner-handover-counter.md` remains the paper for why the counter exists at all and is cited by the changed passage
-- [x] `README.md` still accurate — it says nothing about the handover or the skill
-- [ ] **Release notes.** — `n/a: nobody at the shelter would notice. A handover and a planning skill touch no page, no card and no data`
+- [ ] Backlog item ticked **on this branch** — `n/a: the handover is the skill's step 8, not a backlog item`
+- [x] Non-obvious design choices added as a new file in `docs/decisions/` — `n/a` would be wrong, but no new file is needed: **the design choices are the subject of the edition's own two lead sections** (what the carve-out test proved, and why a third rewording of the notification block is the wrong fix), written where a planner will meet them. `docs/decisions/2026-10-08-planner-handover-counter.md` remains the paper for why the counter exists and is unchanged by this PR
+- [x] `README.md` still accurate — it says nothing about the handover
+- [ ] **Release notes.** — `n/a: nobody at the shelter would notice. A planner handover touches no page, no card and no data, and the release-notes file is not in this diff`
 - [x] Commit messages say why, not just what
-- [x] **Claims in commit messages and decision files were measured, not reasoned** — the band verdicts are each stream's own posted `stream-usage:` comment read against the band recorded in `.plan-day.md` at setup; the floors are `tokens − messages` from those comments; **the two-nines account is this session's own transcript, with Lutan's words quoted from it**; the five waiting streams were counted from their own reports and the nudges sent; the `test-plan` failures were read from the CI job logs, not inferred; the line-endings cause was established with `git show <rev>:docs/backlog.md | file -` on **both** branches plus `git config core.autocrlf`; the line counts are `wc -l`
+- [x] **Claims in commit messages and decision files were measured, not reasoned** — the band verdicts are each stream's own posted `stream-usage:` comment read against the band recorded in `.plan-day.md` **at setup**, not after the fact; the floors are `tokens − messages` from those comments; the one recovered figure is `get_usage` on that session's id with `context.session` checked to echo the id passed, and the one lost figure is recorded `unmeasured` rather than reconstructed from a neighbour; **the refusal text is quoted from the tool result, not paraphrased**; the twelve-row calendar reading was dismissed only after reading that check's own SQL in `scripts/lib/readonly-checks.mjs`; the production verdicts are `check-production.mjs` runs against `dbkodyyxxhtygxcxmfcu` with the project named; the exact card count is `scripts/check-cards-count.mjs:35` read in place; the two streams that stopped mid-wait are quoted from their own reports; the line counts are `wc -l`
 
 ## 8. Pre-production gate
 
-- [ ] Every line in this section — `n/a: nothing in this PR is deployed. No code, no schema, no Worker change, no secret, no env var; the artefacts are two markdown files read by a planning chat`
+- [ ] Every line in this section — `n/a: nothing in this PR is deployed. No code, no schema, no Worker change, no secret, no env var; the artefact is one markdown file read by a planning chat`
 
 ## Defects found
 
 | # | Severity | What | Status |
 |---|---|---|---|
-| 1 | low | The material was first written as an amendment to `564`, reaching **295 lines** before two content cuts took it to 287 | **Fixed, not accepted.** The cuts saved eight lines, which is what showed the approach rather than the prose was wrong. `564` was restored untouched and the material written as `573` at **150 lines**. **Recorded because the lesson generalises: when a trimming pass saves almost nothing, the shape is wrong, not the wording** |
-| 2 | low | The branch is named `claude/handover-564-amend`, which is stale | **Accepted.** Renaming would need a force-push for a two-commit documentation branch; the PR body and this plan both say so |
-| 3 | — | none | The `CLAUDE.md` session-start gap recorded on the previous two editions **still has not been closed.** Recorded again in section 1 rather than silently fixed here |
+| 1 | low | The edition recommends two promotions into `.claude/skills/plan-day/SKILL.md` and makes neither | **Accepted, and deliberately.** A skill change is a different kind of work from a handover and belongs in its own PR (`docs/decisions/2026-10-29-folded-process-docs-get-their-own-pr.md`). The item that would do it, `process-docs-fixes`, was swapped out of this plan and the edition names it as the leading candidate for the next one — **so the recommendation is recorded where the next planner will read it rather than left in a chat** |
+| 2 | low | Batch 3's three streams were still running when this was written, so their figures are in no edition | **Accepted; it is the rule.** The skill requires the handover at the **setup** of the last batch, not after it merges, and requires the edition to say so rather than imply coverage it lacks. The edition says it twice — in its second paragraph and in its state block |
+| 3 | — | none | The two streams that ended turns waiting on a background gates run were both nudged and both resumed; **nothing was lost, and the fault is recorded as a briefing defect rather than a stream error**, since the second one happened after its brief warned about it twice |
 
 ## Left for manual verification
 
 | # | What to check | Where |
 |---|---|---|
-| — | nothing | Lutan has never read a handover, and it outranks nothing — it is read by the next planning chat, rewritten each plan, and a wrong one is corrected by its successor rather than by a reviewer. That is why `CLAUDE.md` lets its PR merge without asking. The skill change is instructions to that same chat, and **the next round tests it by following it**: the counter should read `0 of <total>` and the next edition should fall due at that plan's last batch |
+| — | nothing | Lutan has never read a handover, and it outranks nothing — it is read by the next planning chat, rewritten each plan, and a wrong one is corrected by its successor rather than by a reviewer. That is why `CLAUDE.md` lets its PR merge without asking. **The next round tests it by following it:** the counter should read `0 of <total>` with this slug and date, batch 3's figures should appear in the next edition, and the two recommended promotions should be picked up by `process-docs-fixes` |
 
 ## Sign-off
 
@@ -105,7 +113,7 @@ grouping of cards and every assignment will be rebuilt).
 - [x] Everything in this checklist that could be verified without human eyes was run, not assumed
 - [x] Nothing is ticked that was not actually executed
 
-Automated checks by: Claude (Daily Planner)  Date: 2026-11-02
+Automated checks by: Claude (Planner)  Date: 2026-11-02
 
 ### Manual verification
 
@@ -115,7 +123,7 @@ Manual verification by: n/a: a handover is read by the next planning chat and ou
 
 ### Result
 
-- [x] Open defects are either fixed or explicitly accepted above — 1 fixed, 2 accepted with its reason
+- [x] Open defects are either fixed or explicitly accepted above — 1 and 2 accepted with their reasons, 3 is a note rather than a defect
 - [x] Checklist pasted into the PR
 - [ ] Handed to the production release manager — `n/a: nothing here reaches production`
 
