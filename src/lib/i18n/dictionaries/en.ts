@@ -4531,6 +4531,8 @@ const en = {
     selectVet: "Select a clinic",
     doctorName: "Doctor (optional)",
     doctorNamePlaceholder: "e.g. Dr Somchai",
+    doctorNone: "No doctor recorded",
+    doctorChooseHint: "Choose from the doctors already listed for this clinic. Adding a new doctor is done on the clinic's doctor list.",
     doctorNameHint: "Who saw the resident, if you know. Leave blank otherwise.",
     dateTime: "Date & time",
     dateTimeHint: "Use a past date/time to log a visit that already happened, and set the status to Completed.",

@@ -1,3 +1,4 @@
+import { can } from "@/lib/permissions/can";
 import { canTagNote } from "@/lib/note-tags/can";
 import { requirePermission } from "@/lib/permissions/require";
 import { createClient } from "@/lib/supabase/server";
@@ -97,6 +98,7 @@ export default async function NewClinicVisitPage(
         fixedClinic={scope.kind === "clinics" && clinics.length === 1 ? clinics[0] : null}
         lockedDoctor={scope.kind === "clinics" ? scope.doctorName : null}
         doctorNamesByClinic={doctorNamesByClinic}
+        canAddDoctor={can(perms, "clinics.doctors")}
         preselectedResidentIds={[...preselectedIds]}
         preselectedClinicId={
           typeof clinicIdParam === "string" && clinics.some((c) => c.id === clinicIdParam)
