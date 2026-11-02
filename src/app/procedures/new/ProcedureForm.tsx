@@ -1,5 +1,7 @@
 "use client";
 
+import { TagNoteField } from "@/components/TagNoteField";
+import type { NoteTag } from "@/lib/note-tags/text";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
 import { RowActionButton } from "@/components/RowAction";
@@ -47,9 +49,12 @@ export function ProcedureForm({
   procedureTypes,
   clinicVisits,
   preselectedClinicVisitId,
+  canTagNotes = false,
 }: {
   residentId: string;
   residentDisplayName: string;
+  /** canTagNote(perms, ["medical.procedures"]): the save asks medical.procedures. Default false. */
+  canTagNotes?: boolean;
   /**
    * The current chip, when the person may set it (admin, staff, doctor). After a
    * Microchipping is saved they are asked for the number before leaving.
@@ -278,12 +283,15 @@ export function ProcedureForm({
         <label htmlFor="notes" className="text-sm font-medium text-muted">
           {t.procedures.notes}
         </label>
-        <textarea
+        <TagNoteField
           id="notes"
           name="notes"
           rows={4}
           placeholder={t.procedures.notesPlaceholder}
           className={inputClass}
+          canTag={canTagNotes}
+          initialTags={[]}
+          selfId={residentId}
         />
       </div>
 
