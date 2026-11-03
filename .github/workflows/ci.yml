@@ -187,6 +187,11 @@ jobs:
       # The Worker and the Pi must build with the same Server Actions key, or a
       # form rendered by one fails on the other (check-actions-key.mjs).
       - run: node scripts/check-actions-key.mjs
+      # Every backlog item keeps a permanent id. Without one its page anchor comes
+      # from its title, so the next grooming round that rewords that title detaches
+      # Lutan's Customer priority from it — weeks-later damage from a commit that
+      # looked fine. `node scripts/backlog-ids.mjs docs/backlog.md` fixes it.
+      - run: node scripts/check-backlog-ids.mjs
       # Public hostnames (site-hosts.ts) and public pages (public-paths.ts) are each one list.
       - run: node scripts/check-site-hosts.mjs
       - run: node scripts/check-public-paths.mjs
