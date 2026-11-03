@@ -132,7 +132,7 @@ Automated checks by: Claude  Date: 2026-11-03
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: a person to look at /releases as Admin and as a card-only login
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet, a person has not looked
 
 Manual verification by: pending: a person to look at /releases as Admin and as a card-only login
 
