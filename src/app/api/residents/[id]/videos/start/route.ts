@@ -5,8 +5,8 @@ import { MAX_VIDEO_BYTES, VIDEO_MIME_TYPES } from "@/lib/uploads/limits";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
-import { ensureResidentPhotosFolder, getDriveClient } from "@/lib/google/drive";
-import { dateToYymm, photoCategoriesFor, type PhotoCategory } from "@/lib/google/drive-client";
+import { ensureResidentAdoptionUpdateFolder, ensureResidentPhotosFolder, getDriveClient } from "@/lib/google/drive";
+import { dateToYymm, dateToYyyymmdd, photoCategoriesFor, type PhotoCategory } from "@/lib/google/drive-client";
 import { withDriveErrors } from "@/lib/google/drive-errors";
 import { refuseCrossSite } from "@/lib/auth/same-origin";
 
@@ -36,13 +36,13 @@ async function handlePost(
   const origin = request.headers.get("origin");
   if (!origin) return NextResponse.json({ error: "Missing origin." }, { status: 400 });
 
-  let body: { fileName?: unknown; mimeType?: unknown; size?: unknown; category?: unknown; dateTaken?: unknown };
+  let body: { fileName?: unknown; mimeType?: unknown; size?: unknown; category?: unknown; dateTaken?: unknown; adoptionUpdateId?: unknown };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
-  const { fileName, mimeType, size, category, dateTaken } = body;
+  const { fileName, mimeType, size, category, dateTaken, adoptionUpdateId } = body;
 
   if (typeof fileName !== "string" || !fileName.trim()) {
     return NextResponse.json({ error: "No file provided." }, { status: 400 });
@@ -58,11 +58,19 @@ async function handlePost(
   }
 
   const categories = photoCategoriesFor(perms);
+  // A video an adopter sent (AdoptionUpdateForm) carries its update's id and posts no category; it is filed under
+  // Adoption updates/<YYYYMMDD>/ exactly as the photo route files an adopter's photo, with the same refusals.
+  if (adoptionUpdateId !== undefined && (typeof adoptionUpdateId !== "string" || !adoptionUpdateId)) {
+    return NextResponse.json({ error: "Invalid adoption update." }, { status: 400 });
+  }
+  if (categories.length === 0) {
+    return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
+  }
   const onlyFolder = categories.length === 1 ? categories[0] : null;
-  if (onlyFolder && category !== onlyFolder) {
+  if (onlyFolder && (adoptionUpdateId || category !== onlyFolder)) {
     return NextResponse.json({ error: t.photos.errors.onlyFolder(onlyFolder) }, { status: 403 });
   }
-  if (typeof category !== "string" || !categories.includes(category as PhotoCategory)) {
+  if (!adoptionUpdateId && (typeof category !== "string" || !categories.includes(category as PhotoCategory))) {
     return NextResponse.json({ error: `Folder must be one of: ${categories.join(", ")}.` }, { status: 400 });
   }
   if (typeof dateTaken !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(dateTaken)) {
@@ -81,13 +89,24 @@ async function handlePost(
     return NextResponse.json({ error: "Resident not found." }, { status: 404 });
   }
 
+  let updateReceivedOn: string | null = null;
+  if (typeof adoptionUpdateId === "string") {
+    const { data: updateRows } = await supabase
+      .from("adoption_updates")
+      .select("id, received_on")
+      .eq("id", adoptionUpdateId)
+      .eq("resident_id", id)
+      .limit(1)
+      .returns<{ id: string; received_on: string }[]>();
+    if (!updateRows?.[0]) return NextResponse.json({ error: t.adoptionUpdates.errors.notFound }, { status: 404 });
+    updateReceivedOn = updateRows[0].received_on;
+  }
+  const subFolder = updateReceivedOn ? dateToYyyymmdd(updateReceivedOn) : (category as PhotoCategory);
+
   const drive = getDriveClient();
-  const { residentFolderId, uploadFolderId, isNewResidentFolder } = await ensureResidentPhotosFolder(
-    drive,
-    residentRow,
-    category,
-    dateToYymm(dateTaken),
-  );
+  const { residentFolderId, uploadFolderId, isNewResidentFolder } = updateReceivedOn
+    ? await ensureResidentAdoptionUpdateFolder(drive, residentRow, subFolder)
+    : await ensureResidentPhotosFolder(drive, residentRow, subFolder, dateToYymm(dateTaken));
   if (isNewResidentFolder) {
     await supabase.from("residents").update({ drive_folder_id: residentFolderId }).eq("id", id);
   }
@@ -105,7 +124,7 @@ async function handlePost(
     .from("video_uploads")
     .insert({
       resident_id: id,
-      sub_folder: category,
+      sub_folder: subFolder,
       file_name: fileName,
       mime_type: mimeType,
       size_bytes: size,

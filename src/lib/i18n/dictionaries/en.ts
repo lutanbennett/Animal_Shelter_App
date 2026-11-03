@@ -7139,7 +7139,7 @@ const en = {
         legend: "Publish to the website",
         intro:
           "Only tick this if the adopter has told you that we may show their photo and words to the public. Nothing is published unless you tick it.",
-        tick: "Publish this update's photos and the words below on the public website",
+        tick: "Publish this update's photos, videos and the words below on the public website",
         warning: "This will be visible to anyone on the internet. Untick and save to take it down.",
         story: "Words to publish",
         storyPlaceholder: "Mango loves her new garden and sleeps on the sofa every night.",
@@ -7148,18 +7148,22 @@ const en = {
         firstName: "First name to show (optional)",
         firstNameHint: "One word, typed by you. Leave empty to show no name. Never a surname.",
         photosNote:
-          "Any photo on this update (except one in the Medical folder) can be shown. Delete a photo you do not want shown.",
+          "Any photo or video on this update (except one in the Medical folder) can be shown. Delete a photo or video you do not want shown.",
       },
       notePlaceholder: "Settling in well, sleeps on the sofa, has a new friend next door…",
-      photos: "Photos",
-      addMorePhotos: "Add more photos",
-      photosHint: "Optional. You can pick several at once; each is tagged with this update.",
+      photos: "Photos and videos",
+      addMorePhotos: "Add more photos and videos",
+      photosHint:
+        "Optional. You can pick photos and videos, several at once; each is tagged with this update. Photos up to 15 MB; videos are MP4 or MOV up to 500 MB.",
       fileTooLarge: "Larger than 15 MB — choose a smaller copy.",
+      videoTooLarge: "Larger than 500 MB (about 5 minutes) — trim it or choose a shorter clip.",
+      notAccepted: (name: string) =>
+        `${name} was not added: only photos and MP4 or MOV videos can be attached.`,
       photosFailed: (n: number) =>
         n === 1
-          ? "The update is saved, but one photo did not upload. Save again to retry it."
-          : `The update is saved, but ${n} photos did not upload. Save again to retry them.`,
-      savedRetryHint: "The update is saved. Saving again retries any photos that did not upload.",
+          ? "The update is saved, but one file did not upload. Save again to retry it."
+          : `The update is saved, but ${n} files did not upload. Save again to retry them.`,
+      savedRetryHint: "The update is saved. Saving again retries any photos or videos that did not upload.",
       save: "Save update",
       saveChanges: "Save changes",
       saving: "Saving…",
@@ -7454,6 +7458,7 @@ const en = {
       heading: "Home at last",
       subtitle: "News and photos from families who adopted from us, shared with their permission.",
       photoAlt: (name: string) => `${name} in their new home`,
+      videoAlt: (name: string) => `Video of ${name} in their new home`,
       from: (first: string) => `— ${first}`,
       cardHeading: (name: string) => `${name} in their new home`,
     },

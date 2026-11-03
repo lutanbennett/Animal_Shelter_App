@@ -5,7 +5,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { getDriveClient } from "@/lib/google/drive";
-import { photoCategoriesFor, type PhotoCategory } from "@/lib/google/drive-client";
+import { dateToYyyymmdd, photoCategoriesFor, type PhotoCategory } from "@/lib/google/drive-client";
 import { withDriveErrors } from "@/lib/google/drive-errors";
 import { refuseCrossSite } from "@/lib/auth/same-origin";
 
@@ -30,19 +30,20 @@ async function handlePost(
     return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
   }
 
-  let body: { uploadId?: unknown; driveFileId?: unknown; dateTaken?: unknown; durationMs?: unknown };
+  let body: { uploadId?: unknown; driveFileId?: unknown; dateTaken?: unknown; durationMs?: unknown; adoptionUpdateId?: unknown };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
-  const { uploadId, driveFileId, dateTaken, durationMs } = body;
+  const { uploadId, driveFileId, dateTaken, durationMs, adoptionUpdateId } = body;
   if (
     typeof uploadId !== "string" ||
     typeof driveFileId !== "string" ||
     !/^[A-Za-z0-9_-]{10,100}$/.test(driveFileId) ||
     typeof dateTaken !== "string" ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(dateTaken)
+    !/^\d{4}-\d{2}-\d{2}$/.test(dateTaken) ||
+    (adoptionUpdateId !== undefined && (typeof adoptionUpdateId !== "string" || !adoptionUpdateId))
   ) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
@@ -59,9 +60,28 @@ async function handlePost(
     !upload ||
     upload.resident_id !== id ||
     upload.state !== "started" ||
-    upload.started_by !== (userData.user?.id ?? null) ||
-    !photoCategoriesFor(perms).includes(upload.sub_folder as PhotoCategory)
+    upload.started_by !== (userData.user?.id ?? null)
   ) {
+    return NextResponse.json({ error: "Unknown upload." }, { status: 404 });
+  }
+
+  // An adopter's video: the update must be this resident's and the folder start filed it in must be that
+  // update's dated one. Anything else is filed by category, as before.
+  let updateId: string | null = null;
+  if (typeof adoptionUpdateId === "string") {
+    const { data: updateRows } = await supabase
+      .from("adoption_updates")
+      .select("id, received_on")
+      .eq("id", adoptionUpdateId)
+      .eq("resident_id", id)
+      .limit(1)
+      .returns<{ id: string; received_on: string }[]>();
+    const row = updateRows?.[0];
+    if (!row || photoCategoriesFor(perms).length < 2 || upload.sub_folder !== dateToYyyymmdd(row.received_on)) {
+      return NextResponse.json({ error: "Unknown upload." }, { status: 404 });
+    }
+    updateId = row.id;
+  } else if (!photoCategoriesFor(perms).includes(upload.sub_folder as PhotoCategory)) {
     return NextResponse.json({ error: "Unknown upload." }, { status: 404 });
   }
 
@@ -78,7 +98,7 @@ async function handlePost(
     p_file_name: upload.file_name,
     p_sub_folder: upload.sub_folder,
     p_date_taken: dateTaken,
-    p_adoption_update_id: null,
+    p_adoption_update_id: updateId,
   });
   if (recordError) return NextResponse.json({ error: recordError.message }, { status: 500 });
   const attachmentId = (recordResult as { attachment: { id: string } }[])[0].attachment.id;

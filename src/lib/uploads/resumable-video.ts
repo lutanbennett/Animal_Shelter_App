@@ -47,7 +47,7 @@ export async function uploadResidentVideo(
   t: Dictionary,
   residentId: string,
   file: File,
-  fields: { dateTaken: string; category: string },
+  fields: { dateTaken: string; category?: string; adoptionUpdateId?: string },
   onProgress: (percent: number) => void,
   onRetrying: (retrying: boolean) => void,
 ): Promise<VideoUploadResult> {
@@ -71,6 +71,7 @@ export async function uploadResidentVideo(
       size: file.size,
       category: fields.category,
       dateTaken: fields.dateTaken,
+      adoptionUpdateId: fields.adoptionUpdateId,
     });
     if (!started.ok) return { error: typeof started.json.error === "string" ? started.json.error : messages.failed };
     const { uploadId, uploadUrl } = started.json as { uploadId: string; uploadUrl: string };
@@ -122,7 +123,7 @@ export async function uploadResidentVideo(
 
     onRetrying(false);
     const durationMs = await readVideoDuration(file);
-    const finished = await post("finish", { uploadId, driveFileId, dateTaken: fields.dateTaken, durationMs });
+    const finished = await post("finish", { uploadId, driveFileId, dateTaken: fields.dateTaken, durationMs, adoptionUpdateId: fields.adoptionUpdateId });
     if (!finished.ok) return { error: typeof finished.json.error === "string" ? finished.json.error : messages.failed };
     return {};
   } catch {

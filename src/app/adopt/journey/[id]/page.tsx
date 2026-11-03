@@ -9,6 +9,7 @@ import { loadPublicStoriesFor } from "@/lib/adoption-updates/public";
 import { localizedField } from "@/lib/translations/localize";
 import type { PublicTranslations } from "@/lib/translations/types";
 import { PublicPhoto } from "@/components/PublicPhoto";
+import { PublicVideo } from "@/components/PublicVideo";
 import { speciesLabel } from "@/lib/i18n/enum-labels";
 import { BackLink } from "../../BackLink";
 import { PublicHeader } from "../../PublicHeader";
@@ -124,7 +125,9 @@ export default async function JourneyPage(props: PageProps<"/adopt/journey/[id]"
             <li key={story.id} className="flex flex-col gap-3">
               <h2 className="text-sm font-semibold text-muted">{j.update}</h2>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                {story.photoIds.map((fileId) => (
+                {story.photoIds.map((fileId) => story.videoIds.includes(fileId) ? (
+                  <PublicVideo key={fileId} fileId={fileId} label={t.adopt.successStories.videoAlt(story.name)} className="aspect-[4/3] w-full rounded-xl" />
+                ) : (
                   <div key={fileId} className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-surface">
                     <PublicPhoto
                       fileId={fileId}

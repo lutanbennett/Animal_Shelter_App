@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getDriveClient } from "@/lib/google/drive";
 
 /**
  * Success stories for strangers (0214). Reads ONLY public_adoption_updates:
@@ -16,7 +17,10 @@ export type PublicStory = {
   species: string | null;
   story: string | null;
   firstName: string | null;
+  /** Every file the view lists, photos and videos alike (the cover picture reads the first). */
   photoIds: string[];
+  /** The subset of photoIds that are videos; empty unless loadPublicStoriesFor tells them apart. */
+  videoIds: string[];
 };
 
 type ViewRow = {
@@ -50,6 +54,7 @@ export function foldStories(
         story: r.public_story?.trim() || null,
         firstName: r.public_first_name?.trim() || null,
         photoIds: [r.drive_file_id],
+        videoIds: [],
       });
     }
   }
@@ -76,6 +81,32 @@ export async function loadPublicStories(supabase: SupabaseClient, limit = 6): Pr
   return foldStories(data, cards).slice(0, limit);
 }
 
+const kindCache = new Map<string, boolean>();
+
+/**
+ * Which of these files are videos. The view lists photos and videos alike and its rows carry no media kind
+ * (0303), and a signed-out reader cannot read attachments, so the kind is asked of Drive itself: a mimeType
+ * starting video/. Only ids the view already listed are asked about. A lookup that fails counts as a photo,
+ * which the photo proxy still answers with a thumbnail, never as a video that would not play.
+ */
+export async function findVideoIds(fileIds: string[]): Promise<Set<string>> {
+  const unknown = fileIds.filter((id) => !kindCache.has(id));
+  if (unknown.length > 0) {
+    const drive = getDriveClient();
+    await Promise.all(
+      unknown.map(async (id) => {
+        try {
+          const file = await drive.getFile(id, "id, mimeType");
+          kindCache.set(id, (file.mimeType ?? "").startsWith("video/"));
+        } catch {
+          // not cached: asked again next time
+        }
+      }),
+    );
+  }
+  return new Set(fileIds.filter((id) => kindCache.get(id)));
+}
+
 /** The stories about one animal, for its own page once adopted. */
 export async function loadPublicStoriesFor(supabase: SupabaseClient, residentId: string): Promise<PublicStory[]> {
   const { data, error } = await supabase
@@ -85,7 +116,10 @@ export async function loadPublicStoriesFor(supabase: SupabaseClient, residentId:
     .returns<ViewRow[]>();
   if (error || !data?.length) return [];
   const cards = await loadCards(supabase, [residentId]);
-  return foldStories(data, cards);
+  const stories = foldStories(data, cards);
+  const videos = await findVideoIds(stories.flatMap((s) => s.photoIds));
+  for (const s of stories) s.videoIds = s.photoIds.filter((id) => videos.has(id));
+  return stories;
 }
 
 /** Which animals have a published story, so Happy endings links only the pictures that lead somewhere. */
