@@ -11,7 +11,7 @@
 | PR | opened from this branch |
 | Tested by / date | Claude, 2026-11-03 |
 | Carries a migration? | no (0303 landed in #1229) |
-| Tested at SHA | @@SHA@@ |
+| Tested at SHA | 50790547 |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,11 @@
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`, every `<N>` is `0`:
 
 ```
-@@GATES@@
+=== gates: typecheck exited 0 after 18s
+=== gates: lint exited 0 after 113s
+=== gates: test exited 0 after 15s
+=== gates: build exited 0 after 43s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
