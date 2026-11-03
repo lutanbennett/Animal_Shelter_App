@@ -9,7 +9,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
+import { MAX_UPLOAD_BYTES, MAX_VIDEO_BYTES, VIDEO_MIME_TYPES } from "@/lib/uploads/limits";
+import { uploadResidentVideo } from "@/lib/uploads/resumable-video";
 import { uploadResidentPhoto } from "@/components/PhotoUploader";
 import { ADOPTION_UPDATE_CHANNELS } from "@/lib/adoption-updates/options";
 import { saveAdoptionUpdate } from "./actions";
@@ -28,7 +29,13 @@ type PhotoItem = {
   progress: number;
   status: "queued" | "uploading" | "done" | "error";
   error?: string;
+  /** A video whose connection dropped and is being picked up again. */
+  retrying?: boolean;
 };
+
+const isVideo = (f: File) => VIDEO_MIME_TYPES.has(f.type);
+/** Over the limit for its kind (photos 15 MB, videos 500 MB), or null. */
+const limitFor = (f: File) => (isVideo(f) ? MAX_VIDEO_BYTES : MAX_UPLOAD_BYTES);
 
 function channelButtonClass(active: boolean) {
   return `flex-1 rounded px-3 py-2 text-sm font-medium transition ${
@@ -52,6 +59,7 @@ export function AdoptionUpdateForm({
   defaultSenderId,
   today,
   canTagNotes = false,
+  canAttach = false,
   initialNoteTags = [],
 }: {
   residentId: string;
@@ -76,6 +84,8 @@ export function AdoptionUpdateForm({
   today: string;
   /** canTagNote(perms, ["resident.adoption_news"]): the save asks resident.adoption_news. Default false. */
   canTagNotes?: boolean;
+  /** What the photo and video routes ask: can(perms, "photos.resident_add") and can(perms, "photos.resident_publish"): record_attachment refuses an adopter's file to a login that cannot publish (0217). Default false: no picker. */
+  canAttach?: boolean;
   initialNoteTags?: NoteTag[];
 }) {
   const { t } = useI18n();
@@ -105,15 +115,24 @@ export function AdoptionUpdateForm({
 
   function addFiles(list: FileList | null) {
     if (!list) return;
-    const items = Array.from(list)
-      .filter((f) => f.type.startsWith("image/"))
-      .map<PhotoItem>((file) => ({
+    // Nothing is dropped unseen: a file this form cannot take stays in the list, marked with the reason.
+    const items = Array.from(list).map<PhotoItem>((file) => {
+      const accepted = file.type.startsWith("image/") || isVideo(file);
+      const refusal = !accepted
+        ? a.form.notAccepted(file.name)
+        : file.size > limitFor(file)
+          ? isVideo(file)
+            ? a.form.videoTooLarge
+            : a.form.fileTooLarge
+          : undefined;
+      return {
         key: `${file.name}-${file.size}-${Math.random()}`,
         file,
         progress: 0,
-        status: file.size > MAX_UPLOAD_BYTES ? "error" : "queued",
-        error: file.size > MAX_UPLOAD_BYTES ? a.form.fileTooLarge : undefined,
-      }));
+        status: refusal ? "error" : "queued",
+        error: refusal,
+      };
+    });
     setPhotos((prev) => [...prev, ...items]);
   }
 
@@ -122,13 +141,23 @@ export function AdoptionUpdateForm({
     let failed = 0;
     for (const item of items) {
       patchPhoto(item.key, { status: "uploading", progress: 0, error: undefined });
-      const result = await uploadResidentPhoto(
-        t,
-        residentId,
-        item.file,
-        { dateTaken: receivedOn, adoptionUpdateId: updateId },
-        (progress) => patchPhoto(item.key, { progress }),
-      );
+      // A video goes to Drive in chunks with the update's id; a photo through the ordinary photo route.
+      const result = isVideo(item.file)
+        ? await uploadResidentVideo(
+            t,
+            residentId,
+            item.file,
+            { dateTaken: receivedOn, adoptionUpdateId: updateId },
+            (progress) => patchPhoto(item.key, { progress }),
+            (retrying) => patchPhoto(item.key, { retrying }),
+          )
+        : await uploadResidentPhoto(
+            t,
+            residentId,
+            item.file,
+            { dateTaken: receivedOn, adoptionUpdateId: updateId },
+            (progress) => patchPhoto(item.key, { progress }),
+          );
       if (result.error) {
         failed += 1;
         patchPhoto(item.key, { status: "error", error: result.error });
@@ -175,11 +204,13 @@ export function AdoptionUpdateForm({
       }
       setSavedId(result.id);
       const toSend = photos.filter((p) => p.status === "queued" || p.status === "error");
-      const oversized = toSend.filter((p) => p.file.size > MAX_UPLOAD_BYTES);
+      // Refused at pick time (too big, wrong kind): counted as failed, never sent.
+      const sendable = (p: PhotoItem) => (p.file.type.startsWith("image/") || isVideo(p.file)) && p.file.size <= limitFor(p.file);
+      const oversized = toSend.filter((p) => !sendable(p));
       const failed =
         (await sendPhotos(
           result.id,
-          toSend.filter((p) => p.file.size <= MAX_UPLOAD_BYTES),
+          toSend.filter(sendable),
         )) + oversized.length;
       if (failed > 0) {
         setError(a.form.photosFailed(failed));
@@ -304,6 +335,7 @@ export function AdoptionUpdateForm({
         />
       </div>
 
+      {canAttach && (
       <div className="flex flex-col gap-2">
         <label htmlFor="photos" className="text-sm font-medium text-muted">
           {update ? a.form.addMorePhotos : a.form.photos}
@@ -311,7 +343,7 @@ export function AdoptionUpdateForm({
         <input
           id="photos"
           type="file"
-          accept="image/*"
+          accept="image/*,video/*"
           multiple
           onChange={(e) => {
             addFiles(e.target.files);
@@ -335,11 +367,14 @@ export function AdoptionUpdateForm({
                     {t.photos.uploader.done}
                   </span>
                 ) : item.status === "uploading" ? (
-                  <div className="h-1.5 w-24 overflow-hidden rounded-full bg-surface-hover">
+                  <div className="flex items-center gap-2">
+                    {item.retrying && <span className="text-xs text-muted">{t.photos.videos.retrying}</span>}
+                    <div className="h-1.5 w-24 overflow-hidden rounded-full bg-surface-hover">
                     <div
                       className="h-full bg-primary transition-all"
                       style={{ width: `${item.progress}%` }}
                     />
+                    </div>
                   </div>
                 ) : null}
                 {item.status !== "uploading" && item.status !== "done" && (
@@ -356,6 +391,7 @@ export function AdoptionUpdateForm({
           </ul>
         )}
       </div>
+      )}
 
       <fieldset
         className={`flex flex-col gap-3 rounded-lg border-2 p-4 ${

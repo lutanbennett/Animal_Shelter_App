@@ -6,6 +6,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { isUuid } from "@/lib/tags/links";
 import { loadPublicStoriesFor } from "@/lib/adoption-updates/public";
 import { PublicPhoto } from "@/components/PublicPhoto";
+import { PublicVideo } from "@/components/PublicVideo";
 import { speciesLabel } from "@/lib/i18n/enum-labels";
 import { BackLink } from "../../BackLink";
 import { PublicHeader } from "../../PublicHeader";
@@ -61,7 +62,9 @@ export default async function SuccessStoriesPage(props: PageProps<"/adopt/storie
         {stories.map((story) => (
           <figure key={story.id} className="flex flex-col gap-3 rounded-[20px] border border-border bg-surface p-4">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {story.photoIds.map((fileId) => (
+              {story.photoIds.map((fileId) => story.videoIds.includes(fileId) ? (
+                <PublicVideo key={fileId} fileId={fileId} label={s.videoAlt(story.name)} className="aspect-[4/3] w-full rounded-xl" />
+              ) : (
                 <div key={fileId} className="relative aspect-[4/3] w-full overflow-hidden rounded-xl bg-background">
                   <PublicPhoto
                     fileId={fileId}
