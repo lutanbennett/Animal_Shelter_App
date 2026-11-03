@@ -26,7 +26,15 @@
 - [x] `node scripts/gates.mjs` — four gates, each exit code `0`:
 
 ```
-GATES_BLOCK_PLACEHOLDER
+=== gates: typecheck — npm run typecheck
+=== gates: typecheck exited 0 after 7s
+=== gates: lint — npm run lint
+=== gates: lint exited 0 after 96s
+=== gates: test — npm test
+=== gates: test exited 0 after 15s
+=== gates: build — npm run build
+=== gates: build exited 0 after 38s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
@@ -76,7 +84,7 @@ deliberately rather than filled with rows that test nothing.
 ## 6. Regression
 
 - [x] The pages nearest the change still work — the backlog page is the only consumer, and it renders byte-identically
-- [x] Any shared file touched checked from a second, unrelated page — `.githooks/pre-commit` and `.github/workflows/ci.yml` are the shared files. The hook was **run**, not read: a commit touching `docs/backlog.md` on this branch passed both backlog checks, and `check-script-integrity.mjs` still reports `ok` with the four new files present
+- [x] Any shared file touched checked from a second, unrelated page — `.githooks/pre-commit` and `.github/workflows/ci.yml` are the shared files. The hook was **run, not read**, and running it is the only way to check it here: `core.hooksPath` is an absolute path to the main checkout's `.githooks`, so **a worktree runs main's hooks and never its own**, and the commit that adds this check was made under the old hook. Proved by staging `docs/backlog.md` with one id removed and running `sh .githooks/pre-commit` directly — it refused with exit 1 and named line 940 — then restoring the file. `check-script-integrity.mjs` still reports `ok` with the four new files present
 - [x] Nothing merged from `main` during `sync` was broken by this branch — `sync` brought nothing that touches these paths
 
 ## 7. Documentation

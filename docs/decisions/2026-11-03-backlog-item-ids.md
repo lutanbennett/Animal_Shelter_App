@@ -73,6 +73,21 @@ it was found — the id script reported 934 items against 935 checkboxes. The
 character is removed, and both scripts now use `[\s\S]` and report any
 control character they meet inside a line rather than skipping it silently.
 
+## A hook change does not take effect where you edited it
+
+`core.hooksPath` is set to an **absolute** path — `C:\Development\Animal_Shelter_App\.githooks` —
+so **every worktree runs the main checkout's hooks, not its own.** Editing
+`.githooks/pre-commit` on a feature branch changes nothing until that branch is
+merged and the main checkout has the new file; the commit that adds the check
+is itself made under the old hook.
+
+That is not a fault, and it should not be "fixed" by pointing each worktree at
+its own copy: one hook for every worktree is what stops a branch disabling a
+check for itself. But it does mean **a hook change cannot be proved by
+committing** — this one was proved by staging a backlog file with an id removed
+and running `sh .githooks/pre-commit` directly, which refused with exit 1 and
+named the line. Do that rather than trusting a clean commit.
+
 ## What this does not do
 
 **Nothing re-points a pick made before the ids existed.** The panel re-links one
