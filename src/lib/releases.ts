@@ -89,6 +89,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The Donate, Foster, Volunteer and About pages now show a poodle drawing beside the heading when no photo has been chosen for them; a chosen photo still replaces it, and removing the photo brings the drawing back. The Page photos screen says so. The Thai wording is our own and has not yet been read by a Thai speaker.",
   { text: "If the resident links for a # tag in the intake note could not be saved, the resident page now says so when it opens (before, the note saved and the link was silently missing). The Thai wording was already in the app; it is our own and has not yet been read by a Thai speaker.", cards: ["residents"] },
   { text: "A clinic visit's details page now opens for anyone who can view medical records, so the View link on Upcoming visits no longer sends them away. Editing the visit still needs the edit permission.", cards: ["view_medical"] },
 ];

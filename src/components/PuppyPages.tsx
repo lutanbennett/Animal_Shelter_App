@@ -201,9 +201,15 @@ export function PuppyAbout({ className }: Props) {
   );
 }
 
-export const PAGE_PUPPIES = {
+const PAGE_PUPPIES = {
   donate: PuppyDonate,
   foster: PuppyFoster,
   volunteer: PuppyVolunteer,
   about: PuppyAbout,
 } as const;
+
+/** The drawing for a page whose photo slot is empty. */
+export function PagePuppy({ slug, className }: { slug: keyof typeof PAGE_PUPPIES; className?: string }) {
+  const Drawing = PAGE_PUPPIES[slug];
+  return <Drawing className={className} />;
+}
