@@ -99,6 +99,7 @@ async function handlePost(
     p_sub_folder: upload.sub_folder,
     p_date_taken: dateTaken,
     p_adoption_update_id: updateId,
+    p_media_kind: "video",
   });
   if (recordError) return NextResponse.json({ error: recordError.message }, { status: 500 });
   const recorded = (recordResult as { attachment: { id: string }; is_profile?: boolean }[])[0];
@@ -112,7 +113,8 @@ async function handlePost(
     .eq("id", attachmentId);
   if (kindError) return NextResponse.json({ error: kindError.message }, { status: 500 });
 
-  // record_attachment makes a resident's first file their profile picture. A video is not a picture, and a profile
+  // Belt-and-braces since 0306: record_attachment (told p_media_kind above) now refuses a video the profile slot itself. This undo
+  // stays so the app still holds if the database half is ever rolled back. A video is not a picture, and a profile
   // picture is public (is_public_drive_file reads public_resident_cards), so an unshared video would stream to anyone.
   // Found 2026-11-03 on dev: an update's video, never shared, answered a signed-out request. Undo it, only if it was this file.
   if (recorded.is_profile) {
