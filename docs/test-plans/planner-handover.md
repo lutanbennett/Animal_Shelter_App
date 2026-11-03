@@ -1,39 +1,39 @@
-# Feature test plan — planner handover `600`
+# Feature test plan — planner handover `609`
 
 ## Header
 
 | | |
 |---|---|
-| Feature | `docs/planner-handover.md` rewritten as edition `600`, carrying this plan's batches 1 and 2 in full and batch 3's setup. **One file; no skill change, no `CLAUDE.md` change** |
+| Feature | `docs/planner-handover.md` rewritten as edition `609`, carrying this plan's batches 1 and 2 in full and batch 3's setup. **One file; no skill change, no `CLAUDE.md` change** |
 | Backlog item | `docs/backlog.md` → none. The handover is the planner skill's step 8, not a backlog item |
-| Branch / worktree | `claude/handover-600` @ `C:\Development\Animal_Shelter_handover-600` |
+| Branch / worktree | `claude/planner-handover-609` @ `C:\Development\Animal_Shelter_planner-handover-609` |
 | Dev server | not started — `n/a: one markdown file, no runtime surface` |
 | PR | #TBD |
-| Tested by / date | Claude (Planner) / 2026-11-02 |
+| Tested by / date | Claude (Planner) / 2026-11-03 |
 | Carries a migration? | no |
-| Tested at SHA | `71fc294c` |
+| Tested at SHA | `8c02d18d` |
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for — *edition `600` written as a delta over `591`, leading on the one-go carve-out having been tested and refused, and on a brief block that did not hold.* There is no backlog item, as the header says
-- [x] Files/areas touched listed — **`docs/planner-handover.md` and this plan, and nothing else.** No `src/`, no `scripts/`, no `supabase/migrations/`, no `worker/`, no workflow, no `CLAUDE.md`, no `.claude/skills/`. `git diff --stat origin/main..HEAD` shows one file, 123 insertions and 146 deletions
+- [x] Change is described in one sentence, and it matches what the backlog item asked for — *edition `609` written as a delta over `600`, leading on a brief-authoring rule the planner got wrong and a stream caught: an answer carried forward from a sibling stream is only as wide as what that sibling could see.* There is no backlog item, as the header says
+- [x] Files/areas touched listed — **`docs/planner-handover.md` and this plan, and nothing else.** No `src/`, no `scripts/`, no `supabase/migrations/`, no `worker/`, no workflow, no `CLAUDE.md`, no `.claude/skills/`. `git diff --stat origin/main..HEAD` shows two files — the handover and this plan — and no others
 - [x] Access affected identified — **none.** The handover grants and denies nothing: it is read by one planning chat, it outranks nothing (it says so in its own opening lines), and it is rewritten every plan. No card, activity, policy, page, tile or control changes. *(Stated by card rather than by role, per `CLAUDE.md`: there is no card-derived behaviour here)*
-- [x] Anything explicitly **out of scope** written down — **(a)** The two promotions the edition recommends are deliberately **not** made here: the finishing deliverable into the skill's brief blocks (17 of 17 and still hand-written), and the gates-read step as a numbered deliverable. **Both belong in a PR that changes the skill**, which is the `process-docs-fixes` item this plan swapped out, and doing them in a handover PR is exactly the mixing of a process-doc change with another kind of work that `docs/decisions/2026-10-29-folded-process-docs-get-their-own-pr.md` warns against. **(b)** Batch 3's figures are not in the edition and it says so in its own second paragraph; the next edition carries them. **(c)** Length: **152 lines**, measured with `wc -l`, against the ~150 target and the ~160 ship-it threshold, and **shorter than its predecessor's 175** — so no trimming pass was opened, per the skill's own instruction not to spend round-trips on wordsmithing
+- [x] Anything explicitly **out of scope** written down — **(a) The edition recommends NO promotion this time, because the one `600` asked for was MADE this plan by #1228**: the finishing sequence is now the skill's own brief block. The edition's job is therefore to say *check that planners have stopped hand-writing it*, not to change the skill here — mixing a skill change into a handover PR is exactly what `docs/decisions/2026-10-29-folded-process-docs-get-their-own-pr.md` warns against. **(b) Batch 3's figures are not in the edition and it says so TWICE**, in its second paragraph and again in its state block; the next edition carries them. **(c)** The five answers Lutan gave this plan are recorded **on their backlog items**, not here; the edition only names them so that a planner does not re-ask one. **(d)** Length: **151 lines**, measured with `wc -l` after the content was written, against the ~150 target and the ~160 ship-it threshold — so **no trimming pass was opened**, per the skill's own instruction not to spend round-trips on wordsmithing. Its predecessor was 152
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `n/a` would be wrong: the worktree was created from `origin/main` minutes earlier and `git push` reported the branch as new, so there was nothing to merge in. The gates were run in full regardless
+- [x] `node scripts/worktree.mjs sync` — `n/a` would be wrong: the worktree was created from `origin/main` minutes earlier and `git push` reported the branch as new, so there was nothing to merge in. The gates were run in full regardless, **in the background with their output redirected to a file that was then read** — which is the step every brief in this plan carries as a numbered deliverable, and the planner is not exempt from it
 - [x] `node scripts/gates.mjs` ends:
 
 ```
 === gates: typecheck — npm run typecheck
-=== gates: typecheck exited 0 after 100s
+=== gates: typecheck exited 0 after 129s
 === gates: lint — npm run lint
-=== gates: lint exited 0 after 140s
+=== gates: lint exited 0 after 286s
 === gates: test — npm test
-=== gates: test exited 0 after 15s
+=== gates: test exited 0 after 32s
 === gates: build — npm run build
-=== gates: build exited 0 after 128s
+=== gates: build exited 0 after 398s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
@@ -75,14 +75,14 @@ grouping of cards and every assignment will be rebuilt).
 
 ## 6. Regression
 
-- [x] The pages nearest the change still work — `n/a` would be wrong: `docs/` is read by `scripts/check-test-plan.mjs` and `scripts/check-docs-only.mjs`, so the four gates were run in full rather than skipped as a documentation change. All four exited 0 at this SHA
+- [x] The pages nearest the change still work — `n/a` would be wrong: `docs/` is read by `scripts/check-test-plan.mjs` and `scripts/check-docs-only.mjs`, so the four gates were run in full rather than skipped as a documentation change. All four exited 0. **Precisely: the run started at `b20357ec` and the tested SHA `8c02d18d` adds one markdown-only commit to it — a wording correction inside `docs/planner-handover.md`, which NO gate reads.** The gates were not re-run for it, and that is stated rather than papered over with "at this SHA"
 - [x] Any shared file touched checked from a second, unrelated place — **the handover is the only file touched, and it is read by exactly one consumer: the next planning chat.** The thing worth checking instead is that it does not contradict the documents that outrank it, so each of its claims about the rules was read back against its source: the merge-on-green and test-plan rules against `CLAUDE.md`, the band and brief-block rules against `.claude/skills/plan-day/SKILL.md`, and the counter and handover-trigger rules against step 6 and step 8 of that skill. **The edition states in its own opening lines that it outranks none of them**
 - [x] Nothing merged from `main` during `sync` was broken by this branch — nothing was merged; the branch is one commit of markdown on top of `origin/main`
 
 ## 7. Documentation
 
 - [ ] Backlog item ticked **on this branch** — `n/a: the handover is the skill's step 8, not a backlog item`
-- [x] Non-obvious design choices added as a new file in `docs/decisions/` — `n/a` would be wrong, but no new file is needed: **the design choices are the subject of the edition's own two lead sections** (what the carve-out test proved, and why a third rewording of the notification block is the wrong fix), written where a planner will meet them. `docs/decisions/2026-10-08-planner-handover-counter.md` remains the paper for why the counter exists and is unchanged by this PR
+- [x] Non-obvious design choices added as a new file in `docs/decisions/` — `n/a` would be wrong, but no new file is needed: **the design choices are the subject of the edition's own lead sections** — that a carried-forward answer is only as wide as what its source could see, and that a stream stopping with its PR open and CI running is CORRECT rather than a repeat of `600`'s waiting fault. Both are written where a planner will meet them. `docs/decisions/2026-10-08-planner-handover-counter.md` remains the paper for why the counter exists and is unchanged by this PR
 - [x] `README.md` still accurate — it says nothing about the handover
 - [ ] **Release notes.** — `n/a: nobody at the shelter would notice. A planner handover touches no page, no card and no data, and the release-notes file is not in this diff`
 - [x] Commit messages say why, not just what
@@ -113,7 +113,7 @@ grouping of cards and every assignment will be rebuilt).
 - [x] Everything in this checklist that could be verified without human eyes was run, not assumed
 - [x] Nothing is ticked that was not actually executed
 
-Automated checks by: Claude (Planner)  Date: 2026-11-02
+Automated checks by: Claude (Planner)  Date: 2026-11-03
 
 ### Manual verification
 
