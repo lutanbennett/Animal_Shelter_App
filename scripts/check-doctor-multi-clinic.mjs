@@ -26,18 +26,24 @@
 //      marked no longer there keeps their past visits; doctors has no clinic column
 //   B  one spelling per clinic: a clash on a new doctor's link, on rename, on a
 //      new link; the same name at two clinics stays two people (not merged by name)
-//   C  0108's clinic scope still holds: multi sees A's and B's residents and
-//      not C's; single sees only A's; the unlinked login sees none; an inactive
-//      link drops that clinic from the login's view
-//   D  0110 still holds: multi writes at A and B and is refused at C
-//      (insert, update, delete, move A->C, a prescription on C's visit)
+//   C  no per-clinic reach (0264): current_user_clinic_ids() is {} for every login, and residents follow
+//      resident.record alone, linked to a clinic or not
+//   D  visits follow visit.book (insert) and medical.visits (update) with no clinic term; the doctor-at-clinic
+//      guarantee is a foreign key, so it holds under any login's JWT
 //   E  a doctor's login: only an admin at aal2 sets it; unique both ways
-//   F  nobody widens a doctor login's reach: it cannot link itself to C or take
-//      another clinic's doctor; management cannot touch a login-linked doctor's links
+//   F  doctors and doctor_clinics are written with clinics.doctors and no clinic term (0182); a login-linked
+//      doctor's links stay admin-only
 //   G  merge_doctors across clinics: links, visits and login follow
 //   H  user_roles.clinic_id, its check, current_user_vet_id() and (0172)
 //      current_user_vet_ids() are gone and nothing in the catalogue calls them;
 //      audit_log writes once per change
+//
+//
+// REWRITTEN 2026-11-03 (docs/decisions/2026-11-03-clinic-harness-rewrite.md): C, D and F asserted the
+// retired per-clinic model (0108/0110) and are now card-shaped; the actors hold harness roles with exactly
+// the cells under test instead of borrowing the real doctor and management roles. A had been failing (-1)
+// for a different reason: moving a visit re-resolves the typed doctor name at the new clinic and ADDS a
+// doctor there, which asks clinics.doctors; the real management role did not hold it on dev.
 //
 // Exits 0 when every assertion held.
 import { join } from "node:path";
@@ -45,6 +51,8 @@ import { pathToFileURL } from "node:url";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
+const { runHarness } = await import(pathToFileURL(join(root, "scripts/lib/rollback-harness.mjs")).href);
+const { exitWith } = await import(pathToFileURL(join(root, "scripts/lib/exit.mjs")).href);
 const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
@@ -109,8 +117,16 @@ begin
             'harness-multi-' || r.who || '-' || r.id || '@example.invalid',
             '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
+  -- Card-shaped actors (2026-11-03): no real role is borrowed, because what a role holds changes. 'mgmt' holds
+  -- the cells that book, edit visits, list clinics and add/merge doctors; the doctor logins hold the booking
+  -- cells and read the clinics list but NOT clinics.doctors; admin is the real admin (outside the card system).
+  insert into roles (key, name, kind) values ('harness_multi_mgmt', 'Harness mgmt cells', 'custom'), ('harness_multi_doclogin', 'Harness doctor-login cells', 'custom');
+  insert into role_permissions (role_id, activity, level)
+    select (select id from roles where key = 'harness_multi_mgmt'), x.a, x.l from (values ('visit.book', 2), ('medical.visits', 2), ('medical.prescriptions', 2), ('resident.record', 2), ('clinics.list', 2), ('clinics.doctors', 2)) x(a, l)
+    union all
+    select (select id from roles where key = 'harness_multi_doclogin'), x.a, x.l from (values ('visit.book', 2), ('medical.visits', 2), ('medical.prescriptions', 2), ('resident.record', 1), ('clinics.list', 1)) x(a, l);
   insert into user_roles (user_id, role_id)
-  select v.c0, ro.id from (values (pg_temp.hid('multi'), 'doctor'), (pg_temp.hid('single'), 'doctor'), (pg_temp.hid('nolink'), 'doctor'), (pg_temp.hid('admin'), 'admin'), (pg_temp.hid('mgmt'), 'management')) as v(c0, role_key)
+  select v.c0, ro.id from (values (pg_temp.hid('multi'), 'harness_multi_doclogin'), (pg_temp.hid('single'), 'harness_multi_doclogin'), (pg_temp.hid('nolink'), 'harness_multi_doclogin'), (pg_temp.hid('admin'), 'admin'), (pg_temp.hid('mgmt'), 'harness_multi_mgmt')) as v(c0, role_key)
   join roles ro on ro.key = v.role_key;
   -- clerk: Staff was this login until 0173 retired it; a custom role carrying its cells reaches the same path
   insert into roles (key, name, kind) values ('harness_multi_clerk', 'Harness clerk', 'custom');
@@ -219,64 +235,71 @@ begin
   if k <> 2 then raise exception 'HARNESS-FAIL B: expected 2 people named Dr Multi (A/B shared one, C added one), got %', k; end if;
   v_report := v_report || 'B: one spelling per clinic on insert/rename/link, rename re-keys, same name elsewhere stays separate | ';
 
-  ----------------------------------------------------------------- C (0108)
+  ----------------------------------------------------------------- C (0264: no per-clinic reach)
+  -- 0108 narrowed a doctor login's reach to its clinics; 0264 made current_user_clinic_ids() a constant '{}' and
+  -- dropped every doctor_*_clinic policy. What a login sees is now decided by its cards alone (resident.record).
   update doctors set user_id = multi where id = dm;   -- owner context: no auth.uid(), so the login guard lets it through
-  if pg_temp.scalar(multi, 'select array_to_string(array(select x from unnest(current_user_clinic_ids()) x order by x), '','')')
-     is distinct from (select string_agg(x::text, ',' order by x) from unnest(array[a, b]) x) then
+  if pg_temp.scalar(multi, 'select current_user_clinic_ids()::text') is distinct from '{}' then
     raise exception 'HARNESS-FAIL C: multi''s clinics are %', pg_temp.scalar(multi, 'select current_user_clinic_ids()::text'); end if;
-  if pg_temp.scalar(single, 'select current_user_clinic_ids()::text') is distinct from ('{' || a || '}') then
+  if pg_temp.scalar(single, 'select current_user_clinic_ids()::text') is distinct from '{}' then
     raise exception 'HARNESS-FAIL C: single''s clinics are %', pg_temp.scalar(single, 'select current_user_clinic_ids()::text'); end if;
   if pg_temp.scalar(nolink, 'select current_user_clinic_ids()::text') is distinct from '{}' then
     raise exception 'HARNESS-FAIL C: unlinked doctor login has clinics %', pg_temp.scalar(nolink, 'select current_user_clinic_ids()::text'); end if;
   if pg_temp.scalar(mgmt, 'select current_user_clinic_ids()::text') is distinct from '{}' then
     raise exception 'HARNESS-FAIL C: management has doctor clinics'; end if;
 
-  t := pg_temp.scalar(multi, format('select count(*) from residents where id in (%L, %L, %L)', ra, rb, rc));
-  if t <> '2' or pg_temp.scalar(multi, format('select count(*) from residents where id = %L', rc)) <> '0' then
-    raise exception 'HARNESS-FAIL C: multi sees % of the three harness residents (want A and B, not C)', t; end if;
-  if pg_temp.scalar(multi, format('select count(*) from resident_current_state where resident_id = %L', rc)) <> '0' then
-    raise exception 'HARNESS-FAIL C: the owner-rights view showed C''s resident to multi'; end if;
-  if pg_temp.scalar(single, format('select count(*) from residents where id in (%L, %L)', ra, rc)) <> '1' then
-    raise exception 'HARNESS-FAIL C: single does not see exactly A''s resident'; end if;
-  if pg_temp.scalar(nolink, format('select count(*) from residents where id in (%L, %L, %L)', ra, rb, rc)) <> '0' then
-    raise exception 'HARNESS-FAIL C: unlinked doctor login sees residents'; end if;
+  -- the same card gives every login the same reach, linked to a clinic or not
+  foreach t in array array['multi', 'single', 'nolink'] loop
+    if pg_temp.scalar(pg_temp.hid(t), format('select count(*) from residents where id in (%L, %L, %L)', ra, rb, rc)) <> '3' then
+      raise exception 'HARNESS-FAIL C: % holding resident.record read does not see all three residents', t; end if;
+  end loop;
+  if pg_temp.scalar(multi, format('select count(*) from resident_current_state where resident_id = %L', rc)) <> '1' then
+    raise exception 'HARNESS-FAIL C: multi cannot see C''s resident through the view'; end if;
+  -- ... an inactive link changes nothing about what is seen
   update doctor_clinics set active = false where doctor_id = dm and clinic_id = b;
-  if pg_temp.scalar(multi, format('select count(*) from residents where id in (%L, %L, %L)', ra, rb, rc)) <> '1' then
-    raise exception 'HARNESS-FAIL C: an inactive link still showed B''s residents'; end if;
+  if pg_temp.scalar(multi, format('select count(*) from residents where id in (%L, %L, %L)', ra, rb, rc)) <> '3' then
+    raise exception 'HARNESS-FAIL C: an inactive link narrowed what multi sees'; end if;
   update doctor_clinics set active = true where doctor_id = dm and clinic_id = b;
-  v_report := v_report || 'C: multi sees A+B not C, single sees A only, unlinked sees none, inactive link and view honoured | ';
+  -- ... and without the card nothing is seen, however many clinics the doctor works at
+  delete from user_roles where user_id = nolink;
+  if pg_temp.scalar(nolink, format('select count(*) from residents where id in (%L, %L, %L)', ra, rb, rc)) <> '0' then
+    raise exception 'HARNESS-FAIL C: a login with no cards sees residents'; end if;
+  insert into user_roles (user_id, role_id) select nolink, id from roles where key = 'harness_multi_doclogin';
+  v_report := v_report || 'C: current_user_clinic_ids() is {} for every login, residents follow resident.record alone (multi, single and unlinked all see A, B and C), a login with no cards sees none | ';
 
-  ----------------------------------------------------------------- D (0110)
+  ----------------------------------------------------------------- D (0264: visits follow visit.book / medical.visits)
+  -- insert asks visit.book, update asks medical.visits, and neither asks which clinic. No delete policy exists.
   n := pg_temp.try(multi, format('insert into clinic_visits (resident_id, clinic_id, appointment_date) values (%L, %L, now())', ra, a));
   if n <> 1 then raise exception 'HARNESS-FAIL D: multi booking at A gave %', n; end if;
   n := pg_temp.try(multi, format('insert into clinic_visits (resident_id, clinic_id, appointment_date) values (%L, %L, now())', rb, b));
   if n <> 1 then raise exception 'HARNESS-FAIL D: multi booking at B gave %', n; end if;
   n := pg_temp.try(multi, format('insert into clinic_visits (resident_id, clinic_id, appointment_date) values (%L, %L, now())', ra, c));
-  if n <> -1 then raise exception 'HARNESS-FAIL D: multi booking at C gave %', n; end if;
-  n := pg_temp.try(multi, format('update clinic_visits set notes = ''x'' where id = %L', vc));
-  if n <> 0 then raise exception 'HARNESS-FAIL D: multi updated % of C''s visits', n; end if;
-  n := pg_temp.try(multi, format('delete from clinic_visits where id = %L', vc));
-  if n <> 0 then raise exception 'HARNESS-FAIL D: multi deleted % of C''s visits', n; end if;
-  n := pg_temp.try(multi, format('update clinic_visits set notes = ''x'' where id = %L', va));
-  if n <> 1 then raise exception 'HARNESS-FAIL D: multi updating A''s visit gave %', n; end if;
-  n := pg_temp.try(multi, format('update clinic_visits set clinic_id = %L where id = %L', c, va));
-  if n <> -1 then raise exception 'HARNESS-FAIL D: multi moved a visit from A to C: %', n; end if;
-  n := pg_temp.try(multi, format('update clinic_visits set clinic_id = %L where id = %L', b, va));
-  if n <> 1 then raise exception 'HARNESS-FAIL D: multi moving A->B (both theirs) gave %', n; end if;
-  update clinic_visits set clinic_id = a where id = va;
+  if n <> 1 then raise exception 'HARNESS-FAIL D: booking at C, where multi''s doctor does not work, gave % (visit.book alone decides)', n; end if;
   n := pg_temp.try(single, format('insert into clinic_visits (resident_id, clinic_id, appointment_date) values (%L, %L, now())', ra, b));
-  if n <> -1 then raise exception 'HARNESS-FAIL D: single booking at B gave %', n; end if;
-  -- prescriptions follow their visit's clinic
-  n := pg_temp.try(multi, format('insert into prescriptions (resident_id, medication_id, start_date, clinic_visit_id) values (%L, (select id from medication limit 1), current_date, %L)', rb, vb));
+  if n <> 1 then raise exception 'HARNESS-FAIL D: single booking at B gave %', n; end if;
+  n := pg_temp.try(multi, format('update clinic_visits set notes = ''x'' where id = %L', vc));
+  if n <> 1 then raise exception 'HARNESS-FAIL D: multi updating C''s visit gave % (medical.visits alone decides)', n; end if;
+  n := pg_temp.try(multi, format('update clinic_visits set clinic_id = %L where id = %L', c, va));
+  if n <> 1 then raise exception 'HARNESS-FAIL D: multi moving A->C gave %', n; end if;
+  update clinic_visits set clinic_id = a where id = va;
+  n := pg_temp.try(multi, format('delete from clinic_visits where id = %L', vc));
+  if n <> 0 then raise exception 'HARNESS-FAIL D: multi deleted % visits (no delete policy exists)', n; end if;
+  -- a login holding neither booking card
+  delete from user_roles where user_id = nolink;
+  n := pg_temp.try(nolink, format('insert into clinic_visits (resident_id, clinic_id, appointment_date) values (%L, %L, now())', ra, a));
+  if n <> -1 then raise exception 'HARNESS-FAIL D: a login without visit.book booked: %', n; end if;
+  n := pg_temp.try(nolink, format('update clinic_visits set notes = ''x'' where id = %L', va));
+  if n <> 0 then raise exception 'HARNESS-FAIL D: a login without medical.visits updated % visits', n; end if;
+  insert into user_roles (user_id, role_id) select nolink, id from roles where key = 'harness_multi_doclogin';
+  -- prescriptions follow medical.prescriptions, not the visit's clinic (medication id read as the owner: the login need not read the list)
+  n := pg_temp.try(multi, format('insert into prescriptions (resident_id, medication_id, start_date, clinic_visit_id) values (%L, %L, current_date, %L)', rb, (select id from medication limit 1), vb));
   if n <> 1 then raise exception 'HARNESS-FAIL D: multi prescribing on B''s visit gave %', n; end if;
-  n := pg_temp.try(multi, format('insert into prescriptions (resident_id, medication_id, start_date, clinic_visit_id) values (%L, (select id from medication limit 1), current_date, %L)', rc, vc));
-  if n >= 0 then raise exception 'HARNESS-FAIL D: multi prescribed on C''s visit (%)', n; end if;
-  -- the doctor guarantee holds for a doctor login's own JWT too
+  -- the doctor guarantee is a foreign key, not a card: it holds for a doctor login's own JWT too
   n := pg_temp.try(multi, format('insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_id) values (%L, %L, now(), %L)', ra, a, dy));
   if n >= 0 then raise exception 'HARNESS-FAIL D: multi booked at A with B-only doctor (%)', n; end if;
   n := pg_temp.try(multi, format('insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_id) values (%L, %L, now(), %L)', ra, b, dm));
   if n <> 1 then raise exception 'HARNESS-FAIL D: multi booking at B with the shared doctor gave %', n; end if;
-  v_report := v_report || 'D: multi writes A and B, refused at C (insert/update/delete/move/prescription), single refused at B, doctor guarantee under a doctor login''s JWT | ';
+  v_report := v_report || 'D: insert asks visit.book and update asks medical.visits with no clinic term (multi and single book and edit at any clinic, including one their doctor does not work at, and move a visit), no delete, no cards no booking, doctor guarantee still a foreign key | ';
 
   ----------------------------------------------------------------- E
   update doctors set user_id = null where id = dm;
@@ -286,7 +309,7 @@ begin
   n := pg_temp.try(mgmt, format('update doctors set user_id = %L where id = %L', multi, dm));
   if n <> -1 then raise exception 'HARNESS-FAIL E: management set a login: %', n; end if;
   n := pg_temp.try(single, format('update doctors set user_id = %L where id = %L', single, dx));
-  if n <> -1 then raise exception 'HARNESS-FAIL E: a doctor login linked itself to another doctor (%)', n; end if;
+  if n not in (-1, 0) then raise exception 'HARNESS-FAIL E: a doctor login linked itself to another doctor (%)', n; end if;  -- 0: no clinics.doctors, so doctors_update_perm shows it no row
   n := pg_temp.try(adm, format('update doctors set user_id = %L where id = %L', multi, dm), 'aal1');
   if n <> -1 then raise exception 'HARNESS-FAIL E: an admin at aal1 set a login: %', n; end if;
   n := pg_temp.try(adm, format('update doctors set user_id = %L where id = %L', multi, dm), 'aal2');
@@ -297,30 +320,30 @@ begin
   if n <> -1 then raise exception 'HARNESS-FAIL E: management inserted a doctor with a login: %', n; end if;
   v_report := v_report || 'E: login set only by admin@aal2, unique per login | ';
 
-  ----------------------------------------------------------------- F
+  ----------------------------------------------------------------- F (0182: doctors are written with clinics.doctors, never by clinic)
+  -- A doctor login used to be fenced to its own clinics when it edited the list. Every doctors / doctor_clinics
+  -- write now asks clinics.doctors and nothing about clinics. 'multi' does not hold it; 'mgmt' does.
   insert into doctors (name) values ('Harness Dr Cee') returning id into v_new;   -- works only at C
   insert into doctor_clinics (clinic_id, doctor_id) values (c, v_new);
   n := pg_temp.try(multi, format('insert into doctor_clinics (clinic_id, doctor_id) values (%L, %L)', c, dm));
-  if n <> -1 then raise exception 'HARNESS-FAIL F: multi linked their own doctor to C: %', n; end if;
+  if n <> -1 then raise exception 'HARNESS-FAIL F: multi, without clinics.doctors, linked their own doctor to C: %', n; end if;
   n := pg_temp.try(multi, format('insert into doctor_clinics (clinic_id, doctor_id) values (%L, %L)', a, v_new));
-  if n <> -1 then raise exception 'HARNESS-FAIL F: multi took C-only Dr Cee into A: %', n; end if;
+  if n <> -1 then raise exception 'HARNESS-FAIL F: multi, without clinics.doctors, took Dr Cee into A: %', n; end if;
   n := pg_temp.try(multi, format('update doctors set name = ''Hijack'' where id = %L', v_new));
-  if n <> 0 then raise exception 'HARNESS-FAIL F: multi renamed % of C-only doctors', n; end if;
+  if n <> 0 then raise exception 'HARNESS-FAIL F: multi, without clinics.doctors, renamed % doctors', n; end if;
   n := pg_temp.try(multi, format('update doctors set name = ''Harness Dr Multi'' where id = %L', dm));
-  if n <> 1 then raise exception 'HARNESS-FAIL F: multi editing their own doctor gave %', n; end if;
-  n := pg_temp.try(multi, format('update doctor_clinics set clinic_id = %L where doctor_id = %L and clinic_id = %L', c, dm, a));
-  if n >= 0 then raise exception 'HARNESS-FAIL F: multi moved their link to C (%)', n; end if;
-  -- listing a new doctor is two inserts, as the app does it: the doctor, then the link that says where
+  if n <> 0 then raise exception 'HARNESS-FAIL F: multi, without clinics.doctors, edited their own doctor: %', n; end if;
+  n := pg_temp.try(multi, format('insert into doctors (id, name) values (%L, ''Harness Dr Fresh'')', gen_random_uuid()));
+  if n <> -1 then raise exception 'HARNESS-FAIL F: multi, without clinics.doctors, added a doctor: %', n; end if;
+  -- holding clinics.doctors, the clinic is not part of the answer: a doctor is listed at any clinic
   v_fresh := gen_random_uuid();
-  n := pg_temp.try(multi, format('insert into doctors (id, name) values (%L, ''Harness Dr Fresh'')', v_fresh));
-  if n <> 1 then raise exception 'HARNESS-FAIL F: multi adding a new doctor gave %', n; end if;
-  n := pg_temp.try(multi, format('insert into doctor_clinics (clinic_id, doctor_id) values (%L, %L)', a, v_fresh));
-  if n <> 1 then raise exception 'HARNESS-FAIL F: multi listing the new doctor at A gave %', n; end if;
-  v_fresh := gen_random_uuid();
-  n := pg_temp.try(multi, format('insert into doctors (id, name) values (%L, ''Harness Dr Fresh C'')', v_fresh));
-  if n <> 1 then raise exception 'HARNESS-FAIL F: multi adding a second new doctor gave %', n; end if;
-  n := pg_temp.try(multi, format('insert into doctor_clinics (clinic_id, doctor_id) values (%L, %L)', c, v_fresh));
-  if n <> -1 then raise exception 'HARNESS-FAIL F: multi listing a doctor at C gave %', n; end if;
+  n := pg_temp.try(mgmt, format('insert into doctors (id, name) values (%L, ''Harness Dr Fresh'')', v_fresh));
+  if n <> 1 then raise exception 'HARNESS-FAIL F: mgmt adding a new doctor gave %', n; end if;
+  n := pg_temp.try(mgmt, format('insert into doctor_clinics (clinic_id, doctor_id) values (%L, %L)', a, v_fresh));
+  if n <> 1 then raise exception 'HARNESS-FAIL F: mgmt listing the new doctor at A gave %', n; end if;
+  n := pg_temp.try(mgmt, format('insert into doctor_clinics (clinic_id, doctor_id) values (%L, %L)', c, v_fresh));
+  if n <> 1 then raise exception 'HARNESS-FAIL F: mgmt listing the doctor at C as well gave %', n; end if;
+  -- the one guard that is not a card: a doctor who has a login keeps its clinics unless an admin changes them
   n := pg_temp.try(mgmt, format('insert into doctor_clinics (clinic_id, doctor_id) values (%L, %L)', c, dm));
   if n <> -1 then raise exception 'HARNESS-FAIL F: management widened a login-linked doctor''s clinics: %', n; end if;
   n := pg_temp.try(mgmt, format('delete from doctor_clinics where doctor_id = %L and clinic_id = %L', dm, a));
@@ -328,12 +351,10 @@ begin
   update doctors set name = 'Harness Dr Multi C' where name = 'Harness Dr Multi' and id <> dm;   -- the C listing, until it is merged in G
   n := pg_temp.try(adm, format('insert into doctor_clinics (clinic_id, doctor_id) values (%L, %L)', c, dm));
   if n <> 1 then raise exception 'HARNESS-FAIL F: admin could not widen a login-linked doctor: %', n; end if;
-  if pg_temp.scalar(multi, format('select count(*) from residents where id = %L', rc)) <> '1' then
-    raise exception 'HARNESS-FAIL F: after admin added C, multi should see C''s resident'; end if;
   delete from doctor_clinics where doctor_id = dm and clinic_id = c;
   n := pg_temp.try(mgmt, format('insert into doctor_clinics (clinic_id, doctor_id) values (%L, %L)', c, dx));
   if n <> 1 then raise exception 'HARNESS-FAIL F: management linking a loginless doctor gave %', n; end if;
-  v_report := v_report || 'F: no doctor-login/management widening of a doctor login''s reach; admin can, and the login then sees C | ';
+  v_report := v_report || 'F: doctor writes ask clinics.doctors with no clinic term (without it multi is refused everywhere, with it mgmt lists a doctor at any clinic); a login-linked doctor''s links only an admin changes (and a widened link changes what multi sees: nothing) | ';
 
   ----------------------------------------------------------------- G
   -- the same person listed at A and at C under one name: merge across clinics
@@ -408,16 +429,5 @@ $h$;
 rollback;
 `;
 
-const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
-  method: "POST",
-  headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" },
-  body: JSON.stringify({ query: sql }),
-});
-const text = await res.text();
-let msg = text;
-try { msg = JSON.parse(text).message ?? text; } catch {}
-console.log(`status ${res.status}`);
-console.log(msg);
-// exitCode, not exit(): exiting straight after fetch trips a libuv assertion on Windows.
-// exitCode, not exit(): exiting straight after fetch trips a libuv assertion on Windows.
-process.exitCode = /HARNESS-OK/.test(msg) ? 0 : 1;
+const ok = await runHarness(ref, env, "doctor-multi-clinic", sql);
+await exitWith(ok ? 0 : 1);

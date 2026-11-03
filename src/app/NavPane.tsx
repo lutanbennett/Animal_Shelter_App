@@ -6,7 +6,7 @@ import { todayIso } from "@/lib/format";
 import { countMyUrgentAccessRequests } from "@/lib/my-tasks/access-requests";
 import { countMyUrgentMaintenance } from "@/lib/my-tasks/maintenance";
 import { countMyUrgentRecurring } from "@/lib/my-tasks/recurring";
-import { loadClinicScope } from "@/lib/clinics/scope";
+import { ANY_CLINIC_SCOPE } from "@/lib/clinics/scope";
 import { showMenuForLogin } from "@/lib/menu/show-menu";
 import { NavLinks } from "./NavLinks";
 
@@ -45,7 +45,7 @@ export async function NavPane() {
   // /appointments is a doctor's page (the visits at the clinics their own record works at); anyone else with
   // the same read would land on "not linked to a clinic", so their entry opens the shelter-wide list instead.
   const appointmentsHref =
-    opens("/appointments") && (await loadClinicScope(supabase)).kind === "clinics"
+    opens("/appointments") && ANY_CLINIC_SCOPE.kind === "clinics"
       ? "/appointments"
       : "/upcoming-visits";
 

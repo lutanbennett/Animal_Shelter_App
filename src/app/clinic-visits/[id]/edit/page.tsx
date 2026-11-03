@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { localLabel } from "@/lib/translations/labels";
 import { loadDoctorNamesByClinic } from "@/lib/clinics/doctors";
-import { loadClinicScope } from "@/lib/clinics/scope";
+import { ANY_CLINIC_SCOPE } from "@/lib/clinics/scope";
 import type { ClinicOption } from "@/app/clinic-visits/new/ClinicVisitForm";
 import { MicrochipLine } from "@/components/MicrochipForm";
 import { can } from "@/lib/permissions/can";
@@ -35,7 +35,7 @@ export default async function EditClinicVisitPage(props: PageProps<"/clinic-visi
   const visit = rows?.[0];
   if (!visit) notFound();
 
-  const scope = await loadClinicScope(supabase);
+  const scope = ANY_CLINIC_SCOPE;
   if (scope.kind === "unlinked") {
     return (
       <main className="flex flex-1 flex-col gap-4 p-6">

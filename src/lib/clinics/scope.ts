@@ -1,15 +1,18 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-
 /**
  * Which clinics this session may record a clinic visit against.
  *
- * TODAY THIS IS "ANY CLINIC" FOR EVERY LOGIN. current_user_clinic_ids() has answered a constant
- * '{}' since 0264 (supabase/migrations/0264_inert_security_leftovers.sql:629), because the
- * narrowing it used to do was keyed on a role column, which no longer exists. An empty answer
- * becomes { kind: "any" } below, so the "clinics" and "unlinked" branches are unreachable.
- * No live RLS policy on clinic_visits narrows by clinic either: insert asks visit.book and
- * update asks medical.visits (0264:76-78, 153). Who may book is decided by those cards alone.
- * See docs/decisions/2026-11-02-clinic-scope-inert.md.
+ * THIS IS "ANY CLINIC" FOR EVERY LOGIN, AND NOTHING IS LOADED. current_user_clinic_ids() has answered
+ * a constant '{}' since 0264 (supabase/migrations/0264_inert_security_leftovers.sql:629), because the
+ * narrowing it used to do was keyed on a role column, which no longer exists. No live RLS policy on
+ * clinic_visits narrows by clinic either: insert asks visit.book and update asks medical.visits
+ * (0264:76-78, 153). Who may book is decided by those cards alone.
+ * See docs/decisions/2026-11-02-clinic-scope-inert.md and docs/decisions/2026-11-03-clinic-harness-rewrite.md.
+ *
+ * `loadClinicScope()` used to call that function and the doctors table on every page that imported
+ * this file, to arrive at { kind: "any" } every time. It is gone; the constant below is what it
+ * returned. The "clinics" and "unlinked" members of the type are still tested by the importers
+ * (clinic-visits pages and actions, residents, appointments, NavPane) but can never be true; deleting
+ * those dead branches is a follow-up that also touches dictionary strings.
  *
  * `doctorName` is only ever set on the unreachable "clinics" branch.
  */
@@ -18,24 +21,7 @@ export type ClinicScope =
   | { kind: "clinics"; clinicIds: string[]; doctorName: string | null }
   | { kind: "unlinked" };
 
-export async function loadClinicScope(supabase: SupabaseClient): Promise<ClinicScope> {
-  // Whose visits these are comes from the login's own clinic links (current_user_clinic_ids), not from a column on its role.
-  const { data } = await supabase.rpc("current_user_clinic_ids");
-  const clinicIds = Array.isArray(data) ? (data as string[]) : [];
-  if (clinicIds.length === 0) return { kind: "any" };
-
-  const { data: userData } = await supabase.auth.getUser();
-  let doctorName: string | null = null;
-  if (userData.user) {
-    const { data: doctor } = await supabase
-      .from("doctors")
-      .select("name")
-      .eq("user_id", userData.user.id)
-      .maybeSingle<{ name: string }>();
-    doctorName = doctor?.name ?? null;
-  }
-  return { kind: "clinics", clinicIds, doctorName };
-}
+export const ANY_CLINIC_SCOPE: ClinicScope = { kind: "any" };
 
 /** Whether a visit may be recorded against `clinicId`; `keep` is a clinic the visit already has. */
 export function scopeAllowsClinic(scope: ClinicScope, clinicId: string, keep?: string | null): boolean {

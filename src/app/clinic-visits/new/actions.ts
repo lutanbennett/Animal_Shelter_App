@@ -12,7 +12,7 @@ import { loadPermissions } from "@/lib/permissions/load";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { bookingReturnPath } from "@/lib/clinics/booking-return";
 import { syncPendingVisits } from "@/lib/clinics/calendar-sync";
-import { loadClinicScope, scopeAllowsClinic } from "@/lib/clinics/scope";
+import { ANY_CLINIC_SCOPE, scopeAllowsClinic } from "@/lib/clinics/scope";
 
 // PI FAILOVER (D): the one write here goes through runWriteAction(); the redirect is taken AFTER it returns, so a
 // replay of a saved request redirects too instead of leaving an open claim (the wrapper rethrows a redirect).
@@ -64,7 +64,7 @@ export async function bookClinicVisit(
 
       // The page shows a doctor login only its current clinics; this is the check a posted
       // form can't get round (src/lib/clinics/scope.ts).
-      const scope = await loadClinicScope(supabase);
+      const scope = ANY_CLINIC_SCOPE;
       if (scope.kind === "unlinked") return { ok: false, error: t.vetVisits.noClinicForAccount };
       if (!scopeAllowsClinic(scope, clinicId)) return { ok: false, error: t.vetVisits.errors.notYourClinic };
       // A doctor login's visit is its own: the locked Doctor field is not
