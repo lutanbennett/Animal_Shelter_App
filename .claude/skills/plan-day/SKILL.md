@@ -188,10 +188,43 @@ habit. A figure is evidence only once you know what the stream actually did.**
 
 ## 3. Read the backlog
 
+**FIRST, READ THE CUSTOMER PRIORITIES LIST. IT IS LUTAN'S OWN HAND ON THE ORDER AND IT
+OUTRANKS FILE POSITION.** Added 2026-11-03, when he asked for it to be wired up: the
+pinned **Lanna Care Backlog** page has a *Customer priorities* panel where he stars items
+and drags them into order, and until that day **nothing read what he set** while the panel
+told him *"Claude reads this list when it plans each day's work"*. It does now.
+
+```
+ArtifactData  action "get"  collection "priorities"  doc_id "ranking"
+              url https://claude.ai/artifact/9em8tWXwDHNeEjFuCrFKCN
+```
+
+(that is the pinned page; if the url ever changes, find it with the Artifact tool's
+`list`). It answers `{order: [<item id>, ...], titles: {<item id>: <the title when it was
+picked>}}`, **top first**. An item id is the slug the page derives from the item's title.
+
+- **An item named there is planned before anything that is not**, in the order given.
+  Everything unranked follows in backlog order exactly as before.
+- **`No document` or an empty `order` is the ORDINARY case and means he has picked
+  nothing** — it is not a failed read and not a fault. Fall through to backlog order and
+  say nothing about it.
+- **AN ID THAT MATCHES NO OPEN ITEM IS NEVER SILENTLY DROPPED.** The id is derived from the
+  **title**, and the backlog manager retitles items routinely, so a rename orphans a pick.
+  That is what the `titles` map is for: it records the wording he saw. Use it to name what
+  he meant — *"your number 2 was 'X', which has since been reworded or ticked; is Y the same
+  thing?"* — and put it in step 5's question rather than planning quietly without it.
+- **It is a steer, not a licence to break the sequencing rules.** Schema still precedes its
+  app half, one migration a batch, one dictionary stream a batch, no census beside a stream
+  editing what it counts. Where his order and a sequencing rule disagree, **follow the rule
+  and say so in the plan** — the panel promises him exactly that in its own words, so
+  honouring it is not a departure from his instruction.
+- **Never write to this document.** It is his, set by pressing the star on the page. The
+  planner reads it and nothing else.
+
 `C:/Development/Animal_Shelter_App/docs/backlog.md`, open items only
 (`- [ ]` above `## Completed`). Section order and item order are the
-user's priority; keep that as the default ordering. For each candidate
-note:
+user's priority; keep that as the default ordering **for everything he has
+not ranked himself**. For each candidate note:
 
 - **Read the WHOLE item, tail included — the answer is appended, not inserted.**
   Added 2026-10-21, after two misreads in one round. An item's decision, its
@@ -377,8 +410,10 @@ stop-and-hand-over rule - not a reason to pre-chop it on his behalf.**
 
 Rules, in order:
 
-1. **Backlog priority is the default order across all nine.** Depart
-   from it only for the reasons below, and say so when you do.
+1. **The Customer priorities list first, then backlog priority for the
+   rest.** Section 3 says how to read it and what to do when one of his
+   picks has been renamed. Depart from either only for the reasons
+   below, and say so when you do.
 2. **Disjoint within a batch; overlap across batches is fine.** Batches
    run one after another, so two items that both add nav entries, both
    rework the same topic in `src/lib/manual/en.ts`, or both touch the

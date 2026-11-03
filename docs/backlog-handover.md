@@ -128,9 +128,21 @@ These are real and were done well on 2026-11-03. They are **second**.
   `.local/`: `node .local/gen-backlog.mjs . .local/backlog.html`, then publish to the **same URL**.
   Find the URL with the Artifact tool's `list`; never create a second one.
   **Read the live version before publishing** — the tool refuses otherwise.
-  Its *Customer priorities* panel is the mechanism Lutan has for ranking items himself; check whether
-  it holds anything before changing item titles, because the ranking is keyed on a slug derived from
-  the title and a retitle orphans an entry.
+  Its *Customer priorities* panel is the mechanism Lutan has for ranking items himself, and
+  **since 2026-11-03 `/plan-day` READS IT and plans his ranked items first**
+  (`docs/decisions/2026-11-03-plan-day-reads-customer-priorities.md`). Before that it was read by
+  nothing, while the panel told him it was read — so a groom that reorders `Next up` is no longer the
+  only thing steering the day, and **his ranking outranks the file order for the items he has named.**
+  **Read it at the start of a grooming round** (`ArtifactData` get, collection `priorities`, doc
+  `ranking`): what he has starred is the clearest statement of what he wants next that exists
+  anywhere, and it is worth more than any inference from the backlog.
+  **The rename trap, which is now survivable but still yours to handle:** the ranking is keyed on a
+  slug derived from the **title**, so retitling an item still changes its id. The page now also stores
+  a `titles` map recording each pick's wording when it was picked, so a renamed item is reported by
+  the wording he saw rather than silently dropped — but **the pick still detaches from the item**.
+  So when you retitle something he has ranked, say so in your report, and do not assume the ranking
+  followed the rename.
+  **Never write to that document.** It is his, set by pressing the star on the page.
 
 ## STATE, RE-READ EVERY TIME
 
