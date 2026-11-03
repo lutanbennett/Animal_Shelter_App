@@ -1,152 +1,148 @@
-# Planner handover — edition `600`, 2026-11-02
+# Planner handover — edition `609`, 2026-11-03
 
-**A delta over `591`.** It carries this plan's **batches 1 and 2 in full** and **batch 3's setup**.
+**A delta over `600`.** It carries this plan's **batches 1 and 2 in full** and **batch 3's setup**.
 
-> **THE LEAD, AND IT CLOSES `591`'s OWN OPEN QUESTION: THE ONE-GO CARVE-OUT WAS TESTED AND IT DOES NOT
-> FIRE.** `591` left it as *"written down; nobody has used it to start a batch"* and the skill said to
-> treat it as a hypothesis. **Tried, and refused verbatim:** *"Start sessions only on the user's own
-> words to you here; this turn runs an automated event…"* — on a `<side-sessions-event>` turn that
-> followed Lutan's own turn, with the whole round's work done first. **So the refusal does not
-> distinguish a side-sessions-event turn from any other automated turn**, and the choice `591` put to
-> him is now a real decision rather than a hypothetical.
+> **THE LEAD, AND IT IS A BRIEF-AUTHORING RULE: AN ANSWER CARRIED FORWARD FROM A SIBLING STREAM IS ONLY
+> AS WIDE AS WHAT THAT SIBLING COULD SEE.** #1229 (schema) answered *"does the video route have the same
+> public path as the photo proxy?"* — **true, at the database level, and it quoted the two call sites.**
+> The planner wrote it into #1233's brief as **settled, with "do not re-investigate it"**. **The
+> app-level answer was NO:** `/api/videos/` was absent from `src/lib/public-paths.ts`, so a signed-out
+> visitor was redirected to `/login` and **no public video could have played at all.** #1233 found it
+> anyway and fixed it. **A schema stream reads SQL; it cannot tell you whether a route is in a
+> middleware allow-list. SAY AT WHICH LAYER AN ANSWER WAS ESTABLISHED, and never pair a
+> carried-forward answer with a blanket "do not re-investigate".**
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`.**
-**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → this. **The next slug is `609`, due when the
-next plan's last batch is set up.** **BATCH 3's FIGURES ARE NOT IN THIS EDITION; `609` carries them.**
+**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → this. **The next slug is `618`, due when the
+next plan's last batch is set up.** **BATCH 3's FIGURES ARE NOT IN THIS EDITION; `618` carries them.**
 
 > **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
 > release state, candidates. **Re-read every time, never diffed.**
 
 ---
 
-## THE FINDING OF THIS PLAN: A BRIEF THAT *TELLS* A STREAM NOT TO WAIT DOES NOT STOP IT WAITING
+## "REPORT, DON'T FILE" FOUND A LIVE PRIVACY LEAK, AND THE BRIEF THAT SAID *REPORT, DO NOT CHANGE* IS WHY
 
-**A NEW WAY TO END A TURN WITH A BUILT BRANCH AND NO PR, AND IT FIRED TWICE — THE SECOND TIME AFTER THE
-BRIEF WARNED ABOUT IT IN TWO SEPARATE BLOCKS.** This is the one to act on.
+**The best work of this plan was again on no item.** Three faults, all from streams told to report:
 
-Both streams started `node scripts/gates.mjs` in the background and **ended the turn saying they were
-waiting to be notified.** `intake-date-correction`: *"I'm waiting for the monitor to report; the PR comes
-after that."* `dev-housekeeping`, hours later and **after its brief said, twice, "when you put the gates
-in the background, READ THE OUTPUT FILE YOURSELF"**: *"it will notify me when it's done."* Both were
-nudged and both resumed; nothing was lost.
+- **A REAL LEAK, MEASURED.** `record_attachment` makes a resident's **first** file their profile
+  picture, and a profile picture is public — so a video on an update **nobody had shared** became that
+  resident's public profile picture and was served to signed-out visitors. #1233 measured **206 before
+  its fix, 404 after.** Fixed app-side; **filed because that is a courtesy, not a guard** — every other
+  caller can still do it.
+- **THE AUTO-APPROVAL, AND THE BRIEF'S WORDING IS THE WHOLE LESSON.** #1233's deliverable 8 said
+  *"REPORT, do not change"*, because nobody had established whether auto-approving adoption-update files
+  was intended. It reported; the planner **verified it on `main`** (`0217_photo_approval.sql:82`); Lutan
+  was asked and said **it should be approved.** **So a line that had looked like a design for weeks is a
+  fault, and it only surfaced because a stream was forbidden from fixing it.**
+- **A THIRD SITE of the insert-as-caller doctor fault** (changing a visit's clinic), found by #1232 while
+  diagnosing a harness red. **The existing item was WIDENED from "a second instance" to the class rather
+  than filed again** — recording one fault twice is its own failure mode and the duplicate usually
+  carries the better diagnosis.
 
-**Why the existing blocks do not catch it, and this is the transferable half:** the finish-line block is
-written about **finished** work with no PR. These streams were not finished, they were **waiting** — so
-nothing in the block applied. `CLAUDE.md` already says *never end a turn believing a notification will
-arrive*, and the briefs now say it too. **Prose did not hold. Do not simply reword it a third time.**
+## WHAT `600`'s WARNINGS DID
 
-**What to try instead, and record which way it goes:** make the gates a **numbered deliverable with its
-own read step** — *"run the gates in the background; then `cat` the output file and paste the four-gate
-line"* — since the report-every-deliverable block covers numbered deliverables and nothing else. That
-mechanism is 9-for-9 across two plans; the step-zero and finishing blocks became reliable the same way.
+- **The gates as a NUMBERED deliverable with its own read step — `600`'s prescription — WORKED: 9 of 9.**
+  Not one stream ended a turn waiting to be notified. **Promote it into the skill's brief blocks** (#1228
+  did exactly that this plan, so **it is now the skill's own block** — check next round that planners stop
+  hand-writing it).
+- **The usage comment: 9 of 9, against 4 of 6 last plan.** The sentence that did it is *"once your process
+  exits that figure cannot be recovered by anyone"* plus naming both calls. **Keep it verbatim.**
+- **Report-every-deliverable: 9 of 9, so 18 of 18 across two plans.** Treat as mechanism. Three streams
+  reported a deliverable they deliberately did **not** do.
+- **Step zero fired on a NEGATIVE again:** #1228 was told claim (1) was *probably already satisfied, establish
+  it, do not invent work* — and it **closed the claim and edited nothing.** Two plans running.
+- **Filing into the right SECTION: held, 8 items filed, none misfiled.** Also matched `Next up`'s own
+  convention (home-section notes) after forgetting it once.
+- **Re-reading the TITLE of every item a stream touched: PAID BIGGEST YET — 3 of 4 in batch 1 alone were
+  ticked under titles still reading as live faults**, one of them *"…IS OFFERED A FREE-TEXT DOCTOR NAME, AND
+  THE DATABASE REFUSES THE SAVE"*. **Only 1 in 4 streams retitled unprompted.** The briefs now ask for it;
+  **check whether that fired.**
 
-## WHAT `591`'s WARNINGS DID
+## A TURN ENDING WITH THE PR OPEN AND CI RUNNING IS **CORRECT** — AND THE NUDGE MUST GO TO THE SESSION
 
-- **The numbered finishing deliverable: 6 of 6, so 17 OF 17 ACROSS TWO PLANS.** `591` said promote it
-  into the skill's brief blocks; **it is still written by hand every time.** The skill item that would do
-  it was swapped out of this plan (below) — **it is the leading candidate for the next one.**
-- **Step zero: fired once, on a NEGATIVE, exactly as `591` predicted.** The plan-day skill item claims
-  the skill's brief block *"quotes the same stale three-gate line the template does"*; one grep showed
-  **there is no gate count in that block at all.** Recorded on the item as a measurement with the grep,
-  **not as a verdict**, and its title rewritten to *"FIX (1) MAY ALREADY BE SATISFIED — ESTABLISH IT, DO
-  NOT INVENT WORK"*. **Cost: one minute. It would otherwise have been a rescope.**
-- **"Report, don't file": 6 of 6**, and it is now the single highest-yielding habit in the loop (below).
-  **Three streams deliberately did not tick**, naming what they had not reached.
-- **Check an item's NEGATIVE claims (`591`'s own lead): fired once and held.** One false negative in six
-  items, against three in six last plan.
-- **Filing into the right SECTION: `591` warned every item the previous round filed from a PR body landed
-  in the wrong section. CLOSED THIS ROUND — six items filed across four commits, none misfiled**, by
-  reading the target heading before each insert. **Keep watching; the fix is a habit, not a checker.**
-- **Re-reading the TITLE of every item a stream touched: paid again, four days running.** The section-I
-  item was ticked with its title still reading *"…IS NOT ESTABLISHED"*. Rewritten.
-- **Ban the FILE, not the folder: no stream stranded, no declared crossing needed.**
+**#1231 and #1233 both stopped with the PR open, CI pending, nothing merged, and said so plainly.** That
+looks like `600`'s lead finding and **is the opposite of it**: those streams believed a notification was
+coming; these named what was outstanding, which is exactly what `CLAUDE.md` asks. **Do not reword the
+briefs for this.** Plan for it: **a stream that finishes while a ~4-minute check runs will stop, and the
+planner then reads `gh pr checks` and nudges.**
 
-## READING AN INSTRUMENT'S QUERY BEFORE QUOTING IT PAID FOR THE SECOND ROUND RUNNING
+**AND IT MUST BE A MESSAGE, NOT A MERGE DONE FOR THEM, FOR ONE CONCRETE REASON: the `stream-usage:`
+figure can only be read from the stream's own live process.** Merging #1231 from the planner session
+would have saved a message and **lost the figure for ever.** That is now the standing reason.
 
-`check-production.mjs calendar-recent` printed **twelve visits that "lost their calendar event" in 14
-days** — alarming, and a plausible backlog item. **Reading its SQL first showed it is the ordinary case:**
-the query deliberately includes any visit that is not `scheduled`, **or is past-dated**, or has a recorded
-calendar change, and all twelve are completed, cancelled or past-dated. **Nothing filed, no stream
-briefed to chase it**, and `calendar-pending` is the meaningful reading: nothing is waiting.
+## FOUR COSTS, ALL THE PLANNER'S
 
-**One minute against a filed phantom.** Promote the habit if it fires a third time: **before quoting any
-check, open it and read what it matches on, and state the database beside the figure.**
+- **A PATH GREP COUNTS COMMENTS.** The planner "corrected" an item from five importers to **ten** off
+  `grep -rln "clinics/scope" src/`; #1232 read the files — **eight real importers, two comment-only.**
+  Committed while correcting exactly that class of error. **Read the import line.**
+- **IN ONE AMENDMENT SCRIPT, RUN INSERTS AND BODY EDITS BEFORE TITLE EDITS**, and anchor every edit on a
+  phrase **no edit in that script rewrites**. The planner's script **refused twice in one session** for
+  this — a title edit removes the text a later `findIndex` searches for. **Both refusals were free: the
+  per-anchor guard wrote nothing.** Third and fourth time in two plans the guard has paid.
+- **I CALLED THE FLOOR BIMODAL ON SIX READINGS AND THE NEXT TWO FILLED THE GAP.** Eight stream readings:
+  103,744 · 105,592 · 105,689 · 105,904 · 105,934 · 107,581 · 109,004 · 110,677. **A smooth ~7k spread,
+  not two clusters.** The claim is withdrawn in `.plan-day.md`. **What survives: re-derive the floor every
+  batch; 7% on a tight band changes a verdict.**
+- **An item filed on `backlog` mid-plan is invisible to a stream briefed on it** (`600`'s warning). Handled
+  by merging `backlog` into `main` at each batch setup — **cheap, and it closed the fault.** One
+  whole-file-conflict resolution was needed and the documented method worked: keep `main`'s ticks, take the
+  backlog branch's rewritten titles, **guard that every item line survives** (917 both sides).
 
-## "REPORT, DON'T FILE" IS NOW WHERE THE BEST WORK COMES FROM — AND A THREE-STREAM CHAIN PROVED IT
+## BANDS: SEVEN READINGS, FOUR INSIDE AND THREE OVER BY 4–9%
 
-**The find of the plan was on no item.** #1217, settling a harness red, established that a migration had
-made a scoping function return a constant empty for every login. **It was not scoped to ask who still
-calls it; the planner grepped, and the app did** — turning "no clinics" into **"any clinic"** across five
-live importers. **Filed as a question, not a bug** (the widening may be exactly what removing role-keyed
-scoping intended), and **it became the next batch's stream within the hour.** That stream settled it:
-**intended, and nobody is offered a clinic the database refuses** — one claim in the code's own comment
-was simply false and is corrected.
+Figures and reasoning: **`.plan-day.md`.** Three method corrections worth carrying:
 
-**And on the way it named a real fault: a login that may book a visit but not add a doctor is still
-offered a free-text doctor name, and the database refuses the save.** That is the buttons-follow-cards
-fault, and **it is the same red one check had been printing for a fortnight**: #1217 reported it without
-diagnosing it, #1220 diagnosed it, neither was scoped to fix it, and the planner filed it with the fix
-direction already decided by Lutan's own rule (narrow what the form offers, never widen the policy).
-**Three streams from a red to a named fault is the chain working, not failing.**
-
-## FOUR COSTS WORTH NOT REPEATING, ALL THE PLANNER'S
-
-- **AN ITEM FILED ON THE `backlog` BRANCH MID-PLAN IS INVISIBLE TO A STREAM BRIEFED ON IT.** #1220
-  reported it without complaint: *"the item exists only on the `backlog` branch, not on `main`; planner to
-  strike/tick."* **It was right.** Either merge `backlog` into `main` before briefing a freshly filed
-  item, **or say in the brief that the planner will tick it and the stream should not try.**
-- **TWO OF SIX STREAMS WROTE `tokens=unmeasured` IN THEIR OWN USAGE COMMENT.** One process had already
-  exited and **that figure is lost for good**; the other was still alive and `get_usage` recovered it.
-  **So the comment is only durable when the stream actually fills it in.** The briefs now name the calls
-  (`get_usage` and `get_session`, both `session_id: "self"`); **check next round whether that fired.**
-- **CAPTURE FIGURES BEFORE THE PROCESSES GO.** Three streams merged within minutes and one had already
-  exited. **Read the PR comments first** — that is what saved the other two.
-- **A `done` SWEEP OF THREE WORKTREES EXCEEDS A FOREGROUND TIMEOUT**, and so does `worktree.mjs new`
-  while three streams are building. **Sequence the round so nothing you need is behind a background
-  command**, because a turn resumed by a background completion cannot start a session.
-
-## THE BANDS HELD: FIVE OF FIVE MEASURED FIGURES INSIDE
-
-**Five clean readings, all inside band**, one unmeasured, batch 3 in flight. Figures, floors and the full
-band reasoning: **`.plan-day.md`.** Two things worth carrying as method, not as numbers:
-
-- **The audit row held a FIFTH time** — a sweep ruled its own replacement check out rather than building
-  it, and came in inside. **`591`'s caveat still stands untested: a sweep that must REPAIR what it finds
-  has never been measured, because five sweeps have found almost nothing.** Leave it worded as repair.
-- **A card item is ONE stream carrying its own migration**, and this is now verified rather than quoted:
-  `check-cards-count.mjs` asserts an **exact** card count against `cards.ts`, so the schema half cannot
-  merge alone. The card stream landed inside a 240–300k band.
-- **The floor is re-derived per batch and is drifting up.** Do not carry a number forward.
+- **A PROCESS-DOC STREAM CARRYING A REAL JUDGEMENT IS NOT A QUICK WIN.** #1228 was banded 115–150k as
+  three documentation edits and came in **156,907**, because one numbered deliverable asked it to *decide*
+  whether the test-plan matrix should name cards — and answering meant **restructuring the matrix.**
+  **The moment a deliverable asks a stream to DECIDE, it is an ordinary stream plus the decision,
+  whatever the file type.** The planner had even written the risk into `.plan-day.md` and banded against
+  it anyway.
+- **"FIX THE REPORTING BUG" ACROSS SEVERAL FILES THAT SHARE IT IS AN INSTRUMENT, NOT A REPAIR.** #1232
+  (+6%) fixed *"prints HARNESS-OK as an error"* by writing `scripts/lib/rollback-harness.mjs` for all
+  three harnesses — the honest fix, and above a repair's price.
+- **A STREAM THAT FINDS AND FIXES UNPLANNED FAULTS ON THE WAY WILL RUN OVER, AND THAT IS MONEY WELL
+  SPENT.** #1233 (+9%) delivered all fourteen deliverables **and** found the two faults above.
 
 ## STATE, RE-READ EVERY TIME
 
 Everything below is read from the repo and is stale the moment it is written. **Re-read it; never diff it.**
 
-- `main`, the open item count, the highest migration, how far production is behind, every batch's
-  figures and the full band reasoning: **`.plan-day.md`'s own blocks.**
-- **BATCH 3 IS RUNNING AND ITS RESULTS ARE IN NO EDITION YET.** Three streams, the plan's last.
-  **Read their `stream-usage:` comments and PR bodies at the next `/plan-day` before anything else.**
-- **A DECISION IS WAITING, AND IT IS NEW: can a DECEASED resident's intake date be corrected?** The
-  record lock refuses it, and that is arguably the exact case the new feature is for — a wrong arrival
-  date is what gets noticed while tidying old records. **Do not unlock it; widening a closed-record lock
-  is a permissions decision and his.** Filed with the reasoning.
-- **A SECOND DECISION IS WAITING, AND IT IS `591`'s, NOW REAL:** keep one typed word per batch, or stop
-  pre-creating worktrees so the chain works (which moves port allocation, `npm ci` and the launch file
-  into the brief, and needs port allocation to be race-safe across three simultaneous starts).
-  **Worth telling him honestly that his single go saved two words, not two decisions.**
-- **ANSWERED THIS PLAN:** the website-content card's label → **widen the label**, not split the sign-up
-  list off (a wording change, no permissions change). Utility bills → **cost only**, no units or meter
-  readings. Both recorded on their items with the question marked superseded in place.
-- **`process-docs-fixes` WAS SWAPPED OUT OF THIS PLAN'S NINE** for the clinic-scope question, which was a
-  possible live fault in the top section. **It is the leading candidate for the next plan**, and it is
-  what would promote the finishing deliverable into the skill. **Its fix (1) may already be satisfied.**
+- `main`, the open item count, the highest migration, how far production is behind, every batch's figures
+  and the full band reasoning: **`.plan-day.md`'s own blocks.**
+- **BATCH 3 IS RUNNING AND ITS RESULTS ARE IN NO EDITION.** Three streams, the plan's last. **Read their
+  `stream-usage:` comments and PR bodies at the next `/plan-day` before anything else.**
+- **ANSWERED THIS PLAN, five of them, all recorded on their items with the questions marked superseded in
+  place:** a deceased resident's intake date **is** correctable under the existing card; a release note
+  **gets** an explicit `admin: true` flag (read through `perms.isAdmin`, **Admin still holds no card**);
+  the four sites he will **type in himself**, so no seed and no hard-coded count; invoice kinds are
+  **extend-and-catch-all with an `Other`**, which forces every kind-implied FK to be **optional**; and
+  adoption-update files **must be approved** before the public sees them.
+- **`591`'s ONE-GO QUESTION IS CLOSED: keep one typed word per batch.** Put to him with the honest
+  trade-off — his single go saved two *words*, not two *decisions*, and the alternative needs race-safe
+  port allocation. **He chose to keep it. Never put it to him again.** Three batches then started on his
+  own typed messages with **no refusal and no retry**, because the round was sequenced so nothing needed
+  sat behind a background command. **That sequencing is the method, not a precaution.**
+- **NOTHING IS WAITING ON A DECISION OF HIS** at the time of writing. The two bills questions he answered
+  mid-plan were the last.
+- **THE BILLS INTERFACE HALF IS THE NEXT PLAN'S FIRST STREAM**, by his choice — the kind dropdown (copy
+  `photoCategoriesFor(perms)`, already card-derived), the tailored form, the sites settings screen, the
+  presentation tweaks. **It needs #7's schema merged and applied to dev first.** Do not re-choose it.
 - **MIGRATIONS ON DEV AND NOT ON PRODUCTION** are listed under `## Deployment (before go-live)` — read
-  `--status` rather than this sentence. **THE PRODUCTION APPLY IS LUTAN'S**; give him the command at the
-  moment he needs it, never earlier.
+  `--status` rather than this sentence. **THE PRODUCTION APPLY IS LUTAN'S**; he was offered it on
+  2026-11-03 and said **not now**, so **do not raise it again unprompted and do not show the command until
+  he asks.** `0303` has since merged, so the pending count will have grown.
 - **A release is the release manager's.** Lutan, 2026-11-01. **Do not cut one, do not prepare one, do not
   put it to him as a decision he owes.**
-- **The Pi-failover drill and the `cloudflared` boot race need Lutan at the Pi.** Not streams.
-- **Interruptions: ONE, and it was a measurement rather than a defect** — the carve-out test above. The
-  round's other work was finished first, so his go-ahead was the only outstanding thing, and he typed
-  batch 3's start mid-turn without being asked. **`CLAUDE.md` counts a third touch as a fault to write
-  down; the same arithmetic applies to a batch.**
+- **The Pi-failover drill, the `cloudflared` boot race and the Worker fallback that stops covering after
+  ~11 seconds all need Lutan at the Pi** with `wrangler tail`. Not streams. The fallback one is the
+  serious one: 44 seconds of 503s carrying none of our Worker's own header.
+- **Interruptions: ONE, and it was not a briefing defect.** He asked mid-round why nothing had moved into
+  `## Next up` and withdrew the question himself. **Another session — the Backlog Manager — was doing
+  exactly that and committed it minutes later**, which also moved the planner's anchors and made its
+  amendment script refuse. **Worth one line to him next round: say who is grooming the backlog.**
+- **A SECOND SESSION'S INDEPENDENT ORDERING AGREED WITH THE PLAN ON SEVEN OF NINE ITEMS.** The Backlog
+  Manager stocked `Next up` from the same board without seeing the plan. **That is the strongest
+  cross-check on a selection available without running it, and it is free — look at `Next up` before
+  committing to an order.**
