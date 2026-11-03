@@ -221,6 +221,8 @@ picked>}}`, **top first**. An item id is the slug the page derives from the item
 - **Never write to this document.** It is his, set by pressing the star on the page. The
   planner reads it and nothing else.
 
+**THEN THE BACKLOG FILE ITSELF, for everything he has not ranked.**
+
 `C:/Development/Animal_Shelter_App/docs/backlog.md`, open items only
 (`- [ ]` above `## Completed`). Section order and item order are the
 user's priority; keep that as the default ordering **for everything he has
