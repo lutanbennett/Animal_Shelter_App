@@ -95,6 +95,8 @@ export type CardContext = {
   rounds: AssistantRound[];
   /** Each clinic's active doctors, offered on the clinic card. */
   doctors: DoctorNamesByClinic;
+  /** clinics.doctors: the clinic card may take a doctor the clinic does not list. Absent reads as no. */
+  canAddDoctor?: boolean;
   /** Residents the name could have meant, when it could have meant several. */
   candidates: string[];
   onSettle: (outcome: AssistantOutcome) => void;
@@ -477,7 +479,9 @@ function ClinicCard({ ctx, draft }: { ctx: CardContext; draft: ClinicVisitDraft 
     const listed = core
       ? (ctx.doctors[draft.clinicId ?? ""] ?? []).filter((n) => doctorNameCore(n) === core)
       : [];
-    return listed.length === 1 ? listed[0] : said;
+    if (listed.length === 1) return listed[0];
+    // Without clinics.doctors an unlisted name would be added as the caller and refused, so it is not carried.
+    return ctx.canAddDoctor ? said : "";
   });
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -494,8 +498,9 @@ function ClinicCard({ ctx, draft }: { ctx: CardContext; draft: ClinicVisitDraft 
   // The doctor is optional and never blocks Confirm. A name the clinic's
   // list doesn't have is still written (the database adds it, as on the
   // booking form), but the card says so rather than doing it silently.
-  const doctor = doctorName.trim();
   const roster = ctx.doctors[clinicId] ?? [];
+  // Without clinics.doctors only a name the chosen clinic already lists is sent, even after the clinic is changed.
+  const doctor = ctx.canAddDoctor || roster.includes(doctorName) ? doctorName.trim() : "";
   const sameName = (x: string, y: string) =>
     x.trim().replace(/\s+/g, " ").toLowerCase() === y.trim().replace(/\s+/g, " ").toLowerCase();
   const listedAs = roster.find((n) => sameName(n, doctor)) ?? null;
@@ -626,17 +631,36 @@ function ClinicCard({ ctx, draft }: { ctx: CardContext; draft: ClinicVisitDraft 
         <label htmlFor={`clinic-${ctx.turnId}-doctor`} className="text-sm font-medium text-muted">
           {t.vetVisits.doctorName}
         </label>
-        <input
-          id={`clinic-${ctx.turnId}-doctor`}
-          type="text"
-          autoComplete="off"
-          list={roster.length > 0 ? `clinic-${ctx.turnId}-doctors` : undefined}
-          value={doctorName}
-          placeholder={t.vetVisits.doctorNamePlaceholder}
-          onChange={(e) => setDoctorName(e.target.value)}
-          className={inputClass}
-        />
-        {roster.length > 0 && (
+        {ctx.canAddDoctor ? (
+          <input
+            id={`clinic-${ctx.turnId}-doctor`}
+            type="text"
+            autoComplete="off"
+            list={roster.length > 0 ? `clinic-${ctx.turnId}-doctors` : undefined}
+            value={doctorName}
+            placeholder={t.vetVisits.doctorNamePlaceholder}
+            onChange={(e) => setDoctorName(e.target.value)}
+            className={inputClass}
+          />
+        ) : (
+          <>
+            <select
+              id={`clinic-${ctx.turnId}-doctor`}
+              value={roster.includes(doctorName) ? doctorName : ""}
+              onChange={(e) => setDoctorName(e.target.value)}
+              className={inputClass}
+            >
+              <option value="">{t.vetVisits.doctorNone}</option>
+              {roster.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-muted">{t.vetVisits.doctorChooseHint}</p>
+          </>
+        )}
+        {ctx.canAddDoctor && roster.length > 0 && (
           <datalist id={`clinic-${ctx.turnId}-doctors`}>
             {roster.map((n) => (
               <option key={n} value={n} />

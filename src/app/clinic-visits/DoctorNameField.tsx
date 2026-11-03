@@ -23,6 +23,7 @@ export function DoctorNameField({
   lockedName,
   defaultValue,
   canAddDoctor = false,
+  defaultClinicId,
   className,
 }: {
   clinicId: string;
@@ -30,6 +31,8 @@ export function DoctorNameField({
   lockedName?: string | null;
   defaultValue?: string;
   canAddDoctor?: boolean;
+  /** The clinic `defaultValue` was recorded at. Once the clinic is moved, that name is not carried unless the new clinic lists it. */
+  defaultClinicId?: string;
   className: string;
 }) {
   const { t } = useI18n();
@@ -52,13 +55,15 @@ export function DoctorNameField({
 
   if (!canAddDoctor) {
     // A visit already carrying a name that is not on the list keeps it as a choice, so editing does not drop it.
-    const options = defaultValue && !names.includes(defaultValue) ? [defaultValue, ...names] : names;
+    // Moving the visit to another clinic re-resolves the name there, and an unlisted one would be added as the caller.
+    const keepsOwn = defaultValue && !names.includes(defaultValue) && (defaultClinicId === undefined || defaultClinicId === clinicId);
+    const options = keepsOwn ? [defaultValue, ...names] : names;
     return (
       <div className="flex flex-col gap-1">
         <label htmlFor="doctorName" className="text-sm font-medium text-muted">
           {t.vetVisits.doctorName}
         </label>
-        <select id="doctorName" name="doctorName" defaultValue={defaultValue ?? ""} className={className}>
+        <select key={clinicId} id="doctorName" name="doctorName" defaultValue={options.includes(defaultValue ?? "") ? defaultValue : ""} className={className}>
           <option value="">{t.vetVisits.doctorNone}</option>
           {options.map((name) => (
             <option key={name} value={name}>

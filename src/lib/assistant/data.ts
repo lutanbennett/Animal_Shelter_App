@@ -44,6 +44,11 @@ export type AssistantContext = {
   immunizationTypes: AssistantImmunizationType[];
   /** Each clinic's active doctors, for the clinic card's optional Doctor field. */
   doctors: DoctorNamesByClinic;
+  /**
+   * clinics.doctors: may add a doctor the clinic does not list. The booking RPC adds a new name as the caller
+   * (doctors_insert_perm, 0182), so without it the clinic card offers existing doctors only.
+   */
+  canAddDoctor: boolean;
   /** The medicines the prescription card offers. Empty without `medical.prescriptions`. */
   medications: AssistantMedication[];
   /** Morning / Lunch / Evening / Night, for the prescription card's ticks. Empty likewise. */
@@ -94,7 +99,7 @@ type ListRow = {
 export function emptyAssistantContext(
   error: string | null = null,
 ): AssistantContext {
-  return { residents: [], zones: [], enclosures: [], clinics: [], carers: [], immunizationTypes: [], doctors: {}, medications: [], rounds: [], canAsk: false, canWrite: false, toolCards: {}, error };
+  return { residents: [], zones: [], enclosures: [], clinics: [], carers: [], immunizationTypes: [], doctors: {}, canAddDoctor: false, medications: [], rounds: [], canAsk: false, canWrite: false, toolCards: {}, error };
 }
 
 /**
@@ -216,6 +221,7 @@ export async function loadAssistantContext(
     carers: carerResult.carers,
     immunizationTypes: (typesResult.data ?? []).map((ty) => ({ id: ty.id, name: ty.name, nameTh: ty.name_th })),
     doctors,
+    canAddDoctor: can(perms, "clinics.doctors"),
     medications: (medicationResult.data ?? []).map((m) => ({
       id: m.id,
       name: m.name,
