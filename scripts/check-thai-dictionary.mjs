@@ -424,10 +424,148 @@ function ruleTwo() {
   return faults + stale.length;
 }
 
+/* ---------------------------------------------------------------- rule 3 */
+
+/**
+ * Rule 3 is REPORT-ONLY (it never fails the build). Same history as rule 2,
+ * which printed before it gated: the keys and callers for the routes came
+ * first (t.uploads.errors), so what this lists is what a person can now act on.
+ * What would have to be true before it blocks: a run of the check on a tree
+ * with nothing flagged except named records, held for a day of PRs without a
+ * false positive. docs/decisions/2026-11-03-thai-check-ts-extend.md.
+ */
+const RULE_3_BLOCKS = false;
+
+/**
+ * Rule 3's deliberate English in .ts files, by NAME and never as a count.
+ * file → { "exact string": "why" }. Stale entries are reported, like rule 2.
+ * Only strings classify() puts in the `user` class can appear here; the
+ * admin-only, machine-facing and English-by-design strings are not this
+ * rule's business (scripts/lib/english-in-ts-classes.mjs).
+ */
+const RULE_3_ALLOWED = {};
+
+const USER_KEYS = new Set(["error", "message", "notice", "detail"]);
+const SKIP_PREFIXES = ["src/lib/i18n/dictionaries/", "src/lib/manual/", "src/lib/assistant/"];
+const SKIP_FILES = new Set(["src/lib/releases.ts", "src/lib/status/alerts.ts"]);
+
+function tsFiles(dir) {
+  const out = [];
+  for (const entry of readdirSync(dir)) {
+    const full = path.join(dir, entry);
+    if (statSync(full).isDirectory()) out.push(...tsFiles(full));
+    else if (entry.endsWith(".ts") && !entry.endsWith(".d.ts") && !/\.test\.ts$/.test(entry)) out.push(full);
+  }
+  return out;
+}
+
+const wordsOf = (t) => t.match(/[A-Za-z][A-Za-z'’]*/g) ?? [];
+const PROSE_SHAPE = /^[A-Z(“"']?[A-Za-z][A-Za-z'’]*(?:[\s,:;.!?()\-–—/&%$'"“”0-9]+[A-Za-z0-9][A-Za-z0-9'’]*){2,}[\s.!?]*$/;
+const isProse = (t) =>
+  /\s/.test(t) && PROSE_SHAPE.test(t) && !/https?:|=>|[{};=<>]/.test(t) && wordsOf(t).length >= 3 && wordsOf(t).some((w) => w.length >= 4);
+
+function calleeText(ts, node) {
+  return node.expression.getText();
+}
+
+// Text of a string-ish node, or null. Template substitutions are blanked.
+function stringOf(ts, node) {
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
+  if (ts.isTemplateExpression(node)) return node.head.text + node.templateSpans.map((s) => " " + s.literal.text).join("");
+  return null;
+}
+
+/** The string literals that sit in a user-facing position (see the item's list). */
+function userFacingLiterals(ts, sf, rel) {
+  const found = [];
+  const isEntry = /\/(actions|route)\.ts$/.test(rel);
+  const take = (node) => {
+    const t = stringOf(ts, node);
+    if (t !== null) found.push({ text: t.replace(/\s+/g, " ").trim(), line: sf.getLineAndCharacterOfPosition(node.getStart()).line + 1 });
+  };
+  // Strings reachable through a value: a literal, either arm of ?:, a || / ?? operand, a parenthesis.
+  const values = (node, f) => {
+    if (ts.isParenthesizedExpression(node)) return values(node.expression, f);
+    if (ts.isConditionalExpression(node)) return (values(node.whenTrue, f), values(node.whenFalse, f));
+    if (ts.isBinaryExpression(node) && [ts.SyntaxKind.BarBarToken, ts.SyntaxKind.QuestionQuestionToken].includes(node.operatorToken.kind)) {
+      return (values(node.left, f), values(node.right, f));
+    }
+    f(node);
+  };
+  const visit = (node) => {
+    if (ts.isPropertyAssignment(node) && (ts.isIdentifier(node.name) || ts.isStringLiteral(node.name)) && USER_KEYS.has(node.name.text)) {
+      values(node.initializer, take);
+    } else if (ts.isCallExpression(node) || ts.isNewExpression(node)) {
+      const callee = calleeText(ts, node);
+      if (/^(?:NextResponse\.json|Response\.json)$/.test(callee) || (ts.isNewExpression(node) && /^(?:Response|NextResponse)$/.test(callee))) {
+        for (const a of node.arguments ?? []) values(a, take);
+      } else if (/\.setCustomValidity$/.test(callee)) {
+        for (const a of node.arguments ?? []) values(a, take);
+      }
+    } else if (isEntry && ts.isReturnStatement(node) && node.expression) {
+      values(node.expression, take);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
+  return found;
+}
+
+async function ruleThree() {
+  const { classify } = await import(pathToFileURL(path.join(here, "lib", "english-in-ts-classes.mjs")).href);
+  const ts = (await import("typescript")).default;
+  const started = Date.now();
+  const rows = [];
+  const allowedRows = [];
+  const seen = new Set();
+  let userClass = 0;
+  let positioned = 0;
+  let scanned = 0;
+  for (const file of tsFiles(src)) {
+    const rel = path.relative(root, file).replaceAll("\\", "/");
+    if (SKIP_FILES.has(rel) || SKIP_PREFIXES.some((p) => rel.startsWith(p))) continue;
+    scanned += 1;
+    const sf = ts.createSourceFile(file, readFileSync(file, "utf8"), ts.ScriptTarget.Latest, true);
+    const seenHere = new Set();
+    for (const lit of userFacingLiterals(ts, sf, rel)) {
+      if (!isProse(lit.text)) continue;
+      positioned += 1;
+      const cls = classify(rel, lit.text);
+      if (!cls || cls.reads !== "user") continue; // gate on the `user` class; never re-derive it here
+      userClass += 1;
+      if (seenHere.has(lit.text)) continue;
+      seenHere.add(lit.text);
+      const why = RULE_3_ALLOWED[rel]?.[lit.text];
+      if (why) {
+        seen.add(`${rel}\u0000${lit.text}`);
+        allowedRows.push({ rel, text: lit.text, why });
+      } else rows.push({ rel, line: lit.line, text: lit.text });
+    }
+  }
+  const stale = [];
+  for (const [rel, strings] of Object.entries(RULE_3_ALLOWED)) {
+    for (const text of Object.keys(strings)) {
+      if (!seen.has(`${rel}\u0000${text}`)) stale.push(`RULE_3_ALLOWED["${rel}"] ${JSON.stringify(text)} is stale — that string is no longer there; drop the line`);
+    }
+  }
+  if (showAll) for (const a of allowedRows) console.log(`  allowed  ${a.rel} ${JSON.stringify(a.text)} — ${a.why}`);
+  for (const r of rows) console.log(`REPORT ${r.rel}:${r.line} ${JSON.stringify(r.text)} — English in a .ts, not in the dictionary`);
+  for (const line of stale) console.log(`REPORT ${line}`);
+  console.log(
+    `\nrule 3: ${scanned} .ts files read with the TypeScript compiler (${((Date.now() - started) / 1000).toFixed(1)}s); ` +
+      `${positioned} prose strings in user-facing positions, ${userClass} in the \`user\` class — ` +
+      `${allowedRows.length} allowed by name, ${rows.length} to translate` +
+      (stale.length ? `, ${stale.length} stale` : "") +
+      (RULE_3_BLOCKS ? "" : " (report only: does not fail the build)"),
+  );
+  return rows.length + stale.length;
+}
+
 /* ------------------------------------------------------------------ run */
 
 const faults = await ruleOne();
 const typedIn = ruleTwo();
+const inTs = await ruleThree();
 
 if (faults || typedIn) {
   const parts = [];
@@ -438,4 +576,4 @@ if (faults || typedIn) {
   console.log(`\nevery Thai entry is either translated, wordless or allowed by name,`);
   console.log(`and every piece of English in a .tsx is either translated or allowed by name`);
 }
-await exitWith(faults || (RULE_2_BLOCKS && typedIn) ? 1 : 0);
+await exitWith(faults || (RULE_2_BLOCKS && typedIn) || (RULE_3_BLOCKS && inTs) ? 1 : 0);
