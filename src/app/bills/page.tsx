@@ -9,7 +9,9 @@ import { localLabel } from "@/lib/translations/labels";
 import { appUserLabel, loadAppUsersById } from "@/lib/auth/app-users";
 import { formatDateTime, todayIso } from "@/lib/format";
 import { driveImageUrl } from "@/lib/google/drive-client";
-import { BillsInbox, type BillCard, type BillSuggestion } from "./BillsInbox";
+import { kindsFor, tailoringOf, type BillKind } from "@/lib/bills/kinds";
+import Link from "next/link";
+import { BillsInbox, type BillCard, type BillSuggestion, type KindOption, type PlaceOption, type AccountOption } from "./BillsInbox";
 
 /** How far back a delivery or visit is offered as a likely match. */
 const LOOKBACK_DAYS = 14;
@@ -40,12 +42,12 @@ export default async function BillsPage() {
   const forJobs = can(perms, "maintenance.bills");
   const since = daysAgo(LOOKBACK_DAYS);
 
-  const [cardsResult, receiptsResult, visitsResult, jobsResult] = await Promise.all([
+  const [cardsResult, receiptsResult, visitsResult, jobsResult, kindsResult, premisesResult, accountsResult] = await Promise.all([
     supabase
       .from("bills_inbox")
-      .select("id, taken_by, created_at, bill_date, amount, note")
+      .select("id, taken_by, created_at, bill_date, amount, note, kind_id, premises_id, account_id")
       .order("created_at", { ascending: true })
-      .returns<{ id: string; taken_by: string; created_at: string; bill_date: string | null; amount: number | string | null; note: string | null }[]>(),
+      .returns<{ id: string; taken_by: string; created_at: string; bill_date: string | null; amount: number | string | null; note: string | null; kind_id: string | null; premises_id: string | null; account_id: string | null }[]>(),
     forDeliveries
       ? supabase
           .from("stock_receipts")
@@ -74,12 +76,47 @@ export default async function BillsPage() {
           .limit(30)
           .returns<{ id: string; job_code: string; title: string; status: string; updated_at: string }[]>()
       : Promise.resolve({ data: [], error: null }),
+    supabase
+      .from("bill_kinds")
+      .select("id, key, label, parent_id, sort, archived_at")
+      .order("sort")
+      .returns<{ id: string; key: string; label: string; parent_id: string | null; sort: number; archived_at: string | null }[]>(),
+    supabase.from("premises").select("id, name").is("archived_at", null).order("name").returns<{ id: string; name: string }[]>(),
+    supabase
+      .from("bill_accounts")
+      .select("id, supplier, account_ref, premises_id, kind_id")
+      .is("archived_at", null)
+      .order("supplier")
+      .returns<{ id: string; supplier: string; account_ref: string | null; premises_id: string | null; kind_id: string | null }[]>(),
   ]);
 
   const cards = cardsResult.data ?? [];
   const receipts = receiptsResult.data ?? [];
   const visits = visitsResult.data ?? [];
   const jobs = jobsResult.data ?? [];
+
+  // The dropdown's options come from the login's cards (kindsFor, the way photoCategoriesFor does for photos). A card keeps showing a
+  // kind it already has even when that kind is no longer offered, so saving it cannot silently clear the kind.
+  const allKinds: BillKind[] = (kindsResult.data ?? []).map((k) => ({
+    id: k.id,
+    key: k.key,
+    label: k.label,
+    parentId: k.parent_id,
+    sort: k.sort,
+    archived: k.archived_at != null,
+  }));
+  const offered = new Set(kindsFor(perms, allKinds).map((k) => k.id));
+  const held = new Set(cards.map((c) => c.kind_id).filter((id): id is string => id != null));
+  const kindOptions: KindOption[] = allKinds
+    .filter((k) => offered.has(k.id) || held.has(k.id))
+    .map((k) => ({ id: k.id, label: k.label, parentId: k.parentId, offered: offered.has(k.id), ...tailoringOf(k, allKinds) }));
+  const places: PlaceOption[] = premisesResult.data ?? [];
+  const accountOptions: AccountOption[] = (accountsResult.data ?? []).map((a) => ({
+    id: a.id,
+    label: a.account_ref ? a.supplier + " · " + a.account_ref : a.supplier,
+    premisesId: a.premises_id,
+    kindId: a.kind_id,
+  }));
 
   // One query for every card's photos and one for which candidates already hold a bill photo.
   const candidateIds = [...receipts.map((r) => r.id), ...visits.map((v) => v.id)];
@@ -160,11 +197,14 @@ export default async function BillsPage() {
       amount: c.amount == null ? "" : String(c.amount),
       date: c.bill_date ?? "",
       note: c.note ?? "",
+      kindId: c.kind_id ?? "",
+      premisesId: c.premises_id ?? "",
+      accountId: c.account_id ?? "",
       photos: photosByCard.get(c.id) ?? [],
     };
   });
 
-  const loadError = cardsResult.error ?? receiptsResult.error ?? visitsResult.error ?? jobsResult.error ?? photosResult.error;
+  const loadError = cardsResult.error ?? receiptsResult.error ?? visitsResult.error ?? jobsResult.error ?? kindsResult.error ?? premisesResult.error ?? accountsResult.error ?? photosResult.error;
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
@@ -173,7 +213,12 @@ export default async function BillsPage() {
         <p className="text-sm text-muted">{b.subtitle}</p>
       </div>
       {loadError && <p className="text-sm text-danger">{loadError.message}</p>}
-      <BillsInbox cards={cardProps} suggestions={suggestions} canDeliver={forDeliveries} />
+      {can(perms, "bills.sites") && (
+        <Link href="/bills/settings" className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline">
+          {b.settings.open}
+        </Link>
+      )}
+      <BillsInbox cards={cardProps} suggestions={suggestions} canDeliver={forDeliveries} kinds={kindOptions} places={places} accounts={accountOptions} />
     </main>
   );
 }

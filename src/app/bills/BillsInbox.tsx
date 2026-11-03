@@ -10,7 +10,8 @@ import { uploadAttachmentFile } from "@/components/AttachmentUploader";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
 import { useWriteCall } from "@/lib/use-write-form";
-import { deleteCard, matchBill, matchBillToJob, saveCard, type SuggestionKind } from "./actions";
+import { deleteCard, matchBill, matchBillToJob, recordGeneralBill, saveCard, type SuggestionKind } from "./actions";
+import type { KindRoute } from "@/lib/bills/kinds";
 import { DateInput } from "@/components/DateInput";
 
 export type BillCard = {
@@ -21,6 +22,9 @@ export type BillCard = {
   amount: string;
   date: string;
   note: string;
+  kindId: string;
+  premisesId: string;
+  accountId: string;
   photos: { id: string; url: string; name: string; isPdf: boolean }[];
 };
 
@@ -31,6 +35,14 @@ export type BillSuggestion = {
   title: string;
   detail: string;
 };
+
+/** A kind the login may choose, with what its form asks for (lib/bills/kinds.ts). Every field a kind implies is optional. */
+export type KindOption = { id: string; label: string; parentId: string | null; offered: boolean; route: KindRoute; premises: boolean; account: boolean };
+export type PlaceOption = { id: string; name: string };
+export type AccountOption = { id: string; label: string; premisesId: string | null; kindId: string | null };
+
+/** The match a card's chosen route is shown; a utility or general bill is matched to nothing. */
+const ROUTE_SUGGESTION: Partial<Record<KindRoute, SuggestionKind>> = { visit: "clinic_visit", delivery: "stock_receipt", job: "maintenance_job" };
 
 const inputClass =
   "rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
@@ -44,10 +56,16 @@ export function BillsInbox({
   cards,
   suggestions,
   canDeliver,
+  kinds,
+  places,
+  accounts,
 }: {
   cards: BillCard[];
   suggestions: BillSuggestion[];
   canDeliver: boolean;
+  kinds: KindOption[];
+  places: PlaceOption[];
+  accounts: AccountOption[];
 }) {
   const { t } = useI18n();
   const b = t.bills.page;
@@ -114,7 +132,7 @@ export function BillsInbox({
       ) : (
         <ul className="flex flex-col gap-4">
           {cards.map((card) => (
-            <CardView key={card.id} card={card} suggestions={suggestions} canDeliver={canDeliver} />
+            <CardView key={card.id} card={card} suggestions={suggestions} canDeliver={canDeliver} kinds={kinds} places={places} accounts={accounts} />
           ))}
         </ul>
       )}
@@ -127,10 +145,16 @@ function CardView({
   card,
   suggestions,
   canDeliver,
+  kinds,
+  places,
+  accounts,
 }: {
   card: BillCard;
   suggestions: BillSuggestion[];
   canDeliver: boolean;
+  kinds: KindOption[];
+  places: PlaceOption[];
+  accounts: AccountOption[];
 }) {
   const { t, locale } = useI18n();
   const b = t.bills.page;
@@ -138,6 +162,9 @@ function CardView({
   const [amount, setAmount] = useState(card.amount);
   const [date, setDate] = useState(card.date);
   const [note, setNote] = useState(card.note);
+  const [kindId, setKindId] = useState(card.kindId);
+  const [premisesId, setPremisesId] = useState(card.premisesId);
+  const [accountId, setAccountId] = useState(card.accountId);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
   const [adding, setAdding] = useState(false);
@@ -147,9 +174,29 @@ function CardView({
   const deleteWrite = useWriteCall();
   const matchWrite = useWriteCall();
   const matchJobWrite = useWriteCall();
+  const generalWrite = useWriteCall();
 
-  const details = { amount, date, note };
-  const byNearness = [...suggestions].sort(
+  const kind = kinds.find((k) => k.id === kindId);
+  // The form the chosen kind implies: its place and account (both optional), and where the card is filed. No kind, Other, or a
+  // kind the code does not know is the plain form, with the matching below exactly as it was.
+  const showPlace = !!kind?.premises;
+  const showAccount = !!kind?.account;
+  const details = {
+    amount,
+    date,
+    note,
+    kindId,
+    premisesId: showPlace ? premisesId : "",
+    accountId: showAccount ? accountId : "",
+  };
+  const accountChoices = accounts.filter(
+    (a) =>
+      (!premisesId || !a.premisesId || a.premisesId === premisesId) &&
+      (!a.kindId || a.kindId === kindId || a.kindId === kind?.parentId || a.id === accountId),
+  );
+  const wanted = kind ? ROUTE_SUGGESTION[kind.route] : undefined;
+  const shownSuggestions = kind ? suggestions.filter((x) => x.kind === wanted) : suggestions;
+  const byNearness = [...shownSuggestions].sort(
     (x, y) => Math.abs(dayNumber(x.day) - dayNumber(card.day)) - Math.abs(dayNumber(y.day) - dayNumber(card.day)),
   );
   // The nearest of each kind first, so up to thirty recent jobs cannot push every delivery or visit off the card.
@@ -240,6 +287,75 @@ function CardView({
           {b.date}
           <DateInput value={date} onChange={(e) => setDate(e.target.value)} className={`${inputClass} w-44`} />
         </label>
+        {kinds.length > 0 && (
+          <label className="flex flex-col gap-1 text-sm font-medium text-muted">
+            {b.kindLabel}
+            <select
+              value={kindId}
+              onChange={(e) => {
+                setKindId(e.target.value);
+                setAccountId("");
+              }}
+              className={`${inputClass} w-56`}
+            >
+              <option value="">{b.kindNone}</option>
+              {kinds
+                .filter((k) => !k.parentId)
+                .map((k) => {
+                  const children = kinds.filter((c) => c.parentId === k.id);
+                  return children.length === 0 ? (
+                    <option key={k.id} value={k.id} disabled={!k.offered}>
+                      {k.label}
+                    </option>
+                  ) : (
+                    <optgroup key={k.id} label={k.label}>
+                      <option value={k.id} disabled={!k.offered}>
+                        {b.kindAnyOf(k.label)}
+                      </option>
+                      {children.map((c) => (
+                        <option key={c.id} value={c.id} disabled={!c.offered}>
+                          {c.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  );
+                })}
+            </select>
+          </label>
+        )}
+        {showPlace && (
+          <label className="flex flex-col gap-1 text-sm font-medium text-muted">
+            {b.placeLabel}
+            <select
+              value={premisesId}
+              onChange={(e) => {
+                setPremisesId(e.target.value);
+                setAccountId("");
+              }}
+              className={`${inputClass} w-48`}
+            >
+              <option value="">{b.placeNone}</option>
+              {places.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        {showAccount && (
+          <label className="flex flex-col gap-1 text-sm font-medium text-muted">
+            {b.accountLabel}
+            <select value={accountId} onChange={(e) => setAccountId(e.target.value)} className={`${inputClass} w-56`}>
+              <option value="">{b.accountNone}</option>
+              {accountChoices.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="flex min-w-0 flex-1 basis-48 flex-col gap-1 text-sm font-medium text-muted">
           {b.note}
           <input value={note} onChange={(e) => setNote(e.target.value)} className={`${inputClass} w-full`} />
@@ -248,7 +364,20 @@ function CardView({
 
       <div className="flex flex-col gap-2">
         <p className="text-sm font-medium text-foreground">{b.forWhat}</p>
-        {nearest.length === 0 ? (
+        {kind?.route === "general" && (
+          <div>
+            <ActionButton
+              variant="primary"
+              icon={ACTION_ICONS.save}
+              disabled={pending}
+              onClick={() => run(() => generalWrite((id) => recordGeneralBill(card.id, details, id)), b.recorded)}
+            >
+              {b.recordBill}
+            </ActionButton>
+          </div>
+        )}
+        {kind?.route === "utility" && <p className="text-xs text-muted">{b.utilityLater}</p>}
+        {kind && !wanted ? null : nearest.length === 0 ? (
           <p className="text-xs text-muted">{b.noLikely}</p>
         ) : (
           <>

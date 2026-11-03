@@ -9,6 +9,7 @@ import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { canUseBills } from "@/lib/bills/access";
 import { runWriteAction, type ActionResult } from "@/lib/action-result";
+import { kindsFor, tailoringOf, type BillKind } from "@/lib/bills/kinds";
 
 // PI FAILOVER (D), 2026-11-01: every write here goes through runWriteAction() via wrapped(), which is what lets the
 // Worker replay a save the Pi did not clearly answer (docs/decisions/2026-11-01-write-paths-tail-a.md). A new write
@@ -32,7 +33,8 @@ async function wrapped<R extends object>(
   );
 }
 
-export type CardDetails = { amount: string; date: string; note: string };
+/** kindId, premisesId and accountId are "" when none is chosen: every one of them is optional (an Other bill belongs to none). */
+export type CardDetails = { amount: string; date: string; note: string; kindId: string; premisesId: string; accountId: string };
 export type MatchKind = "stock_receipt" | "clinic_visit";
 export type SuggestionKind = MatchKind | "maintenance_job";
 
@@ -48,6 +50,40 @@ async function mayMatch(kind: MatchKind): Promise<boolean> {
   return kind === "stock_receipt" ? can(perms, "stock.delivery") : can(perms, "medical.visits", "edit");
 }
 
+type KindRow = { id: string; key: string; label: string; parent_id: string | null; sort: number; archived_at: string | null };
+
+async function loadKinds(): Promise<BillKind[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("bill_kinds").select("id, key, label, parent_id, sort, archived_at").returns<KindRow[]>();
+  return (data ?? []).map((k) => ({ id: k.id, key: k.key, label: k.label, parentId: k.parent_id, sort: k.sort, archived: k.archived_at != null }));
+}
+
+/**
+ * What a card's kind, place and account become, or null when the kind is not one this login may choose. The same list the
+ * dropdown was drawn from (kindsFor), so the control and the action cannot disagree. A card keeps a kind that has since been
+ * archived (it was chosen while it was offered), but cannot be given one. The place and account are kept only when the kind
+ * implies them; every one is optional.
+ */
+async function resolveKind(
+  cardId: string,
+  input: CardDetails,
+): Promise<{ kind_id: string | null; premises_id: string | null; account_id: string | null } | null> {
+  if (!input.kindId) return { kind_id: null, premises_id: null, account_id: null };
+  const kinds = await loadKinds();
+  const kind = kinds.find((k) => k.id === input.kindId);
+  if (!kind) return null;
+  const supabase = await createClient();
+  const { data: current } = await supabase.from("bills_inbox").select("kind_id").eq("id", cardId).maybeSingle<{ kind_id: string | null }>();
+  const offered = kindsFor(await loadPermissions(), kinds).some((k) => k.id === kind.id);
+  if (!offered && current?.kind_id !== kind.id) return null;
+  const form = tailoringOf(kind, kinds);
+  return {
+    kind_id: kind.id,
+    premises_id: form.premises && input.premisesId ? input.premisesId : null,
+    account_id: form.account && input.accountId ? input.accountId : null,
+  };
+}
+
 /** Saves what was typed on a card without matching it, so a half-done card keeps its figures. */
 export async function saveCard(cardId: string, input: CardDetails, requestId: string | null): Promise<ActionResult> {
   return wrapped<object>("bills.saveCard", requestId, async (t) => {
@@ -56,10 +92,13 @@ export async function saveCard(cardId: string, input: CardDetails, requestId: st
     const amount = parseBahtAmount(input.amount);
     if (!amount.ok) return { ok: false, error: e.costInvalid };
 
+    const placed = await resolveKind(cardId, input);
+    if (!placed) return { ok: false, error: e.kindNotAllowed };
+
     const supabase = await createClient();
     const { error, count } = await supabase
       .from("bills_inbox")
-      .update({ amount: amount.value, bill_date: input.date || null, note: input.note.trim() || null }, { count: "exact" })
+      .update({ amount: amount.value, bill_date: input.date || null, note: input.note.trim() || null, ...placed }, { count: "exact" })
       .eq("id", cardId);
     if (error) return { ok: false, error: `${e.failed}: ${error.message}` };
     if (!count) return { ok: false, error: e.gone };
@@ -126,6 +165,8 @@ export async function matchBillToJob(cardId: string, jobId: string, input: CardD
         amount: amount.value,
         bill_date: input.date || todayIso(),
         note: input.note.trim() || null,
+        premises_id: input.premisesId || null,
+        account_id: input.accountId || null,
       })
       .select("id")
       .single<{ id: string }>();
@@ -146,6 +187,59 @@ export async function matchBillToJob(cardId: string, jobId: string, input: CardD
 
     revalidateBills();
     revalidatePath(`/maintenance/${jobId}`);
+    return { ok: true };
+  });
+}
+
+/**
+ * Files a card as a general bill (0305 general_bills): any kind with no table of its own, materials, cleaning products and
+ * Other. Needs bills.general, the activity the table's policy asks, and a kind this login may choose that is filed here.
+ * Only the kind and the cost are required; the place and account are kept when the kind implies them and are optional.
+ * The bill is made first and removed again if the photos then fail to move, so the card is never lost.
+ */
+export async function recordGeneralBill(cardId: string, input: CardDetails, requestId: string | null): Promise<ActionResult> {
+  return wrapped<object>("bills.recordGeneralBill", requestId, async (t) => {
+    const e = t.bills.errors;
+    const perms = await loadPermissions();
+    if (!can(perms, "bills.general")) return { ok: false, error: e.notAuthorized };
+    const amount = parseBahtAmount(input.amount);
+    if (!amount.ok) return { ok: false, error: e.costInvalid };
+    if (amount.value == null) return { ok: false, error: e.amountNeeded };
+    if (!input.kindId) return { ok: false, error: e.kindNeeded };
+    const kinds = await loadKinds();
+    const kind = kinds.find((k) => k.id === input.kindId);
+    if (!kind || !kindsFor(perms, kinds).some((k) => k.id === kind.id) || tailoringOf(kind, kinds).route !== "general") {
+      return { ok: false, error: e.kindNotAllowed };
+    }
+    const form = tailoringOf(kind, kinds);
+
+    const supabase = await createClient();
+    const { data: bill, error } = await supabase
+      .from("general_bills")
+      .insert({
+        kind_id: kind.id,
+        premises_id: form.premises && input.premisesId ? input.premisesId : null,
+        account_id: form.account && input.accountId ? input.accountId : null,
+        amount: amount.value,
+        bill_date: input.date || todayIso(),
+        note: input.note.trim() || null,
+      })
+      .select("id")
+      .single<{ id: string }>();
+    if (error || !bill) return { ok: false, error: `${e.failed}: ${error?.message ?? ""}` };
+
+    const { error: moveError } = await supabase
+      .from("attachments")
+      .update({ owner_type: "general_bill", owner_id: bill.id })
+      .eq("owner_type", "bill_inbox")
+      .eq("owner_id", cardId);
+    if (moveError) {
+      await supabase.from("general_bills").delete().eq("id", bill.id);
+      return { ok: false, error: `${e.failed}: ${moveError.message}` };
+    }
+    const { error: deleteError } = await supabase.from("bills_inbox").delete().eq("id", cardId);
+    if (deleteError) return { ok: false, error: `${e.failed}: ${deleteError.message}` };
+    revalidateBills();
     return { ok: true };
   });
 }
