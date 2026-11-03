@@ -11,7 +11,7 @@
 | PR | filled in on the PR itself |
 | Tested by / date | Claude / 2026-11-03 |
 | Carries a migration? | no |
-| Tested at SHA | TESTED_SHA |
+| Tested at SHA | b065aaf7 (gates run on the code commit before the merge of origin/main, which added only backlog documentation) |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,11 @@
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`. Run output:
 
 ```
-GATES_OUTPUT
+=== gates: typecheck exited 0 after 99s
+=== gates: lint exited 0 after 145s
+=== gates: test exited 0 after 16s
+=== gates: build exited 0 after 137s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR (runs the same four gates, among its other checks) — n/a: not yet — the PR does not exist at this commit
