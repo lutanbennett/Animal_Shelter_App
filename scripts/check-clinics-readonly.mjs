@@ -1,26 +1,20 @@
-// A doctor login reads the shelter's clinics but cannot change one. Asserted
-// against the LIVE schema on DEV, in one transaction that ends in a deliberate
-// `raise exception` carrying the evidence — so nothing can commit.
+// Who may read and who may change the clinics list, asserted against the LIVE schema on DEV, in
+// one transaction that ends in a deliberate `raise exception` carrying the evidence, so nothing commits.
 //
 //   node scripts/check-clinics-readonly.mjs     (from the repo root; dev only)
 //
-// Was check-vets-readonly.mjs, which replayed 0105 (vet_rw_vets became
-// vet_read_vets). 0172 renamed the table (vets -> clinics), the role (vet ->
-// doctor) and the policy (doctor_read_clinics), so a replay of 0105 now names a
-// table that is only a read-only stand-in view. It asserts the live schema
-// instead (docs/decisions/2026-10-02-replay-or-assert-live.md); the "before the
-// file a vet could rename a clinic" step went with the replay.
-//
-// It checks
-//   A  a doctor login still reads every clinic — the clinic visit forms need the names
-//   B  a doctor login cannot insert, update or delete a clinic, their own included,
-//      through their own JWT — the Data API path 0105 closed
-//   C  pg_policies: every policy on clinics a clinic login meets (is_clinic_login()
-//      or 'doctor') is a SELECT, and doctor_read_clinics is there
-//   D  management and admin still insert, update and delete, as
-//      /management/clinics does; a login holding the retired Staff role's cells (a
-//      harness custom role, since 0173 refuses a live staff login) still only reads;
-//      a volunteer reads none
+// REWRITTEN 2026-11-03 (docs/decisions/2026-11-03-clinic-harness-rewrite.md). It used to assert a
+// per-clinic model: a "doctor" login that current_user_clinic_ids() placed at a clinic could read
+// clinics but not write them. 0264 made current_user_clinic_ids() a constant '{}' and dropped the
+// doctor_read_clinics policy; every policy on clinics now asks one card, clinics.list (read for
+// select, edit for insert/update/delete). So this asserts the card, with harness roles holding
+// exactly the cells under test, never a role named doctor or management:
+//   A  a login holding clinics.list at read reads every clinic
+//   B  ... and cannot insert, update or delete one (the Data API path 0105 closed)
+//   C  pg_policies: every policy on clinics asks has_permission('clinics.list') and nothing
+//      narrows by clinic or by a role key
+//   D  a login holding clinics.list at edit inserts, updates and deletes; an admin updates; a login
+//      holding a different card reads none and writes none
 //   E  the service role still writes
 //
 // Exits 0 when every assertion held. Writes nothing even on success.
@@ -29,6 +23,8 @@ import { pathToFileURL } from "node:url";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
+const { runHarness } = await import(pathToFileURL(join(root, "scripts/lib/rollback-harness.mjs")).href);
+const { exitWith } = await import(pathToFileURL(join(root, "scripts/lib/exit.mjs")).href);
 const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
@@ -61,134 +57,103 @@ end $f$;
 
 create temp table harness_ids (who text primary key, id uuid not null);
 insert into harness_ids values
-  ('doctor', gen_random_uuid()), ('mgmt', gen_random_uuid()), ('admin', gen_random_uuid()),
-  ('clerk', gen_random_uuid()), ('volunteer', gen_random_uuid()), ('doctor_row', gen_random_uuid()),
-  ('own_clinic', gen_random_uuid()), ('other_clinic', gen_random_uuid()), ('new_clinic', gen_random_uuid());
+  ('reader', gen_random_uuid()), ('editor', gen_random_uuid()), ('other', gen_random_uuid()), ('admin', gen_random_uuid()),
+  ('clinic_a', gen_random_uuid()), ('clinic_b', gen_random_uuid()), ('new_clinic', gen_random_uuid());
 grant select on harness_ids to authenticated, service_role;
 
 do $setup$
-declare r record;
+declare r record; v_role uuid;
 begin
   insert into clinics (id, name)
-  select id, 'Harness ' || who from harness_ids where who in ('own_clinic', 'other_clinic');
-  for r in select * from harness_ids where who in ('doctor', 'mgmt', 'admin', 'clerk', 'volunteer') loop
+  select id, 'Harness ' || who from harness_ids where who in ('clinic_a', 'clinic_b');
+  for r in select * from harness_ids where who in ('reader', 'editor', 'other', 'admin') loop
     insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at)
     values (r.id, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authenticated',
             'harness-clinics-ro-' || r.who || '-' || r.id || '@example.invalid',
             '{}'::jsonb, jsonb_build_object('full_name', 'Harness ' || r.who), now(), now());
   end loop;
-  insert into user_roles (user_id, role_id)
-  select s.c0, ro.id from (select id as c0, 'doctor' as role_key from harness_ids where who = 'doctor') s
-  join roles ro on ro.key = s.role_key;
-  -- 0127/0172: a doctor login's clinics are its linked doctor's active doctor_clinics links.
-  insert into doctors (id, name, user_id)
-  select (select id from harness_ids where who = 'doctor_row'), 'Harness doctor', id from harness_ids where who = 'doctor';
-  insert into doctor_clinics (clinic_id, doctor_id, active)
-  values ((select id from harness_ids where who = 'own_clinic'), (select id from harness_ids where who = 'doctor_row'), true);
-  insert into user_roles (user_id, role_id)
-  select s.c0, ro.id from (select id as c0, case who when 'mgmt' then 'management' else who end as role_key from harness_ids where who in ('mgmt', 'admin', 'volunteer')) s
-  join roles ro on ro.key = s.role_key;
-  -- clerk: Staff was this login until 0173 retired it; a custom role carrying its cells reaches the same path
-  insert into roles (key, name, kind) values ('harness_clinics_ro_clerk', 'Harness clerk', 'custom');
-  insert into role_permissions (role_id, activity, level)
-    select (select id from roles where key = 'harness_clinics_ro_clerk'), rp.activity, rp.level
-      from role_permissions rp join roles s on s.id = rp.role_id where s.key = 'staff';
-  insert into user_roles (user_id, role_id)
-  select (select id from harness_ids where who = 'clerk'), id from roles where key = 'harness_clinics_ro_clerk';
+  -- Three harness roles, each holding exactly the cell under test.
+  insert into roles (key, name, kind) values ('harness_clinics_ro_reader', 'Harness reader', 'custom') returning id into v_role;
+  insert into role_permissions (role_id, activity, level) values (v_role, 'clinics.list', 1);
+  insert into user_roles (user_id, role_id) select id, v_role from harness_ids where who = 'reader';
+  insert into roles (key, name, kind) values ('harness_clinics_ro_editor', 'Harness editor', 'custom') returning id into v_role;
+  insert into role_permissions (role_id, activity, level) values (v_role, 'clinics.list', 2);
+  insert into user_roles (user_id, role_id) select id, v_role from harness_ids where who = 'editor';
+  insert into roles (key, name, kind) values ('harness_clinics_ro_other', 'Harness other', 'custom') returning id into v_role;
+  insert into role_permissions (role_id, activity, level) values (v_role, 'resident.record', 1);
+  insert into user_roles (user_id, role_id) select id, v_role from harness_ids where who = 'other';
+  insert into user_roles (user_id, role_id) select h.id, ro.id from harness_ids h join roles ro on ro.key = 'admin' where h.who = 'admin';
 end $setup$;
 
 do $h$
 declare
-  v_doc uuid := (select id from harness_ids where who = 'doctor');
-  v_mgmt uuid := (select id from harness_ids where who = 'mgmt');
+  v_reader uuid := (select id from harness_ids where who = 'reader');
+  v_editor uuid := (select id from harness_ids where who = 'editor');
+  v_other uuid := (select id from harness_ids where who = 'other');
   v_admin uuid := (select id from harness_ids where who = 'admin');
-  v_clerk uuid := (select id from harness_ids where who = 'clerk');
-  v_vol uuid := (select id from harness_ids where who = 'volunteer');
-  v_own uuid := (select id from harness_ids where who = 'own_clinic');
-  v_other uuid := (select id from harness_ids where who = 'other_clinic');
+  v_a uuid := (select id from harness_ids where who = 'clinic_a');
+  v_b uuid := (select id from harness_ids where who = 'clinic_b');
   v_new uuid := (select id from harness_ids where who = 'new_clinic');
   v_total bigint := (select count(*) from clinics);
   v_bad text;
   n bigint;
   v_report text := '';
 begin
-  -- The harness login really is a doctor at its clinic, so B's refusals are RLS, not a login with no clinic.
-  perform set_config('request.jwt.claims', json_build_object('sub', v_doc, 'role', 'authenticated')::text, true);
-  if not (v_own = any (public.current_user_clinic_ids())) then
-    raise exception 'HARNESS-FAIL setup: the doctor login is not at its own clinic (current_user_clinic_ids)';
-  end if;
-  perform set_config('request.jwt.claims', '', true);
+  -- A: read at clinics.list reads every clinic, whichever clinic it might once have been "at".
+  n := pg_temp.try(v_reader, 'select * from clinics');
+  if n <> v_total then raise exception 'HARNESS-FAIL A: clinics.list reader read % of % clinics', n, v_total; end if;
+  v_report := v_report || format('A: read-level reader reads %s/%s clinics | ', n, v_total);
 
-  -- A: a doctor login reads every clinic.
-  n := pg_temp.try(v_doc, 'select * from clinics');
-  if n <> v_total then raise exception 'HARNESS-FAIL A: doctor read % of % clinics', n, v_total; end if;
-  v_report := v_report || format('A: doctor reads %s/%s clinics | ', n, v_total);
+  -- B: read does not write.
+  n := pg_temp.try(v_reader, format('insert into clinics (id, name) values (%L, ''Reader-made clinic'')', v_new));
+  if n <> -1 then raise exception 'HARNESS-FAIL B: reader insert gave %', n; end if;
+  n := pg_temp.try(v_reader, format('update clinics set name = ''Renamed by reader'' where id = %L', v_a));
+  if n <> 0 then raise exception 'HARNESS-FAIL B: reader update touched % rows', n; end if;
+  n := pg_temp.try(v_reader, 'update clinics set name = name');
+  if n <> 0 then raise exception 'HARNESS-FAIL B: reader blanket update touched % rows', n; end if;
+  n := pg_temp.try(v_reader, format('delete from clinics where id in (%L, %L)', v_a, v_b));
+  if n <> 0 then raise exception 'HARNESS-FAIL B: reader delete touched % rows', n; end if;
+  if (select name from clinics where id = v_a) <> 'Harness clinic_a' then raise exception 'HARNESS-FAIL B: a clinic was renamed'; end if;
+  v_report := v_report || 'B: reader insert refused, update 0, delete 0 | ';
 
-  -- B: a doctor login cannot write, their own clinic included.
-  n := pg_temp.try(v_doc, format('insert into clinics (id, name) values (%L, ''Doctor-made clinic'')', v_new));
-  if n <> -1 then raise exception 'HARNESS-FAIL B: doctor insert gave %', n; end if;
-  n := pg_temp.try(v_doc, format('update clinics set name = ''Renamed by doctor'' where id = %L', v_other));
-  if n <> 0 then raise exception 'HARNESS-FAIL B: doctor update of another clinic touched % rows', n; end if;
-  n := pg_temp.try(v_doc, format('update clinics set name = ''Renamed by doctor'' where id = %L', v_own));
-  if n <> 0 then raise exception 'HARNESS-FAIL B: doctor update of own clinic touched % rows', n; end if;
-  n := pg_temp.try(v_doc, 'update clinics set name = name');
-  if n <> 0 then raise exception 'HARNESS-FAIL B: doctor blanket update touched % rows', n; end if;
-  n := pg_temp.try(v_doc, format('delete from clinics where id in (%L, %L)', v_own, v_other));
-  if n <> 0 then raise exception 'HARNESS-FAIL B: doctor delete touched % rows', n; end if;
-  if (select name from clinics where id = v_other) <> 'Harness other_clinic' then
-    raise exception 'HARNESS-FAIL B: other clinic was renamed';
-  end if;
-  v_report := v_report || 'B: doctor insert refused, update 0 (own, other, all), delete 0 | ';
-
-  -- C: every policy on clinics a clinic login meets is a SELECT.
+  -- C: the policies. Every one asks clinics.list and nothing else decides it.
   select string_agg(policyname || ':' || cmd, ', ') into v_bad
   from pg_policies
-  where schemaname = 'public' and tablename = 'clinics' and cmd <> 'SELECT'
-    and (coalesce(qual, '') || coalesce(with_check, '')) ~ ('''doctor''|current_user_clinic_ids');
-  if v_bad is not null then raise exception 'HARNESS-FAIL C: doctor write policy on clinics: %', v_bad; end if;
-  if not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'clinics'
-                  and policyname = 'doctor_read_clinics' and cmd = 'SELECT') then
-    raise exception 'HARNESS-FAIL C: doctor_read_clinics missing';
-  end if;
-  v_report := v_report || 'C: only doctor_read_clinics (SELECT) for clinic logins | ';
+  where schemaname = 'public' and tablename = 'clinics'
+    and (coalesce(qual, '') || coalesce(with_check, '')) !~ 'has_permission[(]''clinics[.]list''';
+  if v_bad is not null then raise exception 'HARNESS-FAIL C: policy on clinics not asking clinics.list: %', v_bad; end if;
+  select string_agg(policyname, ', ') into v_bad
+  from pg_policies
+  where schemaname = 'public' and tablename = 'clinics'
+    and (coalesce(qual, '') || coalesce(with_check, '')) ~ ('''doctor''|current_user_clinic_ids|is_clinic_login|r[.]key');
+  if v_bad is not null then raise exception 'HARNESS-FAIL C: clinics policy narrows by clinic or role: %', v_bad; end if;
+  v_report := v_report || format('C: all %s policies ask clinics.list only | ', (select count(*) from pg_policies where schemaname = 'public' and tablename = 'clinics'));
 
-  -- D: management and admin still write; the clerk (Staff's cells) only reads; a volunteer reads none.
-  n := pg_temp.try(v_mgmt, format('insert into clinics (id, name) values (%L, ''Mgmt clinic'')', v_new));
-  if n <> 1 then raise exception 'HARNESS-FAIL D: management insert gave %', n; end if;
-  n := pg_temp.try(v_mgmt, format('update clinics set contact_info = ''Edited'' where id = %L', v_new));
-  if n <> 1 then raise exception 'HARNESS-FAIL D: management update gave %', n; end if;
+  -- D: edit writes; admin writes; another card neither reads nor writes.
+  n := pg_temp.try(v_editor, format('insert into clinics (id, name) values (%L, ''Editor clinic'')', v_new));
+  if n <> 1 then raise exception 'HARNESS-FAIL D: editor insert gave %', n; end if;
+  n := pg_temp.try(v_editor, format('update clinics set contact_info = ''Edited'' where id = %L', v_new));
+  if n <> 1 then raise exception 'HARNESS-FAIL D: editor update gave %', n; end if;
   n := pg_temp.try(v_admin, format('update clinics set contact_info = ''Edited again'' where id = %L', v_new));
   if n <> 1 then raise exception 'HARNESS-FAIL D: admin update gave %', n; end if;
-  n := pg_temp.try(v_mgmt, format('delete from clinics where id = %L', v_new));
-  if n <> 1 then raise exception 'HARNESS-FAIL D: management delete gave %', n; end if;
-  n := pg_temp.try(v_clerk, 'select * from clinics');
-  if n <> v_total then raise exception 'HARNESS-FAIL D: clerk (Staff cells) read % of %', n, v_total; end if;
-  n := pg_temp.try(v_vol, 'select * from clinics');
-  if n <> 0 then raise exception 'HARNESS-FAIL D: volunteer read % clinics (0134 took them away)', n; end if;
-  n := pg_temp.try(v_clerk, format('update clinics set name = ''x'' where id = %L', v_other));
-  if n <> 0 then raise exception 'HARNESS-FAIL D: clerk (Staff cells) update touched % rows', n; end if;
-  v_report := v_report || 'D: management insert/update/delete 1, admin update 1, clerk (Staff cells) read all, volunteer none (0134), clerk update 0 | ';
+  n := pg_temp.try(v_editor, format('delete from clinics where id = %L', v_new));
+  if n <> 1 then raise exception 'HARNESS-FAIL D: editor delete gave %', n; end if;
+  n := pg_temp.try(v_other, 'select * from clinics');
+  if n <> 0 then raise exception 'HARNESS-FAIL D: a login without clinics.list read % clinics', n; end if;
+  n := pg_temp.try(v_other, format('update clinics set name = ''x'' where id = %L', v_a));
+  if n <> 0 then raise exception 'HARNESS-FAIL D: a login without clinics.list updated % rows', n; end if;
+  v_report := v_report || 'D: edit-level insert/update/delete 1, admin update 1, a login without the card reads 0 and updates 0 | ';
 
   -- E: the service role.
-  n := pg_temp.try(null, format('update clinics set contact_info = ''Service'' where id = %L', v_other));
+  n := pg_temp.try(null, format('update clinics set contact_info = ''Service'' where id = %L', v_b));
   if n <> 1 then raise exception 'HARNESS-FAIL E: service update gave %', n; end if;
   v_report := v_report || 'E: service role update 1';
 
-  raise exception '%', format('HARNESS-OK clinics read-only for doctor logins, live schema | %s', v_report);
+  raise exception '%', format('HARNESS-OK clinics follow the clinics.list card, live schema | %s', v_report);
 end;
 $h$;
 rollback;
 `;
 
-const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
-  method: "POST",
-  headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" },
-  body: JSON.stringify({ query: sql }),
-});
-const text = await res.text();
-let msg = text;
-try { msg = JSON.parse(text).message ?? text; } catch {}
-console.log(`status ${res.status}`);
-console.log(msg);
-// exitCode, not exit(): exiting straight after fetch trips a libuv assertion on Windows.
-process.exitCode = /HARNESS-OK/.test(msg) ? 0 : 1;
+const ok = await runHarness(ref, env, "clinics-readonly", sql);
+await exitWith(ok ? 0 : 1);

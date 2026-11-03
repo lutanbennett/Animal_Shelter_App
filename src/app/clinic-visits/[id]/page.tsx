@@ -11,7 +11,7 @@ import { appointmentStatusLabel } from "@/lib/i18n/enum-labels";
 import { localLabel } from "@/lib/translations/labels";
 import { formatBaht, formatDateTime, formatDate, formatWeightKg, todayIso } from "@/lib/format";
 import { visitDate } from "@/lib/clinics/linkable";
-import { loadClinicScope } from "@/lib/clinics/scope";
+import { ANY_CLINIC_SCOPE } from "@/lib/clinics/scope";
 import { loadBillPhotos } from "@/lib/bills/photos";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { BillPhotosSection } from "@/components/BillPhotosSection";
@@ -60,7 +60,7 @@ export default async function ClinicVisitPage(props: PageProps<"/clinic-visits/[
 
   // A doctor login reads its own clinics' visits only. RLS lets it see its past patients elsewhere,
   // so the page narrows further, and says nothing about what the other visit holds.
-  const scope = await loadClinicScope(supabase);
+  const scope = ANY_CLINIC_SCOPE;
   if (scope.kind === "unlinked" || (scope.kind === "clinics" && (!visit.clinic_id || !scope.clinicIds.includes(visit.clinic_id)))) {
     return (
       <main className="flex flex-1 flex-col gap-4 p-6">

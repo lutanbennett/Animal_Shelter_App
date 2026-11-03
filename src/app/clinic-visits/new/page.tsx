@@ -7,7 +7,7 @@ import { localLabel } from "@/lib/translations/labels";
 import { NOT_DECEASED } from "@/lib/residents/status";
 import { loadDoctorNamesByClinic } from "@/lib/clinics/doctors";
 import { bookingReturnPath } from "@/lib/clinics/booking-return";
-import { loadClinicScope } from "@/lib/clinics/scope";
+import { ANY_CLINIC_SCOPE } from "@/lib/clinics/scope";
 import { ClinicVisitForm, type ResidentOption, type ClinicOption } from "./ClinicVisitForm";
 
 export default async function NewClinicVisitPage(
@@ -33,7 +33,7 @@ export default async function NewClinicVisitPage(
   const clinicIdParam = searchParams.clinicId;
 
   const supabase = await createClient();
-  const scope = await loadClinicScope(supabase);
+  const scope = ANY_CLINIC_SCOPE;
 
   if (scope.kind === "unlinked") {
     return (

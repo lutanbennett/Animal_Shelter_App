@@ -27,7 +27,7 @@ export type ClinicAppointments = {
 
 /**
  * The visits booked with a doctor login's clinics, for its /appointments page.
- * `clinicIds` are the clinics it currently works at (loadClinicScope): the
+ * `clinicIds` are the clinics it currently works at (ANY_CLINIC_SCOPE, always empty of clinics): the
  * page shows the clinics' appointments, not just the signed-in doctor's
  * (Lutan, 2026-09-29). Which residents a doctor login may see is RLS
  * (current_doctor_resident_ids(), 0172) and is not re-decided here.

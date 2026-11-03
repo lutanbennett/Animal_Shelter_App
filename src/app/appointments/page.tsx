@@ -5,7 +5,7 @@ import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { formatDateTime, todayIso } from "@/lib/format";
-import { loadClinicScope } from "@/lib/clinics/scope";
+import { ANY_CLINIC_SCOPE } from "@/lib/clinics/scope";
 import { visitDate } from "@/lib/clinics/linkable";
 import { loadClinicAppointments, type ClinicAppointment } from "@/lib/clinics/appointments";
 
@@ -27,7 +27,7 @@ export default async function AppointmentsPage() {
   const { supabase, perms } = await requirePermission("medical.visits", "read");
   const { t, locale } = await getT();
   const a = t.vetAppointments;
-  const scope = await loadClinicScope(supabase);
+  const scope = ANY_CLINIC_SCOPE;
 
   const shell = (body: React.ReactNode) => (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-6">

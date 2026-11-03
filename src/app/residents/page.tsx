@@ -12,7 +12,7 @@ import { localLabel } from "@/lib/translations/labels";
 import { placeName } from "@/lib/enclosures/names";
 import { OFFSITE, tidiedQuery, toggleZone, zoneChipOrder } from "@/lib/enclosures/place";
 import { getTagOrigin } from "@/lib/tags/origin";
-import { loadClinicScope } from "@/lib/clinics/scope";
+import { ANY_CLINIC_SCOPE } from "@/lib/clinics/scope";
 import { DECEASED } from "@/lib/residents/status";
 import { exportFilename } from "@/lib/residents/export";
 import {
@@ -162,7 +162,7 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
 
   const [tagOrigin, clinicScope, residentsResult, deceased, statusMatches] = await Promise.all([
     getTagOrigin(),
-    loadClinicScope(supabase),
+    ANY_CLINIC_SCOPE,
     listQuery(supabase, view).returns<ResidentRow[]>(),
     applyFilters(deceasedCountQuery, filters),
     Promise.all(

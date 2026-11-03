@@ -18,6 +18,8 @@ import { pathToFileURL } from "node:url";
 
 const root = process.cwd();
 const { loadEnv, projectRef } = await import(pathToFileURL(join(root, "scripts/lib/env.mjs")).href);
+const { runHarness } = await import(pathToFileURL(join(root, "scripts/lib/rollback-harness.mjs")).href);
+const { exitWith } = await import(pathToFileURL(join(root, "scripts/lib/exit.mjs")).href);
 const env = loadEnv("test");
 const ref = projectRef(env);
 if (ref !== "qxkmhwybjggxvsfxsxbd") throw new Error(`refusing: ${ref} is not the dev project`);
@@ -177,36 +179,78 @@ $h$;
 rollback;
 `;
 
-// RLS, as each role, in its own rolled-back transaction: the policies are
-// what the app actually meets.
+// RLS, as a login holding exactly the cards under test, in its own rolled-back transaction: the
+// policies are what the app actually meets. REWRITTEN 2026-11-03
+// (docs/decisions/2026-11-03-clinic-harness-rewrite.md): it used to run as "a management login" and
+// expect a booking to add a doctor. Adding a doctor asks clinics.doctors (doctors_insert_perm, 0182),
+// not visit.book, and this harness inserts into clinic_visits in SQL, so it never meets the form
+// (#1230 fixed the form; no form change can reach this). The true statement, asserted below, is
+// that a login holding visit.book WITHOUT clinics.doctors is refused (42501) when a booking would
+// add a doctor, and is not refused when the name already exists, while a login that also holds
+// clinics.doctors adds and renames. Logins are given harness roles holding exactly those cells; both also
+// hold clinics.list at read, because the link trigger runs as the caller and finds a doctor by name
+// through doctors_select_perm (clinics.list), so without it even an existing name is refused.
 const rls = `
 begin;
 do $h$
-declare v_clinic uuid; v_res uuid; v_mgmt uuid; v_vol uuid; v_id uuid; v_n int; v_rejected boolean := false;
+declare v_clinic uuid; v_res uuid; v_user uuid; v_vol uuid; v_book uuid; v_bookdoc uuid; v_d uuid;
 begin
   select id into v_clinic from clinics order by name limit 1;
   select s.resident_id into v_res from resident_current_state s where s.current_status in ('Resident', 'Unassigned') limit 1;
-  -- a management login books (was staff until 0173 retired it: a live staff row is refused).
-  -- Dev may hold no live management or volunteer account: turn archived staff accounts into
-  -- them (all rolled back)
-  select user_id into v_mgmt from user_roles where role_id = (select id from roles where key = 'management') and archived_at is null limit 1;
-  if v_mgmt is null then
-    select user_id into v_mgmt from user_roles where role_id = (select id from roles where key = 'staff') and archived_at is not null limit 1;
-    update user_roles set role_id = (select id from roles where key = 'management'), archived_at = null where user_id = v_mgmt;
-  end if;
-  select user_id into v_vol from user_roles where role_id = (select id from roles where key = 'volunteer') and archived_at is null limit 1;
-  if v_vol is null then
-    select user_id into v_vol from user_roles where role_id in (select id from roles where key in ('staff', 'management')) and user_id <> v_mgmt and archived_at is not null limit 1;
-    update user_roles set role_id = (select id from roles where key = 'volunteer'), archived_at = null where user_id = v_vol;
-  end if;
+  -- Any non-admin login will do as the actor: its roles are replaced (rolled back) with harness roles.
+  select ur.user_id into v_user from user_roles ur join roles r on r.id = ur.role_id
+   where r.key not in ('admin') and ur.archived_at is null
+     and not exists (select 1 from user_roles u2 join roles r2 on r2.id = u2.role_id where u2.user_id = ur.user_id and r2.key = 'admin')
+   limit 1;
+  -- A login for the volunteer check: one holding only resident.record read, if dev has one.
+  select user_id into v_vol from user_roles where role_id = (select id from roles where key = 'volunteer') and archived_at is null and user_id <> v_user limit 1;
+  insert into roles (key, name, kind) values ('harness_doctors_book', 'Harness book only', 'custom') returning id into v_book;
+  insert into role_permissions (role_id, activity, level) values (v_book, 'visit.book', 2), (v_book, 'medical.visits', 2), (v_book, 'resident.record', 1), (v_book, 'clinics.list', 1);
+  insert into roles (key, name, kind) values ('harness_doctors_bookdoc', 'Harness book and doctors', 'custom') returning id into v_bookdoc;
+  insert into role_permissions (role_id, activity, level) values (v_bookdoc, 'visit.book', 2), (v_bookdoc, 'medical.visits', 2), (v_bookdoc, 'resident.record', 1), (v_bookdoc, 'clinics.list', 1), (v_bookdoc, 'clinics.doctors', 2);
+  delete from user_roles where user_id = v_user;
+  insert into user_roles (user_id, role_id) values (v_user, v_book);
+  -- A doctor who already works at the clinic, listed by the owner
+  insert into doctors (name) values ('Dr Existing Harness') returning id into v_d;
+  insert into doctor_clinics (clinic_id, doctor_id) values (v_clinic, v_d);
   perform set_config('harness.clinic', v_clinic::text, true);
   perform set_config('harness.res', v_res::text, true);
-  perform set_config('harness.mgmt', v_mgmt::text, true);
+  perform set_config('harness.user', v_user::text, true);
+  perform set_config('harness.bookdoc', v_bookdoc::text, true);
+  perform set_config('harness.doc', v_d::text, true);
   perform set_config('harness.vol', coalesce(v_vol::text, ''), true);
 end;
 $h$;
 
-select set_config('request.jwt.claims', json_build_object('sub', current_setting('harness.mgmt'), 'role', 'authenticated')::text, true);
+-- 1. visit.book without clinics.doctors
+select set_config('request.jwt.claims', json_build_object('sub', current_setting('harness.user'), 'role', 'authenticated')::text, true);
+set local role authenticated;
+do $h$
+declare v_id uuid; v_got text; v_rejected boolean := false;
+begin
+  if has_permission('clinics.doctors') then raise exception 'FAIL RLS setup: the book-only login holds clinics.doctors'; end if;
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_name)
+    values (current_setting('harness.res')::uuid, current_setting('harness.clinic')::uuid, now(), ' dr  existing harness')
+    returning doctor_id into v_id;
+  if v_id is distinct from current_setting('harness.doc')::uuid then raise exception 'FAIL RLS book-only typed an existing doctor but was not linked to them: %', v_id; end if;
+  insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_id)
+    values (current_setting('harness.res')::uuid, current_setting('harness.clinic')::uuid, now(), current_setting('harness.doc')::uuid)
+    returning doctor_name into v_got;
+  if v_got is distinct from 'Dr Existing Harness' then raise exception 'FAIL RLS book-only by id: [%]', v_got; end if;
+  begin
+    insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_name)
+      values (current_setting('harness.res')::uuid, current_setting('harness.clinic')::uuid, now(), 'Dr Brand New Harness');
+  exception when insufficient_privilege then v_rejected := true;
+  end;
+  if not v_rejected then raise exception 'FAIL RLS a login without clinics.doctors added a doctor by typing a name'; end if;
+end;
+$h$;
+reset role;
+
+-- 2. the same login given clinics.doctors adds and renames
+delete from user_roles where user_id = current_setting('harness.user')::uuid;
+insert into user_roles (user_id, role_id) values (current_setting('harness.user')::uuid, current_setting('harness.bookdoc')::uuid);
+select set_config('request.jwt.claims', json_build_object('sub', current_setting('harness.user'), 'role', 'authenticated')::text, true);
 set local role authenticated;
 do $h$
 declare v_id uuid; v_got text;
@@ -214,10 +258,10 @@ begin
   insert into clinic_visits (resident_id, clinic_id, appointment_date, doctor_name)
     values (current_setting('harness.res')::uuid, current_setting('harness.clinic')::uuid, now(), 'Dr Mgmt Harness')
     returning doctor_id, doctor_name into v_id, v_got;
-  if v_id is null then raise exception 'FAIL RLS management booking did not add the doctor'; end if;
+  if v_id is null then raise exception 'FAIL RLS a login holding clinics.doctors did not add the doctor'; end if;
   update doctors set name = 'Dr Mgmt Harness Two' where id = v_id;
   select doctor_name into v_got from clinic_visits where doctor_id = v_id limit 1;
-  if v_got <> 'Dr Mgmt Harness Two' then raise exception 'FAIL RLS management rename: [%]', v_got; end if;
+  if v_got <> 'Dr Mgmt Harness Two' then raise exception 'FAIL RLS rename: [%]', v_got; end if;
 end;
 $h$;
 reset role;
@@ -252,11 +296,11 @@ begin
   exception when insufficient_privilege then null;
   end;
   begin
-    perform current_user_clinic_ids();
-    raise exception 'FAIL RLS anon could call current_user_clinic_ids';
+    insert into clinic_visits (resident_id, clinic_id, appointment_date) values (current_setting('harness.res')::uuid, current_setting('harness.clinic')::uuid, now());
+    raise exception 'FAIL RLS anon booked a visit';
   exception when insufficient_privilege then null;
   end;
-  raise exception 'HARNESS-OK rls: management booking adds and renames a doctor | volunteer (%) reads, cannot add or merge | anon cannot read the list or call current_user_clinic_ids',
+  raise exception 'HARNESS-OK rls: visit.book without clinics.doctors links an existing doctor (name or id) and is refused 42501 when a typed name would add one | with clinics.doctors it adds and renames | volunteer (%) reads, cannot add or merge | anon cannot read the list or book',
     case when current_setting('harness.vol') = '' then 'no volunteer on dev, skipped' else 'checked' end;
 end;
 $h$;
@@ -265,17 +309,6 @@ rollback;
 
 let ok = true;
 for (const [label, query] of [["behaviour", sql], ["rls", rls]]) {
-  const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${env.SUPABASE_ACCESS_TOKEN}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ query }),
-  });
-  const text = await res.text();
-  let msg = text;
-  try { msg = JSON.parse(text).message ?? text; } catch {}
-  console.log(`${label}: status ${res.status}`);
-  console.log(msg);
-  if (!/HARNESS-OK/.test(msg)) ok = false;
+  if (!(await runHarness(ref, env, label, query))) ok = false;
 }
-// exitCode, not exit(): exiting straight after fetch trips a libuv assertion on Windows.
-process.exitCode = ok ? 0 : 1;
+await exitWith(ok ? 0 : 1);
