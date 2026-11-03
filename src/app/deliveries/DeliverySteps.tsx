@@ -17,11 +17,12 @@ import {
 } from "@/lib/management/stock-receipts";
 import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
 import { useWriteCall } from "@/lib/use-write-form";
-import { recordDelivery } from "./actions";
+import { recordDelivery, type BillTotals } from "./actions";
+import { BillTotalsLine } from "./BillTotalsLine";
 import { attachCardToDelivery } from "@/app/bills/actions";
 import { BillPhotoField } from "@/components/BillPhotoField";
 import { useDeferredUploads } from "@/components/DeferredUploads";
-import type { DeliveryFormItem } from "./RecordDeliveryForm";
+import type { DeliveryFormItem, FormKind } from "./RecordDeliveryForm";
 import { DateInput } from "@/components/DateInput";
 
 /** One size on the delivery: what it is counted in, how many, and what that cost. */
@@ -71,7 +72,13 @@ export function DeliverySteps({
   const attachWrite = useWriteCall();
 
   const [step, setStep] = useState<Step>("kind");
-  const [kind, setKind] = useState<DeliveryKind>(initialKind);
+  const [kind, setKind] = useState<FormKind>(initialKind);
+  // One bill, several items (0308): the first save opens the bill, later saves join it, "Finish this bill" closes it.
+  const [describedText, setDescribedText] = useState("");
+  const [describedUnit, setDescribedUnit] = useState("");
+  const [amount, setAmount] = useState(billCost ?? "");
+  const [deliveryId, setDeliveryId] = useState<string | null>(null);
+  const [totals, setTotals] = useState<BillTotals | null>(null);
   const [itemId, setItemId] = useState("");
   const [search, setSearch] = useState("");
   const [lines, setLines] = useState<Line[]>(() => [newLine("", billCost ?? "")]);
@@ -89,16 +96,19 @@ export function DeliverySteps({
   /** The size just added, so its box is the one the keyboard opens on. */
   const [focusKey, setFocusKey] = useState<number | null>(null);
 
-  const item = items[kind].find((i) => i.id === itemId);
+  const listed = kind === "described" ? [] : items[kind];
+  const item = listed.find((i) => i.id === itemId);
   const date = earlier ? earlierDate : today;
-  const countedThatDay = itemId !== "" && date !== "" && (countDays[kind][itemId] ?? []).includes(date);
+  // Only the first item of a bill asks: later items take the bill's own day.
+  const countedThatDay = kind !== "described" && !deliveryId && itemId !== "" && date !== "" && (countDays[kind][itemId] ?? []).includes(date);
   // A line unit is the English key the receipt stamps; what is shown is the reader language (0166).
   const unitLabelOf = (unit: string) =>
     unit ? localLabel(locale, unit, item?.conversions.find((c) => c.unit === unit)?.unitTh) : item?.unit || "";
   const usualUnit = (it: DeliveryFormItem | undefined) =>
     it ? (defaultUnit(it.conversions, "purchase")?.unit ?? "") : "";
   const quantityOkOf = (l: Line) => parseDeliveryQuantity(l.quantity).ok;
-  const allOk = lines.every(quantityOkOf);
+  const describedOk = kind !== "described" || (describedText.trim() !== "" && describedUnit.trim() !== "");
+  const allOk = lines.every(quantityOkOf) && describedOk;
   const together = item ? previewBase(lines, item.conversions) : null;
   const patch = (key: number, change: Partial<Line>) =>
     setLines((all) => all.map((l) => (l.key === key ? { ...l, ...change } : l)));
@@ -107,6 +117,7 @@ export function DeliverySteps({
   const supplier = suppliers.find((x) => x.id === supplierId);
   const costsParsed = lines.map((l) => parseBahtAmount(l.cost));
   const kindWord = d.steps.kind[kind].toLowerCase();
+  const itemLabel = kind === "described" ? describedText.trim() : (item?.name ?? "");
 
   const go = (next: Step) => {
     setError(null);
@@ -118,7 +129,7 @@ export function DeliverySteps({
     if (step === "amount") amountInput.current?.focus({ preventScroll: true });
   }, [step]);
 
-  const chooseKind = (k: DeliveryKind) => {
+  const chooseKind = (k: FormKind) => {
     if (k !== kind) {
       setKind(k);
       setItemId("");
@@ -126,14 +137,15 @@ export function DeliverySteps({
       setLines([newLine("", lines[0]?.cost ?? "")]);
       setTiming(null);
     }
-    go("item");
+    // Something else has no list to choose from: straight to how much.
+    go(k === "described" ? "amount" : "item");
   };
 
   const chooseItem = (id: string) => {
     if (id !== itemId) {
       setItemId(id);
       setTiming(null);
-      const next = items[kind].find((i) => i.id === id);
+      const next = listed.find((i) => i.id === id);
       setLines([newLine(usualUnit(next), lines[0]?.cost ?? "")]);
     }
     go("amount");
@@ -147,37 +159,48 @@ export function DeliverySteps({
 
   const record = () => {
     setError(null);
-    const done = { name: item?.name ?? "", quantity: String(together ?? 0), unit: item?.unit ?? "" };
+    const done =
+      kind === "described"
+        ? { name: describedText.trim(), quantity: String(Number(lines[0]?.quantity) || 0), unit: describedUnit.trim() }
+        : { name: item?.name ?? "", quantity: String(together ?? 0), unit: item?.unit ?? "" };
     startTransition(async () => {
       const result = await recordWrite((requestId) => recordDelivery({
         kind,
         itemId,
+        described: kind === "described" ? { description: describedText, unit: describedUnit } : undefined,
         lines: lines.map((l) => ({ quantity: l.quantity, unit: l.unit, cost: l.cost })),
         date,
         timing: countedThatDay ? timing : null,
         supplierId,
         note,
+        deliveryId,
+        amount,
+        cardId,
       }, requestId));
       if (!result.ok) {
         setError(result.error);
         return;
       }
 
-      // The bill: a card it was recorded from moves onto the delivery, and photos picked here are filed on it.
+      // The bill: a card it was recorded from moves onto the bill (the header, so every item shares the photos), and
+      // photos picked here are filed on it.
       let billNote = "";
-      if (result.id && cardId) {
-        const moved = await attachWrite((requestId) => attachCardToDelivery(cardId, result.id!, requestId));
+      if (result.deliveryId && cardId) {
+        const moved = await attachWrite((requestId) => attachCardToDelivery(cardId, result.deliveryId!, requestId));
         if (!moved.ok) billNote = moved.error;
         setCardId(null);
       }
-      if (result.id && bill.queued.length > 0) {
-        const filed = await bill.upload(`/api/bills/stock_receipt/${result.id}`);
+      if (result.deliveryId && bill.queued.length > 0) {
+        const filed = await bill.upload(`/api/bills/stock_delivery/${result.deliveryId}`);
         if (filed.failed) billNote = t.bills.photo.failed;
       }
+      setDeliveryId(result.deliveryId ?? null);
+      setTotals(result.totals ?? null);
       bill.reset();
       setSaved(d.saved(done.name, formatQuantity(Number(done.quantity)), done.unit) + (billNote ? " " + billNote : ""));
-      // The next item of the same delivery: day and supplier stay.
+      // The next item of the same bill: day, supplier and total stay.
       setItemId("");
+      setDescribedText("");
       setSearch("");
       setLines([newLine()]);
       setTiming(null);
@@ -186,8 +209,17 @@ export function DeliverySteps({
     });
   };
 
+  const finishBill = () => {
+    setDeliveryId(null);
+    setTotals(null);
+    setAmount("");
+    setCardId(null);
+    setSaved(null);
+    go("kind");
+  };
+
   const counted = COUNTED.indexOf(step);
-  const filtered = items[kind].filter((i) => i.name.toLowerCase().includes(search.trim().toLowerCase()));
+  const filtered = listed.filter((i) => i.name.toLowerCase().includes(search.trim().toLowerCase()));
 
   const when = earlier ? s.confirm.on(formatDate(date, locale)) : s.confirm.today;
 
@@ -214,12 +246,12 @@ export function DeliverySteps({
       {step === "kind" && (
         <Screen title={s.kind.title}>
           <div className="grid grid-cols-1 gap-3">
-            {(["medication", "diet"] as const).map((k) => (
+            {(["medication", "diet", "described"] as const).map((k) => (
               <BigButton
                 key={k}
                 primary={k === kind}
                 onClick={() => chooseKind(k)}
-                icon={k === "medication" ? <Pill aria-hidden="true" className="h-6 w-6" /> : <Wheat aria-hidden="true" className="h-6 w-6" />}
+                icon={k === "medication" ? <Pill aria-hidden="true" className="h-6 w-6" /> : k === "diet" ? <Wheat aria-hidden="true" className="h-6 w-6" /> : <Plus aria-hidden="true" className="h-6 w-6" />}
               >
                 {s.kind[k]}
               </BigButton>
@@ -230,7 +262,7 @@ export function DeliverySteps({
 
       {step === "item" && (
         <Screen title={s.item.title(kindWord)}>
-          {items[kind].length === 0 ? (
+          {listed.length === 0 ? (
             <p className="rounded border border-border bg-surface p-4 text-base text-foreground">{s.item.empty(kindWord)}</p>
           ) : (
             <>
@@ -274,6 +306,58 @@ export function DeliverySteps({
         </Screen>
       )}
 
+      {step === "amount" && kind === "described" && (
+        <Screen title={s.amount.title}>
+          <form
+            className="flex flex-col gap-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (allOk) go(deliveryId ? "extras" : "when");
+            }}
+          >
+            <p className="text-sm text-muted">{d.form.describedHint}</p>
+            <label className="flex flex-col gap-1 text-sm font-medium text-muted">
+              {d.form.describedWhat}
+              <input
+                value={describedText}
+                onChange={(e) => setDescribedText(e.target.value)}
+                placeholder={d.form.describedPlaceholder}
+                autoComplete="off"
+                className={inputClass}
+              />
+            </label>
+            <label className="flex flex-col gap-1 text-sm font-medium text-muted">
+              {d.form.quantity}
+              <input
+                type="text"
+                inputMode="decimal"
+                autoComplete="off"
+                value={lines[0]?.quantity ?? ""}
+                onChange={(e) => patch(lines[0].key, { quantity: e.target.value })}
+                aria-invalid={(lines[0]?.quantity !== "" && !quantityOkOf(lines[0])) || undefined}
+                className={`${inputClass} text-center text-2xl`}
+              />
+            </label>
+            {lines[0]?.quantity !== "" && !quantityOkOf(lines[0]) && <p className="text-sm text-danger">{s.amount.invalid}</p>}
+            <label className="flex flex-col gap-1 text-sm font-medium text-muted">
+              {d.form.describedUnit}
+              <input
+                value={describedUnit}
+                onChange={(e) => setDescribedUnit(e.target.value)}
+                placeholder={d.form.describedUnitPlaceholder}
+                autoComplete="off"
+                className={inputClass}
+              />
+            </label>
+            <p className="text-xs text-muted">{d.form.describedNotStock}</p>
+            <BigButton primary disabled={!allOk} onClick={() => go(deliveryId ? "extras" : "when")} icon={<ArrowRight aria-hidden="true" className="h-5 w-5" />}>
+              {s.next}
+            </BigButton>
+          </form>
+          <BackButton onClick={() => go("kind")} />
+        </Screen>
+      )}
+
       {step === "amount" && item && (
         <Screen title={s.amount.title}>
           <div className="flex items-center gap-3">
@@ -286,7 +370,7 @@ export function DeliverySteps({
             className="flex flex-col gap-3"
             onSubmit={(e) => {
               e.preventDefault();
-              if (allOk) go("when");
+              if (allOk) go(deliveryId ? "extras" : "when");
             }}
           >
             {lines.map((line, index) => {
@@ -405,7 +489,7 @@ export function DeliverySteps({
               {s.amount.addSize}
             </BigButton>
             <p className="text-xs text-muted">{s.amount.addSizeHint}</p>
-            <BigButton primary disabled={!allOk} onClick={() => go("when")} icon={<ArrowRight aria-hidden="true" className="h-5 w-5" />}>
+            <BigButton primary disabled={!allOk} onClick={() => go(deliveryId ? "extras" : "when")} icon={<ArrowRight aria-hidden="true" className="h-5 w-5" />}>
               {s.next}
             </BigButton>
           </form>
@@ -466,7 +550,7 @@ export function DeliverySteps({
           <p className="text-sm text-muted">{s.extras.optional}</p>
           <label className="flex flex-col gap-1 text-sm font-medium text-muted">
             {s.extras.supplier}
-            <select value={supplierId} onChange={(e) => setSupplierId(e.target.value)} className={inputClass}>
+            <select value={supplierId} disabled={deliveryId != null} onChange={(e) => setSupplierId(e.target.value)} className={inputClass}>
               <option value="">{suppliers.length ? d.form.supplierNone : d.form.supplierNoVendors}</option>
               {suppliers.map((x) => (
                 <option key={x.id} value={x.id}>
@@ -495,6 +579,18 @@ export function DeliverySteps({
           {lines.length > 1 && (
             <p className={`text-sm ${costRuleOk ? "text-muted" : "text-danger"}`}>{s.extras.costRule}</p>
           )}
+          <label className="flex flex-col gap-1 text-sm font-medium text-muted">
+            {d.form.billTotal}
+            <input
+              type="text"
+              inputMode="decimal"
+              autoComplete="off"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className={inputClass}
+            />
+            <span className="text-xs font-normal">{d.form.billTotalHint}</span>
+          </label>
           <BillPhotoField uploads={bill} />
           <label className="flex flex-col gap-1 text-sm font-medium text-muted">
             {s.extras.note}
@@ -508,17 +604,21 @@ export function DeliverySteps({
           <BigButton primary disabled={!extrasOk} onClick={() => go("confirm")} icon={<ArrowRight aria-hidden="true" className="h-5 w-5" />}>
             {s.next}
           </BigButton>
-          <BackButton onClick={() => go("when")} />
+          <BackButton onClick={() => go(deliveryId ? "amount" : "when")} />
         </Screen>
       )}
 
-      {step === "confirm" && item && (
+      {step === "confirm" && (item || kind === "described") && (
         <Screen title={s.confirm.title}>
           <div className="flex flex-col gap-2 rounded border border-border bg-surface p-4 text-base text-foreground">
             <p className="font-medium">
-              {s.confirm.willLines(lines.map(describe).join(", "), item.name, when)}
+              {s.confirm.willLines(
+                kind === "described" ? `${formatQuantity(Number(lines[0]?.quantity))} ${describedUnit.trim()}` : lines.map(describe).join(", "),
+                itemLabel,
+                when,
+              )}
             </p>
-            {lines.some((l) => l.unit) && together != null && (
+            {item && lines.some((l) => l.unit) && together != null && (
               <p className="text-sm text-muted">
                 {s.amount.equals(formatQuantity(together), item.unit)} · {t.units.entry.approx}
               </p>
@@ -556,10 +656,12 @@ export function DeliverySteps({
               {saved}
             </p>
           )}
+          {deliveryId && <BillTotalsLine totals={totals} />}
           <BigButton primary onClick={() => go("kind")} icon={<Plus aria-hidden="true" className="h-5 w-5" />}>
             {s.done.another}
           </BigButton>
           <p className="text-sm text-muted">{s.done.anotherHint}</p>
+          {deliveryId && <BigButton onClick={finishBill}>{d.form.finishBill}</BigButton>}
           <Link
             href="/home"
             className="inline-flex min-h-14 w-full items-center justify-center gap-2 rounded border border-border bg-surface px-3 text-base font-medium text-foreground"

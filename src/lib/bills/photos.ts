@@ -6,7 +6,7 @@ import type { BillPhoto } from "@/components/BillPhotosSection";
 /** Bill photos on delivery or visit records, grouped by record, in the order they were added. One query for a whole list. */
 export async function loadBillPhotos(
   supabase: SupabaseClient,
-  ownerType: "stock_receipt" | "clinic_visit",
+  ownerType: "stock_receipt" | "stock_delivery" | "clinic_visit",
   ownerIds: string[],
 ): Promise<Map<string, BillPhoto[]>> {
   const byOwner = new Map<string, BillPhoto[]>();

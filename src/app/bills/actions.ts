@@ -245,7 +245,7 @@ export async function recordGeneralBill(cardId: string, input: CardDetails, requ
 }
 
 /** Moves the card's photos onto the record and deletes the card. Used by matchBill and by "record a new delivery from this bill". */
-async function moveCardTo(cardId: string, kind: MatchKind, targetId: string): Promise<ActionResult> {
+async function moveCardTo(cardId: string, kind: MatchKind | "stock_delivery", targetId: string): Promise<ActionResult> {
   const { t } = await getT();
   const e = t.bills.errors;
   const supabase = await createClient();
