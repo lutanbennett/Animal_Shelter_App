@@ -11,7 +11,7 @@
 | PR | see the PR this file is in |
 | Tested by / date | Claude, 2026-11-03 |
 | Carries a migration? | no |
-| Tested at SHA | SHA_HERE |
+| Tested at SHA | c9c3df7e |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,11 @@
 - [x] `node scripts/gates.mjs` closing lines:
 
 ```
-GATES_HERE
+=== gates: typecheck exited 0 after 28s
+=== gates: lint exited 0 after 190s
+=== gates: test exited 0 after 19s
+=== gates: build exited 0 after 75s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
