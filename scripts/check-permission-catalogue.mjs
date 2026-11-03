@@ -231,7 +231,7 @@ const PINNED = {
   },
   "/clinic-visits/new": { guards: ['requirePermission("visit.book")'], decides: ["clinics.doctors"] },
   // The read-only record of a visit: opens at Read (a dead resident's too); every control that writes asks can(... edit).
-  "/clinic-visits/[id]": { guards: ['requirePermission("medical.visits")'], decides: ["medical.visits", "medical.blood_tests", "medical.prescriptions", "medical.weight", "medical.procedures"] },
+  "/clinic-visits/[id]": { guards: ['requirePermission("medical.visits", "read")'], decides: ["medical.visits", "medical.blood_tests", "medical.prescriptions", "medical.weight", "medical.procedures"] },
   "/clinic-visits/[id]/edit": {
     guards: ['requirePermission("medical.visits")'],
     decides: ["clinics.doctors", "medical.visits", "resident.microchip"],
