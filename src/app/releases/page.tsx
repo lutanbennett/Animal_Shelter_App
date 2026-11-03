@@ -6,7 +6,7 @@ import { can, entersApp } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { formatDate } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
-import { isNoteForReader } from "@/lib/release-audience";
+import { isNoteForReader, isNoteListed } from "@/lib/release-audience";
 import { noteText, releases, unreleased, type ReleaseNote } from "@/lib/releases";
 import { OpenReleaseFromHash } from "./OpenReleaseFromHash";
 
@@ -61,6 +61,7 @@ export default async function ReleasesPage({ searchParams }: PageProps<"/release
   /** The notes this view lists: the reader's, or all of them under Show everything. */
   const shown = (notes: ReleaseNote[]): ViewNote[] =>
     notes
+      .filter((note) => isNoteListed(note, perms))
       .map((note) => ({ text: noteText(note), mine: isNoteForReader(note, perms) }))
       .filter((n) => showAll || n.mine);
   const pending = shown(unreleased);
