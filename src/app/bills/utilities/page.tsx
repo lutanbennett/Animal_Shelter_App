@@ -1,9 +1,5 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { refuseFor } from "@/lib/auth/require-role";
-import { loadPermissions } from "@/lib/permissions/load";
-import { can } from "@/lib/permissions/can";
+import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
 import { formatBahtExact, formatDate, formatMonth, todayIso } from "@/lib/format";
 import { kindsFor, tailoringOf, type BillKind } from "@/lib/bills/kinds";
@@ -25,13 +21,7 @@ type Row = {
  * another over time. Cost only, no units. The whole page asks bills.utilities, the activity the utility_bills policy asks.
  */
 export default async function UtilitiesPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
-  const perms = await loadPermissions();
-  if (!can(perms, "bills.utilities")) refuseFor(perms);
+  const { supabase, perms } = await requirePermission("bills.utilities");
 
   const { t, locale } = await getT();
   const u = t.bills.utilities;
