@@ -63,6 +63,8 @@ type RetiredReleaseRole = "staff";
  * plainly not for everyone is tagged by CARD: `{ text, cards: [...] }` is for
  * whoever holds one of those cards, and Admin (outside the card system) sees
  * every line; a card nobody recognises widens, never narrows. `roles` is the
+ * `{ text, admin: true }` is for Admin ONLY, on /releases under every view; Admin holds no card, so no card tag can say it
+ * (docs/decisions/2026-11-03-release-note-admin-flag.md). The mail goes to admins, so it carries these too. `roles` is the
  * older tag, in Lanna's own role keys, and is CLOSED TO NEW NOTES: a shelter
  * may rename its roles, and the tag would then mean nothing
  * (docs/decisions/2026-10-26-release-notes-by-card.md). Notes already tagged
@@ -76,7 +78,8 @@ type RetiredReleaseRole = "staff";
 export type ReleaseNote =
   | string
   | { text: string; roles: (ReleaseRole | RetiredReleaseRole)[] }
-  | { text: string; cards: CardKey[] };
+  | { text: string; cards: CardKey[] }
+  | { text: string; admin: true };
 
 export const noteText = (note: ReleaseNote): string =>
   typeof note === "string" ? note : note.text;
@@ -84,11 +87,15 @@ export const noteText = (note: ReleaseNote): string =>
 export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)[] | undefined =>
   typeof note === "string" || !("roles" in note) ? undefined : note.roles;
 
+export const noteAdmin = (note: ReleaseNote): boolean =>
+  typeof note !== "string" && "admin" in note && note.admin === true;
+
 export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
   typeof note === "string" || !("cards" in note) ? undefined : note.cards;
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "Release notes can now be written for Admin only. A note about a screen only Admin can open is no longer shown to everyone else on the Release notes page, even under Show everything; Admin still sees it, and it is still in the email sent to admins.", admin: true },
   { text: "Bills settings: a new screen to add, rename and archive the places the shelter pays bills for, the accounts at suppliers, and the kinds of bill. In the Bills inbox, each bill now asks what it is for (the choices follow what you are allowed to file), and shows a place and account where they apply; materials, cleaning products and Other bills can be recorded straight from the card. The Thai wording is our own and has not yet been read by a Thai speaker.", cards: ["bill_sites", "general_bills", "utility_bills"] },
   "The Donate, Foster, Volunteer and About pages now show a poodle drawing beside the heading when no photo has been chosen for them; a chosen photo still replaces it, and removing the photo brings the drawing back. The Page photos screen says so. The Thai wording is our own and has not yet been read by a Thai speaker.",
   { text: "A wrong intake date can now be corrected on a resident who has died too. Correct an intake date works for them exactly as for a living resident, moving the same dates with it; everything else on a closed record stays read-only.", cards: ["correct_intake_date"] },

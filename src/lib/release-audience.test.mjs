@@ -2,7 +2,7 @@
 // for a card note, because a shelter may call its roles anything.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { isNoteForReader } from "./release-audience.ts";
+import { isNoteForReader, isNoteListed } from "./release-audience.ts";
 import { bundleJson } from "./permissions/cards.ts";
 import { parsePermissions } from "./permissions/can.ts";
 
@@ -35,6 +35,19 @@ test("a card note whose cards nobody recognises is shown, not hidden", () => {
 test("an untagged note is everyone's, and so is any note for a non-app reader", () => {
   assert.equal(isNoteForReader("plain", nobody), true);
   assert.equal(isNoteForReader({ text: "x", cards: ["record_weight"] }, null), true);
+});
+
+test("an admin note is for Admin and nobody else, holding no card, under every view", () => {
+  const note = { text: "x", admin: true };
+  assert.equal(isNoteForReader(note, admin), true);
+  assert.equal(isNoteListed(note, admin), true);
+  for (const p of [weigher, nobody, null, undefined]) {
+    assert.equal(isNoteForReader(note, p), false);
+    assert.equal(isNoteListed(note, p), false);
+  }
+  // every other shape is always listed
+  assert.equal(isNoteListed("plain", nobody), true);
+  assert.equal(isNoteListed({ text: "x", cards: ["record_weight"] }, nobody), true);
 });
 
 test("role-tagged history is unchanged, retired staff tag included", () => {
