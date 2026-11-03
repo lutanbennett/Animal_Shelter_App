@@ -51,11 +51,13 @@ export default async function BillsPage() {
     forDeliveries
       ? supabase
           .from("stock_receipts")
-          .select("id, item_kind, medication_id, diet_type_id, quantity, unit, received_at")
+          .select("id, item_kind, medication_id, diet_type_id, description, quantity, unit, received_at")
           .is("cost", null)
+          // A line on a bill (0308) has its bill photos on the bill header, not on itself, so it is not a card's match.
+          .is("delivery_id", null)
           .gte("received_at", since)
           .order("received_at", { ascending: false })
-          .returns<{ id: string; item_kind: string; medication_id: string | null; diet_type_id: string | null; quantity: number | string; unit: string | null; received_at: string }[]>()
+          .returns<{ id: string; item_kind: string; medication_id: string | null; diet_type_id: string | null; description: string | null; quantity: number | string; unit: string | null; received_at: string }[]>()
       : Promise.resolve({ data: [], error: null }),
     forVisits
       ? supabase
@@ -160,7 +162,7 @@ export default async function BillsPage() {
         kind: "stock_receipt" as const,
         id: r.id,
         day: todayIso(new Date(r.received_at).getTime()),
-        title: `${b.page.delivery}: ${itemName.get(r.medication_id ?? r.diet_type_id ?? "") ?? "—"}`,
+        title: `${b.page.delivery}: ${r.item_kind === "described" ? (r.description ?? "—") : (itemName.get(r.medication_id ?? r.diet_type_id ?? "") ?? "—")}`,
         detail: `${Number(r.quantity)}${r.unit ? ` ${r.unit}` : ""}`,
       })),
     ...visits

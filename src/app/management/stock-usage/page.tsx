@@ -149,6 +149,8 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
     supabase
       .from("stock_receipts")
       .select("received_at")
+      // A described line (0308) is not stock, so it does not say when stock deliveries began.
+      .neq("item_kind", "described")
       .order("received_at")
       .limit(1)
       .returns<{ received_at: string }[]>(),
