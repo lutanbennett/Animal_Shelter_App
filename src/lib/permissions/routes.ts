@@ -13,7 +13,7 @@
  * rest, and Settings and Management landing pages with their areas.
  */
 
-import { Activity, CalendarClock, Scissors, BadgeCheck, Camera, Laugh, ClipboardCheck, HandHeart, Coins, Globe, Grid3x3, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Scale, ShoppingBag, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
+import { Activity, CalendarClock, Scissors, BadgeCheck, Camera, Laugh, ClipboardCheck, HandHeart, Coins, Globe, Grid3x3, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Receipt, Scale, ShoppingBag, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
 import { CONTACT_ICONS, ENCLOSURE_ICONS, NAV_ICONS, SECTION_ICONS, CLINIC_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "./can";
@@ -460,6 +460,15 @@ export const ROUTES: readonly RouteEntry[] = [
     activity: "resident.correct_intake_date",
     icon: CalendarClock,
     label: (t) => t.nav.intakeDate,
+    device: "any",
+    menu: false,
+  },
+  {
+    // Bills settings (0305): the places, accounts and kinds bills are filed under. Opens on its own card's activity, bills.sites.
+    path: "/bills/settings",
+    activity: "bills.sites",
+    icon: Receipt,
+    label: (t) => t.nav.billsSettings,
     device: "any",
     menu: false,
   },

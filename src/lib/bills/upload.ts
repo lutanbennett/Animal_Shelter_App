@@ -31,7 +31,7 @@ export function mayFileBill(perms: Permissions | null, owner: BillOwnerType): bo
   if (owner === "stock_receipt") return delivery;
   if (owner === "clinic_visit") return visits;
   if (owner === "maintenance_bill") return can(perms, "maintenance.bills");
-  return delivery || visits || can(perms, "maintenance.bills");
+  return delivery || visits || can(perms, "maintenance.bills") || can(perms, "bills.utilities") || can(perms, "bills.general");
 }
 
 /** Reads and checks the posted file; the response is set when it is refused. */

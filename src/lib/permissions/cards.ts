@@ -353,10 +353,13 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // 0302 (Lutan, 2026-11-02): correct a resident's intake date, moving the four dates the intake stamped with it. It includes
   // view_residents so the page can find a resident by name or code. Who holds it is assigned in Who does what.
   correct_intake_date: { includes: ["view_residents"], bundle: [{ activity: "resident.correct_intake_date" }], opens: "/admin/intake-date" },
-  // 0305 (bills, sites and kinds): one card per bill activity, none given to any role. The pages are the interface half.
+  // 0305 (bills, sites and kinds): one card per bill activity, none given to any role.
+  // bill_sites opens Bills settings (the places, accounts and kinds). general_bills opens the Bills inbox, which now opens for it
+  // (canUseBills) and is where a general bill is recorded. utility_bills still opens the inbox, where a utility bill's kind, place and account
+  // are kept; its own screens are the next stream's.
   utility_bills: { includes: [], bundle: [{ activity: "bills.utilities" }], opens: "/bills" },
   general_bills: { includes: [], bundle: [{ activity: "bills.general" }], opens: "/bills" },
-  bill_sites: { includes: [], bundle: [{ activity: "bills.sites" }], opens: "/bills" },
+  bill_sites: { includes: [], bundle: [{ activity: "bills.sites" }], opens: "/bills/settings" },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */
