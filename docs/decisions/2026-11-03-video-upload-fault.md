@@ -32,3 +32,7 @@ A specific reason from the API (the routes' own messages) is still shown as it w
 ## Left open
 
 The cause. The next failure on Lutan's screen will show one of the four sentences, and the console line has Drive's own words. If it says Drive refused it with 401/403 on production, the Drive client or its scopes need attention outside this repository.
+
+## Added later the same day
+
+Lutan reported it also fails when uploading against a resident (the Photos/Videos tab, not an adoption update). That points away from anything adoption-specific (the update's folder, `photos.resident_publish`) and at the part both paths share: the Drive chunk step, the Drive client on the environment he used, or the file itself. A permission refusal would have shown a specific sentence, not this one. Dev passes both paths as admin.
