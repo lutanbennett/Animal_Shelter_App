@@ -147,7 +147,7 @@ Automated checks by: Claude  Date: 2026-11-03
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: see row 1; only the person who looked may tick it
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list has one row and nobody has looked yet, so only the person who looked may tick this (see the pending signature below)
 
 Manual verification by: pending: one booking login opens the visit pages listed above
 
