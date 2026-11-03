@@ -2415,7 +2415,7 @@ const en = {
       pagePhotos: {
         cardHeading: "Photo for this page",
         cardSubtitle:
-          "It shows beside the page's heading, above it on a phone. A page with no photo simply shows its heading across the full width.",
+          "It shows beside the page's heading, above it on a phone. A page with no photo set shows its poodle drawing there instead; choosing a photo replaces the drawing, and removing the photo brings it back.",
         noPhoto: "No photo set",
         replace: "Choose photo",
         remove: "Remove",
