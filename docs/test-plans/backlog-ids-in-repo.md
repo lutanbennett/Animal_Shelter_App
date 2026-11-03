@@ -139,4 +139,14 @@ Automated checks by: Claude (Opus 5)  Date: 2026-11-03
 
 ### Manual verification
 
-pending: the one row above — the artifact page opened from the sidebar on a phone, and a star pressed to confirm the panel still saves
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty; item 1 needs the artifact runtime and waits for a person, and only the person who looked may tick it
+
+Manual verification by: pending: the artifact page opened from the Claude sidebar on a phone, and a star pressed to confirm the Customer priorities panel still saves — the panel needs the artifact runtime, which no script here can exercise
+
+### Result
+
+- [x] Open defects are either fixed or explicitly accepted above — both defects in the table are fixed in this PR
+- [x] Checklist pasted into the PR — the PR body carries the same evidence; this file is the checklist of record
+- [ ] Handed to the production release manager — n/a: nothing here deploys. No `src/`, no `worker/`, no migration; the four section 8 rows that could apply are `deferred: release manager`
+
+Result: pass with accepted defects
