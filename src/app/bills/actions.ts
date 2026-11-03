@@ -8,9 +8,30 @@ import { parseBahtAmount, todayIso } from "@/lib/format";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { canUseBills } from "@/lib/bills/access";
-import type { ActionResult } from "@/lib/action-result";
-import { wrapped } from "@/lib/bills/write";
+import { runWriteAction, type ActionResult } from "@/lib/action-result";
 import { kindsFor, tailoringOf, type BillKind } from "@/lib/bills/kinds";
+
+// PI FAILOVER (D), 2026-11-01: every write here goes through runWriteAction() via wrapped(), which is what lets the
+// Worker replay a save the Pi did not clearly answer (docs/decisions/2026-11-01-write-paths-tail-a.md). A new write
+// added to this file goes through wrapped() too, with its own action name.
+async function wrapped<R extends object>(
+  action: string,
+  requestId: string | null,
+  body: (t: Dictionary) => Promise<ActionResult<R>>,
+): Promise<ActionResult<R>> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction<R>(
+    action,
+    {
+      somethingWentWrong: t.common.somethingWentWrong,
+      saveUnknown: t.common.saveUnknown,
+      reloadToSave: t.common.reloadToSave,
+    },
+    { id: requestId, action, db: supabase },
+    () => body(t),
+  );
+}
 
 /** kindId, premisesId and accountId are "" when none is chosen: every one of them is optional (an Other bill belongs to none). */
 export type CardDetails = { amount: string; date: string; note: string; kindId: string; premisesId: string; accountId: string };

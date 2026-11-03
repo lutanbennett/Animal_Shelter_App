@@ -595,10 +595,10 @@ Result: pending
 
 ## Manage bill places and kinds (`bill_sites`)
 
-- Opens: `/bills`
+- Opens: `/bills/settings`
 
 0. Sign in with `--cards bill_sites`. The home screen shows the **Manage bill places and kinds** tile (or the tile of a card that includes it).
-1. Open `/bills`: it loads.
+1. Open `/bills/settings`: it loads.
 2. **TODO:** Manage bill places, accounts and kinds. Do it on a disposable record named `walk-bill_sites`. Question: where should this write show afterwards (which page, which row)?
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 

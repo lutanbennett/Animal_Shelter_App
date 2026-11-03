@@ -4,9 +4,9 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
-import { wrapped } from "@/lib/bills/write";
 import { keyFromLabel } from "@/lib/bills/kinds";
-import type { ActionResult } from "@/lib/action-result";
+import { runWriteAction, type ActionResult } from "@/lib/action-result";
+import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 
 /**
@@ -14,6 +14,28 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en";
  * activity the three tables' write policies ask, and the page asks it too. Nothing is ever deleted: an entry that is no longer
  * used is archived (archived_at), because bills already filed against it must keep their place.
  */
+
+// PI FAILOVER (D), 2026-11-01: every write here goes through runWriteAction() via wrapped(), which is what lets the
+// Worker replay a save the Pi did not clearly answer (docs/decisions/2026-11-01-write-paths-tail-a.md). A new write
+// added to this file goes through wrapped() too, with its own action name.
+async function wrapped<R extends object>(
+  action: string,
+  requestId: string | null,
+  body: (t: Dictionary) => Promise<ActionResult<R>>,
+): Promise<ActionResult<R>> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction<R>(
+    action,
+    {
+      somethingWentWrong: t.common.somethingWentWrong,
+      saveUnknown: t.common.saveUnknown,
+      reloadToSave: t.common.reloadToSave,
+    },
+    { id: requestId, action, db: supabase },
+    () => body(t),
+  );
+}
 
 async function allowed(): Promise<boolean> {
   return can(await loadPermissions(), "bills.sites");
