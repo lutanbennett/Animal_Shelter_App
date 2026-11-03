@@ -7099,7 +7099,11 @@ const en = {
         wrongType: (name: string) => `${name} is not an MP4 or MOV video, so it was not added.`,
         tooBig: (name: string) => `${name} is bigger than 500 MB (about 5 minutes of video). Trim it or record a shorter clip.`,
         incomplete: "The video did not arrive in full. Try again.",
-        failed: "The video could not be uploaded. Try again.",
+        /** The steps of resumable-video.ts, each named so the message says where it stopped (docs/decisions/2026-11-03-video-upload-fault.md). */
+        startFailed: "The video could not be uploaded: the app could not open the upload. Try again.",
+        driveRefused: (status: number) => `The video could not be uploaded: Google Drive refused it (code ${status}). Try again; if it keeps happening, tell an admin.`,
+        connectionLost: "The video could not be uploaded: the connection kept dropping while it was being sent. Try again on a stronger connection.",
+        finishFailed: "The video reached Google Drive but the app could not save it. Try again.",
       },
     },
     viewer: {
