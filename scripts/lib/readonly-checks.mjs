@@ -514,6 +514,34 @@ export const CHECKS = {
       : [`${r.unmatched} not understood, ${r.refused} refused; oldest ${String(r.oldest).slice(0, 10)}, newest ${String(r.newest).slice(0, 10)}.`,
          ...r.recent.map((x) => `${String(x.created_at).slice(0, 16).replace("T", " ")} ${x.status} ${x.id} ${JSON.stringify(x.typed)}`)]),
   },
+  "public-hash-not-a-tag": {
+    asks: "How many residents have a # in temperament_notes or past_story_notes that is NOT a link to a resident, and so loses its # on the public pages (stripTagMarkup)? Counts per column, plus the distinct fragments that START WITH A DIGIT (such as #1). A fragment that starts with a letter could be a typed name, so only its count is shown. Names no resident and prints no note text. Informational: it flags nothing.",
+    // docs/decisions/2026-11-03-tags-two-faults.md. A # counts as a tag when a live resident_note_tags row on that resident and column points at a
+    // resident whose #name is in the text; anything else at the start of a word is what stripTagMarkup strips by mistake.
+    sql: `with src as (
+        select 'temperament_notes' as col, id, temperament_notes as txt from residents where temperament_notes is not null
+        union all
+        select 'past_story_notes', id, past_story_notes from residents where past_story_notes is not null),
+      hits as (
+        select s.col, s.id, s.txt, m[1] as frag from src s, regexp_matches(s.txt, '(?:^|\s)(#\S+)', 'g') m),
+      loose as (
+        select h.* from hits h
+         where not exists (select 1 from resident_note_tags n join residents r on r.id = n.to_resident_id
+                            where n.from_resident_id = h.id and n.source_table = 'residents' and n.source_column = h.col
+                              and n.archived_at is null and position('#' || r.name in h.txt) > 0))
+      select json_build_object(
+        'with_hash', (select count(distinct (col, id)) from hits),
+        'loose_temperament', (select count(distinct id) from loose where col = 'temperament_notes'),
+        'loose_past_story', (select count(distinct id) from loose where col = 'past_story_notes'),
+        'loose_letter_start', (select count(*) from loose where frag ~ '^#[^0-9]'),
+        'digit_fragments', coalesce((select json_agg(x order by x.n desc, x.frag) from
+            (select left(frag, 12) as frag, count(*) as n from loose where frag ~ '^#[0-9]' group by 1) x), '[]'::json))`,
+    render: (r) => [
+      `${r.with_hash} (resident, column) pair(s) hold a # at the start of a word.`,
+      `Not a tag, so stripped on the public pages by mistake: ${r.loose_temperament} resident(s) in temperament_notes, ${r.loose_past_story} in past_story_notes (${r.loose_letter_start} letter-start fragment(s) in all).`,
+      ...(r.digit_fragments.length ? ["Digit-start fragments:", ...r.digit_fragments.map((x) => `   ${x.frag} x${x.n}`)] : ["No digit-start fragments."]),
+    ],
+  },
 };
 
 /** Wrap one check in a read-only transaction. The result rides out in an exception message, as the harnesses do. */

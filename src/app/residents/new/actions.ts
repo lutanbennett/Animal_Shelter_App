@@ -156,9 +156,10 @@ export async function recordIntake(
           t.residents.tags,
         )
       : null;
-    // The resident and the note are saved; a failed link write cannot be shown on a redirect, so it is logged
-    // (the person can tag again from the note, which is not editable here, so the link is simply absent).
+    // The resident and the note are saved. A redirect cannot carry a message, so the failure rides on the address
+    // (?tags=failed|denied) and the resident page says it; it is logged as well.
     if (tagFailure) console.error("residents.recordIntake note tags", tagFailure);
+    const tagFlag = !tagFailure ? "" : tagFailure === t.residents.tags.notAllowed ? "?tags=denied" : "?tags=failed";
     if (chip.microchip_number || chip.microchip_implanted_on) {
       const { error: chipError } = await supabase
         .from("residents")
@@ -168,10 +169,10 @@ export async function recordIntake(
       // sends them to the edit page to fix the chip rather than losing the intake.
       if (chipError) {
         console.error("residents.recordIntake chip", isDuplicateChipError(chipError), chipError.message);
-        return { ok: true, redirectTo: `/residents/${resident.id}/edit` };
+        return { ok: true, redirectTo: `/residents/${resident.id}/edit${tagFlag}` };
       }
     }
-    return { ok: true, redirectTo: `/residents/${resident.id}` };
+    return { ok: true, redirectTo: `/residents/${resident.id}${tagFlag}` };
   });
   if (done.ok) redirect(done.redirectTo);
   return done;

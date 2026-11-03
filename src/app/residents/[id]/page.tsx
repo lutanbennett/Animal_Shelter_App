@@ -43,7 +43,7 @@ export default async function ResidentPage(
   props: PageProps<"/residents/[id]">,
 ) {
   const { id } = await props.params;
-  const { archive: archiveFlag, list: listParam } = await props.searchParams;
+  const { archive: archiveFlag, list: listParam, tags: tagsFlag } = await props.searchParams;
   const supabase = await createClient();
 
   // The same guard as the record's own pages: a role that holds no read of the record gets the
@@ -231,7 +231,7 @@ export default async function ResidentPage(
   ]);
 
   // The hub prints `.name`, so labels arrive in the reader's language (0166).
-  const { locale } = await getT();
+  const { locale, t } = await getT();
   const local = <T extends { name: string; name_th?: string | null }>(x: T | null) =>
     x && { ...x, name: localLabel(locale, x.name, x.name_th) };
   // immunization_compliance carries no Thai (0166 kept that private view narrow): the
