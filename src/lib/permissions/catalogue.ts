@@ -107,6 +107,9 @@ export const ACTIVITIES = [
   { key: "translations.propose", kind: "yesno", area: "management", sort: 74, requires: [], probes: [] },
   // 0302: correct a resident's intake date, moving the dates the intake stamped with it. Sort 75, after 74, for the reason above.
   { key: "resident.correct_intake_date", kind: "yesno", area: "residents", sort: 75, requires: [], probes: [] },
+  { key: "bills.utilities", kind: "yesno", area: "maintenance", sort: 76, requires: [], probes: [] },
+  { key: "bills.general", kind: "yesno", area: "maintenance", sort: 77, requires: [], probes: [] },
+  { key: "bills.sites", kind: "yesno", area: "maintenance", sort: 78, requires: [], probes: [] },
   { key: "contacts.browse", kind: "yesno", area: "contacts", sort: 57, requires: [], probes: [] },
   { key: "friends.view", kind: "yesno", area: "contacts", sort: 58, requires: [], probes: [] },
   { key: "community.outings", kind: "level", area: "projects", sort: 59, requires: [], probes: [] },
