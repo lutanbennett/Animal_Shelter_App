@@ -550,6 +550,7 @@ function TurnReply({
             medications: context.medications,
             rounds: context.rounds,
             doctors: context.doctors,
+            canAddDoctor: context.canAddDoctor,
             candidates: turn.parsed.residentCandidates,
             onSettle: (outcome) => onSettle(turn, outcome),
           }}

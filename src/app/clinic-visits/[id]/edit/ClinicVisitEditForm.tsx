@@ -123,6 +123,7 @@ export function ClinicVisitEditForm({
           namesByClinic={doctorNamesByClinic}
           lockedName={lockedDoctor}
           canAddDoctor={canAddDoctor}
+          defaultClinicId={fixedClinic?.id ?? visit.clinic_id ?? ""}
           defaultValue={visit.doctor_name ?? ""}
           className={inputClass}
         />
