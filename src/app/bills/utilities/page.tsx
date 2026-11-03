@@ -5,7 +5,7 @@ import { refuseFor } from "@/lib/auth/require-role";
 import { loadPermissions } from "@/lib/permissions/load";
 import { can } from "@/lib/permissions/can";
 import { getT } from "@/lib/i18n/get-t";
-import { formatBaht, formatDate, formatMonth, todayIso } from "@/lib/format";
+import { formatBahtExact, formatDate, formatMonth, todayIso } from "@/lib/format";
 import { kindsFor, tailoringOf, type BillKind } from "@/lib/bills/kinds";
 import { UtilityForm } from "./UtilityForm";
 
@@ -125,10 +125,10 @@ export default async function UtilitiesPage() {
                       <td className="px-3 py-2 text-foreground">{formatMonth(m, locale, true)}</td>
                       {kindsUsed.map((k) => (
                         <td key={k} className="px-3 py-2 text-right text-foreground">
-                          {bills.some((b) => b.covers_month === m && b.kind_id === k) ? formatBaht(total(m, k), locale) : "—"}
+                          {bills.some((b) => b.covers_month === m && b.kind_id === k) ? formatBahtExact(total(m, k), locale) : "—"}
                         </td>
                       ))}
-                      <td className="px-3 py-2 text-right font-medium text-foreground">{formatBaht(total(m), locale)}</td>
+                      <td className="px-3 py-2 text-right font-medium text-foreground">{formatBahtExact(total(m), locale)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -150,7 +150,7 @@ export default async function UtilitiesPage() {
                           <span className="font-medium text-foreground">
                             {[kindName.get(b.kind_id), b.premises_id ? placeName.get(b.premises_id) : null].filter(Boolean).join(" · ")}
                           </span>
-                          <span className="font-medium text-foreground">{formatBaht(Number(b.amount), locale)}</span>
+                          <span className="font-medium text-foreground">{formatBahtExact(Number(b.amount), locale)}</span>
                         </div>
                         <span className="text-xs text-muted">
                           {[b.account_id ? accountName.get(b.account_id) : null, u.billDated(formatDate(b.bill_date, locale)), b.note]

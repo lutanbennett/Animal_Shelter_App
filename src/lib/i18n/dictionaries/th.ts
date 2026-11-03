@@ -119,6 +119,7 @@ const th: Dictionary = {
     units: "หน่วยวัด",
     intakeDate: "แก้ไขวันที่รับเข้า",
     billsSettings: "ตั้งค่าบิล",
+    billsUtilities: "บิลค่าสาธารณูปโภค",
     vets: "คลินิก",
     medications: "ยา",
     medicationList: "รายการยา",

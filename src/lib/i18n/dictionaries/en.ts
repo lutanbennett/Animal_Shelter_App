@@ -138,6 +138,7 @@ const en = {
     units: "Units",
     intakeDate: "Correct an intake date",
     billsSettings: "Bills settings",
+    billsUtilities: "Utility bills",
     vets: "Clinics",
     medications: "Medications",
     medicationList: "Medication list",
