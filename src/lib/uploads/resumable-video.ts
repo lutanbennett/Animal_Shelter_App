@@ -73,7 +73,7 @@ export async function uploadResidentVideo(
       dateTaken: fields.dateTaken,
       adoptionUpdateId: fields.adoptionUpdateId,
     });
-    if (!started.ok) return { error: typeof started.json.error === "string" ? started.json.error : messages.failed };
+    if (!started.ok) return { error: typeof started.json.error === "string" ? started.json.error : messages.startFailed };
     const { uploadId, uploadUrl } = started.json as { uploadId: string; uploadUrl: string };
 
     let offset = 0;
@@ -103,7 +103,10 @@ export async function uploadResidentVideo(
         onProgress(Math.round((offset / file.size) * 100));
       } else if (res === null || res.status >= 500 || res.status === 429) {
         failures += 1;
-        if (failures > MAX_RETRIES_IN_A_ROW) return { error: messages.failed };
+        if (failures > MAX_RETRIES_IN_A_ROW) {
+          console.error("Video upload gave up after repeated failures; last status:", res ? res.status : "no response (dropped or blocked)");
+          return { error: res && res.status !== 429 ? messages.driveRefused(res.status) : messages.connectionLost };
+        }
         onRetrying(true);
         await sleep(Math.min(1000 * 2 ** failures, 20000));
         // Ask Drive where it got to; if even that fails the loop tries again.
@@ -117,14 +120,17 @@ export async function uploadResidentVideo(
           // still offline: next lap
         }
       } else {
-        return { error: messages.failed };
+        // A 4xx other than 429: expired or rescoped credentials (401/403) or a dead session (404). Keep Drive's own words.
+        const detail = await res!.text().catch(() => "");
+        console.error("Drive refused a video chunk:", res!.status, detail.slice(0, 500));
+        return { error: messages.driveRefused(res!.status) };
       }
     }
 
     onRetrying(false);
     const durationMs = await readVideoDuration(file);
     const finished = await post("finish", { uploadId, driveFileId, dateTaken: fields.dateTaken, durationMs, adoptionUpdateId: fields.adoptionUpdateId });
-    if (!finished.ok) return { error: typeof finished.json.error === "string" ? finished.json.error : messages.failed };
+    if (!finished.ok) return { error: typeof finished.json.error === "string" ? finished.json.error : messages.finishFailed };
     return {};
   } catch {
     return { error: t.photos.uploader.networkError };
