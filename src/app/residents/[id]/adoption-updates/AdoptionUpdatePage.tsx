@@ -8,7 +8,6 @@ import { todayIso } from "@/lib/format";
 import { SECTION_ICONS } from "@/components/hub-icons";
 import { loadSenderOptions } from "@/lib/adoption-updates/queries";
 import { AdoptionUpdateForm } from "./AdoptionUpdateForm";
-import { photoCategoriesFor } from "@/lib/google/drive-client";
 import { canTagNote } from "@/lib/note-tags/can";
 import { loadTagsForNote } from "@/lib/note-tags/sync";
 
@@ -101,7 +100,7 @@ export async function AdoptionUpdatePage({
           defaultSenderId={senders.defaultSenderId}
           today={todayIso()}
           canTagNotes={canTagNote(perms, ["resident.adoption_news"])}
-          canAttach={can(perms, "photos.resident_add") && photoCategoriesFor(perms).length >= 2}
+          canAttach={can(perms, "photos.resident_add") && can(perms, "photos.resident_publish")}
           initialNoteTags={update ? await loadTagsForNote(supabase, "adoption_updates", "note", update.id) : []}
         />
       )}

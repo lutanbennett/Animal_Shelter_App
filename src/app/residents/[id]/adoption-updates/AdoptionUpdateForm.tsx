@@ -84,7 +84,7 @@ export function AdoptionUpdateForm({
   today: string;
   /** canTagNote(perms, ["resident.adoption_news"]): the save asks resident.adoption_news. Default false. */
   canTagNotes?: boolean;
-  /** What the photo and video routes ask: can(perms, "photos.resident_add") with more than one folder (photoCategoriesFor). Default false: no picker. */
+  /** What the photo and video routes ask: can(perms, "photos.resident_add") and can(perms, "photos.resident_publish"): record_attachment refuses an adopter's file to a login that cannot publish (0217). Default false: no picker. */
   canAttach?: boolean;
   initialNoteTags?: NoteTag[];
 }) {

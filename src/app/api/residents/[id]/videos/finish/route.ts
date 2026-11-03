@@ -77,7 +77,7 @@ async function handlePost(
       .limit(1)
       .returns<{ id: string; received_on: string }[]>();
     const row = updateRows?.[0];
-    if (!row || photoCategoriesFor(perms).length < 2 || upload.sub_folder !== dateToYyyymmdd(row.received_on)) {
+    if (!row || !can(perms, "photos.resident_publish") || upload.sub_folder !== dateToYyyymmdd(row.received_on)) {
       return NextResponse.json({ error: "Unknown upload." }, { status: 404 });
     }
     updateId = row.id;

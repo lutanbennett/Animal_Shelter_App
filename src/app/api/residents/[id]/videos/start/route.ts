@@ -63,6 +63,10 @@ async function handlePost(
   if (adoptionUpdateId !== undefined && (typeof adoptionUpdateId !== "string" || !adoptionUpdateId)) {
     return NextResponse.json({ error: "Invalid adoption update." }, { status: 400 });
   }
+  // record_attachment (0217) files an adopter's video only for a login that may publish; refuse before Drive is touched.
+  if (adoptionUpdateId && !can(perms, "photos.resident_publish")) {
+    return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
+  }
   if (categories.length === 0) {
     return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
   }
