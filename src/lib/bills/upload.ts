@@ -11,7 +11,7 @@ import { driveImageUrl } from "@/lib/google/drive-client";
 import { refuseCrossSite } from "@/lib/auth/same-origin";
 import { todayIso } from "@/lib/format";
 
-export const BILL_OWNER_TYPES = ["stock_receipt", "clinic_visit", "bill_inbox", "maintenance_bill", "utility_bill"] as const;
+export const BILL_OWNER_TYPES = ["stock_receipt", "stock_delivery", "clinic_visit", "bill_inbox", "maintenance_bill", "utility_bill"] as const;
 export type BillOwnerType = (typeof BILL_OWNER_TYPES)[number];
 
 const ALLOWED_MIME_TYPES = new Set([
@@ -28,7 +28,7 @@ export function mayFileBill(perms: Permissions | null, owner: BillOwnerType): bo
   if (!perms) return false;
   const delivery = can(perms, "stock.delivery");
   const visits = can(perms, "medical.visits", "edit");
-  if (owner === "stock_receipt") return delivery;
+  if (owner === "stock_receipt" || owner === "stock_delivery") return delivery;
   if (owner === "clinic_visit") return visits;
   if (owner === "maintenance_bill") return can(perms, "maintenance.bills");
   if (owner === "utility_bill") return can(perms, "bills.utilities");

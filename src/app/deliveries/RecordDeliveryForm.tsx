@@ -12,11 +12,15 @@ import { packTotal, parseDeliveryQuantity, type DeliveryKind, type DeliveryTimin
 import { previewBase } from "@/lib/management/delivery-lines";
 import { MedicationLabelThumb } from "@/components/MedicationLabelThumb";
 import { useWriteCall } from "@/lib/use-write-form";
-import { recordDelivery } from "./actions";
+import { recordDelivery, type BillTotals } from "./actions";
+import { BillTotalsLine } from "./BillTotalsLine";
 import { attachCardToDelivery } from "@/app/bills/actions";
 import { BillPhotoField } from "@/components/BillPhotoField";
 import { useDeferredUploads } from "@/components/DeferredUploads";
 import { DateInput } from "@/components/DateInput";
+
+/** What a bill's item can be: a list item (medication, food) or a typed description (0308). */
+export type FormKind = DeliveryKind | "described";
 
 export type DeliveryFormItem = {
   id: string;
@@ -38,10 +42,11 @@ const inputClass =
   "rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
 
 /**
- * One delivery of one item, in one or more sizes (2 × 20 kg bag + 1 × 14 kg
- * bag). After a save the item, lines and note clear but the kind, day and
- * supplier stay: one delivery van usually brings several items, entered one
- * after another.
+ * One bill, one or more items (0308). An item is a medication or a food from the list, in one or more sizes (2 × 20 kg
+ * bag + 1 × 14 kg bag), or something else typed as words. The first save opens the bill: the day, supplier, total and
+ * photos belong to the bill, so after a save they stay (and the day and supplier lock) while the item, lines and note
+ * clear for the next item. "Finish this bill" closes it. The bill's total is shown against the items added up, never
+ * blocking.
  */
 export function RecordDeliveryForm({
   initialKind,
@@ -70,7 +75,12 @@ export function RecordDeliveryForm({
   const d = t.deliveries;
   const f = d.form;
 
-  const [kind, setKind] = useState<DeliveryKind>(initialKind);
+  const [kind, setKind] = useState<FormKind>(initialKind);
+  const [describedText, setDescribedText] = useState("");
+  const [describedUnit, setDescribedUnit] = useState("");
+  const [amount, setAmount] = useState(billCost ?? "");
+  const [deliveryId, setDeliveryId] = useState<string | null>(null);
+  const [totals, setTotals] = useState<BillTotals | null>(null);
   const [itemId, setItemId] = useState("");
   const [lines, setLines] = useState<Line[]>(() => [newLine("", billCost ?? "")]);
   const [date, setDate] = useState(today);
@@ -82,8 +92,10 @@ export function RecordDeliveryForm({
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
 
-  const item = items[kind].find((i) => i.id === itemId);
-  const countedThatDay = itemId !== "" && (countDays[kind][itemId] ?? []).includes(date);
+  const listed = kind === "described" ? [] : items[kind];
+  const item = listed.find((i) => i.id === itemId);
+  // Only the first item of a bill asks: later items take the bill's own day.
+  const countedThatDay = kind !== "described" && !deliveryId && itemId !== "" && (countDays[kind][itemId] ?? []).includes(date);
   // A line's unit is the English key the receipt stamps; what is shown is the reader's language (0166).
   const unitLabelOf = (unit: string) =>
     unit ? localLabel(locale, unit, item?.conversions.find((c) => c.unit === unit)?.unitTh) : item?.unit || "";
@@ -100,40 +112,50 @@ export function RecordDeliveryForm({
   const chooseItem = (id: string) => {
     setItemId(id);
     setTiming(null);
-    const next = items[kind].find((i) => i.id === id);
+    const next = listed.find((i) => i.id === id);
     setLines([newLine(usualUnit(next))]);
   };
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
     setMessage(null);
-    const saved = { name: item?.name ?? "", quantity: String(together ?? 0), unit: item?.unit ?? "" };
+    const saved =
+      kind === "described"
+        ? { name: describedText.trim(), quantity: String(Number(lines[0]?.quantity) || 0), unit: describedUnit.trim() }
+        : { name: item?.name ?? "", quantity: String(together ?? 0), unit: item?.unit ?? "" };
     startTransition(async () => {
       const result = await recordWrite((requestId) => recordDelivery({
         kind,
         itemId,
+        described: kind === "described" ? { description: describedText, unit: describedUnit } : undefined,
         lines: lines.map((l) => ({ quantity: l.quantity, unit: l.unit, cost: l.cost })),
         date,
         timing: countedThatDay ? timing : null,
         supplierId,
         note,
+        deliveryId,
+        amount,
+        cardId,
       }, requestId));
       if (!result.ok) {
         setMessage({ ok: false, text: result.error });
         return;
       }
 
-      // The bill: a card it was recorded from moves onto the delivery, and photos picked here are filed on it.
+      // The bill: a card it was recorded from moves onto the bill (the header, so every item shares the photos), and
+      // photos picked here are filed on it.
       let billNote = "";
-      if (result.id && cardId) {
-        const moved = await attachWrite((requestId) => attachCardToDelivery(cardId, result.id!, requestId));
+      if (result.deliveryId && cardId) {
+        const moved = await attachWrite((requestId) => attachCardToDelivery(cardId, result.deliveryId!, requestId));
         if (!moved.ok) billNote = moved.error;
         setCardId(null);
       }
-      if (result.id && bill.queued.length > 0) {
-        const filed = await bill.upload(`/api/bills/stock_receipt/${result.id}`);
+      if (result.deliveryId && bill.queued.length > 0) {
+        const filed = await bill.upload(`/api/bills/stock_delivery/${result.deliveryId}`);
         if (filed.failed) billNote = t.bills.photo.failed;
       }
+      setDeliveryId(result.deliveryId ?? null);
+      setTotals(result.totals ?? null);
       bill.reset();
       setMessage({
         ok: !billNote,
@@ -143,13 +165,22 @@ export function RecordDeliveryForm({
       setLines([newLine()]);
       setTiming(null);
       setNote("");
+      setDescribedText("");
     });
+  };
+
+  const finishBill = () => {
+    setDeliveryId(null);
+    setTotals(null);
+    setAmount("");
+    setCardId(null);
+    setMessage(null);
   };
 
   return (
     <form onSubmit={submit} {...localizedValidity(t, locale)} className="flex flex-col gap-4 rounded border border-border bg-surface p-4">
       <div role="tablist" aria-label={f.kind} className="flex gap-2">
-        {(["medication", "diet"] as const).map((k) => (
+        {(["medication", "diet", "described"] as const).map((k) => (
           <button
             key={k}
             type="button"
@@ -171,6 +202,73 @@ export function RecordDeliveryForm({
         ))}
       </div>
 
+      {kind === "described" && (
+        <fieldset className="flex flex-col gap-3 rounded border border-border p-3">
+          <p className="text-sm text-muted">{f.describedHint}</p>
+          <div className="flex flex-wrap items-start gap-3">
+            <div className="flex min-w-0 flex-1 basis-64 flex-col gap-1">
+              <label htmlFor="delivery-described" className="text-sm font-medium text-muted">
+                {f.describedWhat}
+              </label>
+              <input
+                id="delivery-described"
+                required
+                value={describedText}
+                onChange={(e) => setDescribedText(e.target.value)}
+                placeholder={f.describedPlaceholder}
+                className={`${inputClass} w-full`}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="delivery-described-quantity" className="text-sm font-medium text-muted">
+                {f.quantity}
+              </label>
+              <input
+                id="delivery-described-quantity"
+                required
+                type="number"
+                min={0}
+                step="any"
+                inputMode="decimal"
+                value={lines[0]?.quantity ?? ""}
+                onChange={(e) => patch(lines[0].key, { quantity: e.target.value })}
+                className={`${inputClass} w-32`}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="delivery-described-unit" className="text-sm font-medium text-muted">
+                {f.describedUnit}
+              </label>
+              <input
+                id="delivery-described-unit"
+                required
+                value={describedUnit}
+                onChange={(e) => setDescribedUnit(e.target.value)}
+                placeholder={f.describedUnitPlaceholder}
+                className={`${inputClass} w-36`}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="delivery-described-cost" className="text-sm font-medium text-muted">
+                {f.describedCost}
+              </label>
+              <input
+                id="delivery-described-cost"
+                type="number"
+                min={0}
+                step="0.01"
+                inputMode="decimal"
+                value={lines[0]?.cost ?? ""}
+                onChange={(e) => patch(lines[0].key, { cost: e.target.value })}
+                className={`${inputClass} w-36`}
+              />
+            </div>
+          </div>
+          <span className="text-xs text-muted">{f.describedNotStock}</span>
+        </fieldset>
+      )}
+
+      {kind !== "described" && (
       <div className="flex flex-wrap items-start gap-3">
         <div className="flex min-w-0 flex-col gap-1">
           <label htmlFor="delivery-item" className="text-sm font-medium text-muted">
@@ -183,8 +281,8 @@ export function RecordDeliveryForm({
             onChange={(e) => chooseItem(e.target.value)}
             className={`${inputClass} w-72 max-w-full`}
           >
-            <option value="">{items[kind].length ? f.itemPlaceholder : d.noItems[kind]}</option>
-            {items[kind].map((i) => (
+            <option value="">{listed.length ? f.itemPlaceholder : d.noItems[kind as DeliveryKind]}</option>
+            {listed.map((i) => (
               <option key={i.id} value={i.id}>
                 {i.name}
               </option>
@@ -200,8 +298,9 @@ export function RecordDeliveryForm({
           />
         )}
       </div>
+      )}
 
-      {lines.map((line, index) => {
+      {kind !== "described" && lines.map((line, index) => {
         const quantityOk = parseDeliveryQuantity(line.quantity).ok;
         const label = unitLabelOf(line.unit);
         const id = `${formId}-line-${index}`;
@@ -312,7 +411,7 @@ export function RecordDeliveryForm({
           </fieldset>
         );
       })}
-      {item && (
+      {kind !== "described" && item && (
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
@@ -335,6 +434,7 @@ export function RecordDeliveryForm({
           <DateInput
             id="delivery-date"
             required
+            disabled={deliveryId != null}
             max={today}
             value={date}
             onChange={(e) => {
@@ -343,6 +443,23 @@ export function RecordDeliveryForm({
             }}
             className={`${inputClass} w-44`}
           />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label htmlFor="delivery-amount" className="text-sm font-medium text-muted">
+            {f.billTotal}
+          </label>
+          <input
+            id="delivery-amount"
+            type="number"
+            min={0}
+            step="0.01"
+            inputMode="decimal"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            className={`${inputClass} w-44`}
+          />
+          <span className="text-xs text-muted">{f.billTotalHint}</span>
         </div>
 
         {countedThatDay && (
@@ -374,6 +491,7 @@ export function RecordDeliveryForm({
           </label>
           <select
             id="delivery-supplier"
+            disabled={deliveryId != null}
             value={supplierId}
             onChange={(e) => setSupplierId(e.target.value)}
             className={`${inputClass} w-64 max-w-full`}
@@ -410,10 +528,21 @@ export function RecordDeliveryForm({
       <div className="flex flex-wrap items-center gap-3">
         <ActionButton type="submit" variant="primary" icon={ACTION_ICONS.save}
           disabled={pending}>
-          {pending ? t.common.saving : f.save}
+          {pending ? t.common.saving : deliveryId ? f.saveAnother : f.save}
         </ActionButton>
+        {deliveryId && (
+          <button
+            type="button"
+            onClick={finishBill}
+            disabled={pending}
+            className="min-h-10 rounded border border-border px-3 text-sm font-medium text-foreground hover:bg-surface-hover"
+          >
+            {f.finishBill}
+          </button>
+        )}
         <span className="text-xs text-muted">{f.notACount}</span>
       </div>
+      {deliveryId && <BillTotalsLine totals={totals} />}
       {message && (
         <p role="status" className={`text-sm ${message.ok ? "text-success" : "text-danger"}`}>
           {message.text}

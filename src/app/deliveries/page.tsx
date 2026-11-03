@@ -20,6 +20,11 @@ import { RecordDeliveryForm, type DeliveryFormItem } from "./RecordDeliveryForm"
 import { DeleteDeliveryButton } from "./DeleteDeliveryButton";
 import { BillPhotosSection } from "@/components/BillPhotosSection";
 import { loadBillPhotos } from "@/lib/bills/photos";
+import { canEditItemSettings } from "@/lib/permissions/item-settings";
+import { promotionOffers, type DescribedRow } from "@/lib/management/described-lines";
+import { BillTotalsLine } from "./BillTotalsLine";
+import { PromoteOffers } from "./PromoteOffers";
+import type { BillTotals } from "./actions";
 
 /**
  * /deliveries — record a delivery of one medication or food, and see (and
@@ -39,9 +44,15 @@ type ItemRow = { id: string; name: string; name_th: string | null; unit: string;
 
 type ReceiptRow = {
   id: string;
-  item_kind: "medication" | "diet_type";
+  item_kind: "medication" | "diet_type" | "described";
   medication_id: string | null;
   diet_type_id: string | null;
+  /** The bill this line is on (0308); null on a delivery recorded before bills had several lines. */
+  delivery_id: string | null;
+  /** A described line's words (item_kind described): it has no medication or diet to name it. */
+  description: string | null;
+  promoted_medication_id: string | null;
+  promoted_diet_type_id: string | null;
   quantity: number | string;
   unit: string | null;
   received_at: string;
@@ -85,7 +96,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
     supabase
       .from("stock_receipts")
       .select(
-        "id, item_kind, medication_id, diet_type_id, quantity, unit, received_at, supplier_contact_id, cost, note, recorded_by, entered",
+        "id, item_kind, medication_id, diet_type_id, delivery_id, description, promoted_medication_id, promoted_diet_type_id, quantity, unit, received_at, supplier_contact_id, cost, note, recorded_by, entered",
       )
       .order("received_at", { ascending: false })
       .limit(RECENT)
@@ -130,13 +141,41 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
   const supplierName = new Map(suppliers.map((s) => [s.id, s.name]));
   const itemName = new Map([...medications, ...diets].map((i) => [i.id, localLabel(locale, i.name, i.name_th)]));
   const receipts = receiptsResult.data ?? [];
-  const [billPhotos, recorders] = await Promise.all([
-    loadBillPhotos(supabase, "stock_receipt", receipts.map((r) => r.id)),
+  // A line on a bill shares the bill's photos and total (the header, 0308); a line from before bills keeps its own photos.
+  const deliveryIds = [...new Set(receipts.flatMap((r) => (r.delivery_id ? [r.delivery_id] : [])))];
+  const [billPhotos, headerPhotos, totalsResult, describedResult, recorders] = await Promise.all([
+    loadBillPhotos(supabase, "stock_receipt", receipts.filter((r) => !r.delivery_id).map((r) => r.id)),
+    loadBillPhotos(supabase, "stock_delivery", deliveryIds),
+    deliveryIds.length
+      ? supabase
+          .from("stock_delivery_totals")
+          .select("delivery_id, amount, lines, unpriced_lines, lines_cost, difference")
+          .in("delivery_id", deliveryIds)
+          .returns<{ delivery_id: string; amount: number | string | null; lines: number | string; unpriced_lines: number | string; lines_cost: number | string | null; difference: number | string | null }[]>()
+      : Promise.resolve({ data: [], error: null }),
+    // Every typed line, not only the recent ones: "typed more than once" is counted over all of them.
+    supabase
+      .from("stock_receipts")
+      .select("id, description, unit, promoted_medication_id, promoted_diet_type_id")
+      .eq("item_kind", "described")
+      .returns<DescribedRow[]>(),
     loadAppUsersById(
       supabase,
       receipts.flatMap((r) => (r.recorded_by ? [r.recorded_by] : [])),
     ),
   ]);
+
+  const num = (v: number | string | null) => (v == null ? null : Number(v));
+  const totalsOf = new Map<string, BillTotals>(
+    (totalsResult.data ?? []).map((x) => [
+      x.delivery_id,
+      { amount: num(x.amount), lines: Number(x.lines), unpricedLines: Number(x.unpriced_lines), linesCost: num(x.lines_cost), difference: num(x.difference) },
+    ]),
+  );
+  const offers = promotionOffers(describedResult.data ?? []);
+  // Adding to a list needs the Settings write for that list as well as the delivery activity the page already asks.
+  const mayPromote = { medication: canEditItemSettings(perms, "medication"), diet: canEditItemSettings(perms, "diet") };
+  const shownBills = new Set<string>();
 
   const formProps = {
     initialKind,
@@ -192,6 +231,9 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
 
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-foreground">{d.recent.title}</h2>
+        {offers.length > 0 && (mayPromote.medication || mayPromote.diet) && (
+          <PromoteOffers offers={offers} mayMedication={mayPromote.medication} mayDiet={mayPromote.diet} />
+        )}
         {receiptsResult.error && (
           <p className="text-sm text-danger">
             {d.couldntLoad}: {receiptsResult.error.message}
@@ -203,18 +245,24 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
           <ul className="flex flex-col divide-y divide-border rounded border border-border">
             {receipts.map((r) => {
               const isMed = r.item_kind === "medication";
-              const id = (isMed ? r.medication_id : r.diet_type_id) ?? "";
-              const unit = r.unit ? (isMed ? doseUnitLabel(t, r.unit) : dietUnitLabel(t, r.unit)) : "";
+              // A described line (0308) has neither a medication nor a diet: its words are its name, its unit was typed.
+              const isDescribed = r.item_kind === "described";
+              const id = isDescribed ? "" : ((isMed ? r.medication_id : r.diet_type_id) ?? "");
+              const unit = !r.unit ? "" : isDescribed ? r.unit : isMed ? doseUnitLabel(t, r.unit) : dietUnitLabel(t, r.unit);
+              const name = isDescribed ? (r.description ?? "—") : (itemName.get(id) ?? "—");
+              // The bill's total and photos are shown once, on its first line in the list.
+              const firstOfBill = r.delivery_id != null && !shownBills.has(r.delivery_id);
+              if (r.delivery_id) shownBills.add(r.delivery_id);
               const supplier = r.supplier_contact_id ? supplierName.get(r.supplier_contact_id) : undefined;
               const recorder = r.recorded_by ? recorders.get(r.recorded_by) : undefined;
               // On a day the item was counted, the minute shown can be the
               // count's own, so say which side of it the delivery fell.
-              const side = sideOfCount(r.received_at, countedAt.get(id) ?? []);
+              const side = isDescribed ? null : sideOfCount(r.received_at, countedAt.get(id) ?? []);
               return (
                 <li key={r.id} className="flex flex-wrap items-start justify-between gap-2 px-4 py-3 text-sm">
                   <div className="flex min-w-0 flex-col gap-0.5">
                     <span className="font-medium text-foreground">
-                      {d.recent.line(itemName.get(id) ?? "—", formatQuantity(Number(r.quantity)), unit)}
+                      {d.recent.line(name, formatQuantity(Number(r.quantity)), unit)}
                     </span>
                     {/* The amounts stored on the row, never a live conversion. */}
                     {r.entered && (
@@ -234,7 +282,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
                     <span className="text-xs text-muted">
                       {[
                         formatDateTime(r.received_at, locale),
-                        isMed ? d.kinds.medication : d.kinds.diet,
+                        isDescribed ? d.kinds.described : isMed ? d.kinds.medication : d.kinds.diet,
                         supplier ? d.recent.from(supplier) : null,
                         r.cost == null
                           ? null
@@ -251,10 +299,19 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
                         {d.recent.side[side]}
                       </span>
                     )}
+                    {isDescribed && <span className="text-xs text-muted">{d.recent.notStock}</span>}
                     {r.note && <span className="text-xs text-foreground">{r.note}</span>}
-                    <BillPhotosSection kind="stock_receipt" ownerId={r.id} photos={billPhotos.get(r.id) ?? []} canAdd={can(perms, "stock.delivery")} />
+                    {r.delivery_id == null && (
+                      <BillPhotosSection kind="stock_receipt" ownerId={r.id} photos={billPhotos.get(r.id) ?? []} canAdd={can(perms, "stock.delivery")} />
+                    )}
+                    {firstOfBill && r.delivery_id && (
+                      <div className="mt-1 flex flex-col gap-1 rounded border border-border bg-surface px-3 py-2">
+                        <BillTotalsLine totals={totalsOf.get(r.delivery_id) ?? null} />
+                        <BillPhotosSection kind="stock_delivery" ownerId={r.delivery_id} photos={headerPhotos.get(r.delivery_id) ?? []} canAdd={can(perms, "stock.delivery")} />
+                      </div>
+                    )}
                   </div>
-                  <DeleteDeliveryButton id={r.id} label={itemName.get(id) ?? ""} />
+                  <DeleteDeliveryButton id={r.id} label={name === "—" ? "" : name} />
                 </li>
               );
             })}

@@ -11,7 +11,7 @@ import {
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Adds one more photo to a bill: a delivery's (`stock_receipt`), a clinic
+ * Adds one more photo to a bill: a delivery's (`stock_receipt`, or a bill's `stock_delivery`, 0308), a clinic
  * visit's (`clinic_visit`) or a card already in the inbox (`bill_inbox`), for
  * a bill that runs to a second page. The database decides whether the row
  * may exist (record_attachment, then the attachments policies).
