@@ -11,7 +11,7 @@
 | PR | see the PR for this branch |
 | Tested by / date | Claude, 2026-11-03 |
 | Carries a migration? | no |
-| Tested at SHA | 9aaf927e |
+| Tested at SHA | e23430f8 |
 
 ## 1. Scope and risk
 
@@ -37,13 +37,13 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [x] `node scripts/gates.mjs` four gates, all zero, run on 9aaf927e plus a doc-only edit; closing lines as printed:
+- [x] `node scripts/gates.mjs` four gates, all zero, run after syncing main; closing lines as printed:
 
 ```
-=== gates: typecheck exited 0 after 50s
-=== gates: lint exited 0 after 208s
-=== gates: test exited 0 after 17s
-=== gates: build exited 0 after 76s
+=== gates: typecheck exited 0 after 11s
+=== gates: lint exited 0 after 114s
+=== gates: test exited 0 after 16s
+=== gates: build exited 0 after 52s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
