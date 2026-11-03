@@ -89,6 +89,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "If the resident links for a # tag in the intake note could not be saved, the resident page now says so when it opens (before, the note saved and the link was silently missing). The Thai wording was already in the app; it is our own and has not yet been read by a Thai speaker.", cards: ["residents"] },
 ];
 
 /** Newest first. */
