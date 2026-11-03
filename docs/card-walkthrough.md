@@ -573,10 +573,10 @@ Result: pending
 
 ## Add utility bills (`utility_bills`)
 
-- Opens: `/bills`
+- Opens: `/bills/utilities`
 
 0. Sign in with `--cards utility_bills`. The home screen shows the **Add utility bills** tile (or the tile of a card that includes it).
-1. Open `/bills`: it loads.
+1. Open `/bills/utilities`: it loads.
 2. **TODO:** Add and see utility bills. Do it on a disposable record named `walk-utility_bills`. Question: where should this write show afterwards (which page, which row)?
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 

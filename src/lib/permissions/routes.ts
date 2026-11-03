@@ -464,6 +464,15 @@ export const ROUTES: readonly RouteEntry[] = [
     menu: false,
   },
   {
+    // Utility bills by month: recorded and listed here, on its own card's activity, bills.utilities.
+    path: "/bills/utilities",
+    activity: "bills.utilities",
+    icon: Receipt,
+    label: (t) => t.nav.billsUtilities,
+    device: "any",
+    menu: false,
+  },
+  {
     // Bills settings (0305): the places, accounts and kinds bills are filed under. Opens on its own card's activity, bills.sites.
     path: "/bills/settings",
     activity: "bills.sites",

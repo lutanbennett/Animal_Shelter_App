@@ -355,9 +355,8 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   correct_intake_date: { includes: ["view_residents"], bundle: [{ activity: "resident.correct_intake_date" }], opens: "/admin/intake-date" },
   // 0305 (bills, sites and kinds): one card per bill activity, none given to any role.
   // bill_sites opens Bills settings (the places, accounts and kinds). general_bills opens the Bills inbox, which now opens for it
-  // (canUseBills) and is where a general bill is recorded. utility_bills still opens the inbox, where a utility bill's kind, place and account
-  // are kept; its own screens are the next stream's.
-  utility_bills: { includes: [], bundle: [{ activity: "bills.utilities" }], opens: "/bills" },
+  // (canUseBills) and is where a general bill is recorded. utility_bills opens /bills/utilities, where a utility bill is recorded and the months are listed.
+  utility_bills: { includes: [], bundle: [{ activity: "bills.utilities" }], opens: "/bills/utilities" },
   general_bills: { includes: [], bundle: [{ activity: "bills.general" }], opens: "/bills" },
   bill_sites: { includes: [], bundle: [{ activity: "bills.sites" }], opens: "/bills/settings" },
 };
