@@ -198,6 +198,9 @@ jobs:
       # multi-line entries are compared too. Its second rule — English typed into a
       # .tsx instead of the dictionary — REPORTS ONLY and carries no stored count;
       # docs/decisions/2026-10-31-thai-dictionary-check.md says when that flips.
+      # Rule 3 of the next check parses .ts files with the TypeScript compiler, so this job needs node_modules.
+      # Installed here, after the checks that need nothing, so a failed install cannot hide them.
+      - run: npm ci --ignore-scripts
       - run: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-thai-dictionary.mjs
       # deploy-pi.sh must run the script it just checked out, not the copy bash had open.
       - run: node scripts/pi/check-self-update.mjs
