@@ -101,7 +101,8 @@ async function handlePost(
     p_adoption_update_id: updateId,
   });
   if (recordError) return NextResponse.json({ error: recordError.message }, { status: 500 });
-  const attachmentId = (recordResult as { attachment: { id: string } }[])[0].attachment.id;
+  const recorded = (recordResult as { attachment: { id: string }; is_profile?: boolean }[])[0];
+  const attachmentId = recorded.attachment.id;
 
   const duration =
     typeof durationMs === "number" && Number.isFinite(durationMs) && durationMs > 0 ? Math.round(durationMs) : null;
@@ -110,6 +111,13 @@ async function handlePost(
     .update({ media_kind: "video", duration_ms: duration })
     .eq("id", attachmentId);
   if (kindError) return NextResponse.json({ error: kindError.message }, { status: 500 });
+
+  // record_attachment makes a resident's first file their profile picture. A video is not a picture, and a profile
+  // picture is public (is_public_drive_file reads public_resident_cards), so an unshared video would stream to anyone.
+  // Found 2026-11-03 on dev: an update's video, never shared, answered a signed-out request. Undo it, only if it was this file.
+  if (recorded.is_profile) {
+    await admin.from("residents").update({ profile_photo_drive_file_id: null }).eq("id", id).eq("profile_photo_drive_file_id", driveFileId);
+  }
 
   await admin
     .from("video_uploads")

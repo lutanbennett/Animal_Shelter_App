@@ -9,14 +9,14 @@ test("the open site: these are reachable signed out", () => {
   for (const p of [
     "/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/lca-logo-160.jpg", "/api/version",
     "/adopt", "/adopt/12", "/appeals", "/appeals/abc", "/services/desexing", "/our-work", "/our-work/abc", "/foster", "/volunteer", "/donate", "/friends", "/privacy",
-    "/r/CODE1", "/e/12", "/api/photos/abc",
+    "/r/CODE1", "/e/12", "/api/photos/abc", "/api/videos/abc",
   ]) assert.equal(isPublicPath(p), true, p);
 });
 
 test("the open site: look-alikes and private areas are NOT public", () => {
   for (const p of [
     "", "adopt", "/adoptive", "/adopt-admin", "/adoption", "/appealsx", "/appeal", "/our-workshop", "/fosterage", "/donate2", "/friends-only", "/privacy-admin",
-    "/residents", "/admin", "/management/cashflow", "/api/status/alerts", "/api/photos", "/api/photosx/a", "/r", "/e", "/rx/1", "/ex/1",
+    "/residents", "/admin", "/management/cashflow", "/api/status/alerts", "/api/photos", "/api/photosx/a", "/api/videos", "/api/videosx/a", "/r", "/e", "/rx/1", "/ex/1",
     "/login/other", "/login/", "/leaked.png", "/api/x.svg", "/manual/login.png", "/api/version/x", "/robots.txt/x", "/Adopt", "/ADOPT",
     "//adopt", "/%61dopt", "/admin/adopt", "/residents/adopt",
   ]) assert.equal(isPublicPath(p), false, JSON.stringify(p));

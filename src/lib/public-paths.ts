@@ -59,8 +59,11 @@ export const NOT_EDGE_CACHED_PAGE_PREFIXES = ["/r", "/e", "/appeals", "/services
 /** What the Worker may edge-cache: every public page except the above. */
 export const EDGE_CACHED_PAGE_PREFIXES = PUBLIC_PAGE_PREFIXES.filter((p) => !NOT_EDGE_CACHED_PAGE_PREFIXES.includes(p));
 
+// /api/videos/ is here for a video on a publicly shared adoption update (0303): the route itself answers a
+// signed-out visitor only for a file is_public_drive_file lists, and 404s every other id.
 export const PUBLIC_PATH_PREFIXES = [
   "/api/photos/",
+  "/api/videos/",
   ...PUBLIC_PAGE_PREFIXES.map((p) => (PER_ITEM_PAGE_PREFIXES.includes(p) ? `${p}/` : p)),
 ];
 
