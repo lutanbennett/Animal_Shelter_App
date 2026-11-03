@@ -37,3 +37,9 @@ test("stripTagMarkup leaves the plain name and touches nothing else", () => {
   assert.equal(stripTagMarkup("#Billy first"), "Billy first");
   assert.equal(stripTagMarkup("Room C#3 and a lone # stay"), "Room C#3 and a lone # stay");
 });
+
+test("stripTagMarkup cannot tell a plain hash from a tag (accepted, decisions/2026-11-03-tags-two-faults.md)", () => {
+  // A public page has no read of the link table, so every # that starts a word loses it; this pins the cost so a change is deliberate.
+  assert.equal(stripTagMarkup("My #1 favourite"), "My 1 favourite");
+  assert.equal(stripTagMarkup("#urgent"), "urgent");
+});
