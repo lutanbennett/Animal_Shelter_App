@@ -40,7 +40,7 @@ type Visit = {
  * the server, not by hiding a button. Writing stays behind `medical.visits` edit.
  */
 export default async function ClinicVisitPage(props: PageProps<"/clinic-visits/[id]">) {
-  await requirePermission("medical.visits");
+  await requirePermission("medical.visits", "read");
   const { id } = await props.params;
   const { t, locale } = await getT();
   const v = t.vetVisits.record;
