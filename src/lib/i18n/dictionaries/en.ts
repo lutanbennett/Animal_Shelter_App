@@ -6929,6 +6929,43 @@ const en = {
 
   /** Files picked on a form and uploaded once the record is saved. */
   uploads: {
+    /** Refusals returned by the upload, download and export routes (src/app/api, src/lib/bills/upload.ts); a worker reads them verbatim. */
+    errors: {
+      noFile: "No file provided.",
+      tooLarge: "File is larger than 15MB.",
+      couldNotRecordFile: "Could not record the file.",
+      couldNotRecordPhoto: "Could not record the photo.",
+      couldNotStartBill: "Could not start a bill.",
+      couldNotStartUpload: "Could not start the upload.",
+      residentDied: "This resident has died — their record is closed.",
+      bloodTestNotFound: "Blood test not found.",
+      visitNotFound: "Visit not found.",
+      documentNotFound: "Document not found.",
+      planNotFound: "Plan not found.",
+      maintenanceJobNotFound: "Maintenance job not found.",
+      procedureNotFound: "Procedure not found.",
+      projectFolderNotFound: "Project folder not found.",
+      residentNotFound: "Resident not found.",
+      photoNotFound: "Photo not found.",
+      videoNotFound: "Video not found.",
+      attachmentNotFound: "Attachment not found.",
+      invalidDocumentId: "Invalid document id.",
+      invalidPhotoId: "Invalid photo id.",
+      invalidVideoId: "Invalid video id.",
+      invalidPhotoSize: "Invalid photo size.",
+      invalidAdoptionUpdate: "Invalid adoption update.",
+      dateTakenInvalid: "Date taken must be a valid date.",
+      couldNotLoadDocument: "Could not load document from Drive.",
+      couldNotLoadPhoto: "Could not load photo from Drive.",
+      couldNotLoadVideo: "Could not load video from Drive.",
+      signInAssistantLog: "Sign in to download the assistant log.",
+      adminOnlyAssistantLog: "Only an Admin can download the assistant log.",
+      signInReceipts: "Sign in to view receipts.",
+      noSuchReceipt: "No such receipt.",
+      signInManual: "Sign in to view the manual.",
+      signInResidentsList: "Sign in to download the residents list.",
+      cannotReadResidentsList: "Your role cannot read the residents list.",
+    },
     removeFile: "Remove",
     /** Accessible name of the icon shown in place of a thumbnail (FileTypeIcon.tsx). */
     fileKind: {

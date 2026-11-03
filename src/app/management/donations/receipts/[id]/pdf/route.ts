@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -21,11 +22,11 @@ export async function GET(request: NextRequest, ctx: RouteContext<"/management/d
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return new NextResponse("Sign in to view receipts.", { status: 401 });
+  if (!user) return new NextResponse((await getT()).t.uploads.errors.signInReceipts, { status: 401 });
   if (!can(await loadPermissions(), "donation.receipt")) return new NextResponse("Not allowed.", { status: 403 });
 
   const row = await loadReceipt(supabase, id).catch(() => null);
-  if (!row) return new NextResponse("No such receipt.", { status: 404 });
+  if (!row) return new NextResponse((await getT()).t.uploads.errors.noSuchReceipt, { status: 404 });
 
   const { bytes, fileName } = await receiptPdf(row);
   const disposition = request.nextUrl.searchParams.get("download") === "1" ? "attachment" : "inline";

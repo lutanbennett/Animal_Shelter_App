@@ -41,7 +41,7 @@ export async function readBillFile(
   const formData = await request.formData();
   const file = formData.get("file");
   if (!(file instanceof File)) {
-    return { response: NextResponse.json({ error: "No file provided." }, { status: 400 }) };
+    return { response: NextResponse.json({ error: (await getT()).t.uploads.errors.noFile }, { status: 400 }) };
   }
   if (!ALLOWED_MIME_TYPES.has(file.type)) {
     return {
@@ -49,7 +49,7 @@ export async function readBillFile(
     };
   }
   if (file.size > MAX_UPLOAD_BYTES) {
-    return { response: NextResponse.json({ error: "File is larger than 15MB." }, { status: 400 }) };
+    return { response: NextResponse.json({ error: (await getT()).t.uploads.errors.tooLarge }, { status: 400 }) };
   }
   // The browser's type is a guess from the name; the bytes decide (file-signature.ts).
   const mimeType = await checkFileSignature(file, ALLOWED_MIME_TYPES);
@@ -105,7 +105,7 @@ export async function fileBillPhoto(
     } catch {
       // Best effort.
     }
-    return NextResponse.json({ error: error?.message ?? "Could not record the file." }, { status: 500 });
+    return NextResponse.json({ error: error?.message ?? (await getT()).t.uploads.errors.couldNotRecordFile }, { status: 500 });
   }
   return NextResponse.json({
     attachmentId: row.attachment.id,

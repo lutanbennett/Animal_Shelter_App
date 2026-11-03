@@ -50,13 +50,13 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
   const formData = await request.formData();
   const file = formData.get("file");
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "No file provided." }, { status: 400 });
+    return NextResponse.json({ error: (await getT()).t.uploads.errors.noFile }, { status: 400 });
   }
   if (!ALLOWED_MIME_TYPES.has(file.type)) {
     return NextResponse.json({ error: `Unsupported file type: ${file.type || "unknown"}.` }, { status: 400 });
   }
   if (file.size > MAX_UPLOAD_BYTES) {
-    return NextResponse.json({ error: "File is larger than 15MB." }, { status: 400 });
+    return NextResponse.json({ error: (await getT()).t.uploads.errors.tooLarge }, { status: 400 });
   }
   const mimeType = await checkFileSignature(file, ALLOWED_MIME_TYPES);
   if (!mimeType) {

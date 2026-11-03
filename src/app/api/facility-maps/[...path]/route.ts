@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { loadPermissions } from "@/lib/permissions/load";
 import { can } from "@/lib/permissions/can";
@@ -17,23 +18,23 @@ import { PLAN_OBJECT, readPlanImage } from "@/lib/facility-map/plan-store";
 
 const YEAR = 60 * 60 * 24 * 365;
 
-function notFound() {
-  return NextResponse.json({ error: "Plan not found." }, { status: 404, headers: { "Cache-Control": "no-store" } });
+async function notFound() {
+  return NextResponse.json({ error: (await getT()).t.uploads.errors.planNotFound }, { status: 404, headers: { "Cache-Control": "no-store" } });
 }
 
 export async function GET(_request: Request, { params }: { params: Promise<{ path: string[] }> }) {
   const { path } = await params;
   const objectName = path.join("/");
-  if (!PLAN_OBJECT.test(objectName)) return notFound();
+  if (!PLAN_OBJECT.test(objectName)) return await notFound();
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user || !can(await loadPermissions(), "facility.enclosures", "read")) return notFound();
+  if (!user || !can(await loadPermissions(), "facility.enclosures", "read")) return await notFound();
 
   const image = await readPlanImage(objectName);
-  if (!image) return notFound();
+  if (!image) return await notFound();
 
   return new NextResponse(image.body, {
     status: 200,

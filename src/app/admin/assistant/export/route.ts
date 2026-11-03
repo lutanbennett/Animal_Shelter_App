@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getT } from "@/lib/i18n/get-t";
 import { loadPermissions } from "@/lib/permissions/load";
 import { EXPORT_LIMIT, buildEvalCsv, loadCouldNotHelp, parseCouldNotHelpFilters } from "@/lib/assistant/could-not-help";
 
@@ -13,10 +14,10 @@ export async function GET(request: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return new Response("Sign in to download the assistant log.", { status: 401 });
+  if (!user) return new Response((await getT()).t.uploads.errors.signInAssistantLog, { status: 401 });
 
   const perms = await loadPermissions();
-  if (!perms?.isAdmin) return new Response("Only an Admin can download the assistant log.", { status: 403 });
+  if (!perms?.isAdmin) return new Response((await getT()).t.uploads.errors.adminOnlyAssistantLog, { status: 403 });
 
   const params: Record<string, string> = {};
   for (const [key, value] of new URL(request.url).searchParams) params[key] = value;

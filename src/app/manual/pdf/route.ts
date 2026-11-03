@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return new NextResponse("Sign in to view the manual.", { status: 401 });
+  if (!user) return new NextResponse((await getT()).t.uploads.errors.signInManual, { status: 401 });
 
   const perms = await loadPermissions();
   const all = asked || !entersApp(perms) || perms?.isAdmin === true; // Admin is shown every topic anyway
