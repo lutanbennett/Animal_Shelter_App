@@ -22,7 +22,7 @@ export async function correctIntakeDate(_state: IntakeDateState, formData: FormD
   const { t } = await getT();
   const supabase = await createClient();
   const s = t.admin.intakeDate;
-  return runWriteAction(
+  return runWriteAction<{ success: string }>(
     "intakeDate.correct",
     { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave },
     { id: writeRequestIdFrom(formData), action: "intakeDate.correct", db: supabase },

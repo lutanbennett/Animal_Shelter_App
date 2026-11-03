@@ -40,16 +40,14 @@ indistinguishable from one that passed.
 - [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 test=0 build=0`, four gates, each its own exit code. Closing lines pasted below exactly as the run printed them
 
 ```
-=== gates: typecheck — npm run typecheck
-=== gates: typecheck exited 0 after 27s
-=== gates: lint — npm run lint
-=== gates: lint exited 0 after 189s
-=== gates: test — npm test
-=== gates: test exited 0 after 24s
-=== gates: build — npm run build
-=== gates: build exited 0 after 76s
+=== gates: typecheck exited 0 after 9s
+=== gates: lint exited 0 after 108s
+=== gates: test exited 0 after 17s
+=== gates: build exited 0 after 49s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
+
+Re-run after merging `origin/main` (which carried `0307`). Found on the way: `src/app/admin/intake-date/actions.ts` (from the merged `intake-date-deceased` stream) failed `next build` type-checking only in this merged tree; its `runWriteAction` call now names its result type, `<{ success: string }>`. No behaviour change.
 
 - [ ] CI green on the PR (runs the same four gates, among its other checks). **This one cannot be true in the commit that creates the PR**, so write it `n/a: not yet — the PR does not exist at this commit` and **leave it there.** Changed 2026-10-20: ticking it in a follow-up commit used to be the rule, and that commit **invalidated its own evidence** — a new HEAD means a new run, so every PR in this repository paid two full CI cycles to transcribe a result GitHub already records permanently against the commit. A tick here attests to nothing a reader can check better by looking at the PR. **What must still happen, and is a merge step rather than a checklist line: before merging, read the run for your current HEAD (`gh run view <id> --json status,conclusion,headSha`) and confirm its `headSha` matches.** Merging on an older run's strength merges a commit whose CI never finished. **Do not pre-tick this line either** — a green you have not seen is the exact failure this checklist exists to prevent — n/a: not yet — the PR does not exist at this commit
 
