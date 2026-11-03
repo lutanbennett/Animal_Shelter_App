@@ -14,7 +14,8 @@ const escapeHtml = (s: string) =>
   s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /**
- * Every line, whatever roles it is tagged with: the mail goes to admins,
+ * Every line, whatever it is tagged with, `admin: true` notes included (they are for exactly this audience, so the mail
+ * and /releases agree): the mail goes to admins,
  * who run the whole system, and is the release's record in their inbox, so
  * it is not filtered by role the way /releases is. (releases.ts's
  * `noteText`, repeated here because this file may only import types.)
