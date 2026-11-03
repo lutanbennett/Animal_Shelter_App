@@ -16,7 +16,7 @@
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the backlog item asked for — the view's one file-name test gains mp4/mov/m4v/webm; nothing else it publishes changes
-- [x] Files/areas touched listed — `supabase/migrations/0303_public_adoption_updates_videos.sql`, `docs/backlog.md`, `docs/decisions/2026-11-03-adoption-video-schema.md`, this plan
+- [x] Files/areas touched listed — `supabase/migrations/0303_public_adoption_updates_videos.sql`, `docs/backlog.md`, `docs/hard-coded-security-registry.json` (declares the restated grant to anon), `docs/decisions/2026-11-03-adoption-video-schema.md`, this plan
 - [x] Roles affected identified — signed-out public visitors can now be entitled to videos of shared updates (via `is_public_drive_file`); no signed-in access changes; no page lists them yet
 - [x] Anything explicitly **out of scope** written down — all of `src/` (form, public pages, dictionaries) is the app half
 

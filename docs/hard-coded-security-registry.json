@@ -706,6 +706,11 @@
         "migration": "0292_write_requests.sql",
         "item": "function finish_write_request definer",
         "reason": "The other half of the same door (see claim_write_request above). Security definer so it can write the first result onto the caller's own open claim in write_requests, scoped to auth.uid(); it grants nothing and asks no card because there is no activity a person performs here. It fails closed: no open claim for this login raises, so a write whose claim is not in the same transaction aborts rather than committing unrecorded. docs/decisions/2026-10-31-write-requests-schema.md."
+      },
+      {
+        "migration": "0303_public_adoption_updates_videos.sql",
+        "item": "grant to anon",
+        "reason": "SELECT on the public view public_adoption_updates, restated unchanged from 0217 with one file-name test widened to include videos (mp4, mov, m4v, webm). It was already granted to anon, and every guard is kept (shared publicly, public-visible resident, not deceased, never the Medical folder, approved). The existing public-site pattern: it lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-03-adoption-video-schema.md."
       }
     ],
     "stubs": [
