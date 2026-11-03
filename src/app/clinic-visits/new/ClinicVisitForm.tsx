@@ -31,6 +31,7 @@ export function ClinicVisitForm({
   fixedClinic,
   lockedDoctor,
   doctorNamesByClinic,
+  canAddDoctor = false,
   preselectedResidentIds,
   preselectedClinicId,
   returnTo,
@@ -42,6 +43,8 @@ export function ClinicVisitForm({
   /** A doctor login's own doctor entry: the Doctor field is them, locked. */
   lockedDoctor: string | null;
   doctorNamesByClinic: DoctorNamesByClinic;
+  /** `clinics.doctors`: the free-text doctor name is offered only with it (a new name adds a doctor). */
+  canAddDoctor?: boolean;
   preselectedResidentIds: string[];
   /** From a clinic's page; ignored unless it is one of `clinics` (a doctor's own). */
   preselectedClinicId: string;
@@ -121,6 +124,7 @@ export function ClinicVisitForm({
           clinicId={clinicId}
           namesByClinic={doctorNamesByClinic}
           lockedName={lockedDoctor}
+          canAddDoctor={canAddDoctor}
           className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
         />
 

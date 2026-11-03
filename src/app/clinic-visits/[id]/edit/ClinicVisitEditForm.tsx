@@ -48,6 +48,7 @@ export function ClinicVisitEditForm({
   fixedClinic,
   lockedDoctor,
   doctorNamesByClinic,
+  canAddDoctor = false,
   residentDisplayName,
   cancelHref,
   canTagNotes = false,
@@ -66,6 +67,8 @@ export function ClinicVisitEditForm({
    */
   lockedDoctor: string | null;
   doctorNamesByClinic: DoctorNamesByClinic;
+  /** `clinics.doctors`: the free-text doctor name is offered only with it (a new name adds a doctor). */
+  canAddDoctor?: boolean;
   residentDisplayName: string;
   cancelHref: string;
 }) {
@@ -119,6 +122,7 @@ export function ClinicVisitEditForm({
           clinicId={clinicId}
           namesByClinic={doctorNamesByClinic}
           lockedName={lockedDoctor}
+          canAddDoctor={canAddDoctor}
           defaultValue={visit.doctor_name ?? ""}
           className={inputClass}
         />

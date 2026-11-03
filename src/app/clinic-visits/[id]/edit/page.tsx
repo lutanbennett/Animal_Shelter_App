@@ -142,6 +142,7 @@ export default async function EditClinicVisitPage(props: PageProps<"/clinic-visi
         fixedClinic={scope.kind === "clinics" && clinics.length === 1 ? clinics[0] : null}
         lockedDoctor={scope.kind === "clinics" ? (visit.doctor_name ?? scope.doctorName) : null}
         doctorNamesByClinic={doctorNamesByClinic}
+        canAddDoctor={can(perms, "clinics.doctors")}
         residentDisplayName={displayName}
         cancelHref={tabHref}
       />

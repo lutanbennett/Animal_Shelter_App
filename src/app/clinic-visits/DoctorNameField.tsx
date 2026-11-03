@@ -9,6 +9,10 @@ import type { DoctorNamesByClinic } from "@/lib/clinics/doctors";
  * so a name is typed once and picked after that. The list follows the clinic
  * select, so the form passes the currently selected clinic id.
  *
+ * `canAddDoctor` is `clinics.doctors`, the activity the database asks (doctors_insert_perm, 0182) when a typed
+ * name is new: the booking trigger adds the doctor as the caller. Without it the field is a chooser of the
+ * clinic's existing doctors and offers no free text; it defaults to false so a caller that forgets offers nothing.
+ *
  * `lockedName` is a doctor login's own doctor entry (Lutan, 2026-10-01):
  * when a doctor records a visit the Doctor is themselves, shown but not editable,
  * and sent as a hidden field. The action sets it again server-side.
@@ -18,12 +22,14 @@ export function DoctorNameField({
   namesByClinic,
   lockedName,
   defaultValue,
+  canAddDoctor = false,
   className,
 }: {
   clinicId: string;
   namesByClinic: DoctorNamesByClinic;
   lockedName?: string | null;
   defaultValue?: string;
+  canAddDoctor?: boolean;
   className: string;
 }) {
   const { t } = useI18n();
@@ -40,6 +46,27 @@ export function DoctorNameField({
           {lockedName}
         </p>
         <p className="text-xs text-muted">{t.vetVisits.doctorLockedHint}</p>
+      </div>
+    );
+  }
+
+  if (!canAddDoctor) {
+    // A visit already carrying a name that is not on the list keeps it as a choice, so editing does not drop it.
+    const options = defaultValue && !names.includes(defaultValue) ? [defaultValue, ...names] : names;
+    return (
+      <div className="flex flex-col gap-1">
+        <label htmlFor="doctorName" className="text-sm font-medium text-muted">
+          {t.vetVisits.doctorName}
+        </label>
+        <select id="doctorName" name="doctorName" defaultValue={defaultValue ?? ""} className={className}>
+          <option value="">{t.vetVisits.doctorNone}</option>
+          {options.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-muted">{t.vetVisits.doctorChooseHint}</p>
       </div>
     );
   }
