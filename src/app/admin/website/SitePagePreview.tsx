@@ -6,6 +6,7 @@ import { SitePageArticle } from "@/components/SitePageArticle";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { preferredChannels, type ChannelLink } from "@/lib/site/channels";
+import { PagePuppy } from "@/components/PuppyPages";
 import { sitePageStarter } from "@/lib/site/starter";
 import type { SitePageSlug } from "@/lib/site/pages";
 
@@ -77,6 +78,8 @@ export function SitePagePreview({
         className="object-cover"
       />
     </div>
+  ) : slug === "donate" || slug === "foster" || slug === "volunteer" || slug === "about" ? (
+    <PagePuppy slug={slug} className="h-auto w-full" />
   ) : null;
 
   return (

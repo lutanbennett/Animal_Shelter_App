@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { PagePuppy } from "@/components/PuppyPages";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { getSiteOrigin } from "@/lib/site-origin";
@@ -101,8 +102,9 @@ export async function SitePageView({
     // /donate points at the Shelter Friends — only once there are some.
     slug === "donate" ? hasPublicFriends() : false,
   ]);
-  // A photo an admin chose for Donate, Foster or Volunteer (0200). None chosen, or
-  // a page that has no such photo: the heading takes the full width, as it always did.
+  // A photo an admin chose for Donate, Foster, Volunteer or About (0200). None chosen:
+  // the page's poodle drawing shows in its place (PuppyPages.tsx). A page with no photo
+  // slot at all keeps the heading across the full width.
   // A blank description renders as alt="" (skipped by screen readers), never a filename.
   const photoSlug = slug === "donate" || slug === "foster" || slug === "volunteer" || slug === "about" ? slug : null;
   const photoId = photoSlug && content ? content[`${photoSlug}_photo_drive_file_id`]?.trim() : "";
@@ -117,6 +119,8 @@ export async function SitePageView({
           className="object-cover"
         />
       </div>
+    ) : photoSlug ? (
+      <PagePuppy slug={photoSlug} className="h-auto w-full" />
     ) : null);
   const raw = page ? sitePageText(page, locale) : null;
   const text = pageText(t, slug, raw);
