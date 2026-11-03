@@ -213,6 +213,11 @@ export default async function BillsPage() {
         <p className="text-sm text-muted">{b.subtitle}</p>
       </div>
       {loadError && <p className="text-sm text-danger">{loadError.message}</p>}
+      {can(perms, "bills.utilities") && (
+        <Link href="/bills/utilities" className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline">
+          {t.bills.utilities.open}
+        </Link>
+      )}
       {can(perms, "bills.sites") && (
         <Link href="/bills/settings" className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline">
           {b.settings.open}

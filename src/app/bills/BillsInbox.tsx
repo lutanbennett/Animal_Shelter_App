@@ -10,6 +10,8 @@ import { uploadAttachmentFile } from "@/components/AttachmentUploader";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { formatDate } from "@/lib/format";
 import { useWriteCall } from "@/lib/use-write-form";
+import { fileCardAsUtilityBill } from "./utilities/actions";
+import { monthInputValue } from "@/lib/bills/utility";
 import { deleteCard, matchBill, matchBillToJob, recordGeneralBill, saveCard, type SuggestionKind } from "./actions";
 import type { KindRoute } from "@/lib/bills/kinds";
 import { DateInput } from "@/components/DateInput";
@@ -165,6 +167,8 @@ function CardView({
   const [kindId, setKindId] = useState(card.kindId);
   const [premisesId, setPremisesId] = useState(card.premisesId);
   const [accountId, setAccountId] = useState(card.accountId);
+  // The month a utility bill covers, a month input ("2026-10"); the action turns it into the first of that month.
+  const [coversMonth, setCoversMonth] = useState(monthInputValue(card.date || card.day));
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
   const [adding, setAdding] = useState(false);
@@ -175,6 +179,7 @@ function CardView({
   const matchWrite = useWriteCall();
   const matchJobWrite = useWriteCall();
   const generalWrite = useWriteCall();
+  const utilityWrite = useWriteCall();
 
   const kind = kinds.find((k) => k.id === kindId);
   // The form the chosen kind implies: its place and account (both optional), and where the card is filed. No kind, Other, or a
@@ -356,6 +361,12 @@ function CardView({
             </select>
           </label>
         )}
+        {kind?.route === "utility" && (
+          <label className="flex flex-col gap-1 text-sm font-medium text-muted">
+            {t.bills.utilities.covers}
+            <input type="month" value={coversMonth} onChange={(e) => setCoversMonth(e.target.value)} className={`${inputClass} w-44`} />
+          </label>
+        )}
         <label className="flex min-w-0 flex-1 basis-48 flex-col gap-1 text-sm font-medium text-muted">
           {b.note}
           <input value={note} onChange={(e) => setNote(e.target.value)} className={`${inputClass} w-full`} />
@@ -376,7 +387,18 @@ function CardView({
             </ActionButton>
           </div>
         )}
-        {kind?.route === "utility" && <p className="text-xs text-muted">{b.utilityLater}</p>}
+        {kind?.route === "utility" && (
+          <div>
+            <ActionButton
+              variant="primary"
+              icon={ACTION_ICONS.save}
+              disabled={pending}
+              onClick={() => run(() => utilityWrite((id) => fileCardAsUtilityBill(card.id, { ...details, coversMonth }, id)), b.recorded)}
+            >
+              {t.bills.utilities.fileIt}
+            </ActionButton>
+          </div>
+        )}
         {kind && !wanted ? null : nearest.length === 0 ? (
           <p className="text-xs text-muted">{b.noLikely}</p>
         ) : (
