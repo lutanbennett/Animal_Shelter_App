@@ -42,14 +42,17 @@ next plan's last batch is set up.** **BATCH 3's FIGURES ARE NOT IN THIS EDITION;
 
 ## WHAT `600`'s WARNINGS DID
 
-- **The gates as a NUMBERED deliverable with its own read step — `600`'s prescription — WORKED: 9 of 9.**
-  Not one stream ended a turn waiting to be notified. **Promote it into the skill's brief blocks** (#1228
-  did exactly that this plan, so **it is now the skill's own block** — check next round that planners stop
-  hand-writing it).
-- **The usage comment: 9 of 9, against 4 of 6 last plan.** The sentence that did it is *"once your process
-  exits that figure cannot be recovered by anyone"* plus naming both calls. **Keep it verbatim.**
-- **Report-every-deliverable: 9 of 9, so 18 of 18 across two plans.** Treat as mechanism. Three streams
-  reported a deliverable they deliberately did **not** do.
+- **The gates as a NUMBERED deliverable with its own read step — `600`'s prescription — WORKED: 6 of 6**,
+  that being **this plan's merged streams; batch 3's three are still running and are NOT counted.** Not one
+  of the six ended a turn waiting to be notified. **It is now the skill's own block, promoted by #1228 this
+  plan** — so check next round that planners have stopped hand-writing it.
+- **The usage comment: 6 of 6 of this plan's merged streams, against 4 of 6 last plan** — and the previous
+  plan's batch 3, read at this plan's start, was **2 of 3**, the third lost for good. The sentence that did
+  it is *"once your process exits that figure cannot be recovered by anyone"* plus naming both calls.
+  **Keep it verbatim.**
+- **Report-every-deliverable: 6 of 6 this plan, and 9 of 9 on the streams read at its start, so 15 of 15
+  across every stream measured in two plans.** Treat as mechanism. **Four streams reported a deliverable
+  they deliberately did NOT do**, which is the block working rather than failing.
 - **Step zero fired on a NEGATIVE again:** #1228 was told claim (1) was *probably already satisfied, establish
   it, do not invent work* — and it **closed the claim and edited nothing.** Two plans running.
 - **Filing into the right SECTION: held, 8 items filed, none misfiled.** Also matched `Next up`'s own
