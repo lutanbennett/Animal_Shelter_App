@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
 import { PHOTO_WIDTHS, type PhotoWidth } from "@/lib/google/drive-client";
@@ -25,7 +26,7 @@ import { readMirroredFile, resizeMirrored } from "@/lib/mirror-read";
  *    archived login and a role with no app access all see nothing, and a
  *    doctor is refused a maintenance photo as the maintenance pages refuse
  *    them. It is never cached anywhere: `private, no-store`.
- *  - Everything else is "Photo not found.", so a signed-out visitor can't
+ *  - Everything else is (await getT()).t.uploads.errors.photoNotFound, so a signed-out visitor can't
  *    tell an internal file from a made-up id.
  *
  * Caching is layered, and only ever holds public files:
@@ -102,9 +103,9 @@ function safeToRenderInline(contentType: string) {
   return (type.startsWith("image/") && type !== "image/svg+xml") || type === "application/pdf";
 }
 
-function notFound() {
+async function notFound() {
   return NextResponse.json(
-    { error: "Photo not found." },
+    { error: (await getT()).t.uploads.errors.photoNotFound },
     { status: 404, headers: { "Cache-Control": "no-store" } },
   );
 }
@@ -115,14 +116,14 @@ export async function GET(
 ) {
   const { fileId } = await params;
   if (!FILE_ID_PATTERN.test(fileId)) {
-    return NextResponse.json({ error: "Invalid photo id." }, { status: 400 });
+    return NextResponse.json({ error: (await getT()).t.uploads.errors.invalidPhotoId }, { status: 400 });
   }
 
   const widthParam = request.nextUrl.searchParams.get("w");
   let width: PhotoWidth | null = null;
   if (widthParam !== null) {
     width = PHOTO_WIDTHS.find((w) => String(w) === widthParam) ?? null;
-    if (!width) return NextResponse.json({ error: "Invalid photo size." }, { status: 400 });
+    if (!width) return NextResponse.json({ error: (await getT()).t.uploads.errors.invalidPhotoSize }, { status: 400 });
   }
 
   const webp = width !== null && (request.headers.get("accept") ?? "").toLowerCase().includes("image/webp");
@@ -146,13 +147,13 @@ export async function GET(
     "is_public_drive_file",
     { p_drive_file_id: fileId },
   );
-  if (publicError) return notFound();
+  if (publicError) return await notFound();
 
   const isPublicFile = isPublic === true;
 
   if (!isPublicFile) {
     if (!(await canSeeInternalFile(supabase, fileId))) {
-      return notFound();
+      return await notFound();
     }
   }
 
@@ -215,14 +216,14 @@ export async function GET(
     } else {
       // A video with no thumbnail yet is never read into memory here: it plays from /api/videos/[fileId] (0229).
       const { mimeType } = await drive.getFile(fileId, "mimeType");
-      if (mimeType?.startsWith("video/")) return notFound();
+      if (mimeType?.startsWith("video/")) return await notFound();
       ({ contentType, body } = await drive.downloadFile(fileId));
       if (width) cacheSeconds = FALLBACK_CACHE_SECONDS;
     }
   } catch {
     // Drive itself may be unavailable (including, ironically, a throttled
     // file) — surface a clean error rather than caching a failure.
-    return NextResponse.json({ error: "Could not load photo from Drive." }, { status: 502 });
+    return NextResponse.json({ error: (await getT()).t.uploads.errors.couldNotLoadPhoto }, { status: 502 });
   }
 
   const response = new NextResponse(body, {

@@ -52,7 +52,7 @@ async function handlePost(
   const formData = await request.formData();
   const file = formData.get("file");
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "No file provided." }, { status: 400 });
+    return NextResponse.json({ error: (await getT()).t.uploads.errors.noFile }, { status: 400 });
   }
   if (!ALLOWED_MIME_TYPES.has(file.type)) {
     return NextResponse.json(
@@ -62,7 +62,7 @@ async function handlePost(
   }
   if (file.size > MAX_UPLOAD_BYTES) {
     return NextResponse.json(
-      { error: "File is larger than 15MB." },
+      { error: (await getT()).t.uploads.errors.tooLarge },
       { status: 400 },
     );
   }
@@ -107,7 +107,7 @@ async function handlePost(
 
   const procedureRow = procedure?.[0];
   if (procedureError || !procedureRow || !procedureRow.residents) {
-    return NextResponse.json({ error: "Procedure not found." }, { status: 404 });
+    return NextResponse.json({ error: (await getT()).t.uploads.errors.procedureNotFound }, { status: 404 });
   }
 
   const residentRow = procedureRow.residents;
@@ -123,7 +123,7 @@ async function handlePost(
     .returns<{ is_deceased: boolean }[]>();
   if (state?.[0]?.is_deceased) {
     return NextResponse.json(
-      { error: "This resident has died — their record is closed." },
+      { error: (await getT()).t.uploads.errors.residentDied },
       { status: 409 },
     );
   }

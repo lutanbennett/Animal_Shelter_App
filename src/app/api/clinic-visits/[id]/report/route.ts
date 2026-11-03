@@ -47,7 +47,7 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
       }[]
     >();
   const visit = rows?.[0];
-  if (!visit || !visit.residents) return NextResponse.json({ error: "Visit not found." }, { status: 404 });
+  if (!visit || !visit.residents) return NextResponse.json({ error: (await getT()).t.uploads.errors.visitNotFound }, { status: 404 });
   const resident = visit.residents;
 
   // The deceased lock would refuse the row only after the upload; stop before Drive is touched.
@@ -58,7 +58,7 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
     .limit(1)
     .returns<{ is_deceased: boolean }[]>();
   if (state?.[0]?.is_deceased) {
-    return NextResponse.json({ error: "This resident has died — their record is closed." }, { status: 409 });
+    return NextResponse.json({ error: (await getT()).t.uploads.errors.residentDied }, { status: 409 });
   }
 
   const url = new URL(request.url);
@@ -105,7 +105,7 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
     } catch {
       // Best effort.
     }
-    return NextResponse.json({ error: error?.message ?? "Could not record the file." }, { status: 500 });
+    return NextResponse.json({ error: error?.message ?? (await getT()).t.uploads.errors.couldNotRecordFile }, { status: 500 });
   }
   if (note) await supabase.from("attachments").update({ caption: note }).eq("id", row.attachment.id);
 

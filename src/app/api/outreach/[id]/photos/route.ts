@@ -42,13 +42,13 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
   const formData = await request.formData();
   const file = formData.get("file");
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "No file provided." }, { status: 400 });
+    return NextResponse.json({ error: (await getT()).t.uploads.errors.noFile }, { status: 400 });
   }
   if (!ALLOWED_MIME_TYPES.has(file.type)) {
     return NextResponse.json({ error: `Unsupported file type: ${file.type || "unknown"}.` }, { status: 400 });
   }
   if (file.size > MAX_UPLOAD_BYTES) {
-    return NextResponse.json({ error: "File is larger than 15MB." }, { status: 400 });
+    return NextResponse.json({ error: (await getT()).t.uploads.errors.tooLarge }, { status: 400 });
   }
   const mimeType = await checkFileSignature(file, ALLOWED_MIME_TYPES);
   if (!mimeType) {
@@ -67,7 +67,7 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
     .limit(1)
     .returns<{ id: string; outing_on: string }[]>();
   const outing = outings?.[0];
-  if (!outing) return NextResponse.json({ error: "Visit not found." }, { status: 404 });
+  if (!outing) return NextResponse.json({ error: (await getT()).t.uploads.errors.visitNotFound }, { status: 404 });
 
   const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
   if (!rootId) throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
@@ -94,7 +94,7 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
     } catch {
       // Best effort.
     }
-    return NextResponse.json({ error: error?.message ?? "Could not record the photo." }, { status: 500 });
+    return NextResponse.json({ error: error?.message ?? (await getT()).t.uploads.errors.couldNotRecordPhoto }, { status: 500 });
   }
 
   return NextResponse.json({ photoId: row.id, driveFileId, fileName: file.name, mimeType, fileUrl: driveImageUrl(driveFileId) });

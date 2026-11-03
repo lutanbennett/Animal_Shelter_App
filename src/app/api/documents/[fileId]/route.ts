@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { getDriveClient } from "@/lib/google/drive";
 import { readMirroredFile } from "@/lib/mirror-read";
@@ -13,7 +14,7 @@ import { readMirroredFile } from "@/lib/mirror-read";
  * and a login without the card all see nothing):
  *  - a file held by a row can_see_drive_file() knows (0193/0218, and since 0286 also a donation receipt's filed copy
  *    and a deceased resident's summary or index, each answered by that table's own RLS: donation.receipt, resident read);
- *  - anything else is "Document not found.", so an internal file cannot be told from a made-up id.
+ *  - anything else is (await getT()).t.uploads.errors.documentNotFound, so an internal file cannot be told from a made-up id.
  *
  * Never public, never cached: `private, no-store`. Only raster images and PDFs render in the browser; anything
  * else (HTML, SVG, text) is downloaded, so an uploaded file cannot run as a page on our origin.
@@ -33,8 +34,8 @@ function safeToRenderInline(contentType: string) {
   return (type.startsWith("image/") && type !== "image/svg+xml") || type === "application/pdf";
 }
 
-function notFound() {
-  return NextResponse.json({ error: "Document not found." }, { status: 404, headers: { "Cache-Control": "no-store" } });
+async function notFound() {
+  return NextResponse.json({ error: (await getT()).t.uploads.errors.documentNotFound }, { status: 404, headers: { "Cache-Control": "no-store" } });
 }
 
 function respond(contentType: string, body: BodyInit) {
@@ -52,11 +53,11 @@ function respond(contentType: string, body: BodyInit) {
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ fileId: string }> }) {
   const { fileId } = await params;
   if (!FILE_ID_PATTERN.test(fileId)) {
-    return NextResponse.json({ error: "Invalid document id." }, { status: 400 });
+    return NextResponse.json({ error: (await getT()).t.uploads.errors.invalidDocumentId }, { status: 400 });
   }
 
   const supabase = await createClient();
-  if (!(await callerMaySee(supabase, fileId))) return notFound();
+  if (!(await callerMaySee(supabase, fileId))) return await notFound();
 
   const mirrored = await readMirroredFile(fileId);
   if (mirrored) return respond(mirrored.contentType, new Uint8Array(mirrored.body));
@@ -65,6 +66,6 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     const { contentType, body } = await getDriveClient().downloadFile(fileId);
     return respond(contentType, body);
   } catch {
-    return NextResponse.json({ error: "Could not load document from Drive." }, { status: 502 });
+    return NextResponse.json({ error: (await getT()).t.uploads.errors.couldNotLoadDocument }, { status: 502 });
   }
 }

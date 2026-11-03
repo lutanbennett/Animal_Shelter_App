@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { inListOrder, listQuery, resolveListView } from "@/lib/residents/list-view";
@@ -23,11 +24,11 @@ export async function GET(request: Request) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return new Response("Sign in to download the residents list.", { status: 401 });
+  if (!user) return new Response((await getT()).t.uploads.errors.signInResidentsList, { status: 401 });
 
   const perms = await loadPermissions();
   if (!can(perms, "resident.record", "read")) {
-    return new Response("Your role cannot read the residents list.", { status: 403 });
+    return new Response((await getT()).t.uploads.errors.cannotReadResidentsList, { status: 403 });
   }
 
   const url = new URL(request.url);

@@ -33,7 +33,7 @@ export async function deleteBloodTestAttachment(
 
     const attachmentRow = attachment?.[0];
     if (selectError || !attachmentRow) {
-      return { ok: false, error: selectError?.message ?? "Attachment not found." };
+      return { ok: false, error: selectError?.message ?? (await getT()).t.uploads.errors.attachmentNotFound };
     }
 
     // Under RLS a refused delete matches no row and raises no error, so the

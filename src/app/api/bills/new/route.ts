@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { withDriveErrors } from "@/lib/google/drive-errors";
 import { fileBillPhoto, readBillFile, refuseUnlessAllowed } from "@/lib/bills/upload";
@@ -18,7 +19,7 @@ async function handlePost(request: Request) {
   const { data, error } = await supabase.from("bills_inbox").insert({}).select("id").limit(1).returns<{ id: string }[]>();
   const card = data?.[0];
   if (error || !card) {
-    return NextResponse.json({ error: error?.message ?? "Could not start a bill." }, { status: 500 });
+    return NextResponse.json({ error: error?.message ?? (await getT()).t.uploads.errors.couldNotStartBill }, { status: 500 });
   }
 
   let response: NextResponse;

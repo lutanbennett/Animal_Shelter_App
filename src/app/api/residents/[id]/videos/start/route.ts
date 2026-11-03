@@ -45,13 +45,13 @@ async function handlePost(
   const { fileName, mimeType, size, category, dateTaken, adoptionUpdateId } = body;
 
   if (typeof fileName !== "string" || !fileName.trim()) {
-    return NextResponse.json({ error: "No file provided." }, { status: 400 });
+    return NextResponse.json({ error: (await getT()).t.uploads.errors.noFile }, { status: 400 });
   }
   if (typeof mimeType !== "string" || !VIDEO_MIME_TYPES.has(mimeType)) {
     return NextResponse.json({ error: t.photos.videos.errors.wrongType(fileName) }, { status: 400 });
   }
   if (typeof size !== "number" || !Number.isFinite(size) || size <= 0) {
-    return NextResponse.json({ error: "No file provided." }, { status: 400 });
+    return NextResponse.json({ error: (await getT()).t.uploads.errors.noFile }, { status: 400 });
   }
   if (size > MAX_VIDEO_BYTES) {
     return NextResponse.json({ error: t.photos.videos.errors.tooBig(fileName) }, { status: 400 });
@@ -61,7 +61,7 @@ async function handlePost(
   // A video an adopter sent (AdoptionUpdateForm) carries its update's id and posts no category; it is filed under
   // Adoption updates/<YYYYMMDD>/ exactly as the photo route files an adopter's photo, with the same refusals.
   if (adoptionUpdateId !== undefined && (typeof adoptionUpdateId !== "string" || !adoptionUpdateId)) {
-    return NextResponse.json({ error: "Invalid adoption update." }, { status: 400 });
+    return NextResponse.json({ error: (await getT()).t.uploads.errors.invalidAdoptionUpdate }, { status: 400 });
   }
   // record_attachment (0217) files an adopter's video only for a login that may publish; refuse before Drive is touched.
   if (adoptionUpdateId && !can(perms, "photos.resident_publish")) {
@@ -78,7 +78,7 @@ async function handlePost(
     return NextResponse.json({ error: `Folder must be one of: ${categories.join(", ")}.` }, { status: 400 });
   }
   if (typeof dateTaken !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(dateTaken)) {
-    return NextResponse.json({ error: "Date taken must be a valid date." }, { status: 400 });
+    return NextResponse.json({ error: (await getT()).t.uploads.errors.dateTakenInvalid }, { status: 400 });
   }
 
   const supabase = await createClient();
@@ -90,7 +90,7 @@ async function handlePost(
     .returns<{ id: string; name: string; resident_code: string; drive_folder_id: string | null }[]>();
   const residentRow = resident?.[0];
   if (residentError || !residentRow) {
-    return NextResponse.json({ error: "Resident not found." }, { status: 404 });
+    return NextResponse.json({ error: (await getT()).t.uploads.errors.residentNotFound }, { status: 404 });
   }
 
   let updateReceivedOn: string | null = null;
@@ -137,7 +137,7 @@ async function handlePost(
     .select("id")
     .single();
   if (error || !row) {
-    return NextResponse.json({ error: error?.message ?? "Could not start the upload." }, { status: 500 });
+    return NextResponse.json({ error: error?.message ?? (await getT()).t.uploads.errors.couldNotStartUpload }, { status: 500 });
   }
 
   return NextResponse.json({ uploadId: row.id, uploadUrl });
