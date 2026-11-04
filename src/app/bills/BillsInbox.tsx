@@ -293,7 +293,7 @@ function CardView({
         <p className="text-xs text-muted">
           {card.addedBy} · {b.pages(card.photos.length)}
         </p>
-        <ActionButton compact onClick={onClose}>
+        <ActionButton compact icon={ACTION_ICONS.back} onClick={onClose}>
           {b.close}
         </ActionButton>
       </div>
