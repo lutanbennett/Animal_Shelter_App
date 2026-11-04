@@ -42,50 +42,25 @@ export type Release = {
 
 import type { CardKey } from "./permissions/cards";
 
-/** The live roles a new note can be tagged for. */
-export type ReleaseRole =
-  | "admin"
-  | "management"
-  | "second_in_command"
-  | "head_of_maintenance"
-  | "head_of_medical"
-  | "doctor"
-  | "volunteer";
-
 /**
- * Retired by 0173 (0.24.0). Released notes written before then still carry
- * it and stay as they are; new notes must not. Not offered by ReleaseRole.
- */
-type RetiredReleaseRole = "staff";
-
-/**
- * One line of a release. A plain string is for everyone. A NEW line that is
- * plainly not for everyone is tagged by CARD: `{ text, cards: [...] }` is for
+ * One line of a release. A plain string is for everyone. A line that is plainly
+ * not for everyone is tagged by CARD: `{ text, cards: [...] }` is for
  * whoever holds one of those cards, and Admin (outside the card system) sees
- * every line; a card nobody recognises widens, never narrows. `roles` is the
+ * every line; a card nobody recognises widens, never narrows.
  * `{ text, admin: true }` is for Admin ONLY, on /releases under every view; Admin holds no card, so no card tag can say it
- * (docs/decisions/2026-11-03-release-note-admin-flag.md). The mail goes to admins, so it carries these too. `roles` is the
- * older tag, in Lanna's own role keys, and is CLOSED TO NEW NOTES: a shelter
- * may rename its roles, and the tag would then mean nothing
- * (docs/decisions/2026-10-26-release-notes-by-card.md). Notes already tagged
- * by role stay as they are. /releases opens on the reader's
- * role (docs/decisions.md, "Release notes by role"). Tag a line only when it
- * is plainly not for some role — a doctor has no use for a stocktake line —
- * since an untagged line is never filtered out, and a wrong tag hides it
- * from the people it is for. Lines released before tagging existed stay
- * untagged: they are history, and untagged reads as everyone.
+ * (docs/decisions/2026-11-03-release-note-admin-flag.md). The mail goes to admins, so it carries these too.
+ * There is no role tag: a shelter may rename its roles, and the tag would then mean nothing. The old role-tagged history
+ * was converted on 2026-11-04 (docs/decisions/2026-11-04-release-notes-by-card.md). Tag a line only when it is plainly not
+ * for some card's holders, since an untagged line is never filtered out, and a wrong tag hides it from the people it is
+ * for. Untagged reads as everyone.
  */
 export type ReleaseNote =
   | string
-  | { text: string; roles: (ReleaseRole | RetiredReleaseRole)[] }
   | { text: string; cards: CardKey[] }
   | { text: string; admin: true };
 
 export const noteText = (note: ReleaseNote): string =>
   typeof note === "string" ? note : note.text;
-
-export const noteRoles = (note: ReleaseNote): (ReleaseRole | RetiredReleaseRole)[] | undefined =>
-  typeof note === "string" || !("roles" in note) ? undefined : note.roles;
 
 export const noteAdmin = (note: ReleaseNote): boolean =>
   typeof note !== "string" && "admin" in note && note.admin === true;
@@ -286,10 +261,10 @@ export const releases: Release[] = [
       { text: "The Administer medication, Record weight, Add medical photos and Feed special diets cards now see only who each resident is and where they live, not the whole record, and the Do maintenance card no longer lists residents (the Enclosures page is what a maintenance job needs). The Residents list and its buttons can still be shown to these cards for now; they will show nothing or refuse. View residents keeps the full record and now shows the Enclosure column.", cards: ["administer_medication", "record_weight", "add_medical_photos", "feed_special_diets", "do_maintenance", "view_residents"] },
       { text: "Only an Admin can delete a delivery now. The Record a delivery card still records deliveries; the Delete button may still show for a while and will not work.", cards: ["record_delivery"] },
       "The Releases page now tags new notes by the cards you hold instead of by your role's name, so what you are shown no longer depends on what your shelter calls your role. A note for a card you do not hold is greyed under Show everything, and a note nobody has tagged is still shown to everyone. Notes from earlier releases read as they did.",
-      { text: "Who does what: the Features list (the areas the Available cards are grouped by) has moved to its own page, opened with the new Edit the features button at the top. The cards page is shorter, and the cards are still grouped the same way.", roles: ["admin", "management"] },
+      "Who does what: the Features list (the areas the Available cards are grouped by) has moved to its own page, opened with the new Edit the features button at the top. The cards page is shorter, and the cards are still grouped the same way.",
       "A resident's hub now shows only the parts of the record your cards let you read. Someone who gives medication sees Prescriptions but no Blood tests, Procedures, Visits, Weight, Diet or Immunisations card, and no Medical heading if none of them is open to them. Before, a card they could not open still appeared and said \"0 · none\", which was untrue. If a part is missing that you need, ask an admin to give you the card for it.",
       "The manual now opens on the topics for the cards you hold, and each topic says which cards give it. A 2IC, Head of Medical or Head of Maintenance is no longer shown the volunteer's manual, and a role called anything else gets its own. Show everything still lists the rest, greyed. A few topics are marked as not yet assigned to a card; they are shown to everyone until they are linked.",
-      { text: "System status: when the Pi's tile is grey, it now says that is also what the emergency switch looks like when the Pi is sick, and the Pi-down alert mail points at the written steps for getting sign-in back without the Pi.", roles: ["admin"] },
+      { text: "System status: when the Pi's tile is grey, it now says that is also what the emergency switch looks like when the Pi is sick, and the Pi-down alert mail points at the written steps for getting sign-in back without the Pi.", admin: true },
     ],
   },
   {
@@ -298,11 +273,8 @@ export const releases: Release[] = [
     title: "A card for Who does what, and jobs can go to anyone who signs in",
     major: false,
     notes: [
-  {
-    text: "Seeing which cards each role holds on Settings → Who does what is now a card of its own, called Who does what. Management has it, so nothing changes for them; any other role can be given it, and a role without it no longer sees the page.",
-    roles: ["admin", "management"],
-  },
-  { text: "Recurring jobs: the Assigned to list now shows everyone who can sign in, doctors included, instead of leaving them out by role name. A job that links to a page is still only offered to people whose role can open that page; a job with no link can be given to anyone.", roles: ["admin", "management"] },
+  "Seeing which cards each role holds on Settings → Who does what is now a card of its own, called Who does what. Management has it, so nothing changes for them; any other role can be given it, and a role without it no longer sees the page.",
+  "Recurring jobs: the Assigned to list now shows everyone who can sign in, doctors included, instead of leaving them out by role name. A job that links to a page is still only offered to people whose role can open that page; a job with no link can be given to anyone.",
     ],
   },
   {
@@ -311,10 +283,7 @@ export const releases: Release[] = [
     title: "Giving a role a card works again",
     major: false,
     notes: [
-  {
-    text: "Giving a role a card, taking one away, or moving one up or down on Settings → Who does what works again. Since 0.40.2 every one of those showed Something went wrong and saved nothing.",
-    roles: ["admin"],
-  },
+  { text: "Giving a role a card, taking one away, or moving one up or down on Settings → Who does what works again. Since 0.40.2 every one of those showed Something went wrong and saved nothing.", admin: true },
     ],
   },
   {
@@ -323,12 +292,9 @@ export const releases: Release[] = [
     title: "Hide a public page, and a role is exactly its cards",
     major: false,
     notes: [
-      {
-        text: "Settings → Website → Pages now has Pages on the website: a Hide / Show switch for each public page and for each menu section (Adopt, Get involved, Services). A hidden page leaves the menu, the footer, the home page and the sitemap, and its address shows Not found to visitors; you can still open it while signed in, under a bar saying it is hidden, to check it before you switch it on. Home and Privacy cannot be hidden. A change can take up to ten minutes to show for visitors, because the website keeps a copy of each page for a short while.",
-        roles: ["admin", "management"],
-      },
-      { text: "Admin: Settings → Who does what no longer has an Also allowed part. A role now does exactly what its cards give, so there is nothing left to list there. When a card is held but its tile cannot show, the warning now names the page and the fixed rule that stops it.", roles: ["admin"] },
-      { text: "Admin → Recent changes now shows when someone shows or hides a public website page.", roles: ["admin", "management"] },
+      "Settings → Website → Pages now has Pages on the website: a Hide / Show switch for each public page and for each menu section (Adopt, Get involved, Services). A hidden page leaves the menu, the footer, the home page and the sitemap, and its address shows Not found to visitors; you can still open it while signed in, under a bar saying it is hidden, to check it before you switch it on. Home and Privacy cannot be hidden. A change can take up to ten minutes to show for visitors, because the website keeps a copy of each page for a short while.",
+      { text: "Admin: Settings → Who does what no longer has an Also allowed part. A role now does exactly what its cards give, so there is nothing left to list there. When a card is held but its tile cannot show, the warning now names the page and the fixed rule that stops it.", admin: true },
+      "Admin → Recent changes now shows when someone shows or hides a public website page.",
     ],
   },
   {
@@ -338,14 +304,8 @@ export const releases: Release[] = [
       "Two Stocktaking switches, and cards grouped by feature",
     major: false,
     notes: [
-      {
-        text: "Settings → Stocktaking now has two switches, one for food and one for medicines and vaccines. While one is off, Purchasing shows the full need for the period for that area (nothing is assumed to be in stock, and no safety stock is added), \"Never counted\" is not shown for it, and the Stocktake page leaves it out. Switch it back on when the shelter is ready to count; nothing already counted is lost.",
-        roles: ["admin", "management"],
-      },
-      {
-        text: "Settings → Who does what: the Add a card list is now grouped by feature (Resident information, Medical information and so on), each section opening and closing, with a Not yet sorted section for any card without a feature. A new Features panel lets Admin rename the features in English and Thai, reorder, add and delete them, and move a card to another feature, the same for every role. None of this changes what anyone can do.",
-        roles: ["admin"],
-      },
+      "Settings → Stocktaking now has two switches, one for food and one for medicines and vaccines. While one is off, Purchasing shows the full need for the period for that area (nothing is assumed to be in stock, and no safety stock is added), \"Never counted\" is not shown for it, and the Stocktake page leaves it out. Switch it back on when the shelter is ready to count; nothing already counted is lost.",
+      { text: "Settings → Who does what: the Add a card list is now grouped by feature (Resident information, Medical information and so on), each section opening and closing, with a Not yet sorted section for any card without a feature. A new Features panel lets Admin rename the features in English and Thai, reorder, add and delete them, and move a card to another feature, the same for every role. None of this changes what anyone can do.", admin: true },
     ],
   },
   {
@@ -356,14 +316,8 @@ export const releases: Release[] = [
     major: true,
     notes: [
       "Record a delivery no longer ignores your first taps while the page is still loading, and the page opens a little faster.",
-      {
-        text: "Units of measure are now a list you keep yourself, under Settings → Units. Add a unit (such as each, so an egg can be counted in eggs), give it a Thai name, and choose whether it is offered for ingredients, medicines or both. The ingredient and medicine forms offer exactly that list. A unit that an ingredient or medicine is already measured in can't be renamed or archived, and the page says which ones use it. Where a recipe counts things by the each, it now reads simply \"Egg 1\" rather than \"1 each Egg\".",
-        roles: ["admin"],
-      },
-      {
-        text: "The Recurring jobs page now opens in a few seconds instead of taking half a minute or more, and no longer shows \"Couldn't load recurring jobs: fetch failed\" above the list. Saving a job was slow for the same reason and is quicker too.",
-        roles: ["admin", "management", "second_in_command"],
-      },
+      { text: "Units of measure are now a list you keep yourself, under Settings → Units. Add a unit (such as each, so an egg can be counted in eggs), give it a Thai name, and choose whether it is offered for ingredients, medicines or both. The ingredient and medicine forms offer exactly that list. A unit that an ingredient or medicine is already measured in can't be renamed or archived, and the page says which ones use it. Where a recipe counts things by the each, it now reads simply \"Egg 1\" rather than \"1 each Egg\".", admin: true },
+      "The Recurring jobs page now opens in a few seconds instead of taking half a minute or more, and no longer shows \"Couldn't load recurring jobs: fetch failed\" above the list. Saving a job was slow for the same reason and is quicker too.",
     ],
   },
   {
@@ -382,15 +336,9 @@ export const releases: Release[] = [
       "A feeding list for the kitchen, diets by the serving, and the resident page for medical cards",
     major: false,
     notes: [
-      {
-        text: "New page: Operations → Feeding list. Pick Morning or Evening and it adds up, for each zone, how much of every ingredient that meal needs, diet by diet (special diets are never mixed into the Standard batch), so the person cooking no longer adds it up by hand. A second tab, Plate by dog, shows what each dog gets, enclosure by enclosure. It is a list to read: nothing is ticked or saved.",
-        roles: ["admin", "management", "second_in_command", "head_of_medical"],
-      },
+      "New page: Operations → Feeding list. Pick Morning or Evening and it adds up, for each zone, how much of every ingredient that meal needs, diet by diet (special diets are never mixed into the Standard batch), so the person cooking no longer adds it up by hand. A second tab, Plate by dog, shows what each dog gets, enclosure by enclosure. It is a list to read: nothing is ticked or saved.",
       "A login with the Medical records card (or a Head of Medical / second-in-command role) can now open a resident's whole page. The medical sections can be added to; the name, housing, intake and history show but cannot be changed. The Residents list also stops offering buttons a login cannot use.",
-      {
-        text: "Diets are now written as one serving. In Settings → Diets, each ingredient has a single Amount per serving instead of three amounts, and each diet has a Servings by size row (Small 1, Medium 1.5, Large 2 to start with, changeable per diet). A serving is one day's food, so a Medium dog on a diet of 0.5 cup kibble gets 0.75 cup a day. The feeding list shows each meal's amount with the day's total beside it, and amounts such as 0.375 cup are shown in full instead of being rounded.",
-        roles: ["admin", "management", "head_of_medical", "second_in_command", "doctor"],
-      },
+      "Diets are now written as one serving. In Settings → Diets, each ingredient has a single Amount per serving instead of three amounts, and each diet has a Servings by size row (Small 1, Medium 1.5, Large 2 to start with, changeable per diet). A serving is one day's food, so a Medium dog on a diet of 0.5 cup kibble gets 0.75 cup a day. The feeding list shows each meal's amount with the day's total beside it, and amounts such as 0.375 cup are shown in full instead of being rounded.",
     ],
   },
   {
@@ -417,7 +365,7 @@ export const releases: Release[] = [
   "Account → Home screen icons now has an icon for every tile on your home screen, including Bills, Assistant and My tasks, which were missing.",
   "Vet visits: the Add to Google Calendar link is gone. It made a separate copy in the calendar each time it was pressed, and that copy never followed the visit. Every booked visit already goes into the shelter calendar by itself.",
   "Clinic visits: each coming visit now says whether it is in the shelter calendar, still waiting (and when it will be sent), or whether the calendar is not switched on in this app.",
-  { text: "Calendar: each entry now records which system made it, so a test system can never cancel or move a live visit by acting on the live calendar. The email sent when a visit is cancelled in Google Calendar now says which system it came from.", roles: ["admin"] },
+  { text: "Calendar: each entry now records which system made it, so a test system can never cancel or move a live visit by acting on the live calendar. The email sent when a visit is cancelled in Google Calendar now says which system it came from.", admin: true },
     ],
   },
   {
@@ -427,11 +375,11 @@ export const releases: Release[] = [
       "Vet visits in Google Calendar, Diets as a recipe book, and more home tiles",
     major: false,
     notes: [
-    { text: "Home screens: Management and the 2IC now have tiles for Record Weight, Add Medical Photos and Feed Special Diets; Management has a Bills tile; the Head of Maintenance and Head of Medical have View residents.", roles: ["management", "second_in_command", "head_of_maintenance", "head_of_medical"] },
-    { text: "Settings → Who does what: adding a group now needs only an English name (the Thai name is optional, and the English one shows in Thai until you add it). The result, \"Added: …\" or the reason it was refused, now appears right under the Add group button, and the button stays off until there is a name.", roles: ["admin"] },
+    "Home screens: Management and the 2IC now have tiles for Record Weight, Add Medical Photos and Feed Special Diets; Management has a Bills tile; the Head of Maintenance and Head of Medical have View residents.",
+    { text: "Settings → Who does what: adding a group now needs only an English name (the Thai name is optional, and the English one shows in Thai until you add it). The result, \"Added: …\" or the reason it was refused, now appears right under the Add group button, and the button stays off until there is a name.", admin: true },
     "Clinic visits: vet visits are now written to the shelter's Google Calendar, \"Lanna Care: vet visits\", on the live site. Booking, moving or cancelling a visit updates the calendar, and moving or cancelling the event in Google Calendar updates the visit.",
     "Purchasing: on a laptop, the To buy list now comes first, straight under the period choice, and the working-out tables for medicines and food sit below it under \"How these were worked out\".",
-    { text: "Settings → Diets is now a recipe book. Diets and Ingredients are separate tabs; each diet is a card showing what goes in for a medium dog, and tapping it opens its own page, where Add ingredient is a small form and a total shows what one day's serve adds up to. Each ingredient has its own page too, with its measures (1 cup weighs about 120 g) and the diets that use it.", roles: ["admin", "doctor"] },
+    "Settings → Diets is now a recipe book. Diets and Ingredients are separate tabs; each diet is a card showing what goes in for a medium dog, and tapping it opens its own page, where Add ingredient is a small form and a total shows what one day's serve adds up to. Each ingredient has its own page too, with its measures (1 cup weighs about 120 g) and the diets that use it.",
     ],
   },
   {
@@ -446,8 +394,8 @@ export const releases: Release[] = [
     "Diets are now recipes. Under Settings → Diets an admin can list the ingredients in a diet, with how much of each goes into one day's serve for a small, medium and large animal, measured in cups or any unit set up for that ingredient. Purchasing, the food forecast, Cashflow and stock usage then work from each ingredient (kibble, chicken, rice) instead of treating the whole diet as one product. A resident's diet form now has a Portion multiplier (0.75 for three-quarters) in place of a daily amount. Until a diet is given more than one ingredient, it behaves exactly as before.",
     "Assistant: you can now record a vaccination by typing it, for example \"Panda had rabies today\" or \"vaccinate Panda\". The assistant shows a card with the resident, the vaccines (tick more than one) and the date; press Confirm and it is saved the same way as on the Immunizations page.",
     "Clinic visits: cancelled visits are no longer counted in a resident's visit total, and now sit in their own folded Cancelled section at the bottom of the Clinic visits page, with the reason if one was given. The archive PDF lists them under Cancelled visits too.",
-    { text: "Settings → Who does what: the separate Home screen panel is gone. A role's home screen is now set only by its cards: add, remove or reorder a card on the board and that role's home changes with it. To put a page on a role's home, give the role the card for that page.", roles: ["admin"] },
-    { text: "Settings → Who does what: Admin can now put a role's cards into groups, such as Operations or Management. A group is one tile on that role's home that opens a page of the cards inside it, so a crowded phone home becomes a few doorways. Drag a card into a group, or use the Where it shows list beside it on a phone. Nothing changes on anyone's home until a card is put in a group, and a group never gives anyone more than their cards already do.", roles: ["admin"] },
+    { text: "Settings → Who does what: the separate Home screen panel is gone. A role's home screen is now set only by its cards: add, remove or reorder a card on the board and that role's home changes with it. To put a page on a role's home, give the role the card for that page.", admin: true },
+    { text: "Settings → Who does what: Admin can now put a role's cards into groups, such as Operations or Management. A group is one tile on that role's home that opens a page of the cards inside it, so a crowded phone home becomes a few doorways. Drag a card into a group, or use the Where it shows list beside it on a phone. Nothing changes on anyone's home until a card is put in a group, and a group never gives anyone more than their cards already do.", admin: true },
     "Home screen: if you have recurring tasks, your home now has a My tasks tile showing how many are due today or overdue. If your role can open Operations or Management, those are tiles on your home too, so you no longer need the left-hand menu to reach them.",
     "Assistant: type \"Panda came back from foster\" (or \"back from Khun Noi\") to bring a fostered or adopted resident back into the shelter. The card asks which enclosure they come back to, and only a carer already on the list is recognised; nobody new is added. The Asking the assistant page of the manual now also explains the vaccination sentences.",
     ],
@@ -459,7 +407,7 @@ export const releases: Release[] = [
       "The nightly clear-out is watched, scan card on the immunizations form, and home screen icons",
     major: false,
     notes: [
-    { text: "System status has a new tile for the nightly database job that deletes old assistant requests. It goes red, and admins are emailed, if the job is missing, switched off or failing, and amber if it has not run for two days.", roles: ["admin"] },
+    { text: "System status has a new tile for the nightly database job that deletes old assistant requests. It goes red, and admins are emailed, if the job is missing, switched off or failing, and amber if it has not run for two days.", admin: true },
     "Recording immunizations: Scan card (Android) ticks a resident by holding the phone to their name card, and the search accepts the printed R-code or a card link.",
     "Home screen icons: tap your name, then Home screen icons, to save a picture for each page you can open, drawn like its card, to use on an iPhone Shortcut or the home screen. Every card's icon is also kept in a shared Google Drive folder.",
     ],
@@ -471,10 +419,10 @@ export const releases: Release[] = [
       "Prescriptions set how often directly, desexing drives, and vet visits sync back from Google Calendar",
     major: false,
     notes: [
-    { text: "Prescriptions: choose how often directly (times a day, every so many days, weeks or months, or as needed) instead of picking from a list, and give each ticked time of day its own amount, such as 2 in the morning and 1 in the evening. Settings → Frequencies is now a read-only record.", roles: ["admin", "management", "head_of_medical", "doctor"] },
-    { text: "Desexing drives: a new Services menu on the website lists upcoming days when people can bring their own dog or cat to be desexed, with the date, place, cost and who can come, and a form to sign up. Add and open drives, and see who has signed up, under Management → Desexing drives.", roles: ["admin", "management"] },
-    { text: "A name card opened while you are signed out now shows a large I work here: sign in button at the top of the dog's page; sign in and you come straight back to the card.", roles: ["admin", "management", "head_of_medical", "doctor", "volunteer"] },
-    { text: "Vet visits in the shelter calendar now sync back: move an entry to another time in Google Calendar and the visit moves with it within about 15 minutes; delete one and the visit is cancelled (kept, noted Cancelled from Google Calendar) and every admin is emailed.", roles: ["admin", "management", "doctor"] },
+    "Prescriptions: choose how often directly (times a day, every so many days, weeks or months, or as needed) instead of picking from a list, and give each ticked time of day its own amount, such as 2 in the morning and 1 in the evening. Settings → Frequencies is now a read-only record.",
+    "Desexing drives: a new Services menu on the website lists upcoming days when people can bring their own dog or cat to be desexed, with the date, place, cost and who can come, and a form to sign up. Add and open drives, and see who has signed up, under Management → Desexing drives.",
+    "A name card opened while you are signed out now shows a large I work here: sign in button at the top of the dog's page; sign in and you come straight back to the card.",
+    "Vet visits in the shelter calendar now sync back: move an entry to another time in Google Calendar and the visit moves with it within about 15 minutes; delete one and the visit is cancelled (kept, noted Cancelled from Google Calendar) and every admin is emailed.",
     ],
   },
   {
@@ -484,15 +432,12 @@ export const releases: Release[] = [
       "Videos of residents, prescription times of day, and the visiting vet can record medical notes",
     major: true,
     notes: [
-  { text: "Adding or editing a prescription now has Morning, Lunch and Evening ticks under the frequency. Choosing a frequency ticks its usual rounds and you can change them; the medication list and pick list use what you tick. For a fourth dose a day, tick the three rounds and say in the notes when the extra one is given. The note now shows on the medication list.", roles: ["admin", "management", "doctor"] },
+  "Adding or editing a prescription now has Morning, Lunch and Evening ticks under the frequency. Choosing a frequency ticks its usual rounds and you can change them; the medication list and pick list use what you tick. For a fourth dose a day, tick the three rounds and say in the notes when the extra one is given. The note now shows on the medication list.",
   "If you cover another role for a while, your Home screen now keeps each job's tiles together. On a phone, switch between My job and the role you are covering (it says when the cover ends); on a computer they sit one under the other.",
   "A fundraising appeal can now show a medical photo, chosen one by one. It is public on that appeal only, starts covered until a visitor taps it, and is never used as the picture in a shared link.",
-  { text: "Make a meme: the Residents tab now has a search box. Type part of a name, a Thai name or an R-code to find a resident; with nothing typed, residents with the newest photos come first.", roles: ["admin", "management", "second_in_command"] },
-  {
-    text: "You can now add videos of a resident in the same Photos section as pictures: MP4 or MOV, up to 500 MB (about five minutes). They go straight from your phone to Google Drive and carry on if the signal drops, play right on the page, and follow the same Medical and approval rules as photos. Photos and Videos buttons filter the gallery, and System status shows how much Drive space is left.",
-    roles: ["admin", "management", "doctor"],
-  },
-  { text: "The visiting vet can now record prescriptions, diets, weights, visits and procedures for residents at their own clinic.", roles: ["admin", "management", "doctor"] },
+  "Make a meme: the Residents tab now has a search box. Type part of a name, a Thai name or an R-code to find a resident; with nothing typed, residents with the newest photos come first.",
+  "You can now add videos of a resident in the same Photos section as pictures: MP4 or MOV, up to 500 MB (about five minutes). They go straight from your phone to Google Drive and carry on if the signal drops, play right on the page, and follow the same Medical and approval rules as photos. Photos and Videos buttons filter the gallery, and System status shows how much Drive space is left.",
+  "The visiting vet can now record prescriptions, diets, weights, visits and procedures for residents at their own clinic.",
     ],
   },
   {
@@ -502,20 +447,11 @@ export const releases: Release[] = [
       "Words beside icons on a phone, memes from any photo, and home screen tiles you choose",
     major: false,
     notes: [
-      { text: "On a phone, the main buttons now have words beside their icons: the buttons above the residents list, Edit and Record death on a resident, the actions on each hub card, Edit, Pause and Delete on recurring jobs, and Up and Down on Shelter Friends.", roles: ["admin", "management", "second_in_command"] },
-      {
-        text: "The meme maker can now use photos from more places than residents. Tap Make a meme in the library and pick a tab: Residents, Outreach, Maintenance jobs, Projects, Website, or Upload a photo from your phone (used only for that meme). You see a tab only if you can already open that page, and medical photos are never offered. There is also a Make a meme button under each photo on an outreach note and on a maintenance job. The library now records where each meme came from, shows it on the meme's page, and has a Photo from filter.",
-        roles: ["admin"],
-      },
-      {
-        text: "Home screen tiles are now chosen in Settings. Open Who does what, pick a role, and the new Home screen section lists that role's tiles in order: move them up or down, remove one, or add any page. If the role can't open the page yet, it says so and offers to give them the one permission it needs, for example giving the 2IC Enclosures and adding the tile in one tap. A tile whose permission is later taken away stays in the list greyed out, with the reason, and is hidden on the home. Only an Admin can choose tiles, for every role: no role edits its own, Management's included. The left-hand menu is unchanged.",
-        roles: ["admin"],
-      },
-      { text: "Settings → Who does what: a search box finds a card by name or what it gives, and the newest cards now come first in Available cards.", roles: ["admin"] },
-      {
-        text: "On the Status page, Send a test alert now works. It queues the test and the email goes out on the next 15-minute run; until it does, the tile says Test mail waiting, up to 15 minutes. Waiting never turns the tile green, and a test that reached nobody shows as a red test run so you can ask again.",
-        roles: ["admin"],
-      },
+      "On a phone, the main buttons now have words beside their icons: the buttons above the residents list, Edit and Record death on a resident, the actions on each hub card, Edit, Pause and Delete on recurring jobs, and Up and Down on Shelter Friends.",
+      { text: "The meme maker can now use photos from more places than residents. Tap Make a meme in the library and pick a tab: Residents, Outreach, Maintenance jobs, Projects, Website, or Upload a photo from your phone (used only for that meme). You see a tab only if you can already open that page, and medical photos are never offered. There is also a Make a meme button under each photo on an outreach note and on a maintenance job. The library now records where each meme came from, shows it on the meme's page, and has a Photo from filter.", admin: true },
+      { text: "Home screen tiles are now chosen in Settings. Open Who does what, pick a role, and the new Home screen section lists that role's tiles in order: move them up or down, remove one, or add any page. If the role can't open the page yet, it says so and offers to give them the one permission it needs, for example giving the 2IC Enclosures and adding the tile in one tap. A tile whose permission is later taken away stays in the list greyed out, with the reason, and is hidden on the home. Only an Admin can choose tiles, for every role: no role edits its own, Management's included. The left-hand menu is unchanged.", admin: true },
+      { text: "Settings → Who does what: a search box finds a card by name or what it gives, and the newest cards now come first in Available cards.", admin: true },
+      { text: "On the Status page, Send a test alert now works. It queues the test and the email goes out on the next 15-minute run; until it does, the tile says Test mail waiting, up to 15 minutes. Waiting never turns the tile green, and a test that reached nobody shows as a red test run so you can ask again.", admin: true },
     ],
   },
   {
@@ -525,23 +461,11 @@ export const releases: Release[] = [
       "Make a meme in the app, safer diets and clinic visits, and forms that wait on a slow phone",
     major: false,
     notes: [
-  {
-    text: "Meme library: you can now make a meme in the app. Tap Make a meme in the library, or open a resident's photo and tap it there. Add English or Thai words (they wrap to fit), pick a classic, caption-bar or speech-bubble style and a square or 4:5 crop, and save. The meme lands in the library with the resident tagged and the shelter logo in the corner. Medical photos cannot be made into memes.",
-    roles: ["admin"],
-  },
+  { text: "Meme library: you can now make a meme in the app. Tap Make a meme in the library, or open a resident's photo and tap it there. Add English or Thai words (they wrap to fit), pick a classic, caption-bar or speech-bubble style and a square or 4:5 crop, and save. The meme lands in the library with the resident tagged and the shelter logo in the corner. Medical photos cannot be made into memes.", admin: true },
   "Diets: a diet that looks like a typo (such as 22 meals a day, or far more food than the biggest default) is now held with a message and a tick box, so a slipped finger can no longer quietly inflate the food forecast, purchasing and cashflow. Clinic visits: a past time is no longer switched to Completed for you; the form tells you to pick Completed if the visit happened, and otherwise it shows as overdue. The medication list now opens on the by-resident list; the stock-room pick list is one tap away.",
-  {
-    text: "Forms on a phone: if you tap Save (Return from hospital, Add zone, Move and the others) before the page has finished loading, the form now waits and saves once it is ready, instead of saving nothing. The date box now says when a day does not exist (31/04/2026) rather than blaming the format. The project folder shows Not on the website / On the website as soon as you flip the switch. The people ticked for maintenance and recurring jobs no longer include test logins.",
-    roles: ["admin", "management", "second_in_command", "head_of_maintenance", "head_of_medical", "volunteer"],
-  },
-  {
-    text: "Bills: tapping Record a new delivery from this bill now carries the cost you typed into the delivery, and the bill is filed on the delivery when you save (before, the cost was dropped and the bill stayed waiting). Likely matches now always include a recent delivery when there is one. Starting an appeal lets you search for the animal, and no longer lists animals who have died, been adopted or are on outreach. Shelter Friends shows the word Publish or Unpublish beside its icon.",
-    roles: ["admin", "management"],
-  },
-  {
-    text: "Approving photos is now only the Approve photos card. Having Residents still lets you add photos that go straight onto the website, but it no longer lets you approve photos other people add through Add Shelter Photos. Management has been given Approve photos. The Second in command no longer sees Photos to approve; an Admin can give her the card on Who does what.",
-    roles: ["admin", "management", "second_in_command"],
-  },],
+  "Forms on a phone: if you tap Save (Return from hospital, Add zone, Move and the others) before the page has finished loading, the form now waits and saves once it is ready, instead of saving nothing. The date box now says when a day does not exist (31/04/2026) rather than blaming the format. The project folder shows Not on the website / On the website as soon as you flip the switch. The people ticked for maintenance and recurring jobs no longer include test logins.",
+  "Bills: tapping Record a new delivery from this bill now carries the cost you typed into the delivery, and the bill is filed on the delivery when you save (before, the cost was dropped and the bill stayed waiting). Likely matches now always include a recent delivery when there is one. Starting an appeal lets you search for the animal, and no longer lists animals who have died, been adopted or are on outreach. Shelter Friends shows the word Publish or Unpublish beside its icon.",
+  "Approving photos is now only the Approve photos card. Having Residents still lets you add photos that go straight onto the website, but it no longer lets you approve photos other people add through Add Shelter Photos. Management has been given Approve photos. The Second in command no longer sees Photos to approve; an Admin can give her the card on Who does what.",],
   },
   {
     version: "0.37.0",
@@ -550,22 +474,10 @@ export const releases: Release[] = [
       "A meme library, Posted labels on a resident's photos, and an Approve photos card",
     major: true,
     notes: [
-  {
-    text: "A meme library, at Memes under Management and as a Meme library card in Settings → Who does what. It keeps the memes the shelter makes elsewhere, who is in each one, and a record of where and when each was posted (Facebook, Instagram, LINE, TikTok), so the next post is easy to pick and nothing goes out twice. Filter to Not shared yet, search the captions, download a meme to post it from your phone, and see a resident's memes on their page. Memes are never shown on the website. Admin ticks the card onto a role; until then only Admin can open the library.",
-    roles: ["admin", "management"],
-  },
-  {
-    text: "A resident's Photos now show which pictures have already been posted on social media. A posted photo carries a green Posted label with where it went (Facebook, Instagram, LINE, TikTok or Other), and the buttons above the gallery show just the photos not posted yet, so whoever makes the next post can pick one that has not been used. Open a photo and tap Mark as posted to record where and when it was posted, with a link to the post if you have one; Undo removes a record made by mistake. To record several at once, tap Select photos, tap each one, then Mark as posted. Admin and Management can mark photos; everyone who can see the photos sees the labels. Marking a photo never puts it on the website.",
-    roles: ["admin", "management"],
-  },
-  {
-    text: "Signing in now always lands on your home screen: the tiles your role has been given on Who does what. A doctor used to be sent straight to Appointments, which their role was not allowed to open, so they saw a refusal instead of their home. Now a doctor lands on their tiles like everyone else, and Appointments is one of them as soon as Admin gives the Doctor role the Book clinic visits card. Admin's home is unchanged.",
-    roles: ["admin", "management", "doctor"],
-  },
-  {
-    text: "Settings → Who does what has a new Approve photos card. Whoever holds it can look at the resident photos waiting, approve them for the website, and remove one that should not be seen, without being able to change a resident's record. Add Shelter Photos now waits on it: its Add button is greyed out, with the reason, until some role can approve photos. A role that has been retired no longer counts as one that can approve. Admin ticks the card onto a role; nobody has it yet.",
-    roles: ["admin", "management"],
-  },
+  "A meme library, at Memes under Management and as a Meme library card in Settings → Who does what. It keeps the memes the shelter makes elsewhere, who is in each one, and a record of where and when each was posted (Facebook, Instagram, LINE, TikTok), so the next post is easy to pick and nothing goes out twice. Filter to Not shared yet, search the captions, download a meme to post it from your phone, and see a resident's memes on their page. Memes are never shown on the website. Admin ticks the card onto a role; until then only Admin can open the library.",
+  "A resident's Photos now show which pictures have already been posted on social media. A posted photo carries a green Posted label with where it went (Facebook, Instagram, LINE, TikTok or Other), and the buttons above the gallery show just the photos not posted yet, so whoever makes the next post can pick one that has not been used. Open a photo and tap Mark as posted to record where and when it was posted, with a link to the post if you have one; Undo removes a record made by mistake. To record several at once, tap Select photos, tap each one, then Mark as posted. Admin and Management can mark photos; everyone who can see the photos sees the labels. Marking a photo never puts it on the website.",
+  "Signing in now always lands on your home screen: the tiles your role has been given on Who does what. A doctor used to be sent straight to Appointments, which their role was not allowed to open, so they saw a refusal instead of their home. Now a doctor lands on their tiles like everyone else, and Appointments is one of them as soon as Admin gives the Doctor role the Book clinic visits card. Admin's home is unchanged.",
+  "Settings → Who does what has a new Approve photos card. Whoever holds it can look at the resident photos waiting, approve them for the website, and remove one that should not be seen, without being able to change a resident's record. Add Shelter Photos now waits on it: its Add button is greyed out, with the reason, until some role can approve photos. A role that has been retired no longer counts as one that can approve. Admin ticks the card onto a role; nobody has it yet.",
     ],
   },
   {
@@ -576,14 +488,8 @@ export const releases: Release[] = [
     major: false,
     notes: [
   "Clinic visits now have their own page. On a resident's Clinic Visits list, tap anywhere on a visit to read its notes, bill photos and everything logged at it (blood tests, procedures, prescriptions, weight). It also opens for someone who can only look, and for a resident who has died. Appointments, Upcoming visits and each clinic's page have an Open button for the same page. You can also add the doctor's written report there: photograph the pages or choose a PDF. It is kept private in the animal's Medical folder, never shown on the website, and never counted as a bill.",
-  {
-    text: "Dashboard: the last-12-months chart has a Cumulative view. A daily line shows how many residents are at the shelter (hospital counts; residents in foster care do not while they are away), over running totals of intakes, adoptions and deaths. Switch between Month by month and Cumulative above the chart; it remembers your choice, and Copy as text and Print follow it.",
-    roles: ["admin", "management", "second_in_command"],
-  },
-  {
-    text: "Recent changes reads better on a phone: each entry is a card showing When, Who, What, Record and Fields in full, instead of a table you scroll sideways. On Appeals, the line under each progress bar is easier to read in dark mode.",
-    roles: ["admin", "management", "second_in_command"],
-  },
+  "Dashboard: the last-12-months chart has a Cumulative view. A daily line shows how many residents are at the shelter (hospital counts; residents in foster care do not while they are away), over running totals of intakes, adoptions and deaths. Switch between Month by month and Cumulative above the chart; it remembers your choice, and Copy as text and Print follow it.",
+  "Recent changes reads better on a phone: each entry is a card showing When, Who, What, Record and Fields in full, instead of a table you scroll sideways. On Appeals, the line under each progress bar is easier to read in dark mode.",
   "Resident page: tap the photo at the top to see it large and uncropped. Swipe or use the arrows to go through the other photos (medical ones are never shown), and \"See all photos\" takes you to the Photos tab.",
   "Appeals are easy to find: the public site now always links to Appeals in the footer and under Get involved, and the page explains itself when no appeal is open. In the app, Appeals is in the menu for anyone who may run them, and there is a new Run fundraising appeals card you can give a role in Settings → Who does what. On Settings → Website there is a line pointing to Appeals.",
   "Photos to approve: Discard and Remove now show their \"Are you sure?\" box, and the app no longer locks up when you press them.",
@@ -611,22 +517,10 @@ export const releases: Release[] = [
     major: true,
     notes: [
   "The app now reads properly on a phone held upright, in English and Thai. Every screen was checked at phone width: nothing scrolls sideways any more. The pages that changed most are the resident actions (Send to hospital, Move, Rehome, Record death), where a long name no longer wraps one word per line; the maintenance edit page, whose due date and Clear button no longer push the page wide; the donation appeal pages; and the outreach forms. Nothing was removed from any screen.",
-  {
-    text: "Adoption updates can now be published as success stories. When an adopter has told you we may show their photo and words, open the update, tick Publish to the website, type the words they agreed to share and, if you like, a first name. The animal then shows a Read their news link under its picture in Happy endings on the public adoption page, which opens a page with the photos and those words, and the same news appears on the animal's own card page. The staff note is never shown, and nothing is published unless you tick it: every existing update stays private. Untick and save to take one down.",
-    roles: ["admin", "management"],
-  },
-  {
-    text: "Add Medical Photos and Record Weight can now pick the resident from their name card. In the resident list, type the code printed on the card (R-0042) or paste the card's link and only that resident is shown. On an Android phone, tap Scan card and hold the phone to the card. On an iPhone, tap Scan card, then hold the phone to the card within 5 minutes: the card opens in Safari and takes you straight to the job for that resident, so you need to be signed in in Safari. The page always shows the resident's name and code, so check them against the card before you save.",
-    roles: ["admin", "management", "head_of_medical"],
-  },
-  {
-    text: "System status: when the Status alert mail tile is red because the last alert mail reached nobody, it now says what to do. Press Send a test alert; when that mail reaches an admin the tile turns green. If the page was drawn by the Pi, where the buttons are off, it says the test has to be sent from the Cloudflare Worker page.",
-    roles: ["admin"],
-  },
-  {
-    text: "The assistant can now record a death and place a resident with a foster carer or an adopter. Type, for example, \"Bella died yesterday, lung problems\" or \"Panda goes to foster with Khun Noi\". Nothing is recorded until you press Confirm: the card shows the resident's photo, code and where they are now, leaves the date blank unless you typed one (\"last night\" is left for you to pick), and a death asks once more in the same words as the Record death page. If a name could mean two residents, it asks which one. In English or Thai.",
-    roles: ["admin", "management"],
-  },
+  "Adoption updates can now be published as success stories. When an adopter has told you we may show their photo and words, open the update, tick Publish to the website, type the words they agreed to share and, if you like, a first name. The animal then shows a Read their news link under its picture in Happy endings on the public adoption page, which opens a page with the photos and those words, and the same news appears on the animal's own card page. The staff note is never shown, and nothing is published unless you tick it: every existing update stays private. Untick and save to take one down.",
+  "Add Medical Photos and Record Weight can now pick the resident from their name card. In the resident list, type the code printed on the card (R-0042) or paste the card's link and only that resident is shown. On an Android phone, tap Scan card and hold the phone to the card. On an iPhone, tap Scan card, then hold the phone to the card within 5 minutes: the card opens in Safari and takes you straight to the job for that resident, so you need to be signed in in Safari. The page always shows the resident's name and code, so check them against the card before you save.",
+  { text: "System status: when the Status alert mail tile is red because the last alert mail reached nobody, it now says what to do. Press Send a test alert; when that mail reaches an admin the tile turns green. If the page was drawn by the Pi, where the buttons are off, it says the test has to be sent from the Cloudflare Worker page.", admin: true },
+  "The assistant can now record a death and place a resident with a foster carer or an adopter. Type, for example, \"Bella died yesterday, lung problems\" or \"Panda goes to foster with Khun Noi\". Nothing is recorded until you press Confirm: the card shows the resident's photo, code and where they are now, leaves the date blank unless you typed one (\"last night\" is left for you to pick), and a death asks once more in the same words as the Record death page. If a name could mean two residents, it asks which one. In English or Thai.",
     ],
   },
   {
@@ -637,10 +531,7 @@ export const releases: Release[] = [
     major: true,
     notes: [
   "Fundraising appeals can now be run from the app. On a resident's page, an Admin taps Start an appeal, writes what is wrong and what it costs, picks a bar, thermometer or gauge for progress, chooses photos (never Medical ones, with a blur option for distressing ones), previews the page exactly as visitors will see it, then publishes. Gifts are recorded against the appeal from the donation form, gifts already recorded for the resident can be moved onto it without ever counting twice, and closing the appeal with how it went stops it asking. Management can be given this in Settings.",
-  {
-    text: "Food and medicine that come in more than one size are now easier. Record a delivery: tap Add another size to put 2 bags of 20 kg and 1 bag of 14 kg in one delivery, each with its own cost. Stocktake: an item with several sizes shows a row for each size with a big plus and minus, so you count bags and never work out kilos; there is a choice for a bag that is already open (about full, half, a quarter, nearly empty), and the total is written out for you. Purchasing: next to the usual bag size it now shows the same need in the other sizes, rounded up so it is never short, cheapest first.",
-    roles: ["admin", "management"],
-  },
+  "Food and medicine that come in more than one size are now easier. Record a delivery: tap Add another size to put 2 bags of 20 kg and 1 bag of 14 kg in one delivery, each with its own cost. Stocktake: an item with several sizes shows a row for each size with a big plus and minus, so you count bags and never work out kilos; there is a choice for a bag that is already open (about full, half, a quarter, nearly empty), and the total is written out for you. Purchasing: next to the usual bag size it now shows the same need in the other sizes, rounded up so it is never short, cheapest first.",
   "If Management is given the Book clinic visits card, its home screen now shows the tile and it opens the list of upcoming vet visits. Before, the card was given but no tile appeared. A clinic login with the same card still opens its own appointments. On Settings → Who does what, a card that would show no tile now says so, and View residents says it is shown as part of Residents.",
   "Status page, Release tile: when the website's engine has no release tag, the tile now says so plainly (it is expected right after a setting is changed by hand, and clears at the next release) instead of claiming someone deployed the wrong way. If the engine is tagged as a different release, the tile says that separately.",
     ],
@@ -667,14 +558,8 @@ export const releases: Release[] = [
     major: false,
     notes: [
   "Anyone who can see the list of enclosures can now see the facility map too, with no separate permission to grant. Giving someone the Enclosures card now shows them the Map button.",
-  {
-    text: "Settings → Website → Pages: you can now choose a photo for the Donate, Foster and Volunteer pages, with a description in English and Thai. It shows beside the page's heading on the public website; a page with no photo looks as it does today.",
-    roles: ["admin", "management"],
-  },
-  {
-    text: "A Book a vet appointment button now sits at the top of Upcoming visits and of each clinic's page, for anyone who can book visits. From a clinic's page it opens the form with that clinic already chosen, and you pick the residents on the form.",
-    roles: ["admin", "management"],
-  },
+  "Settings → Website → Pages: you can now choose a photo for the Donate, Foster and Volunteer pages, with a description in English and Thai. It shows beside the page's heading on the public website; a page with no photo looks as it does today.",
+  "A Book a vet appointment button now sits at the top of Upcoming visits and of each clinic's page, for anyone who can book visits. From a clinic's page it opens the form with that clinic already chosen, and you pick the residents on the form.",
   "An item can now be bought in several sizes — kibble in 20, 14 and 10 kg bags, tablets as singles, sleeves or boxes. In Settings → Medications or Diets, tick every size you buy and mark the one you usually buy; Record a delivery and Purchasing open on the usual one, and every size can still be chosen.",
   "Diet stock and Medication stock now work out the cost per unit from what you actually paid on the latest delivery (a donated delivery with no cost is ignored), and say so on the card. An item with no priced delivery still uses its typed price.",
     ],
@@ -686,11 +571,11 @@ export const releases: Release[] = [
       "A room can sit on several plans, and vet visits go in your calendar",
     major: true,
     notes: [
-    { roles: ["admin", "management"], text: "Settings → Facility map: one room, such as the Medical room or the Kitchen, can now be drawn on several plans. Add room has a new choice, Place a room already on another plan, and each room lists the plans it is on. Remove from this plan takes it off one plan only; Delete room removes it from every plan, and the question names each one. Renaming a room or changing what it is for now changes it on every plan, and tapping the room on the map shows the same details wherever it is." },
+    "Settings → Facility map: one room, such as the Medical room or the Kitchen, can now be drawn on several plans. Add room has a new choice, Place a room already on another plan, and each room lists the plans it is on. Remove from this plan takes it off one plan only; Delete room removes it from every plan, and the question names each one. Renaming a room or changing what it is for now changes it on every plan, and tapping the room on the map shows the same details wherever it is.",
     "The Donate page now shows the ways to give straight under its opening paragraph, with the explanation below. Buttons say what they do, for example \"Give by card or PayPal (DonorBox)\", and while no way is set up the page says so and points to the contact details.",
     "Each booked vet visit now has an Add to Google Calendar link, on the Vet visits page and on the resident's Clinic visits list (where booking takes you). It fills in the title, the time and a link back to the app. It adds the visit once: if the visit is rescheduled or cancelled later, your calendar does not change, so update it there.",
     "The User manual and Release notes are now in the menu under your name at the top of every page (tap your name), so you can reach them without the left-hand menu.",
-    { roles: ["admin", "management"], text: "Settings → Website → Donate: after you tap Add, a message now names the way you added and says it is in the list above. If the Donate page cannot load its ways to give, it now shows an error instead of looking empty." },
+    "Settings → Website → Donate: after you tap Add, a message now names the way you added and says it is in the list above. If the Donate page cannot load its ways to give, it now shows an error instead of looking empty.",
     "The public website loads a little faster: photos arrive about a third smaller on phones and browsers that can read the newer image format, and the logo in the header is a much smaller file.",
     ],
   },
@@ -717,12 +602,12 @@ export const releases: Release[] = [
     notes: [
       "Your home screen is now your cards. Each tile on Home is one of the cards your role has been given, in the order chosen for your role, and every tile opens a page you can use. Which tiles a role gets is now chosen per role by Admin under Settings → Who does what. Roles with no cards yet keep the home they had.",
       "The public website is easier to use on a phone. The menu now keeps ‘Talk to us’ on the screen while the pages scroll above it, and Language and Staff login share a row. Links and buttons inside the pages (Get in touch, See also, a Shelter Friend’s contact buttons, ‘Open in Google Maps’, the story category) are big enough to tap. Every ‘available for adoption’ label now looks the same, an animal with no photo shows the puppy instead of a blank box, a home-page story photo that will not load is left out, and on a laptop ‘Ask on LINE’ and ‘Book a visit’ sit beside the animal instead of in a band across the bottom.",
-      { text: "Who does what is now cards. Give a role a card, such as View residents or Residents, and it puts that tile on their home screen and gives them what they need to use it, so a tile can never open a page they cannot use. Tap a card to see exactly what it gives before you add it. A card can include another: Residents includes View residents. The long grid of every activity is one tap away under See every activity (Details), and is now read-only. Anything a role can do that no card gives is listed under Also allowed. Nobody’s access changes on the day this arrives.", roles: ["admin", "management"] },
+      "Who does what is now cards. Give a role a card, such as View residents or Residents, and it puts that tile on their home screen and gives them what they need to use it, so a tile can never open a page they cannot use. Tap a card to see exactly what it gives before you add it. A card can include another: Residents includes View residents. The long grid of every activity is one tap away under See every activity (Details), and is now read-only. Anything a role can do that no card gives is listed under Also allowed. Nobody’s access changes on the day this arrives.",
       "The public website now tells search engines and chat apps what it is: the home page's title reads ‘Lanna Care for Animals — dog and cat rescue, Mae Wang, Chiang Mai’, a link to any public page previews with the hero photo (or the logo) when the page has no picture of its own, and the Our work page previews properly when shared. The adoption list's heading is now ‘Meet our residents’.",
       "The public website now promises only what the Donate page offers. The home page's second button says ‘Help feed them’ and opens the ways to give; ‘Sponsor a resident’ in the menu and on the home page has become ‘Help with their care’; and an animal's page asks for a gift towards that animal's food and care instead of a monthly gift, because there is no monthly or sponsorship option yet. Every story under Our work now ends with ‘Help us do more of this’ and a Donate link, and so does the list. On the home page's big numbers, the lifetime totals (animals rehomed, sterilisations, outreach) now come first, and a today's-count of 0 or 1 is left off the band rather than printed.",
-      { text: "Photos of bills now show. A bill’s photo or PDF was saved but never appeared — the bill kept saying ‘Add a photo of the bill’. They now show on a maintenance job’s bills, on deliveries and vet visits, and on the cards in the Bills inbox. If a photo ever cannot be loaded, the page now says so instead of quietly showing none.", roles: ["admin", "management"] },
+      "Photos of bills now show. A bill’s photo or PDF was saved but never appeared — the bill kept saying ‘Add a photo of the bill’. They now show on a maintenance job’s bills, on deliveries and vet visits, and on the cards in the Bills inbox. If a photo ever cannot be loaded, the page now says so instead of quietly showing none.",
       "Every date box now reads day first, DD/MM/YYYY, on every phone and computer — it no longer follows the language the device is set to, so a date like 13/10/2026 can no longer be shown or typed as month first. Type the numbers (the slashes appear on their own) or tap the calendar button to pick the day. Times are 24-hour, like 14:30.",
-      { text: "New Vet visits page under Shelter Operations: every visit booked at every clinic in one place, with the resident's photo and name, the clinic, the doctor and the time. On a phone it is a list by day, with Today and Tomorrow first and visits that are past but still marked Scheduled in their own Overdue group. Tap Hide overdue to put that group away; the page tells you how many are hidden and your choice is remembered on your phone. On a computer you can also switch to a week or month calendar. Pick one clinic if you only want to see its visits. Completed and cancelled visits are hidden unless you ask for them.", roles: ["admin", "management"] },
+      "New Vet visits page under Shelter Operations: every visit booked at every clinic in one place, with the resident's photo and name, the clinic, the doctor and the time. On a phone it is a list by day, with Today and Tomorrow first and visits that are past but still marked Scheduled in their own Overdue group. Tap Hide overdue to put that group away; the page tells you how many are hidden and your choice is remembered on your phone. On a computer you can also switch to a week or month calendar. Pick one clinic if you only want to see its visits. Completed and cancelled visits are hidden unless you ask for them.",
     ],
   },
   {
@@ -735,7 +620,7 @@ export const releases: Release[] = [
       "Admin and Management can now pick a resident on Add Medical Photos and Record Weight. The list was coming up empty for them.",
       "The shelter's database is now backed up every night instead of once a week, so if anything ever goes wrong at most a day of work can be lost.",
       "New Bills page for photos of receipts. Take a photo of a bill when you record a delivery or finish a clinic visit, and type what it cost. Or take photos of all the day's bills and add them together at night on the Bills page, then tap which delivery or clinic visit each one belongs to. Bills waiting to be matched are counted on the page, and on the Home screen where your role has a Bills tile.",
-      { text: "Maintenance jobs now take bills. On a job, tap Add a bill, type the amount and a note such as \"paint, Thai Watsadu\", and photograph the receipt; add as many bills as the job has. The job's actual cost becomes the total of its bills, and if someone had typed an actual cost by hand the job shows both and says the bills are the ones used. Receipts waiting on the Bills page can be matched to a job too. Only Management and Admin see bills and their amounts.", roles: ["admin", "management"] },
+      "Maintenance jobs now take bills. On a job, tap Add a bill, type the amount and a note such as \"paint, Thai Watsadu\", and photograph the receipt; add as many bills as the job has. The job's actual cost becomes the total of its bills, and if someone had typed an actual cost by hand the job shows both and says the bills are the ones used. Receipts waiting on the Bills page can be matched to a job too. Only Management and Admin see bills and their amounts.",
     ],
   },
   {
@@ -784,11 +669,11 @@ export const releases: Release[] = [
       "Maintenance: when you choose who a job is for, a 2IC, Head of Maintenance or Head of Medical now shows under their own role name (in Thai in Thai), not as Volunteer. The same names now show when you give someone a recurring job.",
       "When a 2IC records a death, the resident's record is now filed in the Deceased folder on Google Drive, as it is for Management. Until now the filing was refused for a 2IC, and the resident's page kept offering a Retry button that failed the same way.",
       "The Head of Maintenance can no longer delete a maintenance job, only log, change, assign and complete one. The Head of Maintenance's role showed Edit on maintenance jobs, which reads as including delete, but the system already refused the delete; the Delete button was on the page and pressing it only showed an error. It is now hidden for that role, so nobody taps it by mistake and loses the record of what was repaired.",
-      { text: "New: Settings → Who does what, also on the Management page. One grid shows what every role can do, every activity down the side and every role across the top, read live from the roles' settings. A box the system does not yet follow exactly carries a small number that leads to the reason under the grid. Print it, or download it as a spreadsheet, to show someone how the work is shared out. It shows the settings.", roles: ["admin", "management"] },
-      { text: "Settings → Who does what: an Admin can now change who does what. Open the grid, pick a new answer in any box and it is saved at once and listed in Recent changes; the role feels it the next time it opens a page. It asks for the authenticator app first. A box that depends on another refuses with the reason (correcting a stock figure needs Edit on the medication or diet list; marking anyone's recurring job needs your own). A doctor's clinic boxes follow the clinic rule and stay fixed. Who may write outreach notes moved here from Settings → Security, as the Outreach notes row, and the Director's draft page now leads to this grid.", roles: ["admin"] },
-      { text: "Settings → Security: you can now give someone the 2IC, Head of Maintenance or Head of Medical role. They are in the role dropdown when you create a user, in the users table and under Access requests, with their Thai names in Thai, and the table shows each person's own role instead of Volunteer.", roles: ["admin"] },
-      { text: "Settings → Who does what no longer offers the 2IC and the two Heads boxes the system refused: for the 2IC, changing a resident's record, adopter news, moving, hospital, rehoming and recording a death, and changing or adding a contact; for both Heads, moving a resident. These roles see who a resident is and where they live, and the 2IC reads a contact's name and phone. Nothing anyone could do has changed; the grid now says what the system already did.", roles: ["admin", "management"] },
-      { text: "System status: the Pi origin tile no longer says \"Not in use yet\" when the Pi is the one showing you the page. That wording was wrong exactly when everything was working; it now says the page was drawn by the Pi. On the Pi, the two alert buttons are switched off with a sentence saying why (the Pi cannot send mail), and a test pressed there no longer turns the Status alert mail tile red.", roles: ["admin"] },
+      "New: Settings → Who does what, also on the Management page. One grid shows what every role can do, every activity down the side and every role across the top, read live from the roles' settings. A box the system does not yet follow exactly carries a small number that leads to the reason under the grid. Print it, or download it as a spreadsheet, to show someone how the work is shared out. It shows the settings.",
+      { text: "Settings → Who does what: an Admin can now change who does what. Open the grid, pick a new answer in any box and it is saved at once and listed in Recent changes; the role feels it the next time it opens a page. It asks for the authenticator app first. A box that depends on another refuses with the reason (correcting a stock figure needs Edit on the medication or diet list; marking anyone's recurring job needs your own). A doctor's clinic boxes follow the clinic rule and stay fixed. Who may write outreach notes moved here from Settings → Security, as the Outreach notes row, and the Director's draft page now leads to this grid.", admin: true },
+      { text: "Settings → Security: you can now give someone the 2IC, Head of Maintenance or Head of Medical role. They are in the role dropdown when you create a user, in the users table and under Access requests, with their Thai names in Thai, and the table shows each person's own role instead of Volunteer.", admin: true },
+      "Settings → Who does what no longer offers the 2IC and the two Heads boxes the system refused: for the 2IC, changing a resident's record, adopter news, moving, hospital, rehoming and recording a death, and changing or adding a contact; for both Heads, moving a resident. These roles see who a resident is and where they live, and the 2IC reads a contact's name and phone. Nothing anyone could do has changed; the grid now says what the system already did.",
+      { text: "System status: the Pi origin tile no longer says \"Not in use yet\" when the Pi is the one showing you the page. That wording was wrong exactly when everything was working; it now says the page was drawn by the Pi. On the Pi, the two alert buttons are switched off with a sentence saying why (the Pi cannot send mail), and a test pressed there no longer turns the Status alert mail tile red.", admin: true },
     ],
   },
   {
@@ -801,8 +686,8 @@ export const releases: Release[] = [
       "Choose how the app looks. Tap your name at the top right and pick Dark, Light, High contrast or Magenta. Your choice is saved to your login, so it follows you to your phone and any computer you sign in on. The public website and printed PDFs are not affected.",
       "Rooms on the facility map now say what they are for. Tap the Medical room, the Kitchen or any other room on the Map and its card shows a few lines about it under its name, in Thai once it has been translated. In Settings → Facility map, rooms are no longer a fixed three: add a new one, rename one in English and Thai, write what it is for, or delete one.",
       "On the facility map, the zoom buttons (+, − and fit) now sit in a row under the plan instead of on top of it. On a phone they used to cover most of the bottom-right enclosure in Main Zone, so tapping it pressed a button instead.",
-      { text: "Record a donation: when a gift is for a resident, Choose a resident now finds them again, by English or Thai name. Residents who have died are in the list too, marked Deceased, so a gift in memory of one can be recorded. If the list ever fails to load, the form now says so instead of looking as if nobody matched.", roles: ["admin", "management"] },
-      { text: "Settings → System status: the Website visitors tile now shows how many people visited the website, instead of saying Not set up.", roles: ["admin"] },
+      "Record a donation: when a gift is for a resident, Choose a resident now finds them again, by English or Thai name. Residents who have died are in the list too, marked Deceased, so a gift in memory of one can be recorded. If the list ever fails to load, the form now says so instead of looking as if nobody matched.",
+      { text: "Settings → System status: the Website visitors tile now shows how many people visited the website, instead of saying Not set up.", admin: true },
     ],
   },
   {
@@ -816,10 +701,10 @@ export const releases: Release[] = [
       "Tap an enclosure on the map to see its details straight away under the plan: the residents in it with their photos, diets and medication, its notes and its open maintenance jobs. Tap another to switch, or Open full page for moving residents and logging maintenance.",
       "On a computer, the Residents list has a Select all box at the top of the tick column: pick a zone, tick it, and every resident listed is ticked for Book clinic visit, Log immunizations or Download. Adopted and deceased residents are left out. Changing a filter unticks anyone who is no longer listed, and says so.",
       "The facility map is easier to read: the 3/4 counts and the room names are gone from the zone plans, so the enclosure numbers on the drawing show through, and each enclosure carries only small icons for medication, a special diet or open maintenance.",
-      { text: "The vet login is now called a Doctor login. A doctor now also sees every animal they were the doctor for at a clinic they have since left. They can still only add or change records at the clinics they work at now.", roles: ["admin", "doctor"] },
-      { text: "Staff is no longer a role, because it confused things: the roles are Admin, Management, 2IC, Head of Maintenance, Head of Medical, Doctor and Volunteer. Settings → Security no longer offers Staff when you create a user, approve a request or change a role, and the manual no longer has a Staff view. Nobody signing in today holds Staff. An archived login that did still shows it; give it another role before you Restore it.", roles: ["admin", "management"] },
-      { text: "The Management dashboard's month section has Copy as text, for pasting the month straight into the monthly report or a LINE message, and Print, which prints that section on its own. It also has two new cards: Vaccinations given, by vaccine, and Clinic spend, from the invoice amounts on the month's visits, with how many visits have no amount yet.", roles: ["admin", "management"] },
-      { text: "Dashboard months now run on Thai time. Something recorded between midnight and 7 am on the 1st used to count in the previous month; it now counts in the month it happened. The same applies to the visits-per-month chart on a clinic's page.", roles: ["admin", "management"] },
+      "The vet login is now called a Doctor login. A doctor now also sees every animal they were the doctor for at a clinic they have since left. They can still only add or change records at the clinics they work at now.",
+      "Staff is no longer a role, because it confused things: the roles are Admin, Management, 2IC, Head of Maintenance, Head of Medical, Doctor and Volunteer. Settings → Security no longer offers Staff when you create a user, approve a request or change a role, and the manual no longer has a Staff view. Nobody signing in today holds Staff. An archived login that did still shows it; give it another role before you Restore it.",
+      "The Management dashboard's month section has Copy as text, for pasting the month straight into the monthly report or a LINE message, and Print, which prints that section on its own. It also has two new cards: Vaccinations given, by vaccine, and Clinic spend, from the invoice amounts on the month's visits, with how many visits have no amount yet.",
+      "Dashboard months now run on Thai time. Something recorded between midnight and 7 am on the 1st used to count in the previous month; it now counts in the month it happened. The same applies to the visits-per-month chart on a clinic's page.",
     ],
   },
   {
@@ -883,9 +768,9 @@ export const releases: Release[] = [
     notes: [
       "Tapping a text box or a drop-down on a phone no longer zooms the page in on an iPhone. Every box on every form now uses a size Safari leaves alone, so the page stays put and does not slide sideways after you tap.",
       "Enclosures → Map now shows the Medical room, the Kitchen and Storage as blue dashed shapes with their names, so you can see where they are; tapping one shows its name and opens nothing. The Director places them under Settings → Facility map.",
-      { text: "Settings → Website → Home page now has Impact figures: enter how many animals were rehomed, and how many village sterilisations were done, before the system began, with the date that is true up to. The home page then shows that number plus every adoption recorded since, marked \"About\" with a note that the early part is an estimate. A figure with nothing entered is not shown, and every change is kept in Recent changes.", roles: ["admin"] },
+      { text: "Settings → Website → Home page now has Impact figures: enter how many animals were rehomed, and how many village sterilisations were done, before the system began, with the date that is true up to. The home page then shows that number plus every adoption recorded since, marked \"About\" with a note that the early part is an estimate. A figure with nothing entered is not shown, and every change is kept in Recent changes.", admin: true },
       "The Notes boxes on the resident forms (Rehome / foster, Return to shelter, Move, Send to hospital, Return from hospital, Record a death, Undo a death, Adoption updates, Edit a resident and Add a resident) are now taller on a phone, so they look like somewhere to write a sentence, and tapping into one no longer zooms the page in and lets it scroll sideways on an iPhone.",
-      { text: "Settings → Recent changes now fits on a phone. The filter row (table, person, dates) used to push the page sideways because the person list was wider than the screen; it now stays inside it, so the audit log reads without side-scrolling.", roles: ["admin"] },
+      { text: "Settings → Recent changes now fits on a phone. The filter row (table, person, dates) used to push the page sideways because the person list was wider than the screen; it now stays inside it, so the audit log reads without side-scrolling.", admin: true },
       "On a computer, the top bar and the menu on the left now stay in place while the page scrolls, so you can reach any other page without scrolling back to the top first. A long menu scrolls by itself inside its own column. On a phone nothing changes.",
       "Tapping a resident's name card with your phone now always shows at least what a visitor would see. Before, the 2IC, the Heads of Medical and Maintenance and volunteers saw less than a stranger (just the name and where the resident lives), and a vet saw an error for a resident their clinic does not treat. Now they see the resident's card with photo, age and temperament, plus where the resident lives and buttons for the jobs they can do. Whether these roles also read the medical record from a card is the Director's choice and has not changed.",
     ],
@@ -897,14 +782,14 @@ export const releases: Release[] = [
       "Your name and role instead of your email, the Director’s answers on who sees what, and full-size buttons on a phone",
     major: true,
     notes: [
-      { text: "The Contacts page (the list of carers, volunteers and suppliers with their phone numbers and addresses) is now for Management and the 2IC only, as the Director decided. The 2IC sees each person's name and phone number, no address. Staff and volunteers no longer see Contacts in the menu: if you need a carer's number, ask Management. Choosing a carer when you take in or rehome a resident works as before.", roles: ["management", "staff", "volunteer"] },
+      "The Contacts page (the list of carers, volunteers and suppliers with their phone numbers and addresses) is now for Management and the 2IC only, as the Director decided. The 2IC sees each person's name and phone number, no address. Staff and volunteers no longer see Contacts in the menu: if you need a carer's number, ask Management. Choosing a carer when you take in or rehome a resident works as before.",
       "The top of every screen now shows your name and role (for example \"Lutan · Admin\") instead of your email address. Tap it to see which account you are signed in to, change your name, or sign out. You can set your own name under Change password, and an admin can set anyone's under Settings → Security. Everyone with a name set is shown by it wherever people are picked or listed, in English and Thai.",
       "On a phone, the buttons across the top of every screen are now full-size: Sign out (it was the smallest button in the app, easy to miss and easy to hit by accident), the menu button and the Assistant button. The top bar now takes two lines on a phone so everything fits, and your full name and role show in Thai as well as English. On a computer nothing changes.",
       "On a phone, the small controls that were easy to mis-tap are now full-size buttons: the cross that removes a resident from a vet visit or immunization (it was 7 pixels wide), Record chip, Add a new carer, Select residents, Add more, Change, and Show anyway. The Cancel and Done buttons in the resident picker and in every confirmation box are bigger too.",
       "The Save, Filter, Send, Move and Book buttons on resident, medical and account forms are now big enough to tap reliably on a phone, in English and Thai.",
-      { text: "Management can now record or correct a resident's microchip number, as the handbook always said they could. Before, the chip form was refused for Management.", roles: ["management"] },
-      { text: "The vaccine list on the Log immunizations form no longer shows what a vaccine costs to anyone: the 2IC can record vaccinations without seeing the price, and prices stay under Settings → Immunization Types.", roles: ["admin", "management", "staff", "doctor"] },
-      { text: "Staff keep seeing a Shelter Friend's card; the Director agreed there is nothing to hide, since the Friends band is public on the website.", roles: ["management", "staff"] },
+      "Management can now record or correct a resident's microchip number, as the handbook always said they could. Before, the chip form was refused for Management.",
+      "The vaccine list on the Log immunizations form no longer shows what a vaccine costs to anyone: the 2IC can record vaccinations without seeing the price, and prices stay under Settings → Immunization Types.",
+      "Staff keep seeing a Shelter Friend's card; the Director agreed there is nothing to hide, since the Friends band is public on the website.",
       "Choosing a folder when you add resident photos now says whether the photo will appear on the public website (every folder except Medical) or never will (Medical). Only people allowed to publish photos can file one outside the Medical folder, and that is checked in the database as well as on the page.",
       "When a resident who has died has a profile photo that could not be put in their summary PDF, the page now says so as soon as you choose or save it, instead of leaving a PDF with no picture and no word. Phone (HEIC) photos are handled by Drive.",
     ],
@@ -918,8 +803,8 @@ export const releases: Release[] = [
     notes: [
       "On the Residents list, a new Download spreadsheet button saves the residents you are looking at (the same place, zone, search and Show all as the list) as a file for Excel or Google Sheets, with more than the list shows: sex, age and estimated birth year, size, colour, whether chipped, prescriptions running today, the next vet visit, diet and latest weight. On a computer, tick residents first to save only those. The page says where the file went, and a volunteer's file holds only who and where.",
       "A project's Thai title is now easy to find and hard to forget. It shows under About this project (with the Thai title field in Edit details), and a published folder with no Thai title says that Thai visitors see the English title. Settings → Website marks those projects with an Add Thai title link, and Management → Translations lists them at the top, so visitors reading Thai see Thai project titles on Our work.",
-      { text: "On Management → Purchasing, the medicines and food that need nothing for the period are now folded into one line under each table (\"12 items need nothing for this period\"), so the page shows what to buy. Tap the line to see them, with the working that shows why. An item that has never been counted, or was counted long ago, is never folded, even when the sum says nothing to buy.", roles: ["admin", "management"] },
-      { text: "On the Purchasing screen on a phone, the \"Not counted yet\" box now also names items nobody has ever counted that show nothing to buy. Before, they were left out, so \"nothing to buy\" looked safe when it was only a guess. The same items are now counted in the banner on the computer page.", roles: ["admin", "management"] },
+      "On Management → Purchasing, the medicines and food that need nothing for the period are now folded into one line under each table (\"12 items need nothing for this period\"), so the page shows what to buy. Tap the line to see them, with the working that shows why. An item that has never been counted, or was counted long ago, is never folded, even when the sum says nothing to buy.",
+      "On the Purchasing screen on a phone, the \"Not counted yet\" box now also names items nobody has ever counted that show nothing to buy. Before, they were left out, so \"nothing to buy\" looked safe when it was only a guess. The same items are now counted in the banner on the computer page.",
       "On a computer, the map under a contact's address is now a sensible size instead of stretching across the whole page.",
     ],
   },
@@ -930,11 +815,11 @@ export const releases: Release[] = [
       "Phones get bigger buttons and stop sliding sideways, and a weekly job can go to the 2IC",
     major: false,
     notes: [
-      { text: "A weekly job that links to a page, such as the stocktake, can now be given to the 2IC from Recurring jobs, and it keeps its link on her My tasks. The same goes for the Head of Medical and the Head of Maintenance: they are judged by what their own role may open, not by the plain Volunteer role they share a login type with.", roles: ["admin", "management", "volunteer"] },
-      { text: "The English / Thai switch at the top of every page, and the sign-in screens, is now a full-size button on a phone (it was only 24 px tall), and so are the numbered step buttons when logging a maintenance job, registering a resident or adding a Shelter Friend. On a computer they are slightly smaller than on a phone.", roles: ["admin", "management", "staff", "volunteer", "doctor"] },
-      { text: "On Maintenance, Projects, Deliveries, Contacts, Vets and Enclosures, the actions that were plain words are now buttons with an icon beside the word, at least 44 px tall on a phone: Edit details, Delete job, Rename, Move, Delete folder, the Manage links to Management and Settings, Log a job on an enclosure, the Friend profile's Publish, Edit, Remove and logo buttons, and the Back links on pages you cannot edit. Deleting a delivery is now a small bin button with the word showing when you hold over it, and on a project's photos the caption, cover and remove actions are icon buttons that are easy to tap. Adding or editing a translation is a button too. The sign-in page's links are easier to tap. Deleting still asks first.", roles: ["admin", "management", "staff", "volunteer", "doctor"] },
-      { text: "On a phone, the Rehome / foster form no longer slides sideways because of a long carer name, and the Medications and Diets pages no longer slide sideways because of the \"Stock between counts\" link, which now wraps onto a second line.", roles: ["admin", "management", "second_in_command"] },
-      { text: "On a phone, the Hand over section of Recurring jobs no longer makes the whole page scroll sideways when a person's name or email is long.", roles: ["admin", "management"] },
+      "A weekly job that links to a page, such as the stocktake, can now be given to the 2IC from Recurring jobs, and it keeps its link on her My tasks. The same goes for the Head of Medical and the Head of Maintenance: they are judged by what their own role may open, not by the plain Volunteer role they share a login type with.",
+      "The English / Thai switch at the top of every page, and the sign-in screens, is now a full-size button on a phone (it was only 24 px tall), and so are the numbered step buttons when logging a maintenance job, registering a resident or adding a Shelter Friend. On a computer they are slightly smaller than on a phone.",
+      "On Maintenance, Projects, Deliveries, Contacts, Vets and Enclosures, the actions that were plain words are now buttons with an icon beside the word, at least 44 px tall on a phone: Edit details, Delete job, Rename, Move, Delete folder, the Manage links to Management and Settings, Log a job on an enclosure, the Friend profile's Publish, Edit, Remove and logo buttons, and the Back links on pages you cannot edit. Deleting a delivery is now a small bin button with the word showing when you hold over it, and on a project's photos the caption, cover and remove actions are icon buttons that are easy to tap. Adding or editing a translation is a button too. The sign-in page's links are easier to tap. Deleting still asks first.",
+      "On a phone, the Rehome / foster form no longer slides sideways because of a long carer name, and the Medications and Diets pages no longer slide sideways because of the \"Stock between counts\" link, which now wraps onto a second line.",
+      "On a phone, the Hand over section of Recurring jobs no longer makes the whole page scroll sideways when a person's name or email is long.",
     ],
   },
   {
@@ -944,10 +829,10 @@ export const releases: Release[] = [
       "A facility map an admin can draw, a shorter Management home on a phone, and icon buttons across Management and Settings",
     major: false,
     notes: [
-      { text: "Settings now has a Facility map page where an admin places the enclosures on the shelter's plans: pick an enclosure, click two corners (or each corner of an odd shape) on the plan, and it is saved and the next one is picked for you. Corners can be dragged to fix a shape, and a plan picture is added to a zone or to the overview from the same page. Everything placed shows at once on the Map under Enclosures, and the enclosures not yet drawn there are still listed beneath it. Best on a computer.", roles: ["admin"] },
-      { text: "The Management home on a phone is now a short screen instead of every page: Recurring jobs, Intake and Residents, with My tasks after them. Booking a vet visit, a resident's medical records and their details are on the resident, one tap from Residents. Everything else is still in the menu.", roles: ["admin", "management"] },
-      { text: "On the Management pages, the actions that repeat on every row (edit, count, merge, delete, archive, restore, make standard, pause, resume, publish, unpublish, move up and down, mark a doctor as left) are now small icon buttons, each at least 44 px square on a phone, with the word showing when you hold or hover over it. A delete that is not allowed says why when you hold over it. Add buttons carry a plus, the stock shortcuts at the top of Medications and Diets are real buttons, and Print and Download CSV are easier to tap. The phone screens for purchasing and the medication list were already big icon-and-word buttons and are unchanged.", roles: ["admin", "management"] },
-      { text: "On the Settings pages, the actions that repeat on every row (edit, delete, merge, archive, restore, move a photo earlier or later, take a project off the website) are now small icon buttons, each at least 44 px square on a phone, with the word showing when you hold or hover over it. Add buttons carry a plus; Replace photo, Issue temporary password, Approve and Deny, Check now, Send a test and Undo this change now show an icon beside the word, and Clear on Recent changes is easier to tap. Deleting a gallery photo, a user or a type still asks first.", roles: ["admin"] },
+      { text: "Settings now has a Facility map page where an admin places the enclosures on the shelter's plans: pick an enclosure, click two corners (or each corner of an odd shape) on the plan, and it is saved and the next one is picked for you. Corners can be dragged to fix a shape, and a plan picture is added to a zone or to the overview from the same page. Everything placed shows at once on the Map under Enclosures, and the enclosures not yet drawn there are still listed beneath it. Best on a computer.", admin: true },
+      "The Management home on a phone is now a short screen instead of every page: Recurring jobs, Intake and Residents, with My tasks after them. Booking a vet visit, a resident's medical records and their details are on the resident, one tap from Residents. Everything else is still in the menu.",
+      "On the Management pages, the actions that repeat on every row (edit, count, merge, delete, archive, restore, make standard, pause, resume, publish, unpublish, move up and down, mark a doctor as left) are now small icon buttons, each at least 44 px square on a phone, with the word showing when you hold or hover over it. A delete that is not allowed says why when you hold over it. Add buttons carry a plus, the stock shortcuts at the top of Medications and Diets are real buttons, and Print and Download CSV are easier to tap. The phone screens for purchasing and the medication list were already big icon-and-word buttons and are unchanged.",
+      { text: "On the Settings pages, the actions that repeat on every row (edit, delete, merge, archive, restore, move a photo earlier or later, take a project off the website) are now small icon buttons, each at least 44 px square on a phone, with the word showing when you hold or hover over it. Add buttons carry a plus; Replace photo, Issue temporary password, Approve and Deny, Check now, Send a test and Undo this change now show an icon beside the word, and Clear on Recent changes is easier to tap. Deleting a gallery photo, a user or a type still asks first.", admin: true },
     ],
   },
   {
@@ -957,12 +842,12 @@ export const releases: Release[] = [
       "Two more logins with their own home screens, medicine rounds, a map of the site, and deliveries step by step",
     major: true,
     notes: [
-      { text: "A new kind of login now exists: 2IC. Her home has four big buttons: Do Stocktaking, Do the Purchasing, Record a Delivery and Do Maintenance. She can count the stock, see what to buy, record what arrived, and run the maintenance board and her own recurring tasks. She sees the stock figures but never the price of a medicine or a diet, and she cannot correct a stock figure, set up recurring tasks, see residents beyond who they are and where they live, or see medical records, contacts or money.", roles: ["admin", "management"] },
-      { text: "A new kind of login now exists: Head of Maintenance. Her home is one big button, Do Maintenance, which opens the maintenance board. She can log a job, assign it, move it on and complete it, and mark her own recurring tasks done on My tasks. She sees who a resident is and where they live, and the enclosures, and nothing else: no medical records, stock, contacts or money. She cannot set up recurring tasks, add photos to a job or delete one.", roles: ["admin", "management"] },
+      "A new kind of login now exists: 2IC. Her home has four big buttons: Do Stocktaking, Do the Purchasing, Record a Delivery and Do Maintenance. She can count the stock, see what to buy, record what arrived, and run the maintenance board and her own recurring tasks. She sees the stock figures but never the price of a medicine or a diet, and she cannot correct a stock figure, set up recurring tasks, see residents beyond who they are and where they live, or see medical records, contacts or money.",
+      "A new kind of login now exists: Head of Maintenance. Her home is one big button, Do Maintenance, which opens the maintenance board. She can log a job, assign it, move it on and complete it, and mark her own recurring tasks done on My tasks. She sees who a resident is and where they live, and the enclosures, and nothing else: no medical records, stock, contacts or money. She cannot set up recurring tasks, add photos to a job or delete one.",
       "The Head of Medical now has three more jobs on her phone, each with pictures first. Record Weight: tap the resident's photo, type the weight on a big open keypad, save; weighing the same animal again the same day replaces the reading instead of adding a second. Add Medical Photos: tap the resident, then Take a photo or Choose from phone; the photos go in the Medical folder and never on the website. Feed Special Diets: a list, by zone and enclosure, of everyone on a non-standard diet, with the amount for one meal beside a bowl and the meals as sunrise and moon, for the Morning or Evening meal you pick. A page you are not allowed to open now shows the in-app \"You don't have access\" page for this role, instead of sending you out to the public website.",
       "The medication list now asks which round you are doing: Morning, Lunch or Evening. It starts on the one that suits the time of day, but you can tap another, so bagging up lunch at nine in the morning shows lunch, not the morning round. You see only the doses for that round, and a new Stock-room pick list adds up what each zone and enclosure needs, medicine by medicine, to bag before going out. Amounts are now pictures (tablets, capsules, a syringe filled to the mark, drops) and the rounds a medicine is given in show as sunrise, sun and moon, so the words are only there as backup.",
-      { text: "Recording a delivery is now a few short steps on a phone, one question at a time: what arrived, which one, how much, when, and who sent it. The last screen says in words what will be recorded, and Back never loses what you typed. After a save, Record another item keeps the day and supplier. Deliveries now has its own place in the menu, next to Stocktake, instead of being a small link at the top of Stocktake.", roles: ["admin", "management", "second_in_command"] },
-      { text: "Enclosures now has a Map next to the List, so you can find your way round the site and open an enclosure from the plan. It shows the shelter's hand-drawn plan, a zone at a time, with every enclosure coloured by how full it is, its count, a spanner for open maintenance and a bowl for special diets. Tap a shape to see it, then Open enclosure; pinch, double-tap or use + and − to zoom. Enclosures not yet drawn on the plan are listed beneath it. The Map button appears once a plan has been loaded.", roles: ["admin", "management", "staff", "volunteer"] },
+      "Recording a delivery is now a few short steps on a phone, one question at a time: what arrived, which one, how much, when, and who sent it. The last screen says in words what will be recorded, and Back never loses what you typed. After a save, Record another item keeps the day and supplier. Deliveries now has its own place in the menu, next to Stocktake, instead of being a small link at the top of Stocktake.",
+      "Enclosures now has a Map next to the List, so you can find your way round the site and open an enclosure from the plan. It shows the shelter's hand-drawn plan, a zone at a time, with every enclosure coloured by how full it is, its count, a spanner for open maintenance and a bowl for special diets. Tap a shape to see it, then Open enclosure; pinch, double-tap or use + and − to zoom. Enclosures not yet drawn on the plan are listed beneath it. The Map button appears once a plan has been loaded.",
       "On a resident's page, the actions that repeat on every record (edit, remove, restore, end today, and log a blood test, prescription, weight, procedure or hospital stay against a vet visit) are now small icon buttons, each at least 44 px square on a phone, with the word showing when you hold or hover over it. The delete on an adoption update is red. 'Back to …' links have an arrow, and 'Register this chip as a new resident' and 'Edit that reading' are real buttons.",
       "When a save is refused (a date in the future, a move that starts before the last one), the form now keeps everything you chose and typed, so you fix the one thing and press Save again instead of starting over. On My tasks, a \"Done today\" list at the bottom shows what you marked done, skipped or completed today, still there after a reload, each with Undo. Marking a job done that is waiting for another job now asks first.",
     ],
@@ -975,17 +860,11 @@ export const releases: Release[] = [
     major: true,
     notes: [
       "Signing in now lands on a Home screen: big buttons, an icon and a word each, one for every job you can do (My tasks, Residents, Stocktake and so on), and nothing you cannot. Home is also the first link in the menu. A vet still lands on their appointments.",
-      {
-        text: "There is now a Head of Medical login. It opens to one big button, Administer Medication, which shows the medication list for today: who needs which medicine, how much and how often, enclosure by enclosure, with a photo of each animal and each medicine's label. It shows nothing else about an animal and nothing can be changed or ticked off. Managers see the same list, and so does Staff, who could not before.",
-        roles: ["admin", "management", "staff"],
-      },
-      {
-        text: "For the Director, who signs in as Admin: on a phone, sign-in opens the Management home; on a larger screen it opens Settings. Across the top of both is a row of buttons to open any other home, Settings, Management, Staff, Vet or Volunteer, to see exactly what that role sees when they ring to say something is wrong. Only Admin has the row, and typing one of those addresses as anyone else is refused.",
-        roles: ["admin"],
-      },
-      { text: "Search on the Residents list now finds a resident by their ID however it is typed: R-0055, R0055, r 0055 or just 0055. On a phone the search box has its own full-width row instead of squeezing in beside the buttons. The manual now writes IDs the way the app does (R-0042).", roles: ["admin", "management", "staff", "volunteer", "doctor"] },
-      { text: "The assistant now gets out of the way: tapping Open resident, Open enclosure or a resident in its answer closes the panel so you can see the page it opened. A new Confirm card scrolls into view instead of opening below the message box, and asking where a fostered animal is now answers with the foster carer rather than a place that does not exist.", roles: ["admin", "management", "staff", "volunteer", "doctor"] },
-      { text: "Once a resident is adopted they no longer show the green Ready for adoption badge or the microchip warning on their page, and they drop off the public Adopt page straight away.", roles: ["admin", "management", "staff", "doctor"] },
+      "There is now a Head of Medical login. It opens to one big button, Administer Medication, which shows the medication list for today: who needs which medicine, how much and how often, enclosure by enclosure, with a photo of each animal and each medicine's label. It shows nothing else about an animal and nothing can be changed or ticked off. Managers see the same list, and so does Staff, who could not before.",
+      { text: "For the Director, who signs in as Admin: on a phone, sign-in opens the Management home; on a larger screen it opens Settings. Across the top of both is a row of buttons to open any other home, Settings, Management, Staff, Vet or Volunteer, to see exactly what that role sees when they ring to say something is wrong. Only Admin has the row, and typing one of those addresses as anyone else is refused.", admin: true },
+      "Search on the Residents list now finds a resident by their ID however it is typed: R-0055, R0055, r 0055 or just 0055. On a phone the search box has its own full-width row instead of squeezing in beside the buttons. The manual now writes IDs the way the app does (R-0042).",
+      "The assistant now gets out of the way: tapping Open resident, Open enclosure or a resident in its answer closes the panel so you can see the page it opened. A new Confirm card scrolls into view instead of opening below the message box, and asking where a fostered animal is now answers with the foster carer rather than a place that does not exist.",
+      "Once a resident is adopted they no longer show the green Ready for adoption badge or the microchip warning on their page, and they drop off the public Adopt page straight away.",
       "On the public website, a visitor reading in Thai who opens a page whose Thai text has not been written yet (Foster and Volunteer today) now sees a short Thai note saying the page is in English for now, instead of unexplained English. On a phone, the website's menu now has Staff login, just under the language switch, so staff no longer scroll to the very bottom of a page to sign in.",
     ],
   },
@@ -996,14 +875,8 @@ export const releases: Release[] = [
       "Counting and ordering on a phone, and the app speaking Thai where it still spoke English",
     major: true,
     notes: [
-      {
-        text: "Counting medicines on a phone is now one card at a time. Each card shows a big photo of the box's label (or the name, if there isn't one), the last count, and a number keypad already open: type what's on the shelf and tap Save to move on, tap Same as last time to keep the old figure, or Skip to come back to it — skipped ones are offered again at the end. It tells you how far you are (23 of 100), and if you close the page, lock the phone or lose signal in the kennels, your counts are kept on the phone and it picks up where you left off. The computer's stocktake sheet is unchanged.",
-        roles: ["admin", "management", "staff", "volunteer"],
-      },
-      {
-        text: "Ordering medicine and food is now one simple screen on a phone instead of a table. Pick how long it should last, then open Medicines or Food (they are bought at different shops) to see what to buy from each supplier, how much of each. Tap an item to see how it was worked out. Print the list or save it from the bottom. Nothing is ordered or saved by the app. Anything nobody has counted yet is assumed to have none on the shelf, so a newly prescribed medicine still gets bought; it is shown in yellow with a button to count it. The computer table is unchanged.",
-        roles: ["admin", "management"],
-      },
+      "Counting medicines on a phone is now one card at a time. Each card shows a big photo of the box's label (or the name, if there isn't one), the last count, and a number keypad already open: type what's on the shelf and tap Save to move on, tap Same as last time to keep the old figure, or Skip to come back to it — skipped ones are offered again at the end. It tells you how far you are (23 of 100), and if you close the page, lock the phone or lose signal in the kennels, your counts are kept on the phone and it picks up where you left off. The computer's stocktake sheet is unchanged.",
+      "Ordering medicine and food is now one simple screen on a phone instead of a table. Pick how long it should last, then open Medicines or Food (they are bought at different shops) to see what to buy from each supplier, how much of each. Tap an item to see how it was worked out. Print the list or save it from the bottom. Nothing is ordered or saved by the app. Anything nobody has counted yet is assumed to have none on the shelf, so a newly prescribed medicine still gets bought; it is shown in yellow with a button to count it. The computer table is unchanged.",
       "Release notes and the Manual now have their headings, buttons and intro in Thai when the app is in Thai, and the Manual says plainly that its text is still English. The Dev/UAT tag on each release is shown to admins only.",
       "On Intake, Change password and Deliveries, the \"please fill in this field\" style messages now follow the app's language (English or Thai) instead of the phone's.",
       "Signing in with a wrong password now says, in English or Thai, \"That email or password isn't right\" and keeps the email you typed, instead of the sign-in service's English message and two empty boxes.",
@@ -1019,14 +892,8 @@ export const releases: Release[] = [
     major: true,
     notes: [
       "Changing your password now asks for your current password first, and signs you out everywhere else once it's changed. Before, anyone holding your phone while you were signed in could set a new password without knowing the old one and take over your account. If you've forgotten the current password, sign out and use Forgot password? on the sign-in page instead. If you still sign in with a temporary password, or arrive from a reset link, nothing changes: you just choose a new one.",
-      {
-        text: "New Medication list under Management: open one page on your phone and see who needs medicine today, enclosure by enclosure in walking order. Each animal shows their photo and name, and each medicine shows a photo of its box, how much to give and how often, so you can match what's in your hand. A medicine given every other day, weekly or monthly appears only on the days it's due. It is a list to read: nothing is ticked off and the app does not record that a dose was given.",
-        roles: ["admin", "management"],
-      },
-      {
-        text: "Staff and managers can now record a blood test. Until now, tapping Save blood test on a resident (or the Log blood test link on a vet visit) answered \"You don't have permission to do that\" and nothing was saved, even though the form was offered. It now saves, with or without a lab scan attached.",
-        roles: ["admin", "management", "staff"],
-      },
+      "New Medication list under Management: open one page on your phone and see who needs medicine today, enclosure by enclosure in walking order. Each animal shows their photo and name, and each medicine shows a photo of its box, how much to give and how often, so you can match what's in your hand. A medicine given every other day, weekly or monthly appears only on the days it's due. It is a list to read: nothing is ticked off and the app does not record that a dose was given.",
+      "Staff and managers can now record a blood test. Until now, tapping Save blood test on a resident (or the Log blood test link on a vet visit) answered \"You don't have permission to do that\" and nothing was saved, even though the form was offered. It now saves, with or without a lab scan attached.",
       "On a phone, a maintenance job can now be moved on with a tap: each job on the Maintenance list has a Move job on button, which asks where it goes, says in words what will happen, and moves it, including back a step and on to Completed. Logging a job is now a few short steps (what is wrong, where, who and when, then a check before it is saved), and going Back keeps everything you typed. Dragging a card still works on a computer.",
       "Pages now fit a phone screen instead of sliding sideways. On a resident's page the Edit pencil and the Record death heart are back on screen (they were cut off the right edge), and the Enclosures, Vets, Contacts, Deliveries, Book vet visit and Move/Return forms no longer push their buttons and boxes out of view; long enclosure and clinic names wrap instead of stretching the page. In Thai, Sign out no longer runs off the edge: on a phone it is a small door-and-arrow icon in the header (the words still show on a larger screen).",
       "Scan a chip on the Residents page now finds the animal: type or scan the 15 digits and you go straight to their page. Before, it always answered \"0 residents\" even for a chip you had just recorded.",
@@ -1039,10 +906,7 @@ export const releases: Release[] = [
     title: "A photo of each medicine's label, on the stocktake sheet and the delivery form",
     major: false,
     notes: [
-      {
-        text: "Each medication can now have a photo of its box or bottle label. A manager taps Upload label on Management → Medications (on a phone this opens the camera); the photo then shows beside the medicine on the Stocktake sheet and on the Record a delivery form, so whoever is holding the box can match it at a glance. It is only visible to people signed in to the app, never on the public website.",
-        roles: ["admin", "management", "staff", "volunteer"],
-      },
+      "Each medication can now have a photo of its box or bottle label. A manager taps Upload label on Management → Medications (on a phone this opens the camera); the photo then shows beside the medicine on the Stocktake sheet and on the Record a delivery form, so whoever is holding the box can match it at a glance. It is only visible to people signed in to the app, never on the public website.",
     ],
   },
   {
@@ -1052,14 +916,8 @@ export const releases: Release[] = [
       "Undo a recent change, a Deny that cannot remove an approved person, and signing in that keeps working while the shelter server is down",
     major: true,
     notes: [
-      {
-        text: "Settings → Recent changes can now undo a mistake. Tap Undo this change on the newest change to a record and confirm: an edit puts the fields back as they were, and a deleted contact, prescription, vet visit, weight or vaccination is put back. If the record has been changed again since, or something has taken its place (a new weight for the same day, say), the page tells you instead of overwriting anything. The undo shows up in the list as a change of its own.",
-        roles: ["admin"],
-      },
-      {
-        text: "Settings → Security: Deny on an access request now says plainly that the sign-in is deleted for good, and refuses if the person was given access in the meantime, so it can no longer remove someone who has just been approved. Requests are listed newest first.",
-        roles: ["admin"],
-      },
+      { text: "Settings → Recent changes can now undo a mistake. Tap Undo this change on the newest change to a record and confirm: an edit puts the fields back as they were, and a deleted contact, prescription, vet visit, weight or vaccination is put back. If the record has been changed again since, or something has taken its place (a new weight for the same day, say), the page tells you instead of overwriting anything. The undo shows up in the list as a change of its own.", admin: true },
+      { text: "Settings → Security: Deny on an access request now says plainly that the sign-in is deleted for good, and refuses if the person was given access in the meantime, so it can no longer remove someone who has just been approved. Requests are listed newest first.", admin: true },
       "If the shelter's main server is switched off or off the network, signing in and saving now keep working instead of showing \"The shelter's server did not answer in time\". Pages may be a little slower until it is back. If a page you already had open will not save, reload it and try again.",
     ],
   },
@@ -1071,22 +929,10 @@ export const releases: Release[] = [
     major: true,
     notes: [
       "Everyone was signed out on 2 October 2026 and has to sign in again once. A security review the shelter commissioned found that the database backups were not encrypted; they now are, and only the administrator can open them. Signing everyone out was a precaution taken at the same time — nothing was lost or changed, and every account and record is exactly as it was. Sign in as usual.",
-      {
-        text: "New Management → Purchasing page works out how much of each medicine and food to buy, so whoever orders no longer does the arithmetic by hand. Pick 1 week, 2 weeks or 1 month and every item shows its working — what was last counted, roughly how much has been used since, what has been delivered since, and what the period needs — with the amount to buy rounded up to whole bags or boxes. An item nobody has counted is flagged instead of guessed, and a count more than three weeks old is marked as probably out of date. Items can now have a safety stock (a floor kept on the shelf whatever is prescribed): set it when adding or editing a medication or food, in the unit it is bought in if you like. The page ends with a list of just the items to buy, grouped by supplier, to print or download as a CSV. Days of stock on Medications and Diets now also counts deliveries recorded since the last count, which it had been ignoring, so it may read longer than before.",
-        roles: ["admin", "management"],
-      },
-      {
-        text: "Adding a Shelter Friend is now one guided path instead of five places. Tap Add a Shelter Friend on Management → Shelter Friends or Management → Contacts, then follow five short steps: who they are (pick a supplier you already have, or add a new business there and then), how they help, their logo and links, what the public may see, and a Review with a preview of their card exactly as the website will show it. Finish with Publish now or Save as a draft. Nothing is ticked for you in the what-the-public-may-see step: phone, email, LINE and address stay private unless you tick them, so ask the business first. Refreshing the page keeps your place and what you typed. If the logo cannot be uploaded the Friend is still saved and you are told to add the logo from their card.",
-        roles: ["admin", "management"],
-      },
-      {
-        text: "A doctor can now work at more than one clinic, and a vet can work at more than one too. A doctor is one person with a list of clinics: add a doctor from another clinic with Also works here on the clinic's Doctors page, or merge two entries for the same person, even from different clinics, with Merge. A vet login is linked to its doctor in Settings → Security, and sees and records for all of that doctor's clinics and no others. When a vet records a visit the Doctor is themselves, filled in and locked. A doctor needs only a name to be added: no email or account.",
-        roles: ["admin", "management", "staff", "doctor"],
-      },
-      {
-        text: "Vets and volunteers now see less of the shelter’s address book, to protect people’s personal details. A volunteer sees each contact’s name and phone number, enough to ring a carer, but not their email, address, LINE or notes. A vet sees only the name behind a carer or sender, and no longer sees other people’s email addresses in the list of logins. Staff and above see everything, as before.",
-        roles: ["doctor", "volunteer"],
-      },
+      "New Management → Purchasing page works out how much of each medicine and food to buy, so whoever orders no longer does the arithmetic by hand. Pick 1 week, 2 weeks or 1 month and every item shows its working — what was last counted, roughly how much has been used since, what has been delivered since, and what the period needs — with the amount to buy rounded up to whole bags or boxes. An item nobody has counted is flagged instead of guessed, and a count more than three weeks old is marked as probably out of date. Items can now have a safety stock (a floor kept on the shelf whatever is prescribed): set it when adding or editing a medication or food, in the unit it is bought in if you like. The page ends with a list of just the items to buy, grouped by supplier, to print or download as a CSV. Days of stock on Medications and Diets now also counts deliveries recorded since the last count, which it had been ignoring, so it may read longer than before.",
+      "Adding a Shelter Friend is now one guided path instead of five places. Tap Add a Shelter Friend on Management → Shelter Friends or Management → Contacts, then follow five short steps: who they are (pick a supplier you already have, or add a new business there and then), how they help, their logo and links, what the public may see, and a Review with a preview of their card exactly as the website will show it. Finish with Publish now or Save as a draft. Nothing is ticked for you in the what-the-public-may-see step: phone, email, LINE and address stay private unless you tick them, so ask the business first. Refreshing the page keeps your place and what you typed. If the logo cannot be uploaded the Friend is still saved and you are told to add the logo from their card.",
+      "A doctor can now work at more than one clinic, and a vet can work at more than one too. A doctor is one person with a list of clinics: add a doctor from another clinic with Also works here on the clinic's Doctors page, or merge two entries for the same person, even from different clinics, with Merge. A vet login is linked to its doctor in Settings → Security, and sees and records for all of that doctor's clinics and no others. When a vet records a visit the Doctor is themselves, filled in and locked. A doctor needs only a name to be added: no email or account.",
+      "Vets and volunteers now see less of the shelter’s address book, to protect people’s personal details. A volunteer sees each contact’s name and phone number, enough to ring a carer, but not their email, address, LINE or notes. A vet sees only the name behind a carer or sender, and no longer sees other people’s email addresses in the list of logins. Staff and above see everything, as before.",
     ],
   },
   {
@@ -1097,18 +943,9 @@ export const releases: Release[] = [
     major: true,
     notes: [
       "The Lanna Care for Animals logo is sharper: it has been replaced with a higher-quality copy of the same artwork, so it no longer looks blurry in the header, on the sign-in pages or on a high-resolution phone screen.",
-      {
-        text: "Booking a vet visit through the assistant now keeps the doctor you name. Say \"book a vet visit for Panda with Dr Somchai on Friday at 10am\" (or \"หมอสมชาย\") and the card shows Somchai in an optional Doctor field, which you can change or clear. If the clinic's doctor list has a matching name, the card offers that spelling; if it has no such doctor yet, the card says the name will be added. The assistant never asks for a doctor.",
-        roles: ["admin", "management", "staff"],
-      },
-      {
-        text: "Weight readings, prescriptions, vet visits and immunizations can now be removed. If one was entered by mistake, tap Remove on its row on the resident's page and, if you like, say why. It leaves the list, the weight chart, the forecasts and the counts, but it is kept, not deleted. Under each list, Show removed brings the removed ones back into view, greyed out with the reason, and Restore puts one back. A removed weight or vaccination no longer blocks entering the correct one for that day. Remove is for admin, management and staff; vets and volunteers don't see it.",
-        roles: ["admin", "management", "staff"],
-      },
-      {
-        text: "Settings now has a Recent changes page that shows who added, edited, archived or deleted a resident, contact, prescription, vet visit, weight, file or vaccination record, and when. You can filter by kind of record, person and date, and open one change to see the values before and after.",
-        roles: ["admin"],
-      },
+      "Booking a vet visit through the assistant now keeps the doctor you name. Say \"book a vet visit for Panda with Dr Somchai on Friday at 10am\" (or \"หมอสมชาย\") and the card shows Somchai in an optional Doctor field, which you can change or clear. If the clinic's doctor list has a matching name, the card offers that spelling; if it has no such doctor yet, the card says the name will be added. The assistant never asks for a doctor.",
+      "Weight readings, prescriptions, vet visits and immunizations can now be removed. If one was entered by mistake, tap Remove on its row on the resident's page and, if you like, say why. It leaves the list, the weight chart, the forecasts and the counts, but it is kept, not deleted. Under each list, Show removed brings the removed ones back into view, greyed out with the reason, and Restore puts one back. A removed weight or vaccination no longer blocks entering the correct one for that day. Remove is for admin, management and staff; vets and volunteers don't see it.",
+      { text: "Settings now has a Recent changes page that shows who added, edited, archived or deleted a resident, contact, prescription, vet visit, weight, file or vaccination record, and when. You can filter by kind of record, person and date, and open one change to see the values before and after.", admin: true },
     ],
   },
   {
@@ -1121,10 +958,7 @@ export const releases: Release[] = [
       "The printable manual (Manual → Download PDF) has its screenshots again. For a short while after the app moved to its new server the PDF came out with text only; it now includes every picture, and builds faster.",
       "Deleting or removing something now opens a box that names exactly what you are about to lose, with Cancel selected so a stray Enter cannot confirm it. The Security page's archive, delete and reset actions work the same way. Buttons on the Settings tables are taller, so they are easier to tap on a phone. A red bar now warns you when the app is offline and changes will not save.",
       "If you are signed out because you have not used the app for a long time, the sign-in page now says so and takes you back to the page you were on once you sign in again.",
-      {
-        text: "Management → Stock between counts now says when someone typed a figure by hand during the dates being compared. The row still shows the same used figure — a correction isn't counted as use, because fixing a typo would otherwise look like stock disappearing — but if an item is far off its plan and carries the note, the figure someone typed is the first thing to check. It appears in the downloaded CSV too.",
-        roles: ["admin", "management"],
-      },
+      "Management → Stock between counts now says when someone typed a figure by hand during the dates being compared. The row still shows the same used figure — a correction isn't counted as use, because fixing a typo would otherwise look like stock disappearing — but if an item is far off its plan and carries the note, the figure someone typed is the first thing to check. It appears in the downloaded CSV too.",
     ],
   },
   {
@@ -1134,16 +968,10 @@ export const releases: Release[] = [
       "2-step verification needs a second admin, faster photos on the website, and longer passwords",
     major: true,
     notes: [
-      {
-        text: "Admins are now reminded on My tasks to set up 2-step verification, and the Security page flags any admin who hasn't. Setting up the first authenticator app now needs another admin to allow it (press Allow set-up beside their name in the 2-step column; making someone an admin allows it for three days), so someone who has only a stolen password can no longer set up their own app and lock the real admin out. The Security page also now lists every login and every access request however many there are, where before a long list of junk sign-ups could push real people off it.",
-        roles: ["admin"],
-      },
+      { text: "Admins are now reminded on My tasks to set up 2-step verification, and the Security page flags any admin who hasn't. Setting up the first authenticator app now needs another admin to allow it (press Allow set-up beside their name in the 2-step column; making someone an admin allows it for three days), so someone who has only a stolen password can no longer set up their own app and lock the real admin out. The Security page also now lists every login and every access request however many there are, where before a long list of junk sign-ups could push real people off it.", admin: true },
       "The public website now loads photos much faster. Project cards, resident cards, galleries, thumbnails and logos used to download the full-size photo straight off the phone, several megabytes each, which was slow on a phone connection; they now download a smaller copy sized for where it is shown, and the large photo is still sharp. Photos you view inside the app are unchanged.",
       "Passwords must now be at least 12 characters (it was 8), with no other rules about capitals or symbols. Existing passwords keep working; the longer minimum applies when you next choose one. Exported spreadsheets (Cashflow, Stock) no longer let a name that starts with = or @ run as a formula when opened in Excel, and the Website settings now check the map link is a real https address.",
-      {
-        text: "The vet line on the Cashflow page now follows how often the shelter really goes. Each week it counts the larger of the typical number of visits (the last 90 days' completed visits, averaged) and the visits actually booked that week, so a quiet week still carries the usual cost and a busy one is not understated. A booked visit with its real cost recorded uses that cost; the rest use the average of recorded costs, or the typical-visit figure until enough are recorded. A line under the table says exactly which numbers were used.",
-        roles: ["admin", "management"],
-      },
+      "The vet line on the Cashflow page now follows how often the shelter really goes. Each week it counts the larger of the typical number of visits (the last 90 days' completed visits, averaged) and the visits actually booked that week, so a quiet week still carries the usual cost and a busy one is not understated. A booked visit with its real cost recorded uses that cost; the rest use the average of recorded costs, or the typical-visit figure until enough are recorded. A line under the table says exactly which numbers were used.",
       "If something goes wrong while saving, moving, completing or deleting a maintenance job or its photos, the Maintenance pages now say so with a short reference you can quote, instead of a numbered error code. That finishes the same fix across the whole app: every page that saves something now explains a failure in words.",
     ],
   },
@@ -1168,16 +996,13 @@ export const releases: Release[] = [
       "Website settings in tabs, a tidier Residents list, vets can record microchips, and clearer Management messages",
     major: false,
     notes: [
-      { text: "Settings → Website is now split into tabs — Home page, Contact & settings, Pages, Gallery and Our work — instead of one long page. Under Pages, each information page is a row you open to edit, with when it was last edited and a Thai missing tag. Nothing has moved between sections or changed how it saves.", roles: ["admin"] },
-      { text: "On a phone the Residents list now shows just the name, so long names (with Thai and other names) no longer wrap; the ID is still on the resident's page and on the computer list. The list search also finds a resident by their ID (for example R0042), and there is a new Adopted filter. If a search has adopted residents that On-site, Off-site, a zone or an enclosure is hiding, the list now says how many and links to them.", roles: ["admin", "management", "staff", "volunteer", "doctor"] },
-      { text: "Vets can now record or correct a resident's microchip themselves: tap Record chip (or Correct) under the name on the resident's page, or at the top of their Vet appointments and Procedures pages and a visit's Edit page, where the chip is now shown. After logging a Microchipping procedure you are asked for the chip number straight away. Staff and admins can use the same form.", roles: ["doctor", "staff", "admin"] },
+      { text: "Settings → Website is now split into tabs — Home page, Contact & settings, Pages, Gallery and Our work — instead of one long page. Under Pages, each information page is a row you open to edit, with when it was last edited and a Thai missing tag. Nothing has moved between sections or changed how it saves.", admin: true },
+      "On a phone the Residents list now shows just the name, so long names (with Thai and other names) no longer wrap; the ID is still on the resident's page and on the computer list. The list search also finds a resident by their ID (for example R0042), and there is a new Adopted filter. If a search has adopted residents that On-site, Off-site, a zone or an enclosure is hiding, the list now says how many and links to them.",
+      "Vets can now record or correct a resident's microchip themselves: tap Record chip (or Correct) under the name on the resident's page, or at the top of their Vet appointments and Procedures pages and a visit's Edit page, where the chip is now shown. After logging a Microchipping procedure you are asked for the chip number straight away. Staff and admins can use the same form.",
       "The public adoption page now says Microchipped for an animal with a chip on file, beside Desexed and Vaccinated. The number itself is never shown on the website.",
-      { text: "The Residents list has a No microchip filter, and the management dashboard counts the residents in care with no microchip; tap it to see who they are.", roles: ["admin", "management", "staff", "doctor"] },
-      { text: "The summary PDF and offline index filed when a resident dies now include their microchip number and implant date.", roles: ["admin", "management", "second_in_command"] },
-      {
-        text: "On the Management pages (vets and their doctors, diets, medications, contacts, recurring jobs and translations), a refused save or delete now tells you why, in words, instead of showing a numbered error code.",
-        roles: ["admin", "management"],
-      },
+      "The Residents list has a No microchip filter, and the management dashboard counts the residents in care with no microchip; tap it to see who they are.",
+      "The summary PDF and offline index filed when a resident dies now include their microchip number and implant date.",
+      "On the Management pages (vets and their doctors, diets, medications, contacts, recurring jobs and translations), a refused save or delete now tells you why, in words, instead of showing a numbered error code.",
     ],
   },
   {
@@ -1188,10 +1013,10 @@ export const releases: Release[] = [
     major: true,
     notes: [
       "The manual can now be printed. On the Manual page, tap Print this as a PDF for a paper copy of your own role's topics, or of the whole manual if you chose Show everything. Without screenshots gives a small, text-only file.",
-      { text: "The cashflow forecast now includes the shelter's fixed monthly costs. Under Management → Cashflow, Edit fixed outgoings lets you list rent, electricity, internet and salaries (as one total, never per person) with an amount in baht per month and an optional first and last month; they appear as a Fixed outgoings column in the chart, table and CSV.", roles: ["admin", "management"] },
-      { text: "Vets now land on a new Appointments page instead of My tasks. It lists every visit booked with your clinic — ones still to write up, upcoming ones, and those finished in the last 30 days — and each one opens the resident and offers the procedure, blood test, prescription and weight forms already linked to that visit. Vets no longer have a My tasks page.", roles: ["doctor"] },
-      { text: "Residents can now have a microchip number. Enter it (15 digits, spaces and dashes are fine) under Edit resident or on the Health step of intake; it shows under the name on the resident's page, and a resident marked ready for adoption with no chip gets a gentle reminder. On the Residents page, the new Scan a chip box takes a reader's 15 digits and opens that resident straight away; an unknown chip offers a new resident with the number filled in. The number is never shown on the public website.", roles: ["admin", "management", "second_in_command"] },
-      { text: "A Shelter Friend's profile now says what went wrong instead of showing a numbered code. Making a contact a Friend, saving, publishing or unpublishing a profile, moving one up or down the order, changing or removing its logo, and removing a profile all give a plain message, with a short reference to quote if it is something unexpected.", roles: ["admin", "management"] },
+      "The cashflow forecast now includes the shelter's fixed monthly costs. Under Management → Cashflow, Edit fixed outgoings lets you list rent, electricity, internet and salaries (as one total, never per person) with an amount in baht per month and an optional first and last month; they appear as a Fixed outgoings column in the chart, table and CSV.",
+      "Vets now land on a new Appointments page instead of My tasks. It lists every visit booked with your clinic — ones still to write up, upcoming ones, and those finished in the last 30 days — and each one opens the resident and offers the procedure, blood test, prescription and weight forms already linked to that visit. Vets no longer have a My tasks page.",
+      "Residents can now have a microchip number. Enter it (15 digits, spaces and dashes are fine) under Edit resident or on the Health step of intake; it shows under the name on the resident's page, and a resident marked ready for adoption with no chip gets a gentle reminder. On the Residents page, the new Scan a chip box takes a reader's 15 digits and opens that resident straight away; an unknown chip offers a new resident with the number filled in. The number is never shown on the public website.",
+      "A Shelter Friend's profile now says what went wrong instead of showing a numbered code. Making a contact a Friend, saving, publishing or unpublishing a profile, moving one up or down the order, changing or removing its logo, and removing a profile all give a plain message, with a short reference to quote if it is something unexpected.",
     ],
   },
   {
@@ -1204,7 +1029,7 @@ export const releases: Release[] = [
       "Settings → Website has a new Preferred way to contact us: put LINE, Messenger, WhatsApp, Instagram, phone and email in the order you want. The public website follows it: the button at the bottom of each animal's page (Ask on LINE, Ask on Messenger and so on), the Get in touch card on the information pages, the footer, and the Talk to us buttons in the phone menu all lead with your first choice. Only channels you have filled in are offered, and if the first is cleared the next takes its place. Nothing changes until you choose: LINE still leads.",
       "The public website now makes the way back obvious. The phone menu starts with Home and the footer has a Home link. Every page below the home page shows a Home › Adopt › Panda style trail under the header (on tablets and computers). The link at the top of a resident or project page (All dogs and cats, All our work) takes you back to the list exactly as you left it, filters and scroll position kept, and if you arrived from Facebook or a search it still opens the list rather than leaving the site.",
       "Resident pages now show a real message when something goes wrong, instead of a numbered code. Recording an intake, editing a resident, moving or rehoming one, sending one to hospital, recording or undoing a death, and deleting or refiling a photo, blood-test file or procedure file all say what happened, with a short reference to quote if it is something unexpected.",
-      { text: "A vet can now change only their own clinic's records. Another clinic's vet visits, prescriptions, procedures, blood tests and their files stay visible on a resident's page but are read-only, and a vet can no longer record a visit for a clinic other than their own. Opening Edit on another clinic's visit now says it is read-only.", roles: ["doctor", "admin"] },
+      "A vet can now change only their own clinic's records. Another clinic's vet visits, prescriptions, procedures, blood tests and their files stay visible on a resident's page but are read-only, and a vet can no longer record a visit for a clinic other than their own. Opening Edit on another clinic's visit now says it is read-only.",
       "The sign-in page now has a Request access link that explains how to ask for an account: continue with Google, and an administrator will see the request and approve it. The message a new Google account gets afterwards now says it has been told, instead of sounding like a dead end, and people with no Google account are pointed to the shelter's email.",
     ],
   },
@@ -1215,10 +1040,10 @@ export const releases: Release[] = [
       "Vets see only their own clinic's residents, access requests at a glance, and refiling photos",
     major: true,
     notes: [
-      { text: "A vet now sees only the residents their own clinic treats: any resident the clinic has a vet visit, prescription, procedure or blood test for, with that resident's whole history, other clinics' visits included. Other residents no longer appear anywhere a vet can look, including by typing a resident's address. The Residents list names the clinic, and a vet account with no clinic set sees no residents until an admin sets one under Security.", roles: ["doctor", "admin"] },
-      { text: "Admins can now see whether anyone is waiting for access without signing in with the authenticator app. Settings → System status has an Access requests card saying how many are waiting and how long the oldest has waited, and while anyone waits every admin has a Review access requests task at the top of My tasks. Neither says who is asking — names and email addresses are still only on Settings → Security, which both link to.", roles: ["admin"] },
+      "A vet now sees only the residents their own clinic treats: any resident the clinic has a vet visit, prescription, procedure or blood test for, with that resident's whole history, other clinics' visits included. Other residents no longer appear anywhere a vet can look, including by typing a resident's address. The Residents list names the clinic, and a vet account with no clinic set sees no residents until an admin sets one under Security.",
+      { text: "Admins can now see whether anyone is waiting for access without signing in with the authenticator app. Settings → System status has an Access requests card saying how many are waiting and how long the oldest has waited, and while anyone waits every admin has a Review access requests task at the top of My tasks. Neither says who is asking — names and email addresses are still only on Settings → Security, which both link to.", admin: true },
       "A prescription or diet that ended yesterday no longer shows as current on a resident's page between midnight and 7 in the morning. It used to stay listed as current until 7. The date on Return from hospital, Rehome and Return to shelter also no longer offers the day before a move made in those hours, which the save then refused.",
-      { text: "Admin pages (Zones, Enclosures, Frequencies, Immunization types, Procedure types, Blood test types, Website, System status) now show the real reason an action was refused, instead of a generic error.", roles: ["admin"] },
+      { text: "Admin pages (Zones, Enclosures, Frequencies, Immunization types, Procedure types, Blood test types, Website, System status) now show the real reason an action was refused, instead of a generic error.", admin: true },
       "Going from the home page to the dogs up for adoption now shows our puppy-at-a-laptop loading animation for a moment before the list appears. Changing a filter or the ready-only toggle on that page stays instant.",
       "A resident photo filed under the wrong folder can now be refiled without deleting and re-uploading it — open it in the photo viewer and choose Move to folder. Its date taken and caption stay; only its folder, in Drive and in the app, changes. A vet can move a photo into Medical but not out of it, and a photo can't be moved into Medical while it's the resident's profile photo.",
     ],
@@ -1231,10 +1056,10 @@ export const releases: Release[] = [
     major: false,
     notes: [
       "Each vet or clinic now has a list of its doctors, which you can see and correct. It fills itself from the doctors' names typed on visits, and the visit forms suggest from it. Under Management → Vets, a new Doctors column opens a clinic's list, where you can rename a misspelt doctor, merge two spellings of one person (\"Somchai\" and \"Dr Somchai\" — the page points out names that look alike), and mark a doctor who has left so they are no longer suggested. A rename or merge also corrects the name on that doctor's past visits, and the page says how many before it does. A vet's hub now shows the clinic's doctors with how many visits each saw.",
-      { text: "A vet booking or editing a vet visit now records it for their own clinic, shown by name, instead of choosing from every clinic the shelter uses. An admin sets which clinic a vet account belongs to under Security, where a Clinic choice now appears under the role of every vet account; until it is set, the vet-visit form tells the vet to ask for it. The Status choices on the vet-visit forms also say what they mean — Scheduled is a visit not yet confirmed as done, which is why a past one shows as overdue.", roles: ["admin", "doctor"] },
+      "A vet booking or editing a vet visit now records it for their own clinic, shown by name, instead of choosing from every clinic the shelter uses. An admin sets which clinic a vet account belongs to under Security, where a Clinic choice now appears under the role of every vet account; until it is set, the vet-visit form tells the vet to ask for it. The Status choices on the vet-visit forms also say what they mean — Scheduled is a visit not yet confirmed as done, which is why a past one shows as overdue.",
       "A vet visit now holds one weight, and a resident one weight per day. When logging a weight, the linked-visit list leaves out visits that already have one (and visits still to come), and choosing a day that already has a reading turns the save into a correction of that reading — so a vet weighing an animal on its intake day updates the intake weight rather than adding a second. Any reading can now be corrected with Edit on the Weight page, or Edit weight on its vet visit.",
-      { text: "The Pet relocation page is gone from the website — moving pets is not a service the shelter offers — and an International adoption page has taken its place, for people abroad who would like to adopt one of the animals. It is under Adopt in the menu and the footer (Adopt now opens to Meet our residents and International adoption), with a caped puppy flying over the globe at the top, and the adoption listing's line for adopters abroad now points to it. Anyone following an old link to the relocation page lands on the new one. The Services menu is hidden while it has nothing in it. The page starts with standard text in English and Thai; admins can rewrite it under Settings → Website, where it is already filled in to edit.", roles: ["admin", "management", "staff", "volunteer"] },
-      { text: "A date you don't have to fill in can now be emptied again once it has been set: a Clear button appears beside it. On a phone, tapping the date could fill it in with no way back to blank, so an optional date became one you had to keep. It is on a diet's and a medication's end date, a maintenance job's due date, a recurring job's end date, a shelter friend's Friend since and a project folder's date.", roles: ["admin", "management", "staff", "volunteer"] },
+      "The Pet relocation page is gone from the website — moving pets is not a service the shelter offers — and an International adoption page has taken its place, for people abroad who would like to adopt one of the animals. It is under Adopt in the menu and the footer (Adopt now opens to Meet our residents and International adoption), with a caped puppy flying over the globe at the top, and the adoption listing's line for adopters abroad now points to it. Anyone following an old link to the relocation page lands on the new one. The Services menu is hidden while it has nothing in it. The page starts with standard text in English and Thai; admins can rewrite it under Settings → Website, where it is already filled in to edit.",
+      "A date you don't have to fill in can now be emptied again once it has been set: a Clear button appears beside it. On a phone, tapping the date could fill it in with no way back to blank, so an optional date became one you had to keep. It is on a diet's and a medication's end date, a maintenance job's due date, a recurring job's end date, a shelter friend's Friend since and a project folder's date.",
       "The user manual now opens on what your own role does: a vet sees sign-in, residents, medical records and photos rather than intake, stocktake and Settings. Show everything, at the top of the manual, brings back the rest, greyed where it isn't part of your role — and Find on page still finds a topic that is tucked away, so you can check whether something is yours to do.",
       "A prescription can only be linked to a vet visit that has already happened. The linked-visit list on the prescription form leaves out visits still to come, a visit still to come no longer has an Add prescription link on the Vet Appointments page, and a visit that has prescriptions linked to it can no longer be moved to a later day than today. A prescription already linked to a visit keeps its link when it is edited.",
       "Release notes now open on what changed for your own role, like the manual: a vet no longer reads about stocktake or the website. Every release stays in the list with its number, and one with nothing for you says so. Show everything, at the top of the page, brings back the rest, greyed where it isn't for your role. Changes from before this release are shown to everyone, as they always were.",

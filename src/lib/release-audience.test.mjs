@@ -50,11 +50,10 @@ test("an admin note is for Admin and nobody else, holding no card, under every v
   assert.equal(isNoteListed({ text: "x", cards: ["record_weight"] }, nobody), true);
 });
 
-test("role-tagged history is unchanged, retired staff tag included", () => {
-  assert.equal(isNoteForReader({ text: "x", roles: ["doctor"] }, login("doctor", false)), true);
-  assert.equal(isNoteForReader({ text: "x", roles: ["doctor"] }, login("volunteer", false)), false);
-  assert.equal(isNoteForReader({ text: "x", roles: ["staff"] }, login("volunteer", false)), false);
-  assert.equal(isNoteForReader({ text: "x", roles: ["staff"] }, login("staff", false)), true);
-  // a role the tags never heard of is widened, never read as another role
-  assert.equal(isNoteForReader({ text: "x", roles: ["doctor"] }, login("kennel_lead", false)), true);
+test("converted history: untagged is everyone's, and no role name is read anywhere", () => {
+  // Role-tagged history was converted to admin: true (admin-only) or untagged; a login's role key changes nothing.
+  for (const key of ["doctor", "volunteer", "kennel_lead", "any_name_a_shelter_picks"]) {
+    assert.equal(isNoteForReader("history line", login(key, false)), true);
+    assert.equal(isNoteForReader({ text: "x", admin: true }, login(key, false)), false);
+  }
 });
