@@ -1,7 +1,10 @@
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/permissions/can";
-import { requirePermission } from "@/lib/permissions/require";
+import { requireAnyPermission } from "@/lib/permissions/require";
+import { loadWebsiteDrafts } from "@/lib/website/drafts";
+import { PortalTabs, type PortalTab } from "./PortalTabs";
+import { WebsiteDraftQueue } from "./WebsiteDraftQueue";
 import { loadWaitingEventPhotos, loadWaitingPhotos } from "@/lib/photos/approval";
 import { loadPendingPhotos } from "@/lib/photos/pending";
 import { loadPickableResidents } from "@/lib/medical/residents";
@@ -17,16 +20,44 @@ import { EventPhotoQueue } from "./EventPhotoQueue";
  * Gated on photos.approve, the activity the database itself checks.
  */
 export default async function ApprovePhotosPage() {
-  const { perms } = await requirePermission("photos.approve");
+  // Each tab asks the activity its own approve action asks (photos.approve for the photo tabs, website.approve for page
+  // changes). The page opens for either; a tab nobody may use is not drawn.
+  const { perms } = await requireAnyPermission(["photos.approve", "website.approve"]);
   const { t } = await getT();
   const supabase = await createClient();
-  const [photos, pending, { residents, error }] = await Promise.all([
-    loadWaitingPhotos(supabase),
-    loadPendingPhotos(supabase),
-    loadPickableResidents(supabase),
+  const showPhotos = can(perms, "photos.approve");
+  const showWebsite = can(perms, "website.approve");
+  const [photos, pending, eventPhotos, drafts, { residents, error }] = await Promise.all([
+    showPhotos ? loadWaitingPhotos(supabase) : [],
+    showPhotos ? loadPendingPhotos(supabase) : [],
+    showPhotos ? loadWaitingEventPhotos(supabase) : [],
+    showWebsite ? loadWebsiteDrafts(supabase) : [],
+    showPhotos ? loadPickableResidents(supabase) : { residents: [], error: null },
   ]);
   // Changing the resident of a waiting photo is managing it (the database asks photos.resident_manage).
   const canManage = can(perms, "photos.resident_manage");
+
+  const tabs: PortalTab[] = [];
+  if (showPhotos) {
+    tabs.push({
+      key: "residents",
+      label: t.photoApproval.tabs.residents,
+      count: photos.length,
+      content: (
+        <ApproveQueue photos={photos} canRemove={canManage} canReassign={canManage} residents={residents} loadError={error} othersWaiting={pending.length > 0} />
+      ),
+    });
+    tabs.push({
+      key: "who",
+      label: t.photoApproval.tabs.who,
+      count: pending.length,
+      content: <PendingQueue photos={pending} residents={residents} loadError={error} />,
+    });
+    tabs.push({ key: "events", label: t.photoApproval.tabs.events, count: eventPhotos.length, content: <EventPhotoQueue photos={eventPhotos} /> });
+  }
+  if (showWebsite) {
+    tabs.push({ key: "website", label: t.photoApproval.tabs.website, count: drafts.length, content: <WebsiteDraftQueue drafts={drafts} canDecide={showWebsite} /> });
+  }
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 md:p-6">
@@ -34,18 +65,7 @@ export default async function ApprovePhotosPage() {
         <h1 className="text-2xl font-semibold text-foreground">{t.photoApproval.title}</h1>
         <p className="text-base text-muted">{t.photoApproval.intro}</p>
       </div>
-      <PendingQueue photos={pending} residents={residents} loadError={error} />
-      {pending.length > 0 && photos.length > 0 && (
-        <h2 className="text-xl font-semibold text-foreground">{t.photoApproval.pending.residentsHeading(photos.length)}</h2>
-      )}
-      <ApproveQueue
-        photos={photos}
-        canRemove={canManage}
-        canReassign={canManage}
-        residents={residents}
-        loadError={error}
-        othersWaiting={pending.length > 0}
-      />
+      <PortalTabs tabs={tabs} />
     </main>
   );
 }

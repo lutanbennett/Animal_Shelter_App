@@ -5170,6 +5170,17 @@ const en = {
     },
   },
   photoApproval: {
+    tabs: { residents: "Resident photos", who: "Who's in the photo", events: "Event photos", website: "Page changes" },
+    website: {
+      empty: "No website changes are waiting.",
+      published: "Published. The website now shows it.",
+      discarded: "Discarded. The website is unchanged.",
+      publish: "Publish",
+      discard: "Discard",
+      home: "Home page",
+      page: (slug: string) => `The ${slug} page`,
+      proposedBy: (who: string, when: string) => `Drafted by ${who} on ${when}`,
+    },
     title: "Photos to approve",
     intro: "Look at each photo. Approve it only if it is the right animal and nothing in it should stay private. Approved photos can then be shown on the website.",
     empty: "No photos are waiting. Everything filed has been looked at.",
