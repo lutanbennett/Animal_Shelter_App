@@ -26,10 +26,10 @@
 - [x] `node scripts/gates.mjs`, run to a file and read:
 
 ```
-=== gates: typecheck exited 0 after 32s
+=== gates: typecheck exited 0 after 44s
 === gates: lint exited 0 after 113s
-=== gates: test exited 0 after 16s
-=== gates: build exited 0 after 89s
+=== gates: test exited 0 after 15s
+=== gates: build exited 0 after 115s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
