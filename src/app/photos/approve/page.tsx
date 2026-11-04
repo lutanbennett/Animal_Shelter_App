@@ -1,7 +1,8 @@
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/permissions/can";
-import { requireAnyPermission } from "@/lib/permissions/require";
+import { loadPermissions } from "@/lib/permissions/load";
+import { requirePermission } from "@/lib/permissions/require";
 import { loadWebsiteDrafts } from "@/lib/website/drafts";
 import { PortalTabs, type PortalTab } from "./PortalTabs";
 import { WebsiteDraftQueue } from "./WebsiteDraftQueue";
@@ -22,7 +23,10 @@ import { EventPhotoQueue } from "./EventPhotoQueue";
 export default async function ApprovePhotosPage() {
   // Each tab asks the activity its own approve action asks (photos.approve for the photo tabs, website.approve for page
   // changes). The page opens for either; a tab nobody may use is not drawn.
-  const { perms } = await requireAnyPermission(["photos.approve", "website.approve"]);
+  const early = await loadPermissions();
+  // Neither activity: the ordinary guard refuses (or sends a signed-out visitor to sign in).
+  if (!can(early, "website.approve")) await requirePermission("photos.approve");
+  const perms = early ?? (await loadPermissions());
   const { t } = await getT();
   const supabase = await createClient();
   const showPhotos = can(perms, "photos.approve");
