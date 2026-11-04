@@ -15,6 +15,7 @@ import { isSubsumed, tileBlock } from "@/lib/home/tiles";
 import { getT } from "@/lib/i18n/get-t";
 import { CardButton, DeleteRoleButton, ShowMenuToggle } from "./CardControls";
 import { CardBoard } from "./CardBoard";
+import { CreateRoleForm } from "./CreateRoleForm";
 import { loadRoles, roleName } from "./roles";
 
 /**
@@ -264,6 +265,12 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
           ) : (
             isAdmin && <p className="text-xs text-muted">{c.menuLocked}</p>
           )}
+        </section>
+      )}
+
+      {canEdit && (
+        <section aria-label={w.createRole.open} className="flex flex-col gap-2">
+          <CreateRoleForm labels={{ open: w.createRole.open, heading: w.createRole.heading, name: w.createRole.name, nameTh: w.createRole.nameTh, keyIs: w.createRole.keyIs, keyNeedsLatin: w.createRole.keyNeedsLatin, noCards: w.createRole.noCards, submit: w.createRole.submit, cancel: w.createRole.cancel }} />
         </section>
       )}
 
