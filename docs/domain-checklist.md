@@ -80,10 +80,46 @@ does not change with it.** Work through it top to bottom, once per move.
 ## C. Giving UAT its own address (owed by the cutover item)
 
 `uat` block in `wrangler.jsonc`: `APP_HOST` and `PUBLIC_HOST` (the UAT host),
-`routes`, then Supabase redirect URLs and Google redirect URIs for it, as in B.
+`routes`, then Supabase redirect URLs and Google redirect URIs for it, as in B. **Settled and sequenced in section E below** (UAT needs no tunnel).
 
 ## D. Outstanding by hand (Lutan)
 
 1. **Supabase, live project, Authentication → SMTP settings:** change *Sender name* from
    `Lanna Care UAT` to `Lanna Care`. The sender address stays `noreply@lannacare.org`.
    Then send a password reset to yourself and check the wording reads as ours.
+
+## E. CUTOVER DAY, in order (Friday 6 November 2026; `#ki6cx`)
+
+Whole system moves to `lannacareforanimals.org`; `lannacare.org` becomes UAT. Reasoning, the
+UAT-tunnel answer and the exact diff: `docs/decisions/2026-11-04-cutover-preflight.md`.
+**Who:** L = Lutan, RM = release manager, S = a script. **Each step's proof must pass before the next starts.**
+
+### Before the day (Thursday)
+
+| # | Step | Who | Proof |
+|---|---|---|---|
+| P1 | New production Supabase project: restore from a dump of the live one (`#ki6cx` step 2; read `2026-10-19-restore-drill-real-supabase.md`, the 120 s timeout) | L + RM | `node scripts/apply-migrations.mjs --status --env production` (with `.env.deploy.production` pointed at it) shows nothing pending; row counts of residents/contacts match |
+| P2 | New project: Authentication → URL Configuration: Site URL and Redirect URL `https://lannacareforanimals.org/auth/callback`; SMTP sender | **L** | screenshot or read-back of both fields |
+| P3 | Google sign-in client (`lanna-care-dev`): add JavaScript origin `https://lannacareforanimals.org` and the **new project's** `https://<ref>.supabase.co/auth/v1/callback` redirect URI. Keep the old entries (UAT uses them) | **L** | sign-in on dev still works; entries visible in the console |
+| P4 | Zone `lannacareforanimals.org`: **delete Sav's parking A and CNAME records** (apex and www) so Worker custom domains can be created; SPF/DKIM/DMARC and send-email routing for `releases@` and `alerts@` | **L** | dashboard shows no A/CNAME at apex or www; test mail sends |
+| P5 | Prepare the cutover branch from the diff in the decision file (wrangler, tunnel, `UAT_PROJECT_REF`, releases label, `deploy-pi.sh`, `purge-cache.mjs`); `.env.deploy.production` → new project, `.env.deploy.uat` → old project, secrets for both. **Do not merge yet.** | RM | `node scripts/check-site-hosts.mjs` prints `all right`; `node scripts/gates.mjs` four zeros |
+| P6 | Backup of the live project | S | `node scripts/backup.mjs --env production` lists a new file |
+
+### On the day
+
+1. **Freeze.** Tell the shelter staff not to save anything until told. *Proof:* message sent.
+2. **Final copy.** Re-dump and restore live → new project (P1 again) so the new project holds the last writes. *Proof:* row counts match the live project.
+3. **Merge the cutover PR** once green on its head commit (`gh run view <id> --json headSha`). Merging deploys nothing.
+4. **Pi first.** `./scripts/pi/deploy-pi.sh --env production` (builds with the new `APP_HOST` and project), then edit `/etc/cloudflared/config.yml` so `pi.lannacare.org` presents `lannacareforanimals.org` and `sudo systemctl restart cloudflared`. From here `lannacare.org` Server Actions are refused until step 5; that is why step 1 happened. RM. *Proof:* `systemctl is-active` for both; `curl` to the Pi with the origin key returns `/api/version` with the new release.
+5. **Production Worker.** `node scripts/deploy.mjs --env production`. RM. *Proof:* `curl -sI https://lannacareforanimals.org/` returns 200 with an `x-lanna-served-by` header; `https://lannacareforanimals.org/api/version` shows the release; the home page is the public site, not a sign-in page.
+6. **Check `lannacare.org` was released.** Dashboard → Workers → `lanna-animal-care` → Domains & Routes should no longer list it. If it still does, remove it by hand (L or RM). *Not established whether wrangler does this on deploy.* *Proof:* the domain is not on the production Worker.
+7. **UAT Worker.** `node scripts/deploy.mjs --env uat`. RM. *Proof:* `https://lannacare.org/` shows the sign-in landing page (locked) and the UAT badge after sign-in; `/api/version` answers. UAT has no tunnel and needs none (`ORIGIN_HOST` is empty).
+8. **Purge** both zones: `node scripts/purge-cache.mjs --env production` with `CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS` set. S. *Proof:* the script's own check.
+9. **Smoke test on the new name, in this order** (RM, then L signs in with Google): sign in; **save a setting** (a Server Action: this is the 2026-10-01 failure); **upload a photo** (the upload route, the other half); open one `/r/` and one `/e/` link; `robots.txt` and `sitemap.xml` say the new host. *Proof:* each works; any "A server error occurred" means stop and read the Pi's journal for `x-forwarded-host`.
+10. **Unfreeze.** Tell the staff. Run the release smoke test (`docs/release-smoke-test.md`).
+11. **Search steps** (from `#ki6cx`, after the unlock): (a) robots/sitemap say the new host; (b) Search Console Domain property (TXT in Cloudflare DNS), submit the sitemap, request indexing on the home page and one animal; (c) Rich Results Test on the home page and a story; (d) PageSpeed on the home page and an animal page; (e) share a page into LINE and Facebook and check the preview; (f) Director sets the new website on the Google Business Profile and Settings → Website → Map link. L, except where stated.
+12. **Record PR**: release record, backlog tick, README environments table.
+
+### If it goes wrong
+
+Before the unfreeze: redeploy the previous Worker version and put the Pi back (`.next.prev`, tunnel header to `lannacare.org`); the live project was never written to after step 2, so nothing is lost. After the unfreeze, the new project has taken writes: rolling back loses them, so fix forward.
