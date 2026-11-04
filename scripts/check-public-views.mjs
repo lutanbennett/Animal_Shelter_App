@@ -94,6 +94,10 @@ const PUBLIC_VIEWS = [
   // 0233. Upcoming open or cancelled desexing drives and a count of places left. Owner-run with a WHERE on status and
   // date, so a draft is never readable. It selects no sign-up column.
   "public_desexing_drives",
+  // 0314. Published, not cancelled fundraising events, and their gallery: a photo only once attachments.approved_at is set.
+  // appeal_id / project_folder_id are shown only when that appeal / project is public itself. No creator, note or money figure.
+  "public_fundraising_events",
+  "public_fundraising_event_photos",
 ];
 // No base tables: site_content, site_content_photos and site_pages were
 // readable by anon with select * until 0122, so a new column was public the

@@ -365,7 +365,7 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // /photos/approve queue (photos.approve). opens points at the campaigns page only until the events screen exists; the
   // app half repoints it to its own route, and until then cardsWithoutTile() says so out loud rather than leaving a holder guessing.
   // Given to no role: Lutan assigns it in Who does what.
-  run_fundraising_events: { includes: [], bundle: [{ activity: "events.run" }], opens: "/management/campaigns" },
+  run_fundraising_events: { includes: [], bundle: [{ activity: "events.run" }], opens: "/management/events" },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */

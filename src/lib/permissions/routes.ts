@@ -13,7 +13,7 @@
  * rest, and Settings and Management landing pages with their areas.
  */
 
-import { Activity, CalendarClock, Scissors, BadgeCheck, Camera, Laugh, ClipboardCheck, HandHeart, Coins, Globe, Grid3x3, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Receipt, Scale, ShoppingBag, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
+import { Activity, CalendarClock, Scissors, BadgeCheck, Camera, Laugh, ClipboardCheck, HandHeart, PartyPopper, Coins, Globe, Grid3x3, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Receipt, Scale, ShoppingBag, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
 import { CONTACT_ICONS, ENCLOSURE_ICONS, NAV_ICONS, SECTION_ICONS, CLINIC_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "./can";
@@ -214,6 +214,15 @@ export const ROUTES: readonly RouteEntry[] = [
     label: (t) => t.nav.appeals,
     device: "any",
     menu: true,
+  },
+  {
+    // Fundraising events (0312, 0314): a date, a place and a gallery. Opens for the run_fundraising_events card.
+    path: "/management/events",
+    activity: "events.run",
+    icon: PartyPopper,
+    label: (t) => t.nav.events,
+    device: "any",
+    menu: false,
   },
   {
     // The social media library (0223): memes made elsewhere, and where each was posted. Opens at Read; never public.
