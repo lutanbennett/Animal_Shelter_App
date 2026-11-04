@@ -11,7 +11,7 @@
 | PR | n/a: not yet — the PR does not exist at this commit |
 | Tested by / date | Claude / 2026-11-04 |
 | Carries a migration? | yes — `0312_fundraising_events.sql` |
-| Tested at SHA | GATES_SHA |
+| Tested at SHA | c283e81e |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,11 @@
 - [x] `node scripts/gates.mjs` ends with the four-gate line, every exit code `0`, run in the background and the file read afterwards:
 
 ```
-GATES_BLOCK
+=== gates: typecheck exited 0 after 10s
+=== gates: lint exited 0 after 93s
+=== gates: test exited 0 after 15s
+=== gates: build exited 0 after 40s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
