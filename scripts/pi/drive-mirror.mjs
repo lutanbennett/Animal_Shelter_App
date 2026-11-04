@@ -18,6 +18,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { pipeline } from "node:stream/promises";
 import { Readable } from "node:stream";
+import { plan, isWorthRetrying } from "./drive-export.mjs";
 
 const arg = (n, d) => {
   const i = process.argv.indexOf(n);
@@ -30,7 +31,6 @@ const META = path.join(DEST, "_mirror");
 const STATE = path.join(META, "state.json");
 const STATUS = path.join(META, "status.json");
 const GONE = path.join(META, "gone.log");
-const FOLDER = "application/vnd.google-apps.folder";
 const API = "https://www.googleapis.com/drive/v3/files";
 
 if (process.argv.includes("--status")) {
@@ -90,7 +90,6 @@ const get = async (url) => {
   throw new Error(`Drive kept failing: ${String(url).split("?")[0]}`);
 };
 const safe = (n) => n.replace(/[<>:"\\|?*\x00-\x1f/]/g, "_").replace(/^\.+$/, "_");
-const isNative = (f) => f.mimeType.startsWith("application/vnd.google-apps.") && !f.mimeType.includes("shortcut");
 
 const state = fs.existsSync(STATE) ? JSON.parse(fs.readFileSync(STATE, "utf8")) : {};
 const seen = new Set();
@@ -118,39 +117,70 @@ async function list(id) {
   return out;
 }
 
-async function copyFile(f, target) {
-  const url = isNative(f)
-    ? `${API}/${f.id}/export?mimeType=application%2Fpdf`
-    : `${API}/${f.id}?alt=media&supportsAllDrives=true`;
+async function copyFile(f, target, how) {
+  const url =
+    how === "export"
+      ? `${API}/${f.id}/export?mimeType=application%2Fpdf`
+      : `${API}/${f.id}?alt=media&supportsAllDrives=true`;
   const r = await get(url);
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   const full = path.join(DEST, SHELTER, target);
   fs.mkdirSync(path.dirname(full), { recursive: true });
   const tmp = full + ".part";
-  await pipeline(Readable.fromWeb(r.body), fs.createWriteStream(tmp));
+  try {
+    await pipeline(Readable.fromWeb(r.body), fs.createWriteStream(tmp));
+  } catch (e) {
+    // A half-written .part is not a copy. Leave nothing behind for the retry to trip on.
+    fs.rmSync(tmp, { force: true });
+    throw e;
+  }
   fs.renameSync(tmp, full);
+}
+
+// Drive's busy and outage codes are retried inside get(); this is for what gets past it —
+// a connection dropped mid-body, which arrives as a bare `terminated` and used to fail the
+// whole run over one photo. A 4xx is final and is not retried.
+async function copyWithRetry(f, target, how) {
+  for (let a = 0; ; a++) {
+    try {
+      return await copyFile(f, target, how);
+    } catch (e) {
+      if (a >= 2 || !isWorthRetrying(e.message)) throw e;
+      console.error(`drive-mirror: ${target}: ${e.message} — retrying (${a + 1} of 2)`);
+      await new Promise((s) => setTimeout(s, 2000 * (a + 1)));
+    }
+  }
 }
 
 async function walk(id, rel) {
   for (const f of await list(id)) {
     const here = path.join(rel, safe(f.name));
-    if (f.mimeType === FOLDER) {
+    const how = plan(f.mimeType);
+    if (how === "folder") {
       await walk(f.id, here);
       continue;
     }
     seen.add(f.id);
-    if (f.mimeType.includes("shortcut")) {
+    if (how === "shortcut") {
       counts.skipped++;
       continue;
     }
-    const want = isNative(f) ? here + ".pdf" : here;
+    if (how === "unexportable") {
+      // Drive has no file behind a Form, a Site or a Jamboard, so there is nothing to copy
+      // and no retry that would help. Named every run rather than silenced: this is the only
+      // place anyone learns that something in Drive is not in the mirror.
+      counts.skipped++;
+      console.error(`drive-mirror: ${here}: skipped, ${f.mimeType} cannot be exported`);
+      continue;
+    }
+    const want = how === "export" ? here + ".pdf" : here;
     const prev = state[f.id];
     if (prev && prev.modifiedTime === f.modifiedTime && prev.path === want && !prev.gone) {
       counts.same++;
       continue;
     }
     try {
-      await copyFile(f, want);
+      await copyWithRetry(f, want, how);
       counts[prev ? "changed" : "new"]++;
       state[f.id] = { path: want, modifiedTime: f.modifiedTime };
     } catch (e) {
