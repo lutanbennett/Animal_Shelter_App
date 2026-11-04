@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FileText } from "lucide-react";
@@ -76,6 +76,15 @@ export function BillsInbox({
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [failed, setFailed] = useState<{ name: string; error: string }[]>([]);
   const busy = progress != null;
+  const [openId, setOpenId] = useState<string | null>(null);
+  // A bill that is filed leaves the list on refresh, which closes its dialog (openCard is then undefined).
+  const openCard = cards.find((c) => c.id === openId);
+  useEffect(() => {
+    if (!openCard) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpenId(null);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [openCard]);
 
   // Each picked photo becomes its own card, one after another (the Drive folder lookup is not safe in parallel).
   // A photo that fails is listed; the others are already cards and stay.
@@ -132,15 +141,56 @@ export function BillsInbox({
       {cards.length === 0 ? (
         <p className="rounded border border-border bg-surface p-4 text-sm text-muted">{b.none}</p>
       ) : (
-        <ul className="flex flex-col gap-4">
+        <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-6">
           {cards.map((card) => (
-            <CardView key={card.id} card={card} suggestions={suggestions} canDeliver={canDeliver} kinds={kinds} places={places} accounts={accounts} />
+            <li key={card.id}>
+              <button
+                type="button"
+                onClick={() => setOpenId(card.id)}
+                aria-label={b.openBill(card.addedBy)}
+                className="relative block w-full overflow-hidden rounded border border-border bg-surface-hover text-left focus:outline-none focus:ring-2 focus:ring-primary/40"
+              >
+                <Thumb photo={card.photos[0]} alt={t.bills.photo.alt} />
+                {card.photos.length > 1 && (
+                  <span className="absolute right-1 top-1 rounded-full bg-foreground/80 px-2 py-0.5 text-xs font-medium text-background">
+                    {card.photos.length}
+                  </span>
+                )}
+              </button>
+            </li>
           ))}
         </ul>
+      )}
+      {openCard && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-2 sm:p-6" onClick={() => setOpenId(null)}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={b.detailTitle}
+            className="w-full max-w-2xl rounded-lg border border-border bg-surface p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardView card={openCard} suggestions={suggestions} canDeliver={canDeliver} kinds={kinds} places={places} accounts={accounts} onClose={() => setOpenId(null)} />
+          </div>
+        </div>
       )}
       {cards.length > 0 && <p className="text-xs text-muted">{b.keep}</p>}
     </div>
   );
+}
+
+/** One tile: the bill's first page as a picture, or a document mark for a PDF (which has no picture to show). */
+function Thumb({ photo, alt }: { photo: BillCard["photos"][number] | undefined; alt: string }) {
+  if (!photo || photo.isPdf) {
+    return (
+      <span className="flex aspect-[3/4] flex-col items-center justify-center gap-1 p-1 text-center text-xs text-muted">
+        <FileText aria-hidden="true" className="h-8 w-8" />
+        {photo && <span className="line-clamp-2 break-all">{photo.name}</span>}
+      </span>
+    );
+  }
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={photo.url} alt={alt} loading="lazy" className="aspect-[3/4] w-full object-cover" />;
 }
 
 function CardView({
@@ -150,7 +200,9 @@ function CardView({
   kinds,
   places,
   accounts,
+  onClose,
 }: {
+  onClose: () => void;
   card: BillCard;
   suggestions: BillSuggestion[];
   canDeliver: boolean;
@@ -184,6 +236,8 @@ function CardView({
   const kind = kinds.find((k) => k.id === kindId);
   // The form the chosen kind implies: its place and account (both optional), and where the card is filed. No kind, Other, or a
   // kind the code does not know is the plain form, with the matching below exactly as it was.
+  // One question first: the rest of the form appears once a type is chosen, or at once for a bill that already carries figures.
+  const showDetails = kinds.length === 0 || !!kindId || !!(amount || date || note);
   const showPlace = !!kind?.premises;
   const showAccount = !!kind?.account;
   const details = {
@@ -234,25 +288,28 @@ function CardView({
   };
 
   return (
-    <li className="flex flex-col gap-3 rounded-lg border border-border bg-surface p-4">
+    <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <p className="text-xs text-muted">
           {card.addedBy} · {b.pages(card.photos.length)}
         </p>
+        <ActionButton compact onClick={onClose}>
+          {b.close}
+        </ActionButton>
       </div>
 
-      <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      <ul className="flex flex-col gap-2">
         {card.photos.map((p) => (
           <li key={p.id} className="overflow-hidden rounded border border-border bg-surface-hover">
             <a href={p.url} target="_blank" rel="noreferrer" className="block">
               {p.isPdf ? (
-                <span className="flex aspect-[3/4] flex-col items-center justify-center gap-1 p-2 text-center text-xs text-muted">
-                  <FileText aria-hidden="true" className="h-8 w-8" />
-                  <span className="line-clamp-2 break-all">{p.name}</span>
+                <span className="flex flex-col items-center justify-center gap-1 p-6 text-center text-sm text-muted">
+                  <FileText aria-hidden="true" className="h-12 w-12" />
+                  <span className="break-all">{p.name}</span>
                 </span>
               ) : (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={p.url} alt={t.bills.photo.alt} className="aspect-[3/4] w-full object-cover" />
+                <img src={p.url} alt={t.bills.photo.alt} className="max-h-[70vh] w-full object-contain" />
               )}
             </a>
           </li>
@@ -275,6 +332,46 @@ function CardView({
         />
       </div>
 
+      <div>
+  {kinds.length > 0 && (
+    <label className="flex flex-col gap-1 text-base font-medium text-foreground">
+      {b.kindLabel}
+      <select
+        value={kindId}
+        onChange={(e) => {
+          setKindId(e.target.value);
+          setAccountId("");
+        }}
+        className={`${inputClass} w-full sm:w-72`}
+      >
+        <option value="">{b.kindNone}</option>
+        {kinds
+          .filter((k) => !k.parentId)
+          .map((k) => {
+            const children = kinds.filter((c) => c.parentId === k.id);
+            return children.length === 0 ? (
+              <option key={k.id} value={k.id} disabled={!k.offered}>
+                {k.label}
+              </option>
+            ) : (
+              <optgroup key={k.id} label={k.label}>
+                <option value={k.id} disabled={!k.offered}>
+                  {b.kindAnyOf(k.label)}
+                </option>
+                {children.map((c) => (
+                  <option key={c.id} value={c.id} disabled={!c.offered}>
+                    {c.label}
+                  </option>
+                ))}
+              </optgroup>
+            );
+          })}
+      </select>
+    </label>
+  )}
+      </div>
+
+      {showDetails && (
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1 text-sm font-medium text-muted">
           {b.cost}
@@ -292,42 +389,6 @@ function CardView({
           {b.date}
           <DateInput value={date} onChange={(e) => setDate(e.target.value)} className={`${inputClass} w-44`} />
         </label>
-        {kinds.length > 0 && (
-          <label className="flex flex-col gap-1 text-sm font-medium text-muted">
-            {b.kindLabel}
-            <select
-              value={kindId}
-              onChange={(e) => {
-                setKindId(e.target.value);
-                setAccountId("");
-              }}
-              className={`${inputClass} w-56`}
-            >
-              <option value="">{b.kindNone}</option>
-              {kinds
-                .filter((k) => !k.parentId)
-                .map((k) => {
-                  const children = kinds.filter((c) => c.parentId === k.id);
-                  return children.length === 0 ? (
-                    <option key={k.id} value={k.id} disabled={!k.offered}>
-                      {k.label}
-                    </option>
-                  ) : (
-                    <optgroup key={k.id} label={k.label}>
-                      <option value={k.id} disabled={!k.offered}>
-                        {b.kindAnyOf(k.label)}
-                      </option>
-                      {children.map((c) => (
-                        <option key={c.id} value={c.id} disabled={!c.offered}>
-                          {c.label}
-                        </option>
-                      ))}
-                    </optgroup>
-                  );
-                })}
-            </select>
-          </label>
-        )}
         {showPlace && (
           <label className="flex flex-col gap-1 text-sm font-medium text-muted">
             {b.placeLabel}
@@ -372,6 +433,8 @@ function CardView({
           <input value={note} onChange={(e) => setNote(e.target.value)} className={`${inputClass} w-full`} />
         </label>
       </div>
+
+      )}
 
       <div className="flex flex-col gap-2">
         <p className="text-sm font-medium text-foreground">{b.forWhat}</p>
@@ -459,6 +522,6 @@ function CardView({
           {message.text}
         </p>
       )}
-    </li>
+    </div>
   );
 }
