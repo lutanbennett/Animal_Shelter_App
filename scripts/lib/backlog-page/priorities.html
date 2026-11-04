@@ -1,0 +1,392 @@
+<style>
+#priorities .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:14px}
+#priorities .lead{color:var(--muted);font-size:14px;max-width:68ch;margin:0 0 12px}
+#priorities .note{color:var(--muted);font-size:13px;margin:10px 0 0}
+#prio-list{list-style:none;margin:0;padding:0}
+#prio-list li{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--border);background:var(--surface)}
+#prio-list li:first-child{border-top:0}
+#prio-list li.dragging{opacity:.9;border-radius:8px;box-shadow:0 2px 10px rgba(30,25,10,.18);border-top-color:transparent}
+#prio-list .n{flex:none;width:26px;height:26px;border-radius:13px;background:var(--primary-soft);color:var(--primary);font-weight:600;font-size:13px;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+#prio-list a.t{flex:1;min-width:0;color:var(--fg);text-decoration:none;font-weight:500}
+#prio-list a.t:hover{text-decoration:underline}
+#prio-list .gone{flex:1;color:var(--muted);font-style:italic}
+.grip{flex:none;width:32px;height:36px;display:flex;align-items:center;justify-content:center;color:var(--muted);cursor:grab;touch-action:none;background:none;border:0;padding:0;font:inherit;font-size:15px;line-height:1;border-radius:8px}
+.grip:hover{color:var(--primary)}
+.grip:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+#prio-list li.dragging .grip{cursor:grabbing}
+.pbtn{flex:none;min-width:36px;height:36px;padding:0 10px;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--fg);font:inherit;font-size:13px;cursor:pointer}
+.pbtn:hover:not(:disabled){border-color:var(--primary);color:var(--primary)}
+.pbtn:disabled{opacity:.35;cursor:default}
+.pbtn.primary{background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600}
+.pbtn.primary:hover:not(:disabled){color:#fff;filter:brightness(1.08)}
+.pbtn:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.prio-empty{color:var(--muted);font-size:14px;padding:6px 0}
+.item-prio{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px}
+.item-prio .rank{font-size:13px;color:var(--primary);font-weight:600}
+.star{flex:none;font-size:12px;font-weight:600;color:var(--primary);background:var(--primary-soft);border-radius:999px;padding:1px 8px;margin-top:2px;font-variant-numeric:tabular-nums}
+/* The pick control sits on the item's own row, so it needs no opening to find. */
+.pick{flex:none;width:30px;height:30px;margin-top:-2px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);border-radius:8px;background:var(--surface);color:var(--muted);font:inherit;font-size:14px;line-height:1;cursor:pointer;padding:0}
+.pick:hover{border-color:var(--primary);color:var(--primary)}
+.pick:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+.pick.on{background:var(--primary-soft);border-color:var(--primary);color:var(--primary)}
+.prio-h3{font-size:13px;font-weight:600;color:var(--muted);margin:22px 0 8px;text-transform:uppercase;letter-spacing:.06em}
+#prio-status{font-size:13px;color:var(--muted);min-height:1em;margin-top:8px}
+@media (prefers-reduced-motion:reduce){#prio-list li.dragging{box-shadow:none}}
+</style>
+<section id="priorities" aria-labelledby="prio-h">
+  <h2 id="prio-h">Customer priorities <span class="count" id="prio-count"></span></h2>
+  <div class="panel">
+    <p class="lead">Pick the items you most want next and put them in order. Tap the <strong>☆</strong> on any item below to add it &mdash; the star is on the item&rsquo;s own row, so you do not need to open it. Then order them here by <strong>dragging the <span aria-hidden="true">⠿</span> handle</strong>, or with the arrows. Claude reads this list when it plans each day&rsquo;s work, and builds from the top down when the work allows it (some things have to be built in a certain order; the plan will say so when that changes your order).</p>
+    <ol id="prio-list"><li class="prio-empty">Loading&hellip;</li></ol>
+    <div id="prio-status" role="status" aria-live="polite"></div>
+    <p class="note" id="prio-offline" hidden></p>
+    <p class="note" id="prio-fix" hidden><button type="button" class="pbtn primary" id="prio-allow">Allow saving</button></p>
+  </div>
+</section>
+<script>
+(() => {
+  const RANK_DOC = "priorities/ranking";
+  const listEl = document.getElementById("prio-list");
+  const countEl = document.getElementById("prio-count");
+  const statusEl = document.getElementById("prio-status");
+
+  // Open items on the page: id -> title. Completed items are not offered.
+  // THIS PANEL IS EMITTED ABOVE THE SECTIONS, so at parse time none of the
+  // items exist yet. Scanning here synchronously found nothing and left the
+  // page with no pick controls at all — scan once the document is parsed.
+  const items = new Map();
+  function scanItems() {
+    items.clear();
+    document.querySelectorAll("section:not(#completed):not(#priorities) li.item:not(.done)").forEach((li) => {
+      const t = li.querySelector(".ttl");
+      if (li.id && t) items.set(li.id, t.textContent.trim());
+    });
+    return items.size;
+  }
+  const whenParsed = (fn) => {
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fn, { once: true });
+    else fn();
+  };
+
+  // A pick that is no longer an open item on the page is one of two things,
+  // and they must NOT be treated alike: it has been FINISHED, or it has been
+  // RENAMED (the id is derived from the title, so retitling detaches the pick).
+  // The generator emits the slug of every finished title for exactly this, so
+  // a finished pick can be dropped while a renamed one keeps its row.
+  const finished = (() => {
+    try { return JSON.parse(document.getElementById("prio-finished").textContent); }
+    catch { return { done: [], sections: [] }; }
+  })();
+  const doneIds = new Set(finished.ids || []);        // finished items, by their own id
+  const doneSlugs = new Set(finished.done || []);     // and by the old title slug, for picks made before ids existed
+  const sectionSlugs = finished.sections || [];
+  // Mirrors the generator's slug(): lowercase, non-alphanumeric to "-", 60 max.
+  const slugify = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+  // An id is "<section>-<title slug>", with a "-2" appended when two titles
+  // collide, so strip both to get back to the title's own slug.
+  const tailOf = (id) => {
+    for (const s of sectionSlugs) if (id.startsWith(s + "-")) return id.slice(s.length + 1);
+    return id;
+  };
+  function isFinished(id) {
+    if (items.has(id)) return false;              // still open: nothing to do
+    if (doneIds.has(id)) return true;             // an id pick: exact, and a retitle cannot affect it
+    if (/^i-[a-z0-9]{5}$/.test(id)) return false; // an id pick that is not finished is simply gone
+    const t = titles[id];
+    if (t && doneSlugs.has(slugify(t))) return true;
+    const tail = tailOf(id);
+    if (doneSlugs.has(tail)) return true;
+    const m = tail.match(/^(.*)-\d+$/);
+    return !!(m && doneSlugs.has(m[1]));
+  }
+
+  let db = null, user = null, canWrite = true;
+  let order = [];            // ranked item ids, top first
+  let titles = {};           // id -> the title as it read when it was picked
+  let meta = { by: null, at: null };
+  let writing = Promise.resolve();
+  let dragging = false;      // a drag is in progress: do not re-render under the pointer
+  let pending = null;        // a snapshot that arrived mid-drag
+
+  const say = (t) => { statusEl.textContent = t; };
+  const fmt = (iso) => { try { return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }); } catch { return ""; } };
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+  const btn = (label, aria, onClick, cls) => { const b = el("button", "pbtn" + (cls ? " " + cls : ""), label); b.type = "button"; if (aria) b.setAttribute("aria-label", aria); b.addEventListener("click", onClick); return b; };
+  const same = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+
+  async function save(next) {
+    order = next; render();
+    writing = writing.then(async () => {
+      try {
+        const id = user ? await user.id() : null;
+        // Record each pick's wording as well as its id. The id is derived from
+        // the title, so a retitled item would otherwise become an orphan nobody
+        // could trace — and the planner reads this list.
+        const t = Object.assign({}, titles);
+        next.forEach((x) => { const cur = items.get(x); if (cur) t[x] = cur; });
+        Object.keys(t).forEach((k) => { if (!next.includes(k)) delete t[k]; });
+        titles = t;
+        await db.doc(RANK_DOC).set({ order: next, titles: t, updatedBy: id, updatedAt: new Date().toISOString() });
+        say("Saved.");
+      } catch (e) {
+        if (e && e.code === "invalid_argument") { canWrite = false; render(); say("You can view this list but not change it."); }
+        else say("Could not save just now; please try again.");
+      }
+    });
+    await writing;
+  }
+  const move = (i, d) => { const n = order.slice(); const j = i + d; if (j < 0 || j >= n.length) return; [n[i], n[j]] = [n[j], n[i]]; save(n); };
+  const remove = (id) => save(order.filter((x) => x !== id));
+  const add = (id) => { if (!order.includes(id)) save(order.concat(id)); };
+  const toggle = (id) => { order.includes(id) ? remove(id) : add(id); };
+
+  // Tidy the list against the page: drop picks that are FINISHED, and re-point
+  // picks whose item is still open but has moved section (the id carries the
+  // section, so moving one detaches the pick exactly as renaming does).
+  // Three guards, each against a way this could destroy the list rather than
+  // tidy it: never run before the items are on the page (every pick would look
+  // finished), never run without the finished set (same), and never write when
+  // the viewer cannot (the rows then just render as they did before).
+  // A pick that is NEITHER finished NOR matched keeps its row, on purpose: a
+  // RETITLED item looks exactly like a deleted one from here, and quietly
+  // dropping it would lose a priority Lutan set.
+  let pruning = false;
+  async function pruneFinished() {
+    if (pruning || dragging || !canWrite || !order.length) return;
+    if (!items.size || !doneSlugs.size) return;
+    const byTitle = new Map();
+    items.forEach((t, id) => byTitle.set(slugify(t), id));
+    const next = [];
+    let dropped = 0, moved = 0;
+    for (const id of order) {
+      if (items.has(id)) { next.push(id); continue; }
+      if (isFinished(id)) { dropped++; continue; }
+      const t = titles[id];
+      const now = t ? byTitle.get(slugify(t)) : null;
+      if (now && !next.includes(now) && !order.includes(now)) {
+        titles[now] = items.get(now);
+        next.push(now);
+        moved++;
+        continue;
+      }
+      next.push(id);                       // unmatched: keep it, with its row
+    }
+    if (!dropped && !moved) return;
+    pruning = true;
+    try {
+      await save(next);
+      const parts = [];
+      if (dropped) parts.push(`removed ${dropped} finished item${dropped > 1 ? "s" : ""}`);
+      if (moved) parts.push(`re-linked ${moved} that had moved`);
+      say(parts.join(", ").replace(/^./, (c) => c.toUpperCase()) + ".");
+    } finally {
+      pruning = false;
+    }
+  }
+
+  // Renumber and re-disable the arrows from the DOM's current order, so a live
+  // drag reads correctly before anything is saved.
+  function renumber() {
+    const rows = [...listEl.querySelectorAll("li[data-id]")];
+    rows.forEach((row, i) => {
+      const n = row.querySelector(".n"); if (n) n.textContent = String(i + 1);
+      const up = row.querySelector('[data-act="up"]'); if (up) up.disabled = i === 0;
+      const dn = row.querySelector('[data-act="dn"]'); if (dn) dn.disabled = i === rows.length - 1;
+    });
+  }
+
+  // Pointer-based drag: works with a mouse and with a finger. HTML5 drag-and-drop
+  // does not fire on touch, and this page is read on a phone.
+  function startDrag(grip, li, ev) {
+    if (!db || !canWrite || ev.button > 0) return;
+    const rows = () => [...listEl.querySelectorAll("li[data-id]")];
+    if (rows().length < 2) return;
+    ev.preventDefault();
+    dragging = true;
+    li.classList.add("dragging");
+    try { grip.setPointerCapture(ev.pointerId); } catch {}
+
+    const onMove = (e) => {
+      let before = null;
+      for (const row of rows()) {
+        if (row === li) continue;
+        const r = row.getBoundingClientRect();
+        if (e.clientY < r.top + r.height / 2) { before = row; break; }
+      }
+      listEl.insertBefore(li, before);   // null appends
+      renumber();
+    };
+    const onUp = () => {
+      window.removeEventListener("pointermove", onMove, true);
+      window.removeEventListener("pointerup", onUp, true);
+      window.removeEventListener("pointercancel", onUp, true);
+      li.classList.remove("dragging");
+      dragging = false;
+      const next = rows().map((row) => row.dataset.id);
+      if (pending) { const p = pending; pending = null; apply(p); return; }
+      if (same(next, order)) render(); else save(next);
+    };
+    // On the WINDOW, not the handle: without pointer capture (and it can fail,
+    // or never be granted for a synthetic or touch pointer) the moves are
+    // delivered to whatever is under the pointer, never to the handle.
+    window.addEventListener("pointermove", onMove, true);
+    window.addEventListener("pointerup", onUp, true);
+    window.addEventListener("pointercancel", onUp, true);
+  }
+
+  function render() {
+    // The items may not have existed when this script first ran.
+    if (!items.size) scanItems();
+    // ---- The ranked list ----
+    listEl.replaceChildren();
+    if (!order.length) listEl.append(el("li", "prio-empty", "Nothing picked yet."));
+    order.forEach((id, i) => {
+      const li = el("li");
+      li.dataset.id = id;
+      if (db && canWrite) {
+        const grip = el("button", "grip", "⠿");
+        grip.type = "button";
+        grip.setAttribute("aria-label", "Drag to reorder");
+        grip.addEventListener("pointerdown", (ev) => startDrag(grip, li, ev));
+        grip.addEventListener("click", (ev) => ev.preventDefault());
+        li.append(grip);
+      }
+      li.append(el("span", "n", String(i + 1)));
+      if (items.has(id)) {
+        const a = el("a", "t", items.get(id)); a.href = "#" + id;
+        a.addEventListener("click", () => { const d = document.getElementById(id)?.querySelector("details"); if (d) d.open = true; });
+        li.append(a);
+      } else {
+        // Not on the page any more: show the wording it had when it was picked,
+        // so it can be recognised rather than merely reported missing.
+        const was = titles[id];
+        // Finished picks are removed by pruneFinished(), so a row that is still
+        // here is one whose wording changed or which left the file — never one
+        // that is simply done.
+        li.append(el("span", "gone", was ? was + "  — its wording has changed since you picked it" : "Renamed or removed since it was picked"));
+      }
+      if (db && canWrite) {
+        const up = btn("↑", "Move up", () => move(i, -1)); up.dataset.act = "up"; up.disabled = i === 0;
+        const dn = btn("↓", "Move down", () => move(i, 1)); dn.dataset.act = "dn"; dn.disabled = i === order.length - 1;
+        li.append(up, dn, btn("✕", "Remove from priorities", () => remove(id)));
+      }
+      listEl.append(li);
+    });
+    countEl.textContent = order.length ? `${order.length} picked` : "";
+
+    // ---- Per-item badge, row control and in-body bar ----
+    // This runs BEFORE any await, so a profile lookup that fails can never leave
+    // the page without its pick controls.
+    items.forEach((title, id) => {
+      const li = document.getElementById(id);
+      if (!li) return;
+      const rank = order.indexOf(id);
+      const ttl = li.querySelector("summary .ttl");
+      li.querySelector(".star")?.remove();
+      li.querySelector(".pick")?.remove();
+      if (rank >= 0 && ttl) {
+        const s = el("span", "star", "#" + (rank + 1));
+        s.title = "Customer priority " + (rank + 1);
+        ttl.after(s);
+      }
+      if (db && canWrite && ttl) {
+        const picked = rank >= 0;
+        const p = el("button", "pick" + (picked ? " on" : ""), picked ? "★" : "☆");
+        p.type = "button";
+        p.setAttribute("aria-label", (picked ? "Remove from" : "Add to") + " priorities: " + title);
+        p.setAttribute("aria-pressed", picked ? "true" : "false");
+        p.title = picked ? "Remove from priorities" : "Add to priorities";
+        // Inside <summary>: stop the press from opening or closing the item.
+        p.addEventListener("click", (ev) => { ev.preventDefault(); ev.stopPropagation(); toggle(id); });
+        (li.querySelector(".star") || ttl).after(p);
+      }
+      const body = li.querySelector(".body");
+      if (!body) return;
+      body.querySelector(".item-prio")?.remove();
+      if (!db) return;
+      const bar = el("div", "item-prio");
+      if (rank >= 0) {
+        bar.append(el("span", "rank", `Priority ${rank + 1} of ${order.length}`));
+        if (canWrite) bar.append(btn("Remove from priorities", null, () => remove(id)));
+      } else if (canWrite) bar.append(btn("★ Add to priorities", null, () => add(id), "primary"));
+      if (bar.childElementCount) body.prepend(bar);
+    });
+
+    // ---- Who changed it last, which needs a lookup and must not break the above ----
+    if (meta.at) label();
+  }
+
+  async function label() {
+    const base = order.length ? `${order.length} picked` : "";
+    let who = "";
+    try {
+      if (meta.by && user) { const ps = await user.profiles([meta.by]); who = (ps && ps[meta.by] && ps[meta.by].name) || ""; }
+    } catch {}
+    countEl.textContent = base + ` · changed ${fmt(meta.at)}${who ? " by " + who : ""}`;
+  }
+
+  function apply(d) {
+    order = Array.isArray(d?.order) ? d.order.filter((x) => typeof x === "string") : [];
+    titles = (d && typeof d.titles === "object" && d.titles) ? d.titles : {};
+    meta = { by: d?.updatedBy ?? null, at: d?.updatedAt ?? null };
+    render();
+    // After the render, so a finished pick is never left on screen; the write
+    // it may make comes back as another snapshot, which finds nothing to do.
+    pruneFinished();
+  }
+
+  // Say WHY saving is off, rather than one sentence that fits every cause.
+  // The three cases are told apart by what the page is running inside.
+  const noteEl = () => document.getElementById("prio-offline");
+  async function explain() {
+    const hasUse = !!(window.claude && typeof window.claude.use === "function");
+    const framed = window.self !== window.top;
+    if (!hasUse) {
+      return "This copy of the page is a plain web page, so it cannot save anything. Open the pinned “Lanna Care Backlog” from the Claude sidebar instead.";
+    }
+    if (!framed) {
+      return "Saving is off because the page is open as its own full page, and a full page is not given access to its own saved list. Open the backlog from the Claude sidebar so it appears in the side panel, and the star and the drag handles will be there.";
+    }
+    // Framed, yet nothing resolved: consent or availability. permissions never prompts on state().
+    let state = null;
+    try { const p = await window.claude.use("permissions"); if (p) state = await p.state("db"); } catch {}
+    if (state === "prompt" || state === "denied") {
+      const fix = document.getElementById("prio-fix");
+      if (fix) {
+        fix.hidden = false;
+        document.getElementById("prio-allow").addEventListener("click", async () => {
+          try {
+            const p = await window.claude.use("permissions");
+            if (p) await p.request(["db", "user"]);
+            say("Thank you — now close this page and open it again, so saving can start.");
+          } catch { say("That could not be asked just now."); }
+        });
+      }
+      return state === "denied"
+        ? "Saving was refused for this page. You can turn it back on from the artifact’s Permissions menu, then open the page again."
+        : "This page needs your permission before it can save your order.";
+    }
+    return "Saving is not available in this view. Everything below still reads normally.";
+  }
+
+  (async () => {
+    [db, user] = await Promise.all([window.claude?.use?.("db") ?? null, window.claude?.use?.("user") ?? null]);
+    if (!db) {
+      const n = noteEl();
+      if (n) { n.textContent = await explain(); n.hidden = false; }
+      listEl.replaceChildren(el("li", "prio-empty", "No priorities can be shown or set in this view."));
+      return;
+    }
+    if (user) { const c = await user.can("data.write"); if (c === false) canWrite = false; }
+    if (!canWrite) { const n = noteEl(); if (n) { n.textContent = "You can read this list but not change it."; n.hidden = false; } }
+    // The snapshot can arrive before the document has finished parsing, so the
+    // controls are drawn again once the items are actually on the page.
+    whenParsed(() => { scanItems(); render(); pruneFinished(); });
+    db.doc(RANK_DOC).onSnapshot((s) => {
+      const d = s.exists ? s.data() : null;
+      if (dragging) { pending = d; return; }   // never re-render under the pointer
+      apply(d);
+    }, () => say("Priorities could not be loaded."));
+  })();
+})();
+</script>
