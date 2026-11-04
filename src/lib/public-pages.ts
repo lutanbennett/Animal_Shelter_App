@@ -24,6 +24,7 @@ export type PublicSection =
   | "friends-join"
   | "adopt-international"
   | "appeals"
+  | "events"
   | "desexing"
   | "about"
   | "shop"
@@ -58,6 +59,12 @@ export type PublicPage = {
     /** The nav key when it differs from the page key (Donate's entry is "care"). */
     navKey?: string;
   };
+  /**
+   * No switch of its own: the database check on hidden_public_pages (0256, 0290) lists the keys it accepts and
+   * has no `page:events`, and a stored value it refuses is a switch that fails. The page still goes when its
+   * section is hidden (isPageHidden reads `section:<group>`). Remove this with a migration that adds the key.
+   */
+  noOwnSwitch?: true;
   /** In the footer: `help` is the Help column, `foot` the small links at the bottom. */
   footer?: { column: "help" | "foot"; order: number };
   /** Omitted = not in the sitemap (About is not, today). `order` is the sitemap's own order. */
@@ -137,6 +144,15 @@ export const PUBLIC_PAGES: PublicPage[] = [
     menu: { group: "get-involved" },
     footer: { column: "help", order: 10 },
     sitemap: { order: 3, changeFrequency: "daily", priority: 0.8 },
+  },
+  {
+    key: "events",
+    href: "/events",
+    label: (t) => t.publicEvents.navLabel,
+    noOwnSwitch: true,
+    menu: { group: "get-involved" },
+    footer: { column: "help", order: 12 },
+    sitemap: { order: 14, changeFrequency: "weekly", priority: 0.6 },
   },
   {
     key: "friends",
@@ -238,7 +254,7 @@ export function hiddenPagesOf(list: readonly string[] | null | undefined): Hidde
 export function isPageHidden(key: PublicSection, hidden: HiddenPages): boolean {
   const page = PUBLIC_PAGES.find((p) => p.key === key);
   if (!page || page.neverHidden) return false;
-  if (hidden.has(pageEntry(key))) return true;
+  if (!page.noOwnSwitch && hidden.has(pageEntry(key))) return true;
   const group = page.menu?.group;
   return group !== undefined && hidden.has(sectionEntry(group));
 }
@@ -250,6 +266,6 @@ export function isPageHidden(key: PublicSection, hidden: HiddenPages): boolean {
 export function hideableEntries(): string[] {
   return [
     ...PUBLIC_MENU_GROUPS.map((g) => sectionEntry(g.key)),
-    ...PUBLIC_PAGES.filter((p) => !p.neverHidden).map((p) => pageEntry(p.key)),
+    ...PUBLIC_PAGES.filter((p) => !p.neverHidden && !p.noOwnSwitch).map((p) => pageEntry(p.key)),
   ];
 }

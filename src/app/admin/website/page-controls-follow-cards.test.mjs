@@ -36,7 +36,7 @@ test("the page save, the Show / Hide switch and the photo controls all ask websi
 });
 
 test("the cards draw Edit and the switch only behind that activity", () => {
-  assert.match(cards, /\{canEdit && !page\.neverHidden && \(/, "the page switch sits behind canEdit");
+  assert.match(cards, /\{canEdit && !page\.neverHidden && !page\.noOwnSwitch && \(/, "the page switch sits behind canEdit");
   assert.match(cards, /\{canEdit && page\.editor && \(/, "Edit sits behind canEdit");
   assert.match(cards, /\{canEdit && \(\n\s+<ActionButton/, "the section switch sits behind canEdit");
   assert.ok(

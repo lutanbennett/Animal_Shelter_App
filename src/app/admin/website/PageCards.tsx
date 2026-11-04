@@ -135,7 +135,7 @@ export function PageCards({
           </Link>
 
           {/* setPublicPageHidden asks website.content; Home and Privacy have no switch at all. */}
-          {canEdit && !page.neverHidden && (
+          {canEdit && !page.neverHidden && !page.noOwnSwitch && (
             <ActionButton
               compact
               icon={own ? ACTION_ICONS.publish : ACTION_ICONS.unpublish}
