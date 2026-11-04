@@ -542,6 +542,31 @@ export const CHECKS = {
       ...(r.digit_fragments.length ? ["Digit-start fragments:", ...r.digit_fragments.map((x) => `   ${x.frag} x${x.n}`)] : ["No digit-start fragments."]),
     ],
   },
+  "intake-date-extra-same-day-rows": {
+    asks: "For how many residents would correct_intake_date() move a weight or diet row the intake did not create? record_intake() (0248) writes at most ONE weight and ONE diet row dated the intake date; the correction (0307) moves EVERY weight and diet row still dated the old intake date. So: residents with more than one weight row, or more than one diet row, dated their intake date, counting archived weights too (the move does not skip them), plus how many of those rows were created more than a day after the resident. Prints resident codes and counts only; no name, note or weight value. Informational: it flags nothing.",
+    // docs/decisions/2026-11-04-intake-date-same-day-check.md. "Created by the intake" = at most one row per table; any further row on that date is one the move would take along.
+    sql: `with w as (
+        select r.id, r.resident_code, count(*) as n, count(*) filter (where x.created_at > r.created_at + interval '1 day') as late
+          from residents r join weight x on x.resident_id = r.id and x.date = r.intake_date group by r.id, r.resident_code),
+      d as (
+        select r.id, r.resident_code, count(*) as n, count(*) filter (where x.created_at > r.created_at + interval '1 day') as late
+          from residents r join resident_diets x on x.resident_id = r.id and x.start_date = r.intake_date group by r.id, r.resident_code)
+      select json_build_object(
+        'residents', (select count(*) from residents where intake_date is not null),
+        'weight_extra', (select count(*) from w where n > 1),
+        'weight_extra_rows_late', (select coalesce(sum(late), 0) from w where n > 1),
+        'diet_extra', (select count(*) from d where n > 1),
+        'diet_extra_rows_late', (select coalesce(sum(late), 0) from d where n > 1),
+        'weight_codes', coalesce((select json_agg(resident_code order by resident_code) from w where n > 1), '[]'::json),
+        'diet_codes', coalesce((select json_agg(resident_code order by resident_code) from d where n > 1), '[]'::json))`,
+    render: (r) => [
+      `${r.residents} resident(s) have an intake date.`,
+      `Weight: ${r.weight_extra} resident(s) with more than one row dated the intake date (${r.weight_extra_rows_late} row(s) created over a day after the resident).`,
+      `Diet: ${r.diet_extra} resident(s) with more than one row starting on the intake date (${r.diet_extra_rows_late} row(s) created over a day after the resident).`,
+      ...(r.weight_codes.length ? [`Weight codes: ${r.weight_codes.join(", ")}`] : []),
+      ...(r.diet_codes.length ? [`Diet codes: ${r.diet_codes.join(", ")}`] : []),
+    ],
+  },
 };
 
 /** Wrap one check in a read-only transaction. The result rides out in an exception message, as the harnesses do. */
