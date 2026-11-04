@@ -911,13 +911,24 @@ release manager cannot control, and `deploy.mjs` takes no `--ref` to pin against
 **What to assert instead**, for each pair of SHAs the release actually built from:
 
 ```bash
-git diff --name-only <tested sha>..<deployed sha> | grep -vE '^(docs/|\.claude/)'
+git diff --name-only <tested sha>..<deployed sha> | grep -E '^(src/|worker/|public/|next\.config\.|open-next\.config\.|wrangler\.jsonc$|package(-lock)?\.json$|postcss\.config\.|tsconfig[^/]*\.json$|scripts/pi/|scripts/lib/[^/]+$|scripts/(deploy|apply-migrations|actions-key)\.mjs$)'
 ```
 
-**Empty output means the served application code is identical**, and the release is
-sound however many SHAs appear in `/api/version`. **Any line means stop** — something
-outside documentation is in one build and not another, which is untested code on a
-production box, and that is a real finding rather than a counter.
+This is an **allow-list of what is built or run at deploy**, and it is the authoritative form
+(`docs/decisions/2026-11-04-release-check-false-positives.md`). **Empty output means the served
+application code is identical**, and the release is sound however many SHAs appear in
+`/api/version`. **Any line means stop** — something that is built or run at deploy is in one
+build and not another, which is untested code on a production box, and that is a real finding
+rather than a counter. The instruction is unchanged; what changed is which lines reach it.
+It used to be `grep -vE '^(docs/|\.claude/)'`, so repo tooling (`.github/`, `.githooks/`,
+`README.md`, most of `scripts/`) read as application code and would halt a sound release,
+as it did on `0.42.0`.
+
+**An allow-list's failure mode is the other way round, so close it by reading.** Run the same
+diff with `grep -vE` and the same pattern and **read what it prints**. If any of those files is
+imported by the build or run during a deploy, add it to the list in the same change.
+`scripts/pi/` and `scripts/lib/*` are listed because they run on the Pi and in `deploy.mjs`; the
+`scripts/lib/backlog-page/` subdirectory is not, because only the backlog page reads it.
 
 Two things this gets right that SHA-equality did not. It **stays quiet when only
 documents differ**, which is the common case and never mattered. And it **fails when
