@@ -995,6 +995,22 @@ const en = {
       legend:
         "Edit: see, add, change and remove. Read: see only. None: not at all. Yes and No are for things that are an act, with nothing to look at.",
       levels: { edit: "Edit", read: "Read", none: "None", yes: "Yes", no: "No" },
+      createRole: {
+        open: "Create a role",
+        heading: "Create a new role",
+        name: "Role name (English)",
+        nameTh: "Role name in Thai (optional)",
+        keyIs: (key: string): string => `It will be saved as "${key}". That short name cannot be changed later.`,
+        keyNeedsLatin: "Type the name with English letters or numbers too, so it can be given a short name.",
+        noCards: "A new role has no cards, so it can do nothing yet. Give it cards below, then give the role to people on Settings → Security.",
+        submit: "Create the role",
+        cancel: "Cancel",
+        nameNeeded: "Type a name for the role.",
+        tooLong: "Keep the names to 80 characters or fewer.",
+        needLatin: "The English name needs at least one English letter or number.",
+        reserved: (key: string): string => `"${key}" is kept for a built-in role. Choose another name.`,
+        keyTaken: (key: string): string => `There is already a role saved as "${key}". Choose a different name.`,
+      },
       deleteRole: {
         button: "Delete this role",
         buttonFor: (name: string): string => `Delete the role ${name}`,
