@@ -22,6 +22,9 @@ import {
 } from "@/lib/placements/rehome";
 import { archiveDeceasedResident } from "@/lib/archive/archive-deceased-resident";
 import { can } from "@/lib/permissions/can";
+import { MAX_MENTIONS, noteWithTags } from "@/lib/assistant/mentions";
+import { syncNoteTagPicks } from "@/lib/note-tags/sync";
+import type { NoteTag } from "@/lib/note-tags/text";
 import { loadPermissions } from "@/lib/permissions/load";
 import { logAssistantAction, type AssistantActionStatus } from "@/lib/assistant/audit";
 import {
@@ -75,6 +78,11 @@ type WriteInput<T> = T & {
    * (src/lib/write-requests.ts), from one useWriteCall() per card.
    */
   requestId: string;
+  /**
+   * Other residents the card still showed at Confirm (mentions.ts). Ids only: the names are read here, under the
+   * caller's own session, so a name the browser sent could never end up in a note.
+   */
+  mentions?: string[];
 };
 
 /**
@@ -106,8 +114,8 @@ type WriteInput<T> = T & {
  */
 async function runWrite(
   intent: Intent,
-  input: { request: string; draft: Draft; trace?: AssistantTrace; requestId: string },
-  write: (supabase: Supabase, t: T) => Promise<{ error: string } | { ok: true; id: string }>,
+  input: { request: string; draft: Draft; trace?: AssistantTrace; requestId: string; mentions?: string[] },
+  write: (supabase: Supabase, t: T, note: string) => Promise<{ error: string } | { ok: true; id: string }>,
   revalidate: () => void,
   resultTable: string,
 ): Promise<AssistantResult> {
@@ -134,7 +142,16 @@ async function runWrite(
         return { ok: false, error };
       }
 
-      const result = await write(supabase, t);
+      // The residents the person left on the card, by id, read under their own session: one the login cannot read
+      // is simply not tagged. Whoever may save the note may tag in it (the link policies are the check).
+      const subject = "residentId" in input.draft ? input.draft.residentId : null;
+      const tags = await mentionedResidents(supabase, input.mentions, subject);
+      const note = noteWithTags(stamp(t, input.request), tags.map((tag) => tag.name));
+
+      const result = await write(supabase, t, note);
+      if (!("error" in result) && tags.length > 0 && subject) {
+        await linkMentions(supabase, resultTable, subject, note, tags);
+      }
 
       await logAssistantAction(supabase, {
         requestText: input.request,
@@ -160,6 +177,57 @@ async function runWrite(
   );
 }
 
+/** The mentioned residents' names, from the database; at most MAX_MENTIONS, never the subject. */
+async function mentionedResidents(
+  supabase: Supabase,
+  ids: readonly string[] | undefined,
+  subject: string | null,
+): Promise<NoteTag[]> {
+  const wanted = [...new Set(ids ?? [])].filter((id) => id !== subject).slice(0, MAX_MENTIONS);
+  if (wanted.length === 0) return [];
+  const { data } = await supabase.from("residents").select("id, name").in("id", wanted).returns<NoteTag[]>();
+  const byId = new Map((data ?? []).map((r) => [r.id, r]));
+  return wanted.flatMap((id) => (byId.has(id) ? [byId.get(id)!] : []));
+}
+
+/**
+ * Writes the links for the note(s) the write just made. The write helpers do not all hand back a row id, so the
+ * rows are found by resident and exact note text, newest first: the ones within 10 seconds of the newest are this
+ * write (a vaccine card writes one row per vaccine). A failure leaves the note saved without its links, and says so
+ * in the log; the same link policies that guard the forms are what refuse a login that may not tag.
+ */
+async function linkMentions(
+  supabase: Supabase,
+  table: string,
+  subject: string,
+  note: string,
+  tags: NoteTag[],
+) {
+  try {
+    const { data } = await supabase
+      .from(table)
+      .select("id, notes, created_at")
+      .eq("resident_id", subject)
+      .order("created_at", { ascending: false })
+      .limit(20)
+      .returns<{ id: string; notes: string | null; created_at: string }[]>();
+    const mine = (data ?? []).filter((row) => row.notes !== null && row.notes.endsWith(note));
+    if (mine.length === 0) return console.error(`assistant: found no ${table} row to link tags to`);
+    const newest = new Date(mine[0].created_at).getTime();
+    for (const row of mine.filter((r) => newest - new Date(r.created_at).getTime() < 10_000)) {
+      const result = await syncNoteTagPicks(
+        supabase,
+        { table, column: "notes", rowId: row.id, residentId: subject },
+        tags,
+        row.notes,
+      );
+      if (!result.ok) console.error(`assistant: tags not linked on ${table} ${row.id} (${result.code})`);
+    }
+  } catch (e) {
+    console.error("assistant: tags not linked —", e);
+  }
+}
+
 function revalidateResident(residentId: string) {
   revalidatePath("/residents");
   revalidatePath(`/residents/${residentId}`);
@@ -175,12 +243,12 @@ export async function assistantMove(
   return runWrite(
     "move",
     input,
-    (supabase, t) =>
+    (supabase, t, note) =>
       moveResidentToEnclosure(supabase, t, {
         residentId: input.residentId,
         enclosureId: input.enclosureId,
         moveDate: input.moveDate,
-        notes: stamp(t, input.request),
+        notes: note,
       }),
     () => {
       revalidateResident(input.residentId);
@@ -208,7 +276,7 @@ export async function assistantBookClinicVisit(
   return runWrite(
     "clinic",
     input,
-    async (supabase, t) => {
+    async (supabase, t, note) => {
       if (!input.residentId) return { error: t.vetVisits.errors.selectResident };
       if (!input.clinicId) return { error: t.vetVisits.errors.selectVet };
       const appointment = new Date(input.appointmentIso);
@@ -221,7 +289,7 @@ export async function assistantBookClinicVisit(
         p_clinic_id: input.clinicId,
         p_appointment_date: appointment.toISOString(),
         p_reason: input.reason?.trim() || null,
-        p_notes: stamp(t, input.request),
+        p_notes: note,
         // Mirrors the booking form's default: a visit already in the past
         // is being logged, not scheduled.
         p_status: appointment.getTime() <= Date.now() ? "completed" : "scheduled",
@@ -253,11 +321,11 @@ export async function assistantSendToHospital(
   return runWrite(
     "hospital",
     input,
-    (supabase, t) =>
+    (supabase, t, note) =>
       sendResidentToHospital(supabase, t, {
         residentId: input.residentId,
         date: input.date,
-        notes: stamp(t, input.request),
+        notes: note,
       }),
     () => {
       revalidateResident(input.residentId);
@@ -277,12 +345,12 @@ export async function assistantReturnFromHospital(
   return runWrite(
     "hospital-return",
     input,
-    (supabase, t) =>
+    (supabase, t, note) =>
       returnResidentFromHospital(supabase, t, {
         residentId: input.residentId,
         enclosureId: input.enclosureId,
         date: input.date,
-        notes: stamp(t, input.request),
+        notes: note,
       }),
     () => {
       revalidateResident(input.residentId);
@@ -301,12 +369,12 @@ export async function assistantLogWeight(
   return runWrite(
     "weight",
     input,
-    (supabase, t) =>
+    (supabase, t, note) =>
       recordWeight(supabase, t, {
         residentId: input.residentId,
         date: input.date,
         weightKg: input.weightKg,
-        notes: stamp(t, input.request),
+        notes: note,
       }),
     () => {
       revalidatePath(`/residents/${input.residentId}`);
@@ -329,12 +397,12 @@ export async function assistantRecordDeath(
   return runWrite(
     "death",
     input,
-    async (supabase, t) => {
+    async (supabase, t, note) => {
       const result = await recordResidentDeath(supabase, t, {
         residentId: input.residentId,
         date: input.date,
         causeOfDeath: input.causeOfDeath?.trim() || null,
-        notes: stamp(t, input.request),
+        notes: note,
       });
       if ("error" in result) return result;
       await archiveDeceasedResident(supabase, input.residentId);
@@ -368,14 +436,14 @@ export async function assistantRehome(
   return runWrite(
     "rehome",
     input,
-    async (supabase, t) => {
+    async (supabase, t, note) => {
       const result = await rehomeResident(supabase, t, {
         residentId: input.residentId,
         kind: input.rehomeKind,
         carerId: input.carerId,
         newCarer: null,
         date: input.date,
-        notes: stamp(t, input.request),
+        notes: note,
       });
       return "error" in result ? result : { ok: true as const, id: "" };
     },
@@ -403,12 +471,12 @@ export async function assistantReturnFromCarer(
   return runWrite(
     "carer-return",
     input,
-    async (supabase, t) => {
+    async (supabase, t, note) => {
       const result = await returnResidentToShelter(supabase, t, {
         residentId: input.residentId,
         enclosureId: input.enclosureId,
         date: input.date,
-        notes: stamp(t, input.request),
+        notes: note,
       });
       return "error" in result ? result : { ok: true as const, id: "" };
     },
@@ -435,14 +503,14 @@ export async function assistantRecordImmunization(
   return runWrite(
     "immunization",
     input,
-    async (supabase, t) => {
+    async (supabase, t, note) => {
       // One claim: runWrite() above holds it. writeImmunizations() claims nothing (it is not an action), and this form
       // carries no `__writeRequest` on purpose -- see docs/decisions/2026-11-01-nested-claim-one-write.md.
       const form = new FormData();
       form.append("residentIds", input.residentId);
       for (const id of input.immunizationTypeIds) form.append("immunizationTypeIds", id);
       form.append("dateAdministered", input.date);
-      form.append("notes", stamp(t, input.request));
+      form.append("notes", note);
       const result = await writeImmunizations(supabase, t, await getLocale(), form);
       if (!result.ok) return { error: result.error };
       return { ok: true as const, id: result.records[0]?.id ?? "" };
@@ -483,7 +551,7 @@ export async function assistantAddPrescription(
   return runWrite(
     "prescription",
     input,
-    async (_supabase, t) => {
+    async (_supabase, _t, note) => {
       const form = new FormData();
       form.append("residentId", input.residentId);
       form.append("medicationId", input.medicationId);
@@ -497,7 +565,7 @@ export async function assistantAddPrescription(
       for (const id of input.roundIds) form.append("roundId", id);
       // The stamp goes in the notes as every other assistant write does, with
       // whatever else the sentence said about how to give it in front of it.
-      const stamped = stamp(t, input.request);
+      const stamped = note;
       form.append("notes", input.notes ? `${input.notes}\n${stamped}` : stamped);
       const result = await recordPrescription(form);
       return "error" in result ? result : { ok: true as const, id: result.id };

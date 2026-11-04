@@ -66,7 +66,11 @@ export const INTENT_PARSERS: readonly IntentParser[] = [
 ];
 
 /** A parsed request, or null when no parser recognised the sentence. */
-export type ParsedRequest = ParseResult & { intent: Intent };
+export type ParsedRequest = ParseResult & {
+  intent: Intent;
+  /** Residents the model found besides the subject, for the card (mentions.ts). Absent from the keyword parser. */
+  mentions?: string[];
+};
 
 export function parseRequest(
   input: string,

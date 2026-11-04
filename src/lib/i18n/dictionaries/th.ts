@@ -4297,6 +4297,8 @@ const th: Dictionary = {
     severalMatch: "มีสัตว์ชื่อนี้มากกว่าหนึ่งตัว กรุณาเลือกตัวที่ถูกต้อง",
     whichOne: "หมายถึงตัวไหน?",
     didYouMean: "คุณหมายถึงตัวนี้ใช่ไหม?",
+    mentionsLabel: "แท็กในหมายเหตุด้วย:",
+    mentionsRemove: (name: string) => `ไม่แท็ก ${name}`,
     details: {
       title: "ขอข้อมูลเพิ่มอีกนิด",
       answer: "ตอบ",
