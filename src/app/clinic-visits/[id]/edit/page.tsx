@@ -9,7 +9,6 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { localLabel } from "@/lib/translations/labels";
 import { loadDoctorNamesByClinic } from "@/lib/clinics/doctors";
-import { ANY_CLINIC_SCOPE } from "@/lib/clinics/scope";
 import type { ClinicOption } from "@/app/clinic-visits/new/ClinicVisitForm";
 import { MicrochipLine } from "@/components/MicrochipForm";
 import { can } from "@/lib/permissions/can";
@@ -35,29 +34,7 @@ export default async function EditClinicVisitPage(props: PageProps<"/clinic-visi
   const visit = rows?.[0];
   if (!visit) notFound();
 
-  const scope = ANY_CLINIC_SCOPE;
-  if (scope.kind === "unlinked") {
-    return (
-      <main className="flex flex-1 flex-col gap-4 p-6">
-        <h1 className="text-2xl font-semibold text-foreground">{t.vetVisits.editPageTitle}</h1>
-        <p className="max-w-2xl text-sm text-muted">{t.vetVisits.noClinicForAccount}</p>
-      </main>
-    );
-  }
-
-  // Another clinic's visit is read-only to a doctor login (0110): the database would
-  // refuse the save, so say so rather than show a form that can only fail.
-  if (scope.kind === "clinics" && (!visit.clinic_id || !scope.clinicIds.includes(visit.clinic_id))) {
-    return (
-      <main className="flex flex-1 flex-col gap-4 p-6">
-        <h1 className="text-2xl font-semibold text-foreground">{t.vetVisits.editPageTitle}</h1>
-        <p className="max-w-2xl text-sm text-muted">{t.vetVisits.otherClinicReadOnly}</p>
-      </main>
-    );
-  }
-
-  let clinicsQuery = supabase.from("clinics").select("id, name, name_th").order("name");
-  if (scope.kind === "clinics") clinicsQuery = clinicsQuery.in("id", scope.clinicIds);
+  const clinicsQuery = supabase.from("clinics").select("id, name, name_th").order("name");
 
   const [residentResult, stateResult, clinicsResult, doctorNamesByClinic, perms] = await Promise.all([
     supabase
@@ -91,8 +68,8 @@ export default async function EditClinicVisitPage(props: PageProps<"/clinic-visi
     name: localLabel(locale, clinic.name, name_th),
   }));
 
-  // The invoice photo(s). A visiting doctor files none: record_attachment() refuses a clinic login a bill (0190).
-  const showBills = scope.kind !== "clinics" && can(perms, "medical.visits", "edit");
+  // The invoice photo(s): record_attachment() asks medical.visits to file a bill (0190).
+  const showBills = can(perms, "medical.visits", "edit");
   const billPhotos = showBills ? ((await loadBillPhotos(supabase, "clinic_visit", [visit.id])).get(visit.id) ?? []) : [];
 
   const displayName = resident.thai_name ? `${resident.name} (${resident.thai_name})` : resident.name;
@@ -139,8 +116,6 @@ export default async function EditClinicVisitPage(props: PageProps<"/clinic-visi
         noteTags={await loadTagsForNote(supabase, "clinic_visits", "notes", visit.id)}
         visit={{ ...visit, cost: visit.cost == null ? null : Number(visit.cost) }}
         clinics={clinics}
-        fixedClinic={scope.kind === "clinics" && clinics.length === 1 ? clinics[0] : null}
-        lockedDoctor={scope.kind === "clinics" ? (visit.doctor_name ?? scope.doctorName) : null}
         doctorNamesByClinic={doctorNamesByClinic}
         canAddDoctor={can(perms, "clinics.doctors")}
         residentDisplayName={displayName}

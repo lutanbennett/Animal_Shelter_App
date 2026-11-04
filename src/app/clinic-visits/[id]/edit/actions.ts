@@ -11,7 +11,6 @@ import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { syncVisitToCalendar } from "@/lib/clinics/calendar-sync";
-import { ANY_CLINIC_SCOPE, scopeAllowsClinic } from "@/lib/clinics/scope";
 
 // PI FAILOVER (D): the one write here goes through runWriteAction(); the redirect is taken AFTER it returns, so a
 // replay of a saved request redirects too instead of leaving an open claim (the wrapper rethrows a redirect).
@@ -74,23 +73,7 @@ export async function updateClinicVisit(
         cost = Math.round(cost * 100) / 100;
       }
 
-      // Same rule as the page (src/lib/clinics/scope.ts): a doctor login may
-      // keep the visit's current clinic or choose another of its own, nothing else.
-      const scope = ANY_CLINIC_SCOPE;
-      if (scope.kind === "unlinked") return { ok: false, error: t.vetVisits.noClinicForAccount };
-      let doctorName = str(formData, "doctorName");
-      if (scope.kind === "clinics") {
-        const { data: current } = await supabase
-          .from("clinic_visits")
-          .select("clinic_id, doctor_name")
-          .eq("id", visitId)
-          .limit(1)
-          .returns<{ clinic_id: string | null; doctor_name: string | null }[]>();
-        if (!scopeAllowsClinic(scope, clinicId, current?.[0]?.clinic_id)) return { ok: false, error: e.notYourClinic };
-        // Locked Doctor (Lutan, 2026-10-01): the visit's own doctor stays, a
-        // visit with none becomes the doctor login's own. Not trusted from the form.
-        if (scope.doctorName) doctorName = current?.[0]?.doctor_name ?? scope.doctorName;
-      }
+      const doctorName = str(formData, "doctorName");
 
       const { data, error } = await supabase
         .from("clinic_visits")

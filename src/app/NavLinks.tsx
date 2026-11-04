@@ -45,7 +45,6 @@ export function NavLinks({
   canResidents,
   hasTasks,
   canAppointments,
-  appointmentsHref,
   urgentCount,
 }: {
   /** Whoever may change who can sign in: the Security link. Not an activity (an Admin rule). */
@@ -64,12 +63,10 @@ export function NavLinks({
    */
   hasTasks: boolean;
   /**
-   * May open /appointments (the clinic scope's page). Without tasks, a login that cannot open it
+   * May open /appointments (the menu entry, which leads to the shelter-wide /upcoming-visits). Without tasks, a login that cannot open it
    * either gets no second entry: a volunteer's menu is Home, Residents and Enclosures.
    */
   canAppointments: boolean;
-  /** Where the Appointments entry leads: a doctor's own page, or the shelter-wide list for a login with no clinic link. */
-  appointmentsHref: string;
   /** My tasks due today or overdue, shown on the My tasks link when > 0. */
   urgentCount: number;
 }) {
@@ -104,7 +101,7 @@ export function NavLinks({
         : canAppointments
           ? [
               {
-                href: appointmentsHref,
+                href: "/upcoming-visits",
                 label: t.nav.appointments,
                 icon: NAV_ICONS.appointments,
               },
