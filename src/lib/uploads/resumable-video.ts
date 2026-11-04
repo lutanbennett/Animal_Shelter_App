@@ -112,7 +112,12 @@ export async function uploadResidentVideo(
         // Ask Drive where it got to; if even that fails the loop tries again.
         try {
           const probe = await fetch(uploadUrl, { method: "PUT", headers: { "Content-Range": `bytes */${file.size}` } });
-          if (probe.status === 308) offset = bytesHeld(probe);
+          if (probe.status === 308) {
+            const held = bytesHeld(probe);
+            // Forward progress means the upload is working, so the stumble count starts again.
+            if (held > offset) failures = 0;
+            offset = held;
+          }
           else if (probe.status === 200 || probe.status === 201) {
             driveFileId = ((await probe.json()) as { id: string }).id;
           }
