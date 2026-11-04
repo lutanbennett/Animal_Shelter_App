@@ -424,3 +424,43 @@ test("the modal's fields come from the tool's own schema", () => {
   assert.deepEqual(askableField(rx, "doseQuantity"), { name: "doseQuantity", input: "number" });
   assert.equal(askableField(tools.get("lookup"), "query"), null);
 });
+
+const U1 = "00000000-0000-4000-8000-000000000001";
+const U2 = "00000000-0000-4000-8000-000000000002";
+const U3 = "00000000-0000-4000-8000-000000000003";
+const withUuids = {
+  ...rows,
+  residents: [
+    { ...rows.residents[0], id: U1, name: "Panda" },
+    { ...rows.residents[1], id: U2, name: "Billy" },
+    { ...rows.residents[1], id: U3, name: "Gigi" },
+  ],
+};
+
+test("mentions: the model's other residents come back checked, never the subject, never a stranger", async () => {
+  const llm = script([
+    { toolCalls: [call("hospital", { residentId: U1, date: null, mentions: [U2, U1, U2, "00000000-0000-4000-8000-0000000000ff"] })], stop: "tool_calls" },
+  ]);
+  const r = await interpretSentence({ llm, rows: withUuids, request: "Panda was bitten by Billy", today: "2026-10-30", canWrite: true });
+  // An id that is not a visible resident is refused back to the model, as every other invented id is.
+  assert.equal(r.ok, false);
+});
+
+test("mentions: a valid list reaches the result; a read-only tool is not offered the field", async () => {
+  const llm = script([
+    { toolCalls: [call("hospital", { residentId: U1, date: null, mentions: [U2, U1, U2] })], stop: "tool_calls" },
+  ]);
+  const r = await interpretSentence({ llm, rows: withUuids, request: "Panda was bitten by Billy", today: "2026-10-30", canWrite: true });
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.mentions, [U2]);
+  const tools = Object.fromEntries(llm.calls[0].tools.map((t) => [t.name, t]));
+  assert.ok("mentions" in tools.hospital.inputSchema.properties);
+  assert.equal("mentions" in tools.summary.inputSchema.properties, false);
+  assert.equal("mentions" in tools.where.inputSchema.properties, false);
+});
+
+test("mentions: a sentence that names someone is never recorded without its card", () => {
+  const weight = { kind: "weight", residentId: "r1", weightKg: 4.5, date: null };
+  assert.ok(readyToRecord(weight, [], []));
+  assert.equal(readyToRecord(weight, [], [U2]), false);
+});

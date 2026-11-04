@@ -50,7 +50,8 @@ test("one tool per Draft kind; every field is required, and additionalProperties
   assert.deepEqual(tools.map((t) => t.name).sort(), [...DRAFT_KINDS].sort());
   for (const t of tools) {
     assert.equal(t.inputSchema.additionalProperties, false);
-    assert.deepEqual([...t.inputSchema.required].sort(), Object.keys(t.inputSchema.properties).sort());
+    // "mentions" is the one optional property, offered on the writes that save a note (mentions.ts).
+    assert.deepEqual([...t.inputSchema.required].sort(), Object.keys(t.inputSchema.properties).filter((k) => k !== "mentions").sort());
   }
 });
 

@@ -4451,6 +4451,8 @@ const en = {
     severalMatch: "More than one resident has that name — pick the right one.",
     whichOne: "Which one do you mean?",
     didYouMean: "Did you mean this one?",
+    mentionsLabel: "Also tag in the note:",
+    mentionsRemove: (name: string) => `Do not tag ${name}`,
     /** The assistant asking for something the sentence left out (stream 4). */
     details: {
       title: "A bit more, please",

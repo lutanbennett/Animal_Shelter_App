@@ -79,6 +79,8 @@ export type CardContext = {
   /** Unique within the conversation; only used to keep field ids apart. */
   turnId: number;
   request: string;
+  /** Other residents the sentence names, still on the card at Confirm (mentions.ts). Ids; the server reads the names. */
+  mentions?: string[];
   /** Set when a model interpreted the sentence; handed to the audit row on Confirm. */
   trace?: AssistantTrace;
   residents: AssistantResident[];
@@ -295,6 +297,7 @@ function useCardChrome(ctx: CardContext, residentChosen: boolean) {
 /** What a write needs to know besides the draft, when there is no card around it. */
 export type LowRiskContext = {
   request: string;
+  mentions?: string[];
   trace?: AssistantTrace;
   residents: AssistantResident[];
   immunizationTypes: AssistantImmunizationType[];
@@ -339,7 +342,7 @@ export async function recordLowRisk(
       residentId: resident.id,
       weightKg: draft.weightKg,
       date,
-      request: ctx.request,
+      request: ctx.request, mentions: ctx.mentions,
       trace: ctx.trace,
       draft: { ...draft, date },
       requestId,
@@ -354,7 +357,7 @@ export async function recordLowRisk(
     residentId: resident.id,
     immunizationTypeIds: chosen.map((ty) => ty.id),
     date,
-    request: ctx.request,
+    request: ctx.request, mentions: ctx.mentions,
     trace: ctx.trace,
     draft: { ...draft, date },
     requestId,
@@ -400,7 +403,7 @@ function MoveCard({ ctx, draft }: { ctx: CardContext; draft: MoveDraft }) {
           residentId: resident.id,
           enclosureId: target.id,
           moveDate: date,
-          request: ctx.request,
+          request: ctx.request, mentions: ctx.mentions,
           trace: ctx.trace,
           draft: { ...draft, residentId: resident.id, enclosureId: target.id, date },
           requestId,
@@ -524,7 +527,7 @@ function ClinicCard({ ctx, draft }: { ctx: CardContext; draft: ClinicVisitDraft 
           appointmentIso: when.toISOString(),
           reason: reason || null,
           doctorName: doctor || null,
-          request: ctx.request,
+          request: ctx.request, mentions: ctx.mentions,
           trace: ctx.trace,
           draft: {
             ...draft,
@@ -711,7 +714,7 @@ function HospitalCard({ ctx, draft }: { ctx: CardContext; draft: HospitalDraft }
         assistantSendToHospital({
           residentId: resident.id,
           date,
-          request: ctx.request,
+          request: ctx.request, mentions: ctx.mentions,
           trace: ctx.trace,
           draft: { ...draft, residentId: resident.id, date },
           requestId,
@@ -807,7 +810,7 @@ function HospitalReturnCard({
           residentId: resident.id,
           enclosureId: target.id,
           date,
-          request: ctx.request,
+          request: ctx.request, mentions: ctx.mentions,
           trace: ctx.trace,
           draft: { ...draft, residentId: resident.id, enclosureId: target.id, date },
           requestId,
@@ -895,7 +898,7 @@ function WeightCard({ ctx, draft }: { ctx: CardContext; draft: WeightDraft }) {
       const result = await save((requestId) =>
         recordLowRisk(
           { ...draft, residentId: resident.id, weightKg, date },
-          { request: ctx.request, trace: ctx.trace, residents: ctx.residents, immunizationTypes: ctx.immunizationTypes, t, locale },
+          { request: ctx.request, mentions: ctx.mentions, trace: ctx.trace, residents: ctx.residents, immunizationTypes: ctx.immunizationTypes, t, locale },
           requestId,
         ),
       );
@@ -1020,7 +1023,7 @@ function DeathCard({ ctx, draft }: { ctx: CardContext; draft: DeathDraft }) {
           residentId: resident.id,
           date,
           causeOfDeath: cause.trim() || null,
-          request: ctx.request,
+          request: ctx.request, mentions: ctx.mentions,
           trace: ctx.trace,
           draft: { ...draft, residentId: resident.id, date, causeOfDeath: cause.trim() || null },
           requestId,
@@ -1126,7 +1129,7 @@ function RehomeCard({ ctx, draft }: { ctx: CardContext; draft: RehomeDraft }) {
           rehomeKind: kind,
           carerId: carer.id,
           date,
-          request: ctx.request,
+          request: ctx.request, mentions: ctx.mentions,
           trace: ctx.trace,
           draft: {
             ...draft,
@@ -1248,7 +1251,7 @@ function CarerReturnCard({ ctx, draft }: { ctx: CardContext; draft: CarerReturnD
           residentId: resident.id,
           enclosureId: target.id,
           date,
-          request: ctx.request,
+          request: ctx.request, mentions: ctx.mentions,
           trace: ctx.trace,
           draft: { ...draft, residentId: resident.id, enclosureId: target.id, date },
           requestId,
@@ -1347,7 +1350,7 @@ function ImmunizationCard({ ctx, draft }: { ctx: CardContext; draft: Immunizatio
       const result = await save((requestId) =>
         recordLowRisk(
           { ...draft, residentId: resident.id, immunizationTypeIds: chosen.map((ty) => ty.id), date },
-          { request: ctx.request, trace: ctx.trace, residents: ctx.residents, immunizationTypes: ctx.immunizationTypes, t, locale },
+          { request: ctx.request, mentions: ctx.mentions, trace: ctx.trace, residents: ctx.residents, immunizationTypes: ctx.immunizationTypes, t, locale },
           requestId,
         ),
       );
@@ -1471,7 +1474,7 @@ function PrescriptionCard({ ctx, draft }: { ctx: CardContext; draft: Prescriptio
           schedule,
           roundIds: ticksShown ? roundIds : [],
           notes: notes.trim() || null,
-          request: ctx.request,
+          request: ctx.request, mentions: ctx.mentions,
           trace: ctx.trace,
           draft: {
             ...draft,

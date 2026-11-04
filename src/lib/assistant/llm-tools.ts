@@ -18,6 +18,7 @@
  */
 import type { LevelKey } from "@/lib/permissions/catalogue";
 import type { LlmToolDef } from "./llm";
+import { isWriteIntent } from "./types";
 import type {
   CarerReturnDraft,
   ClinicVisitDraft,
@@ -274,8 +275,10 @@ export function isLowRiskWrite(kind: Draft["kind"]): boolean {
  * It answers false for every other kind, so "low risk" and "ready" are two
  * questions and a caller has to pass both.
  */
-export function readyToRecord(draft: Draft, candidates: readonly string[]): boolean {
+export function readyToRecord(draft: Draft, candidates: readonly string[], mentions: readonly string[] = []): boolean {
   if (candidates.length > 1) return false;
+  // A tag is only ever made from what the person left on the card, so a sentence that names someone gets the card.
+  if (mentions.length > 0) return false;
   if (draft.kind === "weight") {
     return !!draft.residentId && draft.weightKg !== null && draft.weightKg > 0;
   }
@@ -284,6 +287,18 @@ export function readyToRecord(draft: Draft, candidates: readonly string[]): bool
   }
   return false;
 }
+
+/**
+ * Other residents the sentence names, for the person to confirm on the card (docs/decisions/2026-11-04-tags-assistant-notes.md).
+ * The ids come from a lookup like every other id, and the sentence is never matched to a resident afterwards.
+ */
+export const MENTIONS_FIELD = "mentions";
+const MENTIONS_SCHEMA = {
+  type: "array",
+  items: { type: "string" },
+  description:
+    'Ids (from a lookup) of OTHER residents the sentence names, e.g. Billy in "Panda was bitten by Billy". Not the resident the sentence is about. Leave out if none, or if the name matched several residents.',
+};
 
 /** The tool list to hand the model: one per intent. */
 export function draftTools(): LlmToolDef[] {
@@ -295,7 +310,11 @@ export function draftTools(): LlmToolDef[] {
       description: spec.about,
       inputSchema: {
         type: "object",
-        properties: Object.fromEntries(names.map((n) => [n, schemaOf(spec.fields[n])])),
+        properties: {
+          ...Object.fromEntries(names.map((n) => [n, schemaOf(spec.fields[n])])),
+          // Optional, and only on the writes that save a note. Not part of the Draft: see mentions.ts.
+          ...(isWriteIntent(kind) ? { [MENTIONS_FIELD]: MENTIONS_SCHEMA } : {}),
+        },
         required: names,
         additionalProperties: false,
       },

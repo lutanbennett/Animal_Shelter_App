@@ -28,12 +28,14 @@ import type { LevelKey } from "@/lib/permissions/catalogue";
 import {
   DRAFT_KINDS,
   LOOKUP_KINDS,
+  MENTIONS_FIELD,
   draftFromToolCall,
   draftTools,
   fieldSpecs,
   toolNeeds,
   type LookupKind,
 } from "./llm-tools";
+import { cleanMentions } from "./mentions";
 import { isWriteIntent, type AssistantTrace, type Draft, type ParseContext } from "./types";
 
 export type InterpretRows = Pick<
@@ -180,6 +182,8 @@ export type InterpretResult =
       draft: Draft;
       /** The residents a name could have meant, for the card's "which one?" picker. */
       residentCandidates: string[];
+      /** Other residents the sentence names, offered on the card to keep or remove (mentions.ts). */
+      mentions: string[];
       trace: AssistantTrace;
     }
   /** The model asked the person for details. Answer with `resume` and the values. */
@@ -409,6 +413,12 @@ export function validateToolInput(tool: LlmToolDef, input: unknown, rows: Interp
     if (!LOOKUP_KINDS.includes(obj.kind as LookupKind)) return `"kind" must be one of ${LOOKUP_KINDS.join(", ")}.`;
     if (typeof obj.query !== "string" || !obj.query.trim()) return `"query" must be a non-empty string.`;
     return null;
+  }
+  if (Array.isArray(obj[MENTIONS_FIELD])) {
+    const seen = new Set(rows.residents.map((r) => r.id));
+    if ((obj[MENTIONS_FIELD] as unknown[]).some((id) => !seen.has(id as string))) {
+      return `"${MENTIONS_FIELD}" holds an id that is not from a lookup. Call lookup with kind "resident".`;
+    }
   }
   for (const [key, v] of Object.entries(obj)) {
     if (!typeOk(props[key], v)) return `"${key}" has the wrong type or format. Expected ${JSON.stringify(props[key])}.`;
@@ -797,6 +807,7 @@ export async function interpretSentence(input: {
 
     const results: LlmPart[] = [];
     let draft: Draft | null = null;
+    let rawMentions: unknown = null;
     let ask: DetailsAsk | null = null;
     for (const call of [...response.toolCalls].sort((a, b) => callOrder(a) - callOrder(b))) {
       if (call.name === REQUEST_DETAILS) {
@@ -820,13 +831,21 @@ export async function interpretSentence(input: {
       const answer = answerCall(fixed, toolByName, rows);
       if (answer.draft) {
         draft = answer.draft;
+        rawMentions = (fixed.input as Record<string, unknown> | null)?.[MENTIONS_FIELD];
         break;
       }
       results.push({ type: "tool_result", callId: call.id, content: answer.content, ...(answer.isError ? { isError: true } : {}) });
     }
     if (draft) {
       const settled = settleResident(draft, ledger.residentLookups, rows);
-      return { ok: true, draft: settled.draft, residentCandidates: settled.residentCandidates, trace: trace("draft") };
+      const subject = "residentId" in settled.draft ? settled.draft.residentId : null;
+      return {
+        ok: true,
+        draft: settled.draft,
+        residentCandidates: settled.residentCandidates,
+        mentions: isWriteIntent(settled.draft.kind) ? cleanMentions(rawMentions, subject, rows.residents) : [],
+        trace: trace("draft"),
+      };
     }
     messages = [...messages, { role: "user", content: clip(results) }];
     ledger = ledgerOf(messages);

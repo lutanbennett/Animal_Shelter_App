@@ -6,6 +6,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { parseRequest, type ParsedRequest } from "@/lib/assistant/parse";
 import { isoLocal } from "@/lib/assistant/text";
 import { isWriteIntent, type AssistantTrace, type Draft } from "@/lib/assistant/types";
+import { MentionChips } from "./MentionChips";
 import { isLowRiskWrite, readyToRecord, toolNeeds } from "@/lib/assistant/llm-tools";
 import { ASK_MODEL, mayAskModel, waitAfter, type ModelWait } from "@/lib/assistant/model-wait";
 import type { AssistantContext } from "@/lib/assistant/data";
@@ -229,11 +230,23 @@ export function AssistantConversation({
       draft: result.draft,
       intent: result.draft.kind,
       residentCandidates: result.residentCandidates,
+      mentions: result.mentions,
     };
     setTurns((prev) =>
       prev.map((turn) => (turn.id === id ? { ...turn, ...startedTurn(id, request, parsed, result.trace) } : turn)),
     );
     afterParse(id, request, parsed, result.trace);
+  }
+
+  /** The person took a tagged name off the card: it is not tagged when they Confirm. */
+  function dropMention(turn: Turn, residentId: string) {
+    setTurns((prev) =>
+      prev.map((t) =>
+        t.id === turn.id && t.parsed
+          ? { ...t, parsed: { ...t.parsed, mentions: (t.parsed.mentions ?? []).filter((m) => m !== residentId) } }
+          : t,
+      ),
+    );
   }
 
   function fallback(id: number, request: string, trace?: AssistantTrace, answers?: Turn["answers"]) {
@@ -280,7 +293,7 @@ export function AssistantConversation({
     if (!parsed) return { kind: "unmatched" };
     if (!isWriteIntent(parsed.intent)) return { kind: "pending" };
     if (!mayUseTool(context, parsed.draft.kind)) return { kind: "noCard" };
-    if (isLowRiskWrite(parsed.draft.kind) && readyToRecord(parsed.draft, parsed.residentCandidates)) {
+    if (isLowRiskWrite(parsed.draft.kind) && readyToRecord(parsed.draft, parsed.residentCandidates, parsed.mentions)) {
       return { kind: "recording" };
     }
     return { kind: "card" };
@@ -434,7 +447,7 @@ export function AssistantConversation({
         {turns.map((turn) => (
           <AssistantTurn key={turn.id} settled={turn.state.kind}>
             <RequestBubble text={turn.request} />
-            <TurnReply turn={turn} context={context} onSettle={settle} onPick={(rid) => pickResident(turn, rid)} onOpenAsk={() => setAskOpen(turn.id)} />
+            <TurnReply turn={turn} context={context} onSettle={settle} onPick={(rid) => pickResident(turn, rid)} onDropMention={(rid) => dropMention(turn, rid)} onOpenAsk={() => setAskOpen(turn.id)} />
           </AssistantTurn>
         ))}
       </AssistantMessageList>
@@ -470,12 +483,14 @@ function TurnReply({
   context,
   onSettle,
   onPick,
+  onDropMention,
   onOpenAsk,
 }: {
   turn: Turn;
   context: AssistantContext;
   onSettle: (turn: Turn, outcome: AssistantOutcome) => void;
   onPick: (residentId: string) => void;
+  onDropMention: (residentId: string) => void;
   onOpenAsk: () => void;
 }) {
   const { t } = useI18n();
@@ -535,6 +550,8 @@ function TurnReply({
     case "card":
       if (!turn.parsed) return null;
       return (
+        <>
+        <MentionChips ids={turn.parsed.mentions ?? []} residents={context.residents} onRemove={onDropMention} />
         <AssistantCard
           draft={turn.parsed.draft}
           ctx={{
@@ -552,9 +569,11 @@ function TurnReply({
             doctors: context.doctors,
             canAddDoctor: context.canAddDoctor,
             candidates: turn.parsed.residentCandidates,
+            mentions: turn.parsed.mentions ?? [],
             onSettle: (outcome) => onSettle(turn, outcome),
           }}
         />
+        </>
       );
   }
 }
