@@ -19,7 +19,7 @@ select uid, '00000000-0000-0000-0000-000000000000', 'authenticated', 'authentica
        'harness-0306-' || who || '@example.invalid', '{}'::jsonb, '{}'::jsonb, now(), now() from who;
 insert into roles (key, name, kind) values ('h0306_pics', 'h', 'custom'), ('h0306_util', 'h', 'custom'), ('h0306_gen', 'h', 'custom'), ('h0306_none', 'h', 'custom');
 insert into role_permissions (role_id, activity, level)
-  select r.id, a, 2 from roles r, (values ('photos.resident_add'), ('photos.resident_publish'), ('resident.record')) v(a) where r.key = 'h0306_pics';
+  select r.id, a, 2 from roles r, (values ('photos.resident_add'), ('photos.resident_manage'), ('photos.resident_publish'), ('resident.record')) v(a) where r.key = 'h0306_pics';
 insert into role_permissions (role_id, activity, level) select id, 'bills.utilities', 2 from roles where key = 'h0306_util';
 insert into role_permissions (role_id, activity, level) select id, 'bills.general', 2 from roles where key = 'h0306_gen';
 insert into role_permissions (role_id, activity, level) select id, 'maintenance.photos', 2 from roles where key = 'h0306_none';
@@ -107,7 +107,37 @@ begin
   reset role;
   v_report := v_report || ' | C utility_bill accepted only with bills.utilities, general_bill only with bills.general, neither card refused both';
 
-  raise exception 'HARNESS-OK 0306 (live)%', v_report;
+
+  -- D (0313) the other two routes to the profile picture. Rows are filed as the owner, then the login acts on them.
+  insert into residents (name) values ('harness-0313 set') returning id into v_a;
+  insert into residents (name) values ('harness-0313 delete') returning id into v_b;
+  insert into attachments (owner_type, owner_id, sub_folder, drive_file_id, file_name, media_kind, uploaded_at) values
+    ('resident', v_a, 'Shelter', 'h0313-vid', 'clip.mp4', 'video', now() - interval '1 hour'),
+    ('resident', v_a, 'Shelter', 'h0313-vid-unmarked', 'CLIP.MOV', 'photo', now() - interval '1 hour'),
+    ('resident', v_a, 'Shelter', 'h0313-pic', 'dog.jpg', 'photo', now()),
+    ('resident', v_b, 'Shelter', 'h0313-b-cur', 'cur.jpg', 'photo', now() - interval '3 hours'),
+    ('resident', v_b, 'Shelter', 'h0313-b-vid', 'clip.mp4', 'video', now() - interval '2 hours'),
+    ('resident', v_b, 'Shelter', 'h0313-b-pic', 'later.jpg', 'photo', now() - interval '1 hour');
+  update residents set profile_photo_drive_file_id = 'h0313-b-cur' where id = v_b;
+  perform set_config('request.jwt.claims', json_build_object('sub', (select uid from who where who = 'pics'), 'role', 'authenticated')::text, true);
+  set local role authenticated;
+  begin perform set_resident_profile_photo(v_a, 'h0313-vid'); reset role; raise exception 'D1 video set as profile';
+  exception when sqlstate 'P0001' then if sqlerrm not like 'Only a photo%' then raise; end if; end;
+  begin perform set_resident_profile_photo(v_a, 'h0313-vid-unmarked'); reset role; raise exception 'D2 video-named file set as profile';
+  exception when sqlstate 'P0001' then if sqlerrm not like 'Only a photo%' then raise; end if; end;
+  perform set_resident_profile_photo(v_a, 'h0313-pic');
+  select profile_photo_drive_file_id into v_prof from residents where id = v_a;
+  if v_prof is distinct from 'h0313-pic' then reset role; raise exception 'D3 photo not accepted as profile (%)', v_prof; end if;
+  perform delete_resident_photo((select id from attachments where drive_file_id = 'h0313-b-cur'));
+  select profile_photo_drive_file_id into v_prof from residents where id = v_b;
+  if v_prof is distinct from 'h0313-b-pic' then reset role; raise exception 'D4 deleting the profile photo promoted % (want the later photo, skipping the video)', v_prof; end if;
+  perform delete_resident_photo((select id from attachments where drive_file_id = 'h0313-b-pic'));
+  select profile_photo_drive_file_id into v_prof from residents where id = v_b;
+  if v_prof is not null then reset role; raise exception 'D5 only a video left yet % was promoted', v_prof; end if;
+  reset role;
+  v_report := v_report || ' | D set_resident_profile_photo refuses a video (by kind and by name) and accepts a photo; delete fallback skips a video, promotes the next photo, and leaves none when only a video remains';
+
+  raise exception 'HARNESS-OK 0306+0313 (live)%', v_report;
 end $$;
 `;
 
