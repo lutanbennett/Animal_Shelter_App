@@ -880,6 +880,22 @@ export const ENTRIES = {
       expect: "The sign-up shows the owner's name and contact and the pet; the status change is kept after reloading, and a removed sign-up gives its place back on the public page.",
     },
   ],
+  "running-a-fundraising-event": [
+    {
+      activity: "Plan a fundraising event, publish it and add photos",
+      needs: "events.run",
+      device: "both",
+      do: "Open Management, Fundraising events, tap New event, fill in a title and a date, save, tick Published, then add a photo on the event's page.",
+      expect: "The event appears on the website's Events page. Its photo shows there only after someone approves it on the Photos to approve page.",
+    },
+    {
+      activity: "Cancel a fundraising event",
+      needs: "events.run",
+      device: "both",
+      do: "Open a published event and tap Cancel.",
+      expect: "The event is no longer published and disappears from the website's Events page in the same save.",
+    },
+  ],
   "running-an-appeal": [
     {
       activity: "Start an appeal for a sick resident, preview it and publish it",
