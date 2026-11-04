@@ -17,13 +17,17 @@
 // reported to /api/csp-report, which the Worker answers itself and logs
 // (worker/csp-report.mjs): report-uri for browsers that only know the old
 // mechanism, report-to + Reporting-Endpoints for the rest.
+// www.googleapis.com is the one host the browser sends a video to: the Drive
+// resumable session URL (src/lib/uploads/resumable-video.ts). Photos and bills
+// go through our own server and need nothing here.
+// docs/decisions/2026-11-04-video-upload-csp.md.
 export const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://www.googleapis.com",
   "frame-src https://www.google.com",
   "frame-ancestors 'none'",
   "object-src 'none'",

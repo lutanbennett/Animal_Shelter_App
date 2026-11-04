@@ -7130,7 +7130,7 @@ const en = {
         /** The steps of resumable-video.ts, each named so the message says where it stopped (docs/decisions/2026-11-03-video-upload-fault.md). */
         startFailed: "The video could not be uploaded: the app could not open the upload. Try again.",
         driveRefused: (status: number) => `The video could not be uploaded: Google Drive refused it (code ${status}). Try again; if it keeps happening, tell an admin.`,
-        connectionLost: "The video could not be uploaded: the connection kept dropping while it was being sent. Try again on a stronger connection.",
+        connectionLost: "The video could not be sent to Google Drive, and repeating it did not help. Try again; if it keeps happening, tell an admin, as the cause may be on our side.",
         finishFailed: "The video reached Google Drive but the app could not save it. Try again.",
       },
     },
