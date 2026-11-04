@@ -6,7 +6,7 @@
 |---|---|
 | Feature | Deceased resident's last visit takes a bill, cost and notes (app half) |
 | Backlog item | `docs/backlog.md` → `#314hq` parts 1 (app half) and 3 |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/deceased-visit-notes-app` @ `C:\Development\Animal_Shelter_deceased-visit-notes-app` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | see PR |
 | Tested by / date | Claude, 2026-11-04 |
