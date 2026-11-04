@@ -606,10 +606,10 @@ Result: pending
 
 ## Run fundraising events (`run_fundraising_events`)
 
-- Opens: `/management/campaigns`
+- Opens: `/management/events`
 
 0. Sign in with `--cards run_fundraising_events`. The home screen shows the **Run fundraising events** tile (or the tile of a card that includes it).
-1. Open `/management/campaigns`: it loads.
+1. Open `/management/events`: it loads.
 2. **TODO:** Run a fundraising event and its photos. Do it on a disposable record named `walk-run_fundraising_events`. Question: where should this write show afterwards (which page, which row)?
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 

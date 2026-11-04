@@ -711,6 +711,11 @@
         "migration": "0303_public_adoption_updates_videos.sql",
         "item": "grant to anon",
         "reason": "SELECT on the public view public_adoption_updates, restated unchanged from 0217 with one file-name test widened to include videos (mp4, mov, m4v, webm). It was already granted to anon, and every guard is kept (shared publicly, public-visible resident, not deceased, never the Medical folder, approved). The existing public-site pattern: it lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-03-adoption-video-schema.md."
+      },
+      {
+        "migration": "0314_fundraising_events_app.sql",
+        "item": "grant to anon",
+        "reason": "SELECT on the public views public_fundraising_events and public_fundraising_event_photos, and EXECUTE on is_public_drive_file(text) restated with one more branch. The existing public-site pattern (0210, 0285): the base tables stay revoked from anon, a view shows only a published, not cancelled event and a photo only once attachments.approved_at is set, and appeal/project links only when those are public themselves. It lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-04-fundraising-events-staff-screens.md."
       }
     ],
     "stubs": [
