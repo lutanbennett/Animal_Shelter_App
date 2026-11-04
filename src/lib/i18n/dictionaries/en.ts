@@ -5176,6 +5176,7 @@ const en = {
     events: {
       heading: (n: number) => (n === 1 ? "1 event photo waiting" : `${n} event photos waiting`),
       anEvent: "A fundraising event",
+      removeBody: (title: string) => `The photo on ${title} will be deleted.`,
       photoAlt: (title: string) => `Photo waiting for approval: ${title}`,
       approveFailed: "The photos could not be approved. Nothing was changed. Try again.",
       notWaiting: "That photo was already approved or removed. Refresh the page.",

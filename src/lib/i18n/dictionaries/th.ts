@@ -5005,6 +5005,7 @@ const th: Dictionary = {
     events: {
       heading: (n: number) => `รูปงานระดมทุนรออนุมัติ ${n} รูป`,
       anEvent: "งานระดมทุน",
+      removeBody: (title: string) => `รูปของ ${title} จะถูกลบ`,
       photoAlt: (title: string) => `รูปที่รออนุมัติ: ${title}`,
       approveFailed: "ไม่สามารถอนุมัติรูปได้ ไม่มีอะไรถูกเปลี่ยนแปลง ลองอีกครั้ง",
       notWaiting: "รูปนั้นถูกอนุมัติหรือลบไปแล้ว โปรดรีเฟรชหน้า",

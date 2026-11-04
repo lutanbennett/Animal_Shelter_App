@@ -2,11 +2,12 @@ import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
 import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
-import { loadWaitingPhotos } from "@/lib/photos/approval";
+import { loadWaitingEventPhotos, loadWaitingPhotos } from "@/lib/photos/approval";
 import { loadPendingPhotos } from "@/lib/photos/pending";
 import { loadPickableResidents } from "@/lib/medical/residents";
 import { ApproveQueue } from "./ApproveQueue";
 import { PendingQueue } from "./PendingQueue";
+import { EventPhotoQueue } from "./EventPhotoQueue";
 
 /**
  * Photos to approve: the resident photos filed by a login that may not publish (0217), waiting for someone who may,
