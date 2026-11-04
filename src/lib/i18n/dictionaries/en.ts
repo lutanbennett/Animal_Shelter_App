@@ -2955,7 +2955,7 @@ const en = {
       waiting: (n: number) => (n === 1 ? "1 bill waiting" : n + " bills waiting"),
       none: "Nothing waiting. Press Add bills to put in photos or PDFs of receipts.",
       addBills: "Add bills",
-      addHint: "Choose many photos or PDFs at once from your camera roll, files or a scanner. Each one becomes a card below.",
+      addHint: "Choose many photos or PDFs at once from your camera roll, files or a scanner. Tap a picture below to say what it is for.",
       addedBy: (who: string, when: string) => "Added by " + who + ", " + when,
       cost: "Cost (baht)",
       date: "Date on the bill",
