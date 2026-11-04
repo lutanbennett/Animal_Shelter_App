@@ -41,7 +41,8 @@ async function handlePost(
 
   // Drive is not RLS-protected, so this runs before any Drive call.
   const perms = await loadPermissions();
-  if (!can(perms, "photos.resident_add")) {
+  // An adopter's photo is asked of resident.adoption_news (below); anything else of photos.resident_add.
+  if (!can(perms, "photos.resident_add") && !can(perms, "resident.adoption_news")) {
     const { t } = await getT();
     return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
   }
@@ -86,8 +87,15 @@ async function handlePost(
   // (a doctor: Medical) files there and nowhere else — so not an adopter's
   // photo either, which has no category and a folder of its own; the hub
   // never offers a doctor one.
-  const categories = photoCategoriesFor(perms);
-  if (categories.length === 0) {
+  // 0311: the person who may write an adoption update may illustrate it, and nothing more: the file waits for approval
+  // (0309) and record_attachment checks the update is this resident's and the folder is its own.
+  const illustrates = typeof adoptionUpdateId === "string" && can(perms, "resident.adoption_news");
+  if (adoptionUpdateId && !illustrates) {
+    const { t } = await getT();
+    return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
+  }
+  const categories = illustrates ? [] : photoCategoriesFor(perms);
+  if (!illustrates && (categories.length === 0 || !can(perms, "photos.resident_add"))) {
     const { t } = await getT();
     return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
   }

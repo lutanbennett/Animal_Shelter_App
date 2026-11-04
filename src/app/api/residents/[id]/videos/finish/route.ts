@@ -26,7 +26,8 @@ async function handlePost(
   const { t } = await getT();
 
   const perms = await loadPermissions();
-  if (!can(perms, "photos.resident_add")) {
+  // An adopter's video is asked of resident.adoption_news (below); anything else of photos.resident_add.
+  if (!can(perms, "photos.resident_add") && !can(perms, "resident.adoption_news")) {
     return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
   }
 
@@ -77,11 +78,11 @@ async function handlePost(
       .limit(1)
       .returns<{ id: string; received_on: string }[]>();
     const row = updateRows?.[0];
-    if (!row || !can(perms, "photos.resident_publish") || upload.sub_folder !== dateToYyyymmdd(row.received_on)) {
+    if (!row || !can(perms, "resident.adoption_news") || upload.sub_folder !== dateToYyyymmdd(row.received_on)) {
       return NextResponse.json({ error: "Unknown upload." }, { status: 404 });
     }
     updateId = row.id;
-  } else if (!photoCategoriesFor(perms).includes(upload.sub_folder as PhotoCategory)) {
+  } else if (!can(perms, "photos.resident_add") || !photoCategoriesFor(perms).includes(upload.sub_folder as PhotoCategory)) {
     return NextResponse.json({ error: "Unknown upload." }, { status: 404 });
   }
 

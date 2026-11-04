@@ -286,12 +286,12 @@ const PINNED = {
   "/residents/[id]/deceased/undo": { guards: [FULL], decides: ["placement.death_withdraw"] },
   "/residents/[id]/adoption-updates/new": {
     guards: [FULL],
-    decides: ["photos.resident_add", "photos.resident_publish", "resident.adoption_news"],
+    decides: ["resident.adoption_news"],
     in: "src/app/residents/[id]/adoption-updates/AdoptionUpdatePage.tsx",
   },
   "/residents/[id]/adoption-updates/[updateId]/edit": {
     guards: [FULL],
-    decides: ["photos.resident_add", "photos.resident_publish", "resident.adoption_news"],
+    decides: ["resident.adoption_news"],
     in: "src/app/residents/[id]/adoption-updates/AdoptionUpdatePage.tsx",
   },
   // A record tab: the tab's own activity at Read, from SECTION_READS in src/lib/residents/section-reads.ts (pinned
