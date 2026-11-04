@@ -1070,6 +1070,7 @@ const manual: Manual = {
             "Tap Remove to delete a photo you do not want. It asks first, then deletes the file from the shelter's Google Drive (it stays in Drive's bin for 30 days).",
             "Filed under the wrong animal? Tap Wrong animal? on that photo, then tap the right one. The photo moves and keeps waiting for approval.",
             "Photos tagged to an enclosure, because the person did not know which animal it was, are listed first. See Adding photos: if you don't know the resident, below.",
+            "The screen has tabs: Resident photos, Who's in the photo (the enclosure photos), Event photos and Page changes. You only see the tabs your cards let you decide. Page changes are edits to the website's pages drafted by someone who may not publish: read what they changed, then tap Publish to put it on the website, or Discard to throw it away. The website does not change until you publish.",
           ],
           callouts: [
             {

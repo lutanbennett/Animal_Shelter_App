@@ -356,6 +356,34 @@ export async function updateSitePage(
 }
 
 /**
+ * Proposes a change to one of the site's long-form pages instead of publishing it (0315). Asks website.propose, which
+ * propose_website_draft() asks; the live page does not change until someone holding website.approve publishes the draft
+ * in the approval portal.
+ */
+export async function proposeSitePage(
+  slug: SitePageSlug,
+  _state: SiteContentFormState,
+  formData: FormData,
+): Promise<SiteContentFormState> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction("website.proposeSitePage", write(t), { id: writeRequestIdFrom(formData), action: "website.proposeSitePage", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.propose")) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (!isSitePageSlug(slug)) return refuse(t.admin.website.pages.unknownPage);
+    const title = (formData.get("title") as string | null)?.trim() ?? "";
+    if (!title) return refuse(t.admin.website.pages.titleRequired);
+    const { error } = await supabase.rpc("propose_website_draft", {
+      p_target: "site_pages",
+      p_row_key: slug,
+      p_patch: { title, body: (formData.get("body") as string | null)?.trim() ?? "" },
+    });
+    if (error) return refuse(error.message);
+    revalidatePath("/photos/approve");
+    return { ok: true, success: t.admin.website.pages.proposed };
+  });
+}
+
+/**
  * Set (or clear, with null) the "Pet of the week" on the home page. The
  * choice is checked against public_resident_profiles so only a resident the
  * public adoption pages already show can be featured — the same rule the
