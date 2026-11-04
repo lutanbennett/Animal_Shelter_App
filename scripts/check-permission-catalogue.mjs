@@ -264,6 +264,9 @@ const PINNED = {
   "/management/campaigns/new": { guards: ['requirePermission("appeal.run")'], decides: [] },
   "/management/campaigns/[id]": { guards: ['requirePermission("appeal.run")'], decides: ["appeal.medical_photo", "donation.receipt"] },
   "/management/campaigns/[id]/preview": { guards: ['requirePermission("appeal.run")'], decides: ["donation.receipt"] },
+  // Fundraising events (0312, 0314). One activity reads and writes everything on these pages.
+  "/management/events/new": { guards: ['requirePermission("events.run")'], decides: [] },
+  "/management/events/[id]": { guards: ['requirePermission("events.run")'], decides: [] },
   // The meme library (0223). A meme's page opens at the list's Read; Record a share, Edit and Archive ask Edit in the body.
   "/memes/new": { guards: ['requirePermission("social.library")'], decides: [] },
   "/memes/make": { guards: ['requirePermission("social.library")'], decides: [] },

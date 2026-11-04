@@ -1144,3 +1144,24 @@ export async function ensureBillsFolder(drive: DriveClient, isoDate: string): Pr
   const yearId = await findOrCreateFolder(drive, billsId, year);
   return findOrCreateFolder(drive, yearId, month);
 }
+
+// ---------------------------------------------------------------------------
+// Fundraising events (0314)
+// ---------------------------------------------------------------------------
+
+/** Top-level folder under GOOGLE_DRIVE_ROOT_FOLDER_ID holding the photos of every fundraising event. */
+const EVENTS_FOLDER = "Events";
+
+/**
+ * Where an event's photos live: Events/<year>/<YYYY-MM-DD Title>/. Dated so Drive sorts it as the calendar does, and
+ * kept apart from Projects/ on purpose: a project folder the event links to is NOT its gallery (0312).
+ */
+export async function ensureEventFolder(drive: DriveClient, event: { event_date: string; title: string }): Promise<string> {
+  const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
+  if (!rootId) {
+    throw new Error("GOOGLE_DRIVE_ROOT_FOLDER_ID is not configured.");
+  }
+  const eventsId = await findOrCreateFolder(drive, rootId, EVENTS_FOLDER);
+  const yearId = await findOrCreateFolder(drive, eventsId, event.event_date.slice(0, 4));
+  return findOrCreateFolder(drive, yearId, driveSegment(`${event.event_date} ${event.title}`));
+}

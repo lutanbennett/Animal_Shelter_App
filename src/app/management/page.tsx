@@ -1,4 +1,4 @@
-import { Coins, Globe, Scissors, HandHeart, Grid3x3, HandCoins, HeartHandshake, LayoutDashboard, Languages, Scale, ShoppingCart } from "lucide-react";
+import { Coins, Globe, Scissors, HandHeart, PartyPopper, Grid3x3, HandCoins, HeartHandshake, LayoutDashboard, Languages, Scale, ShoppingCart } from "lucide-react";
 import { canOpen, routeFor } from "@/lib/permissions/routes";
 import { WHO_DOES_WHAT_PATH, opensWhoDoesWhat } from "@/lib/permissions/who-does-what";
 import { requireAnyPageIn } from "@/lib/permissions/require";
@@ -52,6 +52,12 @@ export default async function ManagementPage() {
       label: t.nav.appeals,
       description: t.appealsAdmin.landingTile,
       icon: HandHeart,
+    },
+    {
+      href: "/management/events",
+      label: t.nav.events,
+      description: t.eventsAdmin.landingTile,
+      icon: PartyPopper,
     },
     {
       href: "/management/sterilisation-drives",

@@ -55,6 +55,70 @@ export async function approvePhotos(ids: string[], requestId: string): Promise<A
 }
 
 /**
+ * Approves event photos (0314). Same stamp, same refusal as a resident's: attachments_approval_stamp (0312) records who
+ * and when and refuses a login that may not approve.
+ */
+export async function approveEventPhotos(ids: string[], requestId: string): Promise<ActionResult<{ approved: number }>> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction<{ approved: number }>("photos.approveEvent", write(t), { id: requestId, action: "photos.approveEvent", db: supabase }, async () => {
+    const perms = await loadPermissions();
+    if (!can(perms, "photos.approve")) return { ok: false, error: t.photoApproval.errors.notAllowed };
+    const chosen = [...new Set(ids)];
+    if (chosen.length === 0) return { ok: false, error: t.photoApproval.errors.nothingChosen };
+    if (chosen.length > MAX_BATCH) return { ok: false, error: t.photoApproval.errors.tooMany(MAX_BATCH) };
+
+    const { data, error } = await supabase
+      .from("attachments")
+      .update({ approved_at: new Date().toISOString() })
+      .in("id", chosen)
+      .eq("owner_type", "event")
+      .is("approved_at", null)
+      .select("id")
+      .returns<{ id: string }[]>();
+    if (error) return { ok: false, error: t.photoApproval.events.approveFailed };
+
+    revalidateQueue();
+    revalidatePath("/management/events", "layout");
+    return { ok: true, approved: data?.length ?? 0 };
+  });
+}
+
+/** Removes an event photo that is still waiting; a stale page can never remove one already approved. Drive's bin keeps it 30 days. */
+export async function removeWaitingEventPhoto(attachmentId: string, requestId: string): Promise<ActionResult<{ driveWarning?: string }>> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction<{ driveWarning?: string }>("photos.removeWaitingEvent", write(t), { id: requestId, action: "photos.removeWaitingEvent", db: supabase }, async () => {
+    const perms = await loadPermissions();
+    if (!can(perms, "photos.approve")) return { ok: false, error: t.photoApproval.errors.notAllowed };
+
+    const { data: waiting } = await supabase
+      .from("attachments")
+      .select("id, drive_file_id")
+      .eq("id", attachmentId)
+      .eq("owner_type", "event")
+      .is("approved_at", null)
+      .returns<{ id: string; drive_file_id: string }[]>();
+    const row = waiting?.[0];
+    if (!row) return { ok: false, error: t.photoApproval.events.notWaiting };
+
+    // The gallery row cascades from the attachment.
+    const { error } = await supabase.from("attachments").delete().eq("id", row.id).eq("owner_type", "event").is("approved_at", null);
+    if (error) return { ok: false, error: t.photoApproval.events.removeFailed };
+
+    let driveWarning: string | undefined;
+    try {
+      await getDriveClient().trashFile(row.drive_file_id);
+    } catch {
+      driveWarning = t.photoApproval.driveLeftBehind;
+    }
+    revalidateQueue();
+    revalidatePath("/management/events", "layout");
+    return { ok: true, driveWarning };
+  });
+}
+
+/**
  * Removes a photo that is still waiting. The row goes first, then the file is trashed in Drive; the same order as
  * the resident's own Remove (residents/[id]/photos/actions.ts). If Drive then fails, the photo is gone from the app
  * and a stray file sits in the resident's Drive folder where only someone browsing Drive would meet it; the other
