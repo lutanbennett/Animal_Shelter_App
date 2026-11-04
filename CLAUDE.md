@@ -209,13 +209,12 @@ two or three at once; more than that and merging becomes the bottleneck.
    `.env.local`, runs `npm ci`, records the next free port in `.port`
    and writes a gitignored `.claude/launch.json` aimed at that port.
    Never branch from another feature branch. **Then the session: `/plan-day`
-   starts it for you, with the model and effort already set from its band
-   table.** Decided 2026-11-01, after three batches in which you re-dialled
-   every stream by hand — **but it only works from a turn you typed in the
-   DESKTOP APP.** Over Remote Control the app refuses to start a session at
-   all, whatever folder or dials are passed, and `/plan-day` then falls back
-   to naming the folder and port for you to open yourself. Either way the
-   session's first move is to read `.brief.md`; `node scripts/worktree.mjs dev`
+   creates the worktrees and briefs and names, per stream, the folder, the
+   port and the model and effort to set; you open each session yourself.**
+   Decided 2026-11-03: a 2026-11-01 trial had the planner start the sessions
+   with the dials set (it worked, 12 of 12 starts), and it was reverted for
+   its cost in turns, which is what the Max plan counts. The session's first
+   move is to read `.brief.md`; `node scripts/worktree.mjs dev`
    starts `next dev` on its port, and so does `preview_start` with `name: "dev"` (a checkout
    without the file gets one from `node scripts/worktree.mjs launch`). (`/plan-day` picks the day's workstreams from the backlog
    and creates them.)

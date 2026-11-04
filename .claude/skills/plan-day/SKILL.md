@@ -610,6 +610,20 @@ setting produces a false finding.
 
 ### Token estimates (provisional — revise from the actuals)
 
+**THE CURRENCY, SAID FIRST (Lutan, 2026-11-03): *"My usage is not based on Tokens, it's based on turns"*
+— he is on the Max plan, and his limit is turn-based.** The bands below measure **scale**: how big a
+stream is, which is what they are calibrated for and why they work (the first nine-stream plan's
+figures landed inside or under). **They cannot see the planner's own cost at all** — not its wake-ups,
+and not whether it made forty tool calls or twelve. Keep using them to size streams; do not read a
+token figure as what he pays.
+
+**The planner's own discipline, which no band measures:** batch independent reads into ONE call, and
+prefer one command that prints several answers to several commands. **Evidence: the 2026-11-03 round made
+forty-odd separate tool calls where a dozen batched ones would have served**, which on a request basis is
+expensive and which a token count cannot see. *(The request arithmetic is reasoned, not measured.)*
+**This is advice, never a gate: warn and forecast, do not stop at a threshold — see "NEVER BLOCK HIS
+PAID USAGE" below.**
+
 **A BRIEF THAT HANDS OVER THE CAUSE, THE DECISION AND THE SHAPE OF THE FIX LANDS NEAR THE FLOOR.**
 Added 2026-10-27 on **four** readings in one day, all 27-43% UNDER band: `cron-leaves-a-trace` 161,185
 (banded 220-290k), `calendar-loop-fix` 162,041 (250-310k), `filters-say-what-they-do` 169,996
@@ -743,6 +757,7 @@ Two axes that genuinely do cost, both measured 2026-10-20:
 | **A GUARD READ — half the restate rate, because someone else already localised it** | **~3.6k per row above the floor** | Measured 2026-10-30 (#1103): **25 rows, 90,107 above its own floor**, of which 16 were converted to `await exitWith(n)` with an `else` around what follows, **8 were left alone with a written reason** (no network call, so no libuv trap) and 1 was already a comment. **"Left alone with a reason" was a third of the work and is a correct verdict** — a brief implying every row must change gets worse answers. **Why it is so much cheaper than the ~6.8k restate rate and the ~20k diagnosis rate: `docs/decisions/2026-10-30-harness-exit-triage.md` had already localised each decision to ONE call site.** So the question that picks the rate is **not** how mechanical the edit looks but **who did the localising** — a row you must first find is a diagnosis, a row someone has pointed at is a read. **And set a hard boundary in rows**: 51 rows at this rate does not finish in one session, 25 does |
 | **An AUDIT or a REPORT over a wide but shallow surface — band it NEAR THE FLOOR whatever its size** | **145–190k** | **PROMOTED FROM HANDOVER `438`** on five readings across two rounds. **The test, and it is one question: if everything here turns out to be FINE, what work is left?** If the answer is "write the list and say so", it is a report. Banded for the SIZE of the surface, three landed 43%, 21% and 17% UNDER (`harness-sweep-batch-6`, `buttons-sweep-4-operations`, `policy-triage-1`, 2026-10-28 morning). Banded as REPORTS the same day, two landed on the bottom edge: `policy-triage-2` **144,682** against 145–185k (ten tables, all deliberate) and `buttons-sweep-5-money-content` **151,124** against 150–190k (five areas audited, one gap). **A sweep that expects to find little is an audit, and an audit is cheap.** Ten harnesses, twenty tables, five areas of button checks: the count of things to LOOK AT does not move this row; only a real repair does. **CONFIRMED AGAIN 2026-11-02, and this time against a DELIBERATE over-band: `control-listing-sweep-2` was given 160–200k rather than this row *because its named list was long* (~22 addresses) and came in at 138,872 – under even this row's floor.** Third sweep running to land under an audit band. **So the LENGTH OF THE LIST does not move it either; stop widening for it.** **The caveat, which is the honest half: all three of those sweeps found almost nothing, so nothing was repaired. An audit that finds real gaps is still untested, and if one comes in over, that is why** |
 | Quick win | 110–170k | 1–3 files; screenshots cost far less than first assumed. **Left as written on Lutan's ruling, 2026-10-11** — the planner had been quoting 130–200k while both measured quick wins (129,320 · 135,901) sat *inside* this band. **The band was right and the quoting was high. Do not reopen it** |
+| **A "wording only" change that must be SEEN ON SCREEN in two languages and CHASED through neighbouring documents — NOT a quick win** | **150–195k** (the audit row) | Measured 2026-11-04: `website-content-label` (#1262) shipped **two labels** for **157,458** against 110–150k, 5% over. The code was two labels; the cost was writing the Thai, **seeing both languages on screen** as Admin, fixing the same sentence in `docs/roles-and-permissions.md` and **finding four more places that described the card the old way**. **The question that picks this row is not how much code changes but whether anybody has to go and LOOK, and in how many places the same sentence is written.** Two labels plus an on-screen proof in two languages plus a "where else is this described" sweep is three jobs — and the planner's own brief asked for the proof and the sweep as deliverables 7 and 8, and those two are the overrun (`609`'s rule: naming something in a brief is not pricing it). **This does not change the Quick win row above, whose band was right and must not be quoted higher** |
 | Schema PR, single file | **~140–155k** | measured 6×: `cashflow-forecast-function` 139,791 · `drop-leftovers-schema` 143,030 (three unrelated items in one file) · `receipt-issuer-server-side` 143,678 · `map-rooms-schema` 151,273 · `role-floor-schema` 231,297 · `perm-functions-schema` 284,248 |
 | **Schema PR with code — SPLITS, do not quote one band** | **160–185k** a view or function rewrite plus a named handful of readers · **230–285k** permissions work across many call sites | Corrected 2026-10-21. `diets-sheet-schema` rewrote `special_diet_list`, changed `record_intake` and moved **four named app files** onto recipes: banded 230–285k off the two readings below and came in at **166,331, 28% UNDER.** Those two readings (`role-floor-schema`, `perm-functions-schema`) were **permissions** changes rippling through many call sites, which is a different job. **Ask how many readers the item NAMES**: a named handful is the lower band. **The permissions half now has a third reading and held:** `card-decisions-schema` (2026-10-26) moved four card reads onto narrower grants, added a card and changed two delete policies across many policy call sites — banded 230–285k, came in at **295,409, +3.7% over**, which is the band working rather than failing |
 | Medium | **170–290k** | 5–15 files, browser checks, both dictionaries. Measured: `residents-list-sort` 166,843 · `vaccine-stock-forecast` 188,913 · `perm-policy-cleanup` 206,567 · `who-does-what-edit` 210,888 · `place-order-settings` 282,082 |
@@ -1063,7 +1078,48 @@ takes a minute):
    fresh session needs; CLAUDE.md covers the rest — **except the
    pre-push test-plan block below, which every brief must carry.**
 
-### START THE SESSIONS YOURSELF, WITH THE DIALS SET — but check how the turn arrived first
+### HAND THE SESSIONS BACK: name the folder, the port and the dials, then STOP — decided 2026-11-03
+
+**Lutan, 2026-11-03, watching the first batch of the nine-stream plan run:** *"this new process seems to
+be using a lot more of my allocation per batch. Can we go back to the way we used to do it, you create
+the streams and I will manually start each one"*, and then, correcting the planner's answer, which had
+been in tokens: *"My usage is not based on Tokens, it's based on turns"* … *"it's the Maxplan"*.
+**Both halves are the decision, and the second matters more: tokens are not the currency he pays in.**
+
+**So, once the worktrees and briefs exist: DO NOT call `start_session` for a stream.** Create the
+worktree, write the brief, and end with the finishing message of step 8, which names **for each stream
+the folder, the port, and the model and effort to set**. He opens each session himself. A session he
+opens is not linked to the planner, so the planner's session ends after setup and is never woken.
+
+**THE TRADE HE HAS CHOSEN, stated plainly because the problem the trial solved has not gone away:** he
+goes back to setting the model and effort on three new sessions a batch by hand (every new session opens
+on Opus), and in return he stops paying for the planner being woken every time a stream ends a turn.
+**Make the hand-setting as cheap as it can be: give him the dials as a list in the finishing message, so
+he is copying from it rather than working them out.**
+
+**The figures lose nothing.** The `stream-usage:` comment on each stream's PR is a durable record
+(`docs/decisions/2026-10-28-stream-usage-pr-comment.md`), and the next `/plan-day` reads it **without
+the planner having been woken**. Ending the planner's session after setup costs no measurement.
+
+**WHAT IS MEASURED AND WHAT IS REASONED** (`docs/decisions/2026-11-03-planner-hands-sessions-back.md`):
+measured — the first batch's streams were ordinary (191,212 inside 165–215k; 177,919, 11% under
+200–260k), the planner's own session reached 354,693 tokens, and its 5-hour window went 7% → 19% across
+the planning round. **Reasoned, NOT measured** — that the cause is the wake-ups (each one costs several
+requests: read the notice, verify the PR, amend files, wrap up, reply), and that forty-odd separate tool
+calls where a dozen batched ones would serve was a second, smaller cost. **Nobody has measured requests
+per wake-up against a batched read. Do not quote a figure for it.**
+
+#### SUPERSEDED 2026-11-03 — the planner-starts-the-sessions instruction, kept so it is seen to have been tried
+
+**Everything from here to the end of "ONE GO FOR ALL NINE" below is the old instruction. Do not follow
+it.** It was a trial Lutan chose on 2026-11-01 (*"Yes, try it next batch."*) and it **ran for two
+plans. It worked mechanically: twelve of twelve session starts across the two plans, none refused, the
+dials read back correctly every time. It was reverted on 2026-11-03 for its cost in REQUESTS, not because
+it failed.** The text is left in place so the next reader sees what was tried and why it went; the
+facts it records about the settings cascade (`model` inert for the Code tab, no per-folder memory) are
+still true.
+
+#### (superseded) START THE SESSIONS YOURSELF, WITH THE DIALS SET — but check how the turn arrived first
 
 **Lutan, 2026-11-01: *"I had to change those three streams manually"*, and then, asked whether the
 planner should do it: *"Yes, try it next batch."*** Every batch creates three new folders, every new
@@ -1121,7 +1177,12 @@ check the PR or the diff before telling him a stream is done, and **check its wi
 well past halfway, and on 2026-11-01 two streams stopped short of a PR at 20% and 13%, which is simply
 premature.
 
-### ONE GO FOR ALL NINE: he triggers the PLAN, not each batch
+### (SUPERSEDED 2026-11-03, with the section above) ONE GO FOR ALL NINE: he triggers the PLAN, not each batch
+
+**SUPERSEDED.** It depended on the planner starting sessions and being continued when each ended. With
+the sessions handed back, the planner's session ends after each batch's setup and he starts the next
+`/plan-day` himself, as before 2026-11-02. **What still holds: never nine worktrees at once, and the
+ordering rules in step 4.**
 
 **Lutan, 2026-11-02: *"can we set it up so I give you a single go for all 9 streams and you sequence
 them in the correct order rather than me having to start you off for each batch"*.** Until then each
@@ -1782,10 +1843,10 @@ then brief anyone.**
 
 ## 8. Finish
 
-One line per stream: folder, port, and **who started the session** — you
-did, with the dials already set (step 7), or, where that was refused, that
-he should open one on that folder himself. Either way its first move is to
-read `.brief.md`. Then one line saying that once these have merged, running
+One line per stream, **in a list he can copy from: the folder, the port, and the model and effort to
+set** (from your band table, per "Model and effort"). He opens each session himself (step 7), so
+nothing is already set for him. Each session's first move is to read `.brief.md`. **Then stop; do not
+start the sessions.** Then one line saying that once these have merged, running
 `/plan-day` again sets up the next batch without re-planning.
 
 **WHEN THE PLAN'S LAST BATCH IS SET UP** — see the counter rule in step 6, changed 2026-11-02 so this
