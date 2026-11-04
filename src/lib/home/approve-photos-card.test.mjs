@@ -38,7 +38,7 @@ test("it opens /photos/approve, includes View residents, and is what Add residen
   assert.deepEqual(CARDS.add_photos.requiresCardSomewhere, ["approve_photos"]);
   assert.deepEqual([...CARD_SATISFIED_BY.approve_photos].sort(), ["approve_photos"]);
   assert.equal(bundleOfCards(["residents"]).has("photos.approve"), false);
-  for (const [k, c] of Object.entries(CARDS)) assert.equal(k === "approve_photos", bundleOfCards([k]).has("photos.approve"), k + " bundles photos.approve");
+  for (const [k, c] of Object.entries(CARDS)) assert.equal(k === "approve_photos" || k === "approve_website", bundleOfCards([k]).has("photos.approve"), k + " bundles photos.approve");
 });
 
 test("a role holding the card gets its tile and may open the page; a role without the cells gets neither", () => {
