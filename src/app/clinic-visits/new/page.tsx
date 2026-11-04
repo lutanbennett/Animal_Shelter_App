@@ -7,7 +7,6 @@ import { localLabel } from "@/lib/translations/labels";
 import { NOT_DECEASED } from "@/lib/residents/status";
 import { loadDoctorNamesByClinic } from "@/lib/clinics/doctors";
 import { bookingReturnPath } from "@/lib/clinics/booking-return";
-import { ANY_CLINIC_SCOPE } from "@/lib/clinics/scope";
 import { ClinicVisitForm, type ResidentOption, type ClinicOption } from "./ClinicVisitForm";
 
 export default async function NewClinicVisitPage(
@@ -33,20 +32,8 @@ export default async function NewClinicVisitPage(
   const clinicIdParam = searchParams.clinicId;
 
   const supabase = await createClient();
-  const scope = ANY_CLINIC_SCOPE;
 
-  if (scope.kind === "unlinked") {
-    return (
-      <main className="flex flex-1 flex-col gap-4 p-6">
-        <h1 className="text-2xl font-semibold text-foreground">{t.vetVisits.pageTitle}</h1>
-        <p className="max-w-2xl text-sm text-muted">{t.vetVisits.noClinicForAccount}</p>
-      </main>
-    );
-  }
-
-  // A doctor login books against its current clinics only (src/lib/clinics/scope.ts).
-  let clinicsQuery = supabase.from("clinics").select("id, name, name_th").order("name");
-  if (scope.kind === "clinics") clinicsQuery = clinicsQuery.in("id", scope.clinicIds);
+  const clinicsQuery = supabase.from("clinics").select("id, name, name_th").order("name");
 
   const [residentsResult, clinicsResult, doctorNamesByClinic] = await Promise.all([
     supabase
@@ -95,8 +82,6 @@ export default async function NewClinicVisitPage(
         canTagNotes={canTagNote(perms, ["medical.visits"])}
         residents={residents}
         clinics={clinics}
-        fixedClinic={scope.kind === "clinics" && clinics.length === 1 ? clinics[0] : null}
-        lockedDoctor={scope.kind === "clinics" ? scope.doctorName : null}
         doctorNamesByClinic={doctorNamesByClinic}
         canAddDoctor={can(perms, "clinics.doctors")}
         preselectedResidentIds={[...preselectedIds]}

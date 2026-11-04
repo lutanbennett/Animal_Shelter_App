@@ -45,8 +45,6 @@ function toLocalInput(iso: string): string {
 export function ClinicVisitEditForm({
   visit,
   clinics,
-  fixedClinic,
-  lockedDoctor,
   doctorNamesByClinic,
   canAddDoctor = false,
   residentDisplayName,
@@ -59,13 +57,6 @@ export function ClinicVisitEditForm({
   canTagNotes?: boolean;
   noteTags?: NoteTag[];
   clinics: ClinicOption[];
-  /** A doctor login's only current clinic, when that is the only one on offer (src/lib/clinics/scope.ts). */
-  fixedClinic: ClinicOption | null;
-  /**
-   * A doctor login's Doctor field, locked: the visit's own doctor if it has
-   * one (a doctor does not reassign a colleague's visit), otherwise themselves.
-   */
-  lockedDoctor: string | null;
   doctorNamesByClinic: DoctorNamesByClinic;
   /** `clinics.doctors`: the free-text doctor name is offered only with it (a new name adds a doctor). */
   canAddDoctor?: boolean;
@@ -75,7 +66,7 @@ export function ClinicVisitEditForm({
   const [state, onSubmit, pending] = useWriteForm(updateClinicVisit, undefined);
   const { t } = useI18n();
   const v = t.vetVisits;
-  const [clinicId, setClinicId] = useState(fixedClinic?.id ?? visit.clinic_id ?? "");
+  const [clinicId, setClinicId] = useState(visit.clinic_id ?? "");
 
   return (
     <form onSubmit={onSubmit} className="flex max-w-3xl flex-col gap-6">
@@ -89,15 +80,6 @@ export function ClinicVisitEditForm({
           <label htmlFor="clinicId" className="text-sm font-medium text-muted">
             {v.vetClinic}
           </label>
-          {fixedClinic ? (
-            <>
-              <input type="hidden" name="clinicId" value={fixedClinic.id} />
-              <p id="clinicId" className="py-2 text-sm text-foreground">
-                {fixedClinic.name}
-              </p>
-              <p className="text-xs text-muted">{v.ownClinicHint}</p>
-            </>
-          ) : (
           <select
             id="clinicId"
             name="clinicId"
@@ -115,15 +97,13 @@ export function ClinicVisitEditForm({
               </option>
             ))}
           </select>
-          )}
         </div>
 
         <DoctorNameField
           clinicId={clinicId}
           namesByClinic={doctorNamesByClinic}
-          lockedName={lockedDoctor}
           canAddDoctor={canAddDoctor}
-          defaultClinicId={fixedClinic?.id ?? visit.clinic_id ?? ""}
+          defaultClinicId={visit.clinic_id ?? ""}
           defaultValue={visit.doctor_name ?? ""}
           className={inputClass}
         />

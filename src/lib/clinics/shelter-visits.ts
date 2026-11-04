@@ -20,7 +20,7 @@ export const SHELTER_VISITS_LOOKBACK_DAYS = 30;
 
 /**
  * Every visit at every clinic, for the Director's page. The same table and the same
- * archived filter as loadClinicAppointments, without the clinic filter: what a login may
+ * archived filter the retired clinic-scoped /appointments list used, without a clinic filter: what a login may
  * see is RLS's decision (medical.visits, shelter-wide scope), not re-decided here.
  *
  * A still-Scheduled visit is loaded however old it is: overdue is how the app shows a
