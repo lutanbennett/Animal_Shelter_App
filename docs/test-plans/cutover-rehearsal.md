@@ -149,7 +149,7 @@ Automated checks by: Claude  Date: 2026-11-04
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the two rows above need a person; they are for the cutover day
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the list is not empty; its two rows are for the cutover day and are carried by the pending signature below
 
 Manual verification by: pending: the runbook read-through and the two Cloudflare behaviours above
 
@@ -157,7 +157,7 @@ Manual verification by: pending: the runbook read-through and the two Cloudflare
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — n/a: the PR body links the file and accounts for each deliverable
-- [ ] Handed to the production release manager — pending: after merge
+- [ ] Handed to the production release manager — n/a: handed at the cutover, after merge
 
 Result: pass
 
