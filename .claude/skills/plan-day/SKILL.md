@@ -54,7 +54,7 @@ node C:/Development/Animal_Shelter_App/scripts/check-backlog-sections.mjs   # st
 git -C C:/Development/Animal_Shelter_App push
 git -C C:/Development/Animal_Shelter_Backlog merge --ff-only main
 git -C C:/Development/Animal_Shelter_Backlog push
-npm --prefix C:/Development/Animal_Shelter_App ci   # after the pull (the only step that can change package-lock.json), before anything builds
+node C:/Development/Animal_Shelter_App/scripts/guarded-install.mjs   # = npm ci, after the pull (the only step that can change package-lock.json), before anything builds. REFUSES (exit 1) if a build holds the checkout: say so, do not retry in a loop, run it after the build ends
 node C:/Development/Animal_Shelter_App/scripts/worktree.mjs clean   # prunes the Turbopack cache if over 3 GB; refuses (say so, carry on) while next runs there
 ```
 

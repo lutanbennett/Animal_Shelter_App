@@ -57,3 +57,6 @@ appsheet-export/
 # Files to keep with the project but never commit (local notes, one-off reports, data exports).
 # The repo is public: anything with production or personal data says so in its name.
 .local/
+
+# Held while npm ci or a build uses node_modules (scripts/lib/tree-lock.mjs)
+.tree.lock
