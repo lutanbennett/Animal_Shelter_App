@@ -1548,6 +1548,27 @@ const manual: Manual = {
           ],
         },
         {
+          id: "running-a-fundraising-event",
+          title: "Putting a fundraising event on the website",
+          activity: "events.run",
+          path: "Management → Fundraising events",
+          intro:
+            "A fundraising event is a public page on the website with its date, place, a few words and photos of the day. Plan it, publish it when it is ready, and add photos afterwards. Photos reach the website only after someone approves them.",
+          steps: [
+            "Open Management → Fundraising events and tap New event. Give it a title, a date (and an end date if it runs more than a day) and, if you like, a place and a short summary.",
+            "To tie it to a campaign or a project folder, choose one in the pickers. The website links to it only when that campaign or project is itself public.",
+            "Tick Published when it is ready. The event then appears on the website under Get involved → Events, at /events.",
+            "Add photos on the event's page. Each one waits on the Photos to approve page; the website shows it only once someone has approved it. Choose one approved photo as the cover.",
+            "If the event is cancelled, tap Cancel: it is taken off the website in the same save.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Events are shown newest first, split into Coming up and Past events by the date. The Thai wording on the public page has not been checked by a Thai speaker.",
+            },
+          ],
+        },
+        {
           id: "running-an-appeal",
           title: "Running a campaign",
           activity: "appeal.run",

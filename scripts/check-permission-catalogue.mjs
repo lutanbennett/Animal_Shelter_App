@@ -372,6 +372,8 @@ const EXEMPT = {
   "/adopt/journey/[id]": { public: true, why: "Public website: one recently adopted animal's journey, from public_recent_adoptions, public_resident_cards and public_adoption_updates only." },
   "/adopt/stories/[id]": { public: true, why: "Public website: the public_adoption_updates rows an adopter agreed to share about one animal." },
   "/campaigns": { public: true, why: "Public website: reads public_appeals, the anonymous tier (0210); drafts are excluded in SQL." },
+  "/events": { public: true, why: "Public website: reads public_fundraising_events, the anonymous tier (0314); drafts, cancelled events and unapproved photos are excluded in SQL." },
+  "/events/[id]": { public: true, why: "Public website: one public_fundraising_events row and its approved public_fundraising_event_photos." },
   "/campaigns/[id]": { public: true, why: "Public website: one public_appeals row and its public_appeal_photos." },
   "/services/sterilisation": { public: true, why: "Public website: public_desexing_drives (0233), the drive and a count of places left, never a sign-up." },
   "/adopt/international": { public: true, why: "Public website: static page from site_content." },

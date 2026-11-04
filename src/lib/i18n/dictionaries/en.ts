@@ -407,6 +407,22 @@ const en = {
     getInTouchHint: (list: string) => `Reach us on ${list} and we'll get back to you.`,
   },
 
+  /** /events and /events/[id]: fundraising events (0314). */
+  publicEvents: {
+    navLabel: "Events",
+    pageTitle: "Fundraising events",
+    metaDescription: "Fundraising events that support the animals at Lanna Care: what is coming up and what we have done.",
+    heading: "Fundraising events",
+    lead: "Come along, bring a friend, and help us look after the animals. Every event here supports the shelter.",
+    upcomingHeading: "Coming up",
+    pastHeading: "Past events",
+    noneUpcoming: "There is no event planned right now. You can still help the animals today.",
+    photosHeading: "Photos",
+    linkedAppeal: "See the campaign this supports",
+    linkedProject: "See the project this supports",
+    backToAll: "All events",
+  },
+
   /** /campaigns and /campaigns/[id]: sponsorship drives for sick residents (0210). */
   appeals: {
     /** The header entry and the breadcrumb. */
