@@ -292,8 +292,6 @@ export const ROUTES: readonly RouteEntry[] = [
     // Photos filed by a login that may not publish wait here for one that may (0217); approving is the activity the database checks.
     path: "/photos/approve",
     activity: "photos.approve",
-    // 0315: the portal also holds page changes, which website.approve alone opens.
-    alsoActivity: "website.approve",
     icon: BadgeCheck,
     label: (t) => t.photoApproval.title,
     device: "any",
