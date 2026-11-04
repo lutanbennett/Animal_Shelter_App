@@ -705,7 +705,7 @@ const manual: Manual = {
             "Tap the broken-heart icon beside the pencil on the hub.",
             "Enter the date of death, the cause and any notes. The page lists exactly what will happen.",
             "Tap Record death and confirm.",
-            "The resident's status becomes Deceased; future clinic visits are cancelled, prescriptions ended, and they leave the public pages. The record closes — only their bio and photos can still be changed, and the archive files below are refreshed when they are. Their Drive folder moves to Residents/Deceased/ with a summary PDF and an offline index page — the hub shows links to these, and a Retry button if Drive was unavailable. If you change the bio or photos afterwards and Drive can't be updated, the page warns you that the PDF and index are out of date; tap Refresh archive on the banner to try again.",
+            "The resident's status becomes Deceased; future clinic visits are cancelled, prescriptions ended, and they leave the public pages. The record closes — only their bio and photos can still be changed, plus the cost, notes and bill photos on a clinic visit (open the visit and tap Correct cost and notes, where your cards allow it), and the archive files below are refreshed when they are. Their Drive folder moves to Residents/Deceased/ with a summary PDF and an offline index page — the hub shows links to these, and a Retry button if Drive was unavailable. If you change the bio or photos afterwards and Drive can't be updated, the page warns you that the PDF and index are out of date; tap Refresh archive on the banner to try again.",
             "Checked end to end on 2 October 2026: after a death, adding a photo, changing the bio, choosing a different profile photo and removing a photo each updated both the summary PDF and the offline index in Drive within a few seconds. The out-of-date warning only shows at the moment you make the change and is gone once the page is reloaded, so if you see it, press Refresh archive before leaving. A phone photo (HEIC) chosen as the profile is turned into a picture for the PDF by Drive; if the PDF still could not get the picture, the page says so at the moment you choose it — pick a JPEG or PNG photo instead, or press Refresh archive. A resident whose first archive never finished is not archived by a later edit — use Retry archiving on the hub, which includes everything saved so far.",
           ],
           screenshot: {
@@ -733,7 +733,7 @@ const manual: Manual = {
           callouts: [
             {
               kind: "note",
-              text: "This is for a death that didn't happen — the wrong resident, or a slip. Both the death and the withdrawal stay in the Housing & Placement History, dated when they were made. If the death did happen but a detail is wrong, this isn't the tool.",
+              text: "This is for a death that didn't happen — the wrong resident, or a slip. Both the death and the withdrawal stay in the Housing & Placement History, dated when they were made. If the death did happen but a detail is wrong, this isn't the tool. To add a bill or a note after a death, open the record instead — undo is only for a death recorded in error.",
             },
           ],
         },

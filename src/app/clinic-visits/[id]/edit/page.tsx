@@ -75,17 +75,8 @@ export default async function EditClinicVisitPage(props: PageProps<"/clinic-visi
   const displayName = resident.thai_name ? `${resident.name} (${resident.thai_name})` : resident.name;
   const tabHref = `/residents/${visit.resident_id}/clinic-visits`;
 
-  if (stateResult.data?.[0]?.is_deceased) {
-    return (
-      <main className="flex flex-1 flex-col gap-4 p-6">
-        <h1 className="text-2xl font-semibold text-foreground">{t.vetVisits.editPageTitle}</h1>
-        <p className="text-sm text-muted">{t.residents.deceased.recordClosed}</p>
-        <div>
-          <ActionLink href={tabHref} label={t.residents.sections.backTo(displayName)} icon={ACTION_ICONS.back} iconOnlyOnMobile={false} />
-        </div>
-      </main>
-    );
-  }
+  // 0310 opens a dead resident's visit to its cost and notes only, so the form is drawn with just those two.
+  const deceased = stateResult.data?.[0]?.is_deceased === true;
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">
@@ -94,16 +85,18 @@ export default async function EditClinicVisitPage(props: PageProps<"/clinic-visi
       </Link>
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{t.vetVisits.editPageTitle}</h1>
-        <p className="text-sm text-muted">{t.vetVisits.editPageSubtitle}</p>
+        <p className="text-sm text-muted">{deceased ? t.vetVisits.record.deceasedNote : t.vetVisits.editPageSubtitle}</p>
       </div>
 
       {/* The chip beside the visit it was checked or implanted at (0116). */}
+      {!deceased && (
       <MicrochipLine
         residentId={visit.resident_id}
         number={resident.microchip_number}
         implantedOn={resident.microchip_implanted_on}
         canEdit={can(perms, "resident.microchip")}
       />
+      )}
 
       {clinicsResult.error && (
         <p className="text-sm text-danger">
@@ -120,6 +113,7 @@ export default async function EditClinicVisitPage(props: PageProps<"/clinic-visi
         canAddDoctor={can(perms, "clinics.doctors")}
         residentDisplayName={displayName}
         cancelHref={tabHref}
+        costNotesOnly={deceased}
       />
 
       {showBills && (
