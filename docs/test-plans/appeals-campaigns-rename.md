@@ -149,7 +149,7 @@ Automated checks by: Claude  Date: 2026-11-04
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the two items above
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: nobody has looked yet, see the pending signature below
 
 Manual verification by: pending: Thai wording and the adoption profile wording need a person to read them
 
