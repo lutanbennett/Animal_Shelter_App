@@ -100,7 +100,7 @@ export async function AdoptionUpdatePage({
           defaultSenderId={senders.defaultSenderId}
           today={todayIso()}
           canTagNotes={canTagNote(perms, ["resident.adoption_news"])}
-          canAttach={can(perms, "photos.resident_add") && can(perms, "photos.resident_publish")}
+          canAttach={can(perms, "resident.adoption_news")}
           initialNoteTags={update ? await loadTagsForNote(supabase, "adoption_updates", "note", update.id) : []}
         />
       )}

@@ -29,7 +29,8 @@ async function handlePost(
 
   // Drive is not RLS-protected, so this runs before any Drive call.
   const perms = await loadPermissions();
-  if (!can(perms, "photos.resident_add")) {
+  // An adopter's video is asked of resident.adoption_news (below); anything else of photos.resident_add.
+  if (!can(perms, "photos.resident_add") && !can(perms, "resident.adoption_news")) {
     return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
   }
 
@@ -57,17 +58,17 @@ async function handlePost(
     return NextResponse.json({ error: t.photos.videos.errors.tooBig(fileName) }, { status: 400 });
   }
 
-  const categories = photoCategoriesFor(perms);
   // A video an adopter sent (AdoptionUpdateForm) carries its update's id and posts no category; it is filed under
   // Adoption updates/<YYYYMMDD>/ exactly as the photo route files an adopter's photo, with the same refusals.
   if (adoptionUpdateId !== undefined && (typeof adoptionUpdateId !== "string" || !adoptionUpdateId)) {
     return NextResponse.json({ error: (await getT()).t.uploads.errors.invalidAdoptionUpdate }, { status: 400 });
   }
-  // record_attachment (0217) files an adopter's video only for a login that may publish; refuse before Drive is touched.
-  if (adoptionUpdateId && !can(perms, "photos.resident_publish")) {
+  // 0311: the login that may write an adoption update may illustrate it (record_attachment agrees); refuse before Drive is touched.
+  if (adoptionUpdateId && !can(perms, "resident.adoption_news")) {
     return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
   }
-  if (categories.length === 0) {
+  const categories = adoptionUpdateId ? [] : photoCategoriesFor(perms);
+  if (!adoptionUpdateId && (categories.length === 0 || !can(perms, "photos.resident_add"))) {
     return NextResponse.json({ error: t.photos.errors.notAuthorized }, { status: 403 });
   }
   const onlyFolder = categories.length === 1 ? categories[0] : null;
