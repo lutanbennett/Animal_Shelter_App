@@ -59,7 +59,9 @@ export type NewCardKey =
   | "utility_bills"
   | "general_bills"
   | "bill_sites"
-  | "run_fundraising_events";
+  | "run_fundraising_events"
+  | "propose_website"
+  | "approve_website";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -365,6 +367,15 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // /photos/approve queue (photos.approve). opens /management/events (0314).
   // Given to no role: Lutan assigns it in Who does what.
   run_fundraising_events: { includes: [], bundle: [{ activity: "events.run" }], opens: "/management/events" },
+  // 0315 (Lutan, 2026-11-04: one approval activity across every tab): the approver for the whole portal. Holds website.approve for
+  // page content plus photos.approve and photos.resident_manage, which the photo tabs ask. Given to no role.
+  approve_website: {
+    includes: [],
+    bundle: [{ activity: "website.approve" }, { activity: "photos.approve" }, { activity: "photos.resident_manage" }],
+    opens: "/photos/approve",
+  },
+  // 0315: draft a website change and leave it waiting. It cannot publish, so the live site does not move. Given to no role.
+  propose_website: { includes: [], bundle: [{ activity: "website.propose" }], opens: "/admin/website" },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */
@@ -407,6 +418,8 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   general_bills: (t) => t.appHome.cards.generalBills,
   bill_sites: (t) => t.appHome.cards.billSites,
   run_fundraising_events: (t) => t.appHome.cards.runFundraisingEvents,
+  approve_website: (t) => t.appHome.cards.approveWebsite,
+  propose_website: (t) => t.appHome.cards.proposeWebsite,
 };
 
 export const CARDS: Record<CardKey, Card> = {
