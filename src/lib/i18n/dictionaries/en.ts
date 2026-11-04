@@ -244,6 +244,7 @@ const en = {
       utilityBills: "Add utility bills",
       generalBills: "Add other bills",
       billSites: "Manage bill places and kinds",
+      runFundraisingEvents: "Run fundraising events",
     },
   },
 
@@ -964,6 +965,7 @@ const en = {
           utility_bills: "Add and see utility bills (water, electricity and the like) by the month they cover. Cost only.",
           general_bills: "Add and see bills that belong to no visit, delivery or job: materials, cleaning products and Other.",
           bill_sites: "Add and change the places the shelter pays bills for, the supplier accounts and the kinds of invoice.",
+          run_fundraising_events: "Plan, publish and close a fundraising event and its photos. Photos still wait for approval before the website shows them.",
           donations_receipts: "Issue donation receipts, choosing the resident or project a gift is for.",
           bills: "Take in and file the shelter's bills, and see the maintenance jobs they belong to.",
           website: "Change what the public website says.",
@@ -1127,6 +1129,7 @@ const en = {
         "translations.propose": "Suggest a label's Thai, for someone else to approve",
         "donation.receipt": "Issue a donation receipt",
         "appeal.run": "Run a fundraising appeal for a sick resident",
+        "events.run": "Run a fundraising event and its photos",
         "appeal.medical_photo": "Show a medical photo on a fundraising appeal (public on that appeal)",
         "social.library": "The social media library: memes, and where each was shared",
         "assistant.ask": "Ask the assistant a question",

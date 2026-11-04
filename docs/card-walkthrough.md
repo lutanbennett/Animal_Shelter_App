@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-45 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+46 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -600,6 +600,17 @@ Result: pending
 0. Sign in with `--cards bill_sites`. The home screen shows the **Manage bill places and kinds** tile (or the tile of a card that includes it).
 1. Open `/bills/settings`: it loads.
 2. **TODO:** Manage bill places, accounts and kinds. Do it on a disposable record named `walk-bill_sites`. Question: where should this write show afterwards (which page, which row)?
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Run fundraising events (`run_fundraising_events`)
+
+- Opens: `/management/appeals`
+
+0. Sign in with `--cards run_fundraising_events`. The home screen shows the **Run fundraising events** tile (or the tile of a card that includes it).
+1. Open `/management/appeals`: it loads.
+2. **TODO:** Run a fundraising event and its photos. Do it on a disposable record named `walk-run_fundraising_events`. Question: where should this write show afterwards (which page, which row)?
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
