@@ -199,7 +199,7 @@ export const ROUTES: readonly RouteEntry[] = [
   },
   {
     // Desexing drives and who signed up to them (0233). Opens with the rest of the public site's content.
-    path: "/management/desexing-drives",
+    path: "/management/sterilisation-drives",
     activity: "website.content",
     icon: Scissors,
     label: (t) => t.nav.desexingDrives,
@@ -208,7 +208,7 @@ export const ROUTES: readonly RouteEntry[] = [
   },
   {
     // Sponsorship drives for sick residents (0210). Admin holds the activity; delegable in Settings.
-    path: "/management/appeals",
+    path: "/management/campaigns",
     activity: "appeal.run",
     icon: HandHeart,
     label: (t) => t.nav.appeals,

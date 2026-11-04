@@ -29,7 +29,7 @@ export const dynamic = "force-dynamic";
  * profile photo, then the site's default picture, because a link preview is
  * shown to people who did not choose to look.
  */
-export async function generateMetadata(props: PageProps<"/appeals/[id]">): Promise<Metadata> {
+export async function generateMetadata(props: PageProps<"/campaigns/[id]">): Promise<Metadata> {
   const { id } = await props.params;
   const [supabase, { t, locale }, origin] = await Promise.all([createClient(), getT(), getSiteOrigin()]);
   const appeal = await loadPublicAppeal(supabase, id);
@@ -56,12 +56,12 @@ export async function generateMetadata(props: PageProps<"/appeals/[id]">): Promi
     title,
     description,
     ...(origin ? { metadataBase: origin } : {}),
-    alternates: { canonical: `/appeals/${appeal.id}` },
+    alternates: { canonical: `/campaigns/${appeal.id}` },
     openGraph: {
       type: "article",
       title,
       description,
-      url: `/appeals/${appeal.id}`,
+      url: `/campaigns/${appeal.id}`,
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
       images: share.images,
@@ -70,7 +70,7 @@ export async function generateMetadata(props: PageProps<"/appeals/[id]">): Promi
   };
 }
 
-export default async function AppealPage(props: PageProps<"/appeals/[id]">) {
+export default async function AppealPage(props: PageProps<"/campaigns/[id]">) {
   await requirePageVisible("appeals");
   const { id } = await props.params;
   const supabase = await createClient();
@@ -95,16 +95,16 @@ export default async function AppealPage(props: PageProps<"/appeals/[id]">) {
     gallery.push({ id: "profile", fileId: resident.profile_photo_drive_file_id, isGraphic: false, isMedical: false });
   }
 
-  const pageUrl = origin ? new URL(`/appeals/${appeal.id}`, origin).toString() : null;
+  const pageUrl = origin ? new URL(`/campaigns/${appeal.id}`, origin).toString() : null;
 
   return (
     <main className="flex flex-1 flex-col font-site text-site-ink">
       <PublicHeader
         current="appeals"
-        trail={[{ label: a.navLabel, href: "/appeals" }, { label: text.title }]}
+        trail={[{ label: a.navLabel, href: "/campaigns" }, { label: text.title }]}
       />
 
-      <AppealView appeal={appeal} gallery={gallery} bio={bio} pageUrl={pageUrl} locale={locale} t={t} backHref="/appeals" />
+      <AppealView appeal={appeal} gallery={gallery} bio={bio} pageUrl={pageUrl} locale={locale} t={t} backHref="/campaigns" />
 
       <PublicFooter content={content} />
     </main>

@@ -15,7 +15,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * draft that only appeal.run can see, and opens it to add photos, preview and
  * publish.
  */
-export default async function NewAppealPage(props: PageProps<"/management/appeals/new">) {
+export default async function NewAppealPage(props: PageProps<"/management/campaigns/new">) {
   const { supabase } = await requirePermission("appeal.run");
   const { t, locale } = await getT();
   const a = t.appealsAdmin;
@@ -46,7 +46,7 @@ export default async function NewAppealPage(props: PageProps<"/management/appeal
     return (
       <main className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
         <div className="flex flex-col gap-1">
-          <BackLink href="/management/appeals">{a.backToList}</BackLink>
+          <BackLink href="/management/campaigns">{a.backToList}</BackLink>
           <h1 className="text-2xl font-semibold text-foreground" lang="und">{a.form.newTitle(name)}</h1>
           <p className="text-sm text-muted">{a.form.newSubtitle}</p>
         </div>
@@ -67,7 +67,7 @@ export default async function NewAppealPage(props: PageProps<"/management/appeal
   return (
     <main className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
       <div className="flex flex-col gap-1">
-        <BackLink href="/management/appeals">{a.backToList}</BackLink>
+        <BackLink href="/management/campaigns">{a.backToList}</BackLink>
         <h1 className="text-2xl font-semibold text-foreground">{a.start}</h1>
       </div>
       <ResidentChooser

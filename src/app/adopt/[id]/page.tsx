@@ -381,7 +381,7 @@ export default async function PublicResidentPage(
               <h2 id="care-heading" className="font-site! text-lg font-bold text-site-ink">
                 {t.appeals.onResident.heading(appealText(locale, askingAppeal).residentName)}
               </h2>
-              <Link href={`/appeals/${askingAppeal.id}`} className={`${textLink} self-start text-base`}>
+              <Link href={`/campaigns/${askingAppeal.id}`} className={`${textLink} self-start text-base`}>
                 {t.appeals.onResident.link(appealText(locale, askingAppeal).residentName)} &rarr;
               </Link>
             </section>

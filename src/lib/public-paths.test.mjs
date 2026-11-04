@@ -8,7 +8,7 @@ import { isPublicPath, isPublicPage, isEdgeCachedPage } from "./public-paths.ts"
 test("the open site: these are reachable signed out", () => {
   for (const p of [
     "/", "/login", "/login/forgot", "/login/request", "/auth/callback", "/robots.txt", "/sitemap.xml", "/lca-logo.jpg", "/lca-logo-160.jpg", "/api/version",
-    "/adopt", "/adopt/12", "/appeals", "/appeals/abc", "/services/desexing", "/our-work", "/our-work/abc", "/foster", "/volunteer", "/donate", "/friends", "/privacy",
+    "/adopt", "/adopt/12", "/campaigns", "/campaigns/abc", "/services/sterilisation", "/our-work", "/our-work/abc", "/foster", "/volunteer", "/donate", "/friends", "/privacy",
     "/r/CODE1", "/e/12", "/api/photos/abc", "/api/videos/abc",
   ]) assert.equal(isPublicPath(p), true, p);
 });
@@ -37,15 +37,15 @@ test("the locked site: only sign-in, the landing page, robots, the logo, version
 });
 
 test("public pages carry no app chrome; /login and the photo proxy are not pages", () => {
-  for (const p of ["/", "/adopt", "/adopt/1", "/appeals", "/appeals/1", "/privacy", "/r/CODE1", "/e/9", "/donate"]) assert.equal(isPublicPage(p), true, p);
+  for (const p of ["/", "/adopt", "/adopt/1", "/campaigns", "/campaigns/1", "/privacy", "/r/CODE1", "/e/9", "/donate"]) assert.equal(isPublicPage(p), true, p);
   for (const p of ["/login", "/api/photos/a", "/robots.txt", "/residents", "/adoptive", "/admin", ""]) assert.equal(isPublicPage(p), false, JSON.stringify(p));
 });
 
-test("the Worker edge-caches public pages except the live ones (/r, /e, /appeals)", () => {
+test("the Worker edge-caches public pages except the live ones (/r, /e, /campaigns)", () => {
   for (const p of ["/", "/adopt", "/adopt/1", "/our-work", "/foster", "/volunteer", "/donate", "/friends", "/privacy"]) {
     assert.equal(isEdgeCachedPage(p), true, p);
   }
-  for (const p of ["/r/CODE1", "/e/12", "/r", "/e", "/appeals", "/appeals/1", "/login", "/residents", "/api/photos/a", "/adoptive", ""]) {
+  for (const p of ["/r/CODE1", "/e/12", "/r", "/e", "/campaigns", "/campaigns/1", "/login", "/residents", "/api/photos/a", "/adoptive", ""]) {
     assert.equal(isEdgeCachedPage(p), false, JSON.stringify(p));
   }
 });

@@ -7,7 +7,7 @@ import { useWriteCall } from "@/lib/use-write-form";
 import { DateInput } from "@/components/DateInput";
 import { parseBaht } from "@/lib/donations/donations";
 import { APPEAL_STYLES, type AppealFields, type AppealStyle } from "@/lib/appeals/form";
-import { AppealProgressDisplay } from "@/app/appeals/AppealProgressDisplay";
+import { AppealProgressDisplay } from "@/app/campaigns/AppealProgressDisplay";
 import { createAppeal, saveAppeal } from "./actions";
 
 const inputClass =
@@ -61,7 +61,7 @@ export function AppealForm({
       if (mode === "new") {
         const result = await createAppealCall((requestId) => createAppeal(fields, requestId));
         if (!result.ok) return setError(result.error);
-        router.push(`/management/appeals/${result.id}`);
+        router.push(`/management/campaigns/${result.id}`);
         return;
       }
       const result = await saveAppealCall((requestId) => saveAppeal(appealId!, fields, requestId));

@@ -173,7 +173,7 @@ export default async function WebsitePage({
         {can(perms, "appeal.run") && (
           <p className="text-sm text-muted">
             {t.admin.website.appealsNote}{" "}
-            <Link href="/management/appeals" className="underline underline-offset-4">
+            <Link href="/management/campaigns" className="underline underline-offset-4">
               {t.admin.website.appealsLink}
             </Link>
           </p>

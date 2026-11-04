@@ -27,9 +27,9 @@ function giftItem(r: GiftRow): GiftItem {
 /**
  * Management → Appeals → one appeal: its words, photos, status, gifts and the
  * way to close it. Everything on this page is staff-only; the public page is
- * /appeals/[id], and a draft is never reachable there.
+ * /campaigns/[id], and a draft is never reachable there.
  */
-export default async function AppealPage(props: PageProps<"/management/appeals/[id]">) {
+export default async function AppealPage(props: PageProps<"/management/campaigns/[id]">) {
   const { supabase, perms } = await requirePermission("appeal.run");
   const { id } = await props.params;
   const { t, locale } = await getT();
@@ -109,7 +109,7 @@ export default async function AppealPage(props: PageProps<"/management/appeals/[
   return (
     <main className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
       <div className="flex flex-col gap-1">
-        <BackLink href="/management/appeals">{a.backToList}</BackLink>
+        <BackLink href="/management/campaigns">{a.backToList}</BackLink>
         <h1 className="text-2xl font-semibold text-foreground" lang="und">{appeal.title}</h1>
         <p className="text-sm text-muted">
           <Link href={`/residents/${appeal.resident_id}`} className="underline">{a.forResident(name)}</Link>

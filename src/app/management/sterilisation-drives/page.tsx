@@ -40,7 +40,7 @@ export default async function DesexingDrivesAdminPage() {
         <p className="text-sm text-muted">{a.subtitle}</p>
       </div>
       <Link
-        href="/management/desexing-drives/new"
+        href="/management/sterilisation-drives/new"
         className="inline-flex min-h-11 items-center self-start rounded bg-primary px-5 text-base font-medium text-primary-foreground hover:bg-primary-hover"
       >
         {a.start}
@@ -57,7 +57,7 @@ export default async function DesexingDrivesAdminPage() {
                 <span className="w-fit rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-foreground">
                   {a.driveStatus[d.status]}
                 </span>
-                <Link href={`/management/desexing-drives/${d.id}`} className="text-lg font-semibold text-foreground underline-offset-4 hover:underline" lang="und">
+                <Link href={`/management/sterilisation-drives/${d.id}`} className="text-lg font-semibold text-foreground underline-offset-4 hover:underline" lang="und">
                   {d.title}
                 </Link>
                 <p className="text-sm text-muted">

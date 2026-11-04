@@ -711,8 +711,8 @@ export function ResidentHub({
                       : t.appealsAdmin.hubCard.many(appeals.count, t.appealsAdmin.status[appeals.latestStatus])
                 }
                 tone={appeals.latestStatus === "live" ? "success" : "neutral"}
-                href={appeals.latestId ? `/management/appeals/${appeals.latestId}` : `/management/appeals/new?resident=${resident.id}`}
-                actions={[{ href: `/management/appeals/new?resident=${resident.id}`, label: t.appealsAdmin.hubCard.start }]}
+                href={appeals.latestId ? `/management/campaigns/${appeals.latestId}` : `/management/campaigns/new?resident=${resident.id}`}
+                actions={[{ href: `/management/campaigns/new?resident=${resident.id}`, label: t.appealsAdmin.hubCard.start }]}
               />
             )}
             {/* Any resident ever adopted keeps the card, returned or not —

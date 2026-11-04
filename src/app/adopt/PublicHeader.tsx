@@ -102,7 +102,7 @@ export async function PublicHeader({
   // The menu comes from the one list of pages (src/lib/public-pages.ts): groups in
   // their order, a top-level link where it stands among them. Some pages carry a
   // rule the list cannot: Appeals is always listed (with none live it follows
-  // Donate, and /appeals says nothing is open), Shelter Friends only once there is
+  // Donate, and /campaigns says nothing is open), Shelter Friends only once there is
   // someone to thank and Shop for the shelter only once an entry is shown (each
   // also while the visitor is on it, so the page stays marked), and Donate's entry ("care") is there only while no appeal is live
   // — with one, the Appeals entry is the sponsorship page.

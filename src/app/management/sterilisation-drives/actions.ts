@@ -26,8 +26,8 @@ const refuse = (error: string): ActionRefusal => ({ ok: false, error });
 const allowed = async () => can(await loadPermissions(), "website.content");
 
 function revalidateDrives(id?: string) {
-  revalidatePath("/management/desexing-drives");
-  if (id) revalidatePath(`/management/desexing-drives/${id}`);
+  revalidatePath("/management/sterilisation-drives");
+  if (id) revalidatePath(`/management/sterilisation-drives/${id}`);
 }
 
 export async function createDrive(fields: DriveFields, requestId: string): Promise<ActionResult<{ id: string }>> {
