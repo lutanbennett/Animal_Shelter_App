@@ -45,7 +45,7 @@ const hhmm = (v: string | null) => (v ? v.slice(0, 5) : "");
  * signed up. The sign-up list holds members of the public's names and
  * contact details; it is only ever rendered here, behind website.content.
  */
-export default async function DrivePage(props: PageProps<"/management/desexing-drives/[id]">) {
+export default async function DrivePage(props: PageProps<"/management/sterilisation-drives/[id]">) {
   const { supabase } = await requirePermission("website.content");
   const { id } = await props.params;
   if (!UUID.test(id)) notFound();
@@ -87,7 +87,7 @@ export default async function DrivePage(props: PageProps<"/management/desexing-d
   return (
     <main className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
       <div className="flex flex-col gap-1">
-        <BackLink href="/management/desexing-drives">{a.title}</BackLink>
+        <BackLink href="/management/sterilisation-drives">{a.title}</BackLink>
         <h1 className="text-2xl font-semibold text-foreground" lang="und">{d.title}</h1>
       </div>
       <DriveForm mode="edit" driveId={d.id} initial={initial} />

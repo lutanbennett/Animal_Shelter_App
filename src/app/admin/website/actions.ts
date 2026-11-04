@@ -109,9 +109,9 @@ export async function setPublicPageHidden(entry: string, hide: boolean, requestI
 
     revalidateWebsitePages();
     revalidatePath("/about");
-    revalidatePath("/appeals");
+    revalidatePath("/campaigns");
     revalidatePath("/friends");
-    revalidatePath("/services/desexing");
+    revalidatePath("/services/sterilisation");
     revalidatePath("/sitemap.xml");
     return { ok: true };
   });

@@ -6,7 +6,7 @@ import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 import { loadRaised, loadStaffAppeal } from "@/lib/appeals/staff";
 import type { PublicAppeal } from "@/lib/appeals/public";
-import { AppealView, type AppealGalleryItem } from "@/app/appeals/AppealView";
+import { AppealView, type AppealGalleryItem } from "@/app/campaigns/AppealView";
 
 // A draft's preview is read live, for the person writing it only.
 export const dynamic = "force-dynamic";
@@ -21,13 +21,13 @@ const IMAGE = /\.(jpe?g|png|webp|heic|heif|gif)$/i;
  * (AppealView) from the staff copy of the appeal, so a draft can be read
  * exactly as visitors will read it before it is published. It lives under
  * /management and asks for appeal.run, so a draft is never served from
- * /appeals/[id], which reads public_appeals and refuses anything unpublished.
+ * /campaigns/[id], which reads public_appeals and refuses anything unpublished.
  *
  * Photos follow the same rule as the public site: non-Medical images only.
  * Thai wording shows as English here until its translation is reviewed, as it
  * would publicly.
  */
-export default async function AppealPreviewPage(props: PageProps<"/management/appeals/[id]/preview">) {
+export default async function AppealPreviewPage(props: PageProps<"/management/campaigns/[id]/preview">) {
   const { supabase, perms } = await requirePermission("appeal.run");
   const { id } = await props.params;
   const { t, locale } = await getT();
@@ -106,7 +106,7 @@ export default async function AppealPreviewPage(props: PageProps<"/management/ap
   return (
     <main className="flex flex-1 flex-col">
       <div role="note" className="flex flex-col gap-1 border-b border-border bg-surface px-4 py-3 sm:px-6">
-        <BackLink href={`/management/appeals/${appeal.id}`}>{a.previewBack}</BackLink>
+        <BackLink href={`/management/campaigns/${appeal.id}`}>{a.previewBack}</BackLink>
         <p className="text-sm font-medium text-foreground">{a.previewBanner}</p>
       </div>
       <div className="font-site bg-site-paper text-site-ink">
@@ -114,10 +114,10 @@ export default async function AppealPreviewPage(props: PageProps<"/management/ap
           appeal={asPublic}
           gallery={gallery}
           bio={residentRes.data?.bio ?? ""}
-          pageUrl={origin && appeal.status !== "draft" ? new URL(`/appeals/${appeal.id}`, origin).toString() : null}
+          pageUrl={origin && appeal.status !== "draft" ? new URL(`/campaigns/${appeal.id}`, origin).toString() : null}
           locale={locale}
           t={t}
-          backHref={`/management/appeals/${appeal.id}`}
+          backHref={`/management/campaigns/${appeal.id}`}
         />
       </div>
     </main>

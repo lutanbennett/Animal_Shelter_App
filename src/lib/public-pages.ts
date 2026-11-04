@@ -8,7 +8,7 @@ import type { SitePageSlug } from "@/lib/site/pages";
  * docs/decisions/2026-10-24-public-pages-list.md for the vocabulary.
  *
  * Not on the list: /r/ and /e/ (card and QR scans), and the pages under a
- * page (/adopt/<id>, /our-work/<id>, /appeals/<id>), which the sitemap adds
+ * page (/adopt/<id>, /our-work/<id>, /campaigns/<id>), which the sitemap adds
  * from the database.
  */
 
@@ -132,7 +132,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
   },
   {
     key: "appeals",
-    href: "/appeals",
+    href: "/campaigns",
     label: (t) => t.appeals.navLabel,
     menu: { group: "get-involved" },
     footer: { column: "help", order: 10 },
@@ -168,7 +168,7 @@ export const PUBLIC_PAGES: PublicPage[] = [
   },
   {
     key: "desexing",
-    href: "/services/desexing",
+    href: "/services/sterilisation",
     label: (t) => t.desexing.navLabel,
     menu: { group: "services" },
     footer: { column: "help", order: 11 },

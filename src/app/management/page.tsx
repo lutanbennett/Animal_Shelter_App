@@ -48,13 +48,13 @@ export default async function ManagementPage() {
     },
     // Keeps its /admin address; the Director runs the website by day as Management (Lutan, 2026-10-08).
     {
-      href: "/management/appeals",
+      href: "/management/campaigns",
       label: t.nav.appeals,
       description: t.appealsAdmin.landingTile,
       icon: HandHeart,
     },
     {
-      href: "/management/desexing-drives",
+      href: "/management/sterilisation-drives",
       label: t.nav.desexingDrives,
       description: t.desexingAdmin.landingTile,
       icon: Scissors,

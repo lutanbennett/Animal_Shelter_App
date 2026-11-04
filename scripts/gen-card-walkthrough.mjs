@@ -94,7 +94,7 @@ export const PAGE_STEPS = {
     "Open `/management/clinics` from that link: it loads. Add, Edit and Delete are offered; every server action on the page asks clinics.list at edit. Doctors on a clinic ask clinics.doctors, a separate yes/no.",
   ],
   website: [
-    "Open `/management/desexing-drives`: it loads (website.content at edit). Start a drive, open one, and the signup controls are offered; every action asks website.content at edit.",
+    "Open `/management/sterilisation-drives`: it loads (website.content at edit). Start a drive, open one, and the signup controls are offered; every action asks website.content at edit.",
   ],
   donations_receipts: [
     "Open `/projects`: it loads (projects.folders at read). Confirm the twelve category folders show, the \"read only\" note shows, and NO New folder, Rename, Move or Delete control is offered. No card in the catalogue gives projects.folders at edit today, so the write side of this page has no card to walk.",

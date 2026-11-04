@@ -280,7 +280,7 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   run_appeals: {
     includes: ["view_residents", "view_medical"],
     bundle: [{ activity: "appeal.run" }, { activity: "donation.receipt" }],
-    opens: "/management/appeals",
+    opens: "/management/campaigns",
   },
   // Card twenty-five (2026-10-18): the social media library, for whoever runs the shelter's Facebook and Instagram. One
   // activity at Edit: browse the memes, add one, record where it was posted, archive one. Nothing about residents' photos or
@@ -362,10 +362,10 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   bill_sites: { includes: [], bundle: [{ activity: "bills.sites" }], opens: "/bills/settings" },
   // 0312 (Lutan, 2026-11-04: an event is its own thing, with its own table): plan, publish and close a fundraising event and
   // its photos. It does NOT include run_appeals or add_photos and grants no approval: every event photo still waits in the
-  // /photos/approve queue (photos.approve). opens points at the appeals page only until the events screen exists; the
+  // /photos/approve queue (photos.approve). opens points at the campaigns page only until the events screen exists; the
   // app half repoints it to its own route, and until then cardsWithoutTile() says so out loud rather than leaving a holder guessing.
   // Given to no role: Lutan assigns it in Who does what.
-  run_fundraising_events: { includes: [], bundle: [{ activity: "events.run" }], opens: "/management/appeals" },
+  run_fundraising_events: { includes: [], bundle: [{ activity: "events.run" }], opens: "/management/campaigns" },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */

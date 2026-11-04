@@ -26,7 +26,7 @@ export default async function NewDrivePage() {
   return (
     <main className="flex flex-1 flex-col gap-6 p-4 sm:p-6">
       <div className="flex flex-col gap-1">
-        <BackLink href="/management/desexing-drives">{t.desexingAdmin.title}</BackLink>
+        <BackLink href="/management/sterilisation-drives">{t.desexingAdmin.title}</BackLink>
         <h1 className="text-2xl font-semibold text-foreground">{t.desexingAdmin.start}</h1>
       </div>
       <DriveForm mode="new" initial={initial} />

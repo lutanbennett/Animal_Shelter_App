@@ -34,7 +34,7 @@ export function AppealCard({
 
   return (
     <Link
-      href={`/appeals/${appeal.id}`}
+      href={`/campaigns/${appeal.id}`}
       className="spring-lift flex flex-col overflow-hidden rounded-2xl border border-site-line bg-site-paper hover:border-site-line-strong"
     >
       <div className="relative aspect-[4/3] w-full bg-site-sand">

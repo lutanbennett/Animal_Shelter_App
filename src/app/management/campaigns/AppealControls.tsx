@@ -82,7 +82,7 @@ export function AppealControls({
     startTransition(async () => {
       const result = await deleteDraftAppealCall((requestId) => deleteDraftAppeal(appealId, requestId));
       if (!result.ok) return setMessage({ type: "error", text: result.error });
-      router.push("/management/appeals");
+      router.push("/management/campaigns");
     });
   }
 
@@ -101,7 +101,7 @@ export function AppealControls({
       )}
 
       <div className="flex flex-col gap-1">
-        <Link href={`/management/appeals/${appealId}/preview`} className={`${buttonClass} inline-flex items-center self-start`}>
+        <Link href={`/management/campaigns/${appealId}/preview`} className={`${buttonClass} inline-flex items-center self-start`}>
           {p.preview}
         </Link>
         <span className="text-xs text-muted">{p.previewHint}</span>

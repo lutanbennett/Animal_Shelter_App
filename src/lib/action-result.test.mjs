@@ -155,7 +155,7 @@ test("the wrapped-write list matches real URLs, and lists the security screens n
   assert.ok(isWrappedWritePath("/residents/42/edit"));
   assert.ok(!isWrappedWritePath("/admin/unitsx"));
   for (const listed of ["/admin/security", "/admin/security/verify"]) assert.ok(isWrappedWritePath(listed));
-  assert.ok(isWrappedWritePath("/services/desexing"));
+  assert.ok(isWrappedWritePath("/services/sterilisation"));
 });
 
 test("Next's own control-flow throws pass straight through, redirect included", async () => {

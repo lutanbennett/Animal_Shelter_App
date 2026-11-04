@@ -71,7 +71,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const drives: MetadataRoute.Sitemap = (isPageHidden("appeals", hidden) ? [] : appeals.data ?? []).map((a) => ({
-    url: abs(`/appeals/${a.id}`),
+    url: abs(`/campaigns/${a.id}`),
     changeFrequency: "daily",
     priority: 0.7,
   }));

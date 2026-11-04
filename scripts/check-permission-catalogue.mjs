@@ -259,11 +259,11 @@ const PINNED = {
   "/management/donations/donors/new": { guards: ['requirePermission("donation.receipt")'], decides: [] },
   "/management/donations/donors/[id]": { guards: ['requirePermission("donation.receipt")'], decides: [] },
   // Sponsorship drives (0210). The gifts on an appeal's page are read only by a login that may also read donations.
-  "/management/desexing-drives/new": { guards: ['requirePermission("website.content")'], decides: [] },
-  "/management/desexing-drives/[id]": { guards: ['requirePermission("website.content")'], decides: [] },
-  "/management/appeals/new": { guards: ['requirePermission("appeal.run")'], decides: [] },
-  "/management/appeals/[id]": { guards: ['requirePermission("appeal.run")'], decides: ["appeal.medical_photo", "donation.receipt"] },
-  "/management/appeals/[id]/preview": { guards: ['requirePermission("appeal.run")'], decides: ["donation.receipt"] },
+  "/management/sterilisation-drives/new": { guards: ['requirePermission("website.content")'], decides: [] },
+  "/management/sterilisation-drives/[id]": { guards: ['requirePermission("website.content")'], decides: [] },
+  "/management/campaigns/new": { guards: ['requirePermission("appeal.run")'], decides: [] },
+  "/management/campaigns/[id]": { guards: ['requirePermission("appeal.run")'], decides: ["appeal.medical_photo", "donation.receipt"] },
+  "/management/campaigns/[id]/preview": { guards: ['requirePermission("appeal.run")'], decides: ["donation.receipt"] },
   // The meme library (0223). A meme's page opens at the list's Read; Record a share, Edit and Archive ask Edit in the body.
   "/memes/new": { guards: ['requirePermission("social.library")'], decides: [] },
   "/memes/make": { guards: ['requirePermission("social.library")'], decides: [] },
@@ -368,9 +368,9 @@ const EXEMPT = {
   "/adopt/[id]": { public: true, why: "Public website: one public_resident_profiles row." },
   "/adopt/journey/[id]": { public: true, why: "Public website: one recently adopted animal's journey, from public_recent_adoptions, public_resident_cards and public_adoption_updates only." },
   "/adopt/stories/[id]": { public: true, why: "Public website: the public_adoption_updates rows an adopter agreed to share about one animal." },
-  "/appeals": { public: true, why: "Public website: reads public_appeals, the anonymous tier (0210); drafts are excluded in SQL." },
-  "/appeals/[id]": { public: true, why: "Public website: one public_appeals row and its public_appeal_photos." },
-  "/services/desexing": { public: true, why: "Public website: public_desexing_drives (0233), the drive and a count of places left, never a sign-up." },
+  "/campaigns": { public: true, why: "Public website: reads public_appeals, the anonymous tier (0210); drafts are excluded in SQL." },
+  "/campaigns/[id]": { public: true, why: "Public website: one public_appeals row and its public_appeal_photos." },
+  "/services/sterilisation": { public: true, why: "Public website: public_desexing_drives (0233), the drive and a count of places left, never a sign-up." },
   "/adopt/international": { public: true, why: "Public website: static page from site_content." },
   "/our-work": { public: true, why: "Public website: the public_projects views (0042)." },
   "/our-work/[id]": { public: true, why: "Public website: one public_projects row." },
@@ -496,7 +496,7 @@ for (const k of known) console.log(`KNOWN ${k}`);
 const GUARD = /\b(?:can|requirePermission|requireAdminUser|assertAdminRole|hasAdminRole|canEditItemSettings|refuseUnlessAdmin)\(/;
 const ADMIN_CHECK = /\b(?:requireAdminUser|assertAdminRole|hasAdminRole|refuseUnlessAdmin)\(/;
 const NO_ACTIVITY = {
-  "services/desexing/actions.ts": "the public sign-up, signed out by definition: written as the anon role with insert-only column grants (0233), so the database gate decides; it never reads a sign-up back",
+  "services/sterilisation/actions.ts": "the public sign-up, signed out by definition: written as the anon role with insert-only column grants (0233), so the database gate decides; it never reads a sign-up back",
   "account/password/actions.ts": "changes the signed-in user's own password and name; its one service-role call clears their own must-change flag after the password check",
   "medical/scan-actions.ts": "leaves or clears a five-minute waiting cookie and nothing else; startCardWait refuses unless canOpen(perms, route) for the job's own page, and /scan/arrive re-checks it at the redirect",
   "login/actions.ts": "signed out by definition: the sign-in itself",

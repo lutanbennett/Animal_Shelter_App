@@ -72,6 +72,12 @@ const nextConfig: NextConfig = {
   // moved, and bookmarks, printed QR sheets and old links in chat land on the new ones.
   async redirects() {
     return [
+      // 2026-11-04: Appeals became Campaigns and Desexing became Sterilisation in the words people read, and the
+      // public addresses followed. Both old ones were in the sitemap and may be on a Facebook post, a flyer or a
+      // search result (docs/decisions/2026-11-04-appeals-campaigns-rename.md).
+      { source: "/appeals", destination: "/campaigns", permanent: true },
+      { source: "/appeals/:id", destination: "/campaigns/:id", permanent: true },
+      { source: "/services/desexing", destination: "/services/sterilisation", permanent: true },
       { source: "/relocation", destination: "/adopt/international", permanent: true },
       { source: "/vets", destination: "/clinics", permanent: true },
       { source: "/vets/:path*", destination: "/clinics/:path*", permanent: true },

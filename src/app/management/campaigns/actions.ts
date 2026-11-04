@@ -22,7 +22,7 @@ const write = (t: Dictionary): WriteMessages => ({
  * protection. Moving gifts also asks donation.receipt, because it changes a
  * donation. Results, never throws (src/lib/action-result.ts).
  *
- * The public pages are rendered live and /appeals is not edge-cached, so
+ * The public pages are rendered live and /campaigns is not edge-cached, so
  * revalidating here only has to reach the staff pages and the pages that are
  * cached (home, the resident's /adopt page).
  */
@@ -36,10 +36,10 @@ function problemText(t: Dictionary, problem: AppealProblem, line?: number) {
 }
 
 function revalidateAppeal(id: string, residentId?: string) {
-  revalidatePath("/management/appeals");
-  revalidatePath(`/management/appeals/${id}`);
-  revalidatePath("/appeals");
-  revalidatePath(`/appeals/${id}`);
+  revalidatePath("/management/campaigns");
+  revalidatePath(`/management/campaigns/${id}`);
+  revalidatePath("/campaigns");
+  revalidatePath(`/campaigns/${id}`);
   revalidatePath("/");
   if (residentId) {
     revalidatePath(`/adopt/${residentId}`);

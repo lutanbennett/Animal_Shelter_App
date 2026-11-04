@@ -5,7 +5,7 @@ import { formatBahtExact } from "@/lib/format";
 import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 import { loadRaised, loadStaffAppeals } from "@/lib/appeals/staff";
-import { AppealProgressDisplay } from "@/app/appeals/AppealProgressDisplay";
+import { AppealProgressDisplay } from "@/app/campaigns/AppealProgressDisplay";
 
 /**
  * Management → Appeals: every sponsorship drive, newest first, with where it
@@ -31,7 +31,7 @@ export default async function AppealsPage() {
         <p className="text-sm text-muted">{a.subtitle}</p>
       </div>
       <Link
-        href="/management/appeals/new"
+        href="/management/campaigns/new"
         className="inline-flex min-h-11 items-center self-start rounded bg-primary px-5 text-base font-medium text-primary-foreground hover:bg-primary-hover"
       >
         {a.start}
@@ -49,7 +49,7 @@ export default async function AppealsPage() {
                   <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-foreground">{a.status[x.status]}</span>
                   <span className="text-xs text-muted">{x.published ? a.onSite.yes : a.onSite.no}</span>
                 </div>
-                <Link href={`/management/appeals/${x.id}`} className="text-lg font-semibold text-foreground underline-offset-4 hover:underline" lang="und">
+                <Link href={`/management/campaigns/${x.id}`} className="text-lg font-semibold text-foreground underline-offset-4 hover:underline" lang="und">
                   {x.title}
                 </Link>
                 <p className="text-sm text-muted">{a.forResident(x.residents?.name ?? "")}</p>

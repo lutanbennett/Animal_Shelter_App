@@ -19,7 +19,7 @@ import { sexLabel, speciesLabel } from "@/lib/i18n/enum-labels";
 import { formatAge, todayIso } from "@/lib/format";
 import { appealPhase } from "@/lib/appeals/state";
 import { appealProgress, loadPublicAppeals } from "@/lib/appeals/public";
-import { AppealCard } from "./appeals/AppealCard";
+import { AppealCard } from "./campaigns/AppealCard";
 import { friendAnchor } from "@/lib/shelter-friends/friends";
 import { loadPublicFriends } from "@/lib/shelter-friends/public";
 import { loadSiteContent, pairedText } from "@/lib/site/content";
@@ -226,7 +226,7 @@ export default async function WelcomePage() {
   ];
 
   const h = t.home.howToHelp;
-  // "Help with their care" → /donate, or → /appeals while one is asking: the
+  // "Help with their care" → /donate, or → /campaigns while one is asking: the
   // card promises only what the page delivers (review §6.2, 2026-10-14).
   const careHref =
     openAppeals.length > 0 && shown("appeals") ? pageHref("appeals") : shown("donate") ? pageHref("donate") : null;

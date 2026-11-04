@@ -42,7 +42,7 @@ export function DriveForm({ mode, driveId, initial }: { mode: "new" | "edit"; dr
       if (mode === "new") {
         const result = await createDriveCall((requestId) => createDrive(fields, requestId));
         if (!result.ok) return setError(result.error);
-        router.push(`/management/desexing-drives/${result.id}`);
+        router.push(`/management/sterilisation-drives/${result.id}`);
         return;
       }
       const result = await saveDriveCall((requestId) => saveDrive(driveId!, fields, requestId));
@@ -57,7 +57,7 @@ export function DriveForm({ mode, driveId, initial }: { mode: "new" | "edit"; dr
     startTransition(async () => {
       const result = await deleteDriveCall((requestId) => deleteDrive(driveId!, requestId));
       if (!result.ok) return setError(result.error);
-      router.push("/management/desexing-drives");
+      router.push("/management/sterilisation-drives");
     });
   }
 
