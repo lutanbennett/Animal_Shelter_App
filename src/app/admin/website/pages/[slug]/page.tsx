@@ -8,7 +8,8 @@ import { SITE_PAGE_PATHS, isPagePhotoSlug, isSitePageSlug } from "@/lib/site/pag
 import en from "@/lib/i18n/dictionaries/en";
 import { sitePageStarter } from "@/lib/site/starter";
 import { loadTranslations, translationKey } from "@/lib/translations/queries";
-import { requirePermission } from "@/lib/permissions/require";
+import { requireAnyPermission, requirePermission } from "@/lib/permissions/require";
+import { loadPermissions } from "@/lib/permissions/load";
 import { can } from "@/lib/permissions/can";
 import { hasPublicFriends } from "@/lib/shelter-friends/public";
 import { SitePageForm, type SitePageRow } from "../../SitePageForm";
@@ -29,7 +30,10 @@ import { PageEditPanel } from "./PageEditPanel";
  */
 export default async function SitePageEditPage(props: PageProps<"/admin/website/pages/[slug]">) {
   const { slug } = await props.params;
-  const { perms } = await requirePermission("website.content", "read");
+  // A login that may only propose (website.propose) opens the page to draft; everyone else needs website.content at Read.
+  const early = await loadPermissions();
+  const draftOnly = can(early, "website.propose") && !can(early, "website.content", "read");
+  const { perms } = draftOnly ? await requireAnyPermission(["website.propose"]) : await requirePermission("website.content", "read");
   const canContent = can(perms, "website.content");
   const canTranslations = can(perms, "translations.manage");
   const { t } = await getT();
@@ -110,6 +114,7 @@ export default async function SitePageEditPage(props: PageProps<"/admin/website/
             // The panels save through approveTranslation, which asks translations.manage.
             canManageTranslations={canTranslations}
             canEdit={canContent}
+            canPropose={can(perms, "website.propose")}
             // In English whatever language the admin reads the app in: pages are written in
             // English and translated through the queue.
             starterBody={sitePageStarter(en, page.slug)?.body}

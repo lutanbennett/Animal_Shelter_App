@@ -2669,6 +2669,8 @@ const en = {
           hint: "Select some words, then press a style button. In the box the style shows as tags such as {b}…{/b}; the preview shows the real look. Headings do not take styles.",
         },
         titleRequired: "The page needs a heading.",
+        proposed: "Saved as a draft. It will appear on the website once someone approves it.",
+        proposeChanges: "Save as a draft",
         unknownPage: "That page doesn't exist.",
         slugs: {
           "our-story": "Our story (home page)",

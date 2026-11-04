@@ -8,7 +8,7 @@ import { useI18n } from "@/lib/i18n/I18nProvider";
 import { TranslationPanel } from "@/components/TranslationPanel";
 import type { SitePageSlug } from "@/lib/site/pages";
 import type { TranslationRow } from "@/lib/translations/types";
-import { updateSitePage } from "./actions";
+import { proposeSitePage, updateSitePage } from "./actions";
 import { BodyToolbar } from "@/components/BodyToolbar";
 import { SitePagePreview, type PagePreviewContext } from "./SitePagePreview";
 
@@ -39,6 +39,7 @@ export function SitePageForm({
   translations,
   canManageTranslations,
   canEdit = false,
+  canPropose = false,
   starterBody,
   previewContext,
 }: {
@@ -51,6 +52,8 @@ export function SitePageForm({
    * body boxes stay, read-only, so the words can still be read; the style toolbar is not drawn.
    */
   canEdit?: boolean;
+  /** website.propose, the activity proposeSitePage asks: the words may be typed and saved as a draft that waits. Defaults to false. */
+  canPropose?: boolean;
   /**
    * The standard text the public page shows while the body is empty
    * (sitePageStarter), put in the box so the admin edits it rather than
@@ -61,7 +64,7 @@ export function SitePageForm({
   previewContext: PagePreviewContext;
 }) {
   const [state, onSubmit, pending] = useWriteForm(
-    updateSitePage.bind(null, page.slug),
+    (canEdit ? updateSitePage : proposeSitePage).bind(null, page.slug),
     undefined,
   );
   const { t } = useI18n();
@@ -86,7 +89,7 @@ export function SitePageForm({
           name="title"
           form={formId}
           required
-          readOnly={!canEdit}
+          readOnly={!canEdit && !canPropose}
           defaultValue={page.title}
           onChange={(e) => setTitleDraft(e.target.value)}
           className={`${inputClass} sm:w-96`}
@@ -106,15 +109,15 @@ export function SitePageForm({
           {p.body}
         </label>
         <p className="text-xs text-muted">{p.bodyHint}</p>
-        {canEdit && <p className="text-xs text-muted">{p.marks.hint}</p>}
-        {canEdit && <BodyToolbar target={bodyRef} />}
+        {(canEdit || canPropose) && <p className="text-xs text-muted">{p.marks.hint}</p>}
+        {(canEdit || canPropose) && <BodyToolbar target={bodyRef} />}
         {showStarter && <p className="text-xs font-medium text-warning">{p.starterNote}</p>}
         <textarea
           id={`${page.slug}-body`}
           ref={bodyRef}
           name="body"
           form={formId}
-          readOnly={!canEdit}
+          readOnly={!canEdit && !canPropose}
           rows={Math.min(24, Math.max(8, body.split("\n").length + 2))}
           defaultValue={body}
           onChange={(e) => setDraft(e.target.value)}
@@ -137,9 +140,9 @@ export function SitePageForm({
       </div>
 
       <form id={formId} onSubmit={onSubmit} className="flex items-center gap-3">
-        {canEdit && (
+        {(canEdit || canPropose) && (
           <ActionButton type="submit" icon={ACTION_ICONS.save} variant="primary" disabled={pending}>
-            {pending ? t.common.saving : t.common.saveChanges}
+            {pending ? t.common.saving : canEdit ? t.common.saveChanges : p.proposeChanges}
           </ActionButton>
         )}
         {state && !state.ok && (
