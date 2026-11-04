@@ -1,19 +1,23 @@
 #!/usr/bin/env node
 /**
- * Every `httpHostHeader` in scripts/pi/cloudflared-config.yml is the Host the
- * app believes it is served on, so it must be one of the addresses set in
- * wrangler.jsonc (APP_HOST / PUBLIC_HOST, read by src/lib/site-hosts.ts) —
- * otherwise Server Actions and uploads are refused on that host while every
- * page still loads (the 2026-09-30 and 2026-10-01 outages). Also checks
- * next.config.ts takes its allowedOrigins from the settings, not a copy, and
- * that every environment sets both.
+ * Pre-flight for the hostnames. Run it BEFORE any deploy that touches
+ * wrangler.jsonc `vars`/`routes` or scripts/pi/cloudflared-config.yml (the
+ * cutover to lannacareforanimals.org above all): a list that disagrees with the
+ * address bar makes every Server Action and upload refuse while every page
+ * still loads (the 2026-09-30 and 2026-10-01 outages).
+ *
+ * Rules are in scripts/lib/site-hosts-problems.mjs. Besides running them on the
+ * real files, this script runs them on deliberately broken copies and fails if a
+ * rule does not fire, so a green run means the rules work, not just that nothing
+ * tripped. Also checks next.config.ts takes allowedOrigins from the settings.
  *
  *   node scripts/check-site-hosts.mjs
  */
 import { exitWith } from "./lib/exit.mjs";
 import { readFileSync } from "node:fs";
-import { siteAllowedOrigins, isSiteHostname } from "../src/lib/site-hosts.ts";
+import { siteAllowedOrigins } from "../src/lib/site-hosts.ts";
 import { readWranglerConfig } from "./lib/wrangler.mjs";
+import { hostProblems } from "./lib/site-hosts-problems.mjs";
 
 let failed = 0;
 const say = (ok, msg) => {
@@ -21,26 +25,50 @@ const say = (ok, msg) => {
   console.log(`${ok ? "ok  " : "FAIL"} ${msg}`);
 };
 
-const envs = readWranglerConfig().env ?? {};
-const all = {};
-for (const [name, block] of Object.entries(envs)) {
-  const v = block.vars ?? {};
-  say(!!v.APP_HOST && !!v.PUBLIC_HOST, `${name} sets APP_HOST and PUBLIC_HOST`);
-  for (const k of ["APP_HOST", "PUBLIC_HOST"]) if (v[k]) all[`${name}.${k}`] = v[k];
-}
-const covered = (h) => Object.values(all).some((a) => isSiteHostname(h, { APP_HOST: a }));
-
+const config = readWranglerConfig();
 const yml = readFileSync(new URL("./pi/cloudflared-config.yml", import.meta.url), "utf8");
-const headers = [...yml.matchAll(/^\s*httpHostHeader:\s*(\S+)/gm)].map((m) => m[1]);
-say(headers.length > 0, `cloudflared-config.yml has ${headers.length} httpHostHeader value(s)`);
-for (const h of headers) say(covered(h), `httpHostHeader ${h} is one of the addresses in wrangler.jsonc`);
+for (const r of hostProblems(config, yml)) say(r.ok, r.msg);
 
 const cfg = readFileSync(new URL("../next.config.ts", import.meta.url), "utf8");
 say(/allowedOrigins:\s*siteAllowedOrigins\(\)/.test(cfg), "next.config.ts allowedOrigins comes from siteAllowedOrigins()");
-for (const [name, block] of Object.entries(envs)) {
+for (const [name, block] of Object.entries(config.env ?? {})) {
   const v = block.vars ?? {};
   const o = siteAllowedOrigins({ APP_HOST: v.APP_HOST, PUBLIC_HOST: v.PUBLIC_HOST });
   say(o.length > 0, `${name}: allowedOrigins = ${JSON.stringify(o)}`);
+}
+
+// Self-proof: each broken copy must make at least one rule fail.
+console.log("\nrules fire on broken copies:");
+const clone = () => JSON.parse(JSON.stringify(config));
+const NEW = "lannacareforanimals.org";
+const newRoutes = [{ pattern: NEW, custom_domain: true }, { pattern: `www.${NEW}`, custom_domain: true }];
+const oldRoutes = [{ pattern: "lannacare.org", custom_domain: true }, { pattern: "www.lannacare.org", custom_domain: true }];
+const broken = {
+  "an environment missing PUBLIC_HOST": (c) => { delete c.env.uat.vars.PUBLIC_HOST; },
+  "two environments claiming one route": (c) => { c.env.uat.routes = [{ pattern: "lannacare.org", custom_domain: true }]; },
+  "a route outside its environment's hosts": (c) => { c.env.production.routes.push({ pattern: NEW, custom_domain: true }); },
+  "production moved to the new host but still locked": (c) => {
+    c.env.production.vars.APP_HOST = c.env.production.vars.PUBLIC_HOST = NEW;
+    c.env.production.routes = newRoutes;
+  },
+};
+for (const [what, mutate] of Object.entries(broken)) {
+  const c = clone();
+  mutate(c);
+  say(hostProblems(c, yml).some((r) => !r.ok), `caught: ${what}`);
+}
+{
+  // The cutover edit made in wrangler.jsonc but forgotten in the tunnel: the old header is
+  // still "covered" (UAT owns it now), which is why coverage by ANY environment is not enough.
+  const c = clone();
+  c.env.production.vars.APP_HOST = c.env.production.vars.PUBLIC_HOST = NEW;
+  delete c.env.production.vars.PUBLIC_SITE;
+  c.env.production.routes = newRoutes;
+  c.env.uat.routes = oldRoutes;
+  say(hostProblems(c, yml).some((r) => !r.ok && /pi\.lannacare\.org presents lannacare\.org/.test(r.msg)), "caught: cutover done but the tunnel still presents lannacare.org to production");
+  const fixed = yml.replace(/(hostname: pi\.lannacare\.org[\s\S]*?httpHostHeader:\s*)lannacare\.org/, `$1${NEW}`);
+  const rest = hostProblems(c, fixed).filter((r) => !r.ok);
+  say(rest.length === 0, `the complete cutover edit (wrangler.jsonc + tunnel) passes every rule${rest.length ? `: ${rest.map((r) => r.msg).join("; ")}` : ""}`);
 }
 
 console.log(failed ? `\n${failed} wrong` : "\nall right");
