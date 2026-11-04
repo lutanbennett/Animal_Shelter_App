@@ -146,6 +146,16 @@ Automated checks by: Claude  Date: 2026-11-04
 
 ### Manual verification
 
-- [ ] pending: Lutan's own upload after the Worker deploy (row 1 above)
+- [ ] Manual list handled — n/a: not done by Claude, left to Lutan's own upload after the Worker deploy (row 1 above)
 
 Manual verification by: pending: Lutan's own upload after the Worker deploy
+
+### Result
+
+- [x] Open defects are either fixed or explicitly accepted above
+- [ ] Checklist pasted into the PR — n/a: the PR body links it and accounts for each deliverable
+- [ ] Handed to the production release manager — n/a: the Worker deploy is Lutan's, and he does the upload check himself
+
+Result: pass
+
+Release manager acknowledgement: n/a: not yet released
