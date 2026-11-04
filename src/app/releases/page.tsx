@@ -35,7 +35,7 @@ type ViewNote = { text: string; mine: boolean };
  * the build it describes, so every entry here is live on this site and
  * carries this site's environment.
  *
- * It opens on the reader's role, as /manual does (`isForRole`: an untagged
+ * It opens on the reader's role, as /manual does (an untagged
  * note is everyone's and always shows). Every release stays in the list
  * with its number, whatever survives the filter: releases are numbered for
  * the whole app, and a list jumping from 0.7.0 to 0.4.0 reads as a broken
