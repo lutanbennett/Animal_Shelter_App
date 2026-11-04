@@ -10,6 +10,7 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { isCardKey, type CardKey } from "@/lib/permissions/cards";
 import { isGroupIconKey } from "@/lib/home/group-icons";
 import { holderNames } from "./roles";
+import { RESERVED_ROLE_KEYS, roleKeyFromName } from "./role-key";
 
 /**
  * Settings → Who does what: give a role a card, take one away, and reorder them.
@@ -24,7 +25,7 @@ import { holderNames } from "./roles";
  *   Admin is the only editor, with the authenticator app (so there is always someone able to edit).
  * has_permission(), the policies and can() are not touched: they read role_permissions, as before.
  */
-// PI FAILOVER (D), 2026-11-01: all fourteen writes here go through runWriteAction(), so a change the
+// PI FAILOVER (D), 2026-11-01: all fifteen writes here go through runWriteAction(), so a change the
 // Pi did not clearly answer can be served by the Worker without being applied twice. THE RULE: a
 // fifteenth write goes through it too, or this page never reaches WRAPPED_WRITE_PATHS.
 // The claim is made on a client of this action's own; guard() opens another for the body. Both are
@@ -429,5 +430,36 @@ export async function setCardFeature(card: string, featureId: string | null, req
     const { error } = await g.supabase.from("card_features").upsert({ card, feature_id: featureId }, { onConflict: "card" });
     if (error) return databaseFailure("whoDoesWhat.setCardFeature", error, t.common);
     return done();
+  });
+}
+
+/*
+ * Create a role (docs/decisions/2026-11-04-create-role-from-app.md). Admin at the authenticator-app step, as every write on
+ * this screen; roles' own insert policies (Admin, aal2) enforce it again. The row carries a name, an optional Thai name and a
+ * key derived from the name, kind 'custom', and nothing else: NO cards (a role is a placeholder until a card is assigned) and
+ * none of the retired scope columns, which keep their defaults. opens_app keeps its default of true; the home explains an
+ * empty role. Returns the key so the page can open the new role.
+ */
+export async function createRole(name: string, nameTh: string, requestId: string): Promise<ActionResult<{ key: string }>> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction("whoDoesWhat.createRole", write(t), { id: requestId, action: "whoDoesWhat.createRole", db: supabase }, async () => {
+    const c = t.admin.whoDoesWhat.createRole;
+    const w = t.admin.whoDoesWhat.edit;
+    if (!(await hasAdminRole())) return { ok: false, error: w.adminOnly };
+    if (!(await hasTwoStep())) return { ok: false, error: w.twoStepRequired };
+    const en = name.trim();
+    const th = nameTh.trim();
+    if (!en) return { ok: false, error: c.nameNeeded };
+    if (en.length > 80 || th.length > 80) return { ok: false, error: c.tooLong };
+    const key = roleKeyFromName(en);
+    if (!key) return { ok: false, error: c.needLatin };
+    if (RESERVED_ROLE_KEYS.includes(key)) return { ok: false, error: c.reserved(key) };
+    const { error } = await supabase.from("roles").insert({ key, name: en, name_th: th || null, kind: "custom" });
+    if (error?.code === "23505") return { ok: false, error: c.keyTaken(key) };
+    if (error) return databaseFailure("whoDoesWhat.createRole", error, t.common);
+    revalidatePath("/", "layout");
+    done();
+    return { ok: true, key };
   });
 }
