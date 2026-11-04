@@ -35,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // A hidden page, or a section it sits in, is not listed, nor are the pages under it.
   const hidden = hiddenPagesOf((await loadSiteContent(supabase))?.hidden_public_pages);
 
-  const [residents, projects, appeals, hasShopLinks] = await Promise.all([
+  const [residents, projects, appeals, events, hasShopLinks] = await Promise.all([
     supabase.from("public_resident_profiles").select("id").returns<{ id: string }[]>(),
     supabase
       .from("public_projects")
@@ -43,6 +43,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .returns<{ id: string; sort_date: string | null }[]>(),
     // Appeals still asking (live) or just funded; the list page covers the rest.
     supabase.from("public_appeals").select("id").in("status", ["live", "funded"]).returns<{ id: string }[]>(),
+    supabase.from("public_fundraising_events").select("id, event_date").returns<{ id: string; event_date: string }[]>(),
     hasPublicShopLinks(supabase),
   ]);
 
@@ -76,5 +77,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...pages, ...animals, ...drives, ...stories];
+  const happenings: MetadataRoute.Sitemap = (isPageHidden("events", hidden) ? [] : events.data ?? []).map((e) => ({
+    url: abs(`/events/${e.id}`),
+    lastModified: e.event_date,
+    changeFrequency: "monthly",
+    priority: 0.5,
+  }));
+
+  return [...pages, ...animals, ...drives, ...happenings, ...stories];
 }
