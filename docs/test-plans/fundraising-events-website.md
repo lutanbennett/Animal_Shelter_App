@@ -283,7 +283,7 @@ Manual verification by: pending: a person looking at /events on a phone after re
 
 - [x] Open defects are either fixed or explicitly accepted above — No defects found.
 - [x] Checklist pasted into the PR — Pasted.
-- [ ] Handed to the production release manager — deferred: handed over at the next release cut
+- [ ] Handed to the production release manager — n/a: the handover happens at the release cut, after this PR merges
 
 Result: pass
 
