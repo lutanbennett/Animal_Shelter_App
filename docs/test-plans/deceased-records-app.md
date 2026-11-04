@@ -102,10 +102,10 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] `deploy: production` line read — deferred: release manager
 - [ ] `strip-baked-env` seen — deferred: release manager
 - [ ] New secret/env var exists in production — n/a: none added
-- [ ] Migration and reading code in one PR? No: this PR is schema only, and the app half follows
+- [x] Migration and reading code in one PR? No: this PR is schema only, and the app half follows
 - [ ] `--env production --dry-run` clean — deferred: Lutan, with the production apply
 - [ ] Production backup for a destructive migration — n/a: a function body replacement, nothing rewritten
-- [ ] Apply plan stated: file 0310, production project, may be applied before or after any deploy since nothing reads it yet
+- [x] Apply plan stated: file 0310, production project, may be applied before or after any deploy since nothing reads it yet
 - [ ] Rollback position stated — n/a: leaving 0310 applied is harmless; to revert, re-apply 0307's function body
 
 ## Defects found
