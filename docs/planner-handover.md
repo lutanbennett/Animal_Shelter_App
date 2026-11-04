@@ -126,9 +126,19 @@ Everything below is read from the repo and is stale the moment it is written. **
   *which shape*, not *what it grants*.** It was **not** re-put to him — his intent is plain and the
   implementation that honours it without over-granting is the stream's to find — **but check what an
   option COSTS before offering it, not after he picks it.**
-- **PRODUCTION: `0306`–`0308` went on with `0.42.0`. `0309` and `0310` are PENDING, and `0309` must go
-  on before the next app deploy.** **THE APPLY IS LUTAN'S COMMAND — tell him the fact, do not show him
-  the command.**
+- **PRODUCTION: `0306`–`0308` went on with `0.42.0`. `0309` and `0310` ARE PENDING AND ARE THE RELEASE
+  MANAGER'S, NOT LUTAN'S** — he said so on 2026-11-04: *"The release manager will deploy 0309 and 0310
+  as part of the next release cycle."* **So do NOT carry them as a job of his.** Read, not assumed:
+  `--status --env production` reports **309 applied, 2 pending** (2026-11-04). `scripts/deploy.mjs`
+  refuses a production deploy until every migration on `main` is applied, so the release meets them as
+  an ordinary step — which is also how `0302` went on, closing `#fuazq` without anyone running a
+  command for it. **The planner's job here is to READ the status and say it, nothing more.**
+- **AND THE GENERAL FORM OF THAT, WHICH IS A PLANNER HABIT TO FIX: ASK WHO OWNS A STEP BEFORE LISTING IT
+  AS HIS.** Two items on the 2026-11-04 *still with Lutan* list were not his at all. The migrations are
+  the release manager's, and **segmenting the Pi behind the FR205 had been DONE on 2026-10-31** — offered
+  back to him only because the item that gave that sub-job away never struck it from its own title.
+  **`CLAUDE.md`'s re-read-the-title rule, from the direction nobody checks: a sub-job handed to another
+  item must be struck from the title of the item that handed it over, in the same edit.**
 - **R-0323 still needs him to press *Retry archive*, and NOTHING CAN CONFIRM IT AFTERWARDS.** The named
   check is filed in `## Architecture` and has no stream and no owner. **`check-production.mjs` runs a
   fixed list and takes no SQL, which is the point of its design and must not be loosened.**
