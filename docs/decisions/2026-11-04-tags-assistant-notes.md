@@ -1,6 +1,6 @@
-# Tags in assistant-written notes: the shape is established, and the choice is Lutan's
+# Tags in assistant-written notes: route (c), the confirm card, built
 
-Backlog item `#4ebnh`. Built nothing; this is the reading the item asked for, and a ruling it needs.
+Backlog item `#4ebnh`. First the reading (below), then Lutan's ruling, 2026-11-04 ("Yes, build it", to the question whether the assistant may fill in the tagged residents for the person to confirm on its card). Route (c) is built.
 
 ## What the assistant does today (read on `main` at `e4fa7300`)
 
@@ -29,16 +29,28 @@ Backlog item `#4ebnh`. Built nothing; this is the reading the item asked for, an
   in `interpret.ts`, the card, the eight actions, the stamp (a link needs a `#Name` in the text to show as a link, so the
   stamp would have to rewrite the sentence), en and th strings, and tests. The keyword fallback would offer no links.
 
-## Why this stops here
+## What was built (after the ruling)
 
-Route (c) is a model *proposing* a name match that a person then *confirms*. Whether that counts as "a resident someone
-picked" under decision 1 is a reading of Lutan's own rule, not a fact about the code, and it also means the stamp stops
-being the sentence as typed. **That is his ruling to make; it is not designed around or guessed here.**
+- The write tools (not the read-only ones) take an optional `mentions`: ids of OTHER residents, from a lookup
+  (`llm-tools.ts`). `validateToolInput` refuses an id that is not a visible resident; `cleanMentions`
+  (`src/lib/assistant/mentions.ts`) drops the subject, repeats and anything past five. It is NOT part of the Draft, so the
+  eleven Draft types and their field tables are untouched.
+- `interpretSentence` returns `mentions`; the keyword parser returns none, so it tags nobody.
+- The card shows "Also tag in the note: #Billy ×" (`MentionChips`). The person can drop any. A low-risk write (weight,
+  vaccine) that would have skipped the card does not skip it when it names someone: a tag is only ever made from what the
+  person saw and left.
+- Confirm sends the ids. `runWrite` reads the names under the caller's own session (a resident the login cannot read is
+  not tagged), and saves the stamped sentence followed by `#Name` for each (`noteWithTags`). **The sentence stays as typed;
+  the tags are appended**, so nothing is rewritten.
+- After the write, `linkMentions` finds the row(s) just written (the helpers do not all return an id: by resident and exact
+  note text, newest first, those within 10 seconds of the newest, which covers one row per vaccine) and calls the existing
+  `syncNoteTagPicks`. The link policies decide whether the login may tag, as on every other form. No card created, no
+  migration, no registry insert (the boxes were registered).
 
-**Ask:** may the assistant fill in the tagged residents for the person to confirm on its card (route c), or should
-assistant notes stay un-linked? Nothing else about `#4ebnh` is open.
+## Found, not fixed (for the planner to file)
 
-## Not touched
-
-`blood_tests.results`, `appeals.outcome_note` (his call, unchanged); public strip (shipped); no card created; no
-migration. `node scripts/check-hard-coded-security.mjs` is unaffected (no code change).
+- If the link write fails (policy refusal, or the row cannot be found) the note is saved WITHOUT its links and the person
+  is not told; it is logged (`assistant: tags not linked`). The shared `AssistantResult` has no warning channel.
+- Not driven end to end: dev has no language model, so the card with chips was not exercised in a browser. Unit tests cover
+  the id checks, the card-versus-skip rule and the note text.
+- Thai wording unreviewed.

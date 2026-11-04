@@ -11,7 +11,7 @@
 | PR | see the PR for this branch |
 | Tested by / date | Claude, 2026-11-04 |
 | Carries a migration? | no |
-| Tested at SHA | e4fa7300 |
+| Tested at SHA | 2e0dc170 |
 
 ## 1. Scope and risk
 
@@ -65,12 +65,12 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
-- [ ] Data persists — reload the page and the change is still there — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
-- [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
-- [ ] Empty state renders sensibly (no rows yet) — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
-- [ ] Invalid input is rejected with a readable message, not a crash — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
-- [ ] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
+- [ ] Happy path works end to end — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
+- [ ] Data persists — reload the page and the change is still there — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
+- [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
+- [ ] Empty state renders sensibly (no rows yet) — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
+- [ ] Invalid input is rejected with a readable message, not a crash — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
+- [ ] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
 
 ### Role access matrix
 
@@ -89,35 +89,35 @@ needs two cards together, put both on one row. Do not name `staff` (retired, `01
 
 | Login (card(s) held) | Can reach | Expected | Result |
 |---|---|---|---|
-| none | n/a | no code changed, no access changed | not run |
+| exactly `assistant` | the assistant card with "Also tag" | chips shown, tags saved only for ones left; no new permission | not run: no model on dev |
 | signed out | | | |
 
-- [ ] Every login above tested — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
-- [ ] A login that should not have access is blocked server-side (hitting the URL directly fails) — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
+- [ ] Every login above tested — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
+- [ ] A login that should not have access is blocked server-side (hitting the URL directly fails) — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
 
 ## 5. Cross-cutting
 
-- [ ] Nav entry correct (`src/app/NavLinks.tsx`) — appears for the right cards, no dead links — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
-- [ ] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
-- [ ] Translatable strings go through the translation path, checked at `/management/translations` — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
-- [ ] Mobile viewport (375px) — no overflow, controls reachable — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
-- [ ] Browser console clean — no errors or React warnings — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
-- [ ] Network clean — no unexpected 4xx/5xx on the feature's pages — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
+- [ ] Nav entry correct (`src/app/NavLinks.tsx`) — appears for the right cards, no dead links — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
+- [ ] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
+- [ ] Translatable strings go through the translation path, checked at `/management/translations` — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
+- [ ] Mobile viewport (375px) — no overflow, controls reachable — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
+- [ ] Browser console clean — no errors or React warnings — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
+- [ ] Network clean — no unexpected 4xx/5xx on the feature's pages — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
 
 ## 6. Regression
 
-- [ ] The pages nearest the change still work (list the ones checked) — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
-- [ ] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — **by loading that page, not by reading the file**. Reading proves only that you did not edit it; loading proves the value it still supplies at runtime is the one the other page expects. The weaker reading is the tempting one — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
-- [ ] Nothing merged from `main` during `sync` was broken by this branch — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
+- [ ] The pages nearest the change still work (list the ones checked) — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
+- [ ] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — **by loading that page, not by reading the file**. Reading proves only that you did not edit it; loading proves the value it still supplies at runtime is the one the other page expects. The weaker reading is the tempting one — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
+- [ ] Nothing merged from `main` during `sync` was broken by this branch — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
 
 ## 7. Documentation
 
-- [x] Backlog item `#4ebnh` retitled (not ticked) so its title says the shape is known and a ruling is left
+- [x] Backlog item `#4ebnh` ticked: every registered note box now takes tags
 - [x] Design reasoning recorded in `docs/decisions/2026-11-04-tags-assistant-notes.md`
-- [ ] `README.md` still accurate — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
-- [ ] **Release notes.** n/a: nothing a shelter user would notice, no code changed
+- [ ] `README.md` still accurate — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
+- [x] **Release notes.** `unreleased` gained a line (card-tagged: assistant)
 - [x] Commit messages say why, not just what
-- [ ] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** No gate reads prose: `typecheck`, `lint`, `build` and this checklist all pass with a confidently wrong explanation in the commit that ships the fix, and the wrong explanation is what the next person inherits. Worth real attention on timezone, concurrency and floating-point work, where intuition is unusually unreliable and a plausible story is easy to tell — n/a: analysis only, no code or schema changed, so there is nothing to run or look at
+- [ ] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** No gate reads prose: `typecheck`, `lint`, `build` and this checklist all pass with a confidently wrong explanation in the commit that ships the fix, and the wrong explanation is what the next person inherits. Worth real attention on timezone, concurrency and floating-point work, where intuition is unusually unreliable and a plausible story is easy to tell — n/a: dev has no language model so the card could not be driven in a browser; covered by unit tests, typecheck and build, see Left for manual verification
 
 ## 8. Pre-production gate
 
@@ -185,7 +185,7 @@ section 8's.
 
 | # | What to check | Where |
 |---|---|---|
-| | | |
+| 1 | Type "Panda was bitten by Billy" with a model on: card shows #Billy chip; × removes it; Confirm saves the note with tags, Billy shows it under Mentioned in, removing the chip leaves no link | /assistant |
 
 ## Sign-off
 
@@ -206,9 +206,9 @@ Automated checks by: Claude  Date: 2026-11-04
 
 ### Manual verification
 
-- [x] The manual list above is empty, so there is nothing for a person to look at
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: not yet, one item is listed and waits on a model being switched on
 
-Manual verification by: n/a: no code changed, nothing for a person to look at
+Manual verification by: pending: someone with a language model turned on drives the sentence and checks the note, the chips and Mentioned in
 
 ### Result
 
