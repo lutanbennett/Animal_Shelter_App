@@ -63,7 +63,7 @@ test("nothing on this screen is decided by a role", () => {
 
 test("a login without website.content gets read-only fields and no style toolbar", () => {
   assert.match(form, /\{\(canEdit \|\| canPropose\) && <BodyToolbar target=\{bodyRef\} \/>\}/, "the toolbar sits behind canEdit or canPropose");
-  assert.match(form, /\{canEdit && <p className="text-xs text-muted">\{p\.marks\.hint\}<\/p>\}/, "its hint goes with it");
+  assert.match(form, /\{\(canEdit \|\| canPropose\) && <p className="text-xs text-muted">\{p\.marks\.hint\}<\/p>\}/, "its hint goes with it");
   assert.equal(form.split("readOnly={!canEdit}").length - 1, 2, "the title and the body are read-only without canEdit");
   assert.ok(form.includes("<SitePagePreview"), "the preview is a read and stays");
   assert.ok(form.includes("<TranslationPanel"), "the translation panels stay");
