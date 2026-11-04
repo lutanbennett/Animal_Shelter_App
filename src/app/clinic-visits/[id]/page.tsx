@@ -127,6 +127,9 @@ export default async function ClinicVisitPage(props: PageProps<"/clinic-visits/[
   if (fileError) throw new Error(fileError.message);
   const filesOf = (ownerId: string) => (fileRows ?? []).filter((a) => a.owner_id === ownerId);
   const anyRecorded = blood.length + procs.length + rxs.length + weights.length > 0;
+  // Split (0310): a dead resident's visit still takes a bill photo, a cost and notes, which record_attachment() and the
+  // visit update ask medical.visits edit for. Everything that acts on a living animal stays behind `writable`.
+  const canCorrect = canEdit;
   const writable = canEdit && !isDeceased;
   // Each link below opens a page that asks its own activity, so each is drawn only when the login holds that one.
   const canBlood = can(perms, "medical.blood_tests");
@@ -207,7 +210,7 @@ export default async function ClinicVisitPage(props: PageProps<"/clinic-visits/[
       <section className="flex max-w-2xl flex-col gap-2">
         <h2 className="text-lg font-semibold text-foreground">{v.bills}</h2>
         {billPhotos.length === 0 && <p className="text-sm text-muted">{v.noBills}</p>}
-        <BillPhotosSection kind="clinic_visit" ownerId={id} photos={billPhotos} canAdd={writable} />
+        <BillPhotosSection kind="clinic_visit" ownerId={id} photos={billPhotos} canAdd={canCorrect} />
       </section>
 
       <section className="flex max-w-2xl flex-col gap-2">
@@ -240,6 +243,15 @@ export default async function ClinicVisitPage(props: PageProps<"/clinic-visits/[
           `/residents/${rid}/weight`,
         )}
       </section>
+
+      {isDeceased && canCorrect && (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-lg font-semibold text-foreground">{v.actions}</h2>
+          <div className="flex flex-wrap gap-2">
+            <ActionLink href={`/clinic-visits/${id}/edit`} label={v.correctCostNotes} icon={ACTION_ICONS.edit} iconOnlyOnMobile={false} />
+          </div>
+        </section>
+      )}
 
       {writable && (
         <section className="flex flex-col gap-2">

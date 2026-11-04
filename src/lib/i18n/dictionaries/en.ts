@@ -4706,7 +4706,8 @@ const en = {
       prescriptions: "Prescriptions",
       weight: "Weight",
       actions: "What you can do",
-      deceasedNote: "This resident has died, so their record is closed. You can read this visit but not change it.",
+      deceasedNote: "This resident has died, so their record is closed. You can still add the bill, the cost and notes to this visit; nothing else on it can be changed.",
+      correctCostNotes: "Correct cost and notes",
       reports: {
         title: "Doctor's report",
         hint: "Take a photo of the paper report (a few pages is fine), or choose a photo or PDF. It is kept private in the animal's Medical folder.",
@@ -6120,6 +6121,7 @@ const en = {
       },
       undo: {
         pageTitle: (name: string) => `Withdraw ${name}'s recorded death`,
+        onlyForError: "Undo is only for a death recorded in error. To add a bill or a note, open the record.",
         pageSubtitle:
           "For a death recorded in error — the wrong resident, or one that didn't happen. The record reopens where it was, with what the death cancelled put back. If the death did happen but a detail is wrong, this is not the tool: the reversal stays in the history.",
         notAuthorized: "You can't withdraw a recorded death: it needs the permission \"Withdraw a death recorded in error\".",

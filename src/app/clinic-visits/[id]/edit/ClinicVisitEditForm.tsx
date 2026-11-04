@@ -51,6 +51,7 @@ export function ClinicVisitEditForm({
   cancelHref,
   canTagNotes = false,
   noteTags = [],
+  costNotesOnly = false,
 }: {
   visit: ClinicVisitInitial;
   /** canTagNote(perms, ["medical.visits"]): the save asks medical.visits. Default false. */
@@ -62,6 +63,8 @@ export function ClinicVisitEditForm({
   canAddDoctor?: boolean;
   residentDisplayName: string;
   cancelHref: string;
+  /** A deceased resident: only cost and notes are drawn, because 0310 lets only those change. */
+  costNotesOnly?: boolean;
 }) {
   const [state, onSubmit, pending] = useWriteForm(updateClinicVisit, undefined);
   const { t } = useI18n();
@@ -72,10 +75,13 @@ export function ClinicVisitEditForm({
     <form onSubmit={onSubmit} className="flex max-w-3xl flex-col gap-6">
       <input type="hidden" name="visitId" value={visit.id} />
       <input type="hidden" name="residentId" value={visit.resident_id} />
+      {costNotesOnly && <input type="hidden" name="costNotesOnly" value="1" />}
 
       <p className="text-sm text-muted">{v.forResident(residentDisplayName)}</p>
 
       <div className="grid gap-4 sm:grid-cols-2">
+        {!costNotesOnly && (
+          <>
         <div className="flex flex-col gap-1">
           <label htmlFor="clinicId" className="text-sm font-medium text-muted">
             {v.vetClinic}
@@ -146,6 +152,9 @@ export function ClinicVisitEditForm({
           </select>
           <p className="text-xs text-muted">{v.statusHint}</p>
         </div>
+
+          </>
+        )}
 
         <div className="flex flex-col gap-1">
           <label htmlFor="cost" className="text-sm font-medium text-muted">

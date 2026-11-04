@@ -54,16 +54,17 @@ export async function updateClinicVisit(
       const residentId = str(formData, "residentId");
       if (!visitId || !residentId) return { ok: false, error: e.notFound };
 
-      const clinicId = str(formData, "clinicId");
-      if (!clinicId) return { ok: false, error: e.selectVet };
+      const costNotesOnly = str(formData, "costNotesOnly") === "1";
+      const clinicId = costNotesOnly ? null : str(formData, "clinicId");
+      if (!costNotesOnly && !clinicId) return { ok: false, error: e.selectVet };
 
       const appointmentDateLocal = str(formData, "appointmentDate");
-      if (!appointmentDateLocal) return { ok: false, error: e.enterDateTime };
-      const appointmentDate = new Date(appointmentDateLocal);
-      if (Number.isNaN(appointmentDate.getTime())) return { ok: false, error: e.invalidDate };
+      if (!costNotesOnly && !appointmentDateLocal) return { ok: false, error: e.enterDateTime };
+      const appointmentDate = new Date(appointmentDateLocal ?? "");
+      if (!costNotesOnly && Number.isNaN(appointmentDate.getTime())) return { ok: false, error: e.invalidDate };
 
       const status = str(formData, "status") ?? "scheduled";
-      if (!STATUSES.includes(status as (typeof STATUSES)[number])) return { ok: false, error: e.invalidStatus };
+      if (!costNotesOnly && !STATUSES.includes(status as (typeof STATUSES)[number])) return { ok: false, error: e.invalidStatus };
 
       const costRaw = str(formData, "cost");
       let cost: number | null = null;
@@ -77,16 +78,21 @@ export async function updateClinicVisit(
 
       const { data, error } = await supabase
         .from("clinic_visits")
-        .update({
-          clinic_id: clinicId,
-          appointment_date: appointmentDate.toISOString(),
-          status,
-          reason: str(formData, "reason"),
-          // str() trims and turns blank into null, as 0074's comment promises.
-          doctor_name: doctorName,
-          notes: str(formData, "notes"),
-          cost,
-        })
+        .update(
+          costNotesOnly
+            ? // A deceased resident's visit (0310): the database refuses any other column, so send no other.
+              { notes: str(formData, "notes"), cost }
+            : {
+                clinic_id: clinicId,
+                appointment_date: appointmentDate.toISOString(),
+                status,
+                reason: str(formData, "reason"),
+                // str() trims and turns blank into null, as 0074's comment promises.
+                doctor_name: doctorName,
+                notes: str(formData, "notes"),
+                cost,
+              },
+        )
         .eq("id", visitId)
         .eq("resident_id", residentId)
         .select("id")
@@ -111,11 +117,12 @@ export async function updateClinicVisit(
       }
 
       // Saved first; the calendar is second and can never undo it (calendar-sync.ts). A failure is left on the visit.
-      await syncVisitToCalendar(visitId, (await getSiteOrigin())?.origin ?? null);
+      if (!costNotesOnly) await syncVisitToCalendar(visitId, (await getSiteOrigin())?.origin ?? null);
 
       revalidatePath(`/residents/${residentId}`);
       revalidatePath(`/residents/${residentId}/clinic-visits`);
-      revalidatePath(`/clinics/${clinicId}`, "page");
+      if (clinicId) revalidatePath(`/clinics/${clinicId}`, "page");
+      revalidatePath(`/clinic-visits/${visitId}`);
       revalidatePath("/clinics");
       return { ok: true, redirectTo: `/residents/${residentId}/clinic-visits` };
     },

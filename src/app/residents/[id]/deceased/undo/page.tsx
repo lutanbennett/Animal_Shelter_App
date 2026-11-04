@@ -109,6 +109,7 @@ export default async function UndoDeathPage(
           </span>
         </h1>
         <p className="text-sm text-muted">{u.pageSubtitle}</p>
+        <p className="text-sm font-medium text-foreground">{u.onlyForError}</p>
       </div>
 
       {blocked || !death || !prior ? (
