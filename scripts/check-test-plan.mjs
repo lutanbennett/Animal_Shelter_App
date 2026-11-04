@@ -13,6 +13,7 @@
 
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { roleTaggedNoteTexts, untaggedAdminNotes } from "./lib/release-note-tags.mjs";
 
 const args = process.argv.slice(2);
 const baseArg = args.indexOf("--base");
@@ -198,16 +199,11 @@ const added = unreleasedLines(headReleases).filter((l) => !before.has(l));
 // which is the worse error, so this warns and never fails
 // (docs/decisions/2026-10-22-release-note-audience-question.md).
 const unreleasedBlock = headReleases.match(/export const unreleased\b[^=]*=\s*\[([\s\S]*?)\];/)?.[1] ?? "";
-const taggedTexts = new Set(
-  [...unreleasedBlock.matchAll(/\{\s*text\s*:\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)\s*,\s*(?:roles|cards)\b/g)].map((m) => m[1].slice(1, -1)),
-);
-// The older tag is closed to new notes (docs/decisions/2026-10-26-release-notes-by-card.md).
-const rolesTaggedTexts = new Set(
-  [...unreleasedBlock.matchAll(/\{\s*text\s*:\s*("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)\s*,\s*roles\b/g)].map((m) => m[1].slice(1, -1)),
-);
+// An `admin: true` note is tagged too: Admin holds no card, so no card tag can say it
+// (scripts/lib/release-note-tags.mjs).
+const rolesTaggedTexts = roleTaggedNoteTexts(unreleasedBlock);
 const newRoleTagged = added.filter((l) => rolesTaggedTexts.has(l));
-const ADMIN_ONLY_NOTE = /Settings\s*(?:→|->)|\/admin\b|\bAdmin-only\b|\bonly (?:an )?admins?\b/i;
-const untaggedAdminNotes = added.filter((l) => !taggedTexts.has(l) && ADMIN_ONLY_NOTE.test(l));
+const untagged = untaggedAdminNotes(added, unreleasedBlock);
 const visible = touched.filter((f) => USER_VISIBLE.some((p) => p.test(f)));
 
 // A sign-off PR records a check made after the feature merged — the deployed
@@ -497,10 +493,10 @@ const releaseNote =
     : "";
 const clip = (t) => `  "${t.length > 90 ? t.slice(0, 90) + "…" : t}"`;
 const audienceNote =
-  (untaggedAdminNotes.length
+  (untagged.length
     ? "\nWarning (not a failure): a new `unreleased` note names an admin-only place but has no tag, so every role will see it. " +
       "If only some readers can open that page, tag it `{ text, cards: [...] }` with the card that opens it:\n" +
-      untaggedAdminNotes.map(clip).join("\n")
+      untagged.map(clip).join("\n")
     : "") +
   (newRoleTagged.length
     ? "\nWarning (not a failure): a new `unreleased` note is tagged by `roles`. That tag is closed to new notes, because a shelter may rename its roles; " +
