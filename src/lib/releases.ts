@@ -95,6 +95,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "On Who does what, the box that read “The public website’s content” now also says it opens the desexing drives sign-up list, so you can see what you are giving when you give it. Nothing about who can see what has changed. The Thai wording is our own and has not yet been read by a Thai speaker.", cards: ["website"] },
   { text: "Photos and videos added to an adoption update now wait for approval before they can show on the website. Before, they were approved the moment they were uploaded, so ticking an update to be shared published its pictures straight away. Now a shared update shows nothing publicly until someone with the Approve photos card approves its files on the Photos to approve page, where videos play so they can be judged. This also means the earlier note that a shared update’s videos show on the website is true only after approval. A login that can already publish resident photos, and Admin, still has its own uploads approved on save.", cards: ["adoption_news", "approve_photos"] },
 ];
 

@@ -310,7 +310,7 @@ Result: pending
 
 0. Sign in with `--cards website`. The home screen shows the **Website** tile (or the tile of a card that includes it).
 1. Open `/admin/website`: it loads.
-2. **TODO:** The public website's content. Do it on a disposable record named `walk-website`. Question: where should this write show afterwards (which page, which row)?
+2. **TODO:** The public website's content, and the desexing drives sign-up list. Do it on a disposable record named `walk-website`. Question: where should this write show afterwards (which page, which row)?
 3. Open `/management/desexing-drives`: it loads (website.content at edit). Start a drive, open one, and the signup controls are offered; every action asks website.content at edit.
 4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
@@ -322,7 +322,7 @@ Result: pending
 
 0. Sign in with `--cards website_photos`. The home screen shows the **Website photo strip** tile (or the tile of a card that includes it).
 1. Open `/admin/website`: it loads.
-2. **See:** The public website's content (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+2. **See:** The public website's content, and the desexing drives sign-up list (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 3. **TODO:** Add, move and remove the photos in the public website's photo strip. Do it on a disposable record named `walk-website_photos`. Question: where should this write show afterwards (which page, which row)?
 4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 

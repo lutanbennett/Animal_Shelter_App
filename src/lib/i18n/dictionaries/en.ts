@@ -1131,7 +1131,7 @@ const en = {
         "social.library": "The social media library: memes, and where each was shared",
         "assistant.ask": "Ask the assistant a question",
         "assistant.record": "Record something through the assistant",
-        "website.content": "The public website's content",
+        "website.content": "The public website's content, and the desexing drives sign-up list",
         "website.gallery": "Add, move and remove the photos in the public website's photo strip",
         "reference.types": "Setup lists: immunization, procedure and blood-test types, frequencies, medications, diets, units",
         "system.status": "The system status page",
