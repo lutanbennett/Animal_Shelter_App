@@ -4677,12 +4677,6 @@ const en = {
     statusCancelled: "Cancelled — the visit did not happen",
     statusHint:
       "A scheduled visit whose date has passed shows as overdue until someone marks it completed or cancelled.",
-    ownClinicHint: "Your account belongs to this clinic, so visits you record are for it.",
-    doctorLockedHint: "You are the doctor on visits you record, so this is filled in for you.",
-    noClinicForAccount:
-      "Your account isn't linked to a clinic yet, so you can't record clinic visits. Ask a shelter admin to link your login to your doctor entry in Settings → Security; you then work at that doctor's clinics.",
-    otherClinicReadOnly:
-      "This visit was recorded by another clinic, so you can read it but not change it.",
     record: {
       title: "Clinic visit",
       open: "Open this visit",
@@ -4708,7 +4702,6 @@ const en = {
       weight: "Weight",
       actions: "What you can do",
       deceasedNote: "This resident has died, so their record is closed. You can read this visit but not change it.",
-      otherClinic: "This visit belongs to another clinic.",
       reports: {
         title: "Doctor's report",
         hint: "Take a photo of the paper report (a few pages is fine), or choose a photo or PDF. It is kept private in the animal's Medical folder.",
@@ -4747,7 +4740,6 @@ const en = {
       invalidCost: "Cost must be a number of baht, zero or more.",
       notFound: "Clinic visit not found.",
       notAuthorized: "You don't have permission to change clinic visits.",
-      notYourClinic: "You can only record visits for your own clinic.",
       prescriptionsBlockFuture:
         "This visit has prescriptions linked to it, so it can't be moved to a day after today. Unlink them from the prescriptions first, or keep the visit on the day it happened.",
     },
@@ -5844,10 +5836,6 @@ const en = {
        * says whose list it is — otherwise a short list reads as missing
        * residents.
        */
-      vetScope: (clinic: string) =>
-        `Showing the residents ${clinic} ${clinic.includes(", ") ? "have" : "has"} a clinic visit, prescription, procedure or blood test for, and every resident you were the doctor for at a clinic you have since left (those you can read but not change). A resident appears here once the shelter books them a visit with one of your clinics.`,
-      vetScopeNoClinic:
-        "Your account isn't linked to a clinic yet, so no residents are shown. Ask a shelter admin to set your clinic in Settings → Security.",
       selectedCount: (n: number) => `${n} selected`,
       selectPrompt: "Select residents to act on several at once.",
       /** Beside the count once Select all has ticked every row it takes. */
@@ -6609,21 +6597,6 @@ const en = {
     count: (n: number) => (n === 1 ? "1 visit" : `${n} visits`),
   },
 
-  vetAppointments: {
-    pageTitle: "Appointments",
-    pageSubtitle: "Visits booked with your clinic.",
-    unlinked: "Your account is not linked to a clinic yet, so there are no appointments to show. Ask an admin to set it.",
-    couldntLoad: "Couldn’t load appointments",
-    unknownResident: "Unknown resident",
-    toWriteUp: "To write up",
-    toWriteUpHint: "Visits that have happened and are not marked done.",
-    emptyToWriteUp: "Nothing waiting to be written up.",
-    upcoming: "Upcoming",
-    emptyUpcoming: "No upcoming appointments.",
-    recentlyDone: "Recently done",
-    recentlyDoneHint: "Marked done in the last 30 days. You can still add records to them.",
-    emptyRecentlyDone: "Nothing marked done recently.",
-  },
 
   my: {
     pageTitle: "My tasks",

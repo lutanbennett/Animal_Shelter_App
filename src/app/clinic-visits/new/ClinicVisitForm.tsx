@@ -20,16 +20,9 @@ export type ClinicOption = {
   name: string;
 };
 
-/**
- * `fixedClinic` is a doctor login's only current clinic (src/lib/clinics/scope.ts):
- * shown as the clinic the visit is for rather than a dropdown with one entry.
- * A doctor who works at several chooses among theirs.
- */
 export function ClinicVisitForm({
   residents,
   clinics,
-  fixedClinic,
-  lockedDoctor,
   doctorNamesByClinic,
   canAddDoctor = false,
   preselectedResidentIds,
@@ -39,9 +32,6 @@ export function ClinicVisitForm({
 }: {
   residents: ResidentOption[];
   clinics: ClinicOption[];
-  fixedClinic: ClinicOption | null;
-  /** A doctor login's own doctor entry: the Doctor field is them, locked. */
-  lockedDoctor: string | null;
   doctorNamesByClinic: DoctorNamesByClinic;
   /** `clinics.doctors`: the free-text doctor name is offered only with it (a new name adds a doctor). */
   canAddDoctor?: boolean;
@@ -58,7 +48,7 @@ export function ClinicVisitForm({
   const [selectedIds, setSelectedIds] = useState<string[]>(
     preselectedResidentIds,
   );
-  const [clinicId, setClinicId] = useState(fixedClinic?.id ?? preselectedClinicId);
+  const [clinicId, setClinicId] = useState(preselectedClinicId);
   const [status, setStatus] = useState<"scheduled" | "completed">("scheduled");
   // The status is never changed for the user: a past date left on Scheduled
   // stays Scheduled and shows as overdue, as the status hint says.
@@ -91,15 +81,6 @@ export function ClinicVisitForm({
           <label htmlFor="clinicId" className="text-sm font-medium text-muted">
             {t.vetVisits.vetClinic}
           </label>
-          {fixedClinic ? (
-            <>
-              <input type="hidden" name="clinicId" value={fixedClinic.id} />
-              <p id="clinicId" className="py-2 text-sm text-foreground">
-                {fixedClinic.name}
-              </p>
-              <p className="text-xs text-muted">{t.vetVisits.ownClinicHint}</p>
-            </>
-          ) : (
           <select
             id="clinicId"
             name="clinicId"
@@ -117,13 +98,11 @@ export function ClinicVisitForm({
               </option>
             ))}
           </select>
-          )}
         </div>
 
         <DoctorNameField
           clinicId={clinicId}
           namesByClinic={doctorNamesByClinic}
-          lockedName={lockedDoctor}
           canAddDoctor={canAddDoctor}
           className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
         />

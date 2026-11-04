@@ -12,7 +12,6 @@ import { loadPermissions } from "@/lib/permissions/load";
 import { getSiteOrigin } from "@/lib/site-origin";
 import { bookingReturnPath } from "@/lib/clinics/booking-return";
 import { syncPendingVisits } from "@/lib/clinics/calendar-sync";
-import { ANY_CLINIC_SCOPE, scopeAllowsClinic } from "@/lib/clinics/scope";
 
 // PI FAILOVER (D): the one write here goes through runWriteAction(); the redirect is taken AFTER it returns, so a
 // replay of a saved request redirects too instead of leaving an open claim (the wrapper rethrows a redirect).
@@ -44,7 +43,7 @@ export async function bookClinicVisit(
       const status = formData.get("status");
       // 0074 promises trimmed text with blank stored as null, not ''.
       const doctorRaw = formData.get("doctorName");
-      let doctorName =
+      const doctorName =
         typeof doctorRaw === "string" && doctorRaw.trim() ? doctorRaw.trim() : null;
 
       if (residentIds.length === 0) {
@@ -61,15 +60,6 @@ export async function bookClinicVisit(
       if (Number.isNaN(appointmentDate.getTime())) {
         return { ok: false, error: t.vetVisits.errors.invalidDate };
       }
-
-      // The page shows a doctor login only its current clinics; this is the check a posted
-      // form can't get round (src/lib/clinics/scope.ts).
-      const scope = ANY_CLINIC_SCOPE;
-      if (scope.kind === "unlinked") return { ok: false, error: t.vetVisits.noClinicForAccount };
-      if (!scopeAllowsClinic(scope, clinicId)) return { ok: false, error: t.vetVisits.errors.notYourClinic };
-      // A doctor login's visit is its own: the locked Doctor field is not
-      // trusted from the form (Lutan, 2026-10-01).
-      if (scope.kind === "clinics" && scope.doctorName) doctorName = scope.doctorName;
 
       const { data: made, error } = await supabase.rpc("schedule_bulk_appointments", {
         p_resident_ids: residentIds,

@@ -8,11 +8,9 @@ import { ScanChipBox } from "./ScanChipBox";
 import { FocusSearch } from "./FocusSearch";
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { localLabel } from "@/lib/translations/labels";
 import { placeName } from "@/lib/enclosures/names";
 import { OFFSITE, tidiedQuery, toggleZone, zoneChipOrder } from "@/lib/enclosures/place";
 import { getTagOrigin } from "@/lib/tags/origin";
-import { ANY_CLINIC_SCOPE } from "@/lib/clinics/scope";
 import { DECEASED } from "@/lib/residents/status";
 import { exportFilename } from "@/lib/residents/export";
 import {
@@ -160,9 +158,8 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
     .select(idColumn, { count: "exact", head: true })
     .eq("current_status", DECEASED);
 
-  const [tagOrigin, clinicScope, residentsResult, deceased, statusMatches] = await Promise.all([
+  const [tagOrigin, residentsResult, deceased, statusMatches] = await Promise.all([
     getTagOrigin(),
-    ANY_CLINIC_SCOPE,
     listQuery(supabase, view).returns<ResidentRow[]>(),
     applyFilters(deceasedCountQuery, filters),
     Promise.all(
@@ -178,17 +175,6 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
       }),
     ),
   ]);
-
-  // RLS already limits a doctor to their clinics' residents (0108); this only
-  // names the clinics, so the list says whose it is.
-  const scopeClinicName =
-    clinicScope.kind === "clinics"
-      ? ((
-          await supabase.from("clinics").select("name, name_th").in("id", clinicScope.clinicIds).order("name")
-        ).data ?? [])
-          .map((v) => localLabel(locale, v.name as string, v.name_th as string | null))
-          .join(", ") || null
-      : null;
 
   const { error } = residentsResult;
   const residents: ResidentRow[] = inListOrder(view, residentsResult.data ?? []);
@@ -262,14 +248,6 @@ export default async function ResidentsPage(props: PageProps<"/residents">) {
         )}
         {status && (
           <p className="text-sm text-muted">{t.residents.list.statusOnly[status]}</p>
-        )}
-        {clinicScope.kind === "clinics" && scopeClinicName && (
-          <p className="text-sm text-muted">{t.residents.list.vetScope(scopeClinicName)}</p>
-        )}
-        {clinicScope.kind === "unlinked" && (
-          <p className="rounded border border-border bg-surface px-3 py-2 text-sm text-foreground">
-            {t.residents.list.vetScopeNoClinic}
-          </p>
         )}
       </div>
 

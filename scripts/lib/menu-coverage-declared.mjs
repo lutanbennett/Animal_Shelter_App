@@ -20,7 +20,6 @@ export const LANDINGS = ["/operations", "/management", "/admin"];
 export const DEEP = [
   { page: "/residents/[id]", parent: "/residents", file: "src/app/residents/ResidentsTable.tsx", needle: "/residents/" },
   { page: "/residents/new", parent: "/residents", file: "src/app/residents/page.tsx", needle: "/residents/new", needs: "resident.register" },
-  { page: "/residents/[id]", parent: "/appointments", file: "src/app/appointments/page.tsx", needle: "/residents/" },
   { page: "/projects/[id]", parent: "/projects", file: "src/app/projects/FolderGrid.tsx", needle: "/projects/" },
   { page: "/outreach/new", parent: "/outreach", file: "src/app/outreach/page.tsx", needle: "/outreach/new", needs: "community.outings", level: "edit" },
   { page: "/outreach/[id]", parent: "/outreach", file: "src/app/outreach/page.tsx", needle: "/outreach/" },

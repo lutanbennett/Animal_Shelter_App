@@ -42,6 +42,22 @@ check_backlog() {
   return 0
 }
 
+# Same shape again for the item ids. An item filed without one still renders and
+# still works, so nothing looks wrong — but its anchor falls back to the title,
+# and the next grooming round that rewords that title silently detaches Lutan's
+# Customer priority from it. That is weeks-later damage from a commit that
+# looked fine, which is exactly what a pre-commit check is for. Fails open.
+check_backlog_ids() {
+  git diff --cached --quiet -- docs/backlog.md && return 0
+  command -v node >/dev/null 2>&1 || return 0
+  [ -f scripts/check-backlog-ids.mjs ] || return 0
+  node scripts/check-backlog-ids.mjs --staged
+  rc=$?
+  [ "$rc" -eq 3 ] && return 1
+  [ "$rc" -ne 0 ] && echo "pre-commit: backlog id check crashed (exit $rc) — commit allowed; CI checks the PR." >&2
+  return 0
+}
+
 # The backlog branch only ever touches docs/backlog.md (CLAUDE.md, "The backlog
 # branch"). The daily `git merge backlog && git push` reaches main with no PR, no
 # CI and no review, so any other file committed there rides along unchecked: a
@@ -61,4 +77,5 @@ check_backlog_branch() {
 check_migrations || exit 1
 check_backlog_branch || exit 1
 check_backlog || exit 1
+check_backlog_ids || exit 1
 exit 0

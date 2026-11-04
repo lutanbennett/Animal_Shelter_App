@@ -11,7 +11,6 @@ import { appointmentStatusLabel } from "@/lib/i18n/enum-labels";
 import { localLabel } from "@/lib/translations/labels";
 import { formatBaht, formatDateTime, formatDate, formatWeightKg, todayIso } from "@/lib/format";
 import { visitDate } from "@/lib/clinics/linkable";
-import { ANY_CLINIC_SCOPE } from "@/lib/clinics/scope";
 import { loadBillPhotos } from "@/lib/bills/photos";
 import { driveImageUrl } from "@/lib/google/drive-client";
 import { BillPhotosSection } from "@/components/BillPhotosSection";
@@ -58,18 +57,6 @@ export default async function ClinicVisitPage(props: PageProps<"/clinic-visits/[
   const visit = rows?.[0];
   if (!visit || !visit.residents) notFound();
 
-  // A doctor login reads its own clinics' visits only. RLS lets it see its past patients elsewhere,
-  // so the page narrows further, and says nothing about what the other visit holds.
-  const scope = ANY_CLINIC_SCOPE;
-  if (scope.kind === "unlinked" || (scope.kind === "clinics" && (!visit.clinic_id || !scope.clinicIds.includes(visit.clinic_id)))) {
-    return (
-      <main className="flex flex-1 flex-col gap-4 p-6">
-        <h1 className="text-2xl font-semibold text-foreground">{v.title}</h1>
-        <p className="max-w-2xl text-sm text-muted">{scope.kind === "unlinked" ? t.vetVisits.noClinicForAccount : v.otherClinic}</p>
-      </main>
-    );
-  }
-
   const perms = await loadPermissions();
   const canEdit = can(perms, "medical.visits", "edit");
   const rid = visit.resident_id;
@@ -84,7 +71,7 @@ export default async function ClinicVisitPage(props: PageProps<"/clinic-visits/[
       .eq("purpose", "report")
       .order("uploaded_at", { ascending: true })
       .returns<{ id: string; drive_file_id: string; file_name: string | null; caption: string | null }[]>(),
-    scope.kind === "clinics" ? Promise.resolve(new Map()) : loadBillPhotos(supabase, "clinic_visit", [id]),
+    loadBillPhotos(supabase, "clinic_visit", [id]),
     supabase
       .from("blood_tests")
       .select("id, date, blood_test_types(name, name_th)")
@@ -217,13 +204,11 @@ export default async function ClinicVisitPage(props: PageProps<"/clinic-visits/[
         <div className="sm:col-span-2">{field(v.notes, visit.notes ? <span className="whitespace-pre-wrap"><NoteText text={visit.notes} tags={await loadTagsForNote(supabase, "clinic_visits", "notes", visit.id)} /></span> : null)}</div>
       </dl>
 
-      {scope.kind !== "clinics" && (
-        <section className="flex max-w-2xl flex-col gap-2">
-          <h2 className="text-lg font-semibold text-foreground">{v.bills}</h2>
-          {billPhotos.length === 0 && <p className="text-sm text-muted">{v.noBills}</p>}
-          <BillPhotosSection kind="clinic_visit" ownerId={id} photos={billPhotos} canAdd={writable} />
-        </section>
-      )}
+      <section className="flex max-w-2xl flex-col gap-2">
+        <h2 className="text-lg font-semibold text-foreground">{v.bills}</h2>
+        {billPhotos.length === 0 && <p className="text-sm text-muted">{v.noBills}</p>}
+        <BillPhotosSection kind="clinic_visit" ownerId={id} photos={billPhotos} canAdd={writable} />
+      </section>
 
       <section className="flex max-w-2xl flex-col gap-2">
         <h2 className="text-lg font-semibold text-foreground">{v.reports.title}</h2>

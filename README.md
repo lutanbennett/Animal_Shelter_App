@@ -120,6 +120,20 @@ Keep at least two admins enrolled so route 1 is always available. `scripts/check
    without touching whatever the main checkout is in the middle of; see
    `CLAUDE.md` "The backlog branch" for how it is merged back.
 
+   Every item carries a permanent id in an HTML comment, which markdown
+   readers render as nothing:
+
+   ```
+   - [ ] <!--#a7f3k--> **THE TITLE** the body…
+   ```
+
+   It is what the backlog page anchors on, so rewording a title no longer
+   detaches the priorities pointing at it. A new item gets one from
+   `node scripts/backlog-ids.mjs docs/backlog.md`, which never changes an id
+   that already exists; `node scripts/check-backlog-ids.mjs` enforces it in
+   CI and in the pre-commit hook.
+   `node scripts/gen-backlog.mjs . <out.html>` renders the page itself.
+
 7. **Feature worktrees** (one per workstream)
 
    ```bash
