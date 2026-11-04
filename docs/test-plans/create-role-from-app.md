@@ -105,7 +105,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] prod dry-run — n/a: no migration
 - [ ] Backup — n/a: no migration
 - [ ] Apply plan — n/a: no migration
-- [ ] Rollback position: redeploy the previous ref with scripts/pi/deploy-pi.sh; no schema to revert, and any roles created stay until deleted with Delete this role
+- [ ] Rollback position stated — deferred: release manager (redeploy the previous ref with scripts/pi/deploy-pi.sh; no schema to revert)
 
 ## Defects found
 
