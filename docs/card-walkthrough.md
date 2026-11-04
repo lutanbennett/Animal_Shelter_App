@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-46 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+48 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -611,6 +611,30 @@ Result: pending
 0. Sign in with `--cards run_fundraising_events`. The home screen shows the **Run fundraising events** tile (or the tile of a card that includes it).
 1. Open `/management/events`: it loads.
 2. **TODO:** Run a fundraising event and its photos. Do it on a disposable record named `walk-run_fundraising_events`. Question: where should this write show afterwards (which page, which row)?
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Approve website changes (`approve_website`)
+
+- Opens: `/photos/approve`
+
+0. Sign in with `--cards approve_website`. The home screen shows the **Approve website changes** tile (or the tile of a card that includes it).
+1. Open `/photos/approve`: it loads.
+2. **TODO:** Approve and publish website changes. Do it on a disposable record named `walk-approve_website`. Question: where should this write show afterwards (which page, which row)?
+3. **TODO:** Approve or remove the photos waiting in Photos to approve. Do it on a disposable record named `walk-approve_website`. Question: where should this write show afterwards (which page, which row)?
+4. **Do:** Refile or remove a photo, choose the profile photo. Use a disposable record named `walk-approve_website`. **Read-back:** tap the photo on /residents/<id>/photos: Move to folder changes the folder its tile reads (Medical to Foster read "Foster · <date>"), Remove photo and Current profile photo sit beside it (answered 2026-10-23).
+5. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Propose website changes (`propose_website`)
+
+- Opens: `/admin/website`
+
+0. Sign in with `--cards propose_website`. The home screen shows the **Propose website changes** tile (or the tile of a card that includes it).
+1. Open `/admin/website`: it loads.
+2. **TODO:** Draft a website change, for someone else to approve. Do it on a disposable record named `walk-propose_website`. Question: where should this write show afterwards (which page, which row)?
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
