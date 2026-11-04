@@ -535,10 +535,24 @@ credentials from `.env.deploy.production`; nothing new is minted.
   regenerated archive PDF or `index.html` is picked up.
 - **Nothing is ever deleted from the drive.** A file that vanishes from Drive stays here and is
   logged in `_mirror/gone.log`. A renamed file appears at its new path; the old copy stays.
-  Google Docs/Sheets are saved as PDF. Shortcuts are skipped.
+  Google Docs, Sheets, Slides and Drawings are saved as PDF. Shortcuts are skipped.
+- **Google files that are not Docs editors — a Form, a Site, a Jamboard, a Map — are SKIPPED and
+  named in the log every run.** Drive has no file behind them to export, so there is nothing to copy
+  and no retry would help. They count as `skipped`, never `failed`. Before 2026-11-04 the mirror
+  asked Drive to export every native file as a PDF, Drive answered `HTTP 400` for these, and because
+  **any** failed file makes the run exit 1, two such files in `Admin/Bulk Uploads` turned the nightly
+  unit permanently red while 1,104 of 1,107 files were copying perfectly. **A light that is always
+  red cannot report a real failure** — that was the fault, not the copying
+  (`docs/decisions/2026-11-04-drive-mirror-skip-unexportable.md`).
+- **A download cut off mid-file is retried twice** before it counts as failed. A `4xx` is not
+  retried: the file will not appear by asking again.
 - **Layout:** `/mnt/lanna-mirror/<shelter>/<same folders as Drive>/`; state in `_mirror/`.
 
 ### One-time setup (Lutan, on the Pi)
+
+**Run end to end on this Pi for the first time on 2026-11-04**, which is where the three
+corrections below came from — each of them stops the install dead, and each only shows up when
+someone actually types the commands.
 
 The clone uses the first 64 GB of the 1.8 TB drive (`sda1`, `sda2`); the mirror goes in a third,
 **encrypted** partition made from the free space. The clone half stays unencrypted on purpose
@@ -554,17 +568,47 @@ The clone uses the first 64 GB of the 1.8 TB drive (`sda1`, `sda2`); the mirror 
    replaced — which is the same reason this section already says to mount **by UUID**, never
    `/dev/sda`, and why steps 2 and 3 take `<that partition's by-id path>` rather than a literal. And
    a `by-id` string carries the drive's serial number, which does not belong in a public repository.
-2. `sudo cryptsetup luksFormat <that partition's by-id path>` (choose a passphrase; store it with
-   the backup key, not on the Pi), then `sudo cryptsetup open <path> lanna-mirror`,
+2. **Install `cryptsetup-bin` first** — `sudo apt install cryptsetup-bin` — because it is not on the
+   Pi and this step opens with a `cryptsetup` command (`sudo: cryptsetup: command not found`).
+   **`cryptsetup-bin`, NOT the full `cryptsetup` package, and the reason is the opposite of the
+   obvious choice:** the full package adds initramfs hooks and boot-time unlocking, which is exactly
+   what this design refuses — the volume is `noauto` so that a power cut never leaves the Pi waiting
+   at a passphrase prompt — and installing it would regenerate the initramfs on a box serving
+   production, for a feature we do not want. The kernel side is already fine (`dm-crypt` is present
+   and loads on first use), so the binary is the whole gap. **The trade-off worth knowing:** without
+   the full package nothing acts on `/etc/crypttab`, so the entry added in step 3 is a *record* of
+   the LUKS UUID rather than something systemd runs — which changes nothing, because `noauto` meant
+   it would not run at boot anyway.
+   Then: `sudo cryptsetup luksFormat <that partition's by-id path>` (choose a passphrase; store it
+   with the backup key, not on the Pi), `sudo cryptsetup open <path> lanna-mirror`,
    `sudo mkfs.ext4 -L lanna-mirror /dev/mapper/lanna-mirror`.
 3. Mount **by UUID**, never `/dev/sda3`: `sudo blkid` for the ext4 UUID inside the mapper, and
    `sudo mkdir /mnt/lanna-mirror`. Add to `/etc/crypttab` the partition's **LUKS UUID** with the
    option `noauto`, so a power cut never waits for a passphrase. After a reboot the mirror is simply
    not mounted and the job fails visibly (below); unlock with `sudo cryptsetup open` + `sudo mount UUID=<uuid> /mnt/lanna-mirror`.
-4. Install the timer: `sudo sed -e "s|__REPO__|$PWD|g" -e "s|__USER__|$USER|g" scripts/pi/drive-mirror.service | sudo tee /etc/systemd/system/drive-mirror.service`,
-   `sudo cp scripts/pi/drive-mirror.timer /etc/systemd/system/`, `sudo systemctl daemon-reload`,
-   `sudo systemctl enable --now drive-mirror.timer`. Run once now: `sudo systemctl start drive-mirror.service`
-   and watch `journalctl -u drive-mirror -f`.
+   **Then hand the mount point to the user the service runs as, or the first run dies with a
+   permission error:** `sudo chown $USER:$USER /mnt/lanna-mirror && sudo chmod 700 /mnt/lanna-mirror`.
+   `drive-mirror.service` carries `User=__USER__` while `sudo mkdir` leaves the directory root-owned,
+   so a write test as that user fails before the mirror ever starts. **`700` rather than the default
+   `755`, for reasons that are checkable rather than taste:** the volume holds medical history and
+   names carers and adopters; the **production** app service runs as that same user, so stage 2 can
+   still serve from it; and the **test** service runs as root, which must always read Drive and never
+   the Pi copy — so shutting it out is the intended effect, not collateral.
+4. Install the timer. **`cd` to the repository on its own line, as a separate command** — the `sed`
+   below substitutes `$PWD`, and a shell expands `$PWD` *before* it runs a `cd` placed beside it, so
+   `cd ~/repo && sudo sed -e "s|__REPO__|$PWD|g" …` writes whoever's **old** directory into the unit
+   file:
+   ```
+   cd ~/Animal_Shelter_App
+   sudo sed -e "s|__REPO__|$PWD|g" -e "s|__USER__|$USER|g" scripts/pi/drive-mirror.service | sudo tee /etc/systemd/system/drive-mirror.service
+   ```
+   **Read the unit it prints before going on** and check `WorkingDirectory=` and `User=` are what you
+   expect. Then `sudo cp scripts/pi/drive-mirror.timer /etc/systemd/system/`,
+   `sudo systemctl daemon-reload`, `sudo systemctl enable --now drive-mirror.timer`.
+   Run once now with **`--no-block`**: `sudo systemctl start --no-block drive-mirror.service`, then
+   watch `journalctl -u drive-mirror -f`. Without `--no-block` the terminal hangs for the whole first
+   sync — it is a `oneshot` with `TimeoutStartSec=6h`, and the first run pulls the entire tree (about
+   25 minutes and 1,104 files on 2026-11-04).
 
 Free space first: `df -h /mnt/lanna-mirror`. On dev the tree measured 1.1 GB (934 files, 2026-10-29);
 production's was not measured, but the partition is over 1.7 TB.
