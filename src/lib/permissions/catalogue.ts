@@ -110,6 +110,8 @@ export const ACTIVITIES = [
   { key: "bills.utilities", kind: "yesno", area: "maintenance", sort: 76, requires: [], probes: [] },
   { key: "bills.general", kind: "yesno", area: "maintenance", sort: 77, requires: [], probes: [] },
   { key: "bills.sites", kind: "yesno", area: "maintenance", sort: 78, requires: [], probes: [] },
+  // 0312: run a fundraising event (its own table, apart from appeals and projects). Sort 79, after 78, for the reason above.
+  { key: "events.run", kind: "yesno", area: "management", sort: 79, requires: [], probes: [] },
   { key: "contacts.browse", kind: "yesno", area: "contacts", sort: 57, requires: [], probes: [] },
   { key: "friends.view", kind: "yesno", area: "contacts", sort: 58, requires: [], probes: [] },
   { key: "community.outings", kind: "level", area: "projects", sort: 59, requires: [], probes: [] },

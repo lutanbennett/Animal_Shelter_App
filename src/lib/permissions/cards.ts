@@ -58,7 +58,8 @@ export type NewCardKey =
   | "correct_intake_date"
   | "utility_bills"
   | "general_bills"
-  | "bill_sites";
+  | "bill_sites"
+  | "run_fundraising_events";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -359,6 +360,12 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   utility_bills: { includes: [], bundle: [{ activity: "bills.utilities" }], opens: "/bills/utilities" },
   general_bills: { includes: [], bundle: [{ activity: "bills.general" }], opens: "/bills" },
   bill_sites: { includes: [], bundle: [{ activity: "bills.sites" }], opens: "/bills/settings" },
+  // 0312 (Lutan, 2026-11-04: an event is its own thing, with its own table): plan, publish and close a fundraising event and
+  // its photos. It does NOT include run_appeals or add_photos and grants no approval: every event photo still waits in the
+  // /photos/approve queue (photos.approve). opens points at the appeals page only until the events screen exists; the
+  // app half repoints it to its own route, and until then cardsWithoutTile() says so out loud rather than leaving a holder guessing.
+  // Given to no role: Lutan assigns it in Who does what.
+  run_fundraising_events: { includes: [], bundle: [{ activity: "events.run" }], opens: "/management/appeals" },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */
@@ -400,6 +407,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   utility_bills: (t) => t.appHome.cards.utilityBills,
   general_bills: (t) => t.appHome.cards.generalBills,
   bill_sites: (t) => t.appHome.cards.billSites,
+  run_fundraising_events: (t) => t.appHome.cards.runFundraisingEvents,
 };
 
 export const CARDS: Record<CardKey, Card> = {
