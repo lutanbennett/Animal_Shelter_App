@@ -145,6 +145,6 @@ Automated checks by: Claude  Date: 2026-11-04
 
 ### Manual verification
 
-pending: the upload-to-approval flow in a browser (Left for manual verification row 1)
+Manual verification by: pending: the upload-to-approval flow in a browser (Left for manual verification row 1)
 
 Result: pass
