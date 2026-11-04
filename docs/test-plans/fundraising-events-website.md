@@ -1,7 +1,8 @@
-# Feature test plan
+# Feature test plan — fundraising events on the public website
 
-Copy this file to the feature branch as `docs/test-plans/<feature>.md`, fill the
-header, and tick as you go.
+The public half of `#2zi2j`: the events page and its registration, reading the
+`public_fundraising_events` and `public_fundraising_event_photos` views that `0314`
+built.
 
 Every line must end up in one of three states, and CI checks this:
 
@@ -29,7 +30,7 @@ Never tick something you did not do, and never leave a line untouched. Anything
 that failed goes under **Defects**.
 
 **No merge without a signed-off checklist. No exceptions.** CI enforces it: a PR
-with no completed `docs/test-plans/<feature>.md` fails. Small changes are not
+with no completed `docs/test-plans/fundraising-events-website.md` fails. Small changes are not
 exempt — they are simply fast, because most lines are honestly `n/a`. Writing the
 `n/a` reason *is* the check; that is what says someone looked at everything rather
 than at the happy path.
@@ -249,11 +250,12 @@ Automated checks by: Claude  Date: 2026-11-04
 
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
+has looked and explicitly asks in chat; the line then says so explicitly, naming
+them and recording that the line was written at their request.
 Three valid states:
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
+- A person's name, then two or more spaces, then `Date:` and the date — a person
+  looked. The date is required here.
 - `n/a: <reason>` — there was nothing to look at.
 - `pending: <what is outstanding>` — the work is done and something genuinely
   needs a person who has not got to it yet. **This does not fail the check**
