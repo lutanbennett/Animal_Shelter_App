@@ -11,7 +11,7 @@
 | PR | see the PR for this branch |
 | Tested by / date | Claude, 2026-11-04 |
 | Carries a migration? | no |
-| Tested at SHA | 67ca935f |
+| Tested at SHA | 5374134a |
 
 ## 1. Scope and risk
 
@@ -41,10 +41,10 @@ indistinguishable from one that passed.
 - [x] `node scripts/gates.mjs` four gates, all zero; closing lines as printed:
 
 ```
-=== gates: typecheck exited 0 after 42s
-=== gates: lint exited 0 after 107s
-=== gates: test exited 0 after 16s
-=== gates: build exited 0 after 100s
+=== gates: typecheck exited 0 after 9s
+=== gates: lint exited 0 after 96s
+=== gates: test exited 0 after 14s
+=== gates: build exited 0 after 56s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 - [x] `node scripts/worktree.mjs sync` — origin/main was merged at branch creation; no newer commits needed for an analysis-only change
