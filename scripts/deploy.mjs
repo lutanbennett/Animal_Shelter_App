@@ -41,6 +41,7 @@ import { appliedMigrations } from "./lib/deploy-schema.mjs";
 import { releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
 import { strayEnvFiles } from "./lib/env-leak.mjs";
 import { lockedPublicSiteProblem, readWranglerConfig } from "./lib/wrangler.mjs";
+import { takeTreeLock, treeProblems } from "./lib/tree-lock.mjs";
 import { ACTIONS_KEY_VAR, actionsKeyProblem, builtKeyProblem, keyFingerprint } from "./lib/actions-key.mjs";
 // TypeScript, loaded through Node's type stripping: the same file the app
 // renders, so the page, the tag and the email can't disagree.
@@ -289,6 +290,19 @@ if (planOnly) {
 // tsconfig.build.json (see next.config.ts), which leaves out the
 // `.next/dev` types the dev server keeps rewriting.
 if (!skipBuild) {
+  // Held until deploy exits: an `npm ci` in this checkout mid-build deletes the
+  // tree under it (2026-11-03). Refuse rather than race, and check the tree first.
+  try {
+    takeTreeLock("build");
+  } catch (e) {
+    console.error(`deploy: ${e.message}`);
+    process.exit(2);
+  }
+  const damaged = treeProblems();
+  if (damaged) {
+    console.error(`deploy: ${damaged}`);
+    process.exit(2);
+  }
   const buildEnv = { ...process.env };
   for (const key of [...BUILD_VARS, ACTIONS_KEY_VAR]) buildEnv[key] = env[key];
   // The two addresses from wrangler.jsonc (src/lib/site-hosts.ts): next.config.ts

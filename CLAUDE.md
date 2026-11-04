@@ -687,7 +687,7 @@ Once a day, before starting streams, in `C:\Development\Animal_Shelter_App`:
 `git merge backlog`, then `node scripts/check-backlog-sections.mjs` (stop with its message if it fails; it reads `main`'s copy of the file, not the backlog worktree's), then `git push`, then
 `git -C ../Animal_Shelter_Backlog merge --ff-only main` (the post-merge
 hook pushes it; `git -C ../Animal_Shelter_Backlog status -sb` should not
-say `ahead`). Then `npm ci` in the main checkout: last, so a failed install cannot hold back the
+say `ahead`). Then `node scripts/guarded-install.mjs` in the main checkout (it is `npm ci`, and refuses while a build holds the checkout): last, so a failed install cannot hold back the
 push, and after the pull, the only step that can change `package-lock.json`. Skipped, a dependency a merged
 stream added leaves the checkout unable to build, and it fails minutes into a build rather than at the pull
 (a `--no-pi` test deploy died on `@anthropic-ai/sdk`, 2026-10-31). New streams
