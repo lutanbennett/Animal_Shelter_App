@@ -71,15 +71,24 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   { text: "There is a new Expenses page, for an accountant or anyone who only needs to look. It lists what the shelter has spent in a year, by type and by month, with a link to each bill's receipt, and it says on the page how many bills are still waiting to be filed and so are not counted. Each bill is placed by the date printed on it. It cannot change anything. Give a login the View expenses card on Settings → Who does what to use it. Vet visit costs are not on it yet. The Thai wording has not been checked by a Thai speaker.", cards: ["view_expenses"] },
-  { text: "A login given Propose website changes can now draft the website's settings (tagline, visiting hours, contact details, social links and the gift split) as well as its pages. It saves as a draft that waits on the Photos to approve page, under Page changes, and the live website does not change until someone with Approve website changes publishes it. A second draft replaces the first. The Thai wording has not been checked by a Thai speaker.", cards: ["propose_website", "approve_website"] },
-  "The assistant now tells you when a note was saved but the residents you tagged in it could not be linked, instead of saying nothing.",
-  { text: "Settings → Who does what opens again. In 0.43.0 the page showed 'This page couldn't load' for an Admin who had entered the authenticator code, because of how the new Create a role box was wired in. Nothing on the screen has changed; you can give and remove cards again.", admin: true },
-  { text: "Publishing an adoption update now works. Ticking Publish on the public website, with the story and first name filled in, used to look as if it saved and then show the update as not published, because those three things were never stored. They are stored now, and a first name that contains the letter s is no longer refused. Updates that were ticked before this fix were not saved as published, so tick them again.", cards: ["adoption_news"] },
-  { text: "There is now a way in to the photo and website approval page from the menu, for Admin and for anyone who holds an approving card. It is called Photos to approve.", cards: ["approve_photos", "approve_website"] },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.43.1",
+    date: "2026-11-05",
+    title: "Project photos wait for approval, and three fixes to 0.43.0",
+    major: false,
+    notes: [
+      { text: "A login given Propose website changes can now draft the website's settings (tagline, visiting hours, contact details, social links and the gift split) as well as its pages. It saves as a draft that waits on the Photos to approve page, under Page changes, and the live website does not change until someone with Approve website changes publishes it. A second draft replaces the first. The Thai wording has not been checked by a Thai speaker.", cards: ["propose_website", "approve_website"] },
+      "The assistant now tells you when a note was saved but the residents you tagged in it could not be linked, instead of saying nothing.",
+      { text: "Settings → Who does what opens again. In 0.43.0 the page showed 'This page couldn't load' for an Admin who had entered the authenticator code, because of how the new Create a role box was wired in. Nothing on the screen has changed; you can give and remove cards again.", admin: true },
+      { text: "Publishing an adoption update now works. Ticking Publish on the public website, with the story and first name filled in, used to look as if it saved and then show the update as not published, because those three things were never stored. They are stored now, and a first name that contains the letter s is no longer refused. Updates that were ticked before this fix were not saved as published, so tick them again.", cards: ["adoption_news"] },
+      { text: "There is now a way in to the photo and website approval page from the menu, for Admin and for anyone who holds an approving card. It is called Photos to approve.", cards: ["approve_photos", "approve_website"] },
+      "A photo added to a public project folder now waits for approval before it appears on the public website, the same as resident and event photos. Anyone who can approve photos sees it under a new Project photos tab on the Photos to approve page. Photos added before this change are unaffected, so nothing already on the website has disappeared.",
+    ],
+  },
   {
     version: "0.43.0",
     date: "2026-11-05",
