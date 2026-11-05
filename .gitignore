@@ -60,3 +60,7 @@ appsheet-export/
 
 # Held while npm ci or a build uses node_modules (scripts/lib/tree-lock.mjs)
 .tree.lock
+
+# Prebuilt manual PDFs (scripts/build-manual-pdf.mjs)
+/.manual-pdf/
+/.manual-pdf-build/

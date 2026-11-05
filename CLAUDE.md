@@ -470,12 +470,35 @@ before pushing.
   reaches for when something has gone wrong.
 - **`test-plan` goes red only when the plan is wrong, and never blocks the
   merge.** It validates content, not presence — every line ticked or
-  reasoned `n/a`, no placeholders, both signatures, `Result:` one of three
-  values. A plan that is complete and correct but **unsigned** exits 0
+  reasoned `n/a`, both signatures, `Result:` one of three values. A plan
+  that is complete and correct but **unsigned** exits 0
   (changed 2026-09-24): that is the normal state for most of a PR's life,
   and it still prints what it is waiting for. So a red `test-plan` is
   always someone's mistake to fix — never noise, and never just "nobody
   has signed yet".
+  **TWO MORE STATES STOPPED GOING RED ON 2026-11-05, by the same reasoning,
+  after Lutan asked why every stream was failing this check**
+  (`docs/decisions/2026-11-05-test-plan-pending-and-unfinished.md`). Of the
+  nine red PR runs before that, `test-plan` was the cause of four, and
+  **neither cause was ever a defect**:
+  - **`pending: <what is outstanding>` is now accepted on a CHECKLIST line**,
+    exactly as the two signature lines had always accepted it, and is printed
+    as *awaiting a person*. Before, a line that genuinely waited on somebody —
+    Lutan's own upload, a deploy — had nowhere to say so, so a stream either
+    went red for telling the truth or wrote `n/a:` for something that was not
+    n/a. **The check punished the honest plan and taught streams to mislabel a
+    real wait.** A bare `pending:` with no detail still fails.
+  - **A plan still being written passes and says so.** An unfilled template
+    placeholder, a missing `Result:` line and an unsigned sign-off are reported
+    under *still being written* instead of as problems. The plan is committed
+    with the first commit and filled in as the work proceeds, so CI saw it
+    half-written on every push in between — ordinary working churn, reported as
+    failure.
+  **Nothing was weakened.** A line nobody addressed at all, an `n/a:` or
+  `pending:` with no reason, a `deferred:` outside section 8, a release-notes
+  tick with no release note, `Result: fail`, and a missing plan **all still
+  fail** — each proven against a fixture in that PR, alongside the three real
+  plans that had gone red for nothing.
   The history is worth knowing, because the obvious fix is the wrong one.
   The job once carried `continue-on-error: true` for a real reason: a
   correct-but-unsigned plan failed the workflow every few minutes with

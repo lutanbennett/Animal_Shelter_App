@@ -82,3 +82,35 @@ test("originOrLocal: a write the Pi may have acted on is not rendered locally", 
   assert.equal(ran, false);
   assert.equal(out.response.status, 503);
 });
+
+// A path the Worker cannot render (src/lib/pi-only-paths.ts) is never rendered here.
+const pdf = () => new Request("https://site.example/manual/pdf?view=all");
+
+test("a Pi-only path is answered 503 on any failure or down status, and never rendered locally", async () => {
+  for (const status of [502, 503, 504, 521, 522, 523, 530]) {
+    stub(async () => new Response("", { status }));
+    let rendered = false;
+    const out = await originOrLocal(pdf(), ENV, async () => { rendered = true; return new Response("local"); });
+    assert.equal(rendered, false, String(status));
+    assert.equal(out.response.status, 503, String(status));
+    assert.equal(out.servedBy, "pi-unavailable");
+  }
+  stub(async () => { throw new Error("Network connection lost."); });
+  const out = await originOrLocal(pdf(), ENV, async () => new Response("local"));
+  assert.equal(out.response.status, 503);
+});
+
+test("a Pi-only path is not cut short by the origin timeout, and the Pi's own answer passes through", async () => {
+  let signal = "unset";
+  stub(async (_url, init) => { signal = init.signal; return new Response("pdf", { status: 200 }); });
+  const out = await originOrLocal(pdf(), ENV, async () => new Response("local"));
+  assert.equal(signal, undefined);
+  assert.equal(await out.response.text(), "pdf");
+});
+
+test("an ordinary read still has its timeout", async () => {
+  let signal;
+  stub(async (_url, init) => { signal = init.signal; return new Response("ok"); });
+  await fetchFromOrigin(get(), ENV);
+  assert.ok(signal instanceof AbortSignal);
+});
