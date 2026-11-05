@@ -114,7 +114,7 @@ needs two cards together, put both on one row. Do not name `staff` (retired, `01
 
 ## 7. Documentation
 
-- [ ] Backlog item ticked — n/a: the item (`#jxagg`) is on the backlog branch, not yet in `main`; ticked there after merge
+- [x] Backlog item ticked in `docs/backlog.md` on this branch (`#jxagg`)
 - [x] Non-obvious design choices added: `docs/decisions/2026-11-05-manual-pdf-prebuilt.md`
 - [ ] `README.md` still accurate — n/a: it does not describe the manual PDF
 - [ ] **Release notes.** — n/a: the `unreleased` line is true only once the Pi is deployed (Lutan's step), so it is not ticked as live; the line is in this PR as the brief asked
