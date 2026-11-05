@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The sign-in page on the public web address now says the site is under construction and will be available soon, with a friendly poodle in a hi-vis jacket, and it matches the website's colours.",
 ];
 
 /** Newest first. */

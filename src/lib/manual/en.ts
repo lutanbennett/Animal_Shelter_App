@@ -92,7 +92,7 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "On the testing sites (lannacare.org and test.lannacare.org) the public website is closed until the shelter goes live: the home page shows a Staff testing site page with a Sign in button instead. Once you've signed in you see everything as normal, public pages included. Someone testing the website as a visitor signs in with a Public viewer account: it opens the public pages and nothing else, and lands on the home page. A resident card or enclosure QR code scanned there asks you to sign in first, then opens what you scanned.",
+              text: "On the testing sites (lannacare.org and test.lannacare.org) the public website is closed until the shelter goes live: the home page shows an \"Our site is under construction\" page, in the website's colours, with a Sign in button instead. Once you've signed in you see everything as normal, public pages included. Someone testing the website as a visitor signs in with a Public viewer account: it opens the public pages and nothing else, and lands on the home page. A resident card or enclosure QR code scanned there asks you to sign in first, then opens what you scanned.",
             },
           ],
         },
