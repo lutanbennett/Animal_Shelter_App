@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "There is a new Expenses page, for an accountant or anyone who only needs to look. It lists what the shelter has spent in a year, by type and by month, with a link to each bill's receipt, and it says on the page how many bills are still waiting to be filed and so are not counted. Each bill is placed by the date printed on it. It cannot change anything. Give a login the View expenses card on Settings → Who does what to use it. Vet visit costs are not on it yet. The Thai wording has not been checked by a Thai speaker.", cards: ["view_expenses"] },
 ];
 
 /** Newest first. */

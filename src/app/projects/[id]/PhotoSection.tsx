@@ -32,12 +32,16 @@ export function PhotoSection({
   folder,
   photos,
   canWrite,
+  canPhotos = false,
   canManageTranslations,
   translations,
 }: {
   folder: ProjectFolder;
   photos: ProjectPhoto[];
+  /** projects.folders: the cover-photo switch, which writes the folder row. */
   canWrite: boolean;
+  /** projects.photos: add, remove and caption, the activity the upload route and the attachments policies ask (0314/0316). */
+  canPhotos?: boolean;
   /** Admin/management: may write and approve the other-language captions. */
   canManageTranslations: boolean;
   /** The photos' caption rows in `translations` (0056). */
@@ -75,12 +79,14 @@ export function PhotoSection({
         <h2 className="text-lg font-semibold text-foreground">
           {p.heading} <span className="text-sm text-muted">({photos.length})</span>
         </h2>
-        <ActionButton icon={open ? ACTION_ICONS.clear : ACTION_ICONS.add} onClick={() => setOpen((v) => !v)}>
-          {open ? t.common.close : p.add}
-        </ActionButton>
+        {canPhotos && (
+          <ActionButton icon={open ? ACTION_ICONS.clear : ACTION_ICONS.add} onClick={() => setOpen((v) => !v)}>
+            {open ? t.common.close : p.add}
+          </ActionButton>
+        )}
       </div>
 
-      {open && (
+      {open && canPhotos && (
         <AttachmentUploader
           uploadUrl={`/api/projects/${folder.id}/photos`}
           dropHere={p.dropHere}
@@ -128,7 +134,7 @@ export function PhotoSection({
                       {p.cover}
                     </span>
                   )}
-                  {canWrite && (
+                  {canPhotos && (
                     <div className="absolute right-1 top-1 md:hidden md:group-hover:block">
                       <RowActionButton
                         icon={Trash2}
@@ -176,18 +182,20 @@ export function PhotoSection({
                     <>
                       {caption ? (
                         <span className="line-clamp-2 text-xs text-foreground">{caption}</span>
-                      ) : canWrite ? (
+                      ) : canPhotos ? (
                         <span className="text-xs text-muted">{p.captionPlaceholder}</span>
                       ) : null}
-                      {canWrite && (
+                      {(canPhotos || canWrite) && (
                         <span className="flex flex-wrap gap-2">
-                          <RowActionButton
-                            icon={caption ? ACTION_ICONS.edit : ACTION_ICONS.add}
-                            label={caption ? p.editCaption : p.captionPlaceholder}
-                            subject={caption ?? photo.file_name ?? p.fileFallback}
-                            onClick={() => setEditing(photo.id)}
-                          />
-                          {kind === "image" && (
+                          {canPhotos && (
+                            <RowActionButton
+                              icon={caption ? ACTION_ICONS.edit : ACTION_ICONS.add}
+                              label={caption ? p.editCaption : p.captionPlaceholder}
+                              subject={caption ?? photo.file_name ?? p.fileFallback}
+                              onClick={() => setEditing(photo.id)}
+                            />
+                          )}
+                          {canWrite && kind === "image" && (
                             <RowActionButton
                               icon={ACTION_ICONS.makeStandard}
                               label={isCover ? p.clearCover : p.setCover}
