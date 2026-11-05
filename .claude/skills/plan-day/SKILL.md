@@ -56,12 +56,19 @@ git -C C:/Development/Animal_Shelter_Backlog merge --ff-only main
 git -C C:/Development/Animal_Shelter_Backlog push
 node C:/Development/Animal_Shelter_App/scripts/guarded-install.mjs   # = npm ci, after the pull (the only step that can change package-lock.json), before anything builds. REFUSES (exit 1) if a build holds the checkout: say so, do not retry in a loop, run it after the build ends
 node C:/Development/Animal_Shelter_App/scripts/worktree.mjs clean   # prunes the Turbopack cache if over 3 GB; refuses (say so, carry on) while next runs there
+node C:/Development/Animal_Shelter_App/scripts/check-planner-preflight.mjs   # what can this session actually REACH? read its output before planning anything
 ```
 
 (`check-backlog-sections` run from the main checkout reads **`main`'s** copy of `docs/backlog.md`, not the backlog worktree's — if you just edited the other folder, a stale count is expected until the merge above has brought it in.)
 
 (The post-merge hook pushes both merges too; the explicit pushes cost
 nothing and do not depend on `core.hooksPath` being set.)
+
+**AND THE PREFLIGHT IS THE LAST COMMAND, BECAUSE A PLANNER THAT HAS SILENTLY LOST A CREDENTIAL ASKS LUTAN TO CHECK THINGS INSTEAD OF CHECKING THEM.** Added 2026-11-04, the day it cost him an evening. `#ubejc` moved `SUPABASE_ACCESS_TOKEN` out of every `.env.local` into a Windows user environment variable **that a session's shell does not have**, so from that moment **no session could apply a migration or read either database** — and nobody found out for nine hours, until a stream needed `0315` and asked **him to put the secret back into a file.**
+
+**`scripts/check-planner-preflight.mjs` reads nothing but what is reachable** and prints, per credential, whether this session has it (presence and length, never a value), whether dev answers over REST with the **service role key**, and whether the **Management API** answers — which is what `apply-migrations.mjs` needs. **`--env production` adds production.** It exits non-zero when anything is out of reach.
+
+**TWO THINGS TO DO WITH ITS OUTPUT, and they are the whole point.** **(1) Say in the plan what you cannot reach**, rather than discovering it mid-batch. **(2) NEVER ask him to check something you have merely lost the ability to read.** On 2026-11-04 the planner told him *"I cannot read the database"* across a whole evening **while `SUPABASE_SERVICE_ROLE_KEY` sat in `.env.local` the whole time** — a different credential, enough over REST to find and delete the row that was blocking CI, in three commands and with no help at all. **It had lost one of two credentials and behaved as though it had lost both.**
 
 **`npm ci` stays after the pull and before `worktree.mjs clean`** (added 2026-10-31). The pull is the only step that can change `package-lock.json`, and without the install the main checkout, where a release is cut and `gates.mjs` runs, cannot build after a stream adds a dependency. Reasoning: `CLAUDE.md` "The main checkout".
 
@@ -1310,6 +1317,54 @@ of care catches by eye.
 That script's strictness is deliberate and `CLAUDE.md` documents at length why it
 must not be loosened or given `continue-on-error`. The fix belongs in the brief.
 
+### Every brief carries this block: WHAT GOES TO LUTAN, AND NOTHING ELSE DOES
+
+Added 2026-11-04, after **three streams in one evening asked him for permission they already had** —
+whether to build after a clean step zero, whether to half-do the job, and whether to put a secret back
+in a file. He had already lost that evening to interruptions, and his answer every time was *build it*.
+
+**The briefs said what to do and never said the stream had the authority to do it.** That gap is the
+planner's, not the streams'. Append this verbatim:
+
+```markdown
+## WHAT GOES TO LUTAN — AND NOTHING ELSE DOES
+
+**You have authority to do everything in this brief. Three things, and only these three, go to him:**
+
+1. **A decision that is genuinely his** — a choice the brief names as his, or one that changes what the
+   shelter does rather than how this code works.
+2. **A step only he can perform** — his one production deploy command, a press inside the running app,
+   a code from his authenticator.
+3. **A blocker you have ESTABLISHED and cannot pass** — established by reading or running something,
+   not suspected. Say what you tried.
+
+**Everything else: proceed, and report it in your PR body.** Your step-zero result, a design judgement
+this brief asked you to settle, an unexpected finding, a deliverable you chose not to do — **all PR-body
+material, none of it a question to him.**
+
+**AND A CONDITIONAL PERMISSION DIES WITH ITS CONDITION.** If this brief lets you do something lesser
+*because* of a blocker — open the PR partly built, skip a proof — **that permission is void the moment
+the blocker clears.** Do not come back and ask whether it still applies. **Re-read the condition; if it
+is gone, so is the permission.**
+```
+
+**Do not soften this into "use your judgement".** The streams that asked were being careful, and careful
+is the right instinct — what they lacked was a written statement that proceeding WAS the careful option.
+
+### NO CREDENTIAL OR TOOLING CHANGE MERGES WITHOUT A COMMAND THAT EXERCISES IT, RUN AND PASTED
+
+Added 2026-11-04. `#ubejc` proved the **move** — eight files each lost exactly one line, the account-wide
+token was revoked, the replacement was project-scoped — and its record says *"every half proven rather
+than taken on anyone's word"*. **It never ran one thing that needed the token afterwards**, and left every
+session unable to reach either database.
+
+**So when a brief changes a credential, an environment variable, a path, a script everything imports, or
+how anything authenticates, the brief must name the command that PROVES the system still works** —
+`apply-migrations.mjs --status`, a REST read, a deploy dry-run — **and the PR body must paste its output.**
+
+**A rigorous-sounding list of what WAS checked is how a missing check hides.** Ask of any such change:
+**what is the first thing that breaks if I am wrong, and have I run it?**
+
 ### Every brief also carries the finishing sequence as a numbered deliverable
 
 Write this into every brief's numbered deliverables, adapted only in wording. It went **6 of 6** across 2026-11-02's batches
@@ -1453,6 +1508,12 @@ Before writing anything:
 **If your checks show it has already landed, STOP and say so** in your last message, with the commit
 or decision file that did it. Do not build it again, and do not open a PR. **That is a successful
 outcome for this stream, not a failure.**
+
+**AND IF YOUR CHECKS SHOW THE GAP IS STILL THERE — WHICH IS THE ORDINARY CASE — SAY SO IN ONE LINE AND
+CARRY ON. DO NOT STOP, AND DO NOT ASK ANYONE WHETHER TO BUILD.** You were given this work because the
+planner believes it needs doing; step zero catches the rare case where it has already shipped, it does
+not make you seek permission you already have. **Report your step-zero result in your PR body, not as a
+question to Lutan.**
 ```
 
 **AND NEVER UPGRADE AN ITEM'S OPEN QUESTION INTO A FINDING. THIS IS THE ONE THAT COST MOST ON
@@ -1840,6 +1901,53 @@ an hour, while the backlog carried an item saying the cause was *"not yet confir
 candidate causes, two already ruled out. A stream briefed from that item would have re-diagnosed a
 settled bug. **Rewrite the item with the evidence, mark the superseded guesses in place, and only
 then brief anyone.**
+
+### THREE RULES FROM THE WORST EVENING THIS LOOP HAS HAD — 2026-11-04
+
+Eleven interruptions, an hour of work redone, and Lutan ending with *"I have wasted a whole evening
+doing this, it's simply not good enough"* and *"even the fixes I'm given don't work"*. **Every one was a
+planner defect and NOT ONE was caught by a check** — CI was green throughout, the deliverables landed,
+the usage comments posted. **The paperwork cannot see this class of fault.**
+
+**1. A CHANGE IS NOT PROVEN UNTIL THE THING IT TOUCHES HAS BEEN EXERCISED.** `#ubejc` moved
+`SUPABASE_ACCESS_TOKEN` out of eight `.env.local` files into a Windows user environment variable and
+left **every session unable to reach dev or production** — no migration could be applied by anyone —
+because a session's shell does not have that variable. Its own record claims *"every half proven rather
+than taken on anyone's word"*, and it did prove the **move**: eight files, the revocation, the narrower
+replacement. **It never ran one thing that needed the token afterwards.** The safety argument was that
+`loadEnv()` puts `process.env` last so *"shell beats file"* — true, and not a proof, since it holds
+only if the shell has the variable. **A rigorous-sounding list of what WAS checked is how a missing
+check hides. Ask: what is the first thing that breaks if I am wrong, and have I run it?**
+
+**2. DO NOT DECLARE A CAPABILITY LOST WITHOUT ENUMERATING WHAT IS STILL IN REACH.** The planner spent
+that evening saying *"I cannot read the database"* and handing Lutan commands to run, **while
+`SUPABASE_SERVICE_ROLE_KEY` sat in `.env.local` the whole time.** It is a different credential from the
+Management API token, it reaches the project's REST interface, and it was enough to find the row
+blocking CI, read it and delete it in three commands with no help at all. **One of two credentials was
+missing and the planner behaved as though both were.**
+
+**3. STOP WRITING THE CONCLUSION UNDER THE COMMAND BEFORE READING THE OUTPUT.** Four times that evening
+the planner appended a label such as `(empty = none)` to a command, and **twice the output was not
+empty and the label had to be retracted in front of him.** The conclusions happened to survive; the
+habit is the fault, and it is the same one that produced three wrong column names in a row and a
+confidently-offered restart that did not work. **Write what the command does, read the output, THEN
+write what it means.**
+
+**4. AN ESCAPE HATCH IN A BRIEF MUST NAME ITS CONDITION *AND* SAY THAT IT CLOSES WHEN THE CONDITION
+CLEARS — OR THE STREAM KEEPS OFFERING IT.** The portal brief said *"if a stream cannot reach the
+database, it opens its PR partly built and says so"*, which was right while nothing could reach a
+database. **The moment the token was restored the escape expired, and the stream did not know that**, so
+it asked Lutan *"Should I build the save path before opening the PR, or open it now with the save path
+listed as not done?"* — **offering to half-do the job, on an evening he had already lost to
+interruptions.** **Write the expiry into the sentence:** *"…and when that blocker clears, this fallback
+is void: finish the work."* **A conditional permission with no stated end becomes a standing one.**
+
+**AND ONE FOR EVERY BRIEF THAT ASKS A STREAM TO PROVE AN APPROVAL BOUNDARY: tell it to use a DISTINCT
+fake `drive_file_id` per row.** A stream created an approved and an unapproved attachment **0.3 seconds
+apart sharing one fake id**, so `is_public_drive_file()` answered true for that id and the unapproved
+row read as a public leak. **`check-public-views` then failed on EVERY open PR**, because it reads the
+shared dev database — and it looked exactly like the real open fault `#k7v2p`. **One shared id in a test
+blocks the whole batch.**
 
 ## 8. Finish
 
