@@ -16,8 +16,8 @@ import { loadRoles, roleName } from "../roles";
 
 /**
  * Settings → Who does what → Details: the full grid, one tap from the cards page
- * (docs/decisions/2026-10-14-who-does-what-cards-page.md). READ-ONLY: a role's boxes are the union of its cards and
- * extras, set on the cards page, so a box edited here would be undone by the next card change.
+ * (docs/decisions/2026-10-14-who-does-what-cards-page.md). READ-ONLY: a role's boxes are the union of its cards'
+ * grants (no extras since 0261), set on the cards page, so a box edited here would be undone by the next card change.
  * Every activity down the side, grouped by area, every live role across the
  * top, and what the role's box says. Admin changes a box here, behind the authenticator-app step; Management
  * sees the same grid and cannot change it (actions.ts holds the rules on the server).
