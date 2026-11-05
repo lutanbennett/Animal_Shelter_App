@@ -3,6 +3,10 @@
  * `role_permissions` cells each role would hold. Pure and dependency-free so the loader script
  * (scripts/load-role-draft.mjs, which runs this file directly) and the preview pages share one
  * reading: a second draft is a diff of the JSON, not a second implementation.
+ *
+ * The `label` in each draft row is the wording of the sheet row the Director ticked, as it was then. It is a record, not the
+ * current label of the activity (which lives in the dictionaries), so it is left as written: e.g. "Edit the public website's
+ * content" is `website.content` before its label was widened. Only `keys` is read.
  */
 
 export type DraftKey = { activity: string; level: "read" | "edit" | "yes" };
