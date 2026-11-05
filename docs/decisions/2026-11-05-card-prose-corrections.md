@@ -32,4 +32,4 @@ Searched `src/`, `docs/`, `scripts/`, README for: "plus its extras", "as an extr
 
 ## Found, not fixed (for the planner to file)
 
-- The `0.2.x` decision file `2026-11-04-website-content-label.md` says "desexing" while `en.ts` says "sterilisation"; the two words are used for the same list across the repo. Wording choice, not touched.
+- The `0.2.x` decision file `2026-11-04-website-content-label.md` says "desexing" while `en.ts` says "sterilisation"; the two words are used for the same list across the repo. SETTLED by `2026-11-06-desexing-sterilisation-naming.md`: "sterilisation".
