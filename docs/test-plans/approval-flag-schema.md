@@ -22,7 +22,7 @@
 
 ## 2. Automated gates
 
-- [ ] `node scripts/gates.mjs` — pending: result added before merge
+- [x] `node scripts/gates.mjs` ends `gates: typecheck=0 lint=0 test=0 build=0`
 - [ ] CI green on the PR — pending: read from the PR status before merging
 
 ## 3. Schema and data
@@ -35,7 +35,7 @@
 - [x] Existing rows read correctly — harness: 403 rows, 399 public_ok, 4 not reviewed, 0 private_only; nothing back-filled blank
 - [x] Constraints exercised in a rollback harness — `check-approval-three-states.mjs` HARNESS-OK; `check-photo-approval.mjs` (0217) still HARNESS-OK
 - [x] Down-migration reasoned — restore 0316's stamp function, drop constraints and three columns
-- [ ] Production apply plan — deferred: release manager (additive, `consumer: none`)
+- [ ] Production apply plan — pending: release manager applies it with the next release (additive, `consumer: none`)
 
 ## 4. Functional checks
 
