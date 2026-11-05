@@ -127,6 +127,7 @@ const ALLOWED = {
   // The foundation's own name, and the short forms of it. Used untranslated
   // inside Thai sentences throughout th.ts, so these agree with the file.
   "header.appName": "the foundation's registered name, a proper noun",
+  "home.eyebrow": "the foundation's registered name, a proper noun, kept in Latin as header.appName is",
   "header.shortName": "initials of the foundation's name",
   "publicNav.shortName": "short form of the foundation's name",
   "login.heading": "the foundation's name on the sign-in screen",
