@@ -72,6 +72,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 export const unreleased: ReleaseNote[] = [
   { text: "The full user manual as a PDF no longer fails with a Cloudflare error. It is now prepared once when the shelter's server is updated and opens at once, in English or Thai. If it ever says it has not been prepared, the server needs updating again.", admin: true },
   { text: "There is a new Expenses page, for an accountant or anyone who only needs to look. It lists what the shelter has spent in a year, by type and by month, with a link to each bill's receipt, and it says on the page how many bills are still waiting to be filed and so are not counted. Each bill is placed by the date printed on it. It cannot change anything. Give a login the View expenses card on Settings → Who does what to use it. Vet visit costs are not on it yet. The Thai wording has not been checked by a Thai speaker.", cards: ["view_expenses"] },
+  { text: "The shelter's app has moved to a new address: lannacareforanimals.org. Please use that one from now on, and change the shortcut on your phone. The old address, lannacare.org, is now only a practice site filled with test information: anything saved there is not real and never reaches the shelter's records. You sign in exactly as before, and nothing else about the app has changed." },
 ];
 
 /** Newest first. */
