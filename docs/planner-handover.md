@@ -1,155 +1,215 @@
-# Planner handover — edition `645`, 2026-11-04
+# Planner handover — edition `654`, 2026-11-05
 
-**A delta over `636`.** It covers a plan of **nine streams in three batches** (#1276, #1278, #1279;
-#1280, #1281, #1282; batch 3 set up) **plus two unplanned streams that shipped PRs** (#1274, #1277).
+**A delta over `645`.** It covers one plan of **nine streams in three batches** — batch 1 (#1290,
+#1291, #1292), batch 2 (#1296, #1297, #1298), batch 3 set up — **plus two unplanned streams that
+shipped** (#1293, #1294) and **one PR deliberately left open** (#1295, the cutover).
 
 > **Written at batch 3's SETUP, as the rule requires, so batch 3's own figures are NOT in it.** They
-> land in `654`. **Lutan asked for this edition** at the end of a bad night, with the words *"I expect
-> lots of lessons"*. They are below, and they are not softened.
+> land in `663`.
 
 **Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`.**
-**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → this. **The next slug is `654`.**
+**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → this. **The next slug is `663`.**
 
 > **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
 > release state, candidates. **Re-read every time, never diffed.**
 
 ---
 
-## THE LEAD: HE LOST OVER AN HOUR REDOING FINISHED WORK, AND EVERY CAUSE WAS ONE HABIT
+## THE LEAD: HE ASKED WHY IT WAS TAKING SO LONG, AND THE ANSWER WAS THE ORDER OF THE WORK
 
-**His words, across five messages in one evening:** *"Why was I told there was no further work
-required"*; *"I wasted over an hour redoing work that I'd already done, then told there is nothing
-more. But when I look on the backlog there is more to be done"*; *"It was all the google oauth checks
-and the bitlocker"*; *"Which was all done weeks ago but got reprosicuted tonight as not done"*; *"I
-have done r-0323 multiple times now and reported it done. Why do you keep losing this stuff"*.
+**His words, in two messages:** *"this is taking too long, why is it taking so long"*, then the
+instruction that fixes it — ***"Priority should be to do what I ask first, paperwork can be fixed after
+you finish what I ask for"***.
 
-**THE ONE HABIT BEHIND ALL OF IT: THE LOOP ASKS HIM TO CONFIRM THINGS IT COULD MEASURE, AND NEVER
-WRITES DOWN THAT HE ANSWERED.** An item whose *Done when* is *"Lutan confirms X"* reads as **open**
-until the confirmation is recorded **with its date**, so every sweep for *what still needs Lutan*
-hands it back. Three items did exactly this:
+**He was right, and the diagnosis is uncomfortable because nothing that was done was wrong.** Batch 2's
+worktrees and briefs were finished early. He then waited through: the actuals capture, five backlog
+edits, a deep source read of `0315`, and **a notes-file script that crashed on its own quoting and was
+rebuilt in pieces** — before he was told which three folders to open. Every one of those is legitimate
+planner work. **None of it was what he asked for.** The paperwork cost nothing to do afterwards.
 
-- **BitLocker (`#ubejc`) — the THIRD time he was asked.** The item's own text said so in writing
-  (*"confirmed by Lutan for the third time, 2026-11-04"*) and the loop still did not close.
-- **The Google OAuth checks (`#ij9cm`)** — done weeks earlier, re-prosecuted the same night.
-- **R-0323 (`#314hq`) — asked TWICE AFTER IT WAS ALREADY DONE.** The archive was written at
-  **12:30:43** on 2026-11-04; the planner listed it as outstanding at least twice later that day.
+**The rule, saved as a memory and followed in this round:**
 
-**THE RULE, now written on all three items and in memory (`confirmations-already-given`):**
-**a confirmation he has given is CLOSED the first time he gives it** — date it, tick it — **and
-anything measurable is MEASURED, never asked.** If a later session doubts a state, it reads the record
-or runs the check. `CLAUDE.md` already carried this for the backup key (*never raise it again, fix the
-stale record instead*); **it is the same fault on three new subjects, so it is a pattern, not a slip.**
+- **Worktrees created, briefs written, folders/ports/dials handed over — STOP THERE.** Then
+  `.plan-day.md`, the backlog filing, the actuals, this file.
+- **A real blocker is not paperwork.** Chasing the failed `npm ci` was worth doing first, because it
+  gated his cutover. The test is *"does he need this to act?"*, not *"is it on my checklist?"*
+- **Write the record in ONE pass.** Never a multi-round-trip script against prose.
+- **If the record will take a while, hand over first and say the record is still to write.**
 
-**AND THE SECOND HABIT, which made the first one worse: EXHAUSTIVE CLAIMS ASSEMBLED FROM A BATCH'S
-NOTES.** The batch-1 hand-back said *"Two things still only you can do"*. True of that batch's
-verification rows; **false as a statement of what was outstanding** — roughly twenty open items have a
-part that is genuinely his, and he found that out by reading the backlog himself.
-**Never write "two things" or "all that is left" unless it is the WHOLE list, re-read from the backlog
-at that moment. Say "from this batch" when that is what you mean.** He plans his evening on it.
+**It does NOT override `do-it-right-first-time`.** That rule is about care versus shortcuts; this one is
+about order. Do the job properly, then do the bookkeeping, in that order.
 
-**AND THE THIRD: WORK PUT ON HIS LIST THAT WAS NEVER HIS.** The Pi rebuild was listed as his.
-`docs/release-procedure.md:28-36` quotes his own instruction of 2026-10-02: *"Lutan has exactly one
-job in a release: `node scripts/deploy.mjs --env production`. Everything else is Claude's … **both Pi
-builds and both service restarts** …"*, and then *"If a step appears to need him for anything else,
-that is a fault to fix, not a handover."* **Check whose job it is before putting anything on his list.**
+---
 
-## THE INSTRUMENT THAT SHOULD HAVE EXISTED, AND WHAT BUILDING IT EXPOSED
+## HIS CUSTOMER PRIORITIES PANEL CHANGED A BATCH FOR THE FIRST TIME
 
-R-0323 was settled in the end by **measuring production**, not by asking a fourth time:
-`scripts/check-deceased-archive-state.mjs` printed *`R-0323  Chao Guay (2) — died 2026-10-28, archived
-2026-11-04 12:30:43, summary, index`*. **`#314hq` even named the column that settles it**
-(`deceased_archived_at`) while also carrying the sentence *"nothing can confirm it afterwards"*, which
-was **wrong**. A column the planner can read is never a question for a person.
+**This is the panel working as intended, and a planner should expect it to happen mid-plan.**
 
-**WRITING IT TOOK THREE WRONG GUESSES IN A ROW, ALL ASSERTED WITHOUT OPENING ANYTHING — on the very
-night the planner was apologising for exactly that:** `process.exit()` after a `fetch` (the libuv trap
-`scripts/lib/exit.mjs` exists for); `deceased_summary_file_id` when the column is
-`deceased_summary_drive_file_id` (`0026:63-64`); and `residents.is_deceased` when `is_deceased` is a
-column on the **view** `resident_current_state`, keyed by `resident_id` (`0001:254`). **Each failed in
-front of him.** The skill's *open the thing before you assert it* is not advice about briefs only — it
-is about every sentence the planner writes, including its own code.
+`ArtifactData get priorities/ranking` on the pinned page returned **one** starred item, set at **02:55
+today** — `i-314hq` — which is *after* batch 2 was planned. **His star outranks file position and it
+outranks the saved plan**, so `#314hq` went into batch 3 and `correct-resident-receipts` (`#dklvq`) came
+out, being the one of the three not named in the backlog's own order-of-work nine.
 
-**The script is UNCOMMITTED in the main checkout, so step 1's clean-tree check will stop.** Filed as a
-quick win; it may also close part of `#36egc`.
+**Three things to copy:**
 
-## WHAT `636`'s MECHANISMS DID
+- **Read the panel on a RESUME, not only on a fresh plan.** The skill says re-check the next batch
+  against the backlog *as it is now*; the panel is part of "now". Had this resume skipped the read, his
+  number-one priority would have waited a whole batch.
+- **A worktree already created is not a reason to keep a stream.** `correct-resident-receipts`'s folder
+  had been made; `worktree.mjs done` cleared it (0 ahead, nothing lost) and the displaced item goes to
+  the front of the next plan. **Say that explicitly so it does not read as dropped.**
+- **`No document` or an empty `order` is the ordinary case.** One star is a strong signal precisely
+  because he rarely sets any.
 
-- **Report-every-deliverable: 10 of 10 this plan.** Every finding filed this round came out of a PR
-  body, including two *found, not fixed* sets. **Mechanism; stop checking.**
-- **The usage comment: FIRING, BUT ITS FIGURES ARE DEGRADING — 3 of 10 wrote `tokens=unmeasured`**
-  (#1276, #1280, #1274). All three were honest rather than guessed, which is the rule working. **But
-  a third of the sample is now unusable, and nobody has established WHY the self-read fails.** Worth
-  one look next round; the bands are built on these.
-- **The finishing sequence with its own read step: 10 of 10. Seven plans running — stop checking.**
-- **The advance-rescope flag: did not fire, correctly.** All ten reported `rescoped=no`.
-- **Re-reading the TITLE of every item a stream touched: paid FOUR times** (`#314hq` still said *"PR
-  OPEN/MERGING"*; `#tugyn` ticked but reading as a live fault; `#2zi2j` corrected by its own stream;
-  `#r55fe` sending readers to a branch that does not exist). **Fifth consecutive plan it has found
-  something.**
+---
 
-## BANDS: A BAND IS A CLAIM WITH A CLOCK ON IT
+## THE ACTUALS, AND WHY ONLY FIVE OF SIX ARE READINGS
 
-**New rule, from `appeals-campaigns-rename` (215,713 against 230–290k).** Its band priced a
-two-sources-must-agree reconciliation; **that premise was disproved during setup and the clause was
-struck from the item — and the band was not re-cut.** The figure was a clean reading of a job nobody
-had banded.
+| slug | PR | estimated | actual | source | verdict |
+|---|---|---|---|---|---|
+| `drive-cutover-remap` | #1291 | 220–280k | 191,230 | PR comment | 13% under |
+| `planner-tooling-follow-ups` | #1292 | 150–195k | 198,929 | PR comment | 2% over |
+| `project-photos-approval` | #1290 | 175–225k | 209,063 | PR comment | inside, upper half |
+| `card-prose-corrections` | #1296 | 115–155k | 155,152 | PR comment | 0.1% over |
+| `assistant-tag-save-silent` | #1297 | 140–185k | 160,222 | **`get_usage` fallback** | inside |
+| `website-approval-portal-2` | #1298 | 180–230k | 116,099 | PR comment | **NOT A READING** |
 
-**So: whenever a setup re-check strikes, corrects or supersedes a clause of an item, read the band
-paragraph back and ask whether it priced that clause.** The machinery already existed and was used on
-the other stream in the same batch (`build-install-collision-guard`, re-slugged and re-banded, landed
-inside). Only the band was forgotten.
+**#1298 carried `compacted=yes` AND `rescoped=yes` — two disqualifiers at once.** Its figure is a
+remainder of a reset window measured against a scope that changed. Banked, it would have read as a 48%
+under-run on the batch's largest estimate and taught the next planner that an approval portal costs less
+than a prose sweep. **Keep it out of the bands and say why in one line.**
 
-**THE FLOOR SPREAD BLEW OUT TO 26,515** (81,353 · 105,041 · 107,868), one batch after reading **zero**,
-and `81,353` is **the lowest floor ever measured here**. Four batches now read 5,435 / 424 / 0 / 26,515.
-**There is no near-constant floor. Re-derive it every batch and never carry a number forward.** The
-81k reading is **unexplained**; it is recorded as measured, not theorised about. Figures and reasoning:
-**`.plan-day.md`**.
+**#1297 posted no `stream-usage:` comment at all.** The figure came from `get_usage` on the live session
+with `context.session` echoed back and checked. **The fallback worked only because the session had not
+been archived yet.** The comment is durable; the fallback is a race. **A stream that merges without
+posting one is worth a note on its own** — this is the first of this plan.
 
-## A DATED ITEM WRITTEN IN A HURRY IS THE LEAST TRUSTWORTHY THING ON THE BOARD
+**Floors, re-derived and never carried forward:** 107,929 · 104,015 · 105,200 (batch 1), then 104,083
+and 103,496 (batch 2 — #1298's is meaningless). **Seven batches now read spreads of
+5,001 / 5,435 / 424 / 26,515 / 1,087 / 3,914 / 587.** There is no constant floor.
 
-`#ki6cx` was dated and promoted to `Next up` mid-setup, and **three of its four checkable claims did
-not survive a read**: the "two host lists" are already one list and already a setting
-(`src/lib/site-hosts.ts`, asserted by `check-site-hosts.mjs`); the one-host shape is **already how
-production runs**, not something the cutover creates; and the configuration is already staged. Only
-"no host literals in `src/`/`worker/`" held.
+**Two band lessons, both worth more than the numbers:**
 
-**Being two days from a deadline is exactly when nobody re-reads the code.** One hour of reading turned
-two planned streams into one and a programme into a runbook — and the stream that did it then found
-what neither the item nor the planner had: **host literals in the deploy scripts that the cutover
-commit must also edit.**
+- **A brief that knows something the band does not is a band error, not a lucky under-run.**
+  `drive-cutover-remap` came in 13% under, and its own step-zero evidence had said *"you are extending
+  existing machinery, not building a transport from nothing"* — because `files.copy` already existed.
+  **The band charged the full instrument rate anyway.** When writing step-zero evidence that shrinks the
+  job, shrink the band in the same breath.
+- **Removing a mechanism from scope does not shrink a job much when the judgement and the proof remain.**
+  `project-photos-approval` was re-cut downward after `attachments.approved_at` turned out to exist, and
+  landed near the old band's middle. **Right in discipline, slightly wrong in direction.**
+- **Two re-cuts in batch 2, two held bands.** `card-prose-corrections` narrowed (all five locations named
+  by file and line) landed 152 tokens over the top; `assistant-tag-save-silent` raised (a
+  NOT-ESTABLISHED question to settle plus a browser drive) landed inside. **Re-cutting on stated grounds
+  works; re-cutting on a feeling does not.**
 
-**AND THE RULE THAT CAME OUT OF IT, which is a planning rule rather than a reading one:** the one edit
-genuinely left — production's `APP_HOST` — **cannot be a feature stream at all**, because merge-on-green
-would put it on `main` before the DNS moves. **Ask of any change: what happens if this merges the
-moment CI is green?** If the answer is an outage, it is a release step, not a stream.
+---
 
-## A BRIEF DEFECT THAT REACHED HIM, AND THE FIX IS OWED IN THE SKILL
+## WHAT THE PR BODIES GAVE US, AND IT WAS AGAIN THE BEST VALUE IN THE ROUND
 
-**STEP ZERO says when to STOP and never says when to CARRY ON.** `website-approval-portal` reported a
-clean step-zero result straight to Lutan and waited, asking whether it should build — on the same night
-as everything above. **The stream did nothing wrong**; the block covers only the already-shipped case.
+**Four items filed from six PR bodies.** A stream reports; only the planner files. Read every merged
+body for findings outside its deliverable list, every batch.
 
-**Fixed on disk in all three of batch 3's briefs** (*"say so in one line and CARRY ON — do not wait for
-anyone"*), **but the block is quoted verbatim into every brief from `.claude/skills/plan-day`, so a fix
-in three briefs dies with them. PROMOTING IT INTO THE SKILL IS OWED and is the first job of the next
-round.**
+- **`#p3k9w`** (Security), from #1290 — an approver can edit columns of an attachment they were only
+  meant to approve, **captions included**, on project and event photos. A caption is published public
+  text and the grant is a row write, not a column one.
+- **`#m8x2r`** (Architecture) — the install blocker below.
+- **`#w4s2n`** (Quick wins), from #1296 — the same sign-up list is **"desexing"** in a decision file and
+  **"sterilisation"** in `en.ts`. The dictionary's word is the one a user reads.
+- **`#a7r3k`** (Assistant), from #1297 — the tag-notice shipped, but **no retry in place** and **the
+  failure path cannot be exercised on dev without faking it**, so the notice has never been seen on a
+  screen. A path nobody can exercise is a path that rots.
 
-**Two things it got right, so do not weaken it while fixing it:** step zero correctly established the
-work was not already built, and the stream **independently confirmed the planner's `0163` policy
-reading** — the one unknown the portal's band was built on.
+**And one that needed nothing: #1298 asked the planner to strike the gallery-draft clause from `#7j2qf`
+and had already struck it, and had already ticked the item.** Checked rather than assumed — which is the
+whole habit. **An instruction in a PR body may already have been carried out by the PR.**
 
-## STATE, RE-READ EVERY TIME
+---
 
-Everything repo-derived lives in **`.plan-day.md`** and is stale the moment it is written.
+## `645`'s LEAD IS CLOSED PROPERLY, AND THE RULE IT LEAVES
 
-- **Batch 3's composition, bands, carve-outs and every figure: `.plan-day.md`'s own blocks.**
-- **HIS PRIORITIES LIST REMAINS THE PLANNER'S FIRST READ.** Fifth plan with no orphans.
-  **Never write to it.**
-- **HIS RANK 1 IS FIXED AND WAITS ONLY ON HIS DEPLOY.** `#vib7j` was ours: the Worker's CSP
-  `connect-src` never named `https://www.googleapis.com`, so every browser-to-Drive chunk was refused
-  and the retry loop blamed the network. **It never worked once.** Deliberately not ticked.
-- **INTERRUPTIONS: FIVE, ALL BRIEFING OR REPORTING DEFECTS.** `CLAUDE.md` says a release's target
-  shape is two touches and that a third is a fault to write down. **The same arithmetic applies to a
-  batch, and this plan failed it badly.** Count them; do not count them as his impatience.
-- **OWED:** the step-zero fix in the skill; committing the archive check; and the role-shaped
-  instruments (`check-menu-coverage`, most of `check-production`) still answer per role.
+`645` opened on an hour he lost redoing BitLocker, the Google OAuth checks and R-0323. **The cause was
+that nobody could CHECK, so everybody ASKED.**
+
+`scripts/check-deceased-archive-state.mjs` is now on `main` (#1292, `056f7b9d`) **and has been run
+against production**: `R-0323 Chao Guay (2) — died 2026-10-28, archived 2026-11-04 12:30:43, summary,
+index`. **Nobody has cause to ask him about R-0323 again. A column the planner can read is never a
+question for a person.**
+
+**The rule it leaves, and it is new:** **an "uncommitted" file named in a handover is a race, not a
+deliverable.** `645` said the archive script was *"sitting uncommitted"* and expected step 1's
+clean-tree check to stop on it. It did not — **the file had already gone, and a clean tree looks exactly
+like a tidy one.** Name the commit or name nothing.
+
+---
+
+## STILL HIS, AND STILL OPEN: the main checkout cannot build
+
+**`#m8x2r`.** `node scripts/guarded-install.mjs` failed **EPERM unlink** on
+`node_modules\@next\swc-win32-x64-msvc\next-swc.win32-x64-msvc.node`, exit **127**. `npm ci` deletes
+before installing, so the tree is half-removed: **37 entries, no `node_modules/next`.**
+
+**Holder, identified not guessed:** a defunct `npx next start -p 3100` pair, **pids 76628 and 87036**,
+from the main checkout's own `node_modules`. **Nothing is listening on 3100.** The planner tried to stop
+them and the auto-mode classifier refused it (*Interfere With Workloads*), so **only Lutan can clear it,
+and he has been away from the laptop since.**
+
+**Why `#gspxx`'s tree lock did not prevent it:** that lock is taken by things that **write**
+`node_modules`. A `next start` only **reads** it, takes no lock, and holds the SWC binary anyway — so
+the guard is blind to the commonest holder. The proposed fix is for `guarded-install.mjs` to detect a
+live `next` process pointing at the checkout and **refuse before deleting anything**.
+
+**It did not block any stream** — `worktree.mjs new` installs into each worktree's own `node_modules`
+and all six installs succeeded. **What it will block:** a release cut, `gates.mjs` in the main checkout,
+and `scripts/deploy.mjs` for the cutover. **PR #1295 is open and marked DO NOT MERGE YET.**
+
+---
+
+## TOOLING HABITS THAT COST TURNS THIS PLAN, AND THE SHAPES THAT WORK
+
+- **Do not compose long prose with a shell heredoc or a JS template literal.** It failed twice in one
+  day on its own quoting — a template literal terminated early on backticks in markdown prose, and a
+  heredoc died on `unexpected EOF`. Nothing was written either time. **What works: write each prose
+  block with the Write tool, then `cat` them together, lifting the mandatory blocks with
+  `sed -n <range>` from the previous batch's brief** so they cannot drift within a batch. All six briefs
+  this plan carry the nine mandatory blocks verbatim, verified by heading count.
+- **Amend a long local file by APPENDING a dated UPDATE section**, never by matching anchors in prose.
+- **Do not pipe a command whose exit code you need.** `guarded-install.mjs | tail` reported `tail`'s 0
+  while npm had errored; redirecting to a file gave the real **127**. **Read the output before writing
+  the conclusion under the command.**
+- **`gh pr comment` can be refused by the classifier** (*External System Writes*). It happened on #1286.
+  **Do not retry in a loop** — record the verification elsewhere and carry on; `gh pr merge` worked fine
+  moments later.
+- **Insert into `docs/backlog.md` with `sed -i '<line>r <file>'` after the section heading's blank
+  line.** The working tree is CRLF and `sed -i` rewrites it LF; git stores LF either way, so the diff is
+  exactly the lines added — **check with `git diff --numstat` before committing**, which is how this
+  round proved it.
+
+---
+
+## WHAT IS SET UP AND WHAT IS OWED
+
+**Batch 3, set up and handed over 2026-11-05:**
+
+| slug | item | port | migration | estimated |
+|---|---|---|---|---|
+| `deceased-visit-app-half` | `#314hq` | 3010 | no (`0310` shipped it) | 170–220k |
+| `accountant-card-expenses` | `#00e3u` | 3008 | **`0317`** | 230–290k |
+| `control-listing-sweep-9` | `#79sqf` | 3009 | no | 145–190k |
+
+All three sonnet-5-5 / low, **both dials set by hand** — nothing a session can edit sets the default
+(measured; settled 2026-11-02).
+
+**Owed to the next planner:**
+
+1. **`#dklvq` goes to the front of the next plan.** Displaced by his star, not dropped, unstarted.
+2. **`#m8x2r` is Lutan's and still open.** Ask once, in a clause, not as a question of its own.
+3. **The role-shaped instruments are still role-shaped.** `scripts/check-menu-coverage.mjs` loops over
+   roles and says so in its own first line, and most of `scripts/check-production.mjs` is keyed the same
+   way. **Every band and brief is written from their output, so while they answer per role the
+   all-analysis-by-card rule keeps being broken by people trying to follow it.** This has been owed for
+   three editions.
+4. **Thai is unreviewed across the board** (`#y1dqu`, widened on 2026-11-05 from one string to the
+   standing gap — 6 of 13 notes in `0.43.0` had unread Thai, and 29 items mention it). Every brief says
+   Thai goes in unreviewed and the stream must say so. **Do not let a stream tick it as reviewed.**
+
