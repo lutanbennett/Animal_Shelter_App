@@ -12,7 +12,7 @@ import type { ReactNode } from "react";
 
 type Props = { className?: string };
 
-function Scene({ id, className, children }: { id: string; className?: string; children: ReactNode }) {
+export function Scene({ id, className, children }: { id: string; className?: string; children: ReactNode }) {
   return (
     <svg viewBox="0 0 240 160" aria-hidden="true" focusable="false" className={`puppy-art puppy-page ${className ?? ""}`}>
       <defs>
@@ -27,7 +27,7 @@ function Scene({ id, className, children }: { id: string; className?: string; ch
 }
 
 /** The loader's head, facing right, drawn around (104, 86) in its own space. */
-function Head({ x, y, scale = 1 }: { x: number; y: number; scale?: number }) {
+export function Head({ x, y, scale = 1 }: { x: number; y: number; scale?: number }) {
   return (
     <g transform={`translate(${x - 104 * scale} ${y - 86 * scale}) scale(${scale})`}>
       <g fill="var(--puppy-fur)">
@@ -54,7 +54,7 @@ function Head({ x, y, scale = 1 }: { x: number; y: number; scale?: number }) {
 }
 
 /** A sitting body in pyjamas, side-on, facing right, with a tail behind. */
-function Sitting({ id, x, y }: { id: string; x: number; y: number }) {
+export function Sitting({ id, x, y }: { id: string; x: number; y: number }) {
   return (
     <g transform={`translate(${x} ${y})`}>
       <g fill="var(--puppy-fur)">
@@ -70,7 +70,7 @@ function Sitting({ id, x, y }: { id: string; x: number; y: number }) {
   );
 }
 
-function Heart({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
+export function Heart({ x, y, s = 1 }: { x: number; y: number; s?: number }) {
   return (
     <path
       transform={`translate(${x} ${y}) scale(${s})`}
