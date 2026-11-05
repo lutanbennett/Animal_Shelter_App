@@ -56,7 +56,7 @@ async function main() {
   };
 
   const pairs = fs.readFileSync(MAP, "utf8").split(/\r?\n/).filter(Boolean).map((l) => JSON.parse(l))
-    .filter((m) => m.kind !== "root" && /^[A-Za-z0-9_-]{10,}$/.test(m.from) && /^[A-Za-z0-9_-]{10,}$/.test(m.to));
+    .filter((m) => /^[A-Za-z0-9_-]{10,}$/.test(m.from) && /^[A-Za-z0-9_-]{10,}$/.test(m.to));
   const values = pairs.map((p) => `('${p.from}','${p.to}')`).join(",");
   console.log(`Environment: ${envName} (${appEnv}), project ${ref}. ${pairs.length} id pairs from ${MAP}.`);
   if (!pairs.length) return 0;
