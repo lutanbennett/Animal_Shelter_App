@@ -34,7 +34,7 @@ try {
   mkdirSync(join(dev, "scripts/pi"), { recursive: true });
   for (const f of ["guard-release.mjs", "write-env.mjs", "check-assets.mjs"]) writeFileSync(join(dev, "scripts/pi", f), "process.exit(0);\n");
   writeFileSync(join(dev, "scripts/pi/build-lib.sh"), readFileSync(join(repoRoot, "scripts/pi/build-lib.sh"), "utf8"));
-  for (const f of ["actions-key.mjs", "apply-migrations.mjs"]) writeFileSync(join(dev, "scripts", f), "process.exit(0);\n");
+  for (const f of ["actions-key.mjs", "apply-migrations.mjs", "build-manual-pdf.mjs"]) writeFileSync(join(dev, "scripts", f), "process.exit(0);\n");
   const ship = (text, msg) => { writeFileSync(join(dev, "scripts/pi/deploy-pi.sh"), text); git(dev, "add", "-A"); git(dev, "commit", "-qm", msg); git(dev, "push", "-q", "origin", "main"); };
   ship(variant("v1"), "v1");
 

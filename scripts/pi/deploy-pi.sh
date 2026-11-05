@@ -198,6 +198,13 @@ if [[ "$BUILD_RC" -ne 0 ]]; then abandon_build; report_build_failure "$BUILD_RC"
 # fingerprint with the one `npm run deploy:*` prints on the dev machine.
 NEXT_DIST_DIR=.next.new node scripts/actions-key.mjs --env "$ENV_NAME" --built || { abandon_build; exit 1; }
 
+# The full manual PDFs (one per language) are drawn once here, so /manual/pdf serves a file instead of
+# laying the manual out on every press (30-100 s; the Worker died on it with error 1102). They go in
+# .manual-pdf/, outside public/, and are written file-by-file via rename. Stops before the swap on
+# failure, so the old version and its old manual keep serving
+# (docs/decisions/2026-11-05-manual-pdf-prebuilt.md).
+"${NICE[@]}" node scripts/build-manual-pdf.mjs || { echo "deploy-pi: building the manual PDFs failed; nothing swapped." >&2; abandon_build; exit 1; }
+
 HOST=lannacare.org   # UAT's for good; production keeps it until the cutover (docs/decisions.md)
 [[ "$ENV_NAME" == "test" ]] && HOST=test.lannacare.org
 

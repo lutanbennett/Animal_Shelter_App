@@ -3,6 +3,7 @@
 // OpenNext bundle, which only exists after a build.
 
 import { isWrappedWritePath, ORIGIN_ATTEMPT_MS } from "../src/lib/write-requests.ts";
+import { isPiOnlyPath } from "../src/lib/pi-only-paths.ts";
 
 const DEFAULT_ORIGIN_TIMEOUT_MS = ORIGIN_ATTEMPT_MS;
 
@@ -55,6 +56,14 @@ function writeUnanswered() {
   );
 }
 
+/** A Pi-only path (src/lib/pi-only-paths.ts) while the Pi is not answering: say so, never render it here. */
+function piUnavailable() {
+  return new Response(
+    "This page is made by the shelter's own server, which is not answering right now. Please try again in a few minutes.",
+    { status: 503, headers: { "content-type": "text/plain; charset=utf-8", "retry-after": "60", "x-lanna-served-by": "pi-unavailable" } },
+  );
+}
+
 /**
  * Replay the request against the Pi; null means "fall back to local". A
  * GET/HEAD/OPTIONS gets null on any failure. A write gets null when the edge
@@ -72,6 +81,7 @@ export async function fetchFromOrigin(request, env) {
   // A read always has somewhere to go when the Pi fails; a write only has when
   // its path is wrapped, because only then can the database refuse a second
   // application of it.
+  const piOnly = isPiOnlyPath(url.pathname);
   const canFallBack = idempotent || mayReplayWrite(url);
   url.host = env.ORIGIN_HOST;
 
@@ -99,12 +109,14 @@ export async function fetchFromOrigin(request, env) {
       body: idempotent ? null : request.body,
       // Redirects (to /login, after a form post…) belong to the browser.
       redirect: "manual",
-      signal: canFallBack ? AbortSignal.timeout(timeoutMs) : undefined,
+      // A Pi-only path has no fallback, so it is not cut short either.
+      signal: canFallBack && !piOnly ? AbortSignal.timeout(timeoutMs) : undefined,
     });
   } catch {
-    return canFallBack ? null : writeUnanswered();
+    return piOnly ? piUnavailable() : canFallBack ? null : writeUnanswered();
   }
   if (ORIGIN_DOWN_STATUSES.has(response.status)) {
+    if (piOnly) return piUnavailable();
     if (canFallBack || NEVER_ARRIVED_STATUSES.has(response.status)) return null;
     // A 502/504 can be cloudflared losing the origin mid-request, after the
     // Pi has already acted — so an unwrapped write is no more replayed
