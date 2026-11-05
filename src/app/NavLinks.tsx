@@ -41,6 +41,7 @@ export function NavLinks({
   canSecurity,
   canSettings,
   canManagement,
+  canApprove,
   canOperations,
   canResidents,
   hasTasks,
@@ -53,6 +54,8 @@ export function NavLinks({
   canSettings: boolean;
   /** Opens any page in the Management section: the Management link. */
   canManagement: boolean;
+  /** May approve what waits on /photos/approve (photos.approve or website.approve): the approval queue's link. */
+  canApprove: boolean;
   /** Opens any page in the Operations section: its link (opensAnyIn, the landing's own guard). */
   canOperations: boolean;
   /** Reads the resident record (resident.record): the Residents link. A login without it would open an empty list. */
@@ -135,6 +138,8 @@ export function NavLinks({
             },
           ]
         : []),
+      // The approval queue. Its only other way in is a card's Home tile, which Admin (holding no cards) never gets.
+      ...(canApprove ? [{ href: "/photos/approve", label: t.photoApproval.title, icon: NAV_ICONS.approve }] : []),
       // "Settings" is the menu's name for the /admin pages; the URL and the
       // admin role keep their names (docs/decisions.md, 2026-09-23).
       ...(canSettings

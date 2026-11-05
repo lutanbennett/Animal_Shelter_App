@@ -1020,7 +1020,7 @@ const en = {
         heading: "Create a new role",
         name: "Role name (English)",
         nameTh: "Role name in Thai (optional)",
-        keyIs: (key: string): string => `It will be saved as "${key}". That short name cannot be changed later.`,
+        keyIs: `It will be saved as "{key}". That short name cannot be changed later.`,
         keyNeedsLatin: "Type the name with English letters or numbers too, so it can be given a short name.",
         noCards: "A new role has no cards, so it can do nothing yet. Give it cards below, then give the role to people on Settings → Security.",
         submit: "Create the role",
