@@ -3892,6 +3892,8 @@ const en = {
       amount: "Amount",
       receipt: "Receipt",
       noReceipt: "no receipt",
+      veterinary: "Veterinary",
+      onVisitRecord: "invoice is on the visit record",
       moreReceipts: (n: number) => `+${n} more`,
       bills: (n: number) => (n === 1 ? "1 bill" : `${n} bills`),
       nothing: "No bills with a type were filed for this year.",
@@ -3901,6 +3903,7 @@ const en = {
         maintenance_bill: "Maintenance job bill",
         stock_delivery: "Purchase invoice",
         stock_receipt: "Delivery line, no invoice",
+        clinic_visit: "Vet visit",
       } as Record<string, string>,
       waitingLead: "Not in these figures yet:",
       waiting: (n: number) =>
@@ -3910,7 +3913,7 @@ const en = {
       allFiled: "No bills are waiting to be filed.",
       basisLead: "How this is counted:",
       basis:
-        "Every bill is placed by the date printed on it, never by the day it was paid or entered. A utility bill also shows the month it covers, but is not grouped by it. A purchase is counted once, on its invoice. A delivery recorded before invoices existed has no invoice, so each such line is counted on its own cost and the day it arrived, as Food or Medicine. Planned monthly costs (fixed outgoings) are forecasts and are not included. Money received is not included. Vet visit costs are not included yet.",
+        "Every bill is placed by the date printed on it, never by the day it was paid or entered. A utility bill also shows the month it covers, but is not grouped by it. A purchase is counted once, on its invoice. A delivery recorded before invoices existed has no invoice, so each such line is counted on its own cost and the day it arrived, as Food or Medicine. Planned monthly costs (fixed outgoings) are forecasts and are not included. Money received is not included. Vet visit costs are included as one type, Veterinary, on the day of the visit; a cancelled visit, an archived visit and a visit with no cost recorded are not. A visit shows no receipt here because its invoice is kept on the visit record.",
       couldntLoad: "Couldn't load the expenses",
     },
     cashflow: {

@@ -70,6 +70,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "The Expenses report now includes what the shelter spent on vet visits, as one type called Veterinary, on the day of each visit. A month you looked at before will read higher by that amount. That is the change, not a mistake. Visits with no cost recorded, cancelled visits and archived visits are not counted, and a visit row says its invoice is on the visit record instead of linking a receipt.",
+    cards: ["view_expenses"],
+  },
 ];
 
 /** Newest first. */

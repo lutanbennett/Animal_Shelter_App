@@ -45,7 +45,8 @@ export default async function ExpensesPage(props: PageProps<"/management/expense
   const rows = ((report.data ?? []) as ExpenseRow[]).map((r) => ({ ...r, amountNum: Number(r.amount) }));
   const waitingCount = typeof waiting.data === "number" ? waiting.data : 0;
 
-  const typeLabel = (r: ExpenseRow) => (r.parent_label ? `${r.parent_label} › ${r.kind_label}` : (r.kind_label ?? ""));
+  // A vet visit has no bill type (clinic_visits has no kind_id); every visit is the one type, Veterinary (Lutan, 2026-11-05).
+  const typeLabel = (r: ExpenseRow) => r.source === "clinic_visit" ? c.veterinary : (r.parent_label ? `${r.parent_label} › ${r.kind_label}` : (r.kind_label ?? ""));
 
   const total = rows.reduce((sum, r) => sum + r.amountNum, 0);
   const byType = new Map<string, { sum: number; n: number }>();
@@ -61,7 +62,9 @@ export default async function ExpensesPage(props: PageProps<"/management/expense
   const months = [...byMonth.keys()].sort().reverse();
 
   const receiptCell = (r: ExpenseRow) =>
-    r.receipt_file_id ? (
+    r.source === "clinic_visit" ? (
+      <span className="text-muted">{c.onVisitRecord}</span>
+    ) : r.receipt_file_id ? (
       <span className="flex items-center gap-2">
         <a href={driveImageUrl(r.receipt_file_id)} target="_blank" rel="noreferrer" className="text-primary underline">
           {c.receipt}
