@@ -1,8 +1,8 @@
 /**
  * Cards: the unit the Director assigns to a role (docs/decisions/2026-10-13-cards-are-what-a-role-is-given.md).
  * A card is a name, the page it opens, and a bundle of activities at a level. A role is given cards, and
- * its `role_permissions` rows are the union of their bundles plus its extras (single activities no card
- * gives). `role_permissions` stays the table the database checks, so has_permission(), every policy and can()
+ * its `role_permissions` rows are exactly the union of those cards' grants (0261 dropped `role_extras`: a role is the set of
+ * cards it holds, and nothing else gives it an activity). `role_permissions` stays the table the database checks, so has_permission(), every policy and can()
  * are untouched.
  *
  * Definitions live here, in code, because knowing that Purchasing also needs the last count takes reading
@@ -109,7 +109,7 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
       { activity: "placement.move" },
       { activity: "placement.rehome" },
       // placement.death_withdraw is NOT here: Management does not hold it, so the card would have handed it a power
-      // on the day cards land (found by the 0194 seed check). It stays a single activity, given as an extra.
+      // on the day cards land (found by the 0194 seed check). It is given only by a card that carries it, since 0261 removed extras.
       { activity: "photos.resident_add" },
       { activity: "photos.resident_manage" },
       { activity: "photos.shelter_add" },
@@ -432,9 +432,9 @@ export const CARDS: Record<CardKey, Card> = {
 };
 
 /**
- * Which cards satisfy a requirement named in requiresCardSomewhere. The Approve photos card is satisfied by itself only:
- * Residents bundles photos.resident_publish but not photos.approve. The database counts the ACTIVITY (photos.approve) on roles that
- * are not retired (0222), so it stays correct for extras and both cards; the screen must ask the same question (approverTest).
+ * Which cards satisfy a requirement named in requiresCardSomewhere. The Approve photos card is satisfied by itself only.
+ * The Residents card holds neither photos.approve nor photos.resident_publish. The database counts the ACTIVITY (photos.approve) on roles
+ * that are not retired (0222), so it stays correct whichever cards carry it; the screen must ask the same question (approverTest).
  */
 export const CARD_SATISFIED_BY: Partial<Record<CardKey, readonly CardKey[]>> = {
   approve_photos: ["approve_photos"],

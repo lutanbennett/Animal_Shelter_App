@@ -17,7 +17,8 @@ import { WebsiteTabs, WEBSITE_TABS } from "./WebsiteTabs";
 import { PageCards, type PageEditorMeta } from "./PageCards";
 import { PublishedProjects, type PublishedProjectRow } from "./PublishedProjects";
 import Link from "next/link";
-import { requirePermission } from "@/lib/permissions/require";
+import { requireAnyPermission, requirePermission } from "@/lib/permissions/require";
+import { loadPermissions } from "@/lib/permissions/load";
 import { can } from "@/lib/permissions/can";
 
 type PublicResidentRow = {
@@ -35,6 +36,23 @@ export default async function WebsitePage({
 }) {
   // Opens at read: the photo card holds website.content at read and website.gallery. What each part of the page
   // offers is asked of its own activity below, and its actions ask the same one.
+  // A login that may only propose (website.propose, no website.content) gets the settings form alone, saving as a draft.
+  const early = await loadPermissions();
+  const draftOnly = can(early, "website.propose") && !can(early, "website.content", "read");
+  if (draftOnly) {
+    await requireAnyPermission(["website.propose"]);
+    const { t } = await getT();
+    const draftContent = await loadSiteContent(await createClient());
+    return (
+      <main className="flex flex-1 flex-col gap-6 p-6">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">{t.admin.website.title}</h1>
+          <p className="text-sm text-muted">{t.admin.website.subtitle}</p>
+        </div>
+        {draftContent ? <SiteSettingsForm content={draftContent} canPropose={can(early, "website.propose")} /> : <p className="text-sm text-danger">{t.admin.website.couldntLoad}</p>}
+      </main>
+    );
+  }
   const { perms } = await requirePermission("website.content", "read");
   const canContent = can(perms, "website.content");
   const canGallery = can(perms, "website.gallery");
@@ -204,7 +222,7 @@ export default async function WebsitePage({
             ),
             contact: (
               <>
-                <SiteSettingsForm content={content} />
+                <SiteSettingsForm content={content} canEdit={canContent} />
                 <ClinicVisitEstimate estimate={clinicVisitEstimate} />
               </>
             ),

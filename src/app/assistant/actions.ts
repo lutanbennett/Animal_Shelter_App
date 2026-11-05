@@ -42,7 +42,7 @@ import { getSiteOrigin } from "@/lib/site-origin";
  * result with an `ok` on it. Every call site discriminates on `"error" in
  * result`, which reads the same either way, so nothing else moved.
  */
-export type AssistantResult = { ok: false; error: string } | { ok: true };
+export type AssistantResult = { ok: false; error: string } | { ok: true; notice?: string };
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 type T = Awaited<ReturnType<typeof getT>>["t"];
@@ -149,8 +149,9 @@ async function runWrite(
       const note = noteWithTags(stamp(t, input.request), tags.map((tag) => tag.name));
 
       const result = await write(supabase, t, note);
+      let notice: string | undefined;
       if (!("error" in result) && tags.length > 0 && subject) {
-        await linkMentions(supabase, resultTable, subject, note, tags);
+        notice = (await linkMentions(supabase, resultTable, subject, note, tags, t)) ?? undefined;
       }
 
       await logAssistantAction(supabase, {
@@ -172,7 +173,7 @@ async function runWrite(
         return { ok: false, error: result.error };
       }
       revalidate();
-      return { ok: true };
+      return notice ? { ok: true, notice } : { ok: true };
     },
   );
 }
@@ -193,7 +194,7 @@ async function mentionedResidents(
 /**
  * Writes the links for the note(s) the write just made. The write helpers do not all hand back a row id, so the
  * rows are found by resident and exact note text, newest first: the ones within 10 seconds of the newest are this
- * write (a vaccine card writes one row per vaccine). A failure leaves the note saved without its links, and says so
+ * write (a vaccine card writes one row per vaccine). A failure leaves the note saved without its links, returns words for the person (so the card can tell them), and says so
  * in the log; the same link policies that guard the forms are what refuse a login that may not tag.
  */
 async function linkMentions(
@@ -202,7 +203,9 @@ async function linkMentions(
   subject: string,
   note: string,
   tags: NoteTag[],
-) {
+  t: T,
+): Promise<string | null> {
+  let failure: string | null = null;
   try {
     const { data } = await supabase
       .from(table)
@@ -212,7 +215,10 @@ async function linkMentions(
       .limit(20)
       .returns<{ id: string; notes: string | null; created_at: string }[]>();
     const mine = (data ?? []).filter((row) => row.notes !== null && row.notes.endsWith(note));
-    if (mine.length === 0) return console.error(`assistant: found no ${table} row to link tags to`);
+    if (mine.length === 0) {
+      console.error(`assistant: found no ${table} row to link tags to`);
+      return t.assistant.tagsNotLinked;
+    }
     const newest = new Date(mine[0].created_at).getTime();
     for (const row of mine.filter((r) => newest - new Date(r.created_at).getTime() < 10_000)) {
       const result = await syncNoteTagPicks(
@@ -221,11 +227,16 @@ async function linkMentions(
         tags,
         row.notes,
       );
-      if (!result.ok) console.error(`assistant: tags not linked on ${table} ${row.id} (${result.code})`);
+      if (!result.ok) {
+        console.error(`assistant: tags not linked on ${table} ${row.id} (${result.code})`);
+        failure ??= result.code === "42501" ? t.assistant.tagsNotAllowed : t.assistant.tagsNotLinked;
+      }
     }
   } catch (e) {
     console.error("assistant: tags not linked —", e);
+    failure = t.assistant.tagsNotLinked;
   }
+  return failure;
 }
 
 function revalidateResident(residentId: string) {

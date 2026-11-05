@@ -19,6 +19,8 @@ Donate page, the photo strip in "Our story", and which pages are shown at all. E
 ### Tables
 
 - **The website's content** (wording, photos, figures, contact details, which pages are hidden): read and change.
+- **The sterilisation drives sign-up list** (`/management/sterilisation-drives`): the same `website.content` activity opens it, and the card's label now names it
+  (`docs/decisions/2026-11-04-website-content-label.md`). This 2026-10-25 walk did not drive that page.
 - **Public residents** (names only, for the Pet of the week): read.
 - **Gallery photos**: add, move, remove.
 
