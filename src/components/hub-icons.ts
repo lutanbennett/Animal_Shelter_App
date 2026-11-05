@@ -1,5 +1,6 @@
 import {
   Ambulance,
+  BadgeCheck,
   Archive,
   ArchiveRestore,
   ArrowDown,
@@ -207,6 +208,7 @@ export const NAV_ICONS = {
   releaseNotes: Newspaper,
   changePassword: KeyRound,
   security: ShieldCheck,
+  approve: BadgeCheck,
 } satisfies Record<string, LucideIcon>;
 
 /**

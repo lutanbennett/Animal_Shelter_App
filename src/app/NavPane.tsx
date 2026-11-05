@@ -47,6 +47,8 @@ export async function NavPane() {
       // A landing opens for whoever may open one page in its section: the question its guard asks.
       canSettings={opensAnyIn(perms, "settings")}
       canManagement={opensAnyIn(perms, "management")}
+      // The activities the page itself asks (photos.approve opens it; website.approve is its page-changes tab). Admin passes both with no card.
+      canApprove={can(perms, "photos.approve") || can(perms, "website.approve")}
       // Two or more pages, or the section would only repeat the one tile Home already has.
       canOperations={pagesIn(perms, "operations") > 1}
       // The list is the whole record: a login with no read of it would open an empty list (requireFullResident asks the same).

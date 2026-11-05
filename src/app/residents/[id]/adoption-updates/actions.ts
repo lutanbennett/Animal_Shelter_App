@@ -80,7 +80,7 @@ export async function saveAdoptionUpdate(
 
     const publicStory = input.publicStory?.trim() || null;
     const publicFirstName = input.publicFirstName?.trim() || null;
-    if (publicFirstName && (/s/.test(publicFirstName) || publicFirstName.length > 40)) {
+    if (publicFirstName && (/\s/.test(publicFirstName) || publicFirstName.length > 40)) {
       return { ok: false, error: e.firstNameOneWord };
     }
     if (input.sharePublicly && !publicStory) return { ok: false, error: e.storyRequired };
@@ -90,6 +90,9 @@ export async function saveAdoptionUpdate(
       sender_contact_id: input.senderContactId || null,
       channel: input.channel,
       note: input.note?.trim() || null,
+      share_publicly: input.sharePublicly,
+      public_story: publicStory,
+      public_first_name: publicFirstName,
     };
 
     const { data, error } = updateId
