@@ -36,6 +36,14 @@ function describe(h) {
  */
 export function takeTreeLock(kind, root = ROOT) {
   const file = join(root, LOCK_FILE);
+  // A child of the process that holds the lock (deploy.mjs -> opennext:build)
+  // runs under that lock; it must not refuse its own parent.
+  try {
+    const parent = Number(process.env.TREE_LOCK_PID);
+    if (parent && JSON.parse(readFileSync(file, "utf8")).pid === parent && alive(parent)) return () => {};
+  } catch {
+    // no lock file, or unreadable: take it the ordinary way below
+  }
   const mine = { kind, pid: process.pid, since: new Date().toISOString() };
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
@@ -50,6 +58,7 @@ export function takeTreeLock(kind, root = ROOT) {
         }
       };
       process.on("exit", release);
+      process.env.TREE_LOCK_PID = String(process.pid); // children then run under this lock
       return release;
     } catch (e) {
       if (e.code !== "EEXIST") throw e;

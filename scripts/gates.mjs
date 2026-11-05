@@ -77,6 +77,15 @@ if (missing.length) {
   process.exit(2);
 }
 
+// The build reads node_modules; an `npm ci` through guarded-install.mjs deletes
+// it. Held until this script exits. Refuses, naming the holder, rather than race.
+try {
+  takeTreeLock("build");
+} catch (e) {
+  console.error(`gates: ${e.message}`);
+  process.exit(2);
+}
+
 const gates = [
   { name: "typecheck", cmd: "npm run typecheck" },
   { name: "lint", cmd: "npm run lint" },

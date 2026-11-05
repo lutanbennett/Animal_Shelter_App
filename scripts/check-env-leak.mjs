@@ -11,7 +11,11 @@ import { exitWith } from "./lib/exit.mjs";
 import { strayEnvFiles } from "./lib/env-leak.mjs";
 import { appEnvForSupabaseUrl } from "../src/lib/app-env.ts";
 
-const SITES = { test: "https://test.lannacare.org", uat: "https://lannacare.org", production: "https://lannacare.org" };
+import { SITE_ORIGINS } from "./lib/env.mjs";
+
+// The deploy's own list (wrangler.jsonc, via scripts/lib/env.mjs), not a copy:
+// a second list is what goes stale on the day the hosts change.
+const SITES = SITE_ORIGINS;
 const APP = { test: "dev", uat: "uat", production: "production" };
 const DEV = "https://qxkmhwybjggxvsfxsxbd.supabase.co";
 const PROD = "https://dbkodyyxxhtygxcxmfcu.supabase.co";
@@ -31,19 +35,19 @@ const run = (target, files) =>
     read: (f) => files[f] ?? null,
   });
 
-const prodFile = { ".env.production.local": piFile("production", "https://lannacare.org", PROD) };
-const testFile = { ".env.production.local": piFile("test", "https://test.lannacare.org", DEV) };
+const prodFile = { ".env.production.local": piFile("production", SITES.production, PROD) };
+const testFile = { ".env.production.local": piFile("test", SITES.test, DEV) };
 
 const r1 = run("test", prodFile);
 check("production file refused for test, filename named", r1.length === 1 && r1[0].file === ".env.production.local", JSON.stringify(r1));
-check("...with the reason", /production environment/.test(r1[0]?.why) && /lannacare\.org/.test(r1[0]?.why));
+check("...with the reason", /production environment/.test(r1[0]?.why) && r1[0]?.why.includes(new URL(SITES.production).host));
 check("test file refused for production", run("production", testFile).length === 1);
 check("test file refused for uat", run("uat", testFile).length === 1);
 check("matching file passes (production)", run("production", prodFile).length === 0);
 check("matching file passes (test)", run("test", testFile).length === 0);
 check("no files present passes", run("test", {}).length === 0 && run("production", {}).length === 0);
-check("unmarked file with only a wrong host is caught", run("test", { ".env": "NEXT_PUBLIC_SITE_URL=https://lannacare.org/\n" }).length === 1);
-check("trailing slash on the right host is not a mismatch", run("test", { ".env": "NEXT_PUBLIC_SITE_URL=https://test.lannacare.org/\n" }).length === 0);
+check("unmarked file with only a wrong host is caught", run("test", { ".env": `NEXT_PUBLIC_SITE_URL=${SITES.production}/\n` }).length === 1);
+check("trailing slash on the right host is not a mismatch", run("test", { ".env": `NEXT_PUBLIC_SITE_URL=${SITES.test}/\n` }).length === 0);
 check("unrelated vars pass", run("test", { ".env": "FOO=bar\n" }).length === 0);
 
 await exitWith(failures ? 1 : 0);
