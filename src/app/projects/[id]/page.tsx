@@ -56,6 +56,7 @@ export default async function ProjectFolderPage(props: PageProps<"/projects/[id]
         photos={photos.photos}
         allFolders={all}
         canWrite={can(perms, "projects.folders")}
+        canPhotos={can(perms, "projects.photos")}
         canPublish={can(perms, "projects.publish")}
         canManageTranslations={can(perms, "translations.manage")}
         translations={[...folderTranslations.values(), ...photoTranslations.values()]}
