@@ -201,7 +201,7 @@ and `robots.txt` stay open. Signed-in staff see everything as usual.
 why. To look at it locally, put `PUBLIC_SITE=locked` in
 `.env.development.local` (gitignored) and restart `next dev`.
 
-**What the cutover changed here (done 2026-11-06; read as history: UAT now shares the dev project instead of using `UAT_PROJECT_REF`)**, in one commit: `UAT_PROJECT_REF` in
+**What the cutover changed here (done 2026-11-05, a day earlier than the planned 6th, in release `0.43.2`; read as history: UAT now shares the dev project instead of using `UAT_PROJECT_REF`)**, in one commit: `UAT_PROJECT_REF` in
 `src/lib/app-env.ts` and production's label in `src/app/releases/page.tsx`;
 the `lannacare.org` routes move from the `production` block of
 `wrangler.jsonc` to `uat`, and production gets the new domain,
