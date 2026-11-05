@@ -58,11 +58,7 @@ thing in different words: **when `main` moves, read what is deploying and then d
   `scripts/check-deceased-archive-state.mjs`, in no branch, left by the planner the night before. Moved
   to `.local/`. **Check `git status --porcelain` in the main checkout before the handover, every time** —
   it is the cheapest avoidable cost there is and only cheap if someone looks.
-- **This session could reach both databases**, which `#4xx3l` says no session can since
-  `SUPABASE_ACCESS_TOKEN` moved to a Windows user variable. Every read worked, which **supports the
-  item's own hypothesis**: a process started after the variable was set inherits it. **Do not let this
-  become a reason to put the token back in any `.env.local`** — a stream asked for exactly that and must
-  be refused.
+- **Database reads work from a session again, and `#4xx3l` is CLOSED** (2026-11-05, by the planner's preflight). **Do not re-derive the cause as this release's first draft did.** It is not that a shell started after the variable was set inherits it — Lutan tested restarting the app and it **failed**. It works because he instructed the move to be **reversed** (*"just put the keys back"*), so the **project-scoped** token is in each worktree's `.env.local` while `#ubejc`'s revocation of the account-wide token stands. **Nothing here is a release manager's to do**, and the standing refusal — a stream does not get the secret back in a file — applies to a stream asking, never to him deciding.
 
 ## Corrections and closures to the last edition
 
