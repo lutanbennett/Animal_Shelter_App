@@ -304,11 +304,24 @@ for (const file of changed) {
 
   for (const [line, msg] of fenceProblems(lines)) note(file, line, msg);
 
-  // Template placeholders must be replaced.
+  // Template placeholders must be replaced. The template's own guidance prose
+  // names them too (`docs/test-plans/<feature>.md`), so that prose sits between
+  // <!-- guidance:start --> and <!-- guidance:end --> and is not read as a field.
+  // Only this scan skips it: every checkbox, signature and Result line is judged
+  // exactly as before, so no unfilled FIELD is tolerated
+  // (docs/decisions/2026-11-05-planner-tooling-follow-ups.md).
+  let inGuidance = false;
   lines.forEach((l, i) => {
-    if (inFence[i]) return;
+    if (/^\s*<!--\s*guidance:start\s*-->\s*$/.test(l)) inGuidance = true;
+    else if (/^\s*<!--\s*guidance:end\s*-->\s*$/.test(l)) inGuidance = false;
+    if (inFence[i] || inGuidance) return;
     const ph = l.match(/<(feature|name|yyyy-mm-dd|pass \| [^>]+)>/);
-    if (ph) note(file, i + 1, `unfilled template placeholder \`<${ph[1]}>\``);
+    if (ph)
+      note(
+        file,
+        i + 1,
+        `unfilled template placeholder \`<${ph[1]}>\` — if this line is a field, fill it; if it is the template's own guidance prose (not a field), delete the line`,
+      );
   });
 
   // Every checklist line is ticked, marked `n/a: <reason>`, or — in the

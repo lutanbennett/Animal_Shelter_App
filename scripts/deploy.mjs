@@ -314,6 +314,14 @@ if (!skipBuild) {
   delete buildEnv.NEXT_PUBLIC_SITE_URL;
   run("npm run opennext:build", { env: buildEnv });
   run("node scripts/strip-baked-env.mjs");
+  // The commit this build was made from, beside the one the release was asked
+  // for (--ref <sha>, optional). A build can come from a different commit than
+  // the release names: a 0.42.0 test deploy took no ref and built the wrong one.
+  const built = git("rev-parse HEAD");
+  const asked = rest.includes("--ref") ? rest[rest.indexOf("--ref") + 1] : null;
+  const dirtyTree = git("status --porcelain") ? " (working tree has uncommitted changes)" : "";
+  console.log(`deploy: built from ${built.slice(0, 12)}${dirtyTree}; release SHA asked for: ${asked ?? "none given (--ref <sha>)"}`);
+  if (asked && !built.startsWith(asked)) console.warn(`deploy: WARNING: the build is ${built.slice(0, 12)}, not the requested ${asked}.`);
 }
 
 // Whatever .next holds now — fresh, or the previous run's under --skip-build —
