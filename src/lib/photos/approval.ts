@@ -46,6 +46,7 @@ export async function loadWaitingPhotos(supabase: SupabaseClient): Promise<Waiti
     .select("id, drive_file_id, file_name, uploaded_at, date_taken, owner_id, uploaded_by, media_kind")
     .eq("owner_type", "resident")
     .is("approved_at", null)
+    .is("private_only_at", null)
     .order("uploaded_at", { ascending: true })
     .returns<Row[]>();
   const rows = data ?? [];
@@ -103,6 +104,7 @@ export async function loadWaitingEventPhotos(supabase: SupabaseClient): Promise<
     .select("id, drive_file_id, file_name, uploaded_at, owner_id, uploaded_by")
     .eq("owner_type", "event")
     .is("approved_at", null)
+    .is("private_only_at", null)
     .order("uploaded_at", { ascending: true })
     .returns<{ id: string; drive_file_id: string; file_name: string | null; uploaded_at: string; owner_id: string; uploaded_by: string | null }[]>();
   const rows = data ?? [];
@@ -148,6 +150,7 @@ export async function loadWaitingProjectPhotos(supabase: SupabaseClient): Promis
     .select("id, drive_file_id, file_name, uploaded_at, owner_id, uploaded_by")
     .eq("owner_type", "project")
     .is("approved_at", null)
+    .is("private_only_at", null)
     .order("uploaded_at", { ascending: true })
     .returns<{ id: string; drive_file_id: string; file_name: string | null; uploaded_at: string; owner_id: string; uploaded_by: string | null }[]>();
   const rows = data ?? [];
@@ -181,7 +184,8 @@ export async function countPhotosWaiting(supabase: SupabaseClient, perms: Permis
       .from("attachments")
       .select("id", { count: "exact", head: true })
       .eq("owner_type", "resident")
-      .is("approved_at", null),
+      .is("approved_at", null)
+      .is("private_only_at", null),
     // Photos tagged to an enclosure wait too (0218): one tile counts every kind.
     supabase.from("pending_photos").select("id", { count: "exact", head: true }),
     // And photos filed on a fundraising event (0314).
@@ -189,13 +193,15 @@ export async function countPhotosWaiting(supabase: SupabaseClient, perms: Permis
       .from("attachments")
       .select("id", { count: "exact", head: true })
       .eq("owner_type", "event")
-      .is("approved_at", null),
+      .is("approved_at", null)
+      .is("private_only_at", null),
     // And photos filed in a project folder (0316).
     supabase
       .from("attachments")
       .select("id", { count: "exact", head: true })
       .eq("owner_type", "project")
-      .is("approved_at", null),
+      .is("approved_at", null)
+      .is("private_only_at", null),
   ]);
   return (count ?? 0) + (pending ?? 0) + (events ?? 0) + (projects ?? 0);
 }

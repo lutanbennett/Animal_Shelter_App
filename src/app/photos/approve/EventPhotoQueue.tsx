@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Trash2 } from "lucide-react";
+import { Check, Trash2, EyeOff } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { formatDate } from "@/lib/format";
@@ -10,7 +10,7 @@ import { driveImageUrl } from "@/lib/google/drive-client";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useWriteCall } from "@/lib/use-write-form";
 import type { WaitingEventPhoto } from "@/lib/photos/approval";
-import { approveEventPhotos, removeWaitingEventPhoto } from "./actions";
+import { approveEventPhotos, removeWaitingEventPhoto, markPhotosPrivateOnly } from "./actions";
 
 /**
  * Photos filed on a fundraising event, waiting beside the resident photos (0314). One at a time on purpose: an event photo
@@ -27,6 +27,16 @@ export function EventPhotoQueue({ photos }: { photos: WaitingEventPhoto[] }) {
   // One per action: an id kept from an unknown save must never reach another action.
   const approveCall = useWriteCall();
   const removeCall = useWriteCall();
+  const privateCall = useWriteCall();
+
+  function markPrivate(id: string) {
+    setMessage(null);
+    startTransition(async () => {
+      const result = await privateCall((requestId) => markPhotosPrivateOnly([id], "event", requestId));
+      setMessage(result.ok ? { ok: true, text: q.privateOnlyDone(result.marked) } : { ok: false, text: result.error });
+      router.refresh();
+    });
+  }
 
   if (photos.length === 0) return null;
 
@@ -81,6 +91,9 @@ export function EventPhotoQueue({ photos }: { photos: WaitingEventPhoto[] }) {
               <div className="flex flex-wrap items-center gap-3">
                 <ActionButton icon={Check} variant="primary" disabled={pending} onClick={() => approve(photo.id)}>
                   {q.approve}
+                </ActionButton>
+                <ActionButton icon={EyeOff} disabled={pending} onClick={() => markPrivate(photo.id)}>
+                  {q.privateOnly}
                 </ActionButton>
                 <ActionButton icon={Trash2} disabled={pending} onClick={() => remove(photo)}>
                   {q.remove}

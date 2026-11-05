@@ -219,3 +219,42 @@ export async function removeWaitingPhoto(attachmentId: string, requestId: string
     return { ok: true, driveWarning };
   });
 }
+
+/**
+ * Answers "Private only" for the photos named (0318): looked at and refused, so the photo leaves every queue and never
+ * reaches the website. Works for the three kinds that ride attachments (resident, event, project). Asks photos.approve,
+ * as can_approve_photos() does in the database; the trigger stamps who and when and clears a Public ok if there was one.
+ * `private_only_at` is the only column written (`approval` is generated from it).
+ */
+export async function markPhotosPrivateOnly(
+  ids: string[],
+  kind: "resident" | "event" | "project",
+  requestId: string,
+): Promise<ActionResult<{ marked: number }>> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction<{ marked: number }>("photos.privateOnly", write(t), { id: requestId, action: "photos.privateOnly", db: supabase }, async () => {
+    const perms = await loadPermissions();
+    if (!can(perms, "photos.approve")) return { ok: false, error: t.photoApproval.errors.notAllowed };
+    const chosen = [...new Set(ids)];
+    if (chosen.length === 0) return { ok: false, error: t.photoApproval.errors.nothingChosen };
+    if (chosen.length > MAX_BATCH) return { ok: false, error: t.photoApproval.errors.tooMany(MAX_BATCH) };
+
+    // Only a photo still waiting: a stale page can never take one already on the website off it by this route.
+    const { data, error } = await supabase
+      .from("attachments")
+      .update({ private_only_at: new Date().toISOString() })
+      .in("id", chosen)
+      .eq("owner_type", kind)
+      .is("approved_at", null)
+      .is("private_only_at", null)
+      .select("id")
+      .returns<{ id: string }[]>();
+    if (error) return { ok: false, error: t.photoApproval.privateOnlyFailed };
+
+    revalidateQueue();
+    if (kind === "event") revalidatePath("/management/events", "layout");
+    if (kind === "project") revalidatePath("/projects", "layout");
+    return { ok: true, marked: data?.length ?? 0 };
+  });
+}
