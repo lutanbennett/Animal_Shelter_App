@@ -128,10 +128,55 @@ export async function loadWaitingEventPhotos(supabase: SupabaseClient): Promise<
   }));
 }
 
+/**
+ * One photo filed in a project folder, waiting (0316). A project folder is public only when it is a published sub-folder, but
+ * every waiting image is listed: an approver judges it before the folder is ever published.
+ */
+export type WaitingProjectPhoto = {
+  id: string;
+  driveFileId: string;
+  fileName: string | null;
+  uploadedAt: string;
+  addedBy: string;
+  /** Null when this login may approve but not read projects: the photo is judged on its own. */
+  projectName: string | null;
+};
+
+export async function loadWaitingProjectPhotos(supabase: SupabaseClient): Promise<WaitingProjectPhoto[]> {
+  const { data } = await supabase
+    .from("attachments")
+    .select("id, drive_file_id, file_name, uploaded_at, owner_id, uploaded_by")
+    .eq("owner_type", "project")
+    .is("approved_at", null)
+    .order("uploaded_at", { ascending: true })
+    .returns<{ id: string; drive_file_id: string; file_name: string | null; uploaded_at: string; owner_id: string; uploaded_by: string | null }[]>();
+  const rows = data ?? [];
+  if (rows.length === 0) return [];
+
+  const [{ data: folders }, users] = await Promise.all([
+    supabase
+      .from("project_folders")
+      .select("id, name")
+      .in("id", [...new Set(rows.map((r) => r.owner_id))])
+      .returns<{ id: string; name: string }[]>(),
+    loadAppUsersById(supabase, rows.flatMap((r) => (r.uploaded_by ? [r.uploaded_by] : []))),
+  ]);
+  const names = new Map((folders ?? []).map((f) => [f.id, f.name]));
+
+  return rows.map((r) => ({
+    id: r.id,
+    driveFileId: r.drive_file_id,
+    fileName: r.file_name,
+    uploadedAt: r.uploaded_at,
+    addedBy: r.uploaded_by ? appUserLabel(users.get(r.uploaded_by)) : "—",
+    projectName: names.get(r.owner_id) ?? null,
+  }));
+}
+
 /** The count on the home tile; undefined for a login that cannot approve, so no tile is drawn for it. */
 export async function countPhotosWaiting(supabase: SupabaseClient, perms: Permissions | null): Promise<number | undefined> {
   if (!canApprovePhotos(perms)) return undefined;
-  const [{ count }, { count: pending }, { count: events }] = await Promise.all([
+  const [{ count }, { count: pending }, { count: events }, { count: projects }] = await Promise.all([
     supabase
       .from("attachments")
       .select("id", { count: "exact", head: true })
@@ -145,6 +190,12 @@ export async function countPhotosWaiting(supabase: SupabaseClient, perms: Permis
       .select("id", { count: "exact", head: true })
       .eq("owner_type", "event")
       .is("approved_at", null),
+    // And photos filed in a project folder (0316).
+    supabase
+      .from("attachments")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_type", "project")
+      .is("approved_at", null),
   ]);
-  return (count ?? 0) + (pending ?? 0) + (events ?? 0);
+  return (count ?? 0) + (pending ?? 0) + (events ?? 0) + (projects ?? 0);
 }

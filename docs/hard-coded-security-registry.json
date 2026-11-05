@@ -716,6 +716,11 @@
         "migration": "0314_fundraising_events_app.sql",
         "item": "grant to anon",
         "reason": "SELECT on the public views public_fundraising_events and public_fundraising_event_photos, and EXECUTE on is_public_drive_file(text) restated with one more branch. The existing public-site pattern (0210, 0285): the base tables stay revoked from anon, a view shows only a published, not cancelled event and a photo only once attachments.approved_at is set, and appeal/project links only when those are public themselves. It lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-04-fundraising-events-staff-screens.md."
+      },
+      {
+        "migration": "0316_project_photos_approval.sql",
+        "item": "grant to anon",
+        "reason": "SELECT on the public views public_project_photos and public_projects, each restated with one more condition (attachments.approved_at is not null) and the same grants as before. The existing public-site pattern (0109, 0056): the base tables stay revoked from anon, and the views show only a public project folder and now only an approved photo. It narrows what anon can read; it lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-05-project-photos-approval.md."
       }
     ],
     "stubs": [

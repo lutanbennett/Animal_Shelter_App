@@ -5,12 +5,13 @@ import { requirePermission } from "@/lib/permissions/require";
 import { loadWebsiteDrafts } from "@/lib/website/drafts";
 import { PortalTabs, type PortalTab } from "./PortalTabs";
 import { WebsiteDraftQueue } from "./WebsiteDraftQueue";
-import { loadWaitingEventPhotos, loadWaitingPhotos } from "@/lib/photos/approval";
+import { loadWaitingEventPhotos, loadWaitingProjectPhotos, loadWaitingPhotos } from "@/lib/photos/approval";
 import { loadPendingPhotos } from "@/lib/photos/pending";
 import { loadPickableResidents } from "@/lib/medical/residents";
 import { ApproveQueue } from "./ApproveQueue";
 import { PendingQueue } from "./PendingQueue";
 import { EventPhotoQueue } from "./EventPhotoQueue";
+import { ProjectPhotoQueue } from "./ProjectPhotoQueue";
 
 /**
  * Photos to approve: the resident photos filed by a login that may not publish (0217), waiting for someone who may,
@@ -27,10 +28,11 @@ export default async function ApprovePhotosPage() {
   const supabase = await createClient();
   const showPhotos = can(perms, "photos.approve");
   const showWebsite = can(perms, "website.approve");
-  const [photos, pending, eventPhotos, drafts, { residents, error }] = await Promise.all([
+  const [photos, pending, eventPhotos, projectPhotos, drafts, { residents, error }] = await Promise.all([
     showPhotos ? loadWaitingPhotos(supabase) : [],
     showPhotos ? loadPendingPhotos(supabase) : [],
     showPhotos ? loadWaitingEventPhotos(supabase) : [],
+    showPhotos ? loadWaitingProjectPhotos(supabase) : [],
     showWebsite ? loadWebsiteDrafts(supabase) : [],
     showPhotos ? loadPickableResidents(supabase) : { residents: [], error: null },
   ]);
@@ -54,6 +56,7 @@ export default async function ApprovePhotosPage() {
       content: <PendingQueue photos={pending} residents={residents} loadError={error} />,
     });
     tabs.push({ key: "events", label: t.photoApproval.tabs.events, count: eventPhotos.length, content: <EventPhotoQueue photos={eventPhotos} /> });
+    tabs.push({ key: "projects", label: t.photoApproval.tabs.projects, count: projectPhotos.length, content: <ProjectPhotoQueue photos={projectPhotos} canApprove={showPhotos} /> });
   }
   if (showWebsite) {
     tabs.push({ key: "website", label: t.photoApproval.tabs.website, count: drafts.length, content: <WebsiteDraftQueue drafts={drafts} canDecide={showWebsite} /> });

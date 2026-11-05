@@ -118,6 +118,66 @@ export async function removeWaitingEventPhoto(attachmentId: string, requestId: s
   });
 }
 
+/** Approves waiting project photos (0316). Asks photos.approve, as can_approve_photos() does in the database. */
+export async function approveProjectPhotos(ids: string[], requestId: string): Promise<ActionResult<{ approved: number }>> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction<{ approved: number }>("photos.approveProject", write(t), { id: requestId, action: "photos.approveProject", db: supabase }, async () => {
+    const perms = await loadPermissions();
+    if (!can(perms, "photos.approve")) return { ok: false, error: t.photoApproval.errors.notAllowed };
+    const chosen = [...new Set(ids)];
+    if (chosen.length === 0) return { ok: false, error: t.photoApproval.errors.nothingChosen };
+    if (chosen.length > MAX_BATCH) return { ok: false, error: t.photoApproval.errors.tooMany(MAX_BATCH) };
+
+    const { data, error } = await supabase
+      .from("attachments")
+      .update({ approved_at: new Date().toISOString() })
+      .in("id", chosen)
+      .eq("owner_type", "project")
+      .is("approved_at", null)
+      .select("id")
+      .returns<{ id: string }[]>();
+    if (error) return { ok: false, error: t.photoApproval.projects.approveFailed };
+
+    revalidateQueue();
+    revalidatePath("/projects", "layout");
+    return { ok: true, approved: data?.length ?? 0 };
+  });
+}
+
+/** Removes a project photo that is still waiting; a stale page can never remove one already approved. Drive's bin keeps it 30 days. */
+export async function removeWaitingProjectPhoto(attachmentId: string, requestId: string): Promise<ActionResult<{ driveWarning?: string }>> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction<{ driveWarning?: string }>("photos.removeWaitingProject", write(t), { id: requestId, action: "photos.removeWaitingProject", db: supabase }, async () => {
+    const perms = await loadPermissions();
+    if (!can(perms, "photos.approve")) return { ok: false, error: t.photoApproval.errors.notAllowed };
+
+    const { data: waiting } = await supabase
+      .from("attachments")
+      .select("id, drive_file_id")
+      .eq("id", attachmentId)
+      .eq("owner_type", "project")
+      .is("approved_at", null)
+      .returns<{ id: string; drive_file_id: string }[]>();
+    const row = waiting?.[0];
+    if (!row) return { ok: false, error: t.photoApproval.projects.notWaiting };
+
+        const { error } = await supabase.from("attachments").delete().eq("id", row.id).eq("owner_type", "project").is("approved_at", null);
+    if (error) return { ok: false, error: t.photoApproval.projects.removeFailed };
+
+    let driveWarning: string | undefined;
+    try {
+      await getDriveClient().trashFile(row.drive_file_id);
+    } catch {
+      driveWarning = t.photoApproval.driveLeftBehind;
+    }
+    revalidateQueue();
+    revalidatePath("/projects", "layout");
+    return { ok: true, driveWarning };
+  });
+}
+
 /**
  * Removes a photo that is still waiting. The row goes first, then the file is trashed in Drive; the same order as
  * the resident's own Remove (residents/[id]/photos/actions.ts). If Drive then fails, the photo is gone from the app
