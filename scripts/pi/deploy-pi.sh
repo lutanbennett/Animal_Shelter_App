@@ -198,7 +198,7 @@ if [[ "$BUILD_RC" -ne 0 ]]; then abandon_build; report_build_failure "$BUILD_RC"
 # fingerprint with the one `npm run deploy:*` prints on the dev machine.
 NEXT_DIST_DIR=.next.new node scripts/actions-key.mjs --env "$ENV_NAME" --built || { abandon_build; exit 1; }
 
-HOST=lannacare.org   # UAT's for good; production keeps it until the cutover (docs/decisions.md)
+HOST=lannacareforanimals.org   # the live site since the 2026-11-06 cutover; lannacare.org is UAT, which has no Pi
 [[ "$ENV_NAME" == "test" ]] && HOST=test.lannacare.org
 
 [[ -d .next.new ]] || { echo "deploy-pi: the build reported success but .next.new is missing; nothing swapped, $SERVICE keeps serving the old version." >&2; exit 1; }

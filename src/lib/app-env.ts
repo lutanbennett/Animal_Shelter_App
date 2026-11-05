@@ -38,6 +38,21 @@ export function appEnvForSupabaseUrl(url: string): AppEnv {
   return "production";
 }
 
+/**
+ * The environment this build wears. UAT shares the dev project for now
+ * (docs/decisions/2026-11-05-uat-shares-the-dev-database.md), so the project
+ * cannot tell UAT from dev: scripts/deploy.mjs pins NEXT_PUBLIC_APP_ENV=uat
+ * into the UAT build only, and it is honoured only on a build that talks to
+ * the dev project, so it can never relabel production. appEnvForSupabaseUrl
+ * stays project-only on purpose: the correction scripts treat a "dev" project
+ * as safe to write to and "production" as the live one.
+ */
+export function appEnvFor(url: string, pin: string | undefined): AppEnv {
+  const fromProject = appEnvForSupabaseUrl(url);
+  return fromProject === "dev" && pin === "uat" ? "uat" : fromProject;
+}
+
 export function getAppEnv(): AppEnv {
-  return appEnvForSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "");
+  // Both are written out as literals so Next inlines them at build time.
+  return appEnvFor(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "", process.env.NEXT_PUBLIC_APP_ENV);
 }
