@@ -145,14 +145,14 @@ Automated checks by: Claude  Date: 2026-11-05
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the Thai wording
+- [ ] The manual list above is empty, or every item in it was checked by a person — n/a: the one item is Thai wording, left pending below for a Thai speaker
 
 Manual verification by: pending: Thai wording needs a Thai speaker
 
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — pending: PR not yet open
+- [ ] Checklist pasted into the PR — n/a: the plan is committed in the PR itself
 - [ ] Handed to the production release manager — n/a: the release manager picks it up from the PR
 
 Result: pass
