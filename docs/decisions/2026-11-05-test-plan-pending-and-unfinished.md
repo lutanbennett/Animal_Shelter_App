@@ -70,6 +70,18 @@ proof.** The `sed` anchors did not match the real plan's wording, so all five fi
 to the base and all five "passed" — which looked exactly like the intended result. The rebuilt
 fixtures each assert `diff` against the base before being run.
 
+All eight shapes — the two that now pass, the five that still fail, and a baseline that proves the
+failures mean something — are pinned as a test, `scripts/check-test-plan-states.test.mjs`, so a later
+widening cannot quietly undo this. Its minimal plan is written in the test rather than copied from the
+template, so a template edit cannot change what the test asserts.
+
+**One message wording is deliberately unchanged, and the first gates run is why.** `test` exited 1 on
+`scripts/test-plan-template.test.mjs`, which matches the placeholder message text to prove placeholders
+are reported on fields and never on the template's guidance prose (`#0f0ey`; #1285 hit it three pushes
+running). Rewording the message to read "not filled in yet" broke that match. **The wording was put
+back rather than the test rewritten** — the test is a real guard and only the message's *severity*
+needed to move — and a comment at the call site now says so.
+
 ## The three real plans
 
 Each was taken from the commit whose CI run went red and fed to both the old and the new checker:

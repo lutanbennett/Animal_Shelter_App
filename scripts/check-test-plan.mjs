@@ -336,7 +336,10 @@ for (const file of changed) {
       unwritten(
         file,
         i + 1,
-        `template placeholder \`<${ph[1]}>\` not filled in yet — if this line is a field, fill it; if it is the template's own guidance prose (not a field), delete the line`,
+        // Wording unchanged on purpose: scripts/test-plan-template.test.mjs
+        // matches this message to prove placeholders are reported on fields and
+        // never on the template's guidance prose. Only its severity moved.
+        `unfilled template placeholder \`<${ph[1]}>\` — if this line is a field, fill it; if it is the template's own guidance prose (not a field), delete the line`,
       );
   });
 
