@@ -11,7 +11,7 @@ import { roleKeyFromName } from "./role-key";
  * anyone else). Shows the key the role will use before it is made. The new role has no cards; on success the page opens it
  * so the next step, giving it cards, is on the screen already.
  */
-export function CreateRoleForm({ labels }: { labels: { open: string; heading: string; name: string; nameTh: string; keyIs: (key: string) => string; keyNeedsLatin: string; noCards: string; submit: string; cancel: string } }) {
+export function CreateRoleForm({ labels }: { labels: { open: string; heading: string; name: string; nameTh: string; keyIs: string; keyNeedsLatin: string; noCards: string; submit: string; cancel: string } }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
@@ -51,7 +51,7 @@ export function CreateRoleForm({ labels }: { labels: { open: string; heading: st
         {labels.nameTh}
         <input value={nameTh} onChange={(e) => setNameTh(e.target.value)} maxLength={80} className="min-h-11 rounded-md border border-border bg-background px-3 py-2" />
       </label>
-      <p className="text-sm text-muted [overflow-wrap:anywhere]">{name.trim() && !key ? labels.keyNeedsLatin : key ? labels.keyIs(key) : ""}</p>
+      <p className="text-sm text-muted [overflow-wrap:anywhere]">{name.trim() && !key ? labels.keyNeedsLatin : key ? labels.keyIs.replace("{key}", key) : ""}</p>
       <p className="text-sm text-muted">{labels.noCards}</p>
       <div className="flex flex-wrap gap-2">
         <button type="submit" disabled={pending || !key} className="min-h-11 rounded-md border border-primary bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60">
