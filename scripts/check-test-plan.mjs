@@ -28,16 +28,32 @@ const git = (a) => execFileSync("git", a, { encoding: "utf8" }).trim();
 
 // Three buckets, because they mean different things to whoever reads the red.
 // `problems` is work that is wrong or missing. `awaiting` is a correct plan
-// waiting on a person. `deferred` is a pre-production gate that cannot be true
-// yet and has an owner. Printing them as one flat list made a missing signature
-// look identical to a skipped check, and a red nobody can read is a red people
-// learn to ignore.
+// waiting on a person. `unfinished` is a plan still being written. `deferred` is
+// a pre-production gate that cannot be true yet and has an owner. Printing them
+// as one flat list made a missing signature look identical to a skipped check,
+// and a red nobody can read is a red people learn to ignore.
+//
+// `unfinished` exists because a plan is committed with the first commit and
+// filled in as the work proceeds, so CI sees it half-written on every push in
+// between. That is the ordinary working state, not a defect, and failing on it
+// taught people that a red here means nothing — the same reasoning that stopped
+// an unsigned plan failing on 2026-09-24. Red is reserved for a plan that is
+// wrong: a line nobody addressed at all, an `n/a` with no reason, a `deferred:`
+// outside the deploy gate, a release-notes tick with no note, `Result: fail`.
 const problems = [];
 const awaiting = [];
+const unfinished = [];
 const deferred = [];
 const note = (file, line, msg) =>
   problems.push(file ? `${file}${line ? `:${line}` : ""} — ${msg}` : msg);
 const awaits = (file, msg) => awaiting.push(`${file} — ${msg}`);
+const unwritten = (file, line, msg) =>
+  unfinished.push(file ? `${file}${line ? `:${line}` : ""} — ${msg}` : msg);
+
+// A field still holding its template placeholder, e.g. `<name>`. Judged by shape
+// rather than by the known names, so a plan copied from a newer template with a
+// placeholder this script has never heard of still reads as unwritten.
+const isPlaceholder = (s) => /^<[^>]*>$/.test(String(s).trim());
 
 const isPlan = (f) => /^docs\/test-plans\/.+\.md$/.test(f);
 
@@ -317,10 +333,10 @@ for (const file of changed) {
     if (inFence[i] || inGuidance) return;
     const ph = l.match(/<(feature|name|yyyy-mm-dd|pass \| [^>]+)>/);
     if (ph)
-      note(
+      unwritten(
         file,
         i + 1,
-        `unfilled template placeholder \`<${ph[1]}>\` — if this line is a field, fill it; if it is the template's own guidance prose (not a field), delete the line`,
+        `template placeholder \`<${ph[1]}>\` not filled in yet — if this line is a field, fill it; if it is the template's own guidance prose (not a field), delete the line`,
       );
   });
 
@@ -410,6 +426,26 @@ for (const file of changed) {
       return;
     }
 
+    // `pending: <what is outstanding>` on a checklist line, exactly as the two
+    // signature lines below have always accepted it. The check cannot be ticked
+    // and is not `n/a` — it genuinely waits on somebody, usually Lutan or a
+    // deploy. Before this, the honest word went red while writing `n/a:` for the
+    // same thing went green, so the check punished the truthful plan and taught
+    // streams to mislabel a real wait as "did not apply".
+    //
+    // Matched on the word rather than on a well-formed `pending: <reason>`, as
+    // `deferred` is, so a bare `pending:` reports its missing detail instead of
+    // falling through to the catch-all below.
+    if (/\bpending\b/i.test(body)) {
+      const p = body.match(/pending\s*[:\-—]\s*(.+)$/i);
+      if (!p || p[1].trim().length < 3) {
+        note(file, i + 1, "`pending` with no detail — say what is outstanding and who it waits on");
+      } else {
+        awaits(file, `${section || "checklist"}, line ${i + 1}: ${p[1].trim()}`);
+      }
+      return;
+    }
+
     note(file, i + 1, `unticked and not marked \`n/a: <reason>\`: "${body.slice(0, 60)}"`);
   });
   if (boxes === 0) note(file, 0, "no checklist items found — is this a copy of the template?");
@@ -417,7 +453,9 @@ for (const file of changed) {
   // Sign-off.
   const result = text.match(/^Result:\s*(.+?)\s*$/m);
   if (!result) {
-    note(file, 0, "no `Result:` line");
+    unwritten(file, 0, "no `Result:` line yet");
+  } else if (isPlaceholder(result[1])) {
+    unwritten(file, 0, "`Result:` still holds the template's placeholder");
   } else {
     const value = result[1].replace(/\*\*/g, "").trim().toLowerCase();
     if (!RESULTS.includes(value)) {
@@ -478,6 +516,15 @@ for (const file of changed) {
       continue; // Pending carries no date.
     }
 
+    // A placeholder still in the signature means nobody has reached the sign-off
+    // yet, which is where every plan sits until its last commit. It is reported
+    // as unwritten rather than wrong, so the only red left on a signature is a
+    // real one: an empty name, or a date that is not a date.
+    if (isPlaceholder(who) || isPlaceholder(when)) {
+      unwritten(file, 0, `\`${label}\` not signed off yet`);
+      continue;
+    }
+
     if (who.length < 2 || /^_+$/.test(who)) {
       note(file, 0, `\`${label}:\` is empty — say who did this, \`n/a: <reason>\`, or \`pending: <what is outstanding>\``);
     }
@@ -530,10 +577,16 @@ const deferredNote = deferred.length
     deferred.map((d) => `  ${d}`).join("\n")
   : "";
 
+const unfinishedNote = unfinished.length
+  ? "\nStill being written (not a defect — the plan is filled in as the work proceeds):\n" +
+    unfinished.map((u) => `  ${u}`).join("\n")
+  : "";
+
 if (problems.length) {
   console.error(
     `check-test-plan: ${problems.length} problem(s)` +
       (awaiting.length ? `, and ${awaiting.length} item(s) awaiting a person` : "") +
+      (unfinished.length ? `, and ${unfinished.length} line(s) not written yet` : "") +
       "\n",
   );
   for (const p of problems) console.error(`  ${p}`);
@@ -541,8 +594,12 @@ if (problems.length) {
     console.error("\nAwaiting a person (not a defect — nobody has looked yet):");
     for (const a of awaiting) console.error(`  ${a}`);
   }
+  if (unfinished.length) console.error(unfinishedNote);
   console.error(deferredNote + releaseNote + releaseFromNote + audienceNote);
-  console.error("\nEvery line is ticked, `n/a: <reason>`, or — in the pre-production gate — `deferred: <owner>`.");
+  console.error(
+    "\nEvery line is ticked, `n/a: <reason>`, `pending: <what is outstanding>` when it genuinely waits on " +
+      "somebody, or — in the pre-production gate — `deferred: <owner>`.",
+  );
   process.exit(1);
 }
 
@@ -553,11 +610,17 @@ if (problems.length) {
 // still has to be resolved before the release manager deploys — it is just not
 // the CI job's job to shout about it. Red now means a plan that is missing,
 // incomplete or self-contradictory, which is always someone's mistake to fix.
-if (awaiting.length) {
-  console.log(`check-test-plan: the plan is complete and correct, and ${awaiting.length} item(s) await a person:\n`);
+if (awaiting.length || unfinished.length) {
+  const headline = unfinished.length
+    ? `check-test-plan: nothing is wrong — the plan is still being written (${unfinished.length} line(s))` +
+      (awaiting.length ? ` and ${awaiting.length} item(s) await a person` : "")
+    : `check-test-plan: the plan is complete and correct, and ${awaiting.length} item(s) await a person`;
+  console.log(headline + ":\n");
   for (const a of awaiting) console.log(`  ${a}`);
-  console.log(deferredNote + releaseNote + releaseFromNote + audienceNote);
-  console.log("\nNothing to fix. A person still has to look and sign before this ships.");
+  console.log(unfinishedNote + deferredNote + releaseNote + releaseFromNote + audienceNote);
+  console.log(
+    "\nNothing to fix. The plan still has to be finished, and a person still has to look and sign, before this ships.",
+  );
   process.exit(0);
 }
 
