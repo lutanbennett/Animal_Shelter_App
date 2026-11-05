@@ -75,6 +75,7 @@ export const unreleased: ReleaseNote[] = [
   { text: "Settings → Who does what opens again. In 0.43.0 the page showed 'This page couldn't load' for an Admin who had entered the authenticator code, because of how the new Create a role box was wired in. Nothing on the screen has changed; you can give and remove cards again.", admin: true },
   { text: "Publishing an adoption update now works. Ticking Publish on the public website, with the story and first name filled in, used to look as if it saved and then show the update as not published, because those three things were never stored. They are stored now, and a first name that contains the letter s is no longer refused. Updates that were ticked before this fix were not saved as published, so tick them again.", cards: ["adoption_news"] },
   { text: "There is now a way in to the photo and website approval page from the menu, for Admin and for anyone who holds an approving card. It is called Photos to approve.", cards: ["approve_photos", "approve_website"] },
+  "A photo added to a public project folder now waits for approval before it appears on the public website, the same as resident and event photos. Anyone who can approve photos sees it under a new Project photos tab on the Photos to approve page. Photos added before this change are unaffected, so nothing already on the website has disappeared.",
 ];
 
 /** Newest first. */
