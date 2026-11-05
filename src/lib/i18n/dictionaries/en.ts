@@ -5188,7 +5188,7 @@ const en = {
     },
   },
   photoApproval: {
-    tabs: { residents: "Resident photos", who: "Who's in the photo", events: "Event photos", website: "Page changes" },
+    tabs: { residents: "Resident photos", who: "Who's in the photo", events: "Event photos", projects: "Project photos", website: "Page changes" },
     website: {
       empty: "No website changes are waiting.",
       published: "Published. The website now shows it.",
@@ -5228,6 +5228,16 @@ const en = {
       heading: (n: number) => (n === 1 ? "1 event photo waiting" : `${n} event photos waiting`),
       anEvent: "A fundraising event",
       removeBody: (title: string) => `The photo on ${title} will be deleted.`,
+      photoAlt: (title: string) => `Photo waiting for approval: ${title}`,
+      approveFailed: "The photos could not be approved. Nothing was changed. Try again.",
+      notWaiting: "That photo was already approved or removed. Refresh the page.",
+      removeFailed: "The photo could not be removed. Nothing was changed. Try again.",
+    },
+    /** Photos filed in a project folder (0316), waiting in the same queue. */
+    projects: {
+      heading: (n: number) => (n === 1 ? "1 project photo waiting" : `${n} project photos waiting`),
+      aProject: "A project folder",
+      removeBody: (title: string) => `The photo in ${title} will be deleted.`,
       photoAlt: (title: string) => `Photo waiting for approval: ${title}`,
       approveFailed: "The photos could not be approved. Nothing was changed. Try again.",
       notWaiting: "That photo was already approved or removed. Refresh the page.",
