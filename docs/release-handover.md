@@ -1,117 +1,113 @@
-# Release handover — written 2026-11-04 after `0.42.0`
+# Release handover — written 2026-11-05 after `0.43.0`
 
 A **delta**. The durable rules are in `docs/release-procedure.md` and this release's own record is
-`docs/releases/2026-11-04-0-42-0.md`. **Both outrank this file.**
+`docs/releases/2026-11-05-0-43-0.md`. **Both outrank this file.**
 
 ## START HERE
 
-**`0.42.0` is deployed on both environments and it MAILED.** Both Pi clones and the production Worker
-built from **`2c985e4f`** (the clones pinned with `--ref`); the **test Worker is `cd2b0070`**, because
-`main` moved after the cut and `deploy.mjs` takes no `--ref`. **Nothing served differs** — see the next
-section, which is the one thing in this edition worth reading before you start. **309 of 309 applied**,
-`No drift` on **both** databases, `calendar-cron` healthy, every held card fully applied, every
-permission cell backed by a card, `activities-grantable` byte-identical before and after.
+**`0.43.0` is deployed on both environments and it MAILED.** Both Pi clones are the release commit
+**`3227a19e`** (pinned with `--ref`); **both Workers are `fda3c508`**, because #1286 merged itself on
+green in the gap and `deploy.mjs` takes no `--ref`. **Nothing served differs** — the allow-list
+code-identity diff is empty, and that mattered, see below. **316 of 316 applied**, `No drift` on both
+databases, `calendar-cron` healthy, every held card fully applied, every permission cell backed by a
+card, `activities-grantable` unchanged at ten.
 
-**The release cost two touches — the target.** The email answer and his Worker deploy, nothing else.
+**The release cost two touches — the target.** The email answer and his Worker deploy.
 
-**Re-measure before trusting any of this.** `git fetch`, `git diff --stat 2c985e4f..origin/main`,
+**Re-measure before trusting any of this.** `git fetch`, `git diff --stat fda3c508..origin/main`,
 `gh pr list`, `--status --env production`, `node scripts/check-production.mjs all`, `/api/version`.
 
-## The code-identity check will stop a sound release, and you need to know why
+## `0.42.0`'s fix to the code-identity check earned its keep on the very next release
 
-**This is new and it will recur.** The runbook's check is
-`git diff --name-only <a>..<b> | grep -vE '^(docs/|\.claude/)'`, and its instruction is **any line
-means stop**. On this release it printed eight files and **none of them was served**: a git hook, the
-CI workflow, the README, three backlog scripts and two HTML templates, all from #1254 merging during
-the deploy.
-
-**The exclusion list covers `docs/` and `.claude/` only.** It does not cover `scripts/`, `.github/`
-or `.githooks/`, so repo tooling reads as application code. **The second grep is the one that
-answers the question** — is anything in `src/`, `worker/`, `public/`, `next.config` or `package*`? If
-that is empty, nothing `next build` includes differs and the release is sound:
+**The one thing in this edition worth reading before you start.** `main` moved under the deploy again
+(#1286, the planner preflight). The **authoritative allow-list form** of the check printed nothing, so
+the release was sound and **nothing was rebuilt**:
 
 ```bash
-git diff --name-only <a>..<b> | grep -E '^(src/|worker/|public/|next\.config|package)'
+git diff --name-only <a>..<b> | grep -E '^(src/|worker/|public/|next\.config\.|open-next\.config\.|wrangler\.jsonc$|package(-lock)?\.json$|postcss\.config\.|tsconfig[^/]*\.json$|scripts/pi/|scripts/lib/[^/]+$|scripts/(deploy|apply-migrations|actions-key)\.mjs$)'
 ```
 
-**Nothing was rebuilt**, because the trap is explicit that `main` moving does not license chasing a
-SHA — a past release poisoned the Cloudflare cache doing exactly that. **Widening the pattern is a
-backlog item under *Architecture*, not a release-time fix.** Do not change it mid-release.
-
-## Corrections and closures to the last edition
-
-- **`0.41.3`'s gutted `node_modules` HAS a cause, and it is not the Windows preload.** The last
-  edition filed it unknown with `win-junction-symlinks.cjs` as prime suspect. The planner established
-  it from the npm logs on 2026-11-03: **the daily sync's own `npm ci` deleted the tree while the
-  release's build was using it.** `npm ci` removes before it installs, the damage signature is a
-  half-finished delete, and the timestamps line up to the second. **Reading that preload is probably
-  not the job. The guard is.** It does not exist yet, so **run `npm ci` first, before any build, and
-  run nothing else in the main checkout while one is in flight.** That worked here — 484 entries
-  throughout both builds.
-- **The deferred-note window COLLAPSED: 9 candidates, down from 48.** The last two editions warned it
-  was growing; it is not. **The boilerplate problem is unchanged** — three of the four flagged printed
-  the plan template's own text instead of a reason, so **read the plan, not the excerpt**. Two of those
-  had actually *ticked* their line and their notes were published. Budget minutes, not an hour.
-- **The migration apply was NOT refused.** The pattern across five releases: refused twice
-  (`0.41.1`), clean (`0.41.2`), refused (`0.41.3`), clean (`0.42.0`). **Neither outcome predicts the
-  next. Do not plan around either, and do NOT ask for an allow rule** — settled on `0.41.2`. A *third*
-  refusal is the moment to put the whole pattern to him.
-- **`--base` was again not needed**, for the same reason: no note was written in the cut. Expect
-  `--base` only on a release that publishes a deferred note in the cut itself.
-- **The two hosts' stylesheets differ again** (19 bytes, different filenames) and it is **still not a
-  finding**. The per-host `check-assets` is the check. **Stop re-deriving this.**
-- **`release-prs.mjs` was short one squash-merged planner handover again** (#1247). **Four releases
-  running.** Its exit 0 is correct and not reassuring: read `gh pr list --state merged` by `mergedAt`
-  too and add the numbers by hand.
-- **`doctor-cells` reads `MISSING 5 of 12`, unchanged for four releases**, same five names:
-  `medical.weight`, `photos.resident_add`, `resident.adoption_news`, `resident.microchip`, `visit.book`.
-  Lutan tests one card at a time on Doctor. **Never restore its cards and never edit the check.**
-- **Both Pi caches stayed warm** (658 MB and 661 MB, both `kept`), continuing the run since `0.41.2`.
-- **`npm ci` was again measured as not needed** by the range and run anyway. Keep doing that.
+**Under the old `grep -vE '^(docs/|\.claude/)'` form it would have printed three files** — a planner
+skill, a test plan and `scripts/check-planner-preflight.mjs` — and *any line means stop* would have
+halted a sound release for the second release running. **Use the allow-list form.** And close its
+opposite failure mode as the decision file requires: run the same diff with `grep -vE` and **read**
+what it prints, to confirm nothing there is built or run at deploy. Three releases now say the same
+thing in different words: **when `main` moves, read what is deploying and then do nothing.**
 
 ## New this release
 
-- **The "minor release" trap fired for the SECOND time and the prescribed question defused it again.**
-  He asked for "a minor release"; in his usage that is the middle-number bump, in `releases.ts` `major`
-  means *worth an email*. **Ask about the EMAIL, never about "major or minor"** — and this time the
-  answer was **yes**, so the two readings happened to agree on `0.42.0`. **Do not infer from the last
-  release that "minor" means no mail.** Use the exact question, every time.
-- **Both of his answers went in ONE message**, with the nine notes and the eight pending plans listed
-  inside the question itself. **That is what kept this to two touches.** A session that asks the email
-  question and the `pending:` question separately spends two interventions on one decision point.
-- **A mailing release makes the mail PRESENCE assertion load-bearing**, not the absence. `--verify`
-  printed `majorReleasesSince("0.41.3")` → `["0.42.0"]` with the control still finding `0.41.0` from
-  further back. **And "sent 1" is not delivery** — the inbox was checked and the message was there,
-  unread, seconds after the deploy line. `E_RECIPIENT_NOT_ALLOWED` on the shelter's own address is
-  the known skip, not a failure.
-- **The first `admin: true` release note ever shipped** (#1248). The cut asserted only that it crossed
-  character-identical; **the behaviour is #1248's to verify** and sits on its own plan's `pending:`
-  line. Do not read the cut as having checked it.
-- **The edge-cache check is easy to get wrong in a way that looks like a broken cache.** A fresh URL
-  per fetch is a fresh cache key, so three requests give three `MISS`es and prove nothing. **Fetch ONE
-  url three times**: `MISS`, `HIT`, `HIT`. This was done wrong first and redone.
-- **`sync-home-icons` now draws 52 cards / 416 images** (was 50 / 400), creating exactly 16 — two
-  cards at eight images each, consistent with last release's bill cards. A jump of a multiple of eight
-  is a new card, not a fault.
+- **A release can now ship two notes that contradict each other, and no check looks for it.** The
+  fundraising staff-screens note said *"Nothing is on the public website yet"* while the public Events
+  page shipped in the **same release** — both would have been mailed together. Found only by reading
+  the thirteen notes **as a set**. **Expect this whenever a feature lands in two halves**, which the
+  security and fundraising work does by design. Corrected in the cut; it is a defect in the record.
+- **`--base` was needed, exactly as the last edition predicted**, because five notes were written in
+  the cut: the **deferred notes whose step this release closes**. That is the one case the runbook puts
+  in the cut, and it will recur on any release that applies migrations several streams were waiting on.
+  **Commit the notes first**, then `--verify --base <that commit>`, so *character-identical* still
+  means something.
+- **The deferred-note window went 48 → 9 → 16, and every one of the 16 was flagged.** It tracks how
+  many streams are waiting on a production apply, not quality. **Eight of the sixteen were the plan
+  template's boilerplate** rather than a reason, which is four editions running: **read the plan, not
+  the excerpt.** Budget ten minutes, not an hour.
+- **The production dry-run FAILED and applying was still correct.** `0314` uses the
+  `attachment_owner_type` value `'event'` that `0312` adds, and a new enum value cannot be used in the
+  transaction that adds it. **Read both files and check dev**: all seven were already applied there,
+  which is the proof. A red dry-run normally means *do not apply*; this shape means *apply*.
+- **An untracked file in the main checkout would have refused his one command.**
+  `scripts/check-deceased-archive-state.mjs`, in no branch, left by the planner the night before. Moved
+  to `.local/`. **Check `git status --porcelain` in the main checkout before the handover, every time** —
+  it is the cheapest avoidable cost there is and only cheap if someone looks.
+- **Database reads work from a session again, and `#4xx3l` is CLOSED** (2026-11-05, by the planner's preflight). **Do not re-derive the cause as this release's first draft did.** It is not that a shell started after the variable was set inherits it — Lutan tested restarting the app and it **failed**. It works because he instructed the move to be **reversed** (*"just put the keys back"*), so the **project-scoped** token is in each worktree's `.env.local` while `#ubejc`'s revocation of the account-wide token stands. **Nothing here is a release manager's to do**, and the standing refusal — a stream does not get the secret back in a file — applies to a stream asking, never to him deciding.
+
+## Corrections and closures to the last edition
+
+- **The test Worker was NOT left behind.** The last edition recorded it as `cd2b0070`; it read
+  `2c985e4f` before this release began, so it was brought level afterwards. Both hosts agreed at the
+  start and agree now.
+- **The migration apply was clean again.** The pattern over six releases: refused twice (`0.41.1`),
+  clean (`0.41.2`), refused (`0.41.3`), clean, **clean**. **Two in a row still predicts nothing. Do NOT
+  ask for an allow rule** — settled on `0.41.2`. A *third* refusal is when to put the pattern to him.
+- **The "minor release" trap did not fire**, because he said *"a major release with email"* himself. **Do
+  not read that as the trap being gone**: it fired on the two releases before this one. Use the exact
+  question — *should this release email you?* — every time.
+- **`release-prs.mjs` was short one squash-merged planner handover again** (#1284). **Five releases
+  running.** Its exit 0 is correct and not reassuring: also read `gh pr list --state merged` by
+  `mergedAt` and add the numbers by hand.
+- **`doctor-cells` reads `MISSING 5 of 12`, unchanged for five releases**, same five names. Never
+  restore its cards, never edit the check, never raise it.
+- **Both Pi caches stayed warm** (693 MB and 695 MB, both under the 1 GB clear point).
+- **`npm ci` was again measured as not needed by the range and run anyway, first, before any build.**
+  Keep doing both.
+- **The two hosts' stylesheets differ again** (33 bytes, different filenames) and it is **still not a
+  finding**. Stop re-deriving this.
+
+## Two measurement notes, so nobody repeats the mistakes
+
+- **The edge-cache check gave three `HIT`s and no `MISS`, and that is a pass.** The browser pane's own
+  page load was the miss that warmed it. **Fetch ONE url three times** — a fresh URL per fetch is a
+  fresh key and proves nothing. Say which fetch was the miss rather than implying you saw the sequence.
+- **A header is only verifiable once BOTH endpoints report the release.** `/api/version` is the Pi and
+  `/api/releases/current` is the Worker bundle. This release's CSP fix (#1277) was read **after** both
+  agreed: `connect-src` names `googleapis.com`, enforced, no report-only header. **That is the first
+  time a release has verified the thing its own deferred note promised**, rather than asserting it.
 
 ## In flight and open
 
-- **8 of 14 plans shipped signed `pending:`**, on his decision, grouped in the record. Two clusters:
-  a Thai read of new Thai (5) and a look at a screen (3). **The poodle drawings are the one worth a
-  real look**, because they are the only thing in this release a member of the public can see.
-- **The five cards held by no role: ANSWERED 2026-11-02 — *leave them*. STOP RAISING IT.** Carried
-  forward unchanged, because the fault it names is a session re-asking it. It is his action on
-  Settings → Who does what, not a release matter, and **not a defect, a gap or a decision anyone is
-  owed.** The bill cards from last release are likewise held by nobody — **the normal state of a new
-  card.**
-- **The whole signed-out surface is still unverified** and `PUBLIC_SITE` is `locked`. The release that
+- **16 of 30 plans shipped signed `pending:`**, on his decision, grouped in the record. **The one worth
+  doing first is `video-upload-csp`** — his own upload, now unblocked by the deploy, on a feature that
+  has never once worked.
+- **The locked public site now hides something people would want to see.** `/events` sends an anonymous
+  visitor to `/login?next=%2Fevents`, so **the only publicly visible change in this release is the one
+  nobody can check.** The same applies to the Campaigns and Sterilisation redirects. The release that
   unlocks the site inherits all of it at once.
-- **Nothing behind sign-in was verified**, on either environment: no account. Date handling for
-  Thailand sits in that gap.
+- **Six of the thirteen notes say their own Thai is unread by a Thai speaker.** That is a standing
+  backlog now, not a per-release item, and worth putting to him as one decision rather than six.
+- **Nothing behind sign-in was verified**, on either environment: no account.
 - **Carried, re-measure each:** the restore drill, never exercised; the Worker-fallback 44-second gap
-  from the power-pull drill (its own backlog item under *Architecture*, cause not established).
-  **`tee` under PowerShell still writes UTF-16** — `tr -d '\000'` before grepping.
+  from the power-pull drill. **`tee` under PowerShell still writes UTF-16** — `tr -d '\000'` before
+  grepping, and the log is absent from disk for the whole build, so **read his terminal instead**.
 
-**Next free migration number: `0309`.** `0308` is the highest on `main`, and there is no number to
-avoid: both databases read 309 of 309 with nothing applied that has no file. Check `origin/main` *and*
+**Next free migration number: `0316`.** `0315` is the highest on `main`, and there is no number to
+avoid: both databases read 316 of 316 with nothing applied that has no file. Check `origin/main` *and*
 open `*-schema` PRs anyway.
