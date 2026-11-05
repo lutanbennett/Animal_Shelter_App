@@ -38,3 +38,17 @@ test("a gutted tree is named; a whole one passes", () => {
   assert.equal(treeProblems(root), null);
   rmSync(root, { recursive: true, force: true });
 });
+
+test("a child of the live holder runs under its lock instead of refusing it", () => {
+  const root = tmp();
+  writeFileSync(join(root, LOCK_FILE), JSON.stringify({ kind: "build", pid: process.ppid, since: "x" }));
+  const before = process.env.TREE_LOCK_PID;
+  process.env.TREE_LOCK_PID = String(process.ppid);
+  try {
+    takeTreeLock("build", root)();
+    assert.equal(existsSync(join(root, LOCK_FILE)), true, "the parent's lock is left alone");
+  } finally {
+    if (before === undefined) delete process.env.TREE_LOCK_PID;
+    else process.env.TREE_LOCK_PID = before;
+  }
+});

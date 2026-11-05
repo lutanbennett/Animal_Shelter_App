@@ -40,7 +40,7 @@ export function takeTreeLock(kind, root = ROOT) {
   // runs under that lock; it must not refuse its own parent.
   try {
     const parent = Number(process.env.TREE_LOCK_PID);
-    if (parent && JSON.parse(readFileSync(file, "utf8")).pid === parent && alive(parent)) return () => {};
+    if (parent && parent !== process.pid && JSON.parse(readFileSync(file, "utf8")).pid === parent && alive(parent)) return () => {};
   } catch {
     // no lock file, or unreadable: take it the ordinary way below
   }
