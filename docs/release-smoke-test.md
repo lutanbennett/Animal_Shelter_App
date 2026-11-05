@@ -1,7 +1,7 @@
 # Release smoke test
 
 Run this **once per production release**, not per feature. Copy it to
-`docs/releases/<yyyy-mm-dd>.md`, fill it in against `lannacare.org` after the
+`docs/releases/<yyyy-mm-dd>.md`, fill it in against `lannacareforanimals.org` (production since the 2026-11-06 cutover) after the
 deploy, and commit it on a feature branch and open a PR like any other change —
 no exceptions, the record included (Lutan, 2026-10-03). It is a record, not a
 gate, and nothing in CI checks it.
@@ -53,7 +53,7 @@ Read the output; do not assume it.
 - [ ] `deploy: production → Supabase project dbkodyyxxhtygxcxmfcu (<sha>)` — the project ref is **production**, not dev, and the SHA matches what you meant to ship
 - [ ] `strip-baked-env: removed N env var(s) from the Worker bundle` present
 
-## The app on `lannacare.org`
+## The app on `lannacareforanimals.org` (production)
 
 - [ ] **No Dev badge, and the palette is orange.** Teal with a green cast means the build is pointing at the dev database — stop and roll back. Note this is a one-way signal: `app-env.ts` renders anything that is not the known dev project as production, so the *absence* of the badge only rules out dev, it does not prove production. The deploy line above is the authoritative check
 - [ ] Sign in with Google works
@@ -93,7 +93,7 @@ expected; test being behind is the thing this prevents.
 - [ ] **Check what is already on test before overwriting it.** `curl -s https://test.lannacare.org/api/releases/current`, and ask whether anyone is mid-test on it. Test holds one build, and it is sometimes deliberately an integration build that exists nowhere else — on 2026-09-23 it held `main` + cashflow + `claude/utc-today` for an overnight timezone check, and deploying over it would have destroyed the thing under test
 - [ ] `npm run deploy:test` from the same commit as the production deploy
 - [ ] `deploy: test → Supabase project qxkmhwybjggxvsfxsxbd (<sha>)` — the ref is the **dev** project and the SHA matches production's
-- [ ] Both report the same version: `curl -s https://test.lannacare.org/api/releases/current` and the same on `lannacare.org`
+- [ ] Both report the same version: `curl -s https://test.lannacare.org/api/releases/current` and the same on `lannacareforanimals.org`
 
 Three things about this worth knowing rather than discovering:
 

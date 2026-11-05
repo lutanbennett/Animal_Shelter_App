@@ -43,7 +43,7 @@ to recognise it as damage and fix it, not to add it to his list. The two genuine
 exceptions, both of which should be rare enough to be remarkable:
 
 - a `sudo` password on the Pi, which only an already-broken clone should need
-- anything behind a sign-in on `lannacare.org`, since Claude has no account there
+- anything behind a sign-in on `lannacareforanimals.org`, since Claude has no account there
 
 | Step | Who |
 |---|---|
@@ -643,7 +643,7 @@ Configuration → Purge Everything**, which is Lutan's step — then re-run the 
 the Pi:
 
 ```bash
-ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && node scripts/pi/check-assets.mjs --url https://lannacare.org/'
+ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && node scripts/pi/check-assets.mjs --url https://lannacareforanimals.org/'
 ```
 
 The script builds into `.next.new` and renames it over `.next` only once it compiled, so a request never meets a half-written build; it probes the Pi on loopback **with the origin key** (production answers `Forbidden` without it); and the asset check below runs from an exit trap, so a failure in an earlier step can no longer skip it. A `DEPLOY FAILED` banner is believed — but if the probe line says `serves 'nothing'`, confirm with `https://lannacare.org/api/version` before rolling back, and **run the asset check by hand either way**.
@@ -673,7 +673,7 @@ If one clone builds and its twin does not on the same machine, run `du -sh .next
 account:
 
 ```bash
-curl -s https://lannacare.org/api/version
+curl -s https://lannacareforanimals.org/api/version
 curl -s https://test.lannacare.org/api/version
 ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && git log --oneline -1; cd ~/Animal_Shelter_App_test && git log --oneline -1; systemctl is-active lanna-care lanna-care-test'
 ```
@@ -703,7 +703,7 @@ drift there invalidates test as a pre-production check.
 **Confirm the release mail actually arrived — do not stop at "sent 1".** The
 deploy prints `deploy: release mail for <version> [UAT]: sent N, skipped M`;
 that is the relay accepting it, not delivery. Check the inbox for the message
-from `releases@lannacare.org` with the version in its subject.
+from `releases@lannacareforanimals.org` with the version in its subject.
 `lannacareforanimals@gmail.com` is expected to be skipped with
 `E_RECIPIENT_NOT_ALLOWED` — the shelter's own address refused by the relay, a
 known open question, not a delivery failure.
