@@ -759,9 +759,9 @@ const en = {
     },
     /** The landing page a signed-out visitor sees while the public site is locked. */
     locked: {
-      title: "Staff testing site",
-      body: "This site is for shelter staff during testing. The public website isn't open yet.",
-      signInHint: "Shelter staff: sign in to see the app and the public pages.",
+      title: "Our site is under construction",
+      body: "We're busy putting it together, and it will be available soon. Do come back and meet the animals looking for a home.",
+      signInHint: "Work at the shelter? Sign in to see the app and the public pages.",
     },
     forgot: {
       title: "Reset your password",

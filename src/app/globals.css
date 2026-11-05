@@ -363,6 +363,9 @@ body {
   --puppy-pj: #e0732f;
   --puppy-pj-dot: #fbe3c6;
   --puppy-pj-dot2: #f7b27c;
+  /* The hi-vis jacket on the locked landing page (PuppyConstruction). */
+  --puppy-hivis: #edc132;
+  --puppy-hivis-shade: #d9a81f;
 }
 
 /* Hidden, then faded in after --puppy-delay, so a fast navigation never
