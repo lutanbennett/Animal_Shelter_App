@@ -151,15 +151,15 @@ export async function unpublishProject(
   });
 }
 
-export async function updateSiteContent(
-  _state: SiteContentFormState,
+/**
+ * The checked columns of the home-page settings form, shared by the save that publishes (updateSiteContent) and the one
+ * that drafts (proposeSiteContent) so the two cannot disagree about what a valid form is. Returns the column patch
+ * or the refusal text.
+ */
+async function siteContentPatch(
   formData: FormData,
-): Promise<SiteContentFormState> {
-  const { t } = await getT();
-  const supabase = await createClient();
-  return runWriteAction("website.updateSiteContent", write(t), { id: writeRequestIdFrom(formData), action: "website.updateSiteContent", db: supabase }, async () => {
-    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
-
+  t: Awaited<ReturnType<typeof getT>>["t"],
+): Promise<{ patch: Record<string, unknown> } | { error: string }> {
     const text = (name: string) => (formData.get(name) as string | null)?.trim() ?? "";
     const optional = (name: string) => text(name) || null;
 
@@ -179,16 +179,16 @@ export async function updateSiteContent(
     const checked: Record<string, string | null> = {};
     for (const [name, label, check, hosts] of links) {
       const result = check(text(name));
-      if (!result.ok) return refuse(`${label}: ${linkErrorText(t.linkErrors, result, hosts)}`);
+      if (!result.ok) return { error: `${label}: ${linkErrorText(t.linkErrors, result, hosts)}` };
       checked[name] = result.url;
     }
     // A map link that 404s at Google (a retired goo.gl link, a typo in a
     // short link) is refused here rather than published in the footer.
     if (checked.contact_map_url && !(await mapLinkLeadsSomewhere(checked.contact_map_url))) {
-      return refuse(`${s.contactMapUrl}: ${s.contactMapUrlDead}`);
+      return { error: `${s.contactMapUrl}: ${s.contactMapUrlDead}` };
     }
     const whatsapp = checkWhatsAppNumber(text("whatsapp_number"));
-    if (!whatsapp.ok) return refuse(`${s.whatsappNumber}: ${t.linkErrors.whatsappNumber}`);
+    if (!whatsapp.ok) return { error: `${s.whatsappNumber}: ${t.linkErrors.whatsappNumber}` };
 
     // The picker's whole order, comma-separated. Unknown names are dropped
     // and repeats collapsed; whether a channel has a value is not checked
@@ -221,7 +221,7 @@ export async function updateSiteContent(
         giftRaw.some((v) => !v) || amounts.some((n) => !Number.isFinite(n) || n < 0) ||
         (giftUnit === "percent" && amounts.some((n) => n > 100))
       ) {
-        return refuse(s.giftSplitInvalid);
+        return { error: s.giftSplitInvalid };
       }
       gift = {
         gift_split_year: year,
@@ -233,13 +233,8 @@ export async function updateSiteContent(
       };
     }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    const { error } = await supabase
-      .from("site_content")
-      .update({
+    return {
+      patch: {
         tagline: text("tagline"),
         tagline_th: optional("tagline_th"),
         hero_alt: text("hero_alt"),
@@ -257,6 +252,30 @@ export async function updateSiteContent(
         preferred_channels: preferred,
         ...checked,
         whatsapp_number: whatsapp.number,
+      },
+    };
+}
+
+export async function updateSiteContent(
+  _state: SiteContentFormState,
+  formData: FormData,
+): Promise<SiteContentFormState> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction("website.updateSiteContent", write(t), { id: writeRequestIdFrom(formData), action: "website.updateSiteContent", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+
+    const built = await siteContentPatch(formData, t);
+    if ("error" in built) return refuse(built.error);
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    const { error } = await supabase
+      .from("site_content")
+      .update({
+        ...built.patch,
         updated_at: new Date().toISOString(),
         updated_by: user?.id ?? null,
       })
@@ -266,6 +285,32 @@ export async function updateSiteContent(
 
     revalidateWebsitePages();
     return { ok: true, success: t.common.saved };
+  });
+}
+
+/**
+ * Proposes the home-page settings instead of publishing them (0315). Asks website.propose, which propose_website_draft()
+ * asks; site_content has one row, so the draft is keyed 'site' and a second proposal replaces the first. The live page does
+ * not change until someone holding website.approve publishes it in the approval portal.
+ */
+export async function proposeSiteContent(
+  _state: SiteContentFormState,
+  formData: FormData,
+): Promise<SiteContentFormState> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction("website.proposeSiteContent", write(t), { id: writeRequestIdFrom(formData), action: "website.proposeSiteContent", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.propose")) return refuse(t.admin.security.errors.adminAccessRequired);
+    const built = await siteContentPatch(formData, t);
+    if ("error" in built) return refuse(built.error);
+    const { error } = await supabase.rpc("propose_website_draft", {
+      p_target: "site_content",
+      p_row_key: "site",
+      p_patch: built.patch,
+    });
+    if (error) return refuse(error.message);
+    revalidatePath("/photos/approve");
+    return { ok: true, success: t.admin.website.pages.proposed };
   });
 }
 

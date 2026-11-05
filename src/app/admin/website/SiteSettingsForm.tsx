@@ -19,7 +19,7 @@ import {
   X_HOSTS,
 } from "@/lib/links/validate";
 import { ContactChannelPicker } from "./ContactChannelPicker";
-import { updateSiteContent } from "./actions";
+import { proposeSiteContent, updateSiteContent } from "./actions";
 
 const inputClass =
   "rounded border border-border bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/40";
@@ -29,8 +29,18 @@ const inputClass =
  * its English and Thai side by side (paired columns, 0059), the contact
  * ways are language-neutral. The long-form pages are SitePageForm.
  */
-export function SiteSettingsForm({ content }: { content: SiteContent }) {
-  const [state, onSubmit, pending] = useWriteForm(updateSiteContent, undefined);
+export function SiteSettingsForm({
+  content,
+  canEdit = false,
+  canPropose = false,
+}: {
+  content: SiteContent;
+  /** website.content, the activity updateSiteContent asks. Defaults to false so a caller that forgets offers no Save. */
+  canEdit?: boolean;
+  /** website.propose, the activity proposeSiteContent asks: the settings are saved as a draft that waits for approval. Defaults to false. */
+  canPropose?: boolean;
+}) {
+  const [state, onSubmit, pending] = useWriteForm(canEdit ? updateSiteContent : proposeSiteContent, undefined);
   const { t } = useI18n();
   const s = t.admin.website.settings;
 
@@ -325,9 +335,11 @@ export function SiteSettingsForm({ content }: { content: SiteContent }) {
       />
 
       <div className="flex items-center gap-3">
-        <ActionButton type="submit" icon={ACTION_ICONS.save} variant="primary" disabled={pending || anyError}>
-          {pending ? t.common.saving : t.common.saveChanges}
-        </ActionButton>
+        {(canEdit || canPropose) && (
+          <ActionButton type="submit" icon={ACTION_ICONS.save} variant="primary" disabled={pending || anyError}>
+            {pending ? t.common.saving : canEdit ? t.common.saveChanges : t.admin.website.pages.proposeChanges}
+          </ActionButton>
+        )}
         {state && !state.ok && (
           <p className="text-sm text-danger">{state.error}</p>
         )}
