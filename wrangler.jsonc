@@ -119,9 +119,10 @@
       ],
       // Release mail (worker/release-mail.mjs): since the cutover this is the
       // live site on lannacareforanimals.org, sending as "Production" from that
-      // domain. PUBLIC_SITE is not set: the public website is open
-      // (src/lib/public-site.ts; scripts/deploy.mjs refuses a locked
-      // production block that is off UAT's host).
+      // domain. PUBLIC_SITE stays "locked" (Lutan, 2026-11-05): signed-out
+      // visitors get the sign-in landing page, not the public website
+      // (src/lib/public-site.ts). Removing it is the public launch, a
+      // separate decision.
       "vars": {
         "NODE_ENV": "production",
         "ORIGIN_HOST": "pi.lannacare.org",
@@ -134,6 +135,7 @@
         "ORIGIN_TIMEOUT_MS": "20000",
         "RELEASE_MAIL_ENV": "Production",
         "RELEASE_MAIL_FROM": "releases@lannacareforanimals.org",
+        "PUBLIC_SITE": "locked",
         // Status alerts, as on test, now on lannacareforanimals.org.
         "STATUS_ALERT_SITE": "https://lannacareforanimals.org",
         "STATUS_ALERT_FROM": "alerts@lannacareforanimals.org",

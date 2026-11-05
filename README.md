@@ -205,10 +205,9 @@ why. To look at it locally, put `PUBLIC_SITE=locked` in
 `src/lib/app-env.ts` and production's label in `src/app/releases/page.tsx`;
 the `lannacare.org` routes move from the `production` block of
 `wrangler.jsonc` to `uat`, and production gets the new domain,
-`RELEASE_MAIL_ENV` `Production` and a From on that domain, and loses
-`"PUBLIC_SITE": "locked"`, or the live site opens on a sign-in page
-(`scripts/deploy.mjs` refuses `--env production` while the block is off
-`lannacare.org` and still locked);
+`RELEASE_MAIL_ENV` `Production` and a From on that domain, and keeps
+`"PUBLIC_SITE": "locked"` (Lutan, 2026-11-05: the public launch is a separate decision; removing
+that var from the production block is the launch);
 `HOST=` in `scripts/pi/deploy-pi.sh` follows. The two addresses are `APP_HOST` and
 `PUBLIC_HOST` in each `wrangler.jsonc` block (`src/lib/site-hosts.ts`), so a host
 move is those settings plus `httpHostHeader` in `scripts/pi/cloudflared-config.yml`;

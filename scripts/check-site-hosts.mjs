@@ -47,7 +47,6 @@ const broken = {
   "an environment missing PUBLIC_HOST": (c) => { delete c.env.uat.vars.PUBLIC_HOST; },
   "two environments claiming one route": (c) => { c.env.uat.routes = [{ pattern: NEW, custom_domain: true }]; },
   "a route outside its environment's hosts": (c) => { c.env.production.routes.push({ pattern: "lannacare.org", custom_domain: true }); },
-  "production on the new host but still locked": (c) => { c.env.production.vars.PUBLIC_SITE = "locked"; },
 };
 for (const [what, mutate] of Object.entries(broken)) {
   const c = clone();
