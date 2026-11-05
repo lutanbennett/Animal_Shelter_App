@@ -1,122 +1,116 @@
-# Release handover — written 2026-11-05 after `0.43.1`
+# Release handover — written 2026-11-05 after `0.43.2`, **the domain cutover**
 
 A **delta**. The durable rules are in `docs/release-procedure.md` and this release's own record is
-`docs/releases/2026-11-05-0-43-1.md`. **Both outrank this file.**
+`docs/releases/2026-11-05-0-43-2.md`. **Both outrank this file.**
 
 ## START HERE
 
-**`0.43.1` is deployed on both environments and it did NOT mail** — on his answer, and that absence is
-verified at the inbox, not inferred. **All four builds came from `beabcf7f`**, and `origin/main` is
-still `beabcf7f`, so the code-identity question needed no judgement for the first time in three
-releases. **317 of 317 applied**, `0 pending` and no drift on both databases, `role-cells` and
-`role-cards` byte-identical across the apply, `activities-grantable` unchanged at ten, every held card
-fully applied, every cell backed by a card, `calendar-cron` healthy.
+**The system has moved. Production is `lannacareforanimals.org`.** `lannacare.org` is now **UAT**, on the
+**dev** Supabase project, and it correctly wears the UAT badge. `test.lannacare.org` is unchanged.
+Production's database never moved: still `dbkodyyxxhtygxcxmfcu`, **318 of 318** with no drift, same on dev.
 
-**The release cost two touches — the target.** His one answer and his one command.
+**`0.43.2` did NOT mail** — verified at the inbox with a presence control, not inferred. The public site is
+**still locked** (`PUBLIC_SITE: "locked"`, his decision); the unlock is a separate decision and the search
+steps wait on it.
 
-**One thing is still outstanding and it is his:** a stray `next start -p 3100` in the **main
-checkout**, which broke `npm ci` there (below).
+**Re-measure before trusting any of this.** `git fetch`, `git diff --stat 8ec682d1..origin/main`,
+`gh pr list`, `--status --env production`, `node scripts/check-production.mjs all`, `/api/version` on both
+hosts.
 
-**Re-measure before trusting any of this.** `git fetch`, `git diff --stat beabcf7f..origin/main`,
-`gh pr list`, `--status --env production`, `node scripts/check-production.mjs all`, `/api/version`.
+## THE ONE THING TO READ BEFORE YOUR NEXT CUT
 
-## THE "MINOR RELEASE" TRAP FIRED THIS TIME, AND THE QUESTION IS WHAT CAUGHT IT
+**He asked for "a minor release no email to be sent". On that `main`, that was a domain cutover.**
 
-**The one thing in this edition to read before you start.** He said *"Let's do a minor release"* and
-**meant no email**. Taken at face value it would have shipped as `0.44.0` **with** mail — because in
-his usage *minor* has meant the middle-number bump, and that release mailed, while in this repo
-`major` means *worth an email*.
+#1295, titled `DO NOT MERGE YET`, had merged seven hours earlier. Merging deployed nothing — but **every
+deploy from that `main` performed the cutover**. Taken at face value, the release manager would have run
+`deploy.mjs --env production` alone: that is **step 5 of a thirteen-step runbook**, with no freeze, no fresh
+backup, the Pi still built for the old host and the Supabase Site URL still on the old one. Sign-in and
+every Server Action would have broken, with a rollback the runbook itself calls *not rehearsed*.
 
-- **Put the question with both words removed, every single time: *should this release email you?***
-  Name what the notes say, that it reaches one address in practice, and that it cannot be unsent once
-  his deploy runs.
-- The last edition recorded the trap as *not firing*, only because he pre-empted it by saying *"a
-  major release with email"* himself. **That was luck, not evidence.** Three of the last four
-  releases have turned on this question.
-- Ask it with the pending-plans question in the **same round**. He answered both in one message
-  again, which is what keeps a release to two touches.
+- **No check catches this, and one of them actively looks like reassurance.** `check-site-hosts.mjs` prints
+  `all right` **because the cutover state is internally consistent** — it is built to pass once the cutover
+  commit is in. CI was green. The gates were green.
+- **What caught it was `git log --oneline -1` before cutting**, then reading the decision file it named.
+  **Do that every release.** It costs one command.
+- He was asked before anything was cut, with the alternative of deploying the next day in order. He
+  reaffirmed *"Cut now and we are deploying straight after"*. **A reaffirmed instruction is a decision —
+  proceed, and record it as his.**
 
 ## New this release
 
-- **`npm ci` IN THE MAIN CHECKOUT CAN FAIL AND LEAVE THE CHECKOUT UNABLE TO BUILD.** It failed with
-  `EPERM … unlink node_modules/@next/swc-win32-x64-msvc/next-swc.win32-x64-msvc.node` **after** taking
-  the tree from 484 packages to **37**. The main checkout is where both deploys run `next build`, so
-  the next command would have failed in a way that looks nothing like its cause. **The holder was a
-  stray `next start -p 3100` started in the main checkout that morning and still alive six hours
-  later, with nothing listening on 3100** — almost certainly left from a Lighthouse pass, which needs
-  `build` + `next start`. **Three things follow.** (1) **`npm install`, not `npm ci`, is the repair**:
-  it restores the tree without unlinking the locked file, and its only diff was the stale version
-  string below. (2) **Prove the checkout afterwards** — `npm run build` exited 0 and printed
-  `▲ Next.js 16.4.2`, which is what made it safe to hand him his command. (3) **Stopping the process
-  was refused** by the classifier as *Interfere With Workloads*, so it is on his list, not yours.
-  **Add a look for stray `node` processes in the main checkout to your step-1 checks**, beside
-  `git status --porcelain`.
-- **Verify a no-mail release at the INBOX, with a presence control beside it.** A search for
-  `from:releases@lannacare.org newer_than:2d` found `0.43.0` and `0.42.0` and **no `0.43.1`**. That is
-  the runbook's absence-plus-presence rule applied to the thing itself rather than to a function, and
-  it costs one call. The deploy's own `no major release new to production … so no email` line and the
-  cut's `mail ABSENCE` assertion are both still worth having; this is the one that cannot be fooled.
-- **`package-lock.json`'s own `version` field had been stale since `0.41.0`** (`0.41.0` against
-  `package.json`'s `0.43.0`), because `cut-release.mjs` has never touched the lockfile. Harmless —
-  `npm ci` compares dependency trees — but it is the kind of thing a later report reads. Both strings
-  set to `0.43.1` in the cut; **the script change is backlog `#jhd8s`, so check whether it landed
-  before you fix it by hand again.** Changing the lockfile also makes the PR's `audit` job run for
-  real, which is a small bonus rather than a problem.
-- **The production apply was refused by the classifier and succeeded on an immediate retry.** That is
-  the **third episode** (`0.41.1` twice, `0.41.3`, now), which the last edition said is when to put
-  the pattern to him. **It has now been put to him, in the release report.** Do not ask for an allow
-  rule — settled against on `0.41.2`. Retry once; it has always cleared.
-- **`release-prs.mjs` was NOT short a PR**, after five releases running where it was. Its exit 0 is
-  still not proof: the `gh pr list --state merged` cross-check by `mergedAt` is one call and it agreed
-  exactly. **Keep doing it** — the pattern breaking once does not mean the gap is closed.
-- **Read paperwork rule 2 BEFORE you make a worktree for the record.** The record goes in the **cut's
-  own worktree** (`git fetch && git checkout -b claude/record-<version> origin/main` there). A
-  separate `record-…` worktree was created first here and had to be `done`'d; the wrong order costs an
-  `npm ci` and leaves a second folder for `/clean-streams`.
+- **THE PI TUNNEL CHANGE IS LUTAN'S, AND THE RUNBOOK DOES NOT SAY SO.** `/etc/cloudflared/config.yml` is
+  root-owned and `sudo systemctl restart cloudflared` is **not** in the Pi's passwordless sudo list. That
+  list is exactly four commands: `systemctl restart lanna-care`, `restart lanna-care-test`, and
+  `is-active --quiet` for each. **So the Pi build and app restart are yours; anything touching cloudflared
+  is his.** Establish this with `sudo -n -l` **before** a deploy, not by meeting a password prompt with the
+  site half-moved. `release-procedure.md`'s exception list and `domain-checklist.md` step 4 should both name
+  him; neither does yet.
+- **Verify every command before handing it over, and prefer a script to a quoted one-liner.** The tunnel
+  `sed` was tested against the live file with `diff` (exactly one line changed, the test ingress untouched),
+  then wrapped in a self-verifying script on the Pi so his step was one short, PowerShell-safe command that
+  backs up, refuses to restart if the wrong line moved, and is idempotent. The production deploy was
+  `--plan`-ed first; so was UAT's, which resolved its eight secrets while his build ran.
+- **`gates.mjs` can exit 0 while two gates are RED.** The first cut read `typecheck=2 lint=0 test=0 build=1`
+  and the runner's own exit code was **0**. **Only the four-number line is the truth.** Worse, the background
+  task's log file was truncated to its last **487 bytes**, losing both error messages — so **redirect gates
+  to your scratchpad** and read that.
+- **An untagged release note is a PLAIN STRING, not `{ text }`.** `ReleaseNote` is
+  `string | {text, cards} | {text, admin: true}`; `{ text }` alone fails typecheck. That was this session's
+  error and it cost a revert and a re-cut.
+- **A card-creating migration can leave `role-cells`/`role-cards` byte-identical, and that is correct.**
+  `0317` creates `view_expenses` but assigns it to no role. **Identical snapshots look exactly like a failed
+  apply**, so prove it the other way: `reports.expenses` is absent from `activities-grantable`, which means a
+  card grants it.
+- **Count assertions with `grep -c`, never off a `tail`.** `tail -12` said twelve release-guard assertions;
+  there are **16**. The last edition warned about this with a `tail -15` and the warning still did not
+  prevent it.
 
-## Corrections and closures to the last edition
+## Newly established, and worth not re-deriving
 
-- **`--base` was needed again, exactly as predicted**, for one note rather than five:
-  `project-photos-approval`, whose step (`0316`) this release closed. **Two releases running. Expect it
-  on any release that applies a migration streams were waiting on**, and commit the note first so
-  `--verify --base <that commit>` still means something.
-- **The deferred-note window was 20 and only ONE was real.** Seven were already answered by `0.43.0`'s
-  own cut (`0310`–`0315` all applied there), `cutover-rehearsal` stays correctly open, and **the rest
-  print the plan template's boilerplate instead of a reason — four editions running.** Read the plan,
-  not the excerpt. Twenty candidates took about ten minutes.
-- **The notes were read as a SET**, which is what caught a contradiction last release. None of these
-  six disagreed. **Keep doing it: no check looks for this.**
-- **Both Workers and both Pis agreed, so nothing was left behind** — the test Worker was level, unlike
-  `0.42.0`'s.
-- **The Server Actions key pairs matched**: production `cbd55beae8d8` on Worker and Pi, test
-  `ecc41837fc0b` on both. Read both prints rather than one.
-- **`doctor-cells` reads `MISSING 5 of 12`, unchanged for six releases**, same five names. Never
-  restore its cards, never edit the check, never raise it.
-- **The two hosts' stylesheets differ again** (99,042 against 99,067 bytes, different filenames) and it
-  is **still not a finding**. Stop re-deriving this.
-- **`guard-release` on the Pi could not ask production about migrations** (`SUPABASE_ACCESS_TOKEN` is
-  not set there) and went ahead, which is the documented *warns and does not refuse* path. **Read
-  `--status` yourself**; it was 317 of 317 before either deploy.
-- **The edge-cache reading was `MISS` then `HIT`, and the `MISS` was `purge-cache`'s own probe.** Say
-  which fetch was the miss rather than implying you watched a sequence.
+- **A Worker deploy releases the old custom domain by itself.** Step 6 said this was not established.
+  `lannacare.org` was absent from the bound domains immediately and returned nothing; the dashboard agreed.
+  **No manual removal.**
+- **The purge token DOES cover `lannacareforanimals.org`** — step 8 was its first real use. The manual
+  dashboard fallback was not needed.
+- **The Pi's asset check fails as `ENOTFOUND` before the new host exists**, not against a parked page.
+- **Production release mail has been mislabelled `[UAT]`** for at least two releases — `0.43.0` and `0.42.0`
+  both arrived as *"[UAT] Lanna Care release …"* from *"Lanna Care UAT"*. The cutover's
+  `RELEASE_MAIL_ENV: "Production"` fixes it **from the next mailing release**. Nobody had noticed.
+- **`--base` was needed for the third release running**, again because the cut wrote a note of its own.
+  Expect it whenever a release closes a step streams were waiting on.
+
+## Corrections to the last edition
+
+- **The stray `next start -p 3100` is GONE.** That edition's one outstanding item for Lutan is closed.
+- **`npm ci` in the main checkout was deliberately skipped, and that was right.** `git diff
+  beabcf7f..HEAD -- package.json package-lock.json` was **empty**, so the proven 484-package tree already
+  matched the lockfile. **Check that diff first**: if it is empty there is nothing for `npm ci` to fix and
+  running it only re-courts the `EPERM`. Read the `Next.js version :` banner on every build regardless — it
+  matched `16.4.2` on all four.
+- **`package-lock.json`'s version field was stale AGAIN.** Backlog `#jhd8s` has **not** landed;
+  `cut-release.mjs` still does not touch the lockfile. Fix by hand and expect to do it again.
+- **The production apply was NOT refused by the classifier** — the first clean one in four episodes. The
+  pattern has already been put to him; do not ask for an allow rule.
+- **`doctor-cells` reads `MISSING 5 of 12`, unchanged.** Never restore, never edit, never raise.
+- **`release-prs.mjs` was not short a PR**, second release running. Cross-check anyway.
 
 ## In flight and open
 
-- **Four plans shipped signed `pending:`**, on his decision, listed in the record. **The one worth
-  doing first is `release-0-43-0-fixes`** — three checks on things that were visibly broken, all now
-  possible on the deployed build.
-- **The stray `next start -p 3100` in the main checkout is still running.** Until it is stopped,
-  `npm ci` there fails. `npm install` works; so does a build.
-- **Seven of the last two releases' notes say their own Thai is unread by a Thai speaker.** Still a
-  standing backlog, still worth putting to him as **one** decision rather than seven.
-- **Nothing publicly visible shipped**, so the locked public site cost nothing this time. The release
-  that unlocks it inherits `0.43.0`'s Events page, Campaigns and Sterilisation redirects, and this
-  release's gated project photos, all at once.
-- **Nothing behind sign-in was verified**, on either environment: no account.
-- **Carried, re-measure each:** the restore drill, never exercised; the Worker-fallback 44-second gap
-  from the power-pull drill. **`tee` under PowerShell still writes UTF-16** — `tr -d '\000'` before
-  grepping, and **read his terminal** rather than the log file for the production deploy's own lines.
+- **UAT's zone cache has NEVER been purged**, and it matters slightly more than it sounds: that zone may
+  still hold year-long `immutable` `/_next/static/**` from the **old production** build, which UAT would now
+  serve stale. Needs a dashboard purge or `CLOUDFLARE_PURGE_TOKEN` in `.env.deploy.uat`.
+- **Production's `CLOUDFLARE_ZONE_ID` is still the OLD zone**, which the Settings → System status visitor
+  count reads. `domain-checklist.md` step 13(a).
+- `scripts/pi/setup.sh` and `docs/pi-hosting.md` still call `lannacare.org` production. Step 13(b).
+- **The Pi cannot resolve the apex `lannacareforanimals.org`** — its router cached the NXDOMAIN from lookups
+  made while the domain did not exist. `www` resolves, and the **test** host's asset check passed from the
+  same Pi, so neither the script nor the Pi's networking is at fault. Expect it to clear; re-run rather than
+  treating it as standing.
+- **Four plans shipped signed `pending:`**, on his instruction, listed in the record. Eighth release running.
+- **The Pi build caches are 958–961 MB against a 1024 MB ceiling** on both clones. They will cross it soon.
+- **Carried, re-measure each:** the restore drill, never exercised; the Worker-fallback 44-second gap.
+  **`tee` under PowerShell still writes UTF-16** — read his terminal for the production deploy's own lines,
+  which is how it was done this time.
 
-**Next free migration number: `0317`.** `0316` is the highest on `main`, and there is no number to
-avoid: both databases read 317 of 317 with nothing applied that has no file. Check `origin/main` *and*
-open `*-schema` PRs anyway.
+**Next free migration number: `0318`.** `0317` is the highest on `main` and both databases read 318 of 318
+with nothing applied that has no file. Check `origin/main` *and* open `*-schema` PRs anyway.
