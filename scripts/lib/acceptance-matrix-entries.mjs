@@ -1129,6 +1129,15 @@ export const ENTRIES = {
       expect: "Totals, the monthly chart and the table show; items with no price read \"not priced yet\".",
     },
   ],
+  expenses: [
+    {
+      activity: "Read the expense report",
+      needs: "reports.expenses:read",
+      device: "both",
+      do: "Open Expenses from the View expenses tile and open one Receipt link.",
+      expect: "Expenses show by type and by month, the waiting-bills note is at the top, the receipt opens, and nothing on the page can be changed.",
+    },
+  ],
   translations: [
     {
       activity: "Translate a public text and see it on the website",
