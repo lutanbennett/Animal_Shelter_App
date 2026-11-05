@@ -9,7 +9,7 @@
 |---|---|
 | Feature | accountant-card-expenses: the expense report and the View expenses card |
 | Backlog item | `docs/backlog.md` → #00e3u (first build only) |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | claude/accountant-card-expenses, in the Animal_Shelter_accountant-card-expenses worktree |
 | Dev server | http://localhost:3008 |
 | PR | see the PR that carries this file |
 | Tested by / date | Claude, 2026-11-05 |
