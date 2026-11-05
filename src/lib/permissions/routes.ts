@@ -343,6 +343,16 @@ export const ROUTES: readonly RouteEntry[] = [
     menu: false,
   },
   {
+    path: "/management/expenses",
+    activity: "reports.expenses",
+    // Read opens the page (0317); the page has no control that writes.
+    level: "read",
+    icon: Coins,
+    label: (t) => t.nav.expenses,
+    device: "any",
+    menu: false,
+  },
+  {
     path: "/management/cashflow",
     activity: "reports.cashflow",
     // Read opens the page (0280): the forecast card holds only that. Every control on it asks edit.

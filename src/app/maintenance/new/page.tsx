@@ -73,6 +73,7 @@ export default async function NewMaintenancePage(props: PageProps<"/maintenance/
         preselectedZoneId={zoneId}
         cancelHref={enclosure ? `/enclosures/${enclosure.id}` : "/maintenance"}
         assignees={assignees.users}
+        canPhotos={can(perms, "maintenance.photos")}
       />
     </main>
   );

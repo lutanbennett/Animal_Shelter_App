@@ -67,6 +67,7 @@ export function FolderView({
   photos,
   allFolders,
   canWrite,
+  canPhotos,
   canPublish,
   canManageTranslations,
   translations,
@@ -77,6 +78,8 @@ export function FolderView({
   photos: ProjectPhoto[];
   allFolders: ProjectFolder[];
   canWrite: boolean;
+  /** projects.photos: add, remove and caption project photos. */
+  canPhotos: boolean;
   /** projects.publish: the show-on-website switch and checkbox. */
   canPublish: boolean;
   /** Admin/management: may write and approve the other-language text. */
@@ -241,6 +244,7 @@ export function FolderView({
               folder={folder}
               photos={photos}
               canWrite={canWrite}
+              canPhotos={canPhotos}
               canManageTranslations={canManageTranslations}
               translations={translations.filter((row) => row.table_name === "attachments")}
             />

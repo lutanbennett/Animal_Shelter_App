@@ -2001,6 +2001,26 @@ const manual: Manual = {
           },
         },
         {
+          id: "expenses",
+          title: "The expense report",
+          activity: "reports.expenses",
+          path: "Management → Expenses",
+          intro:
+            "What the shelter has spent, by type and by month, with a link to the receipt on every line. It is made for an outside accountant: a login holding only the View expenses card sees this page and nothing else, and it cannot change anything.",
+          steps: [
+            "Open Expenses from the View expenses tile on Home. It opens on this year. Previous year and Next year move between years.",
+            "The note at the top says how many bills are still waiting in Bills, either not filed yet or with no type chosen. Those are not in any figure on the page, so a month with many waiting bills looks cheaper than it was.",
+            "By type adds the year up by the type chosen on each bill. By month lists every bill, newest first, with its type, how it was recorded, the month a utility bill covers, its note, its amount and a Receipt link. A bill with no photo says no receipt.",
+            "Every bill is placed by the date printed on it, not the day it was paid or entered. The month a utility bill covers is shown beside it but is never used to group it.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "A purchase is counted once, on its invoice. A delivery recorded before invoices existed has no invoice, so each of those lines is counted on its own cost as Food or Medicine. Planned monthly costs (fixed outgoings) are forecasts and are not counted. Money received and vet visit costs are not on this page yet.",
+            },
+          ],
+        },
+        {
           id: "translations",
           title: "Translating",
           activity: "translations.manage",

@@ -62,7 +62,10 @@ export function MaintenanceForm({
   preselectedZoneId = null,
   cancelHref,
   assignees,
+  canPhotos = false,
 }: {
+  /** maintenance.photos: the activity the upload route asks, so the picker is drawn only when it will be accepted. */
+  canPhotos?: boolean;
   mode: "create" | "edit";
   /** Logins that action jobs, for "Assigned to" (0055, a team since 0063). */
   assignees: AppUser[];
@@ -182,7 +185,7 @@ export function MaintenanceForm({
         entries: [
           { label: f.title, value: text("title") },
           { label: f.description, value: text("description") },
-          { label: f.photos, value: w.photos(uploads.files.length) },
+          ...(canPhotos ? [{ label: f.photos, value: w.photos(uploads.files.length) }] : []),
         ],
       },
       { step: 1, title: stepTitles[1], entries: [{ label: f.location, value: place }] },
@@ -341,7 +344,7 @@ export function MaintenanceForm({
         />
       </div>
 
-      {mode === "create" && (
+      {mode === "create" && canPhotos && (
         <div className="flex flex-col gap-2">
           <span className="text-sm font-medium text-muted">{f.photos}</span>
           <p className="text-xs text-muted">{fm.photosHint}</p>
