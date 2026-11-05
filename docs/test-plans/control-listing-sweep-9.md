@@ -132,6 +132,10 @@ Automated checks by: Claude  Date: 2026-11-05
 
 ### Manual verification
 
-- [ ] The manual list above is empty — pending: new-job form picker check
+- [ ] The manual list above is empty — n/a: it holds one row, for a person to look at /maintenance/new
 
 Manual verification by: pending: someone to look at /maintenance/new
+
+### Result
+
+Result: pass with accepted defects
