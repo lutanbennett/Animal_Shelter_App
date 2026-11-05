@@ -369,7 +369,7 @@ Admin is shown for completeness; it is never stored (§6).
 | `assistant.ask` | Ask the assistant a question | Y/N | Y | Y | Y | – | – | 32 | |
 | `assistant.record` | Record something through the assistant | Y/N | Y | Y | Y | – | – | 32 | Each thing it records is also checked against that thing's own activity |
 | **Settings** | | | | | | | | | |
-| `website.content` | The public website's content, and the desexing drives sign-up list | E/R | E | E | – | – | – | 33 | Management added by `0163` (Lutan, 2026-10-08): the Director runs the website by day as Management. The 2IC deliberately not. `site_content`, `site_content_photos` and `site_pages` write on this cell since `0163` |
+| `website.content` | The public website's content, and the sterilisation drives sign-up list | E/R | E | E | – | – | – | 33 | Management added by `0163` (Lutan, 2026-10-08): the Director runs the website by day as Management. The 2IC deliberately not. `site_content`, `site_content_photos` and `site_pages` write on this cell since `0163` |
 | `reference.types` | Setup lists: immunization, procedure and blood-test types, frequencies, medications, diets, units | E/R | E | – | – | – | – | 34 | |
 | ~~`reference.add_while_recording`~~ | **RETIRED 2026-10-31 (`0291`).** Was: add a missing medication, frequency or procedure type from a form | Y/N | – | – | – | – | – | 34 | Lutan, 2026-10-30: *"Missing medication added by admin only as part of system configuration"*. Card gone in `0287`, activity in `0291`; the policies that asked it ask only their other cell. `docs/decisions/2026-10-31-retire-add-while-recording-activity.md` |
 | `audit.view` | See who changed what | Y/N | Y | – | – | – | – | 35 | |

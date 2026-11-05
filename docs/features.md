@@ -30,7 +30,7 @@ This is **step 1** of the card simplification (backlog: *the foundation of the s
 | 8 | Photos, videos and social media | 9 | Residents, Add Medical Photos, Add Photos, Approve photos, Meme library |
 | 9 | People and contacts | 7 | Contacts |
 | 10 | Fundraising and outreach | 6 | Run appeals, Outreach notes, Donations and receipts |
-| 11 | Website and public pages | 6 | Website (none for the desexing drives list by name) |
+| 11 | Website and public pages | 6 | Website (none for the sterilisation drives list by name) |
 | 12 | Staff tasks and the assistant | 6 | Recurring jobs, My tasks, Do Maintenance, Assistant |
 | 13 | Settings and administration | 13 | None (Admin only) |
 
@@ -276,12 +276,12 @@ ________________________________________________________________
 
 1. **Appeals**: set up and run a sponsorship drive for a sick resident. `/management/appeals`, `/management/appeals/new`, `/management/appeals/[id]`, `.../preview` · `appeal.run`
 2. **The public appeal pages**. `/appeals`, `/appeals/[id]`, `/donate`
-3. **Desexing drives and sign-ups**. `/management/desexing-drives`, `/management/desexing-drives/new`, `/management/desexing-drives/[id]`, `/services/desexing` · `website.content`
+3. **Sterilisation drives and sign-ups**. `/management/sterilisation-drives`, `/management/sterilisation-drives/new`, `/management/sterilisation-drives/[id]`, `/services/sterilisation` · `website.content`
 4. **Outreach visits**: a note typed standing at a temple or village. `/outreach`, `/outreach/new`, `/outreach/[id]/edit` · `community.outings` (read, edit)
 5. **Donation channels and receipts** (see Finances). · `donation.receipt`
 6. **QR short links**. `/r/[code]`
 
-**Who uses it today:** nobody by card. **Cards today:** Run appeals, Outreach notes, Donations and receipts. Desexing drives is reached only through the Website permission.
+**Who uses it today:** nobody by card. **Cards today:** Run appeals, Outreach notes, Donations and receipts. Sterilisation drives is reached only through the Website permission.
 
 Keep / Rename / Merge with ______ / Split ______
 
@@ -301,7 +301,7 @@ ________________________________________________________________
 2. **Public home, about, privacy, releases**. `/`, `/about`, `/privacy`, `/releases`
 3. **Public adopt and foster pages** (see Resident information, 7). `/adopt`, `/foster`
 4. **Public "our work" pages** (see Maintenance and projects, 7). `/our-work`
-5. **Desexing drives** (see Fundraising, 3). `/management/desexing-drives`
+5. **Sterilisation drives** (see Fundraising, 3). `/management/sterilisation-drives`
 6. **Donate page**. `/donate`
 
 **Who uses it today:** nobody by card. **Cards today:** Website.
@@ -375,7 +375,7 @@ Done from the code: every route in the registry and every activity appears above
 
 **Activities with no card** (reachable only by Admin or a role given the single permission): `placement.death_withdraw`, `projects.folders`, `projects.photos`, `projects.publish`, `stock.usage`, `stock.medications`, `stock.diets`, `stock.correct`, `translations.manage`, `translations.view`, `reference.types`, `audit.view`, `audit.undo`, `system.status`, `maintenance.delete`, `appeal.medical_photo`.
 
-**Registry pages with no card opening them** (reached from menus or landings): `/projects`, `/contacts`, `/clinics`, `/management/shelter-friends`, `/management/desexing-drives`, `/management/clinics`, `/operations/feeding-list`, `/management/medications`, `/management/diets`, `/management/stock-usage`, `/management/cashflow`, `/management/translations`, `/admin/enclosures`, `/admin/zones`, `/admin/facility-map`, `/admin/immunization-types`, `/admin/procedure-types`, `/admin/blood-test-types`, `/admin/medications`, `/admin/diets`, `/admin/frequencies`, `/admin/status`.
+**Registry pages with no card opening them** (reached from menus or landings): `/projects`, `/contacts`, `/clinics`, `/management/shelter-friends`, `/management/sterilisation-drives`, `/management/clinics`, `/operations/feeding-list`, `/management/medications`, `/management/diets`, `/management/stock-usage`, `/management/cashflow`, `/management/translations`, `/admin/enclosures`, `/admin/zones`, `/admin/facility-map`, `/admin/immunization-types`, `/admin/procedure-types`, `/admin/blood-test-types`, `/admin/medications`, `/admin/diets`, `/admin/frequencies`, `/admin/status`.
 
 **Features reached by more than one card:** Resident information (2 plus 7 hidden copies), Medical information (4), Photos (5), Stock (3), Finances (3).
 
