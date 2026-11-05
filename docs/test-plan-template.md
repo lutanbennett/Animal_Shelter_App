@@ -1,5 +1,6 @@
 # Feature test plan
 
+<!-- guidance:start -->
 Copy this file to the feature branch as `docs/test-plans/<feature>.md`, fill the
 header, and tick as you go.
 
@@ -47,6 +48,11 @@ It will **not** become a required check. Earlier wording here said it would
 and got him asked for an answer he had already given.
 The completed checklist is also pasted into the PR and read by the production
 release manager before `npm run deploy:prod`.
+
+Text between the `guidance:start` and `guidance:end` comments is advice, not fields:
+the checker does not read it for unfilled `<…>` placeholders, so leave it or delete
+it. Everything outside those comments is judged.
+<!-- guidance:end -->
 
 ---
 
@@ -249,6 +255,7 @@ Automated checks by: <name>  Date: <yyyy-mm-dd>
 
 ### Manual verification
 
+<!-- guidance:start -->
 The items in **Left for manual verification** above. Signed by the person who
 looked. Claude never signs this line on someone else's behalf, unless that person
 has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
@@ -273,6 +280,7 @@ Three valid states:
 write the line and stop. A trailing `Date: —` is accepted too, since existing
 plans use it. A bare *name* with no date is still rejected, which is what stops an
 empty signature quietly passing.
+<!-- guidance:end -->
 
 A red `test-plan` that says what it is waiting for is a red people act on. An
 illegible one is a red people learn to ignore.
