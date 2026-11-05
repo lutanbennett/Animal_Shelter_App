@@ -8,13 +8,16 @@ import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { takeTreeLock } from "./lib/tree-lock.mjs";
+import { refuseIfServerRunning } from "./lib/live-servers.mjs";
 
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 try {
+  // Before anything is deleted: a running server holds files open and `npm ci` would gut the tree.
+  refuseIfServerRunning(root);
   takeTreeLock("install");
 } catch (e) {
   console.error(`guarded-install: ${e.message}`);
   process.exit(1);
 }
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const r = spawnSync("npm ci", { cwd: root, stdio: "inherit", shell: true });
 process.exit(r.status ?? 1);
