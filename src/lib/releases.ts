@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  { text: "The full user manual as a PDF no longer fails with a Cloudflare error. It is now prepared once when the shelter's server is updated and opens at once, in English or Thai. If it ever says it has not been prepared, the server needs updating again.", admin: true },
 ];
 
 /** Newest first. */

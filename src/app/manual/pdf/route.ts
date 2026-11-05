@@ -7,6 +7,7 @@ import { entersApp } from "@/lib/permissions/can";
 import { CARDS, CARD_KEYS } from "@/lib/permissions/cards";
 import { loadPermissions } from "@/lib/permissions/load";
 import { getT } from "@/lib/i18n/get-t";
+import { PREBUILT_DIR, prebuiltName } from "@/lib/manual/prebuilt";
 
 /**
  * GET /manual/pdf — the manual as a printable PDF.
@@ -21,6 +22,14 @@ import { getT } from "@/lib/i18n/get-t";
  * It opens on the reader's own cards' topics, as the page does. ?view=all is the
  * whole manual (the office-wall copy); ?images=0 leaves the screenshots out
  * for a small, text-only file.
+ *
+ * The whole manual with its pictures is the same for every reader of a language,
+ * and laying it out takes 30-100 s, so it is built once at deploy time
+ * (scripts/build-manual-pdf.mjs) and read from .manual-pdf/ here. The sign-in
+ * check above still runs first. A missing file is a clear 503, never a live
+ * render: that is the slow path this exists to remove, and the Worker
+ * (which would die on it, error 1102) never gets this path (src/lib/pi-only-paths.ts).
+ * docs/decisions/2026-11-05-manual-pdf-prebuilt.md.
  */
 export const dynamic = "force-dynamic";
 
@@ -62,6 +71,26 @@ async function readPublicFile(src: string): Promise<Uint8Array | null> {
   );
 }
 
+/** The prebuilt full manual for a language, or null if it was not built or this runtime has no disk. */
+async function readPrebuilt(locale: string): Promise<Uint8Array | null> {
+  try {
+    const [{ readFile }, path] = await Promise.all([import("node:fs/promises"), import("node:path")]);
+    return new Uint8Array(await readFile(path.resolve(process.cwd(), PREBUILT_DIR, prebuiltName(locale))));
+  } catch {
+    return null;
+  }
+}
+
+function pdfResponse(bytes: Uint8Array, name: string) {
+  return new NextResponse(Buffer.from(bytes), {
+    headers: {
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `inline; filename="${name}"`,
+      "Cache-Control": "private, no-store",
+    },
+  });
+}
+
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
   const asked = params.get("view") === "all";
@@ -74,7 +103,20 @@ export async function GET(request: NextRequest) {
 
   const perms = await loadPermissions();
   const all = asked || !entersApp(perms) || perms?.isAdmin === true; // Admin is shown every topic anyway
-  const { t } = await getT();
+  const { t, locale } = await getT();
+
+  if (all && withImages) {
+    const file = await readPrebuilt(locale);
+    if (!file) {
+      console.error(`manual-pdf: .manual-pdf/${prebuiltName(locale)} is missing; run node scripts/build-manual-pdf.mjs`);
+      return new NextResponse(
+        "The full manual has not been prepared on this server yet. Ask an administrator to run the manual build (scripts/build-manual-pdf.mjs); the personalised copy still works.",
+        { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } },
+      );
+    }
+    return pdfResponse(file, "lanna-care-manual.pdf");
+  }
+
   const cards: ManualCard[] = CARD_KEYS.map((key) => ({
     key,
     label: CARDS[key].label(t),
@@ -93,11 +135,5 @@ export async function GET(request: NextRequest) {
   // the reader's dictionary, so the heading over them does too: a Thai reader
   // saw บัตรงานโดยสรุป on /manual and "Cards at a glance" on the PDF of it.
   const pdf = await renderManualPdf(manual, { cards, cardsHeading: t.manualPage.cardsAtAGlance, all, images, perms });
-  return new NextResponse(Buffer.from(pdf), {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="lanna-care-${all ? "manual" : "manual-my-cards"}.pdf"`,
-      "Cache-Control": "private, no-store",
-    },
-  });
+  return pdfResponse(pdf, `lanna-care-${all ? "manual" : "manual-my-cards"}.pdf`);
 }
