@@ -111,7 +111,7 @@ It is deliberately **untagged**. Every signed-in person needs the new address, s
 - [ ] Migration number is one above the highest on `main` — n/a: this PR carries no migration. For the record: `0317` is the highest on `main` and the next free number is `0318`. Nothing is applied that has no file (`applied here, no file on origin/main: 0`)
 - [x] `--status` reviewed before applying — production reads **317 applied, 1 pending** (`0317_expense_report_card.sql`) against `origin/main 8820abf8`
 - [x] `--dry-run` reviewed — run early, from the main checkout, rather than left to the apply step: **`dry-run 0317_expense_report_card.sql … ok`**. Four `-- consumer:` warnings, all the safe direction (the schema lands before the code that reads it). One of them is itself a cutover artefact worth recording: the script could not ask the live release which commit it is on, because it now asks `https://lannacareforanimals.org`, which nothing serves yet — so it assumed the cut commit is live. Harmless here, and the first visible sign that the tooling has already moved to the new host
-- [ ] Applied to **dev** — n/a as this PR's step: `0317` was applied to dev by its own stream (#1303)
+- [ ] Applied to **dev** — n/a: this PR carries no migration, and `0317` was applied to dev by its own stream (#1303)
 - [x] File is re-runnable — read rather than assumed: `0317` is additive (one activity, the `view_expenses` card, two `security definer` functions, and `bill_owner_can()` rebuilt from `0308` with one read-only widening), with no `drop`, `delete`, `truncate` or column alter, and four `if not exists` / `or replace` guards
 - [x] Existing rows still read correctly — nothing is rewritten. The one behaviour change to an existing function is a **read** permitted to a new card holder; every write path is unchanged
 - [ ] Constraints and defaults exercised against real rows — n/a: no migration in this PR; #1303's plan records its own harness
@@ -171,16 +171,16 @@ It is deliberately **untagged**. Every signed-in person needs the new address, s
 ### Tested build
 
 - [x] Tested SHA recorded in the header, and it is the tip of this branch at the time the gates ran — `ef2fe53f`
-- [ ] Deployed SHA matches the tested SHA — deferred: this session, at the deploy. The deployed SHA will be this PR's merge commit, not `ef2fe53f`, and the record states both with the allow-list code-identity diff between them
+- [ ] Deployed SHA matches the tested SHA — deferred: this session, at the deploy. The deployed SHA will be this PR's merge commit, not `2bce6ec2`, and the record states both with the allow-list code-identity diff between them
 
 ### On the deployed build
 
-- [ ] Deployed to test — deferred. **Note for this release: `test` is not in the cutover's path.** Section E deploys production and then **UAT**, which is the new name for `lannacare.org`. `test.lannacare.org` is untouched by the cutover and is deployed after, never beside, a production build: both run `next build` in the main checkout
+- [ ] Deployed to test — deferred: this session, after the production Worker deploy reports. **Note for this release: `test` is not in the cutover's path.** Section E deploys production and then **UAT**, which is the new name for `lannacare.org`. `test.lannacare.org` is untouched by the cutover and is deployed after, never beside, a production build: both run `next build` in the main checkout
 - [ ] Smoke-tested — deferred: this session and Lutan, on `lannacareforanimals.org`, following section E step 9 rather than the usual test-site pass
 - [ ] Timezone-sensitive behaviour proved — n/a: the only date in this PR is the entry's own `2026-11-05`, a literal, not a derived "today"
 - [ ] Boundary or banding change covers both edges — n/a: not a banding change
 - [x] **Evidence pasted into this plan is the tool's actual output, unedited**
-- [ ] Public pages re-checked after a cache purge — deferred. `PUBLIC_SITE` stays `locked` on production by Lutan's decision of 2026-11-05, so an anonymous visitor reaches only the sign-in gate on the new host. Both zones are purged at section E step 8
+- [ ] Public pages re-checked after a cache purge — deferred: this session, at section E step 8. `PUBLIC_SITE` stays `locked` on production by Lutan's decision of 2026-11-05, so an anonymous visitor reaches only the sign-in gate on the new host. Both zones are purged at section E step 8
 
 ### Deploy safety
 
@@ -190,7 +190,7 @@ It is deliberately **untagged**. Every signed-in person needs the new address, s
 
 ### Migration ordering — *skip if no migration*
 
-- [ ] Both a migration and code that reads it — n/a as this PR's own step. **The release carries both**, and the ordering is stated: `0317` applied before any deploy, after the merge and the pull
+- [ ] Both a migration and code that reads it — n/a: this PR carries no migration. **The release carries both**, and the ordering is stated: `0317` applied before any deploy, after the merge and the pull
 - [x] `--env production --dry-run` clean — **done early: `ok`**, with the four safe-direction consumer warnings described in §3
 - [x] Backup fresh for a destructive migration — n/a for `0317`, which deletes nothing. **But this release has a destructive-equivalent step in the cutover**, and the backup for that is real: the peer session reports `lannacare-production-2026-11-05T1343Z.dump.age` (1.58 MB) taken on the Pi **after** Lutan said the freeze was in place, uploaded to Drive and kept in `~/backups/lannacare`. Section E step 1 asks for a repeat after the freeze, which that run already is
 - [x] Apply plan stated — `0317` to `dbkodyyxxhtygxcxmfcu` from the main checkout, **before** any deploy, with `role-cells` and `role-cards` taken before and re-run after
