@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The assistant now tells you when a note was saved but the residents you tagged in it could not be linked, instead of saying nothing.",
 ];
 
 /** Newest first. */
