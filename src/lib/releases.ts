@@ -70,12 +70,20 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "The public website's top bar now shows a larger crest and the short name LCA on a phone. The home page opens with Lanna Care for Animals Foundation over Chiang Mai, Thailand, and the crest also sits beside the Meet the animals and Help feed them buttons.",
-  "The sign-in page on the public web address now says the site is under construction and will be available soon, with a friendly poodle in a hi-vis jacket, and it matches the website's colours.",
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.43.3",
+    date: "2026-11-06",
+    title: "The public website's crest and the locked sign-in page",
+    major: false,
+    notes: [
+      "The public website's top bar now shows a larger crest and the short name LCA on a phone. The home page opens with Lanna Care for Animals Foundation over Chiang Mai, Thailand, and the crest also sits beside the Meet the animals and Help feed them buttons.",
+      "The sign-in page on the public web address now says the site is under construction and will be available soon, with a friendly poodle in a hi-vis jacket, and it matches the website's colours.",
+    ],
+  },
   {
     version: "0.43.2",
     date: "2026-11-05",
