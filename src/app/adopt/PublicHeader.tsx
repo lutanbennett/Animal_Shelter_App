@@ -204,12 +204,12 @@ export async function PublicHeader({
 
   const brand = (
     <Link href="/" className="flex min-h-11 items-center gap-2.5 text-site-ink lg:gap-3">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white p-1 ring-1 ring-site-line lg:h-12 lg:w-12">
+      <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center lg:h-16 lg:w-16">
         <Image
-          src="/lca-logo-160.jpg"
+          src="/lca-logo-transparent.png"
           alt=""
-          width={40}
-          height={40}
+          width={128}
+          height={128}
           className="object-contain"
           priority={current === "home"}
         />

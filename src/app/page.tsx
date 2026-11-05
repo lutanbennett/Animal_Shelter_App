@@ -260,14 +260,19 @@ export default async function WelcomePage() {
         }`}
       >
         <div className="flex flex-col gap-6">
-          <p className={eyebrow}>{t.home.eyebrow}</p>
+          <p className={eyebrow}>
+            {t.home.eyebrow}
+            <br />
+            {t.home.eyebrowPlace}
+          </p>
           <h1 className="max-w-2xl font-display text-[40px] font-bold leading-[1.05] text-site-ink sm:text-5xl xl:text-[60px]">
             {t.home.heroHeading}
           </h1>
           <p className="max-w-xl text-lg leading-relaxed text-site-ink-soft lg:text-xl">
             {tagline || t.home.heroLead}
           </p>
-          <div className="flex flex-wrap gap-4 pt-2">
+          <div className="flex items-center justify-between gap-4 pt-2">
+            <div className="flex flex-wrap gap-4">
             {shown("adopt") && (
               <Link
                 href={pageHref("adopt")}
@@ -286,6 +291,14 @@ export default async function WelcomePage() {
                 {t.home.helpFeedThem}
               </Link>
             )}
+            </div>
+            <Image
+              src="/lca-logo-transparent.png"
+              alt=""
+              width={240}
+              height={240}
+              className="h-[120px] w-[120px] shrink-0 object-contain"
+            />
           </div>
         </div>
         {content?.hero_drive_file_id && (

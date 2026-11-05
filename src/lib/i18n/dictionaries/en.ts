@@ -255,11 +255,13 @@ const en = {
 
   home: {
     /** The line above the hero heading. */
-    eyebrow: "Rescue foundation · Mae Wang, Chiang Mai",
+    eyebrow: "Lanna Care for Animals Foundation",
+    /** The second line of the hero eyebrow. */
+    eyebrowPlace: "Chiang Mai, Thailand",
     heroHeading: "Every street dog and cat deserves a second chance.",
     /** The hero paragraph when /admin/website has no tagline. */
     heroLead:
-      "We rescue, treat and care for dogs and cats at our shelter in Mae Wang — and find loving homes for as many as we can. The rest stay with us, safe and cared for, for life.",
+      "We rescue, treat and care for dogs and cats at our shelter near Chiang Mai — and find loving homes for as many as we can. The rest stay with us, safe and cared for, for life.",
     meetAnimals: "Meet the animals",
     /**
      * The hero's second button. "Give monthly" until 2026-10-14: there is no
@@ -355,7 +357,7 @@ const en = {
     /** Over a hidden page, shown only to someone who can edit the website. */
     hiddenBanner: "This page is hidden from the public. You can see it because you can edit the website.",
     /** The name beside the logo on a phone, where the full one doesn't fit. */
-    shortName: "Lanna Care",
+    shortName: "LCA",
     getInvolved: "Get involved",
     /**
      * The shelter's services to the public. Desexing drives are its first entry.
