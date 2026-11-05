@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The public website's top bar now shows a larger crest and the short name LCA on a phone. The home page opens with Lanna Care for Animals Foundation over Chiang Mai, Thailand, and the crest also sits beside the Meet the animals and Help feed them buttons.",
 ];
 
 /** Newest first. */

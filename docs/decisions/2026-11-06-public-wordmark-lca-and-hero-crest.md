@@ -12,4 +12,4 @@ for Chiang Mai; built as Chiang Mai.
   inside the unchanged bar height. The old `/lca-logo-160.jpg` stays for other callers.
 - The 120 px hero crest beside the buttons is an option for Lutan and the Director to judge by eye.
 - Not changed: `shareFallback`, `metaTitle`, the adopt description, the About registration sentence
-  (`en.ts` ~594, a legal fact; asked of Lutan), and the tagline (his, editable in Settings → Website).
+  (`en.ts` ~594, a legal fact; out of scope per Lutan: "just the home page"), and the tagline (his, editable in Settings → Website).
