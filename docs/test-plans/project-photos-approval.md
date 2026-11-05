@@ -11,7 +11,7 @@
 | PR | see the PR for this branch |
 | Tested by / date | Claude, 2026-11-05 |
 | Carries a migration? | yes (0316) |
-| Tested at SHA | @@SHA@@ |
+| Tested at SHA | 634f75ec |
 
 ## 1. Scope and risk
 
@@ -25,7 +25,13 @@
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
 - [x] `node scripts/gates.mjs` ends with the four-gate line, every exit code 0:
 
-@@GATES@@
+```
+=== gates: typecheck exited 0 after 186s
+=== gates: lint exited 0 after 506s
+=== gates: test exited 0 after 39s
+=== gates: build exited 0 after 458s
+gates: typecheck=0 lint=0 test=0 build=0
+```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
