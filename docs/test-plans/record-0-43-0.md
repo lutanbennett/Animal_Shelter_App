@@ -45,7 +45,7 @@
 - [ ] Create / edit / delete all exercised — n/a: two documents, no operation to exercise
 - [x] Empty state renders sensibly — n/a as a UI state; the equivalent is that neither file is read by the app, so there is no state to render
 - [x] Invalid input is rejected with a readable message — n/a as written; the honest equivalent is that `check-test-plan.mjs` validates this plan and was run before the PR
-- [x] Boundary cases checked — the handover is **118 lines against a stated ceiling of 150 and an aim of about 100**, which is the one measurable constraint on it
+- [x] Boundary cases checked — the handover is **117 lines against a stated ceiling of 150 and an aim of about 100**, which is the one measurable constraint on it. Counted with `wc -l` after writing it; the previous commit's message says 118, which was written before the count and is wrong by one
 - [ ] `/releases` driven in a real browser — n/a: neither file is served. The release's own live verification is in the record
 
 ### Role access matrix
