@@ -49,7 +49,7 @@ export default async function WebsitePage({
           <h1 className="text-2xl font-semibold text-foreground">{t.admin.website.title}</h1>
           <p className="text-sm text-muted">{t.admin.website.subtitle}</p>
         </div>
-        {draftContent ? <SiteSettingsForm content={draftContent} canPropose /> : <p className="text-sm text-danger">{t.admin.website.couldntLoad}</p>}
+        {draftContent ? <SiteSettingsForm content={draftContent} canPropose={can(early, "website.propose")} /> : <p className="text-sm text-danger">{t.admin.website.couldntLoad}</p>}
       </main>
     );
   }
