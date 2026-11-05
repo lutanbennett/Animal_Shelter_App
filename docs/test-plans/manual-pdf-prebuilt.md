@@ -9,8 +9,8 @@
 |---|---|
 | Feature | Full manual PDF prebuilt at deploy; /manual/pdf kept off the Worker |
 | Backlog item | `docs/backlog.md` → Error 1102 on the full manual PDF (`#jxagg`, on the backlog branch) |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
-| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
+| Branch / worktree | `claude/manual-pdf-prebuilt` @ `C:/Development/Animal_Shelter_manual-pdf-prebuilt` |
+| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3005` |
 | PR | pending |
 | Tested by / date | Claude / 2026-11-05 |
 | Carries a migration? | no |
