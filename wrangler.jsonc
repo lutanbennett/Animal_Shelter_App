@@ -76,15 +76,18 @@
       "triggers": { "crons": ["*/15 * * * *"] }
     },
     // The customer's acceptance testing: the UAT database and the current
-    // Google Drive, on lannacare.org for good (docs/decisions.md). Plumbing
-    // only until the cutover: no routes, because lannacare.org still belongs
-    // to the production block below, and scripts/deploy.mjs refuses --env uat
-    // until src/lib/app-env.ts knows UAT's project. The cutover adds the
-    // lannacare.org and www routes here and takes them off production.
+    // Google Drive, on lannacare.org for good (docs/decisions.md). Since the
+    // cutover (2026-11-06) it owns lannacare.org and www. UAT shares the DEV
+    // Supabase project for now (docs/decisions/2026-11-05-uat-shares-the-dev-database.md):
+    // the build is pinned with NEXT_PUBLIC_APP_ENV=uat by scripts/deploy.mjs so it
+    // wears UAT's badge although the project is dev's.
     "uat": {
       "name": "lanna-animal-care-uat",
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
-      "routes": [],
+      "routes": [
+        { "pattern": "lannacare.org", "custom_domain": true },
+        { "pattern": "www.lannacare.org", "custom_domain": true }
+      ],
       "vars": {
         "NODE_ENV": "production",
         "ORIGIN_HOST": "",
@@ -111,18 +114,15 @@
       "name": "lanna-animal-care",
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
       "routes": [
-        { "pattern": "lannacare.org", "custom_domain": true },
-        { "pattern": "www.lannacare.org", "custom_domain": true }
+        { "pattern": "lannacareforanimals.org", "custom_domain": true },
+        { "pattern": "www.lannacareforanimals.org", "custom_domain": true }
       ],
-      // Release mail (worker/release-mail.mjs). lannacare.org is UAT for good
-      // and this database becomes UAT at the cutover, so it already sends as
-      // UAT. At the cutover the production block moves to
-      // lannacareforanimals.org with RELEASE_MAIL_ENV "Production" and a
-      // From on that domain, and the uat block above takes over these routes.
-      // PUBLIC_SITE "locked" for the same reason: lannacare.org is UAT and not
-      // for the public (src/lib/public-site.ts). THE CUTOVER MUST DROP IT
-      // from this block when it moves to lannacareforanimals.org, or the live
-      // site opens on a sign-in page.
+      // Release mail (worker/release-mail.mjs): since the cutover this is the
+      // live site on lannacareforanimals.org, sending as "Production" from that
+      // domain. PUBLIC_SITE stays "locked" (Lutan, 2026-11-05): signed-out
+      // visitors get the sign-in landing page, not the public website
+      // (src/lib/public-site.ts). Removing it is the public launch, a
+      // separate decision.
       "vars": {
         "NODE_ENV": "production",
         "ORIGIN_HOST": "pi.lannacare.org",
@@ -130,17 +130,15 @@
         // serves everything. The public website's move to its own domain is PUBLIC_HOST
         // changing here; the staff app's move to its Cooper address is APP_HOST.
         // docs/domain-checklist.md lists the places outside the code that also change.
-        "APP_HOST": "lannacare.org",
-        "PUBLIC_HOST": "lannacare.org",
+        "APP_HOST": "lannacareforanimals.org",
+        "PUBLIC_HOST": "lannacareforanimals.org",
         "ORIGIN_TIMEOUT_MS": "20000",
-        "RELEASE_MAIL_ENV": "UAT",
-        "RELEASE_MAIL_FROM": "releases@lannacare.org",
+        "RELEASE_MAIL_ENV": "Production",
+        "RELEASE_MAIL_FROM": "releases@lannacareforanimals.org",
         "PUBLIC_SITE": "locked",
-        // Status alerts, as on test. The cutover moves this block to
-        // lannacareforanimals.org: STATUS_ALERT_SITE moves with it, and the
-        // uat block takes lannacare.org and a copy of these alert entries.
-        "STATUS_ALERT_SITE": "https://lannacare.org",
-        "STATUS_ALERT_FROM": "alerts@lannacare.org",
+        // Status alerts, as on test, now on lannacareforanimals.org.
+        "STATUS_ALERT_SITE": "https://lannacareforanimals.org",
+        "STATUS_ALERT_FROM": "alerts@lannacareforanimals.org",
         // The puppy loader showcase pause on /adopt's first load — Lutan
         // chose to keep it live for real visitors too (docs/decisions.md,
         // 2026-09-28). Clamped to 3000ms regardless.

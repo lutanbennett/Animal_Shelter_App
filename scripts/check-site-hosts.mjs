@@ -41,16 +41,12 @@ for (const [name, block] of Object.entries(config.env ?? {})) {
 console.log("\nrules fire on broken copies:");
 const clone = () => JSON.parse(JSON.stringify(config));
 const NEW = "lannacareforanimals.org";
-const newRoutes = [{ pattern: NEW, custom_domain: true }, { pattern: `www.${NEW}`, custom_domain: true }];
-const oldRoutes = [{ pattern: "lannacare.org", custom_domain: true }, { pattern: "www.lannacare.org", custom_domain: true }];
+// Written after the 2026-11-06 cutover: the file on disk is the cutover state, so each broken
+// copy undoes or spoils one part of it.
 const broken = {
   "an environment missing PUBLIC_HOST": (c) => { delete c.env.uat.vars.PUBLIC_HOST; },
-  "two environments claiming one route": (c) => { c.env.uat.routes = [{ pattern: "lannacare.org", custom_domain: true }]; },
-  "a route outside its environment's hosts": (c) => { c.env.production.routes.push({ pattern: NEW, custom_domain: true }); },
-  "production moved to the new host but still locked": (c) => {
-    c.env.production.vars.APP_HOST = c.env.production.vars.PUBLIC_HOST = NEW;
-    c.env.production.routes = newRoutes;
-  },
+  "two environments claiming one route": (c) => { c.env.uat.routes = [{ pattern: NEW, custom_domain: true }]; },
+  "a route outside its environment's hosts": (c) => { c.env.production.routes.push({ pattern: "lannacare.org", custom_domain: true }); },
 };
 for (const [what, mutate] of Object.entries(broken)) {
   const c = clone();
@@ -58,17 +54,12 @@ for (const [what, mutate] of Object.entries(broken)) {
   say(hostProblems(c, yml).some((r) => !r.ok), `caught: ${what}`);
 }
 {
-  // The cutover edit made in wrangler.jsonc but forgotten in the tunnel: the old header is
-  // still "covered" (UAT owns it now), which is why coverage by ANY environment is not enough.
-  const c = clone();
-  c.env.production.vars.APP_HOST = c.env.production.vars.PUBLIC_HOST = NEW;
-  delete c.env.production.vars.PUBLIC_SITE;
-  c.env.production.routes = newRoutes;
-  c.env.uat.routes = oldRoutes;
-  say(hostProblems(c, yml).some((r) => !r.ok && /pi\.lannacare\.org presents lannacare\.org/.test(r.msg)), "caught: cutover done but the tunnel still presents lannacare.org to production");
-  const fixed = yml.replace(/(hostname: pi\.lannacare\.org[\s\S]*?httpHostHeader:\s*)lannacare\.org/, `$1${NEW}`);
-  const rest = hostProblems(c, fixed).filter((r) => !r.ok);
-  say(rest.length === 0, `the complete cutover edit (wrangler.jsonc + tunnel) passes every rule${rest.length ? `: ${rest.map((r) => r.msg).join("; ")}` : ""}`);
+  // The tunnel forgotten: its old header is still "covered" (UAT owns lannacare.org now), which is
+  // why coverage by ANY environment is not enough.
+  const stale = yml.replace(/(hostname: pi\.lannacare\.org[\s\S]*?httpHostHeader:\s*)lannacareforanimals\.org/, "$1lannacare.org");
+  say(stale !== yml && hostProblems(config, stale).some((r) => !r.ok && /pi\.lannacare\.org presents lannacare\.org/.test(r.msg)), "caught: tunnel still presents lannacare.org to production");
+  const rest = hostProblems(config, yml).filter((r) => !r.ok);
+  say(rest.length === 0, `the complete cutover state (wrangler.jsonc + tunnel) passes every rule${rest.length ? `: ${rest.map((r) => r.msg).join("; ")}` : ""}`);
 }
 
 console.log(failed ? `\n${failed} wrong` : "\nall right");

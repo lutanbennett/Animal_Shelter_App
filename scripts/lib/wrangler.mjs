@@ -28,28 +28,3 @@ export function routeHosts(config, envName) {
     (typeof r === "string" ? r : r.pattern).replace(/^https?:\/\//, "").split("/")[0],
   );
 }
-
-/**
- * Why a production deploy must not go ahead with the public site locked, or
- * null when it may.
- *
- * This is waiting for the cutover, not checking a permanent invariant.
- * Today the production block serves `uatHost` (lannacare.org), which is UAT
- * for good and rightly locked, so a production deploy with PUBLIC_SITE
- * "locked" is correct and passes. Once the block's routes move off that
- * host, production is the real public website, and a lock left behind would
- * open it on a sign-in page (src/lib/public-site.ts) — that is what this
- * refuses. After the cutover has dropped the var, it never fires again.
- */
-export function lockedPublicSiteProblem(config, envName, uatHost) {
-  if (envName !== "production") return null;
-  if (config.env?.production?.vars?.PUBLIC_SITE !== "locked") return null;
-  const hosts = routeHosts(config, "production");
-  if (hosts.includes(uatHost)) return null;
-  return (
-    `the production block of wrangler.jsonc now routes to ${hosts.join(", ") || "nothing"}, ` +
-    `not ${uatHost}, but still sets "PUBLIC_SITE": "locked" — the live site would open on a ` +
-    `sign-in page.\n  Drop "PUBLIC_SITE": "locked" from the production block's vars ` +
-    `(README, "What the cutover changes here").`
-  );
-}

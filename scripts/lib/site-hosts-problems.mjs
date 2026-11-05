@@ -3,7 +3,7 @@
 // it on the real files AND on deliberately broken copies (proving each rule fires).
 // Why these rules: docs/decisions/2026-11-04-cutover-preflight.md.
 import { isSiteHostname } from "../../src/lib/site-hosts.ts";
-import { lockedPublicSiteProblem, routeHosts } from "./wrangler.mjs";
+import { routeHosts } from "./wrangler.mjs";
 
 /** Reads `- hostname:` / `httpHostHeader:` pairs out of the cloudflared ingress list. */
 export function ingressRules(yml) {
@@ -70,9 +70,5 @@ export function hostProblems(config, ingressYml) {
     if (o) say(rules.some((r) => r.hostname === o), `${name}: ORIGIN_HOST ${o} has a tunnel ingress`);
   }
 
-  // The live site must not open on the sign-in page.
-  const uatHost = envs.uat?.vars?.APP_HOST;
-  const lock = uatHost ? lockedPublicSiteProblem(config, "production", uatHost) : null;
-  say(!lock, "production is not locked while routed away from UAT's address");
   return out;
 }

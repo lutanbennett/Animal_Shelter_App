@@ -19,11 +19,10 @@
 // entirely. See docs/decisions/2026-10-18-purge-from-the-deploy-machine.md.
 //
 // WHAT IT NEEDS. In `.env.deploy.<env>` (gitignored), two values:
-//   CLOUDFLARE_ZONE_ID      the zone for lannacare.org
-//   CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS  optional, production only: the zone for
-//                           lannacareforanimals.org. When set it is purged and checked too,
-//                           so the domain cutover needs no code change.
-//   CLOUDFLARE_PURGE_TOKEN  an API token scoped to Zone -> Cache Purge, that zone only
+//   CLOUDFLARE_ZONE_ID      the zone for lannacare.org (UAT and test)
+//   CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS  production only (since the 2026-11-06 cutover): the
+//                           zone for lannacareforanimals.org, required for --env production
+//   CLOUDFLARE_PURGE_TOKEN  an API token scoped to Zone -> Cache Purge, that zone only (a production token must be allowed on the lannacareforanimals.org zone)
 // Nothing else in the repo reads CLOUDFLARE_PURGE_TOKEN, and it is never printed.
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -43,27 +42,26 @@ if (!["production", "uat", "test"].includes(envName)) {
   const env = loadEnv(envName);
   const file = envFile(envName); // test keeps its values in .env.local, not .env.deploy.test
 
-  const zone = env.CLOUDFLARE_ZONE_ID;
+  // Since the 2026-11-06 cutover production is lannacareforanimals.org, which is its own zone
+  // (CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS); lannacare.org is UAT and keeps CLOUDFLARE_ZONE_ID.
+  // The token must be allowed to purge whichever zone it is used on.
+  const zoneVar = envName === "production" ? "CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS" : "CLOUDFLARE_ZONE_ID";
+  const zone = env[zoneVar];
   const token = env.CLOUDFLARE_PURGE_TOKEN;
-  const host = envName === "test" ? "test.lannacare.org" : "lannacare.org";
-
-  // Production also serves lannacareforanimals.org once the domain cutover happens;
-  // its zone id is optional so nothing changes until Lutan adds it.
-  const extraZone = envName === "production" ? env.CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS : undefined;
+  const host = envName === "test" ? "test.lannacare.org" : envName === "uat" ? "lannacare.org" : "lannacareforanimals.org";
   const targets = [{ zone, host }];
-  if (extraZone) targets.push({ zone: extraZone, host: "lannacareforanimals.org" });
 
   // Refuse with instructions rather than a stack trace: whoever hits this is
   // mid-release and needs to know exactly what to add and with what scope.
   const missing = [];
-  if (!zone) missing.push("CLOUDFLARE_ZONE_ID");
+  if (!zone) missing.push(zoneVar);
   if (!token) missing.push("CLOUDFLARE_PURGE_TOKEN");
   if (missing.length) {
     console.error(`purge-cache: ${missing.join(" and ")} missing from ${file}.`);
     console.error("  Create an API token at Cloudflare -> My Profile -> API Tokens with");
     console.error("  Permissions: Zone -> Cache Purge -> Purge, and Zone Resources limited to");
     console.error(`  the one zone serving ${host}. Put it in ${file} as`);
-    console.error("  CLOUDFLARE_PURGE_TOKEN, with CLOUDFLARE_ZONE_ID beside it.");
+    console.error(`  CLOUDFLARE_PURGE_TOKEN, with ${zoneVar} beside it.`);
     console.error("  Until then, purge by hand: Cloudflare -> Caching -> Configuration -> Purge Everything.");
     process.exitCode = 2;
   } else for (const { zone, host } of targets) if (dryRun) {

@@ -152,22 +152,23 @@ Keep at least two admins enrolled so route 1 is always available. `scripts/check
 
 ## Environments
 
-Four environments, three of them deployed. **UAT exists in the code and
-the tooling but not yet as a site**: until the production domain cutover,
-`lannacare.org` is served by the production block and `--env uat` refuses
-to deploy. The UAT column is what the cutover makes true.
+Four environments, three of them deployed. **Since the 2026-11-06 cutover**
+the live site is `lannacareforanimals.org` (the production block) and
+`lannacare.org` is UAT. UAT shares the **dev** Supabase project for now
+(`docs/decisions/2026-11-05-uat-shares-the-dev-database.md`), so its build is
+badged UAT by a pin (`NEXT_PUBLIC_APP_ENV=uat`, set by `scripts/deploy.mjs`).
 
 | | Dev | Test | UAT | Production |
 |---|---|---|---|---|
-| Where | `next dev` on your machine | `test.lannacare.org` (served by the Pi from its own clone once `ORIGIN_KEY` and the WAF rule are in place, `docs/pi-hosting.md`) | `lannacare.org`, `www.lannacare.org` — for good | `lannacare.org` until the cutover, then `lannacareforanimals.org` |
-| Worker | — | `lanna-animal-care-test` | `lanna-animal-care-uat` (no routes until the cutover) | `lanna-animal-care` |
-| Database | dev Supabase project (`qxkmhwybjggxvsfxsxbd`) | **the same dev project** | `dbkodyyxxhtygxcxmfcu` — today's production project, demoted at the cutover | `dbkodyyxxhtygxcxmfcu` today; a new project from the cutover |
+| Where | `next dev` on your machine | `test.lannacare.org` (served by the Pi from its own clone once `ORIGIN_KEY` and the WAF rule are in place, `docs/pi-hosting.md`) | `lannacare.org`, `www.lannacare.org` — for good | `lannacareforanimals.org`, `www.lannacareforanimals.org` |
+| Worker | — | `lanna-animal-care-test` | `lanna-animal-care-uat` | `lanna-animal-care` |
+| Database | dev Supabase project (`qxkmhwybjggxvsfxsxbd`) | **the same dev project** | **the dev project** (a stopgap: no free Supabase slot) | `dbkodyyxxhtygxcxmfcu` |
 | Google Drive | dev account | dev account | dev account (the current tree) | dev account, until the shelter's own account exists |
 | Values from | `.env.local` | `.env.local` | `.env.deploy.uat` over `.env.local` | `.env.deploy.production` over `.env.local` |
 | Deploy | — | `npm run deploy:test` | `npm run deploy:uat` | `npm run deploy:prod` |
 | Looks | teal, striped strip and **Dev** badge in the header | teal, strip and **Dev** badge | orange, **UAT** badge | orange |
 | Generated PDFs | `DEV` watermark | `DEV` watermark | `UAT` watermark | none |
-| Release mail | never | never | `[UAT]` | `[UAT]` until the cutover, then `[Production]` |
+| Release mail | never | never | `[UAT]` | `[Production]` |
 | Public website | open | **locked** — sign-in landing page | **locked** | **locked** until the cutover, then open |
 
 Dev and Test are recoloured (teal instead of orange, greenish surfaces, a
@@ -200,14 +201,13 @@ and `robots.txt` stay open. Signed-in staff see everything as usual.
 why. To look at it locally, put `PUBLIC_SITE=locked` in
 `.env.development.local` (gitignored) and restart `next dev`.
 
-**What the cutover changes here**, in one commit: `UAT_PROJECT_REF` in
+**What the cutover changed here (done 2026-11-06; read as history: UAT now shares the dev project instead of using `UAT_PROJECT_REF`)**, in one commit: `UAT_PROJECT_REF` in
 `src/lib/app-env.ts` and production's label in `src/app/releases/page.tsx`;
 the `lannacare.org` routes move from the `production` block of
 `wrangler.jsonc` to `uat`, and production gets the new domain,
-`RELEASE_MAIL_ENV` `Production` and a From on that domain, and loses
-`"PUBLIC_SITE": "locked"`, or the live site opens on a sign-in page
-(`scripts/deploy.mjs` refuses `--env production` while the block is off
-`lannacare.org` and still locked);
+`RELEASE_MAIL_ENV` `Production` and a From on that domain, and keeps
+`"PUBLIC_SITE": "locked"` (Lutan, 2026-11-05: the public launch is a separate decision; removing
+that var from the production block is the launch);
 `HOST=` in `scripts/pi/deploy-pi.sh` follows. The two addresses are `APP_HOST` and
 `PUBLIC_HOST` in each `wrangler.jsonc` block (`src/lib/site-hosts.ts`), so a host
 move is those settings plus `httpHostHeader` in `scripts/pi/cloudflared-config.yml`;
@@ -345,8 +345,7 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    commits GitHub has. Merge first, then deploy. Every environment,
    Test included, also refuses when its env file points at a project
    `src/lib/app-env.ts` would badge as something else — which is why
-   `deploy:uat` fails today: UAT has no project of its own until the
-   cutover.
+   `deploy:uat` expects the dev project's values in `.env.deploy.uat`.
 
    **Why the strip step matters.** The OpenNext adapter copies *everything*
    in `.env.local` into the Worker bundle as a fallback for any variable not

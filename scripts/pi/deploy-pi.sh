@@ -205,7 +205,7 @@ NEXT_DIST_DIR=.next.new node scripts/actions-key.mjs --env "$ENV_NAME" --built |
 # (docs/decisions/2026-11-05-manual-pdf-prebuilt.md).
 "${NICE[@]}" node scripts/build-manual-pdf.mjs || { echo "deploy-pi: building the manual PDFs failed; nothing swapped." >&2; abandon_build; exit 1; }
 
-HOST=lannacare.org   # UAT's for good; production keeps it until the cutover (docs/decisions.md)
+HOST=lannacareforanimals.org   # the live site since the 2026-11-06 cutover; lannacare.org is UAT, which has no Pi
 [[ "$ENV_NAME" == "test" ]] && HOST=test.lannacare.org
 
 [[ -d .next.new ]] || { echo "deploy-pi: the build reported success but .next.new is missing; nothing swapped, $SERVICE keeps serving the old version." >&2; exit 1; }

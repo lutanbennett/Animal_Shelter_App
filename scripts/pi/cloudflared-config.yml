@@ -4,7 +4,7 @@
 # One tunnel, one public hostname. The Worker (worker/index.mjs) is the
 # only legitimate caller of pi.lannacare.org — a WAF rule on that hostname
 # rejects requests without the shared x-origin-key header — and it wants
-# the app to believe it is lannacare.org, so cloudflared rewrites the Host
+# the app to believe it is lannacareforanimals.org (the live site), so cloudflared rewrites the Host
 # header on the way in (redirects, cookies and getSiteOrigin() then match
 # the address the visitor is on).
 #
@@ -18,7 +18,7 @@ ingress:
   - hostname: pi.lannacare.org
     service: http://127.0.0.1:3000
     originRequest:
-      httpHostHeader: lannacare.org
+      httpHostHeader: lannacareforanimals.org
       connectTimeout: 10s
       noHappyEyeballs: true
   # Test on the same Pi: lanna-care-test.service on 3001, run from its own clone

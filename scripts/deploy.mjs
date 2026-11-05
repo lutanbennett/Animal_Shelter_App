@@ -1,7 +1,7 @@
 // Build and deploy one environment's Worker.
 //
 //   node scripts/deploy.mjs --env test                # test.lannacare.org
-//   node scripts/deploy.mjs --env uat                 # lannacare.org, from the cutover
+//   node scripts/deploy.mjs --env uat                 # lannacare.org, since the 2026-11-06 cutover (dev project)
 //   node scripts/deploy.mjs --env production          # lannacare.org until the cutover
 //   node scripts/deploy.mjs --env production --secrets
 //       # (uat/production refuse a secret found only in .env.local unless
@@ -40,7 +40,7 @@ import { WORKER_BUILD_VARS, WORKER_OPTIONAL_SECRETS, WORKER_REQUIRED_SECRETS } f
 import { appliedMigrations } from "./lib/deploy-schema.mjs";
 import { releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
 import { strayEnvFiles } from "./lib/env-leak.mjs";
-import { lockedPublicSiteProblem, readWranglerConfig } from "./lib/wrangler.mjs";
+import { readWranglerConfig } from "./lib/wrangler.mjs";
 import { takeTreeLock, treeProblems } from "./lib/tree-lock.mjs";
 import { ACTIONS_KEY_VAR, actionsKeyProblem, builtKeyProblem, keyFingerprint } from "./lib/actions-key.mjs";
 // TypeScript, loaded through Node's type stripping: the same file the app
@@ -64,7 +64,9 @@ const planOnly = rest.includes("--plan");
 // definitions were identical, so removing this one changes nothing.
 
 // What src/lib/app-env.ts must call each environment's database.
-const EXPECTED_APP_ENV = { test: "dev", uat: "uat", production: "production" };
+// What the PROJECT must be called (appEnvForSupabaseUrl). UAT shares the dev project for now, so it
+// expects "dev" here and is told apart by the NEXT_PUBLIC_APP_ENV pin set below.
+const EXPECTED_APP_ENV = { test: "dev", uat: "dev", production: "production" };
 
 // Environments where a deploy is something a customer or the shelter sees.
 const GUARDED = envName === "uat" || envName === "production";
@@ -120,20 +122,6 @@ function wrangler(args, opts = {}) {
 }
 const git = (args) => spawnSync(`git ${args}`, { shell: true, encoding: "utf8" }).stdout.trim();
 
-// The cutover moves the production block off lannacare.org and must drop its
-// PUBLIC_SITE lock on the way (README, "What the cutover changes here"). Until
-// then production serves UAT's host and the lock is right, so this stays
-// silent; see lockedPublicSiteProblem() for the whole condition. First of the
-// guards because it needs only wrangler.jsonc, no environment's secrets.
-// There is deliberately no flag past it (docs/decisions.md, 2026-09-27).
-{
-  const problem = lockedPublicSiteProblem(readWranglerConfig(), envName, new URL(SITE_ORIGINS.uat).hostname);
-  if (problem) {
-    console.error(`deploy: ${problem}`);
-    process.exit(2);
-  }
-}
-
 const env = loadEnv(envName);
 for (const key of [...BUILD_VARS, ...(pushSecrets ? RUNTIME_SECRETS : [])]) {
   if (!env[key]) {
@@ -175,7 +163,7 @@ if (pushSecrets) {
     console.error(
       `deploy: --env ${envName} points at Supabase project ${projectRef(env)}, which src/lib/app-env.ts ` +
         `calls "${builds}" — the build would wear ${builds}'s badge, not ${envName}'s.` +
-        (envName === "uat" ? "\n  UAT has no project of its own until the cutover sets UAT_PROJECT_REF there." : ""),
+        (envName === "uat" ? "\n  UAT shares the dev project for now (docs/decisions/2026-11-05-uat-shares-the-dev-database.md): .env.deploy.uat must hold the dev project's values." : ""),
     );
     process.exit(2);
   }
@@ -312,6 +300,8 @@ if (!skipBuild) {
   buildEnv.APP_HOST = wranglerVars.APP_HOST;
   buildEnv.PUBLIC_HOST = wranglerVars.PUBLIC_HOST;
   delete buildEnv.NEXT_PUBLIC_SITE_URL;
+  // Pinned for every environment, so no shell or env file can badge the wrong site: only the UAT build wears UAT's badge (src/lib/app-env.ts).
+  buildEnv.NEXT_PUBLIC_APP_ENV = envName === "uat" ? "uat" : "";
   run("npm run opennext:build", { env: buildEnv });
   run("node scripts/strip-baked-env.mjs");
   // The commit this build was made from, beside the one the release was asked

@@ -16,14 +16,12 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /**
- * What each environment is called on this page. Until the cutover the
- * build app-env calls "production" is the UAT site — UAT for good
- * (docs/decisions.md) — so it is still labelled UAT, matching the `[UAT]`
- * its release mail carries (wrangler.jsonc RELEASE_MAIL_ENV). The cutover
- * sets UAT_PROJECT_REF in app-env and changes production's label here to
- * "Production" in the same commit.
+ * What each environment is called on this page. Since the 2026-11-06 cutover
+ * the build app-env calls "production" is the live site, matching the
+ * `[Production]` its release mail carries (wrangler.jsonc RELEASE_MAIL_ENV);
+ * UAT is the pinned build on lannacare.org (src/lib/app-env.ts).
  */
-const ENV_LABEL = { dev: "Dev", uat: "UAT", production: "UAT" } as const;
+const ENV_LABEL = { dev: "Dev", uat: "UAT", production: "Production" } as const;
 
 /** A note as the page shows it: `mine` when it is for the reader's role or for everyone. */
 type ViewNote = { text: string; mine: boolean };
