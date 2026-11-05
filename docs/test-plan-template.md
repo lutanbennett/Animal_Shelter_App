@@ -4,14 +4,25 @@
 Copy this file to the feature branch as `docs/test-plans/<feature>.md`, fill the
 header, and tick as you go.
 
-Every line must end up in one of three states, and CI checks this:
+Every line must end up in one of four states, and CI checks this:
 
 - `- [x]` — the check was actually run and passed.
 - `- [ ] … — n/a: <reason>` — the check did not apply, and the reason says why.
+- `- [ ] … — pending: <what is outstanding>` — the check **does** apply and
+  genuinely waits on somebody or something: Lutan's own upload, a deploy, a
+  person to look. It passes CI and is printed as *awaiting a person*.
 - `- [ ] … — deferred: <owner>` — **section 8 only.** The check cannot be true
   yet, and this names who picks it up.
 
-That third state exists because the deploy gates in section 8 cannot be true at
+`pending:` is there so the honest word is also the one that passes. Before
+2026-11-05 a checklist line that truly waited on someone had nowhere to say so —
+only a tick or an `n/a:` passed — so a stream either went red for telling the
+truth or wrote `n/a` for something that was not n/a. The signature lines below
+had accepted `pending:` all along; the checklist now does too. **Nothing ships
+on a `pending:`**: it is the release manager's pre-deploy pass that resolves it,
+exactly as for the signatures.
+
+That fourth state exists because the deploy gates in section 8 cannot be true at
 PR time: there is no deployed build to check and no production apply to have run.
 Writing them `n/a` is a lie in a box labelled "did not apply", and once that habit
 forms people write `n/a` for things they simply did not do. `deferred:` says the
@@ -34,6 +45,14 @@ with no completed `docs/test-plans/<feature>.md` fails. Small changes are not
 exempt — they are simply fast, because most lines are honestly `n/a`. Writing the
 `n/a` reason *is* the check; that is what says someone looked at everything rather
 than at the happy path.
+
+**A half-written plan is not a failure.** The plan is committed early and filled
+in as the work proceeds, so CI sees it unfinished on every push in between. Since
+2026-11-05 the checker reports an unfilled placeholder, a missing `Result:` line
+and an unsigned sign-off as *still being written* and passes, exactly as it has
+passed an unsigned plan since 2026-09-24. **Red means the plan is wrong**: a line
+nobody addressed at all, an `n/a:` or a `pending:` with no reason, a `deferred:`
+outside section 8, a release-notes tick with no release note, `Result: fail`.
 
 Run `node scripts/check-test-plan.mjs` locally before pushing to see what CI will say.
 
