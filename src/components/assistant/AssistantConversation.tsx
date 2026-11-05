@@ -84,7 +84,7 @@ type TurnState =
   /** A name matched several residents: asked which, rather than guessed or answered in words. */
   | { kind: "pick"; draft: Draft; candidates: string[] }
   | { kind: "error"; message: string }
-  | { kind: "done"; message: string; residentId: string | null }
+  | { kind: "done"; message: string; residentId: string | null; notice?: string }
   | { kind: "cancelled" }
   /** No parser recognised the sentence. */
   | { kind: "unmatched" }
@@ -537,6 +537,7 @@ function TurnReply({
       return (
         <ReplyBubble>
           <p>{turn.state.message}</p>
+          {turn.state.notice && <p role="alert" className="mt-1 text-sm text-danger">{turn.state.notice}</p>}
           {turn.state.residentId && (
             <Link
               href={`/residents/${turn.state.residentId}`}

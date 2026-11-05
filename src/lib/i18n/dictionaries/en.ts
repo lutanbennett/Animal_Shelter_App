@@ -4521,6 +4521,8 @@ const en = {
     },
     fillBlanks: "Check the details, fill in anything missing, then confirm.",
     notAuthorized: "Your account can't use the assistant.",
+    tagsNotLinked: "The note was saved, but the residents you tagged in it could not be linked. Open the resident and re-tag them in the note.",
+    tagsNotAllowed: "The note was saved, but your cards do not let you link residents in it, so the tagged residents were not linked.",
     cardRefused:
       "Your cards don't let you make this change, so nothing was saved. Ask someone whose cards cover it, or use the resident's own page.",
     notYourCard:

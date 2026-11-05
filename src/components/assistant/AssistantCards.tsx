@@ -71,7 +71,7 @@ import { DateInput } from "@/components/DateInput";
  */
 
 export type AssistantOutcome =
-  | { kind: "done"; message: string; residentId: string | null }
+  | { kind: "done"; message: string; residentId: string | null; notice?: string }
   | { kind: "cancelled" };
 
 /** What every card needs: the sentence it came from, and the rows to pick from. */
@@ -348,7 +348,7 @@ export async function recordLowRisk(
       requestId,
     });
     if ("error" in result) return result;
-    return { ok: true, kind: "done", message: a.weight.done(who, draft.weightKg, day), residentId: resident.id };
+    return { ok: true, kind: "done", message: a.weight.done(who, draft.weightKg, day), residentId: resident.id, notice: result.notice };
   }
 
   const chosen = ctx.immunizationTypes.filter((ty) => draft.immunizationTypeIds.includes(ty.id));
@@ -369,6 +369,7 @@ export async function recordLowRisk(
     kind: "done",
     message: immunizationStrings(ctx.locale).done(who, names, day),
     residentId: resident.id,
+    notice: result.notice,
   };
 }
 
@@ -412,6 +413,7 @@ function MoveCard({ ctx, draft }: { ctx: CardContext; draft: MoveDraft }) {
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
+        notice: result.notice,
         message: a.move.done(
           `${resident.name} (${resident.code})`,
           placeName(locale, target.name, target.name_th),
@@ -544,6 +546,7 @@ function ClinicCard({ ctx, draft }: { ctx: CardContext; draft: ClinicVisitDraft 
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
+        notice: result.notice,
         message: a.vet.done(`${resident.name} (${resident.code})`, clinic.name, whenLabel, doctor || null),
         residentId: resident.id,
       });
@@ -723,6 +726,7 @@ function HospitalCard({ ctx, draft }: { ctx: CardContext; draft: HospitalDraft }
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
+        notice: result.notice,
         message: a.hospital.done(`${resident.name} (${resident.code})`),
         residentId: resident.id,
       });
@@ -819,6 +823,7 @@ function HospitalReturnCard({
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
+        notice: result.notice,
         message: a.hospitalReturn.done(
           `${resident.name} (${resident.code})`,
           placeName(locale, target.name, target.name_th),
@@ -1033,6 +1038,7 @@ function DeathCard({ ctx, draft }: { ctx: CardContext; draft: DeathDraft }) {
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
+        notice: result.notice,
         message: a.death.done(`${resident.name} (${resident.code})`),
         residentId: resident.id,
       });
@@ -1144,6 +1150,7 @@ function RehomeCard({ ctx, draft }: { ctx: CardContext; draft: RehomeDraft }) {
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
+        notice: result.notice,
         message: a.rehome.done(
           `${resident.name} (${resident.code})`,
           a.rehome.kinds[kind],
@@ -1260,6 +1267,7 @@ function CarerReturnCard({ ctx, draft }: { ctx: CardContext; draft: CarerReturnD
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
+        notice: result.notice,
         message: s.done(
           `${resident.name} (${resident.code})`,
           placeName(locale, target.name, target.name_th),
@@ -1491,6 +1499,7 @@ function PrescriptionCard({ ctx, draft }: { ctx: CardContext; draft: Prescriptio
       if ("error" in result) return setError(result.error);
       ctx.onSettle({
         kind: "done",
+        notice: result.notice,
         message: p.done(`${resident.name} (${resident.code})`, medicationLabel(medication)),
         residentId: resident.id,
       });
