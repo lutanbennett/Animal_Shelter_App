@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { requireAnyPermission } from "@/lib/permissions/require";
 import { can } from "@/lib/permissions/can";
-import { photoCategoriesFor } from "@/lib/google/drive-client";
+import { photoCategoriesFor, type PhotoCategory } from "@/lib/google/drive-client";
 import { loadPickableResidents } from "@/lib/medical/residents";
 import { loadEnclosureChoices } from "@/lib/photos/pending";
 import { AddPhotosFlow } from "./AddPhotosFlow";
@@ -29,6 +29,11 @@ export default async function AddPhotosPage() {
   const shelterOnly = categories.length === 1 && categories[0] === "Shelter";
   const route = shelterOnly ? "shelter" : categories.length === 1 ? "medical" : "staff";
   // What this login files into Shelter waits for Management (0217's trigger decides; this only says so).
+  // A login holding several folders but not photos.resident_add (shelter_add + medical_add) cannot use the hub route for either
+  // folder: the hub route asks resident_add or adoption_news, so each folder files through the route that asks its own activity.
+  const mayStaff = can(perms, "photos.resident_add") || can(perms, "resident.adoption_news");
+  const routeFor = (c: PhotoCategory) => (categories.length === 1 || mayStaff ? route : c === "Medical" ? "medical" : "shelter");
+  const routes = Object.fromEntries(categories.map((c) => [c, routeFor(c)])) as Partial<Record<PhotoCategory, "staff" | "medical" | "shelter">>;
   const waits = shelterOnly && !can(perms, "photos.resident_publish");
 
   const supabase = await createClient();
@@ -42,7 +47,7 @@ export default async function AddPhotosPage() {
     <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 md:p-6">
       <h1 className="text-2xl font-semibold text-foreground">{t.addPhotos.title}</h1>
       <p className="text-base text-muted">{t.addPhotos.intro}</p>
-      <AddPhotosFlow categories={categories} route={route} waits={waits} residents={residents} loadError={error} enclosures={enclosures} />
+      <AddPhotosFlow categories={categories} route={route} routes={routes} waits={waits} residents={residents} loadError={error} enclosures={enclosures} />
     </main>
   );
 }
