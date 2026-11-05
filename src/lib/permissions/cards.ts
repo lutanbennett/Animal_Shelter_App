@@ -61,7 +61,8 @@ export type NewCardKey =
   | "bill_sites"
   | "run_fundraising_events"
   | "propose_website"
-  | "approve_website";
+  | "approve_website"
+  | "view_expenses";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -376,6 +377,10 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   },
   // 0315: draft a website change and leave it waiting. It cannot publish, so the live site does not move. Given to no role.
   propose_website: { includes: [], bundle: [{ activity: "website.propose" }], opens: "/admin/website" },
+  // 0317 (Lutan, 2026-11-04: "basic reports that show expenses by type and date / Month and links to the receipts", "all one card"):
+  // the shelter's expenses by type and month with a link to each receipt, for an outside accountant. Read only: reports.expenses is a
+  // level activity because the bill activities are yes/no and could not be held without the right to write. Given to no role.
+  view_expenses: { includes: [], bundle: [{ activity: "reports.expenses", level: "read" }], opens: "/management/expenses" },
 };
 
 /** Titles of the new cards, from the dictionary; the eight jobs keep theirs under appHome.jobs. */
@@ -420,6 +425,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   run_fundraising_events: (t) => t.appHome.cards.runFundraisingEvents,
   approve_website: (t) => t.appHome.cards.approveWebsite,
   propose_website: (t) => t.appHome.cards.proposeWebsite,
+  view_expenses: (t) => t.appHome.cards.viewExpenses,
 };
 
 export const CARDS: Record<CardKey, Card> = {

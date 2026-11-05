@@ -75,6 +75,7 @@ function writeRecent(ids: string[]) {
 export function AddPhotosFlow({
   categories,
   route,
+  routes,
   waits,
   residents,
   loadError,
@@ -82,6 +83,8 @@ export function AddPhotosFlow({
 }: {
   categories: readonly PhotoCategory[];
   route: "staff" | "medical" | "shelter";
+  /** The route each folder files through, where it differs from `route` (a login with Shelter and Medical but not photos.resident_add). */
+  routes?: Partial<Record<PhotoCategory, "staff" | "medical" | "shelter">>;
   /** The photos filed here wait for Management's approval; say so. */
   waits: boolean;
   residents: PickableResident[];
@@ -141,7 +144,7 @@ export function AddPhotosFlow({
               photo.file,
               { category: job.folder, dateTaken: todayIso() },
               () => {},
-              route,
+              routes?.[job.folder] ?? route,
             );
         patchTag(
           job.photoKey,
@@ -152,7 +155,7 @@ export function AddPhotosFlow({
     } finally {
       running.current = false;
     }
-  }, [patchTag, route, t]);
+  }, [patchTag, route, routes, t]);
 
   const add = (list: FileList | null) => {
     if (!list) return;

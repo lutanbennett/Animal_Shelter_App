@@ -245,14 +245,14 @@ const PINNED = {
   "/management/clinics/[id]/doctors": { guards: ['requirePermission("clinics.doctors")'], decides: [] },
   // Maintenance opens its add and edit pages at Read on purpose and shows a reader "read only"
   // instead of the form: the form is behind the body's can(perms, "maintenance.jobs") (Edit).
-  "/maintenance/new": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.jobs"] },
+  "/maintenance/new": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.jobs", "maintenance.photos"] },
   "/maintenance/[id]/edit": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.jobs"] },
   // Detail pages: they open at the list's own level, and every control that writes asks can().
   "/maintenance/[id]": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.bills", "maintenance.delete", "maintenance.jobs", "maintenance.photos", "maintenance.progress", "social.library", "translations.manage"] },
   "/clinics/[id]": { guards: ['requirePermission("clinics.list", "read")'], decides: ["clinics.list", "medical.visits:read", "visit.book"] },
   "/contacts/[id]": { guards: ['requirePermission("contacts.browse")'], decides: ["contacts.directory", "friends.manage"] },
   "/enclosures/[id]": { guards: ['requirePermission("facility.enclosures", "read")'], decides: ["facility.enclosures", "maintenance.jobs", "resident.record:read", "resident.who_and_where:read"] },
-  "/projects/[id]": { guards: ['requirePermission("projects.folders", "read")'], decides: ["projects.folders", "projects.publish", "translations.manage"] },
+  "/projects/[id]": { guards: ['requirePermission("projects.folders", "read")'], decides: ["projects.folders", "projects.photos", "projects.publish", "translations.manage"] },
   // A donation's own page is the receipt: issuing it is the yes/no activity, and nothing else.
   "/management/donations/[id]": { guards: ['requirePermission("donation.receipt")'], decides: [] },
   "/management/donations/donors": { guards: ['requirePermission("donation.receipt")'], decides: [] },
