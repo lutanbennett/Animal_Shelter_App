@@ -87,9 +87,9 @@ gates: typecheck=0 lint=0 test=0 build=0
 ## 7. Documentation
 
 - [x] Backlog #c2m7w ticked on this branch; #t5k9r deliberately left open (not changed)
-- [x] Decision file docs/decisions/2026-11-07-expense-visit-costs.md
+- [x] Decision file docs/decisions/2026-11-06-expense-visit-costs.md
 - [x] README still accurate
-- [x] **Release notes.** Added to unreleased, tagged view_expenses
+- [ ] **Release notes.** n/a: the line was added to unreleased in this feature's own PR; this PR only fixed a filename citation
 - [x] Commit messages say why
 - [x] Claims measured: before/after totals read from the running page on dev
 
