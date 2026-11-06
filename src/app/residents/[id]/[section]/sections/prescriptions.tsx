@@ -11,6 +11,8 @@ import { ActionLink } from "@/components/ActionLink";
 import { SECTION_ICONS } from "@/components/hub-icons";
 import type { SectionContext } from "./types";
 import { Placeholder, RecordList } from "./shared";
+import { ClosedRecordNoteControl } from "@/components/ClosedRecordNoteControl";
+import { CLOSED_NOTE_KINDS } from "@/lib/closed-record/notes";
 
 export async function renderPrescriptionsSection(ctx: SectionContext): Promise<React.ReactNode> {
   const { id, isDeceased, perms, t, locale, supabase, showArchived, canArchive, archivedCount, archivedToggle, archivedList, noteTags } = ctx;
@@ -136,6 +138,11 @@ export async function renderPrescriptionsSection(ctx: SectionContext): Promise<R
               ending: t.prescriptions.ending,
             }}
           />
+        )}
+        {isDeceased && !archived && can(perms, CLOSED_NOTE_KINDS.prescription.activity) && (
+          <div className="flex justify-end">
+            <ClosedRecordNoteControl kind="prescription" residentId={id} id={row.id} subject={`${(row.medication ? localLabel(locale, row.medication.name, row.medication.name_th) : t.residents.sections.unknownMedication)} · ${formatDate(row.start_date, locale)}`} />
+          </div>
         )}
         {canArchive("prescription") && (
           <div className="flex justify-end">

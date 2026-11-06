@@ -81,25 +81,8 @@ export default async function NewBloodTestPage(
     ? `${resident.name} (${resident.thai_name})`
     : resident.name;
 
-  // Unlike the immunization and clinic-visit forms, this page is reached with a
-  // resident id rather than a picker, so the "no records for the dead" rule
-  // (migration 0026, which would reject the insert anyway) is checked here.
-  if (stateResult.data?.[0]?.is_deceased) {
-    return (
-      <main className="flex flex-1 flex-col gap-4 p-6">
-        <h1 className="text-2xl font-semibold text-foreground">
-          {t.bloodTests.pageTitle}
-        </h1>
-        <p className="text-sm text-muted">{t.residents.deceased.recordClosed}</p>
-        <Link
-          href={`/residents/${residentId}`}
-          className="text-sm font-medium text-primary hover:underline"
-        >
-          {t.residents.sections.backTo(displayName)}
-        </Link>
-      </main>
-    );
-  }
+  // A dead resident can still be given a blood test whose result arrived late: 0320 permits that one INSERT (and nothing else).
+  const closedRecord = stateResult.data?.[0]?.is_deceased ?? false;
 
   const clinicVisits = clinicVisitsResult.data ?? [];
 
@@ -132,6 +115,7 @@ export default async function NewBloodTestPage(
       <BloodTestForm
         residentId={residentId}
         residentDisplayName={displayName}
+        closedRecord={closedRecord}
         bloodTestTypes={(typesResult.data ?? []).map(({ name_th, ...type }) => ({
           ...type,
           name: localLabel(locale, type.name, name_th),

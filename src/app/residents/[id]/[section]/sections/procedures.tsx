@@ -72,6 +72,7 @@ export async function renderProceduresSection(ctx: SectionContext): Promise<Reac
         procedures={procedures}
         readOnly={isDeceased}
         canManage={can(perms, "medical.procedures")}
+        canAddClosedNote={can(perms, "medical.procedures")}
       />
     </div>
   );

@@ -51,7 +51,8 @@ export async function renderBloodTestsSection(ctx: SectionContext): Promise<Reac
 
   return (
     <div className="flex flex-col gap-4">
-      {!isDeceased && can(perms, "medical.blood_tests") && (
+      {/* 0320 permits one INSERT on a closed record: a blood test whose result arrived late. The page asks the same activity as createBloodTest. */}
+      {can(perms, "medical.blood_tests") && (
         <div className="flex justify-end">
           <ActionLink
             href={`/blood-tests/new?residentId=${id}`}

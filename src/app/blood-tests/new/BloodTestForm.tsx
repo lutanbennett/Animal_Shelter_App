@@ -54,12 +54,15 @@ export function BloodTestForm({
   bloodTestTypes,
   clinicVisits,
   preselectedClinicVisitId,
+  closedRecord = false,
 }: {
   residentId: string;
   residentDisplayName: string;
   bloodTestTypes: BloodTestTypeOption[];
   clinicVisits: ClinicVisitOption[];
   preselectedClinicVisitId: string | null;
+  /** The resident has died: the result text is permitted (0320), a scan is not (attachments stay locked). */
+  closedRecord?: boolean;
 }) {
   const { t, locale } = useI18n();
   const router = useRouter();
@@ -206,6 +209,9 @@ export function BloodTestForm({
         <p className="text-xs text-muted">{t.bloodTests.resultsHint}</p>
       </div>
 
+      {closedRecord ? (
+        <p className="text-xs text-muted">{t.bloodTests.lateResultNoFiles}</p>
+      ) : (
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium text-muted">{t.bloodTests.files}</span>
         <p className="text-xs text-muted">{t.bloodTests.attachHint}</p>
@@ -216,6 +222,7 @@ export function BloodTestForm({
         />
         <PendingFileList files={uploads.files} onRemove={uploads.removeFile} onRetry={null} />
       </div>
+      )}
 
       {error && <p className="text-sm text-danger">{error}</p>}
 
