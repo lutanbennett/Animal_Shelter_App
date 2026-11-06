@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Check, Repeat, Trash2, X } from "lucide-react";
+import { Check, EyeOff, Repeat, Trash2, X } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { formatDate } from "@/lib/format";
@@ -13,7 +13,7 @@ import { useWriteCall } from "@/lib/use-write-form";
 import type { WaitingPhoto } from "@/lib/photos/approval";
 import { ResidentPicker } from "@/app/medical/ResidentPicker";
 import type { PickableResident } from "@/lib/medical/residents";
-import { approvePhotos, removeWaitingPhoto } from "./actions";
+import { approvePhotos, markPhotosPrivateOnly, removeWaitingPhoto } from "./actions";
 import { reassignWaitingPhoto } from "./pending-actions";
 
 /**
@@ -47,6 +47,7 @@ export function ApproveQueue({
   const saveApprove = useWriteCall();
   const saveReassign = useWriteCall();
   const saveRemove = useWriteCall();
+  const savePrivate = useWriteCall();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [changing, setChanging] = useState<string | null>(null);
@@ -88,6 +89,24 @@ export function ApproveQueue({
       if (result.ok) {
         setSelected(new Set());
         setMessage({ ok: true, text: q.approved(result.approved) });
+        router.refresh();
+      } else {
+        setMessage({ ok: false, text: result.error });
+      }
+    });
+  }
+
+  function markPrivate(photo: WaitingPhoto) {
+    startTransition(async () => {
+      setMessage(null);
+      const result = await savePrivate((requestId) => markPhotosPrivateOnly([photo.id], "resident", requestId));
+      if (result.ok) {
+        setSelected((prev) => {
+          const next = new Set(prev);
+          next.delete(photo.id);
+          return next;
+        });
+        setMessage({ ok: true, text: q.privateOnlyDone(result.marked) });
         router.refresh();
       } else {
         setMessage({ ok: false, text: result.error });
@@ -200,6 +219,9 @@ export function ApproveQueue({
             <div className="flex flex-wrap items-center gap-3">
               <ActionButton icon={Check} variant="primary" disabled={pending} onClick={() => approve([photo.id], false)}>
                 {q.approve}
+              </ActionButton>
+              <ActionButton icon={EyeOff} disabled={pending} onClick={() => markPrivate(photo)}>
+                {q.privateOnly}
               </ActionButton>
               {canReassign && (
                 <ActionButton

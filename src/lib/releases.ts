@@ -70,6 +70,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "Photos to approve now has a second answer next to Approve: Private only. Use it for a photo that should never be on the website. It leaves the waiting list for good, so the next person does not have to look at it again. This works for resident, event and project photos, and when you choose who is in a photo that was tagged to an enclosure.",
+    cards: ["approve_photos"],
+  },
 ];
 
 /** Newest first. */

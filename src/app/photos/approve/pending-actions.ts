@@ -118,6 +118,19 @@ export async function assignPendingPhoto(
         return { ok: false, error: e.assignFailed };
       }
 
+      // "Keep private" is the Private only answer (0318): the approver looked and refused, so the new rows are marked and
+      // leave the queue instead of coming round as if never opened. Best effort on purpose: the assignment has already
+      // committed, and an unmarked row simply waits in the resident queue where it can be refused again.
+      if (!approve) {
+        await supabase
+          .from("attachments")
+          .update({ private_only_at: new Date().toISOString() })
+          .in("drive_file_id", assignments.map((a) => a.drive_file_id))
+          .eq("owner_type", "resident")
+          .is("approved_at", null)
+          .is("private_only_at", null);
+      }
+
       let driveWarning: string | undefined;
       try {
         const file = await drive.getFile(pending.drive_file_id, "id, parents");
