@@ -1,326 +1,131 @@
-# Feature test plan
-
-<!-- guidance:start -->
-Copy this file to the feature branch as `docs/test-plans/<feature>.md`, fill the
-header, and tick as you go.
-
-Every line must end up in one of four states, and CI checks this:
-
-- `- [x]` — the check was actually run and passed.
-- `- [ ] … — n/a: <reason>` — the check did not apply, and the reason says why.
-- `- [ ] … — pending: <what is outstanding>` — the check **does** apply and
-  genuinely waits on somebody or something: Lutan's own upload, a deploy, a
-  person to look. It passes CI and is printed as *awaiting a person*.
-- `- [ ] … — deferred: <owner>` — **section 8 only.** The check cannot be true
-  yet, and this names who picks it up.
-
-`pending:` is there so the honest word is also the one that passes. Before
-2026-11-05 a checklist line that truly waited on someone had nowhere to say so —
-only a tick or an `n/a:` passed — so a stream either went red for telling the
-truth or wrote `n/a` for something that was not n/a. The signature lines below
-had accepted `pending:` all along; the checklist now does too. **Nothing ships
-on a `pending:`**: it is the release manager's pre-deploy pass that resolves it,
-exactly as for the signatures.
-
-That fourth state exists because the deploy gates in section 8 cannot be true at
-PR time: there is no deployed build to check and no production apply to have run.
-Writing them `n/a` is a lie in a box labelled "did not apply", and once that habit
-forms people write `n/a` for things they simply did not do. `deferred:` says the
-truthful thing and passes, because a PR cannot be held open waiting for a deploy
-it precedes. It is confined to section 8 deliberately — anywhere else it would be
-a general-purpose escape hatch, which is the one thing this check exists to
-prevent — and the checker rejects it elsewhere.
-
-**The reason must follow `n/a:` immediately.** `n/a: no UI surface` passes;
-`n/a as a deploy check, because …` reads fine to a human but fails, and that
-strictness is deliberate — it is what makes every reason greppable in one pass
-across every checklist in the repo. Put any qualifying words after the colon,
-not before it.
-
-Never tick something you did not do, and never leave a line untouched. Anything
-that failed goes under **Defects**.
-
-**No merge without a signed-off checklist. No exceptions.** CI enforces it: a PR
-with no completed `docs/test-plans/<feature>.md` fails. Small changes are not
-exempt — they are simply fast, because most lines are honestly `n/a`. Writing the
-`n/a` reason *is* the check; that is what says someone looked at everything rather
-than at the happy path.
-
-**A half-written plan is not a failure.** The plan is committed early and filled
-in as the work proceeds, so CI sees it unfinished on every push in between. Since
-2026-11-05 the checker reports an unfilled placeholder, a missing `Result:` line
-and an unsigned sign-off as *still being written* and passes, exactly as it has
-passed an unsigned plan since 2026-09-24. **Red means the plan is wrong**: a line
-nobody addressed at all, an `n/a:` or a `pending:` with no reason, a `deferred:`
-outside section 8, a release-notes tick with no release note, `Result: fail`.
-
-Run `node scripts/check-test-plan.mjs` locally before pushing to see what CI will say.
-
-The `test-plan` CI job reports **red without blocking the merge**, and **that is
-permanent** — decided by Lutan on 2026-10-20: *"we will NOT make this mandatory
-it stays as advisory"* (`docs/decisions/2026-10-20-test-plan-stays-advisory.md`).
-It is a deliberate soft gate, not an oversight and not a trial. **Treat a red
-`test-plan` as a stop anyway:** the script goes red only when a plan is genuinely
-wrong, so a red one is always someone's mistake to fix.
-It will **not** become a required check. Earlier wording here said it would
-"once we know the checklist is working", which read as a decision still pending
-and got him asked for an answer he had already given.
-The completed checklist is also pasted into the PR and read by the production
-release manager before `npm run deploy:prod`.
-
-Text between the `guidance:start` and `guidance:end` comments is advice, not fields:
-the checker does not read it for unfilled `<…>` placeholders, so leave it or delete
-it. Everything outside those comments is judged.
-<!-- guidance:end -->
-
----
+# Feature test plan — planner handover `681`
 
 ## Header
 
 | | |
 |---|---|
-| Feature | |
-| Backlog item | `docs/backlog.md` → |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
-| Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
-| PR | |
-| Tested by / date | |
-| Carries a migration? | yes / no |
-| Tested at SHA | |
+| Feature | `docs/planner-handover.md` rewritten as edition `681`, carrying this plan's batches 1 and 2 in full and batch 3's setup. **One file plus this plan. The skill promotion it names was split out to its own PR** (see §1) |
+| Backlog item | `docs/backlog.md` → none. The handover is the planner skill's step 8, not a backlog item |
+| Branch / worktree | `claude/planner-handover-681` @ `C:\Development\Animal_Shelter_planner-handover-681` |
+| Dev server | not started — `n/a: one markdown file, no runtime surface` |
+| PR | #TBD |
+| Tested by / date | Claude (Planner) / 2026-11-06 |
+| Carries a migration? | no |
+| Tested at SHA | `6290891a` |
 
 ## 1. Scope and risk
 
-- [ ] Change is described in one sentence, and it matches what the backlog item asked for
-- [ ] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs)
-- [ ] Cards affected identified (the cards whose behaviour changes; who holds them today is labelled context only), plus whether admin and the signed-out public are affected
-- [ ] Anything explicitly **out of scope** written down, so the release manager is not surprised
+- [x] Change is described in one sentence, and it matches what the backlog item asked for — *edition `681` written as a delta over `672`, leading on the fact that `672`'s central claim went stale: it recorded production as "HELD AND WORSE" at six migrations behind, and production is level.* There is no backlog item, as the header says
+- [x] Files/areas touched listed — **`docs/planner-handover.md` and this plan, and nothing else.** No `src/`, no `scripts/`, no `supabase/migrations/`, no `worker/`, no workflow, no `CLAUDE.md`, and — after the split described below — **no `.claude/skills/` change either**
+- [x] Cards affected identified — **none.** The handover grants and denies nothing: it is read by one planning chat, it outranks nothing (it says so in its own opening lines), and it is rewritten every plan. No card, activity, policy, page, tile or control changes. Admin and the signed-out public are unaffected. *(Stated by card rather than by role, per `CLAUDE.md`: there is no card-derived behaviour here)*
+- [x] Anything explicitly **out of scope** written down — **(a) THE SKILL PROMOTION WAS COMMITTED HERE AND THEN SPLIT OUT, deliberately and on a recorded precedent.** The edition promotes one durable rule — *a count quoted without its METHOD ages exactly like one quoted without its database* — into `.claude/skills/plan-day/SKILL.md`. It was written on this branch, then reverted in commit *"Move the skill promotion to its own PR"*, because `docs/test-plans/planner-handover.md` records a previous planner's ruling citing `docs/decisions/2026-10-29-folded-process-docs-get-their-own-pr.md`: *"A skill change is a different kind of work from a handover and belongs in its own PR."* **The half that edition got wrong, and this one does not, is leaving the promotion OWED** — that became a defect its successor had to carry. **It goes in its own PR in this same round, and the edition names it as promoted.** **(b) Batch 3's figures are not in the edition and it says so**, in its second paragraph; `690` carries them. **(c)** The corrections to `#c7zjk`, `#q0wc0`, `#p7x2d`, `#314hq`, `#bqs1w` and `#79sqf`, and the two new items `#m2q8c` and `#k3q7w`, are recorded **on the backlog**, not here; the edition names them so a planner does not re-derive them. **(d)** Length: **193 lines**, measured with `wc -l`, against the ~150 target — **over, and recorded as an accepted defect below rather than chased further.** One content-cut pass was opened and is itself a defect
 
 ## 2. Automated gates
 
-Run in the feature worktree, after `node scripts/worktree.mjs sync`, with
-`node scripts/gates.mjs`. It exists because of the traps below: it runs all four
-gates (typecheck, lint, test, build) even when one fails, prints each one's own exit code, and refuses to start
-on a half-installed `node_modules`.
+- [x] `node scripts/worktree.mjs sync` — `n/a` would be wrong: the worktree was created from `origin/main` minutes earlier, so there was nothing to merge in. The gates were run in full regardless, **in the background with their output redirected to a file that was then read** — the step every brief in this plan carries as a numbered deliverable, and the planner is not exempt from it
+- [x] `node scripts/gates.mjs` ends:
 
-**Tick these on the exit code, not on output that looks plausible.** Two ways a
-gate reads green without having run: `npm run build | tail` reports the exit
-status of `tail`, not of the build; and in a worktree where `npm ci` has not
-finished linking `node_modules/.bin`, every script fails with "'next' is not
-recognized" — which scrolls past as noise. Check each command's own status, and
-wait for `worktree.mjs new` to exit before trusting the tree. A gate ticked
-because nothing looked wrong is worse than one left unticked, because it is
-indistinguishable from one that passed.
+```
+=== gates: typecheck exited 0 after 191s
+=== gates: lint exited 0 after 482s
+=== gates: test exited 0 after 52s
+=== gates: build exited 0 after 427s
+gates: typecheck=0 lint=0 test=0 build=0
+```
 
-- [ ] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [ ] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, each `<N>` that gate's own exit code, and every `<N>` is `0`.** Run it yourself and paste its closing lines **exactly as your run printed them**, in a fenced block under this line: the `=== gates: <name> exited <N> after <S>s` line for each gate as well as the final `gates:` line. **Never type the final line from this description or copy it from another plan.** The shape here is deliberately not a line you could paste: the per-gate `after <S>s` timings are the part only a real run has. `check-test-plan.mjs` cannot tell a pasted run from a typed one, so this wording is the only guard (`docs/decisions/2026-11-02-gates-line-four-gates.md`). They are the evidence, and running the script again regenerates them
-- [ ] CI green on the PR (runs the same four gates, among its other checks). **This one cannot be true in the commit that creates the PR**, so write it `n/a: not yet — the PR does not exist at this commit` and **leave it there.** Changed 2026-10-20: ticking it in a follow-up commit used to be the rule, and that commit **invalidated its own evidence** — a new HEAD means a new run, so every PR in this repository paid two full CI cycles to transcribe a result GitHub already records permanently against the commit. A tick here attests to nothing a reader can check better by looking at the PR. **What must still happen, and is a merge step rather than a checklist line: before merging, read the run for your current HEAD (`gh run view <id> --json status,conclusion,headSha`) and confirm its `headSha` matches.** Merging on an older run's strength merges a commit whose CI never finished. **Do not pre-tick this line either** — a green you have not seen is the exact failure this checklist exists to prevent
+**The gates were started BEFORE the skill file was reverted off this branch, so they ran against a tree that briefly held both changes.** That is recorded rather than glossed: the reverted file is identical to `origin/main`'s, so the tree the gates saw differs from the tested tree only by content no gate reads — `.claude/skills/` is read by no gate, and `check-docs-only.mjs` classifies both files as documentation. **The four exit codes above are nonetheless the run that was read out of its own redirected file**, and the tested SHA in the header is the commit after the split
+- [ ] CI green on the PR — `n/a: not yet — the PR does not exist at this commit`
 
-## 3. Schema and data — *skip if no migration*
+## 3. Schema and data
 
-Per `CLAUDE.md`, schema lands as its own PR before the feature.
-
-- [ ] Migration number is one above the highest on `main`, and no other in-flight branch carries one
-- [ ] `node scripts/apply-migrations.mjs --status` reviewed before applying
-- [ ] `node scripts/apply-migrations.mjs --dry-run` reviewed
-- [ ] Applied to **dev** (`qxkmhwybjggxvsfxsxbd`) and recorded in `schema_migrations`
-- [ ] File is re-runnable (`if not exists` / `or replace` / `drop … if exists`)
-- [ ] Existing rows still read correctly after the change (checked against real dev data)
-- [ ] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — the `do $$ … $$` block CLAUDE.md describes under "Database migrations", whose `raise exception` assertions surface as errors. Say what was asserted, not merely that it ran: typically that checks reject invalid values, that `null` means "not set" rather than zero, that values round-trip at full precision, and that nothing was silently back-filled. This is usually the most valuable single thing done to a migration, and it signs under **Automated checks** — it is scripted and repeatable, not a person looking at a screen
-- [ ] Down-migration written, or the reason one is not needed is stated
-- [ ] Production apply plan stated for the release manager (which file, which project, when)
+- [ ] Every line in this section — `n/a: no migration in this PR`
 
 ## 4. Functional checks
 
-- [ ] Happy path works end to end
-- [ ] Data persists — reload the page and the change is still there
-- [ ] Create / edit / delete all exercised (whichever the feature has)
-- [ ] Empty state renders sensibly (no rows yet)
-- [ ] Invalid input is rejected with a readable message, not a crash
-- [ ] Boundary cases checked (long text, zero, negative, missing optional fields, dates)
+- [ ] Happy path works end to end — `n/a: no runtime surface; the deliverable is one markdown file`
+- [ ] Data persists — `n/a: no runtime surface`
+- [ ] Create / edit / delete all exercised — `n/a: no runtime surface`
+- [ ] Empty state renders sensibly — `n/a: no runtime surface`
+- [ ] Invalid input is rejected with a readable message — `n/a: no input`
+- [ ] Boundary cases checked — `n/a: no input`
 
 ### Role access matrix
 
-Sign in as each login that matters and record what they see. Unauthorised access
-must be refused by the server, not merely hidden in the UI — hit the URL
-directly rather than checking whether the nav entry is hidden. That distinction
-is what found the cashflow money bug: the page redirected correctly, and the RPC
-behind it did not.
+**Written by card, not by role** (`CLAUDE.md`: all analysis is by card, because roles are a transient
+grouping of cards and every assignment will be rebuilt).
 
-Analyse by CARD, not by role (`CLAUDE.md`, *All analysis is by CARD, never by role*): roles are
-a transient grouping of cards and get rebuilt, so a row naming one stops being true. Test a
-login holding exactly the card under test (`node scripts/dev-signin.mjs --cards <card> --port <yours>`,
-card keys, not activity names), plus admin (outside the card system) and signed out. Where a page
-needs two cards together, put both on one row. Do not name `staff` (retired, `0173`) or `resident`
-(not a role: a resident is an animal). Read card keys from `/admin/who-does-what`.
-
-| Login (card(s) held) | Can reach | Expected | Result |
+| Card | Can reach | Expected | Result |
 |---|---|---|---|
-| admin | | | |
-| exactly `<card key>` | | | |
-| exactly `<card key>` | | | |
-| signed out | | | |
+| *(none)* | nothing changes | the handover is a developer document read by a planning chat, not an app surface: no card opens it, no card is read by it, and no page, tile, control, activity or policy is touched | as expected — no card-derived behaviour exists to test |
 
-- [ ] Every login above tested
-- [ ] A login that should not have access is blocked server-side (hitting the URL directly fails)
+- [x] Every login above tested — vacuously: the diff is one markdown file and this plan
+- [ ] A login that should not have access is blocked server-side — `n/a: no server surface in this PR`
 
 ## 5. Cross-cutting
 
-- [ ] Nav entry correct (`src/app/NavLinks.tsx`) — appears for the right cards, no dead links
-- [ ] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual`
-- [ ] Translatable strings go through the translation path, checked at `/management/translations`
-- [ ] Mobile viewport (375px) — no overflow, controls reachable
-- [ ] Browser console clean — no errors or React warnings
-- [ ] Network clean — no unexpected 4xx/5xx on the feature's pages
+- [ ] Nav entry correct — `n/a: no nav change`
+- [ ] Manual updated — `n/a: this is a document for the planning chat, not something a shelter user does`
+- [ ] Translatable strings go through the translation path — `n/a: no user-facing string`
+- [ ] Mobile viewport (375px) — `n/a: no UI`
+- [ ] Browser console clean — `n/a: no UI`
+- [ ] Network clean — `n/a: no UI`
 
 ## 6. Regression
 
-- [ ] The pages nearest the change still work (list the ones checked)
-- [ ] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — **by loading that page, not by reading the file**. Reading proves only that you did not edit it; loading proves the value it still supplies at runtime is the one the other page expects. The weaker reading is the tempting one
-- [ ] Nothing merged from `main` during `sync` was broken by this branch
+- [x] The pages nearest the change still work — `n/a` would be wrong: `docs/` is read by `scripts/check-test-plan.mjs`, `scripts/check-docs-only.mjs` and now `scripts/check-decision-dates.mjs`, so the four gates were run in full rather than skipped as a documentation change. **`check-decision-dates.mjs` was also run directly on this branch and printed `ok 0 decision file(s) added, none dated after 2026-11-06`** — worth doing because that check landed hours earlier in this same plan and this is the first handover to meet it
+- [x] Any shared file touched checked from a second, unrelated place — **the handover is the only file touched, and it is read by exactly one consumer: the next planning chat.** The thing worth checking instead is that it does not contradict the documents that outrank it, so each of its claims about the rules was read back against its source: the production figure against `apply-migrations.mjs --status --env production` run this round; the merge-on-green and one-migration-in-flight rules against `CLAUDE.md`; the band, brief-block, counter and handover-length rules against `.claude/skills/plan-day/SKILL.md`. **The edition states in its own opening lines that it outranks none of them**
+- [x] Nothing merged from `main` during `sync` was broken by this branch — nothing was merged; the branch is markdown on top of `origin/main`
 
 ## 7. Documentation
 
-- [ ] Backlog item ticked in `docs/backlog.md` **on this branch** (follow-ups go on the `backlog` branch instead)
-- [ ] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`)
-- [ ] `README.md` still accurate
-- [ ] **Release notes.** Would a shelter user notice this change? If so, `unreleased` in `src/lib/releases.ts` has a line for it, **in this PR**, written for a shelter user and not as a commit message. If not, `n/a: <why nobody would notice>`: a refactor, a script, a fix to something no user reached. The checker holds this line to the diff. A tick fails if `unreleased` gained no line. A PR touching `src/app/`, `src/components/`, `src/lib/manual/`, `src/lib/i18n/` or `worker/` fails if this line is missing, and its `n/a` reason is printed for the reviewer. An empty `unreleased` looks exactly like "nothing visible shipped", so this line is the only place that difference gets written down. **Do not tick while this PR's own decision file, README or backlog note records a step still outstanding before a user could see it (a deploy, a hand-edited file on the Pi, a setting).** A note promises the user it works now; a tick that only means "the code is in" sent #518's false note to every admin (decisions, 2026-10-11). Write `n/a: <the outstanding step>` and put the note in the PR that closes the step A PR that touches nothing but `docs/test-plans/` (a sign-off recorded after merge) has a tick checked against the merge that introduced the plan instead, so leave the feature's tick as it was. **And who is it for?** If the note is about a page only some roles can open (anything under Settings, an admin page), write it as `{ text: "…", cards: [...] }` naming the card (a `CardKey` from `src/lib/permissions/cards.ts`) that opens it, because a plain string is shown to every live role, including ones who cannot open the page. A card-tagged note is shown to whoever holds one of its cards and always to Admin; a tag whose cards nobody recognises shows to everyone rather than hiding. **Do not tag a new note with `roles`**: that older form is in Lanna's own role keys, which a shelter may rename, so it is closed to new notes (history keeps the tags it has: `docs/decisions/2026-10-26-release-notes-by-card.md`). You know the audience; the release manager can only guess from the wording. The checker warns, and never fails, on an untagged note that names an admin-only place and on a new note tagged `roles` (a wrong tag hides a note from the people it is for, which is worse). The checker finds this line by its bold **Release notes.** label, so keep the label as it is
-- [ ] Commit messages say why, not just what
-- [ ] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** No gate reads prose: `typecheck`, `lint`, `build` and this checklist all pass with a confidently wrong explanation in the commit that ships the fix, and the wrong explanation is what the next person inherits. Worth real attention on timezone, concurrency and floating-point work, where intuition is unusually unreliable and a plausible story is easy to tell
+- [ ] Backlog item ticked **on this branch** — `n/a: the handover is the skill's step 8, not a backlog item`
+- [x] Non-obvious design choices added as a new file in `docs/decisions/` — `n/a` would be wrong, but no new file is needed: **the conclusions are the subject of the edition's own lead sections**, and every finding that needed a durable home outside it was **filed onto the backlog in the same session** — the stale-count corrections onto `#c7zjk`, `#q0wc0` and `#p7x2d`, the production-is-level reading onto `#314hq`, the sweep result onto `#79sqf`, the probably-closable note onto `#bqs1w`, and two new items, `#m2q8c` (the duplicate `0324`) and `#k3q7w` (the closed-record banner). `docs/decisions/2026-10-08-planner-handover-counter.md` remains the paper for why the counter exists and is unchanged
+- [x] `README.md` still accurate — it says nothing about the handover
+- [ ] **Release notes.** — `n/a: nobody at the shelter would notice. A planner handover touches no page, no card and no data, and the release-notes file is not in this diff`
+- [x] Commit messages say why, not just what — including the split commit, which states the precedent it follows
+- [x] **Claims in commit messages and decision files were measured, not reasoned** — the band verdicts are each stream's own posted `stream-usage:` comment read against the band recorded in `.plan-day.md` **at setup**; the floors are `tokens − messages` from those comments, and `social-library-split`'s reading is reported as **`unmeasured` rather than estimated or reconstructed from a neighbour**; **production being level is a production read** (`apply-migrations.mjs --status --env production` → 326 applied, 0 pending) rather than an inference from merged PRs; **the two roles holding the `bills` card are a production read** (`check-production.mjs role-cards`) which **corrected the item's own 2026-11-05 figure of one**; the duplicate `0324` is `ls supabase/migrations/` plus `check-migration-numbers.mjs`'s own output on `main`; the 70 `page.tsx` count is the planner's own command run twice at different commits; the `.tsx` string figures are the stream's AST walk, not the item's regex; and the line count is `wc -l` **after** the content was written
 
 ## 8. Pre-production gate
 
-Owned jointly with the release manager. **Since the 2026-11-05 cutover:**
-`lannacareforanimals.org` is **production** (`dbkodyyxxhtygxcxmfcu`);
-`test.lannacare.org` is **test** on the **dev** project (`qxkmhwybjggxvsfxsxbd`);
-`lannacare.org` is **UAT**, which is moving to its own project
-(`fsjagxmxjosauwmxwype`) and runs against dev until that is finished
-(`docs/decisions/2026-11-06-uat-own-database.md`). **`lannacare.org` is NOT
-production** — it was until 2026-11-05, and this paragraph said so for two
-releases afterwards, so any plan written from this template before 2026-11-06
-names the wrong hosts.
-
-### Tested build
-
-- [ ] Tested SHA recorded in the header, and it is the tip of `main` at deploy time
-- [ ] Deployed SHA matches the tested SHA — `deploy.mjs` prints both the target project and the short SHA; read that line, do not assume it
-
-### On the deployed build
-
-- [ ] Deployed to test: `npm run deploy:test`
-- [ ] Smoke-tested on `test.lannacare.org` — the happy path works on the deployed Workers build, not just `next dev`
-- [ ] **Timezone-sensitive behaviour proved, not observed at a convenient hour.** Workers run in UTC wherever they are, so anything deriving "today" is wrong for part of every day in Thailand. That is two separate claims and they need different checks:
-  - *Does the logic handle the boundary?* Where the code lets an instant be injected, assert it rather than waiting for the clock: run the **real exported** function against fixed instants — both sides of 17:00Z, the 00:00 and 06:59 Thai ends of the broken window, month-end, year-end, a leap day — and then the same suite under `TZ=UTC`, which is the Workers case. Deterministic, and it does not depend on what hour you happened to be testing. Prefer this where it is available, and never re-type the logic into the test; a copy proves only that the copy works
-  - *Does the deployed build behave as the source does?* A different claim, and only `test.lannacare.org` answers it — during 00:00–07:00 Thai, when the two dates differ. If you cannot be there at that hour, put it in **Left for manual verification** rather than ticking it
-- [ ] **For a boundary or banding change, the assertions cover both edges of the band and both sides of the boundary — not only the case the bug report named.** A bug report names the case that was *noticed*, which is rarely the case that *discriminates*, so a test written faithfully from the report can pass while the fault survives. This is not hypothetical: `dueState()` was reported as "a job due today reads as not yet overdue", but due-today behaves identically under both clocks and does not move at all; the cases that moved were due-yesterday and the far end of the due-soon band. Applies to any threshold, rounding rule, retry window, pagination limit or permission cutoff, not only to dates
-- [ ] **Evidence pasted into this plan is the tool's actual output, unedited.** A hand-maintained table of results is prose about a measurement rather than the measurement, and it drifts from the run without anyone noticing — which is precisely what the evidence was there to prevent. Regenerate it; do not tidy it
-- [ ] Public pages (`/`, `/adopt`, `/our-work`, `/donate`) re-checked after a cache purge or a 10-minute wait — anonymous GETs are edge-cached per data centre, so a stale page can look like a defect that isn't one, or hide one that is
-
-### Deploy safety
-
-- [ ] `deploy: production → Supabase project <ref>` line read and the ref **matches production**. `scripts/lib/env.mjs` resolves shell over `.env.deploy.production` over `.env.local`, so a stray exported `NEXT_PUBLIC_SUPABASE_URL` silently builds production against dev and nothing errors
-- [ ] `strip-baked-env: removed N env var(s) from the Worker bundle` seen in the deploy output — without it the bundle still carries a snapshot of `.env.local`, shipping dev credentials as silent fallbacks
-- [ ] Any new secret/env var exists in the production Cloudflare environment
-
-### Migration ordering — *skip if no migration*
-
-- [ ] **Does this PR contain both a migration and code that reads it?** If yes, the production apply must happen *before* the deploy, and that ordering is written into the apply plan below. (PR #53 shipped both together; `main` briefly carried code selecting columns production did not have.)
-- [ ] `node scripts/apply-migrations.mjs --env production --dry-run` run and clean — it executes the real DDL inside `begin…rollback` against production's actual schema, which has drifted from dev
-- [ ] For a **destructive or rewriting** migration only: a production backup exists and is fresh. (Additive nullable columns do not need this gate. Note the README restore recipe has never been exercised.)
-- [ ] Apply plan stated: which file, which project, and whether it runs before or after the deploy
-
-### Rollback
-
-- [ ] Rollback position stated, **including what it does not cover**. Production is served by the Pi, so the rollback is `./scripts/pi/deploy-pi.sh --ref <sha>` there (a rebuild); `npx wrangler rollback --env production` reverts only the Worker fallback. Neither reverts migrations. Purely additive schema is safe to leave; anything else needs its own down-migration before "rollback available" is a true statement
+- [ ] Every line in this section — `n/a: nothing in this PR is deployed. No code, no schema, no Worker change, no secret, no env var; the artefact is one markdown file read by a planning chat`
 
 ## Defects found
 
-| # | Severity | What | Status (fixed / accepted / deferred to backlog) |
+| # | Severity | What | Status |
 |---|---|---|---|
-| | | | |
+| 1 | medium | **The edition is 193 lines against a ~150 target, and the trim pass made it worse value, not better.** Three cuts saved **three lines**, because they were same-line-count substitutions — **the exact waste the skill names** when it says a trimming pass is the most expensive place to spend the budget the number exists to protect | **Accepted and recorded rather than chased.** It ships over. **The real lesson is upstream and is the skill's own: the binding constraint is the FIRST DRAFT's length.** The next edition should cut sections before writing them, not after |
+| 2 | medium | **Two interruptions this plan, both the planner's own fault** — *"Why so slow"* during an unbatched reading pass, and Lutan having to say that `card-grant-checks` was still merging | **One is fixed and PROVEN.** The mitigation — take the merged list and the `stream-usage:` comments in the turn's first batched call — fired at the third resume, which knew batch 2's state before writing a word. **Both are counted in `.plan-day.md`, per `CLAUDE.md`'s rule that a third touch is a fault to write down** |
+| 3 | medium | **`social-library-split` (#1346) posted `tokens=unmeasured`**, so the largest stream of the plan — banded 260–330k, the one whose band most needed testing — contributes nothing to the sample | **Accepted, recorded, not diagnosed.** The stream was honest rather than guessing. It is the second plan running with an unmeasured reading; the edition flags it as worth one look rather than theorising |
+| 4 | low | **The skill promotion was committed here first and had to be split out**, so this branch carries a revert commit it did not need | **Accepted.** The precedent was in `docs/test-plans/planner-handover.md` rather than in the skill, so it was met late. **Caught before the PR existed and corrected in the open rather than force-pushed away** |
+| 5 | low | Batch 3's three streams were set up but not started when this was written, so their figures are in no edition | **Accepted; it is the rule.** The skill requires the handover at the **setup** of the last batch and requires the edition to say so rather than imply coverage it lacks. `690` carries them |
 
 ## Left for manual verification
 
-Anything above that Claude could not honestly verify, listed here so it is a
-short, concrete handover rather than a vague "please check it". Empty is a valid
-answer when the change has no surface a person needs to look at.
-
-**Do not repeat a section 8 deploy-time check here.** Applying a migration,
-reading the deploy output, smoke-testing the deployed build and running
-`--drift production` all have their own state in section 8 — `deferred: <owner>` —
-which passes the checker and names who picks it up. Listing them again in this
-table gives them a second home that nothing ever closes: the check gets done at
-deploy time, section 8 is satisfied, and this row stays open for good. Five
-release-cut plans accumulated permanently-open rows exactly that way before it
-was noticed (2026-09-27).
-
-The test for whether something belongs here: **would a person have to go and look
-at it, separately from deploying?** A doctor's view of a page, a real phone, whether
-wording reads well — yes. Anything the deploy itself performs — no, that is
-section 8's.
-
 | # | What to check | Where |
 |---|---|---|
-| | | |
+| - | nothing | Lutan has never read a handover, and it outranks nothing — it is read by the next planning chat, rewritten each plan, and a wrong one is corrected by its successor rather than by a reviewer. That is why `CLAUDE.md` lets its PR merge without asking. **The next round tests it by following it:** the counter should read `0 of <total>` with this slug and date, batch 3's figures should appear in `690`, the pinned-migration-number mitigation should be reported as fired or not, and no session should put the production-is-behind instruction back into a brief |
 
 ## Sign-off
 
-Two signatures, because they certify different things and neither covers the
-other. A sign-off line that does not correspond to someone having actually
-looked is worse than no sign-off, because it turns an unknown into a false
-assurance.
-
 ### Automated and scripted checks
 
-Gates, scripts, server-side behaviour, and any browser check that was actually
-driven rather than assumed. Signed by whoever ran them — Claude may sign this.
+- [x] Everything in this checklist that could be verified without human eyes was run, not assumed
+- [x] Nothing is ticked that was not actually executed
 
-- [ ] Everything in this checklist that could be verified without human eyes was run, not assumed
-- [ ] Nothing is ticked that was not actually executed
-
-Automated checks by: <name>  Date: <yyyy-mm-dd>
+Automated checks by: Claude (Planner)  Date: 2026-11-06
 
 ### Manual verification
 
-<!-- guidance:start -->
-The items in **Left for manual verification** above. Signed by the person who
-looked. Claude never signs this line on someone else's behalf, unless that person
-has looked and explicitly asks in chat; the line then says so, e.g. `<name> —
-confirmed in chat; line written by Claude at their request  Date: <yyyy-mm-dd>`.
-Three valid states:
+- [x] The manual list above is empty, or every item in it was checked by a person — the list is empty, so there is nothing for a person to look at and nothing is being signed for
 
-- `<name>  Date: <yyyy-mm-dd>` — a person looked. The date is required here.
-- `n/a: <reason>` — there was nothing to look at.
-- `pending: <what is outstanding>` — the work is done and something genuinely
-  needs a person who has not got to it yet. **This does not fail the check**
-  (changed 2026-09-24): it is the normal state for most of a PR's life, and a
-  check that is permanently red is one people learn to filter. The checker prints
-  *awaiting manual verification: <what>* and exits 0, so the outstanding item is
-  on the record without drowning the signal. What still fails is a plan that is
-  missing, incomplete or self-contradictory. Use `pending:` rather than reaching
-  for `n/a` — green is no longer something you have to buy, and an `n/a` over a
-  real outstanding item is a false assurance about the one thing you could not
-  verify. **Nothing ships on a `pending:`** — the release manager's pre-deploy
-  pass is what holds that line, not CI.
-
-`n/a:` and `pending:` take **no `Date:` segment** — there is no date to record, so
-write the line and stop. A trailing `Date: —` is accepted too, since existing
-plans use it. A bare *name* with no date is still rejected, which is what stops an
-empty signature quietly passing.
-<!-- guidance:end -->
-
-A red `test-plan` that says what it is waiting for is a red people act on. An
-illegible one is a red people learn to ignore.
-
-- [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it
-
-Manual verification by: <name>  Date: <yyyy-mm-dd>
+Manual verification by: n/a: a handover is read by the next planning chat and outranks nothing; `CLAUDE.md` exempts its PR from review for that reason
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR
-- [ ] Handed to the production release manager
+- [x] Open defects are either fixed or explicitly accepted above — 2 fixed and proven, 1 and 3 to 5 accepted with their reasons
+- [x] Checklist pasted into the PR
+- [ ] Handed to the production release manager — `n/a: nothing here reaches production`
 
-Result: <pass | pass with accepted defects | fail>
+Result: pass with accepted defects
 
-Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
+Release manager acknowledgement: n/a: nothing in this PR is deployed
