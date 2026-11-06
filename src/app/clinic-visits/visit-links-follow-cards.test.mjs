@@ -17,6 +17,6 @@ test("the visit page's log links need the card the page they open asks", () => {
   ]) {
     assert.ok(page.includes(`const ${flag} = can(perms, "${activity}");`), `${flag} must ask ${activity}`);
     assert.match(page, new RegExp(`\{(started && )?${flag} && `), `${flag} must gate its link`);
-    assert.ok(read(target).includes(`requirePermission("${activity}")`), `${target} must ask ${activity}`);
+    assert.ok(read(target).includes(`requirePermission("${activity}", "edit")`), `${target} must ask ${activity}`);
   }
 });
