@@ -20,6 +20,7 @@ import {
   Undo2,
   X,
 } from "lucide-react";
+import { photoApprovalState, type PhotoApprovalState } from "@/lib/photos/approval-state";
 import { ActionButton } from "@/components/ActionButton";
 import { ActionLink } from "@/components/ActionLink";
 import { DateInput } from "@/components/DateInput";
@@ -48,6 +49,13 @@ import { SOCIAL_PLATFORMS, platformsOf, type SharesByPhoto, type SocialPlatform 
  */
 const INITIAL_TILE_COUNT = 8;
 
+function approvalText(t: Dictionary, s: PhotoApprovalState) {
+  const p = t.photos;
+  if (s === "private") return { badge: p.privateOnlyBadge, note: p.privateOnlyNote, profile: p.privateOnlyProfile };
+  if (s === "other") return { badge: p.notOnWebsiteBadge, note: p.notOnWebsiteNote, profile: p.notOnWebsiteProfile };
+  return { badge: p.waitingForApproval, note: p.waitingNote, profile: p.waitingProfile };
+}
+
 export type PhotoRow = {
   id: string;
   drive_file_id: string;
@@ -56,6 +64,8 @@ export type PhotoRow = {
   date_taken: string | null;
   /** NULL = waiting for Management to approve it (0217); the website shows only approved photos. */
   approved_at?: string | null;
+  /** 0318: public_ok, private_only, or NULL (nobody has reviewed it). */
+  approval?: string | null;
   /** 'video' for a clip filed in the same folders (0229); absent or 'photo' for everything else. */
   media_kind?: "photo" | "video" | null;
   duration_ms?: number | null;
@@ -566,9 +576,9 @@ export function PhotoGallery({
                 </span>
               )}
               <span className="absolute right-1.5 top-1.5 flex flex-col items-end gap-1">
-                {photo.approved_at === null && (
+                {photoApprovalState(photo) !== "public" && (
                   <span className="rounded-full bg-amber-600 px-2 py-0.5 text-[10px] font-medium text-white">
-                    {t.photos.waitingForApproval}
+                    {approvalText(t, photoApprovalState(photo)).badge}
                   </span>
                 )}
                 {platforms.length > 0 && (
@@ -690,7 +700,7 @@ export function PhotoGallery({
                 )}
               </div>
 
-              {openPhoto.approved_at === null && <p className="text-sm font-medium text-foreground">{t.photos.waitingNote}</p>}
+              {photoApprovalState(openPhoto) !== "public" && <p className="text-sm font-medium text-foreground">{approvalText(t, photoApprovalState(openPhoto)).note}</p>}
               {error && <p className="text-sm text-danger">{error}</p>}
 
               {/* Posted on social media (0223): where this photo went, Undo per post, Mark as posted. The list shows to
@@ -784,8 +794,8 @@ export function PhotoGallery({
                   {/* A Medical photo is never on the website, so it is not
                       offered as the profile photo (setResidentProfilePhoto
                       refuses it too). One already there stays labelled. */}
-                  {openPhoto.media_kind === "video" ? null : openPhoto.approved_at === null ? (
-                    <p className="max-w-xs text-right text-xs text-muted">{t.photos.waitingProfile}</p>
+                  {openPhoto.media_kind === "video" ? null : photoApprovalState(openPhoto) !== "public" ? (
+                    <p className="max-w-xs text-right text-xs text-muted">{approvalText(t, photoApprovalState(openPhoto)).profile}</p>
                   ) : isMedicalFolder(openPhoto.sub_folder) &&
                   openPhoto.drive_file_id !== profilePhotoDriveFileId ? (
                     <p className="max-w-xs text-right text-xs text-muted">

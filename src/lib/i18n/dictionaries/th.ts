@@ -7028,6 +7028,12 @@ const th: Dictionary = {
     waitingForApproval: "รออนุมัติ",
     waitingNote: "รออนุมัติ เว็บไซต์ยังไม่แสดงรูปนี้",
     waitingProfile: "รูปนี้ยังรออนุมัติ จึงตั้งเป็นรูปโปรไฟล์ยังไม่ได้",
+    privateOnlyBadge: "ส่วนตัวเท่านั้น",
+    privateOnlyNote: "ส่วนตัวเท่านั้น มีคนดูรูปนี้แล้วและไม่แสดงบนเว็บไซต์",
+    privateOnlyProfile: "รูปนี้เป็นส่วนตัวเท่านั้น จึงตั้งเป็นรูปโปรไฟล์ไม่ได้",
+    notOnWebsiteBadge: "ไม่แสดงบนเว็บไซต์",
+    notOnWebsiteNote: "เว็บไซต์ไม่แสดงรูปนี้",
+    notOnWebsiteProfile: "เว็บไซต์ไม่แสดงรูปนี้ จึงตั้งเป็นรูปโปรไฟล์ไม่ได้",
     moveToFolder: "ย้ายไปโฟลเดอร์",
     moveButton: (folder: string) => `ย้ายไป ${folder}`,
     uploader: {

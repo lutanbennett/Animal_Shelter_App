@@ -4,6 +4,7 @@ import { PhotoGallery, type PhotoRow } from "@/components/PhotoGallery";
 import { isMedicalFolder } from "@/lib/google/drive-client";
 import Link from "next/link";
 import { can } from "@/lib/permissions/can";
+import { photoApprovalState } from "@/lib/photos/approval-state";
 import { loadPhotoShares } from "@/lib/social-shares";
 import type { SectionContext } from "./types";
 
@@ -23,11 +24,14 @@ export async function renderPhotosSection(ctx: SectionContext): Promise<React.Re
   const canReadMedical = can(perms, "photos.resident_medical", "read");
   const photos = canReadMedical ? allPhotos : (allPhotos ?? []).filter((p) => !isMedicalFolder(p.sub_folder));
   // Photos filed by a login that may not publish wait for one that does (0217); the approver can go straight to the queue.
-  const waiting = (photos ?? []).filter((p) => p.approved_at === null).length;
+  const waiting = (photos ?? []).filter((p) => photoApprovalState(p) === "waiting").length;
   // Where each photo has been posted on social media (0223). One query for the grid, owner_type pinned inside.
   const shares = await loadPhotoShares(supabase, (photos ?? []).map((p) => p.id));
   // The same test the table's policies make: photos.resident_manage, and a role that sees all residents.
   const canMarkPosted = can(perms, "photos.resident_manage");
+  // The upload route asks photos.resident_add for every folder this uploader offers (api/residents/[id]/photos/route.ts:98),
+  // then the folder itself (photoCategoriesFor). A login holding a folder but not this activity would only be refused.
+  const uploadFolders = can(perms, "photos.resident_add") ? photoCategoriesFor(perms) : [];
   return (
     <div className="flex flex-col gap-6">
       {waiting > 0 && can(perms, "photos.approve") && (
@@ -41,8 +45,8 @@ export async function renderPhotosSection(ctx: SectionContext): Promise<React.Re
       {/* Photos stay open after death (0052); the archive is refreshed
           by the upload route and the photo actions. */}
       {/* No drop zone for a card that cannot add photos: it would only refuse (Card review 1, 2026-10-26). */}
-      {photoCategoriesFor(perms).length > 0 && (
-        <PhotoUploader residentId={id} categories={photoCategoriesFor(perms)} canSeeMedical={canReadMedical} />
+      {uploadFolders.length > 0 && (
+        <PhotoUploader residentId={id} categories={uploadFolders} canSeeMedical={canReadMedical} />
       )}
       <PhotoGallery
         residentId={id}
