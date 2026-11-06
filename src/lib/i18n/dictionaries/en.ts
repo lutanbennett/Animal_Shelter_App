@@ -6300,13 +6300,13 @@ const en = {
     deceased: {
       pageTitle: (name: string) => `Record ${name}'s death`,
       pageSubtitle:
-        "Close this resident's record. Their status becomes Deceased, their file becomes read-only, and their Google Drive folder is archived with a summary PDF and an offline index page.",
+        "Close this resident's record. Their status becomes Deceased, their file is closed to edits, and their Google Drive folder is archived with a summary PDF and an offline index page.",
       recordButton: "Record death",
       recording: "Recording...",
       recordClosed:
         "This resident has died — their record is closed, so this cannot be added or changed. Notes on existing placements, weights, prescriptions, immunizations and procedures, and late blood test results, can still be added from the resident's page.",
       editLimited:
-        "This resident has died. Their bio and photos can still be updated — everything else in the record is closed. The archive in Drive is refreshed after each change.",
+        "This resident has died. Their bio and photos can still be updated — the other details on this form are closed. Notes and late blood test results are added from the resident's page. The archive in Drive is refreshed after each change.",
       notAuthorized: "You can't record a death: it needs the permission \"Record a death\".",
       fields: {
         date: "Date of death",
@@ -6321,7 +6321,7 @@ const en = {
           "The resident's status becomes Deceased and they leave their enclosure.",
           "Future clinic visits are cancelled and active prescriptions are ended.",
           "They're removed from the public adoption pages.",
-          "Their whole record becomes read-only — no edits, photos or new medical records.",
+          "Their record is closed — no edits, no new medical entries. Notes on existing entries, late blood test results and visit bills can still be added.",
           "Their Drive folder moves to Residents/Deceased/, and a summary PDF plus an offline index page are written into it.",
         ],
       },
@@ -6335,7 +6335,7 @@ const en = {
         titleNoDate: "This record is closed",
         cause: (cause: string) => `Cause of death: ${cause}`,
         readOnly:
-          "The resident's file is read-only. Nothing can be edited, uploaded or recorded against it.",
+          "The resident's file is closed. Their details, medical entries and files can no longer be changed. Notes can still be added to existing entries, late blood test results can be added, and visit bills and costs can still be filled in, by whoever is allowed to.",
         summaryPdf: "Summary PDF",
         offlineIndex: "Offline index page",
         driveFolder: "Drive folder",
