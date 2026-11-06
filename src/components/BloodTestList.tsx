@@ -4,8 +4,9 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Paperclip, X } from "lucide-react";
 import { driveImageUrl } from "@/lib/google/drive-client";
-import { deleteBloodTestAttachment } from "@/app/residents/[id]/blood-tests/actions";
+import { deleteBloodTestAttachment, editClosedBloodTestResult } from "@/app/residents/[id]/blood-tests/actions";
 import { ActionButton } from "@/components/ActionButton";
+import { ACTION_ICONS } from "@/components/hub-icons";
 import { AttachmentUploader } from "@/components/AttachmentUploader";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { RowActionButton } from "@/components/RowAction";
@@ -54,6 +55,23 @@ export function BloodTestList({
   const confirm = useConfirm();
   const remove = useWriteCall();
   const [attachingTo, setAttachingTo] = useState<string | null>(null);
+  const [correcting, setCorrecting] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+  const [correctError, setCorrectError] = useState<string | null>(null);
+  const saveResult = useWriteCall();
+
+  function saveCorrection(testId: string) {
+    setCorrectError(null);
+    startTransition(async () => {
+      const result = await saveResult((rid) => editClosedBloodTestResult(residentId, testId, draft, rid));
+      if (!result.ok) {
+        setCorrectError(result.error);
+        return;
+      }
+      setCorrecting(null);
+      router.refresh();
+    });
+  }
 
   async function removeAttachment(attachmentId: string, fileName: string) {
     if (!await confirm({ body: t.common.removeFileConfirm(fileName), confirmLabel: t.common.remove })) return;
@@ -97,10 +115,58 @@ export function BloodTestList({
               </div>
             </div>
 
-            {test.results && (
-              <p className="whitespace-pre-wrap text-sm text-foreground">
-                {test.results}
-              </p>
+            {correcting === test.id ? (
+              <form
+                className="flex w-full max-w-md flex-col gap-2"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  saveCorrection(test.id);
+                }}
+              >
+                <label className="flex flex-col gap-1 text-xs font-medium text-muted">
+                  {t.bloodTests.correctResultLabel}
+                  <textarea
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    rows={5}
+                    autoFocus
+                    className="w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary"
+                  />
+                </label>
+                <p className="text-xs text-muted">{t.bloodTests.correctResultExplain}</p>
+                {correctError && <p className="text-xs text-danger">{correctError}</p>}
+                <div className="flex gap-2">
+                  <ActionButton type="submit" icon={ACTION_ICONS.save} variant="primary" compact disabled={isPending}>
+                    {t.bloodTests.correctResultSave}
+                  </ActionButton>
+                  <ActionButton icon={X} compact disabled={isPending} onClick={() => setCorrecting(null)}>
+                    {t.common.cancel}
+                  </ActionButton>
+                </div>
+              </form>
+            ) : (
+              <>
+                {test.results && (
+                  <p className="whitespace-pre-wrap text-sm text-foreground">
+                    {test.results}
+                  </p>
+                )}
+                {/* 0320 permits an UPDATE of results only on a closed record; blood_tests_update_perm asks medical.blood_tests. */}
+                {readOnly && canManage && (
+                  <div className="self-start">
+                    <RowActionButton
+                      icon={ACTION_ICONS.edit}
+                      label={t.bloodTests.correctResult}
+                      subject={test.blood_test_types?.name ?? t.bloodTests.unknownType}
+                      onClick={() => {
+                        setDraft(test.results ?? "");
+                        setCorrectError(null);
+                        setCorrecting(test.id);
+                      }}
+                    />
+                  </div>
+                )}
+              </>
             )}
 
             {test.attachments.length > 0 ? (
