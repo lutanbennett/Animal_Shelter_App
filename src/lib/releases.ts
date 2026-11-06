@@ -71,6 +71,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "Filing a bill is now one permission card, Bills. It covers maintenance, utility and other bills, so whoever holds it can answer \"What type of bill is this?\" for any of them and save it. The two cards Add utility bills and Add other bills are gone. Bills settings stays its own card.",
+    cards: ["bills", "bill_sites"],
+  },
+  {
     text: "There are two new permission cards for the meme library. Add and change memes lets someone add a meme, change its words and residents, and record where it was posted, but not archive it or take a post record off. Browse memes only lets someone look. Archiving a meme, and removing a post record, now need the Meme library card; the database enforces it too. The Thai wording has not been checked by a Thai speaker.",
     cards: ["meme_add", "meme_view", "meme_library"],
   },

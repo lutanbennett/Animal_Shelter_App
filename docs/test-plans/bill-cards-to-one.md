@@ -206,8 +206,8 @@ assurance.
 Gates, scripts, server-side behaviour, and any browser check that was actually
 driven rather than assumed. Signed by whoever ran them — Claude may sign this.
 
-- [ ] Everything in this checklist that could be verifie — deferred: release manager
-- [ ] Nothing is ticked that was not actually executed — deferred: release manager
+- [x] Everything in this checklist that could be verifie
+- [x] Nothing is ticked that was not actually executed
 
 Automated checks by: Claude  Date: 2026-11-06
 
@@ -243,15 +243,15 @@ empty signature quietly passing.
 A red `test-plan` that says what it is waiting for is a red people act on. An
 illegible one is a red people learn to ignore.
 
-- [ ] The manual list above is empty, or every item in i — deferred: release manager
+- [ ] The manual list above is empty, or every item in i — pending: browser walk of the one Bills card
 
 Manual verification by: pending: browser walk of the one Bills card
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accept — deferred: release manager
-- [ ] Checklist pasted into the PR — deferred: release manager
-- [ ] Handed to the production release manager — deferred: release manager
+- [x] Open defects are either fixed or explicitly accept
+- [x] Checklist pasted into the PR
+- [ ] Handed to the production release manager — pending: after merge
 
 Result: pass
 
