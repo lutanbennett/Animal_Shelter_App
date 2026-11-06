@@ -71,6 +71,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "A resident’s Photos tab now opens much faster, most of all on a phone using mobile data. The small pictures in the grid used to be the full-size photos; they are now small copies, and the full-size photo loads only when you tap one to open it.",
+    cards: ["residents"],
+  },
+  {
     text: "On a resident’s Photos tab, the upload box now shows only to a login that is allowed to add resident photos. Before, a login that could only file into one folder saw the box and was then refused. If your box has gone, that is why; ask whoever sets cards to give you the card that adds resident photos.",
     cards: ["residents"],
   },
