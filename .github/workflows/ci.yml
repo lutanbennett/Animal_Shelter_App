@@ -129,7 +129,10 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
+      # GH_TOKEN lets the open-PR half ask `gh pr list`; without it that half warns and skips, the filename half still runs.
       - run: node scripts/check-migration-numbers.mjs --base origin/${{ github.base_ref }}
+        env:
+          GH_TOKEN: ${{ github.token }}
 
   # A `_th` column a migration adds must be registered in translatable_labels (or named as deliberate in the script), or
   # no manager can translate it from Management -> Translations. Blocking: it reads only the migration files, so it

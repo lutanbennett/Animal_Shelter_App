@@ -37,7 +37,8 @@
 
 import { spawnSync } from "node:child_process";
 import { statSync } from "node:fs";
-import { MIGRATION_NAME, MIGRATIONS_DIR, numberOf, parseLsTree } from "./lib/migrations.mjs";
+import { readFileSync } from "node:fs";
+import { MIGRATION_NAME, MIGRATIONS_DIR, KNOWN_DUPLICATES, collisionsWithOpenPrs, duplicateNumbers, numberOf, parseLsTree } from "./lib/migrations.mjs";
 
 const STALE_HOURS = 24;
 
@@ -45,9 +46,17 @@ const args = process.argv.slice(2);
 const staged = args.includes("--staged");
 const baseArg = args.indexOf("--base");
 const base = baseArg >= 0 ? args[baseArg + 1] : "origin/main";
-const unknown = args.filter((a, i) => a !== "--staged" && a !== "--base" && !(baseArg >= 0 && i === baseArg + 1));
+const valueOf = (flag) => { const i = args.indexOf(flag); return i >= 0 ? args[i + 1] : undefined; };
+// Fixtures for proving the checks: --names-file lists file names (one per line) in place of HEAD's tree,
+// --prs-file is `gh pr list --json number,headRefName,files` output in place of the network, --branch names the PR.
+const namesFile = valueOf("--names-file");
+const prsFile = valueOf("--prs-file");
+const branchArg = valueOf("--branch");
+const noPrs = args.includes("--no-prs");
+const flagValues = new Set(["--base", "--names-file", "--prs-file", "--branch"]);
+const unknown = args.filter((a, i) => !["--staged", "--no-prs", ...flagValues].includes(a) && !flagValues.has(args[i - 1]));
 if (unknown.length || (baseArg >= 0 && !base)) {
-  console.error("usage: node scripts/check-migration-numbers.mjs [--staged] [--base <ref>]");
+  console.error("usage: node scripts/check-migration-numbers.mjs [--staged] [--base <ref>] [--no-prs]");
   process.exit(2);
 }
 
@@ -161,7 +170,36 @@ function main() {
   if (!tree.ok) cannotCheck(`could not list ${staged ? "the index" : "HEAD"}: ${tree.err}`);
   const { highestName, fresh, ok, problems } = evaluate(tree.out.split("\n").filter(Boolean), mainBlobs);
 
+  // The durable half: a number used by two files in the tree. Pure filename read. Never in the hook.
+  const dupNotes = [];
+  if (!staged) {
+    const names = (namesFile ? readFileSync(namesFile, "utf8").split("\n").map((l) => l.trim()).filter(Boolean) : tree.out.split("\n").filter(Boolean).map(basename));
+    for (const [n, list] of duplicateNumbers(names)) {
+      const known = KNOWN_DUPLICATES.get(n);
+      if (known && list.join() === known.files.join()) dupNotes.push(`${pad(n)} is shared by ${list.join(" and ")} (known, left as is: ${known.why})`);
+      else problems.push(`${pad(n)} is used by more than one file: ${list.join(", ")}.
+    Rename the one that is not applied anywhere yet. Applied files cannot be renamed (schema_migrations records the filename).`);
+    }
+    // The preventing half: another open PR already adds the same number. Needs gh, so it warns rather than fails when gh cannot answer.
+    if (fresh.length && !noPrs) {
+      let prs = null;
+      if (prsFile) prs = JSON.parse(readFileSync(prsFile, "utf8"));
+      else {
+        const r = spawnSync("gh", ["pr", "list", "--state", "open", "--limit", "200", "--json", "number,headRefName,files"], { encoding: "utf8" });
+        if (r.status === 0) prs = JSON.parse(r.stdout);
+        else console.error(`${TAG}: open-PR check skipped — gh could not list PRs (${(r.stderr || r.error?.message || "no gh").trim().split("\n")[0]}).`);
+      }
+      if (prs) {
+        const own = branchArg ?? process.env.GITHUB_HEAD_REF ?? git(["branch", "--show-current"]).out;
+        for (const h of collisionsWithOpenPrs(fresh, prs, own))
+          problems.push(`${h.name}: open PR ${h.pr} already adds ${h.other}, the same number ${pad(h.number)}.
+    Whichever merges second must renumber; ask the other stream, or take the next free number.`);
+      }
+    }
+  }
+
   const against = `${base} ${baseSha}, highest ${highestName ?? "none"}`;
+  for (const note of dupNotes) console.log(`${TAG}: note — ${note}`);
   if (!problems.length) {
     console.log(
       fresh.length
