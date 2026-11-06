@@ -7,9 +7,9 @@
 //               `next dev` uses, so it reads .env.local and nothing else.
 //   uat         the UAT Supabase project — values in the gitignored
 //               .env.deploy.uat, layered OVER .env.local like production's.
-//               It shares the DEV project for now (docs/decisions/2026-11-05-uat-shares-the-dev-database.md), so
-//               its file holds the dev values and deploy.mjs pins the UAT badge
-//               (NEXT_PUBLIC_APP_ENV, src/lib/app-env.ts). If the file doesn't
+//               It has its OWN project (docs/decisions/2026-11-06-uat-own-database.md,
+//               in a second Supabase account), so every Supabase value is its own and
+//               deploy.mjs refuses to push a dev one for it. If the file doesn't
 //               exist, anything given --env uat stops here.
 //   production  the production Supabase project — its values live in the
 //               gitignored .env.deploy.production, which is layered OVER

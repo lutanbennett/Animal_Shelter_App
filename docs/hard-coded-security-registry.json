@@ -541,10 +541,6 @@
       "gates": "Which Supabase project the app talks to."
     },
     {
-      "name": "NEXT_PUBLIC_APP_ENV",
-      "gates": "Whether a build on the dev Supabase project wears the UAT badge and watermark instead of the dev ones (src/lib/app-env.ts). Set to uat by scripts/deploy.mjs for the UAT Worker only. Display only: it decides a badge, a colour theme and a PDF watermark, never what a role may do."
-    },
-    {
       "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
       "gates": "The public (anon) key for that project."
     },

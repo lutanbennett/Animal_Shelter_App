@@ -35,7 +35,7 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { readFileSync } from "node:fs";
 import { SITE_ORIGINS, envFile, loadEnv, loadLayers, parseEnvArg, projectRef } from "./lib/env.mjs";
-import { ALLOW_FLAG, fallthroughRefusal, sourcesFor } from "./lib/secret-sources.mjs";
+import { ALLOW_FLAG, fallthroughRefusal, localOnly, sourcesFor } from "./lib/secret-sources.mjs";
 import { WORKER_BUILD_VARS, WORKER_OPTIONAL_SECRETS, WORKER_REQUIRED_SECRETS } from "./lib/runtime-config.mjs";
 import { appliedMigrations } from "./lib/deploy-schema.mjs";
 import { releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
@@ -64,9 +64,8 @@ const planOnly = rest.includes("--plan");
 // definitions were identical, so removing this one changes nothing.
 
 // What src/lib/app-env.ts must call each environment's database.
-// What the PROJECT must be called (appEnvForSupabaseUrl). UAT shares the dev project for now, so it
-// expects "dev" here and is told apart by the NEXT_PUBLIC_APP_ENV pin set below.
-const EXPECTED_APP_ENV = { test: "dev", uat: "dev", production: "production" };
+// What the PROJECT must be called (appEnvForSupabaseUrl): each environment has its own project.
+const EXPECTED_APP_ENV = { test: "dev", uat: "uat", production: "production" };
 
 // Environments where a deploy is something a customer or the shelter sees.
 const GUARDED = envName === "uat" || envName === "production";
@@ -137,6 +136,13 @@ if (pushSecrets) {
   secretNames = [...RUNTIME_SECRETS, ...OPTIONAL_SECRETS.filter((k) => env[k])];
   const sources = sourcesFor(secretNames, loadLayers(envName), envFile(envName));
   console.log("deploy: secrets to push (name <- source):\n" + sources.map((s) => `  ${s.name} <- ${s.source}`).join("\n"));
+  // UAT has its own database: a Supabase secret that exists only in .env.local is dev's, and no flag
+  // may push it to UAT (the Drive set may still fall through until #rqv5c).
+  const devDb = envName === "uat" ? localOnly(sources).filter((n) => /SUPABASE/.test(n)) : [];
+  if (devDb.length) {
+    console.error(`deploy: uat would push dev's database secret(s) from .env.local: ${devDb.join(", ")}. Put UAT's own in ${envFile(envName)}; ${ALLOW_FLAG} does not apply to these.`);
+    process.exit(2);
+  }
   const refusal = GUARDED
     ? fallthroughRefusal({ envName, sources, overlayName: envFile(envName), allowed: rest.includes(ALLOW_FLAG) })
     : null;
@@ -163,7 +169,7 @@ if (pushSecrets) {
     console.error(
       `deploy: --env ${envName} points at Supabase project ${projectRef(env)}, which src/lib/app-env.ts ` +
         `calls "${builds}" — the build would wear ${builds}'s badge, not ${envName}'s.` +
-        (envName === "uat" ? "\n  UAT shares the dev project for now (docs/decisions/2026-11-05-uat-shares-the-dev-database.md): .env.deploy.uat must hold the dev project's values." : ""),
+        (envName === "uat" ? "\n  UAT has its own project (docs/decisions/2026-11-06-uat-own-database.md): .env.deploy.uat must hold ITS values, not dev's or production's." : ""),
     );
     process.exit(2);
   }
@@ -300,8 +306,6 @@ if (!skipBuild) {
   buildEnv.APP_HOST = wranglerVars.APP_HOST;
   buildEnv.PUBLIC_HOST = wranglerVars.PUBLIC_HOST;
   delete buildEnv.NEXT_PUBLIC_SITE_URL;
-  // Pinned for every environment, so no shell or env file can badge the wrong site: only the UAT build wears UAT's badge (src/lib/app-env.ts).
-  buildEnv.NEXT_PUBLIC_APP_ENV = envName === "uat" ? "uat" : "";
   run("npm run opennext:build", { env: buildEnv });
   run("node scripts/strip-baked-env.mjs");
   // The commit this build was made from, beside the one the release was asked
