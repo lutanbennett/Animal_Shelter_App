@@ -58,8 +58,6 @@ export type NewCardKey =
   | "record_microchip"
   | "adoption_news"
   | "correct_intake_date"
-  | "utility_bills"
-  | "general_bills"
   | "bill_sites"
   | "run_fundraising_events"
   | "propose_website"
@@ -225,7 +223,7 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
     opens: "/management/donations",
   },
   // Card review 2 (0268): it reads maintenance jobs, so the holder can attach a bill to one.
-  bills: { includes: [], bundle: [{ activity: "maintenance.bills" }, { activity: "maintenance.jobs", level: "read" }], opens: "/bills" },
+  bills: { includes: [], bundle: [{ activity: "maintenance.bills" }, { activity: "maintenance.jobs", level: "read" }, { activity: "bills.utilities" }, { activity: "bills.general" }], opens: "/bills" },
   // 0323 (2026-11-06, Lutan): the write side of Projects had no card, so New folder, Rename, Move and Delete were drawn for Admin only and
   // nobody had chosen that. This card is exactly projects.folders at edit and nothing else: not projects.photos (add/remove/caption) and not
   // projects.publish (putting a folder on the public website), which stay their own activities. Edit implies read, so the page opens.
@@ -384,11 +382,8 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // 0302 (Lutan, 2026-11-02): correct a resident's intake date, moving the four dates the intake stamped with it. It includes
   // view_residents so the page can find a resident by name or code. Who holds it is assigned in Who does what.
   correct_intake_date: { includes: ["view_residents"], bundle: [{ activity: "resident.correct_intake_date" }], opens: "/admin/intake-date" },
-  // 0305 (bills, sites and kinds): one card per bill activity, none given to any role.
-  // bill_sites opens Bills settings (the places, accounts and kinds). general_bills opens the Bills inbox, which now opens for it
-  // (canUseBills) and is where a general bill is recorded. utility_bills opens /bills/utilities, where a utility bill is recorded and the months are listed.
-  utility_bills: { includes: [], bundle: [{ activity: "bills.utilities" }], opens: "/bills/utilities" },
-  general_bills: { includes: [], bundle: [{ activity: "bills.general" }], opens: "/bills" },
+  // 0305 made one card per bill activity; 0327 (Lutan, 2026-11-05) folded utility_bills and general_bills into bills, the one card for filing a bill.
+  // bill_sites stays apart: it administers the places, accounts and kinds (opens Bills settings), which is not filing a bill.
   bill_sites: { includes: [], bundle: [{ activity: "bills.sites" }], opens: "/bills/settings" },
   // 0312 (Lutan, 2026-11-04: an event is its own thing, with its own table): plan, publish and close a fundraising event and
   // its photos. It does NOT include run_appeals or add_photos and grants no approval: every event photo still waits in the
@@ -449,8 +444,6 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   record_microchip: (t) => t.appHome.cards.recordMicrochip,
   adoption_news: (t) => t.appHome.cards.adoptionNews,
   correct_intake_date: (t) => t.appHome.cards.correctIntakeDate,
-  utility_bills: (t) => t.appHome.cards.utilityBills,
-  general_bills: (t) => t.appHome.cards.generalBills,
   bill_sites: (t) => t.appHome.cards.billSites,
   run_fundraising_events: (t) => t.appHome.cards.runFundraisingEvents,
   approve_website: (t) => t.appHome.cards.approveWebsite,
