@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-50 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+52 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -433,8 +433,32 @@ Result: pending
 0. Sign in with `--cards meme_library`. The home screen shows the **Meme library** tile (or the tile of a card that includes it).
 1. Open `/memes`: it loads.
 2. **TODO:** The social media library: memes, and where each was shared. Do it on a disposable record named `walk-meme_library`. Question: where should this write show afterwards (which page, which row)?
+3. **TODO:** Archive or restore a meme, and take a post record off it. Do it on a disposable record named `walk-meme_library`. Question: where should this write show afterwards (which page, which row)?
+4. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+5. **Refused:** open `/maintenance` (the page of **Do Maintenance**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Add and change memes (`meme_add`)
+
+- Opens: `/memes`
+
+0. Sign in with `--cards meme_add`. The home screen shows the **Add and change memes** tile (or the tile of a card that includes it).
+1. Open `/memes`: it loads.
+2. **TODO:** The social media library: memes, and where each was shared. Do it on a disposable record named `walk-meme_add`. Question: where should this write show afterwards (which page, which row)?
 3. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 4. **Refused:** open `/maintenance` (the page of **Do Maintenance**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Browse memes (`meme_view`)
+
+- Opens: `/memes`
+
+0. Sign in with `--cards meme_view`. The home screen shows the **Browse memes** tile (or the tile of a card that includes it).
+1. Open `/memes`: it loads.
+2. **See:** The social media library: memes, and where each was shared (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
