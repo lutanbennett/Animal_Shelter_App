@@ -20,7 +20,7 @@
 - [x] Change is described in one sentence, and it matches what the backlog item asked for: on a dead resident's page, a person with the right card can add a note to a placement, weight, prescription, immunization or procedure, and record a late blood test, and the closed-record sentences are true.
 - [x] Files/areas touched listed: `src/app/residents/[id]/closed-note-actions.ts` (new), `src/components/ClosedRecordNoteControl.tsx` (new), `src/lib/closed-record/notes.ts` (new), the `housing`, `weight`, `prescriptions`, `immunizations`, `procedures`, `blood-tests` sections, `ProcedureList.tsx`, `src/app/blood-tests/new/{page,BloodTestForm}.tsx`, both dictionaries. No migration, no worker.
 - [x] Cards affected: the cards carrying `resident.record` edit, `medical.weight`, `medical.prescriptions`, `medical.immunizations`, `medical.procedures` and `medical.blood_tests` edit. Admin sees all through `perms.isAdmin`; signed-out visitors are unaffected (no public surface).
-- [x] Out of scope written down in `docs/decisions/2026-11-08-deceased-record-widen-app.md`: no delete, no add of any entry except a blood test, no edit form, no file on a late blood test, no edit of an existing result's text, `photos.tsx` and `PhotoGallery.tsx` untouched.
+- [x] Out of scope written down in `docs/decisions/2026-11-06-deceased-record-widen-app.md`: no delete, no add of any entry except a blood test, no edit form, no file on a late blood test, no edit of an existing result's text, `photos.tsx` and `PhotoGallery.tsx` untouched.
 
 ## 2. Automated gates
 
@@ -88,7 +88,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 ## 7. Documentation
 
 - [x] Backlog item ticked in `docs/backlog.md` on this branch: `#f6p2d` ticked; `#314hq` annotated (app half of D built; C and the bills press remain)
-- [x] Non-obvious design choices recorded in `docs/decisions/2026-11-08-deceased-record-widen-app.md`
+- [x] Non-obvious design choices recorded in `docs/decisions/2026-11-06-deceased-record-widen-app.md`
 - [x] `README.md` still accurate
 - [ ] **Release notes.** Would a shelter user notice this change? n/a: needs 0320 applied to production; the note belongs in the PR that closes that step, drafted in the decision file
 - [x] Commit messages say why, not just what

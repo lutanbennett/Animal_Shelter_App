@@ -1,0 +1,125 @@
+{
+  "rule": "An activity that no card grants is drawn for Admin only (the perms.isAdmin short-circuit in can.ts), so nobody else can reach it and no one-card login can test it. scripts/check-ungranted-activities.mjs fails on any activity+level listed nowhere here. Each record is a NAMED, DATED decision with its reason, never a count. A record whose activity is now granted fails the check until it is deleted. Admin itself is not a finding and is never given cards. foundNotRuled lists gaps the first run found that nobody has ruled on: printed every run as UNRULED, they do not fail the check, but a gap on neither list fails.",
+  "adminOnlyOnPurpose": [
+    {
+      "activity": "facility.enclosures",
+      "level": "edit",
+      "ruled": "2026-11-06",
+      "by": "Lutan",
+      "reason": "Moving an enclosure's plan is a rare, consequential act the shelter wants to stay with the administrator. Read is granted by cards; only edit is held by none.",
+      "decision": "docs/decisions/2026-11-06-ungranted-activities-cards.md"
+    },
+    {
+      "activity": "placement.death_withdraw",
+      "level": "edit",
+      "ruled": "2026-11-06",
+      "by": "Lutan",
+      "reason": "Withdrawing a recorded death is rare and consequential; cards.ts keeps it off the residents card for exactly that reason.",
+      "decision": "docs/decisions/2026-11-06-ungranted-activities-cards.md"
+    }
+  ],
+  "foundNotRuled": [
+    {
+      "activity": "photos.resident_publish",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    },
+    {
+      "activity": "projects.photos",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    },
+    {
+      "activity": "projects.publish",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    },
+    {
+      "activity": "stock.usage",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    },
+    {
+      "activity": "stock.medications",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    },
+    {
+      "activity": "stock.diets",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    },
+    {
+      "activity": "stock.correct",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    },
+    {
+      "activity": "reports.cashflow",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    },
+    {
+      "activity": "reference.types",
+      "level": "read",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    },
+    {
+      "activity": "reference.types",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    },
+    {
+      "activity": "system.status",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    },
+    {
+      "activity": "reports.expenses",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    },
+    {
+      "activity": "maintenance.delete",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    },
+    {
+      "activity": "appeal.medical_photo",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    },
+    {
+      "activity": "roles.view",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    },
+    {
+      "activity": "resident.who_and_where",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    },
+    {
+      "activity": "photos.resident_medical",
+      "level": "edit",
+      "found": "2026-11-06",
+      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
+    }
+  ]
+}
