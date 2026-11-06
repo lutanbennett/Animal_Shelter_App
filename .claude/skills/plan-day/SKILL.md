@@ -325,6 +325,21 @@ not ranked himself**. For each candidate note:
   because dev is where it worked** — so a count attached to a decision is worth one command before it
   is put to him, and the cheapest thing shipped that round was the script that made the production
   count readable at all.
+- **AND A COUNT QUOTED WITHOUT ITS *METHOD* ages exactly like one quoted without its DATABASE.
+  Measured twice on 2026-11-06, in one plan.** The English-strings item carried *"161 `.tsx`
+  strings"* and *"261 `.ts` strings"*, both measured 2026-11-01 and both read as current by every
+  session since. A brief refused to repeat them — *"I did NOT re-measure these... re-measure as your
+  first deliverable and report what you get; if the number has moved, that is a finding, not an
+  error"* — and the stream came back with **20 in 7 files, and 204**, reporting the first figure as
+  **not reproducible**: the old reading used a prose-shaped regex, the stream used an AST walk and
+  left `scripts/measure-english-in-tsx.mjs` behind so the next person can repeat it. **Neither figure
+  was wrong when written.** A job banded as a wide classification pass turned out to be mostly
+  already correct, and **the planner had expected the correction to widen the job rather than shrink
+  it eightfold.** **So ask of any count on an item: WHAT counted it, and would that method still
+  agree?** A count whose method nobody can re-run is an anecdote. **And the cheap habit that pays:
+  when a brief must carry a count the planner did not measure, say so in those words and make
+  re-measuring deliverable one** — it costs a sentence, and it is how both figures were caught inside
+  a single stream.
 - **When an orphan or a gap is a HUB, closing it closes everything under it —
   price and predict accordingly.** Added 2026-10-21. *Menu-removal orphans 1 of 6*
   named **12 rows**; the stream closed **51**, and `check-menu-coverage.mjs` went
