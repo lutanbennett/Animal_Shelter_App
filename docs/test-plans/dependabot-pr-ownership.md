@@ -23,7 +23,15 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — ran; origin/main merged in
-- [ ] `node scripts/gates.mjs` — pending: result pasted once the run finishes
+- [x] `node scripts/gates.mjs` ended with all four gates at exit 0:
+
+```
+=== gates: typecheck exited 0 after 159s
+=== gates: lint exited 0 after 351s
+=== gates: test exited 0 after 40s
+=== gates: build exited 0 after 332s
+gates: typecheck=0 lint=0 test=0 build=0
+```
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data
