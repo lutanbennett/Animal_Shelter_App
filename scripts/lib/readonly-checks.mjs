@@ -567,6 +567,37 @@ export const CHECKS = {
       ...(r.diet_codes.length ? [`Diet codes: ${r.diet_codes.join(", ")}`] : []),
     ],
   },
+  "deceased-archive-outstanding": {
+    asks: "Which residents read deceased but have no finished archive? For each deceased resident: the code, the date of death, whether deceased_archived_at is set, whether the Drive summary and index files are recorded, and whether the placement history is exactly Intake then Deceased (the placement TYPES in order, e.g. Intake,Deceased,DeceasedInError after a withdrawn death). Lists only the ones OUTSTANDING (no archive time, or a file missing). Codes, dates, true/false and placement types only: no resident name, no bio, no story. Informational: it flags nothing.",
+    // Settles #314hq part (2) and #36egc (docs/decisions/2026-11-06-scripts-tooling-three.md). Generalised from the R-0323 question to ANY resident whose
+    // archive is outstanding. Columns: residents.deceased_archived_at, deceased_summary_drive_file_id, deceased_index_drive_file_id (0026); is_deceased and
+    // date_of_death are on the view resident_current_state (0001), keyed by resident_id. Retrying is the hub's "Retry archive" button; this check never writes.
+    sql: `with d as (
+        select r.id, r.resident_code, s.date_of_death, r.deceased_archived_at,
+               (r.deceased_summary_drive_file_id is not null) as has_summary,
+               (r.deceased_index_drive_file_id is not null) as has_index,
+               (select string_agg(p.placement_type::text, ',' order by p.start_date, p.created_at)
+                  from placement_history p where p.resident_id = r.id) as placements
+          from residents r join resident_current_state s on s.resident_id = r.id
+         where s.is_deceased),
+      o as (select * from d where deceased_archived_at is null or not has_summary or not has_index)
+      select json_build_object(
+        'deceased', (select count(*) from d),
+        'outstanding', (select count(*) from o),
+        'no_archive_time', (select count(*) from o where deceased_archived_at is null),
+        'history_is_intake_then_deceased', (select count(*) from d where placements = 'Intake,Deceased'),
+        'rows', coalesce((select json_agg(json_build_object(
+            'code', resident_code, 'died', to_char(date_of_death at time zone 'UTC', 'YYYY-MM-DD'),
+            'archived_at', to_char(deceased_archived_at at time zone 'UTC', 'YYYY-MM-DD HH24:MI:SS'),
+            'summary', has_summary, 'index', has_index, 'placements', placements) order by resident_code) from o), '[]'::json))`,
+    render: (r) => [
+      `${r.deceased} resident(s) read deceased; ${r.history_is_intake_then_deceased} of them have a placement history of exactly Intake then Deceased.`,
+      r.outstanding === 0
+        ? "None outstanding: every deceased resident has an archive time and both Drive files recorded."
+        : `${r.outstanding} OUTSTANDING (${r.no_archive_time} with no archive time):`,
+      ...r.rows.map((x) => `   ${x.code} died ${x.died ?? "unknown"}; archived ${x.archived_at ?? "NOT SET"}; summary ${x.summary ? "yes" : "NO"}; index ${x.index ? "yes" : "NO"}; placements ${x.placements}`),
+    ],
+  },
 };
 
 /** Wrap one check in a read-only transaction. The result rides out in an exception message, as the harnesses do. */
