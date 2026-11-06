@@ -10,7 +10,7 @@
 | Backlog item | `docs/backlog.md` → `#prr9h` (Pi local copy as a cache) |
 | Branch / worktree | `claude/pi-mirror-timings` @ `C:\Development\Animal_Shelter_pi-mirror-timings` |
 | Dev server | not started — docs-only change, no page to load |
-| PR | PR_PLACEHOLDER |
+| PR | [#1347](https://github.com/lutanbennett/Animal_Shelter_App/pull/1347) |
 | Tested by / date | Claude, 2026-11-06 |
 | Carries a migration? | no |
 | Tested at SHA | 006e4070 |
