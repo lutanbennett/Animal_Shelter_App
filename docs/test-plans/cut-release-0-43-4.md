@@ -11,7 +11,7 @@
 | PR | #TBD |
 | Tested by / date | Claude Opus 5 (production release manager) / 2026-11-06 |
 | Carries a migration? | **no** — the cut itself adds no migration file. **Eight migrations written by earlier PRs (`0318`–`0324`) are pending on production** and are applied as a release step, before the deploy. Section 8 carries that ordering |
-| Tested at SHA | `SHA_PLACEHOLDER` |
+| Tested at SHA | `c55d1dcc` — the tree the four gates and all 17 cut assertions ran against |
 
 ## 1. Scope and risk
 
@@ -53,7 +53,11 @@ whether this release closes its step; if so add the note to `unreleased` first."
 - [x] `node scripts/gates.mjs` ends with the four-gate line, every exit code `0`:
 
 ```
-GATES_PLACEHOLDER
+=== gates: typecheck exited 0 after 138s
+=== gates: lint exited 0 after 310s
+=== gates: test exited 0 after 30s
+=== gates: build exited 0 after 253s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [x] CI green on the PR — `n/a: not yet — the PR does not exist at this commit`
@@ -125,7 +129,22 @@ who is shown which line on `/releases` — which is content marking, not access.
 `node scripts/check-release-guards.mjs`, which is the regression check that matters on a cut:
 
 ```
-GUARDS_PLACEHOLDER
+ok   a cut release with nothing unreleased passes
+ok   unreleased notes are a problem
+ok   package.json behind the newest release is a problem
+ok   a migration the database lacks is refused
+ok   a database holding every migration passes
+ok   schema ahead of code is fine
+ok   could not ask warns and does not refuse
+ok   clean release, clean schema: go
+ok   unreleased refuses
+ok   missing migration refuses
+ok   could not ask alone goes ahead, with its warnings
+ok   --force goes ahead and keeps every problem for the record
+ok   --force with nothing to override records nothing
+ok   --env test is not guarded
+ok   --force without a reason is refused
+ok   --drift reads the arrays it prints from driftReport()
 ```
 
 ## 7. Documentation
@@ -133,7 +152,7 @@ GUARDS_PLACEHOLDER
 - [x] Backlog item ticked — n/a: a release cut closes no backlog item. Nothing in the range left an item closable by *this* PR; the items the range's features closed were ticked by those PRs
 - [x] Non-obvious design choices added as a new file in `docs/decisions/` — n/a: the judgement in this cut is the deferred-note review, which belongs in the release record (`docs/releases/2026-11-06-0-43-4.md`) and in this plan's section 1, where a release manager will look for it. A decision file would be a third home for it
 - [x] `README.md` still accurate — unchanged by this diff
-- [x] **Release notes.** `n/a: a cut cannot tick this line. The checker holds it to the diff and a tick requires `unreleased` to have *gained* a line, while this PR's whole purpose is to empty it — eight notes moved out. The three notes this PR added are described in section 1; they were added to `unreleased` before the cut ran, and the cut then moved all eight`
+- [ ] **Release notes.** n/a: a cut cannot tick this line, and must not. The checker holds it to the diff and a tick requires `unreleased` to have *gained* a line, while a cut's whole purpose is to empty it — eight notes moved out and none remain. The three notes this PR wrote are described in section 1: they were added to `unreleased` before the cut ran, and the cut then moved all eight into the entry, so the file's net gain is zero and a tick would be a claim the diff contradicts
 - [x] Commit messages say why, not just what
 - [x] Claims were measured, not reasoned — the four claims in this plan that could have been reasoned were each measured instead: the pending-migration count from `--status` against production, the duplicate `0324` from `ls`, the lockfile bump from the `--verify` assertion rather than from `#jhd8s` having landed, and the mail absence from the assertion pair rather than from `major: false`
 
@@ -205,7 +224,7 @@ Automated checks by: Claude Opus 5 (production release manager session)  Date: 2
 
 ### Manual verification
 
-- [ ] The manual list above is empty, or every item in it was checked by a person
+- [ ] The manual list above is empty, or every item in it was checked by a person — pending: the list is not empty (two items), so only the person who looked may tick it
 
 Manual verification by: pending: Lutan to read the eight notes on `/releases` after the deploy, and the Thai wording of the reels screens by a Thai speaker
 
