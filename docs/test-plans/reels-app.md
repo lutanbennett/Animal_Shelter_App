@@ -164,7 +164,7 @@ Manual verification by: pending: the four items in Left for manual verification
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above — pending: defects 2-4 are deferred to the planner, none blocks this PR
+- [ ] Open defects are either fixed or explicitly accepted above — pending: defects 2-4 are left for the planner, none blocks this PR
 - [ ] Checklist pasted into the PR — pending: after the PR opens
 - [ ] Handed to the production release manager — pending: release time
 
