@@ -62,7 +62,8 @@ export type NewCardKey =
   | "run_fundraising_events"
   | "propose_website"
   | "approve_website"
-  | "view_expenses";
+  | "view_expenses"
+  | "project_folders";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -223,6 +224,10 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   },
   // Card review 2 (0268): it reads maintenance jobs, so the holder can attach a bill to one.
   bills: { includes: [], bundle: [{ activity: "maintenance.bills" }, { activity: "maintenance.jobs", level: "read" }], opens: "/bills" },
+  // 0323 (2026-11-06, Lutan): the write side of Projects had no card, so New folder, Rename, Move and Delete were drawn for Admin only and
+  // nobody had chosen that. This card is exactly projects.folders at edit and nothing else: not projects.photos (add/remove/caption) and not
+  // projects.publish (putting a folder on the public website), which stay their own activities. Edit implies read, so the page opens.
+  project_folders: { includes: [], bundle: [{ activity: "projects.folders", level: "edit" }], opens: "/projects" },
   website: { includes: [], bundle: [{ activity: "website.content", level: "edit" }], opens: "/admin/website" },
   // Card review 2 (0268): the photo strip is its own card, so a person who changes the opening hours cannot add a public photo. The page
   // opens on website.content, held here at read. The hero photo is a column of site_content and stays with Website until the app half moves it.
@@ -412,6 +417,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   translations: (t) => t.appHome.cards.translations,
   propose_translations: (t) => t.appHome.cards.proposeTranslations,
   view_translations: (t) => t.appHome.cards.viewTranslations,
+  project_folders: (t) => t.appHome.cards.projectFolders,
   food_forecast: (t) => t.appHome.cards.foodForecast,
   medicine_forecast: (t) => t.appHome.cards.medicineForecast,
   view_cashflow: (t) => t.appHome.cards.viewCashflow,

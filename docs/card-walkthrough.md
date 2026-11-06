@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-49 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+50 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -287,7 +287,7 @@ Result: pending
 2. **TODO:** Issue a donation receipt. Do it on a disposable record named `walk-donations_receipts`. Question: where should this write show afterwards (which page, which row)?
 3. **See:** Who a resident is and where they are, nothing more (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 4. **See:** Project folders and their stories (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-5. Open `/projects`: it loads (projects.folders at read). Confirm the twelve category folders show, the "read only" note shows, and NO New folder, Rename, Move or Delete control is offered. No card in the catalogue gives projects.folders at edit today, so the write side of this page has no card to walk.
+5. Open `/projects`: it loads (projects.folders at read). Confirm the twelve category folders show, the "read only" note shows, and NO New folder, Rename, Move or Delete control is offered. The write side of this page is walked under Look after project folders (`project_folders`).
 6. **Refused:** open `/maintenance` (the page of **Do Maintenance**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
@@ -301,6 +301,17 @@ Result: pending
 2. **TODO:** Add and see a maintenance job's bills and costs. Do it on a disposable record named `walk-bills`. Question: where should this write show afterwards (which page, which row)?
 3. **See:** Maintenance jobs: log, change, assign, cost (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
 4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Look after project folders (`project_folders`)
+
+- Opens: `/projects`
+
+0. Sign in with `--cards project_folders`. The home screen shows the **Look after project folders** tile (or the tile of a card that includes it).
+1. Open `/projects`: it loads.
+2. **Do:** Project folders and their stories. Use a disposable record named `walk-project_folders`. **Read-back:** the folder appears (or reads its new name, place or story) on /projects and inside its parent folder after the save; Delete removes it from both. Putting it on the public website needs projects.publish and adding photos needs projects.photos, which this card does not give.
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
