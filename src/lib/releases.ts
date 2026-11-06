@@ -79,6 +79,11 @@ export const unreleased: ReleaseNote[] = [
     cards: ["meme_add", "meme_view", "meme_library"],
   },
 
+  {
+    text: "When you add or change a fundraising event, the campaign and project pickers now say so if they may be short or empty because your login cannot see campaigns or project folders, instead of looking like there is nothing to choose. The Thai wording has not been checked by a Thai speaker.",
+    cards: ["run_fundraising_events"],
+  },
+
   "You can now correct the result text of a blood test on a resident who has died. Nothing else on a closed record changes.",
 ];
 

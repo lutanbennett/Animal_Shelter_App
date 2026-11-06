@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { BackLink } from "@/components/BackLink";
 import { getT } from "@/lib/i18n/get-t";
+import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 import { loadEventPhotos, loadLinkChoices, loadStaffEvent } from "@/lib/events/staff";
 import type { EventFields } from "@/lib/events/form";
@@ -12,7 +13,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Management → Events → one event: its words, its gallery and whether it is on the website. */
 export default async function EventPage(props: PageProps<"/management/events/[id]">) {
-  const { supabase } = await requirePermission("events.run");
+  const { supabase, perms } = await requirePermission("events.run");
   const { t } = await getT();
   const a = t.eventsAdmin;
   const { id } = await props.params;
@@ -51,7 +52,7 @@ export default async function EventPage(props: PageProps<"/management/events/[id
         cancelled={event.status === "cancelled"}
         waitingPhotos={photos.filter((p) => !p.approved).length}
       />
-      <EventForm mode="edit" eventId={event.id} initial={initial} published={event.published} appeals={appeals} projects={projects} />
+      <EventForm mode="edit" eventId={event.id} initial={initial} published={event.published} appeals={appeals} projects={projects} canSeeAppeals={can(perms, "appeal.run")} canSeeProjects={can(perms, "projects.folders", "read")} />
       <EventPhotos eventId={event.id} photos={photos} />
     </main>
   );
