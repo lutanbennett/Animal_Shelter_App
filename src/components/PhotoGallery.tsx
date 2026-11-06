@@ -547,7 +547,7 @@ export function PhotoGallery({
               }`}
             >
               <img
-                src={driveImageUrl(photo.drive_file_id, photo.media_kind === "video" ? 400 : undefined)}
+                src={driveImageUrl(photo.drive_file_id, 400)}
                 alt={photo.media_kind === "video" ? t.photos.videos.videoAlt(photo.file_name ?? "") : (photo.file_name ?? t.photos.residentPhotoAlt)}
                 loading="lazy"
                 decoding="async"
