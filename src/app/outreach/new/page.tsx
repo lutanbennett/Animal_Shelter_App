@@ -7,7 +7,7 @@ import { OutingForm } from "../OutingForm";
 /** /outreach/new: record one outreach visit (0169). Edit on community.outings writes. */
 export default async function NewOutingPage() {
   const { t } = await getT();
-  const { supabase } = await requirePermission("community.outings");
+  const { supabase } = await requirePermission("community.outings", "edit");
   const { places } = await loadPlaces(supabase);
 
   return (

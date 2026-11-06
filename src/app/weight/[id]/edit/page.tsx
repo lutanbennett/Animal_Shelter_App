@@ -18,7 +18,7 @@ import { loadTagsForNote } from "@/lib/note-tags/sync";
  * page says so instead of offering a form the database (0026) would reject.
  */
 export default async function EditWeightPage(props: PageProps<"/weight/[id]/edit">) {
-  const { perms } = await requirePermission("medical.weight");
+  const { perms } = await requirePermission("medical.weight", "edit");
   const { id } = await props.params;
   const { t } = await getT();
   const supabase = await createClient();

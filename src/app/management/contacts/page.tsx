@@ -10,7 +10,7 @@ import { requirePermission } from "@/lib/permissions/require";
 export default async function ContactsAdminPage(
   props: PageProps<"/management/contacts">,
 ) {
-  await requirePermission("contacts.directory");
+  await requirePermission("contacts.directory", "edit");
   const { t } = await getT();
   const a = t.contacts.archive;
   // Archived contacts are hidden unless ?archived=1 — the same link toggle

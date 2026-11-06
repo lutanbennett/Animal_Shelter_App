@@ -10,7 +10,7 @@ import { WeightForm, type ExistingReading } from "../WeightForm";
 import { canTagNote } from "@/lib/note-tags/can";
 
 export default async function NewWeightPage(props: PageProps<"/weight/new">) {
-  const { perms } = await requirePermission("medical.weight");
+  const { perms } = await requirePermission("medical.weight", "edit");
   const searchParams = await props.searchParams;
   const { t, locale } = await getT();
 

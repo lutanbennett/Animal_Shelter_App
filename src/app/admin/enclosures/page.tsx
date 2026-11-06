@@ -7,7 +7,7 @@ import { requirePermission } from "@/lib/permissions/require";
 import { inShelterOrder } from "@/lib/enclosures/order";
 
 export default async function EnclosuresPage() {
-  await requirePermission("facility.enclosures");
+  await requirePermission("facility.enclosures", "edit");
   const { t } = await getT();
 
   const supabase = await createClient();

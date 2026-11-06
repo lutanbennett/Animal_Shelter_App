@@ -6,7 +6,7 @@ import { ClinicsTable, type ClinicRow } from "./ClinicsTable";
 import { requirePermission } from "@/lib/permissions/require";
 
 export default async function ClinicsAdminPage() {
-  await requirePermission("clinics.list");
+  await requirePermission("clinics.list", "edit");
   const { t } = await getT();
 
   const supabase = await createClient();

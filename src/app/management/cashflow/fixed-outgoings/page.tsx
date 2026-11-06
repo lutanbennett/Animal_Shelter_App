@@ -17,7 +17,7 @@ import { requirePermission } from "@/lib/permissions/require";
  * (0114, docs/decisions/2026-09-29-fixed-outgoings-not-payroll.md).
  */
 export default async function FixedOutgoingsPage() {
-  await requirePermission("reports.cashflow");
+  await requirePermission("reports.cashflow", "edit");
   const { t } = await getT();
   const m = t.management.fixedOutgoings;
 

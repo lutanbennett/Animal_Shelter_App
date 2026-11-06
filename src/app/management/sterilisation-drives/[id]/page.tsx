@@ -46,7 +46,7 @@ const hhmm = (v: string | null) => (v ? v.slice(0, 5) : "");
  * contact details; it is only ever rendered here, behind website.content.
  */
 export default async function DrivePage(props: PageProps<"/management/sterilisation-drives/[id]">) {
-  const { supabase } = await requirePermission("website.content");
+  const { supabase } = await requirePermission("website.content", "edit");
   const { id } = await props.params;
   if (!UUID.test(id)) notFound();
   const { t, locale } = await getT();

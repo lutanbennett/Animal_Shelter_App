@@ -6,7 +6,7 @@ import { LargerScreenNotice } from "@/components/LargerScreenNotice";
 import { requirePermission } from "@/lib/permissions/require";
 
 export default async function ZonesPage() {
-  await requirePermission("facility.enclosures");
+  await requirePermission("facility.enclosures", "edit");
   const { t } = await getT();
 
   const supabase = await createClient();

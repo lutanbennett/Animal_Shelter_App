@@ -8,7 +8,7 @@ import { CreateContactForm } from "../CreateContactForm";
  * Same gate as the createContact action.
  */
 export default async function NewContactPage() {
-  await requirePermission("contacts.directory");
+  await requirePermission("contacts.directory", "edit");
   const { t } = await getT();
   const c = t.management.contacts;
   return (

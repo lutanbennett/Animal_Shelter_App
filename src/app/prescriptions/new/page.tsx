@@ -15,7 +15,7 @@ import { canTagNote } from "@/lib/note-tags/can";
 export default async function NewPrescriptionPage(
   props: PageProps<"/prescriptions/new">,
 ) {
-  const { perms } = await requirePermission("medical.prescriptions");
+  const { perms } = await requirePermission("medical.prescriptions", "edit");
   const searchParams = await props.searchParams;
   const { t, locale } = await getT();
 

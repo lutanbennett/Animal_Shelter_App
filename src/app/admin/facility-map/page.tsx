@@ -18,7 +18,7 @@ type PlanRow = Omit<MapPlan, "image_url"> & { image_path: string };
  * Only physical, on-site places: the Lifecycle pseudo-zone and off-site zones are never on the map.
  */
 export default async function FacilityMapAdminPage() {
-  const { supabase, perms } = await requirePermission("facility.enclosures");
+  const { supabase, perms } = await requirePermission("facility.enclosures", "edit");
   const { t } = await getT();
 
   const [zonesResult, enclosuresResult, plansResult, roomsResult] = await Promise.all([

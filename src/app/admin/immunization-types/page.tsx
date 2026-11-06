@@ -10,7 +10,7 @@ import { requirePermission } from "@/lib/permissions/require";
 import { loadStocktakingSwitches } from "@/lib/management/stocktaking-switches";
 
 export default async function ImmunizationTypesPage() {
-  await requirePermission("reference.types");
+  await requirePermission("reference.types", "edit");
   const { t } = await getT();
 
   const supabase = await createClient();

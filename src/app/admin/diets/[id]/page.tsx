@@ -10,7 +10,7 @@ import { RecipeDetail } from "../RecipeDetail";
 /** One diet's recipe page: its ingredients, amounts and total daily serve, with Standard, rename and delete. */
 export default async function RecipePage(props: PageProps<"/admin/diets/[id]">) {
   const { id } = await props.params;
-  const { supabase, perms } = await requirePermission("reference.types");
+  const { supabase, perms } = await requirePermission("reference.types", "edit");
   if (!canEditItemSettings(perms, "diet")) refuseFor(perms);
   const { t } = await getT();
   const book = await loadRecipeBook(supabase);

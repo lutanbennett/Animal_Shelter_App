@@ -10,7 +10,7 @@ import { loadDietResident } from "../resident";
 
 /** Reached from the resident's Diet tab or the hub's Diet card. */
 export default async function NewDietPage(props: PageProps<"/diets/new">) {
-  const { perms } = await requirePermission("medical.diet");
+  const { perms } = await requirePermission("medical.diet", "edit");
   const searchParams = await props.searchParams;
   const { t, locale } = await getT();
 

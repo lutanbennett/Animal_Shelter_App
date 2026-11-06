@@ -9,7 +9,7 @@ import { MemeForm } from "../MemeForm";
  * this login may read (a deceased resident stays: a meme in their memory is a real case).
  */
 export default async function NewMemePage() {
-  const { supabase } = await requirePermission("social.library");
+  const { supabase } = await requirePermission("social.library", "edit");
   const { t } = await getT();
   const { data, error } = await supabase
     .from("resident_list_view")

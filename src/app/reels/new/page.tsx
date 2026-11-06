@@ -10,7 +10,7 @@ import { ReelForm } from "../ReelForm";
  * login that may also use its search (resident.record at Read, see ReelForm); the rest is the same form without it.
  */
 export default async function NewReelPage() {
-  const { perms } = await requirePermission("social.library");
+  const { perms } = await requirePermission("social.library", "edit");
   const { t } = await getT();
   const today = todayIso();
   return (

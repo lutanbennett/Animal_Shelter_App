@@ -6,7 +6,7 @@ import { DriveForm } from "../DriveForm";
 
 /** Management → Desexing drives → New. Starts blank and as a draft: nothing is public until it is opened. */
 export default async function NewDrivePage() {
-  await requirePermission("website.content");
+  await requirePermission("website.content", "edit");
   const { t } = await getT();
   const initial: DriveFields = {
     title: "",

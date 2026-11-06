@@ -22,7 +22,7 @@ import { MedicationsTable, type MedicationDefinitionRow } from "./MedicationsTab
  * desktop-only notice stands.
  */
 export default async function MedicationSettingsPage() {
-  const { supabase, perms } = await requirePermission("reference.types");
+  const { supabase, perms } = await requirePermission("reference.types", "edit");
   if (!canEditItemSettings(perms, "medication")) refuseFor(perms);
   const { t } = await getT();
 
