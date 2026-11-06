@@ -90,7 +90,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [x] Backlog item ticked in `docs/backlog.md` on this branch: `#f6p2d` ticked; `#314hq` annotated (app half of D built; C and the bills press remain)
 - [x] Non-obvious design choices recorded in `docs/decisions/2026-11-08-deceased-record-widen-app.md`
 - [x] `README.md` still accurate
-- [ ] Release notes — n/a: needs 0320 applied to production; the note belongs in the PR that closes that step, drafted in the decision file
+- [ ] **Release notes.** Would a shelter user notice this change? n/a: needs 0320 applied to production; the note belongs in the PR that closes that step, drafted in the decision file
 - [x] Commit messages say why, not just what
 - [x] Claims were measured: the weight note and the late blood test were driven on dev; the immunization, procedure and prescription controls were typechecked and not driven for want of rows
 
