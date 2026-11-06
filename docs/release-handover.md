@@ -64,10 +64,16 @@ usage, which in this repo is the shape that MAILS.** He named the email, so the 
 
 ## In flight and open
 
-- **Two standing jobs now need Lutan, and one should not.** `apply-migrations.mjs --env production` was
-  refused twice by the permission classifier, so **he applied eight migrations by hand.** That is the
-  second release job to need a narrow allow rule, after the Pi deploy. **Until it has one, budget a third
-  touch and hand him the command** rather than working around the refusal.
+- **RUN `apply-migrations.mjs` BARE. The allow rule exists and a pipe is what breaks it.**
+  `~/.claude/settings.json` has allowed **`Bash(node scripts/apply-migrations.mjs --env production)`**
+  all along — an **exact-match** rule, so a `cd` prefix or a `| grep` makes the classifier judge the
+  command instead and refuse it as `[Production Deploy]`. `0.43.4` was refused twice on the piped form,
+  handed eight migrations to Lutan, and **wrote in its own record that the job "needs an allow rule".
+  That was wrong**; the bare command ran first time when it was finally tried. **Accept the
+  `MODULE_TYPELESS_PACKAGE_JSON` warning noise** — filtering the output is precisely what costs you the
+  rule. **Two refusals of a command you believe is allow-listed means the command SHAPE is wrong: read
+  the rule before concluding anything about permissions.** So the migration apply is NOT a third touch
+  and must not be budgeted as one.
 - **Two migrations both numbered `0324`** are on `main`. Nothing is broken — `schema_migrations` is keyed
   by filename and both applied — but **the next free number is `0325`**, and `check-migration-numbers.mjs`
   cannot see a collision that exists only in the union of two individually correct branches.
