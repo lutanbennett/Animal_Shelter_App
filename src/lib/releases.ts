@@ -71,6 +71,14 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "On a resident’s Photos tab, the upload box now shows only to a login that is allowed to add resident photos. Before, a login that could only file into one folder saw the box and was then refused. If your box has gone, that is why; ask whoever sets cards to give you the card that adds resident photos.",
+    cards: ["residents"],
+  },
+  {
+    text: "A photo marked Private only now says so on the resident’s Photos tab, instead of saying it is waiting for approval. It was looked at and kept off the website, so there is nothing to approve again. (This shows once the shelter has the Private only answer, which is not live yet.)",
+    cards: ["residents"],
+  },
+  {
     text: "The Expenses report now includes what the shelter spent on vet visits, as one type called Veterinary, on the day of each visit. A month you looked at before will read higher by that amount. That is the change, not a mistake. Visits with no cost recorded, cancelled visits and archived visits are not counted, and a visit row says its invoice is on the visit record instead of linking a receipt.",
     cards: ["view_expenses"],
   },

@@ -7272,6 +7272,14 @@ const en = {
     waitingForApproval: "Waiting for approval",
     waitingNote: "Waiting for approval. The website does not show this photo yet.",
     waitingProfile: "This photo is waiting for approval, so it can't be the profile photo yet.",
+    /** Looked at and refused (0318). Not waiting: do not ask again. */
+    privateOnlyBadge: "Private only",
+    privateOnlyNote: "Private only. Someone looked at this photo and kept it off the website.",
+    privateOnlyProfile: "This photo is private only, so it can't be the profile photo.",
+    /** A state this screen does not recognise: described, never called waiting. */
+    notOnWebsiteBadge: "Not on the website",
+    notOnWebsiteNote: "The website does not show this photo.",
+    notOnWebsiteProfile: "The website does not show this photo, so it can't be the profile photo.",
     moveToFolder: "Move to folder",
     moveButton: (folder: string) => `Move to ${folder}`,
     uploader: {

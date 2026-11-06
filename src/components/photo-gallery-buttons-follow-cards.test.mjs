@@ -44,3 +44,18 @@ test("the photos page asks the Medical read, and the uploader never promises a t
   assert.match(up, /canSeeMedical = false,/, "canSeeMedical must default to false");
   assert.match(up, /item\.category === "Medical" && !canSeeMedical \? t\.photos\.uploader\.doneMedicalHidden/);
 });
+
+test("the photos tab offers the uploader only to a login whose card the upload route asks", () => {
+  const page = read("../app/residents/[id]/[section]/sections/photos.tsx");
+  assert.match(page, /const uploadFolders = can\(perms, "photos\.resident_add"\) \? photoCategoriesFor\(perms\) : \[\];/);
+  assert.match(page, /uploadFolders\.length > 0 && \(/);
+  assert.match(read("../app/api/residents/[id]/photos/route.ts"), /categories\.length === 0 \|\| !can\(perms, "photos\.resident_add"\)/);
+});
+
+test("the gallery captions the three approval states apart and never calls a refused photo waiting", () => {
+  const state = read("../lib/photos/approval-state.ts");
+  assert.match(state, /p\.approval === "private_only"\) return "private"/);
+  assert.match(state, /return "other"/);
+  assert.doesNotMatch(gallery, /approved_at === null/, "the caption must read photoApprovalState, not approved_at alone");
+  assert.match(gallery, /approvalText\(t, photoApprovalState\(photo\)\)\.badge/);
+});
