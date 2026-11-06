@@ -22,9 +22,9 @@
 
 ## 2. Automated gates
 
-- [ ] `node scripts/worktree.mjs sync` — pending
-- [ ] `node scripts/gates.mjs` — pending
-- [ ] CI green on the PR — pending
+- [x] `node scripts/worktree.mjs sync` — merged cleanly
+- [x] `node scripts/gates.mjs` — typecheck=0 lint=0 test=0 build=0 (after fixing the lint allow-list error)
+- [ ] CI green on the PR — pending: checks run after the PR is opened
 
 ## 3. Schema and data
 

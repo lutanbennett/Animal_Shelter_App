@@ -1,6 +1,5 @@
 import { getAppEnv } from "@/lib/app-env";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { getHealthReport } from "@/lib/status/health";
+import { getHealthReport, readDatabaseHealth } from "@/lib/status/health";
 import { buildHealthFeed, makeLimiter, tokenMatches } from "@/lib/status/health-feed";
 
 /**
@@ -30,11 +29,7 @@ export async function GET(request: Request) {
   try {
     const [report, db] = await Promise.all([
       getHealthReport(),
-      createAdminClient().rpc("database_health").then(({ data, error }) => {
-        const row = Array.isArray(data) ? data[0] : null;
-        if (error || !row) return null;
-        return { sizeBytes: Number(row.size_bytes), connections: Number(row.connections) };
-      }, () => null),
+      readDatabaseHealth(),
     ]);
     return Response.json(
       buildHealthFeed({ report, databaseHealth: db, environment: getAppEnv(), now: new Date() }),

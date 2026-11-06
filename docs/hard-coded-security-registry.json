@@ -161,11 +161,6 @@
       "guard": "Server only (`server-only`); every caller below is named."
     },
     {
-      "file": "src/app/api/status/health/route.ts",
-      "for": "Runs the System status checks and the database_health() read (size and connection count) for the Home Assistant feed.",
-      "guard": "Its own bearer token, STATUS_READ_TOKEN (constant-time, rate-limited, refuses when unset); returns states, times and a few numbers, never error text."
-    },
-    {
       "file": "src/app/account/password/actions.ts",
       "for": "Changes the signed-in person's own password and reads their sign-in methods.",
       "guard": "The signed-in user from the session; verifies the current password first."
