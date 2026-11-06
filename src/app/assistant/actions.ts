@@ -24,6 +24,7 @@ import { archiveDeceasedResident } from "@/lib/archive/archive-deceased-resident
 import { can } from "@/lib/permissions/can";
 import { MAX_MENTIONS, noteWithTags } from "@/lib/assistant/mentions";
 import { syncNoteTagPicks } from "@/lib/note-tags/sync";
+import { forcedTagFailureCode } from "@/lib/assistant/force-tag-failure";
 import type { NoteTag } from "@/lib/note-tags/text";
 import { loadPermissions } from "@/lib/permissions/load";
 import { logAssistantAction, type AssistantActionStatus } from "@/lib/assistant/audit";
@@ -221,12 +222,15 @@ async function linkMentions(
     }
     const newest = new Date(mine[0].created_at).getTime();
     for (const row of mine.filter((r) => newest - new Date(r.created_at).getTime() < 10_000)) {
-      const result = await syncNoteTagPicks(
-        supabase,
-        { table, column: "notes", rowId: row.id, residentId: subject },
-        tags,
-        row.notes,
-      );
+      const forced = forcedTagFailureCode();
+      const result = forced
+        ? ({ ok: false, code: forced } as const)
+        : await syncNoteTagPicks(
+            supabase,
+            { table, column: "notes", rowId: row.id, residentId: subject },
+            tags,
+            row.notes,
+          );
       if (!result.ok) {
         console.error(`assistant: tags not linked on ${table} ${row.id} (${result.code})`);
         failure ??= result.code === "42501" ? t.assistant.tagsNotAllowed : t.assistant.tagsNotLinked;
