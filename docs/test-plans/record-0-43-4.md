@@ -67,7 +67,13 @@ Analysed by card. **No card's behaviour changes**, and no file here is served to
 - [x] The pages nearest the change still work — n/a: no page is near these files. `check-docs-only.mjs` establishes that, and its answer is the evidence:
 
 ```
-docs-only=true deps-changed=false
+deps-changed: false
+docs-only: true — 4 path(s), all documents
+  docs/release-handover.md
+  docs/releases/2026-11-06-0-43-4.md
+  docs/test-plan-template.md
+  docs/test-plans/record-0-43-4.md
+The heavy jobs will skip; test-plan still runs.
 ```
 
 - [x] Any shared file touched checked from a second, unrelated page — **`docs/test-plan-template.md` is the one shared file here, and it was checked by use rather than by reading**: this plan was written against the corrected paragraph, and `check-test-plan.mjs` parses it. **Reading it would prove only that it was edited.** The corrected text names the hosts this release actually deployed to and verified, which is the strongest check available for a sentence of prose
@@ -121,6 +127,7 @@ the dev project; `lannacare.org` is UAT. **This PR is the correction that makes 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
 | 1 | low | **The template's wrong host mapping had survived two releases as a recorded defect.** `0.43.3` wrote it down *"for the planner"*; nothing happened; `0.43.4` met it again, in a plan written on 2026-11-06 that had inherited the sentence verbatim | **Fixed here**, with the correction naming the date it went wrong so a reader of an older plan knows which way it went. **Recording a thing twice and fixing it neither time is how a defect becomes furniture** |
+| 2 | low | **This plan's own evidence block was wrong on its first write.** The `check-docs-only.mjs` line was typed from memory as `docs-only=true deps-changed=false`, which is not the shape the script prints. Running it for real then reported **`2 path(s)`** against four files that had been written — revealing that a `git stash` round-trip had restored two of them unstaged, so the first commit silently took only half the change | **Both fixed: the evidence replaced with the tool's actual output, and the two missing files committed.** Worth recording rather than tidying away, because the template's own rule — *evidence pasted into this plan is the tool's actual output, unedited* — is what caught a real defect here, not just a formatting slip. **A plausible-looking line I had written myself would have shipped a record claiming a fix that was not in the PR** |
 
 ## Left for manual verification
 
