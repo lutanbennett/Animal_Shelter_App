@@ -25,7 +25,7 @@ export default async function MemePage(props: PageProps<"/memes/[id]">) {
     <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 md:p-6">
       <BackLink href="/memes">{t.memes.page.back}</BackLink>
       <h1 className="text-2xl font-semibold text-foreground">{meme.title}</h1>
-      <MemeView meme={meme} canEdit={can(perms, "social.library")} today={todayIso()} />
+      <MemeView meme={meme} canEdit={can(perms, "social.library")} canManage={can(perms, "social.library_manage")} today={todayIso()} />
     </main>
   );
 }

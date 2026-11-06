@@ -117,6 +117,7 @@ export const ACTIVITIES = [
   { key: "website.approve", kind: "yesno", area: "settings", sort: 81, requires: [], probes: [] },
   // 0317: read the expense report. A level, so Read can open the screen without handing over the right to write any bill.
   { key: "reports.expenses", kind: "level", area: "management", sort: 82, requires: [], probes: [] },
+  { key: "social.library_manage", kind: "yesno", area: "management", sort: 83, requires: [], probes: [] },
   { key: "contacts.browse", kind: "yesno", area: "contacts", sort: 57, requires: [], probes: [] },
   { key: "friends.view", kind: "yesno", area: "contacts", sort: 58, requires: [], probes: [] },
   { key: "community.outings", kind: "level", area: "projects", sort: 59, requires: [], probes: [] },

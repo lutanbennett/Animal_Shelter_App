@@ -43,10 +43,10 @@ const labelClass = "text-sm font-medium text-muted";
 
 /**
  * One meme's page: the picture full width, its words, who is in it, and the record of where it went. Record a share,
- * Edit and Archive show only at social.library Edit (`canEdit`); the database refuses a Read login that tries anyway.
+ * Edit and Record a share show at social.library Edit (`canEdit`); Archive, Restore and Remove-a-share show only with social.library_manage (`canManage`); the database refuses a Read login that tries anyway.
  * Download is a same-origin link with `download`, so the phone saves the file instead of opening it.
  */
-export function MemeView({ meme, canEdit, today }: { meme: ViewMeme; canEdit: boolean; today: string }) {
+export function MemeView({ meme, canEdit, canManage = false, today }: { meme: ViewMeme; canEdit: boolean; canManage?: boolean; today: string }) {
   const { t, locale } = useI18n();
   const shareWrite = useWriteCall();
   const removeShareWrite = useWriteCall();
@@ -133,7 +133,7 @@ export function MemeView({ meme, canEdit, today }: { meme: ViewMeme; canEdit: bo
           </ActionButton>
         )}
         {canEdit && <ActionLink href={`/memes/${meme.id}/edit`} label={m.page.edit} icon={ACTION_ICONS.edit} iconOnlyOnMobile={false} />}
-        {canEdit &&
+        {canManage &&
           (meme.archived ? (
             <ActionButton icon={ACTION_ICONS.restore} onClick={() => archive(false)} disabled={pending}>
               {m.page.unarchive}
@@ -239,7 +239,7 @@ export function MemeView({ meme, canEdit, today }: { meme: ViewMeme; canEdit: bo
                     </a>
                   )}
                 </div>
-                {canEdit && <RowActionButton icon={ACTION_ICONS.delete} label={m.share.remove} onClick={() => remove(s.id)} disabled={pending} />}
+                {canManage && <RowActionButton icon={ACTION_ICONS.delete} label={m.share.remove} onClick={() => remove(s.id)} disabled={pending} />}
               </li>
             ))}
           </ul>

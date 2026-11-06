@@ -221,7 +221,7 @@ export async function setMemeArchived(id: string, archived: boolean, requestId: 
     { id: requestId, action: "memes.archive", db: await createClient() },
     async () => {
     const perms = await loadPermissions();
-    if (!can(perms, "social.library")) return { ok: false, error: e.notAllowed };
+    if (!can(perms, "social.library_manage")) return { ok: false, error: e.notAllowed };
     if (!UUID.test(id)) return { ok: false, error: e.notFound };
     const supabase = await createClient();
     const [{ data, error }, { data: links }] = await Promise.all([
@@ -289,7 +289,7 @@ export async function removeMemeShare(memeId: string, shareId: string, requestId
     { id: requestId, action: "memes.removeShare", db: await createClient() },
     async () => {
     const perms = await loadPermissions();
-    if (!can(perms, "social.library")) return { ok: false, error: t.memes.form.errors.notAllowed };
+    if (!can(perms, "social.library_manage")) return { ok: false, error: t.memes.form.errors.notAllowed };
     if (!UUID.test(memeId) || !UUID.test(shareId)) return { ok: false, error: t.memes.share.errors.notFound };
     const supabase = await createClient();
     const { data, error } = await supabase

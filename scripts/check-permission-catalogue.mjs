@@ -270,7 +270,7 @@ const PINNED = {
   // The meme library (0223). A meme's page opens at the list's Read; Record a share, Edit and Archive ask Edit in the body.
   "/memes/new": { guards: ['requirePermission("social.library")'], decides: [] },
   "/memes/make": { guards: ['requirePermission("social.library")'], decides: [] },
-  "/memes/[id]": { guards: ['requirePermission("social.library", "read")'], decides: ["social.library"] },
+  "/memes/[id]": { guards: ['requirePermission("social.library", "read")'], decides: ["social.library", "social.library_manage"] },
   "/memes/[id]/edit": { guards: ['requirePermission("social.library")'], decides: [] },
   // The reels library (0322): same shape as the memes above, plus the # picker, which is drawn only with resident.record at Read (the activity its own search asks).
   "/reels/new": { guards: ['requirePermission("social.library")'], decides: ["resident.record:read"] },
