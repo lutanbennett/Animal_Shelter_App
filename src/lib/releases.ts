@@ -74,6 +74,10 @@ export const unreleased: ReleaseNote[] = [
     text: "The Expenses report now includes what the shelter spent on vet visits, as one type called Veterinary, on the day of each visit. A month you looked at before will read higher by that amount. That is the change, not a mistake. Visits with no cost recorded, cancelled visits and archived visits are not counted, and a visit row says its invoice is on the visit record instead of linking a receipt.",
     cards: ["view_expenses"],
   },
+  {
+    text: "Photos to approve now has a second answer next to Approve: Private only. Use it for a photo that should never be on the website. It leaves the waiting list for good, so the next person does not have to look at it again. This works for resident, event and project photos, and when you choose who is in a photo that was tagged to an enclosure.",
+    cards: ["approve_photos"],
+  },
 ];
 
 /** Newest first. */

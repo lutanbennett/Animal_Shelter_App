@@ -5256,6 +5256,10 @@ const en = {
     addedBy: (who: string, when: string) => `Added by ${who} on ${when}`,
     selectToApprove: "Tick to approve together with others",
     approve: "Approve",
+    /** The second answer (0318): looked at and refused. Not shown on the website, and the photo leaves the waiting list. */
+    privateOnly: "Private only",
+    privateOnlyDone: (n: number) => (n === 1 ? "1 photo marked private only. It will not be shown on the website." : `${n} photos marked private only. They will not be shown on the website.`),
+    privateOnlyFailed: "The photo could not be marked private only. Nothing was changed. Try again.",
     approveN: (n: number) => (n === 1 ? "Approve 1 ticked photo" : `Approve ${n} ticked photos`),
     clearSelection: "Untick all",
     bulkConfirmTitle: (n: number) => (n === 1 ? "Approve 1 photo?" : `Approve ${n} photos?`),
@@ -5311,14 +5315,14 @@ const en = {
       hideSearch: "Close search",
       nobodyYet: "Nobody chosen yet.",
       chosenList: (names: string) => `Chosen: ${names}`,
-      keepPrivate: "Keep it off the website",
-      keepPrivateHelp: "The photo goes on the resident's page but is not approved. Nobody outside the shelter sees it until someone approves it.",
+      keepPrivate: "Private only",
+      keepPrivateHelp: "The photo goes on the resident's page, marked private only. It is never shown on the website and it leaves the waiting list.",
       assignApprove: (n: number) => (n <= 1 ? "Assign and approve" : `Assign to ${n} and approve`),
-      assignPrivate: (n: number) => (n <= 1 ? "Assign, keep private" : `Assign to ${n}, keep private`),
+      assignPrivate: (n: number) => (n <= 1 ? "Assign, private only" : `Assign to ${n}, private only`),
       assigned: (n: number, approved: boolean) =>
         approved
           ? n === 1 ? "Photo assigned and approved." : `Photo assigned to ${n} residents and approved.`
-          : n === 1 ? "Photo assigned. It is not approved." : `Photo assigned to ${n} residents. It is not approved.`,
+          : n === 1 ? "Photo assigned. It is private only." : `Photo assigned to ${n} residents. It is private only.`,
       discard: "Discard",
       discardConfirmTitle: "Discard this photo?",
       discardConfirmBody: "Nobody has been chosen for it. The photo will be deleted.",
