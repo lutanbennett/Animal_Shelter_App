@@ -14,6 +14,8 @@ import { isPublicPage } from "@/lib/public-paths";
 const STATUS_ALERTS_PATH = "/api/status/alerts";
 /** Same for the calendar sweep (src/app/api/calendar/sweep/route.ts). */
 const CALENDAR_SWEEP_PATH = "/api/calendar/sweep";
+/** The read-only health feed Home Assistant polls (src/app/api/status/health/route.ts): GET only, guarded by its own bearer token. */
+const STATUS_HEALTH_PATH = "/api/status/health";
 
 export default async function proxy(request: NextRequest) {
   // Pi only (see src/lib/origin-key.ts): refuse what did not come through the Worker.
@@ -37,6 +39,9 @@ export default async function proxy(request: NextRequest) {
     }
   }
   if ((request.nextUrl.pathname === STATUS_ALERTS_PATH || request.nextUrl.pathname === CALENDAR_SWEEP_PATH) && request.method === "POST") {
+    return NextResponse.next();
+  }
+  if (request.nextUrl.pathname === STATUS_HEALTH_PATH && request.method === "GET") {
     return NextResponse.next();
   }
   // A first visit from a Thai phone: no `locale` cookie yet, Thai first in

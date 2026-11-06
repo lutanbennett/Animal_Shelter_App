@@ -161,6 +161,11 @@
       "guard": "Server only (`server-only`); every caller below is named."
     },
     {
+      "file": "src/app/api/status/health/route.ts",
+      "for": "Runs the System status checks and the database_health() read (size and connection count) for the Home Assistant feed.",
+      "guard": "Its own bearer token, STATUS_READ_TOKEN (constant-time, rate-limited, refuses when unset); returns states, times and a few numbers, never error text."
+    },
+    {
       "file": "src/app/account/password/actions.ts",
       "for": "Changes the signed-in person's own password and reads their sign-in methods.",
       "guard": "The signed-in user from the session; verifies the current password first."
@@ -527,6 +532,10 @@
     {
       "name": "ORIGIN_KEY",
       "gates": "A shared secret between the Worker and the app for cron-only routes (calendar sweep, status alerts)."
+    },
+    {
+      "name": "STATUS_READ_TOKEN",
+      "gates": "A read-only bearer token for the GET /api/status/health feed Home Assistant polls. It can read system health numbers and nothing else; not a role or card rule, and never the service-role key."
     },
     {
       "name": "NEXT_PUBLIC_SITE_URL",
