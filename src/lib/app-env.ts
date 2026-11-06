@@ -21,13 +21,13 @@
 const DEV_PROJECT_REF = "qxkmhwybjggxvsfxsxbd";
 
 /**
- * Empty until the cutover (docs/decisions.md, 2026-09-23). The project that
- * will be UAT is dbkodyyxxhtygxcxmfcu — which is *production's* until the
- * day it is demoted, so setting it early would put a UAT badge on the live
- * site. The cutover change sets it, in the same commit that points the
- * production environment at its new project.
+ * UAT's own Supabase project, "Lanna Care For Animals - UAT", in the second
+ * Supabase account (docs/decisions/2026-11-06-uat-own-database.md). It is NOT
+ * dbkodyyxxhtygxcxmfcu: that is PRODUCTION's, and putting it here would badge
+ * the live site as UAT. Anything that is neither this nor the dev project
+ * renders as production, so a wrong ref here fails toward "no badge".
  */
-const UAT_PROJECT_REF: string = "";
+const UAT_PROJECT_REF: string = "fsjagxmxjosauwmxwype";
 
 export type AppEnv = "dev" | "uat" | "production";
 
@@ -39,20 +39,12 @@ export function appEnvForSupabaseUrl(url: string): AppEnv {
 }
 
 /**
- * The environment this build wears. UAT shares the dev project for now
- * (docs/decisions/2026-11-05-uat-shares-the-dev-database.md), so the project
- * cannot tell UAT from dev: scripts/deploy.mjs pins NEXT_PUBLIC_APP_ENV=uat
- * into the UAT build only, and it is honoured only on a build that talks to
- * the dev project, so it can never relabel production. appEnvForSupabaseUrl
- * stays project-only on purpose: the correction scripts treat a "dev" project
- * as safe to write to and "production" as the live one.
+ * The environment this build wears: the project alone decides, since UAT has
+ * its own. (Between 2026-11-05 and the move to its own database UAT shared
+ * the dev project and a NEXT_PUBLIC_APP_ENV pin told them apart; the pin is
+ * gone, so no variable can relabel a build.)
  */
-export function appEnvFor(url: string, pin: string | undefined): AppEnv {
-  const fromProject = appEnvForSupabaseUrl(url);
-  return fromProject === "dev" && pin === "uat" ? "uat" : fromProject;
-}
-
 export function getAppEnv(): AppEnv {
-  // Both are written out as literals so Next inlines them at build time.
-  return appEnvFor(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "", process.env.NEXT_PUBLIC_APP_ENV);
+  // Written out as a literal so Next inlines it at build time.
+  return appEnvForSupabaseUrl(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "");
 }

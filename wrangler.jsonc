@@ -77,10 +77,9 @@
     },
     // The customer's acceptance testing: the UAT database and the current
     // Google Drive, on lannacare.org for good (docs/decisions.md). Since the
-    // cutover (2026-11-06) it owns lannacare.org and www. UAT shares the DEV
-    // Supabase project for now (docs/decisions/2026-11-05-uat-shares-the-dev-database.md):
-    // the build is pinned with NEXT_PUBLIC_APP_ENV=uat by scripts/deploy.mjs so it
-    // wears UAT's badge although the project is dev's.
+    // cutover (2026-11-06) it owns lannacare.org and www. UAT has its own
+    // Supabase project (docs/decisions/2026-11-06-uat-own-database.md); src/lib/app-env.ts
+    // badges the build from that project alone.
     "uat": {
       "name": "lanna-animal-care-uat",
       "version_metadata": { "binding": "CF_VERSION_METADATA" },

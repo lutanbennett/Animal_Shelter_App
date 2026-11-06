@@ -21,3 +21,5 @@ Whether UAT should send release mail or status alerts against dev's data. The `u
 ## When it ends
 
 A third Supabase project exists: create it, restore production into it, set `UAT_PROJECT_REF`, run P7 and 6a, and remove the stopgap signal.
+
+**2026-11-06:** UAT now has its own project; see `2026-11-06-uat-own-database.md`. This stopgap ends when that data half lands.

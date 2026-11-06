@@ -154,15 +154,16 @@ Keep at least two admins enrolled so route 1 is always available. `scripts/check
 
 Four environments, three of them deployed. **Since the 2026-11-06 cutover**
 the live site is `lannacareforanimals.org` (the production block) and
-`lannacare.org` is UAT. UAT shares the **dev** Supabase project for now
-(`docs/decisions/2026-11-05-uat-shares-the-dev-database.md`), so its build is
-badged UAT by a pin (`NEXT_PUBLIC_APP_ENV=uat`, set by `scripts/deploy.mjs`).
+`lannacare.org` is UAT. UAT has its **own** Supabase project (`fsjagxmxjosauwmxwype`, in a second
+Supabase account; `docs/decisions/2026-11-06-uat-own-database.md`), so its
+build is badged UAT by that project alone. Until its data is loaded UAT is a
+code-ready but empty database.
 
 | | Dev | Test | UAT | Production |
 |---|---|---|---|---|
 | Where | `next dev` on your machine | `test.lannacare.org` (served by the Pi from its own clone once `ORIGIN_KEY` and the WAF rule are in place, `docs/pi-hosting.md`) | `lannacare.org`, `www.lannacare.org` — for good | `lannacareforanimals.org`, `www.lannacareforanimals.org` |
 | Worker | — | `lanna-animal-care-test` | `lanna-animal-care-uat` | `lanna-animal-care` |
-| Database | dev Supabase project (`qxkmhwybjggxvsfxsxbd`) | **the same dev project** | **the dev project** (a stopgap: no free Supabase slot) | `dbkodyyxxhtygxcxmfcu` |
+| Database | dev Supabase project (`qxkmhwybjggxvsfxsxbd`) | **the same dev project** | `fsjagxmxjosauwmxwype` (own project, second Supabase account) | `dbkodyyxxhtygxcxmfcu` |
 | Google Drive | dev account | dev account | dev account (the current tree) | dev account, until the shelter's own account exists |
 | Values from | `.env.local` | `.env.local` | `.env.deploy.uat` over `.env.local` | `.env.deploy.production` over `.env.local` |
 | Deploy | — | `npm run deploy:test` | `npm run deploy:uat` | `npm run deploy:prod` |
