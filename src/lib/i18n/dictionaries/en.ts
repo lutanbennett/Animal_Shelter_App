@@ -5253,6 +5253,12 @@ const en = {
     },
   },
   reels: {
+    hub: {
+      title: "Reels",
+      none: "No reels feature this resident yet.",
+      open: "Open the reels",
+      more: (n: number) => `and ${n} more`,
+    },
     title: "Reels",
     intro: "The shelter's reels: short videos kept here to post on Facebook, each with a description whose #tags name the animals in it. Never shown on the website.",
     add: "Add a reel",

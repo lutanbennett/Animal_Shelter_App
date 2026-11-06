@@ -78,6 +78,26 @@ async function attach(supabase: SupabaseClient, rows: ReelRow[]): Promise<ReelDe
   });
 }
 
+/**
+ * The reels featuring one resident, newest date taken first, for the resident's page. Only for a login holding social.library at
+ * Read: the page asks canBrowseReels() before calling this, and RLS would answer nothing anyway (reel_residents_select_perm).
+ * Shaped like loadResidentMemes in src/lib/memes/queries.ts.
+ */
+export async function loadResidentReels(supabase: SupabaseClient, residentId: string): Promise<ReelSummary[]> {
+  const { data: links } = await supabase.from("reel_residents").select("reel_id").eq("resident_id", residentId).returns<{ reel_id: string }[]>();
+  const ids = (links ?? []).map((l) => l.reel_id);
+  if (ids.length === 0) return [];
+  const { data } = await supabase
+    .from("reels")
+    .select(REEL_COLUMNS)
+    .in("id", ids)
+    .eq("archived", false)
+    .order("date_taken", { ascending: false })
+    .order("created_at", { ascending: false })
+    .returns<ReelRow[]>();
+  return attach(supabase, data ?? []);
+}
+
 /** Every reel that is not archived, newest date taken first. Filtering happens in the page: the library is small. */
 export async function loadReels(supabase: SupabaseClient): Promise<{ reels: ReelDetail[]; error: string | null }> {
   const { data, error } = await supabase
