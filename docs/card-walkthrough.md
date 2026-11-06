@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-52 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+50 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -300,7 +300,9 @@ Result: pending
 1. Open `/bills`: it loads.
 2. **TODO:** Add and see a maintenance job's bills and costs. Do it on a disposable record named `walk-bills`. Question: where should this write show afterwards (which page, which row)?
 3. **See:** Maintenance jobs: log, change, assign, cost (read only). Confirm it is visible, and that no add, edit or save control is offered for it.
-4. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+4. **TODO:** Add and see utility bills. Do it on a disposable record named `walk-bills`. Question: where should this write show afterwards (which page, which row)?
+5. **TODO:** Add and see general bills. Do it on a disposable record named `walk-bills`. Question: where should this write show afterwards (which page, which row)?
+6. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 
@@ -602,28 +604,6 @@ Result: pending
 0. Sign in with `--cards correct_intake_date`. The home screen shows the **Correct an intake date** tile (or the tile of a card that includes it).
 1. Open `/admin/intake-date`: it loads.
 2. **TODO:** Correct a resident's intake date. Do it on a disposable record named `walk-correct_intake_date`. Question: where should this write show afterwards (which page, which row)?
-3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
-
-Result: pending
-
-## Add utility bills (`utility_bills`)
-
-- Opens: `/bills/utilities`
-
-0. Sign in with `--cards utility_bills`. The home screen shows the **Add utility bills** tile (or the tile of a card that includes it).
-1. Open `/bills/utilities`: it loads.
-2. **TODO:** Add and see utility bills. Do it on a disposable record named `walk-utility_bills`. Question: where should this write show afterwards (which page, which row)?
-3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
-
-Result: pending
-
-## Add other bills (`general_bills`)
-
-- Opens: `/bills`
-
-0. Sign in with `--cards general_bills`. The home screen shows the **Add other bills** tile (or the tile of a card that includes it).
-1. Open `/bills`: it loads.
-2. **TODO:** Add and see general bills. Do it on a disposable record named `walk-general_bills`. Question: where should this write show afterwards (which page, which row)?
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
