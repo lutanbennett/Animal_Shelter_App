@@ -173,7 +173,8 @@ for (const r of ROUTES) {
   eq(`E ${r.path} has a page.tsx`, exists, true);
   if (!exists) continue;
   const text = readFileSync(page, "utf8");
-  const level = r.level ? `,\\s*"${r.level}"` : "";
+  // No registry level means Edit, which a page may now state outright (2026-11-06) instead of taking the default.
+  const level = r.level ? `,\\s*"${r.level}"` : `(?:,\\s*"edit")?`;
   if (r.alsoActivity) {
     // Two activities open the page: it must guard with requireAnyPermission naming both.
     const named = /requireAnyPermission\(\s*\[([^\]]*)\]/.exec(text)?.[1] ?? "";
@@ -211,37 +212,37 @@ const FULL = "requireFullResident()";
 const PINNED = {
   // Add and edit pages under a registered list. Every one writes, so every one is at Edit.
   "/residents/new": { guards: ['requirePermission("resident.register")'], decides: [] },
-  "/weight/new": { guards: ['requirePermission("medical.weight")'], decides: [] },
+  "/weight/new": { guards: ['requirePermission("medical.weight", "edit")'], decides: [] },
   "/weight/[id]/edit": {
-    guards: ['requirePermission("medical.weight")'],
+    guards: ['requirePermission("medical.weight", "edit")'],
     decides: [],
   },
-  "/prescriptions/new": { guards: ['requirePermission("medical.prescriptions")'], decides: [] },
+  "/prescriptions/new": { guards: ['requirePermission("medical.prescriptions", "edit")'], decides: [] },
   "/prescriptions/[id]/edit": {
-    guards: ['requirePermission("medical.prescriptions")'],
+    guards: ['requirePermission("medical.prescriptions", "edit")'],
     decides: [],
   },
-  "/procedures/new": { guards: ['requirePermission("medical.procedures")'], decides: ["resident.microchip"] },
-  "/blood-tests/new": { guards: ['requirePermission("medical.blood_tests")'], decides: [] },
-  "/immunizations/new": { guards: ['requirePermission("medical.immunizations")'], decides: [] },
-  "/diets/new": { guards: ['requirePermission("medical.diet")'], decides: [] },
+  "/procedures/new": { guards: ['requirePermission("medical.procedures", "edit")'], decides: ["resident.microchip"] },
+  "/blood-tests/new": { guards: ['requirePermission("medical.blood_tests", "edit")'], decides: [] },
+  "/immunizations/new": { guards: ['requirePermission("medical.immunizations", "edit")'], decides: [] },
+  "/diets/new": { guards: ['requirePermission("medical.diet", "edit")'], decides: [] },
   "/diets/[id]/edit": {
-    guards: ['requirePermission("medical.diet")'],
+    guards: ['requirePermission("medical.diet", "edit")'],
     decides: [],
   },
   "/clinic-visits/new": { guards: ['requirePermission("visit.book")'], decides: ["clinics.doctors"] },
   // The read-only record of a visit: opens at Read (a dead resident's too); every control that writes asks can(... edit).
   "/clinic-visits/[id]": { guards: ['requirePermission("medical.visits", "read")'], decides: ["medical.visits", "medical.blood_tests", "medical.prescriptions", "medical.weight", "medical.procedures"] },
   "/clinic-visits/[id]/edit": {
-    guards: ['requirePermission("medical.visits")'],
+    guards: ['requirePermission("medical.visits", "edit")'],
     decides: ["clinics.doctors", "medical.visits", "resident.microchip"],
   },
-  "/outreach/new": { guards: ['requirePermission("community.outings")'], decides: [] },
-  "/outreach/[id]/edit": { guards: ['requirePermission("community.outings")'], decides: ["social.library"] },
+  "/outreach/new": { guards: ['requirePermission("community.outings", "edit")'], decides: [] },
+  "/outreach/[id]/edit": { guards: ['requirePermission("community.outings", "edit")'], decides: ["social.library"] },
   "/management/donations/new": { guards: ['requirePermission("donation.receipt")'], decides: [] },
-  "/management/contacts/new": { guards: ['requirePermission("contacts.directory")'], decides: [] },
+  "/management/contacts/new": { guards: ['requirePermission("contacts.directory", "edit")'], decides: [] },
   "/management/shelter-friends/new": { guards: ['requirePermission("friends.manage")'], decides: [] },
-  "/management/cashflow/fixed-outgoings": { guards: ['requirePermission("reports.cashflow")'], decides: [] },
+  "/management/cashflow/fixed-outgoings": { guards: ['requirePermission("reports.cashflow", "edit")'], decides: [] },
   "/management/clinics/[id]/doctors": { guards: ['requirePermission("clinics.doctors")'], decides: [] },
   // Maintenance opens its add and edit pages at Read on purpose and shows a reader "read only"
   // instead of the form: the form is behind the body's can(perms, "maintenance.jobs") (Edit).
@@ -259,8 +260,8 @@ const PINNED = {
   "/management/donations/donors/new": { guards: ['requirePermission("donation.receipt")'], decides: [] },
   "/management/donations/donors/[id]": { guards: ['requirePermission("donation.receipt")'], decides: [] },
   // Sponsorship drives (0210). The gifts on an appeal's page are read only by a login that may also read donations.
-  "/management/sterilisation-drives/new": { guards: ['requirePermission("website.content")'], decides: [] },
-  "/management/sterilisation-drives/[id]": { guards: ['requirePermission("website.content")'], decides: [] },
+  "/management/sterilisation-drives/new": { guards: ['requirePermission("website.content", "edit")'], decides: [] },
+  "/management/sterilisation-drives/[id]": { guards: ['requirePermission("website.content", "edit")'], decides: [] },
   "/management/campaigns/new": { guards: ['requirePermission("appeal.run")'], decides: [] },
   "/management/campaigns/[id]": { guards: ['requirePermission("appeal.run")'], decides: ["appeal.medical_photo", "donation.receipt"] },
   "/management/campaigns/[id]/preview": { guards: ['requirePermission("appeal.run")'], decides: ["donation.receipt"] },
@@ -268,14 +269,14 @@ const PINNED = {
   "/management/events/new": { guards: ['requirePermission("events.run")'], decides: [] },
   "/management/events/[id]": { guards: ['requirePermission("events.run")'], decides: [] },
   // The meme library (0223). A meme's page opens at the list's Read; Record a share, Edit and Archive ask Edit in the body.
-  "/memes/new": { guards: ['requirePermission("social.library")'], decides: [] },
-  "/memes/make": { guards: ['requirePermission("social.library")'], decides: [] },
+  "/memes/new": { guards: ['requirePermission("social.library", "edit")'], decides: [] },
+  "/memes/make": { guards: ['requirePermission("social.library", "edit")'], decides: [] },
   "/memes/[id]": { guards: ['requirePermission("social.library", "read")'], decides: ["social.library", "social.library_manage"] },
-  "/memes/[id]/edit": { guards: ['requirePermission("social.library")'], decides: [] },
+  "/memes/[id]/edit": { guards: ['requirePermission("social.library", "edit")'], decides: [] },
   // The reels library (0322): same shape as the memes above, plus the # picker, which is drawn only with resident.record at Read (the activity its own search asks).
-  "/reels/new": { guards: ['requirePermission("social.library")'], decides: ["resident.record:read"] },
+  "/reels/new": { guards: ['requirePermission("social.library", "edit")'], decides: ["resident.record:read"] },
   "/reels/[id]": { guards: ['requirePermission("social.library", "read")'], decides: ["social.library"] },
-  "/reels/[id]/edit": { guards: ['requirePermission("social.library")'], decides: ["resident.record:read"] },
+  "/reels/[id]/edit": { guards: ['requirePermission("social.library", "edit")'], decides: ["resident.record:read"] },
 
   // The resident's own pages. requireFullResident() is resident.record at Read plus "not a
   // who-and-where login" (0134); the decision that matters, may this person do the thing, is the
@@ -348,9 +349,9 @@ const PINNED = {
   "/admin/who-does-what/details": { guards: ["if (!opensWhoDoesWhat(perms)) refuseFor(perms)"], decides: [] },
   "/admin/who-does-what/features": { guards: ["if (!opensWhoDoesWhat(perms)) refuseFor(perms)"], decides: [] },
   // Settings → Diets, the recipe book (diets-recipe-book): the same two guards as /admin/diets, one per screen.
-  "/admin/diets/[id]": { guards: ['requirePermission("reference.types")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },
-  "/admin/diets/ingredients": { guards: ['requirePermission("reference.types")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },
-  "/admin/diets/ingredients/[id]": { guards: ['requirePermission("reference.types")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },
+  "/admin/diets/[id]": { guards: ['requirePermission("reference.types", "edit")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },
+  "/admin/diets/ingredients": { guards: ['requirePermission("reference.types", "edit")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },
+  "/admin/diets/ingredients/[id]": { guards: ['requirePermission("reference.types", "edit")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },
   // Settings → Website → Pages → Edit: one public page's wording and the photo beside its heading,
   // on a page of its own rather than the popup the Pages tab used to open. Reached only from that
   // tab, so it carries the same guard as /admin/website; its controls ask website.content (the page
