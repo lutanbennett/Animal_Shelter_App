@@ -70,6 +70,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "There are two new permission cards for the meme library. Add and change memes lets someone add a meme, change its words and residents, and record where it was posted, but not archive it or take a post record off. Browse memes only lets someone look. Archiving a meme, and removing a post record, now need the Meme library card; the database enforces it too. The Thai wording has not been checked by a Thai speaker.",
+    cards: ["meme_add", "meme_view", "meme_library"],
+  },
 ];
 
 /** Newest first. */
@@ -111,10 +115,6 @@ export const releases: Release[] = [
       {
         text: "There is a new permission card, Look after project folders. It lets someone add, rename, move and delete project folders and write their stories, without being able to add photos or publish. Until now those controls only worked for an administrator, which was an oversight rather than a decision.",
         cards: ["who_does_what"],
-      },
-      {
-        text: "There are two new permission cards for the meme library. Add and change memes lets someone add a meme, change its words and residents, and record where it was posted, but not archive it or take a post record off. Browse memes only lets someone look. Archiving a meme, and removing a post record, now need the Meme library card; the database enforces it too. The Thai wording has not been checked by a Thai speaker.",
-        cards: ["meme_add", "meme_view", "meme_library"],
       },
     ],
   },
