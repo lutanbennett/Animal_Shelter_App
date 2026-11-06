@@ -115,6 +115,7 @@ export default async function NewBloodTestPage(
       <BloodTestForm
         residentId={residentId}
         residentDisplayName={displayName}
+        closedRecord={closedRecord}
         bloodTestTypes={(typesResult.data ?? []).map(({ name_th, ...type }) => ({
           ...type,
           name: localLabel(locale, type.name, name_th),
