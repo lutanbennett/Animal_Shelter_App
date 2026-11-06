@@ -529,6 +529,10 @@
       "gates": "A shared secret between the Worker and the app for cron-only routes (calendar sweep, status alerts)."
     },
     {
+      "name": "STATUS_READ_TOKEN",
+      "gates": "A read-only bearer token for the GET /api/status/health feed Home Assistant polls. It can read system health numbers and nothing else; not a role or card rule, and never the service-role key."
+    },
+    {
       "name": "NEXT_PUBLIC_SITE_URL",
       "gates": "The public site's address for links and sitemaps."
     },

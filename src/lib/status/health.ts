@@ -395,6 +395,18 @@ export async function checkCronJobs(): Promise<CheckOutcome<CronJobsFacts>> {
   return { state: jobs.some((j) => j.problem) ? "warn" : "ok", facts };
 }
 
+/** Database size and open connections (database_health(), 0324) for the health feed; null when unreadable. */
+export async function readDatabaseHealth(): Promise<{ sizeBytes: number; connections: number } | null> {
+  try {
+    const { data, error } = await createAdminClient().rpc("database_health");
+    const row = Array.isArray(data) ? data[0] : null;
+    if (error || !row) return null;
+    return { sizeBytes: Number(row.size_bytes), connections: Number(row.connections) };
+  } catch {
+    return null;
+  }
+}
+
 export type HealthReport = {
   cronJobs: CheckResult<CronJobsFacts>;
   database: CheckResult<DatabaseFacts>;
