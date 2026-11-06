@@ -87,6 +87,8 @@ leftovers to `done` — but only if `held` says `free`. A `HELD` worktree
 has a session or a process in it; name it and ask rather than tearing it
 down. List any husks it prints so the user can clear them.
 
+Then `gh pr list --state open` and **name every open PR this session did not open** (a Dependabot bump above all: no stream owns it, so nothing else will ever look). Each gets a line in the plan with its age; `CLAUDE.md`, "A bot pull request", says whether it is merged or read first.
+
 **Capture the actuals now — from the PR first.** Since 2026-10-28 each feature stream posts one
 `stream-usage:` comment on its own PR just before it merges (`CLAUDE.md`, merge train step 4;
 fields: `slug tokens messages model effort started merged compacted rescoped finished`). For each
