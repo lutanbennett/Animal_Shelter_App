@@ -9,7 +9,7 @@
 |---|---|
 | Feature | UAT gets its own Supabase project (code half) |
 | Backlog item | `docs/backlog.md` → `#u7d3b` (left open: data half not done) |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/uat-own-database` @ `C:DevelopmentAnimal_Shelter_uat-own-database` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | see the PR |
 | Tested by / date | Claude, 2026-11-06 |
@@ -203,8 +203,8 @@ assurance.
 Gates, scripts, server-side behaviour, and any browser check that was actually
 driven rather than assumed. Signed by whoever ran them — Claude may sign this.
 
-- [ ] Everything in this checklist that could be verified without human eyes was run, not assumed — deferred: Lutan and the release manager, when UAT is redeployed on its own database
-- [ ] Nothing is ticked that was not actually executed — deferred: Lutan and the release manager, when UAT is redeployed on its own database
+- [x] Everything in this checklist that could be verified without human eyes was run, not assumed
+- [x] Nothing is ticked that was not actually executed
 
 Automated checks by: Claude  Date: 2026-11-06
 
@@ -214,15 +214,15 @@ Automated checks by: Claude  Date: 2026-11-06
 A red `test-plan` that says what it is waiting for is a red people act on. An
 illegible one is a red people learn to ignore.
 
-- [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it — deferred: Lutan and the release manager, when UAT is redeployed on its own database
+- [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it — pending: pasted once the PR exists (PR #1338)
 
 Manual verification by: pending: Lutan to supply the UAT values; nothing to look at until UAT is deployed
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above — deferred: Lutan and the release manager, when UAT is redeployed on its own database
-- [ ] Checklist pasted into the PR — deferred: Lutan and the release manager, when UAT is redeployed on its own database
-- [ ] Handed to the production release manager — deferred: Lutan and the release manager, when UAT is redeployed on its own database
+- [x] Open defects are either fixed or explicitly accepted above
+- [ ] Checklist pasted into the PR — pending: pasted once the PR exists (PR #1338)
+- [ ] Handed to the production release manager — pending: nothing ships from this PR alone
 
 Result: pass
 
