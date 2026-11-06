@@ -12,7 +12,7 @@ import {
 export default async function NewBloodTestPage(
   props: PageProps<"/blood-tests/new">,
 ) {
-  await requirePermission("medical.blood_tests");
+  await requirePermission("medical.blood_tests", "edit");
   const searchParams = await props.searchParams;
   const { t, locale } = await getT();
 

@@ -14,7 +14,7 @@ import { OutingPhotos } from "./OutingPhotos";
 export default async function EditOutingPage(props: PageProps<"/outreach/[id]/edit">) {
   const { id } = await props.params;
   const { t } = await getT();
-  const { supabase, perms } = await requirePermission("community.outings");
+  const { supabase, perms } = await requirePermission("community.outings", "edit");
 
   const [outing, photos, { places }] = await Promise.all([
     loadOuting(supabase, id),

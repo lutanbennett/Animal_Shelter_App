@@ -8,7 +8,7 @@ import {
 import { requirePermission } from "@/lib/permissions/require";
 
 export default async function BloodTestTypesPage() {
-  await requirePermission("reference.types");
+  await requirePermission("reference.types", "edit");
   const { t } = await getT();
 
   const supabase = await createClient();

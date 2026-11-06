@@ -27,7 +27,7 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
   const { photo, resident, source: sourceParam } = await props.searchParams;
   const photoId = typeof photo === "string" ? photo : "";
   const residentId = typeof resident === "string" ? resident : "";
-  const { supabase, perms } = await requirePermission("social.library");
+  const { supabase, perms } = await requirePermission("social.library", "edit");
   const { t, locale } = await getT();
   const m = t.memes.maker;
 

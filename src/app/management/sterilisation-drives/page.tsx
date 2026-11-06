@@ -20,7 +20,7 @@ type DriveRow = {
  * as the rest of the public site's content).
  */
 export default async function DesexingDrivesAdminPage() {
-  const { supabase } = await requirePermission("website.content");
+  const { supabase } = await requirePermission("website.content", "edit");
   const { t, locale } = await getT();
   const a = t.desexingAdmin;
 

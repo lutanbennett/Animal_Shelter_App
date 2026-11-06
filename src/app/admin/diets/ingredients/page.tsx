@@ -12,7 +12,7 @@ import { DietTabs } from "../DietTabs";
 
 /** Settings → Diets, the ingredients tab: what is bought and counted. Tap one for its own page. */
 export default async function IngredientsPage() {
-  const { supabase, perms } = await requirePermission("reference.types");
+  const { supabase, perms } = await requirePermission("reference.types", "edit");
   if (!canEditItemSettings(perms, "diet")) refuseFor(perms);
   const { t } = await getT();
   const book = await loadRecipeBook(supabase);

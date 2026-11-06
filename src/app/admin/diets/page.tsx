@@ -20,7 +20,7 @@ import { DietTabs } from "./DietTabs";
  * Admin only (item-settings.ts). Built for a phone first: the Director opens it there.
  */
 export default async function DietSettingsPage() {
-  const { supabase, perms } = await requirePermission("reference.types");
+  const { supabase, perms } = await requirePermission("reference.types", "edit");
   if (!canEditItemSettings(perms, "diet")) refuseFor(perms);
   const { t } = await getT();
   const book = await loadRecipeBook(supabase);

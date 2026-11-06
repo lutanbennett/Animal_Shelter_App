@@ -18,7 +18,7 @@ import { loadTagsForNote } from "@/lib/note-tags/sync";
 export default async function EditPrescriptionPage(
   props: PageProps<"/prescriptions/[id]/edit">,
 ) {
-  const { perms } = await requirePermission("medical.prescriptions");
+  const { perms } = await requirePermission("medical.prescriptions", "edit");
   const { id } = await props.params;
   const { t, locale } = await getT();
   const supabase = await createClient();

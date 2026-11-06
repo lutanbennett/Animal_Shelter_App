@@ -18,7 +18,7 @@ import {
  * the visit and defaults the date to it) — same shape as /weight/new.
  */
 export default async function NewProcedurePage(props: PageProps<"/procedures/new">) {
-  await requirePermission("medical.procedures");
+  await requirePermission("medical.procedures", "edit");
   const searchParams = await props.searchParams;
   const { t, locale } = await getT();
 

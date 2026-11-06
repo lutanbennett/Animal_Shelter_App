@@ -29,7 +29,7 @@ import { BackLink } from "@/components/BackLink";
  * docs/decisions/2026-10-16-weigh-these-first.md.
  */
 export default async function RecordWeightPage(props: PageProps<"/medical/weight">) {
-  await requirePermission("medical.weight");
+  await requirePermission("medical.weight", "edit");
   const { t, locale } = await getT();
   const w = t.medicalJobs.weight;
   const sp = await props.searchParams;

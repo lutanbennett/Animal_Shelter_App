@@ -11,7 +11,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** Edit a meme's words, tags and residents. The image is fixed: a different picture is a different meme. */
 export default async function EditMemePage(props: PageProps<"/memes/[id]/edit">) {
   const { id } = await props.params;
-  const { supabase } = await requirePermission("social.library");
+  const { supabase } = await requirePermission("social.library", "edit");
   if (!UUID.test(id)) notFound();
   const { t } = await getT();
   const [meme, { data, error }] = await Promise.all([

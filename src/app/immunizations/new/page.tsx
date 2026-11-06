@@ -16,7 +16,7 @@ import {
 export default async function NewImmunizationPage(
   props: PageProps<"/immunizations/new">,
 ) {
-  const { perms } = await requirePermission("medical.immunizations");
+  const { perms } = await requirePermission("medical.immunizations", "edit");
   const searchParams = await props.searchParams;
   const { t, locale } = await getT();
 

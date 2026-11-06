@@ -14,7 +14,7 @@ import { UnitsTable, type UnitTableRow } from "./UnitsTable";
  * settings are (item-settings.ts); the table's write policy asks the same.
  */
 export default async function UnitsPage() {
-  const { supabase, perms } = await requirePermission("reference.types");
+  const { supabase, perms } = await requirePermission("reference.types", "edit");
   if (!canEditItemSettings(perms, "diet") && !canEditItemSettings(perms, "medication")) refuseFor(perms);
   const { t } = await getT();
 

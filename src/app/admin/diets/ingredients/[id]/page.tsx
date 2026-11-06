@@ -10,7 +10,7 @@ import { IngredientDetail, type UsedBy } from "../../IngredientDetail";
 /** One ingredient's page: its details, the ways it is measured (a cup, a bag…), and the diets that use it. */
 export default async function IngredientPage(props: PageProps<"/admin/diets/ingredients/[id]">) {
   const { id } = await props.params;
-  const { supabase, perms } = await requirePermission("reference.types");
+  const { supabase, perms } = await requirePermission("reference.types", "edit");
   if (!canEditItemSettings(perms, "diet")) refuseFor(perms);
   const { t } = await getT();
   const book = await loadRecipeBook(supabase);
