@@ -35,6 +35,7 @@ export const READBACK = {
   "visit.book": "the visit shows on that resident's page and in the shelter's list of visits (/upcoming-visits)",
   "maintenance.progress": "the job sits in its new column on /maintenance after a reload",
   "maintenance.jobs": "the job is on /maintenance (and on /my once assigned); status is changed on /maintenance/<id>, and assignee, zone, due date and the Estimated / Actual cost on /maintenance/<id>/edit (the cost reads back on the job page). No delete control is offered to this card",
+  "projects.folders": "the folder appears (or reads its new name, place or story) on /projects and inside its parent folder after the save; Delete removes it from both. Putting it on the public website needs projects.publish and adding photos needs projects.photos, which this card does not give",
   "maintenance.photos": "the job page /maintenance/<id> counts the photo under Before (the problem as found) or After (the finished work)",
   "assistant.ask": "the answer shows in the assistant panel opened by the Assistant button in the header, and writes no row to any page",
   "assistant.record": "ask it to record a weight for the disposable resident, then press Confirm on the card it shows. The weight really appears on that resident's Weight page (/residents/<id>/weight), and Cancel writes nothing. A weight and an immunization skip the confirm step and are written straight away (#1129), so for those the read-back is the reply naming the date it used (0295 is what makes any of this reach the database for a card-only login)",
@@ -97,7 +98,7 @@ export const PAGE_STEPS = {
     "Open `/management/sterilisation-drives`: it loads (website.content at edit). Start a drive, open one, and the signup controls are offered; every action asks website.content at edit.",
   ],
   donations_receipts: [
-    "Open `/projects`: it loads (projects.folders at read). Confirm the twelve category folders show, the \"read only\" note shows, and NO New folder, Rename, Move or Delete control is offered. No card in the catalogue gives projects.folders at edit today, so the write side of this page has no card to walk.",
+    "Open `/projects`: it loads (projects.folders at read). Confirm the twelve category folders show, the \"read only\" note shows, and NO New folder, Rename, Move or Delete control is offered. The write side of this page is walked under Look after project folders (`project_folders`).",
   ],
 };
 
