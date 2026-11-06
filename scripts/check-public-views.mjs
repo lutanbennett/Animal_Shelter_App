@@ -284,7 +284,7 @@ for (const [method, body] of [["GET"], ["POST", {}], ["PATCH", {}], ["DELETE"]])
 // The social media library (0223). A meme can be made from a medical or sad photo, with a joke that needs context,
 // and a share records where it was posted. None of it is ever public, so anon is refused every method on all three
 // tables, and no public view may carry a meme or a share column (a 2xx on a missing column would be the leak).
-for (const table of ["memes", "meme_residents", "social_shares"]) {
+for (const table of ["memes", "meme_residents", "social_shares", "reels", "reel_residents"]) {
   for (const [method, body] of [["GET"], ["POST", {}], ["PATCH", {}], ["DELETE"]]) {
     const call = await fetch(`${url}/rest/v1/${table}${method === "GET" ? "?select=id&limit=1" : `?${noRow}`}`, {
       method,
