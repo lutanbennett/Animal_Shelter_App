@@ -1,5 +1,6 @@
 import { BackLink } from "@/components/BackLink";
 import { getT } from "@/lib/i18n/get-t";
+import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 import { loadLinkChoices } from "@/lib/events/staff";
 import type { EventFields } from "@/lib/events/form";
@@ -7,7 +8,7 @@ import { EventForm } from "../EventForm";
 
 /** Management → Events → Add an event. Saving makes an unpublished event and opens it to add photos and publish. */
 export default async function NewEventPage() {
-  const { supabase } = await requirePermission("events.run");
+  const { supabase, perms } = await requirePermission("events.run");
   const { t } = await getT();
   const a = t.eventsAdmin;
   const { appeals, projects } = await loadLinkChoices(supabase);
@@ -31,7 +32,7 @@ export default async function NewEventPage() {
         <h1 className="text-2xl font-semibold text-foreground">{a.form.newTitle}</h1>
         <p className="text-sm text-muted">{a.form.newSubtitle}</p>
       </div>
-      <EventForm mode="new" initial={initial} published={false} appeals={appeals} projects={projects} />
+      <EventForm mode="new" initial={initial} published={false} appeals={appeals} projects={projects} canSeeAppeals={can(perms, "appeal.run")} canSeeProjects={can(perms, "projects.folders", "read")} />
     </main>
   );
 }

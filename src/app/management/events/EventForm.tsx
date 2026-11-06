@@ -32,6 +32,9 @@ export function EventForm({
   published: boolean;
   appeals: { id: string; title: string }[];
   projects: { id: string; name: string }[];
+  /** Whether this login may read campaigns / project folders. False means the list above is short because of access, not because there is nothing to choose. */
+  canSeeAppeals: boolean;
+  canSeeProjects: boolean;
 }) {
   const { t } = useI18n();
   const f = t.eventsAdmin.form;
@@ -126,6 +129,7 @@ export function EventForm({
             ))}
           </select>
           <span className={hintClass}>{f.appealHint}</span>
+          {!canSeeAppeals && <span role="note" className={hintClass}>{f.appealNoAccess}</span>}
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="ev-project" className={labelClass}>{f.project}</label>
@@ -136,6 +140,7 @@ export function EventForm({
             ))}
           </select>
           <span className={hintClass}>{f.projectHint}</span>
+          {!canSeeProjects && <span role="note" className={hintClass}>{f.projectNoAccess}</span>}
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="ev-links" className={labelClass}>{f.links}</label>
