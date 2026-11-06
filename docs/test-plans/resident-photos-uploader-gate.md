@@ -88,7 +88,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [x] Backlog items #q8h4v and #r6v8k ticked on this branch
 - [x] Decision file docs/decisions/2026-11-06-resident-photos-uploader-gate.md
 - [ ] README.md — n/a: nothing in it describes these controls
-- [x] **Release notes.** Two lines added to `unreleased`; the caption note says it shows once the Private only answer is live
+- [ ] **Release notes.** n/a: the lines were added to unreleased in this feature's own PR; this PR only fixed a filename citation
 - [x] Commit messages say why
 - [x] Claims were read from source (route.ts lines quoted), not reasoned
 
