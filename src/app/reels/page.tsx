@@ -9,7 +9,7 @@ import { ReelLibrary } from "./ReelLibrary";
 /**
  * The reels library (0322): every reel that is not archived, newest date taken first, with where each has been
  * posted. Opens at social.library Read; Add a reel shows at Edit, the activity the upload routes and the reels write
- * policy ask. Never public: the video plays through /api/reels/[id]/video, which asks the reels table as the caller.
+ * policy ask. Never public: the video plays through /api/videos/[fileId], which asks can_see_drive_file() (0324 lists reels).
  * docs/decisions/2026-11-06-reels-app.md.
  */
 export default async function ReelsPage() {

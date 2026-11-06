@@ -205,6 +205,7 @@ export function ResidentHub({
   photoCount,
   appeals,
   memes,
+  reels,
   adoptionUpdates,
   now,
   tagOrigin,
@@ -261,6 +262,7 @@ export function ResidentHub({
   appeals: { count: number; latestId: string | null; latestStatus: AppealStatus | null } | null;
   /** Memes featuring this resident (0223), newest first; null when this login may not browse the library. */
   memes: { id: string; drive_file_id: string; title: string; platforms: Platform[] }[] | null;
+  reels: { id: string; description: string; date_taken: string; platforms: Platform[] }[] | null;
   adoptionUpdates: AdoptionUpdatesSummary;
   /** Tagged residents in this resident's own notes, by column (behaviour_notes, ...). */
   noteTags: Record<string, NoteTag[]>;
@@ -842,6 +844,35 @@ export function ResidentHub({
                 </ul>
               )}
               {memes.length > 6 && <p className="text-xs text-muted">{t.memes.hub.more(memes.length - 6)}</p>}
+            </div>
+          )}
+
+          {/* The reels this resident is in (0322): like the memes above, only when the server handed a list. A reel has
+              no still image, so it is listed as the first line of its description and its date. */}
+          {reels && (
+            <div className="flex flex-col gap-2 rounded border border-border bg-surface p-4">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-base font-semibold text-foreground">{t.reels.hub.title}</h3>
+                <Link href="/reels" className="text-sm font-medium text-primary hover:underline">
+                  {t.reels.hub.open}
+                </Link>
+              </div>
+              {reels.length === 0 ? (
+                <p className="text-sm text-muted">{t.reels.hub.none}</p>
+              ) : (
+                <ul className="flex flex-col gap-1">
+                  {reels.slice(0, 6).map((reel) => (
+                    <li key={reel.id}>
+                      <Link href={`/reels/${reel.id}`} className="flex flex-col gap-0.5 rounded focus:outline-none focus:ring-2 focus:ring-primary/40">
+                        <span className="line-clamp-1 text-sm text-foreground">{reel.description.split("\n")[0] || formatDate(reel.date_taken, locale)}</span>
+                        <span className="text-xs text-muted">{formatDate(reel.date_taken, locale)}</span>
+                        <SharedOn platforms={reel.platforms} names={t.memes.platforms} notSharedYet={t.memes.notSharedYet} sharedOn={t.memes.sharedOn} />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {reels.length > 6 && <p className="text-xs text-muted">{t.reels.hub.more(reels.length - 6)}</p>}
             </div>
           )}
         </section>
