@@ -159,6 +159,7 @@ const en = {
     events: "Fundraising events",
     desexingDrives: "Sterilisation drives",
     memes: "Memes",
+    reels: "Reels",
     manual: "User manual",
     releaseNotes: "Release notes",
     publicSite: "Public website",
@@ -361,7 +362,7 @@ const en = {
     shortName: "LCA",
     getInvolved: "Get involved",
     /**
-     * The shelter's services to the public. Desexing drives are its first entry.
+     * The shelter's services to the public. Sterilisation drives are its first entry.
      */
     services: "Services",
     /** Adopt → /adopt, the listing, beside International adoption. */
@@ -5251,6 +5252,85 @@ const en = {
       open: "Open the library",
     },
   },
+  reels: {
+    title: "Reels",
+    intro: "The shelter's reels: short videos kept here to post on Facebook, each with a description whose #tags name the animals in it. Never shown on the website.",
+    add: "Add a reel",
+    notPostedYet: "Not posted yet",
+    postedOn: (places: string) => `Posted on ${places}`,
+    search: "Search descriptions and #tags",
+    count: (n: number) => (n === 1 ? "1 reel" : `${n} reels`),
+    empty: "No reels yet. Tap Add a reel to file the first one.",
+    noMatch: "No reel matches these filters.",
+    archivedBadge: "Archived",
+    play: "Play",
+    noDescription: "No description",
+    filters: {
+      resident: "Resident",
+      anyResident: "Any resident",
+      tag: "Hashtag",
+      anyTag: "Any hashtag",
+      platform: "Posted on",
+      anyPlatform: "Anywhere or nowhere",
+      notPostedYet: "Not posted yet",
+      clear: "Clear filters",
+    },
+    errors: {
+      notAllowed: "Your cards do not let you change the reels library.",
+      driveNotConfigured: "Google Drive is not set up on this server. That is a server setting no card can change, so tell whoever looks after the server.",
+    },
+    form: {
+      newTitle: "Add a reel",
+      editTitle: "Edit reel",
+      video: "Video",
+      chooseVideo: "Choose from phone or photo library",
+      changeVideo: "Choose a different video",
+      videoHint: "An MP4 or iPhone video (MOV), up to 500 MB. It goes straight to Google Drive, so a long clip can take a few minutes.",
+      description: "Description",
+      descriptionHint: "The words you post with it. Type # and a name to tag an animal; any other #word is kept as a hashtag.",
+      dateTaken: "Date taken",
+      dateTakenHint: "The day it was filmed. It is not read from the file, so check it.",
+      save: "Save reel",
+      saving: "Saving…",
+      uploading: (percent: number) => `Sending the video… ${percent}%`,
+      retrying: "The connection dropped. Trying again…",
+      cancel: "Cancel",
+      saved: "Reel saved.",
+      linksFailed: "The reel is saved, but the animals you tagged could not be linked. Open it and tap Edit to tag them again.",
+      errors: {
+        descriptionLong: "The description is too long (2,000 characters at most).",
+        dateTaken: "Enter the date it was taken.",
+        noFile: "Choose a video first.",
+        saveFailed: "The reel could not be saved. Try again.",
+        notFound: "That reel is no longer here.",
+      },
+    },
+    page: {
+      back: "Back to the reels",
+      dateTaken: (when: string) => `Taken ${when}`,
+      addedOn: (when: string) => `Added ${when}`,
+      residents: "Animals in it",
+      noResidents: "No animal is tagged.",
+      tags: "Hashtags",
+      noTags: "No other hashtags.",
+      description: "Description",
+      posts: "Where it has been posted",
+      noPosts: "Not posted anywhere yet.",
+      recordPost: "Record where it was posted",
+      download: "Download",
+      downloadHint: "Saves the video to your phone so you can post it.",
+      edit: "Edit",
+      archive: "Archive",
+      archiveConfirmTitle: "Archive this reel?",
+      archiveConfirmBody: "It leaves the library. Where it was posted is kept, and it can be brought back from its own page.",
+      archiveConfirm: "Archive reel",
+      unarchive: "Bring back",
+      archivedNotice: "This reel is archived. It is not in the library.",
+      archived: "Reel archived.",
+      restored: "Reel brought back.",
+      videoUnsupported: "This browser cannot play the video here. Use Download instead.",
+    },
+  },
   photoApproval: {
     tabs: { residents: "Resident photos", who: "Who's in the photo", events: "Event photos", projects: "Project photos", website: "Page changes" },
     website: {
@@ -8287,7 +8367,7 @@ const en = {
     /** Photo folders: stored (and named in Drive) in English, shown in the reader's language. */
     photoFolder: { Shelter: "Shelter", Medical: "Medical", Foster: "Foster", Adoption: "Adoption" },
   },
-  // Desexing drives (0233): the public page's words. The shelter's own dates, prices and
+  // Sterilisation drives (0233): the public page's words. The shelter's own dates, prices and
   // eligibility are data typed in Management, never written here.
   desexing: {
     navLabel: "Sterilisation drives",
@@ -8342,7 +8422,7 @@ const en = {
       rateLimited: "Many people are signing up right now. Please try again in a little while.",
     },
   },
-  // Management → Desexing drives (0233).
+  // Management → Sterilisation drives (0233).
   desexingAdmin: {
     nav: "Sterilisation drives",
     landingTile: "Add a sterilisation drive with its date, place, cost and who can come, open it to sign-ups, and see who has signed up.",

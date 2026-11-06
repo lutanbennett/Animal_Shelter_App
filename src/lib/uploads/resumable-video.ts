@@ -43,6 +43,78 @@ export function readVideoDuration(file: File): Promise<number | null> {
   });
 }
 
+/** What the chunk loop reports: Drive's file id, or words for the person. */
+type DriveSend = { driveFileId: string } | { error: string };
+
+/**
+ * Sends the file to an open Drive resumable session in chunks, resuming after a dropped connection. Shared by a
+ * resident's video and a reel's (both open the session in their own start route).
+ */
+async function sendToDrive(
+  messages: Dictionary["photos"]["videos"]["errors"],
+  uploadUrl: string,
+  file: File,
+  onProgress: (percent: number) => void,
+  onRetrying: (retrying: boolean) => void,
+): Promise<DriveSend> {
+  let offset = 0;
+  let failures = 0;
+  let driveFileId: string | null = null;
+  while (driveFileId === null) {
+    const end = Math.min(offset + CHUNK_BYTES, file.size);
+    let res: Response | null = null;
+    try {
+      res = await fetch(uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Range": `bytes ${offset}-${end - 1}/${file.size}` },
+        body: file.slice(offset, end),
+      });
+    } catch {
+      res = null; // dropped connection
+    }
+
+    if (res && (res.status === 200 || res.status === 201)) {
+      driveFileId = ((await res.json()) as { id: string }).id;
+      onProgress(100);
+    } else if (res && res.status === 308) {
+      failures = 0;
+      onRetrying(false);
+      // A chunk Drive accepted whole is held whole, even if the browser may not read its Range header.
+      offset = res.headers.get("range") ? bytesHeld(res) : end;
+      onProgress(Math.round((offset / file.size) * 100));
+    } else if (res === null || res.status >= 500 || res.status === 429) {
+      failures += 1;
+      if (failures > MAX_RETRIES_IN_A_ROW) {
+        console.error("Video upload gave up after repeated failures; last status:", res ? res.status : "no response (dropped or blocked)");
+        return { error: res && res.status !== 429 ? messages.driveRefused(res.status) : messages.connectionLost };
+      }
+      onRetrying(true);
+      await sleep(Math.min(1000 * 2 ** failures, 20000));
+      // Ask Drive where it got to; if even that fails the loop tries again.
+      try {
+        const probe = await fetch(uploadUrl, { method: "PUT", headers: { "Content-Range": `bytes */${file.size}` } });
+        if (probe.status === 308) {
+          const held = bytesHeld(probe);
+          // Forward progress means the upload is working, so the stumble count starts again.
+          if (held > offset) failures = 0;
+          offset = held;
+        }
+        else if (probe.status === 200 || probe.status === 201) {
+          driveFileId = ((await probe.json()) as { id: string }).id;
+        }
+      } catch {
+        // still offline: next lap
+      }
+    } else {
+      // A 4xx other than 429: expired or rescoped credentials (401/403) or a dead session (404). Keep Drive's own words.
+      const detail = await res!.text().catch(() => "");
+      console.error("Drive refused a video chunk:", res!.status, detail.slice(0, 500));
+      return { error: messages.driveRefused(res!.status) };
+    }
+  }
+  return { driveFileId };
+}
+
 export async function uploadResidentVideo(
   t: Dictionary,
   residentId: string,
@@ -76,67 +148,63 @@ export async function uploadResidentVideo(
     if (!started.ok) return { error: typeof started.json.error === "string" ? started.json.error : messages.startFailed };
     const { uploadId, uploadUrl } = started.json as { uploadId: string; uploadUrl: string };
 
-    let offset = 0;
-    let failures = 0;
-    let driveFileId: string | null = null;
-    while (driveFileId === null) {
-      const end = Math.min(offset + CHUNK_BYTES, file.size);
-      let res: Response | null = null;
-      try {
-        res = await fetch(uploadUrl, {
-          method: "PUT",
-          headers: { "Content-Range": `bytes ${offset}-${end - 1}/${file.size}` },
-          body: file.slice(offset, end),
-        });
-      } catch {
-        res = null; // dropped connection
-      }
-
-      if (res && (res.status === 200 || res.status === 201)) {
-        driveFileId = ((await res.json()) as { id: string }).id;
-        onProgress(100);
-      } else if (res && res.status === 308) {
-        failures = 0;
-        onRetrying(false);
-        // A chunk Drive accepted whole is held whole, even if the browser may not read its Range header.
-        offset = res.headers.get("range") ? bytesHeld(res) : end;
-        onProgress(Math.round((offset / file.size) * 100));
-      } else if (res === null || res.status >= 500 || res.status === 429) {
-        failures += 1;
-        if (failures > MAX_RETRIES_IN_A_ROW) {
-          console.error("Video upload gave up after repeated failures; last status:", res ? res.status : "no response (dropped or blocked)");
-          return { error: res && res.status !== 429 ? messages.driveRefused(res.status) : messages.connectionLost };
-        }
-        onRetrying(true);
-        await sleep(Math.min(1000 * 2 ** failures, 20000));
-        // Ask Drive where it got to; if even that fails the loop tries again.
-        try {
-          const probe = await fetch(uploadUrl, { method: "PUT", headers: { "Content-Range": `bytes */${file.size}` } });
-          if (probe.status === 308) {
-            const held = bytesHeld(probe);
-            // Forward progress means the upload is working, so the stumble count starts again.
-            if (held > offset) failures = 0;
-            offset = held;
-          }
-          else if (probe.status === 200 || probe.status === 201) {
-            driveFileId = ((await probe.json()) as { id: string }).id;
-          }
-        } catch {
-          // still offline: next lap
-        }
-      } else {
-        // A 4xx other than 429: expired or rescoped credentials (401/403) or a dead session (404). Keep Drive's own words.
-        const detail = await res!.text().catch(() => "");
-        console.error("Drive refused a video chunk:", res!.status, detail.slice(0, 500));
-        return { error: messages.driveRefused(res!.status) };
-      }
-    }
+    const sent = await sendToDrive(messages, uploadUrl, file, onProgress, onRetrying);
+    if ("error" in sent) return { error: sent.error };
+    const { driveFileId } = sent;
 
     onRetrying(false);
     const durationMs = await readVideoDuration(file);
     const finished = await post("finish", { uploadId, driveFileId, dateTaken: fields.dateTaken, durationMs, adoptionUpdateId: fields.adoptionUpdateId });
     if (!finished.ok) return { error: typeof finished.json.error === "string" ? finished.json.error : messages.finishFailed };
     return {};
+  } catch {
+    return { error: t.photos.uploader.networkError };
+  }
+}
+
+/**
+ * A reel's upload: the same three steps against /api/reels/start and /api/reels/finish. The description, the date and
+ * the residents picked from it travel with the finish call, which writes the reels row as the caller.
+ */
+export async function uploadReelVideo(
+  t: Dictionary,
+  file: File,
+  fields: { dateTaken: string; description: string; picks: { id: string; name: string }[] },
+  onProgress: (percent: number) => void,
+  onRetrying: (retrying: boolean) => void,
+): Promise<VideoUploadResult & { reelId?: string; linkFailed?: boolean }> {
+  const messages = t.photos.videos.errors;
+
+  async function post(path: string, payload: unknown) {
+    const res = await fetch(`/api/reels/${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const json = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    return { ok: res.ok, json };
+  }
+
+  try {
+    const started = await post("start", { fileName: file.name, mimeType: file.type, size: file.size });
+    if (!started.ok) return { error: typeof started.json.error === "string" ? started.json.error : messages.startFailed };
+    const { uploadId, uploadUrl } = started.json as { uploadId: string; uploadUrl: string };
+
+    const sent = await sendToDrive(messages, uploadUrl, file, onProgress, onRetrying);
+    if ("error" in sent) return { error: sent.error };
+
+    onRetrying(false);
+    const durationMs = await readVideoDuration(file);
+    const finished = await post("finish", {
+      uploadId,
+      driveFileId: sent.driveFileId,
+      dateTaken: fields.dateTaken,
+      durationMs,
+      description: fields.description,
+      picks: fields.picks,
+    });
+    if (!finished.ok) return { error: typeof finished.json.error === "string" ? finished.json.error : messages.finishFailed };
+    return { reelId: finished.json.reelId as string, linkFailed: finished.json.linkFailed === true };
   } catch {
     return { error: t.photos.uploader.networkError };
   }

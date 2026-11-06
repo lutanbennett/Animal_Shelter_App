@@ -211,6 +211,16 @@
       "guard": "A shared secret in the request, not a session."
     },
     {
+      "file": "src/app/api/reels/finish/route.ts",
+      "for": "Records a finished reel upload (video_uploads is service role only).",
+      "guard": "can(perms, \"social.library\") on the signed-in caller, before any read; the reels row itself is written as the caller."
+    },
+    {
+      "file": "src/app/api/reels/start/route.ts",
+      "for": "Starts a reel upload (video_uploads is service role only).",
+      "guard": "can(perms, \"social.library\") on the signed-in caller, before any Drive call."
+    },
+    {
       "file": "src/app/api/residents/[id]/videos/finish/route.ts",
       "for": "Records a finished video upload.",
       "guard": "can(perms, ...) on the signed-in caller."

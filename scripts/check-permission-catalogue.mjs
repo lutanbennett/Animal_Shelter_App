@@ -272,6 +272,10 @@ const PINNED = {
   "/memes/make": { guards: ['requirePermission("social.library")'], decides: [] },
   "/memes/[id]": { guards: ['requirePermission("social.library", "read")'], decides: ["social.library"] },
   "/memes/[id]/edit": { guards: ['requirePermission("social.library")'], decides: [] },
+  // The reels library (0322): same shape as the memes above, plus the # picker, which is drawn only with resident.record at Read (the activity its own search asks).
+  "/reels/new": { guards: ['requirePermission("social.library")'], decides: ["resident.record:read"] },
+  "/reels/[id]": { guards: ['requirePermission("social.library", "read")'], decides: ["social.library"] },
+  "/reels/[id]/edit": { guards: ['requirePermission("social.library")'], decides: ["resident.record:read"] },
 
   // The resident's own pages. requireFullResident() is resident.record at Read plus "not a
   // who-and-where login" (0134); the decision that matters, may this person do the thing, is the

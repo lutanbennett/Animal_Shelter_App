@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getT } from "@/lib/i18n/get-t";
 import { createClient } from "@/lib/supabase/server";
-import { getDriveClient } from "@/lib/google/drive";
-import { openMirroredVideo } from "@/lib/mirror-read";
+import { streamDriveVideo, videoNotFound } from "@/lib/google/stream-video";
 
 /**
  * Playback for a resident's video, streamed from Drive with the browser's Range header passed through, so an
@@ -18,10 +17,6 @@ import { openMirroredVideo } from "@/lib/mirror-read";
 
 const FILE_ID_PATTERN = /^[A-Za-z0-9_-]{10,100}$/;
 
-async function notFound() {
-  return NextResponse.json({ error: (await getT()).t.uploads.errors.videoNotFound }, { status: 404, headers: { "Cache-Control": "no-store" } });
-}
-
 export async function GET(request: NextRequest, { params }: { params: Promise<{ fileId: string }> }) {
   const { fileId } = await params;
   if (!FILE_ID_PATTERN.test(fileId)) {
@@ -32,59 +27,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { data: isPublic, error: publicError } = await supabase.rpc("is_public_drive_file", {
     p_drive_file_id: fileId,
   });
-  if (publicError) return await notFound();
+  if (publicError) return await videoNotFound();
   if (isPublic !== true) {
     const { data, error } = await supabase.rpc("can_see_drive_file", { p_drive_file_id: fileId });
-    if (error || data !== true) return await notFound();
+    if (error || data !== true) return await videoNotFound();
   }
 
-  // An internal video on the Pi mirror (src/lib/mirror-read.ts), reached only after the checks above.
-  // A public file is left to Drive, as photos are. Any miss falls through to Drive below.
-  if (isPublic !== true) {
-    const mirrored = await openMirroredVideo(fileId, request.headers.get("range"));
-    if (mirrored && "unsatisfiable" in mirrored) {
-      return new NextResponse(null, { status: 416, headers: { "Content-Range": `bytes */${mirrored.unsatisfiable}` } });
-    }
-    if (mirrored) {
-      return new NextResponse(mirrored.body, {
-        status: mirrored.status,
-        headers: {
-          ...mirrored.headers,
-          "Content-Type": mirrored.contentType,
-          "X-Content-Type-Options": "nosniff",
-          "Content-Disposition": "inline",
-          "Cache-Control": "private, no-store",
-        },
-      });
-    }
-  }
-
-  let upstream: Response;
-  try {
-    upstream = await getDriveClient().streamFile(fileId, request.headers.get("range"));
-  } catch (err) {
-    // A range Drive cannot satisfy is the browser's mistake, not an outage.
-    const status = (err as { status?: number }).status;
-    if (status === 416) return new NextResponse(null, { status: 416 });
-    return NextResponse.json({ error: (await getT()).t.uploads.errors.couldNotLoadVideo }, { status: 502 });
-  }
-
-  const contentType = (upstream.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
-  if (!contentType.startsWith("video/")) {
-    await upstream.body?.cancel();
-    return await notFound();
-  }
-
-  const headers = new Headers({
-    "Content-Type": contentType,
-    "Accept-Ranges": "bytes",
-    "X-Content-Type-Options": "nosniff",
-    "Content-Disposition": "inline",
-    "Cache-Control": isPublic === true ? "public, max-age=3600" : "private, no-store",
-  });
-  for (const name of ["content-length", "content-range"]) {
-    const value = upstream.headers.get(name);
-    if (value) headers.set(name, value);
-  }
-  return new NextResponse(upstream.body, { status: upstream.status, headers });
+  return streamDriveVideo(request, fileId, isPublic === true);
 }
