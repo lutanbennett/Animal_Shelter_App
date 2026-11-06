@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The notice at the top of a deceased animal's page no longer says nothing at all can be edited, uploaded or recorded. It now says what is true: the record is closed to changes, but notes can still be added to existing entries, late blood test results can be added, and visit bills can be filled in. The record-a-death and edit pages say the same. The Thai wording has not been checked by a Thai speaker.",
   {
     text: "Filing a bill is now one permission card, Bills. It covers maintenance, utility and other bills, so whoever holds it can answer \"What type of bill is this?\" for any of them and save it. The two cards Add utility bills and Add other bills are gone. Bills settings stays its own card.",
     cards: ["bills", "bill_sites"],
