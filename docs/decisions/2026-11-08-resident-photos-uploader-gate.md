@@ -25,7 +25,7 @@ Route and policies untouched (hiding is the courtesy).
 
 ## 3. Five callers
 - `/adopt/[id]` uses its own `src/app/adopt/[id]/PhotoGallery.tsx` (ids only): no approval wording at all. Unchanged, nothing to fix.
-- `sections/photos.tsx`: three-state caption. `sections/adoption-updates.tsx`: gets it through the shared component; its select is separate, so `approval` is absent there and a Private only photo reads as waiting until that select adds it (**found, not fixed**: not this item's controls).
+- `sections/photos.tsx`: three-state caption. `sections/adoption-updates.tsx`: reads the same `photoSelect` (line 41), so it gets `approval` and the same three-state caption with no change to its controls.
 - `EditResidentForm`/`edit/page.tsx` import only the `PhotoRow` type. `PhotoViewer`, `ThumbnailStrip`: no approval wording.
 
 ## 4. Thai
