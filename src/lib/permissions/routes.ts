@@ -13,7 +13,7 @@
  * rest, and Settings and Management landing pages with their areas.
  */
 
-import { Activity, CalendarClock, Scissors, BadgeCheck, Camera, Laugh, ClipboardCheck, HandHeart, PartyPopper, Coins, Globe, Grid3x3, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Receipt, Scale, ShoppingBag, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
+import { Activity, CalendarClock, Scissors, BadgeCheck, Camera, Film, Laugh, ClipboardCheck, HandHeart, PartyPopper, Coins, Globe, Grid3x3, HandCoins, ImagePlus, HeartHandshake, History, LayoutDashboard, Languages, Pill, Receipt, Scale, ShoppingBag, ShoppingCart, Truck, Utensils, type LucideIcon } from "lucide-react";
 import { CONTACT_ICONS, ENCLOSURE_ICONS, NAV_ICONS, SECTION_ICONS, CLINIC_ICONS } from "@/components/hub-icons";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { can, type Permissions } from "./can";
@@ -231,6 +231,18 @@ export const ROUTES: readonly RouteEntry[] = [
     level: "read",
     icon: Laugh,
     label: (t) => t.nav.memes,
+    device: "any",
+    menu: false,
+    section: "management",
+  },
+  {
+    // The reels library (0322): short videos kept for posting to Facebook, and where each was posted. Same activity as the
+    // memes (#i7qkz will split it for both). Opens at Read; never public.
+    path: "/reels",
+    activity: "social.library",
+    level: "read",
+    icon: Film,
+    label: (t) => t.nav.reels,
     device: "any",
     menu: false,
     section: "management",

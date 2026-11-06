@@ -218,6 +218,8 @@ export const WRAPPED_WRITE_PATHS = [
   "/projects",
   "/projects/[id]",
   "/r/[code]",
+  "/reels/[id]",
+  "/reels/[id]/edit",
   "/releases",
   "/residents",
   "/residents/[id]",
