@@ -1,3 +1,4 @@
+import { Film } from "lucide-react";
 import { ActionLink } from "@/components/ActionLink";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { getT } from "@/lib/i18n/get-t";
@@ -24,12 +25,16 @@ export default async function MemesPage() {
           <h1 className="text-2xl font-semibold text-foreground">{t.memes.title}</h1>
           <p className="text-base text-muted">{t.memes.intro}</p>
         </div>
-        {can(perms, "social.library") && (
-          <div className="flex flex-wrap gap-2">
-            <ActionLink href="/memes/make" label={t.memes.maker.button} icon={ACTION_ICONS.add} variant="primary" iconOnlyOnMobile={false} />
-            <ActionLink href="/memes/new" label={t.memes.add} icon={ACTION_ICONS.uploadImage} iconOnlyOnMobile={false} />
-          </div>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {/* The way in to the reels library: the Meme library card opens /memes, and a card opens one page (0322, reels-app). Same read the page itself needs. */}
+          <ActionLink href="/reels" label={t.reels.title} icon={Film} iconOnlyOnMobile={false} />
+          {can(perms, "social.library") && (
+            <>
+              <ActionLink href="/memes/make" label={t.memes.maker.button} icon={ACTION_ICONS.add} variant="primary" iconOnlyOnMobile={false} />
+              <ActionLink href="/memes/new" label={t.memes.add} icon={ACTION_ICONS.uploadImage} iconOnlyOnMobile={false} />
+            </>
+          )}
+        </div>
       </div>
       <MemeLibrary
         memes={memes.map(({ id, drive_file_id, title, caption_en, caption_th, tags, residents, platforms, source_kind }) => ({

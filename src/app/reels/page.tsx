@@ -25,9 +25,12 @@ export default async function ReelsPage() {
           <h1 className="text-2xl font-semibold text-foreground">{t.reels.title}</h1>
           <p className="text-base text-muted">{t.reels.intro}</p>
         </div>
-        {can(perms, "social.library") && (
-          <ActionLink href="/reels/new" label={t.reels.add} icon={ACTION_ICONS.add} variant="primary" iconOnlyOnMobile={false} />
-        )}
+        <div className="flex flex-wrap gap-2">
+          <ActionLink href="/memes" label={t.memes.title} icon={ACTION_ICONS.back} iconOnlyOnMobile={false} />
+          {can(perms, "social.library") && (
+            <ActionLink href="/reels/new" label={t.reels.add} icon={ACTION_ICONS.add} variant="primary" iconOnlyOnMobile={false} />
+          )}
+        </div>
       </div>
       <ReelLibrary
         reels={reels.map(({ id, description, tags, duration_ms, date_taken, residents, platforms }) => ({
