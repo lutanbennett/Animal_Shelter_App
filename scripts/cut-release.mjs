@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Cuts a release: moves `unreleased` in src/lib/releases.ts into a new entry at
-// the top of `releases`, empties `unreleased`, and bumps package.json — then,
+// the top of `releases`, empties `unreleased`, and bumps package.json and the two version fields at the head of
+// package-lock.json (top level and root package, #jhd8s) — then,
 // with --verify, proves nothing was lost, changed or invented.
 // docs/release-procedure.md step 4; docs/decisions/2026-10-26-cut-release-script.md.
 //
@@ -51,6 +52,7 @@ const repoDir = join(dirname(fileURLToPath(import.meta.url)), "..");
 const root = resolve(rootArg ?? join(dirname(fileURLToPath(import.meta.url)), ".."));
 const relPath = join(root, "src", "lib", "releases.ts");
 const pkgPath = join(root, "package.json");
+const lockPath = join(root, "package-lock.json");
 
 if (!/^\d+\.\d+\.\d+$/.test(version ?? "")) die(`version "${version}" is not a.b.c`);
 if (!/^\d{4}-\d{2}-\d{2}$/.test(date ?? "")) die(`date "${date}" is not YYYY-MM-DD`);
@@ -61,10 +63,15 @@ const src = readFileSync(relPath, "utf8");
 const eol = src.includes("\r\n") ? "\r\n" : "\n";
 const pkg = readFileSync(pkgPath, "utf8");
 const pkgEol = pkg.includes("\r\n") ? "\r\n" : "\n";
+const lock = readFileSync(lockPath, "utf8");
 
 const OPEN_UNRELEASED = /export const unreleased: ReleaseNote\[\] = \[\r?\n/;
 const OPEN_RELEASES = /export const releases: Release\[\] = \[\r?\n/;
 const PKG_VERSION = /^(\s*"version":\s*")([^"]+)(",?)\r?$/m;
+// The lockfile carries the version twice near its head: top level, and packages[""] (the root package). Edited in
+// place so the rest of a very large file is never re-serialised. Both must be found or nothing is written (#jhd8s).
+const LOCK_HEAD =
+  /^(\{\r?\n\s*"name":\s*"[^"]*",\r?\n\s*"version":\s*")([^"]+)(",\r?\n(?:(?!\n  "packages")[\s\S])*?\n  "packages":\s*\{\r?\n\s*"":\s*\{\r?\n\s*"name":\s*"[^"]*",\r?\n\s*"version":\s*")([^"]+)(")/;
 
 async function load(file) {
   // A copy with a unique name, so Node's module cache never serves a stale one.
@@ -110,6 +117,7 @@ if (!verify) {
   if (!mR) die("could not find `export const releases: Release[] = [`");
   if (mR.index < bodyStart) die("`releases` appears before `unreleased`; the file is not shaped as expected");
   if (!PKG_VERSION.test(pkg)) die('could not find the `"version"` line in package.json');
+  if (!LOCK_HEAD.test(lock)) die("could not find both `version` fields at the head of package-lock.json");
   const prev = PKG_VERSION.exec(pkg)[2];
   const t = (title ?? "").trim();
   if (!t) die("--title is required");
@@ -145,6 +153,7 @@ if (!verify) {
   if (out === src) die("internal: nothing changed");
   writeFileSync(relPath, out);
   writeFileSync(pkgPath, newPkg);
+  writeFileSync(lockPath, lock.replace(LOCK_HEAD, (_m, a, _top, b, _root, c) => a + version + b + version + c));
   console.log(`cut ${prev} -> ${version} (${kind}, ${eol === "\r\n" ? "CRLF" : "LF"}); now run: node scripts/cut-release.mjs ${version} ${date} ${kind} --verify`);
   process.exit(0);
 }
@@ -192,6 +201,12 @@ check("releases are in compareVersions order, newest first", order);
 check("latestRelease is the new entry", cur.latestRelease.version === version);
 const pkgNow = JSON.parse(readFileSync(pkgPath, "utf8"));
 check("package.json version equals the newest entry", pkgNow.version === version, pkgNow.version);
+const lockNow = JSON.parse(readFileSync(lockPath, "utf8"));
+check(
+  "package-lock.json top-level and root-package versions equal package.json (the three agree)",
+  lockNow.version === pkgNow.version && lockNow.packages?.[""]?.version === pkgNow.version,
+  `lock ${lockNow.version} / root ${lockNow.packages?.[""]?.version} / package.json ${pkgNow.version}`,
+);
 const rendered = JSON.stringify(entry);
 check("no [object Object] or undefined in the entry", !/\[object Object\]|undefined/.test(rendered));
 // majorReleasesSince returns Release OBJECTS, not version strings — map first.
