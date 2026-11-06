@@ -25,6 +25,8 @@ export function EventForm({
   published,
   appeals,
   projects,
+  canSeeAppeals,
+  canSeeProjects,
 }: {
   mode: "new" | "edit";
   eventId?: string;
