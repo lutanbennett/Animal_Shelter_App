@@ -9,6 +9,11 @@
 //       Desktop FIRST, then copies the named details onto R-0063 and deletes
 //       R-0208 in one begin…commit
 //
+//   node scripts/correct-resident.mjs --env production --restore-death R-0323 --date 2026-10-28 [--leave-cascade] [--apply --confirm R-0323]
+//       the second job (backlog #dklvq): put back a death that was withdrawn, on its original date. Same shape: dry run by
+//       default, --apply --confirm to commit. Its receipt is written FIRST to the main checkout's gitignored .local/, named
+//       for the database and resident. See RESTORE A DEATH at the foot of this file.
+//
 // Without --env it works on the test database, as the other scripts do.
 //
 // WHO RUNS IT. Lutan asks a chat in plain words ("delete R-0208, it's a
@@ -76,7 +81,8 @@
 // owner, so row security does not apply either. This script relies on that
 // openly. backlog: "Placement history can be deleted, though it cannot be edited".
 
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
@@ -94,8 +100,8 @@ const value = (name) => {
   return i >= 0 ? (args[i + 1] ?? null) : null;
 };
 
-const VALUED = ["--remove", "--keep", "--receipt", "--confirm", "--copy"];
-const KNOWN = new Set([...VALUED, "--apply", "--force-names", "--enclosure-moves", "--drive-trashed", "--merge-into"]);
+const VALUED = ["--remove", "--keep", "--receipt", "--confirm", "--copy", "--restore-death", "--date"];
+const KNOWN = new Set([...VALUED, "--apply", "--force-names", "--enclosure-moves", "--drive-trashed", "--merge-into", "--leave-cascade"]);
 const unknown = args.filter((a, i) => a.startsWith("--") && !KNOWN.has(a) && !VALUED.includes(args[i - 1]));
 if (unknown.length) {
   console.error(`Unknown option(s): ${unknown.join(" ")}. See the top of scripts/correct-resident.mjs.`);
@@ -150,14 +156,35 @@ const copyFields = (value("--copy") ?? "")
   .map((f) => f.trim().toLowerCase())
   .filter(Boolean);
 
-if (!removeCode || !keepCode) {
+// The second mode (backlog #dklvq): put back a death that was withdrawn, on its original date. See RESTORE A DEATH above.
+const restoreCode = code(value("--restore-death"));
+const restoreDate = value("--date");
+const leaveCascade = flag("--leave-cascade");
+if (flag("--restore-death") && !restoreCode) {
+  console.error("--restore-death needs a resident code, for example --restore-death R-0323.");
+  process.exit(2);
+}
+if (restoreCode && (removeCode || keepCode || copyFields.length || forceNames || enclosureMoves || driveTrashed)) {
+  console.error("--restore-death is its own job: do not combine it with --remove, --keep, --copy or the removal flags.");
+  process.exit(2);
+}
+if (restoreCode && !/^\d{4}-\d{2}-\d{2}$/.test(restoreDate ?? "")) {
   console.error(
-    "Say which resident to remove and which one it duplicates, by code:\n" +
-      "  node scripts/correct-resident.mjs --remove R-0240 --keep R-0220",
+    "--restore-death needs --date YYYY-MM-DD: the date the death was ORIGINALLY recorded on. The run checks it against the\n" +
+      "database, so the wrong resident or the wrong death is refused instead of restored.",
   );
   process.exit(2);
 }
-if (removeCode === keepCode) {
+if (!restoreCode && (!removeCode || !keepCode)) {
+  console.error(
+    "Say which resident to remove and which one it duplicates, by code:\n" +
+      "  node scripts/correct-resident.mjs --remove R-0240 --keep R-0220\n" +
+      "or which withdrawn death to put back:\n" +
+      "  node scripts/correct-resident.mjs --restore-death R-0323 --date 2026-10-28",
+  );
+  process.exit(2);
+}
+if (!restoreCode && removeCode === keepCode) {
   console.error(`--remove and --keep are both ${removeCode}.`);
   process.exit(2);
 }
@@ -189,9 +216,9 @@ if (!rightDatabase) {
   console.error(`Refusing: NEXT_PUBLIC_SUPABASE_URL (${url ?? "not set"}) is not the ${live ? "live" : "test"} database.`);
   process.exit(2);
 }
-if (live && apply && code(value("--confirm")) !== removeCode) {
+if (live && apply && code(value("--confirm")) !== (restoreCode ?? removeCode)) {
   console.error(
-    `Refusing: deleting from the LIVE database needs --confirm ${removeCode} as well as --apply.\n` +
+    `Refusing: changing the LIVE database needs --confirm ${restoreCode ?? removeCode} as well as --apply.\n` +
       "Run it without --apply first; the dry run prints the exact line.",
   );
   process.exit(2);
@@ -210,6 +237,24 @@ const desktop = [join(homedir(), "OneDrive", "Desktop"), join(homedir(), "Deskto
 function receiptFile() {
   if (value("--receipt")) return resolve(value("--receipt"));
   const stamp = new Date().toISOString().slice(0, 10);
+  if (restoreCode) {
+    // The restore mode's receipt goes to the main checkout's gitignored .local/ (the item's own wording), named for the
+    // database and the resident. Found from git's common dir, so it is the same folder from any worktree. The repo is
+    // public: .local/ is ignored at .gitignore:59, which is why it is safe for a receipt holding real rows.
+    let mainCheckout = null;
+    try {
+      const common = execFileSync("git", ["rev-parse", "--path-format=absolute", "--git-common-dir"], { encoding: "utf8" }).trim();
+      mainCheckout = dirname(common);
+    } catch {
+      // not in a git checkout: fall through to the Desktop
+    }
+    const dir = mainCheckout ? join(mainCheckout, ".local") : desktop;
+    mkdirSync(dir, { recursive: true });
+    const base = join(dir, `${live ? "production" : "test"}-${restoreCode}-restore-death-before-${stamp}`);
+    let path = `${base}.json`;
+    for (let n = 2; existsSync(path); n++) path = `${base}-${n}.json`;
+    return path;
+  }
   const base = join(desktop, `removed-${removeCode}-${live ? "live" : "test"}-${stamp}`);
   let path = `${base}.json`;
   for (let n = 2; existsSync(path); n++) path = `${base}-${n}.json`;
@@ -283,13 +328,17 @@ const placeSql = (id) => `(select coalesce(z.name || ' / ' || e.name, p.placemen
 const residentSql = (c) =>
   `(select to_jsonb(r) || jsonb_build_object('place', ${placeSql("r.id")}, 'deceased', resident_is_deceased(r.id)) from residents r where r.resident_code = ${q(c)})`;
 
-console.log(`\nRemove ${removeCode}, keep ${keepCode} — ${dbLabel} (${projectRef})`);
+console.log(
+  restoreCode
+    ? `\nRestore the withdrawn death of ${restoreCode} (originally ${restoreDate}) — ${dbLabel} (${projectRef})`
+    : `\nRemove ${removeCode}, keep ${keepCode} — ${dbLabel} (${projectRef})`,
+);
 
 // Everything past here talks to the database, and process.exit() trips a libuv
 // assertion on Windows while fetch still holds a socket (load-residents.mjs
 // has the same note). So the rest sets process.exitCode and returns instead.
 try {
-  await run();
+  await (restoreCode ? runRestoreDeath() : run());
 } catch (error) {
   console.error(`\nCould not read the database: ${error.message}\nNothing was changed.`);
   process.exitCode = 1;
@@ -578,4 +627,199 @@ end $$;`;
   console.log(`\n${removeCode} ${after.data.gone ? "is deleted" : "IS STILL THERE — check by hand"}.`);
   console.log(`\n${keepCode} now:\n  ${describe(after.data.keep)}`);
   for (const c of copies) console.log(`  ${c.field}: ${after.data.keep[c.field]}`);
+}
+
+// ---------------------------------------------------------------------------
+// RESTORE A DEATH (--restore-death) — backlog #dklvq, the case R-0323 needed on 2026-11-02
+// ---------------------------------------------------------------------------
+//
+// A death withdrawn in the app ("Withdraw this death", undo_deceased_placement(), 0049) does not erase it: the Deceased row is
+// closed and a DeceasedInError row is written, putting the resident back where it was. Re-recording the death on its ORIGINAL date
+// through the app is then refused, because a placement now sits after that date. This puts the withdrawn death back exactly as it
+// was, which is not a deletion of a resident and so could not be done by the script before.
+//
+// It changes two placement_history rows and nothing else: it deletes the open DeceasedInError row and re-opens the Deceased row it
+// had closed (end_date back to null). No row is created and no start_date is touched, so the death keeps its original date.
+//
+// WHAT IT READS FOR EACH GUARD (named, because a guard that tests the wrong property is reported as safety):
+//   "is not deceased now"      resident_is_deceased(id), the same function the database lock uses (0026:124): the OPEN placement is in
+//                              the Lifecycle zone. NOT placement_type alone.
+//   "the Deceased row"         the placement_history row immediately before the open one (by start_date, created_at), with
+//                              placement_type = 'Deceased', an enclosure in the Lifecycle zone, and end_date equal to the open row's start_date
+//                              (close_prior_placement() sets exactly that).
+//   "the open row to delete"   the resident's only row with end_date is null, with placement_type = 'DeceasedInError', and the LAST row.
+//   "the original date"        --date must equal the Deceased row's start_date, as a UTC or an Asia/Bangkok calendar date.
+// It refuses anything else: any placement after the withdrawal means the resident has really moved since.
+//
+// THE CASCADE. Recording a death cancelled the resident's future vet appointments and ended active prescriptions; withdrawing it put
+// them back (deceased_cascade on the Deceased row says which). Re-opening the Deceased row does NOT cancel them again, because only
+// INSERTING the row does that. So if any of them are live again the run refuses unless --leave-cascade says that is understood.
+// ready_for_adoption is likewise not cleared. Neither is touched by this script.
+async function runRestoreDeath() {
+  const [found] = await query(`select json_build_object(
+    'resident', ${residentSql(restoreCode)},
+    'placements', coalesce((select json_agg(json_build_object('row', to_jsonb(p),
+        'lifecycle', exists (select 1 from enclosures e join zones z on z.id = e.zone_id where e.id = p.enclosure_id and z.name = 'Lifecycle'),
+        'start_utc', to_char(p.start_date at time zone 'UTC', 'YYYY-MM-DD'),
+        'start_bkk', to_char(p.start_date at time zone 'Asia/Bangkok', 'YYYY-MM-DD'))
+        order by p.start_date, p.created_at)
+      from placement_history p join residents r on r.id = p.resident_id where r.resident_code = ${q(restoreCode)}), '[]'::json),
+    'tables', (select json_agg(table_name) from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE')
+  ) as data`);
+  const { resident, placements, tables } = found.data;
+  if (!resident) {
+    console.error(`There is no resident ${restoreCode} in the ${dbLabel}.\nNothing was changed.`);
+    process.exitCode = 1;
+    return;
+  }
+
+  const refusals = [];
+  const open = placements.filter((p) => p.row.end_date === null);
+  const last = placements[placements.length - 1];
+  const openRow = open.length === 1 ? open[0] : null;
+  const idx = openRow ? placements.indexOf(openRow) : -1;
+  const deathEntry = idx > 0 ? placements[idx - 1] : null;
+
+  if (resident.deceased) {
+    refusals.push(`${restoreCode} is recorded as deceased right now (its open placement is in the Lifecycle zone). There is no withdrawn death to restore.`);
+  }
+  if (!openRow) {
+    refusals.push(`${restoreCode} has ${open.length} open placement(s); this needs exactly one, the DeceasedInError row.`);
+  } else {
+    if (openRow.row.placement_type !== "DeceasedInError") {
+      refusals.push(`${restoreCode}'s open placement is ${openRow.row.placement_type}, not DeceasedInError: its death was not withdrawn (or it has moved since).`);
+    }
+    if (openRow !== last) refusals.push(`${restoreCode} has placements after the withdrawal: it has really moved since. That is history; sort it out in the app.`);
+    if (!deathEntry || deathEntry.row.placement_type !== "Deceased" || !deathEntry.lifecycle) {
+      refusals.push(`The placement before the open one is not a Deceased row in the Lifecycle zone (it is ${deathEntry?.row.placement_type ?? "missing"}).`);
+    } else if (deathEntry.row.end_date !== openRow.row.start_date) {
+      refusals.push("The Deceased row was not closed by the withdrawal (its end date is not the DeceasedInError start): it is not the death that was withdrawn.");
+    } else if (restoreDate !== deathEntry.start_utc && restoreDate !== deathEntry.start_bkk) {
+      refusals.push(
+        `--date ${restoreDate} is not the death's date. The Deceased row starts ${deathEntry.row.start_date} (${deathEntry.start_utc} UTC, ${deathEntry.start_bkk} in Thailand).`,
+      );
+    }
+  }
+
+  // The cascade the withdrawal put back (see THE CASCADE above).
+  const cascade = deathEntry?.row.deceased_cascade ?? null;
+  const apptIds = cascade?.vet_appointments ?? [];
+  const rxItems = cascade?.prescriptions ?? [];
+  let liveAppts = 0;
+  if (apptIds.length && tables.includes("vet_appointments")) {
+    const [r] = await query(`select count(*)::int as n from vet_appointments where status = 'scheduled' and id = any(array[${apptIds.map((x) => q(x)).join(", ")}]::uuid[])`);
+    liveAppts = r.n;
+  }
+  const cascadeLive = liveAppts + rxItems.length;
+  if (deathEntry && !cascade) {
+    console.log("\n(This death has no cascade snapshot — it was recorded before 0049 — so there is nothing the withdrawal put back to compare.)");
+  }
+  if (cascadeLive > 0 && !leaveCascade) {
+    refusals.push(
+      `The withdrawal put back ${liveAppts} vet appointment(s) and ${rxItems.length} prescription(s). Restoring the death will NOT cancel or end them again, ` +
+        "so they would stay live against a deceased resident. Sort them out in the app first, or add --leave-cascade if leaving them is right.",
+    );
+  }
+
+  console.log(`\n${restoreCode}  ${resident.name}${resident.thai_name ? ` (${resident.thai_name})` : ""}`);
+  console.log("  placement history, oldest first:");
+  for (const p of placements) {
+    console.log(`    ${p.row.placement_type.padEnd(16)} ${p.row.start_date} → ${p.row.end_date ?? "(open)"}`);
+  }
+  if (refusals.length) {
+    console.error(`\nNot done — ${refusals.length} reason(s):`);
+    for (const r of refusals) console.error(`  - ${r}`);
+    console.error("\nNothing was changed.");
+    process.exitCode = 1;
+    return;
+  }
+
+  const death = deathEntry.row;
+  const withdrawal = openRow.row;
+  console.log(`\nWhat will happen (two placement rows, no other table):`);
+  console.log(`  delete the DeceasedInError row of ${withdrawal.start_date} (${withdrawal.id})`);
+  console.log(`  re-open the Deceased row that starts ${death.start_date} (${death.id}): end date → none`);
+  console.log(`  ${restoreCode} then reads deceased on ${deathEntry.start_utc}${deathEntry.start_utc === deathEntry.start_bkk ? "" : ` UTC (${deathEntry.start_bkk} in Thailand)`}.`);
+  if (cascadeLive > 0) console.log(`  NOT touched (--leave-cascade): ${liveAppts} vet appointment(s), ${rxItems.length} prescription(s) the withdrawal put back.`);
+  console.log("\naudit_log keeps the record of this change.");
+
+  const block = `do $$
+declare
+  v_n int;
+begin
+  -- The same checks as before the run, in case something changed since: still alive, and still exactly this open withdrawal.
+  if resident_is_deceased(${q(resident.id)}::uuid) then raise exception 'refused: % is deceased now', ${q(restoreCode)}; end if;
+  if (select count(*) from placement_history where resident_id = ${q(resident.id)}::uuid and end_date is null) <> 1
+     or not exists (select 1 from placement_history where id = ${q(withdrawal.id)}::uuid and resident_id = ${q(resident.id)}::uuid
+                    and placement_type = 'DeceasedInError' and end_date is null) then
+    raise exception 'refused: the open placement is no longer the withdrawal I read';
+  end if;
+  if exists (select 1 from placement_history where resident_id = ${q(resident.id)}::uuid and created_at > ${q(withdrawal.created_at)}::timestamptz) then
+    raise exception 'refused: a placement was recorded after the withdrawal I read';
+  end if;
+
+  -- end_date may only change while app.placement_close is on (enforce_placement_history_immutability, 0119).
+  perform set_config('app.placement_close', 'on', true);
+  delete from placement_history where id = ${q(withdrawal.id)}::uuid and placement_type = 'DeceasedInError' and end_date is null;
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then raise exception 'expected to delete the withdrawal row, deleted %', v_n; end if;
+
+  update placement_history set end_date = null
+   where id = ${q(death.id)}::uuid and placement_type = 'Deceased' and end_date = ${q(withdrawal.start_date)}::timestamptz;
+  get diagnostics v_n = row_count;
+  if v_n <> 1 then raise exception 'expected to re-open the Deceased row, changed %', v_n; end if;
+  perform set_config('app.placement_close', 'off', true);
+
+  if not resident_is_deceased(${q(resident.id)}::uuid) then raise exception 'the resident still does not read deceased'; end if;
+  if (select start_date from placement_history where id = ${q(death.id)}::uuid) is distinct from ${q(death.start_date)}::timestamptz then
+    raise exception 'the death date moved';
+  end if;
+end $$;`;
+
+  const receipt = {
+    note: `Rows changed by scripts/correct-resident.mjs --restore-death: the withdrawn death of ${restoreCode} put back on its original date.`,
+    written_at: new Date().toISOString(),
+    database: `${dbLabel} (${projectRef})`,
+    command: `node scripts/correct-resident.mjs ${process.argv.slice(2).join(" ")}`,
+    restored: restoreCode,
+    deleted_row: withdrawal,
+    reopened_row_before: death,
+    cascade_left_alone: cascadeLive > 0 ? { live_vet_appointments: liveAppts, prescriptions: rxItems.length } : null,
+    resident_before: (({ place, deceased, ...row }) => row)(resident),
+    placement_history_before: placements.map((p) => p.row),
+  };
+
+  if (apply) {
+    writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`);
+    console.log(`\nReceipt written first: ${receiptPath}`);
+  }
+
+  process.stdout.write(`\n${apply ? "Doing it" : "Trying it (rolled back)"} … `);
+  try {
+    await query(`begin;\n${block}\n${apply ? "commit" : "rollback"};`);
+    console.log("ok");
+  } catch (error) {
+    console.log("FAILED");
+    console.error(error.message);
+    console.error(`Nothing was changed.${apply ? " The receipt lists what would have been changed." : ""}`);
+    process.exitCode = 1;
+    return;
+  }
+
+  if (!apply) {
+    const line = [
+      "node scripts/correct-resident.mjs",
+      live ? "--env production" : "",
+      `--restore-death ${restoreCode} --date ${restoreDate}`,
+      leaveCascade ? "--leave-cascade" : "",
+      "--apply",
+      live ? `--confirm ${restoreCode}` : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    console.log(`\nNothing was changed; it runs cleanly. To do it:\n\n  ${line}\n`);
+    return;
+  }
+  const [after] = await query(`select json_build_object('resident', ${residentSql(restoreCode)}) as data`);
+  console.log(`\n${restoreCode} now ${after.data.resident.deceased ? "reads deceased (restored)" : "DOES NOT READ DECEASED — check by hand"}; place: ${after.data.resident.place ?? "none"}.`);
 }
