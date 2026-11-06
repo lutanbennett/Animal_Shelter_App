@@ -1184,6 +1184,7 @@ const en = {
         "events.run": "Run a fundraising event and its photos",
         "appeal.medical_photo": "Show a medical photo on a fundraising campaign (public on that campaign)",
         "social.library": "The social media library: memes, and where each was shared",
+        "social.library_manage": "Archive or restore a meme, and take a post record off it",
         "assistant.ask": "Ask the assistant a question",
         "assistant.record": "Record something through the assistant",
         "website.content": "The public website's content, and the sterilisation drives sign-up list",
