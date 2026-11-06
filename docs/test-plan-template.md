@@ -189,8 +189,15 @@ needs two cards together, put both on one row. Do not name `staff` (retired, `01
 
 ## 8. Pre-production gate
 
-Owned jointly with the release manager. `test.lannacare.org` runs the **dev**
-database; `lannacare.org` runs **production** (`dbkodyyxxhtygxcxmfcu`).
+Owned jointly with the release manager. **Since the 2026-11-05 cutover:**
+`lannacareforanimals.org` is **production** (`dbkodyyxxhtygxcxmfcu`);
+`test.lannacare.org` is **test** on the **dev** project (`qxkmhwybjggxvsfxsxbd`);
+`lannacare.org` is **UAT**, which is moving to its own project
+(`fsjagxmxjosauwmxwype`) and runs against dev until that is finished
+(`docs/decisions/2026-11-06-uat-own-database.md`). **`lannacare.org` is NOT
+production** — it was until 2026-11-05, and this paragraph said so for two
+releases afterwards, so any plan written from this template before 2026-11-06
+names the wrong hosts.
 
 ### Tested build
 
