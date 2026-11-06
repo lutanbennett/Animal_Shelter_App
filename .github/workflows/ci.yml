@@ -228,6 +228,34 @@ jobs:
           node-version: 22
       - run: node scripts/check-cards-count.mjs
 
+  # Is any activity granted by NO card? Resolved through bundleOfCards, as the app does (docs/decisions/2026-11-06-card-grant-checks.md).
+  # Blocking: the two Admin-only rulings and the 17 first-run gaps are named records in docs/ungranted-activities-allowlist.json,
+  # so it is green on main and goes red only on a NEW gap (or a record gone stale). Reads files only.
+  ungranted-activities:
+    needs: changes
+    if: needs.changes.outputs.docs-only != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-ungranted-activities.mjs
+
+  # A decision file this PR ADDS must not be dated after today. Needs history for the merge-base. Runs on docs-only PRs too: decisions are docs.
+  decision-dates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: node scripts/check-decision-dates.mjs origin/main
+
   # Hard-coded security is forbidden (CLAUDE.md). Asserts ZERO coded security outside the Admin bypass (no baselines): fails on an
   # unrecorded role read, service-role file, env var, or new migration policy/definer function outside a card; the survivors are named records in
   # docs/hard-coded-security-registry.json. No continue-on-error: a red that cannot fail gets ignored. Reads files, not the live database.
