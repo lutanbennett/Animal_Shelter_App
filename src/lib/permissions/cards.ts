@@ -44,6 +44,8 @@ export type NewCardKey =
   | "approve_photos"
   | "run_appeals"
   | "meme_library"
+  | "meme_add"
+  | "meme_view"
   | "my_tasks"
   | "who_does_what"
   | "translations"
@@ -296,7 +298,27 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // here: who gets it is a Settings answer, and the Director ticks it on.
   meme_library: {
     includes: [],
+    bundle: [
+      { activity: "social.library", level: "edit" },
+      { activity: "social.library_manage" },
+      { activity: "resident.who_and_where", level: "read" },
+    ],
+    opens: "/memes",
+  },
+  // 2026-11-06 (#i7qkz, Lutan 2026-11-05): add and change memes and record where one was posted, but not archive and not
+  // delete. social.library is that add-and-change activity; archiving, deleting a meme and removing a share record are
+  // social.library_manage, which this card does not hold. The Reels screens still ask social.library (a Reels card is the
+  // other half of the item).
+  meme_add: {
+    includes: [],
     bundle: [{ activity: "social.library", level: "edit" }, { activity: "resident.who_and_where", level: "read" }],
+    opens: "/memes",
+  },
+  // 2026-11-06: browse the memes and nothing else. No card held social.library at Read alone, so a Read-only login for the
+  // library could not be built.
+  meme_view: {
+    includes: [],
+    bundle: [{ activity: "social.library", level: "read" }],
     opens: "/memes",
   },
   // Card twenty-six (2026-10-21, Lutan's ruling on menu-removal orphans 1 of 6): do the recurring tasks assigned to me, and
@@ -412,6 +434,8 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   approve_photos: (t) => t.appHome.cards.approvePhotos,
   run_appeals: (t) => t.appHome.cards.runAppeals,
   meme_library: (t) => t.appHome.cards.memeLibrary,
+  meme_add: (t) => t.appHome.cards.memeAdd,
+  meme_view: (t) => t.appHome.cards.memeView,
   my_tasks: (t) => t.appHome.cards.myTasks,
   who_does_what: (t) => t.appHome.cards.whoDoesWhat,
   translations: (t) => t.appHome.cards.translations,
