@@ -24,6 +24,7 @@ import { recordReelShare, removeReelShare, setReelArchived } from "../actions";
 
 export type ViewReel = {
   id: string;
+  drive_file_id: string;
   file_name: string | null;
   description: string;
   tags: string[];
