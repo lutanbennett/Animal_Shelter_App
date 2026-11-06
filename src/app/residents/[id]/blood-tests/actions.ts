@@ -66,3 +66,65 @@ export async function deleteBloodTestAttachment(
     },
   );
 }
+
+const MAX_RESULT = 4000;
+
+/**
+ * Corrects the result text of a blood test on a resident who has died. 0320 permits an UPDATE that changes only
+ * `results` (and `drive_file_id`) on blood_tests once the record is closed, so this sends exactly `{ results }`.
+ * The activity is the one blood_tests_update_perm asks (0264_inert_security_leftovers.sql:94), the same one the
+ * attach/remove actions above ask. The row is matched on the text it was read with so two people cannot overwrite
+ * each other; a refused update matches no row and is reported as not allowed.
+ */
+export async function editClosedBloodTestResult(
+  residentId: string,
+  bloodTestId: string,
+  results: string,
+  requestId: string,
+): Promise<BloodTestActionState> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction(
+    "residents.editClosedBloodTestResult",
+    { somethingWentWrong: t.common.somethingWentWrong, saveUnknown: t.common.saveUnknown, reloadToSave: t.common.reloadToSave },
+    { id: requestId, action: "residents.editClosedBloodTestResult", db: supabase },
+    async () => {
+      if (!can(await loadPermissions(), "medical.blood_tests")) return { ok: false, error: t.common.notAllowed };
+      const text = results.trim();
+      if (text.length > MAX_RESULT) return { ok: false, error: t.bloodTests.correctResultTooLong(MAX_RESULT) };
+
+      const { data: state } = await supabase
+        .from("resident_current_state")
+        .select("is_deceased")
+        .eq("resident_id", residentId)
+        .limit(1)
+        .returns<{ is_deceased: boolean }[]>();
+      if (!state?.[0]?.is_deceased) return { ok: false, error: t.closedRecordNote.errors.notClosed };
+
+      const { data: current, error: readError } = await supabase
+        .from("blood_tests")
+        .select("results")
+        .eq("id", bloodTestId)
+        .eq("resident_id", residentId)
+        .limit(1)
+        .returns<{ results: string | null }[]>();
+      if (readError) return { ok: false, error: readError.message };
+      if (!current?.[0]) return { ok: false, error: t.common.notAllowed };
+      const before = current[0].results;
+
+      let update = supabase
+        .from("blood_tests")
+        .update({ results: text === "" ? null : text })
+        .eq("id", bloodTestId)
+        .eq("resident_id", residentId);
+      update = before === null ? update.is("results", null) : update.eq("results", before);
+      const { data, error } = await update.select("id");
+      if (error) return { ok: false, error: error.message };
+      if (!data?.length) return { ok: false, error: t.closedRecordNote.errors.changed };
+
+      revalidatePath(`/residents/${residentId}`);
+      revalidatePath(`/residents/${residentId}/blood-tests`);
+      return { ok: true };
+    },
+  );
+}

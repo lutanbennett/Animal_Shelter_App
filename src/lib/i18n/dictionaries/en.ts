@@ -5078,6 +5078,11 @@ const en = {
     attachHint:
       "Pick the lab scan or PDF here; it uploads when you save. You can add more later from the Blood Tests tab.",
     lateResultNoFiles: "This resident has died, so their record is closed. A result that arrived late can be added as text; a scan or PDF cannot be attached.",
+    correctResult: "Correct result",
+    correctResultLabel: "Result text",
+    correctResultExplain: "This resident has died, so their record is closed. You can correct the result text; nothing else on this blood test can be changed.",
+    correctResultSave: "Save result",
+    correctResultTooLong: (max: number) => `The result can be up to ${max} characters.`,
     done: "Done",
     linkedVisitLabel: (date: string, reason: string) => `Clinic visit: ${date} — ${reason}`,
     fileFallback: "File",

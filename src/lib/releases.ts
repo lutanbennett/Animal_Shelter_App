@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "You can now correct the result text of a blood test on a resident who has died. Nothing else on a closed record changes.",
 ];
 
 /** Newest first. */

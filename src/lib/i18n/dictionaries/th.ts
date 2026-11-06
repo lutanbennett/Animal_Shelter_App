@@ -4905,6 +4905,11 @@ const th: Dictionary = {
     attachHint:
       "เลือกไฟล์สแกนหรือ PDF ผลตรวจที่นี่ ระบบจะอัปโหลดเมื่อบันทึก และเพิ่มภายหลังได้จากแท็บผลตรวจเลือด",
     lateResultNoFiles: "สัตว์ตัวนี้เสียชีวิตแล้ว ประวัติจึงถูกปิด ผลตรวจที่มาถึงช้าเพิ่มได้เป็นข้อความ แต่แนบไฟล์สแกนหรือ PDF ไม่ได้",
+    correctResult: "แก้ไขผลตรวจ",
+    correctResultLabel: "ข้อความผลตรวจ",
+    correctResultExplain: "สัตว์ตัวนี้เสียชีวิตแล้ว ประวัติจึงถูกปิด คุณแก้ไขข้อความผลตรวจได้ แต่แก้ส่วนอื่นของการตรวจเลือดนี้ไม่ได้",
+    correctResultSave: "บันทึกผลตรวจ",
+    correctResultTooLong: (max: number) => `ผลตรวจยาวได้ไม่เกิน ${max} ตัวอักษร`,
     done: "เสร็จสิ้น",
     linkedVisitLabel: (date: string, reason: string) => `การไปคลินิก: ${date} — ${reason}`,
     fileFallback: "ไฟล์",
