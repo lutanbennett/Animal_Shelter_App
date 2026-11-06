@@ -5,8 +5,8 @@ import { getDriveClient } from "@/lib/google/drive";
 import { openMirroredVideo } from "@/lib/mirror-read";
 
 /**
- * The streaming half of a video route, shared by /api/videos/[fileId] (a resident's video) and /api/reels/[id]/video
- * (a reel). The CALLER decides who may watch, before calling this: nothing here checks a permission. Drive's answer
+ * The streaming half of a video route, shared by /api/videos/[fileId] (a resident or reel video, 0324)
+ * The CALLER decides who may watch, before calling this: nothing here checks a permission. Drive's answer
  * passes the browser's Range header through (an iPhone will not play a video from a server that cannot answer a range
  * request), only a Drive file of type video/* is served, and an internal file is `private, no-store`.
  */

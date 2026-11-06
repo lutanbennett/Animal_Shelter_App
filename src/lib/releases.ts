@@ -70,26 +70,50 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  {
-    text: "On a resident’s Photos tab, the upload box now shows only to a login that is allowed to add resident photos. Before, a login that could only file into one folder saw the box and was then refused. If your box has gone, that is why; ask whoever sets cards to give you the card that adds resident photos.",
-    cards: ["residents"],
-  },
-  {
-    text: "A photo marked Private only now says so on the resident’s Photos tab, instead of saying it is waiting for approval. It was looked at and kept off the website, so there is nothing to approve again. (This shows once the shelter has the Private only answer, which is not live yet.)",
-    cards: ["residents"],
-  },
-  {
-    text: "The Expenses report now includes what the shelter spent on vet visits, as one type called Veterinary, on the day of each visit. A month you looked at before will read higher by that amount. That is the change, not a mistake. Visits with no cost recorded, cancelled visits and archived visits are not counted, and a visit row says its invoice is on the visit record instead of linking a receipt.",
-    cards: ["view_expenses"],
-  },
-  {
-    text: "Photos to approve now has a second answer next to Approve: Private only. Use it for a photo that should never be on the website. It leaves the waiting list for good, so the next person does not have to look at it again. This works for resident, event and project photos, and when you choose who is in a photo that was tagged to an enclosure.",
-    cards: ["approve_photos"],
-  },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.43.4",
+    date: "2026-11-06",
+    title: "Faster resident photos, Private only, reels, and vet visits in the Expenses report",
+    major: false,
+    notes: [
+      {
+        text: "A resident’s Photos tab now opens much faster, most of all on a phone using mobile data. The small pictures in the grid used to be the full-size photos; they are now small copies, and the full-size photo loads only when you tap one to open it.",
+        cards: ["residents"],
+      },
+      {
+        text: "On a resident’s Photos tab, the upload box now shows only to a login that is allowed to add resident photos. Before, a login that could only file into one folder saw the box and was then refused. If your box has gone, that is why; ask whoever sets cards to give you the card that adds resident photos.",
+        cards: ["residents"],
+      },
+      {
+        text: "A photo marked Private only now says so on the resident’s Photos tab, instead of saying it is waiting for approval. It was looked at and kept off the website, so there is nothing to approve again.",
+        cards: ["residents"],
+      },
+      {
+        text: "The Expenses report now includes what the shelter spent on vet visits, as one type called Veterinary, on the day of each visit. A month you looked at before will read higher by that amount. That is the change, not a mistake. Visits with no cost recorded, cancelled visits and archived visits are not counted, and a visit row says its invoice is on the visit record instead of linking a receipt.",
+        cards: ["view_expenses"],
+      },
+      {
+        text: "Photos to approve now has a second answer next to Approve: Private only. Use it for a photo that should never be on the website. It leaves the waiting list for good, so the next person does not have to look at it again. This works for resident, event and project photos, and when you choose who is in a photo that was tagged to an enclosure.",
+        cards: ["approve_photos"],
+      },
+      {
+        text: "When a resident has died you can now add a note to their placements, weights, prescriptions, immunizations and procedures, and record a blood test result that arrives afterwards. Nothing else on a closed record can be changed.",
+        cards: ["residents"],
+      },
+      {
+        text: "The Meme library now has a Reels button. Add a short video with a description and the date it was filmed, record where and when you posted it, and archive one you no longer need. A resident’s own page now lists the reels they are in. Reels are never shown on the website. Typing # to tag an animal works only for a login that can also open resident records; without that you get a plain description box. The Thai wording has not been checked by a Thai speaker.",
+        cards: ["meme_library"],
+      },
+      {
+        text: "There is a new permission card, Look after project folders. It lets someone add, rename, move and delete project folders and write their stories, without being able to add photos or publish. Until now those controls only worked for an administrator, which was an oversight rather than a decision.",
+        cards: ["who_does_what"],
+      },
+    ],
+  },
   {
     version: "0.43.3",
     date: "2026-11-06",

@@ -16,6 +16,7 @@ import { useConfirm } from "@/components/ConfirmProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { textareaClass } from "@/components/textareaClass";
 import { formatDate, todayIso } from "@/lib/format";
+import { videoUrl as driveVideoUrl } from "@/lib/google/drive-client";
 import { formatDuration, REEL_NOTE_MAX } from "@/lib/reels/form";
 import { PLATFORMS, type Platform } from "@/lib/memes/platforms";
 import { PlatformIcon } from "../../memes/PlatformIcon";
@@ -23,6 +24,7 @@ import { recordReelShare, removeReelShare, setReelArchived } from "../actions";
 
 export type ViewReel = {
   id: string;
+  drive_file_id: string;
   file_name: string | null;
   description: string;
   tags: string[];
@@ -63,7 +65,7 @@ export function ReelView({ reel, canEdit, today }: { reel: ViewReel; canEdit: bo
   const [note, setNote] = useState("");
 
   const residentName = (r: { name: string; thai_name: string | null }) => (locale === "th" && r.thai_name ? r.thai_name : r.name);
-  const videoUrl = `/api/reels/${reel.id}/video`;
+  const videoUrl = driveVideoUrl(reel.drive_file_id);
   const downloadName = reel.file_name ?? `reel-${reel.date_taken}.mp4`;
   const length = formatDuration(reel.duration_ms);
 

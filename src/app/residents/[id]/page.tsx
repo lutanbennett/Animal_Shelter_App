@@ -15,6 +15,7 @@ import { loadMentions, loadNoteTags, loadSourceLabels, noteKey } from "@/lib/not
 import { MentionedIn } from "./MentionedIn";
 import { isMedicalFolder } from "@/lib/google/drive-client";
 import { canBrowseMemes, loadResidentMemes } from "@/lib/memes/queries";
+import { canBrowseReels, loadResidentReels } from "@/lib/reels/queries";
 import type { AppealStatus } from "@/lib/appeals/state";
 import { localLabel } from "@/lib/translations/labels";
 import {
@@ -281,6 +282,8 @@ export default async function ResidentPage(
   );
 
   const memes = canBrowseMemes(perms) ? await loadResidentMemes(supabase, id) : null;
+  // The reels featuring this resident (0322): the activity the reel_residents policy asks, social.library at Read.
+  const reels = canBrowseReels(perms) ? await loadResidentReels(supabase, id) : null;
 
   // The header photo's viewer: the same attachments the Photos tab lists, minus the Medical
   // folder (isMedicalFolder, the rule the profile-photo and appeal code use). A failed read
@@ -364,6 +367,7 @@ export default async function ResidentPage(
         memes &&
         memes.map((m) => ({ id: m.id, drive_file_id: m.drive_file_id, title: m.title, platforms: m.platforms }))
       }
+      reels={reels && reels.map((r) => ({ id: r.id, description: r.description, date_taken: r.date_taken, platforms: r.platforms }))}
       adoptionUpdates={{
         count: adoptionUpdatesResult.data?.length ?? 0,
         latest: adoptionUpdatesResult.data?.[0] ?? null,
