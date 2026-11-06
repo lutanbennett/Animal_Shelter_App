@@ -597,6 +597,12 @@ Know its limits, and say so in the test plan when they bite:
 - **The dev database is shared by every stream**, so what you write is visible to the others.
 - The cookie lasts 50 minutes. If a page sends you to `/login`, run the script again.
 
+### A dev model for the assistant
+
+Dev has no language model, so assistant paths that need one cannot run. **`node scripts/dev-assistant-model.mjs --dev`** starts a scripted stand-in and `next dev` pointed at it
+(`--force-tag-failure denied` to see the tags-did-not-attach notice). Good for a save path and a failure notice, **not** for judging whether the assistant understands a sentence.
+Read `docs/dev-assistant-model.md` first (decisions: `2026-11-06-dev-assistant-model.md`).
+
 ### The built-in browser pane lies about pages you load by their address
 
 Measured 2026-10-28 (`docs/decisions/2026-10-28-website-contact-tab-not-an-app-fault.md`, extended

@@ -142,7 +142,7 @@ if (isMain) {
     const force = opt("--force-tag-failure");
     if (force) env.ASSISTANT_FORCE_TAG_FAILURE = force;
     console.log(`next dev on :${devPort} with the stand-in${force ? ` and ASSISTANT_FORCE_TAG_FAILURE=${force}` : ""}`);
-    const child = spawn("npx", ["next", "dev", "--port", devPort], { cwd: root, env, stdio: "inherit", shell: true });
+    const child = spawn(process.execPath, [join(root, "node_modules", "next", "dist", "bin", "next"), "dev", "--port", devPort], { cwd: root, env, stdio: "inherit" });
     child.on("exit", (c) => process.exit(c ?? 0));
   } else {
     console.log("Point a dev server at it: ASSISTANT_LLM_MODEL=scripted-dev ASSISTANT_LLM_BASE_URL=http://localhost:" + port + "/v1");
