@@ -4799,7 +4799,7 @@ const en = {
       prescriptions: "Prescriptions",
       weight: "Weight",
       actions: "What you can do",
-      deceasedNote: "This resident has died, so their record is closed. You can still add the bill, the cost and notes to this visit; nothing else on it can be changed.",
+      deceasedNote: "This resident has died, so their record is closed. Whoever is allowed to can still add the bill, the cost and notes to this visit; nothing else on it can be changed.",
       correctCostNotes: "Correct cost and notes",
       reports: {
         title: "Doctor's report",
@@ -5008,6 +5008,18 @@ const en = {
       },
     },
   },
+  closedRecordNote: {
+    add: "Add a note",
+    label: "Note",
+    explain: "This resident has died, so their record is closed. A note is added after what is already written; nothing else on this entry can be changed.",
+    save: "Save note",
+    errors: {
+      empty: "Write the note first.",
+      tooLong: (max: number) => `A note can be up to ${max} characters.`,
+      notClosed: "This resident is not recorded as having died. Use the entry's own edit page.",
+      changed: "Someone changed this entry while you were writing. Reload the page and add the note again.",
+    },
+  },
   recordArchive: {
     badge: "Removed",
     archive: "Remove",
@@ -5062,6 +5074,7 @@ const en = {
     files: "Files",
     attachHint:
       "Pick the lab scan or PDF here; it uploads when you save. You can add more later from the Blood Tests tab.",
+    lateResultNoFiles: "This resident has died, so their record is closed. A result that arrived late can be added as text; a scan or PDF cannot be attached.",
     done: "Done",
     linkedVisitLabel: (date: string, reason: string) => `Clinic visit: ${date} — ${reason}`,
     fileFallback: "File",
@@ -6197,7 +6210,7 @@ const en = {
       recordButton: "Record death",
       recording: "Recording...",
       recordClosed:
-        "This resident has died — their record is closed and can no longer be changed.",
+        "This resident has died — their record is closed, so this cannot be added or changed. Notes on existing placements, weights, prescriptions, immunizations and procedures, and late blood test results, can still be added from the resident's page.",
       editLimited:
         "This resident has died. Their bio and photos can still be updated — everything else in the record is closed. The archive in Drive is refreshed after each change.",
       notAuthorized: "You can't record a death: it needs the permission \"Record a death\".",

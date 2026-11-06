@@ -6,12 +6,15 @@ import { ActionLink } from "@/components/ActionLink";
 import { SECTION_ICONS } from "@/components/hub-icons";
 import type { SectionContext } from "./types";
 import { RecordList } from "./shared";
+import { NoteText } from "@/components/NoteText";
+import { ClosedRecordNoteControl } from "@/components/ClosedRecordNoteControl";
+import { CLOSED_NOTE_KINDS } from "@/lib/closed-record/notes";
 
 export async function renderImmunizationsSection(ctx: SectionContext): Promise<React.ReactNode> {
-  const { id, isDeceased, perms, t, locale, supabase, showArchived, canArchive, archivedCount, archivedToggle, archivedList } = ctx;
+  const { id, isDeceased, perms, t, locale, supabase, showArchived, canArchive, archivedCount, archivedToggle, archivedList, noteTags } = ctx;
   const { data } = await supabase
     .from("immunization_records")
-    .select("id, date_administered, administered_by, immunization_types:picker_immunization_types(name, name_th)")
+    .select("id, date_administered, administered_by, notes, immunization_types:picker_immunization_types(name, name_th)")
     .is("archived_at", null)
     .eq("resident_id", id)
     .order("date_administered", { ascending: false })
@@ -20,6 +23,7 @@ export async function renderImmunizationsSection(ctx: SectionContext): Promise<R
         id: string;
         date_administered: string;
         administered_by: string | null;
+        notes: string | null;
         immunization_types: { name: string; name_th: string | null } | null;
       }[]
     >();
@@ -27,7 +31,7 @@ export async function renderImmunizationsSection(ctx: SectionContext): Promise<R
   const { data: archivedImm } = showArchived
     ? await supabase
         .from("immunization_records")
-        .select("id, date_administered, administered_by, archive_reason, immunization_types:picker_immunization_types(name, name_th)")
+        .select("id, date_administered, administered_by, notes, archive_reason, immunization_types:picker_immunization_types(name, name_th)")
         .not("archived_at", "is", null)
         .eq("resident_id", id)
         .order("date_administered", { ascending: false })
@@ -36,6 +40,7 @@ export async function renderImmunizationsSection(ctx: SectionContext): Promise<R
             id: string;
             date_administered: string;
             administered_by: string | null;
+            notes: string | null;
             archive_reason: string | null;
             immunization_types: { name: string; name_th: string | null } | null;
           }[]
@@ -46,10 +51,12 @@ export async function renderImmunizationsSection(ctx: SectionContext): Promise<R
       id: string;
       date_administered: string;
       administered_by: string | null;
+      notes: string | null;
       immunization_types: { name: string; name_th: string | null } | null;
     },
     archived: boolean,
   ) => (
+    <div className="flex flex-col gap-1">
     <div className="flex items-center justify-between gap-3">
       <span className="font-medium">
         {(row.immunization_types ? localLabel(locale, row.immunization_types.name, row.immunization_types.name_th) : t.residents.sections.unknownVaccine)}
@@ -69,6 +76,13 @@ export async function renderImmunizationsSection(ctx: SectionContext): Promise<R
           />
         )}
       </span>
+    </div>
+    {row.notes && <span className="text-xs text-muted"><NoteText text={row.notes} tags={noteTags("immunization_records", "notes", row.id)} /></span>}
+    {isDeceased && !archived && can(perms, CLOSED_NOTE_KINDS.immunization.activity) && (
+      <div className="flex justify-end">
+        <ClosedRecordNoteControl kind="immunization" residentId={id} id={row.id} subject={`${(row.immunization_types ? localLabel(locale, row.immunization_types.name, row.immunization_types.name_th) : t.residents.sections.unknownVaccine)} · ${formatDate(row.date_administered, locale)}`} />
+      </div>
+    )}
     </div>
   );
   const { data: missing } = await supabase

@@ -9,6 +9,8 @@ import { ACTION_ICONS, SECTION_ICONS } from "@/components/hub-icons";
 import { RowActionLink } from "@/components/RowAction";
 import type { SectionContext } from "./types";
 import { RecordList } from "./shared";
+import { ClosedRecordNoteControl } from "@/components/ClosedRecordNoteControl";
+import { CLOSED_NOTE_KINDS } from "@/lib/closed-record/notes";
 
 export async function renderWeightSection(ctx: SectionContext): Promise<React.ReactNode> {
   const { id, isDeceased, perms, t, locale, supabase, showArchived, canArchive, archivedCount, archivedToggle, archivedList, noteTags } = ctx;
@@ -133,8 +135,11 @@ export async function renderWeightSection(ctx: SectionContext): Promise<React.Re
               </span>
             </div>
             {row.notes && <span className="text-xs text-muted"><NoteText text={row.notes} tags={noteTags("weight", "notes", row.id)} /></span>}
-            {(!isDeceased || canArchive("weight")) && (
+            {(!isDeceased || canArchive("weight") || can(perms, CLOSED_NOTE_KINDS.weight.activity)) && (
               <div className="flex items-start justify-end gap-3">
+                {isDeceased && can(perms, CLOSED_NOTE_KINDS.weight.activity) && (
+                  <ClosedRecordNoteControl kind="weight" residentId={id} id={row.id} subject={`${formatWeightKg(row.weight_kg, locale)} · ${formatDate(row.date, locale)}`} />
+                )}
                 {!isDeceased && can(perms, "medical.weight") && (
                   <RowActionLink
                     href={`/weight/${row.id}/edit`}

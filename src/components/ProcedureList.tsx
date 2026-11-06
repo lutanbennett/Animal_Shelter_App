@@ -10,6 +10,7 @@ import { deleteProcedureAttachment } from "@/app/residents/[id]/procedures/actio
 import { ActionButton } from "@/components/ActionButton";
 import { AttachmentUploader } from "@/components/AttachmentUploader";
 import { useConfirm } from "@/components/ConfirmProvider";
+import { ClosedRecordNoteControl } from "@/components/ClosedRecordNoteControl";
 import { RowActionButton } from "@/components/RowAction";
 import { FileTypeIcon } from "@/components/FileTypeIcon";
 import { useWriteCall } from "@/lib/use-write-form";
@@ -43,12 +44,15 @@ export function ProcedureList({
   residentId,
   procedures,
   readOnly = false,
+  canAddClosedNote = false,
   canManage = false,
 }: {
   residentId: string;
   procedures: ProcedureRow[];
   /** A closed record (deceased resident): files can be opened, not changed. */
   readOnly?: boolean;
+  /** A dead resident: draws the add-a-note control (0320). The caller passes can(perms, CLOSED_NOTE_KINDS.procedure.activity). */
+  canAddClosedNote?: boolean;
   /** The login holds the card the attach and remove actions ask. Defaults to false so a caller that forgets offers nothing. */
   canManage?: boolean;
 }) {
@@ -108,6 +112,12 @@ export function ProcedureList({
               <p className="whitespace-pre-wrap text-sm text-foreground">
                 <NoteText text={procedure.notes} tags={procedure.noteTags} />
               </p>
+            )}
+
+            {readOnly && canAddClosedNote && (
+              <div className="flex justify-end">
+                <ClosedRecordNoteControl kind="procedure" residentId={residentId} id={procedure.id} />
+              </div>
             )}
 
             {procedure.attachments.length > 0 ? (

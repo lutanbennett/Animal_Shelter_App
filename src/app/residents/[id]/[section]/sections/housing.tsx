@@ -8,6 +8,9 @@ import { PLACEMENT_ICONS } from "@/components/hub-icons";
 import { PLACEMENT_ACTION_PATHS, placementActionsFor } from "@/lib/placements/available";
 import type { SectionContext } from "./types";
 import { RecordList } from "./shared";
+import { ClosedRecordNoteControl } from "@/components/ClosedRecordNoteControl";
+import { CLOSED_NOTE_KINDS } from "@/lib/closed-record/notes";
+import { can } from "@/lib/permissions/can";
 
 export async function renderHousingSection(ctx: SectionContext): Promise<React.ReactNode> {
   const { id, residentState, isDeceased, t, locale, supabase, contactEmbed, noteTags } = ctx;
@@ -110,6 +113,11 @@ export async function renderHousingSection(ctx: SectionContext): Promise<React.R
               </span>
             )}
             {row.notes && <span className="text-xs text-muted"><NoteText text={row.notes} tags={noteTags("placement_history", "notes", row.id)} /></span>}
+            {isDeceased && can(ctx.perms, CLOSED_NOTE_KINDS.placement.activity) && (
+              <div className="flex justify-end">
+                <ClosedRecordNoteControl kind="placement" residentId={id} id={row.id} subject={`${placementTypeLabel(t, row.placement_type)} · ${formatDate(row.start_date, locale)}`} />
+              </div>
+            )}
           </div>
         )}
       />
