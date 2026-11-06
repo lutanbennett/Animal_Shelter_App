@@ -16,7 +16,7 @@
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence: a decision file records that the donation QR and shelter-friend logo need no approval flag, and #h3w7c is ticked
-- [x] Files touched: `docs/decisions/2026-11-08-approval-flag-public-surfaces.md`, `docs/backlog.md`, this plan
+- [x] Files touched: `docs/decisions/2026-11-06-approval-flag-public-surfaces.md`, `docs/backlog.md`, this plan
 - [ ] Cards affected — n/a: no behaviour changes; admin and the public are unaffected
 - [x] Out of scope written down: no migration, no src, `site_content_photos` and #7aev4's three items untouched
 
