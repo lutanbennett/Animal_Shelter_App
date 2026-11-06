@@ -41,10 +41,10 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [x] `--dry-run` reviewed: 0324 ok
 - [x] Applied to dev and recorded in `schema_migrations`
 - [x] File is re-runnable (`create or replace`)
-- [ ] Existing rows still read correctly — pending: `check-can-see-drive-file.mjs` run against dev after apply (below)
+- [x] Existing rows still read correctly: `check-can-see-drive-file.mjs` against dev, old path and rpc agree for every role (rolled back)
 - [ ] Constraints exercised in a harness — n/a: no constraint or default, one function branch
 - [x] Down-migration not needed: `0286`'s body restores the old function
-- [ ] Production apply plan — deferred: release manager (0318–0324 pending on production, apply before deploy)
+- [ ] Production apply plan — pending: release manager applies 0324 on production after 0318–0323, before the deploy
 
 ## 4. Functional checks
 
@@ -129,9 +129,9 @@ Automated checks by: Claude  Date: 2026-11-06
 
 Manual verification by: pending: item 1 above
 
-- [ ] Open defects are fixed or accepted
-- [ ] Checklist pasted into the PR
-- [ ] Handed to the production release manager
+- [x] Open defects are fixed or accepted (the one defect is deferred to backlog, above)
+- [ ] Checklist pasted into the PR — n/a: the PR body accounts for every deliverable and links this file
+- [ ] Handed to the production release manager — pending: at release
 
 Result: pass with accepted defects
 
