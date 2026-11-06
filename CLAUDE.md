@@ -630,6 +630,26 @@ bisect stream.
 - **Record the machine load beside every figure.** A timing without its machine load is not a reading, exactly as a count
   without its database is not one.
 
+## A bot pull request (Dependabot) is owned by whoever meets it
+
+**Decided 2026-11-06 (`docs/decisions/2026-11-06-dependabot-pr-ownership.md`).** Merge-on-green covers a PR a
+stream opened. Dependabot opens one and then nobody is responsible for it, and `test-plan` is red on every one
+(a bot writes no plan), so the one signal that a human is needed looks like the normal state. #1161 sat open from
+1 to 5 November, `MERGEABLE`, for exactly that reason. `/plan-day` step 2 now lists open PRs it did not open;
+**whoever sees one settles it, without asking**:
+
+- **Merge it yourself** when all three hold, and say so on the PR: **(1)** GitHub reports `MERGEABLE`;
+  **(2)** the only red check is `test-plan`, which is advisory and never blocks (any other red is a real
+  finding, as everywhere); **(3)** every pinned commit hash in the diff has been **resolved against GitHub and
+  really is the tag the comment claims** (`gh api repos/<owner>/<name>/git/ref/tags/<tag>`, following an
+  annotated tag to its commit). The workflows pin actions by hash, so a wrong hash runs someone else's code in
+  CI; check (3) is the one that matters.
+- **Read it first, do not merge on sight,** anything touching `package.json` or `package-lock.json`: that is
+  the one that can change what ships. Read the changelog for breaking changes and run the gates on it. If it
+  needs a plan, carry it on a `claude/dependabot-<n>` branch
+  (`docs/decisions/2026-10-07-dependabot-prs-carried-on-a-branch.md`).
+- `check-test-plan.mjs` is **not** taught to skip bot PRs: that is an exemption, and "no exemptions" stands.
+
 ## A red `audit` check is not a blocker, and never has been
 
 CI's `audit` job (`npm run audit:prod`) reports known-vulnerable
