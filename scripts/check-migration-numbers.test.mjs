@@ -4,7 +4,7 @@ import { spawnSync } from "node:child_process";
 import { KNOWN_DUPLICATES, collisionsWithOpenPrs, duplicateNumbers } from "./lib/migrations.mjs";
 
 const FX = "scripts/fixtures/migration-numbers";
-const run = (...a) => spawnSync("node", ["scripts/check-migration-numbers.mjs", "--no-prs", ...a], { encoding: "utf8" });
+const run = (...a) => spawnSync("node", ["scripts/check-migration-numbers.mjs", "--no-prs", "--base", "HEAD", ...a], { encoding: "utf8" });
 
 test("a planted duplicate number is refused, with no network", () => {
   const r = run("--names-file", `${FX}/planted-duplicate-names.txt`);
