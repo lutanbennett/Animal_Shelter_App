@@ -12,7 +12,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** Edit a reel's description and date taken. The video is fixed: a different clip is a different reel. */
 export default async function EditReelPage(props: PageProps<"/reels/[id]/edit">) {
   const { id } = await props.params;
-  const { supabase, perms } = await requirePermission("social.library", "edit");
+  const { supabase, perms } = await requirePermission("social.reels", "edit");
   if (!UUID.test(id)) notFound();
   const { t } = await getT();
   const reel = await loadReel(supabase, id);
@@ -28,7 +28,7 @@ export default async function EditReelPage(props: PageProps<"/reels/[id]/edit">)
         initial={{ description: reel.description, dateTaken: reel.date_taken }}
         initialTags={reel.residents.map((r) => ({ id: r.id, name: r.name }))}
         today={todayIso()}
-        canTag={can(perms, "resident.record", "read")}
+        canTag={can(perms, "resident.who_and_where", "read")}
       />
     </main>
   );

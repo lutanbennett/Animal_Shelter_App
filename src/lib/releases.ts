@@ -79,6 +79,10 @@ export const unreleased: ReleaseNote[] = [
     text: "There are two new permission cards for the meme library. Add and change memes lets someone add a meme, change its words and residents, and record where it was posted, but not archive it or take a post record off. Browse memes only lets someone look. Archiving a meme, and removing a post record, now need the Meme library card; the database enforces it too. The Thai wording has not been checked by a Thai speaker.",
     cards: ["meme_add", "meme_view", "meme_library"],
   },
+  {
+    text: "There are two new permission cards for the Reels library. Add and change reels lets someone add a reel, change its words and residents, and record where it was posted, but not archive it or take a post record off. Browse reels only lets someone look. Archiving a reel, and removing a post record, now need the Reels library card; the database enforces it too. Anyone who had a meme card was given the matching reel card, so nobody loses Reels today. The Thai wording has not been checked by a Thai speaker.",
+    cards: ["reel_add", "reel_view", "reel_library"],
+  },
 
   {
     text: "When you add or change a fundraising event, the campaign and project pickers now say so if they may be short or empty because your login cannot see campaigns or project folders, instead of looking like there is nothing to choose. The Thai wording has not been checked by a Thai speaker.",

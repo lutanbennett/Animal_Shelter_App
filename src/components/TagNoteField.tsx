@@ -25,6 +25,7 @@ export function TagNoteField({
   className,
   required,
   canTag = false,
+  searchUrl = "/api/residents/tag-search",
   initialTags = [],
   selfId,
   onTextChange,
@@ -39,6 +40,8 @@ export function TagNoteField({
   className?: string;
   required?: boolean;
   canTag?: boolean;
+  /** The search the # picker calls; defaults to the general one. A reel passes its own, scoped to who-and-where. */
+  searchUrl?: string;
   initialTags?: readonly NoteTag[];
   /** The resident the note is written on, never offered as a tag. */
   selfId?: string;
@@ -60,7 +63,7 @@ export function TagNoteField({
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/residents/tag-search?q=${encodeURIComponent(open.query)}`, { signal: controller.signal });
+        const res = await fetch(`${searchUrl}?q=${encodeURIComponent(open.query)}`, { signal: controller.signal });
         if (!res.ok) throw new Error("search");
         const body = (await res.json()) as { residents: Match[] };
         setMatches(body.residents.filter((r) => r.id !== selfId));
@@ -73,7 +76,7 @@ export function TagNoteField({
       clearTimeout(timer);
       controller.abort();
     };
-  }, [open, selfId]);
+  }, [open, selfId, searchUrl]);
 
   function refresh() {
     const el = ref.current;

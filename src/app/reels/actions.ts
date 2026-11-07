@@ -22,8 +22,8 @@ const write = (t: Dictionary): WriteMessages => ({
 });
 
 /**
- * The reels library's writes (0322). Each asks can(perms, "social.library") for a sentence; the database asks
- * has_permission('social.library') in reels_write_perm, reel_residents_write_perm and the four social_shares policies,
+ * The reels library's writes (0322, split by 0329). Changing a reel and recording a post ask social.reels; archiving and taking a post
+ * record off ask social.reels_manage. The database asks the same in the per-command reels, reel_residents and social_shares policies,
  * so a stale page or a hand-made request is refused there too. Adding a reel is NOT here: it is the upload routes
  * /api/reels/start and /finish, because the video goes to Drive from the browser.
  * docs/decisions/2026-11-06-reels-app.md.
@@ -50,7 +50,7 @@ export async function updateReel(id: string, formData: FormData): Promise<Action
     { id: writeRequestIdFrom(formData), action: "reels.update", db: await createClient() },
     async () => {
       const perms = await loadPermissions();
-      if (!can(perms, "social.library")) return { ok: false, error: t.reels.errors.notAllowed };
+      if (!can(perms, "social.reels")) return { ok: false, error: t.reels.errors.notAllowed };
       if (!UUID.test(id)) return { ok: false, error: e.notFound };
 
       const description = (formData.get("description") as string | null) ?? "";
@@ -113,7 +113,7 @@ export async function setReelArchived(id: string, archived: boolean, requestId: 
     { id: requestId, action: "reels.archive", db: await createClient() },
     async () => {
       const perms = await loadPermissions();
-      if (!can(perms, "social.library")) return { ok: false, error: t.reels.errors.notAllowed };
+      if (!can(perms, "social.reels_manage")) return { ok: false, error: t.reels.errors.notAllowed };
       if (!UUID.test(id)) return { ok: false, error: e.notFound };
       const supabase = await createClient();
       const [{ data, error }, { data: links }] = await Promise.all([
@@ -143,7 +143,7 @@ export async function recordReelShare(reelId: string, input: ReelShareInput, req
     { id: requestId, action: "reels.recordShare", db: await createClient() },
     async () => {
       const perms = await loadPermissions();
-      if (!can(perms, "social.library")) return { ok: false, error: t.reels.errors.notAllowed };
+      if (!can(perms, "social.reels")) return { ok: false, error: t.reels.errors.notAllowed };
       if (!UUID.test(reelId)) return { ok: false, error: t.reels.form.errors.notFound };
       if (!isPlatform(input.platform)) return { ok: false, error: e.badPlatform };
       if (!/^\d{4}-\d{2}-\d{2}$/.test(input.sharedOn) || Number.isNaN(new Date(input.sharedOn).getTime())) {
@@ -186,7 +186,7 @@ export async function removeReelShare(reelId: string, shareId: string, requestId
     { id: requestId, action: "reels.removeShare", db: await createClient() },
     async () => {
       const perms = await loadPermissions();
-      if (!can(perms, "social.library")) return { ok: false, error: t.reels.errors.notAllowed };
+      if (!can(perms, "social.reels_manage")) return { ok: false, error: t.reels.errors.notAllowed };
       if (!UUID.test(reelId) || !UUID.test(shareId)) return { ok: false, error: t.memes.share.errors.notFound };
       const supabase = await createClient();
       const { data, error } = await supabase

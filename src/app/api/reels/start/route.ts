@@ -14,7 +14,7 @@ import { refuseCrossSite } from "@/lib/auth/same-origin";
  * the browser says what it is about to send, this route checks it, opens a Drive resumable upload in the Reels
  * folder and hands the session's address back. The video never passes through the app.
  *
- * Asks social.library at Edit, the activity the reels table's write policy asks (0322), BEFORE any Drive call: Drive
+ * Asks social.reels at Edit, the activity the reels table's write policy asks (0322), BEFORE any Drive call: Drive
  * is not RLS-protected. The service-role client is used only for video_uploads (service role only, 0229), after that
  * check; the row is owner_kind 'reel' with no resident, as 0322 allows.
  */
@@ -25,7 +25,7 @@ async function handlePost(request: Request) {
   if (crossSite) return crossSite;
 
   const { t } = await getT();
-  if (!can(await loadPermissions(), "social.library")) {
+  if (!can(await loadPermissions(), "social.reels")) {
     return NextResponse.json({ error: t.reels.errors.notAllowed }, { status: 403 });
   }
 

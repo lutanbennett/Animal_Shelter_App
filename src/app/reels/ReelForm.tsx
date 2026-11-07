@@ -27,8 +27,8 @@ const hintClass = "text-xs text-muted";
  * different clip is a different reel. A new video goes to Google Drive from the browser in chunks, never through the
  * app (src/lib/uploads/resumable-video.ts); the description's #tags travel with the finish call.
  *
- * `canTag` is can(perms, "resident.record", "read"), the activity the # picker's own search asks
- * (/api/residents/tag-search). Without it the box is a plain description and a save leaves the residents alone.
+ * `canTag` is can(perms, "resident.who_and_where", "read"), the activity the # picker's own search asks
+ * (/api/reels/resident-search). Without it the box is a plain description and a save leaves the residents alone.
  */
 export function ReelForm({
   mode,
@@ -133,6 +133,7 @@ export function ReelForm({
           defaultValue={initial.description}
           className={textareaClass}
           canTag={canTag}
+          searchUrl="/api/reels/resident-search"
           initialTags={initialTags}
           onTextChange={setDescription}
           onTagsChange={setPicks}

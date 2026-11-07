@@ -42,12 +42,12 @@ const labelClass = "text-sm font-medium text-muted";
 
 /**
  * One reel's page: the video, its description with the tagged animals as links, and the record of where it was posted.
- * Record where it was posted, Edit and Archive show only at social.library Edit (`canEdit`), the activity their
- * actions and policies ask; the database refuses a Read login that tries anyway. Download is a same-origin link with
+ * Record where it was posted and Edit show only with social.reels Edit (`canEdit`); Archive, Restore and removing a post record only with
+ * social.reels_manage (`canManage`), the activities their actions and policies ask; the database refuses a login that tries anyway. Download is a same-origin link with
  * `download`, so the phone saves the file instead of opening it. Nothing here publishes anywhere: recording a post is
  * bookkeeping, and posting from the app is #vkswg, on hold.
  */
-export function ReelView({ reel, canEdit, today }: { reel: ViewReel; canEdit: boolean; today: string }) {
+export function ReelView({ reel, canEdit, canManage = false, today }: { reel: ViewReel; canEdit: boolean; canManage?: boolean; today: string }) {
   const { t, locale } = useI18n();
   const shareWrite = useWriteCall();
   const removeShareWrite = useWriteCall();
@@ -145,7 +145,7 @@ export function ReelView({ reel, canEdit, today }: { reel: ViewReel; canEdit: bo
           </ActionButton>
         )}
         {canEdit && <ActionLink href={`/reels/${reel.id}/edit`} label={p.edit} icon={ACTION_ICONS.edit} iconOnlyOnMobile={false} />}
-        {canEdit &&
+        {canManage &&
           (reel.archived ? (
             <ActionButton icon={ACTION_ICONS.restore} onClick={() => archive(false)} disabled={pending}>
               {p.unarchive}
@@ -246,7 +246,7 @@ export function ReelView({ reel, canEdit, today }: { reel: ViewReel; canEdit: bo
                     </a>
                   )}
                 </div>
-                {canEdit && <RowActionButton icon={ACTION_ICONS.delete} label={m.share.remove} onClick={() => remove(s.id)} disabled={pending} />}
+                {canManage && <RowActionButton icon={ACTION_ICONS.delete} label={m.share.remove} onClick={() => remove(s.id)} disabled={pending} />}
               </li>
             ))}
           </ul>
