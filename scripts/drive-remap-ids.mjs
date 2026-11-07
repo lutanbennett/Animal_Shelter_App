@@ -72,7 +72,7 @@ async function main() {
   const map = `(values ${values}) as m(f,t)`;
   for (const { t, c } of cols) {
     const sql = APPLY
-      ? `with u as (update public."${t}" x set "${c}" = m.t from ${map} where x."${c}" = m.f returning 1) select count(*)::int n from u`
+      ? `select set_config('app.deceased_lock_bypass', 'on', true); with u as (update public."${t}" x set "${c}" = m.t from ${map} where x."${c}" = m.f returning 1) select count(*)::int n from u`
       : `select count(*)::int n from public."${t}" x join ${map} on x."${c}" = m.f`;
     const [{ n }] = await query(sql);
     total += n;
