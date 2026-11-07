@@ -71,6 +71,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "The Sterilisation drives list now opens for a login that can only view the website, instead of being refused. It shows the drives and their sign-up counts; the Start a drive button and the links into each drive appear only for a login that can edit the website.",
+    cards: ["website", "website_photos"],
+  },
+  {
     text: "Bills now has an Other bills page. It lists every bill filed as materials, cleaning products or another kind with no screen of its own, shows the pages already on each, and lets you add another page if one turns up after the bill was filed. The new page shows in the expenses report as that bill's receipt. The Thai wording has not been checked by a Thai speaker.",
     cards: ["bills"],
   },
