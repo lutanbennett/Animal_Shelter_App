@@ -89,7 +89,9 @@
       ],
       "vars": {
         "NODE_ENV": "production",
-        "ORIGIN_HOST": "",
+        // The Pi's third instance (lanna-care-uat.service, port 3002). Empty until 2026-11-07, when every
+        // UAT page was rendered in this Worker over the free 10 ms CPU limit (docs/decisions/2026-11-07-uat-on-the-pi.md).
+        "ORIGIN_HOST": "uat-pi.lannacare.org",
         // The two addresses (src/lib/site-hosts.ts), hostnames only. Equal = one address
         // serves everything. The public website's move to its own domain is PUBLIC_HOST
         // changing here; the staff app's move to its Cooper address is APP_HOST.

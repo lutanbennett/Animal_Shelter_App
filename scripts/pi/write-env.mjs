@@ -87,18 +87,18 @@ const lines = [
   // The sized-photo disk cache (src/lib/photo-cache.ts). Only a Pi has this
   // line, so the Worker fallback and `next dev` stay diskless. Disposable and
   // capped (PHOTO_CACHE_MAX_MB, default 1024), kept outside ~/backups.
-  // Test has its own directory: it shares the Pi with production and its own cap.
-  `PHOTO_CACHE_DIR=${join(homedir(), name === "test" ? "photo-cache-test" : "photo-cache")}`,
+  // Test and UAT each have their own directory: they share the Pi with production and each its own cap.
+  `PHOTO_CACHE_DIR=${join(homedir(), name === "production" ? "photo-cache" : `photo-cache-${name}`)}`,
   // The read path onto the Drive mirror (src/lib/mirror-read.ts). Production only: the mirror is the production
   // shelter's Drive. Unmounted, it has no state.json and every file is fetched from Drive as before.
-  ...(name === "test" ? [] : [`MIRROR_DEST=${process.env.MIRROR_DEST || "/mnt/lanna-mirror"}`]),
+  ...(name === "production" ? [`MIRROR_DEST=${process.env.MIRROR_DEST || "/mnt/lanna-mirror"}`] : []),
 ];
 writeFileSync(".env.production.local", lines.join("\n") + "\n", { mode: 0o600 });
 // The service runs as its own user (docs/decisions/2026-10-22-pi-app-own-user.md) and reads this
 // file through its group. Rewriting the file resets that, so hand it over again every time. Before
 // setup has made the group there is nothing to hand over to, and the file stays 0600.
 {
-  const group = name === "test" ? "lannacare-test" : "lannacare-app";
+  const group = name === "production" ? "lannacare-app" : `lannacare-${name}`;
   try {
     execFileSync("getent", ["group", group], { stdio: "ignore" });
     execFileSync("chgrp", [group, ".env.production.local"]);
