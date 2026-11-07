@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, CheckCircle2, ImagePlus, Loader2, RotateCcw, XCircle } from "lucide-react";
+import { Camera, CheckCircle2, ImagePlus, Loader2, RotateCcw, Save, XCircle } from "lucide-react";
 import { ActionButton } from "@/components/ActionButton";
 import { uploadResidentPhoto } from "@/components/PhotoUploader";
 import { ResidentPicker } from "@/app/medical/ResidentPicker";
@@ -18,12 +18,14 @@ import type { PhotoCategory } from "@/lib/google/drive-client";
 type Status = "saving" | "saved" | "failed";
 
 /** One photo saved (or being saved) to one resident. A photo with two dogs has two of these. */
-type Tag = { residentId: string; name: string; status: Status; error?: string; enclosureId?: string };
+type Tag = { residentId: string; name: string; status: Status; error?: string; enclosureId?: string; unsorted?: boolean };
 
 type Photo = { key: string; file: File; preview: string; tags: Tag[] };
 
 /** One upload waiting its turn. Sequential: the first upload for a resident may create their Drive folder. */
-type Job = { photoKey: string; residentId: string; folder: PhotoCategory; enclosureId?: string };
+type Job = { photoKey: string; residentId: string; folder: PhotoCategory; enclosureId?: string; unsorted?: boolean };
+
+const UNSORTED_KEY = "unsorted";
 
 const RECENT_KEY = "photos-add:recent";
 const RECENT_MAX = 8;
@@ -80,6 +82,7 @@ export function AddPhotosFlow({
   residents,
   loadError,
   enclosures,
+  mayStoreForLater,
 }: {
   categories: readonly PhotoCategory[];
   route: "staff" | "medical" | "shelter";
@@ -91,11 +94,14 @@ export function AddPhotosFlow({
   loadError: string | null;
   /** Where a photo can be tagged when the person does not know the animal; null where that path is not offered. */
   enclosures: EnclosureChoices | null;
+  /** The login may file a photo with no resident and no place: the activity /api/photos/pending asks, read there. */
+  mayStoreForLater: boolean;
 }) {
   const { t, locale } = useI18n();
   const a = t.addPhotos;
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [pickedKey, setPickedKey] = useState<string | null>(null);
+  const [finished, setFinished] = useState<{ n: number; later: number } | null>(null);
   const [allToOne, setAllToOne] = useState(false);
   const [folder, setFolder] = useState<PhotoCategory>(categories.includes("Shelter") ? "Shelter" : categories[0]);
   const [query, setQuery] = useState("");
@@ -136,8 +142,8 @@ export function AddPhotosFlow({
         if (!job) break;
         const photo = photosRef.current.find((p) => p.key === job.photoKey);
         if (!photo) continue;
-        const result = job.enclosureId
-          ? await uploadPendingPhoto(t, job.enclosureId, photo.file)
+        const result = job.enclosureId || job.unsorted
+          ? await uploadPendingPhoto(t, job.enclosureId ?? null, photo.file)
           : await uploadResidentPhoto(
               t,
               job.residentId,
@@ -169,6 +175,7 @@ export function AddPhotosFlow({
       }));
     if (fresh.length === 0) return;
     commit([...photosRef.current, ...fresh]);
+    setFinished(null);
     setPickedKey((k) => k ?? fresh[0].key);
   };
 
@@ -238,8 +245,39 @@ export function AddPhotosFlow({
     if (!after) setAllToOne(false);
   };
 
+  // Neither the animal nor the place is known: store every photo not yet tagged, to be named later by whoever approves.
+  const saveForLater = () => {
+    let any = false;
+    for (const p of photosRef.current.filter((x) => x.tags.length === 0)) {
+      any = true;
+      const tag: Tag = { residentId: UNSORTED_KEY, name: a.laterName, status: "saving", unsorted: true };
+      commit(photosRef.current.map((x) => (x.key === p.key ? { ...x, tags: [tag] } : x)));
+      jobs.current.push({ photoKey: p.key, residentId: UNSORTED_KEY, folder: "Shelter", unsorted: true });
+    }
+    if (!any) return;
+    setAllToOne(false);
+    setPickedKey(null);
+    void drain();
+  };
+
+  // Everything is stored: the person says they have finished, and is told in words what now exists.
+  const finish = () => {
+    const later = photosRef.current.filter((p) => p.tags.some((x) => x.unsorted)).length;
+    setFinished({ n: photosRef.current.length, later });
+    for (const p of photosRef.current) URL.revokeObjectURL(p.preview);
+    commit([]);
+    setPickedKey(null);
+    setAllToOne(false);
+  };
+
   const retry = (photoKey: string, residentId: string) => {
     const failedTag = photosRef.current.find((p) => p.key === photoKey)?.tags.find((x) => x.residentId === residentId);
+    if (failedTag?.unsorted) {
+      jobs.current.push({ photoKey, residentId, folder: "Shelter", unsorted: true });
+      patchTag(photoKey, residentId, { status: "saving", error: undefined });
+      void drain();
+      return;
+    }
     if (failedTag?.enclosureId) {
       // pickEnclosure tags the picked photo; point it at this one first.
       setAllToOne(false);
@@ -383,6 +421,12 @@ export function AddPhotosFlow({
       {folder === "Medical" && <p className="text-sm text-muted">{a.medicalNever}</p>}
       {waits && <p className="text-sm font-medium text-foreground">{a.waitsNote}</p>}
 
+      {finished && photos.length === 0 && (
+        <p role="status" className="flex items-start gap-2 rounded-lg border-2 border-green-700 bg-surface p-4 text-lg font-semibold text-foreground">
+          <CheckCircle2 aria-hidden className="mt-0.5 h-6 w-6 shrink-0 text-green-700" />
+          {a.stored(finished.n, finished.later)}
+        </p>
+      )}
       {photos.length === 0 ? (
         <p className="rounded-lg border border-border bg-surface p-4 text-muted">{a.noPhotos}</p>
       ) : (
@@ -416,7 +460,7 @@ export function AddPhotosFlow({
                   {p.tags.map((tag) => (
                     <span key={tag.residentId} className="flex flex-col gap-1">
                       <span className="flex items-center gap-1 break-words text-sm font-medium text-foreground">
-                        {tag.status === "saved" && <CheckCircle2 aria-label={waits ? a.savedWaiting : a.saved} role="img" className="h-4 w-4 shrink-0 text-green-700" />}
+                        {tag.status === "saved" && <CheckCircle2 aria-label={tag.unsorted ? a.savedForLater : waits ? a.savedWaiting : a.saved} role="img" className="h-4 w-4 shrink-0 text-green-700" />}
                         {tag.status === "saving" && <Loader2 aria-label={a.saving} role="img" className="h-4 w-4 shrink-0 animate-spin" />}
                         {tag.status === "failed" && <XCircle aria-label={a.failed} role="img" className="h-4 w-4 shrink-0 text-red-700" />}
                         {tag.name}
@@ -447,10 +491,28 @@ export function AddPhotosFlow({
             </button>
           )}
 
+          {untagged === 0 && !saving && !failed && (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-muted">{a.doneHelp}</p>
+              <ActionButton icon={CheckCircle2} variant="primary" onClick={finish}>
+                {a.done}
+              </ActionButton>
+            </div>
+          )}
+
           <h2 className="text-xl font-semibold text-foreground">
             {allToOne ? a.whoForAll(untagged) : a.whoFor}
           </h2>
           <p className="text-sm text-muted">{a.another}</p>
+
+          {mayStoreForLater && untagged > 0 && (
+            <div className="flex flex-col gap-1 rounded-lg border-2 border-foreground bg-surface p-3">
+              <ActionButton icon={Save} variant="primary" onClick={saveForLater}>
+                {a.saveLater}
+              </ActionButton>
+              <p className="text-sm text-muted">{a.saveLaterHelp(untagged)}</p>
+            </div>
+          )}
 
           {canTag && offerEnclosure && (
             <div className="grid grid-cols-2 gap-2" role="group" aria-label={a.whoFor}>

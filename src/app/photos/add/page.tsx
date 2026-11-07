@@ -41,13 +41,15 @@ export default async function AddPhotosPage() {
   // "I don't know, tag the enclosure" (0218) files into Shelter, so it is offered to the logins that may file there;
   // the Head of Medical (Medical only) cannot file a pending photo.
   const mayTagEnclosure = categories.includes("Shelter") && route !== "medical";
+  // Exactly what /api/photos/pending asks before it touches Drive, so the control and the action cannot disagree.
+  const mayStoreForLater = (can(perms, "photos.shelter_add") || can(perms, "photos.resident_publish")) && categories.includes("Shelter");
   const enclosures = mayTagEnclosure ? await loadEnclosureChoices(supabase) : null;
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 md:p-6">
       <h1 className="text-2xl font-semibold text-foreground">{t.addPhotos.title}</h1>
       <p className="text-base text-muted">{t.addPhotos.intro}</p>
-      <AddPhotosFlow categories={categories} route={route} routes={routes} waits={waits} residents={residents} loadError={error} enclosures={enclosures} />
+      <AddPhotosFlow categories={categories} route={route} routes={routes} waits={waits} residents={residents} loadError={error} enclosures={enclosures} mayStoreForLater={mayStoreForLater} />
     </main>
   );
 }

@@ -27,6 +27,9 @@ import { enclosureNameFor } from "@/lib/photos/pending";
 
 const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"]);
 const HOLDING_FOLDER = "Unsorted";
+// A photo with no enclosure and no resident (0332) goes in a fixed subfolder, not the Unsorted root: the root then only ever
+// holds folders, one per enclosure, and these are as easy to find and to clear as any of them.
+const NO_PLACE_FOLDER = "No place given";
 
 async function handlePost(request: Request) {
   const crossSite = refuseCrossSite(request);
@@ -61,14 +64,21 @@ async function handlePost(request: Request) {
     );
   }
 
-  const enclosureId = formData.get("enclosureId");
-  if (typeof enclosureId !== "string" || !isUuid(enclosureId)) {
+  // Absent or empty means the filer knows neither the animal nor the place (0332): stored with no enclosure. A value
+  // that IS present must still be a uuid this login can resolve.
+  const rawEnclosure = formData.get("enclosureId");
+  const enclosureId = rawEnclosure === null || rawEnclosure === "" ? null : rawEnclosure;
+  if (enclosureId !== null && (typeof enclosureId !== "string" || !isUuid(enclosureId))) {
     return NextResponse.json({ error: t.addPhotos.errors.noEnclosure }, { status: 400 });
   }
   const supabase = await createClient();
-  const enclosureName = await enclosureNameFor(supabase, enclosureId);
-  if (!enclosureName) {
-    return NextResponse.json({ error: t.addPhotos.errors.noEnclosure }, { status: 404 });
+  let folderName = NO_PLACE_FOLDER;
+  if (enclosureId !== null) {
+    const enclosureName = await enclosureNameFor(supabase, enclosureId);
+    if (!enclosureName) {
+      return NextResponse.json({ error: t.addPhotos.errors.noEnclosure }, { status: 404 });
+    }
+    folderName = enclosureName;
   }
 
   const rootId = process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID;
@@ -76,7 +86,7 @@ async function handlePost(request: Request) {
   const drive = getDriveClient();
   const holdingId = await findOrCreateFolder(drive, rootId, HOLDING_FOLDER);
   // Slashes cannot appear in a Drive path segment, the same rule as a resident's folder name.
-  const enclosureFolderId = await findOrCreateFolder(drive, holdingId, enclosureName.trim().replace(/\//g, "-"));
+  const enclosureFolderId = await findOrCreateFolder(drive, holdingId, folderName.trim().replace(/\//g, "-"));
   const driveFileId = await uploadImageToFolder(drive, enclosureFolderId, {
     name: file.name,
     mimeType,
@@ -94,7 +104,7 @@ async function handlePost(request: Request) {
     try {
       await drive.trashFile(driveFileId);
     } catch {
-      /* the file is in Unsorted/<enclosure> where only someone browsing Drive would meet it; the answer below still says it was not saved */
+      /* the file is in Unsorted/<enclosure or No place given> where only someone browsing Drive would meet it; the answer below still says it was not saved */
     }
     return NextResponse.json({ error: t.addPhotos.errors.notSaved }, { status: 500 });
   }

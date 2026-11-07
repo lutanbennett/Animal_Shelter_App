@@ -28,7 +28,8 @@ export type PendingPhoto = {
   fileName: string | null;
   takenAt: string;
   uploadedAt: string;
-  enclosureId: string;
+  /** null: the filer knew neither the animal nor the place (0332), so no one can be suggested. */
+  enclosureId: string | null;
   /** "Blue Enclosure 3": null when this login cannot read the enclosure. */
   enclosureName: string | null;
   enclosureNameTh: string | null;
@@ -43,7 +44,7 @@ type PendingRow = {
   taken_at: string;
   uploaded_at: string;
   uploaded_by: string;
-  enclosure_id: string;
+  enclosure_id: string | null;
   enclosures: { name: string; name_th: string | null } | null;
 };
 
