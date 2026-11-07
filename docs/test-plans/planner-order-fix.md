@@ -10,10 +10,10 @@
 | Backlog item | `docs/backlog.md` → none: Lutan's direct instruction, 2026-11-07 (*"update the skill to move the streams to step 2 and then create the handover and merge it"*) |
 | Branch / worktree | `claude/planner-order-fix` @ `C:\Development\Animal_Shelter_planner-order-fix` |
 | Dev server | not started — process documents only, no app surface |
-| PR | <pr> |
+| PR | #1374 |
 | Tested by / date | Claude (planner session) / 2026-11-07 |
 | Carries a migration? | no |
-| Tested at SHA | <sha> |
+| Tested at SHA | `80cf31d7` |
 
 ## 1. Scope and risk
 
@@ -25,7 +25,20 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — cut from `origin/main` at `b2cfcfac`+ after #1373 merged; `sync` run before the gates
-- [ ] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — <gates block pasted here from the run>
+- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — run in this worktree, output read from the file:
+
+```
+=== gates: typecheck exited 0 after 124s
+=== gates: lint exited 0 after 394s
+=== gates: test exited 0 after 38s
+=== gates: build exited 0 after 225s
+gates: typecheck=0 lint=0 test=0 build=0
+```
+
+  **Lint took 394s against 118s on the previous PR of the same day** — three other worktrees were
+  installing and building at the time. Noted rather than investigated: the exit code is what the gate
+  asserts, and machine load moving a timing on this box is already recorded in `CLAUDE.md`
+  ("Measuring the public site: load moves the score").
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
