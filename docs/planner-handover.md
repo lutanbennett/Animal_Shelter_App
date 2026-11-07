@@ -83,7 +83,7 @@ Both are in `.claude/skills/plan-day/SKILL.md` as of this PR. The delta is only 
 
 ---
 
-## MITIGATIONS: FIVE FIRED, ONE HELD, ONE UNTESTED, NONE FAILED
+## MITIGATIONS: FOUR FIRED, ONE HELD, ONE UNTESTED, ONE NOT NEEDED, NONE FAILED
 
 Full list and evidence in `.plan-day.md`. Three worth knowing about:
 
