@@ -36,13 +36,14 @@ export default async function ReelsPage() {
         </div>
       </div>
       <ReelLibrary
-        reels={reels.map(({ id, description, tags, duration_ms, date_taken, residents, platforms }) => ({
+        reels={reels.map(({ id, description, tags, duration_ms, date_taken, residents, unnamedCount, platforms }) => ({
           id,
           description,
           tags,
           duration_ms,
           date_taken,
           residents,
+          unnamedCount,
           platforms,
         }))}
         tags={reelTagsInUse(reels)}

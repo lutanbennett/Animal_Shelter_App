@@ -75,6 +75,10 @@ export const unreleased: ReleaseNote[] = [
     cards: ["website", "website_photos"],
   },
   {
+    text: "Opening a reel no longer says \"No animal is tagged\" when animals are tagged but your card does not let you see their names. It now says how many animals are tagged and that you cannot see which, on the reel and on its tile in the library.",
+    cards: ["reel_view", "reel_add"],
+  },
+  {
     text: "Bills now has an Other bills page. It lists every bill filed as materials, cleaning products or another kind with no screen of its own, shows the pages already on each, and lets you add another page if one turns up after the bill was filed. The new page shows in the expenses report as that bill's receipt. The Thai wording has not been checked by a Thai speaker.",
     cards: ["bills"],
   },
