@@ -111,7 +111,7 @@
 - [ ] Both a migration and code that reads it? — n/a: code only; depends on 0332 already merged
 - [ ] Production dry-run — deferred: release manager (0332 must be applied first)
 - [ ] Production backup — n/a: no migration here
-- [ ] Apply plan stated — 0332 before this deploys
+- [x] Apply plan stated — 0332 before this deploys
 
 ### Rollback
 
