@@ -815,3 +815,11 @@ readable by the app. See `docs/decisions/2026-10-22-pi-app-own-user.md`.
 
 **Going back:** `sudo sed -i 's/^User=.*/User=lutan/;/^Group=/d' /etc/systemd/system/lanna-care.service && sudo systemctl daemon-reload && sudo systemctl restart lanna-care`
 (same for `lanna-care-test`). The app reads fine as you; only the protection is lost.
+
+## Google Drive buckets (2026-11-07)
+
+Each environment writes into its own folder inside the one Drive account: **Production**, **UAT** and **Test**
+roots under the old shared root. `GOOGLE_DRIVE_ROOT_FOLDER_ID` points an environment at its bucket (values and
+files in `docs/decisions/2026-11-07-drive-buckets.md`); change it in the environment's secret file and restart the
+service. UAT's bucket is empty until UAT's data restore copies Prod into it. Sorting was done by
+`scripts/drive-partition-tree.mjs` then `scripts/drive-remap-ids.mjs --env test`.
