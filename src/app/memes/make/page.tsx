@@ -4,6 +4,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { requirePermission } from "@/lib/permissions/require";
 import { driveImageUrl, isMedicalFolder } from "@/lib/google/drive-client";
 import { resolveSource } from "@/lib/memes/source-server";
+import { loadMemeResidents } from "@/lib/memes/residents";
 import { isSourceKind, sourcesFor, type SourceKind } from "@/lib/memes/sources";
 import { MemeMaker } from "./MemeMaker";
 import { ResidentSearch } from "./ResidentSearch";
@@ -64,12 +65,9 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
     if (!source.ok) return shell(<p role="alert" className="text-base text-danger">{m.refused}</p>, false);
     let label = "";
     if (source.residentIds.length > 0) {
-      const { data: names } = await supabase
-        .from("resident_list_view")
-        .select("name")
-        .in("resident_id", source.residentIds)
-        .returns<{ name: string }[]>();
-      label = (names ?? []).map((n) => n.name).join(", ");
+      const { residents: known } = await loadMemeResidents(supabase, perms);
+      const wanted = new Set(source.residentIds);
+      label = known.filter((r) => wanted.has(r.id)).map((r) => r.name).join(", ");
     }
     return shell(
       <MemeMaker photoSrc={driveImageUrl(photoId, 1200)} sourceKind={kind} sourceFileId={photoId} residentLabel={label} />,
@@ -126,7 +124,7 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
   }
 
   if (residentId && UUID.test(residentId)) {
-    const [{ data: photos }, { data: who }] = await Promise.all([
+    const [{ data: photos }, { residents: whoList }] = await Promise.all([
       supabase
         .from("attachments")
         .select("drive_file_id, file_name, sub_folder, approved_at")
@@ -136,34 +134,19 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
         .eq("media_kind", "photo")
         .order("uploaded_at", { ascending: false })
         .returns<{ drive_file_id: string; file_name: string | null; sub_folder: string | null }[]>(),
-      supabase.from("resident_list_view").select("name").eq("resident_id", residentId).returns<{ name: string }[]>(),
+      loadMemeResidents(supabase, perms),
     ]);
     const usable = (photos ?? []).filter((p) => !isMedicalFolder(p.sub_folder) && IMAGE_NAME.test(p.file_name ?? ""));
     return shell(
       <>
-        <h2 className="text-lg font-semibold text-foreground">{m.pickPhoto(who?.[0]?.name ?? "")}</h2>
+        <h2 className="text-lg font-semibold text-foreground">{m.pickPhoto(whoList.find((r) => r.id === residentId)?.name ?? "")}</h2>
         {usable.length === 0 ? <p className="text-base text-muted">{m.noPhotos}</p> : grid(usable)}
       </>,
     );
   }
 
-  const [{ data: residents }, { data: profiles }, { data: recent }] = await Promise.all([
-    supabase
-      .from("resident_list_view")
-      .select("resident_id, name, thai_name, resident_code, enclosure_name, enclosure_name_th, zone_name, zone_name_th")
-      .order("name")
-      .returns<
-        {
-          resident_id: string;
-          name: string;
-          thai_name: string | null;
-          resident_code: string | null;
-          enclosure_name: string | null;
-          enclosure_name_th: string | null;
-          zone_name: string | null;
-          zone_name_th: string | null;
-        }[]
-      >(),
+  const [{ residents: pickable, emptyKind }, { data: profiles }, { data: recent }] = await Promise.all([
+    loadMemeResidents(supabase, perms),
     supabase
       .from("residents")
       .select("id, profile_photo_drive_file_id")
@@ -182,16 +165,16 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
   const rank = new Map<string, number>();
   for (const a of recent ?? []) if (!rank.has(a.owner_id)) rank.set(a.owner_id, rank.size);
   const th = locale === "th";
-  const list = (residents ?? [])
+  const list = pickable
     .map((r) => {
-      const zone = th ? (r.zone_name_th ?? r.zone_name) : r.zone_name;
-      const enc = th ? (r.enclosure_name_th ?? r.enclosure_name) : r.enclosure_name;
-      const photo = photoOf.get(r.resident_id);
+      const zone = th ? (r.zone?.nameTh ?? r.zone?.name) : r.zone?.name;
+      const enc = th ? (r.enclosure?.nameTh ?? r.enclosure?.name) : r.enclosure?.name;
+      const photo = photoOf.get(r.id);
       return {
-        id: r.resident_id,
+        id: r.id,
         name: r.name,
-        thai_name: r.thai_name,
-        code: r.resident_code,
+        thai_name: r.thaiName,
+        code: r.code,
         where: [zone, enc].filter(Boolean).join(" · ") || null,
         photo: photo ? driveImageUrl(photo, 160) : null,
       };
@@ -200,7 +183,7 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
   return shell(
     <>
       <p className="text-base text-muted">{m.pickResidentHint}</p>
-      <ResidentSearch residents={list} placeholder={m.searchResident} recentLabel={m.recentResidents} noMatch={m.noResidentMatch} />
+      <ResidentSearch residents={list} placeholder={m.searchResident} recentLabel={m.recentResidents} noMatch={emptyKind === "cannot" ? m.cannotSeeResidents : emptyKind === "none" ? m.noResidentsOnFile : m.noResidentMatch} />
     </>,
   );
 }
