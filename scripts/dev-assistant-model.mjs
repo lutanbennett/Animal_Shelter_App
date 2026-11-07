@@ -35,7 +35,7 @@ const NOT_NAMES = new Set([
 
 export function namesIn(sentence) {
   const out = [];
-  for (const m of sentence.matchAll(/\b[A-Z][a-z]+\b/g)) {
+  for (const m of sentence.matchAll(/\b[A-Z][a-z]+(?: \d+)?\b/g)) {
     if (!NOT_NAMES.has(m[0]) && !out.includes(m[0])) out.push(m[0]);
   }
   return out;
@@ -64,7 +64,11 @@ export function reply(body) {
     } else if (m.role === "tool" && pending.has(m.tool_call_id)) {
       try {
         const rows = JSON.parse(textOf(m));
-        if (Array.isArray(rows) && rows.length === 1 && rows[0].id) found.set(pending.get(m.tool_call_id), rows[0].id);
+        const want = String(pending.get(m.tool_call_id)).toLowerCase();
+        // One row, or else the one row whose name is exactly the query ("Test 1" also matches "Test 10" on a fuller dev).
+        const exact = Array.isArray(rows) ? rows.filter((r) => String(r.name ?? "").toLowerCase() === want) : [];
+        const row = Array.isArray(rows) && rows.length === 1 ? rows[0] : exact.length === 1 ? exact[0] : null;
+        if (row?.id) found.set(pending.get(m.tool_call_id), row.id);
       } catch { /* an error result: leave the name unfound, so the field goes null */ }
     }
   }
