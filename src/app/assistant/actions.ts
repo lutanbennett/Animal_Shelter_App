@@ -206,6 +206,7 @@ async function linkMentions(
   tags: NoteTag[],
   t: T,
 ): Promise<string | null> {
+  const names = tags.map((tag) => tag.name).join(", ");
   let failure: string | null = null;
   try {
     const { data } = await supabase
@@ -218,7 +219,7 @@ async function linkMentions(
     const mine = (data ?? []).filter((row) => row.notes !== null && row.notes.endsWith(note));
     if (mine.length === 0) {
       console.error(`assistant: found no ${table} row to link tags to`);
-      return t.assistant.tagsNotLinked;
+      return t.assistant.tagsNotLinked(names);
     }
     const newest = new Date(mine[0].created_at).getTime();
     for (const row of mine.filter((r) => newest - new Date(r.created_at).getTime() < 10_000)) {
@@ -233,12 +234,12 @@ async function linkMentions(
           );
       if (!result.ok) {
         console.error(`assistant: tags not linked on ${table} ${row.id} (${result.code})`);
-        failure ??= result.code === "42501" ? t.assistant.tagsNotAllowed : t.assistant.tagsNotLinked;
+        failure ??= result.code === "42501" ? t.assistant.tagsNotAllowed(names) : t.assistant.tagsNotLinked(names);
       }
     }
   } catch (e) {
     console.error("assistant: tags not linked —", e);
-    failure = t.assistant.tagsNotLinked;
+    failure = t.assistant.tagsNotLinked(names);
   }
   return failure;
 }

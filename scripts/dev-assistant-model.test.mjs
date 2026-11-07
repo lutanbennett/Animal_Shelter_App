@@ -8,6 +8,7 @@ const call = (r) => r.choices[0].message.tool_calls?.[0];
 
 test("names are the capitalised words that are not days or fillers", () => {
   assert.deepEqual(namesIn(sentence), ["Butter", "Angsumalin"]);
+  assert.deepEqual(namesIn("Test 1 weighs 4.2 kg, bitten by Test 2"), ["Test 1", "Test 2"]);
 });
 
 test("looks each name up, one per turn, then calls weight with the rest as mentions", () => {
@@ -30,4 +31,12 @@ test("a sentence it does not know is answered in words, with no tool call", () =
   assert.equal(call(r), undefined);
   assert.equal(r.choices[0].finish_reason, "stop");
   assert.equal(MODEL_NAME, "scripted-dev");
+});
+
+test("when a name matches several rows it takes the one named exactly", () => {
+  const s = "Test 1 weighs 4.2 kg, bitten by Test 2";
+  const asked = (q, id) => ({ role: "assistant", tool_calls: [{ id, function: { name: "lookup", arguments: JSON.stringify({ kind: "resident", query: q }) } }] });
+  const both = '[{"id":"T1","name":"Test 1"},{"id":"T2","name":"Test 2"}]';
+  const m = [{ role: "user", content: s }, asked("Test 1", "a"), { role: "tool", tool_call_id: "a", content: both }, asked("Test 2", "b"), { role: "tool", tool_call_id: "b", content: both }];
+  assert.deepEqual(JSON.parse(call(reply({ messages: m })).function.arguments), { residentId: "T1", weightKg: 4.2, date: null, mentions: ["T2"] });
 });
