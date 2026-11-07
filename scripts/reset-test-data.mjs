@@ -107,17 +107,41 @@ const KEEP = new Set([
   "bill_accounts", "status_alert_checks",
 ]);
 
-// Test-marked rows inside tables that otherwise stay. Named in full on purpose.
+// Test-marked rows inside tables that otherwise stay: [table, column, exact names, like].
+// Named in full on purpose — a loose pattern over reference lists would take real rows with it
+// ("Heartworm Test" is a blood test type, "medical.blood_tests" is a card grant). This list came
+// from scanning every text column of every surviving table for test markers and reading the hits,
+// which is also how zones, premises and the five below were caught after a first pass had already
+// run: the Residents page still offered "Dryrun Zone 1018" as a filter.
 const CURATED_DELETES = [
-  ["enclosures", ["Dryrun Pen 1018", "Front Zone 0 order test"], "ZZ Width %"],
-  ["medication", ["Dryrun Med 1018"], null],
-  ["diet_types", ["Pouch test food", "test lentils 1103"], null],
-  ["clinics", ["[roster] Test Clinic", "Dryrun Mobile Vet 1018", "walk-contacts clinic"], "ZZ Width %"],
-  ["doctors", [
+  ["enclosures", "name", ["Dryrun Pen 1018", "Front Zone 0 order test"], "ZZ Width %"],
+  ["zones", "name", ["Dryrun Zone 1018", "wrD-zone-37m7x", "wrD-zone-9kyz8"], "ZZ Width %"],
+  ["medication", "name", ["Dryrun Med 1018"], null],
+  ["diet_types", "name", ["Pouch test food", "test lentils 1103"], null],
+  ["diets", "name", ["ZZ servings test (diets-servings-app)"], null],
+  ["frequency", "label", ["Every 6 hours (dry run)"], null],
+  ["immunization_types", "name", ["Dryrun Vaccine 1018"], null],
+  ["procedure_types", "name", ["Dryrun procedure type EN"], null],
+  ["bill_kinds", "key", ["zz_test_kind"], null],
+  ["bill_accounts", "supplier", ["ZZ Test Water Co"], null],
+  ["premises", "name", ["ZZ test place A"], null],
+  ["clinics", "name", ["[roster] Test Clinic", "Dryrun Mobile Vet 1018", "walk-contacts clinic"], "ZZ Width %"],
+  ["doctors", "name", [
     "Dr Booked New", "Dr Date Test", "Dr Dry Run 20261009", "Dr Dryrun",
     "Dr Dryrun Added 1009", "Dr Dryrun Typed 1009", "Dr Walk Two", "Scope test vet",
   ], "ZZ %"],
+  // A walkthrough left the Thai for the DonorBox donation channel as the literal text
+  // "walk-translations". The channel itself is real and stays; deleting the translation row
+  // returns it to untranslated, which is honest, rather than inventing Thai for it.
+  ["translations", "text", ["walk-translations"], null],
 ];
+
+// label_sources and translations are keyed (table_name, row_id) to a row somewhere else, so they
+// are neither purely setup nor purely content: 69 of label_sources' rows describe enclosures that
+// stay, while others describe residents and maintenance jobs that have gone. Matching on markers
+// would be guesswork; the honest rule is that a translation of a row that no longer exists is an
+// orphan, so those are deleted and the rest are left exactly alone.
+const KEYED_TABLES = ["label_sources", "translations"];
 
 const q = (sql, readOnly) =>
   fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
@@ -247,6 +271,22 @@ if (DO_DB) {
     }
   }
 
+  // Build the orphan deletes from what the keyed tables actually point at, so a table that is
+  // renamed or dropped later needs no edit here: its rows simply have nothing to point at.
+  const orphanDeletes = [];
+  for (const keyed of KEYED_TABLES) {
+    if (!tables.includes(keyed)) continue;
+    const targets = (await q(`select distinct table_name as t from public.${keyed}`, true)).map((r) => r.t);
+    for (const t of targets) {
+      orphanDeletes.push(
+        tables.includes(t)
+          ? `delete from public.${keyed} s where s.table_name = ${lit(t)}
+               and not exists (select 1 from public.${t} x where x.id::text = s.row_id::text);`
+          : `delete from public.${keyed} where table_name = ${lit(t)};`,
+      );
+    }
+  }
+
   const before = await q(
     `select 'x' as k, ` +
       tables.map((t) => `(select count(*) from public.${t})::int as ${t}`).join(", "),
@@ -271,13 +311,14 @@ if (DO_DB) {
     // whole thing rolls back, where cascade would have quietly emptied it instead.
     `truncate table ${plainTables.map((t) => `public.${t}`).join(", ")};`,
     // test-marked rows inside the reference lists that stay
-    ...CURATED_DELETES.map(([t, names, like]) => {
-      const col = t === "maintenance" || t === "appeals" ? "title" : "name";
+    ...CURATED_DELETES.map(([t, col, names, like]) => {
       const parts = [];
-      if (names.length) parts.push(`${col} in (${names.map(lit).join(", ")})`);
-      if (like) parts.push(`${col} like ${lit(like)}`);
+      if (names.length) parts.push(`"${col}" in (${names.map(lit).join(", ")})`);
+      if (like) parts.push(`"${col}" like ${lit(like)}`);
       return `delete from public.${t} where ${parts.join(" or ")};`;
     }),
+    // translations and label sources whose row has gone
+    ...orphanDeletes,
     // Role assignments belonging to a throwaway login or a disposable role. The kept logins'
     // assignments are untouched, so Lutan's Admin survives.
     `delete from public.user_roles where user_id in (select id from auth.users where ${DOOMED})
