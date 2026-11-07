@@ -87,6 +87,21 @@ leftovers to `done` — but only if `held` says `free`. A `HELD` worktree
 has a session or a process in it; name it and ask rather than tearing it
 down. List any husks it prints so the user can clear them.
 
+**AND THE `free` / `0 ahead` / `nothing beyond main` SIGNATURE IS A SNAPSHOT, NOT A VERDICT. PROMOTED
+2026-11-07 FROM A NEAR-MISS RATHER THAN A LOSS, WHICH IS WHY IT IS WORTH ITS SPACE.**
+`Animal_Shelter_uat-on-the-pi` read `free`, `0 ahead`, `nothing beyond main` **and had never had a PR**
+— exactly the leftover signature this paragraph describes — with the user's "clear them" already given
+for three other folders. **Two minutes later the same command read `ahead 1`, two dirty files and a held
+folder. An hour after that it was PR #1356**, a real change to how UAT is served, which `done` would have
+destroyed.
+
+- **`list`'s `held` and `ahead` columns describe the instant you ran it.** The tool's own footnote says
+  *"a session can still attach a moment later"* and that is not a formality.
+- **`gh pr list --state all --head claude/<slug>` is the check that settles it**, costs one command, and
+  catches this case on its own: a branch with no PR *ever* is a different thing from one whose PR merged.
+- **Never widen a destructive step past what the user named.** That, and nothing cleverer, is what saved
+  this one: the "clear them" had named three specific folders and the fourth was left alone.
+
 Then `gh pr list --state open` and **name every open PR this session did not open** (a Dependabot bump above all: no stream owns it, so nothing else will ever look). Each gets a line in the plan with its age; `CLAUDE.md`, "A bot pull request", says whether it is merged or read first.
 
 **Capture the actuals now — from the PR first.** Since 2026-10-28 each feature stream posts one
@@ -782,6 +797,7 @@ Two axes that genuinely do cost, both measured 2026-10-20:
 | A new integration on existing machinery | **145–180k** | 153,821 |
 | Schema with a public write path / RLS to get right | **145–185k** | 159,976 |
 | **Schema whose item calls the BACK-FILL the dangerous part — ask whether a shape exists in which the danger disappears** | **the ordinary schema row, NOT a premium** | 151,874 — `approval-flag-schema` (2026-11-06), banded 195–250k almost entirely on its item's own words (*"the back-fill is the dangerous part"*, *"a column every public view already filters on"*) and **22% UNDER**. The stream chose a shape where `approved_at` **keeps its meaning**: a new **generated** column answers the third state, so no public view, no `is_public_drive_file()` and no queue changed, **and the back-fill became the identity**. **Nothing was omitted** — every deliverable landed, with a new rollback harness. **So the premium is contingent on the SHAPE, and a good stream can remove it.** Band the ordinary row, and **say in the brief that finding such a shape is worth the stream's time** |
+| **An app half whose SCHEMA half already wrote its specification — band the BOTTOM of its row** | **the shape's row at its bottom edge** | 202,507 — `website-switches-app` (2026-11-07), banded 200–260k as a new switch surface on an existing Settings screen plus a browser drive, and it landed **2.5k above the band's floor**. The reason is in the schema half's PR body: #1353 wrote its own requirements onto the item's tail — which column, which table, what a switched-off live count returns, and which activity the tick must be drawn behind — so the app half had **nothing to design**. **This is the schema-PR "nothing left to discover" effect, which was written about schema PRs only, appearing on the APP side for the first time.** The question that picks the bottom edge: **did the schema half hand this stream a specification, or only a column?** A specification is a discount; a column is not. **And the planner's half of it: when a schema stream writes requirements onto the item, QUOTE them into the app half's brief rather than letting it invent a specification** — that is what turned the handover into a discount instead of a rewrite |
 | Replacing an existing screen | **155–200k** | 169,220 |
 | Reads very widely and edits many call sites | **185–250k** | 200,612 — **reading widely is cheap; editing many call sites is what cost** |
 | **Creates a new surface people submit data through** | **200–270k** | 235,561 – **one** new surface. For a surface wired into SEVERAL EXISTING forms use the row below |
@@ -1450,6 +1466,11 @@ So:
 - **If the work is done, open the PR before you report success** — then bind it with the `ccd_pr`
   tools, and treat the CI monitor as a nudge rather than a guarantee (`CLAUDE.md` says why).
 - **"The code is written" is not a report of completion.** Say where the PR is.
+- **AND A GREEN PR YOU DID NOT MERGE IS THE SAME FAULT ONE STEP LATER.** On 2026-11-07 PR #1356 was
+  opened with every check green on its own head and its session ended without merging it; it sat
+  `MERGEABLE` and invisible for an hour until the planner found it. **Opening the PR is the finish line;
+  merging it on green is still yours** — `CLAUDE.md`, "Every PR merges on green": every PR, no approval
+  round-trip, and you do not ask.
 ```
 
 **Add one line for a stream that is two PRs** (a schema half then an app half):
