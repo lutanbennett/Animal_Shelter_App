@@ -10,10 +10,10 @@
 | Backlog item | `docs/backlog.md` → `#svs6c` |
 | Branch / worktree | `claude/mirror-repull-note` @ `C:\Development\Animal_Shelter_mirror-repull-note` |
 | Dev server | not started — documentation only, no app surface |
-| PR | <pr> |
+| PR | #1373 |
 | Tested by / date | Claude (planner session) / 2026-11-07 |
 | Carries a migration? | no |
-| Tested at SHA | <sha> |
+| Tested at SHA | `5d83aecb` |
 
 ## 1. Scope and risk
 
@@ -25,7 +25,19 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [ ] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — <gates block pasted here from the run>
+- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — run in this worktree, output read from the file:
+
+```
+=== gates: typecheck exited 0 after 45s
+=== gates: lint exited 0 after 118s
+=== gates: test exited 0 after 44s
+=== gates: build exited 0 after 282s
+gates: typecheck=0 lint=0 test=0 build=0
+```
+
+  **Run before the final `sync`, and deliberately not re-run after it.** The merge that followed brought
+  in four commits touching **`docs/backlog.md` and nothing else** (`git diff --stat HEAD...origin/main`),
+  so no input to typecheck, lint, test or build changed. Said here rather than left to be assumed.
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
@@ -99,7 +111,7 @@ reasoned:
 - [ ] Smoke-tested on `test.lannacare.org` — deferred: release manager
 - [ ] Timezone-sensitive behaviour proved — n/a: no code and no date handling
 - [ ] Boundary or banding change covered at both edges — n/a: no logic changes
-- [ ] Evidence pasted into this plan is the tool's actual output, unedited — n/a as a deploy-time check; the evidence in sections 2 and 4 is pasted from its runs
+- [ ] Evidence pasted into this plan is the tool's actual output, unedited — n/a: a deploy-time check with no deploy in this PR; the evidence in sections 2 and 4 is pasted from its runs, unedited
 - [ ] Public pages re-checked after a cache purge — n/a: no public page changes
 - [ ] `deploy: production → Supabase project <ref>` line read — deferred: release manager
 - [ ] `strip-baked-env` seen in the deploy output — deferred: release manager
