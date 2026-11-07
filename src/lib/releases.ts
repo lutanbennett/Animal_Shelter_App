@@ -70,35 +70,43 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "When a deceased animal's Drive archive cannot be made or restored, and when a maintenance job or project folder cannot be moved, renamed or deleted in Drive, the message now appears in the language the app is set to instead of always in English. The Thai wording has not been checked by a Thai speaker.",
-  {
-    text: "Settings → Website now has a switch for every statistic on the public home page: the lifetime figures (animals rehomed, community dogs helped, villages sterilised) and today's counts (in our care, adopted this year, with foster families, in treatment). Switching one off takes it off the home page without losing the numbers you entered, and switching it back on shows it again. It asks you to confirm and is kept in Recent changes. A count under 2 is still left off the home page, and the screen says so. The Events page can now be hidden from Settings → Pages like the others. The Thai wording has not been checked by a Thai speaker.",
-    cards: ["website"],
-  },
-  "The notice at the top of a deceased animal's page no longer says nothing at all can be edited, uploaded or recorded. It now says what is true: the record is closed to changes, but notes can still be added to existing entries, late blood test results can be added, and visit bills can be filled in. The record-a-death and edit pages say the same. The Thai wording has not been checked by a Thai speaker.",
-  {
-    text: "Filing a bill is now one permission card, Bills. It covers maintenance, utility and other bills, so whoever holds it can answer \"What type of bill is this?\" for any of them and save it. The two cards Add utility bills and Add other bills are gone. Bills settings stays its own card.",
-    cards: ["bills", "bill_sites"],
-  },
-  {
-    text: "There are two new permission cards for the meme library. Add and change memes lets someone add a meme, change its words and residents, and record where it was posted, but not archive it or take a post record off. Browse memes only lets someone look. Archiving a meme, and removing a post record, now need the Meme library card; the database enforces it too. The Thai wording has not been checked by a Thai speaker.",
-    cards: ["meme_add", "meme_view", "meme_library"],
-  },
-  {
-    text: "There are two new permission cards for the Reels library. Add and change reels lets someone add a reel, change its words and residents, and record where it was posted, but not archive it or take a post record off. Browse reels only lets someone look. Archiving a reel, and removing a post record, now need the Reels library card; the database enforces it too. Anyone who had a meme card was given the matching reel card, so nobody loses Reels today. The Thai wording has not been checked by a Thai speaker.",
-    cards: ["reel_add", "reel_view", "reel_library"],
-  },
-
-  {
-    text: "When you add or change a fundraising event, the campaign and project pickers now say so if they may be short or empty because your login cannot see campaigns or project folders, instead of looking like there is nothing to choose. The Thai wording has not been checked by a Thai speaker.",
-    cards: ["run_fundraising_events"],
-  },
-
-  "You can now correct the result text of a blood test on a resident who has died. Nothing else on a closed record changes.",
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.43.5",
+    date: "2026-11-07",
+    title: "Website statistic switches, one Bills card, and cards for the meme and reels libraries",
+    major: false,
+    notes: [
+      "When a deceased animal's Drive archive cannot be made or restored, and when a maintenance job or project folder cannot be moved, renamed or deleted in Drive, the message now appears in the language the app is set to instead of always in English. The Thai wording has not been checked by a Thai speaker.",
+      {
+        text: "Settings → Website now has a switch for every statistic on the public home page: the lifetime figures (animals rehomed, community dogs helped, villages sterilised) and today's counts (in our care, adopted this year, with foster families, in treatment). Switching one off takes it off the home page without losing the numbers you entered, and switching it back on shows it again. It asks you to confirm and is kept in Recent changes. A count under 2 is still left off the home page, and the screen says so. The Events page can now be hidden from Settings → Pages like the others. The Thai wording has not been checked by a Thai speaker.",
+        cards: ["website"],
+      },
+      "The notice at the top of a deceased animal's page no longer says nothing at all can be edited, uploaded or recorded. It now says what is true: the record is closed to changes, but notes can still be added to existing entries, late blood test results can be added, and visit bills can be filled in. The record-a-death and edit pages say the same. The Thai wording has not been checked by a Thai speaker.",
+      {
+        text: "Filing a bill is now one permission card, Bills. It covers maintenance, utility and other bills, so whoever holds it can answer \"What type of bill is this?\" for any of them and save it. The two cards Add utility bills and Add other bills are gone. Bills settings stays its own card.",
+        cards: ["bills", "bill_sites"],
+      },
+      {
+        text: "There are two new permission cards for the meme library. Add and change memes lets someone add a meme, change its words and residents, and record where it was posted, but not archive it or take a post record off. Browse memes only lets someone look. Archiving a meme, and removing a post record, now need the Meme library card; the database enforces it too. The Thai wording has not been checked by a Thai speaker.",
+        cards: ["meme_add", "meme_view", "meme_library"],
+      },
+      {
+        text: "There are two new permission cards for the Reels library. Add and change reels lets someone add a reel, change its words and residents, and record where it was posted, but not archive it or take a post record off. Browse reels only lets someone look. Archiving a reel, and removing a post record, now need the Reels library card; the database enforces it too. Anyone who had a meme card was given the matching reel card, so nobody loses Reels today. The Thai wording has not been checked by a Thai speaker.",
+        cards: ["reel_add", "reel_view", "reel_library"],
+      },
+
+      {
+        text: "When you add or change a fundraising event, the campaign and project pickers now say so if they may be short or empty because your login cannot see campaigns or project folders, instead of looking like there is nothing to choose. The Thai wording has not been checked by a Thai speaker.",
+        cards: ["run_fundraising_events"],
+      },
+
+      "You can now correct the result text of a blood test on a resident who has died. Nothing else on a closed record changes.",
+    ],
+  },
   {
     version: "0.43.4",
     date: "2026-11-06",
