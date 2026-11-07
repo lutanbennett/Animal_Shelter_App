@@ -26,7 +26,10 @@ export default async function ReelsPage() {
           <p className="text-base text-muted">{t.reels.intro}</p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <ActionLink href="/memes" label={t.memes.title} icon={ACTION_ICONS.back} iconOnlyOnMobile={false} />
+          {/* The link goes to /memes, which asks social.library Read; a reel-only login would land on "no access". */}
+          {can(perms, "social.library", "read") && (
+            <ActionLink href="/memes" label={t.memes.title} icon={ACTION_ICONS.back} iconOnlyOnMobile={false} />
+          )}
           {can(perms, "social.reels") && (
             <ActionLink href="/reels/new" label={t.reels.add} icon={ACTION_ICONS.add} variant="primary" iconOnlyOnMobile={false} />
           )}
