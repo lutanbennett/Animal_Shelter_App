@@ -404,12 +404,12 @@ export function AddPhotosFlow({
         <label className="flex flex-col gap-1 text-base font-semibold text-foreground">
           {a.folderLabel}
           <select
-            value={folder}
+            value={categories.includes(folder) ? folder : categories[0]}
             onChange={(e) => setFolder(e.target.value as PhotoCategory)}
             className="min-h-12 rounded-lg border border-border bg-surface px-3 text-lg font-normal text-foreground"
           >
             {categories.map((c) => (
-              <option key={c} value={c}>
+              <option key={c} value={c} className="bg-surface text-foreground">
                 {photoFolderLabel(t, c)}
               </option>
             ))}
