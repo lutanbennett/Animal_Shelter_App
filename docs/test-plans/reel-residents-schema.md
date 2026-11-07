@@ -11,7 +11,7 @@
 | PR | pending: number known once opened |
 | Tested by / date | Claude / 2026-11-07 |
 | Carries a migration? | yes — `0330_reel_resident_tags.sql` |
-| Tested at SHA | pending: recorded after the final commit |
+| Tested at SHA | f3b8cb9c |
 
 ## 1. Scope and risk
 
@@ -23,7 +23,15 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — see PR body
-- [ ] `node scripts/gates.mjs` — pending: closing lines pasted once the run finishes
+- [x] `node scripts/gates.mjs` ends with the four-gate line, all `0`:
+
+```
+=== gates: typecheck exited 0 after 129s
+=== gates: lint exited 0 after 211s
+=== gates: test exited 0 after 46s
+=== gates: build exited 0 after 355s
+gates: typecheck=0 lint=0 test=0 build=0
+```
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data
@@ -136,6 +144,6 @@ Automated checks by: Claude  Date: 2026-11-07
 
 ### Manual verification
 
-n/a: no UI surface; the screen is the app half's
+Manual verification by: n/a: no UI surface; the screen is the app half's
 
 Result: pass
