@@ -150,6 +150,6 @@ Automated checks by: Claude  Date: 2026-11-07
 
 ### Manual verification
 
-pending: a person plays a real phone-recorded reel on the app
+Manual verification by: pending: a person plays a real phone-recorded reel on the app
 
 Result: pass with accepted defects
