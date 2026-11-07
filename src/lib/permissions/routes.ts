@@ -236,10 +236,10 @@ export const ROUTES: readonly RouteEntry[] = [
     section: "management",
   },
   {
-    // The reels library (0322): short videos kept for posting to Facebook, and where each was posted. Same activity as the
-    // memes (#i7qkz will split it for both). Opens at Read; never public.
+    // The reels library (0322): short videos kept for posting to Facebook, and where each was posted. Its own activity since 0329
+    // (apart from the memes). Opens at Read; never public.
     path: "/reels",
-    activity: "social.library",
+    activity: "social.reels",
     level: "read",
     icon: Film,
     label: (t) => t.nav.reels,

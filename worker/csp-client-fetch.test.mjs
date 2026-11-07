@@ -42,6 +42,7 @@ const UNRESOLVED_OK = {
   "src/lib/uploads/resumable-video.ts:fetch": "Drive resumable session URL returned by our server; host pinned by security-headers.test.mjs",
   "src/components/AttachmentUploader.tsx:xhr.open": "uploadUrl prop: a same-origin /api route chosen by each caller",
   "src/components/PhotoUploader.tsx:xhr.open": "uploadUrl built from props: a same-origin /api route",
+  "src/components/TagNoteField.tsx:fetch": "searchUrl prop: a same-origin /api route (the general resident search, or the reel one)",
 };
 
 const connectSrc = () =>

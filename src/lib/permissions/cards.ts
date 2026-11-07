@@ -46,6 +46,9 @@ export type NewCardKey =
   | "meme_library"
   | "meme_add"
   | "meme_view"
+  | "reel_library"
+  | "reel_add"
+  | "reel_view"
   | "my_tasks"
   | "who_does_what"
   | "translations"
@@ -305,7 +308,7 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   },
   // 2026-11-06 (#i7qkz, Lutan 2026-11-05): add and change memes and record where one was posted, but not archive and not
   // delete. social.library is that add-and-change activity; archiving, deleting a meme and removing a share record are
-  // social.library_manage, which this card does not hold. The Reels screens still ask social.library (a Reels card is the
+  // social.library_manage, which this card does not hold. The Reels screens ask social.reels since 0329 (the Reels cards are the
   // other half of the item).
   meme_add: {
     includes: [],
@@ -318,6 +321,29 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
     includes: [],
     bundle: [{ activity: "social.library", level: "read" }],
     opens: "/memes",
+  },
+  // 2026-11-07 (0329, #i7qkz): the Reels library, the same three shapes as the memes. reel_library does everything the Reels screens do:
+  // add, change, record where one was posted, archive, take a post record off. Reels have no path to the website.
+  reel_library: {
+    includes: [],
+    bundle: [
+      { activity: "social.reels", level: "edit" },
+      { activity: "social.reels_manage" },
+      { activity: "resident.who_and_where", level: "read" },
+    ],
+    opens: "/reels",
+  },
+  // Add and change reels and record where one was posted, but not archive and not delete (Lutan, 2026-11-05).
+  reel_add: {
+    includes: [],
+    bundle: [{ activity: "social.reels", level: "edit" }, { activity: "resident.who_and_where", level: "read" }],
+    opens: "/reels",
+  },
+  // Browse the reels and nothing else: the card that makes a Read-only login for the Reels library possible.
+  reel_view: {
+    includes: [],
+    bundle: [{ activity: "social.reels", level: "read" }],
+    opens: "/reels",
   },
   // Card twenty-six (2026-10-21, Lutan's ruling on menu-removal orphans 1 of 6): do the recurring tasks assigned to me, and
   // nothing else. recurring.do_own is what /my reads and what record_recurring_job() enforces as own only; it gives no
@@ -431,6 +457,9 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   meme_library: (t) => t.appHome.cards.memeLibrary,
   meme_add: (t) => t.appHome.cards.memeAdd,
   meme_view: (t) => t.appHome.cards.memeView,
+  reel_library: (t) => t.appHome.cards.reelLibrary,
+  reel_add: (t) => t.appHome.cards.reelAdd,
+  reel_view: (t) => t.appHome.cards.reelView,
   my_tasks: (t) => t.appHome.cards.myTasks,
   who_does_what: (t) => t.appHome.cards.whoDoesWhat,
   translations: (t) => t.appHome.cards.translations,

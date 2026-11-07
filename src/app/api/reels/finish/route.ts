@@ -14,10 +14,10 @@ import { checkReelFields, splitDescription } from "@/lib/reels/form";
  * Step 3 of a reel upload, the reel twin of /api/residents/[id]/videos/finish: Drive has the whole file and the
  * browser says so. The route does not take the browser's word for it: the upload row must be this login's, still
  * open and a reel's, and Drive itself must hold a file of exactly the promised size and type. Only then is the reels
- * row written, AS THE CALLER (so reels_write_perm, social.library, is the database's check), with the description's
+ * row written, AS THE CALLER (so reels_write_perm, social.reels, is the database's check), with the description's
  * residents in reel_residents and its other hashtags in reels.tags.
  *
- * Asks social.library at Edit, the activity both policies ask (0322). A failed reels insert trashes the Drive file
+ * Asks social.reels at Edit, the activity both policies ask (0322). A failed reels insert trashes the Drive file
  * and leaves the upload row open (the abandoned-upload sweep closes it); a failed resident link is reported, not undone.
  */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -27,7 +27,7 @@ async function handlePost(request: Request) {
   if (crossSite) return crossSite;
 
   const { t } = await getT();
-  if (!can(await loadPermissions(), "social.library")) {
+  if (!can(await loadPermissions(), "social.reels")) {
     return NextResponse.json({ error: t.reels.errors.notAllowed }, { status: 403 });
   }
 
