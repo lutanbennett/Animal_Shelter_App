@@ -201,6 +201,7 @@ export const ROUTES: readonly RouteEntry[] = [
     // Desexing drives and who signed up to them (0233). Opens with the rest of the public site's content.
     path: "/management/sterilisation-drives",
     activity: "website.content",
+    level: "read",
     icon: Scissors,
     label: (t) => t.nav.desexingDrives,
     device: "any",

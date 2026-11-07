@@ -71,6 +71,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "The Sterilisation drives list now opens for a login that can only view the website, instead of being refused. It shows the drives and their sign-up counts; the Start a drive button and the links into each drive appear only for a login that can edit the website.",
+    cards: ["website", "website_photos"],
+  },
+  {
     text: "Opening a reel no longer says \"No animal is tagged\" when animals are tagged but your card does not let you see their names. It now says how many animals are tagged and that you cannot see which, on the reel and on its tile in the library.",
     cards: ["reel_view", "reel_add"],
   },

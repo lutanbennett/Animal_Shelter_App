@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BackLink } from "@/components/BackLink";
 import { getT } from "@/lib/i18n/get-t";
 import { formatDate } from "@/lib/format";
+import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 
 type DriveRow = {
@@ -20,7 +21,10 @@ type DriveRow = {
  * as the rest of the public site's content).
  */
 export default async function DesexingDrivesAdminPage() {
-  const { supabase } = await requirePermission("website.content", "edit");
+  // Opens at READ: the list and its counts need only website.content read (desexing_drives_select_perm, 0233).
+  // Starting a drive and opening one (an editor) ask the EDIT level, as createDrive/saveDrive do.
+  const { supabase, perms } = await requirePermission("website.content", "read");
+  const canEdit = can(perms, "website.content", "edit");
   const { t, locale } = await getT();
   const a = t.desexingAdmin;
 
@@ -39,12 +43,14 @@ export default async function DesexingDrivesAdminPage() {
         <h1 className="text-2xl font-semibold text-foreground">{a.title}</h1>
         <p className="text-sm text-muted">{a.subtitle}</p>
       </div>
-      <Link
-        href="/management/sterilisation-drives/new"
-        className="inline-flex min-h-11 items-center self-start rounded bg-primary px-5 text-base font-medium text-primary-foreground hover:bg-primary-hover"
-      >
-        {a.start}
-      </Link>
+      {canEdit && (
+        <Link
+          href="/management/sterilisation-drives/new"
+          className="inline-flex min-h-11 items-center self-start rounded bg-primary px-5 text-base font-medium text-primary-foreground hover:bg-primary-hover"
+        >
+          {a.start}
+        </Link>
+      )}
 
       {drives.length === 0 ? (
         <p className="max-w-2xl rounded border border-border bg-surface p-4 text-sm text-muted">{a.noneYet}</p>
@@ -57,9 +63,13 @@ export default async function DesexingDrivesAdminPage() {
                 <span className="w-fit rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-foreground">
                   {a.driveStatus[d.status]}
                 </span>
-                <Link href={`/management/sterilisation-drives/${d.id}`} className="text-lg font-semibold text-foreground underline-offset-4 hover:underline" lang="und">
-                  {d.title}
-                </Link>
+                {canEdit ? (
+                  <Link href={`/management/sterilisation-drives/${d.id}`} className="text-lg font-semibold text-foreground underline-offset-4 hover:underline" lang="und">
+                    {d.title}
+                  </Link>
+                ) : (
+                  <span className="text-lg font-semibold text-foreground" lang="und">{d.title}</span>
+                )}
                 <p className="text-sm text-muted">
                   {formatDate(d.drive_date, locale)} · <span lang="und">{d.venue}</span>
                 </p>
