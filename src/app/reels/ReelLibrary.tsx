@@ -17,6 +17,7 @@ export type LibraryReel = {
   duration_ms: number | null;
   date_taken: string;
   residents: { id: string; name: string; thai_name: string | null }[];
+  unnamedCount: number;
   platforms: Platform[];
 };
 
@@ -151,6 +152,7 @@ export function ReelLibrary({ reels, tags }: { reels: LibraryReel[]; tags: strin
                     {reel.residents.length > 0 && (
                       <span className="line-clamp-1 text-xs text-muted">{reel.residents.map(residentName).join(", ")}</span>
                     )}
+                    {reel.unnamedCount > 0 && <span className="line-clamp-1 text-xs text-muted">{r.taggedUnseen(reel.unnamedCount)}</span>}
                     <span className="mt-auto pt-1">
                       <SharedOn platforms={reel.platforms} names={t.memes.platforms} notSharedYet={r.notPostedYet} sharedOn={r.postedOn} />
                     </span>

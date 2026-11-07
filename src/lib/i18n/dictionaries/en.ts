@@ -5299,6 +5299,7 @@ const en = {
     intro: "The shelter's reels: short videos kept here to post on Facebook, each with a description whose #tags name the animals in it. Never shown on the website.",
     add: "Add a reel",
     notPostedYet: "Not posted yet",
+    taggedUnseen: (n: number) => (n === 1 ? "1 animal tagged, you cannot see which" : `${n} animals tagged, you cannot see which`),
     postedOn: (places: string) => `Posted on ${places}`,
     search: "Search descriptions and #tags",
     count: (n: number) => (n === 1 ? "1 reel" : `${n} reels`),
