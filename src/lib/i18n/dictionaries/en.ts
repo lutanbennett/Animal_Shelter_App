@@ -1412,6 +1412,7 @@ const en = {
         card_grants: "What a card gives",
         card_includes: "Card included in another",
         site_content: "Website settings",
+        public_stat_switches: "Website count switch",
         role_extras: "Extra permission",
       },
       kinds: {

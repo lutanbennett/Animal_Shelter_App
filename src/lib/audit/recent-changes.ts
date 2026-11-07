@@ -44,6 +44,8 @@ export const AUDITED_TABLES = [
   "card_includes",
   // The website settings row (0254, 0256): hiding or showing a public page, and the Stocktaking switches. Its own trigger writes the audit rows.
   "site_content",
+  // The four live counts on the home band, one switch each (0328): the name shown is the count's key.
+  "public_stat_switches",
 ] as const;
 export type AuditedTable = (typeof AUDITED_TABLES)[number];
 
@@ -210,6 +212,8 @@ function toEntry(raw: RawRow): AuditEntry {
         ? str(image.name)
         : table === "attachments"
           ? str(image.file_name)
+          : table === "public_stat_switches"
+            ? str(image.key)
           : table === "impact_baselines" || table === "donation_channels"
             ? str(image.label)
             : table === "role_permissions"
