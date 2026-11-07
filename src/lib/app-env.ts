@@ -12,8 +12,13 @@
  * too. Anything that isn't a known non-production project renders as
  * production — a misconfigured public site should never come up badged.
  *
- * UAT wears production's exact colours (the customer should be testing the
- * real thing) and differs only by its badge and PDF watermark.
+ * UAT wears its own blue-indigo (globals.css data-env="uat"), with a badge,
+ * a fixed-colour header strip and a PDF watermark. Lutan, 2026-11-06: "just
+ * needs to be different to prod"; test is teal, production orange.
+ * SUPERSEDED 2026-11-07, kept so the reasoning survives: "UAT wears
+ * production's exact colours (the customer should be testing the real thing)
+ * and differs only by its badge and PDF watermark." Lutan reversed it, so do
+ * not undo this to match production.
  *
  * scripts/deploy.mjs and scripts/lib/env.mjs import this file too, so a
  * deploy target and the badge its build will wear can't disagree.

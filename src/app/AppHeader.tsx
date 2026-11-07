@@ -40,31 +40,31 @@ export async function AppHeader() {
           ? role.nameTh
           : role.name) || null;
 
-  // Production has no badge. UAT has nothing else: it keeps production's
-  // colours so the customer tests the real thing (src/lib/app-env.ts).
+  // Production has no badge. UAT wears its own indigo (src/lib/app-env.ts).
   //
   // The badge and the strip along the header's top edge use fixed colours,
   // never the theme tokens: a person's colour theme redefines those tokens,
-  // which overrides dev's teal, so this is the one marker no theme can hide
-  // (docs/decisions/2026-10-10-user-colour-themes.md). Dev keeps the teal
-  // everywhere under the default theme as well.
+  // which overrides dev's teal and UAT's indigo, so this is the one marker
+  // no theme can hide (docs/decisions/2026-10-10-user-colour-themes.md).
+  // Dev and UAT keep their colour everywhere under the default theme too.
   const appEnv = getAppEnv();
   const badge =
     appEnv === "dev"
       ? { label: t.header.devBadge, title: t.header.devBadgeTitle, className: "bg-[#2dd4bf] text-[#032523] ring-1 ring-[#0b3d38]", strip: true }
       : appEnv === "uat"
-        ? { label: t.header.uatBadge, title: t.header.uatBadgeTitle, className: "bg-[#ff9f0a] text-[#1a1100] ring-1 ring-[#3d2600]", strip: false }
+        ? { label: t.header.uatBadge, title: t.header.uatBadgeTitle, className: "bg-[#7c8cff] text-[#070b24] ring-1 ring-[#1a2150]", strip: true }
         : null;
 
   return (
     <header className="relative flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-border bg-surface px-4 py-3 md:sticky md:top-0 md:z-30 md:h-[var(--app-header-h)] md:flex-nowrap md:px-6">
-      {/* Dev's strip: teal and near-black diagonal bands, so one of the two
-          stands out on a light header and the other on a dark one. */}
+      {/* The strip: diagonal bands of the environment's colour and a near-black
+          shade of it, so one of the two stands out on a light header and the
+          other on a dark one. Dev is teal, UAT is indigo. */}
       {badge?.strip && (
         <span
           aria-hidden="true"
           data-env-strip={appEnv}
-          className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-[repeating-linear-gradient(135deg,#2dd4bf_0_10px,#0b3d38_10px_20px)]"
+          className={`pointer-events-none absolute inset-x-0 top-0 h-1.5 ${appEnv === "uat" ? "bg-[repeating-linear-gradient(135deg,#7c8cff_0_10px,#1a2150_10px_20px)]" : "bg-[repeating-linear-gradient(135deg,#2dd4bf_0_10px,#0b3d38_10px_20px)]"}`}
         />
       )}
       <div className="flex items-center gap-3">

@@ -65,6 +65,22 @@
   --primary-foreground: #032523;
 }
 
+/* UAT (the customer's test site) wears blue-indigo on surfaces with a faint
+   blue cast: unmistakably not production's orange, not test's teal, and
+   nowhere near --danger red (Lutan, 2026-11-06: "just needs to be different
+   to prod"; the hue was the builder's). Same token set as dev, so every
+   theme must set them too (scripts/check-theme-contrast.mjs). */
+:root[data-env="uat"] {
+  --background: #0e1220;
+  --surface: #151b2e;
+  --surface-hover: #202842;
+  --border: #2f3a5c;
+
+  --primary: #7c8cff;
+  --primary-hover: #9aa6ff;
+  --primary-foreground: #070b24;
+}
+
 /* The colour themes each person can pick from the account menu
    (src/lib/theme/themes.ts; docs/decisions/2026-10-10-user-colour-themes.md).
    The default — dark with orange — is the :root block above and has no
@@ -219,6 +235,20 @@
   --site-action-hover: #0b524c;
   --site-footer: #1c2422;
   --site-footer-link: #7fd6c9;
+}
+
+/* UAT's public pages: the action colour turns indigo and the cream takes a
+   blue cast, so a public page on the UAT site is never mistaken for the live
+   site or the test site. */
+:root[data-env="uat"] {
+  --site-cream: #eceff8;
+  --site-paper: #fbfcff;
+  --site-sand: #dfe5f4;
+  --site-line: #cdd5ea;
+  --site-action: #3f4fd0;
+  --site-action-hover: #3240ab;
+  --site-footer: #1a2040;
+  --site-footer-link: #a9b3ff;
 }
 
 /* A page is a public-site page when it renders the public header, which

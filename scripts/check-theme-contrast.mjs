@@ -12,7 +12,8 @@
  * pairs such as `text-danger` on `bg-danger/10` are blended over the surface
  * they sit on, as the browser draws them.
  *
- * Dev's teal (`:root[data-env="dev"]`) is checked too: it applies only under
+ * Dev's teal (`:root[data-env="dev"]`) and UAT's indigo
+ * (`:root[data-env="uat"]`) are checked too: each applies only under
  * the default theme (docs/decisions/2026-10-10-user-colour-themes.md).
  */
 import { exitWith } from "./lib/exit.mjs";
@@ -38,12 +39,13 @@ const base = tokens(":root");
 const themes = {
   dark: base,
   "dark (dev)": { ...base, ...tokens(':root[data-env="dev"]') },
+  "dark (uat)": { ...base, ...tokens(':root[data-env="uat"]') },
 };
 // A theme block comes after the dev block, so whatever it leaves out, dev's
 // teal and green-cast surfaces fill in on dev and Test. Every theme must set
 // every app token dev changes, or it looks different per environment. (The
 // public site's --site-* tokens are not the themes' business.)
-const devOnly = Object.keys(tokens(':root[data-env="dev"]')).filter((k) => !k.startsWith("site-"));
+const devOnly = [...new Set([...Object.keys(tokens(':root[data-env="dev"]')), ...Object.keys(tokens(':root[data-env="uat"]'))])].filter((k) => !k.startsWith("site-"));
 let failures = 0;
 for (const m of css.matchAll(/:root\[data-theme="([a-z-]+)"\] \{/g)) {
   const own = tokens(`:root[data-theme="${m[1]}"]`);
@@ -51,7 +53,7 @@ for (const m of css.matchAll(/:root\[data-theme="([a-z-]+)"\] \{/g)) {
   const missing = devOnly.filter((k) => !(k in own));
   if (missing.length) {
     failures++;
-    console.log(`FAIL theme "${m[1]}" leaves dev's ${missing.join(", ")} showing through on dev and Test`);
+    console.log(`FAIL theme "${m[1]}" leaves dev's or UAT's ${missing.join(", ")} showing through on dev, Test and UAT`);
   }
 }
 
@@ -179,7 +181,7 @@ for (const [name, t] of Object.entries(themes)) {
   // every swatch. The default orange (5.0 from Orange) and dev's teal (4.5
   // from Teal) predate the themes and are reported, not failed.
   const near = swatches.map(([k, hex]) => [k, deltaE(t.primary, hex)]).sort((a, b) => a[1] - b[1])[0];
-  const accentOk = near[1] >= 10 || name === "dark" || name === "dark (dev)";
+  const accentOk = near[1] >= 10 || name === "dark" || name === "dark (dev)" || name === "dark (uat)";
   if (!accentOk) failures++;
   console.log(`  ${near[1] >= 10 ? "ok  " : accentOk ? "KNWN" : "FAIL"} zone chips: accent ${t.primary} is ΔE ${near[1].toFixed(1)} from the nearest zone colour (${near[0]})`);
   // A chip's edge is its zone colour, darkened halfway to black in the light
