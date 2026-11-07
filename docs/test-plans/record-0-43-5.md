@@ -67,7 +67,12 @@ Analysed by card. **No card's behaviour changes**, and no file here is served to
 - [x] The pages nearest the change still work — n/a: no page is near these files. `check-docs-only.mjs` establishes that, and its answer is the evidence:
 
 ```
-EVIDENCE_PLACEHOLDER
+deps-changed: false
+docs-only: true — 3 path(s), all documents
+  docs/release-handover.md
+  docs/releases/2026-11-07-0-43-5.md
+  docs/test-plans/record-0-43-5.md
+The heavy jobs will skip; test-plan still runs.
 ```
 
 - [x] Any shared file touched checked from a second, unrelated page — **there is no shared file in this PR.** `docs/release-handover.md` is replaced wholesale each release and is read by one chat; it imports nothing and nothing imports it. Unlike `0.43.4`'s record PR, this one does not touch `docs/test-plan-template.md`, so there is no shared file to re-check
@@ -98,7 +103,7 @@ the dev project; `lannacare.org` is UAT, still on `0.43.3` against dev and still
 - [x] Smoke-tested on `test.lannacare.org` — n/a: there is nothing to smoke-test, because nothing in this PR reaches any host. Test itself is on `0.43.5` and was verified for the release
 - [x] Timezone-sensitive behaviour proved — n/a: no logic in this PR derives a date. The dates in the documents are literals recording when things happened
 - [x] For a boundary or banding change, the assertions cover both edges — n/a: no boundary, band, threshold or cutoff in this PR
-- [x] Evidence pasted into this plan is the tool's actual output, unedited — the `check-docs-only.mjs` block in section 6 is its own output, pasted after running it. **`0.43.4`'s record plan typed this block from memory, got the shape wrong, and running it for real exposed a half-committed change** — so it was run first here and the block filled from the result
+- [x] Evidence pasted into this plan is the tool's actual output, unedited — the `check-docs-only.mjs` block in section 6 is its own output, pasted after running it. **`0.43.4`'s record plan typed this block from memory, got the shape wrong, and running it for real exposed a half-committed change** — so it was run here and the block filled from the result. **It caught something again:** run WITHOUT `--base` the script reports `deps-changed: true` and `docs-only: false — no --base given`, and staged-but-uncommitted it reports `no changed files could be read`. **Either output pasted as evidence would have been wrong in the opposite direction from the truth**
 - [x] Public pages re-checked after a cache purge — n/a as a step of this PR. It was done for the release and is recorded there, proved byte-for-byte from the Pi (`check-assets: ok … 99677 bytes, identical to the build`) rather than by size alone
 
 ### Deploy safety
