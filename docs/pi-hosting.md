@@ -559,7 +559,29 @@ hour without finishing. `init` now fails a slow drive for this reason. **Use a b
 500 GB to 1 TB SSD** from a reputable shop (the clone needs about 7 GB; the archive less than
 that), and run `f3probe` on it before first use.
 
-## Drive mirror (stage 1: a copy on the USB drive; Drive stays primary)
+## Drive mirror (a cache on the USB drive; Drive stays the source of truth)
+
+**STAGE 2 IS SETTLED. Lutan, 2026-11-07, asked directly: the Pi copy is the CACHE and Drive is the
+fallback.** So the app reads a file from the Pi when the mirror has it and goes to Drive on any miss —
+which is what the code has always done (`src/lib/mirror-read.ts` calls itself *"a cache, not a
+primary"*), so **the decision required no change and nothing to deploy.** The measurement it was taken
+on is `#prr9h`, settled on the Pi on 2026-11-06: 47 files, mirror **27 ms** against Drive **14.66 s**
+at concurrency 4.
+
+**Three things the backlog item warned about therefore do not apply, and that is the half worth
+knowing.** `noauto` in `/etc/crypttab` **stays**: after a power cut the mirror comes back locked and
+the nightly job fails visibly, which is right for a cache and is the one thing that would otherwise
+have forced an auto-unlocking key and its security cost. The Cloudflare Worker fallback **has no
+disk**, and that now costs nothing, because Drive is still serving when the Pi is down. And Drive
+stays a live **off-site** copy, rather than the drive beside the Pi being the only one.
+
+**What actually reads it — because "Drive stays primary" in this heading used to suggest nothing did,
+and on 2026-11-07 that sent a wrong answer to Lutan.** `MIRROR_DEST` is written for **production
+only** (`scripts/pi/write-env.mjs`), and three call sites read through `src/lib/mirror-read.ts`:
+`src/app/api/photos/[fileId]/route.ts`, `src/app/api/documents/[fileId]/route.ts` and
+`src/lib/google/stream-video.ts`. So on production, staff photos, documents **and videos** are served
+from the Pi's copy whenever it holds them. It decides nothing about who may see a file: the caller has
+asked the database first, and this holds bytes only.
 
 `scripts/pi/drive-mirror.mjs` copies everything under the app's Drive root
 (`GOOGLE_DRIVE_ROOT_FOLDER_ID`: residents, photos, documents, blood work, procedures and
@@ -823,3 +845,25 @@ roots under the old shared root. `GOOGLE_DRIVE_ROOT_FOLDER_ID` points an environ
 files in `docs/decisions/2026-11-07-drive-buckets.md`); change it in the environment's secret file and restart the
 service. UAT's bucket is empty until UAT's data restore copies Prod into it. Sorting was done by
 `scripts/drive-partition-tree.mjs` then `scripts/drive-remap-ids.mjs --env test`.
+
+**The buckets cost the mirror one full re-pull, and the old copies stay. Measured 2026-11-07.**
+`drive-mirror.mjs` skips a file only when its Drive `modifiedTime` **and** its path are both unchanged
+(`prev.path === want`), and its layout is `<dest>/<shelter>/<Drive path>`. Sorting the tree into
+buckets changed every file's path, and pointing production at the Production bucket changed the root as
+well, so the first run after 2026-11-07 treats the whole tree as changed and copies it again — about
+**915 files / 1.1 GB** for the Production bucket, in one re-pull rather than two, because the sort and
+the root switch happened the same day. **Nothing is deleted:** the old pre-bucket copy stays on disk
+beside the new one, by the rule in the script's own header, so the mirror's footprint roughly doubles.
+That is affordable, and it was checked rather than assumed — `/mnt/lanna-mirror` is **1.8 TB with
+1.3 GB used and 1.7 TB free** (`df -h /mnt/lanna-mirror`, 2026-11-07), so the re-pull takes it to about
+2.4 GB.
+
+**Reads do not break while it happens, in either direction.** `src/lib/mirror-read.ts` resolves a file
+by its Drive **id** through `_mirror/state.json`; a Drive id survives a move, and the old copy is still
+on disk until the entry is rewritten, so a request hits the old path before the run and the new path
+after it. `src/lib/photo-cache.ts` is keyed by file id too and is untouched.
+
+**If you are reading this because the encrypted partition grew, this is why.**
+`du -sh /mnt/lanna-mirror/lanna` and `cat /mnt/lanna-mirror/_mirror/status.json` confirm it (a run
+reporting a large `changed` count once, then `same` thereafter). Nothing needs clearing, and the kept
+old copy is the one thing a mirror exists for.
