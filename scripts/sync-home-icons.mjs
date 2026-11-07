@@ -41,7 +41,7 @@ await build({
   logLevel: "error",
 });
 const mod = createRequire(import.meta.url)(outfile);
-const { catalogueEn, buildIconSvg, iconFileStem, HOME_ICONS_FOLDER } = mod;
+const { catalogueEn, cardOpens, buildIconSvg, iconFileStem, HOME_ICONS_FOLDER } = mod;
 
 const cards = catalogueEn();
 const files = [];
@@ -56,7 +56,14 @@ for (const card of cards) {
     }
   }
 }
-console.log(`${cards.length} cards, ${files.length} images drawn.`);
+// This counts PAGES, not cards: one icon per page, so a page several cards open is drawn once and a registry page no card opens is drawn too.
+// The card count is cards.ts (CARD_KEYS, asserted by check-cards-count.mjs); it is stated here so this figure is never quoted as "the number of cards".
+const opens = cardOpens();
+const pagePaths = new Set(cards.map((c) => c.path));
+const openedByACard = new Set(opens.filter((o) => pagePaths.has(o)));
+const missing = opens.filter((o) => !pagePaths.has(o));
+if (missing.length) fail(`cards.ts has cards opening pages with no icon: ${[...new Set(missing)].join(", ")}`);
+console.log(`${cards.length} pages drawn (${openedByACard.size} opened by the ${opens.length} cards in cards.ts, ${cards.length - openedByACard.size} registry pages no card opens), ${files.length} images. This is a page count, not a card count.`);
 
 if (localDir) {
   for (const f of files) {
