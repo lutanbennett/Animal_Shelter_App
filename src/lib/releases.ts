@@ -70,7 +70,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "Settings → Website now has a switch for every statistic on the public home page: the lifetime figures (animals rehomed, community dogs helped, villages sterilised) and today's counts (in our care, adopted this year, with foster families, in treatment). Switching one off takes it off the home page without losing the numbers you entered, and switching it back on shows it again. It asks you to confirm and is kept in Recent changes. A count under 2 is still left off the home page, and the screen says so. The Events page can now be hidden from Settings → Pages like the others. The Thai wording has not been checked by a Thai speaker.",
+  {
+    text: "Settings → Website now has a switch for every statistic on the public home page: the lifetime figures (animals rehomed, community dogs helped, villages sterilised) and today's counts (in our care, adopted this year, with foster families, in treatment). Switching one off takes it off the home page without losing the numbers you entered, and switching it back on shows it again. It asks you to confirm and is kept in Recent changes. A count under 2 is still left off the home page, and the screen says so. The Events page can now be hidden from Settings → Pages like the others. The Thai wording has not been checked by a Thai speaker.",
+    cards: ["website"],
+  },
   "The notice at the top of a deceased animal's page no longer says nothing at all can be edited, uploaded or recorded. It now says what is true: the record is closed to changes, but notes can still be added to existing entries, late blood test results can be added, and visit bills can be filled in. The record-a-death and edit pages say the same. The Thai wording has not been checked by a Thai speaker.",
   {
     text: "Filing a bill is now one permission card, Bills. It covers maintenance, utility and other bills, so whoever holds it can answer \"What type of bill is this?\" for any of them and save it. The two cards Add utility bills and Add other bills are gone. Bills settings stays its own card.",
