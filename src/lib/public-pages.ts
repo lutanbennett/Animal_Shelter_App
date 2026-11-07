@@ -149,7 +149,6 @@ export const PUBLIC_PAGES: PublicPage[] = [
     key: "events",
     href: "/events",
     label: (t) => t.publicEvents.navLabel,
-    noOwnSwitch: true,
     menu: { group: "get-involved" },
     footer: { column: "help", order: 12 },
     sitemap: { order: 14, changeFrequency: "weekly", priority: 0.6 },

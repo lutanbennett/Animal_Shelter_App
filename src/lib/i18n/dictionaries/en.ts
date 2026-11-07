@@ -2577,6 +2577,13 @@ const en = {
         invalidDate: "Enter the date as day, month and year.",
         futureDate: "The date cannot be in the future.",
         notFound: "That figure no longer exists. Reload the page.",
+        showOnWebsite: "Show on the website",
+        switchedOff: "Switched off: this is not shown on the public site. Nothing entered has been lost, and switching it back on shows it again.",
+        switchOnConfirm: "Show \"{name}\" on the public website? This changes what the public site says, and the change is recorded.",
+        switchOffConfirm: "Take \"{name}\" off the public website? Its numbers are kept, and the change is recorded.",
+        liveHeading: "Today's counts",
+        liveSubtitle: "Counted by the system from the animals in your care, so there is nothing to type. Switch off any you would rather not show. A count under {min} is left off the home page whatever the switch says.",
+        belowMin: "Switched on, but the count is only {count} and counts under {min} are left off the home page, so nothing shows yet. It appears by itself once the count reaches {min}.",
       },
       donate: {
         heading: "Ways to give",
