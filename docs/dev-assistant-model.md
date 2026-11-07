@@ -49,3 +49,9 @@ assistant carries on (`src/lib/assistant/llm.test.mjs`). Only the `--dev` comman
 server it starts.
 
 Tests: `node --test scripts/dev-assistant-model.test.mjs`.
+
+## Names on a fresh dev database (added 2026-11-08)
+
+Dev holds only `Test 1` and `Test 2`. The stand-in reads a trailing number as part of a name, so
+`Test 1 weighs 4.2 kg, bitten by Test 2` works: subject `Test 1`, an "Also tag" chip for `Test 2`. The full walk-through
+that shows both failure notices is in `docs/decisions/2026-11-08-assistant-tag-notice-seen-no-retry.md`.
