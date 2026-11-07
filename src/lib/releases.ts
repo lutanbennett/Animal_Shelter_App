@@ -71,6 +71,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "Adding a meme to a resident, from the meme library, now offers the residents. A login that holds only the meme cards got an empty list, because the list was read through a door those cards do not open. If the list is empty it now says whether there are no residents on file or your cards cannot see them.",
+    cards: ["meme_library", "meme_add"],
+  },
+  {
     text: "The Sterilisation drives list now opens for a login that can only view the website, instead of being refused. It shows the drives and their sign-up counts; the Start a drive button and the links into each drive appear only for a login that can edit the website.",
     cards: ["website", "website_photos"],
   },
