@@ -3,7 +3,7 @@
 #
 #   ./scripts/pi/deploy-pi.sh                 # production values
 #   ./scripts/pi/deploy-pi.sh --env test      # test.lannacare.org, from the TEST clone only
-#   ./scripts/pi/deploy-pi.sh --env uat       # a UAT instance, from the cutover
+#   ./scripts/pi/deploy-pi.sh --env uat       # lannacare.org, from the UAT clone only
 #   ./scripts/pi/deploy-pi.sh --ref <sha>     # ROLLBACK: serve that commit instead
 #   ./scripts/pi/deploy-pi.sh --force "why"   # emergency: past the release guard, on record
 #
@@ -13,8 +13,8 @@
 # The Pi is what serves users (the Worker answers only when it times out), so
 # this is the deploy that needs the guard (docs/decisions/2026-10-02-pi-ships-releases.md).
 #
-# Production and test are separate clones of the repo (~/Animal_Shelter_App and
-# ~/Animal_Shelter_App_test), each with its own node_modules, .next and env file,
+# Production, test and UAT are separate clones of the repo (~/Animal_Shelter_App,
+# ~/Animal_Shelter_App_test and ~/Animal_Shelter_App_uat), each with its own node_modules, .next and env file,
 # because a build bakes NEXT_PUBLIC_* values in and the running service serves
 # whatever .next is in its WorkingDirectory. This script refuses to run for one
 # environment from the other's clone (docs/decisions/2026-10-02-pi-test-own-clone.md).
@@ -67,29 +67,27 @@ done
 [[ "$ENV_NAME" == "test" ]] && SERVICE=lanna-care-test
 [[ "$ENV_NAME" == "uat" ]] && SERVICE=lanna-care-uat
 
-# Which clone is this? The folder name decides: ..._test is the test clone and
-# nothing else is. A wrong pairing builds one environment's values into the
-# other's .next, invisibly, so stop before anything is fetched, built or restarted.
+# Which clone is this? The folder name decides: ..._test is the test clone, ..._uat is the
+# UAT clone and nothing else is either. A wrong pairing builds one environment's values into
+# another's .next, invisibly, so stop before anything is fetched, built or restarted.
+# (Until UAT had a clone of its own, --env uat from the production clone was accepted and
+# would have put UAT's database in front of the shelter's staff at the next restart.)
 CLONE="$(pwd)"
 case "$(basename "$CLONE")" in
   *_test) CLONE_KIND=test ;;
+  *_uat) CLONE_KIND=uat ;;
   *) CLONE_KIND=production ;;
 esac
-if [[ "$ENV_NAME" == "test" && "$CLONE_KIND" != "test" ]]; then
-  echo "deploy-pi: REFUSING --env test from $CLONE" >&2
-  echo "  That is the production clone: its .next is what lanna-care.service serves, and a test" >&2
-  echo "  build would bake the dev database into it. Run it from the test clone instead:" >&2
-  echo "    cd ~/Animal_Shelter_App_test && ./scripts/pi/deploy-pi.sh --env test" >&2
-  exit 2
-fi
-if [[ "$ENV_NAME" != "test" && "$CLONE_KIND" == "test" ]]; then
+if [[ "$ENV_NAME" != "$CLONE_KIND" ]]; then
+  case "$ENV_NAME" in production) WANT_FOLDER=Animal_Shelter_App ;; *) WANT_FOLDER="Animal_Shelter_App_$ENV_NAME" ;; esac
   echo "deploy-pi: REFUSING --env $ENV_NAME from $CLONE" >&2
-  echo "  That is the test clone, which holds the dev database's values. Run it from the" >&2
-  echo "  production clone instead:" >&2
-  echo "    cd ~/Animal_Shelter_App && ./scripts/pi/deploy-pi.sh --env $ENV_NAME" >&2
+  echo "  That is the $CLONE_KIND clone: a $ENV_NAME build would bake the wrong database into its .next," >&2
+  echo "  which is what that clone's service serves. Run it from the $ENV_NAME clone instead:" >&2
+  echo "    cd ~/$WANT_FOLDER && ./scripts/pi/deploy-pi.sh --env $ENV_NAME" >&2
   exit 2
 fi
-# Isolation: the test clone must never be able to read a production secret.
+# Isolation: the test clone must never be able to read a production or uat secret, and the
+# uat clone must never be able to read production's.
 if [[ "$CLONE_KIND" == "test" ]]; then
   for f in .env.deploy.production .env.deploy.uat; do
     if [[ -e "$f" ]]; then
@@ -98,9 +96,13 @@ if [[ "$CLONE_KIND" == "test" ]]; then
     fi
   done
 fi
-# Test builds are the ones that come and go; keep them from starving production.
+if [[ "$CLONE_KIND" == "uat" && -e .env.deploy.production ]]; then
+  echo "deploy-pi: REFUSING: $CLONE/.env.deploy.production exists. The uat clone must not hold production secrets; delete it." >&2
+  exit 2
+fi
+# Test and UAT builds are the ones that come and go; keep them from starving production.
 NICE=()
-[[ "$ENV_NAME" == "test" ]] && NICE=(nice -n 10)
+[[ "$ENV_NAME" == "test" || "$ENV_NAME" == "uat" ]] && NICE=(nice -n 10)
 
 if [[ -z "${DEPLOY_PI_REEXECED:-}" ]]; then   # the re-exec below runs this script again; fetch once
   echo "deploy-pi: fetching main"
@@ -205,7 +207,8 @@ NEXT_DIST_DIR=.next.new node scripts/actions-key.mjs --env "$ENV_NAME" --built |
 # (docs/decisions/2026-11-05-manual-pdf-prebuilt.md).
 "${NICE[@]}" node scripts/build-manual-pdf.mjs || { echo "deploy-pi: building the manual PDFs failed; nothing swapped." >&2; abandon_build; exit 1; }
 
-HOST=lannacareforanimals.org   # the live site since the 2026-11-06 cutover; lannacare.org is UAT, which has no Pi
+HOST=lannacareforanimals.org   # the live site since the 2026-11-06 cutover
+[[ "$ENV_NAME" == "uat" ]] && HOST=lannacare.org
 [[ "$ENV_NAME" == "test" ]] && HOST=test.lannacare.org
 
 [[ -d .next.new ]] || { echo "deploy-pi: the build reported success but .next.new is missing; nothing swapped, $SERVICE keeps serving the old version." >&2; exit 1; }
@@ -231,7 +234,7 @@ mv .next .next.prev 2>/dev/null || true
 mv .next.new .next
 sudo systemctl restart "$SERVICE"
 sleep 3
-LOCAL_PORT=3000; [[ "$ENV_NAME" == "test" ]] && LOCAL_PORT=3001
+LOCAL_PORT=3000; [[ "$ENV_NAME" == "test" ]] && LOCAL_PORT=3001; [[ "$ENV_NAME" == "uat" ]] && LOCAL_PORT=3002
 # Production refuses a request without the Worker's x-origin-key (403 Forbidden), so the probe presents it.
 check_served_version "http://localhost:$LOCAL_PORT/api/version" "$(node -p "require(\"./package.json\").version")" "$(origin_key_from .env.production.local)" || {
   echo "deploy-pi: the previous build is kept in .next.prev; roll back with: rm -rf .next && mv .next.prev .next && sudo systemctl restart $SERVICE" >&2

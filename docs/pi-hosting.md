@@ -180,6 +180,42 @@ updates. Re-runnable.
   stopped, because a GET-only drill passed on 2026-09-30 while auth and every
   Server Action were broken. **Capacity:** with both servers running and a test
   build in progress, watch `free -m` and `journalctl -u lanna-care` for restarts.
+- **UAT on the same Pi** (`lannacare.org`, the customer's acceptance testing). Until 2026-11-07 UAT had no
+  Pi (`ORIGIN_HOST` empty), so every page was rendered inside its Worker, over the free plan's 10 ms CPU
+  limit: 627 "Exceeded CPU Time Limits" on 2026-11-05 and Cloudflare's "100+ in 24 hours" email
+  (`docs/decisions/2026-11-07-uat-on-the-pi.md`). It is a third instance, same pattern as test: its own
+  clone `~/Animal_Shelter_App_uat`, service `lanna-care-uat` on 127.0.0.1:3002 as user `lannacare-uat`,
+  `Nice=5`, `CPUWeight=75`, `MemoryMax=900M`, photo cache `~/photo-cache-uat`, tunnel `uat-pi.lannacare.org`
+  presenting `Host: lannacare.org`. **Differences from test that matter:**
+  - It holds **UAT's own** values, in `.env.deploy.uat` and nowhere else. **No `.env.local`** (that is dev's
+    database, and the Supabase token), and no `.env.deploy.production`. Nothing falls through, so the Google
+    Drive set must be in `.env.deploy.uat` too; `write-env.mjs` names whatever is missing.
+  - `deploy-pi.sh --env uat` is guarded like production (release written down, migrations applied to **UAT's**
+    project, commit on `origin/main`) and refuses to run from any clone not named `*_uat`. Before this, it
+    ran from the production clone and would have built UAT's database into the production `.next`.
+  - No Drive mirror (production's Drive only).
+
+  **Order matters, and nothing here is reachable until the last step**, so a half-done setup changes nothing
+  for anyone (the Worker falls back to rendering itself, exactly as today).
+  1. On the Pi: `git clone https://github.com/lutanbennett/Animal_Shelter_App.git ~/Animal_Shelter_App_uat`,
+     create `~/Animal_Shelter_App_uat/.env.deploy.uat` with UAT's values (copy from the dev machine's; it
+     must include `ORIGIN_KEY`, the **same value as production's**, and `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`,
+     the same one `deploy:uat` uses). Then `cd ~/Animal_Shelter_App_uat && ./scripts/pi/setup-uat.sh`.
+  2. **Check memory first:** three Next servers on a 4 GB Pi. `free -m` before and after; production's
+     service must not restart (`journalctl -u lanna-care -n 30`).
+  3. Cloudflare: `cloudflared tunnel route dns <tunnel> uat-pi.lannacare.org`; install the new
+     `scripts/pi/cloudflared-config.yml` over `/etc/cloudflared/config.yml` (tunnel id filled in as
+     `setup.sh` does) and `sudo systemctl restart cloudflared`; extend the WAF rule's host set to
+     `{"pi.lannacare.org" "test-pi.lannacare.org" "uat-pi.lannacare.org"}` (free plan: five custom rules, so
+     extend, never add).
+  4. Dev machine: `npm run deploy:uat -- --secrets` (puts `ORIGIN_KEY` on the UAT Worker and ships the new
+     `ORIGIN_HOST`). **Only after steps 1–3**: until then a Worker that names a tunnel with nothing behind it
+     takes the 530 path to its own render, which is today's behaviour.
+  5. **Check:** `curl -sI https://lannacare.org/login | grep x-lanna` says `pi`; a signed-in page says `pi`;
+     `curl -sI https://uat-pi.lannacare.org/` from elsewhere is 403. **Failover drill:**
+     `sudo systemctl stop lanna-care-uat`, the header flips to `worker`; sign in and submit something while it
+     is stopped, then `start` it. After the first real day, the UAT Worker's Metrics → Errors by invocation
+     status should show no "Exceeded CPU Time Limits".
 - **Rollback (the Pi serves users, so this is the production rollback)**:
   find the release's commit (`git log --oneline -- src/lib/releases.ts`, the
   cut that preceded the bad one), then `./scripts/pi/deploy-pi.sh --ref <sha>`.

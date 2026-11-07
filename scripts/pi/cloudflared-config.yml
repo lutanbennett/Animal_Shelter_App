@@ -28,4 +28,12 @@ ingress:
     service: http://127.0.0.1:3001
     originRequest:
       httpHostHeader: test.lannacare.org
+  # UAT on the same Pi (customer acceptance testing, lannacare.org): lanna-care-uat.service on 3002,
+  # run from its own clone (~/Animal_Shelter_App_uat, scripts/pi/setup-uat.sh). Reached by the UAT
+  # Worker (ORIGIN_HOST) behind the same WAF rule. Before this, UAT had no Pi and rendered every
+  # page inside the Worker, over the free plan's 10 ms CPU limit (627 errors on 2026-11-05).
+  - hostname: uat-pi.lannacare.org
+    service: http://127.0.0.1:3002
+    originRequest:
+      httpHostHeader: lannacare.org
   - service: http_status:404

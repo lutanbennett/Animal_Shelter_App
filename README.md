@@ -219,8 +219,11 @@ disagree. Everything outside the code that holds an address is listed in
 `.env.deploy.production` becomes `.env.deploy.uat`, a new
 `.env.deploy.production` holds the new project's values, and
 `node scripts/deploy.mjs --env uat --secrets` gives the UAT Worker its
-secrets. The Pi has no `lanna-care-uat` service yet; `setup.sh` installs
-only `lanna-care`.
+secrets. UAT is served by the Pi as a third instance (`lanna-care-uat` on
+port 3002, tunnel `uat-pi.lannacare.org`, from its own `~/Animal_Shelter_App_uat`
+clone): `setup.sh` installs only `lanna-care`, `setup-uat.sh` adds UAT, and
+`docs/pi-hosting.md` ("UAT on the same Pi") has the order of steps. Without a
+Pi UAT rendered every page in its Worker, over the free plan's CPU limit.
 
 Two databases, both on Supabase's free tier (the org allows two). Test
 deliberately shares the dev database: one developer, throwaway data, and
