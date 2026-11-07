@@ -315,7 +315,7 @@ async function updateDeceasedResident(
   // The edit is saved and a Drive hiccup does not undo it, but it must not
   // pass silently: the hub opens with a warning and its Refresh archive
   // button (decisions 2026-10-01).
-  const refresh = await refreshDeceasedArchiveIfNeeded(supabase, residentId);
+  const refresh = await refreshDeceasedArchiveIfNeeded(supabase, t, residentId);
 
   revalidatePath(`/residents/${residentId}`);
   revalidatePath(`/residents/${residentId}/photos`);

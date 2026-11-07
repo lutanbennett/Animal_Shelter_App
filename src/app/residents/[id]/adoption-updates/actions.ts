@@ -182,7 +182,7 @@ export async function deleteAdoptionUpdate(
     // The links went with the note: no foreign key can cascade across the note tables (0299).
     await supabase.from("resident_note_tags").delete().eq("source_table", "adoption_updates").eq("source_row_id", updateId);
 
-    if ((photos ?? []).length > 0) await refreshDeceasedArchiveIfNeeded(supabase, residentId);
+    if ((photos ?? []).length > 0) await refreshDeceasedArchiveIfNeeded(supabase, t, residentId);
     revalidateResident(residentId);
     return { ok: true };
   });

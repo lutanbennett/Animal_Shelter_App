@@ -8,6 +8,7 @@ import {
   type DriveClient,
   type ProjectFolderChain,
 } from "@/lib/google/drive";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { driveErrorMessage } from "@/lib/google/drive-errors";
 
 type ChainRow = {
@@ -89,6 +90,7 @@ export async function ensureProjectDriveFolder(
  */
 export async function syncProjectFolderRename(
   supabase: SupabaseClient,
+  t: Dictionary,
   folderId: string,
 ): Promise<string | null> {
   const { data } = await supabase
@@ -104,7 +106,7 @@ export async function syncProjectFolderRename(
     await renameProjectDriveFolder(getDriveClient(), row.drive_folder_id, row.name);
     return null;
   } catch (error) {
-    return driveErrorMessage(error, "Could not rename the Drive folder.");
+    return driveErrorMessage(error, t.common.driveFolderRenameFailed);
   }
 }
 
@@ -115,6 +117,7 @@ export async function syncProjectFolderRename(
  */
 export async function syncProjectFolderMove(
   supabase: SupabaseClient,
+  t: Dictionary,
   folderId: string,
 ): Promise<string | null> {
   const { data } = await supabase
@@ -132,7 +135,7 @@ export async function syncProjectFolderMove(
     await moveProjectDriveFolder(drive, row.drive_folder_id, parentDriveId);
     return null;
   } catch (error) {
-    return driveErrorMessage(error, "Could not move the Drive folder.");
+    return driveErrorMessage(error, t.common.driveFolderMoveFailed);
   }
 }
 
@@ -141,13 +144,13 @@ export async function syncProjectFolderMove(
  * one was ever created. Only empty folders can be deleted from the app,
  * so this never removes files.
  */
-export async function deleteProjectDriveFolder(driveFolderId: string | null): Promise<string | null> {
+export async function deleteProjectDriveFolder(t: Dictionary, driveFolderId: string | null): Promise<string | null> {
   if (!driveFolderId) return null;
   try {
     await getDriveClient().trashFile(driveFolderId);
     return null;
   } catch (error) {
     if (error instanceof DriveApiError && error.status === 404) return null;
-    return driveErrorMessage(error, "Could not delete the Drive folder.");
+    return driveErrorMessage(error, t.common.driveFolderDeleteFailed);
   }
 }

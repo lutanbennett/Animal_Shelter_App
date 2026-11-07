@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import {
   DriveApiError,
   getDriveClient,
@@ -29,6 +30,7 @@ export type RestoreDeceasedResidentResult = { ok: true } | { error: string };
 
 export async function restoreDeceasedResident(
   supabase: SupabaseClient,
+  t: Dictionary,
   residentId: string,
 ): Promise<RestoreDeceasedResidentResult> {
   const [residentResult, stateResult] = await Promise.all([
@@ -59,12 +61,12 @@ export async function restoreDeceasedResident(
 
   if (residentResult.error) return { error: residentResult.error.message };
   const resident = residentResult.data?.[0];
-  if (!resident) return { error: "Resident not found." };
+  if (!resident) return { error: t.residents.deceased.archiveErrors.residentNotFound };
   if (stateResult.error) return { error: stateResult.error.message };
   // Never dismantle the archive of a resident who is still recorded as
   // deceased — this only follows a withdrawn death.
   if (stateResult.data?.[0]?.is_deceased) {
-    return { error: "This resident is still recorded as deceased." };
+    return { error: t.residents.deceased.archiveErrors.stillDeceased };
   }
 
   try {
@@ -101,7 +103,7 @@ export async function restoreDeceasedResident(
   } catch (error) {
     return {
       error:
-        error instanceof Error ? error.message : "Failed to restore the resident's Drive folder.",
+        error instanceof Error ? error.message : t.residents.deceased.archiveErrors.restoreFailed,
     };
   }
 }

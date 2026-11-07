@@ -67,6 +67,9 @@ const en = {
     // Any Drive call whose token or client is dead (drive-errors.ts).
     driveNotConnected: "Photo storage is not connected. That is a server setting no card can change, so tell whoever looks after the server. The System status page shows what is wrong.",
     driveFailed: "Google Drive didn't accept that. Try again in a minute.",
+    driveFolderMoveFailed: "Could not move the Drive folder.",
+    driveFolderRenameFailed: "Could not rename the Drive folder.",
+    driveFolderDeleteFailed: "Could not delete the Drive folder.",
     system: "(system)",
     name: "Name",
     notes: "Notes",
@@ -6329,6 +6332,12 @@ const en = {
         title: (name: string) => `Record ${name} as deceased?`,
         body: "Withdrawing it afterwards is a separate permission, \"Withdraw a death recorded in error\".",
         confirmButton: "Yes, record the death",
+      },
+      archiveErrors: {
+        residentNotFound: "Resident not found.",
+        archiveFailed: "Failed to archive the resident.",
+        stillDeceased: "This resident is still recorded as deceased.",
+        restoreFailed: "Failed to restore the resident's Drive folder.",
       },
       banner: {
         title: (date: string) => `This record was closed on ${date}`,

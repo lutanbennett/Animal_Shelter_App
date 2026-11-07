@@ -222,10 +222,10 @@ async function handlePost(
 
   // Uploads are sequential (DeferredUploads), so this runs once per file;
   // acceptable for the handful of photos added after a death.
-  const archiveRefresh = isDeceased
-    ? await refreshDeceasedArchiveIfNeeded(supabase, id)
-    : null;
   const { t } = await getT();
+  const archiveRefresh = isDeceased
+    ? await refreshDeceasedArchiveIfNeeded(supabase, t, id)
+    : null;
 
   return NextResponse.json({
     attachmentId: row.attachment.id,

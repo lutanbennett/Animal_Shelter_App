@@ -50,6 +50,9 @@ const th: Dictionary = {
     reloadToSave: "ต้องโหลดหน้านี้ใหม่ก่อนจึงจะบันทึกได้ โหลดหน้าใหม่แล้วลองอีกครั้ง",
     driveNotConnected: "ที่เก็บรูปภาพยังไม่ได้เชื่อมต่อ นี่เป็นการตั้งค่าของเซิร์ฟเวอร์ ไม่มีการ์ดใดแก้ได้ โปรดแจ้งผู้ที่ดูแลเซิร์ฟเวอร์ หน้า System status แสดงสิ่งที่ผิดปกติ",
     driveFailed: "Google Drive ไม่รับไฟล์นี้ ลองใหม่อีกครั้งในอีกสักครู่",
+    driveFolderMoveFailed: "ย้ายโฟลเดอร์ใน Drive ไม่สำเร็จ",
+    driveFolderRenameFailed: "เปลี่ยนชื่อโฟลเดอร์ใน Drive ไม่สำเร็จ",
+    driveFolderDeleteFailed: "ลบโฟลเดอร์ใน Drive ไม่สำเร็จ",
     system: "(ระบบ)",
     name: "ชื่อ",
     notes: "หมายเหตุ",
@@ -6106,6 +6109,12 @@ const th: Dictionary = {
         title: (name: string) => `บันทึกว่า ${name} เสียชีวิตแล้วหรือไม่?`,
         body: "การถอนการบันทึกนี้ภายหลังเป็นสิทธิ์แยกต่างหาก คือ \"ยกเลิกการเสียชีวิตที่บันทึกผิด\"",
         confirmButton: "ใช่ บันทึกการเสียชีวิต",
+      },
+      archiveErrors: {
+        residentNotFound: "ไม่พบสัตว์ตัวนี้",
+        archiveFailed: "เก็บถาวรประวัติสัตว์ไม่สำเร็จ",
+        stillDeceased: "สัตว์ตัวนี้ยังถูกบันทึกว่าตายอยู่",
+        restoreFailed: "กู้คืนโฟลเดอร์ Drive ของสัตว์ตัวนี้ไม่สำเร็จ",
       },
       banner: {
         title: (date: string) => `ประวัตินี้ถูกปิดเมื่อ ${date}`,

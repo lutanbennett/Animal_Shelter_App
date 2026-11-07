@@ -28,7 +28,7 @@ async function archiveWarningFor(
   t: Awaited<ReturnType<typeof getT>>["t"],
   residentId: string,
 ): Promise<string | undefined> {
-  const refresh = await refreshDeceasedArchiveIfNeeded(supabase, residentId);
+  const refresh = await refreshDeceasedArchiveIfNeeded(supabase, t, residentId);
   if (refresh.error) return t.residents.deceased.banner.archiveNotRefreshed;
   return refresh.photoMissing ? t.residents.deceased.banner.photoNotInPdf : undefined;
 }

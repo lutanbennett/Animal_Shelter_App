@@ -420,7 +420,7 @@ export async function assistantRecordDeath(
         notes: note,
       });
       if ("error" in result) return result;
-      await archiveDeceasedResident(supabase, input.residentId);
+      await archiveDeceasedResident(supabase, t, input.residentId);
       return { ok: true, id: "" };
     },
     () => {
