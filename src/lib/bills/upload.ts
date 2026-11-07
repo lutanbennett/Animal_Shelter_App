@@ -11,11 +11,10 @@ import { driveImageUrl } from "@/lib/google/drive-client";
 import { refuseCrossSite } from "@/lib/auth/same-origin";
 import { todayIso } from "@/lib/format";
 
-// general_bill is left out on purpose: no screen shows a filed general bill (it is only a row in general_bills, kept for the totals),
-// so nothing offers "add a page" to one. A multi-page general bill gets all its pages while it is still a card in the Bills inbox
-// (bill_inbox, below), and recordGeneralBill moves them all across. The database would accept the owner (0306); the app has no use for it.
-// Add it here, with a screen that shows the bill, the day one is wanted (docs/decisions/2026-11-04-bills-inbox-one-question.md).
-export const BILL_OWNER_TYPES = ["stock_receipt", "stock_delivery", "clinic_visit", "bill_inbox", "maintenance_bill", "utility_bill"] as const;
+// general_bill is accepted since /bills/general shows a filed general bill with its pages and offers "add a page" (a second page can
+// arrive after the bill is filed). Before that a multi-page bill got all its pages while still a card in the Bills inbox (bill_inbox,
+// below) and recordGeneralBill moved them across. The database accepts the owner (0306, bill_owner_can) and bills.general reads it (0317).
+export const BILL_OWNER_TYPES = ["stock_receipt", "stock_delivery", "clinic_visit", "bill_inbox", "maintenance_bill", "utility_bill", "general_bill"] as const;
 export type BillOwnerType = (typeof BILL_OWNER_TYPES)[number];
 
 const ALLOWED_MIME_TYPES = new Set([
@@ -36,6 +35,7 @@ export function mayFileBill(perms: Permissions | null, owner: BillOwnerType): bo
   if (owner === "clinic_visit") return visits;
   if (owner === "maintenance_bill") return can(perms, "maintenance.bills");
   if (owner === "utility_bill") return can(perms, "bills.utilities");
+  if (owner === "general_bill") return can(perms, "bills.general");
   return delivery || visits || can(perms, "maintenance.bills") || can(perms, "bills.utilities") || can(perms, "bills.general");
 }
 

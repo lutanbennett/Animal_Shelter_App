@@ -70,6 +70,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "Bills now has an Other bills page. It lists every bill filed as materials, cleaning products or another kind with no screen of its own, shows the pages already on each, and lets you add another page if one turns up after the bill was filed. The new page shows in the expenses report as that bill's receipt. The Thai wording has not been checked by a Thai speaker.",
+    cards: ["bills"],
+  },
 ];
 
 /** Newest first. */
