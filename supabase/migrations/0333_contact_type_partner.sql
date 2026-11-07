@@ -1,0 +1,19 @@
+-- consumer: src/lib/contacts/contacts.ts, src/lib/shelter-friends/friends.ts, src/app/contacts/ContactList.tsx
+--
+-- SCHEMA half of backlog item #xkfsv, the Partner piece: a business that helps the shelter but sells it nothing
+-- must be able to be a Shelter Friend without first being filed as a Supplier (`Vendor`). This file adds the one
+-- enum value and NOTHING else: an added enum value cannot be used in the transaction that adds it, and
+-- apply-migrations.mjs runs each file in its own, so any use would need a later file. None is needed (see below).
+--
+-- The `-- consumer:` warning from apply-migrations.mjs is CORRECT and EXPECTED: the app half (CONTACT_TYPES,
+-- FRIEND_CONTACT_TYPES, the two dictionary labels, the filter chips) is a separate, later PR. Until then nothing
+-- writes a Partner.
+--
+-- WHY NOTHING IN THE DATABASE NEEDS TO CHANGE (read in the migration files, not assumed): the only places that
+-- compare a contact's type to a literal are 0001/0126 `type = 'Carer'` (carer_id must reference a Carer; Partner
+-- is correctly not one) and 0143 `stock_vendors` `type = 'Vendor'` (the suppliers a delivery names; a Partner is
+-- correctly NOT a supplier, so it correctly stays out). Both test ONE value; neither enumerates, so no site
+-- silently drops the new value. shelter_friends.contact_id is keyed on the contact, not its type (0076), so a
+-- Partner can be a Friend with no change. The value is appended, so `(enum_range(null::contact_type))[1]`, which
+-- several harnesses use, is still Carer.
+alter type contact_type add value if not exists 'Partner';
