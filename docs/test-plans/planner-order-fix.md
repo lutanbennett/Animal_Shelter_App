@@ -10,7 +10,7 @@
 | Backlog item | `docs/backlog.md` → none: Lutan's direct instruction, 2026-11-07 (*"update the skill to move the streams to step 2 and then create the handover and merge it"*) |
 | Branch / worktree | `claude/planner-order-fix` @ `C:\Development\Animal_Shelter_planner-order-fix` |
 | Dev server | not started — process documents only, no app surface |
-| PR | #1374 |
+| PR | #1376 |
 | Tested by / date | Claude (planner session) / 2026-11-07 |
 | Carries a migration? | no |
 | Tested at SHA | `80cf31d7` |
