@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import {
   type DriveClient,
   getDriveClient,
@@ -111,6 +112,7 @@ async function loadProfilePhoto(
 
 export async function archiveDeceasedResident(
   supabase: SupabaseClient,
+  t: Dictionary,
   residentId: string,
 ): Promise<ArchiveDeceasedResidentResult> {
   const residentResult = await supabase
@@ -134,7 +136,7 @@ export async function archiveDeceasedResident(
 
   if (residentResult.error) return { error: residentResult.error.message };
   const resident = residentResult.data?.[0];
-  if (!resident) return { error: "Resident not found." };
+  if (!resident) return { error: t.residents.deceased.archiveErrors.residentNotFound };
 
   try {
     const record = await loadResidentArchiveRecord(supabase, residentId);
@@ -182,7 +184,7 @@ export async function archiveDeceasedResident(
     // redeploy.
     console.error(`archiveDeceasedResident(${residentId}) failed:`, error);
     return {
-      error: error instanceof Error ? error.message : "Failed to archive the resident.",
+      error: error instanceof Error ? error.message : t.residents.deceased.archiveErrors.archiveFailed,
     };
   }
 }

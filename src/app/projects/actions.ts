@@ -123,7 +123,7 @@ export async function renameProjectFolder(
     const row = data?.[0];
     if (!row) return refuse(t.projects.errors.notAuthorized);
 
-    const driveWarning = await syncProjectFolderRename(supabase, folderId);
+    const driveWarning = await syncProjectFolderRename(supabase, t, folderId);
     revalidateFolder(folderId, row.parent_folder_id);
     return { ok: true, driveWarning };
   });
@@ -218,7 +218,7 @@ export async function moveProjectFolder(
     if (error) return refuse(error.code === "42501" ? t.common.notAllowed : await friendlyDbError(error.message));
     if (!data || data.length === 0) return refuse(t.projects.errors.notAuthorized);
 
-    const driveWarning = await syncProjectFolderMove(supabase, folderId);
+    const driveWarning = await syncProjectFolderMove(supabase, t, folderId);
     revalidateFolder(folderId, newParentId);
     if (previousParent) revalidatePath(`/projects/${previousParent}`);
     return { ok: true, driveWarning };
@@ -263,7 +263,7 @@ export async function deleteProjectFolder(folderId: string, requestId: string): 
     if (error) return refuse(error.code === "42501" ? t.common.notAllowed : await friendlyDbError(error.message));
     if (!data || data.length === 0) return refuse(t.projects.errors.notAuthorized);
 
-    const driveWarning = await deleteProjectDriveFolder(folder.drive_folder_id);
+    const driveWarning = await deleteProjectDriveFolder(t, folder.drive_folder_id);
     revalidateFolder(null, folder.parent_folder_id);
     return { ok: true, driveWarning, folderId: folder.parent_folder_id ?? undefined };
   });

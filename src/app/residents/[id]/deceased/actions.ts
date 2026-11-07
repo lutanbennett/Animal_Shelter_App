@@ -82,7 +82,7 @@ export async function recordDeath(
       if (tagFailure) return { ok: false, error: tagFailure };
     }
 
-    await archiveDeceasedResident(supabase, residentId);
+    await archiveDeceasedResident(supabase, t, residentId);
 
     revalidateResident(residentId);
     return { ok: true, redirectTo: `/residents/${residentId}` };
@@ -110,7 +110,7 @@ export async function retryDeceasedArchive(
       return { ok: false, error: t.residents.deceased.notAuthorized };
     }
 
-    const result = await archiveDeceasedResident(supabase, residentId);
+    const result = await archiveDeceasedResident(supabase, t, residentId);
     if ("error" in result) return { ok: false, error: result.error };
 
     revalidatePath(`/residents/${residentId}`, "layout");
@@ -145,7 +145,7 @@ export async function undoDeath(
     });
     if ("error" in result) return { ok: false, error: result.error };
 
-    await restoreDeceasedResident(supabase, residentId);
+    await restoreDeceasedResident(supabase, t, residentId);
 
     revalidateResident(residentId);
     return { ok: true, redirectTo: `/residents/${residentId}` };
@@ -172,7 +172,7 @@ export async function retryDeceasedRestore(
       return { ok: false, error: t.residents.deceased.undo.notAuthorized };
     }
 
-    const result = await restoreDeceasedResident(supabase, residentId);
+    const result = await restoreDeceasedResident(supabase, t, residentId);
     if ("error" in result) return { ok: false, error: result.error };
 
     revalidatePath(`/residents/${residentId}`, "layout");

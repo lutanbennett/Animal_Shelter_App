@@ -249,7 +249,7 @@ export async function updateMaintenanceJob(formData: FormData): Promise<ActionRe
     const teamError = await setAssignees(supabase, jobId, fields.assignee_ids);
     if (teamError) return refuse(teamError);
 
-    const driveWarning = await syncJobFolderAfterChange(supabase, jobId);
+    const driveWarning = await syncJobFolderAfterChange(supabase, t, jobId);
 
     revalidateJob(jobId, fields.enclosure_id);
     const previousEnclosure = before?.[0]?.enclosure_id ?? null;
@@ -290,7 +290,7 @@ export async function setMaintenanceStatus(
     const row = data?.[0];
     if (!row) return refuse(t.maintenance.errors.notAuthorized);
 
-    const driveWarning = await syncJobFolderAfterChange(supabase, jobId);
+    const driveWarning = await syncJobFolderAfterChange(supabase, t, jobId);
     revalidateJob(jobId, row.enclosure_id);
     return { ok: true, driveWarning };
   });

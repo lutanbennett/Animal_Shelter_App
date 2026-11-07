@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "When a deceased animal's Drive archive cannot be made or restored, and when a maintenance job or project folder cannot be moved, renamed or deleted in Drive, the message now appears in the language the app is set to instead of always in English. The Thai wording has not been checked by a Thai speaker.",
   {
     text: "Settings → Website now has a switch for every statistic on the public home page: the lifetime figures (animals rehomed, community dogs helped, villages sterilised) and today's counts (in our care, adopted this year, with foster families, in treatment). Switching one off takes it off the home page without losing the numbers you entered, and switching it back on shows it again. It asks you to confirm and is kept in Recent changes. A count under 2 is still left off the home page, and the screen says so. The Events page can now be hidden from Settings → Pages like the others. The Thai wording has not been checked by a Thai speaker.",
     cards: ["website"],

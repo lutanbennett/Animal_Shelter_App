@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { archiveDeceasedResident } from "./archive-deceased-resident";
 
 /**
@@ -17,6 +18,7 @@ import { archiveDeceasedResident } from "./archive-deceased-resident";
  */
 export async function refreshDeceasedArchiveIfNeeded(
   supabase: SupabaseClient,
+  t: Dictionary,
   residentId: string,
 ): Promise<{ refreshed: boolean; error?: string; photoMissing?: boolean }> {
   const [{ data: state }, { data: resident }] = await Promise.all([
@@ -37,7 +39,7 @@ export async function refreshDeceasedArchiveIfNeeded(
     return { refreshed: false };
   }
 
-  const result = await archiveDeceasedResident(supabase, residentId);
+  const result = await archiveDeceasedResident(supabase, t, residentId);
   if ("error" in result) return { refreshed: false, error: result.error };
   return { refreshed: true, photoMissing: result.photoMissing };
 }
