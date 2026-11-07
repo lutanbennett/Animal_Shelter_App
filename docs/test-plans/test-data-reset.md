@@ -10,7 +10,7 @@
 | Backlog item | `docs/backlog.md` → none; asked for directly by Lutan in chat, 2026-11-07 |
 | Branch / worktree | `claude/test-data-reset` @ `C:\Development\Animal_Shelter_test-data-reset` |
 | Dev server | `preview_start "dev"` → `http://localhost:3000` |
-| PR | #1374 |
+| PR | #1377 |
 | Tested by / date | Claude, 2026-11-07 |
 | Carries a migration? | no |
 | Tested at SHA | 812c5b0d (+ the follow-up commit on this branch) |
