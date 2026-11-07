@@ -51,6 +51,7 @@ const API = "https://www.googleapis.com/drive/v3";
 const FOLDER = "application/vnd.google-apps.folder";
 const SHORTCUT = "application/vnd.google-apps.shortcut";
 const ICON_PREFIX = "/Home screen icons";
+const BACKUPS_PREFIX = "/Admin/Backups";
 
 const env = loadEnv(envName);
 let tokenCache = { value: "", at: 0 };
@@ -164,7 +165,7 @@ async function main() {
 
   // 3. Classify. File bucket: prod | test | shared | leave.  Folder home: prod | test | none.
   const fileBucket = (n) => {
-    if (n.path.startsWith(ICON_PREFIX)) return "prod";
+    if (n.path.startsWith(ICON_PREFIX) || n.path.startsWith(BACKUPS_PREFIX)) return "prod"; // icons and Admin/Backups: Lutan, 2026-11-07
     const p = P.has(n.id), d = D.has(n.id);
     return p && d ? "shared" : p ? "prod" : d ? "test" : "leave";
   };
