@@ -33,6 +33,7 @@ export type ViewReel = {
   archived: boolean;
   created_at: string;
   residents: { id: string; name: string; thai_name: string | null }[];
+  unnamedCount: number;
   shares: { id: string; platform: Platform; shared_on: string; post_url: string | null; note: string | null }[];
 };
 
@@ -266,9 +267,10 @@ export function ReelView({ reel, canEdit, canManage = false, today }: { reel: Vi
 
       <section className="flex flex-col gap-2">
         <h2 className="text-lg font-semibold text-foreground">{p.residents}</h2>
-        {reel.residents.length === 0 ? (
+        {reel.residents.length === 0 && reel.unnamedCount === 0 ? (
           <p className="text-base text-muted">{p.noResidents}</p>
         ) : (
+          <>
           <ul className="flex flex-wrap gap-2">
             {reel.residents.map((r) => (
               <li key={r.id}>
@@ -281,6 +283,8 @@ export function ReelView({ reel, canEdit, canManage = false, today }: { reel: Vi
               </li>
             ))}
           </ul>
+          {reel.unnamedCount > 0 && <p className="text-base text-muted">{t.reels.taggedUnseen(reel.unnamedCount)}</p>}
+          </>
         )}
       </section>
 
