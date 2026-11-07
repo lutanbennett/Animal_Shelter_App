@@ -1,193 +1,176 @@
-# Planner handover — edition `681`, 2026-11-06
+# Planner handover — edition `690`, 2026-11-07
 
-**A delta over `672`.** One plan of **nine streams in three batches** — batch 1 (#1341, #1342, #1343),
-batch 2 (#1344, #1345, #1346), batch 3 set up — all inside one day, the second such day running.
+**This is a DELTA against `681`.** It says what changed, corrects its predecessor, and reports what each
+of `681`'s warnings and owed items actually did. Per-stream figures, batch composition, ports and the
+dependency notes live in `.plan-day.md` and are **not** reproduced here.
 
-> **Written at the last batch's SETUP, as the rule requires, so ITS figures are NOT in it.** Batch 3's
-> three land in `690`.
+**It outranks nothing.** It is read by one chat, it will be rewritten within one plan, and a wrong line
+in it is corrected by its successor rather than by a reviewer.
 
-**Nothing here outranks `CLAUDE.md`, the skill, `docs/backlog.md` or `.plan-day.md`.**
-**Read first:** `CLAUDE.md` → the skill → `.plan-day.md` → this. **The next slug is `690`.**
-
-> **Never carried forward: anything read from the repo** — counts, migration numbers, PR numbers,
-> release state, candidates. **Re-read every time, never diffed.**
-
----
-
-## THE LEAD: `672` SAID PRODUCTION WAS "HELD AND WORSE". IT IS LEVEL, AND THREE EDITIONS OF STANDING INSTRUCTION ARE WITHDRAWN
-
-`672` recorded production as *"four migrations behind → now SIX (`0318`–`0323`). HELD AND WORSE"*, and
-on the strength of that **every brief in its batches 2 and 3 wrote `n/a` on its release-note line.**
-
-**Measured 2026-11-06, first command of the round:** `apply-migrations.mjs --status --env production`
-reads **326 applied, 0 pending**. Release `0.43.4` was cut and recorded the same day (#1337, #1339).
-So **the ban is lifted**, and all nine of this plan's briefs say so in a block of their own.
-
-**What that block actually produced is worth knowing, because it is not what it looks like.** Four of
-the five streams that could have ticked a note wrote `n/a` anyway — *"no screen offers the refused
-write"*, *"no `src/` change"* — and **every one of those was correct.** Only #1344 and #1346 ticked.
-**So the instruction removed a false constraint without inviting a false note**, which is the outcome
-to want. **Do not read four `n/a`s as the block having failed.**
-
-**The one thing still unverified, and a brief must not assume it:** whether `0.43.4`'s **deploy**
-reached both halves. `docs/release-procedure.md` §6 is explicit that a Worker deploy alone does not
-change what users see, and **the two version endpoints were not read against each other this round.**
-Migrations being level is not the same as the build being live.
+**Written at the SETUP of this plan's last batch, so BATCH 3'S OWN FIGURES ARE NOT IN IT.** `690`'s
+batch 3 — `general-bill-receipts`, `reels-readonly-drive`, `page-level-required` — was handed over at
+01:50Z and had not been opened. The next edition carries its actuals. Nobody asked for this edition; the
+counter did.
 
 ---
 
-## THE ROUND'S THEME, AND IT IS NEW: FOUR COUNTS ON THE BOARD WERE STALE, AND EVERY ONE WAS FOUND BY A BRIEF THAT REFUSED TO ASSERT
+## THE LEAD: SIX OF `681`'s SEVEN OWED ITEMS ARE DISCHARGED, AND THE SEVENTH IS HIS
 
-| what the item said | what it is | found by |
-|---|---|---|
-| 161 English strings in `.tsx` | **20, in 7 files** — and the old figure **not reproducible** | #1343 |
-| 261 English strings in `.ts` | **204** | #1343 |
-| 64 `page.tsx` taking the default level | **70** | the planner, re-measuring |
-| 2 future-dated decision files | **6** | the planner, re-measuring |
+`681` handed over seven. **Six closed inside one plan**, which has not happened before:
 
-**#1343 is the one to learn from.** Its brief said, in these words: *"I did NOT re-measure the 161
-`.tsx` strings… Re-measure them as your first deliverable and report what you get; if the number has
-moved, that is a finding, not an error."* It came back eightfold smaller, with a **new script**
-(`scripts/measure-english-in-tsx.mjs`) so the next person can repeat it — the old reading used a
-prose-shaped regex, the stream used an AST walk. **A job banded as a wide classification pass turned
-out to be mostly already correct, and none of the 20 needed converting.**
+1. **`#e7v1q` — "goes to the front of the next plan"** → **honoured without displacing his own
+   priority.** It carried a migration and so wanted the slot that Lutan's new high-priority `#jdoto`
+   needed. **They are the same kind of work** — a Settings switch deciding what the public site shows —
+   so one migration file (`0328`) carried both keys and `#e7v1q`'s code half rode batch 2. Ticked by
+   #1358. **The lesson: "front of the next plan" and "his item leads" are not always in conflict; look
+   for the fold before you choose between them.**
+2. **`#k3q7w` — the closed-record banner** → **closed by #1354, and the brief's refusal to assert is why
+   it came out right.** `681` said several sentences exist and not all are wrong. The brief carried that
+   verbatim. The stream found the banner is a **SECOND string** — `DeceasedBanner.tsx:75` →
+   `deceased.banner.readOnly` — **not** the `recordClosed` one `#f6p2d` fixed, which it confirmed *"was
+   and is correct"*. It fixed four and **left seven alone as already correct.**
+3. **`#bqs1w` — "probably closable and nobody has checked"** → **the planner checked.** The core fault
+   is fixed (`tagsNotLinked` and `tagsNotAllowed` both exist, `en.ts:4575`); what is left is that neither
+   notice names which residents, and the `failed` path was never driven. **Folded into `#a7r3k`** rather
+   than left as its own near-empty item.
+4. **The Reels half of `#i7qkz`, "including the reel tag-search that still asks `resident.record`"** →
+   **both halves closed by #1359, the tag-search included.** It built `/api/reels/resident-search` asking
+   `resident.who_and_where` Read, proved a `reel_add`-only login gets 200 where the old route gave 403,
+   and **widened no card.**
+5. **`#52y56` must stay unscheduled** → **HELD.** Not scheduled, not re-argued, and Lutan's own
+   correction of its title stands.
+6. **Ollama is still NOT installed** → unchanged and still true. The scripted stand-in
+   (`docs/dev-assistant-model.md`) remains good for a save path and a failure notice and **not** for
+   judging whether the assistant understands a sentence. **A real model is his install.**
+7. **Still his, blocking nothing:** `#mzu7v` needs `STATUS_READ_TOKEN` on production, and `#u7d3b`'s data
+   half waits on his keys.
 
-**The planner expected that correction to WIDEN the job; it shrank it.** Second time in a fortnight the
-not-established rule has paid in the unexpected direction.
-
-**THE DURABLE FACT, PROMOTED INTO THE SKILL RATHER THAN LEFT HERE** (step 3, beside the
-count-without-its-database rule): **a count quoted without its METHOD ages exactly like one quoted
-without its database.** Both of #1343's figures had been carried on the item since 2026-11-01 and read
-as current; neither was wrong when written. **Ask of any count on an item: what counted it, and would
-that method still agree?**
-
----
-
-## EVERY BAND HELD. FIVE CLEAN READINGS, ALL INSIDE — the first plan where that is true across two batches
-
-Figures and floors are in `.plan-day.md`; this says what they mean.
-
-- **Five of six measured streams landed inside band**, none under, none over. #1346 reported
-  `tokens=unmeasured` and is **not a reading** — kept out. **The floor sat at 97.4k–98.5k and is
-  FLAT** after editions of slow upward drift; re-derive it anyway, never carry it.
-- **`blood-test-result-text` is the one to watch**: banded 140–180k as the batch's quick win and landed
-  **179,085, the top edge.** The code was one button. The cost was the brief's own deliverable 4 —
-  drive it on a dead resident **that actually has a blood test result**, which meant making the test
-  data first. **That is the browser allowance doing exactly what the skill says it does**, and the band
-  only just contained it. **A one-control fix with a mandated drive is not a quick win; band it at the
-  ordinary row.**
-- **No model finding, and there cannot be one.** All six ran `sonnet`/`low` because that is what the
-  dials were set to; the planner recommends and does not control them.
+**Where `681` was over-cautious:** nothing material. Its one soft spot was leaving `#bqs1w` as an owed
+*read* when one `grep` of `en.ts` settles it — **an owed item that costs one command is cheaper to
+discharge than to hand on.**
 
 ---
 
-## `672`'s OWED LIST: WHAT EACH ONE ACTUALLY DID
+## NINE CONSECUTIVE READINGS INSIDE BAND — and the first band note worth promoting in weeks
 
-1. **`#p3k9w` and `#c7zjk` to the front of the next plan → BOTH BUILT**, as batch 1's streams 1 and 2.
-   Owed once, delivered once.
-2. **`#i7qkz` next after those → BUILT as batch 2's stream 4** (#1346). It split `social.library` into
-   add-and-change plus a new `social.library_manage`, added `meme_add` and **`meme_view`, the first
-   Read-only library card** — which closes a gap `#8bz78` hit twice. **Annotated, not ticked: the Reels
-   half remains.**
-3. **`#v9t4m` starred and already ticked → he took the star off.** The panel now holds six.
-4. **Three of his seven picks are not streams → still true, fourth plan running**, but two have
-   shrunk to one step of his own: `#314hq` part (C) is **DONE and measured** (production level), so
-   only the `/bills` press remains; `#prr9h` was built by #1331, so only his phone re-time remains.
-   **`#7aev4` still needs numbers from him.** **Say so when his order is reported.**
-5. **Thai unreviewed across the board → HELD, and every stream said so unprompted again.** #1343 wrote
-   no new Thai at all (nothing needed converting), #1346's card labels are unreviewed. **Do not let one
-   tick it as reviewed.**
-6. **A release is the natural next step → IT HAPPENED** (`0.43.4`), and it is what made the lead true.
+`681` reported five clean readings across two batches. **This plan added nine more, all inside, none
+under, none over**, on `sonnet`/`low` throughout. Figures and verdicts are in `.plan-day.md`.
+
+**One new band effect, PROMOTED INTO THE SKILL'S BAND TABLE rather than explained here:** *an app half
+whose schema half already wrote its specification bands at the BOTTOM of its row* (`website-switches-app`,
+202,507 against 200–260k). Nobody had priced it.
+
+**The floor moved, which matters more than any single band.** Batch 1 read 97,696 · 98,433 · 102,683 and
+batch 2, twelve hours later, read 106,075 · 106,411 · 111,509 — **about 8k up inside one day**, with the
+widest within-batch spread yet (5.4k). **Re-derive it from `tokens − messages` every batch. Never carry a
+floor forward**, including the ones in this paragraph.
 
 ---
 
-## A NEW FAULT WITH A PLANNING LESSON THE SKILL DID NOT HAVE: `#m2q8c`
+## TWO THINGS PROMOTED INTO THE SKILL, BOTH ABOUT `uat-on-the-pi`, AND NOT REPEATED HERE
 
-**Two migrations both shipped numbered `0324`** — `0324_can_see_drive_file_lists_reels.sql` (#1333) and
-`0324_database_health.sql` (#1334). Both applied, unrelated objects, nothing pending, **no harm done.**
+Both are in `.claude/skills/plan-day/SKILL.md` as of this PR. The delta is only that they happened:
 
-**The instrument is the fault, not the files.** `check-migration-numbers.mjs` compares a branch's added
-files against `origin/main`, and **each branch was cut before the other merged**, so neither could see
-the other's number. It is green on both PRs and the collision is invisible to it even on `main` today.
-
-**THE PLANNING HALF, AND IT IS THE PART TO CARRY:** it happened because the second migration came from
-an **unplanned stream — a fork another session started — and no batch plan accounts for forks.**
-`CLAUDE.md` allows one in-flight migration-carrying branch at a time; a plan can only enforce that over
-streams it created. **When a fork or an unplanned stream is running, ask whether it carries schema
-before giving a planned stream the migration slot.**
-
-**Acted on the same day:** batch 3's migration number was **pinned in the brief as `0327`**, with the
-command to confirm `0326` had landed, because #1346 still held `0326` at setup. **That is the mitigation
-to check in `690`.**
+1. **A leftover signature is a SNAPSHOT.** `Animal_Shelter_uat-on-the-pi` read `free`, `0 ahead`,
+   `nothing beyond main` and had never had a PR — the exact signature the skill calls a leftover to
+   `done` — and **two minutes later it was `ahead 1` and an hour later it was PR #1356.** It survived
+   because *"clear them"* had named three other folders and the step was not widened. **Near-miss, not
+   loss**, which is the only reason this rule cost nothing to learn.
+2. **A green PR you did not merge is the finish-line fault one step later.** #1356 was opened with every
+   check green on its own head and its session ended without merging it. The two earlier instances ended
+   with a built branch and *no PR*; **this shape had no sentence anywhere**, so the finish-line block now
+   carries it. **Check next edition whether batch 3's three merged themselves.**
 
 ---
 
-## MITIGATIONS: SEVEN FIRED, ONE HELD, NONE FAILED
+## MITIGATIONS: FOUR FIRED, ONE HELD, ONE UNTESTED, ONE NOT NEEDED, NONE FAILED
 
-Checked rather than assumed. The full list is in `.plan-day.md`; the three that earned their place:
+Full list and evidence in `.plan-day.md`. Three worth knowing about:
 
-1. **"Re-measure; a moved number is a finding, not an error"** → the lead above. **The round's best
-   line, for the second plan running.**
-2. **The batch-1-to-batch-2 dependency** → **fired, visibly.** Batch 1's stream 3 built
-   `check-ungranted-activities.mjs`; batch 2's stream 4 had to leave `social.library` granted by
-   something or fail it. **It passes on #1346, and the stream reported `social.library` *"no longer
-   listed"*.** An instrument built in one batch and depended on by the next, in one day.
-3. **The declared-crossing clause** → **fired twice and saved an interruption both times.** #1346
-   edited two check scripts and a unit-test count, all forced by its new cards, all named in its PR
-   body under *"Declared crossings"* — **none of them a question to Lutan.** Working as designed
-   rather than as a loophole.
+1. **The hand-pinned migration number RETIRED ITSELF.** #1355 turned three batches of planner prose into
+   `check-migration-numbers.mjs`, which refuses a clash on `main` or against any open PR; #1359 ran it.
+   **Batch 3's brief names `0330` and says the check is the authority, not the brief.** The check also
+   found a **second** duplicate pair, `0191`, that neither the item nor the planner knew about — both
+   now recorded with reasons. **A count on an item is the count somebody took.**
+2. **"A card-count red is your sibling's in-flight card"** → **UNTESTED: the situation never arose.**
+   Recorded as untested rather than held, which is the correct price for insurance.
+3. **The handoff rule fired** — #1359 named `reel_view` for batch 3, and it is in stream 8's brief with
+   the three refusals #1359 already proved, so that stream does not re-report them as new.
 
-**And one the planner should not get credit for:** #1346 asked for a `check-production.mjs` reading
-on whether any card holder loses access. **The planner had already taken it that round** — nothing is
-lost. **The stream was right to ask rather than assert; a brief naming the reading would have saved
-the asking.**
+**And the one to copy:** #1358 listed three of its own deliverables as **not verified** and ticked its
+item in the same PR. A ticked item is read by nobody, so those three would have become silent
+assumptions. **Filed as `#w9n4r`.** #1357 likewise declined the backlog sweep *and said so*; the planner
+did it. **An honest not-done line is the most useful thing a stream writes, and it only works if the
+planner reads the PR body after taking the usage figure.**
+
+---
+
+## FRESH FACTS, RE-READ FROM THE REPO — never diffed against a predecessor
+
+- **Open backlog items: 66** on the `backlog` branch (65 on `main` until the next merge).
+  `check-backlog-sections` and `check-backlog-ids` both clean.
+- **Production is FIVE migrations behind: `0325`–`0329` pending, 326 applied** (`apply-migrations.mjs
+  --status --env production`, 01:40Z). **`#8bz78`'s note saying `0318`–`0322` are pending is STALE** —
+  those were applied and five newer ones took their place.
+  **This does NOT block a release note.** `docs/release-procedure.md` **§5** applies pending production
+  migrations as a Claude step, so a note shipping with that release is true when it ships — **and
+  #1330's `n/a: needs 0322 applied to production` was over-cautious.** `n/a` is still right for a step
+  the procedure does not cover: a hand edit on the Pi, a Worker deploy, a press in the app.
+- **Next migration number: `0330`.** Highest on `main` is `0329_reels_card_split.sql`.
+- **`src/lib/releases.ts` names `0.43.5`.** Production was verified at `0.43.4` earlier in this plan
+  (`/api/version` and `/api/releases/current` read against each other). **Whether `0.43.5` has shipped is
+  NOT established by this edition** — the release manager owns it, and it is two reads to settle.
+- **This plan's PRs: #1353, #1354, #1355 (batch 1), #1357, #1358, #1359 (batch 2), plus #1356**, the
+  unplanned `uat-on-the-pi` stream the planner merged. **#1356 counts as a stream that shipped a PR**, so
+  the plan ran ten streams, not nine.
+- **`main` is green as a whole.** `node scripts/gates.mjs` on `main` at 01:30Z, **after four PRs merged
+  inside one hour, none of which had seen the others in CI** — `typecheck=0 lint=0 test=0 build=0`,
+  build 339 s. **Four green PRs do not prove their combination green and nothing else in the loop checks
+  it.** Worth repeating whenever a batch merges in a cluster.
+- **Preflight is clean**: all four credentials present, dev REST and the Management API both answering.
 
 ---
 
 ## WHAT IS SET UP AND WHAT IS OWED
 
-**Batch 3, set up and handed over 2026-11-06** — composition, ports, the carve-out and the pinned
-migration number are in `.plan-day.md`, which this does not reproduce. Its three are
-`bill-cards-to-one` (`#ywn5r`, migration `0327`), `page-level-classification` (`#q0wc0`, 70 files) and
-`events-card-reads` (`#yacd2`, two recorded answers).
+**Batch 3, set up and handed over 2026-11-07.** Composition, ports, bands and the carve-out are in
+`.plan-day.md`. Its three are `general-bill-receipts` (`#t5k9r`, **two PRs**, migration `0330`),
+`reels-readonly-drive` (`#8bz78`) and `page-level-required` (`#q0wc0`).
 
 **Owed to the next planner:**
 
-1. **`#e7v1q` goes to the front of the next plan.** Displaced, not dropped: it carries a migration and
-   all three slots this plan were taken. Small, nothing to decide.
-2. **`#k3q7w` is new and cheap, and its history is the interesting part.** The closed-record banner
-   still says nothing can be edited; #1344 reported it having just drawn a Correct-result button on that
-   same page. **It is NOT a duplicate of `#f6p2d`, which was ticked earlier the same day** — that fix
-   was correct and was **overtaken when `0320` widened the same surface again hours later.** Several
-   closed-record sentences exist and **not all are wrong**, so the item says to establish which first.
-3. **`#bqs1w` is probably closable and nobody has checked.** #1345 saw the tag-failure notice on a
-   screen for the first time and **said plainly it had not read the item to close it.** Read it against
-   `docs/decisions/2026-11-06-dev-assistant-model.md` before scheduling any build.
-4. **The Reels half of `#i7qkz`**, including the reel tag-search that still asks `resident.record`
-   where a `who_and_where` search would do. #1346 left it deliberately and said so.
-5. **`#52y56` must stay unscheduled** until why it failed is established. Lutan corrected its title
-   himself: *"THIS ITEM IS NOT PROVEN, IT FAILED AND HAD TO BE REVERTED."* Two written explanations are
-   known to be wrong and **the past state cannot be re-measured.**
-6. **Ollama is NOT installed on this laptop** (#1345 established it). The documented dev-model route
-   is a scripted stand-in: **good for a save path and a failure notice, NOT for judging whether the
-   assistant understands a sentence.** A real model is his install.
-7. **His, and blocking nothing else:** `#mzu7v` needs `STATUS_READ_TOKEN` on production, and
-   `#u7d3b`'s data half waits on his keys.
+1. **Batch 3's three actuals and PR bodies.** Not in this edition, by construction.
+2. **Stream 9's answer to the #1351-vs-#1352 disagreement** — whether the events pages and
+   `/photos/approve` take `requirePermission`'s default edit level, or are yes/no and cannot take a level
+   at all. **Both quotes are in its brief as a numbered deliverable with no planner verdict.** Read what
+   it concluded; one of two careful streams was wrong and it matters which.
+3. **Stream 8's answer to a question nobody has ever asked here: can the browser pane decode and play a
+   video at all?** Its brief makes that deliverable 2 and tells it to write the video half as `pending:`
+   rather than fake a pass if it cannot. **If the answer is no, that is a tooling fact worth promoting.**
+4. **`#w9n4r`** (new) — three surfaces of the website switches that shipped unseen. Small: one signed-in
+   pass plus one no-edit login.
+5. **`#s4t7q`** — the `set_at` stamp moves when a statistic is toggled. Filed; **the fix is NOT
+   ESTABLISHED because nobody has read the trigger body.**
+6. **`#c7zjk` gained one more position rule 3 cannot see** — `driveErrorMessage(…, "…")`. So its clean
+   *0 `user`-class strings* means 0 **of the positions rule 3 looks at**, not 0 in the tree. **A clean run
+   of an instrument is not an argument for letting it block.**
+7. **`#52y56` must still stay unscheduled.** Unchanged from `681`, and do not re-argue it.
+8. **Still his:** `#mzu7v` needs `STATUS_READ_TOKEN` on production; `#u7d3b`'s data half waits on his
+   keys; a real local model is his install.
 
 ---
 
-## THE PLANNER'S OWN COST: TWO INTERRUPTIONS, BOTH ITS OWN FAULT
+## THE PLANNER'S OWN COST: ONE INTERRUPTION, AND IT WAS NOT A FAULT
 
-`CLAUDE.md` counts a third touch on a release as a fault to write down. **The same arithmetic applies to
-a plan, and this one cost two.**
+`681` cost two, both its own fault. **This plan cost one, and it was him asking for the stream details
+mid-setup** — a reasonable question, not a defect, and the hand-back list answered it in one message.
 
-1. **He asked *"Why so slow"*** during the first round's reading pass. Fourteen items were read end to
-   end, one `grep` at a time, before anything was presented. **The reading was not wasted** — it
-   produced two of the four stale counts and the `#m2q8c` filing — **but it was not batched.**
-2. **He had to tell the planner that `card-grant-checks` was still merging**, because the resume read
-   the worktree list and the open PRs but had not yet established which of batch 1's three were done.
+**`681`'s own mitigation fired for the third round running:** take the merged list, the `stream-usage:`
+comments and the PR bodies **in the first batched call of the turn**. Both resumes this plan knew the
+batch's state before writing a word, and neither had to ask which streams were done. **Carry it; it is
+still the cheapest thing in the loop.**
 
-**Mitigation applied at the next resume and it FIRED:** take the merged list and the `stream-usage:`
-comments **in the first batched call of the turn**, before anything is said. The third resume knew
-batch 2's state — two merged, #1346 open with all fourteen checks green — before writing a word.
-**Carry that habit; it is the cheapest thing in this edition.**
+**What to watch instead:** the planner's own window, not its tokens. **His currency is turns, not
+tokens** — he is on the Max plan — so a round that reads forty things one at a time is expensive in a way
+no figure in `.plan-day.md` can show. **Batch independent reads, and prefer one command that prints
+several answers.**
