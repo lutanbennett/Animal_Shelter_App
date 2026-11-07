@@ -3,6 +3,10 @@
 Lutan, 2026-10-29: mirror the Drive files first, measure responsiveness later, then decide which
 is primary. **Drive stays primary; stage 2 (measuring, the decision) is not started.**
 
+**SUPERSEDED 2026-11-07 as to stage 2, which is now settled: the Pi copy is the CACHE and Drive the
+fallback** (`docs/decisions/2026-11-07-mirror-is-a-cache.md`). The sentence above was true when it was
+written. Everything else in this file still describes stage 1 as built.
+
 - **One job closes two items:** the whole-tree mirror and the deceased-archive USB copy
   (`Residents/Deceased/` is just part of the tree).
 - **A Node script, not rclone.** Nothing is installed on the Pi beyond node, and every Drive call is a
