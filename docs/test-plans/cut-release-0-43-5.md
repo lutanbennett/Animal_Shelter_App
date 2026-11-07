@@ -11,7 +11,7 @@
 | PR | #TBD |
 | Tested by / date | Claude Opus 5 (production release manager) / 2026-11-07 |
 | Carries a migration? | **no** — the cut itself adds no migration file. **Five migrations written by earlier PRs (`0325`–`0329`) are pending on production** and are applied as a release step, before the deploy. Section 8 carries that ordering |
-| Tested at SHA | `TBD` — the tree the four gates and all 17 cut assertions ran against |
+| Tested at SHA | `aa1886c7` — the tree the four gates and all 17 cut assertions ran against. This line is the only thing the commit after it changes, so the tested tree and the PR head differ by one markdown line and nothing else |
 
 ## 1. Scope and risk
 
