@@ -1,176 +1,148 @@
-# Planner handover — edition `690`, 2026-11-07
+# Planner handover — edition `699`, 2026-11-07
 
-**This is a DELTA against `681`.** It says what changed, corrects its predecessor, and reports what each
-of `681`'s warnings and owed items actually did. Per-stream figures, batch composition, ports and the
+**This is a DELTA against `690`.** It says what changed, corrects its predecessor, and reports what each
+of `690`'s warnings and owed items actually did. Per-stream figures, batch composition, ports and the
 dependency notes live in `.plan-day.md` and are **not** reproduced here.
 
 **It outranks nothing.** It is read by one chat, it will be rewritten within one plan, and a wrong line
 in it is corrected by its successor rather than by a reviewer.
 
-**Written at the SETUP of this plan's last batch, so BATCH 3'S OWN FIGURES ARE NOT IN IT.** `690`'s
-batch 3 — `general-bill-receipts`, `reels-readonly-drive`, `page-level-required` — was handed over at
-01:50Z and had not been opened. The next edition carries its actuals. Nobody asked for this edition; the
-counter did.
+**Written at the SETUP of this plan's last batch, so BATCH 3'S OWN FIGURES ARE NOT IN IT.** Batch 3 —
+`baseline-stamp-trigger`, `assistant-tag-retry`, `card-count-truth` — was handed over at about 12:30Z and
+had not been opened. The next edition carries its actuals. Nobody asked for this edition; the counter did.
 
 ---
 
-## THE LEAD: SIX OF `681`'s SEVEN OWED ITEMS ARE DISCHARGED, AND THE SEVENTH IS HIS
+## THE LEAD: THE SKILL'S OWN STEP ORDER WAS THE DEFECT, AND LUTAN DIAGNOSED IT, NOT THE PLANNER
 
-`681` handed over seven. **Six closed inside one plan**, which has not happened before:
+**He said it four times in one day.** The last two: *"Background work is to be done after - I don't know
+how many times I need to repeat myself"*, then *"So this is the 4th time today, There is something wrong
+with your instructions."*
 
-1. **`#e7v1q` — "goes to the front of the next plan"** → **honoured without displacing his own
-   priority.** It carried a migration and so wanted the slot that Lutan's new high-priority `#jdoto`
-   needed. **They are the same kind of work** — a Settings switch deciding what the public site shows —
-   so one migration file (`0328`) carried both keys and `#e7v1q`'s code half rode batch 2. Ticked by
-   #1358. **The lesson: "front of the next plan" and "his item leads" are not always in conflict; look
-   for the fold before you choose between them.**
-2. **`#k3q7w` — the closed-record banner** → **closed by #1354, and the brief's refusal to assert is why
-   it came out right.** `681` said several sentences exist and not all are wrong. The brief carried that
-   verbatim. The stream found the banner is a **SECOND string** — `DeceasedBanner.tsx:75` →
-   `deceased.banner.readOnly` — **not** the `recordClosed` one `#f6p2d` fixed, which it confirmed *"was
-   and is correct"*. It fixed four and **left seven alone as already correct.**
-3. **`#bqs1w` — "probably closable and nobody has checked"** → **the planner checked.** The core fault
-   is fixed (`tagsNotLinked` and `tagsNotAllowed` both exist, `en.ts:4575`); what is left is that neither
-   notice names which residents, and the `failed` path was never driven. **Folded into `#a7r3k`** rather
-   than left as its own near-empty item.
-4. **The Reels half of `#i7qkz`, "including the reel tag-search that still asks `resident.record`"** →
-   **both halves closed by #1359, the tag-search included.** It built `/api/reels/resident-search` asking
-   `resident.who_and_where` Read, proved a `reel_add`-only login gets 200 where the old route gave 403,
-   and **widened no card.**
-5. **`#52y56` must stay unscheduled** → **HELD.** Not scheduled, not re-argued, and Lutan's own
-   correction of its title stands.
-6. **Ollama is still NOT installed** → unchanged and still true. The scripted stand-in
-   (`docs/dev-assistant-model.md`) remains good for a save path and a failure notice and **not** for
-   judging whether the assistant understands a sentence. **A real model is his install.**
-7. **Still his, blocking nothing:** `#mzu7v` needs `STATUS_READ_TOKEN` on production, and `#u7d3b`'s data
-   half waits on his keys.
+**He was right, and `690` got this wrong in print.** `690` recorded his mid-setup request for the stream
+details as *"a reasonable question, not a defect"* and counted the plan as costing one interruption. The
+memory note `deliverable-first-paperwork-after` had already flagged that excuse — and the deeper cause was
+never in the memory at all: **`SKILL.md` ran the paperwork before the delivery by construction.** Old
+order: sync → **actuals, every merged PR body** → **backlog and filing** → choose → present → save →
+*then* create the worktrees and hand over. **A planner following the skill exactly made him wait; one
+following his standing instruction broke the skill.** Four instances in a day is what a contradiction
+between two instruction sources looks like, not four lapses of attention.
 
-**Where `681` was over-cautious:** nothing material. Its one soft spot was leaving `#bqs1w` as an owed
-*read* when one `grep` of `en.ts` settles it — **an owed item that costs one command is cheaper to
-discharge than to hand on.**
+**FIXED IN THIS PLAN, by his instruction (*"update the skill to move the streams to step 2"*): setting up
+the batch is now §2.** The sections were physically reordered — 7→2, 2→3, 3→4, 4→5, 5→6, 6→7 — and the
+internal `step N` references remapped. Two were deliberately left alone (`CLAUDE.md`'s own merge-train
+step 4, and *"stopped at step 2 of 11"*, which is a stream's own numbering). **Proved non-destructive
+rather than eyeballed:** a sorted line-set comparison of the old blob against the new showed exactly
+nineteen differing lines — six headings and thirteen references — and nothing else.
+
+**What the next planner must know about the new order.** On a **resume** nothing in the paperwork feeds
+the setup: the batch was chosen and saved on an earlier run, which is what `.plan-day.md` is for. Only the
+sync must precede it, because a worktree branches from `origin/main`. **On a plan from SCRATCH the setup
+cannot be second**, because §5 is what picks the items — there, say so in one line and get the hand-over
+list out the moment the folders exist. **The paperwork is not dropped; it moves behind the delivery.**
 
 ---
 
-## NINE CONSECUTIVE READINGS INSIDE BAND — and the first band note worth promoting in weeks
+## WHAT `690`'s OWED ITEMS AND WARNINGS DID
 
-`681` reported five clean readings across two batches. **This plan added nine more, all inside, none
-under, none over**, on `sonnet`/`low` throughout. Figures and verdicts are in `.plan-day.md`.
-
-**One new band effect, PROMOTED INTO THE SKILL'S BAND TABLE rather than explained here:** *an app half
-whose schema half already wrote its specification bands at the BOTTOM of its row* (`website-switches-app`,
-202,507 against 200–260k). Nobody had priced it.
-
-**The floor moved, which matters more than any single band.** Batch 1 read 97,696 · 98,433 · 102,683 and
-batch 2, twelve hours later, read 106,075 · 106,411 · 111,509 — **about 8k up inside one day**, with the
-widest within-batch spread yet (5.4k). **Re-derive it from `tokens − messages` every batch. Never carry a
-floor forward**, including the ones in this paragraph.
-
----
-
-## TWO THINGS PROMOTED INTO THE SKILL, BOTH ABOUT `uat-on-the-pi`, AND NOT REPEATED HERE
-
-Both are in `.claude/skills/plan-day/SKILL.md` as of this PR. The delta is only that they happened:
-
-1. **A leftover signature is a SNAPSHOT.** `Animal_Shelter_uat-on-the-pi` read `free`, `0 ahead`,
-   `nothing beyond main` and had never had a PR — the exact signature the skill calls a leftover to
-   `done` — and **two minutes later it was `ahead 1` and an hour later it was PR #1356.** It survived
-   because *"clear them"* had named three other folders and the step was not widened. **Near-miss, not
-   loss**, which is the only reason this rule cost nothing to learn.
-2. **A green PR you did not merge is the finish-line fault one step later.** #1356 was opened with every
-   check green on its own head and its session ended without merging it. The two earlier instances ended
-   with a built branch and *no PR*; **this shape had no sentence anywhere**, so the finish-line block now
-   carries it. **Check next edition whether batch 3's three merged themselves.**
+- **`#uat7p`, UAT onto the Pi — STILL HIS, and now fully specified.** He asked for his own step list and
+  got it: fix `.env.deploy.uat` (add the four `GOOGLE_OAUTH_*`/`GOOGLE_DRIVE_ROOT_FOLDER_ID` keys, add an
+  `ORIGIN_KEY` **matching production's**, remove `SUPABASE_ACCESS_TOKEN` or `setup-uat.sh` refuses at step
+  one), clone, run the script, the Cloudflare route and WAF host, `npm run deploy:uat -- --secrets`,
+  then the failover drill. **A correction worth carrying: the planner first told him to copy the four
+  `GOOGLE_*` keys out of `.env.local`, which would have pointed UAT at production's Drive tree and the
+  live calendar** — the exact cross-pollination he was trying to prevent. Caught and retracted the same
+  turn. **`#uq4vz` was filed beside it**: UAT's new colour has never been seen on a signed-in app page,
+  and `#o1v9f` is ticked.
+- **The memory concern `690` left as UNMEASURED — "memory for three Next servers on a 4 GB Pi" — is
+  discharged.** Measured on the Pi: 683 MB used, **3,365 MB available** with production and test both
+  running, 6 GB swap, 875 GB disk. A third server capped at 900 MB fits. **It was one `ssh` command, and
+  it had been carried as an open risk for a day.**
+- **The `free`/`0 ahead`/`nothing beyond main` snapshot rule fired again and held.** Three batch-2
+  folders read exactly that signature; `gh pr list --state all --head claude/<slug>` confirmed a merged
+  PR for each before any `done`. One command, and it is the rule that saved #1356 from destruction.
+- **`stream-usage:` compliance went BACKWARDS and this is the edition's one unexplained regression.**
+  Batch 1 posted three of three. **Batch 2 posted two of four** — #1369 and #1371 posted nothing, and
+  both sessions were archived before the next `/plan-day`, so `get_usage` is `unavailable` by
+  construction and both figures are **`unmeasured`, not guessed.** Their dials came from `get_session`,
+  which never expires. **The mechanism lives in `CLAUDE.md`'s merge train, not in the brief**, so a
+  stream that reads its brief and merges on green can miss it entirely. **Put one line in every brief
+  next plan and check whether it fires.**
 
 ---
 
-## MITIGATIONS: FOUR FIRED, ONE HELD, ONE UNTESTED, ONE NOT NEEDED, NONE FAILED
+## THE BANDS
 
-Full list and evidence in `.plan-day.md`. Three worth knowing about:
+**Four readings this plan, all clean (`compacted=no rescoped=no finished=yes`), and the method held.**
+Batch 1 went three for three — two inside, one 2.3% under — and `uat-colour`'s **deliberate upward re-band
+from 110–150k to 150–190k was vindicated** at 176,041, which would have been 17% over the original.
+**#1370 landed 185,190 against 145–185k: 0.1% over, the closest reading yet.**
 
-1. **The hand-pinned migration number RETIRED ITSELF.** #1355 turned three batches of planner prose into
-   `check-migration-numbers.mjs`, which refuses a clash on `main` or against any open PR; #1359 ran it.
-   **Batch 3's brief names `0330` and says the check is the authority, not the brief.** The check also
-   found a **second** duplicate pair, `0191`, that neither the item nor the planner knew about — both
-   now recorded with reasons. **A count on an item is the count somebody took.**
-2. **"A card-count red is your sibling's in-flight card"** → **UNTESTED: the situation never arose.**
-   Recorded as untested rather than held, which is the correct price for insurance.
-3. **The handoff rule fired** — #1359 named `reel_view` for batch 3, and it is in stream 8's brief with
-   the three refusals #1359 already proved, so that stream does not re-report them as new.
+**THE AUDIT ROW HELD FOR THE FIFTH SWEEP RUNNING** (#1370, a four-page control audit that changed one
+page's level). **The honest caveat stands unchanged and must keep being printed: every one of those five
+found almost nothing, so an audit that finds a real repair is still untested.**
 
-**And the one to copy:** #1358 listed three of its own deliverables as **not verified** and ticked its
-item in the same PR. A ticked item is read by nobody, so those three would have become silent
-assumptions. **Filed as `#w9n4r`.** #1357 likewise declined the backlog sweep *and said so*; the planner
-did it. **An honest not-done line is the most useful thing a stream writes, and it only works if the
-planner reads the PR body after taking the usage figure.**
+**FLOOR RE-DERIVED from `tokens − messages` on this batch's two comments: 106,847 and 107,500** — flat
+against batch 1's 106.4k–107.6k. **Never carry it forward.**
 
----
-
-## FRESH FACTS, RE-READ FROM THE REPO — never diffed against a predecessor
-
-- **Open backlog items: 66** on the `backlog` branch (65 on `main` until the next merge).
-  `check-backlog-sections` and `check-backlog-ids` both clean.
-- **Production is FIVE migrations behind: `0325`–`0329` pending, 326 applied** (`apply-migrations.mjs
-  --status --env production`, 01:40Z). **`#8bz78`'s note saying `0318`–`0322` are pending is STALE** —
-  those were applied and five newer ones took their place.
-  **This does NOT block a release note.** `docs/release-procedure.md` **§5** applies pending production
-  migrations as a Claude step, so a note shipping with that release is true when it ships — **and
-  #1330's `n/a: needs 0322 applied to production` was over-cautious.** `n/a` is still right for a step
-  the procedure does not cover: a hand edit on the Pi, a Worker deploy, a press in the app.
-- **Next migration number: `0330`.** Highest on `main` is `0329_reels_card_split.sql`.
-- **`src/lib/releases.ts` names `0.43.5`.** Production was verified at `0.43.4` earlier in this plan
-  (`/api/version` and `/api/releases/current` read against each other). **Whether `0.43.5` has shipped is
-  NOT established by this edition** — the release manager owns it, and it is two reads to settle.
-- **This plan's PRs: #1353, #1354, #1355 (batch 1), #1357, #1358, #1359 (batch 2), plus #1356**, the
-  unplanned `uat-on-the-pi` stream the planner merged. **#1356 counts as a stream that shipped a PR**, so
-  the plan ran ten streams, not nine.
-- **`main` is green as a whole.** `node scripts/gates.mjs` on `main` at 01:30Z, **after four PRs merged
-  inside one hour, none of which had seen the others in CI** — `typecheck=0 lint=0 test=0 build=0`,
-  build 339 s. **Four green PRs do not prove their combination green and nothing else in the loop checks
-  it.** Worth repeating whenever a batch merges in a cluster.
-- **Preflight is clean**: all four credentials present, dev REST and the Management API both answering.
+**One entry offered rather than asserted, because it has a single reading: a planner's own docs-only PR is
+not a stream and has no clean figure.** #1373 was written by this session, so `get_usage` reports the
+planner's whole window. **It posted no `stream-usage:` comment on purpose and said why in the PR body.**
+Do the same rather than banking a planner figure as a stream reading.
 
 ---
 
-## WHAT IS SET UP AND WHAT IS OWED
+## WHAT THE PR BODIES HANDED BACK — THE BEST YIELD OF THE PLAN
 
-**Batch 3, set up and handed over 2026-11-07.** Composition, ports, bands and the carve-out are in
-`.plan-day.md`. Its three are `general-bill-receipts` (`#t5k9r`, **two PRs**, migration `0330`),
-`reels-readonly-drive` (`#8bz78`) and `page-level-required` (`#q0wc0`).
+**Reading every merged PR body produced four backlog changes, and three of them nothing else would have
+caught.** This is the cheapest high-value habit in the loop.
 
-**Owed to the next planner:**
-
-1. **Batch 3's three actuals and PR bodies.** Not in this edition, by construction.
-2. **Stream 9's answer to the #1351-vs-#1352 disagreement** — whether the events pages and
-   `/photos/approve` take `requirePermission`'s default edit level, or are yes/no and cannot take a level
-   at all. **Both quotes are in its brief as a numbered deliverable with no planner verdict.** Read what
-   it concluded; one of two careful streams was wrong and it matters which.
-3. **Stream 8's answer to a question nobody has ever asked here: can the browser pane decode and play a
-   video at all?** Its brief makes that deliverable 2 and tells it to write the video half as `pending:`
-   rather than fake a pass if it cannot. **If the answer is no, that is a tooling fact worth promoting.**
-4. **`#w9n4r`** (new) — three surfaces of the website switches that shipped unseen. Small: one signed-in
-   pass plus one no-edit login.
-5. **`#s4t7q`** — the `set_at` stamp moves when a statistic is toggled. Filed; **the fix is NOT
-   ESTABLISHED because nobody has read the trigger body.**
-6. **`#c7zjk` gained one more position rule 3 cannot see** — `driveErrorMessage(…, "…")`. So its clean
-   *0 `user`-class strings* means 0 **of the positions rule 3 looks at**, not 0 in the tree. **A clean run
-   of an instrument is not an argument for letting it block.**
-7. **`#52y56` must still stay unscheduled.** Unchanged from `681`, and do not re-argue it.
-8. **Still his:** `#mzu7v` needs `STATUS_READ_TOKEN` on production; `#u7d3b`'s data half waits on his
-   keys; a real local model is his install.
+- **`#v3h8m` had to be ticked BY THE PLANNER.** #1369 shipped every deliverable and **never edited
+  `docs/backlog.md`**, so its title read *"APP HALF OPEN"* after the work had merged. **Fourth instance
+  of the stale-title fault.** It also answered a question its brief had carried as open — the `#` picker
+  uses `/api/reels/resident-search`, which asks who-and-where — and that answer was in the PR body only.
+- **`#r8kq3`** — #1369 proved the `reel_view` case and **never drove Admin or a login that can name
+  residents**, so *"nothing was widened"* rests on reading the function. Same shape as `#w9n4r`: the
+  stream said so plainly, its item closed in the same hour, and **nobody re-reads a ticked item.**
+- **`#d3cw7`** — #1370 reported `/admin/diets` needing **`reference.types` edit AND `stock.diets` edit
+  together**, which is what `CLAUDE.md` asks for rather than quietly gating on one. **A two-card page is
+  invisible to every instrument we have**, because `dev-signin.mjs --cards` models a single-card login.
+  **The decision — one card, or split the page — is his.**
+- **`#a9d4v`, and this one is why measuring beats filing a worry.** #1371 found `public_stat_switches`
+  missing from `AUDITED_TABLES` and fixed it; the list's own comment says *"every table with that trigger
+  belongs here, or its rows show unlabelled"*. The planner then scanned the migrations: **20 declared, 48
+  trigger sites, about 28 real tables undeclared**, plus `role_home_tiles` declared and **dropped in
+  `0243`**. **The method over-counts and the item says so** — three of the 31 are trigger names the regex
+  mistook for tables — **with re-measuring as deliverable one.** A worry would have been ignored; a
+  measured count carrying its own caveat is a stream.
 
 ---
 
-## THE PLANNER'S OWN COST: ONE INTERRUPTION, AND IT WAS NOT A FAULT
+## TWO UNPLANNED STREAMS, BOTH COUNTED INTO THIS PLAN
 
-`681` cost two, both its own fault. **This plan cost one, and it was him asking for the stream details
-mid-setup** — a reasonable question, not a defect, and the hand-back list answered it in one message.
+- **`drive-buckets` (#1372)** — his request, and the design conversation was worth more than the build.
+  The documented worry was a tester deleting a live photo; **the real exposure was that dev and test files
+  sat INSIDE the tree about to be copied to the shelter's own Google account.** The fact that made his
+  plan cheap: **Drive ids survive a move**, so 885 of 1,159 files could be bucketed with no database
+  change, and only 7 of 198 file-holding folders were mixed.
+- **`mirror-repull-note` (#1373)** — his stage-2 decision on the Pi mirror: **the Pi copy is the cache,
+  Drive the fallback.** It needed **no change**, because `mirror-read.ts` has called itself *"a cache, not
+  a primary"* since it was written — so the value was recording it and discharging the three costs the
+  item had held open (`noauto` stays; the Worker's missing disk now costs only latency; Drive stays a live
+  off-site copy). **And it fixed the fault that caused a wrong answer to reach him:** the heading
+  *"stage 1 … Drive stays primary"* described an intention, and `drive-buckets` quoted it back as
+  behaviour. **Production serves staff photos, documents AND videos from the Pi**, through three call
+  sites the section now names. **A heading that states an intention will be read as the behaviour.**
 
-**`681`'s own mitigation fired for the third round running:** take the merged list, the `stream-usage:`
-comments and the PR bodies **in the first batched call of the turn**. Both resumes this plan knew the
-batch's state before writing a word, and neither had to ask which streams were done. **Carry it; it is
-still the cheapest thing in the loop.**
+---
 
-**What to watch instead:** the planner's own window, not its tokens. **His currency is turns, not
-tokens** — he is on the Max plan — so a round that reads forty things one at a time is expensive in a way
-no figure in `.plan-day.md` can show. **Batch independent reads, and prefer one command that prints
-several answers.**
+## OWED, AND WHO OWES IT
+
+1. **`#uat7p` — his**, fully specified above. **`#uq4vz` rides with it**, since that is when a genuinely
+   UAT-resolving instance first exists.
+2. **`#d3cw7` — his**: one card for diet settings, or split the page. Do not widen either card first.
+3. **The 54 unreferenced Drive files — his**, on his Desktop since midday, for manual review.
+4. **`check-stale-titles.mjs`'s eight candidates — the planner's**, and still untriaged after two plans.
+   **Say so plainly rather than carrying it silently a third time.**
+5. **Teach the briefs the `stream-usage:` line**, then check whether it fires. A mitigation you wrote is
+   a hypothesis.
