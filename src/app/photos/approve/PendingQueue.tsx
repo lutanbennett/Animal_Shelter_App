@@ -97,7 +97,8 @@ export function PendingQueue({ photos, residents, loadError }: { photos: Pending
       )}
       <ul className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {photos.map((photo) => {
-          const place = photo.enclosureName ? placeName(locale, photo.enclosureName, photo.enclosureNameTh) : p.someEnclosure;
+          const noPlace = photo.enclosureId === null;
+          const place = photo.enclosureName ? placeName(locale, photo.enclosureName, photo.enclosureNameTh) : noPlace ? p.noPlace : p.someEnclosure;
           const who = chosen[photo.id] ?? [];
           const isChosen = (id: string) => who.some((c) => c.id === id);
           const candidateIds = new Set(photo.candidates.map((c) => c.residentId));
@@ -112,14 +113,14 @@ export function PendingQueue({ photos, residents, loadError }: { photos: Pending
                 loading="lazy"
               />
               <div className="flex flex-col gap-1">
-                <p className="break-words text-lg font-semibold text-foreground">{p.taken(place)}</p>
+                <p className="break-words text-lg font-semibold text-foreground">{noPlace ? p.takenNoPlace : p.taken(place)}</p>
                 <p className="text-sm text-muted">{t.photoApproval.addedBy(photo.addedBy, formatDate(photo.takenAt, locale))}</p>
               </div>
 
               <div className="flex flex-col gap-2">
-                <h3 className="text-base font-semibold text-foreground">{p.wereThere(place, formatDate(photo.takenAt, locale))}</h3>
+                {!noPlace && <h3 className="text-base font-semibold text-foreground">{p.wereThere(place, formatDate(photo.takenAt, locale))}</h3>}
                 {photo.candidates.length === 0 ? (
-                  <p className="text-sm text-muted">{p.noneThere}</p>
+                  <p className="text-sm text-muted">{noPlace ? p.noOneToSuggest : p.noneThere}</p>
                 ) : (
                   <>
                     <p className="text-sm text-muted">{p.compareFaces}</p>

@@ -71,6 +71,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "Add shelter photos can now save a photo when you do not know the animal or where it was taken. Press Don't know either: save for later, and the photo is stored (not public) for whoever approves photos to name the animal. When every photo is saved a Done button appears, and pressing it tells you how many photos are stored. In Photos to approve, a photo with no place says so and says there is no one to suggest.",
+    cards: ["add_photos"],
+  },
+  {
     text: "Adding a meme to a resident, from the meme library, now offers the residents. A login that holds only the meme cards got an empty list, because the list was read through a door those cards do not open. If the list is empty it now says whether there are no residents on file or your cards cannot see them.",
     cards: ["meme_library", "meme_add"],
   },
