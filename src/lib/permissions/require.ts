@@ -21,8 +21,8 @@ import { opensAnyIn, type Section } from "./routes";
  *   if (!can(await loadPermissions(), "stock.count")) return { ok: false, error: e.notAuthorized };
  */
 export async function requirePermission(activity: YesNoKey): Promise<Guarded>;
-export async function requirePermission(activity: LevelKey, level?: Level): Promise<Guarded>;
-export async function requirePermission(activity: YesNoKey | LevelKey, level: Level = "edit"): Promise<Guarded> {
+export async function requirePermission(activity: LevelKey, level: Level): Promise<Guarded>;
+export async function requirePermission(activity: YesNoKey | LevelKey, level?: Level): Promise<Guarded> {
   const supabase = await createClient();
   const {
     data: { user },
@@ -30,7 +30,7 @@ export async function requirePermission(activity: YesNoKey | LevelKey, level: Le
   if (!user) redirect("/login");
 
   const perms = await loadPermissions();
-  if (!perms || !can(perms, activity as LevelKey, level)) refuseFor(perms);
+  if (!perms || !can(perms, activity as LevelKey, level ?? "edit")) refuseFor(perms);
 
   return { supabase, user, perms };
 }
