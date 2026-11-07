@@ -357,7 +357,7 @@ const PINNED = {
   // tab, so it carries the same guard as /admin/website; its controls ask website.content (the page
   // save and the photo) and translations.manage (the panels), each its own action's activity.
   "/admin/website/pages/[slug]": { guards: ['requirePermission("website.content", "read")'], decides: ["website.content", "translations.manage", "website.propose", "website.content:read"] },
-  "/bills": { guards: ["if (!canUseBills(perms)) refuseFor(perms)"], decides: ["stock.delivery", "medical.visits", "maintenance.bills", "bills.sites", "bills.utilities"] },
+  "/bills": { guards: ["if (!canUseBills(perms)) refuseFor(perms)"], decides: ["stock.delivery", "medical.visits", "maintenance.bills", "bills.sites", "bills.utilities", "bills.general"] },
 };
 
 // EXEMPT: no permission guard, and the reason none is needed. `public: true` is also checked

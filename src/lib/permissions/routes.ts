@@ -504,6 +504,15 @@ export const ROUTES: readonly RouteEntry[] = [
     menu: false,
   },
   {
+    // Filed general bills, with their pages and an add-a-page control: its own card's activity, bills.general.
+    path: "/bills/general",
+    activity: "bills.general",
+    icon: Receipt,
+    label: (t) => t.nav.billsGeneral,
+    device: "any",
+    menu: false,
+  },
+  {
     // Bills settings (0305): the places, accounts and kinds bills are filed under. Opens on its own card's activity, bills.sites.
     path: "/bills/settings",
     activity: "bills.sites",

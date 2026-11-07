@@ -126,6 +126,7 @@ export const WRAPPED_WRITE_PATHS = [
   "/appointments",
   "/assistant",
   "/bills",
+  "/bills/general",
   "/bills/settings",
   "/bills/utilities",
   "/blood-tests/new",

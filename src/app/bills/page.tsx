@@ -220,6 +220,11 @@ export default async function BillsPage() {
           {t.bills.utilities.open}
         </Link>
       )}
+      {can(perms, "bills.general") && (
+        <Link href="/bills/general" className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline">
+          {t.bills.general.open}
+        </Link>
+      )}
       {can(perms, "bills.sites") && (
         <Link href="/bills/settings" className="inline-flex min-h-11 items-center text-sm font-medium text-primary hover:underline">
           {b.settings.open}

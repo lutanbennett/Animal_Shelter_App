@@ -21,7 +21,7 @@ export function BillPhotosSection({
   photos,
   canAdd,
 }: {
-  kind: "stock_receipt" | "stock_delivery" | "clinic_visit" | "maintenance_bill";
+  kind: "stock_receipt" | "stock_delivery" | "clinic_visit" | "maintenance_bill" | "general_bill";
   ownerId: string;
   photos: BillPhoto[];
   canAdd: boolean;
