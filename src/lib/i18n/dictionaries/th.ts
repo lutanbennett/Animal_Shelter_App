@@ -1301,6 +1301,7 @@ const th: Dictionary = {
         card_grants: "สิ่งที่การ์ดให้",
         card_includes: "การ์ดที่รวมอยู่ในอีกใบ",
         site_content: "การตั้งค่าเว็บไซต์",
+        public_stat_switches: "สวิตช์ตัวเลขบนเว็บไซต์",
         role_extras: "สิทธิ์เพิ่มเติม",
       },
       kinds: {
