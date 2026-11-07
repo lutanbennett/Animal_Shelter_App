@@ -15,11 +15,12 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 
 /** public_shelter_stats (0039, 0062, 0073) — counts only, granted to anon. */
 export type ShelterStats = {
-  in_care: number;
-  in_foster: number;
-  in_treatment: number;
+  // NULL = the count is switched off in Settings -> Website (0328): no tile, whatever the number is.
+  in_care: number | null;
+  in_foster: number | null;
+  in_treatment: number | null;
   adopted_last_7_days: number;
-  adopted_this_year: number;
+  adopted_this_year: number | null;
 };
 
 export const SHELTER_STATS_COLUMNS =
@@ -49,7 +50,9 @@ export function impactStats(t: Dictionary, stats: ShelterStats | null): ImpactSt
     { key: "adopted-this-year", value: stats.adopted_this_year, label: s.adoptedThisYear },
     { key: "in-foster", value: stats.in_foster, label: s.inFoster },
     { key: "in-treatment", value: stats.in_treatment, label: s.inVetCare },
-  ].filter((stat) => stat.value >= LIVE_TILE_MIN);
+  ]
+    // A switched-off count arrives as null (0328) and is no tile; the threshold is a separate rule.
+    .flatMap((stat) => (stat.value !== null && stat.value >= LIVE_TILE_MIN ? [{ ...stat, value: stat.value }] : []));
 }
 
 /**
@@ -104,4 +107,6 @@ export type ImpactBaselineRow = {
   baseline_date: string | null;
   since_year: number | null;
   set_at: string;
+  /** False = left off the public band while the numbers above stay as entered (0328). */
+  show_on_website: boolean;
 };

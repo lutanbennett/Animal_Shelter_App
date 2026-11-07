@@ -796,6 +796,40 @@ export async function updateImpactBaseline(
   });
 }
 
+/** The four live counts on the homepage band (public_stat_switches, 0328). */
+const LIVE_STAT_KEYS = ["in_care", "adopted_this_year", "in_foster", "in_treatment"] as const;
+
+/**
+ * Switch one statistic on or off the public homepage (0328). A lifetime figure is a column on its
+ * impact_baselines row; a live count is a row of public_stat_switches. Either way only the flag
+ * changes: the baseline, its date and the year are never touched. Both tables are audited, so the
+ * change reaches Settings -> Recent changes. Asks website.content at edit, like the baseline save.
+ */
+export async function setStatisticShown(
+  kind: "figure" | "live",
+  key: string,
+  shown: boolean,
+  requestId: string,
+): Promise<ActionResult> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction("website.setStatisticShown", write(t), { id: requestId, action: "website.setStatisticShown", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+    if (kind === "live" && !(LIVE_STAT_KEYS as readonly string[]).includes(key)) {
+      return refuse(t.admin.website.impact.notFound);
+    }
+    const { data, error } =
+      kind === "live"
+        ? await supabase.from("public_stat_switches").update({ show_on_website: shown }).eq("key", key).select("key").returns<{ key: string }[]>()
+        : await supabase.from("impact_baselines").update({ show_on_website: shown }).eq("key", key).select("key").returns<{ key: string }[]>();
+    if (error) return refuse(error.message);
+    if (!data?.length) return refuse(t.admin.website.impact.notFound);
+    revalidatePath("/admin/website");
+    revalidatePath("/");
+    return { ok: true };
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Ways to give (0191 donation_channels): Settings -> Website -> Donate
 // ---------------------------------------------------------------------------

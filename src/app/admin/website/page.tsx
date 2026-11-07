@@ -10,7 +10,8 @@ import { HeroPhoto } from "./HeroPhoto";
 import { GalleryPhotos, type GalleryPhotoRow } from "./GalleryPhotos";
 import { FeaturedResident, type FeaturedResidentOption } from "./FeaturedResident";
 import { ImpactBaselines } from "./ImpactBaselines";
-import type { ImpactBaselineRow } from "@/lib/site/impact";
+import { SHELTER_STATS_COLUMNS, type ImpactBaselineRow, type ShelterStats } from "@/lib/site/impact";
+import type { LiveSwitchRow } from "./ImpactBaselines";
 import { DonationChannels } from "./DonationChannels";
 import { CHANNEL_COLUMNS, type DonationChannelRow } from "@/lib/site/donation-channels";
 import { WebsiteTabs, WEBSITE_TABS } from "./WebsiteTabs";
@@ -71,6 +72,8 @@ export default async function WebsitePage({
     publishedResult,
     baselinesResult,
     channelsResult,
+    liveSwitchesResult,
+    liveStatsResult,
   ] = await Promise.all([
       loadSiteContent(supabase),
       // Not part of loadSiteContent: it is an internal figure kept out of
@@ -116,7 +119,7 @@ export default async function WebsitePage({
       // The starting numbers behind the homepage band (0156).
       supabase
         .from("impact_baselines")
-        .select("key, label, label_th, baseline_count, baseline_date, since_year, set_at")
+        .select("key, label, label_th, baseline_count, baseline_date, since_year, set_at, show_on_website")
         .order("key")
         .returns<ImpactBaselineRow[]>(),
       // Every way to give, hidden ones too (website.content reads the table; /donate reads the view).
@@ -126,6 +129,10 @@ export default async function WebsitePage({
         .order("sort_order")
         .order("created_at")
         .returns<DonationChannelRow[]>(),
+      // The live counts' switches (0328), and the counts so the screen can say when a switched-on
+      // count is under LIVE_TILE_MIN. A switched-off count reads as null here.
+      supabase.from("public_stat_switches").select("key, show_on_website").returns<LiveSwitchRow[]>(),
+      supabase.from("public_shelter_stats").select(SHELTER_STATS_COLUMNS).returns<ShelterStats[]>(),
     ]);
 
   // An editor that shows empty lists on a failed read invites the admin to re-enter what is already
@@ -138,6 +145,8 @@ export default async function WebsitePage({
     ["published projects", publishedResult],
     ["impact baselines", baselinesResult],
     ["ways to give", channelsResult],
+    ["statistic switches", liveSwitchesResult],
+    ["live counts", liveStatsResult],
   ] as const) {
     if (result.error) throw new Error(`Website admin: could not read ${what}: ${result.error.message}`);
   }
@@ -217,7 +226,12 @@ export default async function WebsitePage({
                   featuredResidentId={content.featured_resident_id}
                   residents={publicResidents}
                 />
-                <ImpactBaselines rows={baselinesResult.data ?? []} />
+                <ImpactBaselines
+                  rows={baselinesResult.data ?? []}
+                  liveSwitches={liveSwitchesResult.data ?? []}
+                  liveStats={liveStatsResult.data?.[0] ?? null}
+                  canEdit={canContent}
+                />
               </>
             ),
             contact: (

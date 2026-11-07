@@ -1,13 +1,14 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import { useConfirm } from "@/components/ConfirmProvider";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { ActionButton } from "@/components/ActionButton";
-import { useWriteForm } from "@/lib/use-write-form";
+import { useWriteCall, useWriteForm } from "@/lib/use-write-form";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { todayIso } from "@/lib/format";
-import type { ImpactBaselineRow } from "@/lib/site/impact";
-import { updateImpactBaseline } from "./actions";
+import { LIVE_TILE_MIN, type ImpactBaselineRow, type ShelterStats } from "@/lib/site/impact";
+import { setStatisticShown, updateImpactBaseline } from "./actions";
 import { DateInput } from "@/components/DateInput";
 
 /**
@@ -17,7 +18,28 @@ import { DateInput } from "@/components/DateInput";
  * changes a public claim, so saving asks first, and the change is in
  * Settings → Recent changes.
  */
-export function ImpactBaselines({ rows }: { rows: ImpactBaselineRow[] }) {
+export type LiveSwitchRow = { key: string; show_on_website: boolean };
+
+/** The live counts, in the order the band draws them; labels come from the band's own dictionary. */
+const LIVE_STATS = [
+  { key: "in_care", label: "inCare" },
+  { key: "adopted_this_year", label: "adoptedThisYear" },
+  { key: "in_foster", label: "inFoster" },
+  { key: "in_treatment", label: "inVetCare" },
+] as const;
+
+export function ImpactBaselines({
+  rows,
+  liveSwitches,
+  liveStats,
+  canEdit,
+}: {
+  rows: ImpactBaselineRow[];
+  liveSwitches: LiveSwitchRow[];
+  liveStats: ShelterStats | null;
+  /** website.content at edit, the activity setStatisticShown asks: without it no tick is drawn. */
+  canEdit: boolean;
+}) {
   const { t } = useI18n();
   const i = t.admin.website.impact;
   return (
@@ -28,15 +50,111 @@ export function ImpactBaselines({ rows }: { rows: ImpactBaselineRow[] }) {
       </div>
       <div className="flex flex-col gap-4">
         {rows.map((row) => (
-          <BaselineForm key={row.key} row={row} />
+          <BaselineForm key={row.key} row={row} canEdit={canEdit} />
         ))}
       </div>
+      <LiveCounts switches={liveSwitches} stats={liveStats} canEdit={canEdit} />
       <p className="text-xs text-muted">{i.hint}</p>
     </section>
   );
 }
 
-function BaselineForm({ row }: { row: ImpactBaselineRow }) {
+/**
+ * One tick: show this statistic on the public homepage. Changing it changes a public claim, so it
+ * asks first like a baseline save; the table's audit trigger puts it in Settings -> Recent changes.
+ * Drawn only for a login that can edit the website (the same activity the action asks).
+ */
+function StatisticSwitch({
+  kind,
+  statKey,
+  shown,
+  name,
+  canEdit,
+}: {
+  kind: "figure" | "live";
+  statKey: string;
+  shown: boolean;
+  name: string;
+  canEdit: boolean;
+}) {
+  const { t } = useI18n();
+  const confirm = useConfirm();
+  const i = t.admin.website.impact;
+  const [pending, startTransition] = useTransition();
+  const save = useWriteCall();
+  const [error, setError] = useState<string | null>(null);
+  if (!canEdit) return null;
+
+  async function toggle(next: boolean) {
+    setError(null);
+    // Ask outside the transition: a dialog opened from inside one cannot render until it ends.
+    const ok = await confirm({ body: (next ? i.switchOnConfirm : i.switchOffConfirm).replace("{name}", name) });
+    if (!ok) return;
+    startTransition(async () => {
+      const result = await save((requestId) => setStatisticShown(kind, statKey, next, requestId));
+      if (!result.ok && "error" in result) setError(result.error);
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      <label className="flex items-center gap-2 text-sm font-medium text-foreground">
+        <input
+          type="checkbox"
+          checked={shown}
+          disabled={pending}
+          onChange={(e) => void toggle(e.currentTarget.checked)}
+          className="h-4 w-4"
+        />
+        {i.showOnWebsite}
+      </label>
+      {error && <p className="text-sm text-danger">{error}</p>}
+    </div>
+  );
+}
+
+/** The four live counts: a switch each. The numbers themselves are counted, never typed. */
+function LiveCounts({
+  switches,
+  stats,
+  canEdit,
+}: {
+  switches: LiveSwitchRow[];
+  stats: ShelterStats | null;
+  canEdit: boolean;
+}) {
+  const { t } = useI18n();
+  const i = t.admin.website.impact;
+  const s = t.home.stats;
+  return (
+    <div className="flex flex-col gap-3 border-t border-border pt-4">
+      <div>
+        <h3 className="text-sm font-semibold text-foreground">{i.liveHeading}</h3>
+        <p className="text-xs text-muted">{i.liveSubtitle.replace("{min}", String(LIVE_TILE_MIN))}</p>
+      </div>
+      {LIVE_STATS.map(({ key, label }) => {
+        const row = switches.find((r) => r.key === key);
+        if (!row) return null;
+        // public_shelter_stats gives NULL for a switched-off count, so the number is only known while on.
+        const count = stats ? stats[key] : null;
+        return (
+          <div key={key} className="flex flex-col gap-1">
+            <p className="text-sm font-medium text-foreground">{s[label]}</p>
+            <StatisticSwitch kind="live" statKey={key} shown={row.show_on_website} name={s[label]} canEdit={canEdit} />
+            {!row.show_on_website && <p className="text-xs text-muted">{i.switchedOff}</p>}
+            {row.show_on_website && count !== null && count < LIVE_TILE_MIN && (
+              <p className="text-xs text-muted">
+                {i.belowMin.replace("{count}", String(count)).replaceAll("{min}", String(LIVE_TILE_MIN))}
+              </p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function BaselineForm({ row, canEdit }: { row: ImpactBaselineRow; canEdit: boolean }) {
   const { t } = useI18n();
   const confirm = useConfirm();
   const i = t.admin.website.impact;
@@ -117,6 +235,8 @@ function BaselineForm({ row }: { row: ImpactBaselineRow }) {
           {pending ? t.common.saving : t.common.saveChanges}
         </ActionButton>
       </div>
+      <StatisticSwitch kind="figure" statKey={row.key} shown={row.show_on_website} name={row.label} canEdit={canEdit} />
+      {!row.show_on_website && <p className="text-xs text-muted">{i.switchedOff}</p>}
       <p className="text-xs text-muted">{i.sinceYearHelp}</p>
       {row.baseline_count === null && <p className="text-xs text-muted">{i.notShown}</p>}
       {state && !state.ok && <p className="text-sm text-danger">{state.error}</p>}
