@@ -42,6 +42,7 @@ export function ResidentPicker({
   triggerLabel,
   single = false,
   scanStrings,
+  emptyNote,
 }: {
   residents: ResidentOption[];
   selectedIds: string[];
@@ -50,6 +51,8 @@ export function ResidentPicker({
   single?: boolean;
   /** Offer Scan card (Web NFC, Android) in the list. Never offered where a page load would lose the form. */
   scanStrings?: ScanCardStrings;
+  /** Said in the list when there is nobody to offer at all, so an empty list never reads as a broken button. */
+  emptyNote?: string;
 }) {
   const { t } = useI18n();
   const resolvedTriggerLabel = triggerLabel ?? t.residents.picker.selectResidents;
@@ -215,7 +218,7 @@ export function ResidentPicker({
                 ))}
                 {filtered.length === 0 && (
                   <p className="px-3 py-4 text-center text-sm text-muted">
-                    {t.residents.picker.noMatches}
+                    {residents.length === 0 && emptyNote ? emptyNote : t.residents.picker.noMatches}
                   </p>
                 )}
               </div>

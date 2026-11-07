@@ -31,6 +31,7 @@ export function MemeForm({
   initial,
   driveFileId,
   residents,
+  residentsEmptyNote,
 }: {
   mode: "new" | "edit";
   memeId?: string;
@@ -38,6 +39,8 @@ export function MemeForm({
   /** Edit only: the picture, shown so the person knows which meme they are editing. */
   driveFileId?: string;
   residents: ResidentOption[];
+  /** Why the list is empty: none on file, or this login's cards cannot see them. */
+  residentsEmptyNote?: string;
 }) {
   const { t } = useI18n();
   // One per action (use-write-form.ts): a kept create id must never reach the update.
@@ -190,6 +193,7 @@ export function MemeForm({
           selectedIds={fields.residentIds}
           onChange={(ids) => set("residentIds", ids)}
           triggerLabel={f.pickResidents}
+          emptyNote={residentsEmptyNote}
         />
         <span className={hintClass}>{f.residentsHint}</span>
       </div>

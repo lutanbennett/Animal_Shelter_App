@@ -56,6 +56,7 @@ function shape(row: WhoRow): PickableResident {
  */
 export async function loadPickableResidents(
   supabase: Supabase,
+  opts: { includeInactive?: boolean } = {},
 ): Promise<{ residents: PickableResident[]; error: string | null }> {
   const [{ data, error }, order] = await Promise.all([
     supabase.from("resident_who_and_where").select(COLUMNS).returns<WhoRow[]>(),
@@ -65,7 +66,7 @@ export async function loadPickableResidents(
   const rows = data && data.length > 0 ? data : await loadWhoRowsDirect(supabase);
   // Zones and enclosures in the shelter's order (Settings → Zones and Enclosures), no place last.
   const residents = [...rows]
-    .filter((r) => r.current_status !== "Deceased" && r.current_status !== "Adopted")
+    .filter((r) => opts.includeInactive || (r.current_status !== "Deceased" && r.current_status !== "Adopted"))
     .sort(
       (a, b) =>
         order.compareZones(a.zone_name, b.zone_name) ||

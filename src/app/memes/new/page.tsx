@@ -2,6 +2,7 @@ import { BackLink } from "@/components/BackLink";
 import type { ResidentOption } from "@/components/ResidentPicker";
 import { getT } from "@/lib/i18n/get-t";
 import { requirePermission } from "@/lib/permissions/require";
+import { loadMemeResidents } from "@/lib/memes/residents";
 import { MemeForm } from "../MemeForm";
 
 /**
@@ -9,21 +10,16 @@ import { MemeForm } from "../MemeForm";
  * this login may read (a deceased resident stays: a meme in their memory is a real case).
  */
 export default async function NewMemePage() {
-  const { supabase } = await requirePermission("social.library", "edit");
+  const { supabase, perms } = await requirePermission("social.library", "edit");
   const { t } = await getT();
-  const { data, error } = await supabase
-    .from("resident_list_view")
-    .select("resident_id, name, thai_name, current_status")
-    .order("name")
-    .returns<(Omit<ResidentOption, "id"> & { resident_id: string })[]>();
-  if (error) console.error("meme form: resident list failed", error);
-  const residents: ResidentOption[] = (data ?? []).map(({ resident_id, ...r }) => ({ id: resident_id, ...r }));
+  const { residents, emptyKind } = await loadMemeResidents(supabase, perms);
+  const options: ResidentOption[] = residents.map((r) => ({ id: r.id, name: r.name, thai_name: r.thaiName, current_status: r.status, code: r.code }));
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 md:p-6">
       <BackLink href="/memes">{t.memes.page.back}</BackLink>
       <h1 className="text-2xl font-semibold text-foreground">{t.memes.form.newTitle}</h1>
-      <MemeForm mode="new" initial={{ title: "", captionEn: "", captionTh: "", tags: "", residentIds: [] }} residents={residents} />
+      <MemeForm mode="new" initial={{ title: "", captionEn: "", captionTh: "", tags: "", residentIds: [] }} residents={options} residentsEmptyNote={emptyKind ? t.memes.form[emptyKind === "cannot" ? "cannotSeeResidents" : "noResidentsOnFile"] : undefined} />
     </main>
   );
 }
