@@ -45,9 +45,13 @@ card — no exceptions."* And, the rule in full:
   fallback.
 - **A card applies the access that lets its activity be performed.** It is not a requirement list
   checked against the role, and there must be no state in which a card does nothing.
-  The `role-cards-coverage` check (#911, `scripts/lib/readonly-checks.mjs`) asks "does any role
-  hold a card that does nothing?" The answer must always be none. **It does not pass yet:** on
-  2026-10-24 production named four roles.
+  The `card-grants-applied` check (`scripts/lib/readonly-checks.mjs`; it supersedes
+  `role-cards-coverage`, #911) asks "does any card in the catalogue grant nothing wherever it is
+  held?" The answer must always be none. **It passes:** no card in the catalogue grants nothing
+  wherever it is held. Measured on production, 2026-11-07, after the `0.43.5` migrations, where it
+  answered "Every held card is fully applied wherever it is held". That is a dated measurement, not a
+  standing guarantee: re-run `node scripts/check-production.mjs` before relying on it after the card
+  set or its grants change.
 - **Why it matters:** `cardTile()` in `src/lib/home/tiles.ts` re-checks a card against access the
   card itself applied, and lets the page rules veto it; the tile then silently isn't drawn, with no
   message and no record. That is how faults "come out of nowhere".

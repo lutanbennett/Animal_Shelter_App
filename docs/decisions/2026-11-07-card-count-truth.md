@@ -20,4 +20,6 @@ It is the second kind, *pages the icon script correctly draws that are not cards
 
 ## The CLAUDE.md correction (#k2v8m)
 
+**SUPERSEDED 2026-11-08: the claim below was false.** The edit never landed; `CLAUDE.md` still said "does not pass yet" until `claude/claude-md-card-coverage` made it (`docs/decisions/2026-11-08-claude-md-card-coverage.md`). Kept so the claimed-but-not-landed fault stays visible.
+
 The "does not pass yet" sentence under *Hard-coded security is forbidden* now reads that it passes, measured on production 2026-11-07 after the `0.43.5` migrations, in card terms (no card grants nothing wherever it is held). The Admin passage is untouched. `docs/release-handover.md` and `docs/releases/2026-11-07-0-43-5.md` still quote the old sentence; they are dated records of what CLAUDE.md said then and were left.
