@@ -95,22 +95,8 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
     const label =
       e.table === "residents"
         ? (residentName ?? e.name ?? s.unnamedRecord)
-        : e.table === "contacts" ||
-            e.table === "attachments" ||
-            e.table === "roles" ||
-            e.table === "role_permissions" ||
-            e.table === "role_cards" ||
-            e.table === "role_home_tiles" ||
-            e.table === "features" ||
-            e.table === "card_features" ||
-            e.table === "card_grants" ||
-            e.table === "card_includes" ||
-            e.table === "site_content" ||
-            e.table === "impact_baselines" ||
-            e.table === "public_stat_switches" ||
-            e.table === "donation_channels"
-          ? (e.name ?? s.unnamedRecord)
-          : null;
+        : // every other table: its own name when it has one (NAME_FROM_IMAGE), else the resident it belongs to below
+          e.name;
     const owner = e.table !== "residents" && e.table !== "contacts" ? residentName : null;
     return (
       <>
@@ -146,7 +132,8 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
           {s.filters.table}
           <select name="table" defaultValue={filters.table ?? ""} className={field}>
             <option value="">{s.filters.anyTable}</option>
-            {AUDITED_TABLES.map((tbl) => (
+            {/* ~45 tables: sorted by the label shown, so a table is found by name; ordering only, not access. */}
+            {[...AUDITED_TABLES].sort((x, y) => s.tables[x].localeCompare(s.tables[y])).map((tbl) => (
               <option key={tbl} value={tbl}>
                 {s.tables[tbl]}
               </option>
