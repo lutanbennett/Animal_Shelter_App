@@ -1005,6 +1005,15 @@ find .open-next -type f -printf '%T@ %p\n' | sort -rn | head -1   # newest file,
 On `0.43.6` that read `60s: 0 / 180s: 15 / 600s: 213`, newest file 64 seconds old —
 alive, settled in seconds.
 
+**WATCH THE DIRECTORY THE CURRENT STAGE ACTUALLY WRITES, or you will read a
+healthy build as a stall.** `.open-next` is only written during the OpenNext
+stages. While the deploy is still in `next build` — up to and including
+`Finalizing page optimization …` — the writes go to **`.next`**, and `.open-next`
+can sit untouched for ten minutes while everything is fine. Measured on `0.43.6`'s
+test deploy: `.open-next` showed **2 files in 600 seconds** while `.next` showed
+**26 in the last 60**, newest 5 seconds old. Read the banner to see which stage you
+are in, then point `find` at the matching directory.
+
 **And never pipe a deploy through `tail`.** It buffers until the process exits and
 discards the head of the log, which is where every line worth reading is. `0.38.2`
 and `0.43.5` each lost test's `strip-baked-env` count that way, and `0.43.5`'s
