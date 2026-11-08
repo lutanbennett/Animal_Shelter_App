@@ -75,17 +75,17 @@
       // Every 15 minutes: ALERT_INTERVAL_MINUTES in src/lib/status/alerts.ts.
       "triggers": { "crons": ["*/15 * * * *"] }
     },
-    // The customer's acceptance testing: the UAT database and the current
-    // Google Drive, on lannacare.org for good (docs/decisions.md). Since the
-    // cutover (2026-11-06) it owns lannacare.org and www. UAT has its own
+    // The customer's acceptance testing, on uat.lannacare.org since 2026-11-08 (Lutan: "similar to
+    // test.lannacare.org"; docs/decisions/2026-11-08-uat-finalisation-runbook.md). From the 2026-11-06
+    // cutover until then it owned lannacare.org and www, which now forward to production by a
+    // Cloudflare redirect rule (docs/uat-finalisation.md, Part 7), not by any Worker. UAT has its own
     // Supabase project (docs/decisions/2026-11-06-uat-own-database.md); src/lib/app-env.ts
     // badges the build from that project alone.
     "uat": {
       "name": "lanna-animal-care-uat",
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
       "routes": [
-        { "pattern": "lannacare.org", "custom_domain": true },
-        { "pattern": "www.lannacare.org", "custom_domain": true }
+        { "pattern": "uat.lannacare.org", "custom_domain": true }
       ],
       "vars": {
         "NODE_ENV": "production",
@@ -96,8 +96,8 @@
         // serves everything. The public website's move to its own domain is PUBLIC_HOST
         // changing here; the staff app's move to its Cooper address is APP_HOST.
         // docs/domain-checklist.md lists the places outside the code that also change.
-        "APP_HOST": "lannacare.org",
-        "PUBLIC_HOST": "lannacare.org",
+        "APP_HOST": "uat.lannacare.org",
+        "PUBLIC_HOST": "uat.lannacare.org",
         "ORIGIN_TIMEOUT_MS": "20000",
         "RELEASE_MAIL_ENV": "UAT",
         "RELEASE_MAIL_FROM": "releases@lannacare.org",

@@ -19,7 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * What each environment is called on this page. Since the 2026-11-06 cutover
  * the build app-env calls "production" is the live site, matching the
  * `[Production]` its release mail carries (wrangler.jsonc RELEASE_MAIL_ENV);
- * UAT is the pinned build on lannacare.org (src/lib/app-env.ts).
+ * UAT is the build on uat.lannacare.org, badged by its own Supabase project (src/lib/app-env.ts).
  */
 const ENV_LABEL = { dev: "Dev", uat: "UAT", production: "Production" } as const;
 

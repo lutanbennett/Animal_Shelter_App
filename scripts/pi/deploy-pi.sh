@@ -3,7 +3,7 @@
 #
 #   ./scripts/pi/deploy-pi.sh                 # production values
 #   ./scripts/pi/deploy-pi.sh --env test      # test.lannacare.org, from the TEST clone only
-#   ./scripts/pi/deploy-pi.sh --env uat       # lannacare.org, from the UAT clone only
+#   ./scripts/pi/deploy-pi.sh --env uat       # uat.lannacare.org, from the UAT clone only
 #   ./scripts/pi/deploy-pi.sh --ref <sha>     # ROLLBACK: serve that commit instead
 #   ./scripts/pi/deploy-pi.sh --force "why"   # emergency: past the release guard, on record
 #
@@ -208,7 +208,7 @@ NEXT_DIST_DIR=.next.new node scripts/actions-key.mjs --env "$ENV_NAME" --built |
 "${NICE[@]}" node scripts/build-manual-pdf.mjs || { echo "deploy-pi: building the manual PDFs failed; nothing swapped." >&2; abandon_build; exit 1; }
 
 HOST=lannacareforanimals.org   # the live site since the 2026-11-06 cutover
-[[ "$ENV_NAME" == "uat" ]] && HOST=lannacare.org
+[[ "$ENV_NAME" == "uat" ]] && HOST=uat.lannacare.org
 [[ "$ENV_NAME" == "test" ]] && HOST=test.lannacare.org
 
 [[ -d .next.new ]] || { echo "deploy-pi: the build reported success but .next.new is missing; nothing swapped, $SERVICE keeps serving the old version." >&2; exit 1; }

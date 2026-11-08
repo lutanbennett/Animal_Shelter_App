@@ -17,8 +17,8 @@
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for: one runbook of every remaining UAT step in order, a read-only preflight for UAT's configuration, and the backlog retitled to point at it
-- [x] Files/areas touched listed: `docs/uat-finalisation.md`, `docs/pi-hosting.md`, `docs/backlog.md`, `docs/decisions/2026-11-08-uat-finalisation-runbook.md`, `scripts/check-uat-ready.mjs`, `scripts/lib/uat-ready.mjs`, `scripts/check-uat-ready.test.mjs`. No routes, no `worker/`, no migrations
+- [x] Change is described in one sentence, and it matches what the backlog item asked for: one plain-English, step-by-step runbook of every remaining UAT step in order, a read-only preflight for UAT's configuration, UAT's address moved to `uat.lannacare.org` (Lutan's request the same day), and the backlog retitled to point at the runbook
+- [x] Files/areas touched listed: `docs/uat-finalisation.md`, `docs/pi-hosting.md`, `docs/backlog.md`, `docs/decisions/2026-11-08-uat-finalisation-runbook.md`, `README.md`, `scripts/check-uat-ready.mjs`, `scripts/lib/uat-ready.mjs`, `scripts/check-uat-ready.test.mjs`; for the address move `wrangler.jsonc` (the `uat` block), `scripts/pi/cloudflared-config.yml`, `scripts/pi/deploy-pi.sh`, `scripts/pi/setup-uat.sh`, comments in `scripts/deploy.mjs`, `scripts/check-site-hosts.mjs` and `src/app/releases/page.tsx`. No migrations, no `worker/`. The address move takes effect only when Lutan deploys UAT (Part 6 of the runbook)
 - [x] Cards affected identified: none. No page, action or permission changed; admin and the signed-out public are unaffected
 - [x] Anything explicitly **out of scope** written down: every step marked Lutan's, `.env.deploy.uat` (not read or edited), production anything, `#w4k9n`, `#ao0jk`, `#mc6fu`, and the move of production to the shelter's Google account
 
@@ -27,15 +27,7 @@
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in; one conflict, in `docs/backlog.md` on the `#rqv5c`/`#uq4vz`/`#xkfsv` lines, resolved by keeping this branch's two retitles and upstream's `#xkfsv`
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`, every `<N>` `0`:
 
-```
-=== gates: typecheck exited 0 after 62s
-=== gates: lint exited 0 after 151s
-=== gates: test exited 0 after 29s
-=== gates: build exited 0 after 255s
-gates: typecheck=0 lint=0 test=0 build=0
-```
-
-(Run at the merge commit, before the decision file and this plan were added; both are documents only.)
+GATES_BLOCK
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
@@ -83,7 +75,7 @@ Nothing here is reachable by a login: a dev-machine script and documents. The on
 
 ### The `#uq4vz` colour pass, and what it does NOT prove
 
-**`data-env="uat"` was SET BY HAND on `<html>`, because a plain dev server resolves `getAppEnv()` to `dev` (the header badge read DEV throughout). So this does NOT prove that `getAppEnv()` resolves to `uat` on a real build.** That half stays open on `#uq4vz`, retitled, until a real UAT build exists (step 5 of `docs/uat-finalisation.md`).
+**`data-env="uat"` was SET BY HAND on `<html>`, because a plain dev server resolves `getAppEnv()` to `dev` (the header badge read DEV throughout). So this does NOT prove that `getAppEnv()` resolves to `uat` on a real build.** That half stays open on `#uq4vz`, retitled, until a real UAT build exists (Part 6 of `docs/uat-finalisation.md`, at `uat.lannacare.org`).
 
 - [x] A signed-in app page seen under all four themes with the attribute hand-set, tokens read back from the page: dark `--background #0e1220`, `--primary #7c8cff` (UAT indigo); light `#f4f4f5`, `#a84a07`; high contrast `#000`, `#b3ff1a`; magenta `#121212`, `#e033ff`. **Only the default dark theme shows UAT's indigo; the other three redefine the same tokens later and win**, so on those UAT is told apart by the header's fixed strip and badge. That is the documented design, not a fault
 - [x] A real Delete button (`/admin/blood-test-types`, "Delete: Blood Chemistry Panel") and an error message (`text-danger`) both resolve to `--danger` under all four themes with the attribute set: `#ff453a` dark and magenta, `#c0261a` light, `#ff7b72` high contrast. Transitions were switched off for the read, since a button's colour otherwise reads mid-transition. The error message used was an injected `<p class="text-sm text-danger">`, the app's own class; I did not trigger a real server error
@@ -91,7 +83,7 @@ Nothing here is reachable by a login: a dev-machine script and documents. The on
 
 ## 6. Regression
 
-- [x] The pages nearest the change still work: nothing in `src/` was edited; `/my`, `/residents`, `/admin` and `/admin/blood-test-types` loaded
+- [x] The pages nearest the change still work: the only `src/` edit is one comment in `src/app/releases/page.tsx`; `/my`, `/residents`, `/admin` and `/admin/blood-test-types` loaded. For the address move, `node scripts/check-site-hosts.mjs` passed: every environment's routes, hosts and tunnel ingress agree, `uat` allowedOrigins are `uat.lannacare.org` and `www.uat.lannacare.org`, and all four self-proofs still fire
 - [ ] Any shared file touched checked from a second page — n/a: no shared source file touched
 - [x] Nothing merged from `main` during `sync` was broken by this branch: the only conflict was in `docs/backlog.md`, resolved by hand and re-checked with `check-backlog-sections.mjs` and `check-backlog-ids.mjs`
 
@@ -127,7 +119,7 @@ Nothing here is reachable by a login: a dev-machine script and documents. The on
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| 1 | low | `drive-copy-tree.mjs` makes a new root at the top of My Drive instead of filling UAT's empty root | deferred to backlog: carried on `#rqv5c` and in `docs/uat-finalisation.md` step 6; Lutan's step |
+| 1 | low | `drive-copy-tree.mjs` makes a new root at the top of My Drive instead of filling UAT's empty root | deferred to backlog: carried on `#rqv5c` and handled in `docs/uat-finalisation.md` Part 3; Lutan's step |
 | 2 | low | Only the default dark theme shows UAT's indigo | accepted: by design, recorded on `#uq4vz` |
 
 ## Left for manual verification

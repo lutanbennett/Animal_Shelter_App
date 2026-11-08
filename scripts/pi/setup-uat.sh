@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-time setup of the UAT instance (lannacare.org) on a Pi that already runs production
+# One-time setup of the UAT instance (uat.lannacare.org) on a Pi that already runs production
 # (scripts/pi/setup.sh). Run it inside its own clone:
 #
 #   git clone https://github.com/lutanbennett/Animal_Shelter_App.git ~/Animal_Shelter_App_uat
@@ -50,7 +50,7 @@ SVC_USER=lannacare-uat
 ensure_service_user "$SVC_USER"
 node scripts/pi/write-env.mjs --env uat
 prepare_service_files "$SVC_USER" "$REPO" "$HOME/photo-cache-uat" no
-install_unit scripts/pi/lanna-care-uat.service lanna-care-uat "$SVC_USER" "$REPO" "$HOME/photo-cache-uat"   http://127.0.0.1:3002/ lannacare.org "$(grep -s "^ORIGIN_KEY=" .env.production.local | cut -d= -f2-)"
+install_unit scripts/pi/lanna-care-uat.service lanna-care-uat "$SVC_USER" "$REPO" "$HOME/photo-cache-uat"   http://127.0.0.1:3002/ uat.lannacare.org "$(grep -s "^ORIGIN_KEY=" .env.production.local | cut -d= -f2-)"
 
 echo
 echo "Capacity: three Next servers now share this Pi. Check 'free -m' and 'journalctl -u lanna-care -n 30' for restarts."

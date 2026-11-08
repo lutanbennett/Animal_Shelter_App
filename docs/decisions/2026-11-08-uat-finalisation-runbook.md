@@ -46,6 +46,36 @@ by hand**: computed `--background`, `--primary` and `--danger` under each of the
 button on `/admin/blood-test-types` and an error message both resolve to `--danger` under all four (dark and
 magenta `#ff453a`, light `#c0261a`, high contrast `#ff7b72`). Pages were reached by clicking through.
 **Not measured: that `getAppEnv()` resolves to `uat` on a real build.** The badge read DEV throughout,
-which is the point. That is `#uq4vz`'s remaining half, after step 5.
+which is the point. That is `#uq4vz`'s remaining half, after Part 6 of the list.
+
+## Added the same day: UAT moves to `uat.lannacare.org`, and `lannacare.org` forwards to production
+
+Lutan, 2026-11-08, after the first version of this PR: *"Also I want this to be UAT.lannacare.org"*,
+*"similar to Test.lannacare.org"*, *"and then we can redirect lannacare.org to production"*.
+
+- **Code:** `wrangler.jsonc`'s `uat` block now routes `uat.lannacare.org` (a custom domain, like test's)
+  with `APP_HOST`/`PUBLIC_HOST` to match. `lannacare.org` and `www` are no longer any Worker's.
+  `scripts/pi/cloudflared-config.yml` presents `Host: uat.lannacare.org` to UAT's Pi server.
+  `deploy-pi.sh` and `setup-uat.sh` probe that host. The Pi tunnel name `uat-pi.lannacare.org` is
+  unchanged. `node scripts/check-site-hosts.mjs` passes on the new state, with all its self-proofs.
+- **The forward is a Cloudflare Single Redirect, not code.** It runs before any Worker. It is 301,
+  `lannacare.org` and `www`, path and query kept, to `lannacareforanimals.org` (Part 7 of the list). It
+  needs proxied DNS records for both names once the Worker's custom domain no longer creates them. The
+  email records (MX, TXT) are untouched, so `@lannacare.org` mail keeps working. 301 because the move is
+  permanent; browsers cache it.
+- **The list was reordered so nothing is done twice.** The Drive copy (Part 3) now comes before the Pi
+  (Part 5), so UAT's new Drive root is in the settings file before that file is copied to the Pi, and
+  there is one deploy instead of two.
+
+## Two more findings while writing the plain-English version
+
+4. **`deploy:uat` refuses unless `main` is a cut release** (`scripts/deploy.mjs`, `releaseProblems`:
+   `unreleased` must be empty). On 2026-11-08 `main` has unreleased notes, so Part 6 waits for the next
+   release cut. The list says so. Nothing was changed to get around it.
+5. **UAT's database will hold production's real users after the restore.** So the UAT deploy runs with
+   `--no-mail`, and the list says why. Otherwise a major-release email from UAT would reach real people.
+6. **Not fixed, production:** `scripts/pi/setup.sh` line 122 still probes production's Pi server with
+   `Host: lannacare.org`, and `docs/pi-hosting.md` has several pre-cutover `lannacare.org` lines about
+   production. Both are production tidy-up (`#w4k9n`), outside this stream.
 
 Not done, on purpose: every Lutan step, `.env.deploy.uat` (never read or edited), production anything.

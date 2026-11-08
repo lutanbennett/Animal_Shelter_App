@@ -153,15 +153,16 @@ Keep at least two admins enrolled so route 1 is always available. `scripts/check
 ## Environments
 
 Four environments, three of them deployed. **Since the 2026-11-06 cutover**
-the live site is `lannacareforanimals.org` (the production block) and
-`lannacare.org` is UAT. UAT has its **own** Supabase project (`fsjagxmxjosauwmxwype`, in a second
+the live site is `lannacareforanimals.org` (the production block). UAT is
+`uat.lannacare.org` (moved from `lannacare.org` on 2026-11-08; `lannacare.org` and `www` now forward
+to production by a Cloudflare redirect rule, `docs/uat-finalisation.md`). UAT has its **own** Supabase project (`fsjagxmxjosauwmxwype`, in a second
 Supabase account; `docs/decisions/2026-11-06-uat-own-database.md`), so its
 build is badged UAT by that project alone. Until its data is loaded UAT is a
 code-ready but empty database.
 
 | | Dev | Test | UAT | Production |
 |---|---|---|---|---|
-| Where | `next dev` on your machine | `test.lannacare.org` (served by the Pi from its own clone once `ORIGIN_KEY` and the WAF rule are in place, `docs/pi-hosting.md`) | `lannacare.org`, `www.lannacare.org` — for good | `lannacareforanimals.org`, `www.lannacareforanimals.org` |
+| Where | `next dev` on your machine | `test.lannacare.org` (served by the Pi from its own clone once `ORIGIN_KEY` and the WAF rule are in place, `docs/pi-hosting.md`) | `uat.lannacare.org` (until 2026-11-08 `lannacare.org`, which now forwards to production) | `lannacareforanimals.org`, `www.lannacareforanimals.org` |
 | Worker | — | `lanna-animal-care-test` | `lanna-animal-care-uat` | `lanna-animal-care` |
 | Database | dev Supabase project (`qxkmhwybjggxvsfxsxbd`) | **the same dev project** | `fsjagxmxjosauwmxwype` (own project, second Supabase account) | `dbkodyyxxhtygxcxmfcu` |
 | Google Drive | dev account | dev account | dev account (the current tree) | dev account, until the shelter's own account exists |

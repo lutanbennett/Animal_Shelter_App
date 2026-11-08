@@ -54,8 +54,8 @@ for (const [what, mutate] of Object.entries(broken)) {
   say(hostProblems(c, yml).some((r) => !r.ok), `caught: ${what}`);
 }
 {
-  // The tunnel forgotten: its old header is still "covered" (UAT owns lannacare.org now), which is
-  // why coverage by ANY environment is not enough.
+  // The tunnel forgotten: production's tunnel presenting the old address, which must be caught
+  // whether or not another environment covers it (UAT owned lannacare.org until 2026-11-08).
   const stale = yml.replace(/(hostname: pi\.lannacare\.org[\s\S]*?httpHostHeader:\s*)lannacareforanimals\.org/, "$1lannacare.org");
   say(stale !== yml && hostProblems(config, stale).some((r) => !r.ok && /pi\.lannacare\.org presents lannacare\.org/.test(r.msg)), "caught: tunnel still presents lannacare.org to production");
   const rest = hostProblems(config, yml).filter((r) => !r.ok);
