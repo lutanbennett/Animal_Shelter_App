@@ -195,14 +195,18 @@ updates. Re-runnable.
     ran from the production clone and would have built UAT's database into the production `.next`.
   - No Drive mirror (production's Drive only).
 
+  **The whole of UAT's finalisation, in order, is `docs/uat-finalisation.md`**; this is its step 4.
+
   **Order matters, and nothing here is reachable until the last step**, so a half-done setup changes nothing
   for anyone (the Worker falls back to rendering itself, exactly as today).
   1. On the Pi: `git clone https://github.com/lutanbennett/Animal_Shelter_App.git ~/Animal_Shelter_App_uat`,
      create `~/Animal_Shelter_App_uat/.env.deploy.uat` with UAT's values (copy from the dev machine's; it
      must include `ORIGIN_KEY`, the **same value as production's**, and `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`,
-     the same one `deploy:uat` uses). Then `cd ~/Animal_Shelter_App_uat && ./scripts/pi/setup-uat.sh`.
-  2. **Check memory first:** three Next servers on a 4 GB Pi. `free -m` before and after; production's
-     service must not restart (`journalctl -u lanna-care -n 30`).
+     the same one `deploy:uat` uses), **and no `SUPABASE_ACCESS_TOKEN`**: it is in the dev machine's copy of the same
+     file, and `setup-uat.sh` refuses to run if the Pi's has it). Then `cd ~/Animal_Shelter_App_uat && ./scripts/pi/setup-uat.sh`.
+  2. **Confirm memory** (measured 2026-11-07 with production and test running: 683 MB used, 3,365 MB available,
+     so a third server capped at 900 MB fits). `free -m` before and after; production's service must not
+     restart (`journalctl -u lanna-care -n 30`).
   3. Cloudflare: `cloudflared tunnel route dns <tunnel> uat-pi.lannacare.org`; install the new
      `scripts/pi/cloudflared-config.yml` over `/etc/cloudflared/config.yml` (tunnel id filled in as
      `setup.sh` does) and `sudo systemctl restart cloudflared`; extend the WAF rule's host set to
