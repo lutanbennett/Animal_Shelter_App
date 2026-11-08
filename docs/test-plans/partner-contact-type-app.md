@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → #xkfsv (Partner half only) |
 | Branch / worktree | `claude/partner-contact-type-app` |
 | Dev server | http://localhost:3009 |
-| PR | #1384 |
+| PR | #1385 |
 | Tested by / date | Claude, 2026-11-08 |
 | Carries a migration? | no |
 | Tested at SHA | fac7a8ed |
@@ -252,7 +252,7 @@ Manual verification by: pending: a Thai speaker reading the Partner wording
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [x] Checklist pasted into the PR
-- [ ] Handed to the production release manager — deferred: release manager at deploy time
+- [ ] Handed to the production release manager — pending: release manager at deploy time
 
 Result: pass
 
