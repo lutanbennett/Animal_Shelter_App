@@ -1,8 +1,8 @@
 // Build and deploy one environment's Worker.
 //
 //   node scripts/deploy.mjs --env test                # test.lannacare.org
-//   node scripts/deploy.mjs --env uat                 # lannacare.org, since the 2026-11-06 cutover (dev project)
-//   node scripts/deploy.mjs --env production          # lannacare.org until the cutover
+//   node scripts/deploy.mjs --env uat                 # uat.lannacare.org (UAT's own project, fsjagxmxjosauwmxwype)
+//   node scripts/deploy.mjs --env production          # lannacareforanimals.org
 //   node scripts/deploy.mjs --env production --secrets
 //       # (uat/production refuse a secret found only in .env.local unless
 //       #  --allow-dev-fallthrough is also given)
