@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none; Lutan asked for this directly in chat on 2026-11-08 |
 | Branch / worktree | `claude/plan-day-trim` @ `C:\Development\Animal_Shelter_plan-day-trim` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3011` (not started; no runtime surface) |
-| PR | <pr> |
+| PR | #1396 |
 | Tested by / date | Claude Opus 5 / 2026-11-08 |
 | Carries a migration? | no |
 | Tested at SHA | `6a3648f7` — the commit the gates ran against. The only commit after it, `4d19a463`, adds two markdown files under `docs/` (this plan and the decision file), which no gate reads |
