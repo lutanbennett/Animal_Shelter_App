@@ -53,6 +53,13 @@ const { name: envName, rest } = parseEnvArg(process.argv.slice(2));
 const pushSecrets = rest.includes("--secrets");
 const skipBuild = rest.includes("--skip-build");
 const noMail = rest.includes("--no-mail");
+// UAT's database holds production's real people (docs/decisions/2026-11-06-uat-own-database.md), so a
+// major release deployed there would mail them from a test site. A flag the operator must remember is
+// the wrong shape for that — forget it once and the mail has gone, and UAT is now deployed on every
+// release (docs/release-procedure.md, step 6). So UAT mails only when asked for in words: `--mail`
+// means nothing on any other environment.
+const mailOptIn = rest.includes("--mail");
+const uatWillNotMail = envName === "uat" && !mailOptIn;
 const noPi = rest.includes("--no-pi");
 const planOnly = rest.includes("--plan");
 
@@ -276,6 +283,14 @@ const deployArgs = [
 if (planOnly) {
   console.log(`deploy: --plan: would ${skipBuild ? "reuse the last build" : "build"}${pushSecrets ? ", push secrets" : ""}, then run:`);
   console.log(`  wrangler ${deployArgs.map((a) => (/\s/.test(a) ? JSON.stringify(a) : a)).join(" ")}`);
+  // Say what it would do about mail, so the decision is visible BEFORE the deploy rather than in a
+  // line that scrolls past after it. `0.43.6` had to be asserted by reading the code instead.
+  const mailPlan = noMail
+    ? "--no-mail: nothing would be mailed"
+    : uatWillNotMail
+      ? "uat does not mail unless --mail is given: nothing would be mailed"
+      : "a major release new to this environment would be mailed to the admins";
+  console.log(`deploy: --plan: mail: ${mailPlan}.`);
   console.log("deploy: --plan: stopping here; nothing built, uploaded or deployed.");
   process.exit(0);
 }
@@ -354,6 +369,10 @@ async function announce() {
   const versions = majors.map((r) => r.version).join(", ");
   if (noMail) {
     console.log(`deploy: --no-mail, not announcing ${versions}.`);
+    return;
+  }
+  if (uatWillNotMail) {
+    console.log(`deploy: uat does not mail unless --mail is given, so not announcing ${versions}. Its database holds production's real people.`);
     return;
   }
   const key = env.SUPABASE_SERVICE_ROLE_KEY;

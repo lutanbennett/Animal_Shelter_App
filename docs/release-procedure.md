@@ -33,8 +33,17 @@ node scripts/deploy.mjs --env production
 ```
 
 Everything else is Claude's: the cut, the PR, CI, the merge, the production
-migrations, the test Worker deploy, **both Pi builds and both service restarts**,
-the verification and the record.
+migrations, the test and UAT Worker deploys, **all three Pi builds and their
+service restarts**, the verification and the record.
+
+**There are THREE environments to ship, not two.** UAT went live at
+`uat.lannacare.org` on 2026-11-08 and Lutan said the same day that it *"is now part
+of the standard release process"*. It is the customer's acceptance-test site: its
+own Supabase project (`fsjagxmxjosauwmxwype`, on a second Supabase account), its own
+Drive copy, its own Pi service, **and a copy of production's real people in its
+database** — which is why it never mails and why its deploy is not a thing to
+improvise. Everything below that says "test and production" now says UAT too, and
+each step names it.
 
 If a step appears to need him for anything else, that is a **fault to fix, not a
 handover**. In `0.15.0` the test clone had been left root-owned, which made a
@@ -49,11 +58,41 @@ exceptions, both of which should be rare enough to be remarkable:
 |---|---|
 | Cut PR, gates, CI, **merge** | Claude — **merged as soon as CI is green, without asking** (2026-10-13) |
 | Production migrations | Claude — `apply-migrations.mjs --env production` from the **main checkout**, under a user-settings allow rule added 2026-10-13 |
+| **UAT migrations** | Claude — **as soon as UAT's access token can write; it cannot today** (see *What UAT still needs once*) |
 | **Worker production deploy** | **Lutan** — the one handover |
 | Worker test deploy | Claude |
+| **Worker UAT deploy** | Claude — `--no-mail` is no longer needed to stop the mail, but say it anyway |
 | Pi production build + restart | Claude — SSH works and `systemctl restart lanna-care` is passwordless |
 | Pi test build + restart | Claude — same |
+| **Pi UAT build + restart** | Claude — **once the Pi's sudo rule covers `lanna-care-uat`; it does not today** (same section) |
 | Verification, release record | Claude — **and the record PR is merged by Claude too, without asking** |
+
+### What UAT still needs once, and none of it is per-release
+
+Measured 2026-11-08, after UAT went live. **All three are one-time jobs of Lutan's,
+and until they are done UAT is a release target whose last mile is manual.** None of
+them blocks production, and none is a reason to skip UAT.
+
+1. **UAT's Supabase access token cannot read its own database.**
+   `apply-migrations.mjs --env uat` (any mode, `--status` included) dies with
+   `Missing required permission(s): database_read`, so **nobody can apply a migration
+   to UAT by script**, and there is no second route: the repo has no Postgres client,
+   so `SUPABASE_DB_PASSWORD` is not an alternative. The fix is to add `database_read`
+   (and the write permission the query endpoint needs) to that token in the
+   `lutan.bennett1@gmail.com` Supabase account. **Until then a release whose
+   migrations UAT lacks cannot ship to UAT at all** — correctly, because the deploy
+   now refuses rather than warns.
+2. **The Pi's passwordless sudo does not cover `lanna-care-uat`.**
+   `/etc/sudoers.d/lanna-care-restart` names `lanna-care` and `lanna-care-test` only
+   (read 2026-11-08: `sudo -n systemctl is-active --quiet lanna-care-uat` answers
+   *a password is required*), and `deploy-pi.sh --env uat` ends in
+   `sudo systemctl restart lanna-care-uat`. So the UAT Pi build stops at its last step
+   for a password. This is the `sudo`-password exception above, and per that paragraph
+   it is **damage to fix, not a handover to add**: two lines in that file.
+3. **`.env.deploy.uat` has no `CLOUDFLARE_PURGE_TOKEN`,** so UAT's edge cache has
+   never been purged. `CLOUDFLARE_ZONE_ID` is already there and is the right zone
+   (`lannacare.org` serves both `test.` and `uat.`); the token is the only missing
+   value, and `purge-cache.mjs --env uat` names exactly what to create.
 
 **Two touches, and count them.** A release should cost Lutan exactly two
 interventions: **major versus minor**, and the production Worker deploy. `0.28.0`
@@ -69,10 +108,10 @@ about it, which invents a blocker out of bookkeeping.
 start it as soon as the cut is merged and let the two run in parallel. `0.15.0`
 sat waiting on a handover that did not need to be sequential.
 
-**But never run the two WORKER deploys at once, and this is exactly what "do not
-idle" does not license.** Both `deploy.mjs --env test` and `deploy.mjs --env
-production` run `next build` in the **main checkout**, so starting one while the
-other is building kills the second in seconds:
+**But never run two WORKER deploys at once, and this is exactly what "do not
+idle" does not license. There are now THREE of them** — `--env test`, `--env
+production` and `--env uat` — and every one runs `next build` in the **main
+checkout**, so starting one while another is building kills the second in seconds:
 
 ```
 ⨯ Another next build process is already running.
@@ -88,10 +127,13 @@ was already on the new release; that is precisely why nobody noticed quickly.
 
 This document already warns *"Two builds in one worktree collide"* under Traps.
 That was written about `gates.mjs`, and the deploys are the same hazard in a
-place nobody thought to look. **So: the two Worker deploys are strictly
+place nobody thought to look. **So: the Worker deploys are strictly
 sequential.** Deploy test, see it finish, then hand the production command over —
-or hand his over first and wait. **What genuinely parallelises is the Pi
-builds**, which build on the Pi and touch nothing in the main checkout.
+or hand his over first and wait — **then UAT last, after his has finished.**
+Adding UAT made the queue three long, so the discipline matters more, not less:
+**his is the one that must not be killed**, which is why UAT goes at the back.
+**What genuinely parallelises is the Pi builds**, which build on the Pi and touch
+nothing in the main checkout.
 
 **And confirm a deploy from the Worker, never from "it finished".** A failed
 deploy also finishes. `0.40.3` was told "it looks like it has deployed" when it
@@ -203,6 +245,28 @@ git checkout main && git pull
 
 Fold in the backlog branch if it has anything (`git log --oneline main..backlog`),
 then push, then fast-forward `backlog` to `main`.
+
+**Then read what is live on all three, before deciding anything.** Two commands,
+and they have paid on five consecutive releases:
+
+```bash
+git log --oneline -1
+node scripts/apply-migrations.mjs --env production --status
+```
+
+and, since UAT joined the standard process, what UAT is actually serving — it is
+deployed last, so it is the one most likely to be a release behind:
+
+```bash
+curl -s https://uat.lannacare.org/api/version
+node scripts/assert-schema.mjs --env uat
+```
+
+**`--status --env uat` is not available** (`database_read`); the assertion above is
+the reading that works. And note the version it answers is **not** proof of the
+commit: UAT can be serving the right version number from a later `main` than the
+release, because `deploy-pi.sh` ships `origin/main`. Read the SHA in the same
+answer.
 
 **Then `npm ci` in the main checkout, before any deploy.** Added after `0.28.0`,
 where it was nearly missed. That checkout had `next@16.3.5` installed while
@@ -423,6 +487,26 @@ Both deploy paths refuse a commit whose database lacks a migration that is on
 columns. Re-run `--status` afterwards and read `0 pending` and a clean drift
 check before moving on.
 
+**THREE databases, not two.** Production and test as always, and now **UAT's own
+project**, which the same runner reaches with `--env uat`. Apply to UAT in the same
+pass, before UAT's deploy, for the same reason: its code reads the new columns.
+
+**UAT cannot be applied to today, and the refusal is honest rather than hidden.**
+Its access token lacks `database_read`, so **every** mode — `--status`, `--dry-run`,
+the apply, `--drift` — dies with `Missing required permission(s): database_read`
+(measured 2026-11-08). Nothing in the repo offers a second route. So on a release
+that adds a migration, **UAT's deploy will refuse until that token is fixed**, and
+the right response is to say so in the record and ship the other two, not to force
+it. See *What UAT still needs once* at the top.
+
+**The schema READ, unlike the apply, now works for UAT anyway.**
+`appliedMigrations()` falls back from the Management API to the database itself over
+PostgREST with the env file's service-role key, and refuses if that URL does not
+name the project it was asked about. That is what turned UAT's guard from blind into
+real: before 2026-11-08 a UAT deploy printed *could not ask … continuing WITHOUT the
+schema check* every time. The assertion now names which route answered — `asked the
+database directly` means the token is still the limited one.
+
 **The check that stops a Pi build running ahead of its schema is on THIS machine, not the Pi.**
 The Pi has no `SUPABASE_ACCESS_TOKEN` (it is the internet-facing box and must not get one), so
 `scripts/pi/guard-release.mjs` checks the release record only and says so. Immediately before
@@ -430,6 +514,7 @@ section 7's `ssh … deploy-pi.sh` for uat or production, run:
 
 ```bash
 node scripts/assert-schema.mjs --env production
+node scripts/assert-schema.mjs --env uat
 ```
 
 It asks the database which migrations it holds and compares them with `origin/main` (`--ref <sha>`
@@ -543,7 +628,13 @@ nowhere else:
 
 ```bash
 curl -s https://test.lannacare.org/api/version
+curl -s https://uat.lannacare.org/api/version
 ```
+
+**The order is test, then production, then UAT**, with the three Worker builds
+strictly one after another (see *never run two WORKER deploys at once* above).
+UAT goes last on purpose: it is the one environment nobody is waiting on, and
+putting it behind Lutan's command means it can never kill his build.
 
 ### Worker, production — Lutan runs this
 
@@ -622,6 +713,45 @@ never read. Both facts were recoverable from the bindings printout and
 `/api/version`, which is luck rather than method. `tee` passes the status through
 and keeps the whole log; `tail` costs a ten-minute rerun to recover one line.
 
+### Worker, UAT — Claude runs this, last of the three
+
+```bash
+mkdir -p .local && node scripts/deploy.mjs --env uat --no-mail | tee .local/deploy-uat-<version>.log
+```
+
+**Run it from the MAIN checkout, and nowhere else.** `worktree.mjs` copies only
+`.env.local`, so a worktree has no `.env.deploy.uat` at all and the deploy would
+resolve the wrong project or refuse.
+
+**Read the project line before anything else.** It must say
+`fsjagxmxjosauwmxwype`. If it names `qxkmhwybjggxvsfxsxbd` (dev) or
+`dbkodyyxxhtygxcxmfcu` (production), **stop** — that is UAT about to be pointed at
+somebody else's data. The deploy has its own refusal for dev's Supabase secrets
+leaking in from `.env.local`, which no flag overrides, but read the line anyway.
+
+**Lutan's shell exports a `SUPABASE_ACCESS_TOKEN` for the other Supabase account,
+and it beats the one in `.env.deploy.uat`.** If the project line looks wrong, that
+is the first thing to check: `env -u SUPABASE_ACCESS_TOKEN node scripts/deploy.mjs
+--env uat …`, or clear it from the window
+(`Remove-Item Env:SUPABASE_ACCESS_TOKEN` in PowerShell).
+
+**`--secrets` is for the first deploy and for a release that CHANGES one of UAT's
+secrets, not for every release.** Part 6 of `docs/uat-finalisation.md` used it
+because UAT had none yet. A routine release does not need it, and pushing secrets
+you have not changed is a way to overwrite a good value with a stale one.
+
+**`--no-mail` no longer carries the whole weight, and write it anyway.** UAT's
+Worker has `RELEASE_MAIL_ENV: "UAT"` and a mail binding, and **UAT's database holds
+production's real people** — so before 2026-11-08 a major release deployed to UAT
+with the flag forgotten would have mailed every real admin from a test site. Since
+2026-11-08 `deploy.mjs` will not mail from UAT unless `--mail` is given in words,
+and it says so in its own output and in `--plan`. Keep writing `--no-mail`: it
+makes the intent readable, and belt-and-braces is the right shape when the failure
+is "real people were emailed".
+
+**Then bring UAT's Pi clone to the same release** (below), so the Pi and the Worker
+fallback run the same code.
+
 ### The Pi — Claude runs this
 
 Production is served by the Pi; the Worker is the fallback. A Worker deploy alone
@@ -637,7 +767,20 @@ header-related change.
 ```bash
 ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && ./scripts/pi/deploy-pi.sh'
 ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App_test && ./scripts/pi/deploy-pi.sh --env test'
+ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App_uat && ./scripts/pi/deploy-pi.sh --env uat'
 ```
+
+**Three clones now, one per environment** — `~/Animal_Shelter_App`,
+`~/Animal_Shelter_App_test`, `~/Animal_Shelter_App_uat` — serving
+`lanna-care`, `lanna-care-test` and `lanna-care-uat` on ports 3000, 3001 and 3002.
+They build in parallel safely; they are on the Pi, not the main checkout.
+
+**The UAT one stops at its last step for a sudo password today.**
+`/etc/sudoers.d/lanna-care-restart` does not name `lanna-care-uat`, so the build and
+swap complete and `sudo systemctl restart lanna-care-uat` then prompts. Until that
+file is fixed (*What UAT still needs once*, item 2), expect to read `.next.new` swapped
+and the service not restarted; say so in the record rather than leaving it to be
+discovered by a stale UAT.
 
 **Run it detached with a log, not in the SSH foreground.** The build takes longer
 than the foreground tool timeout, and a timeout kills the SSH session mid-build:
@@ -664,7 +807,13 @@ both Pi builds:
 
 ```bash
 node scripts/purge-cache.mjs --env production
+node scripts/purge-cache.mjs --env uat
 ```
+
+**The UAT one refuses today** for want of `CLOUDFLARE_PURGE_TOKEN` in
+`.env.deploy.uat`, and that refusal is the whole of what it does — run it anyway, so
+the gap stays visible, and note it in the record. Nothing purges test either; the
+trap below says why both of those are true and what the real exposure is.
 
 It purges the zone and then proves the purge took rather than trusting the API's own
 "success": where it can it re-runs the asset check, and where it cannot it prints the
@@ -683,7 +832,7 @@ the Pi:
 ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && node scripts/pi/check-assets.mjs --url https://lannacareforanimals.org/'
 ```
 
-The script builds into `.next.new` and renames it over `.next` only once it compiled, so a request never meets a half-written build; it probes the Pi on loopback **with the origin key** (production answers `Forbidden` without it); and the asset check below runs from an exit trap, so a failure in an earlier step can no longer skip it. A `DEPLOY FAILED` banner is believed — but if the probe line says `serves 'nothing'`, confirm with `https://lannacare.org/api/version` before rolling back, and **run the asset check by hand either way**.
+The script builds into `.next.new` and renames it over `.next` only once it compiled, so a request never meets a half-written build; it probes the Pi on loopback **with the origin key** (production answers `Forbidden` without it); and the asset check below runs from an exit trap, so a failure in an earlier step can no longer skip it. A `DEPLOY FAILED` banner is believed — but if the probe line says `serves 'nothing'`, confirm with `https://lannacareforanimals.org/api/version` before rolling back, and **run the asset check by hand either way**.
 
 `deploy-pi.sh` already runs that check as its last step and **fails loudly** if the
 served stylesheet differs from the build; a red result there means purge, then re-run.
@@ -712,8 +861,33 @@ account:
 ```bash
 curl -s https://lannacareforanimals.org/api/version
 curl -s https://test.lannacare.org/api/version
-ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && git log --oneline -1; cd ~/Animal_Shelter_App_test && git log --oneline -1; systemctl is-active lanna-care lanna-care-test'
+curl -s https://uat.lannacare.org/api/version
+ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App && git log --oneline -1; cd ~/Animal_Shelter_App_test && git log --oneline -1; cd ~/Animal_Shelter_App_uat && git log --oneline -1; systemctl is-active lanna-care lanna-care-test lanna-care-uat'
 ```
+
+**Ask both endpoints on all three, not just `/api/version`.** `/api/version` is
+answered by the app the Pi is running; `/api/releases/current` is bundled into the
+Worker. They disagree exactly in the window between a Pi deploy and its Worker
+deploy, which is the window UAT now sits in while it is deployed last:
+
+```bash
+for h in lannacareforanimals.org test.lannacare.org uat.lannacare.org; do curl -s "https://$h/api/releases/current"; done
+```
+
+**And confirm UAT is still served by the Pi**, because its Worker rendering every
+page is what put it over Cloudflare's free CPU limit in the first place (627 errors
+on 5 November):
+
+```bash
+curl -sI https://uat.lannacare.org/login | grep -i x-lanna-served-by
+```
+
+`pi` is right. `worker` means UAT's service is down and the fallback is carrying it
+— a finding, not a pass.
+
+**`lannacare.org` is not a check of anything any more.** Since 2026-11-08 it 301s
+to `lannacareforanimals.org`, so curling it tells you about production. Several
+paragraphs in older release records read it as UAT; they were right when written.
 
 The edge-cache check must be done **in a real browser**, not with curl — curl
 sends no `locale` cookie and gets `BYPASS` every time, proving nothing. From the
@@ -724,18 +898,26 @@ Everything behind sign-in is Lutan's, and so is the signed-out public tour while
 `PUBLIC_SITE` is `locked` — anonymous visitors get the "STAFF TESTING SITE" gate,
 so `/`, `/adopt` and the rest cannot be checked without an account.
 
-**Drift, both databases, explicitly.** `--status` prints a comparison, but run
+**Drift, every database, explicitly.** `--status` prints a comparison, but run
 the named check and quote it, because it is the one that reads as a drift check
 to whoever reads the record afterwards:
 
 ```bash
 node scripts/apply-migrations.mjs --drift production
 node scripts/apply-migrations.mjs --drift test
+node scripts/apply-migrations.mjs --drift uat
 ```
 
-Both must end `No drift: <env> matches origin/main`, with `0` in each direction.
+Each must end `No drift: <env> matches origin/main`, with `0` in each direction.
 Dev matters as much as production: it is the database test runs against, so
 drift there invalidates test as a pre-production check.
+
+**`--drift uat` dies with `Missing required permission(s): database_read` today,
+and that is the answer to record** — not a blank. The reading that *can* be had is
+`node scripts/assert-schema.mjs --env uat`, which reaches UAT's database by the
+other route and says whether it holds every migration the deployed commit carries.
+That is a weaker statement than drift (it does not report schema ahead of code),
+so say which one you ran.
 
 **Confirm the release mail actually arrived — do not stop at "sent 1".** The
 deploy prints `deploy: release mail for <version> [UAT]: sent N, skipped M`;
@@ -994,6 +1176,14 @@ So `--env test` still **refuses**, but the reason it did not matter has gone: it
 looks for those two values in `.env.local` while they live in
 `.env.deploy.production`. **Fixing it is one value in one file**, and until then
 test's edge is purged by nothing.
+
+**And `--env uat` refuses for a different reason, so UAT's edge is purged by nothing
+either.** `.env.deploy.uat` carries `CLOUDFLARE_ZONE_ID` (the right zone —
+`lannacare.org` serves both `test.` and `uat.`) but no `CLOUDFLARE_PURGE_TOKEN`, so
+the script names exactly what to create and stops. **A second thing was wrong here
+and is now fixed:** `--env uat` purged the host `lannacare.org`, which since
+2026-11-08 is a 301 to production — it would have purged a redirect, reported
+success, and left UAT's own cache standing. It now purges `uat.lannacare.org`.
 
 **Why it has not yet produced a visible fault — which is also what the exposure
 actually is:** every build names its assets by content hash, so a new build's
