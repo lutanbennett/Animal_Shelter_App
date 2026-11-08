@@ -423,6 +423,24 @@ Both deploy paths refuse a commit whose database lacks a migration that is on
 columns. Re-run `--status` afterwards and read `0 pending` and a clean drift
 check before moving on.
 
+**The check that stops a Pi build running ahead of its schema is on THIS machine, not the Pi.**
+The Pi has no `SUPABASE_ACCESS_TOKEN` (it is the internet-facing box and must not get one), so
+`scripts/pi/guard-release.mjs` checks the release record only and says so. Immediately before
+section 7's `ssh … deploy-pi.sh` for uat or production, run:
+
+```bash
+node scripts/assert-schema.mjs --env production
+```
+
+It asks the database which migrations it holds and compares them with `origin/main` (`--ref <sha>`
+for another commit). **It asserts:** every migration file in that commit is applied. **When it
+fails (exit 2) it names each missing migration with the app files its `-- consumer:` header says
+read it, and it also fails when it cannot ask** (no token, network, API error), because a guard
+that cannot check must not pass. **What to do:** run `node scripts/apply-migrations.mjs --env
+production`, read back `0 pending`, then run the assertion again. **Do not start the Pi build
+until it prints `holds every migration`.** `scripts/deploy.mjs` (the Worker) runs the same
+comparison itself, and warns rather than refuses on a Supabase blip.
+
 **`0292_write_requests.sql` is the one where that refusal is protecting something
 you can name, so do not look for a way round it.** The Pi failover wrapper
 (`src/lib/action-result.ts`, `worker/origin.mjs`) lets the Worker serve a write

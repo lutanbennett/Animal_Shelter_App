@@ -153,8 +153,12 @@ GUARD_ARGS=(--env "$ENV_NAME")
 node scripts/pi/guard-release.mjs "${GUARD_ARGS[@]}"
 
 # Migrations are applied from the developer's machine (CLAUDE.md), never
-# here; guard-release.mjs above refuses a uat/production deploy whose database
-# lacks one. For test, --status just says where it stands.
+# here. This box has no Supabase token (and must not), so it CANNOT check that
+# the database holds them: guard-release.mjs above checks the release record only.
+# The schema is asserted BEFORE this script is started, on the deploy machine, by
+# `node scripts/assert-schema.mjs --env <env>` (docs/release-procedure.md, section 5;
+# docs/decisions/2026-11-08-guard-release-asserts.md). For test, --status just says
+# where it stands.
 node scripts/apply-migrations.mjs --env "$ENV_NAME" --status 2>/dev/null | tail -1 || true
 
 # Memory precondition. `next build` peaks above 6 GB on this 4 GB Pi (killed by the kernel

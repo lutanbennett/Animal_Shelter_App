@@ -4,10 +4,16 @@
 // served. The rules and messages are scripts/lib/release-guards.mjs, the same
 // ones scripts/deploy.mjs applies to the Worker.
 //
+// It does NOT check the schema. That needs SUPABASE_ACCESS_TOKEN, which the Pi
+// (the internet-facing box) does not have and must not get. A check that warns
+// "could not ask" and carries on is decoration, so it was removed from here and
+// is asserted on the deploy machine, before the Pi build starts, by
+// scripts/assert-schema.mjs (docs/decisions/2026-11-08-guard-release-asserts.md).
+//
 //   node scripts/pi/guard-release.mjs --env production
 //   node scripts/pi/guard-release.mjs --env uat --force "sign-in outage, PR #123 follows"
 //
-// Exit 0: go ahead. Exit 2: refused. test is never guarded (it runs ahead of
+// Exit 0: go ahead (release-record rules only). Exit 2: refused. test is never guarded (it runs ahead of
 // and behind release on purpose), exactly as in deploy.mjs.
 //
 // --force is for a genuine emergency. It prints every problem it is
@@ -19,9 +25,8 @@ import { spawnSync } from "node:child_process";
 import { appendFileSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { loadEnv, parseEnvArg, projectRef } from "../lib/env.mjs";
-import { appliedMigrations } from "../lib/deploy-schema.mjs";
-import { decideGuard, releaseProblems, schemaVerdict } from "../lib/release-guards.mjs";
+import { parseEnvArg } from "../lib/env.mjs";
+import { decideGuard, releaseProblems } from "../lib/release-guards.mjs";
 import { latestRelease, unreleased } from "../../src/lib/releases.ts";
 
 const { name: envName, rest } = parseEnvArg(process.argv.slice(2));
@@ -38,11 +43,9 @@ if (forceAt >= 0 && !force) {
 }
 
 const git = (args) => spawnSync(`git ${args}`, { shell: true, encoding: "utf8" }).stdout.trim();
-const env = loadEnv(envName);
 const pkgVersion = JSON.parse(readFileSync("package.json", "utf8")).version;
 const problems = releaseProblems({ pkgVersion, latestRelease, unreleased });
-const schema = schemaVerdict({ envName, result: await appliedMigrations(env, projectRef(env)), git });
-const verdict = decideGuard({ envName, problems, schema, force });
+const verdict = decideGuard({ envName, problems, schema: { warnings: [], refusal: null }, force });
 
 for (const w of verdict.warnings) console.warn(`guard-release: WARNING: ${w}`);
 if (verdict.refuse) {
@@ -60,4 +63,4 @@ if (verdict.overridden.length) {
   appendFileSync(join(homedir(), "lanna-deploy-overrides.log"), line);
   console.warn("guard-release: recorded in ~/lanna-deploy-overrides.log. Put it in the next release record.");
 }
-console.log(`guard-release: ${envName} ok, release ${latestRelease.version} @ ${git("rev-parse --short HEAD")}`);
+console.log(`guard-release: ${envName} ok, release ${latestRelease.version} @ ${git("rev-parse --short HEAD")} (release record only; the schema is asserted on the deploy machine by scripts/assert-schema.mjs)`);

@@ -87,8 +87,8 @@ updates. Re-runnable.
    building. **Rotating it** (generate a new one, set it in all four places,
    deploy both) makes forms already open in someone's browser fail once, as any
    deploy does; a reload fixes it.
-2. **WAF rule** so only the Worker can reach the Pi: Security → WAF →
-   Custom rules → create, expression
+2. **WAF rule** so only the Worker can reach the Pi: Security → Security rules (older dashboards:
+   Security → WAF → Custom rules) → create, expression
    `(http.host eq "pi.lannacare.org" and not any(http.request.headers["x-origin-key"][*] eq "<the key>"))`,
    action **Block**. (Free plan: 5 custom rules.)
 3. **Point the Worker at the Pi**: in `wrangler.jsonc`, production
