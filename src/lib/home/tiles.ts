@@ -6,7 +6,7 @@
  * What a tile is: a registry entry, plus two that are not in it because they ask no activity
  * (My tasks, which is recurring.do_own's; Residents, which opens for every role that opens the
  * app). A record-scoped page is never here: the registry does not hold one, and that is the
- * contract.
+ * contract. And one tile every home carries whatever it is built from: the user manual (manualTile()).
  */
 import { Receipt, Sparkles, type LucideIcon } from "lucide-react";
 import { groupIcon } from "@/lib/home/group-icons";
@@ -170,6 +170,29 @@ function withApprovalTile(tiles: HomeTile[], t: Dictionary, waiting: number): Ho
   return [...tiles, { href: route.path, label: route.label(t), icon: route.icon, ...badge }];
 }
 
+/** Where the user manual lives; its tile is on every home (manualTile()). */
+export const MANUAL_HREF = "/manual";
+
+/**
+ * The user manual's tile. It is NOT a cardTile(): no card opens /manual and none may (Lutan chose a tile over a card,
+ * 2026-11-08, #ce6ec), because every signed-in login may read the manual and the page narrows its own topics to the
+ * cards the reader holds. So there is nothing for the page rules to check it against and nothing that may veto it: it
+ * is a fixed doorway, added last by withManualTile() to the answer of every function that builds a home
+ * (homeTilesFor, homeTilesForRoles, homeGroupsForRoles), on the card path and the derived path alike. It is about
+ * finding the manual, not about access: the account menu has always linked it for every login.
+ */
+export function manualTile(t: Dictionary): HomeTile {
+  return { href: MANUAL_HREF, label: t.nav.manual, icon: NAV_ICONS.manual };
+}
+
+/** The home's tiles with the manual's last. Independent of counts, so nothing about a home's numbers can drop it. */
+function withManualTile(tiles: HomeTile[], t: Dictionary): HomeTile[] {
+  return tiles.some((x) => x.href === MANUAL_HREF) ? tiles : [...tiles, manualTile(t)];
+}
+
+/** Whether a home has any tile besides the manual's: a home with only the manual still says its role has no jobs. */
+export const hasJobTiles = (tiles: readonly HomeTile[]) => tiles.some((x) => x.href !== MANUAL_HREF);
+
 /** Put the due-today counts on the tiles they belong to: My tasks carries the total, Maintenance its share. */
 export function withCounts(drawn: HomeTile[], t: Dictionary, counts?: TileCounts): HomeTile[] {
   if (!counts) return drawn;
@@ -182,7 +205,7 @@ export function withCounts(drawn: HomeTile[], t: Dictionary, counts?: TileCounts
 }
 
 export function homeTilesFor(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[] | RoleCards, counts?: TileCounts): HomeTile[] {
-  return withCounts(homeTilesBase(perms, t, billsWaiting, cards), t, counts);
+  return withManualTile(withCounts(homeTilesBase(perms, t, billsWaiting, cards), t, counts), t);
 }
 
 /**
@@ -212,7 +235,7 @@ export function homeTilesForRoles(
   // "Add photos" is the extra of a role with jobs and no medical photos job; once ANY held role has that job it is
   // redundant (the union's cells would otherwise give the maintenance side of a cover the extra too).
   const shown = perms.roles.length > 1 && tiles.some((x) => x.href === "/medical/photos") ? tiles.filter((x) => x.href !== "/photos/add") : tiles;
-  return withCounts(shown, t, counts);
+  return withManualTile(withCounts(shown, t, counts), t);
 }
 
 /** One role's share of a multi-role home: its tiles, drawn as if it were the person's only role. */
@@ -238,7 +261,9 @@ export function homeGroupsForRoles(
   const addPhotosRedundant = keys.length > 1 && raw.some((g) => g.tiles.some((x) => x.href === "/medical/photos"));
   return raw
     .map((g) => ({ roleKey: g.roleKey, tiles: withCounts(addPhotosRedundant ? g.tiles.filter((x) => x.href !== "/photos/add") : g.tiles, t, counts) }))
-    .filter((g, i) => i === 0 || g.tiles.length > 0);
+    .filter((g, i) => i === 0 || g.tiles.length > 0)
+    // Every group, not only the main role's: on a phone one group shows at a time, and a cover's tab must not lose it.
+    .map((g) => ({ ...g, tiles: withManualTile(g.tiles, t) }));
 }
 
 function homeTilesBase(perms: Permissions, t: Dictionary, billsWaiting?: number, cards?: readonly CardKey[] | RoleCards): HomeTile[] {

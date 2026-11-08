@@ -14,14 +14,15 @@ const as = (key, permissions) =>
   });
 const cells = { "resident.record": 1, "medical.weight": 2, "medical.diet": 1, "photos.resident_add": 2, "maintenance.bills": 2 };
 const hrefs = (p, cards) => homeTilesFor(p, en, 0, cards).map((x) => x.href);
+// The one tile not from a card: the user manual's, the same on every home (manualTile(), #ce6ec, 2026-11-08). It grants nothing.
 
 test("no role key gets a tile its cards do not name", () => {
   for (const key of ["head_of_maintenance", "head_of_medical", "management", "second_in_command"]) {
-    assert.deepEqual(hrefs(as(key, cells), ["view_residents"]), ["/residents"], key);
+    assert.deepEqual(hrefs(as(key, cells), ["view_residents"]), ["/residents", "/manual"], key);
   }
 });
 
 test("the same tiles come back when the card is given, and only then", () => {
   const h = hrefs(as("management", cells), ["view_residents", "bills", "record_weight"]);
-  assert.deepEqual(h, ["/residents", "/bills", "/medical/weight"]);
+  assert.deepEqual(h, ["/residents", "/bills", "/medical/weight", "/manual"]);
 });
