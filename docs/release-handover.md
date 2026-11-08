@@ -56,11 +56,17 @@ said `--base` "was not needed"; that was true of a cut that wrote nothing, and i
 to inherit.**
 
 **2. The dry-run now explains its own non-fault, so do not investigate it.** `0336` and `0337` came
-back `FAILED: relation "suppliers" does not exist` — `0335` creates that table in the same pending run
-and the dry-run rolls each file back before the next starts. The script printed the reasoning itself,
-naming the six files each one runs cleanly after, and **the right action on that red was to apply.**
-That text is new since this last bit a release; it turned a two-file investigation into a line of
-reading.
+back `FAILED: relation "suppliers" does not exist`, because `0335` creates that table in the same
+pending run and the dry-run rolls each file back. The script said so itself and named the files each
+one runs cleanly after: **the right action on that red was to apply**, and it did.
+
+**2b. NOTHING PURGES TEST'S EDGE CACHE, and the runbook asserted the opposite for two releases.** The
+2026-11-06 cutover gave production its own Cloudflare zone, so `purge-cache.mjs --env production` no
+longer reaches `test.lannacare.org`, and `--env test` still refuses because it looks for the zone and
+token in `.env.local` while they live in `.env.deploy.production`. **The runbook paragraph is corrected
+and explains the real exposure** (stale HTML pointing at an old asset name, not a stale asset — asset
+names are content-hashed, which is why this has never yet shown); the code half is backlog `#pz3tk`.
+**So always re-run the test asset check and believe a red one.**
 
 **3. THE BEFORE-PICTURE IS NOT ALWAYS `role-cards`. Read all the migrations and snapshot what they
 write.** `0.43.5`'s handover said to take `role-cards` and `role-cells`, which was right **for a
@@ -81,8 +87,9 @@ identical before and after this release's apply, so nothing here caused it. Back
 `activities-grantable` exclude the activities ruled Admin-only, or it will keep reading as ten faults.
 
 **5. `check-deferred-notes.mjs`'s over-listing is now described in `docs/release-procedure.md`**, where
-it belongs after four editions of being recopied here: it ignores the commit range you pass it, and it
-prints the template's guidance as the "reason". Budget one lookup per candidate — thirteen this time.
+it belongs after `0.43.4`, `0.43.5` and `0.43.6` each recorded it and carried it here instead: it
+ignores the commit range you pass it, and it prints the template's guidance as the "reason". Budget one
+lookup per candidate — thirteen this time.
 
 ## WHAT STAYS HIS, AND WHAT THIS RELEASE COST HIM
 
