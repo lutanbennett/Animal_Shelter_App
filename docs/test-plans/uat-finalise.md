@@ -27,7 +27,15 @@
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in; one conflict, in `docs/backlog.md` on the `#rqv5c`/`#uq4vz`/`#xkfsv` lines, resolved by keeping this branch's two retitles and upstream's `#xkfsv`
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`, every `<N>` `0`:
 
-GATES_BLOCK
+```
+=== gates: typecheck exited 0 after 34s
+=== gates: lint exited 0 after 187s
+=== gates: test exited 0 after 23s
+=== gates: build exited 0 after 90s
+gates: typecheck=0 lint=0 test=0 build=0
+```
+
+(Run after the address move and the sync with main, before this block was pasted in.)
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
