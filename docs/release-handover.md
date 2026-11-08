@@ -46,14 +46,12 @@ question — ask about the email.**
 
 ## WHAT `0.43.6` CHANGES FOR YOU
 
-**1. A CUT THAT ADDS A NOTE MUST BE VERIFIED WITH `--base`, AND THIS IS HOW.** New, and the most
-likely thing to go wrong next time. `cut-release.mjs --verify` compares against
-`origin/main:src/lib/releases.ts`, so if your cut **added** a deferred note that is no longer the
-pre-cut state: the two assertions that matter most — *every note carried across character-identical*
-and *nothing invented* — fail with `[11 vs 10]`, and 15 of 17 pass.
-
-**Do not wave them past.** They are the only check that can catch a lost or altered note, which is a
-cut's one real failure mode. Build the intended base explicitly and verify against it:
+**1. A CUT THAT ADDS A NOTE MUST BE VERIFIED WITH `--base`, AND THIS IS HOW.** The most likely thing
+to go wrong next time. `--verify` compares against `origin/main:src/lib/releases.ts`, so if your cut
+**added** a deferred note that is no longer the pre-cut state: the two assertions that matter most —
+*every note carried across character-identical* and *nothing invented* — fail with `[11 vs 10]`, and
+15 of 17 pass. **Do not wave them past;** they are the only check that catches a lost or altered note,
+a cut's one real failure mode. Build the intended base explicitly and verify against it:
 
 ```bash
 MSYS_NO_PATHCONV=1 git show origin/main:src/lib/releases.ts > /tmp/base.ts
@@ -78,16 +76,14 @@ and explains the real exposure** (stale HTML pointing at an old asset name, not 
 names are content-hashed, which is why this has never yet shown); the code half is backlog `#pz3tk`.
 **So always re-run the test asset check and believe a red one.**
 
-**3. THE BEFORE-PICTURE IS NOT ALWAYS `role-cards`. Read all the migrations and snapshot what they
-write.** `0.43.5`'s handover said to take `role-cards` and `role-cells`, which was right **for a
-release whose migrations rewrote card grants**. None of `0.43.6`'s eight does — one view, one trigger
-replacement, one dropped `not null`, one enum value, one function, one new table, one nullable column,
-one additive back-fill. Copying the previous snapshot would have measured nothing. The picture that
-earned its place here was of **policies and the activity catalogue**, because `0335` and `0336` create
-tables with their own policies and `0335` claims in its header to add no new activity and no new card.
-It paid three times: that claim is true, the two new tables have live policies on all four commands
-(`table-policy-commands` returns the **same 72** pairs and names neither), and no Thai column was left
-unreachable.
+**3. THE BEFORE-PICTURE IS NOT ALWAYS `role-cards`. Read the migrations and snapshot what they
+write.** `0.43.5`'s handover said to take `role-cards` and `role-cells` — right for a release whose
+migrations rewrote card grants, and **none of `0.43.6`'s eight did**, so copying that snapshot would
+have measured nothing. The one that earned its place was **policies and the activity catalogue**,
+because `0335` and `0336` create tables with their own policies and `0335` claims in its header to add
+no new activity and no new card. It paid three times: that claim is true, the new tables have live
+policies on all four commands (`table-policy-commands` returns the **same 72** pairs and names
+neither), and no Thai column was left unreachable.
 
 **4. `activities-grantable` exits 1 on production and it is NOT a fault list.** Ten activities answer
 *"no card grants it, so only Admin can ever do it"*, and at least one — `maintenance.delete` — is there
