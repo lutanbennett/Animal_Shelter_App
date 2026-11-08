@@ -17,6 +17,8 @@ import { checkFacebookUrl, checkHttpsUrl, FACEBOOK_HOSTS, type LinkCheck } from 
 import {
   canBecomeFriend,
   friendAnchor,
+  friendSubjectHref,
+  type FriendSubjectKind,
   FRIEND_OPT_INS,
   previewPublicFriend,
   type FriendOptIn,
@@ -26,6 +28,7 @@ import type { TranslationRow } from "@/lib/translations/types";
 import { runUploadAction } from "@/lib/uploads/run-upload-action";
 import {
   createFriend,
+  createSupplierFriend,
   deleteFriend,
   removeFriendLogo,
   setFriendPublished,
@@ -44,7 +47,10 @@ const buttonClass =
   "inline-flex min-h-11 items-center justify-center gap-1.5 rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-surface-hover disabled:opacity-50 md:min-h-9";
 
 /** Which contact detail each opt-in releases — the view's CASE columns (0076). */
-const OPT_IN_SOURCE: Record<FriendOptIn, (c: Contact) => string | null> = {
+/** What the card needs of the business it is about: a contact (a Partner) or a supplier (0336). */
+export type FriendSubject = Pick<Contact, "id" | "name" | "phone" | "email" | "line_id" | "address" | "map_url" | "archived_at">;
+
+const OPT_IN_SOURCE: Record<FriendOptIn, (c: FriendSubject) => string | null> = {
   show_phone: (c) => c.phone,
   show_email: (c) => c.email,
   show_line: (c) => c.line_id,
@@ -80,12 +86,15 @@ function fieldsFrom(friend: ShelterFriend): FriendFields {
  */
 export function ShelterFriendCard({
   contact,
+  kind = "contact",
   friend,
   canManage,
   map,
   translations,
 }: {
-  contact: Contact;
+  contact: FriendSubject;
+  /** Whose page this is: a contact (default) or a supplier. A supplier needs no type gate. */
+  kind?: FriendSubjectKind;
   friend: ShelterFriend | null;
   canManage: boolean;
   /** The contact's address as a map (map-preview.ts), for the preview when Map is ticked. */
@@ -149,7 +158,7 @@ export function ShelterFriendCard({
 
   // --- Not a Friend yet: a manager may make one, where the gate allows.
   if (!friend) {
-    if (!canManage || !canBecomeFriend(contact) || isArchived(contact)) return null;
+    if (!canManage || !(kind === "supplier" || canBecomeFriend(contact as Contact)) || isArchived(contact)) return null;
     return (
       <section className="flex flex-col gap-3 rounded-lg border border-dashed border-border bg-surface p-5">
         <h2 className="text-lg font-semibold text-foreground">{c.heading}</h2>
@@ -159,7 +168,7 @@ export function ShelterFriendCard({
             icon={ACTION_ICONS.add}
             variant="primary"
             disabled={isPending}
-            onClick={() => run(() => createFriendCall((requestId) => createFriend(contact.id, requestId)), () => setEditing(true))}
+            onClick={() => run(() => createFriendCall((requestId) => (kind === "supplier" ? createSupplierFriend(contact.id, requestId) : createFriend(contact.id, requestId))), () => setEditing(true))}
           >
             {isPending ? c.making : c.make}
           </ActionButton>
@@ -345,7 +354,7 @@ export function ShelterFriendCard({
                     key={translations[p.key]!.id + translations[p.key]!.updated_at}
                     row={translations[p.key]!}
                     canManage={canManage}
-                    recordPath={`/contacts/${contact.id}`}
+                    recordPath={friendSubjectHref({ kind, id: contact.id })}
                   />
                 )}
               </div>

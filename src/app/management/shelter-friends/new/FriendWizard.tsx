@@ -5,11 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore
 import { FriendCard } from "@/components/FriendCard";
 import { PendingPuppy } from "@/components/PuppyLoader";
 import { ACTION_ICONS, CONTACT_ICONS } from "@/components/hub-icons";
-import {
-  addressMapNow,
-  contactAddressFields,
-  type Contact,
-} from "@/lib/contacts/contacts";
+import { addressMapNow, contactAddressFields } from "@/lib/contacts/contacts";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { contactTypeLabel } from "@/lib/i18n/enum-labels";
 import { useI18n } from "@/lib/i18n/I18nProvider";
@@ -17,6 +13,7 @@ import { useWriteCall } from "@/lib/use-write-form";
 import { checkFacebookUrl, checkHttpsUrl, FACEBOOK_HOSTS, type LinkCheck } from "@/lib/links/validate";
 import {
   FRIEND_CONTACT_TYPES,
+  type FriendCandidate,
   FRIEND_OPT_INS,
   previewPublicFriend,
   type FriendOptIn,
@@ -112,7 +109,7 @@ function linkMessage(t: Dictionary, check: LinkCheck, hosts?: readonly string[])
 }
 
 /** What stops a step being left, or null. Pure, so a restored draft can be checked too. */
-function stepProblem(step: number, d: Draft, contacts: Contact[], t: Dictionary): string | null {
+function stepProblem(step: number, d: Draft, contacts: FriendCandidate[], t: Dictionary): string | null {
   const w = t.shelterFriends.wizard;
   if (step === 0) {
     if (d.mode === "existing") {
@@ -134,6 +131,8 @@ function stepProblem(step: number, d: Draft, contacts: Contact[], t: Dictionary)
 type Result = {
   friendId: string;
   contactId: string;
+  /** The page of the contact or supplier the Friend is about. */
+  href: string;
   name: string;
   published: boolean;
   /** "none": no logo was chosen. */
@@ -150,7 +149,7 @@ type Result = {
  * behind it: every opt-in starts off, and the words beside them are the
  * point of the step — see docs/decisions, 2026-09-24 and 2026-10-02.
  */
-export function FriendWizard(props: { contacts: Contact[]; initialStep?: number }) {
+export function FriendWizard(props: { contacts: FriendCandidate[]; initialStep?: number }) {
   // Client-only: the draft lives in sessionStorage, which the server render
   // cannot see, so the form is not drawn until it can read it (drawing it
   // first and swapping the answers in would flash an empty wizard).
@@ -166,7 +165,7 @@ function FriendWizardForm({
   contacts,
   initialStep = 0,
 }: {
-  contacts: Contact[];
+  contacts: FriendCandidate[];
   initialStep?: number;
 }) {
   const { t, locale } = useI18n();
@@ -396,7 +395,7 @@ function FriendWizardForm({
     setSaveError(null);
     const contact: WizardContact =
       draft.mode === "existing"
-        ? { mode: "existing", id: draft.contactId }
+        ? { mode: "existing", id: draft.contactId, kind: contacts.find((c) => c.id === draft.contactId)?.kind ?? "contact" }
         : {
             mode: "new",
             name: draft.newName,
@@ -445,6 +444,7 @@ function FriendWizardForm({
         setResult({
           friendId: saved.friendId,
           contactId: saved.contactId,
+          href: saved.href,
           name: saved.name,
           published: publish,
           logo: logoOutcome,
@@ -481,7 +481,7 @@ function FriendWizardForm({
         )}
         <div className="flex flex-wrap gap-2">
           <Link
-            href={`/contacts/${result.contactId}`}
+            href={result.href}
             className="inline-flex min-h-11 items-center gap-1.5 rounded bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary-hover md:min-h-0"
           >
             <CONTACT_ICONS.contact aria-hidden="true" className="h-4 w-4" />
@@ -615,7 +615,7 @@ function FriendWizardForm({
                     onChange={(e) => set("newType", e.target.value)}
                     className={inputClass}
                   >
-                    {FRIEND_CONTACT_TYPES.map((type) => (
+                    {[...FRIEND_CONTACT_TYPES, "Supplier"].map((type) => (
                       <option key={type} value={type}>
                         {contactTypeLabel(t, type)}
                       </option>

@@ -154,10 +154,10 @@ eq("window: no lead set", P.windowDaysFor(14, null, true), 14);
 
 // ---- receipts ---------------------------------------------------------------
 const receipts = [
-  { item_id: "a", quantity: 10, received_at: "2026-09-20T05:00:00Z", supplier_contact_id: "s1" },
-  { item_id: "a", quantity: 5, received_at: "2026-09-25T05:00:00Z", supplier_contact_id: "s2" },
-  { item_id: "a", quantity: 7, received_at: "2026-09-30T05:00:00Z", supplier_contact_id: null },
-  { item_id: "b", quantity: 4, received_at: "2026-09-30T05:00:00Z", supplier_contact_id: "s1" },
+  { item_id: "a", quantity: 10, received_at: "2026-09-20T05:00:00Z", supplier_id: "s1" },
+  { item_id: "a", quantity: 5, received_at: "2026-09-25T05:00:00Z", supplier_id: "s2" },
+  { item_id: "a", quantity: 7, received_at: "2026-09-30T05:00:00Z", supplier_id: null },
+  { item_id: "b", quantity: 4, received_at: "2026-09-30T05:00:00Z", supplier_id: "s1" },
 ];
 const since = P.receivedSinceCount(
   receipts,

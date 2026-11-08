@@ -7,7 +7,7 @@ type ReceiptQueryRow = {
   diet_type_id: string | null;
   quantity: number | string;
   received_at: string;
-  supplier_contact_id: string | null;
+  supplier_id: string | null;
 };
 
 const PAGE = 1000;
@@ -26,7 +26,7 @@ export async function loadReceipts(
   for (let from = 0; ; from += PAGE) {
     const { data: rows, error } = await supabase
       .from("stock_receipts")
-      .select("medication_id, diet_type_id, quantity, received_at, supplier_contact_id")
+      .select("medication_id, diet_type_id, quantity, received_at, supplier_id")
       .eq("item_kind", kind === "medication" ? "medication" : "diet_type")
       .order("received_at", { ascending: false })
       .range(from, from + PAGE - 1)
@@ -39,7 +39,7 @@ export async function loadReceipts(
         item_id: itemId,
         quantity: Number(row.quantity),
         received_at: row.received_at,
-        supplier_contact_id: row.supplier_contact_id,
+        supplier_id: row.supplier_id,
       });
     }
     if ((rows?.length ?? 0) < PAGE) return { data, error: null };

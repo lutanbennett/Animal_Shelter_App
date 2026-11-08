@@ -235,7 +235,7 @@ export async function recordDelivery(input: DeliveryInput, requestId: string | n
         .from("stock_deliveries")
         .insert({
           ...(at.value ? { received_at: at.value } : {}),
-          supplier_contact_id: input.supplierId || null,
+          supplier_id: input.supplierId || null,
           bill_date: input.date,
           amount: amount.value,
           kind_id: fromCard?.kind_id ?? null,
@@ -250,7 +250,7 @@ export async function recordDelivery(input: DeliveryInput, requestId: string | n
 
     const { data: inserted, error } = await supabase
       .from("stock_receipts")
-      .insert({ ...row, delivery_id: deliveryId, supplier_contact_id: input.supplierId || null, note: note || null })
+      .insert({ ...row, delivery_id: deliveryId, supplier_id: input.supplierId || null, note: note || null })
       .select("id")
       .single<{ id: string }>();
     if (error) return { ok: false, error: `${e.failed}: ${error.message}` };

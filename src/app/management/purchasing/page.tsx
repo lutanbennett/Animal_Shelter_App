@@ -95,7 +95,7 @@ export default async function PurchasingPage(props: PageProps<"/management/purch
       .order("name")
       .returns<ItemQueryRow[]>(),
     // Archived too: an old delivery still names its supplier.
-    supabase.from("stock_vendors").select("id, name").returns<{ id: string; name: string }[]>(),
+    supabase.from("suppliers").select("id, name").returns<{ id: string; name: string }[]>(),
   ]);
   const meds = medResult.data ?? [];
   const diets = dietResult.data ?? [];

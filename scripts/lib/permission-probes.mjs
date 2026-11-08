@@ -133,6 +133,9 @@ export const PROBES = [
   // address and notes, is contacts.browse's (0170). Before 0170 staff read the table through this cell (C9, C10).
   { activity: "contacts.directory", level: "read", sql: `select 1 from picker_contacts where id = $CONTACT` },
   { activity: "contacts.browse", level: "edit", sql: `select 1 from contacts where id = $CONTACT` },
+  { activity: "suppliers.directory", level: "edit", sql: `insert into suppliers (name) values ('Probe supplier')` },
+  // Read on suppliers.directory names a supplier; the stock, bills, maintenance-bills and Shelter Friends activities read the same rows (a delivery, a bill or a Friend names one).
+  { activity: "suppliers.directory", level: "read", sharedWith: ["stock.delivery", "stock.purchasing", "bills.general", "bills.utilities", "maintenance.bills", "friends.manage", "friends.view"], sql: `select 1 from suppliers limit 1` },
   { activity: "contacts.add", level: "edit", sql: `insert into contacts (name, type) values ('Probe contact', 'Vendor')` },
   { activity: "friends.manage", level: "edit", sql: `update shelter_friends set published = published where id = $FRIEND` },
   { activity: "friends.view", level: "read", sql: `select 1 from shelter_friends where id = $FRIEND`, known: [{ id: "C10", roles: ["doctor"] }] },

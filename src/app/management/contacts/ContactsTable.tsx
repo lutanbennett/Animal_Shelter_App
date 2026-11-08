@@ -18,7 +18,7 @@ import { contactTypeLabel } from "@/lib/i18n/enum-labels";
 import {
   addressText,
   CARER_CONTACT_TYPE,
-  CONTACT_TYPES,
+  PEOPLE_CONTACT_TYPES,
   contactAddressFields,
   isArchived,
   type Contact,
@@ -191,7 +191,7 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
               onChange={(e) => setType(e.target.value as ContactType)}
               className={`${inputClass} min-w-28 disabled:cursor-not-allowed disabled:opacity-60`}
             >
-              {CONTACT_TYPES.map((option) => (
+              {PEOPLE_CONTACT_TYPES.map((option) => (
                 <option key={option} value={option}>
                   {contactTypeLabel(t, option)}
                 </option>

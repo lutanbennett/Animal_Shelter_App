@@ -56,7 +56,7 @@ type ReceiptRow = {
   quantity: number | string;
   unit: string | null;
   received_at: string;
-  supplier_contact_id: string | null;
+  supplier_id: string | null;
   cost: number | string | null;
   note: string | null;
   recorded_by: string | null;
@@ -89,14 +89,14 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
     // Every vendor, archived too: an old delivery still names its supplier.
     // The form offers only the live ones.
     supabase
-      .from("stock_vendors")
+      .from("suppliers")
       .select("id, name, archived_at")
       .order("name")
       .returns<{ id: string; name: string; archived_at: string | null }[]>(),
     supabase
       .from("stock_receipts")
       .select(
-        "id, item_kind, medication_id, diet_type_id, delivery_id, description, promoted_medication_id, promoted_diet_type_id, quantity, unit, received_at, supplier_contact_id, cost, note, recorded_by, entered",
+        "id, item_kind, medication_id, diet_type_id, delivery_id, description, promoted_medication_id, promoted_diet_type_id, quantity, unit, received_at, supplier_id, cost, note, recorded_by, entered",
       )
       .order("received_at", { ascending: false })
       .limit(RECENT)
@@ -253,7 +253,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
               // The bill's total and photos are shown once, on its first line in the list.
               const firstOfBill = r.delivery_id != null && !shownBills.has(r.delivery_id);
               if (r.delivery_id) shownBills.add(r.delivery_id);
-              const supplier = r.supplier_contact_id ? supplierName.get(r.supplier_contact_id) : undefined;
+              const supplier = r.supplier_id ? supplierName.get(r.supplier_id) : undefined;
               const recorder = r.recorded_by ? recorders.get(r.recorded_by) : undefined;
               // On a day the item was counted, the minute shown can be the
               // count's own, so say which side of it the delivery fell.

@@ -70,6 +70,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "Suppliers are now their own list, no longer part of Contacts. Management → Suppliers is where you add a supplier, change its details, and archive or restore it; Contacts now holds only people. Every supplier you had filed as a Vendor was copied across, with its deliveries and bills, and the delivery forms, bills and the shopping list read the new list. A supplier can be made a Shelter Friend from its own page, the same as a contact. A new card, Manage suppliers, gives this; anyone who had Manage contacts was given it. Suppliers cannot be deleted, only archived. The Thai wording has not been checked by a Thai speaker.",
+    cards: ["suppliers"],
+  },
 ];
 
 /** Newest first. */

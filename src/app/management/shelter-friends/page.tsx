@@ -21,7 +21,7 @@ export default async function ShelterFriendsPage() {
   const { data, error } = await supabase
     .from("shelter_friends")
     .select(
-      "id, contact_id, published, sort_order, logo_drive_file_id, help_kind, contacts(name, archived_at)",
+      "id, contact_id, supplier_id, published, sort_order, logo_drive_file_id, help_kind, contacts(name, archived_at), suppliers(name, archived_at)",
     )
     .order("sort_order")
     .returns<FriendOrderRow[]>();
@@ -30,7 +30,7 @@ export default async function ShelterFriendsPage() {
   const friends = [...(data ?? [])].sort(
     (a, b) =>
       a.sort_order - b.sort_order ||
-      (a.contacts?.name ?? "").localeCompare(b.contacts?.name ?? ""),
+      (a.contacts?.name ?? a.suppliers?.name ?? "").localeCompare(b.contacts?.name ?? b.suppliers?.name ?? ""),
   );
 
   return (

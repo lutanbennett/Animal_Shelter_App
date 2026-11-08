@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { FriendBadge } from "@/components/FriendBadge";
 import { driveImageUrl } from "@/lib/google/drive-client";
+import { supplierHref } from "@/lib/suppliers/suppliers";
 import type { ActionResult } from "@/lib/action-result";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { useWriteCall } from "@/lib/use-write-form";
@@ -15,12 +16,14 @@ import { moveFriend, setFriendPublished } from "./actions";
 
 export type FriendOrderRow = {
   id: string;
-  contact_id: string;
+  contact_id: string | null;
+  supplier_id: string | null;
   published: boolean;
   sort_order: number;
   logo_drive_file_id: string | null;
   help_kind: string | null;
   contacts: { name: string; archived_at: string | null } | null;
+  suppliers: { name: string; archived_at: string | null } | null;
 };
 
 /**
@@ -55,8 +58,9 @@ export function FriendsOrder({ friends }: { friends: FriendOrderRow[] }) {
       {error && <p className="text-sm text-danger">{error}</p>}
       <ol className="flex flex-col gap-2">
         {friends.map((friend, index) => {
-          const name = friend.contacts?.name ?? t.common.dash;
-          const archived = Boolean(friend.contacts?.archived_at);
+          const subject = friend.contacts ?? friend.suppliers;
+          const name = subject?.name ?? t.common.dash;
+          const archived = Boolean(subject?.archived_at);
           const live = friend.published && !archived;
           return (
             <li
@@ -83,7 +87,7 @@ export function FriendsOrder({ friends }: { friends: FriendOrderRow[] }) {
               </div>
               <div className="flex min-w-[10rem] flex-1 flex-col gap-1">
                 <Link
-                  href={`/contacts/${friend.contact_id}`}
+                  href={friend.supplier_id ? supplierHref(friend.supplier_id) : `/contacts/${friend.contact_id}`}
                   className="truncate font-medium text-foreground hover:underline"
                 >
                   {name}

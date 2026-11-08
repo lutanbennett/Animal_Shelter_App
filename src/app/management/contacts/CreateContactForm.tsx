@@ -7,7 +7,7 @@ import { useWriteForm } from "@/lib/use-write-form";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { contactTypeLabel } from "@/lib/i18n/enum-labels";
-import { CARER_CONTACT_TYPE, CONTACT_TYPES } from "@/lib/contacts/contacts";
+import { CARER_CONTACT_TYPE, PEOPLE_CONTACT_TYPES } from "@/lib/contacts/contacts";
 import { createContact } from "./actions";
 
 const inputClass =
@@ -57,7 +57,7 @@ export function CreateContactForm({ listHref }: { listHref?: string }) {
           defaultValue={CARER_CONTACT_TYPE}
           className={`${inputClass} w-36`}
         >
-          {CONTACT_TYPES.map((type) => (
+          {PEOPLE_CONTACT_TYPES.map((type) => (
             <option key={type} value={type}>
               {contactTypeLabel(t, type)}
             </option>
