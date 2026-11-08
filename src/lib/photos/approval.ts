@@ -96,6 +96,8 @@ export type WaitingEventPhoto = {
   addedBy: string;
   /** Null only when the event has since been deleted: waiting_event_titles() (0334) names every event with a waiting photo to a login that may approve, with no other column. */
   eventTitle: string | null;
+  /** The event's own date (yyyy-mm-dd), from the same waiting_event_titles() row as the title; null exactly when the title is. */
+  eventDate: string | null;
 };
 
 export async function loadWaitingEventPhotos(supabase: SupabaseClient): Promise<WaitingEventPhoto[]> {
@@ -115,7 +117,7 @@ export async function loadWaitingEventPhotos(supabase: SupabaseClient): Promise<
     loadAppUsersById(supabase, rows.flatMap((r) => (r.uploaded_by ? [r.uploaded_by] : []))),
   ]);
   const events = (eventRows ?? []) as { id: string; title: string; event_date: string }[];
-  const titles = new Map(events.map((e) => [e.id, e.title]));
+  const byId = new Map(events.map((e) => [e.id, e]));
 
   return rows.map((r) => ({
     id: r.id,
@@ -123,7 +125,8 @@ export async function loadWaitingEventPhotos(supabase: SupabaseClient): Promise<
     fileName: r.file_name,
     uploadedAt: r.uploaded_at,
     addedBy: r.uploaded_by ? appUserLabel(users.get(r.uploaded_by)) : "—",
-    eventTitle: titles.get(r.owner_id) ?? null,
+    eventTitle: byId.get(r.owner_id)?.title ?? null,
+    eventDate: byId.get(r.owner_id)?.event_date ?? null,
   }));
 }
 

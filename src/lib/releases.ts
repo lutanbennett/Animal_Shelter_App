@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Photos to approve: each event photo now shows the event's date under its title, so two events with similar names can be told apart. Two messages on the photo screens were also corrected: the resident picker no longer tells you to ask an admin (it now says to ask whoever manages cards at your shelter), and the 30-day alert on the status page no longer says a waiting photo is tagged to an enclosure, since a photo can now be saved with no place at all. The Thai wording has not been checked by a Thai speaker.",
   "Every home screen now ends with a User manual tile, so the manual is one tap away even if your home has no menu. It was always in the menu under your name at the top right; the tile just makes it easy to find.",
   {
     text: "On Management → Translations, when saving, proposing, approving or rejecting a label's Thai is refused (for example, someone else approved or rejected the proposal first), the reason now shows in Thai for a Thai reader instead of in English. Other screens are not changed yet. The Thai wording has not been checked by a Thai speaker.",
