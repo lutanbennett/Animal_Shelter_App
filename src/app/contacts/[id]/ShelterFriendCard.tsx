@@ -75,7 +75,7 @@ function fieldsFrom(friend: ShelterFriend): FriendFields {
  * (the same FriendCard, fed by previewPublicFriend). Every other role sees
  * that the contact is a Friend and whether it is live, read-only.
  *
- * Offered only where canBecomeFriend() allows — Vendors, for now. A
+ * Offered only where canBecomeFriend() allows — Vendors and Partners. A
  * contact that already has a profile keeps the card whatever its type.
  */
 export function ShelterFriendCard({
