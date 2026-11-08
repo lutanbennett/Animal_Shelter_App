@@ -11,7 +11,7 @@
 | PR | pending: opened after this plan |
 | Tested by / date | Claude / 2026-11-08 |
 | Carries a migration? | yes — `0335_suppliers.sql`, `0336_shelter_friends_supplier_subject.sql`, `0337_supplier_history_rekey.sql` |
-| Tested at SHA | `1ddd3814` |
+| Tested at SHA | `9e2359fc` |
 
 ## 1. Scope and risk
 
@@ -26,10 +26,10 @@
 - [x] `node scripts/gates.mjs` ends with the four-gate line, every exit code `0`:
 
 ```
-=== gates: typecheck exited 0 after 226s
-=== gates: lint exited 0 after 453s
-=== gates: test exited 0 after 34s
-=== gates: build exited 0 after 230s
+=== gates: typecheck exited 0 after 14s
+=== gates: lint exited 0 after 152s
+=== gates: test exited 0 after 25s
+=== gates: build exited 0 after 59s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
