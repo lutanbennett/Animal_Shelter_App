@@ -4,7 +4,7 @@ import { addDaysIso } from "@/lib/format";
 /**
  * Reading audit_log for Settings → Recent changes (backlog DB-6, part 2).
  *
- * The table holds whole-row images of eleven tables and is the most sensitive
+ * The table holds whole-row images of every audited table and is the most sensitive
  * one in the database, so this file is deliberately modest:
  *
  *  - It reads with the signed-in admin's own client. RLS (0121) lets only an
@@ -16,6 +16,13 @@ import { addDaysIso } from "@/lib/format";
  *    time. There is no count: counting the table is what grows with it.
  */
 
+/**
+ * Every table whose changes this screen can label. scripts/check-audited-tables.mjs fails the build when this
+ * list and the migrations disagree, in either direction: a table with a record_audit() trigger (or its own
+ * trigger that inserts into audit_log) that is neither here nor in AUDIT_TABLES_NOT_LISTED, a table here with no
+ * such trigger, and a table here with no NAME_FROM_IMAGE entry or no label in both dictionaries (recentChanges.tables).
+ * A missing label renders blank, not the raw table name (page.tsx reads s.tables[table]).
+ */
 export const AUDITED_TABLES = [
   "residents",
   "contacts",
@@ -24,30 +31,124 @@ export const AUDITED_TABLES = [
   "weight",
   "attachments",
   "immunization_records",
+  "blood_tests",
+  "procedures",
+  "placement_history",
+  "resident_diets",
   // The settings tables with a record_audit() trigger: 0132, 0156, 0165.
-  // Every table with that trigger belongs here, or its rows show unlabelled.
   "impact_baselines",
   // Ways to give on /donate (0191); the name shown is the way's label.
   "donation_channels",
   "facility_maps",
   "roles",
   "role_permissions",
+  // Which roles a login holds (0195).
+  "user_roles",
   // Which cards a role has (0194).
   "role_cards",
-  // Which pages a role shows as tiles on its home, in order (0225).
-  "role_home_tiles",
   // The areas of the system and the feature each card serves (0255): Who does what, Features panel.
   "features",
   "card_features",
-  // What each card requires, and which cards include which (0257): Who does what reads these, the database recomputes every role from them.
+  // What each card requires (0257): Who does what reads these, the database recomputes every role from them.
+  // (card_includes is not here: it has never had an audit trigger, so it could never log a row.)
   "card_grants",
-  "card_includes",
-  // The website settings row (0254, 0256): hiding or showing a public page, and the Stocktaking switches. Its own trigger writes the audit rows.
+  // The website settings row (0254, 0256): hiding or showing a public page, and the Stocktaking switches. Its own triggers write the audit rows.
   "site_content",
   // The four live counts on the home band, one switch each (0328): the name shown is the count's key.
   "public_stat_switches",
+  "shop_links",
+  // Money in and out (0168, 0195, 0308).
+  "donations",
+  "donation_lines",
+  "donation_receipts",
+  "maintenance",
+  "maintenance_bills",
+  "bills_inbox",
+  "stock_receipts",
+  "stock_deliveries",
+  // Appeals and fundraising events (0210, 0312), desexing drives (0233).
+  "appeals",
+  "appeal_photos",
+  "fundraising_events",
+  "fundraising_event_photos",
+  "desexing_drives",
+  "desexing_drive_signups",
+  // Community dogs (0169).
+  "community_places",
+  "community_dog_outings",
+  "community_outing_photos",
+  // Photos, memes and reels (0218, 0223, 0322).
+  "pending_photos",
+  "memes",
+  "meme_residents",
+  "reels",
+  "reel_residents",
+  "social_shares",
 ] as const;
 export type AuditedTable = (typeof AUDITED_TABLES)[number];
+
+/**
+ * Tables with an audit trigger that are deliberately not listed, each with the reason, so the next person
+ * meets it here. Empty today: every audited table is something an admin could be asked about, and a row
+ * nobody can label is worse than a longer filter. The check reads this object's keys.
+ */
+export const AUDIT_TABLES_NOT_LISTED: Record<string, string> = {};
+
+/**
+ * The columns that name a record in the list, those the row has, joined with `sep`.
+ * An empty list means the table has no name of its own: the row shows the table, the kind of change and the
+ * resident. Every audited table must be here (the type enforces it) so a new one has to be decided.
+ */
+type NameColumns = { cols: readonly string[]; sep?: string };
+const NAME_FROM_IMAGE: Record<AuditedTable, NameColumns> = {
+  residents: { cols: ["name"] },
+  contacts: { cols: ["name"] },
+  prescriptions: { cols: [] },
+  clinic_visits: { cols: [] },
+  weight: { cols: [] },
+  attachments: { cols: ["file_name"] },
+  immunization_records: { cols: [] },
+  blood_tests: { cols: ["date"] },
+  procedures: { cols: ["procedure_type"] },
+  placement_history: { cols: ["placement_type"] },
+  resident_diets: { cols: [] },
+  impact_baselines: { cols: ["label"] },
+  donation_channels: { cols: ["label"] },
+  facility_maps: { cols: [] },
+  roles: { cols: ["name"] },
+  role_permissions: { cols: ["activity"] },
+  user_roles: { cols: [] },
+  role_cards: { cols: ["card"] },
+  features: { cols: [] },
+  card_features: { cols: [] },
+  card_grants: { cols: ["card", "activity"], sep: ": " },
+  site_content: { cols: [] },
+  public_stat_switches: { cols: ["key"] },
+  shop_links: { cols: ["title"] },
+  donations: { cols: ["donor_name"] },
+  donation_lines: { cols: ["description"] },
+  donation_receipts: { cols: ["number"] },
+  maintenance: { cols: ["title"] },
+  maintenance_bills: { cols: ["bill_date"] },
+  bills_inbox: { cols: ["bill_date"] },
+  stock_receipts: { cols: [] },
+  stock_deliveries: { cols: ["bill_date"] },
+  appeals: { cols: ["title"] },
+  appeal_photos: { cols: [] },
+  fundraising_events: { cols: ["title"] },
+  fundraising_event_photos: { cols: [] },
+  desexing_drives: { cols: ["title"] },
+  desexing_drive_signups: { cols: ["pet_name"] },
+  community_places: { cols: ["name"] },
+  community_dog_outings: { cols: ["outing_on"] },
+  community_outing_photos: { cols: ["file_name"] },
+  pending_photos: { cols: ["file_name"] },
+  memes: { cols: ["file_name"] },
+  meme_residents: { cols: [] },
+  reels: { cols: ["file_name"] },
+  reel_residents: { cols: [] },
+  social_shares: { cols: ["platform"] },
+};
 
 /**
  * audit_log is append-only, so a row keeps the names in force when it was
@@ -180,6 +281,16 @@ type RawRow = {
   new_row: Image;
 };
 
+function nameFromImage(table: AuditedTable, image: NonNullable<Image>): string | null {
+  const spec = NAME_FROM_IMAGE[table];
+  if (!spec) return null; // a logged table that is no longer (or not yet) listed
+  const parts = spec.cols
+    .map((c) => image[c])
+    .filter((v): v is string | number => (typeof v === "string" && v !== "") || typeof v === "number")
+    .map(String);
+  return parts.length ? parts.join(spec.sep ?? " · ") : null;
+}
+
 function toEntry(raw: RawRow): AuditEntry {
   const r = { ...raw, old_row: currentImage(raw.old_row), new_row: currentImage(raw.new_row) };
   const image = r.new_row ?? r.old_row ?? {};
@@ -207,26 +318,7 @@ function toEntry(raw: RawRow): AuditEntry {
       ((r.op === "UPDATE" && changed.includes("calendar_changed_at")) ||
         // a visit made from an entry typed into Google Calendar (calendar-import.ts) carries this note
         (r.op === "INSERT" && typeof image.notes === "string" && image.notes.includes("Created from Google Calendar"))),
-    name:
-      table === "residents" || table === "contacts" || table === "roles"
-        ? str(image.name)
-        : table === "attachments"
-          ? str(image.file_name)
-          : table === "public_stat_switches"
-            ? str(image.key)
-          : table === "impact_baselines" || table === "donation_channels"
-            ? str(image.label)
-            : table === "role_permissions"
-              ? str(image.activity)
-            : table === "role_cards"
-              ? str(image.card)
-            : table === "card_grants"
-              ? [str(image.card), str(image.activity)].filter(Boolean).join(": ") || null
-            : table === "card_includes"
-              ? [str(image.card), str(image.included_card)].filter(Boolean).join(" includes ") || null
-            : table === "role_home_tiles"
-              ? str(image.path)
-              : null,
+    name: nameFromImage(table, image),
     residentId,
   };
 }
