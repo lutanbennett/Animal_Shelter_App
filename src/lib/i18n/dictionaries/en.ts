@@ -3378,7 +3378,7 @@ const en = {
         dashboard:
           "The month's activity and where the shelter stands today — every figure the monthly report asks for.",
         contacts:
-          "The people the shelter works with: foster and adoptive carers, volunteers and suppliers.",
+          "The people the shelter works with: foster and adoptive carers, volunteers, suppliers and partners.",
         vets:
           "The clinics the shelter books visits with, and how much each one has seen.",
         medications:
@@ -4964,7 +4964,7 @@ const en = {
   contacts: {
     pageTitle: "Contacts",
     pageSubtitle:
-      "Carers, volunteers and suppliers — tap to call, chat on LINE, Messenger or WhatsApp, email, or open in maps.",
+      "Carers, volunteers, suppliers and partners — tap to call, chat on LINE, Messenger or WhatsApp, email, or open in maps.",
     couldntLoadContacts: "Couldn't load contacts",
     couldntLoadPlacements: "Couldn't load placements",
     manageInAdmin: "Edit contacts in Management",
