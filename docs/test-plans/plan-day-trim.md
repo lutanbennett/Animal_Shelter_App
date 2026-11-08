@@ -11,7 +11,7 @@
 | PR | <pr> |
 | Tested by / date | Claude Opus 5 / 2026-11-08 |
 | Carries a migration? | no |
-| Tested at SHA | <sha> |
+| Tested at SHA | `6a3648f7` — the commit the gates ran against. The only commit after it, `4d19a463`, adds two markdown files under `docs/` (this plan and the decision file), which no gate reads |
 
 ## 1. Scope and risk
 
@@ -22,11 +22,19 @@
 
 ## 2. Automated gates
 
-- [ ] `node scripts/worktree.mjs sync` — pending: the sync and gates run is still in progress
-- [ ] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — pending: filled from the run's own closing lines when it finishes
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (it reported `Already up to date.`, then pushed the branch)
+- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — four gates, every `<N>` is `0`. Run in the background with output redirected to a file, then read from that file:
 
 ```
-<gates output — the run is in progress; this block is filled from its own closing lines>
+=== gates: typecheck — npm run typecheck
+=== gates: typecheck exited 0 after 66s
+=== gates: lint — npm run lint
+=== gates: lint exited 0 after 185s
+=== gates: test — npm test
+=== gates: test exited 0 after 34s
+=== gates: build — npm run build
+=== gates: build exited 0 after 176s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
@@ -75,7 +83,7 @@ considered and found inapplicable, not skipped.
 
 - [x] The pages nearest the change still work — the nearest things are the skill's own machinery, and all three were checked: the **YAML frontmatter** is byte-for-byte what `git show HEAD:…` prints (`name: plan-day` plus the unchanged `description`), which is what makes the skill discoverable at all; `brief-blocks.md` holds **all nine** verbatim blocks, in brief order, asserted by the generating script's own guards on the test-plan and finish-line blocks; and `reference.md` and `SKILL.md` cross-reference each other by filename with no broken pointer
 - [x] Any shared file touched checked from a second, unrelated place — the three live batch-2 briefs (`suppliers-app`, `guard-release-asserts`, `reel-tag-admin-pass`) were **assembled before this change** from the old `SKILL.md`, so they are unaffected and still carry the full blocks; confirmed by their line counts being unchanged (363 / 321 / 321). The two sibling skills (`clean-streams`, `upload-blood-work`) share nothing with this file and were not edited
-- [ ] Nothing merged from `main` during `sync` was broken by this branch — pending: the gates run on the merged tree is still in progress
+- [x] Nothing merged from `main` during `sync` was broken by this branch — `sync` reported `Already up to date.`, so nothing came in to break, and the four gates passed afterwards on that tree
 
 ## 7. Documentation
 
@@ -110,7 +118,7 @@ considered and found inapplicable, not skipped.
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
 | 1 | High | The first write of `SKILL.md` **dropped the YAML frontmatter**, which carries `name` and `description` and is what makes the skill discoverable. The harness strips frontmatter when it injects a skill, so it was never visible in the file as read — a skill without it would simply stop being offered | fixed — restored byte-for-byte from `git show HEAD:…` before any commit, and re-checked in section 6 |
-| 2 | Low | A content-preservation grep reported "Keep recommending low" as missing from all three files | accepted — not a defect: the text reads `` `low` `` with backticks. Recorded because the check firing is what makes the other twelve results trustworthy |
+| 2 | — | A content-preservation grep reported "Keep recommending low" as missing from all three files | **not a defect** — the check's own false positive: the text reads `` `low` `` with backticks, and `SKILL.md:33` carries the rule. Recorded because the check firing at all is what makes the other twelve results trustworthy, and because it was investigated rather than waved through |
 
 ## Sign-off
 
@@ -119,7 +127,7 @@ considered and found inapplicable, not skipped.
 Covers the four gates, the content-preservation greps, the frontmatter byte comparison and the
 block-count assertions — all scripted and repeatable.
 
-Automated checks by: pending: signed once the gates run has been read, not before
+Automated checks by: Claude Opus 5  Date: 2026-11-08
 
 ### Manual verification
 
@@ -130,7 +138,7 @@ watch for.
 
 Manual verification by: n/a: no UI surface, no deployed surface, and no shelter-visible behaviour; the only judgement available is whether the file reads too thin, which is answered by using it
 
-Result: <filled once the gates run has been read>
+Result: pass
 
 ## Left for manual verification
 
