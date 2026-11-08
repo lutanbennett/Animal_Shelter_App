@@ -5,8 +5,12 @@ import { PI_REQUIRED, PI_FORBIDDEN } from "./runtime-config.mjs";
 import { actionsKeyProblem } from "./actions-key.mjs";
 
 export const UAT_PROJECT_REF = "fsjagxmxjosauwmxwype";
-// Names that belong to the live shared calendar, not to UAT (docs/uat-finalisation.md, step 1).
+// The calendar pair. UAT must have NO calendar: each key must be present with an EMPTY value. A key left
+// out of the file is not "off": loadEnv layers .env.deploy.uat over .env.local, so the deploy would push
+// .env.local's value (Test's calendar) to the UAT Worker. Found on the 2026-11-08 deploy.
 export const CALENDAR_NAMES = ["GOOGLE_CALENDAR_ID", "GOOGLE_CALENDAR_REFRESH_TOKEN"];
+// The Drive account's credentials, shared by every environment, so they must equal .env.local's.
+export const SHARED_OAUTH_NAMES = ["GOOGLE_OAUTH_CLIENT_ID", "GOOGLE_OAUTH_CLIENT_SECRET", "GOOGLE_OAUTH_REFRESH_TOKEN"];
 
 /** Parse KEY=value lines the way scripts/lib/env.mjs does. */
 export function parseDotEnv(text) {
@@ -59,10 +63,20 @@ export function uatReadiness({ uat, production, local, shell }) {
     else add("ok", "GOOGLE_DRIVE_ROOT_FOLDER_ID differs from production's and Test's" + (production || local ? "" : " (nothing to compare against here)"));
   }
 
-  // 4. The live calendar must not be reachable from UAT.
-  const cal = CALENDAR_NAMES.filter((n) => n in uat);
-  if (cal.length) add("fail", `${cal.join(" and ")} must not be in UAT's file: it is the live shared calendar, and a tester could write a vet visit onto the shelter's real one. Unset means visits are simply not sent to a calendar`);
-  else add("ok", "no calendar keys in UAT's file");
+  // 3b. The shared Drive credentials must be the shared ones. On 2026-11-08 the new sign-in client's
+  // secret was pasted over GOOGLE_OAUTH_CLIENT_SECRET and every Drive call failed with invalid_client.
+  if (local) {
+    const differ = SHARED_OAUTH_NAMES.filter((n) => set(local[n]) && set(uat[n]) && uat[n] !== local[n]);
+    if (differ.length) add("fail", `${differ.join(", ")} differ${differ.length === 1 ? "s" : ""} from .env.local's: these are the shared Drive account's and must be copied exactly, or Drive fails with invalid_client. (The Supabase sign-in client's secret goes in GOOGLE_SIGNIN_CLIENT_SECRET, never here.)`);
+    else add("ok", "the three GOOGLE_OAUTH_* values match .env.local's");
+  }
+
+  // 4. UAT has no calendar: both keys present and EMPTY.
+  const calSet = CALENDAR_NAMES.filter((n) => set(uat[n]));
+  const calMissing = CALENDAR_NAMES.filter((n) => !(n in uat));
+  if (calSet.length) add("fail", `${calSet.join(" and ")} must be EMPTY in UAT's file (${calSet.length === 1 ? "it has" : "they have"} a value): UAT must not write vet visits to any calendar, not production's and not Test's`);
+  if (calMissing.length) add("fail", `${calMissing.join(" and ")} must be in UAT's file with nothing after the "=". Left out, the deploy takes ${calMissing.length === 1 ? "it" : "them"} from .env.local, which is Test's calendar`);
+  if (!calSet.length && !calMissing.length) add("ok", "calendar switched off: both keys present and empty");
 
   // 5. The Supabase token: here, not on the Pi. Names come from the list, so a rename follows.
   for (const n of PI_FORBIDDEN) {
