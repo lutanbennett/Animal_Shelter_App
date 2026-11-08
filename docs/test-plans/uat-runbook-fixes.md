@@ -24,11 +24,15 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — pending: run before the PR, result recorded on the PR
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (one backlog line from upstream), no conflicts
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`, every `<N>` `0`:
 
 ```
-GATES_PLACEHOLDER
+=== gates: typecheck exited 0 after 49s
+=== gates: lint exited 0 after 150s
+=== gates: test exited 0 after 31s
+=== gates: build exited 0 after 210s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
@@ -78,7 +82,7 @@ Nothing here is reachable by a login: dev-machine scripts and documents.
 
 - [x] The pages nearest the change still work: no `src/` file changed; `setup-uat.sh`'s content is unchanged (mode only, `git ls-files -s` shows 100755 like `setup.sh` and `setup-test.sh`)
 - [ ] Any shared file touched checked from a second page — n/a: no shared source file touched
-- [x] Nothing merged from `main` during `sync` was broken by this branch — pending: recorded on the PR after sync
+- [x] Nothing merged from `main` during `sync` was broken by this branch: the sync brought one `docs/backlog.md` line, and the gates above ran after it
 
 ## 7. Documentation
 
