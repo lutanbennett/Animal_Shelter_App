@@ -9,9 +9,10 @@ the Drive files, served by the Pi. Then **`lannacare.org` forwards to the live s
 depend on the one before. Every step is yours unless it says otherwise. If anything prints something you
 did not expect, stop and ask Claude, pasting what it printed.
 
-**Where it stands (8 November 2026): Parts 1 to 5 are done.** Part 6 waits for the next release cut,
-Part 7 follows it straight away, then Part 8. Parts 1 to 5 stay written out in full, corrected from the
-real run, for the day UAT has to be rebuilt.
+**Where it stands (8 November 2026): UAT IS LIVE at `uat.lannacare.org` on release 0.43.6, and
+`lannacare.org` forwards to production. Parts 1 to 7 are done.** Part 8: steps 1, 2 and 4 passed; the
+failover drill (step 3) was skipped by Lutan's choice; step 5 is the next-day check for CPU-limit errors.
+Every part stays written out in full, corrected from the real run, for the day UAT has to be rebuilt.
 
 **Where the reasoning lives:** `docs/pi-hosting.md` ("UAT on the same Pi") and the decision files
 `2026-11-06-uat-own-database.md`, `2026-11-07-uat-on-the-pi.md`, `2026-11-07-drive-buckets.md` and
@@ -59,9 +60,17 @@ window only.
    environment shares.
 4. **Copy no other `GOOGLE_` line.** In particular:
    - **`GOOGLE_DRIVE_ROOT_FOLDER_ID`**: UAT already has its own line. Do not copy Test's over it.
-   - **`GOOGLE_CALENDAR_ID`** and **`GOOGLE_CALENDAR_REFRESH_TOKEN`**: these are the shelter's **real**
-     calendar. They must **not** be in UAT's file at all, or a tester could put a vet visit on the real
-     calendar. If either is already in `.env.deploy.uat`, delete that line.
+   - **`GOOGLE_CALENDAR_ID`** and **`GOOGLE_CALENDAR_REFRESH_TOKEN`**: UAT has **no** calendar. Write both
+     lines with **nothing after the `=`**:
+
+     ```
+     GOOGLE_CALENDAR_ID=
+     GOOGLE_CALENDAR_REFRESH_TOKEN=
+     ```
+
+     **Do not leave them out:** a line missing from `.env.deploy.uat` is filled from `.env.local` at deploy
+     time, and `.env.local`'s are Test's calendar. An empty value is what switches it off: the deploy skips
+     it and the app treats the calendar as not set up.
 5. Open **`.env.deploy.production`**. Copy its whole **`ORIGIN_KEY=`** line to the end of
    `.env.deploy.uat`. UAT must use the same value as production.
 6. Make sure `.env.deploy.uat` still has its **`SUPABASE_ACCESS_TOKEN=`** line. This PC's copy needs it. The
@@ -157,6 +166,19 @@ data yet.
     harmless: it tried to remove something that was not there. Ask Claude to read
     `C:\Temp\lannacare-restore\restore-errors.txt` and confirm nothing else went wrong. A failed `CREATE`,
     `COPY`, `ALTER` or `ADD CONSTRAINT` is a real problem, so stop if Claude finds one.
+
+    **Then put back the grants the copy leaves out.** Step 11's `--no-privileges` keeps out production's
+    owners and permissions, and most of them come back by themselves. These do not, and without them the
+    Residents page says *permission denied for view resident_current_state*. In UAT's SQL Editor, run:
+
+    ```
+    grant execute on function private.works_with_logins(), private.works_with_residents(), private.has_app_access(), private.works_with_immunizations(), private.works_with_translations() to authenticated, service_role;
+    grant execute on function private.approved_translations(text, uuid) to anon, authenticated, service_role;
+    grant select on private.resident_current_state to authenticated, service_role;
+    ```
+
+    Claude can then read every table and view as a signed-in login to prove nothing else is refused (on
+    8 November: 163 checked, 0 refused).
 13. **Compare the resident counts.** In UAT's SQL Editor, run `select count(*) from residents;`. Sign in to
     supabase.com as `lutan.bennett2@gmail.com`, open production's project, and run the same line there.
     The two numbers must match.
@@ -262,7 +284,10 @@ It must come after Part 2 and before Part 5.
 3. **Turn on Google sign-in for UAT.** Back in the UAT project on supabase.com, open **Authentication**,
    then **Sign In / Providers**, then **Google**. Switch it on, paste the client ID and secret from step 2,
    and save. Put the same secret after `GOOGLE_SIGNIN_CLIENT_SECRET=` in `.env.deploy.uat`, replacing
-   whatever was there (a value copied from another environment belongs to another client).
+   whatever was there (a value copied from another environment belongs to another client). **Check the line
+   you change is `GOOGLE_SIGNIN_CLIENT_SECRET` and not `GOOGLE_OAUTH_CLIENT_SECRET`:** on 8 November the
+   sign-in secret landed on the Drive line and every photo failed with *invalid_client*.
+   `node scripts/check-uat-ready.mjs` now catches that.
 4. **A Resend key of UAT's own.** Mail goes out through Resend (`docs/email-sending.md`, section 2). At
    resend.com, open **API Keys**, then **Create API key**: name `Supabase UAT (new project)`, permission
    *Sending access*, domain `lannacare.org`. It is shown **once**: leave the page open and put it straight
@@ -330,6 +355,9 @@ Nothing in this part is visible to anyone until Part 6.
    anything, the clone predates the fix of 8 November: run `bash ./scripts/pi/setup-uat.sh` instead.)
    If it stops with a message naming a missing setting, add that setting to the Pi's `.env.deploy.uat`
    (and to your PC's copy) and run it again.
+   **Then close the Pi window and reconnect** (`ssh lutan@lanna-pi.local`). The setup added your Pi user to
+   UAT's group, which only counts from the next login; without it, the next `deploy-pi.sh` ends with a page
+   of *rm: cannot remove '.next.prev/…': Permission denied* (the deploy itself still works).
 7. **Check memory after.** Run `free -m` again; there should still be plenty available. Then run
    `journalctl -u lanna-care -n 30` and check production did **not** restart during the setup.
 8. **Find the tunnel's id.** Run `ls /etc/cloudflared/`. The file ending in `.json` is named after the
@@ -384,40 +412,56 @@ Nothing in this part is visible to anyone until Part 6.
 Only after Parts 1 to 5. **From this point UAT moves: `lannacare.org` stops showing UAT and
 `uat.lannacare.org` starts.** Do Part 7 straight after this part.
 
-**When:** the UAT deploy only ships a released version. It refuses if the code has release notes not yet
-cut into a release, and on 8 November it does. So do this part **right after the next release is cut**
-(or ask for one to be cut first). If step 2 below says *"ships only a written-down release"*, that is the
-reason; wait for the release.
+**When:** the UAT deploy only ships a released version, so do this part **right after a release is cut**,
+before anything else merges. Between releases `main` has unreleased notes and often a database update UAT
+does not have. **To change one Worker setting between releases, do not deploy:** run
+`npx.cmd wrangler secret put <NAME> --env uat` and paste the value at its prompt.
+
+**Use `npm.cmd` and `npx.cmd`** in PowerShell: plain `npm` is refused by Windows' script setting. Do not
+change that setting.
 
 1. In PowerShell in the main checkout (with the first line of this document pasted), run `git pull`.
-2. Preview what will happen:
+   Then `node scripts/check-uat-ready.mjs`: it must say **`Ready: no failures.`**
+2. **Bring UAT's database to the release:** `node scripts/apply-migrations.mjs --status --env uat`, then, if
+   anything is pending, `node scripts/apply-migrations.mjs --env uat` and `--status` again.
+3. Preview what will happen:
 
    ```
-   npm run deploy:uat -- --secrets --no-mail --plan
+   npm.cmd run deploy:uat -- --secrets --no-mail --plan
    ```
 
-   It should name project `fsjagxmxjosauwmxwype`. If it names any other project, stop.
+   It should name project `fsjagxmxjosauwmxwype` and show no `deploy: WARNING` line. In its list of
+   secrets to push, **no line may say `<- .env.local`** and no `GOOGLE_CALENDAR_` line may appear. If it
+   refuses with *"main and origin/main differ (N behind)"*, run `git pull` and preview again. If it
+   suggests `--allow-dev-fallthrough`, do **not** use it: that flag pushes Test's values to UAT.
    **`--no-mail` matters:** UAT's database now holds production's real users, so a release email from UAT
    would reach real people.
-3. **Deploy:**
+4. **Deploy:**
 
    ```
-   npm run deploy:uat -- --secrets --no-mail
+   npm.cmd run deploy:uat -- --secrets --no-mail
    ```
 
-   Read the line naming the Supabase project: it must be `fsjagxmxjosauwmxwype`.
-4. **Bring the Pi to the same release,** so the Pi and the Cloudflare fallback run the same code. On the Pi:
+   Read the line naming the Supabase project: it must be `fsjagxmxjosauwmxwype`. It ends naming
+   `uat.lannacare.org (custom domain)`. **`--secrets` only adds and replaces settings; it never removes one.**
+   So list the Worker's settings with `npx.cmd wrangler secret list --env uat`, and remove any that UAT must
+   not have, such as a `GOOGLE_CALENDAR_` one, with `npx.cmd wrangler secret delete <NAME> --env uat`.
+   (On 8 November two calendar settings from older deploys were found and removed this way.)
+5. **Bring the Pi to the same release,** so the Pi and the Cloudflare fallback run the same code. In the
+   **Pi** window (`lutan@lanna-pi`), not the PC one:
 
    ```
    cd ~/Animal_Shelter_App_uat && git pull && ./scripts/pi/deploy-pi.sh --env uat
    ```
 
-5. Open **`https://uat.lannacare.org`** and sign in with Google. You should see the **UAT** badge in the
+   If `.env.deploy.uat` changed since the Pi's copy was made, copy it again first (Part 5, steps 4 and 5).
+6. Open **`https://uat.lannacare.org`** and sign in with Google. You should see the **UAT** badge in the
    header and production's residents. (The very first visit can take a minute while Cloudflare sets up the
    new address.)
-6. In the Cloudflare dashboard, go to **Workers & Pages**, then **lanna-animal-care-uat**, then
-   **Settings**, then **Domains & Routes**. Only `uat.lannacare.org` should be listed. If `lannacare.org` or
-   `www.lannacare.org` is still there, remove it from that list.
+7. **Only `uat.lannacare.org` belongs to the Worker.** Claude can check this from outside: if
+   `lannacare.org` and `www.lannacare.org` have no address before Part 7, no Worker holds them (on 8 November
+   the deploy had already let them go). In the dashboard the list is under the Worker's **Settings**, in
+   **Domains & Routes**, which newer layouts move around.
 
 ---
 
@@ -437,12 +481,15 @@ reason; wait for the release.
    - **Name:** `Forward lannacare.org to production`
    - **If incoming requests match:** choose **Custom filter expression**. Set **Field** to **Hostname**,
      **Operator** to **equals**, and **Value** to `lannacare.org`. Click **Or** and add the same with
-     `www.lannacare.org`.
+     `www.lannacare.org`. **Check the second line is there:** on 8 November it was missing at first, and
+     `www` gave a *522* error instead of forwarding. With **Edit expression** the whole condition reads
+     `(http.host eq "lannacare.org") or (http.host eq "www.lannacare.org")`.
    - **Then:** **Type** Dynamic. **Expression**:
      `concat("https://lannacareforanimals.org", http.request.uri.path)`.
      **Status code** **301**. Tick **Preserve query string**.
    - Click **Deploy**.
-4. **Check it.** Open `https://lannacare.org/adopt` in a private browser window. You should land on
+4. **Check it.** Open `https://lannacare.org/adopt` in a private browser window (your own PC may remember
+   for a few minutes that the address had no record, so a phone or Claude's check is quicker). You should land on
    `https://lannacareforanimals.org/adopt`. Try `https://www.lannacare.org` too.
 5. `test.lannacare.org` and `uat.lannacare.org` are not affected: the rule names only the two addresses
    above.

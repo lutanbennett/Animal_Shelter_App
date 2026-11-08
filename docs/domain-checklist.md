@@ -87,9 +87,10 @@ does not change with it.** Work through it top to bottom, once per move.
 
 ## D. Outstanding by hand (Lutan)
 
-1. **Supabase, live project, Authentication → SMTP settings:** change *Sender name* from
-   `Lanna Care UAT` to `Lanna Care`. The sender address stays `noreply@lannacare.org`.
-   Then send a password reset to yourself and check the wording reads as ours.
+1. ~~**Supabase, live project, Authentication → SMTP settings:** change *Sender name* from
+   `Lanna Care UAT` to `Lanna Care`.~~ **DONE 2026-10-29** (`#prx2t`): Lutan sent himself a reset and it
+   arrives from **"LCA System"**. This line was left open by mistake and was raised with him again on
+   2026-11-08; it is not outstanding. Do not ask him about it.
 
 ## E. CUTOVER DAY, in order (Friday 6 November 2026; `#ki6cx`)
 
