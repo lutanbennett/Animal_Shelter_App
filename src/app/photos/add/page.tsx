@@ -3,7 +3,7 @@ import { getT } from "@/lib/i18n/get-t";
 import { requireAnyPermission } from "@/lib/permissions/require";
 import { can } from "@/lib/permissions/can";
 import { photoCategoriesFor, type PhotoCategory } from "@/lib/google/drive-client";
-import { loadPickableResidents } from "@/lib/medical/residents";
+import { loadPickableResidents, residentsEmptyKind } from "@/lib/medical/residents";
 import { loadEnclosureChoices } from "@/lib/photos/pending";
 import { AddPhotosFlow } from "./AddPhotosFlow";
 
@@ -36,8 +36,21 @@ export default async function AddPhotosPage() {
   const routes = Object.fromEntries(categories.map((c) => [c, routeFor(c)])) as Partial<Record<PhotoCategory, "staff" | "medical" | "shelter">>;
   const waits = shelterOnly && !can(perms, "photos.resident_publish");
 
+  // A login that holds the page's card but no folder-filing card has nothing to file into: every save route refuses an
+  // empty folder list before it touches Drive, so say so rather than let photos be chosen and each fail.
+  if (categories.length === 0) {
+    return (
+      <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 md:p-6">
+        <h1 className="text-2xl font-semibold text-foreground">{t.addPhotos.title}</h1>
+        <p role="status" className="rounded-lg border border-border bg-surface p-4 text-base text-foreground">{t.addPhotos.noFolders}</p>
+      </main>
+    );
+  }
+
   const supabase = await createClient();
   const { residents, error } = await loadPickableResidents(supabase);
+  const emptyKind = residentsEmptyKind(perms, residents.length, error);
+  const residentsEmptyNote = emptyKind ? t.addPhotos[emptyKind === "cannot" ? "cannotSeeResidents" : "noResidentsOnFile"] : undefined;
   // "I don't know, tag the enclosure" (0218) files into Shelter, so it is offered to the logins that may file there;
   // the Head of Medical (Medical only) cannot file a pending photo.
   const mayTagEnclosure = categories.includes("Shelter") && route !== "medical";
@@ -49,7 +62,7 @@ export default async function AddPhotosPage() {
     <main className="flex min-w-0 flex-1 flex-col gap-4 p-4 md:p-6">
       <h1 className="text-2xl font-semibold text-foreground">{t.addPhotos.title}</h1>
       <p className="text-base text-muted">{t.addPhotos.intro}</p>
-      <AddPhotosFlow categories={categories} route={route} routes={routes} waits={waits} residents={residents} loadError={error} enclosures={enclosures} mayStoreForLater={mayStoreForLater} />
+      <AddPhotosFlow categories={categories} route={route} routes={routes} waits={waits} residents={residents} loadError={error} residentsEmptyNote={residentsEmptyNote} enclosures={enclosures} mayStoreForLater={mayStoreForLater} />
     </main>
   );
 }

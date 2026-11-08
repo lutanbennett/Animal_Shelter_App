@@ -1,7 +1,6 @@
 import type { createClient } from "@/lib/supabase/server";
-import { can } from "@/lib/permissions/can";
 import type { Permissions } from "@/lib/permissions/can";
-import { loadPickableResidents, type PickableResident } from "@/lib/medical/residents";
+import { loadPickableResidents, residentsEmptyKind, type PickableResident } from "@/lib/medical/residents";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
@@ -21,6 +20,5 @@ export async function loadMemeResidents(
   const { residents, error } = await loadPickableResidents(supabase, { includeInactive: true });
   if (error) console.error("meme screens: resident list failed", error);
   if (residents.length > 0) return { residents, emptyKind: null };
-  const sees = can(perms, "resident.who_and_where", "read") || can(perms, "resident.record", "read");
-  return { residents, emptyKind: sees && !error ? "none" : "cannot" };
+  return { residents, emptyKind: residentsEmptyKind(perms, residents.length, error) };
 }

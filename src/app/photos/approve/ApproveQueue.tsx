@@ -35,7 +35,7 @@ export function ApproveQueue({
   canReassign: boolean;
   residents: PickableResident[];
   loadError: string | null;
-  /** Photos tagged to an enclosure are waiting above this list, so "nothing is waiting" would be untrue. */
+  /** Photos waiting to be named (tagged to an enclosure, or with no place) are above this list, so "nothing is waiting" would be untrue. */
   othersWaiting: boolean;
 }) {
   const { t, locale } = useI18n();

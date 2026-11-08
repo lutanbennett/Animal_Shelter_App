@@ -15,8 +15,8 @@ import { ProjectPhotoQueue } from "./ProjectPhotoQueue";
 
 /**
  * Photos to approve: the resident photos filed by a login that may not publish (0217), waiting for someone who may,
- * and above them the photos tagged to an enclosure by someone who did not know the animal (0218), waiting for
- * someone to say who is in them. Two lists and two cards on purpose
+ * and above them the photos filed by someone who did not know the animal (0218), waiting for
+ * someone to say who is in them: tagged to an enclosure, or with no place at all (0332). Two lists and two cards on purpose
  * (docs/decisions/2026-10-17-photo-approval-queue.md): a pending photo has no resident yet.
  * Gated on photos.approve, the activity the database itself checks.
  */

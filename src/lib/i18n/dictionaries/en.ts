@@ -5469,7 +5469,7 @@ const en = {
     },
     /** Photos tagged to an enclosure by someone who did not know the animal (0218). */
     pending: {
-      heading: (n: number) => (n === 1 ? "1 photo tagged to an enclosure" : `${n} photos tagged to an enclosure`),
+      heading: (n: number) => (n === 1 ? "1 photo waiting to be named" : `${n} photos waiting to be named`),
       intro: "The person who took these did not know which animal is in them. Choose who it is. If there are two animals, choose both.",
       residentsHeading: (n: number) => (n === 1 ? "1 photo of a resident" : `${n} photos of residents`),
       someEnclosure: "an enclosure",
@@ -5562,6 +5562,9 @@ const en = {
     leave: "Some photos are not tagged yet. If you leave, they will be lost. Leave anyway?",
     leaveSaving: "Photos are still being saved. If you leave now, some may be lost. Leave anyway?",
     noPhotos: "No photos yet. Tap a button above.",
+    noResidentsOnFile: "There are no residents on file yet.",
+    cannotSeeResidents: "Your cards don't let you see the residents, so none can be offered here.",
+    noFolders: "Your cards let you open this page but not file a photo into any folder, so nothing added here could be saved.",
     saveLater: "Don't know either: save for later",
     saveLaterHelp: (n: number) => `${n === 1 ? "Stores this photo" : `Stores these ${n} photos`} with no animal and no place. It is not public. Whoever approves photos names the animal later.`,
     savedForLater: "Saved, to be named later",
