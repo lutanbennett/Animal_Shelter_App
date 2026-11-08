@@ -70,50 +70,63 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  {
-    text: "Add photos now says why the list of residents is empty: either your cards do not let you see the residents, or there are none on file yet.",
-    cards: ["add_photos"],
-  },
-  {
-    text: "Photos to approve no longer describes a photo with no place at all as \"tagged to an enclosure\"; the heading now says it is waiting to be named.",
-    cards: ["approve_photos"],
-  },
-  {
-    text: "Photos to approve now names the fundraising event a waiting photo belongs to, instead of just saying \"A fundraising event\". You see only the event's name, not the rest of the event. The campaign and project-folder pickers on an event already say when they are short because your login cannot see campaigns or project folders.",
-    cards: ["approve_photos"],
-  },
-  {
-    text: "Contacts can now be a Partner: a business, school, clinic or group that helps the shelter without selling it anything. Before, it had to be filed as a Supplier to appear on the Shelter Friends page. Choose Partner when you add or edit a contact, and a Partner can be made a Shelter Friend just like a supplier. The contacts list has a Partner filter beside Supplier.",
-    cards: ["contacts", "publish_shelter_friends"],
-  },
-  {
-    text: "Settings → Recent changes now says what changed for donations, bills, stock, appeals, fundraising events, desexing drives, community dogs, photos, memes, reels, blood tests, procedures and who holds which role. These rows used to show no label at all. The Table filter lists them too, in alphabetical order.",
-    admin: true,
-  },
-  {
-    text: "Add shelter photos can now save a photo when you do not know the animal or where it was taken. Press Don't know either: save for later, and the photo is stored (not public) for whoever approves photos to name the animal. When every photo is saved a Done button appears, and pressing it tells you how many photos are stored. In Photos to approve, a photo with no place says so and says there is no one to suggest.",
-    cards: ["add_photos"],
-  },
-  {
-    text: "Adding a meme to a resident, from the meme library, now offers the residents. A login that holds only the meme cards got an empty list, because the list was read through a door those cards do not open. If the list is empty it now says whether there are no residents on file or your cards cannot see them.",
-    cards: ["meme_library", "meme_add"],
-  },
-  {
-    text: "The Sterilisation drives list now opens for a login that can only view the website, instead of being refused. It shows the drives and their sign-up counts; the Start a drive button and the links into each drive appear only for a login that can edit the website.",
-    cards: ["website", "website_photos"],
-  },
-  {
-    text: "Opening a reel no longer says \"No animal is tagged\" when animals are tagged but your card does not let you see their names. It now says how many animals are tagged and that you cannot see which, on the reel and on its tile in the library.",
-    cards: ["reel_view", "reel_add"],
-  },
-  {
-    text: "Bills now has an Other bills page. It lists every bill filed as materials, cleaning products or another kind with no screen of its own, shows the pages already on each, and lets you add another page if one turns up after the bill was filed. The new page shows in the expenses report as that bill's receipt. The Thai wording has not been checked by a Thai speaker.",
-    cards: ["bills"],
-  },
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.43.6",
+    date: "2026-11-08",
+    title: "Other bills, Partner contacts, and photos you can save for later",
+    major: false,
+    notes: [
+      {
+        text: "Add photos now says why the list of residents is empty: either your cards do not let you see the residents, or there are none on file yet.",
+        cards: ["add_photos"],
+      },
+      {
+        text: "Photos to approve no longer describes a photo with no place at all as \"tagged to an enclosure\"; the heading now says it is waiting to be named.",
+        cards: ["approve_photos"],
+      },
+      {
+        text: "Photos to approve now names the fundraising event a waiting photo belongs to, instead of just saying \"A fundraising event\". You see only the event's name, not the rest of the event. The campaign and project-folder pickers on an event already say when they are short because your login cannot see campaigns or project folders.",
+        cards: ["approve_photos"],
+      },
+      {
+        text: "Contacts can now be a Partner: a business, school, clinic or group that helps the shelter without selling it anything. Before, it had to be filed as a Supplier to appear on the Shelter Friends page. Choose Partner when you add or edit a contact, and a Partner can be made a Shelter Friend just like a supplier. The contacts list has a Partner filter beside Supplier.",
+        cards: ["contacts", "publish_shelter_friends"],
+      },
+      {
+        text: "Settings → Recent changes now says what changed for donations, bills, stock, appeals, fundraising events, desexing drives, community dogs, photos, memes, reels, blood tests, procedures and who holds which role. These rows used to show no label at all. The Table filter lists them too, in alphabetical order.",
+        admin: true,
+      },
+      {
+        text: "Add shelter photos can now save a photo when you do not know the animal or where it was taken. Press Don't know either: save for later, and the photo is stored (not public) for whoever approves photos to name the animal. When every photo is saved a Done button appears, and pressing it tells you how many photos are stored. In Photos to approve, a photo with no place says so and says there is no one to suggest.",
+        cards: ["add_photos"],
+      },
+      {
+        text: "Adding a meme to a resident, from the meme library, now offers the residents. A login that holds only the meme cards got an empty list, because the list was read through a door those cards do not open. If the list is empty it now says whether there are no residents on file or your cards cannot see them.",
+        cards: ["meme_library", "meme_add"],
+      },
+      {
+        text: "The Sterilisation drives list now opens for a login that can only view the website, instead of being refused. It shows the drives and their sign-up counts; the Start a drive button and the links into each drive appear only for a login that can edit the website.",
+        cards: ["website", "website_photos"],
+      },
+      {
+        text: "Opening a reel no longer says \"No animal is tagged\" when animals are tagged but your card does not let you see their names. It now says how many animals are tagged and that you cannot see which, on the reel and on its tile in the library.",
+        cards: ["reel_view", "reel_add"],
+      },
+      {
+        text: "Bills now has an Other bills page. It lists every bill filed as materials, cleaning products or another kind with no screen of its own, shows the pages already on each, and lets you add another page if one turns up after the bill was filed. The new page shows in the expenses report as that bill's receipt. The Thai wording has not been checked by a Thai speaker.",
+        cards: ["bills"],
+      },
+      {
+        text:
+          "The Reels library no longer shows a Meme library link to a login whose cards cannot open the meme library. Before, the link was there and led to a page saying you had no access.",
+        cards: ["reel_view", "reel_add"],
+      },
+    ],
+  },
   {
     version: "0.43.5",
     date: "2026-11-07",

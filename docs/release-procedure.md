@@ -387,6 +387,25 @@ which is the failure `docs/decisions.md` records on 2026-09-24. **Expect this sh
 again while the security rebuild runs**, since it lands schema and code in separate
 PRs by design.
 
+**Know how it over-lists before you start, and budget one lookup per candidate.**
+Promoted here 2026-11-08, after `0.43.4`, `0.43.5` and `0.43.6` each recorded it as
+a defect and carried it in a handover rather than fixing it at source. Two quirks,
+both still present:
+
+- **It ignores the commit range you pass it.** Given `<prev deployed sha> HEAD` on
+  `0.43.6` it re-read **58** plans from an older cut point, against that release's
+  **32** PRs.
+- **It prints the test-plan template's own guidance text as the "reason"** for a
+  plan whose answer it cannot parse — six of thirteen candidates on `0.43.6`, and
+  it lists lines that are **ticked** rather than `n/a`.
+
+**This is the right way round and must not be "fixed" by narrowing it:**
+under-listing is the fault it exists to prevent, and `0.40.10` lost three notes
+that way. So read each candidate's plan yourself, decide whether **this** release
+closes its step, and answer every one in `--deferred-reviewed` — the flag is a gate
+on writing, not a record, so **the durable answer goes in the cut's test plan and
+the release record**, where the next release manager will look.
+
 **If anything in the entry changes after the gates run — even a role tag — re-run
 the gates and the comparison.** The tempting assumption is that a data-only edit
 cannot break a build.
@@ -957,13 +976,69 @@ not a streak.
 **It does not license rebuilding a Pi to chase a SHA.** The trap above stands: when
 `main` moves, read what is deploying. If the diff is clean, there is nothing to do.
 
-**The zone purge covers `test.lannacare.org` as well as `lannacare.org`.** They
-are one Cloudflare zone, so `purge-cache.mjs --env production` clears both.
-`purge-cache.mjs --env test` **refuses with exit 2** — `CLOUDFLARE_ZONE_ID` and
-`CLOUDFLARE_PURGE_TOKEN` live in `.env.deploy.production`, not `.env.local` — and
-that is usually irrelevant for exactly this reason. **Confirm by re-running the
-test asset check rather than assuming it either way.** Only worth fixing if test
-ever needs purging on its own.
+**THE PRODUCTION PURGE NO LONGER COVERS TEST. Nothing purges test.** Corrected
+2026-11-08 during `0.43.6`; this paragraph asserted the opposite for two releases.
+
+Until the 2026-11-06 cutover production and test were one Cloudflare zone, so
+`purge-cache.mjs --env production` genuinely cleared both and `--env test`
+refusing was harmless. **Production now has its own zone**, and the script reads
+`CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS` for production and `CLOUDFLARE_ZONE_ID`
+for everything else. Measured with `--dry-run`, which sends nothing:
+
+```
+--env production --dry-run   would purge everything for lannacareforanimals.org (zone 323637bc…)
+--env test --dry-run         CLOUDFLARE_ZONE_ID and CLOUDFLARE_PURGE_TOKEN missing from .env.local.
+```
+
+So `--env test` still **refuses**, but the reason it did not matter has gone: it
+looks for those two values in `.env.local` while they live in
+`.env.deploy.production`. **Fixing it is one value in one file**, and until then
+test's edge is purged by nothing.
+
+**Why it has not yet produced a visible fault — which is also what the exposure
+actually is:** every build names its assets by content hash, so a new build's
+stylesheet has a name the edge has never cached. On `0.43.6` the after-checks read
+production `HIT` and test `MISS`, both *identical to the build*. The risk is
+**stale HTML pointing at an old asset name**, which is the shape that renders the
+app unstyled. **So always re-run the test asset check**
+(`node scripts/pi/check-assets.mjs --url https://test.lannacare.org/` on the test
+clone) and believe a red one; never reason that production's purge covered it.
+
+**A Worker deploy goes SILENT for about six minutes on `Building server function:
+default...`, and it is not a stall.** Promoted here 2026-11-08; `0.43.5` met it,
+recorded it and carried it in its handover rather than fixing it at source.
+OpenNext's esbuild stage prints nothing while it works,
+which looks exactly like a hung build — on `0.43.5` it survived two long terminal
+reads with no output.
+
+**Measure it instead of killing it, and give the measurement a wide enough
+window.** `0.43.5`'s handover said `find .open-next -type f -newermt '-20 seconds'
+| wc -l`, which returned 63 there; on `0.43.6` the same command returned **`0` on a
+perfectly healthy build**, because the stage writes in bursts and 20 seconds lands
+in a gap. Use two or three minutes, or read the newest file's age:
+
+```bash
+for w in 60 180 600; do printf "%-6s " "${w}s:"; find .open-next -type f -newermt "-$w seconds" | wc -l; done
+find .open-next -type f -printf '%T@ %p\n' | sort -rn | head -1   # newest file, epoch seconds
+```
+
+On `0.43.6` that read `60s: 0 / 180s: 15 / 600s: 213`, newest file 64 seconds old —
+alive, settled in seconds.
+
+**WATCH THE DIRECTORY THE CURRENT STAGE ACTUALLY WRITES, or you will read a
+healthy build as a stall.** `.open-next` is only written during the OpenNext
+stages. While the deploy is still in `next build` — up to and including
+`Finalizing page optimization …` — the writes go to **`.next`**, and `.open-next`
+can sit untouched for ten minutes while everything is fine. Measured on `0.43.6`'s
+test deploy: `.open-next` showed **2 files in 600 seconds** while `.next` showed
+**26 in the last 60**, newest 5 seconds old. Read the banner to see which stage you
+are in, then point `find` at the matching directory.
+
+**And never pipe a deploy through `tail`.** It buffers until the process exits and
+discards the head of the log, which is where every line worth reading is. `0.38.2`
+and `0.43.5` each lost test's `strip-baked-env` count that way, and `0.43.5`'s
+record had to say the count was never read. `tee` passes the status through and
+keeps everything.
 
 **`gh pr merge` printing nothing at all is neither success nor refusal.**
 `0.38.1`'s cut merged with no output whatsoever. **Always re-read the state** —

@@ -130,6 +130,16 @@ Until the domain verifies, the Domain list offers only *All domains*. That's
 equivalent here, because the free account holds one domain. You see it once, and it goes straight into the
 Supabase field below. It doesn't belong in any file in this repo.
 
+**One key per Supabase project** (2026-11-08), so either can be revoked without stopping the other's mail:
+
+| Resend key name | Used by | Note |
+|---|---|---|
+| `Supabase UAT` | **production** (`dbkodyyxxhtygxcxmfcu`) | Made 2026-09-23, when that database was still called UAT; the name is a leftover. **Do not delete it.** Rename it `Supabase production` if Resend offers a rename |
+| `Supabase UAT (new project)` | UAT (`fsjagxmxjosauwmxwype`) | Made 2026-11-08 (`docs/uat-finalisation.md`, Part 4) |
+
+The sender name in 2d (`Lanna Care UAT`) is the same leftover on production: `docs/domain-checklist.md`
+section D still has it changing to `Lanna Care` there. UAT's project keeps `Lanna Care UAT`.
+
 ### 2d. Supabase: which fields go where
 
 Supabase dashboard → the project behind `lannacare.org` (today

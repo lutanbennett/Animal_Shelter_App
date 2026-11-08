@@ -83,7 +83,7 @@ clients and refresh tokens were not part of the block. Only the console was. If
 | Service accounts | none | none | none |
 | OAuth clients | **none** (2 deleted 2026-10-09) | **3** (below) | none |
 | Branding | verified (2026-09-22) | **verified and published 2026-10-09** | — |
-| Used for | **Nothing since 2026-10-09** | Drive storage everywhere; staff sign-in on **both** Supabase projects (`lannacare.org`, `test.lannacare.org`, local) | Nothing; unused |
+| Used for | **Nothing since 2026-10-09** | Drive storage everywhere; staff sign-in on **every** Supabase project (production, dev/test and, since 2026-11-08, UAT's own `fsjagxmxjosauwmxwype`) | Nothing; unused |
 
 All of the above is [seen 2026-10-09]. Older history [recorded]: LCA App was
 renamed from `My First Project` and published 2026-09-22 (branding `Lanna Care for
@@ -98,6 +98,7 @@ second `My First Project` is a different, later project, not the renamed one.
 | Project | Name | Type | Client ID | Redirect URI | Created | Secrets (all enabled) | Serves |
 |---|---|---|---|---|---|---|---|
 | Lanna Care - Dev | Lanna Care sign-in (production Supabase) | Web | `1036347359893-udugtetbu312ee8301th8r0uo1jucupd` | `https://dbkodyyxxhtygxcxmfcu.supabase.co/auth/v1/callback` | 2026-10-09 | 1 (2026-10-09) | **Production sign-in** (`lannacare.org`). Lutan pasted it into Supabase `dbkodyyxxhtygxcxmfcu` and signed in with it on 2026-10-09 |
+| Lanna Care - Dev | Lanna Care sign-in (UAT Supabase) | Web | not copied here: read it in the console | `https://fsjagxmxjosauwmxwype.supabase.co/auth/v1/callback` | 2026-11-08 | 1 (2026-11-08) | **UAT sign-in** (`uat.lannacare.org`). Created by Lutan as `lannaanimalfoundationbwm` on 2026-11-08 (`docs/uat-finalisation.md` Part 4, step 2), pasted into Supabase `fsjagxmxjosauwmxwype` → Providers → Google, secret in `.env.deploy.uat` as `GOOGLE_SIGNIN_CLIENT_SECRET` [reported by Lutan, 2026-11-08] |
 | Lanna Care - Dev | LCA Application | Web | `1036347359893-tk4qklicq40o496onnqan8j8mf1od331` | `https://qxkmhwybjggxvsfxsxbd.supabase.co/auth/v1/callback` | 2026-09-20 | 1 (2026-09-20) | **Dev/test sign-in.** Supabase `qxkmhwybjggxvsfxsxbd` uses this client [recorded: Management API, 2026-10-07] |
 | Lanna Care - Dev | Lanna Care Drive Access | Desktop | `1036347359893-dfbupbdp60l8ukicc08dhf0jipafinb6` | none (Desktop clients use a loopback address) | 2026-09-18 | 1 (2026-09-18) | **All Drive access**: photos, attachments, archive PDFs, backups, for every environment. `GOOGLE_OAUTH_CLIENT_ID` in `.env.local` [repo] |
 
@@ -170,6 +171,7 @@ nobody out, because the secret is only used during the sign-in exchange [recorde
 |---|---|---|---|---|
 | Production sign-in | `lannaanimalfoundationbwm` | Lanna Care - Dev | `…udugte…` (redirect `dbkodyyxxhtygxcxmfcu`) | Supabase `dbkodyyxxhtygxcxmfcu` → Authentication → Providers → Google; and `.env.deploy.production`. Then disable the old secret |
 | Dev/test sign-in | `lannaanimalfoundationbwm` | Lanna Care - Dev | `…tk4qkl…` (redirect `qxkmhwybjggxvsfxsxbd`) | Supabase `qxkmhwybjggxvsfxsxbd` → Authentication → Providers → Google |
+| UAT sign-in | `lannaanimalfoundationbwm` | Lanna Care - Dev | Lanna Care sign-in (UAT Supabase) (redirect `fsjagxmxjosauwmxwype`) | Supabase `fsjagxmxjosauwmxwype` (account `lutan.bennett1`) → Authentication → Providers → Google; and `GOOGLE_SIGNIN_CLIENT_SECRET` in `.env.deploy.uat` |
 | Drive | `lannaanimalfoundationbwm` | Lanna Care - Dev | `…dfbupb…` (Desktop) | `GOOGLE_OAUTH_CLIENT_SECRET` in every place listed above, then `deploy.mjs --secrets` for each environment. The refresh token stays valid across a secret change, so no new token is needed |
 
 Google lets a client hold two secrets at once for exactly this: add the new one,
@@ -306,6 +308,6 @@ blocks or is undone by that.
 Still open after the 2026-10-09 stocktake:
 
 - Whether anything other than Supabase used the deleted LCA App clients. Nothing in the repo does, and sign-in worked after they were disabled. If something unexpected breaks before 2026-11-08, restoring them from LCA App's deleted-credentials page is the quick way back.
-- What `.env.deploy.uat` holds. No such file existed in the main checkout on 2026-10-09.
+- ~~What `.env.deploy.uat` holds.~~ Answered 2026-11-08: it exists, and `node scripts/check-uat-ready.mjs` checks its Google keys (the three `GOOGLE_OAUTH_*` shared with every environment, UAT's own Drive root, no calendar keys) without printing a value.
 - Where the 90-day expiry lives.
 - Anything owned by `lannacareforanimals@gmail.com`, which is not signed in to Lutan's Chrome.
