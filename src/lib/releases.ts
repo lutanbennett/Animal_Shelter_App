@@ -71,6 +71,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "Photos to approve now names the fundraising event a waiting photo belongs to, instead of just saying \"A fundraising event\". You see only the event's name, not the rest of the event. The campaign and project-folder pickers on an event already say when they are short because your login cannot see campaigns or project folders.",
+    cards: ["approve_photos"],
+  },
+  {
     text: "Contacts can now be a Partner: a business, school, clinic or group that helps the shelter without selling it anything. Before, it had to be filed as a Supplier to appear on the Shelter Friends page. Choose Partner when you add or edit a contact, and a Partner can be made a Shelter Friend just like a supplier. The contacts list has a Partner filter beside Supplier.",
     cards: ["contacts", "publish_shelter_friends"],
   },
