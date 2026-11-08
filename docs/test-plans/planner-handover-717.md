@@ -132,6 +132,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 |---|---|---|---|
 | 1 | low | `Write` refused `docs/planner-handover.md` with *"File has not been read yet"*, so the first attempt to install the text failed and wrote nothing. The skill's own prescribed route (write to the scratchpad, then `cat <scratch> > <file>`) was used instead | fixed — no content was lost, and the refusal is the harness working as designed on a file this session had not read |
 | 2 | low | `node scripts/worktree.mjs sync` was declined with *"run 'git pull' in the main checkout instead"* because the shell's working directory had been reset to the main checkout between calls. Re-run inside the worktree in a subshell | fixed — and the branch was 0 commits behind `origin/main` anyway, so nothing was skipped |
+| 3 | medium | **`test-plan` went red on the first pushed commit (`5eeab63d`), and it was right to.** The gates line in section 2 was ticked while the fenced block under it still read `GATES_BLOCK_PLACEHOLDER`, and `check-test-plan.mjs` refused it: *"fenced block under ticked line 28 … still holds placeholder text — paste the real output"*. **A tick whose evidence is a placeholder is exactly what that check exists to catch**, so this is the instrument working, not noise | fixed — the block now holds the run's own four per-gate lines and the summary, and the run on the current head (`d59ff84b`, run `42474489654`) is `completed success` |
 
 ## Left for manual verification
 
