@@ -157,8 +157,12 @@ the live site is `lannacareforanimals.org` (the production block). UAT is
 `uat.lannacare.org` (moved from `lannacare.org` on 2026-11-08; `lannacare.org` and `www` now forward
 to production by a Cloudflare redirect rule, `docs/uat-finalisation.md`). UAT has its **own** Supabase project (`fsjagxmxjosauwmxwype`, in a second
 Supabase account; `docs/decisions/2026-11-06-uat-own-database.md`), so its
-build is badged UAT by that project alone. Until its data is loaded UAT is a
-code-ready but empty database.
+build is badged UAT by that project alone. **UAT is finished and live as of
+2026-11-08** — it holds a copy of production's data and is served by the Pi — and
+Lutan said the same day that it *"is now part of the standard release process"*, so
+a release now deploys it alongside test and production
+(`docs/release-procedure.md`, step 6, which also lists the three one-time jobs it
+still needs).
 
 | | Dev | Test | UAT | Production |
 |---|---|---|---|---|
@@ -167,24 +171,29 @@ code-ready but empty database.
 | Database | dev Supabase project (`qxkmhwybjggxvsfxsxbd`) | **the same dev project** | `fsjagxmxjosauwmxwype` (own project, second Supabase account) | `dbkodyyxxhtygxcxmfcu` |
 | Google Drive | dev account | dev account | dev account (the current tree) | dev account, until the shelter's own account exists |
 | Values from | `.env.local` | `.env.local` | `.env.deploy.uat` over `.env.local` | `.env.deploy.production` over `.env.local` |
-| Deploy | — | `npm run deploy:test` | `npm run deploy:uat` | `npm run deploy:prod` |
-| Looks | teal, striped strip and **Dev** badge in the header | teal, strip and **Dev** badge | orange, **UAT** badge | orange |
+| Deploy | — | `node scripts/deploy.mjs --env test` | `node scripts/deploy.mjs --env uat` | `node scripts/deploy.mjs --env production` |
+| Looks | teal, striped strip and **Dev** badge in the header | teal, strip and **Dev** badge | indigo, strip and **UAT** badge | orange |
 | Generated PDFs | `DEV` watermark | `DEV` watermark | `UAT` watermark | none |
-| Release mail | never | never | `[UAT]` | `[Production]` |
+| Release mail | never | never | **never, unless `--mail` is given in words** — its database holds production's real people (`[UAT]` is the label it would use) | `[Production]` |
 | Public website | open | **locked** — sign-in landing page | **locked** | **locked** until the cutover, then open |
 
 Dev and Test are recoloured (teal instead of orange, greenish surfaces, a
 **Dev** badge beside the logo once signed in) so a tab on the dev database
-is never mistaken for the live site. UAT is deliberately *not* recoloured —
-the customer should be testing the real thing — and differs from
-Production only by its **UAT** badge and the watermark on the archive PDF
-(`src/lib/archive/resident-summary-pdf.tsx`), which lands in a Drive that
-dev, Test and UAT share. `src/lib/app-env.ts` decides from the Supabase
+is never mistaken for the live site. **UAT is recoloured too, in indigo**
+(Lutan, 2026-11-06: it *"just needs to be different to prod"*; the hue was the
+builder's) — `:root[data-env="uat"]` in `globals.css`, for the app and again for
+the public pages — plus a **UAT** badge, a fixed-colour strip, and the watermark
+on the archive PDF (`src/lib/archive/resident-summary-pdf.tsx`). **Only the
+default dark theme shows the indigo:** light, high contrast and magenta redefine
+the same tokens and win, so under those UAT is told apart by the strip and badge
+alone. UAT's Drive is its **own** copy since 2026-11-08, no longer shared with dev
+and Test. `src/lib/app-env.ts` decides from the Supabase
 project ref the build was made with — not from `NODE_ENV`, which is
 `production` on Test too — and the layout sets `<html data-env>`, which
-`globals.css` keys the colour tokens on. Its `UAT_PROJECT_REF` is empty
-until the cutover, because the project that will be UAT is production's
-today; set early, it would badge the live site.
+`globals.css` keys the colour tokens on. Its `UAT_PROJECT_REF` is
+`fsjagxmxjosauwmxwype` since UAT got its own project; it was deliberately empty
+before that, because the project that was going to be UAT was production's, and
+setting it early would have badged the live site.
 
 Each person can also pick a colour theme (account menu → Colours), which
 redefines the same tokens and so overrides dev's teal. That is why the
@@ -240,8 +249,12 @@ which environment; `scripts/deploy.mjs`, `scripts/apply-migrations.mjs`,
 `scripts/backup.mjs`, `scripts/check-public-views.mjs` and
 `scripts/bootstrap-admin.mjs` all take `--env test|uat|production`
 (default `test`) and print the environment and Supabase project ref before
-doing anything. `--env uat` stops at once while `.env.deploy.uat` does
-not exist, which is until the cutover.
+doing anything. `.env.deploy.uat` exists since 2026-11-08, so `--env uat` runs for
+real — **except in `apply-migrations.mjs`**, where UAT's access token lacks
+`database_read` and every mode dies with
+`Missing required permission(s): database_read` (`docs/release-procedure.md`,
+*What UAT still needs once*). A worktree has only `.env.local`, so UAT commands
+are run from the main checkout.
 
 `.env.deploy.production` (gitignored) holds the production
 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and
@@ -299,8 +312,12 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
 3. **Deploy to Test**
 
    ```bash
-   npm run deploy:test
+   node scripts/deploy.mjs --env test
    ```
+
+   (The `npm run deploy:*` forms in `package.json` are the same commands, but
+   PowerShell's execution policy blocks `npm` on the machine this is run from,
+   so the bare `node` form is what the documents give.)
 
    Builds with the dev Supabase values, empties the env-file snapshot
    OpenNext bakes into the bundle (`scripts/strip-baked-env.mjs` — check its
@@ -337,11 +354,11 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
 4. **Deploy to UAT or Production**
 
    ```bash
-   npm run deploy:uat
+   node scripts/deploy.mjs --env uat --no-mail
    ```
 
    ```bash
-   npm run deploy:prod
+   node scripts/deploy.mjs --env production
    ```
 
    Same steps with `.env.deploy.uat` / `.env.deploy.production`, and a
@@ -350,7 +367,9 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    commits GitHub has. Merge first, then deploy. Every environment,
    Test included, also refuses when its env file points at a project
    `src/lib/app-env.ts` would badge as something else — which is why
-   `deploy:uat` expects the dev project's values in `.env.deploy.uat`.
+   `--env uat` expects **UAT's own** project's values in `.env.deploy.uat`, and
+   refuses a Supabase secret that came only from `.env.local` (dev's) whatever
+   flag you pass.
 
    **Why the strip step matters.** The OpenNext adapter copies *everything*
    in `.env.local` into the Worker bundle as a fallback for any variable not
@@ -548,7 +567,10 @@ the Workers runtime — the `googleapis` SDK does not (see `docs/decisions.md`).
    the release (dashboard → Workers → Deployments), and after deploying
    emails a **major** release that is new to the site to that environment's
    admins, with `[UAT]` / `[Production]` in the subject; `--no-mail` skips
-   the email. Test never sends. The one-off Cloudflare setup the email needs
+   the email. **Test never sends, and UAT does not send unless `--mail` is given
+   in words** — UAT's database holds a copy of production's real people, so a
+   forgotten flag would have mailed them from a test site
+   (`docs/decisions/2026-11-08-uat-in-every-release.md`). The one-off Cloudflare setup the email needs
    — verifying each admin's address under Email Routing, free —
    is [`docs/email-sending.md`](docs/email-sending.md) §1.
 
