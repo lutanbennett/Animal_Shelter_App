@@ -14,6 +14,7 @@ const role = (permissions, key = "custom_x") =>
     permissions,
   });
 const hrefs = (tiles) => tiles.map((x) => x.href);
+// The one tile not from a card: the user manual's, the same on every home (manualTile(), #ce6ec, 2026-11-08). It grants nothing.
 // Cells that open pages in Operations, Management and My tasks all at once.
 const wide = { "resident.record": 1, "recurring.manage": 2, "recurring.do_any": 2, "recurring.do_own": 2, "medical.prescriptions": 1, "medical.diet": 1, "contact.directory": 1 };
 
@@ -29,12 +30,12 @@ test("Operations and Management are groupings, not cards (0268)", () => {
 
 test("a role's home is exactly its cards, however wide its cells are", () => {
   const perms = role(wide);
-  assert.deepEqual(hrefs(homeTilesFor(perms, en, 0, ["view_residents"])), ["/residents"]);
+  assert.deepEqual(hrefs(homeTilesFor(perms, en, 0, ["view_residents"])), ["/residents", "/manual"]);
 });
 
 test("a ruled role key gets no card it was not given", () => {
   for (const key of ["management", "second_in_command", "head_of_medical", "head_of_maintenance"]) {
-    assert.deepEqual(hrefs(homeTilesFor(role(wide, key), en, 0, ["view_residents"])), ["/residents"], key);
+    assert.deepEqual(hrefs(homeTilesFor(role(wide, key), en, 0, ["view_residents"])), ["/residents", "/manual"], key);
   }
 });
 

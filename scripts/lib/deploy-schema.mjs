@@ -21,12 +21,8 @@ export function deployedMigrations(git, ref = "HEAD") {
   return [...parseLsTree(git(`ls-tree ${ref} ${MIGRATIONS_DIR}/`)).keys()].sort();
 }
 
-/**
- * Ask the Management API which files the target has applied.
- * Returns { ok: true, applied: string[] } or { ok: false, reason } when it
- * could not be asked (no token, network, timeout, API error). Never throws.
- */
-export async function appliedMigrations(env, projectRef, { timeoutMs = 20_000, fetchImpl = fetch } = {}) {
+/** Ask the Management API which files the target has applied. Never throws. */
+async function fromManagementApi(env, projectRef, { timeoutMs, fetchImpl }) {
   const token = env.SUPABASE_ACCESS_TOKEN;
   if (!token) return { ok: false, reason: "SUPABASE_ACCESS_TOKEN is not set" };
   const query = async (sql) => {
@@ -43,10 +39,62 @@ export async function appliedMigrations(env, projectRef, { timeoutMs = 20_000, f
   try {
     const [{ exists }] = await query("select to_regclass('public.schema_migrations') is not null as exists");
     // No table is an answer, not a failure: nothing has been applied.
-    if (!exists) return { ok: true, applied: [] };
+    if (!exists) return { ok: true, applied: [], via: "the Management API" };
     const rows = await query("select filename from schema_migrations");
-    return { ok: true, applied: rows.map((r) => r.filename) };
+    return { ok: true, applied: rows.map((r) => r.filename), via: "the Management API" };
   } catch (error) {
     return { ok: false, reason: error?.message ?? String(error) };
   }
+}
+
+/**
+ * Ask the database itself, over PostgREST with the env file's service-role key.
+ * The fallback for a project whose access token cannot read it — UAT's cannot
+ * (`Missing required permission(s): database_read`), and it is now a standard
+ * release target (docs/release-procedure.md, step 6).
+ *
+ * The URL must name the SAME project the caller asked about, or this refuses:
+ * answering about dev's database while the caller believes it asked UAT's is
+ * the one way a working guard becomes a lying one.
+ */
+async function fromPostgrest(env, projectRef, { timeoutMs, fetchImpl }) {
+  const url = env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return { ok: false, reason: "no NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY to ask the database directly" };
+  if (projectRef && !url.includes(projectRef)) {
+    return { ok: false, reason: `NEXT_PUBLIC_SUPABASE_URL is not project ${projectRef}, so asking it would answer about another database` };
+  }
+  try {
+    const res = await fetchImpl(`${url.replace(/\/+$/, "")}/rest/v1/schema_migrations?select=filename`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    const text = await res.text();
+    // No table reads as "nothing applied" here too, the same answer the API gives.
+    if (res.status === 404 || (res.status === 400 && /schema_migrations/.test(text))) {
+      return { ok: true, applied: [], via: "the database directly" };
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${text.slice(0, 200)}`);
+    return { ok: true, applied: JSON.parse(text).map((r) => r.filename), via: "the database directly" };
+  } catch (error) {
+    return { ok: false, reason: error?.message ?? String(error) };
+  }
+}
+
+/**
+ * Which files the target database has applied.
+ * Returns { ok: true, applied: string[], via } or { ok: false, reason } when
+ * neither route could be asked. Never throws.
+ *
+ * Two routes, in order: the Management API, then the database itself over
+ * PostgREST. The second exists because a project's access token may be unable
+ * to read it at all, which made the guard blind rather than wrong — the worse
+ * failure, because a blind guard looks like a passing one.
+ */
+export async function appliedMigrations(env, projectRef, { timeoutMs = 20_000, fetchImpl = fetch } = {}) {
+  const api = await fromManagementApi(env, projectRef, { timeoutMs, fetchImpl });
+  if (api.ok) return api;
+  const direct = await fromPostgrest(env, projectRef, { timeoutMs, fetchImpl });
+  if (direct.ok) return direct;
+  return { ok: false, reason: `${api.reason}; and asking the database directly: ${direct.reason}` };
 }

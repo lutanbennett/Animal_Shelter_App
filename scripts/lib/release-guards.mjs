@@ -96,7 +96,9 @@ export function assertSchema({ envName, result, git, read }) {
     };
   }
   const missing = missingFromDatabase(deployedMigrations(git), result.applied);
-  if (!missing.length) return { ok: true, message: `${envName} holds every migration this commit carries.` };
+  if (!missing.length) {
+    return { ok: true, message: `${envName} holds every migration this commit carries${result.via ? ` (asked ${result.via})` : ""}.` };
+  }
   const lines = consumersOf(missing, read).map(({ name, consumers }) =>
     `  - ${name}` +
     (consumers === null ? "  (declares no -- consumer: header)" : consumers.length ? `  <- read by ${consumers.join(", ")}` : "  (consumer: none)"));

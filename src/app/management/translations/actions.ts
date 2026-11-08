@@ -8,6 +8,7 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { ROW_COLUMNS, type TranslationRow } from "@/lib/translations/types";
 import { linkTargets, sameLinks } from "@/lib/site/links";
 import { can } from "@/lib/permissions/can";
+import { dbRefusal } from "@/lib/db-refusal";
 import { loadPermissions } from "@/lib/permissions/load";
 
 /** The words runWriteAction() needs; the same three for every write here. */
@@ -194,7 +195,7 @@ export async function saveLabelTranslation(
         p_column: column,
         p_text: "",
       });
-      if (clearError) return refuse(clearError.message);
+      if (clearError) return dbRefusal("translations.saveLabelTranslation", clearError, t);
     }
     const { data, error } = await supabase.rpc("set_label_th", {
       p_table: table,
@@ -202,7 +203,7 @@ export async function saveLabelTranslation(
       p_column: column,
       p_text: trimmed,
     });
-    if (error) return refuse(error.message);
+    if (error) return dbRefusal("translations.saveLabelTranslation", error, t);
     if (data !== true) return refuse(t.translations.errors.labelNotFound);
     revalidatePath("/", "layout");
     return { ok: true, textTh: trimmed || null };
@@ -242,7 +243,7 @@ export async function proposeLabelTranslation(
       p_column: column,
       p_text: trimmed,
     });
-    if (error) return refuse(error.message);
+    if (error) return dbRefusal("translations.proposeLabelTranslation", error, t);
     // false means the row itself is gone (0294 checks, rather than writing a dead draft).
     if (data !== true) return refuse(t.translations.errors.labelNotFound);
     revalidatePath("/management/translations");
@@ -273,7 +274,7 @@ export async function approveLabelTranslation(
       p_row_id: rowId,
       p_column: column,
     });
-    if (error) return refuse(error.message);
+    if (error) return dbRefusal("translations.approveLabelTranslation", error, t);
     if (data !== true) return refuse(t.translations.errors.labelNotFound);
     revalidatePath("/", "layout");
     return { ok: true };
@@ -300,7 +301,7 @@ export async function discardLabelDraft(
       p_row_id: rowId,
       p_column: column,
     });
-    if (error) return refuse(error.message);
+    if (error) return dbRefusal("translations.discardLabelDraft", error, t);
     if (data !== true) return refuse(t.translations.errors.nothingWaiting);
     revalidatePath("/management/translations");
     return { ok: true };

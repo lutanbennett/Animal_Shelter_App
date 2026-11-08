@@ -5,7 +5,8 @@
 //   node scripts/check-home-screens.mjs
 //
 //   A  the device rule: which screens are phones and which are desks, tablets included
-//   B  a tile is always one the registry can draw: a registered path, or My tasks / Residents;
+//   B  a tile is always one the registry can draw: a registered path, or My tasks / Residents, or the
+//      user manual's, which every home carries once (manualTile(), #ce6ec);
 //      never a path with a record id in it, never twice, never a page the person is refused
 //   C  each default role's home: what leads, what is left out, what is only that role's
 //   D  Settings pages stay on Admin's Settings home, but a role holding only those still has a home
@@ -26,7 +27,7 @@ register(
 );
 const imp = (p) => import(pathToFileURL(join(root, p)).href);
 const { deviceFrom } = await imp("src/lib/home/device.ts");
-const { homeTilesFor } = await imp("src/lib/home/tiles.ts");
+const { homeTilesFor, MANUAL_HREF } = await imp("src/lib/home/tiles.ts");
 const { ROUTES, canOpen } = await imp("src/lib/permissions/routes.ts");
 const { ACTIVITIES } = await imp("src/lib/permissions/catalogue.ts");
 const { parsePermissions } = await imp("src/lib/permissions/can.ts");
@@ -82,7 +83,8 @@ for (const [role, perms] of Object.entries(roles)) {
   const tiles = homeTilesFor(perms, t);
   const hrefs = tiles.map((x) => x.href);
   eq(`B ${role}: no tile twice, none without a word`, [new Set(hrefs).size === hrefs.length, tiles.every((x) => x.label)], [true, true]);
-  eq(`B ${role}: every tile is a registered page, My tasks or Residents`, hrefs.filter((h) => !registered.has(h) && h !== "/my" && h !== "/residents" && h !== "/residents/new" && h !== "/bills"), []);
+  eq(`B ${role}: every tile is a registered page, My tasks or Residents`, hrefs.filter((h) => !registered.has(h) && h !== "/my" && h !== "/residents" && h !== "/residents/new" && h !== "/bills" && h !== MANUAL_HREF), []);
+  eq(`B ${role}: the user manual's tile is on the home, once and last`, [hrefs.filter((h) => h === MANUAL_HREF).length, hrefs.at(-1)], [1, MANUAL_HREF]);
   eq(`B ${role}: no tile has a record id in it`, hrefs.filter((h) => h.includes("[")), []);
   eq(`B ${role}: every registered tile opens for the role`, hrefs.filter((h) => registered.has(h) && !canOpen(perms, ROUTES.find((r) => r.path === h))), []);
   eq(`B ${role}: the labels are one word each (no two tiles read alike)`, new Set(tiles.map((x) => x.label)).size, tiles.length);
@@ -132,7 +134,7 @@ const shelterMade = (gone = []) => {
   ], [[], true, true, []]);
   eq("C a shelter-made role without recurring.manage loses Recurring jobs", hrefsOf(shelterMade(["recurring.manage"])).includes("/management/recurring-jobs"), false);
   eq("C a shelter-made role without recurring.do_own loses My tasks", hrefsOf(shelterMade(["recurring.do_own"])).includes("/my"), false);
-  eq("C a shelter-made role with every cell taken away has no tiles", hrefsOf(shelterMade(ACTIVITIES.map((a) => a.key))), []);
+  eq("C a shelter-made role with every cell taken away has no tiles but the manual's", hrefsOf(shelterMade(ACTIVITIES.map((a) => a.key))), [MANUAL_HREF]);
   eq("C a shelter-made role that is not Management is not given Intake as a tile (it is the curated screen's)", hrefs.includes("/residents/new"), false);
 }
 // Staff's home (stocktake, maintenance, deliveries) went with the role (0173).
@@ -162,7 +164,7 @@ eq("C Contacts is one tile, and opens the manager for the role that may use it",
 ], [["/management/contacts"], ["/contacts"]]);
 // R1 (volunteer-read-only): a tile that survives its page is the clearest sign the app is out of step with
 // the cells. The volunteer holds three cells and its home is exactly the two pages they open.
-eq("C a volunteer's home is Residents and Enclosures, and nothing else", homeTilesFor(roles.volunteer, t).map((x) => x.href), ["/residents", "/enclosures"]);
+eq("C a volunteer's home is Residents and Enclosures, and nothing else", homeTilesFor(roles.volunteer, t).map((x) => x.href), ["/residents", "/enclosures", MANUAL_HREF]);
 
 eq("C Enclosures is the menu's page", [
   homeTilesFor(roles.volunteer, t).filter((x) => x.label === t.nav.enclosures).map((x) => x.href),
@@ -176,7 +178,7 @@ const settingsOnly = parsePermissions({
   permissions: { "reference.types": 2 },
 });
 eq("D a role holding only a Settings activity still has a home", homeTilesFor(settingsOnly, t).some((x) => x.href.startsWith("/admin/")), true);
-eq("D a role holding nothing has no tiles: a role is a placeholder until a card is assigned", homeTilesFor(parsePermissions({ role: { key: "x", name: "X" }, scopes: {}, permissions: {} }), t).map((x) => x.href), []);
+eq("D a role holding nothing has no tiles but the manual's: a role is a placeholder until a card is assigned", homeTilesFor(parsePermissions({ role: { key: "x", name: "X" }, scopes: {}, permissions: {} }), t).map((x) => x.href), [MANUAL_HREF]);
 
 console.log(fails ? `\n${fails} FAILED` : "\nall ok");
 process.exitCode = fails ? 1 : 0;

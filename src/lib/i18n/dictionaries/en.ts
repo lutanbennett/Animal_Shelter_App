@@ -77,6 +77,20 @@ const en = {
     enclosure: "Enclosure",
     status: "Status",
   },
+  // Refusals a database function raises as a KEY rather than a sentence (src/lib/db-refusal.ts; #3nuwy,
+  // docs/decisions/2026-11-08-db-refusal-keys-mechanism.md). One entry per key, spelt exactly as the SQL raises it;
+  // parameters arrive from the error's detail as strings. A key with no entry here falls back to
+  // common.somethingWentWrong with a reference, never to the key itself. Later groups add their keys to this block.
+  refusals: {
+    "label.translate_not_allowed": () => "Your access does not include translating labels.",
+    "label.propose_not_allowed": () => "Your access does not include proposing Thai for labels.",
+    "label.approve_not_allowed": () => "Your access does not include approving Thai for labels.",
+    "label.discard_not_allowed": () => "Your access does not include discarding proposed Thai.",
+    "label.not_translatable": (p: Record<string, string>) =>
+      `"${p.table}.${p.column}" is not a label that can be translated. Reload the page and try again.`,
+    "label.no_proposal_waiting": () =>
+      "There is no proposed Thai waiting for this label any more. Someone may have approved or discarded it already; reload the page to see where it stands.",
+  },
 
   // The notice a desktop-only Settings/Management page shows on a phone
   // (components/LargerScreenNotice.tsx), and the tile label that warns of it.
@@ -1569,7 +1583,7 @@ const en = {
         title: "Waiting for a resident",
         none: "No photo has waited more than 30 days for someone to choose its resident.",
         waiting: (v: { count: number; age: string }) =>
-          `${v.count} photo${v.count === 1 ? "" : "s"} tagged to an enclosure ${v.count === 1 ? "has" : "have"} waited more than 30 days, ${v.age}.`,
+          `${v.count} photo${v.count === 1 ? "" : "s"} waiting to be named ${v.count === 1 ? "has" : "have"} waited more than 30 days, ${v.age}.`,
         oldestDays: (v: { days: number }) => `the oldest ${v.days} days`,
         review: "Choose their residents on Photos to approve",
         fail: "Couldn't count photos with no resident.",
@@ -5246,7 +5260,7 @@ const en = {
       residentsHint: "None, one or several. Each resident's page lists the memes they are in.",
       pickResidents: "Choose residents",
       noResidentsOnFile: "There are no residents on file yet.",
-      cannotSeeResidents: "Your cards don't let you see the residents, so none can be offered. Ask an admin to check them.",
+      cannotSeeResidents: "Your cards don't let you see the residents, so none can be offered. Ask whoever manages cards at your shelter to check them.",
       save: "Save meme",
       saving: "Saving…",
       cancel: "Cancel",
@@ -5280,7 +5294,7 @@ const en = {
       recentResidents: "Recently photographed residents",
       noResidentMatch: "No resident matches that.",
       noResidentsOnFile: "There are no residents on file yet.",
-      cannotSeeResidents: "Your cards don't let you see the residents, so none can be offered. Ask an admin to check them.",
+      cannotSeeResidents: "Your cards don't let you see the residents, so none can be offered. Ask whoever manages cards at your shelter to check them.",
       pickPhoto: (name: string) => `Choose a photo of ${name}`,
       noPhotos: "This resident has no photos that can be made into a meme.",
       refused: "That photo cannot be made into a meme.",
@@ -5490,6 +5504,7 @@ const en = {
     events: {
       heading: (n: number) => (n === 1 ? "1 event photo waiting" : `${n} event photos waiting`),
       anEvent: "A fundraising event",
+      eventOn: (date: string) => `Event date: ${date}`,
       removeBody: (title: string) => `The photo on ${title} will be deleted.`,
       photoAlt: (title: string) => `Photo waiting for approval: ${title}`,
       approveFailed: "The photos could not be approved. Nothing was changed. Try again.",
@@ -5506,7 +5521,7 @@ const en = {
       notWaiting: "That photo was already approved or removed. Refresh the page.",
       removeFailed: "The photo could not be removed. Nothing was changed. Try again.",
     },
-    /** Photos tagged to an enclosure by someone who did not know the animal (0218). */
+    /** Photos saved by someone who did not know the animal (0218), tagged to an enclosure or to no place at all (#40oz4). */
     pending: {
       heading: (n: number) => (n === 1 ? "1 photo waiting to be named" : `${n} photos waiting to be named`),
       intro: "The person who took these did not know which animal is in them. Choose who it is. If there are two animals, choose both.",
