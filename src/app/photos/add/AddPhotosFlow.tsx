@@ -81,6 +81,7 @@ export function AddPhotosFlow({
   waits,
   residents,
   loadError,
+  residentsEmptyNote,
   enclosures,
   mayStoreForLater,
 }: {
@@ -92,6 +93,8 @@ export function AddPhotosFlow({
   waits: boolean;
   residents: PickableResident[];
   loadError: string | null;
+  /** Why the resident list is empty, said in the picker (never names a role). */
+  residentsEmptyNote?: string;
   /** Where a photo can be tagged when the person does not know the animal; null where that path is not offered. */
   enclosures: EnclosureChoices | null;
   /** The login may file a photo with no resident and no place: the activity /api/photos/pending asks, read there. */
@@ -566,6 +569,7 @@ export function AddPhotosFlow({
                 residents={residents}
                 query={query}
                 error={loadError}
+                emptyNote={residentsEmptyNote}
                 onPick={pick}
                 onQueryChange={setQuery}
               />

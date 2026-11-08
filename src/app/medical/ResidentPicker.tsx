@@ -34,6 +34,7 @@ export function ResidentPicker({
   onQueryChange,
   before,
   scanJob,
+  emptyNote,
 }: {
   t: Dictionary;
   locale: Locale;
@@ -49,6 +50,8 @@ export function ResidentPicker({
   before?: React.ReactNode;
   /** The job a scanned card opens on an iPhone; omit where a page load would lose work. */
   scanJob?: CardWaitJob;
+  /** Said when there is nobody to offer at all (no search typed), in place of the generic line. */
+  emptyNote?: string;
 }) {
   const p = t.medicalJobs.picker;
   const shown = residents.filter((r) => matchesQuery(r, query));
@@ -133,7 +136,7 @@ export function ResidentPicker({
       )}
       {!error && shown.length === 0 && (
         <p className="rounded-lg border border-border bg-surface p-4 text-muted">
-          {query ? (residentCodeFrom(query) ? p.noMatchCode : p.noMatch) : p.empty}
+          {query ? (residentCodeFrom(query) ? p.noMatchCode : p.noMatch) : residents.length === 0 && emptyNote ? emptyNote : p.empty}
         </p>
       )}
 

@@ -3,7 +3,26 @@ import { loadPlaceOrder, natural } from "@/lib/enclosures/order";
 import { residentPlace } from "@/lib/residents/place";
 import { isUuid, residentCodeFrom } from "@/lib/tags/links";
 
+import { can } from "@/lib/permissions/can";
+import type { Permissions } from "@/lib/permissions/can";
+
 type Supabase = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * Why a resident list is empty, so a screen never claims the shelter has no animals when the truth is that the login's
+ * cards cannot see them: null when there are residents, "none" when a card lets this login read who residents are and
+ * there are none (or the read worked and found nobody), "cannot" when no card does or the read failed.
+ * One definition for the meme screens and /photos/add (docs/decisions/2026-11-08-photos-add-messages.md).
+ */
+export function residentsEmptyKind(
+  perms: Permissions | null | undefined,
+  count: number,
+  error: string | null,
+): "none" | "cannot" | null {
+  if (count > 0) return null;
+  const sees = can(perms, "resident.who_and_where", "read") || can(perms, "resident.record", "read");
+  return sees && !error ? "none" : "cannot";
+}
 
 /** A row of `resident_who_and_where` (0134): who a resident is and where it lives, nothing more. */
 type WhoRow = {
