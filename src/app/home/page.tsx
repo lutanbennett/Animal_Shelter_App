@@ -6,7 +6,7 @@ import { entersApp } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { deviceFrom } from "@/lib/home/device";
 import { listHomeRoles, loadCardsByRole } from "@/lib/home/roles";
-import { cardsWithoutTile, homeGroupsForRoles } from "@/lib/home/tiles";
+import { cardsWithoutTile, hasJobTiles, homeGroupsForRoles } from "@/lib/home/tiles";
 import { loadUrgentCounts } from "@/lib/my-tasks/urgent";
 import { countBillsWaiting } from "@/lib/bills/waiting";
 import { countPhotosWaiting } from "@/lib/photos/approval";
@@ -81,14 +81,14 @@ export default async function HomePage() {
         <h1 className="text-2xl font-semibold text-foreground">{t.appHome.pageTitle}</h1>
         <p className="text-sm text-muted">{t.appHome.subtitle}</p>
       </div>
-      {tiles.length > 0 ? (
-        views.length > 1 ? <HomeGroups groups={views} today={todayIso()} label={t.appHome.groupsLabel} /> : <HomeTiles tiles={tiles} />
-      ) : (
+      {/* The manual's tile is on every home (manualTile()), so a role with no jobs still gets it, under the notice. */}
+      {!hasJobTiles(tiles) && (
         <section className="rounded-lg border border-border bg-surface p-4">
           <h2 className="font-semibold text-foreground">{t.appHome.emptyTitle}</h2>
           <p className="text-sm text-muted">{t.appHome.empty}</p>
         </section>
       )}
+      {views.length > 1 ? <HomeGroups groups={views} today={todayIso()} label={t.appHome.groupsLabel} /> : <HomeTiles tiles={tiles} />}
       {stuck.length > 0 && (
         <section className="rounded-lg border border-border bg-surface p-4">
           <h2 className="font-semibold text-foreground">{t.appHome.cardsNoPageTitle}</h2>

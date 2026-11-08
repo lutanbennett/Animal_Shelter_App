@@ -20,7 +20,8 @@ test("two roles: two groups, main first, a shared tile in each", () => {
   const groups = homeGroupsForRoles(perms, en, undefined, { main: ["add_photos"], cover: ["add_photos", "contacts"] });
   assert.deepEqual(groups.map((g) => g.roleKey), ["main", "cover"]);
   // A home is only its cards: no Operations or Management tile unless a landing card was given.
-  assert.deepEqual(groups[0].tiles.map((x) => x.href), ["/photos/add"]);
+  // ...apart from the user manual's tile, which every group carries (manualTile(), #ce6ec).
+  assert.deepEqual(groups[0].tiles.map((x) => x.href), ["/photos/add", "/manual"]);
   assert.ok(groups[1].tiles.some((x) => x.href === "/photos/add"));
   assert.ok(groups[1].tiles.length > 1);
 });
