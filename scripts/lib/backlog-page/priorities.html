@@ -252,6 +252,11 @@
         li.append(grip);
       }
       li.append(el("span", "n", String(i + 1)));
+      // The item's own id, so a row in this list can be quoted in a conversation
+      // the same way the item rows below can. A pick made before ids existed is
+      // keyed by a title slug and has none, and then shows nothing.
+      const idMatch = /^i-([a-z0-9]{5})$/.exec(id);
+      if (idMatch) li.append(el("code", "iid", "#" + idMatch[1]));
       if (items.has(id)) {
         const a = el("a", "t", items.get(id)); a.href = "#" + id;
         a.addEventListener("click", () => { const d = document.getElementById(id)?.querySelector("details"); if (d) d.open = true; });

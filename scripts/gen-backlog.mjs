@@ -114,6 +114,11 @@ function itemHtml(item, idPrefix) {
     `<li class="item${done ? " done" : ""}" id="${anchor}">\n` +
     `  <details>\n` +
     `    <summary><span class="box" aria-hidden="true"></span>` +
+    // The permanent id, on the row rather than only in the anchor: it is how
+    // every session and every chat names an item, so a reader who cannot see it
+    // cannot follow a reference to it. An item with no id yet shows nothing
+    // rather than a placeholder — `noId` above is what reports those.
+    (itemId ? `<code class="iid">#${itemId}</code>` : "") +
     `<span class="ttl">${inline(title)}</span>` +
     `<span class="chev" aria-hidden="true"></span></summary>\n` +
     `    <div class="body">${body}</div>\n` +

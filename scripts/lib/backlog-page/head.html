@@ -54,6 +54,12 @@ summary:focus-visible{outline:2px solid var(--primary);outline-offset:-2px}
 .box{flex:none;width:18px;height:18px;margin-top:2px;border:1.5px solid var(--muted);border-radius:5px;position:relative;background:var(--bg)}
 .item.done .box{background:var(--success);border-color:var(--success)}
 .item.done .box::after{content:"";position:absolute;left:5px;top:1.5px;width:5px;height:10px;border:solid var(--success-soft);border-width:0 2px 2px 0;transform:rotate(45deg)}
+/* The item's permanent id, shown so a reference to it can be followed. The ids
+   are how every session and every chat names an item, and they were invisible
+   here, so a reader could not tell which row "#ce6ec" meant (Lutan, 2026-11-08).
+   user-select:all makes one click select the whole id, ready to copy. */
+.iid{flex:none;margin-top:1px;font:12px/1.5 "Geist Mono",ui-monospace,Menlo,Consolas,monospace;color:var(--muted);background:var(--code);padding:.1em .4em;border-radius:4px;user-select:all}
+.item.done .iid{opacity:.55}
 .ttl{flex:1;font-weight:500}
 .item.done .ttl{color:var(--muted);font-weight:400;text-decoration:line-through;text-decoration-color:var(--border)}
 .chev{flex:none;width:8px;height:8px;margin:7px 4px 0 0;border:solid var(--muted);border-width:0 1.5px 1.5px 0;transform:rotate(45deg);transition:transform .15s}
