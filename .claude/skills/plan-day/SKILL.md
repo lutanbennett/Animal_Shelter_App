@@ -2074,6 +2074,30 @@ context exists — offer to do it; (2) then start a fresh chat for the next
 `/plan-day`. Reset the counter with the new slug and today's date once the handover is
 written. Why: `docs/decisions/2026-10-08-planner-handover-counter.md`.
 
+### THE HANDOVER IS NOT WRITTEN UNTIL ITS PR IS MERGED — AND THE PLANNER HAS NOW MADE THIS MISTAKE ITSELF
+
+**Edition `708` was written, committed and pushed on 2026-11-08, and no PR was ever opened.** So
+`docs/planner-handover.md` on `main` still read edition `699` for a day, and every session that read a
+handover in that time read the wrong one. The next `/plan-day` found it in the sync.
+
+**This is the finish-line fault — the sixth instance, and the first in the planner's own paperwork.**
+`CLAUDE.md` and every brief have carried the finish-line block since 2026-10-12 because two feature
+streams built working code and never opened a PR, and PR #1356 did it one step later by opening a green PR
+and not merging it. **The planner's paperwork is the one place nobody audits**, because the planner is the
+only role that reads it — which is exactly why it needs the rule written here rather than relied upon.
+
+- **"Written" means merged.** Do not say in a wrap-up, a `.plan-day.md` header or a chat message that the
+  handover is written when the PR is not open. `708`'s own `.plan-day.md` said *"IS WRITTEN IN THIS CHAT"*
+  while nothing had reached `main`.
+- **The handover PR merges on green, with no approval round-trip** (`CLAUDE.md`, "Every PR merges on
+  green"). There is nothing to wait for, so there is no reason to leave it open.
+- **Its test plan is part of it.** `708`'s was written and left **untracked**, so even an opened PR would
+  have gone red on `check-test-plan.mjs`.
+- **How it was caught, and the command is one line.** `worktree.mjs list` read `free` with `ahead 1`,
+  which step 3 calls **unsubmitted work, not a leftover**, and
+  `gh pr list --state all --head claude/<slug>` returned **nothing at all** — a different thing from a
+  merged PR. Run it before `done`-ing anything, and run it on your own branches too.
+
 **Write it at SETUP of the last batch, not after it merges, and say in the edition that its results are
 not in it.** That is the one asymmetry the change leaves: the final batch's figures land in the NEXT
 edition, which is already true of any batch still running when an edition is written, and `546` and

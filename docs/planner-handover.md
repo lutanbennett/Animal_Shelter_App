@@ -7,10 +7,11 @@ dependency notes live in `.plan-day.md` and are **not** reproduced here.
 **It outranks nothing.** It is read by one chat, it will be rewritten within one plan, and a wrong line
 in it is corrected by its successor rather than by a reviewer.
 
-**Written at the SETUP of this plan's last batch, so BATCH 3'S OWN FIGURES ARE NOT IN IT.** Batch 3 —
-`partner-contact-type-app`, `events-card-reads`, `audited-tables-drift` — was handed over at about 02:30Z
-and had not been opened. The next edition carries its actuals. Nobody asked for this edition; the counter
-did.
+**Written at the SETUP of this plan's last batch, so batch 3's figures were not in it — AND THEN THIS
+EDITION SAT UNMERGED FOR A DAY, WHICH IS WHY THEY NOW ARE.** Batch 3 — `partner-contact-type-app`,
+`events-card-reads`, `audited-tables-drift` — was handed over at about 02:30Z and had not been opened.
+It has since merged, and **the postscript at the foot of this document carries its actuals**, which no
+edition has ever been able to do for its own last batch. Nobody asked for this edition; the counter did.
 
 ---
 
@@ -143,7 +144,11 @@ its findings into its PR body and said *for the planner to file* rather than edi
 ## OWED, AND WHO OWES IT
 
 1. **`#uat7p` — his**, fully specified in `699` and unchanged. **`#uq4vz` rides with it.**
-2. **`#d3cw7` — his**: one card for diet settings, or split the page. Do not widen either card first.
+2. **`#d3cw7` — ANSWERED 2026-11-08, asked directly: ONE CARD opens diet settings.** Retitled on the
+   `backlog` branch so the title alone says nothing is left to decide. **Still do not widen either card**;
+   that was the wrong shape while the question was open and it is the wrong shape now. One half stays
+   **not established** and is the planner's: whether any live role holds exactly one of the pair, which no
+   existing check can answer.
 3. **`#40oz4`'s part B — his, and it is the only thing on that item.** #1382 could not reproduce the blank
    Folder dropdown on Admin in English or Thai — four readable options — so it hardened the control and
    kept it. **Cause unproven, and it needs his own eyes on his own phone.** No stream can close it.
@@ -156,5 +161,39 @@ its findings into its PR body and said *for the planner to file* rather than edi
    a merged PR; `drive-buckets` is `HELD` by its own session and must be asked about, not torn down.
    `/clean-streams` does the round. **Nothing is lost by leaving them a day, and `done` refuses a held
    folder anyway.**
-7. **Name the `stream-usage:` comment as a numbered deliverable** in the next plan's briefs, and **check
-   whether batch 3's prose version fired.** A mitigation you wrote is a hypothesis.
+7. **CHECKED 2026-11-08, AND IT FIRED: 3 of 3**, against 2 of 4 the plan before. All three of batch 3's
+   briefs carried the line and all three PRs posted a comment. **One reported `tokens=unmeasured
+   messages=unmeasured` rather than guessing**, which is the rule working and not a miss. The next plan's
+   briefs carry it as a numbered deliverable rather than as prose.
+
+---
+
+## POSTSCRIPT, 2026-11-08: THIS EDITION SAT UNMERGED, AND THE LESSON IS NOW IN THE SKILL
+
+**It was written, committed and pushed on 2026-11-08 and no PR was ever opened**, so `main` still read
+edition `699` for a day and its own test plan was left untracked. **Sixth instance of the finish-line
+fault and the first in the planner's own paperwork** — promoted into `.claude/skills/plan-day/SKILL.md`
+under step 8 rather than carried here, because it will still be true in three rounds. **It was caught by
+`ahead 1` with `free`, which the skill calls unsubmitted work rather than a leftover, and by
+`gh pr list --state all --head` returning nothing at all.**
+
+## BATCH 3'S ACTUALS, WHICH THIS EDITION CAN NOW CARRY
+
+Read from the PRs' own `stream-usage:` comments on 2026-11-08; the table is in `.plan-day.md`.
+
+- **Both measured figures landed inside their bands**, one at `medium` and one at `low`, and the +25%
+  adjustment held again: `partner-contact-type-app` **219,022** at `medium` against 150–190k at `low`
+  (188–238k adjusted), and `audited-tables-drift` **231,270** at `low` against 185–235k.
+- **`events-card-reads` reported `unmeasured` and that is a correct reading**, not a gap. It is kept out
+  of the bands.
+- **THE FLOOR HAS MOVED UP AGAIN: 110,816 and 107,579** from `tokens − messages`, against `699`'s
+  106,847 and 107,500. The drift is slow and upward and **110,816 is the highest yet. Never carry it
+  forward; re-derive it each batch.**
+- **The best yield was again the PR bodies, and two streams handed work over explicitly.** Three items were
+  filed from them (`#q8m4t`, `#v2p7k`, `#n5j3w`); the strongest is that **`card_includes` has no audit
+  trigger**, so a change to what a card applies leaves no trail while the same change to `card_grants` is
+  recorded — in a repository whose first rule is that a card is the only thing that may grant access.
+- **And one claimed deliverable had not landed.** `card-count-truth`'s decision file states that a
+  `CLAUDE.md` sentence "now reads that it passes"; `CLAUDE.md:49` still says it does not. The same
+  stream's script half landed correctly. **CI, the test plan, the backlog tick and the usage comment were
+  all green**, and one grep found it. It is now a stream of its own.
