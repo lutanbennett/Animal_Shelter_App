@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none; asked for directly in chat by Lutan, 2026-11-08 |
 | Branch / worktree | `claude/backlog-page-ids` @ `C:\Development\Animal_Shelter_backlog-page-ids` |
 | Dev server | not used — this change is to a generator script, not to the app |
-| PR | #1385 |
+| PR | #1388 |
 | Tested by / date | Claude (backlog manager) / 2026-11-08 |
 | Carries a migration? | no |
 | Tested at SHA | `547f28cd` |
