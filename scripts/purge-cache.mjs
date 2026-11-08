@@ -19,7 +19,7 @@
 // entirely. See docs/decisions/2026-10-18-purge-from-the-deploy-machine.md.
 //
 // WHAT IT NEEDS. In `.env.deploy.<env>` (gitignored), two values:
-//   CLOUDFLARE_ZONE_ID      the zone for lannacare.org (UAT and test)
+//   CLOUDFLARE_ZONE_ID      the lannacare.org zone, which serves test.lannacare.org and uat.lannacare.org
 //   CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS  production only (since the 2026-11-06 cutover): the
 //                           zone for lannacareforanimals.org, required for --env production
 //   CLOUDFLARE_PURGE_TOKEN  an API token scoped to Zone -> Cache Purge, that zone only (a production token must be allowed on the lannacareforanimals.org zone)
@@ -43,12 +43,16 @@ if (!["production", "uat", "test"].includes(envName)) {
   const file = envFile(envName); // test keeps its values in .env.local, not .env.deploy.test
 
   // Since the 2026-11-06 cutover production is lannacareforanimals.org, which is its own zone
-  // (CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS); lannacare.org is UAT and keeps CLOUDFLARE_ZONE_ID.
-  // The token must be allowed to purge whichever zone it is used on.
+  // (CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS); the lannacare.org zone serves test and UAT and keeps
+  // CLOUDFLARE_ZONE_ID. The token must be allowed to purge whichever zone it is used on.
+  //
+  // UAT's host is uat.lannacare.org since 2026-11-08 (docs/uat-finalisation.md, Part 6). It read
+  // `lannacare.org` until then, and that address now 301s to production (Part 7), so purging it
+  // would have purged a redirect and reported success while UAT's own cache stood.
   const zoneVar = envName === "production" ? "CLOUDFLARE_ZONE_ID_LANNACAREFORANIMALS" : "CLOUDFLARE_ZONE_ID";
   const zone = env[zoneVar];
   const token = env.CLOUDFLARE_PURGE_TOKEN;
-  const host = envName === "test" ? "test.lannacare.org" : envName === "uat" ? "lannacare.org" : "lannacareforanimals.org";
+  const host = envName === "test" ? "test.lannacare.org" : envName === "uat" ? "uat.lannacare.org" : "lannacareforanimals.org";
   const targets = [{ zone, host }];
 
   // Refuse with instructions rather than a stack trace: whoever hits this is

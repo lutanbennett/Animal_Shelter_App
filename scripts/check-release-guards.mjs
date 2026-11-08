@@ -20,6 +20,7 @@ import { exitWith } from "./lib/exit.mjs";
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { assertSchema, decideGuard, releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
+import { appliedMigrations } from "./lib/deploy-schema.mjs";
 
 let failures = 0;
 const check = (name, ok, detail = "") => {
@@ -72,6 +73,8 @@ check("assert: says when a header is none or absent", strictMissing.message.incl
 check("assert: tells the operator how to apply", strictMissing.message.includes("apply-migrations.mjs --env production"));
 const strictOk = assertSchema({ envName: "production", result: ok, git, read: readSql });
 check("assert: a database holding every migration passes", strictOk.ok, strictOk.message);
+const strictVia = assertSchema({ envName: "uat", result: { ...ok, via: "the database directly" }, git, read: readSql });
+check("assert: the pass names which route answered", strictVia.ok && strictVia.message.includes("asked the database directly"), strictVia.message);
 const strictBlind = assertSchema({ envName: "production", result: { ok: false, reason: "SUPABASE_ACCESS_TOKEN is not set" }, git, read: readSql });
 check("assert: could not ask is a REFUSAL, not a warning", !strictBlind.ok && strictBlind.message.includes("SUPABASE_ACCESS_TOKEN is not set") && strictBlind.message.includes("Refusing"), strictBlind.message);
 
@@ -97,5 +100,61 @@ check(
   migrate.includes("return { unapplied, missingFile };") &&
     migrate.includes("const { unapplied, missingFile } = driftReport();"),
 );
+
+// appliedMigrations()'s two routes. UAT's access token cannot read its database at all
+// (`Missing required permission(s): database_read`, measured 2026-11-08), which made the
+// guard blind rather than wrong; the fallback asks the database itself over PostgREST.
+const API = "https://api.supabase.com/v1/projects/abc/database/query";
+const REST = "https://abc.supabase.co/rest/v1/schema_migrations?select=filename";
+const reply = (body, status = 200) => ({ ok: status >= 200 && status < 300, status, text: async () => body });
+const uatEnv = {
+  SUPABASE_ACCESS_TOKEN: "t",
+  NEXT_PUBLIC_SUPABASE_URL: "https://abc.supabase.co",
+  SUPABASE_SERVICE_ROLE_KEY: "k",
+};
+const denied = () => reply('{"message":"Missing required permission(s): database_read"}', 403);
+const spy = (handler) => {
+  const seen = [];
+  return { seen, fetchImpl: async (url, init) => { seen.push(url); return handler(url, init); } };
+};
+
+const viaApi = spy((url, init) =>
+  url !== API ? reply("unexpected", 500) : /to_regclass/.test(init.body) ? reply('[{"exists":true}]') : reply('[{"filename":"0001_a.sql"}]'));
+const apiResult = await appliedMigrations(uatEnv, "abc", { fetchImpl: viaApi.fetchImpl });
+check(
+  "applied: the Management API answers, and the database is not asked",
+  apiResult.ok && apiResult.applied.join() === "0001_a.sql" && apiResult.via === "the Management API" && !viaApi.seen.includes(REST),
+  JSON.stringify(apiResult),
+);
+
+const viaRest = spy((url) => (url === API ? denied() : url === REST ? reply('[{"filename":"0001_a.sql"},{"filename":"0002_b.sql"}]') : reply("unexpected", 500)));
+const restResult = await appliedMigrations(uatEnv, "abc", { fetchImpl: viaRest.fetchImpl });
+check(
+  "applied: a token that cannot read falls back to the database itself",
+  restResult.ok && restResult.applied.length === 2 && restResult.via === "the database directly" && viaRest.seen.includes(REST),
+  JSON.stringify(restResult),
+);
+
+const noTable = spy((url) => (url === API ? denied() : reply('{"message":"relation \\"schema_migrations\\" does not exist"}', 400)));
+const noTableResult = await appliedMigrations(uatEnv, "abc", { fetchImpl: noTable.fetchImpl });
+check("applied: no schema_migrations table reads as nothing applied, not as a failure", noTableResult.ok && noTableResult.applied.length === 0, JSON.stringify(noTableResult));
+
+const wrongProject = spy(() => denied());
+const wrongResult = await appliedMigrations({ ...uatEnv, NEXT_PUBLIC_SUPABASE_URL: "https://zzz.supabase.co" }, "abc", { fetchImpl: wrongProject.fetchImpl });
+check(
+  "applied: a URL naming another project is refused rather than answered",
+  !wrongResult.ok && wrongResult.reason.includes("not project abc") && wrongProject.seen.length === 1,
+  JSON.stringify(wrongResult),
+);
+
+const bothDown = spy((url) => (url === API ? denied() : reply("gateway", 502)));
+const bothResult = await appliedMigrations(uatEnv, "abc", { fetchImpl: bothDown.fetchImpl });
+check(
+  "applied: both routes failing names both reasons and stays a 'could not ask'",
+  !bothResult.ok && bothResult.reason.includes("database_read") && bothResult.reason.includes("502"),
+  JSON.stringify(bothResult),
+);
+const noKey = await appliedMigrations({ SUPABASE_ACCESS_TOKEN: "t" }, "abc", { fetchImpl: spy(() => denied()).fetchImpl });
+check("applied: no service-role key says so rather than pretending", !noKey.ok && noKey.reason.includes("SUPABASE_SERVICE_ROLE_KEY"), JSON.stringify(noKey));
 
 await exitWith(failures ? 1 : 0);

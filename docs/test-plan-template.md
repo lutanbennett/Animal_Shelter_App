@@ -189,15 +189,20 @@ needs two cards together, put both on one row. Do not name `staff` (retired, `01
 
 ## 8. Pre-production gate
 
-Owned jointly with the release manager. **Since the 2026-11-05 cutover:**
-`lannacareforanimals.org` is **production** (`dbkodyyxxhtygxcxmfcu`);
-`test.lannacare.org` is **test** on the **dev** project (`qxkmhwybjggxvsfxsxbd`);
-`lannacare.org` is **UAT**, which is moving to its own project
-(`fsjagxmxjosauwmxwype`) and runs against dev until that is finished
-(`docs/decisions/2026-11-06-uat-own-database.md`). **`lannacare.org` is NOT
-production** — it was until 2026-11-05, and this paragraph said so for two
-releases afterwards, so any plan written from this template before 2026-11-06
-names the wrong hosts.
+Owned jointly with the release manager. **The three hosts, as they stand since
+2026-11-08:**
+
+| Host | What it is | Database |
+|---|---|---|
+| `lannacareforanimals.org` | **production** | `dbkodyyxxhtygxcxmfcu` |
+| `test.lannacare.org` | **test** | the **dev** project, `qxkmhwybjggxvsfxsxbd` |
+| `uat.lannacare.org` | **UAT**, the customer's acceptance-test site | its own project, `fsjagxmxjosauwmxwype`, on a second Supabase account |
+
+**`lannacare.org` is now a 301 to production and is a check of nothing.** It was
+production until 2026-11-05 and UAT from then until 2026-11-08, so a plan written
+from this template before today may name it as either, and both readings were
+correct when written. **UAT is deployed on every release since 2026-11-08**
+(`docs/release-procedure.md`, step 6), last of the three.
 
 ### Tested build
 
