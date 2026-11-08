@@ -15,13 +15,14 @@ import type { PublicTranslations } from "@/lib/translations/types";
 /**
  * Which contact types may be made a Shelter Friend. The profile is keyed
  * on contact_id, not the type, so the schema takes any contact; the app
- * offers it on Vendors only for now (decided 2026-09-24: any business,
- * including one that only donates, is entered as a Vendor). **This is the
+ * offers it on Vendors and Partners (a Partner is a business or group
+ * that helps the shelter without selling it anything; before 2026-11-08
+ * such a business had to be filed as a Vendor). **This is the
  * one gate** — the contact hub, the server action and the manual all go
- * through it, so a `Business` or `Supporter` type added later is a
+ * through it, so another type added later is a
  * one-line change here.
  */
-export const FRIEND_CONTACT_TYPES: readonly ContactType[] = ["Vendor"];
+export const FRIEND_CONTACT_TYPES: readonly ContactType[] = ["Vendor", "Partner"];
 
 export function canBecomeFriend(contact: { type: ContactType }): boolean {
   return FRIEND_CONTACT_TYPES.includes(contact.type);

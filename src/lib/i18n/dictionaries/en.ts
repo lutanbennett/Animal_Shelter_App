@@ -4435,7 +4435,7 @@ const en = {
     contacts: {
       title: "Contacts",
       subtitle:
-        "The people the shelter works with: foster and adoptive carers, volunteers and suppliers. Set them up here; only contacts of type Carer can be given a resident, and that's done from the resident's hub.",
+        "The people the shelter works with: foster and adoptive carers, volunteers, suppliers and partners. Set them up here; only contacts of type Carer can be given a resident, and that's done from the resident's hub.",
       viewList: "Open the contact list →",
       newButton: "New contact",
       newTitle: "New contact",
@@ -8241,7 +8241,7 @@ const en = {
       unpublished: "Taken off the website.",
     },
     errors: {
-      notOffered: "Only Supplier contacts can be made Shelter Friends for now.",
+      notOffered: "Only Supplier and Partner contacts can be made Shelter Friends.",
       alreadyFriend: "This contact is already a Shelter Friend.",
       notFound: "That Shelter Friend profile no longer exists.",
       invalidDate: "Friend since must be a date.",
@@ -8283,19 +8283,19 @@ const en = {
         review: "Review",
       },
       who: {
-        existing: "Pick a supplier you already have",
+        existing: "Pick a supplier or partner you already have",
         brandNew: "Add a new business",
         onlySuppliers:
-          "Only suppliers can be Shelter Friends for now. A business that only donates is a supplier too.",
-        searchLabel: "Search suppliers",
+          "Only suppliers and partners can be Shelter Friends. A business or group that helps the shelter without selling it anything is a partner.",
+        searchLabel: "Search suppliers and partners",
         searchPlaceholder: "Name or phone",
-        noMatches: "No supplier matches that.",
+        noMatches: "No supplier or partner matches that.",
         noneAvailable:
-          "There is no supplier left to pick — each one is already a Shelter Friend, or none has been added yet. Add a new business instead.",
+          "There is no supplier or partner left to pick — each one is already a Shelter Friend, or none has been added yet. Add a new business instead.",
         selected: (name: string) => `Selected: ${name}`,
         newIntro:
           "Just enough to find them again. Their full details can be added later on their contact page.",
-        pickRequired: "Pick a supplier, or choose Add a new business.",
+        pickRequired: "Pick a supplier or partner, or choose Add a new business.",
         nameRequired: "Enter the business's name.",
       },
       help: {
@@ -8406,6 +8406,7 @@ const en = {
       Carer: "Foster or adopter",
       Volunteer: "Volunteer",
       Vendor: "Supplier",
+      Partner: "Partner",
     },
     sex: { Male: "Male", Female: "Female" },
     size: { Small: "Small", Medium: "Medium", Large: "Large" },

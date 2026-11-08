@@ -71,6 +71,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "Contacts can now be a Partner: a business, school, clinic or group that helps the shelter without selling it anything. Before, it had to be filed as a Supplier to appear on the Shelter Friends page. Choose Partner when you add or edit a contact, and a Partner can be made a Shelter Friend just like a supplier. The contacts list has a Partner filter beside Supplier.",
+    cards: ["contacts", "publish_shelter_friends"],
+  },
+  {
     text: "Add shelter photos can now save a photo when you do not know the animal or where it was taken. Press Don't know either: save for later, and the photo is stored (not public) for whoever approves photos to name the animal. When every photo is saved a Done button appears, and pressing it tells you how many photos are stored. In Photos to approve, a photo with no place says so and says there is no one to suggest.",
     cards: ["add_photos"],
   },
