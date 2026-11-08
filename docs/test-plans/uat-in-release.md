@@ -58,9 +58,28 @@
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
 
-  `merging origin/main into claude/uat-in-release` / `Already up to date.` / `pushing claude/uat-in-release`.
+  Run twice. The first: `merging origin/main into claude/uat-in-release` / `Already up to date.` /
+  `pushing claude/uat-in-release`. The second, after GitHub reported the PR `CONFLICTING`:
+  `Auto-merging docs/backlog.md` / `CONFLICT (content): Merge conflict in docs/backlog.md` /
+  `worktree: git merge origin/main exited with 1`. **Not merged cleanly, then** — resolved by hand
+  and described in §6, which is where the evidence is.
 
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`
+
+  **Run twice: once on this branch alone, and again on the tree merged with `main`** after #1402
+  came in (§6). The second is the one that matters, and both are green.
+
+  On the merged tree:
+
+```
+=== gates: typecheck exited 0 after 15s
+=== gates: lint exited 0 after 146s
+=== gates: test exited 0 after 26s
+=== gates: build exited 0 after 80s
+gates: typecheck=0 lint=0 test=0 build=0
+```
+
+  Before the merge:
 
 ```
 === gates: typecheck exited 0 after 36s
@@ -69,6 +88,12 @@
 === gates: build exited 0 after 69s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
+
+  **A note on the first attempt, because it is a trap this checklist warns about and I walked into
+  it anyway:** that run was `node scripts/gates.mjs | tail -22`, which kept only the **build's**
+  line and discarded the other three. The exit code was still the gates script's, so nothing was
+  misreported — but the evidence this line asks for was gone, and recovering it cost a ten-minute
+  re-run. `tail` is the same hazard the runbook records for deploy logs.
 
 - [ ] CI green on the PR (runs the same four gates, among its other checks) — n/a: not yet — the PR does not exist at this commit
 
@@ -197,7 +222,16 @@ about them.
 
 - [x] Nothing merged from `main` during `sync` was broken by this branch
 
-  `sync` reported `Already up to date.`, so nothing came in. Re-run before merge if `main` moves.
+  **The first `sync` reported `Already up to date.`; the second did not, and that is the one that
+  counts.** GitHub reported the PR `CONFLICTING` / `DIRTY` minutes after it was opened, which in
+  this repo means `main` has moved rather than that CI is slow. `main` had taken #1402 (the manual
+  home tile — 14 files, including `src/lib/home/tiles.ts` and `src/lib/releases.ts`) and the
+  folded-in `backlog` branch. **One conflict, in `docs/backlog.md`:** `main` carried `#uq8wk`
+  (filed on the `backlog` branch and already merged in) and its own **unticked** `#m9qtv`, while
+  this branch had ticked `#m9qtv`. Resolved by keeping both — `main`'s `#uq8wk` and this branch's
+  ticked `#m9qtv` — verified with `check-backlog-sections.mjs` (67 open, all above `## Completed`)
+  and `check-backlog-ids.mjs` (1,028 ids, unique). **The gates were then re-run on the merged
+  tree** (§2). Nothing #1402 touches is touched by this branch.
 
 ## 7. Documentation
 
