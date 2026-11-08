@@ -10,7 +10,7 @@
 | Backlog item | `docs/backlog.md` → `#m9qtv` (ticked here); `#uat7p`, `#u7d3b`, `#uq4vz` and the new `#uq8wk` are on the `backlog` branch |
 | Branch / worktree | `claude/uat-in-release` @ `C:\Development\Animal_Shelter_uat-in-release` |
 | Dev server | not started — no page in this change (see §1) |
-| PR | <filled in when the PR is opened> |
+| PR | #1404 |
 | Tested by / date | Claude Opus 5 / 2026-11-08 |
 | Carries a migration? | no |
 | Tested at SHA | `5861825a`, plus this plan's own commit |
