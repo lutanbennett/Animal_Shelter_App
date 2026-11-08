@@ -30,8 +30,11 @@ export type ContactSummary = (Contact | VolunteerContact) & {
 
 /**
  * A contact type, everyone, or the Shelter Friends. Friends sit in the
- * same row of chips rather than a second filter: they are all Vendors
- * today, so "Vendor and Friend" would be the same list as "Friend".
+ * same row of chips rather than a second filter: a Friend is either a
+ * Vendor or a Partner, and not every Vendor or Partner is one, so Friends
+ * cut across two type chips and are one chip of their own. Combining
+ * them ("Partner and Friend") would only repeat a list the two chips
+ * already give.
  */
 type TypeFilter = ContactType | "all" | "friends";
 

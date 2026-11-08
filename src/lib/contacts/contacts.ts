@@ -12,7 +12,7 @@
  * (placement_history_check_carer_type), which is why the residents hub's
  * carer picker filters on it — see carers.ts.
  */
-export const CONTACT_TYPES = ["Carer", "Volunteer", "Vendor"] as const;
+export const CONTACT_TYPES = ["Carer", "Volunteer", "Vendor", "Partner"] as const;
 export type ContactType = (typeof CONTACT_TYPES)[number];
 
 export const CARER_CONTACT_TYPE: ContactType = "Carer";
