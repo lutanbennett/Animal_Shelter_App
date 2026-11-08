@@ -71,7 +71,12 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
-    text: "Add photos now says why the list of residents is empty: either your cards do not let you see the residents, or there are none on file yet. Photos waiting to be named in Photos to approve are no longer described as \"tagged to an enclosure\" when they have no place at all.",
+    text: "Add photos now says why the list of residents is empty: either your cards do not let you see the residents, or there are none on file yet.",
+    cards: ["add_photos"],
+  },
+  {
+    text: "Photos to approve no longer describes a photo with no place at all as \"tagged to an enclosure\"; the heading now says it is waiting to be named.",
+    cards: ["approve_photos"],
   },
   {
     text: "Photos to approve now names the fundraising event a waiting photo belongs to, instead of just saying \"A fundraising event\". You see only the event's name, not the rest of the event. The campaign and project-folder pickers on an event already say when they are short because your login cannot see campaigns or project folders.",
