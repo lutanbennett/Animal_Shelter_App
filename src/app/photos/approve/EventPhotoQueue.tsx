@@ -86,6 +86,7 @@ export function EventPhotoQueue({ photos }: { photos: WaitingEventPhoto[] }) {
               />
               <div className="flex flex-col gap-1">
                 <p className="text-lg font-semibold text-foreground" lang="und">{title}</p>
+                {photo.eventDate && <p className="text-sm text-foreground">{q.events.eventOn(formatDate(photo.eventDate, locale))}</p>}
                 <p className="text-sm text-muted">{q.addedBy(photo.addedBy, formatDate(photo.uploadedAt, locale))}</p>
               </div>
               <div className="flex flex-wrap items-center gap-3">
