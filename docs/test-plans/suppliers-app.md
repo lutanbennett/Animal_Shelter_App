@@ -14,7 +14,7 @@
 | PR | see the PR for branch `claude/suppliers-app` |
 | Tested by / date | Claude, 2026-11-08 |
 | Carries a migration? | yes — 0338 |
-| Tested at SHA | 8b392cf2 |
+| Tested at SHA | 60f4ffad |
 
 ## 1. Scope and risk
 
@@ -43,10 +43,10 @@ indistinguishable from one that passed.
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`
 
 ```
-=== gates: typecheck exited 0 after 64s
-=== gates: lint exited 0 after 135s
-=== gates: test exited 0 after 27s
-=== gates: build exited 0 after 112s
+=== gates: typecheck exited 0 after 10s
+=== gates: lint exited 0 after 155s
+=== gates: test exited 0 after 34s
+=== gates: build exited 0 after 61s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
