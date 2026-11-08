@@ -3,7 +3,7 @@ import { refuseFor } from "@/lib/auth/require-role";
 import { createClient } from "@/lib/supabase/server";
 import { loadPermissions } from "@/lib/permissions/load";
 import { listHomeRoles, loadRoleCards, loadRolePermissions } from "@/lib/home/roles";
-import { homeTilesFor } from "@/lib/home/tiles";
+import { hasJobTiles, homeTilesFor } from "@/lib/home/tiles";
 import { countBillsWaiting } from "@/lib/bills/waiting";
 import { countPhotosWaiting } from "@/lib/photos/approval";
 import { getT } from "@/lib/i18n/get-t";
@@ -60,14 +60,13 @@ export default async function RoleHomePage(props: PageProps<"/home/[role]">) {
           What this role can and cannot do, in words
         </Link>
       </div>
-      {tiles.length > 0 ? (
-        <HomeTiles tiles={tiles} />
-      ) : (
+      {!hasJobTiles(tiles) && (
         <section className="rounded-lg border border-border bg-surface p-4">
           <h2 className="font-semibold text-foreground">{t.appHome.emptyTitle}</h2>
           <p className="text-sm text-muted">{t.appHome.empty}</p>
         </section>
       )}
+      <HomeTiles tiles={tiles} />
     </main>
   );
 }
