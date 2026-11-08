@@ -1,4 +1,4 @@
-import type { ContactType } from "@/lib/contacts/contacts";
+import type { Contact, ContactType } from "@/lib/contacts/contacts";
 import type { Locale } from "@/lib/i18n/locales";
 import { localizedField } from "@/lib/translations/localize";
 import type { PublicTranslations } from "@/lib/translations/types";
@@ -15,14 +15,30 @@ import type { PublicTranslations } from "@/lib/translations/types";
 /**
  * Which contact types may be made a Shelter Friend. The profile is keyed
  * on contact_id, not the type, so the schema takes any contact; the app
- * offers it on Vendors and Partners (a Partner is a business or group
- * that helps the shelter without selling it anything; before 2026-11-08
- * such a business had to be filed as a Vendor). **This is the
+ * offers it on Partners (a Partner is a business or group
+ * that helps the shelter without selling it anything; a supplier is offered it on
+ * its own page, see below). **This is the
  * one gate** — the contact hub, the server action and the manual all go
  * through it, so another type added later is a
  * one-line change here.
  */
-export const FRIEND_CONTACT_TYPES: readonly ContactType[] = ["Vendor", "Partner"];
+export const FRIEND_CONTACT_TYPES: readonly ContactType[] = ["Partner"];
+
+/**
+ * A Friend's subject is a contact (a Partner) or a supplier (0336). **A supplier needs no gate of its own**: Contacts holds
+ * people of every kind and only a business among them could be a Friend, which is what FRIEND_CONTACT_TYPES decides, but a
+ * supplier is a business by definition, so every live supplier is eligible. (Before 2026-11-08 the Vendor type did this
+ * job here; Vendor contacts were copied to suppliers and their Friends moved with them, 0338.)
+ */
+export type FriendSubjectKind = "contact" | "supplier";
+
+/** One row the Shelter Friend wizard can pick: a contact the gate allows, or a supplier. `type` is the contact type, or "Supplier". */
+export type FriendCandidate = Omit<Contact, "type"> & { type: string; kind: FriendSubjectKind };
+
+/** The page a Friend's subject lives on. */
+export function friendSubjectHref(subject: { kind: FriendSubjectKind; id: string }): string {
+  return subject.kind === "supplier" ? `/suppliers/${subject.id}` : `/contacts/${subject.id}`;
+}
 
 export function canBecomeFriend(contact: { type: ContactType }): boolean {
   return FRIEND_CONTACT_TYPES.includes(contact.type);
@@ -45,7 +61,9 @@ export type FriendOptIn = (typeof FRIEND_OPT_INS)[number];
 /** A shelter_friends row as the staff side reads it (RLS: every signed-in role). */
 export type ShelterFriend = {
   id: string;
-  contact_id: string;
+  /** Exactly one of contact_id and supplier_id is set (shelter_friends_one_subject, 0336). */
+  contact_id: string | null;
+  supplier_id: string | null;
   blurb: string | null;
   help_kind: string | null;
   discount_note: string | null;
@@ -59,7 +77,7 @@ export type ShelterFriend = {
 } & Record<FriendOptIn, boolean>;
 
 export const SHELTER_FRIEND_COLUMNS =
-  "id, contact_id, blurb, help_kind, discount_note, website_url, facebook_url, logo_drive_file_id, friend_since, sort_order, published, updated_at, show_phone, show_email, show_line, show_address, show_map";
+  "id, contact_id, supplier_id, blurb, help_kind, discount_note, website_url, facebook_url, logo_drive_file_id, friend_since, sort_order, published, updated_at, show_phone, show_email, show_line, show_address, show_map";
 
 /**
  * One row of public_shelter_friends — the whole of what a visitor can

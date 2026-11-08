@@ -66,7 +66,8 @@ export type NewCardKey =
   | "propose_website"
   | "approve_website"
   | "view_expenses"
-  | "project_folders";
+  | "project_folders"
+  | "suppliers";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -198,6 +199,10 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
     ],
     opens: "/management/contacts",
   },
+  // 0338 (2026-11-08, #xkfsv): suppliers are their own records and Contacts holds only people. This card is exactly suppliers.directory at
+  // edit: the supplier list, a supplier's page, add, change, archive and restore. Not friends.manage (making a supplier a Shelter Friend is
+  // Publish Shelter Friends) and not stock.delivery (recording a delivery that names one). Edit implies read, so the screen opens.
+  suppliers: { includes: [], bundle: [{ activity: "suppliers.directory", level: "edit" }], opens: "/management/suppliers" },
   recurring_jobs: {
     includes: [],
     bundle: [{ activity: "recurring.manage" }, { activity: "recurring.do_any" }, { activity: "recurring.do_own" }],
@@ -466,6 +471,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   propose_translations: (t) => t.appHome.cards.proposeTranslations,
   view_translations: (t) => t.appHome.cards.viewTranslations,
   project_folders: (t) => t.appHome.cards.projectFolders,
+  suppliers: (t) => t.appHome.cards.suppliers,
   food_forecast: (t) => t.appHome.cards.foodForecast,
   medicine_forecast: (t) => t.appHome.cards.medicineForecast,
   view_cashflow: (t) => t.appHome.cards.viewCashflow,

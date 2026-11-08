@@ -157,6 +157,7 @@ const en = {
     recurringJobs: "Recurring jobs",
     translations: "Translations",
     contacts: "Contacts",
+    suppliers: "Suppliers",
     shelterFriends: "Shelter Friends",
     donations: "Donations",
     appeals: "Campaigns",
@@ -221,6 +222,7 @@ const en = {
       bookClinicVisits: "Book clinic visits",
       contacts: "Manage contacts",
       viewContacts: "View contacts",
+      suppliers: "Manage suppliers",
       publishShelterFriends: "Publish Shelter Friends",
       recurringJobs: "Recurring jobs",
       dashboard: "Dashboard",
@@ -984,6 +986,7 @@ const en = {
           view_medical: "Read a resident's medical history (visits, procedures, blood tests, prescriptions, immunizations, weight and diet) and the clinic list, without changing anything.",
           book_clinic_visits: "Book a vet visit, change its date or time or cancel it (it cannot delete one), and read the resident's medical history for reference.",
           contacts: "Add and change the directory of contacts, clinics and doctors. Includes View contacts.",
+          suppliers: "Add and change the shelter's suppliers, the businesses it buys from, and archive or restore one. A supplier can be made a Shelter Friend, which needs Publish Shelter Friends as well. Suppliers are never deleted.",
           view_contacts: "Look up contacts, clinics and Shelter Friends without changing anything.",
           publish_shelter_friends: "Publish Shelter Friends to the public website and take them down. Includes View contacts.",
           recurring_jobs: "Set up recurring jobs and mark any of them done.",
@@ -1163,6 +1166,7 @@ const en = {
         "clinics.list": "The list of clinics",
         "clinics.doctors": "A clinic's doctors: add, rename, merge, retire",
         "contacts.directory": "Contacts",
+        "suppliers.directory": "Suppliers: the list and each supplier's page (Read); add, change, archive and restore (Edit)",
         "contacts.add": "Add a new contact",
         "contacts.browse": "Browse the contacts book",
         "friends.manage": "Shelter Friends: add, publish, unpublish",
@@ -1394,6 +1398,7 @@ const en = {
       tables: {
         residents: "Resident",
         contacts: "Contact",
+        suppliers: "Supplier",
         prescriptions: "Prescription",
         clinic_visits: "Clinic visit",
         vet_appointments: "Clinic visit",
@@ -3219,7 +3224,7 @@ const en = {
       },
       supplier: "Supplier (optional)",
       supplierNone: "Not recorded",
-      supplierNoVendors: "No suppliers — add one as a Vendor in Contacts",
+      supplierNoVendors: "No suppliers — add one under Suppliers",
       cost: "Cost ฿ (optional)",
       costHint: "Total paid for this size. 0 = donated. Price every size, or none.",
       note: "Note (optional)",
@@ -3387,7 +3392,7 @@ const en = {
         outreach: "A short note after each visit to a temple or village: where, what you did, how many dogs.",
         vetVisits: "Every vet visit coming up, with the resident and the clinic, by day or on a calendar.",
         vets: "Look up a clinic the shelter works with, and call them.",
-        contacts: "Look up a carer, volunteer or supplier, and call or message them.",
+        contacts: "Look up a carer, volunteer or partner, and call or message them.",
         medicationList:
           "Who needs what medicine today, in walking order, with a photo of each animal and of each box. A list to read; nothing to tap.",
         feedingList:
@@ -3407,7 +3412,7 @@ const en = {
         dashboard:
           "The month's activity and where the shelter stands today — every figure the monthly report asks for.",
         contacts:
-          "The people the shelter works with: foster and adoptive carers, volunteers, suppliers and partners.",
+          "The people the shelter works with: foster and adoptive carers, volunteers and partners.",
         vets:
           "The clinics the shelter books visits with, and how much each one has seen.",
         medications:
@@ -3422,6 +3427,8 @@ const en = {
           "How each count moved between two stocktakes, beside what the prescriptions and diets planned.",
         purchasing:
           "How much of each medicine and food to buy for a week, two weeks or a month, with the working shown and a list for the supplier.",
+        suppliers:
+          "The businesses the shelter buys from: add one, change its details, archive it, or make it a Shelter Friend.",
         shelterFriends:
           "The businesses thanked on the public website — their order, and which are live.",
         donations:
@@ -4464,7 +4471,7 @@ const en = {
     contacts: {
       title: "Contacts",
       subtitle:
-        "The people the shelter works with: foster and adoptive carers, volunteers, suppliers and partners. Set them up here; only contacts of type Carer can be given a resident, and that's done from the resident's hub.",
+        "The people the shelter works with: foster and adoptive carers, volunteers and partners. Suppliers have their own page, Suppliers. Set them up here; only contacts of type Carer can be given a resident, and that's done from the resident's hub.",
       viewList: "Open the contact list →",
       newButton: "New contact",
       newTitle: "New contact",
@@ -4526,6 +4533,38 @@ const en = {
           `This contact has ${n} placement${n === 1 ? "" : "s"} recorded and can't be deleted — the placements are part of the residents' history. Archive them instead.`,
         typeLockedByPlacements: (n: number) =>
           `This contact has ${n} placement${n === 1 ? "" : "s"} as a carer, so their type must stay Carer.`,
+      },
+    },
+    /** Suppliers (0338): the businesses the shelter buys from. Their own records; Contacts holds only people. */
+    suppliers: {
+      title: "Suppliers",
+      subtitle:
+        "The businesses the shelter buys from. Deliveries, bills and the shopping list name them, and a supplier can be made a Shelter Friend. Carers, volunteers and partners are in Contacts.",
+      newButton: "New supplier",
+      newTitle: "New supplier",
+      newSubtitle: "Add a business the shelter buys from. Cancel returns to the list.",
+      added: (name: string) => `Added: ${name}`,
+      couldntLoad: "Couldn't load suppliers",
+      createdSupplier: (name: string) => `Created supplier "${name}".`,
+      createForm: {
+        namePlaceholder: "e.g. Chiang Mai Pet Supplies",
+        notesPlaceholder: "What they supply, opening hours, account number…",
+        addButton: "Add supplier",
+      },
+      table: { name: "Name", contactDetails: "Contact", address: "Address", notes: "Notes", noSuppliers: "No suppliers yet." },
+      openPage: "Open this supplier's page",
+      pageIntro: "A supplier is a business the shelter buys from. Change its details, archive it, or make it a Shelter Friend here.",
+      backToList: "← All suppliers",
+      archive: {
+        confirmArchive: "Archive supplier",
+        explain:
+          "Archiving keeps the supplier and every delivery that names it, but takes it out of the delivery forms' pickers. You can restore it at any time. A supplier cannot be deleted.",
+        alreadyArchived: "This supplier is already archived.",
+        notArchived: "This supplier isn't archived.",
+      },
+      errors: {
+        nameRequired: "Name is required.",
+        notFound: "That supplier isn't there any more. Reload the page.",
       },
     },
   },
@@ -4993,7 +5032,7 @@ const en = {
   contacts: {
     pageTitle: "Contacts",
     pageSubtitle:
-      "Carers, volunteers, suppliers and partners — tap to call, chat on LINE, Messenger or WhatsApp, email, or open in maps.",
+      "Carers, volunteers and partners — tap to call, chat on LINE, Messenger or WhatsApp, email, or open in maps.",
     couldntLoadContacts: "Couldn't load contacts",
     couldntLoadPlacements: "Couldn't load placements",
     manageInAdmin: "Edit contacts in Management",
@@ -8227,7 +8266,7 @@ const en = {
       editProfile: "Edit profile",
       readOnly: "Changing this profile needs the permission \"Shelter Friends: add, publish, unpublish\".",
       archivedHidden:
-        "This contact is archived, so their card is off the website until they are restored.",
+        "This record is archived, so its card is off the website until it is restored.",
       blurb: "What they do for the shelter",
       blurbHint: "A sentence or two in your own words — the main text of their card.",
       helpKind: "Kind of help",
@@ -8249,7 +8288,7 @@ const en = {
         show_address: "Address (as text)",
         show_map: "Map",
       },
-      notRecorded: "not recorded for this contact",
+      notRecorded: "not recorded",
       logo: "Logo",
       noLogo: "No logo",
       uploadLogo: "Upload logo",
@@ -8264,32 +8303,32 @@ const en = {
       previewNotLive: "Not live yet — Publish to put it on the website.",
       removeProfile: "Remove Shelter Friend status",
       removeConfirm: (name: string) =>
-        `The contact ${name} stays, with everything recorded on it. Only their Shelter Friend status ends: the card comes off the website and its text, logo and translations are deleted. To hide the card for now instead, cancel and use Unpublish.`,
+        `${name} stays, with everything recorded on it. Only their Shelter Friend status ends: the card comes off the website and its text, logo and translations are deleted. To hide the card for now instead, cancel and use Unpublish.`,
       actionsHint:
-        "Unpublish hides the card for now and keeps the profile. Remove Shelter Friend status means they are no longer a Friend — the profile is deleted, the contact stays.",
-      removed: "No longer a Shelter Friend. The contact is unchanged.",
+        "Unpublish hides the card for now and keeps the profile. Remove Shelter Friend status means they are no longer a Friend — the profile is deleted, the record stays.",
+      removed: "No longer a Shelter Friend. The record is unchanged.",
       created: "Profile created — fill it in, then Publish.",
       published: "Published — it's on the website now.",
       unpublished: "Taken off the website.",
     },
     errors: {
-      notOffered: "Only Supplier and Partner contacts can be made Shelter Friends.",
-      alreadyFriend: "This contact is already a Shelter Friend.",
+      notOffered: "Only a supplier or a Partner contact can be made a Shelter Friend.",
+      alreadyFriend: "This is already a Shelter Friend.",
       notFound: "That Shelter Friend profile no longer exists.",
       invalidDate: "Friend since must be a date.",
     },
     manage: {
       title: "Shelter Friends",
       subtitle:
-        "The businesses thanked on the public website, in the order they appear there. Edit a profile from the contact's page.",
+        "The businesses thanked on the public website, in the order they appear there. Edit a profile from the contact's or supplier's page.",
       viewPage: "View the Shelter Friends page",
       empty: "No Shelter Friends yet. Tap Add a Shelter Friend to thank the first business.",
       moveUp: (name: string) => `Move ${name} up`,
       moveDown: (name: string) => `Move ${name} down`,
       moveUpWord: "Up",
       moveDownWord: "Down",
-      openContact: "Open contact",
-      archivedNote: "Contact archived — hidden from the website",
+      openContact: "Open page",
+      archivedNote: "Archived — hidden from the website",
     },
     /** Management → Shelter Friends → Add a Shelter Friend: the guided way in. */
     wizard: {
@@ -8318,7 +8357,7 @@ const en = {
         existing: "Pick a supplier or partner you already have",
         brandNew: "Add a new business",
         onlySuppliers:
-          "Only suppliers and partners can be Shelter Friends. A business or group that helps the shelter without selling it anything is a partner.",
+          "Only suppliers and partners can be Shelter Friends (pick a supplier from Suppliers, or a partner from Contacts). A business or group that helps the shelter without selling it anything is a partner.",
         searchLabel: "Search suppliers and partners",
         searchPlaceholder: "Name or phone",
         noMatches: "No supplier or partner matches that.",
@@ -8438,6 +8477,7 @@ const en = {
       Carer: "Foster or adopter",
       Volunteer: "Volunteer",
       Vendor: "Supplier",
+      Supplier: "Supplier",
       Partner: "Partner",
     },
     sex: { Male: "Male", Female: "Female" },

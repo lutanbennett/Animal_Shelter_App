@@ -26,6 +26,8 @@ import { addDaysIso } from "@/lib/format";
 export const AUDITED_TABLES = [
   "residents",
   "contacts",
+  // Suppliers (0335): businesses the shelter buys from; Contacts holds only people.
+  "suppliers",
   "prescriptions",
   "clinic_visits",
   "weight",
@@ -92,10 +94,7 @@ export type AuditedTable = (typeof AUDITED_TABLES)[number];
  * meets it here. Empty today: every audited table is something an admin could be asked about, and a row
  * nobody can label is worse than a longer filter. The check reads this object's keys.
  */
-export const AUDIT_TABLES_NOT_LISTED: Record<string, string> = {
-  suppliers:
-    "0335 audits the new suppliers table, but no screen reads it yet. The supplier app half lists it in AUDITED_TABLES with its label and removes this entry (docs/decisions/2026-11-08-suppliers-schema.md).",
-};
+export const AUDIT_TABLES_NOT_LISTED: Record<string, string> = {};
 
 /**
  * The columns that name a record in the list, those the row has, joined with `sep`.
@@ -106,6 +105,7 @@ type NameColumns = { cols: readonly string[]; sep?: string };
 const NAME_FROM_IMAGE: Record<AuditedTable, NameColumns> = {
   residents: { cols: ["name"] },
   contacts: { cols: ["name"] },
+  suppliers: { cols: ["name"] },
   prescriptions: { cols: [] },
   clinic_visits: { cols: [] },
   weight: { cols: [] },

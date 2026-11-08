@@ -1,4 +1,4 @@
-import { Coins, Globe, Scissors, HandHeart, PartyPopper, Grid3x3, HandCoins, HeartHandshake, LayoutDashboard, Languages, Scale, ShoppingCart } from "lucide-react";
+import { Coins, Globe, Truck, Scissors, HandHeart, PartyPopper, Grid3x3, HandCoins, HeartHandshake, LayoutDashboard, Languages, Scale, ShoppingCart } from "lucide-react";
 import { canOpen, routeFor } from "@/lib/permissions/routes";
 import { WHO_DOES_WHAT_PATH, opensWhoDoesWhat } from "@/lib/permissions/who-does-what";
 import { requireAnyPageIn } from "@/lib/permissions/require";
@@ -33,6 +33,12 @@ export default async function ManagementPage() {
       label: t.nav.contacts,
       description: t.management.landing.tiles.contacts,
       icon: CONTACT_ICONS.contact,
+    },
+    {
+      href: "/management/suppliers",
+      label: t.nav.suppliers,
+      description: t.management.landing.tiles.suppliers,
+      icon: Truck,
     },
     {
       href: "/management/shelter-friends",

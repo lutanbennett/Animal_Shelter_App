@@ -235,7 +235,7 @@ export type ReceiptFigure = {
   item_id: string;
   quantity: number;
   received_at: string;
-  supplier_contact_id: string | null;
+  supplier_id: string | null;
 };
 
 /**
@@ -260,10 +260,10 @@ export function receivedSinceCount(
 export function usualSuppliers(receipts: ReceiptFigure[]): Map<string, string> {
   const latest = new Map<string, { at: number; supplier: string }>();
   for (const r of receipts) {
-    if (!r.supplier_contact_id) continue;
+    if (!r.supplier_id) continue;
     const at = Date.parse(r.received_at);
     const have = latest.get(r.item_id);
-    if (!have || at > have.at) latest.set(r.item_id, { at, supplier: r.supplier_contact_id });
+    if (!have || at > have.at) latest.set(r.item_id, { at, supplier: r.supplier_id });
   }
   return new Map([...latest].map(([item, v]) => [item, v.supplier]));
 }

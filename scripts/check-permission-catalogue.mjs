@@ -241,6 +241,9 @@ const PINNED = {
   "/outreach/[id]/edit": { guards: ['requirePermission("community.outings", "edit")'], decides: ["social.library"] },
   "/management/donations/new": { guards: ['requirePermission("donation.receipt")'], decides: [] },
   "/management/contacts/new": { guards: ['requirePermission("contacts.directory", "edit")'], decides: [] },
+  // Suppliers (0338): the add form asks the edit level; a supplier's page opens at read and draws Archive / Restore only at edit and the Shelter Friend card's controls only with friends.manage.
+  "/management/suppliers/new": { guards: ['requirePermission("suppliers.directory", "edit")'], decides: [] },
+  "/suppliers/[id]": { guards: ['requirePermission("suppliers.directory", "read")'], decides: ["suppliers.directory", "friends.manage"] },
   "/management/shelter-friends/new": { guards: ['requirePermission("friends.manage")'], decides: [] },
   "/management/cashflow/fixed-outgoings": { guards: ['requirePermission("reports.cashflow", "edit")'], decides: [] },
   "/management/clinics/[id]/doctors": { guards: ['requirePermission("clinics.doctors")'], decides: [] },

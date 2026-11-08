@@ -17,6 +17,18 @@ export type ContactType = (typeof CONTACT_TYPES)[number];
 
 export const CARER_CONTACT_TYPE: ContactType = "Carer";
 
+/**
+ * The types a person is filed under now. "Vendor" is no longer one: a supplier is its own record (suppliers, 0335) and Contacts
+ * holds only people. The value stays in the enum, and in ContactType, because Postgres cannot drop an enum value that code and
+ * old rows may still name; the lists hide a Vendor contact and no form offers or accepts it.
+ */
+export const PEOPLE_CONTACT_TYPES: readonly ContactType[] = ["Carer", "Volunteer", "Partner"];
+
+/** A type a form may save today (see PEOPLE_CONTACT_TYPES). */
+export function isPeopleContactType(value: unknown): value is ContactType {
+  return typeof value === "string" && (PEOPLE_CONTACT_TYPES as readonly string[]).includes(value);
+}
+
 export function isContactType(value: unknown): value is ContactType {
   return typeof value === "string" && (CONTACT_TYPES as readonly string[]).includes(value);
 }

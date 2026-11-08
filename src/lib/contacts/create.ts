@@ -1,6 +1,6 @@
 import type { createClient } from "@/lib/supabase/server";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
-import { contactAddressFields, isContactType } from "@/lib/contacts/contacts";
+import { contactAddressFields, isPeopleContactType } from "@/lib/contacts/contacts";
 import { mapLinkLeadsSomewhere } from "@/lib/contacts/map-preview";
 
 /**
@@ -36,7 +36,7 @@ export async function insertContact(
   const name = optional(fields.name);
   if (!name) return { ok: false, error: t.management.contacts.errors.nameRequired };
   const type = fields.type;
-  if (!isContactType(type)) return { ok: false, error: t.management.contacts.errors.invalidType };
+  if (!isPeopleContactType(type)) return { ok: false, error: t.management.contacts.errors.invalidType };
   const place = contactAddressFields(fields.address, fields.mapUrl);
   if (!place.ok) return { ok: false, error: t.management.contacts.errors[place.error] };
   if (place.map_url && !(await mapLinkLeadsSomewhere(place.map_url))) {

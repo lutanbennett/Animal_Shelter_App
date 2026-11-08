@@ -181,6 +181,25 @@ export const ROUTES: readonly RouteEntry[] = [
     menu: false,
   },
   {
+    // The suppliers list (0338): the businesses the shelter buys from, kept apart from Contacts, which holds only people.
+    path: "/management/suppliers",
+    activity: "suppliers.directory",
+    icon: Truck,
+    label: (t) => t.nav.suppliers,
+    device: "any",
+    menu: false,
+  },
+  {
+    // A supplier's own page (0338), the link the translation queue and the lists use. Read opens it.
+    path: "/suppliers",
+    activity: "suppliers.directory",
+    level: "read",
+    icon: Truck,
+    label: (t) => t.nav.suppliers,
+    device: "any",
+    menu: false,
+  },
+  {
     path: "/management/shelter-friends",
     activity: "friends.manage",
     icon: HeartHandshake,

@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import { CONTACT_COLUMNS, type Contact } from "@/lib/contacts/contacts";
-import { canBecomeFriend } from "@/lib/shelter-friends/friends";
+import { SUPPLIER_COLUMNS, type Supplier } from "@/lib/suppliers/suppliers";
+import { canBecomeFriend, type FriendCandidate } from "@/lib/shelter-friends/friends";
 import { parseStepParam } from "@/app/residents/new/steps";
 import { FriendWizard } from "./FriendWizard";
 import { FRIEND_STEPS } from "./steps";
@@ -9,9 +10,9 @@ import { requirePermission } from "@/lib/permissions/require";
 
 /**
  * Management → Shelter Friends → Add a Shelter Friend: the guided way to
- * what used to take five places (see docs/decisions, 2026-10-02). The
- * contacts it offers are the ones the one gate allows, that are not
- * archived and are not already a Friend.
+ * what used to take five places (see docs/decisions, 2026-10-02). It offers
+ * the contacts the one gate allows and every supplier, that are not archived
+ * and are not already a Friend.
  */
 export default async function AddShelterFriendPage(
   props: PageProps<"/management/shelter-friends/new">,
@@ -23,21 +24,27 @@ export default async function AddShelterFriendPage(
   const initialStep = parseStepParam(searchParams.step, FRIEND_STEPS.length);
 
   const supabase = await createClient();
-  const [contactsResult, friendsResult] = await Promise.all([
+  const [contactsResult, suppliersResult, friendsResult] = await Promise.all([
     supabase
       .from("contacts")
       .select(CONTACT_COLUMNS)
       .is("archived_at", null)
       .order("name")
       .returns<Contact[]>(),
-    supabase.from("shelter_friends").select("contact_id").returns<{ contact_id: string }[]>(),
+    supabase.from("suppliers").select(SUPPLIER_COLUMNS).is("archived_at", null).order("name").returns<Supplier[]>(),
+    supabase.from("shelter_friends").select("contact_id, supplier_id").returns<{ contact_id: string | null; supplier_id: string | null }[]>(),
   ]);
 
-  const taken = new Set((friendsResult.data ?? []).map((row) => row.contact_id));
-  const contacts = (contactsResult.data ?? []).filter(
-    (contact) => canBecomeFriend(contact) && !taken.has(contact.id),
-  );
-  const loadError = contactsResult.error?.message ?? friendsResult.error?.message ?? null;
+  const taken = new Set((friendsResult.data ?? []).flatMap((row) => [row.contact_id, row.supplier_id]));
+  const contacts: FriendCandidate[] = [
+    ...(contactsResult.data ?? [])
+      .filter((contact) => canBecomeFriend(contact) && !taken.has(contact.id))
+      .map((contact): FriendCandidate => ({ ...contact, kind: "contact" })),
+    ...(suppliersResult.data ?? [])
+      .filter((supplier) => !taken.has(supplier.id))
+      .map((supplier): FriendCandidate => ({ ...supplier, type: "Supplier", kind: "supplier" })),
+  ].sort((a, b) => a.name.localeCompare(b.name));
+  const loadError = contactsResult.error?.message ?? suppliersResult.error?.message ?? friendsResult.error?.message ?? null;
 
   return (
     <main className="flex flex-1 flex-col gap-6 p-6">

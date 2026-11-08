@@ -35,6 +35,7 @@ export const READBACK = {
   "visit.book": "the visit shows on that resident's page and in the shelter's list of visits (/upcoming-visits)",
   "maintenance.progress": "the job sits in its new column on /maintenance after a reload",
   "maintenance.jobs": "the job is on /maintenance (and on /my once assigned); status is changed on /maintenance/<id>, and assignee, zone, due date and the Estimated / Actual cost on /maintenance/<id>/edit (the cost reads back on the job page). No delete control is offered to this card",
+  "suppliers.directory": "the supplier appears (or reads its new details) in the list at /management/suppliers after the save and on its own page /suppliers/<id>; Archive moves it out of the list (it returns under Show archived) and out of the delivery forms' supplier pickers. There is no Delete: suppliers are archived. Making it a Shelter Friend needs Publish Shelter Friends as well",
   "projects.folders": "the folder appears (or reads its new name, place or story) on /projects and inside its parent folder after the save; Delete removes it from both. Putting it on the public website needs projects.publish and adding photos needs projects.photos, which this card does not give",
   "maintenance.photos": "the job page /maintenance/<id> counts the photo under Before (the problem as found) or After (the finished work)",
   "assistant.ask": "the answer shows in the assistant panel opened by the Assistant button in the header, and writes no row to any page",

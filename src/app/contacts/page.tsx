@@ -28,6 +28,8 @@ export default async function ContactsPage(props: PageProps<"/contacts">) {
     supabase
           .from("contacts")
           .select(CONTACT_COLUMNS)
+          // A Vendor contact was copied to a supplier (0335, 0338); Contacts holds only people.
+          .neq("type", "Vendor")
           .order("name")
           .returns<Contact[]>(),
     supabase
@@ -41,6 +43,7 @@ export default async function ContactsPage(props: PageProps<"/contacts">) {
     supabase
       .from("shelter_friends")
       .select("contact_id, published")
+      .not("contact_id", "is", null)
       .returns<{ contact_id: string; published: boolean }[]>(),
   ]);
 

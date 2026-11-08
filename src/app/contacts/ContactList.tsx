@@ -12,7 +12,7 @@ import { contactTypeLabel } from "@/lib/i18n/enum-labels";
 import {
   addressText,
   CARER_CONTACT_TYPE,
-  CONTACT_TYPES,
+  PEOPLE_CONTACT_TYPES,
   isArchived,
   type Contact,
   type ContactType,
@@ -208,7 +208,7 @@ export function ContactList({
   const filters: TypeFilter[] = [
     "all",
     // A volunteer reads no type (0126), so there is nothing to filter by.
-    ...(contacts.some((c) => c.type) ? CONTACT_TYPES : []),
+    ...(contacts.some((c) => c.type) ? PEOPLE_CONTACT_TYPES : []),
     ...(contacts.some(isFriend) ? (["friends"] as const) : []),
   ];
 

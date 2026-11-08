@@ -11,7 +11,7 @@ import { mapLinkLeadsSomewhere } from "@/lib/contacts/map-preview";
 import {
   CARER_CONTACT_TYPE,
   contactAddressFields,
-  isContactType,
+  isPeopleContactType,
   type ContactType,
 } from "@/lib/contacts/contacts";
 import { can } from "@/lib/permissions/can";
@@ -106,7 +106,7 @@ export async function updateContact(id: string, fields: ContactFields, requestId
     if (!can(await loadPermissions(), "contacts.directory")) return refuse(t.management.errors.managementAccessRequired);
     const name = optional(fields.name);
     if (!name) return refuse(t.management.contacts.errors.nameRequired);
-    if (!isContactType(fields.type)) {
+    if (!isPeopleContactType(fields.type)) {
       return refuse(t.management.contacts.errors.invalidType);
     }
     const place = contactAddressFields(fields.address, fields.mapUrl);

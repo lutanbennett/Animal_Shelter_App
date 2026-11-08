@@ -5,8 +5,8 @@ import { JOBS, bundleOfJobs } from "./jobs.ts";
 import { ACTIVITIES } from "./catalogue.ts";
 import { ROUTES } from "./routes.ts";
 
-test("the agreed set is fifty-three cards, the eight jobs among them", () => {
-  assert.equal(CARD_KEYS.length, 53);
+test("the agreed set is fifty-four cards, the eight jobs among them", () => {
+  assert.equal(CARD_KEYS.length, 54);
   for (const k of Object.keys(JOBS)) assert.ok(CARDS[k], k);
 });
 

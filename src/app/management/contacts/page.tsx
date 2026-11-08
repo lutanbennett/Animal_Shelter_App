@@ -28,7 +28,7 @@ export default async function ContactsAdminPage(
   };
 
   const supabase = await createClient();
-  let contactsQuery = supabase.from("contacts").select(CONTACT_COLUMNS).order("name");
+  let contactsQuery = supabase.from("contacts").select(CONTACT_COLUMNS).neq("type", "Vendor").order("name");
   if (!showArchived) contactsQuery = contactsQuery.is("archived_at", null);
 
   const [contactsResult, placementsResult, archivedResult, friendsResult] = await Promise.all([
@@ -55,6 +55,7 @@ export default async function ContactsAdminPage(
     supabase
       .from("shelter_friends")
       .select("contact_id, published")
+      .not("contact_id", "is", null)
       .returns<{ contact_id: string; published: boolean }[]>(),
   ]);
   const archivedCount = archivedResult.count ?? 0;
