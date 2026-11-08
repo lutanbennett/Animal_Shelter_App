@@ -1390,7 +1390,7 @@ const en = {
     recentChanges: {
       title: "Recent changes",
       subtitle:
-        "Who changed what, newest first: every add, edit, archive and delete on residents, contacts, prescriptions, clinic visits, weights, files and vaccinations, and on impact figures, facility plans, roles and permissions. The list shows which fields changed; the values appear only when you open one. The newest change to a record can be undone.",
+        "Who changed what, newest first: every add, edit, archive and delete on residents, contacts, prescriptions, clinic visits, weights, files, vaccinations, blood tests and procedures, and on donations, bills and stock, appeals, events and photos, as well as impact figures, facility plans, roles and permissions. The list shows which fields changed; the values appear only when you open one. The newest change to a record can be undone.",
       tables: {
         residents: "Resident",
         contacts: "Contact",
@@ -1406,13 +1406,42 @@ const en = {
         roles: "Role",
         role_permissions: "Permission",
         role_cards: "Card",
+        // Dropped tables (0243, 0261): kept so rows logged before the drop still read.
         role_home_tiles: "Home screen tile",
         features: "Feature",
         card_features: "Card's feature",
         card_grants: "What a card gives",
-        card_includes: "Card included in another",
         site_content: "Website settings",
         public_stat_switches: "Website count switch",
+        blood_tests: "Blood test",
+        procedures: "Procedure",
+        placement_history: "Placement",
+        resident_diets: "Resident diet",
+        user_roles: "Role given to a login",
+        shop_links: "Shop link",
+        donations: "Donation",
+        donation_lines: "Donation line",
+        donation_receipts: "Donation receipt",
+        maintenance: "Maintenance job",
+        maintenance_bills: "Maintenance bill",
+        bills_inbox: "Bill in the inbox",
+        stock_receipts: "Stock receipt",
+        stock_deliveries: "Stock delivery",
+        appeals: "Appeal",
+        appeal_photos: "Appeal photo",
+        fundraising_events: "Fundraising event",
+        fundraising_event_photos: "Fundraising event photo",
+        desexing_drives: "Desexing drive",
+        desexing_drive_signups: "Desexing drive sign-up",
+        community_places: "Community place",
+        community_dog_outings: "Community dog outing",
+        community_outing_photos: "Community outing photo",
+        pending_photos: "Photo waiting for a place",
+        memes: "Meme",
+        meme_residents: "Meme resident link",
+        reels: "Reel",
+        reel_residents: "Reel resident link",
+        social_shares: "Social media share",
         role_extras: "Extra permission",
       },
       kinds: {
@@ -3378,7 +3407,7 @@ const en = {
         dashboard:
           "The month's activity and where the shelter stands today — every figure the monthly report asks for.",
         contacts:
-          "The people the shelter works with: foster and adoptive carers, volunteers and suppliers.",
+          "The people the shelter works with: foster and adoptive carers, volunteers, suppliers and partners.",
         vets:
           "The clinics the shelter books visits with, and how much each one has seen.",
         medications:
@@ -4435,7 +4464,7 @@ const en = {
     contacts: {
       title: "Contacts",
       subtitle:
-        "The people the shelter works with: foster and adoptive carers, volunteers and suppliers. Set them up here; only contacts of type Carer can be given a resident, and that's done from the resident's hub.",
+        "The people the shelter works with: foster and adoptive carers, volunteers, suppliers and partners. Set them up here; only contacts of type Carer can be given a resident, and that's done from the resident's hub.",
       viewList: "Open the contact list →",
       newButton: "New contact",
       newTitle: "New contact",
@@ -4964,7 +4993,7 @@ const en = {
   contacts: {
     pageTitle: "Contacts",
     pageSubtitle:
-      "Carers, volunteers and suppliers — tap to call, chat on LINE, Messenger or WhatsApp, email, or open in maps.",
+      "Carers, volunteers, suppliers and partners — tap to call, chat on LINE, Messenger or WhatsApp, email, or open in maps.",
     couldntLoadContacts: "Couldn't load contacts",
     couldntLoadPlacements: "Couldn't load placements",
     manageInAdmin: "Edit contacts in Management",
@@ -8241,7 +8270,7 @@ const en = {
       unpublished: "Taken off the website.",
     },
     errors: {
-      notOffered: "Only Supplier contacts can be made Shelter Friends for now.",
+      notOffered: "Only Supplier and Partner contacts can be made Shelter Friends.",
       alreadyFriend: "This contact is already a Shelter Friend.",
       notFound: "That Shelter Friend profile no longer exists.",
       invalidDate: "Friend since must be a date.",
@@ -8283,19 +8312,19 @@ const en = {
         review: "Review",
       },
       who: {
-        existing: "Pick a supplier you already have",
+        existing: "Pick a supplier or partner you already have",
         brandNew: "Add a new business",
         onlySuppliers:
-          "Only suppliers can be Shelter Friends for now. A business that only donates is a supplier too.",
-        searchLabel: "Search suppliers",
+          "Only suppliers and partners can be Shelter Friends. A business or group that helps the shelter without selling it anything is a partner.",
+        searchLabel: "Search suppliers and partners",
         searchPlaceholder: "Name or phone",
-        noMatches: "No supplier matches that.",
+        noMatches: "No supplier or partner matches that.",
         noneAvailable:
-          "There is no supplier left to pick — each one is already a Shelter Friend, or none has been added yet. Add a new business instead.",
+          "There is no supplier or partner left to pick — each one is already a Shelter Friend, or none has been added yet. Add a new business instead.",
         selected: (name: string) => `Selected: ${name}`,
         newIntro:
           "Just enough to find them again. Their full details can be added later on their contact page.",
-        pickRequired: "Pick a supplier, or choose Add a new business.",
+        pickRequired: "Pick a supplier or partner, or choose Add a new business.",
         nameRequired: "Enter the business's name.",
       },
       help: {
@@ -8406,6 +8435,7 @@ const en = {
       Carer: "Foster or adopter",
       Volunteer: "Volunteer",
       Vendor: "Supplier",
+      Partner: "Partner",
     },
     sex: { Male: "Male", Female: "Female" },
     size: { Small: "Small", Medium: "Medium", Large: "Large" },
