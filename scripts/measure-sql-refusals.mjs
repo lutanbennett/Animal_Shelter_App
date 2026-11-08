@@ -16,6 +16,7 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { classifyLiveRefusals, CLASSES } from "./lib/sql-refusal-classes.mjs";
+import { REFUSAL_KEY } from "./check-sql-refusal-keys.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const { rows, live, rawHits, doBlocks } = classifyLiveRefusals(root);
@@ -45,6 +46,11 @@ for (const k of ["user", "maybe", "masked", "developer"]) {
   console.log(`reads=${k}: ${mine.length} functions, ${sum(mine, (r) => r.m.all)} messages`);
 }
 console.log(`unclassified: ${rows.filter((r) => !r.cls).length}`);
+// The progress meter for #3nuwy: a keyed message is worded by the app (src/lib/db-refusal.ts), so it is no longer English
+// to anyone. The classes above still count it, because they describe who reads a function, not what it says.
+const keyedN = (r) => r.m.messages.filter((x) => REFUSAL_KEY.test(x.text)).length;
+const userRows = rows.filter((r) => r.cls.reads === "user" || r.cls.id === "called-forwarded-and-masked");
+console.log(`keyed (worded by the app, not English): ${rows.filter((r) => keyedN(r)).length} functions, ${sum(rows, keyedN)} messages; of the person-read (user + forwarded-and-masked), ${sum(userRows, (r) => r.m.all - keyedN(r))} messages are still English`);
 if (process.argv.includes("--list")) {
   console.log("");
   for (const r of rows) {
