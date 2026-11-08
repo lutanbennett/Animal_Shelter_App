@@ -83,8 +83,18 @@ has real paths to read** (the `0.43.4` trap was a plausible block typed from mem
 existed this same command answered `no changed files could be read`):
 
 ```
-DOCS-ONLY-BLOCK
+deps-changed: false
+docs-only: true — 4 path(s), all documents
+  docs/release-handover.md
+  docs/release-procedure.md
+  docs/releases/2026-11-08-0-43-6.md
+  docs/test-plans/record-0-43-6.md
+The heavy jobs will skip; test-plan still runs.
 ```
+
+`deps-changed: false` is what makes `audit` show `skipped` on this PR, and `docs-only: true` is what
+makes the heavy jobs skip. Both values come from the one line `check-docs-only.mjs` appends to
+`GITHUB_OUTPUT`, which `ci.yml` reads.
 
 ## 7. Documentation
 
