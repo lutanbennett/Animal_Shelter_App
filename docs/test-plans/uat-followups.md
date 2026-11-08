@@ -24,11 +24,15 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — SYNC_PLACEHOLDER
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in: already up to date, no conflicts
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`, every `<N>` `0`:
 
 ```
-GATES_PLACEHOLDER
+=== gates: typecheck exited 0 after 91s
+=== gates: lint exited 0 after 182s
+=== gates: test exited 0 after 29s
+=== gates: build exited 0 after 219s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
