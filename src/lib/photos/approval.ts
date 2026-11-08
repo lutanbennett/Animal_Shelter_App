@@ -110,11 +110,12 @@ export async function loadWaitingEventPhotos(supabase: SupabaseClient): Promise<
   const rows = data ?? [];
   if (rows.length === 0) return [];
 
-  const [{ data: events }, users] = await Promise.all([
-    supabase.rpc("waiting_event_titles").returns<{ id: string; title: string; event_date: string }[]>(),
+  const [{ data: eventRows }, users] = await Promise.all([
+    supabase.rpc("waiting_event_titles"),
     loadAppUsersById(supabase, rows.flatMap((r) => (r.uploaded_by ? [r.uploaded_by] : []))),
   ]);
-  const titles = new Map((events ?? []).map((e) => [e.id, e.title]));
+  const events = (eventRows ?? []) as { id: string; title: string; event_date: string }[];
+  const titles = new Map(events.map((e) => [e.id, e.title]));
 
   return rows.map((r) => ({
     id: r.id,
