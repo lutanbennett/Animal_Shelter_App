@@ -24,9 +24,24 @@ fixed where it will be read next time. Lutan: *"Yes, do it now."*
    login (0 refused) and nothing was found open to `anon`. **Runbook Part 2 now carries the grants;** a real
    disaster restore has the same gap, filed as `#rg7pv` on the backlog branch, because a hand-kept list of
    grants will rot.
-4. **"UAT's token lacks `database_read`" (release handover, 0.43.6) was wrong.** In a window without the
-   other account's shell token, `--status` and the drift read UAT fine. Corrected in place in
-   `docs/release-handover.md`, marked SUPERSEDED, keeping it under its line limit.
+4. **"UAT's token lacks `database_read`" was wrong, and it had spread.** In a window without the other
+   account's shell token, `--status` and the drift read UAT fine. Meanwhile `claude/uat-in-release`
+   (merged the same day) built on the false reading: an urgent backlog item for Lutan (`#t0k9r`, "two
+   minutes in a dashboard"), and statements in `docs/release-procedure.md` and `README.md` that UAT could
+   not be migrated by script. **Measured on this machine:** this PC's shell `SUPABASE_ACCESS_TOKEN` is the
+   same value as `.env.local`'s (the first account's); with it set, `apply-migrations --status --env uat`
+   dies with `database_read`; with it removed, it reads `339 applied, 2 pending`.
+   **Fix in the tool, not in a habit:** `loadEnv` let the shell win over every file value, which is right
+   for a setting and wrong for a credential that says *which account*. `scripts/lib/env.mjs` now has
+   `ACCOUNT_KEYS` (`SUPABASE_ACCESS_TOKEN`): a non-empty value in the environment's own file beats the
+   shell; an empty or missing one leaves the shell's. Production's file sets no token, so production
+   behaves exactly as before (its `--status` read unchanged after the change). With the shell token still
+   set, the changed script read UAT's status correctly. `#t0k9r` is ticked; the handover, release
+   procedure, README and runbook are corrected in place. The PostgREST fallback in `deploy-schema.mjs`
+   stays: a wrong or revoked token must still not leave the deploy's schema guard blind.
+   **Why only that one key:** the other values in a deploy file are settings, and a shell override of a
+   setting is a deliberate act (as with `next build`). A token is not a setting; nobody sets the shell's
+   token to steer UAT, and when it differs from UAT's file it is always the wrong account.
 5. **The Pi deploy's clean-up failed** (*rm: cannot remove '.next.prev/…'*), because the group
    `setup-uat.sh` adds the deploy user to only applies from the next login. The deploy itself had
    succeeded; the leftover was removed from a fresh login. **Runbook Part 5:** reconnect after setup.

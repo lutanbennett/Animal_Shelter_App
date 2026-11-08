@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | Feature | uat-followups |
-| Backlog item | `docs/backlog.md` → #u7d3b and #m9qtv (ticked here); #uat7p, #uq4vz retitled and #rg7pv filed on the `backlog` branch |
+| Backlog item | `docs/backlog.md` → #t0k9r (ticked here); #u7d3b and #m9qtv (ticked on `main` too); #uat7p retitled, #uq4vz ticked and #rg7pv filed on the `backlog` branch |
 | Branch / worktree | `claude/uat-followups` @ `C:\Development\Animal_Shelter_uat-followups` |
 | Dev server | n/a: nothing served changed |
 | PR | see the PR for this branch |
@@ -18,7 +18,7 @@
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence: what putting UAT live on 2026-11-08 found, fixed where it will be read next time (the preflight's calendar and Drive-secret rules, the runbook's Parts 1, 2, 4, 5, 6 and 7, a stale "outstanding" line, and the release handover's wrong UAT claim)
-- [x] Files/areas touched listed: `scripts/lib/uat-ready.mjs`, `scripts/check-uat-ready.test.mjs`, `docs/uat-finalisation.md`, `docs/email-sending.md`, `docs/domain-checklist.md`, `docs/release-handover.md`, `docs/backlog.md` (one tick), `docs/decisions/2026-11-08-uat-go-live-findings.md`
+- [x] Files/areas touched listed: `scripts/lib/env.mjs`, `scripts/env-layers.test.mjs`, `scripts/lib/deploy-schema.mjs` (comment), `docs/release-procedure.md`, `README.md`, `scripts/lib/uat-ready.mjs`, `scripts/check-uat-ready.test.mjs`, `docs/uat-finalisation.md`, `docs/email-sending.md`, `docs/domain-checklist.md`, `docs/release-handover.md`, `docs/backlog.md` (one tick), `docs/decisions/2026-11-08-uat-go-live-findings.md`
 - [x] Cards affected identified: none. No page, action or permission in the app changed
 - [x] Anything explicitly **out of scope** written down: the restore recipe's own fix (`#rg7pv`, filed), the failover drill (skipped by Lutan's choice), the `#uq4vz` signed-in pass (needs a UAT login)
 
@@ -56,6 +56,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] Create / edit / delete all exercised — n/a: the check is read-only
 - [x] Empty state renders sensibly: with no `.env.local` the Drive-secret comparison is skipped rather than failing (test)
 - [x] Invalid input is rejected with a readable message, not a crash: a calendar key with a value, a missing calendar line, and a differing `GOOGLE_OAUTH_CLIENT_SECRET` each fail with a named reason (10 tests pass)
+- [x] Account token: `scripts/env-layers.test.mjs` (5 pass) proves an environment file's `SUPABASE_ACCESS_TOKEN` beats the shell's, an empty or missing one does not, and every other key still lets the shell win. Live, from the main checkout with the shell's token set: the old script's `--status --env uat` died with `database_read`, the changed one read `339 applied, 2 pending`; `--status --env production` read the same before and after
 - [x] Boundary cases checked: the no-secret-in-output test now also covers the OAuth secret, with a marker that is not part of any key name (the old marker `SECRET` matched the key name `GOOGLE_OAUTH_CLIENT_SECRET` once that name could appear in a finding)
 
 ### Role access matrix
@@ -86,7 +87,7 @@ Nothing here is reachable by a login.
 
 ## 7. Documentation
 
-- [x] Backlog items ticked in `docs/backlog.md` on this branch: `#u7d3b` and `#m9qtv`, each with what closed it
+- [x] Backlog items ticked in `docs/backlog.md` on this branch: `#t0k9r`, with what closed it (`#u7d3b` and `#m9qtv` were ticked here first and then by `claude/uat-in-release` on `main`; main's text was kept at the merge)
 - [x] Non-obvious design choices added as a new file in `docs/decisions/`: `2026-11-08-uat-go-live-findings.md`
 - [x] `README.md` still accurate: it says UAT is `uat.lannacare.org` on its own project, which is now true live
 - [ ] **Release notes.** n/a: no shelter user sees a dev-machine check or a runbook

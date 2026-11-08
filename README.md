@@ -250,10 +250,10 @@ which environment; `scripts/deploy.mjs`, `scripts/apply-migrations.mjs`,
 `scripts/bootstrap-admin.mjs` all take `--env test|uat|production`
 (default `test`) and print the environment and Supabase project ref before
 doing anything. `.env.deploy.uat` exists since 2026-11-08, so `--env uat` runs for
-real — **except in `apply-migrations.mjs`**, where UAT's access token lacks
-`database_read` and every mode dies with
-`Missing required permission(s): database_read` (`docs/release-procedure.md`,
-*What UAT still needs once*). A worktree has only `.env.local`, so UAT commands
+real, `apply-migrations.mjs` included. (UAT is in a second Supabase account, so
+`SUPABASE_ACCESS_TOKEN` is the one value an environment file wins over the shell for:
+`ACCOUNT_KEYS` in `scripts/lib/env.mjs`. Before 2026-11-08 the shell's token won and every UAT
+read died with `database_read`, which was read as a missing permission.) A worktree has only `.env.local`, so UAT commands
 are run from the main checkout.
 
 `.env.deploy.production` (gitignored) holds the production
