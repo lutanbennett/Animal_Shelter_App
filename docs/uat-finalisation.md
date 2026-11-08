@@ -9,6 +9,10 @@ the Drive files, served by the Pi. Then **`lannacare.org` forwards to the live s
 depend on the one before. Every step is yours unless it says otherwise. If anything prints something you
 did not expect, stop and ask Claude, pasting what it printed.
 
+**Where it stands (8 November 2026): Parts 1 to 5 are done.** Part 6 waits for the next release cut,
+Part 7 follows it straight away, then Part 8. Parts 1 to 5 stay written out in full, corrected from the
+real run, for the day UAT has to be rebuilt.
+
 **Where the reasoning lives:** `docs/pi-hosting.md` ("UAT on the same Pi") and the decision files
 `2026-11-06-uat-own-database.md`, `2026-11-07-uat-on-the-pi.md`, `2026-11-07-drive-buckets.md` and
 `2026-11-08-uat-finalisation-runbook.md`. You do not need them to follow this list.
@@ -22,8 +26,16 @@ did not expect, stop and ask Claude, pasting what it printed.
 | **Production's database** | Supabase project `dbkodyyxxhtygxcxmfcu`, under the `lutan.bennett2@gmail.com` account |
 | **UAT's settings file** | `.env.deploy.uat` in the main checkout. A second copy goes on the Pi in Part 5 |
 
-**Commands on your PC:** use a **PowerShell** window opened in the main checkout. At the start of every
-new window, paste this line first:
+**Commands on your PC:** open an ordinary **PowerShell** window (not *Run as administrator*) and go to the
+main checkout first:
+
+```
+cd C:\Development\Animal_Shelter_App
+```
+
+The prompt then reads `PS C:\Development\Animal_Shelter_App>`. (An administrator window starts in
+`C:\WINDOWS\system32`, where the commands below fail with *access denied* or *not found*.) Then paste this
+line:
 
 ```
 Remove-Item Env:SUPABASE_ACCESS_TOKEN -ErrorAction SilentlyContinue
@@ -98,7 +110,8 @@ data yet.
 
 6. **Get UAT's database address.** In your browser, sign in to supabase.com as
    **`lutan.bennett1@gmail.com`**. Open the project **Lanna Care For Animals - UAT**, then click
-   **Connect** at the top. Choose **Session pooler** and copy the connection string. It starts
+   **Connect** at the top. In the **Direct** section, open the **Method** list and choose **Session pooler**,
+   then copy the connection string. It starts
    `postgresql://postgres.fsjagxmxjosauwmxwype:` and contains `[YOUR-PASSWORD]`.
 7. Replace `[YOUR-PASSWORD]` with UAT's **database** password: the value after `SUPABASE_DB_PASSWORD=` in
    `.env.deploy.uat`. This is not your Supabase login password. **If that password contains `@`,** reset it
@@ -110,7 +123,14 @@ data yet.
    $env:DB = "<the whole connection string from step 7>"
    ```
 
-9. **Load the user accounts.** Run these two, one after the other, `users` first:
+9. **Load the user accounts.** `pg_restore` comes with PostgreSQL 17. If PowerShell says it is *not
+   recognized*, add its folder for this window and try again:
+
+   ```
+   $env:Path += ";$env:LOCALAPPDATA\Programs\PostgreSQL\17\bin"
+   ```
+
+   Run these two, one after the other, `users` first:
 
    ```
    pg_restore --dbname="$env:DB" --schema=auth --table=users --data-only --no-owner --no-privileges C:\Temp\lannacare-restore\restore.dump
@@ -132,8 +152,9 @@ data yet.
     pg_restore --dbname="$env:DB" --schema=public --schema=private --clean --if-exists --no-owner --no-privileges C:\Temp\lannacare-restore\restore.dump 2> C:\Temp\lannacare-restore\restore-errors.txt
     ```
 
-12. **Check the errors.** Hundreds of errors are normal. Every one that mentions **`DROP`** is harmless:
-    it tried to remove something that was not there. Ask Claude to read
+12. **Check the errors.** UAT's database already has its tables, so expect only a few errors (on
+    8 November there were four, all about `public_stat_switches`). Every one that mentions **`DROP`** is
+    harmless: it tried to remove something that was not there. Ask Claude to read
     `C:\Temp\lannacare-restore\restore-errors.txt` and confirm nothing else went wrong. A failed `CREATE`,
     `COPY`, `ALTER` or `ADD CONSTRAINT` is a real problem, so stop if Claude finds one.
 13. **Compare the resident counts.** In UAT's SQL Editor, run `select count(*) from residents;`. Sign in to
@@ -148,8 +169,10 @@ data yet.
     The project it names **must be `fsjagxmxjosauwmxwype`**. If it is any other project, stop. If it says
     some files are pending, run `node scripts/apply-migrations.mjs --env uat` to apply them, then run the
     `--status` line again to see none pending.
-15. **Clean up.** Delete `restore.dump` and `key.txt` from `C:\Temp\lannacare-restore`. Both are
-    unprotected copies. Keep the `.dump.age` file if you like; it is still locked.
+15. **Clean up.** Delete `restore.dump`, `key.txt` and `restore-errors.txt` from
+    `C:\Temp\lannacare-restore`. The first two are unprotected copies. Keep the `.dump.age` file if you
+    like; it is still locked. Then **close this PowerShell window**: `$env:DB` holds UAT's database
+    password until it closes.
 
 ---
 
@@ -160,7 +183,9 @@ photo on UAT would delete the real one. This part copies the files and points UA
 It must come after Part 2 and before Part 5.
 
 1. Open `.env.deploy.production` in Notepad. Copy the **value** after `GOOGLE_DRIVE_ROOT_FOLDER_ID=`
-   (production's Drive folder ID). Below, it replaces `<production folder id>`.
+   (production's Drive folder ID). Below, it replaces `<production folder id>`. It is the folder to copy
+   **from**: UAT's restored data names production's files, so the copy starts there. Production's folder
+   is only read; nothing in it is changed.
 2. **Trial run, which copies nothing:**
 
    ```
@@ -174,11 +199,17 @@ It must come after Part 2 and before Part 5.
    node scripts/drive-copy-tree.mjs --env uat --source <production folder id> --map .local\drive-copy-map.uat.jsonl --apply
    ```
 
-4. Near the start it prints **`New root "...": <an id>`**. Copy that id. **This new folder, not the empty one
-   made on 7 November, is now UAT's Drive folder.** The script always makes a new folder at the top of My
-   Drive; it cannot fill the old empty one.
+   It ends **`Copied <n> files this run; 0 failed.`** (8 November: 915 files, 342 folders, 1.11 GB.)
+4. Near the start it prints **`New root "...": <an id>`**. Copy that id. If it has scrolled away, the first
+   line of `.local\drive-copy-map.uat.jsonl` holds it (`"kind":"root"`): ask Claude to read it out.
+   **This new folder, not the empty one made on 7 November, is now UAT's Drive folder.** The script always
+   makes a new folder named `Production (UAT copy <date>)` at the top of **My Drive** of the shelter
+   account (`lannaanimalfoundationbwm@gmail.com`, the account the script printed). It is not shared, so it
+   is invisible from any other Google account. You may move it into **LCA Health system** and rename it
+   **UAT**: Drive keeps a folder's id when it is moved or renamed, and the id is all the app uses.
 5. Open `.env.deploy.uat` and change the value after `GOOGLE_DRIVE_ROOT_FOLDER_ID=` to the id from step 4.
-   Save. (The old empty UAT folder can be deleted in Drive later. Nothing uses it.)
+   Save. (The old empty UAT folder can be deleted in Drive once you have checked it is empty. Nothing uses
+   it. Delete it before renaming the new one, so there are never two folders called UAT.)
 6. **Trial run of the database change, which changes nothing:**
 
    ```
@@ -192,8 +223,18 @@ It must come after Part 2 and before Part 5.
    node scripts/drive-remap-ids.mjs --env uat --map .local\drive-copy-map.uat.jsonl --apply
    ```
 
-   Running it again should report nothing left to change. It refuses to touch production.
-8. Run `node scripts/check-uat-ready.mjs` again. It must still say **`Ready: no failures.`**
+   It ends **`APPLIED: <n> values rewritten.`**, the same number the trial gave (8 November: 506). It
+   refuses to touch production.
+8. **Check nothing still points at production's files.** Step 7 changes only the ids it has a copy for, so a
+   record naming a Drive file *outside* production's folder would be left pointing at the real file, and
+   running step 7 again cannot see it. This check can. It only reads:
+
+   ```
+   node scripts/check-drive-leftovers.mjs --env uat --map .local\drive-copy-map.uat.jsonl
+   ```
+
+   It must end **`CLEAN`**. If it says **`LEFTOVERS`**, stop and ask Claude before anyone tests UAT.
+9. Run `node scripts/check-uat-ready.mjs` again. It must still say **`Ready: no failures.`**
 
 ---
 
@@ -205,25 +246,42 @@ It must come after Part 2 and before Part 5.
    - Under **Redirect URLs**, click **Add URL** and add `https://uat.lannacare.org/auth/callback`
    - Click **Save**.
 2. **Google sign-in client.** At console.cloud.google.com, signed in as the shelter account
-   (`lannaanimalfoundationbwm`), choose project **lanna-care-dev**, then **APIs & Services**, then
-   **Credentials**. Look under **OAuth 2.0 Client IDs** for a client whose authorised redirect URI is
+   (`lannaanimalfoundationbwm@gmail.com`), choose project **Lanna Care - Dev** (`lanna-care-dev`), then
+   **APIs & Services**, then **Credentials**. Every live Google client is in this project, whichever
+   Supabase account the project it serves belongs to (`docs/google-cloud-inventory.md`). The Supabase
+   accounts and the Google account are different things: Supabase only needs the client's ID and secret
+   pasted in. Look under **OAuth 2.0 Client IDs** for a client whose authorised redirect URI is
    `https://fsjagxmxjosauwmxwype.supabase.co/auth/v1/callback`.
-   - **If there is one** (you may have made it when filling in `GOOGLE_SIGNIN_CLIENT_SECRET`), use it.
+   - **If there is one**, use it. Since 8 November it exists: **Lanna Care sign-in (UAT Supabase)**.
    - **If there is none**, click **Create credentials**, then **OAuth client ID**, choose type **Web
      application**, and name it **Lanna Care sign-in (UAT Supabase)**. Under **Authorised redirect URIs**,
      add `https://fsjagxmxjosauwmxwype.supabase.co/auth/v1/callback`. Click **Create** and keep the client
-     ID and secret it shows.
-   - Do not change any other client: each one serves a different project.
+     ID and secret it shows. Add it to `docs/google-cloud-inventory.md`.
+   - Do not change any other client: each one serves a different project. The other two are production's
+     (`Lanna Care sign-in (production Supabase)`) and Dev/Test's (`LCA Application`).
 3. **Turn on Google sign-in for UAT.** Back in the UAT project on supabase.com, open **Authentication**,
    then **Sign In / Providers**, then **Google**. Switch it on, paste the client ID and secret from step 2,
-   and save. If you made a new client, also put its secret in `GOOGLE_SIGNIN_CLIENT_SECRET=` in
-   `.env.deploy.uat`.
-4. **Email sender.** In the UAT project, open **Authentication**, then **SMTP settings** (or **Emails**,
-   then **SMTP**). Turn on custom SMTP. Copy the host, port and username from **production's** project's
-   same page. Use sender address `noreply@lannacare.org` and sender name `Lanna Care UAT`. **Supabase
-   never shows a saved SMTP password again**, so take the password from your email provider. Save.
-5. **Test the sender.** Still in UAT's project, open **Authentication**, then **Users**, pick your own
-   account, and send a password reset. Check it arrives from Lanna Care UAT.
+   and save. Put the same secret after `GOOGLE_SIGNIN_CLIENT_SECRET=` in `.env.deploy.uat`, replacing
+   whatever was there (a value copied from another environment belongs to another client).
+4. **A Resend key of UAT's own.** Mail goes out through Resend (`docs/email-sending.md`, section 2). At
+   resend.com, open **API Keys**, then **Create API key**: name `Supabase UAT (new project)`, permission
+   *Sending access*, domain `lannacare.org`. It is shown **once**: leave the page open and put it straight
+   into step 5, never into a file. **Do not reuse or delete the key called `Supabase UAT`:** despite its
+   name it is **production's** live key, made on 23 September when today's production database was still
+   called UAT. Rename it `Supabase production` if Resend offers a rename.
+5. **Email sender.** In the UAT project, open **Authentication**, then **Emails**, then **SMTP Settings**,
+   switch on **Enable custom SMTP**, and fill in: sender email `noreply@lannacare.org`, sender name
+   `Lanna Care UAT`, host `smtp.resend.com`, port `465`, username `resend`, password the key from step 4.
+   Save. Then under **Authentication**, **Rate Limits**, raise the email limit to about 30 an hour.
+6. **Test the sender.** The site is not live yet, so its *Forgot password?* page cannot be used. This sends
+   the same request straight to UAT's Supabase, to an address of yours that has a login:
+
+   ```
+   node scripts/send-reset-email.mjs you@example.com --env uat
+   ```
+
+   It prints **`HTTP 200, sent`**. The mail must arrive from **Lanna Care UAT**, and Resend's **Emails**
+   page shows it *Delivered*. Its link points at `uat.lannacare.org` and does nothing until Part 6.
 
 ---
 
@@ -232,15 +290,17 @@ It must come after Part 2 and before Part 5.
 Nothing in this part is visible to anyone until Part 6.
 
 1. **Open a terminal on the Pi:** `ssh lutan@lanna-pi.local`
-2. **Check memory before you start.** Run `free -m` and note the **available** figure. On 7 November it was
-   about 3,365 MB with production and Test running. UAT needs up to 900 MB.
+2. **Check memory before you start.** Run `free -m` and note the **available** figure. With production
+   and Test running it was about 3,365 MB on 7 November and 3,047 MB on 8 November. UAT needs up to 900 MB.
 3. **Get the code.** On the Pi:
 
    ```
    git clone https://github.com/lutanbennett/Animal_Shelter_App.git ~/Animal_Shelter_App_uat
    ```
 
-4. **Copy UAT's settings file to the Pi.** In a PowerShell window on your PC, in the main checkout:
+4. **Copy UAT's settings file to the Pi.** This runs on your **PC**, not the Pi: switch to the PowerShell
+   window whose prompt reads `PS C:\Development\Animal_Shelter_App>` (not `lutan@lanna-pi`). In the Pi
+   window it fails with *No such file or directory*, because the file is on the PC:
 
    ```
    scp .env.deploy.uat lutan@lanna-pi.local:Animal_Shelter_App_uat/.env.deploy.uat
@@ -262,9 +322,14 @@ Nothing in this part is visible to anyone until Part 6.
    cd ~/Animal_Shelter_App_uat && ./scripts/pi/setup-uat.sh
    ```
 
-   It builds UAT and starts it as its own service. It takes several minutes. If it stops with a message
-   naming a missing setting, add that setting to the Pi's `.env.deploy.uat` (and to your PC's copy) and run
-   it again.
+   **No `sudo` in front:** it refuses to run as root and asks for your Pi password itself, once, at
+   `== 2. systemd`. It builds UAT and starts it as its own service; the build is slow and quiet for long
+   stretches. A `chgrp: … Operation not permitted` line is normal on the first run: UAT's user does not
+   exist yet at that point, and the script sets the file's group again after making it. It must end with
+   **`lanna-care-uat runs as lannacare-uat and answers`**. (If it says *Permission denied* before doing
+   anything, the clone predates the fix of 8 November: run `bash ./scripts/pi/setup-uat.sh` instead.)
+   If it stops with a message naming a missing setting, add that setting to the Pi's `.env.deploy.uat`
+   (and to your PC's copy) and run it again.
 7. **Check memory after.** Run `free -m` again; there should still be plenty available. Then run
    `journalctl -u lanna-care -n 30` and check production did **not** restart during the setup.
 8. **Find the tunnel's id.** Run `ls /etc/cloudflared/`. The file ending in `.json` is named after the
@@ -277,19 +342,40 @@ Nothing in this part is visible to anyone until Part 6.
 
 10. **Install the new tunnel settings and restart the tunnel:**
 
+    First keep a copy of today's settings, so they can be put straight back:
+
+    ```
+    sudo cp /etc/cloudflared/config.yml /etc/cloudflared/config.yml.bak-before-uat
+    ```
+
+    Then, one line at a time:
+
     ```
     cd ~/Animal_Shelter_App_uat && sed -e "s|__TUNNEL_ID__|<tunnel id>|g" scripts/pi/cloudflared-config.yml | sudo tee /etc/cloudflared/config.yml >/dev/null
     sudo systemctl restart cloudflared
+    systemctl is-active cloudflared
     ```
 
-    These need your Pi password.
+    The last line must print **`active`**. These need your Pi password. The file installed is the whole
+    tunnel configuration, so before running it Claude can compare it with the Pi's current one: on
+    8 November the only change besides comments was the added `uat-pi.lannacare.org` entry.
 11. **Check production is still fine:** open `https://lannacareforanimals.org` in your browser and sign in.
 12. **Let the Pi address through the firewall rule.** In the Cloudflare dashboard, open the
-    **lannacare.org** site, then **Security**, then **WAF**, then **Custom rules**. Edit the rule that
-    already lists `pi.lannacare.org` and `test-pi.lannacare.org`, and add `uat-pi.lannacare.org` to its list
+    **lannacare.org** site, then **Security**, then **Security rules** (older dashboards called this
+    **WAF**, then **Custom rules**). Edit the custom rule, action **Block**, that already lists `pi.lannacare.org` and `test-pi.lannacare.org`, and add `uat-pi.lannacare.org` to its list
     of hostnames. The list then reads:
     `{"pi.lannacare.org" "test-pi.lannacare.org" "uat-pi.lannacare.org"}`. Save.
-    **Edit the existing rule. Do not create a new one:** the free plan allows only five.
+    **Edit the existing rule. Do not create a new one:** the free plan allows only five. Change nothing
+    else in it, above all the part about the key header.
+13. **Check the firewall now stands in front of UAT's Pi.** In PowerShell on your PC:
+
+    ```
+    curl.exe -sI https://uat-pi.lannacare.org/login
+    ```
+
+    It must say **`403`** with **`Content-Type: text/html`**: Cloudflare's block page, the same as
+    `pi.lannacare.org` gives. A 403 with `text/plain` is the app's own refusal and means the firewall
+    rule does not cover the address yet.
 
 ---
 
