@@ -60,6 +60,17 @@ const th: Dictionary = {
     enclosure: "กรง",
     status: "สถานะ",
   },
+  // Refusals a database function raises as a KEY (src/lib/db-refusal.ts). UNREVIEWED Thai, as the rest of the app.
+  refusals: {
+    "label.translate_not_allowed": () => "สิทธิ์ของคุณไม่รวมการแปลป้ายชื่อ",
+    "label.propose_not_allowed": () => "สิทธิ์ของคุณไม่รวมการเสนอคำแปลภาษาไทยของป้ายชื่อ",
+    "label.approve_not_allowed": () => "สิทธิ์ของคุณไม่รวมการอนุมัติคำแปลภาษาไทยของป้ายชื่อ",
+    "label.discard_not_allowed": () => "สิทธิ์ของคุณไม่รวมการทิ้งคำแปลภาษาไทยที่เสนอไว้",
+    "label.not_translatable": (p: Record<string, string>) =>
+      `"${p.table}.${p.column}" ไม่ใช่ป้ายชื่อที่แปลได้ โปรดโหลดหน้านี้ใหม่แล้วลองอีกครั้ง`,
+    "label.no_proposal_waiting": () =>
+      "ไม่มีคำแปลภาษาไทยที่เสนอไว้รออยู่สำหรับป้ายชื่อนี้แล้ว อาจมีคนอนุมัติหรือทิ้งไปก่อนแล้ว โปรดโหลดหน้านี้ใหม่เพื่อดูสถานะล่าสุด",
+  },
 
   largerScreen: {
     title: "ใช้งานบนจอใหญ่จะดีกว่า",

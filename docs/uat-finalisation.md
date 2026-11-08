@@ -9,9 +9,16 @@ the Drive files, served by the Pi. Then **`lannacare.org` forwards to the live s
 depend on the one before. Every step is yours unless it says otherwise. If anything prints something you
 did not expect, stop and ask Claude, pasting what it printed.
 
-**Where it stands (8 November 2026): Parts 1 to 5 are done.** Part 6 waits for the next release cut,
-Part 7 follows it straight away, then Part 8. Parts 1 to 5 stay written out in full, corrected from the
-real run, for the day UAT has to be rebuilt.
+**WHERE IT STANDS (8 November 2026): DONE, all eight parts.** UAT answers `0.43.6` at
+`uat.lannacare.org` with `x-lanna-served-by: pi`, `lannacare.org` now 301s to
+`lannacareforanimals.org`, and Lutan said the same day that UAT *"is now part of the standard
+release process"*.
+
+**So this is no longer a to-do list — it is the REBUILD list.** It stays written out in full,
+corrected from the real run, for the day UAT has to be built again. **What a RELEASE does to UAT
+lives in `docs/release-procedure.md`** (steps 1, 5, 6 and 7, and *What UAT still needs once* at its
+top). **Do not follow Part 6 for a routine release:** it pushes secrets, which a release should
+not, and a release deploys UAT last rather than first.
 
 **Where the reasoning lives:** `docs/pi-hosting.md` ("UAT on the same Pi") and the decision files
 `2026-11-06-uat-own-database.md`, `2026-11-07-uat-on-the-pi.md`, `2026-11-07-drive-buckets.md` and
@@ -385,24 +392,40 @@ Only after Parts 1 to 5. **From this point UAT moves: `lannacare.org` stops show
 `uat.lannacare.org` starts.** Do Part 7 straight after this part.
 
 **When:** the UAT deploy only ships a released version. It refuses if the code has release notes not yet
-cut into a release, and on 8 November it does. So do this part **right after the next release is cut**
-(or ask for one to be cut first). If step 2 below says *"ships only a written-down release"*, that is the
-reason; wait for the release.
+cut into a release. So do this part **right after a release is cut** (or ask for one to be cut first).
+If step 2 below says *"ships only a written-down release"*, that is the reason; wait for the release.
+
+**Not `npm run deploy:uat`.** PowerShell's execution policy blocks `npm` on this machine
+(`npm.ps1 cannot be loaded because running scripts is disabled on this system`), so the commands below
+are the bare `node` form. They are the same thing: `deploy:uat` in `package.json` is exactly
+`node scripts/deploy.mjs --env uat`. (This list said `npm run` until 8 November, which would have
+failed to start.)
 
 1. In PowerShell in the main checkout (with the first line of this document pasted), run `git pull`.
 2. Preview what will happen:
 
    ```
-   npm run deploy:uat -- --secrets --no-mail --plan
+   node scripts/deploy.mjs --env uat --secrets --no-mail --plan
    ```
 
    It should name project `fsjagxmxjosauwmxwype`. If it names any other project, stop.
-   **`--no-mail` matters:** UAT's database now holds production's real users, so a release email from UAT
-   would reach real people.
+
+   **Expect this line, and it is not a mistake you made:**
+   `WARNING: could not ask uat which migrations it has applied (HTTP 403: Missing required
+   permission(s): database_read)`. UAT's Supabase access token is not allowed to read its own
+   database, so the check that stops new code going live ahead of its database **cannot run for
+   UAT** — and cannot be done by hand either (`--drift uat` fails the same way). Since 8 November
+   the deploy asks the database itself instead and the warning should be gone; if you still see
+   it, the fallback could not reach UAT either, and the deploy is unguarded. Adding `database_read`
+   to that token in the `lutan.bennett1@gmail.com` Supabase account is the real fix, and it is also
+   what lets a release apply a migration to UAT at all.
+   **`--no-mail` matters:** UAT's database holds production's real users, so a release email from UAT
+   would reach real people. (Since 8 November the script will not mail from UAT unless `--mail` is
+   given, so this is belt-and-braces rather than the only thing stopping it.)
 3. **Deploy:**
 
    ```
-   npm run deploy:uat -- --secrets --no-mail
+   node scripts/deploy.mjs --env uat --secrets --no-mail
    ```
 
    Read the line naming the Supabase project: it must be `fsjagxmxjosauwmxwype`.
@@ -481,12 +504,19 @@ reason; wait for the release.
 
 ## Backlog items this finishes
 
-| Item | Finished by |
-|---|---|
-| `#u7d3b` UAT's own database | Parts 1, 2, 4 and 6 |
-| `#rqv5c` UAT's own Drive copy | Part 3 |
-| `#uat7p` UAT served by the Pi | Parts 5, 6 and 8 |
-| `#uq4vz` UAT's colour on a real UAT build | Part 8, step 6 |
+| Item | Finished by | State on 8 November |
+|---|---|---|
+| `#u7d3b` UAT's own database | Parts 1, 2, 4 and 6 | **Ticked** |
+| `#uat7p` UAT served by the Pi | Parts 5, 6 and 8 | **Ticked** |
+| `#rqv5c` UAT's own Drive copy | Part 3 | **Still open** — its UAT half is done; what is left is production moving to the shelter's own Google account, which is not scheduled and is nothing to do with UAT |
+| `#uq4vz` UAT's colour on a real UAT build | Part 8, step 6 | **Still open, and now DOABLE** — it was waiting for a build where `getAppEnv()` resolves to `uat`, and that now exists at `uat.lannacare.org` |
 
 **Not part of this list:** anything else about production, moving production to the shelter's own Google
 account, the Cloudflare hardening (`#ao0jk`) and acceptance testing (`#mc6fu`).
+
+**Three one-time jobs this list did NOT cover, found when UAT joined the release process.** They are
+in `docs/release-procedure.md` under *What UAT still needs once*, and all three are Lutan's: UAT's
+Supabase token needs `database_read`; the Pi's `/etc/sudoers.d/lanna-care-restart` needs
+`lanna-care-uat`; and `.env.deploy.uat` needs a `CLOUDFLARE_PURGE_TOKEN`. Until they are done a
+release can still ship UAT, but its last mile is manual and a release that adds a migration cannot
+ship UAT at all.
