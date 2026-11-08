@@ -1,148 +1,160 @@
-# Planner handover — edition `699`, 2026-11-07
+# Planner handover — edition `708`, 2026-11-08
 
-**This is a DELTA against `690`.** It says what changed, corrects its predecessor, and reports what each
-of `690`'s warnings and owed items actually did. Per-stream figures, batch composition, ports and the
+**This is a DELTA against `699`.** It says what changed, corrects its predecessor, and reports what each
+of `699`'s warnings and owed items actually did. Per-stream figures, batch composition, ports and the
 dependency notes live in `.plan-day.md` and are **not** reproduced here.
 
 **It outranks nothing.** It is read by one chat, it will be rewritten within one plan, and a wrong line
 in it is corrected by its successor rather than by a reviewer.
 
 **Written at the SETUP of this plan's last batch, so BATCH 3'S OWN FIGURES ARE NOT IN IT.** Batch 3 —
-`baseline-stamp-trigger`, `assistant-tag-retry`, `card-count-truth` — was handed over at about 12:30Z and
-had not been opened. The next edition carries its actuals. Nobody asked for this edition; the counter did.
+`partner-contact-type-app`, `events-card-reads`, `audited-tables-drift` — was handed over at about 02:30Z
+and had not been opened. The next edition carries its actuals. Nobody asked for this edition; the counter
+did.
 
 ---
 
-## THE LEAD: THE SKILL'S OWN STEP ORDER WAS THE DEFECT, AND LUTAN DIAGNOSED IT, NOT THE PLANNER
+## THE LEAD: THE NEW STEP ORDER HELD, AND IT IS THE FIRST PLAN IN A WEEK THAT COST HIM NOTHING UNPLANNED
 
-**He said it four times in one day.** The last two: *"Background work is to be done after - I don't know
-how many times I need to repeat myself"*, then *"So this is the 4th time today, There is something wrong
-with your instructions."*
+`699`'s whole lead was that `SKILL.md` ran the paperwork before the delivery by construction, and that
+Lutan had to diagnose it himself after saying it four times in one day. **It was reordered in that plan
+and this is the first edition able to report on it: it works, and there is nothing to correct.**
 
-**He was right, and `690` got this wrong in print.** `690` recorded his mid-setup request for the stream
-details as *"a reasonable question, not a defect"* and counted the plan as costing one interruption. The
-memory note `deliverable-first-paperwork-after` had already flagged that excuse — and the deeper cause was
-never in the memory at all: **`SKILL.md` ran the paperwork before the delivery by construction.** Old
-order: sync → **actuals, every merged PR body** → **backlog and filing** → choose → present → save →
-*then* create the worktrees and hand over. **A planner following the skill exactly made him wait; one
-following his standing instruction broke the skill.** Four instances in a day is what a contradiction
-between two instruction sources looks like, not four lapses of attention.
+**Both of this plan's remaining setups ran sync → worktrees → briefs → hand-over list → paperwork.** The
+hand-over list went out before a single actual was read, before any PR body, and before
+`docs/backlog.md` was touched. **He raised it nought times.** The two interruptions this plan cost him
+were both planned questions on his own items, and the one unplanned cost of the previous round — a
+`guarded-install.mjs` that refused while his own dev server held the main checkout — **did not recur at
+either setup.**
 
-**FIXED IN THIS PLAN, by his instruction (*"update the skill to move the streams to step 2"*): setting up
-the batch is now §2.** The sections were physically reordered — 7→2, 2→3, 3→4, 4→5, 5→6, 6→7 — and the
-internal `step N` references remapped. Two were deliberately left alone (`CLAUDE.md`'s own merge-train
-step 4, and *"stopped at step 2 of 11"*, which is a stream's own numbering). **Proved non-destructive
-rather than eyeballed:** a sorted line-set comparison of the old blob against the new showed exactly
-nineteen differing lines — six headings and thirteen references — and nothing else.
-
-**What the next planner must know about the new order.** On a **resume** nothing in the paperwork feeds
-the setup: the batch was chosen and saved on an earlier run, which is what `.plan-day.md` is for. Only the
-sync must precede it, because a worktree branches from `origin/main`. **On a plan from SCRATCH the setup
-cannot be second**, because §5 is what picks the items — there, say so in one line and get the hand-over
-list out the moment the folders exist. **The paperwork is not dropped; it moves behind the delivery.**
+**What the next planner should not conclude from that.** The order is not the only reason. Both of these
+were **resumes**, where the skill's own note says nothing in the paperwork feeds the setup. **A plan from
+SCRATCH still cannot put the setup second**, because choosing the items is what decides which worktrees
+to make, and that case remains untested under the new order. **Say so in one line and get the list out
+the moment the folders exist**, exactly as the skill now says.
 
 ---
 
-## WHAT `690`'s OWED ITEMS AND WARNINGS DID
+## WHAT `699`'s OWED ITEMS AND WARNINGS DID
 
-- **`#uat7p`, UAT onto the Pi — STILL HIS, and now fully specified.** He asked for his own step list and
-  got it: fix `.env.deploy.uat` (add the four `GOOGLE_OAUTH_*`/`GOOGLE_DRIVE_ROOT_FOLDER_ID` keys, add an
-  `ORIGIN_KEY` **matching production's**, remove `SUPABASE_ACCESS_TOKEN` or `setup-uat.sh` refuses at step
-  one), clone, run the script, the Cloudflare route and WAF host, `npm run deploy:uat -- --secrets`,
-  then the failover drill. **A correction worth carrying: the planner first told him to copy the four
-  `GOOGLE_*` keys out of `.env.local`, which would have pointed UAT at production's Drive tree and the
-  live calendar** — the exact cross-pollination he was trying to prevent. Caught and retracted the same
-  turn. **`#uq4vz` was filed beside it**: UAT's new colour has never been seen on a signed-in app page,
-  and `#o1v9f` is ticked.
-- **The memory concern `690` left as UNMEASURED — "memory for three Next servers on a 4 GB Pi" — is
-  discharged.** Measured on the Pi: 683 MB used, **3,365 MB available** with production and test both
-  running, 6 GB swap, 875 GB disk. A third server capped at 900 MB fits. **It was one `ssh` command, and
-  it had been carried as an open risk for a day.**
-- **The `free`/`0 ahead`/`nothing beyond main` snapshot rule fired again and held.** Three batch-2
-  folders read exactly that signature; `gh pr list --state all --head claude/<slug>` confirmed a merged
-  PR for each before any `done`. One command, and it is the rule that saved #1356 from destruction.
-- **`stream-usage:` compliance went BACKWARDS and this is the edition's one unexplained regression.**
-  Batch 1 posted three of three. **Batch 2 posted two of four** — #1369 and #1371 posted nothing, and
-  both sessions were archived before the next `/plan-day`, so `get_usage` is `unavailable` by
-  construction and both figures are **`unmeasured`, not guessed.** Their dials came from `get_session`,
-  which never expires. **The mechanism lives in `CLAUDE.md`'s merge train, not in the brief**, so a
-  stream that reads its brief and merges on green can miss it entirely. **Put one line in every brief
-  next plan and check whether it fires.**
+- **`check-stale-titles.mjs` — DISCHARGED, and the answer is cheaper than two plans of carrying it.**
+  `699` was right to say *"still untriaged after two plans; say so plainly rather than carrying it
+  silently a third time"*. Triaged: **all seven candidates are false positives.** The heuristic trips on
+  the words *decided*, *question* and *waiting* appearing in titles that are **themselves the answer** —
+  which is exactly what this project's own title rule tells a planner to write. **So it will keep
+  reporting those items for ever and that is not a defect in the items.** It exits 0 by design and is
+  deliberately not in CI. **Do not carry it as owed again; run it, expect false positives, and spend the
+  minute on the items whose titles genuinely lie** — which is the next bullet.
+- **The stale-title fault fired for a FIFTH and SIXTH time, and this is the one habit that keeps paying.**
+  `#40oz4`'s title was rewritten **by its own stream** (#1382), correctly and unprompted — the first time
+  a stream has done that rather than the planner. **`#ay3d6`'s was not**, and still read *URGENT … a meme
+  or a photo cannot be attached to a resident at all* after **both halves had been settled by
+  measurement.** Retitled by the planner (backlog `4c9ba1d3`). **Read the TITLE of every item a stream
+  touched, alone, and ask whether it still says what is open.** It is one minute and it has now caught
+  six.
+- **`stream-usage:` — 5 of 6 across the two batches, and the regression `699` called unexplained now has
+  an explanation.** Batch 2 went **two of three**: `partner-contact-type-schema` and
+  `photo-save-confirm-app` posted, **`assistant-tag-retry` did not**, and its session is gone, so its
+  figure is **`unmeasured`, never guessed**. `699` asked for one line in every brief; **it got one, in the
+  finishing paragraph, and the one stream that missed it was the one RESUMING AN EXISTING BRANCH** —
+  it reached the merge by a different path from its two siblings and skipped the step that lives in a
+  closing paragraph. **So the mitigation is half-right and the fix is positional, not verbal: name the
+  comment as a NUMBERED DELIVERABLE.** The skill already knows why — a question in step zero is context,
+  and context is not reported on; a chore in a closing paragraph is the same thing. **Batch 3's briefs
+  still carry it as prose, deliberately, so batch 3 is the control. If one of its three also posts none,
+  the prose version is proven insufficient at two of six.**
+- **The `free`/`0 ahead`/`nothing beyond main` snapshot rule fired twice more and held.** Four batch-1 and
+  batch-2 folders read that exact signature; `gh pr list --state all --head claude/<slug>` confirmed a
+  merged PR for each. **One command, and it is still the rule that saved #1356 from destruction.**
+- **`ArtifactData` and the priorities panel: reachable, and `699`'s "unreachable" was an unloaded tool,
+  not a broken panel.** Read again this plan. Do not inherit a conclusion that a tool is down.
 
 ---
 
 ## THE BANDS
 
-**Four readings this plan, all clean (`compacted=no rescoped=no finished=yes`), and the method held.**
-Batch 1 went three for three — two inside, one 2.3% under — and `uat-colour`'s **deliberate upward re-band
-from 110–150k to 150–190k was vindicated** at 176,041, which would have been 17% over the original.
-**#1370 landed 185,190 against 145–185k: 0.1% over, the closest reading yet.**
+**Five clean readings this plan (`compacted=no rescoped=no finished=yes`), and the method held on all
+five.** Nothing here moves a row in the skill's table.
 
-**THE AUDIT ROW HELD FOR THE FIFTH SWEEP RUNNING** (#1370, a four-page control audit that changed one
-page's level). **The honest caveat stands unchanged and must keep being printed: every one of those five
-found almost nothing, so an audit that finds a real repair is still untested.**
+**BATCH 1 IS THE CLEANEST TEST THE `medium` ADJUSTMENT HAS HAD.** He set `medium` on all three against
+bands written at `low`, and **all three land inside or just under the +25%-adjusted band** — read against
+the `low` bands, two of them look like overruns and are not. **Always state the effort beside the figure
+and the adjusted band beside the raw one**; a `low` band quoted at a `medium` stream manufactures a false
+overrun, which is how a good band gets "corrected" into a bad one.
 
-**FLOOR RE-DERIVED from `tokens − messages` on this batch's two comments: 106,847 and 107,500** — flat
-against batch 1's 106.4k–107.6k. **Never carry it forward.**
+**AND THE DIAL RECOMMENDATION IS NOW SETTLED, BY HIM, 2026-11-08: *"Keep recommending low"*.** Asked
+directly after that batch. So the band table stays written at `low` and every hand-over list keeps naming
+`sonnet` / `low`. **Two things it does not mean.** It is **not a ceiling on him** — the dials are his, and
+never blocking his paid usage is a hard rule; a `medium` he sets is a choice, not a deviation to flag.
+And it does **not** license recommending `low` harder to make an overrun go away. **Asked and answered;
+do not put it to him again.**
 
-**One entry offered rather than asserted, because it has a single reading: a planner's own docs-only PR is
-not a stream and has no clean figure.** #1373 was written by this session, so `get_usage` reports the
-planner's whole window. **It posted no `stream-usage:` comment on purpose and said why in the PR body.**
-Do the same rather than banking a planner figure as a stream reading.
+**The one reading worth banking as a confirmation:** `partner-contact-type-schema` came in **28% under its
+adjusted band** because its brief forbade all `src/` work, handed it the enum value, and told it `0334`
+might turn out to be empty. **It proved the second migration UNNECESSARY**, which is the cheapest
+deliverable there is. **A brief finding, not a model finding.**
 
----
-
-## WHAT THE PR BODIES HANDED BACK — THE BEST YIELD OF THE PLAN
-
-**Reading every merged PR body produced four backlog changes, and three of them nothing else would have
-caught.** This is the cheapest high-value habit in the loop.
-
-- **`#v3h8m` had to be ticked BY THE PLANNER.** #1369 shipped every deliverable and **never edited
-  `docs/backlog.md`**, so its title read *"APP HALF OPEN"* after the work had merged. **Fourth instance
-  of the stale-title fault.** It also answered a question its brief had carried as open — the `#` picker
-  uses `/api/reels/resident-search`, which asks who-and-where — and that answer was in the PR body only.
-- **`#r8kq3`** — #1369 proved the `reel_view` case and **never drove Admin or a login that can name
-  residents**, so *"nothing was widened"* rests on reading the function. Same shape as `#w9n4r`: the
-  stream said so plainly, its item closed in the same hour, and **nobody re-reads a ticked item.**
-- **`#d3cw7`** — #1370 reported `/admin/diets` needing **`reference.types` edit AND `stock.diets` edit
-  together**, which is what `CLAUDE.md` asks for rather than quietly gating on one. **A two-card page is
-  invisible to every instrument we have**, because `dev-signin.mjs --cards` models a single-card login.
-  **The decision — one card, or split the page — is his.**
-- **`#a9d4v`, and this one is why measuring beats filing a worry.** #1371 found `public_stat_switches`
-  missing from `AUDITED_TABLES` and fixed it; the list's own comment says *"every table with that trigger
-  belongs here, or its rows show unlabelled"*. The planner then scanned the migrations: **20 declared, 48
-  trigger sites, about 28 real tables undeclared**, plus `role_home_tiles` declared and **dropped in
-  `0243`**. **The method over-counts and the item says so** — three of the 31 are trigger names the regex
-  mistook for tables — **with re-measuring as deliverable one.** A worry would have been ignored; a
-  measured count carrying its own caveat is a stream.
+**FLOOR RE-DERIVED from `tokens − messages` on this plan's five comments: 106,077 · 106,413 · 107,389
+(batch 1), 106,492 · 107,243 (batch 2)** — flat against `699`'s 106.8k–107.5k. **Never carry it forward.**
 
 ---
 
-## TWO UNPLANNED STREAMS, BOTH COUNTED INTO THIS PLAN
+## ONE DURABLE FACT PROMOTED INTO THE SKILL RATHER THAN CARRIED HERE
 
-- **`drive-buckets` (#1372)** — his request, and the design conversation was worth more than the build.
-  The documented worry was a tester deleting a live photo; **the real exposure was that dev and test files
-  sat INSIDE the tree about to be copied to the shelter's own Google account.** The fact that made his
-  plan cheap: **Drive ids survive a move**, so 885 of 1,159 files could be bucketed with no database
-  change, and only 7 of 198 file-holding folders were mixed.
-- **`mirror-repull-note` (#1373)** — his stage-2 decision on the Pi mirror: **the Pi copy is the cache,
-  Drive the fallback.** It needed **no change**, because `mirror-read.ts` has called itself *"a cache, not
-  a primary"* since it was written — so the value was recording it and discharging the three costs the
-  item had held open (`noauto` stays; the Worker's missing disk now costs only latency; Drive stays a live
-  off-site copy). **And it fixed the fault that caused a wrong answer to reach him:** the heading
-  *"stage 1 … Drive stays primary"* described an intention, and `drive-buckets` quoted it back as
-  behaviour. **Production serves staff photos, documents AND videos from the Pi**, through three call
-  sites the section now names. **A heading that states an intention will be read as the behaviour.**
+**A decision of his can create a migration slot out of nothing**, which no rule anticipated: batch 3 was
+composed as carrying no migration and his answer to `#yacd2` turned it into schema work. **The rule is now
+in `SKILL.md` beside step 5's rule 3**, with the mechanism, so this edition does not have to carry it and
+the next one does not have to re-derive it. **Promotion is the lever on this document's length; wordsmithing
+is not.**
+
+---
+
+## WHAT THE PR BODIES HANDED BACK
+
+**Three batches, three for three on the report-and-let-the-planner-file mechanism.** Every stream wrote
+its findings into its PR body and said *for the planner to file* rather than editing `docs/backlog.md`.
+**Treat that as mechanism now, not hypothesis.**
+
+- **`#nssnt` FILED** (`## Resident operations`, backlog `4c9ba1d3`), from #1382's *Found, not fixed* list,
+  both halves in one item because both are on `/photos/add`: an empty `photoCategoriesFor` leaves the
+  Drive `folder` **undefined** — filed as **NOT ESTABLISHED**, because nobody has shown the empty case is
+  reachable, and establishing it is the item's first job — and the approval queue heading tells an
+  approver a no-place photo is *"tagged to an enclosure"*, which `#40oz4`'s part A made untrue.
+- **`#ay3d6` RETITLED, not ticked.** Both halves answered **by measurement, and the two agree**: #1380
+  shipped the meme half with an empty-state message; #1382 drove `/photos/add` and found **2 residents on
+  a card-only login AND on Admin**, the two the dev database held. **His confirmation that he was on
+  Admin is what made it conclusive** — Admin sits outside the card system, so no card could have emptied
+  his picker, and the item's four card-shaped candidate causes are all dead. **What he saw was the
+  cleared test data (#1377).** One empty-state message on `/photos/add` is all that is left.
+- **`#xkfsv`'s app-half SPECIFICATION was quoted into the brief rather than re-derived.** #1381 wrote the
+  files, the lines, the Thai word it suggests and *"nothing contradicts the item"* under its own heading
+  *for the planner to quote*. **That is the schema-half-hands-the-app-half-a-specification discount the
+  skill records, and stream 7 is banded at the bottom of its row because of it.** Its own last line said
+  the line numbers came from the planner's brief and were not re-read — **and two of the four had moved**,
+  so the new brief carries today's and tells the stream to re-read either way. **A specification is a
+  discount; its line numbers are not evidence.**
+- **Nothing to file from #1383.** It closed `#a7r3k` and `#bqs1w`, cited `#y1dqu` for the unreviewed Thai,
+  and **fixed** `scripts/dev-assistant-model.mjs` rather than building its own — which is the outcome
+  naming the apparatus in the brief was meant to buy, against `assistant-v2-tools`' 440,348 tokens spent
+  standing up a model server.
 
 ---
 
 ## OWED, AND WHO OWES IT
 
-1. **`#uat7p` — his**, fully specified above. **`#uq4vz` rides with it**, since that is when a genuinely
-   UAT-resolving instance first exists.
+1. **`#uat7p` — his**, fully specified in `699` and unchanged. **`#uq4vz` rides with it.**
 2. **`#d3cw7` — his**: one card for diet settings, or split the page. Do not widen either card first.
-3. **The 54 unreferenced Drive files — his**, on his Desktop since midday, for manual review.
-4. **`check-stale-titles.mjs`'s eight candidates — the planner's**, and still untriaged after two plans.
-   **Say so plainly rather than carrying it silently a third time.**
-5. **Teach the briefs the `stream-usage:` line**, then check whether it fires. A mitigation you wrote is
-   a hypothesis.
+3. **`#40oz4`'s part B — his, and it is the only thing on that item.** #1382 could not reproduce the blank
+   Folder dropdown on Admin in English or Thai — four readable options — so it hardened the control and
+   kept it. **Cause unproven, and it needs his own eyes on his own phone.** No stream can close it.
+4. **`#oeglm`'s third reading — his, and it is one command.** The Pi's `sshd` config could not be read
+   unprivileged, so password authentication, root login and the listen address are **unknown, not assumed
+   safe**. Passwordless sudo on the Pi covers only the four service commands. **One `sudo sshd -T`.**
+   TightVNC on the PC still has no IP restriction, and the PC holds production secrets.
+5. **The 54 unreferenced Drive files — his**, on his Desktop since 2026-11-07.
+6. **Six leftover worktrees — the planner's.** All six of batch 1's and batch 2's folders read `free` with
+   a merged PR; `drive-buckets` is `HELD` by its own session and must be asked about, not torn down.
+   `/clean-streams` does the round. **Nothing is lost by leaving them a day, and `done` refuses a held
+   folder anyway.**
+7. **Name the `stream-usage:` comment as a numbered deliverable** in the next plan's briefs, and **check
+   whether batch 3's prose version fired.** A mitigation you wrote is a hypothesis.

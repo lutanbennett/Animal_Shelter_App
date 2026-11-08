@@ -1417,6 +1417,18 @@ Rules, in order:
    one-in-flight rule, applied per batch because batches are
    sequential). If two items in one batch need schema, either fold them
    into a single schema PR or move one to the next batch.
+   **AND READ THE BATCH'S OPEN QUESTIONS FOR SCHEMA CONSEQUENCES BEFORE YOU ASSIGN THE SLOT: AN ANSWER OF
+   HIS CAN CREATE A MIGRATION OUT OF NOTHING.** Added 2026-11-08. Batch 3 was composed and saved as
+   carrying **no migration**, correctly, from its items as filed. Then Lutan answered `#yacd2`’s first
+   question — *show the approver the event’s name* — and **that answer is schema work**, because an
+   approver may read no `fundraising_events` row at all (`0312`, `has_permission('events.run')`) and
+   **row-level security cannot limit columns**, so *name-and-date-only* needs a narrow view or function
+   rather than a second blanket policy. **It cost nothing that day because the other two streams added
+   none** — but the slot is assigned when the batch is composed and his answer arrives afterwards, so a
+   batch holding two migration-shaped items and one open question of his **would have had to be
+   re-ordered after he replied.** This rule and rule 4 both assume the shape is knowable at composition
+   time. **The test: would any answer he might give need the database to change?** If so, the slot is
+   provisional until he has answered, and say so in the plan rather than discovering it at setup.
 4. **Schema-first items span adjacent batches** — the schema PR in batch
    N, its feature branch in batch N+1, never the same batch. The feature
    needs the migration on `main` and applied to dev first.
