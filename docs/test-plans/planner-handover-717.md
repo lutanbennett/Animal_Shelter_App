@@ -10,10 +10,10 @@
 | Backlog item | `docs/backlog.md` → none. The handover is written by `.claude/skills/plan-day` step 8 at the setup of a plan's last batch; it carries no backlog item and never has |
 | Branch / worktree | `claude/planner-handover-717` @ `C:\Development\Animal_Shelter_planner-handover-717` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3015` — **not started: this PR changes one documentation file and has no runtime surface** |
-| PR | GATES_PR_PLACEHOLDER |
+| PR | [#1403](https://github.com/lutanbennett/Animal_Shelter_App/pull/1403) |
 | Tested by / date | Claude (planner session) / 2026-11-08 |
 | Carries a migration? | no |
-| Tested at SHA | GATES_SHA_PLACEHOLDER |
+| Tested at SHA | `5eeab63d` — the commit the gates above ran on. **This PR's head moves by one commit when this plan is filled in**, which is the commit the merge reads CI for |
 
 ## 1. Scope and risk
 
@@ -28,7 +28,11 @@
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`
 
 ```
-GATES_BLOCK_PLACEHOLDER
+=== gates: typecheck exited 0 after 62s
+=== gates: lint exited 0 after 312s
+=== gates: test exited 0 after 44s
+=== gates: build exited 0 after 132s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR (runs the same four gates, among its other checks) — n/a: not yet — the PR does not exist at this commit
