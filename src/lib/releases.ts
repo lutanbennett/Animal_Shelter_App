@@ -71,6 +71,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "Contacts can now be a Partner: a business, school, clinic or group that helps the shelter without selling it anything. Before, it had to be filed as a Supplier to appear on the Shelter Friends page. Choose Partner when you add or edit a contact, and a Partner can be made a Shelter Friend just like a supplier. The contacts list has a Partner filter beside Supplier.",
+    cards: ["contacts", "publish_shelter_friends"],
+  },
+  {
     text: "Settings → Recent changes now says what changed for donations, bills, stock, appeals, fundraising events, desexing drives, community dogs, photos, memes, reels, blood tests, procedures and who holds which role. These rows used to show no label at all. The Table filter lists them too, in alphabetical order.",
     admin: true,
   },
