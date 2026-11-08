@@ -6,14 +6,20 @@
  *
  *   node scripts/check-release-guards.mjs
  *
- * No network, no database: git and the Management API are stubbed, and the
- * one real process spawned is guard-release.mjs --env test, which must not
- * ask for an environment file. Exits 1 if any case is wrong.
+ * Also checks assertSchema(), the strict verdict scripts/assert-schema.mjs runs on the
+ * deploy machine before a Pi build (the Pi has no token, so its guard-release.mjs no
+ * longer asks the schema anything): a missing migration is refused with the app files
+ * its `-- consumer:` header names, and "could not ask" is a REFUSAL there.
+ *
+ * No network, no database: git and the Management API are stubbed. The real
+ * processes spawned are guard-release.mjs --env test (must not ask for an
+ * environment file) and --env production (must run with no token and no env file).
+ * Exits 1 if any case is wrong.
  */
 import { exitWith } from "./lib/exit.mjs";
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { decideGuard, releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
+import { assertSchema, decideGuard, releaseProblems, schemaVerdict } from "./lib/release-guards.mjs";
 
 let failures = 0;
 const check = (name, ok, detail = "") => {
@@ -51,10 +57,37 @@ const forced = decide(dirty, missing, "sign-in outage");
 check("--force goes ahead and keeps every problem for the record", !forced.refuse && forced.overridden.length === 2, JSON.stringify(forced));
 check("--force with nothing to override records nothing", decide(clean, level, "why not").overridden.length === 0);
 
+// assertSchema: the strict verdict the deploy machine runs before the Pi build.
+const sqlAt = {
+  "supabase/migrations/0003_c.sql": ["-- consumer: src/app/c/page.tsx, src/lib/c.ts", "create table c();"].join("\n"),
+  "supabase/migrations/0004_d.sql": ["-- consumer: none", "select 1;"].join("\n"),
+  "supabase/migrations/0005_e.sql": "select 1;",
+};
+const readSql = (path) => { if (!(path in sqlAt)) throw new Error("no such file"); return sqlAt[path]; };
+const all = lsTree(["0001_a.sql", "0002_b.sql", "0003_c.sql", "0004_d.sql", "0005_e.sql"]);
+const strictMissing = assertSchema({ envName: "production", result: ok, git: all, read: readSql });
+check("assert: a pending migration is refused", !strictMissing.ok && strictMissing.message.includes("0003_c.sql"), strictMissing.message);
+check("assert: names the app files the consumer header says read it", strictMissing.message.includes("read by src/app/c/page.tsx, src/lib/c.ts"), strictMissing.message);
+check("assert: says when a header is none or absent", strictMissing.message.includes("0004_d.sql  (consumer: none)") && strictMissing.message.includes("0005_e.sql  (declares no -- consumer: header)"), strictMissing.message);
+check("assert: tells the operator how to apply", strictMissing.message.includes("apply-migrations.mjs --env production"));
+const strictOk = assertSchema({ envName: "production", result: ok, git, read: readSql });
+check("assert: a database holding every migration passes", strictOk.ok, strictOk.message);
+const strictBlind = assertSchema({ envName: "production", result: { ok: false, reason: "SUPABASE_ACCESS_TOKEN is not set" }, git, read: readSql });
+check("assert: could not ask is a REFUSAL, not a warning", !strictBlind.ok && strictBlind.message.includes("SUPABASE_ACCESS_TOKEN is not set") && strictBlind.message.includes("Refusing"), strictBlind.message);
+
 const test = spawnSync(process.execPath, ["scripts/pi/guard-release.mjs", "--env", "test"], { encoding: "utf8" });
 check("--env test is not guarded", test.status === 0 && test.stdout.includes("test is not guarded"), test.stdout + test.stderr);
 const noReason = spawnSync(process.execPath, ["scripts/pi/guard-release.mjs", "--env", "production", "--force"], { encoding: "utf8" });
 check("--force without a reason is refused", noReason.status === 2 && noReason.stderr.includes("needs a reason"), noReason.stderr);
+
+// The Pi's guard must not ask the schema anything (it has no token): it runs with no token and no env
+// file, and never imports the code that asks. Exit 0 (a cut release) or 2 (not one) both mean it ran.
+const piProd = spawnSync(process.execPath, ["scripts/pi/guard-release.mjs", "--env", "production"], { encoding: "utf8", env: { ...process.env, SUPABASE_ACCESS_TOKEN: "" } });
+check("Pi guard runs for production with no token and no env file", [0, 2].includes(piProd.status) && !/SUPABASE_ACCESS_TOKEN|is missing or empty|WARNING/.test(piProd.stdout + piProd.stderr), piProd.stdout + piProd.stderr);
+const piSrc = readFileSync("scripts/pi/guard-release.mjs", "utf8");
+check("Pi guard no longer imports the schema query", !/appliedMigrations|schemaVerdict|loadEnv/.test(piSrc.split("\n").filter((l) => !l.trim().startsWith("//")).join("\n")));
+const pi = readFileSync("scripts/pi/deploy-pi.sh", "utf8");
+check("deploy-pi.sh points at the deploy-machine assertion", pi.includes("scripts/assert-schema.mjs"));
 
 // --drift needs a database, so CI cannot run it; this reads the source instead. 0.28.0 shipped a
 // ReferenceError here (the call site read names driftReport() never returned) and lost the verdict line.
