@@ -2,7 +2,14 @@
 // (scripts/deploy.mjs) and the Pi (scripts/pi/guard-release.mjs, called by
 // scripts/pi/deploy-pi.sh). One copy of the rules and of the messages, so the
 // two paths cannot drift apart again (docs/decisions/2026-10-02-pi-ships-releases.md).
+//
+// The SCHEMA half is asked only where a Supabase token exists: scripts/deploy.mjs
+// (Worker) and scripts/assert-schema.mjs (the deploy machine, before the Pi build).
+// The Pi runs releaseProblems only, because it has no token and must not get one
+// (docs/decisions/2026-11-08-guard-release-asserts.md).
 import { deployedMigrations, missingFromDatabase } from "./deploy-schema.mjs";
+import { declaredConsumers } from "./migration-consumers.mjs";
+import { MIGRATIONS_DIR } from "./migrations.mjs";
 
 /**
  * Why this commit is not a written-down release: package.json must name the
@@ -58,4 +65,46 @@ export function decideGuard({ envName, problems, schema, force }) {
   if (schema.refusal) errors.push(schema.refusal);
   const forced = Boolean(force) && errors.length > 0;
   return { refuse: errors.length > 0 && !forced, errors, warnings: schema.warnings, overridden: forced ? errors : [] };
+}
+
+/**
+ * For each missing migration, the app files its `-- consumer:` header says read it.
+ * `read(path)` returns the file text at the commit being shipped. Returns
+ * [{ name, consumers }]: null = no header (says nothing), [] = `none`.
+ */
+export function consumersOf(missing, read) {
+  return missing.map((name) => {
+    let sql = "";
+    try { sql = read(`${MIGRATIONS_DIR}/${name}`); } catch { /* unreadable reads as no header */ }
+    return { name, consumers: declaredConsumers(sql) };
+  });
+}
+
+/**
+ * The STRICT schema verdict, for the one path that cannot rely on a person
+ * noticing a warning (the deploy machine, before a Pi build). Unlike
+ * schemaVerdict(), "could not ask" REFUSES: a guard that cannot check must not
+ * pass. Returns { ok, message }.
+ */
+export function assertSchema({ envName, result, git, read }) {
+  if (!result.ok) {
+    return {
+      ok: false,
+      message:
+        `cannot confirm ${envName}'s schema: could not ask which migrations it has applied (${result.reason}).\n` +
+        `Refusing rather than guessing. Fix the cause, or check by hand: node scripts/apply-migrations.mjs --env ${envName} --status (read "0 pending").`,
+    };
+  }
+  const missing = missingFromDatabase(deployedMigrations(git), result.applied);
+  if (!missing.length) return { ok: true, message: `${envName} holds every migration this commit carries.` };
+  const lines = consumersOf(missing, read).map(({ name, consumers }) =>
+    `  - ${name}` +
+    (consumers === null ? "  (declares no -- consumer: header)" : consumers.length ? `  <- read by ${consumers.join(", ")}` : "  (consumer: none)"));
+  return {
+    ok: false,
+    message:
+      `${envName} is missing ${missing.length} migration(s) this commit carries; the build would run code against schema that is not there:\n` +
+      lines.join("\n") +
+      `\nApply them first: node scripts/apply-migrations.mjs --env ${envName}`,
+  };
 }
