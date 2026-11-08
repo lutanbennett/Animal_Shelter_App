@@ -92,7 +92,10 @@ export type AuditedTable = (typeof AUDITED_TABLES)[number];
  * meets it here. Empty today: every audited table is something an admin could be asked about, and a row
  * nobody can label is worse than a longer filter. The check reads this object's keys.
  */
-export const AUDIT_TABLES_NOT_LISTED: Record<string, string> = {};
+export const AUDIT_TABLES_NOT_LISTED: Record<string, string> = {
+  suppliers:
+    "0335 audits the new suppliers table, but no screen reads it yet. The supplier app half lists it in AUDITED_TABLES with its label and removes this entry (docs/decisions/2026-11-08-suppliers-schema.md).",
+};
 
 /**
  * The columns that name a record in the list, those the row has, joined with `sep`.

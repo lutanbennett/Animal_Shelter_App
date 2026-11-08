@@ -15,8 +15,8 @@
 
 ## 1. Scope and risk
 
-- [x] Change is described in one sentence, and it matches what the backlog item asked for — the schema half only: suppliers become their own table, a Shelter Friend can be a supplier, the two history columns gain a reference to it; no code under `src/` changed
-- [x] Files/areas touched listed — `supabase/migrations/0335`–`0337`, `supabase/harness/0335_suppliers_harness.sql`, `docs/hard-coded-security-registry.json` (one declared anon grant), `docs/backlog.md` (title), `docs/decisions/2026-11-08-suppliers-schema.md`, this plan
+- [x] Change is described in one sentence, and it matches what the backlog item asked for — the schema half only: suppliers become their own table, a Shelter Friend can be a supplier, the two history columns gain a reference to it; one declared line under `src/` (`AUDIT_TABLES_NOT_LISTED`, because CI's check-audited-tables failed on the new audit trigger)
+- [x] Files/areas touched listed — `supabase/migrations/0335`–`0337`, `supabase/harness/0335_suppliers_harness.sql`, `docs/hard-coded-security-registry.json` (one declared anon grant), `src/lib/audit/recent-changes.ts` (one excused audit table), `docs/backlog.md` (title), `docs/decisions/2026-11-08-suppliers-schema.md`, this plan
 - [x] Cards affected identified — none gain or change behaviour: no card or activity was added, the policies ask existing activities (`stock.delivery`, `stock.purchasing`, `bills.*`, `maintenance.bills`, `friends.manage`, `friends.view`, `contacts.add`, `contacts.directory`). Admin sits outside the card system. The signed-out public sees the same Friends: `public_shelter_friends` keeps its columns and rows
 - [x] Anything explicitly **out of scope** written down — every reader under `src/`, the supplier screen and its card, the "No suppliers — add one as a Vendor in Contacts" string, dropping the old columns and `Vendor` from the enum: all the app half's
 

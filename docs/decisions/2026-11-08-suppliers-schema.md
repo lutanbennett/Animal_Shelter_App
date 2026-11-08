@@ -2,7 +2,7 @@
 
 Lutan, asked directly on 2026-11-08: *"Leave contacts entirely"*, and then *"Shelter Friends could also come from a
 supplier as well so need same functionality for Shelter friends on both Contacts and Suppliers"*. This PR is the schema
-half only (`0335`, `0336`, `0337`). No file under `src/` changed. The app half re-points every reader.
+half only (`0335`, `0336`, `0337`). One line under `src/` changed, a declared crossing (see Found). The app half re-points every reader.
 
 ## Step zero, measured 2026-11-08
 
@@ -68,8 +68,7 @@ Vendor contacts).
   `supplier_id` (or `supplier_contact_id`) on a receipt: deleting a supplier that has receipts will be refused. Suppliers
   are archived rather than deleted, and this matches contacts today; the app half should keep it that way or add the
   column to the trigger's open list.
-- `audit_suppliers` records changes, but the app's `AUDITED_TABLES` has no label for `suppliers`, so Recent Changes will
-  show an unlabelled row. App half (this is the same drift as `#a9d4v`).
+- `audit_suppliers` records changes, but `AUDITED_TABLES` has no label for `suppliers`. CI's `check-audited-tables` failed on it, so **the one declared crossing into `src/`**: `suppliers` is excused in `AUDIT_TABLES_NOT_LISTED` (`src/lib/audit/recent-changes.ts`) with a reason. The app half lists it in `AUDITED_TABLES` with a label in both dictionaries and removes the excuse.
 - The string *"No suppliers — add one as a Vendor in Contacts"* in both delivery forms is user-visible and must change
   with the data. App half.
 - `Vendor` stays in the `contact_type` enum. Code still reads it.
