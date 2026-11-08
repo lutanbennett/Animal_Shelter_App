@@ -71,6 +71,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "Photos to approve now names the fundraising event a waiting photo belongs to, instead of just saying \"A fundraising event\". You see only the event's name, not the rest of the event. The campaign and project-folder pickers on an event already say when they are short because your login cannot see campaigns or project folders.",
+    cards: ["approve_photos"],
+  },
+  {
     text: "Add shelter photos can now save a photo when you do not know the animal or where it was taken. Press Don't know either: save for later, and the photo is stored (not public) for whoever approves photos to name the animal. When every photo is saved a Done button appears, and pressing it tells you how many photos are stored. In Photos to approve, a photo with no place says so and says there is no one to suggest.",
     cards: ["add_photos"],
   },

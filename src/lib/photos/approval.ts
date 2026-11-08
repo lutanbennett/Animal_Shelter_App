@@ -94,7 +94,7 @@ export type WaitingEventPhoto = {
   fileName: string | null;
   uploadedAt: string;
   addedBy: string;
-  /** Null when this login may approve but not read events (events.run): the photo is judged on its own. */
+  /** Null only when the event has since been deleted: waiting_event_titles() (0334) names every event with a waiting photo to a login that may approve, with no other column. */
   eventTitle: string | null;
 };
 
@@ -111,11 +111,7 @@ export async function loadWaitingEventPhotos(supabase: SupabaseClient): Promise<
   if (rows.length === 0) return [];
 
   const [{ data: events }, users] = await Promise.all([
-    supabase
-      .from("fundraising_events")
-      .select("id, title")
-      .in("id", [...new Set(rows.map((r) => r.owner_id))])
-      .returns<{ id: string; title: string }[]>(),
+    supabase.rpc("waiting_event_titles").returns<{ id: string; title: string; event_date: string }[]>(),
     loadAppUsersById(supabase, rows.flatMap((r) => (r.uploaded_by ? [r.uploaded_by] : []))),
   ]);
   const titles = new Map((events ?? []).map((e) => [e.id, e.title]));
