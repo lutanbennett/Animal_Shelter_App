@@ -388,8 +388,9 @@ again while the security rebuild runs**, since it lands schema and code in separ
 PRs by design.
 
 **Know how it over-lists before you start, and budget one lookup per candidate.**
-Promoted here 2026-11-08 after four releases carried it in a handover, each time
-recording it as a defect. Two quirks, both still present:
+Promoted here 2026-11-08, after `0.43.4`, `0.43.5` and `0.43.6` each recorded it as
+a defect and carried it in a handover rather than fixing it at source. Two quirks,
+both still present:
 
 - **It ignores the commit range you pass it.** Given `<prev deployed sha> HEAD` on
   `0.43.6` it re-read **58** plans from an older cut point, against that release's
@@ -986,8 +987,9 @@ app unstyled. **So always re-run the test asset check**
 clone) and believe a red one; never reason that production's purge covered it.
 
 **A Worker deploy goes SILENT for about six minutes on `Building server function:
-default...`, and it is not a stall.** Promoted here 2026-11-08 after two releases
-carried it in a handover. OpenNext's esbuild stage prints nothing while it works,
+default...`, and it is not a stall.** Promoted here 2026-11-08; `0.43.5` met it,
+recorded it and carried it in its handover rather than fixing it at source.
+OpenNext's esbuild stage prints nothing while it works,
 which looks exactly like a hung build — on `0.43.5` it survived two long terminal
 reads with no output.
 
