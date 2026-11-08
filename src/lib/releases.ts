@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Photos to approve: each event photo now shows the event's date under its title, so two events with similar names can be told apart. Two messages on the photo screens were also corrected: the resident picker no longer tells you to ask an admin (it now says to ask whoever manages cards at your shelter), and the 30-day alert on the status page no longer says a waiting photo is tagged to an enclosure, since a photo can now be saved with no place at all. The Thai wording has not been checked by a Thai speaker.",
   {
     text: "Suppliers are now their own list, no longer part of Contacts. Management → Suppliers is where you add a supplier, change its details, and archive or restore it; Contacts now holds only people. Every supplier you had filed as a Vendor was copied across, with its deliveries and bills, and the delivery forms, bills and the shopping list read the new list. A supplier can be made a Shelter Friend from its own page, the same as a contact. A new card, Manage suppliers, gives this; anyone who had Manage contacts was given it. Suppliers cannot be deleted, only archived. The Thai wording has not been checked by a Thai speaker.",
     cards: ["suppliers"],
