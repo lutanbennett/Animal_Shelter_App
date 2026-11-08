@@ -3393,7 +3393,6 @@ const en = {
         vetVisits: "Every vet visit coming up, with the resident and the clinic, by day or on a calendar.",
         vets: "Look up a clinic the shelter works with, and call them.",
         contacts: "Look up a carer, volunteer or partner, and call or message them.",
-        suppliers: "The businesses the shelter buys from: add one, change its details, archive it, or make it a Shelter Friend.",
         medicationList:
           "Who needs what medicine today, in walking order, with a photo of each animal and of each box. A list to read; nothing to tap.",
         feedingList:
@@ -3428,6 +3427,8 @@ const en = {
           "How each count moved between two stocktakes, beside what the prescriptions and diets planned.",
         purchasing:
           "How much of each medicine and food to buy for a week, two weeks or a month, with the working shown and a list for the supplier.",
+        suppliers:
+          "The businesses the shelter buys from: add one, change its details, archive it, or make it a Shelter Friend.",
         shelterFriends:
           "The businesses thanked on the public website — their order, and which are live.",
         donations:

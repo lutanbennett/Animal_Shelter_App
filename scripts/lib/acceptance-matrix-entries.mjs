@@ -848,6 +848,15 @@ export const ENTRIES = {
       expect: "An archived contact drops out of the pickers; a restored one returns.",
     },
   ],
+  "manage-suppliers": [
+    {
+      activity: "Add, edit, archive and restore a supplier",
+      needs: "suppliers.directory",
+      device: "desktop",
+      do: "Add a supplier, change its phone number, archive it, then Show archived and Restore it.",
+      expect: "An archived supplier drops out of the supplier picker on the delivery form; a restored one returns. There is no Delete.",
+    },
+  ],
   "shelter-friends": [
     {
       activity: "Add a Shelter Friend and publish it",
