@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | Feature | uat-followups |
-| Backlog item | `docs/backlog.md` → #u7d3b (ticked here); #uat7p, #uq4vz retitled and #rg7pv filed on the `backlog` branch |
+| Backlog item | `docs/backlog.md` → #u7d3b and #m9qtv (ticked here); #uat7p, #uq4vz retitled and #rg7pv filed on the `backlog` branch |
 | Branch / worktree | `claude/uat-followups` @ `C:\Development\Animal_Shelter_uat-followups` |
 | Dev server | n/a: nothing served changed |
 | PR | see the PR for this branch |
@@ -86,7 +86,7 @@ Nothing here is reachable by a login.
 
 ## 7. Documentation
 
-- [x] Backlog item ticked in `docs/backlog.md` on this branch: `#u7d3b`, with what closed it
+- [x] Backlog items ticked in `docs/backlog.md` on this branch: `#u7d3b` and `#m9qtv`, each with what closed it
 - [x] Non-obvious design choices added as a new file in `docs/decisions/`: `2026-11-08-uat-go-live-findings.md`
 - [x] `README.md` still accurate: it says UAT is `uat.lannacare.org` on its own project, which is now true live
 - [ ] **Release notes.** n/a: no shelter user sees a dev-machine check or a runbook
