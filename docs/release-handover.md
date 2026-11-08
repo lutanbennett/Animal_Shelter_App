@@ -8,12 +8,22 @@ A **delta**. The durable rules are in `docs/release-procedure.md` and this relea
 Production is `lannacareforanimals.org`, now on **`0.43.6` @ `9b07b038`**. `test.lannacare.org` is
 test on the dev project, also `0.43.6`. Both databases hold **339** migrations and neither drifts.
 
-**UAT is still `lannacare.org` running `0.43.3`, and `uat.lannacare.org` DOES NOT RESOLVE.** #1387
-landed the code and the runbook for the move to `uat.lannacare.org`; the DNS record has not been made,
-so `nslookup uat.lannacare.org` answers *Non-existent domain* while `lannacare.org` still serves UAT
-(`x-lanna-served-by: worker`, `0.43.3`). **Read that as the move being unfinished, not as UAT being
-broken** — and do not tell anyone UAT has moved. It also still refuses a deploy until `.env.deploy.uat`
-is filled, which is that stream's work.
+**UAT is still `lannacare.org` running `0.43.3` @ `a5bf0904`, and `uat.lannacare.org` DOES NOT
+RESOLVE.** #1387 landed the code and the runbook for the move; the DNS record has not been made, so
+`nslookup uat.lannacare.org` answers *Non-existent domain* while `lannacare.org` still serves UAT
+(`x-lanna-served-by: worker`). **Read that as the move being unfinished, not as UAT being broken** —
+and do not tell anyone UAT has moved.
+
+**UAT NO LONGER REFUSES A DEPLOY — the last edition of this file said it did, and that is now wrong.**
+`node scripts/deploy.mjs --env uat --plan` **exits 0**, resolves UAT's own project
+(`fsjagxmxjosauwmxwype`) and says it *would* deploy. **It was still right not to**, for a reason the
+old refusal was hiding: **UAT's access token cannot read its database.** `--drift uat` dies with
+`Missing required permission(s): database_read`, and the deploy's own first lines say it could not ask
+which migrations are applied and reports `live now: unknown`. So UAT's schema guard is blind *and*
+cannot be verified by hand either — deploying would ship code that reads `0332`–`0334` to a database
+nobody can confirm has them. **The blocker is now "UAT's token needs `database_read`, and
+`uat.lannacare.org` needs a DNS record", not "`.env.deploy.uat` is unfilled".** Both are `#uat7p`,
+his own steps.
 
 **`0.43.6` did NOT mail** — asserted at the cut with its control, and stated by the deploy itself. The
 public site is **still locked** (`PUBLIC_SITE: "locked"`).
