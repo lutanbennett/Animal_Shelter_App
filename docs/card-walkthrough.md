@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-53 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+54 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -248,6 +248,17 @@ Result: pending
 6. Open `/clinics`: it loads, and the Manage link is offered.
 7. Open `/management/clinics` from that link: it loads. Add, Edit and Delete are offered; every server action on the page asks clinics.list at edit. Doctors on a clinic ask clinics.doctors, a separate yes/no.
 8. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Manage suppliers (`suppliers`)
+
+- Opens: `/management/suppliers`
+
+0. Sign in with `--cards suppliers`. The home screen shows the **Manage suppliers** tile (or the tile of a card that includes it).
+1. Open `/management/suppliers`: it loads.
+2. **Do:** Suppliers: the list and each supplier's page (Read); add, change, archive and restore (Edit). Use a disposable record named `walk-suppliers`. **Read-back:** the supplier appears (or reads its new details) in the list at /management/suppliers after the save and on its own page /suppliers/<id>; Archive moves it out of the list (it returns under Show archived) and out of the delivery forms' supplier pickers. There is no Delete: suppliers are archived. Making it a Shelter Friend needs Publish Shelter Friends as well.
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
 

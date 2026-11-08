@@ -4539,7 +4539,6 @@ const en = {
       title: "Suppliers",
       subtitle:
         "The businesses the shelter buys from. Deliveries, bills and the shopping list name them, and a supplier can be made a Shelter Friend. Carers, volunteers and partners are in Contacts.",
-      viewContacts: "Open Contacts →",
       newButton: "New supplier",
       newTitle: "New supplier",
       newSubtitle: "Add a business the shelter buys from. Cancel returns to the list.",
