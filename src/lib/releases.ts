@@ -75,6 +75,10 @@ export const unreleased: ReleaseNote[] = [
     cards: ["approve_photos"],
   },
   {
+    text: "Settings → Recent changes now says what changed for donations, bills, stock, appeals, fundraising events, desexing drives, community dogs, photos, memes, reels, blood tests, procedures and who holds which role. These rows used to show no label at all. The Table filter lists them too, in alphabetical order.",
+    admin: true,
+  },
+  {
     text: "Add shelter photos can now save a photo when you do not know the animal or where it was taken. Press Don't know either: save for later, and the photo is stored (not public) for whoever approves photos to name the animal. When every photo is saved a Done button appears, and pressing it tells you how many photos are stored. In Photos to approve, a photo with no place says so and says there is no one to suggest.",
     cards: ["add_photos"],
   },
