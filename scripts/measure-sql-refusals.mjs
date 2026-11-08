@@ -13,45 +13,13 @@
  *   node scripts/measure-sql-refusals.mjs          counts
  *   node scripts/measure-sql-refusals.mjs --list   every function with its class and messages
  */
-import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { readMigrations, liveFunctions, messagesOf } from "./lib/sql-refusals.mjs";
-import { classify, CLASSES } from "./lib/sql-refusal-classes.mjs";
+import { classifyLiveRefusals, CLASSES } from "./lib/sql-refusal-classes.mjs";
+import { REFUSAL_KEY } from "./check-sql-refusal-keys.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const walk = (d, o = []) => {
-  for (const e of readdirSync(d)) {
-    if (e === "node_modules" || e === ".next") continue;
-    const f = path.join(d, e);
-    if (statSync(f).isDirectory()) walk(f, o);
-    else if (/\.(ts|tsx|mjs)$/.test(f) && !/\.test\./.test(f)) o.push(f);
-  }
-  return o;
-};
-const files = [...walk(path.join(root, "src")), ...walk(path.join(root, "worker"))].map((f) => ({
-  rel: path.relative(root, f).replaceAll("\\", "/"),
-  text: readFileSync(f, "utf8"),
-}));
-
-// A caller file "forwards" when it hands an error's .message to what the person sees; "masks" when it uses the
-// dictionary-worded helpers in src/lib/action-result.ts. Both are per FILE, not per call: a stated limit.
-const FORWARDS = /(?:error|reason|message)\s*:\s*[\w.?]*[eE]rr(?:or)?\??\.message|refuse\(\s*(?:await \w+\()?[\w.?]*\.message|return\s+[\w.?]*[eE]rr(?:or)?\??\.message|new Error\([^)]*\.message/;
-const MASKS = /databaseFailure\(|unexpectedFailure\(/;
-
-const { live, rawHits, doBlocks } = liveFunctions(readMigrations(path.join(root, "supabase/migrations")));
-const rows = [];
-for (const f of live) {
-  const m = messagesOf(f.body);
-  if (!m.all) continue;
-  const q = [`"${f.name}"`, `'${f.name}'`, "`" + f.name + "`"];
-  const srcCallers = files
-    .filter((x) => q.some((s) => x.text.includes(s)))
-    .map((x) => ({ rel: x.rel, forwardsMessage: FORWARDS.test(x.text), masksMessage: MASKS.test(x.text) }));
-  const sqlCallers = live.filter((g) => g !== f && g.body.includes(f.name + "(")).map((g) => g.name);
-  const cls = classify({ isTrigger: /trigger/i.test(f.returns), srcCallers, sqlCallers });
-  rows.push({ f, m, cls, srcCallers });
-}
+const { rows, live, rawHits, doBlocks } = classifyLiveRefusals(root);
 const sum = (a, k) => a.reduce((n, r) => n + k(r), 0);
 const doN = sum(doBlocks, (b) => b.n);
 const liveN = sum(rows, (r) => r.m.all);
@@ -78,6 +46,11 @@ for (const k of ["user", "maybe", "masked", "developer"]) {
   console.log(`reads=${k}: ${mine.length} functions, ${sum(mine, (r) => r.m.all)} messages`);
 }
 console.log(`unclassified: ${rows.filter((r) => !r.cls).length}`);
+// The progress meter for #3nuwy: a keyed message is worded by the app (src/lib/db-refusal.ts), so it is no longer English
+// to anyone. The classes above still count it, because they describe who reads a function, not what it says.
+const keyedN = (r) => r.m.messages.filter((x) => REFUSAL_KEY.test(x.text)).length;
+const userRows = rows.filter((r) => r.cls.reads === "user" || r.cls.id === "called-forwarded-and-masked");
+console.log(`keyed (worded by the app, not English): ${rows.filter((r) => keyedN(r)).length} functions, ${sum(rows, keyedN)} messages; of the person-read (user + forwarded-and-masked), ${sum(userRows, (r) => r.m.all - keyedN(r))} messages are still English`);
 if (process.argv.includes("--list")) {
   console.log("");
   for (const r of rows) {

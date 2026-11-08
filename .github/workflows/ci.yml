@@ -201,6 +201,10 @@ jobs:
       # Every table with an audit trigger is listed in Recent changes with a name and a label in both dictionaries,
       # and no listed table is gone. Reads the migrations and the source: no database, no node_modules.
       - run: node scripts/check-audited-tables.mjs
+      # A database refusal a person reads is a KEY the app words in Thai or English, not an English sentence (#3nuwy).
+      # Fails on a person-read function defined from 0339 that raises a sentence, and on a raised key with no wording
+      # in en.ts or th.ts. Ignores older functions until they are next redefined. Reads migrations and source only.
+      - run: node scripts/check-sql-refusal-keys.mjs
       # A permission prop is never JSX shorthand: a bare `canManage` is always true,
       # which is how #1126's Settings → Website hole was written.
       - run: node scripts/check-permission-props.mjs

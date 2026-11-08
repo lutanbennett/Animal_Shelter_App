@@ -77,6 +77,20 @@ const en = {
     enclosure: "Enclosure",
     status: "Status",
   },
+  // Refusals a database function raises as a KEY rather than a sentence (src/lib/db-refusal.ts; #3nuwy,
+  // docs/decisions/2026-11-08-db-refusal-keys-mechanism.md). One entry per key, spelt exactly as the SQL raises it;
+  // parameters arrive from the error's detail as strings. A key with no entry here falls back to
+  // common.somethingWentWrong with a reference, never to the key itself. Later groups add their keys to this block.
+  refusals: {
+    "label.translate_not_allowed": () => "Your access does not include translating labels.",
+    "label.propose_not_allowed": () => "Your access does not include proposing Thai for labels.",
+    "label.approve_not_allowed": () => "Your access does not include approving Thai for labels.",
+    "label.discard_not_allowed": () => "Your access does not include discarding proposed Thai.",
+    "label.not_translatable": (p: Record<string, string>) =>
+      `"${p.table}.${p.column}" is not a label that can be translated. Reload the page and try again.`,
+    "label.no_proposal_waiting": () =>
+      "There is no proposed Thai waiting for this label any more. Someone may have approved or discarded it already; reload the page to see where it stands.",
+  },
 
   // The notice a desktop-only Settings/Management page shows on a phone
   // (components/LargerScreenNotice.tsx), and the tile label that warns of it.
