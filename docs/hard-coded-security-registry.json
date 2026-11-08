@@ -740,6 +740,11 @@
         "migration": "0328_website_statistic_switches.sql",
         "item": "grant to anon",
         "reason": "SELECT on the public views public_impact_figures and public_shelter_stats, each restated with the same grants as before (0204, 0124) beside a re-created view that now honours a show_on_website switch. Nothing is newly granted: both were already readable by anon. The new table public_stat_switches is NOT granted to anon (the owner-run view reads it). The existing public-site pattern: it lets anon read what the shelter chose to publish, not do anything; hiding a tile is content, not security. docs/decisions/2026-11-06-website-switches-schema.md."
+      },
+      {
+        "migration": "0336_shelter_friends_supplier_subject.sql",
+        "item": "grant to anon",
+        "reason": "SELECT on the public view public_shelter_friends, restated with the same grants as before (0076, 0164). Nothing is newly granted: anon already read it. The view now also draws a Friend whose subject is a supplier, still only when published and not archived and still behind the same show_* boxes. The base tables shelter_friends and suppliers are not granted to anon. The existing public-site pattern: it lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-08-suppliers-schema.md."
       }
     ],
     "stubs": [
