@@ -7189,7 +7189,8 @@ const en = {
       deleteHint: "Removes the job, its photos and its Drive folder. This can't be undone.",
       deleteConfirm: (title: string) =>
         `Delete "${title}"? Its photos and Drive folder go with it. This can't be undone.`,
-      readOnly: "You can view maintenance jobs and add photos, but not log or update them.",
+      readOnly: "You can view maintenance jobs, but not log or update them.",
+      readOnlyWithPhotos: "You can view maintenance jobs and add photos, but not log or update them.",
       driveWarning: (message: string) =>
         `Saved, but the Drive folder couldn't be moved: ${message}. It will be retried on the next change.`,
     },
