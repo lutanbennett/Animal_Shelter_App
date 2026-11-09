@@ -10,11 +10,13 @@
 //      (its rows would show unlabelled);
 //   2. a listed table no migration leaves an audit trigger on (it can never log a row, or was dropped);
 //   3. a listed table with no NAME_FROM_IMAGE entry;
+//   5. (third question, #v3qmz) a table whose NAME marks it as access-deciding with no audit trigger: scripts/lib/access-tables.mjs
 //   4. a listed table with no label in en.ts or th.ts (recentChanges.tables); a missing one renders blank.
 // docs/decisions/2026-11-08-audited-tables-drift.md
 
 import { readFileSync } from "node:fs";
 import { auditTriggerTables } from "./lib/audit-triggers.mjs";
+import { accessTableProblems, createdTables } from "./lib/access-tables.mjs";
 
 const src = readFileSync("src/lib/audit/recent-changes.ts", "utf8");
 
@@ -55,9 +57,13 @@ for (const lang of ["en", "th"]) {
   if (none.length) problems.push(`No label in ${lang}.ts recentChanges.tables (the row would render blank): ${none.join(", ")}`);
 }
 
+const access = accessTableProblems(createdTables(), new Set(triggered.keys()));
+problems.push(...access.problems);
+for (const k of access.known) console.log(`known gap (access-deciding, not audited): ${k}`);
+
 if (problems.length) {
   console.log(`NOT CLEAN: the audited-table list has drifted from the migrations.\n\n${problems.join("\n\n")}`);
   process.exitCode = 1;
 } else {
-  console.log(`ok: ${listed.length} audited tables, each with a name entry and a label in both dictionaries; ${triggered.size} tables carry an audit trigger and every one is listed${notListed.length ? ` or excused (${notListed.join(", ")})` : ""}.`);
+  console.log(`ok: ${listed.length} audited tables, each with a name entry and a label in both dictionaries; ${triggered.size} tables carry an audit trigger and every one is listed; ${access.expected.length} access-deciding tables checked for a trigger${notListed.length ? ` or excused (${notListed.join(", ")})` : ""}.`);
 }
