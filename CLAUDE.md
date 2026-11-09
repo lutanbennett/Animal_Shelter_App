@@ -591,8 +591,9 @@ Know its limits, and say so in the test plan when they bite:
 - **A login holding exactly some cards: `node scripts/dev-signin.mjs --cards <a,b> --port <yours>`, with NO role.** `<a,b>` are **card keys, not activity names** (`website_photos`, not `website.gallery`; on a key it
   does not know the script refuses and prints the real ones). The script
   **refuses** a role and `--cards` together (`give a role or --cards, not both`). Given `--cards` alone it builds a disposable role
-  of its own holding exactly those cards, so no real role is disturbed and no other running stream is signed out. Called twice
-  for the same cards it **re-keys** the login, so only the **later** snippet is valid.
+  of its own holding exactly those cards, so no real role is disturbed and no other running stream is signed out. The login is keyed by card set **plus your port** (`dev_signin_cards_<hash>_<port>`, `--label x` to override), so two
+  streams holding the same card each get their own login and neither signs the other out. Calling it again from the SAME port re-keys
+  that port's login, so only that port's **later** snippet is valid. `--remove --cards a,b --port N` removes that port's login only.
 - **Never run `--remove` while other streams are running:** it deletes every login the script has ever made, including their
   live ones.
 - **The snippet holds a live dev session token.** Never paste it into a PR, a test plan or a commit.
