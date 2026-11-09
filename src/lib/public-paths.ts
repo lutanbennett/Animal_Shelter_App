@@ -103,6 +103,20 @@ export function isPublicPage(pathname: string): boolean {
   return pathname === "/" || PUBLIC_PAGE_PREFIXES.some((prefix) => underPrefix(pathname, prefix));
 }
 
+/**
+ * While the website is off (PUBLIC_SITE "off", src/lib/public-site.ts): the
+ * website pages a signed-in login is turned away from, to the app. Not "/"
+ * (src/app/page.tsx sends a signed-in login on itself), not /privacy
+ * (Google's consent screen links to it, so it answers in every state), and not
+ * /r/ or /e/ (the address on a resident's card and an enclosure's QR code:
+ * their pages already forward a signed-in login into the app).
+ */
+export function isWebsitePageWhenOff(pathname: string): boolean {
+  if (pathname === "/") return false;
+  if (["/privacy", ...PER_ITEM_PAGE_PREFIXES].some((prefix) => underPrefix(pathname, prefix))) return false;
+  return isPublicPage(pathname);
+}
+
 /** Whether the Worker may edge-cache this public page. */
 export function isEdgeCachedPage(pathname: string): boolean {
   return pathname === "/" || EDGE_CACHED_PAGE_PREFIXES.some((prefix) => underPrefix(pathname, prefix));

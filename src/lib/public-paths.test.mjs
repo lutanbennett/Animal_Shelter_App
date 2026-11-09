@@ -49,3 +49,15 @@ test("the Worker edge-caches public pages except the live ones (/r, /e, /campaig
     assert.equal(isEdgeCachedPage(p), false, JSON.stringify(p));
   }
 });
+
+test("website off: the website pages a signed-in login is turned away from", async () => {
+  const { isWebsitePageWhenOff } = await import("./public-paths.ts");
+  for (const p of ["/adopt", "/adopt/12", "/campaigns", "/campaigns/1", "/services/x", "/our-work", "/foster", "/volunteer", "/donate", "/about", "/friends", "/shop", "/events"]) {
+    assert.equal(isWebsitePageWhenOff(p), true, p);
+  }
+  // "/" sends itself on; /privacy answers in every state; /r/ and /e/ forward into the app;
+  // /no-access, where a login with no app cards lands, must never be one (that would loop).
+  for (const p of ["/", "/privacy", "/privacy/x", "/r/CODE1", "/e/12", "/no-access", "/home", "/login", "/residents", "/api/photos/a", "/adoptive", ""]) {
+    assert.equal(isWebsitePageWhenOff(p), false, JSON.stringify(p));
+  }
+});
