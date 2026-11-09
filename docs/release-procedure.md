@@ -926,6 +926,11 @@ weaker reading (it does not report schema ahead of code); if you ran only that, 
 deploy prints `deploy: release mail for <version> [UAT]: sent N, skipped M`;
 that is the relay accepting it, not delivery. Check the inbox for the message
 from `releases@lannacareforanimals.org` with the version in its subject.
+**For the production mail, read the title and the sender's name too:** the subject must start
+`[Production]` and the name must not say *UAT*. `0.42.0` and `0.43.0` went out titled *"[UAT] Lanna
+Care release …"* from *"Lanna Care UAT"*; `RELEASE_MAIL_ENV: "Production"` was set and read in the
+production deploy on 2026-11-06 (`0.43.3`), and no release has mailed since, so **the first minor
+release after that is the proof** (`#w4k9n` (e)). If it still says UAT, that is a fault to record.
 `lannacareforanimals@gmail.com` is expected to be skipped with
 `E_RECIPIENT_NOT_ALLOWED` — the shelter's own address refused by the relay, a
 known open question, not a delivery failure.

@@ -119,7 +119,7 @@ SVC_USER=lannacare-app
 ensure_service_user "$SVC_USER"
 node scripts/pi/write-env.mjs --env production   # again, now the group exists, so the service can read it
 prepare_service_files "$SVC_USER" "$REPO" "$HOME/photo-cache" no
-install_unit scripts/pi/lanna-care.service lanna-care "$SVC_USER" "$REPO" "$HOME/photo-cache"   http://127.0.0.1:3000/ lannacare.org "$(grep -s "^ORIGIN_KEY=" .env.production.local | cut -d= -f2-)"
+install_unit scripts/pi/lanna-care.service lanna-care "$SVC_USER" "$REPO" "$HOME/photo-cache"   http://127.0.0.1:3000/ lannacareforanimals.org "$(grep -s "^ORIGIN_KEY=" .env.production.local | cut -d= -f2-)"
 
 echo "== 5. cloudflared as a service"
 sudo mkdir -p /etc/cloudflared
