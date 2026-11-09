@@ -488,8 +488,9 @@ export const ROUTES: readonly RouteEntry[] = [
     menu: false,
   },
   {
-    // Settings → Medications and → Diets, the option-list halves of the split of 2026-10-08. Admin only:
+    // Settings → Medications, the option-list half of the split of 2026-10-08. Admin only:
     // the page also asks the item's stock cell (canEditItemSettings), which Admin alone holds with this one.
+    // (Settings → Diets was the same until 0340 gave it its own card.)
     path: "/admin/medications",
     activity: "reference.types",
     icon: SECTION_ICONS.prescriptions,
@@ -499,7 +500,8 @@ export const ROUTES: readonly RouteEntry[] = [
   },
   {
     path: "/admin/diets",
-    activity: "reference.types",
+    // Its own card since 0340 (#d3cw7). It asked reference.types here and stock.diets on the page, together.
+    activity: "diets.settings",
     icon: SECTION_ICONS.diet,
     label: (t) => t.nav.diets,
     device: "any",

@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
 import { BackLink } from "@/components/BackLink";
 import { getT } from "@/lib/i18n/get-t";
-import { refuseFor } from "@/lib/auth/require-role";
-import { canEditItemSettings } from "@/lib/permissions/item-settings";
 import { requirePermission } from "@/lib/permissions/require";
 import { loadRecipeBook } from "@/lib/diets/recipe-book";
 import { RecipeDetail } from "../RecipeDetail";
@@ -10,8 +8,7 @@ import { RecipeDetail } from "../RecipeDetail";
 /** One diet's recipe page: its ingredients, amounts and total daily serve, with Standard, rename and delete. */
 export default async function RecipePage(props: PageProps<"/admin/diets/[id]">) {
   const { id } = await props.params;
-  const { supabase, perms } = await requirePermission("reference.types", "edit");
-  if (!canEditItemSettings(perms, "diet")) refuseFor(perms);
+  const { supabase } = await requirePermission("diets.settings");
   const { t } = await getT();
   const book = await loadRecipeBook(supabase);
   const recipe = book.recipes.find((r) => r.id === id);

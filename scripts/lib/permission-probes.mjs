@@ -148,8 +148,10 @@ export const PROBES = [
   // 0291: a medication insert asks stock.medications Edit alone (it was shared with the retired reference.add_while_recording).
   { activity: "stock.medications", level: "edit", sql: `insert into medication (name, dose_unit) values ('Probe medication', current_setting('harness.med_unit', true))`, refusedBy: ["P0001"] /* check_unit_in_units (0252) reads units as the caller, so a role that cannot read them is refused there first, with a message about units */ },
   { activity: "stock.medications", level: "read", sql: `select cost_per_unit from medication where id = ${MED}`, known: [{ id: "N1", roles: ["doctor"] }] },
-  { activity: "stock.diets", level: "edit", sql: `update diet_types set notes = 'probe' where id = $DIET` },
-  { activity: "stock.diets", level: "read", sql: `select cost_per_unit from diet_types where id = $DIET`, known: [{ id: "C10", roles: ["doctor"] }] },
+  // diets.settings (0340) opens the same rows on purpose: Settings → Diets changes an ingredient's name, unit and notes.
+  { activity: "diets.settings", level: "edit", fn: true, sql: `select * from diet_usage()` },
+  { activity: "stock.diets", level: "edit", sharedWith: ["diets.settings"], sql: `update diet_types set notes = 'probe' where id = $DIET` },
+  { activity: "stock.diets", level: "read", sharedWith: ["diets.settings"], sql: `select cost_per_unit from diet_types where id = $DIET`, known: [{ id: "C10", roles: ["doctor"] }] },
   { activity: "stock.correct", level: "edit", fn: true, sql: `select record_stock_correction('medication', ${MED}, 1)` },
 
   // --- Management

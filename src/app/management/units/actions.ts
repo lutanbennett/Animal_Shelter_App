@@ -14,6 +14,15 @@ import { loadPermissions } from "@/lib/permissions/load";
 
 const refuse = (error: string) => ({ ok: false as const, error });
 
+/**
+ * Who may change an item's ways of measuring: what that item's own Settings page asks. A medicine still asks the two cells
+ * canEditItemSettings reads; an ingredient asks diets.settings, the one Settings → Diets card (0340, #d3cw7), whose policies on
+ * item_unit_conversions cover an ingredient's rows only.
+ */
+function mayEditMeasures(perms: Awaited<ReturnType<typeof loadPermissions>>, kind: ItemKind): boolean {
+  return kind === "diet" ? can(perms, "diets.settings") : canEditItemSettings(perms, kind);
+}
+
 /** The words runWriteAction() needs; the same three for every write here. */
 const write = (t: Dictionary): WriteMessages => ({
   somethingWentWrong: t.common.somethingWentWrong,
@@ -87,7 +96,7 @@ export async function saveConversion(
   return runWriteAction("units.saveConversion", write(t), { id: requestId, action: "units.saveConversion", db: supabase }, async () => {
     if (kind !== "medication" && kind !== "diet") return refuse(e.failed);
     // Settings → Medications / Diets since the split of 2026-10-08: Admin only (item-settings.ts).
-    if (!canEditItemSettings(await loadPermissions(), kind)) return refuse(e.notAuthorized);
+    if (!mayEditMeasures(await loadPermissions(), kind)) return refuse(e.notAuthorized);
 
     const base = await baseUnitOf(kind, itemId);
     if (!base) return refuse(e.gone);
@@ -136,7 +145,7 @@ export async function deleteConversion(kind: ItemKind, id: string, requestId: st
   const supabase = await createClient();
   return runWriteAction("units.deleteConversion", write(t), { id: requestId, action: "units.deleteConversion", db: supabase }, async () => {
     if (kind !== "medication" && kind !== "diet") return refuse(e.failed);
-    if (!canEditItemSettings(await loadPermissions(), kind)) return refuse(e.notAuthorized);
+    if (!mayEditMeasures(await loadPermissions(), kind)) return refuse(e.notAuthorized);
     // Only a conversion of this kind: the check above was for this kind.
     const { error, count } = await supabase
       .from("item_unit_conversions")

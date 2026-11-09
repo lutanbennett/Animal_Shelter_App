@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
 import { BackLink } from "@/components/BackLink";
 import { getT } from "@/lib/i18n/get-t";
-import { refuseFor } from "@/lib/auth/require-role";
-import { canEditItemSettings } from "@/lib/permissions/item-settings";
 import { requirePermission } from "@/lib/permissions/require";
 import { loadRecipeBook } from "@/lib/diets/recipe-book";
 import { IngredientDetail, type UsedBy } from "../../IngredientDetail";
@@ -10,8 +8,7 @@ import { IngredientDetail, type UsedBy } from "../../IngredientDetail";
 /** One ingredient's page: its details, the ways it is measured (a cup, a bag…), and the diets that use it. */
 export default async function IngredientPage(props: PageProps<"/admin/diets/ingredients/[id]">) {
   const { id } = await props.params;
-  const { supabase, perms } = await requirePermission("reference.types", "edit");
-  if (!canEditItemSettings(perms, "diet")) refuseFor(perms);
+  const { supabase } = await requirePermission("diets.settings");
   const { t } = await getT();
   const book = await loadRecipeBook(supabase);
   const ingredient = book.ingredients.find((i) => i.id === id);

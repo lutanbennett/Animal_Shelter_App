@@ -174,7 +174,7 @@ export default async function DeliveriesPage(props: PageProps<"/deliveries">) {
   );
   const offers = promotionOffers(describedResult.data ?? []);
   // Adding to a list needs the Settings write for that list as well as the delivery activity the page already asks.
-  const mayPromote = { medication: canEditItemSettings(perms, "medication"), diet: canEditItemSettings(perms, "diet") };
+  const mayPromote = { medication: canEditItemSettings(perms, "medication"), diet: can(perms, "diets.settings") };
   const shownBills = new Set<string>();
 
   const formProps = {

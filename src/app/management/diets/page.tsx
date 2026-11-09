@@ -17,7 +17,6 @@ import { receivedSinceCount } from "@/lib/management/purchasing";
 import { requirePermission } from "@/lib/permissions/require";
 import { can } from "@/lib/permissions/can";
 import { loadStocktakingSwitches } from "@/lib/management/stocktaking-switches";
-import { canEditItemSettings } from "@/lib/permissions/item-settings";
 import { moveDietType } from "./actions";
 
 type DietTypeQueryRow = {
@@ -236,7 +235,7 @@ export default async function DietStockPage(props: PageProps<"/management/diets"
               iconOnlyOnMobile={false}
             />
           )}
-          {canEditItemSettings(perms, "diet") && (
+          {can(perms, "diets.settings") && (
             <ActionLink href="/admin/diets" label={m.settingsLink} icon={ListChecks} iconOnlyOnMobile={false} />
           )}
         </div>

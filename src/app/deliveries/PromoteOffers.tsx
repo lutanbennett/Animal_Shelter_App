@@ -11,7 +11,7 @@ import { promoteDescription } from "./promote-actions";
  * Wordings typed on more than one line, each with an offer to add it to Settings → Medications or → Diets so it
  * starts counting as stock (0308). Nothing happens until somebody accepts, in one confirmed step that names how many
  * lines will be linked. Each button is drawn only when the login may do what its action asks (the page passes
- * mayMedication / mayDiet from canEditItemSettings, the same question promoteDescription asks), and the action
+ * mayMedication / mayDiet from canEditItemSettings and diets.settings, the same question promoteDescription asks), and the action
  * checks again.
  */
 export function PromoteOffers({

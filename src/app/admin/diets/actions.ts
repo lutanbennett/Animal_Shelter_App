@@ -9,7 +9,7 @@ import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { loadUnitList } from "@/lib/unit-list-server";
 import { usableUnit } from "@/lib/unit-list";
 import { loadPermissions } from "@/lib/permissions/load";
-import { canEditItemSettings } from "@/lib/permissions/item-settings";
+import { can } from "@/lib/permissions/can";
 
 // Settings → Diets, the ingredient half (diet_types, 0239): name, unit, notes,
 // add and delete. The recipes that use them are in ./recipe-actions.ts. Cost,
@@ -50,7 +50,7 @@ function optional(value: FormDataEntryValue | string | null | undefined) {
 }
 
 async function refusal() {
-  if (canEditItemSettings(await loadPermissions(), "diet")) return null;
+  if (can(await loadPermissions(), "diets.settings")) return null;
   const { t } = await getT();
   return refuse(t.admin.security.errors.adminAccessRequired);
 }

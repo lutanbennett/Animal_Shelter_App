@@ -351,10 +351,10 @@ const PINNED = {
   // Who does what: Admin, or a role holding the Who does what card (roles.view, 0262). opensWhoDoesWhat() asks it in one place.
   "/admin/who-does-what/details": { guards: ["if (!opensWhoDoesWhat(perms)) refuseFor(perms)"], decides: [] },
   "/admin/who-does-what/features": { guards: ["if (!opensWhoDoesWhat(perms)) refuseFor(perms)"], decides: [] },
-  // Settings → Diets, the recipe book (diets-recipe-book): the same two guards as /admin/diets, one per screen.
-  "/admin/diets/[id]": { guards: ['requirePermission("reference.types", "edit")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },
-  "/admin/diets/ingredients": { guards: ['requirePermission("reference.types", "edit")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },
-  "/admin/diets/ingredients/[id]": { guards: ['requirePermission("reference.types", "edit")', 'if (!canEditItemSettings(perms, "diet")) refuseFor(perms)'], decides: [] },
+  // Settings → Diets, the recipe book (diets-recipe-book): the one guard /admin/diets asks, diets.settings since 0340 (#d3cw7).
+  "/admin/diets/[id]": { guards: ['requirePermission("diets.settings")'], decides: [] },
+  "/admin/diets/ingredients": { guards: ['requirePermission("diets.settings")'], decides: [] },
+  "/admin/diets/ingredients/[id]": { guards: ['requirePermission("diets.settings")'], decides: [] },
   // Settings → Website → Pages → Edit: one public page's wording and the photo beside its heading,
   // on a page of its own rather than the popup the Pages tab used to open. Reached only from that
   // tab, so it carries the same guard as /admin/website; its controls ask website.content (the page
