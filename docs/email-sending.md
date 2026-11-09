@@ -137,8 +137,9 @@ Supabase field below. It doesn't belong in any file in this repo.
 | `Supabase UAT` | **production** (`dbkodyyxxhtygxcxmfcu`) | Made 2026-09-23, when that database was still called UAT; the name is a leftover. **Do not delete it.** Rename it `Supabase production` if Resend offers a rename |
 | `Supabase UAT (new project)` | UAT (`fsjagxmxjosauwmxwype`) | Made 2026-11-08 (`docs/uat-finalisation.md`, Part 4) |
 
-The sender name in 2d (`Lanna Care UAT`) is the same leftover on production: `docs/domain-checklist.md`
-section D still has it changing to `Lanna Care` there. UAT's project keeps `Lanna Care UAT`.
+**Sender names:** production's reset mail has said **"LCA System"** since 2026-10-29 (`#prx2t`, done and
+ticked); the `Lanna Care UAT` in 2d below is what the table said in September, not production's state today.
+UAT's own project uses `Lanna Care UAT`.
 
 ### 2d. Supabase: which fields go where
 
