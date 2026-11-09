@@ -24,11 +24,7 @@ begin
   if n_priv <> 0 then raise exception 'FAIL 1c % rows already private_only', n_priv; end if;
 
   insert into residents (name, species, is_public_visible, resident_code) values ('Harness 0318', 'Dog', true, 'R-H318A') returning id into r;
-  select ur.user_id into v_user from user_roles ur
-    where ur.archived_at is null
-      and not exists (select 1 from user_roles x join roles ro on ro.id = x.role_id
-                       where x.user_id = ur.user_id and x.archived_at is null and ro.key in ('admin', 'management'))
-    limit 1;
+  v_user := gen_random_uuid(); insert into auth.users (id, email) values (v_user, 'h-nonapprover-' || v_user || '@example.invalid'); -- a disposable login holding no card, so the test never depends on who holds photos.approve on dev
 
   -- 2. a non-publisher files a photo: it waits (blank), and cannot pre-set Private only
   perform set_config('request.jwt.claims', json_build_object('sub', v_user, 'role', 'authenticated')::text, true);

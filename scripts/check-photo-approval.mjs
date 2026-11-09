@@ -56,17 +56,15 @@ begin
   insert into residents (name, species, is_public_visible, resident_code) values ('Harness 0217', 'Dog', true, 'R-H217A') returning id into r;
   insert into appeals (resident_id, title, target_amount, status, published) values (r, 'Harness 0217', 1000, 'live', true) returning id into v_app;
 
-  -- A. filed by a script / the owner (no signed-in user) = approved on save, public at once
+  -- A. filed by a script / the owner (no signed-in user) WAITS since 0346 (0217's approve-on-save is gone); it is public only once someone approves it
   insert into attachments (owner_type, owner_id, drive_file_id, file_name, sub_folder) values ('resident', r, 'h0217old', 'a.jpg', 'Shelter') returning id into a_old;
-  if (select approved_at from attachments where id = a_old) is null then raise exception 'FAIL A1 script-filed photo is waiting'; end if;
+  if (select approved_at from attachments where id = a_old) is not null then raise exception 'FAIL A1 a script-filed photo was approved on save'; end if;
+  if pg_temp.as_anon('h0217old') or pg_temp.anon_view_has('h0217old') then raise exception 'FAIL A1b a script-filed photo is public before approval'; end if;
+  update attachments set approved_at = now() where id = a_old;
   if not pg_temp.as_anon('h0217old') or not pg_temp.anon_view_has('h0217old') then raise exception 'FAIL A2 an approved photo is not public'; end if;
 
   -- B. filed by a signed-in login that may NOT publish = waiting
-  select ur.user_id into v_user from user_roles ur
-    where ur.archived_at is null
-      and not exists (select 1 from user_roles x join roles ro on ro.id = x.role_id
-                       where x.user_id = ur.user_id and x.archived_at is null and ro.key in ('admin', 'management'))
-    limit 1;
+  v_user := gen_random_uuid(); insert into auth.users (id, email) values (v_user, 'h-nonapprover-' || v_user || '@example.invalid'); -- a disposable login holding no card, so the test never depends on who holds photos.approve on dev
   if v_user is null then raise exception 'FAIL B0 no non-publisher login on dev to test with'; end if;
   perform set_config('request.jwt.claims', json_build_object('sub', v_user, 'role', 'authenticated')::text, true);
   if coalesce((select can_publish_resident_photos()), false) then raise exception 'FAIL B0b the chosen login can publish'; end if;
@@ -121,7 +119,7 @@ begin
   update attachments set approved_at = null where id = a_wait;
   if pg_temp.as_anon('h0217wait') or pg_temp.anon_view_has('h0217wait') then raise exception 'FAIL H1 an un-approved photo is still public'; end if;
 
-  raise exception 'HARNESS-OK script-filed photo approved on save and public by view and proxy | non-publisher photo waiting, caller cannot pre-approve | waiting photo absent from every public view, the proxy and as a profile photo | refused on an appeal | non-publisher cannot approve or withdraw | Medical approved on save and still not public | approving makes it public, withdrawing removes it again';
+  raise exception 'HARNESS-OK script-filed photo waits, then approved is public by view and proxy | non-publisher photo waiting, caller cannot pre-approve | waiting photo absent from every public view, the proxy and as a profile photo | refused on an appeal | non-publisher cannot approve or withdraw | Medical approved on save and still not public | approving makes it public, withdrawing removes it again';
 end;
 $h$;
 rollback;

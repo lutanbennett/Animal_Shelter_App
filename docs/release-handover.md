@@ -141,7 +141,10 @@ hand it back as a question.
 - **The UAT zone cache HAS now been purged (2026-11-09, `#prg4z`)** — a zone-scoped token that cannot
   reach production's zone, and the purge proven by a re-fetch rather than by Cloudflare's own success
   flag. `node scripts/purge-cache.mjs --env uat` works; it is no longer a gap.
-- The **restore drill has still never been exercised**.
+- **CORRECTED 2026-11-09: THE DRILL HAS BEEN EXERCISED THREE TIMES** — `#q2vp7` (local, 2026-10-13),
+  `#xa1jk` (a production backup into a real Supabase project, **signed in**, 2026-10-19) and `#rg7pv`
+  (into UAT's own project, 923 of 923 privileges, 2026-11-09). Lutan ruled the production risk
+  **negligible**; left are 24h of data loss and the facility plan images. `2026-11-09-restore-risk-settled.md`.
 - `audit:prod` exits 1 with five vulnerabilities and `audit:register` exits 0 — one registered,
   unreachable high advisory (`GHSA-5j98-mcp5-4vw2`). A red `audit` on a PR that ran it is a real
   finding; `skipped` is not a pass. **A cut always runs it for real**, because it bumps `package.json`.

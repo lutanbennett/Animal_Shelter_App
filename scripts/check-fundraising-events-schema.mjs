@@ -81,7 +81,7 @@ begin
   select id into att3 from attachments where drive_file_id = 'harness-3';
   select id into att4 from attachments where drive_file_id = 'harness-4';
   insert into r (label, got, want) values ('an event photo from a non-approver waits', (select approved_at is null from attachments where id = att)::text, 'true');
-  insert into r (label, got, want) values ('an event photo from an approver is approved', (select approved_at is not null from attachments where id = att4)::text, 'true');
+  insert into r (label, got, want) values ('an event photo from an approver waits too (0346 removed approve-on-save)', (select approved_at is null from attachments where id = att4)::text, 'true');
   insert into r (label, got, want) values ('a resident photo from a non-publisher still waits (0309 unchanged)', (select approved_at is null from attachments where id = att3)::text, 'true');
   insert into r (label, got, want) values ('the card holder cannot approve the photo', pg_temp.try(m, format($q$update attachments set approved_at = now() where id = %L$q$, att))::text, '0');
   insert into r (label, got, want) values ('and it is still waiting afterwards', (select approved_at is null from attachments where id = att)::text, 'true');

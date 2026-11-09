@@ -1,14 +1,15 @@
 // A signed-in browser session on DEV for one role, with no password handed to anyone:
 //
 //   node scripts/dev-signin.mjs <role> [--port N]     print the snippet that signs the browser in
-//   node scripts/dev-signin.mjs --cards a,b [--port N] the same, for a login holding EXACTLY these cards and nothing else
-//   node scripts/dev-signin.mjs --remove <role>        delete only that role's login (a roles.key, or a dev_signin_cards_<hash> key)
-//   node scripts/dev-signin.mjs --remove --cards a,b   delete only the login and throwaway role for exactly those cards
+//   node scripts/dev-signin.mjs --cards a,b [--port N] [--label x] the same, for a login holding EXACTLY these cards and nothing else.
+//                                                      One login per card set PER PORT (or label): two streams with the same cards do not share a login.
+//   node scripts/dev-signin.mjs --remove <role>        delete only that role's login (a roles.key, or a dev_signin_cards_<hash>_<port> key)
+//   node scripts/dev-signin.mjs --remove --cards a,b [--port N]   delete only the login and throwaway role for those cards on that port
 //   node scripts/dev-signin.mjs --remove <role> --clear-held   also delete the test clinic visits / bulk batches that login created, when those are all that hold it
 //   node scripts/dev-signin.mjs --remove all           delete every dev-signin login (and card-scoped role), signing every stream out
 //
 // --cards (docs/card-walkthrough.md; docs/decisions/2026-10-22-card-walkthrough-generated.md): the cards are card keys from
-// src/lib/permissions/cards.ts. The script makes one throwaway role per set of cards (key dev_signin_cards_<hash>), hands it the
+// src/lib/permissions/cards.ts. The script makes one throwaway role per set of cards (key dev_signin_cards_<hash>_<port>), hands it the
 // cards through set_role_cards(), and signs in a login holding only that role. No extras, so a
 // card that silently leans on another card's permission fails for this login, not in front of a real person.
 
@@ -88,7 +89,14 @@ async function whatHolds(userId, { raw = false } = {}) {
 }
 
 const args = process.argv.slice(2);
-const cardRoleKey = (list) => CARD_ROLE_PREFIX + createHash("sha1").update([...new Set(list)].sort().join(",")).digest("hex").slice(0, 8);
+// One throwaway role and login per card set PER CALLER (the port, or --label), so two streams asking for the same cards get two
+// logins and neither re-keys the other's password. Key: dev_signin_cards_<hash>_<port|label>.
+const optVal = (name) => { const i = args.indexOf(name); return i >= 0 && args[i + 1] && !args[i + 1].startsWith("--") ? args[i + 1] : null; };
+const labelArg = optVal("--label");
+const callerPort = optVal("--port") ?? (() => { try { return readFileSync(join(root, ".port"), "utf8").trim(); } catch { return null; } })();
+const callerSuffix = (labelArg ?? callerPort ?? "").replace(/[^A-Za-z0-9]/g, "").slice(0, 16);
+if (args.includes("--label") && !labelArg) throw new Error("--label needs a value");
+const cardRoleKey = (list) => CARD_ROLE_PREFIX + createHash("sha1").update([...new Set(list)].sort().join(",")).digest("hex").slice(0, 8) + (callerSuffix ? "_" + callerSuffix : "");
 const loginEmail = (role) => `${PREFIX}${role.startsWith(CARD_ROLE_PREFIX) ? role.slice(CARD_ROLE_PREFIX.length) : role}${DOMAIN}`.replace(/_/g, "-");
 if (args.includes("--remove")) {
   // Other streams share this project and hold their own logins: removing is always by name, never a blanket sweep by default.
@@ -140,7 +148,7 @@ const portIdx = args.indexOf("--port");
 const cardsIdx = args.indexOf("--cards");
 const cardsArg = cardsIdx >= 0 ? args[cardsIdx + 1] : null;
 if (cardsIdx >= 0 && (!cardsArg || cardsArg.startsWith("--"))) throw new Error("--cards needs a comma-separated list of card keys");
-const positional = args.find((a, i) => !a.startsWith("--") && i !== (portIdx >= 0 ? portIdx + 1 : -1) && i !== (cardsIdx >= 0 ? cardsIdx + 1 : -1));
+const positional = args.find((a, i) => !a.startsWith("--") && i !== (portIdx >= 0 ? portIdx + 1 : -1) && i !== (cardsIdx >= 0 ? cardsIdx + 1 : -1) && i !== (args.indexOf("--label") >= 0 ? args.indexOf("--label") + 1 : -1));
 let role = positional;
 if (cardsArg && positional) throw new Error("give a role or --cards, not both");
 if (!role && !cardsArg) throw new Error("usage: node scripts/dev-signin.mjs <role> [--port N]   |   --cards a,b [--port N]   |   --remove");
