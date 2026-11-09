@@ -76,7 +76,7 @@ const manual: Manual = {
             "You land on your home screen: one tile for each card you have been given on Who does what. Sign out any time with the Sign out button at the top right.",
             "After those tiles come up to three more, for the pages the menu used to be the only way into: My tasks (with how many are due today or overdue) if you have recurring tasks, and Operations and Management if your cards open a page in them. A set of cards that opens none of these shows none of them. The last tile is always User manual, which opens this manual whatever cards you hold, so it can be found even on a home with no menu.",
             "Forgotten your password? Tap Forgot password? under the Sign in button, enter your email, and follow the link in the message to choose a new one — it's valid for an hour. If you were given a temporary password and it's lost, ask an admin to issue another instead.",
-            "To change your password at any time, pick Change password from the bottom of the menu. You'll be asked for your current password first, and once it's changed every other phone or computer signed in as you is signed out — you stay signed in on this one. If you've forgotten the current one, sign out and use Forgot password? instead.",
+            "To change your password at any time, open Change password (at the bottom of the menu, for a login that has a menu). You'll be asked for your current password first, and once it's changed every other phone or computer signed in as you is signed out — you stay signed in on this one. If you've forgotten the current one, sign out and use Forgot password? instead.",
             "The top of every screen shows who is signed in — your name and your role, such as \"Noi · Volunteer\". Tap it to see the email address of the account, change your name (under Change password), or sign out. If your account has no name yet, the email is shown instead; add one under Change password so people can tell you from someone with the same first name.",
             "New here and don't have an account? Tap Request access under Continue with Google, then Continue with Google and choose the Google account you want to use. You'll be told you don't have access yet — that is the request being sent. An administrator sees it under Access requests and approves you; try signing in again later. Without a Google account, the same page gives the shelter's email: email and password logins are created by an administrator, not requested.",
           ],
@@ -167,24 +167,25 @@ const manual: Manual = {
           id: "navigation",
           everyone: true,
           title: "Finding your way around",
+          intro:
+            "Your home screen is where you start: one tile for each card you hold, and the User manual last. Tap a tile to open that page.",
           steps: [
-            "On a computer the menu is always visible down the left, each link with its own icon: Home and My tasks at the top, then Residents and Operations — and, depending on your role, Management and Settings. A doctor's menu is just Appointments and Residents.",
-            "Operations, Management and Settings each open a front page of tiles, one for each page inside that you can open; Residents does the same for a resident's record. The same icons are used on the tiles and in the menu, and the menu entry stays lit while you are on any page inside it.",
-            "Under a dividing line at the very bottom of the menu sit the things you only need now and then, so they are always in the same place: this manual, Release notes, Change password and — for admins — Security, where accounts and roles are managed.",
-            "On a phone tap the ☰ button at the top left to open the same menu; tap outside it to close. The same links are the last entries in it, below the same line.",
+            "Some logins also have a menu: down the left on a computer, or behind the ☰ button at the top left on a phone (tap outside it to close). It lists the same pages the tiles open, each with the same icon, and the entry stays lit while you are on a page inside it. Whether your login has a menu is chosen for it on Who does what. If you see none, the tiles on your home screen are the way into everything you can open.",
+            "Operations, Management and Settings, where your cards open pages in them, each open a front page of tiles, one for each page inside that you can open. Residents does the same for a resident's record.",
+            "At the bottom of the menu, under a dividing line, sit the things you only need now and then: this manual, Release notes, Change password and, for a login that manages accounts, Security.",
             "The LCA logo and your email are in the header, with the Assistant button, the language switch and Sign out. Tap the logo to see the public website as a visitor does — it opens in a new tab so you don't lose your place.",
-            "Open a page your role doesn't include — a link someone sent you, or a job that points at Stocktake — and you see You don't have access to this page, still inside the app, with a Go to My tasks button. If you need that page for your work, ask a manager or an admin.",
+            "Open a page your cards don't include — a link someone sent you, say — and you see You don't have access to this page, still inside the app, with a button back to a page you can use. If you need that page for your work, ask a manager or an admin to give you the card for it.",
           ],
           screenshot: {
             src: "/manual/nav-mobile.png",
             alt: "The phone menu drawer open over the residents list",
-            caption: "The menu on a phone. On a computer the same links sit in a sidebar.",
+            caption: "The menu on a phone, for a login that has one. On a computer the same links sit in a sidebar.",
             mobile: true,
           },
         },
         {
           id: "shelter-operations",
-          everyone: true,
+          // UNASSIGNED (2026-11-09, manual-topics-by-card): the Operations front page opens for any one of a dozen cards, so no one card owns it.
           title: "Operations: the daily work",
           path: "Operations (in the menu)",
           intro:
@@ -205,14 +206,14 @@ const manual: Manual = {
           id: "release-notes",
           everyone: true,
           title: "What changed: release notes",
-          path: "Release notes (bottom of the menu)",
+          path: "Release notes",
           intro:
-            "Every update to the system is listed on the Release notes page, newest at the top, in plain words: what you will notice, not how it was built. Everyone who can sign in can read it, and it opens on the changes for your own role.",
+            "Every update to the system is listed on the Release notes page, newest at the top, in plain words: what you will notice, not how it was built. Everyone who can sign in can read it, and it opens on the changes that are for you.",
           steps: [
-            "Open Release notes from the bottom of the menu.",
+            "Open Release notes. In the menu it is at the bottom, under the dividing line.",
             "Each release shows its number, the date it was prepared and the environment you are looking at. A Major badge marks a release worth reading before you carry on working.",
             "Click a release to see what changed in it, and click it again to fold it away. The newest release is already open.",
-            "The page lists the changes for your role and the ones for everyone. Every release stays in the list, so the numbers run in order; one with nothing for your role carries a badge saying so — Nothing for Doctor, for a doctor — and opening it says its changes are for other roles. Show everything, at the top, lists every change, greyed where it isn't for your role.",
+            "The page lists the changes for you and the ones for everyone. Every release stays in the list, so the numbers run in order; one with nothing for you carries a badge saying so, and opening it says its changes are for others. Show everything, at the top, lists every change, greyed where it isn't for you.",
             "Admins also get each major release by email. The subject starts with [UAT] or [Production], so a test release is never mistaken for a live one.",
           ],
           callouts: [
@@ -336,7 +337,7 @@ const manual: Manual = {
         },
         {
           id: "home-covering-another-role",
-          everyone: true,
+          // UNASSIGNED (2026-11-09, manual-topics-by-card): about holding a second set of cards for a while, which no card grants.
           title: "Home screen: if you cover another role",
           path: "Home",
           intro:
@@ -390,7 +391,8 @@ const manual: Manual = {
       topics: [
         {
           id: "residents-list",
-          everyone: true,
+          activity: "resident.record",
+          activityLevel: "read",
           title: "Finding a resident",
           path: "Residents",
           steps: [
@@ -429,18 +431,30 @@ const manual: Manual = {
             },
             {
               kind: "note",
-              text: "If your cards give you \"Who a resident is and where they are, nothing more\" and not the full record, the list is who and where only: name, ID, enclosure, zone and status. The spreadsheet download holds only those columns (plus species and sex). There is no microchip search or No microchip filter, no ticking residents, no new resident and no pencil, and no search by other names.",
-            },
-            {
-              kind: "note",
               text: "On a login that works by its own clinic, the list is your clinics': every resident your clinics have a clinic visit, prescription, procedure or blood test for — a cancelled visit included — plus every resident you were the doctor for at a clinic you have since left, and no one else. You can read those but not change them: you add and change records only at the clinics you work at now. The line under the heading names the clinic. A resident appears once the shelter books them a visit with you, and their hub shows all of their history, other clinics' visits included. A login whose doctor works at more than one clinic sees the residents of all of them; the line under the heading names the clinics. A clinic login not linked to a doctor record sees no residents until an admin links it (Accounts and roles).",
             },
           ],
         },
         {
+          id: "residents-list-who-and-where",
+          title: "Finding a resident: who and where",
+          cards: ["enclosures"],
+          path: "Residents",
+          intro:
+            "With \"Who a resident is and where they are, nothing more\" instead of the full record, the list is who and where only: name, ID, enclosure, zone and status.",
+          steps: [
+            "Open Residents. Every resident is listed by name with their ID, enclosure, zone and status. Residents who have died are left out; Show all brings them back, dimmed.",
+            "Type part of a name (English or Thai) or an ID such as R-0042 in Search and tap Filter. Searching by an \"also known as\" name finds nothing.",
+            "Tap a zone chip to add that zone, tap it again to take it off; All zones clears them. Picking no chip shows everyone. Tap a heading to sort by it, and again to reverse it.",
+            "Tap a resident's name to open their page.",
+            "Download spreadsheet saves the residents you are looking at as a CSV file for Excel or Google Sheets. It holds only the columns you can see, plus species and sex.",
+            "There is no microchip search or No microchip filter, no ticking residents, no new resident and no pencil.",
+          ],
+        },
+        {
           id: "name-card",
           title: "Scanning a name card",
-          everyone: true,
+          cards: ["enclosures"],
           path: "Hold your phone to a resident's name card",
           intro:
             "Every resident has a name card with an NFC chip. Hold the top of your phone to it (an iPhone XS or later, or an Android phone with NFC on) and the resident's page opens. What you see depends on who you are, but never less than a visitor sees.",
@@ -547,7 +561,8 @@ const manual: Manual = {
         },
         {
           id: "hub",
-          everyone: true,
+          activity: "resident.record",
+          activityLevel: "read",
           title: "The resident hub",
           path: "Residents → (a resident)",
           intro:
@@ -567,11 +582,18 @@ const manual: Manual = {
             alt: "A resident hub with the details card, housing card and medical cards",
             caption: "A resident hub. Green, orange and red card colours mean fine, needs attention soon, and overdue or missing.",
           },
-          callouts: [
-            {
-              kind: "note",
-              text: "With \"Who a resident is and where they are, nothing more\" instead of the full record, the page is smaller: photo, name, ID, species, sex, status and the enclosure and zone, and a link to the enclosure. Everything else on the hub, and everything it links to, is not opened.",
-            },
+        },
+        {
+          id: "hub-who-and-where",
+          title: "A resident's page: who and where",
+          cards: ["enclosures"],
+          path: "Residents → (a resident)",
+          intro:
+            "With \"Who a resident is and where they are, nothing more\" instead of the full record, a resident's page is small. It is there to tell you who the animal is and where to find them.",
+          steps: [
+            "Top: the profile photo, name, ID, species, sex and status.",
+            "Below it, the enclosure and zone the resident is in, with a link to the enclosure.",
+            "That is all of it. There is no pencil, no housing actions and no medical cards, and nothing the page would link to is opened.",
           ],
         },
         {
@@ -1108,27 +1130,27 @@ const manual: Manual = {
         },
         {
           id: "add-photos-unknown",
-          title: "Adding photos: if you don't know the resident",
+          title: "Adding a photo",
           activity: "photos.shelter_add",
           path: "Home → Add Shelter Photos",
           intro:
-            "You took a photo but do not know which animal is in it? Tag the enclosure you were standing in. Management then chooses the animal. The photo is not shown to anyone outside the shelter in the meantime.",
+            "Take a photo at the shelter and say who is in it. If you know the animal, name them; if you do not, tag the enclosure you were standing in and whoever approves photos chooses the animal. Either way the photo is not shown to anyone outside the shelter until it has been approved.",
           steps: [
             "Tap Add Shelter Photos, then take or choose the photo, and tap it.",
-            "Tap I don't know, tag the enclosure. (If you do know who it is, tap I know who it is and carry on as usual.)",
-            "Tap the zone, then tap the enclosure you were in. The enclosures you tagged last are at the top, so a walk round one zone is quick. The photo is saved at once, and the next photo is picked for you.",
+            "If you know who it is, tap I know who it is, then tap the resident in the photo. The photo is saved against that animal and the next photo is picked for you.",
+            "If you do not know who it is, tap I don't know, tag the enclosure. Tap the zone, then tap the enclosure you were in. The enclosures you tagged last are at the top, so a walk round one zone is quick. The photo is saved at once, and the next photo is picked for you.",
             "Many photos from one enclosure? Tap All to the same resident, then tap the enclosure once.",
-            "Management sees the photo on Photos to approve as Taken in that enclosure, resident not chosen. They are shown the animals that were recorded in that enclosure that day, each with their own photo, or can search for anyone else. One photo can be given to several animals.",
+            "A photo you tagged to an enclosure appears for approval as Taken in that enclosure, resident not chosen. Whoever approves photos is shown the animals that were recorded in that enclosure that day, each with their own photo, or can search for anyone else. One photo can be given to several animals.",
             "When they choose, the photo is filed in each animal's Shelter folder and approved. They can instead choose Keep it off the website: the photo is still filed, but it is not approved. They can also discard a photo.",
           ],
           callouts: [
             {
               kind: "note",
-              text: "The list of enclosures shows the places where an animal is living now. If the enclosure you were in is empty, it may not be in the list: ask Management to add the photo to the animal instead.",
+              text: "The list of enclosures shows the places where an animal is living now. If the enclosure you were in is empty, it may not be in the list: ask whoever approves photos to add the photo to the animal instead.",
             },
             {
               kind: "note",
-              text: "Management: a photo not assigned within 30 days appears on Settings → System status under Photos with no resident.",
+              text: "A photo not assigned to an animal within 30 days appears on Settings → System status under Photos with no resident.",
             },
           ],
         },
@@ -1136,6 +1158,7 @@ const manual: Manual = {
           id: "memes",
           title: "Memes: adding one and recording where it went",
           activity: "social.library",
+          activityLevel: "read",
           path: "Home → Meme library (or Management → Memes)",
           intro:
             "The meme library keeps the memes the shelter makes elsewhere (a phone app, Canva) and a record of where each one has been posted, so nobody posts the same joke twice and the next post is easy to pick. Memes are never shown on the website: they can be made from medical or sad photos, and a joke needs its context.",
@@ -1181,6 +1204,29 @@ const manual: Manual = {
             {
               kind: "warning",
               text: "Think before you post. A joke made from a sad or sick animal reaches the internet under the shelter's name. Photos filed under Medical cannot be made into memes, and neither can photos still waiting for approval.",
+            },
+          ],
+        },
+        {
+          id: "reels-add",
+          title: "Reels: adding one and recording where it went",
+          activity: "social.reels",
+          activityLevel: "read",
+          path: "Home → Reels",
+          intro:
+            "The reels library keeps the shelter's short videos to post on Facebook, each with a description whose #tags name the animals in it. Reels are never shown on the website. A card that only browses can look through the reels, play and download one, and sees none of the buttons below that change anything.",
+          steps: [
+            "Tap Reels on your home screen. The reels are listed with a Play button, their description and where each has been posted, or Not posted yet.",
+            "To add one, tap Add a reel, then Choose from phone or photo library and pick the video (an MP4 or iPhone video up to 500 MB). It goes straight to Google Drive, so a long clip can take a few minutes; if the connection drops it tries again by itself.",
+            "Write the Description, the words you post with it. Type # and an animal's name to tag that animal; any other #word is kept as a hashtag.",
+            "Check the Date taken. It is not read from the file, so it is whatever you enter. Tap Save reel.",
+            "Tap a reel to open it. Download saves the video to your phone so you can post it. When you have posted it, tap Record where it was posted.",
+            "Edit changes the description, the date and the animals in it.",
+          ],
+          callouts: [
+            {
+              kind: "note",
+              text: "Archiving a reel, bringing one back and taking a post record off need the Reels library card, which does everything. A card that only adds and changes reels does not show those buttons.",
             },
           ],
         },
@@ -1681,7 +1727,10 @@ const manual: Manual = {
           id: "manage-medications",
           title: "Managing medications",
           activity: "stock.medications",
+          activityLevel: "read",
           path: "Management → Medication stock; the list itself is Settings → Medications",
+          intro:
+            "With the Medicine forecast card you can read the Medication stock page and its forecast, and change nothing. The steps below are for a login that can change it.",
           steps: [
             "Medications live on two pages. Settings → Medications is the list itself, changed by a login whose cards include the setup lists: names, units, merging duplicates, and the units each one is bought and counted in. Management → Medication stock is what changes day to day: how much is in the cupboard, the price, when to reorder, the label photo and the forecast. Each page has a link to the other at the top, shown when your cards open both.",
             "On Settings → Medications, the table is the product list the prescription form offers. Add one with its name and unit (tablet vs suspension are two medications); rename or fix a unit with Edit. That unit is the medication's base unit: doses, prescriptions and the forecast stay in it. A new medication is not priced: set its price on Medication stock.",
@@ -1708,7 +1757,10 @@ const manual: Manual = {
           id: "manage-diets",
           title: "Managing diets and the food forecast",
           activity: "stock.diets",
+          activityLevel: "read",
           path: "Management → Diet stock; the list itself is Settings → Diets",
+          intro:
+            "With the Food forecast card you can read the Diet stock page and its forecast, and change nothing. The steps below are for a login that can change it.",
           steps: [
             "Diets live on two pages. Settings → Diets is where the Set up diets card keeps the diets (recipes) and the ingredients they are made of; Management → Diet stock is what changes day to day: how much of each ingredient is in the cupboard, the price, when to reorder and the food forecast. Each page has a link to the other at the top, shown when your cards open both.",
             "Settings → Diets is a recipe book with two tabs: Diets (recipes) and Ingredients. Diets shows a card for each diet: its name, a Standard badge if it is the standard one, how many residents are on it and, in plain words, what a medium dog gets in a day (1 cup kibble · 1.5 cups chicken · 1.5 cups rice). Tap Add a diet, give it a name (Diabetic, say) and you land on that diet's own page. There, Add ingredient opens a small form: choose the ingredient, choose what it is measured in (its own unit, or a cup, a bag…) and enter how much goes in ONE serving. A diet is written as one serving (1 serving = 0.5 cup kibble, 1 egg, 0.5 cup rice, 50 g chicken), and a serving is one day's food. Under the list, Servings by size says how many servings a small, medium and large animal gets in a day (1, 1.5 and 2 to start with; change them for a diet that needs it, then tap Save servings). Each line also shows what that works out to per day for each size, and an animal's own portion setting is multiplied on top. Each line has Edit and Remove. Total daily serve adds the lines up for each size (Medium: 4 cups), so a recipe that does not add up is easy to see. On the feeding list each meal shows the day's amount divided by the meals a day, with the day's total beside it. Purchasing orders each ingredient in its own pack size, not the diet. Rename, Make Standard and Delete are on the diet's page too. A diet on any resident's record can't be deleted, and the last ingredient of a diet residents are on can't be removed — add its replacement first. Edit an amount and it flows straight through to the forecast.",
@@ -1727,6 +1779,20 @@ const manual: Manual = {
             src: "/manual/management-diets.png",
             alt: "The diet stock page with the forecast and costs",
           },
+        },
+        {
+          id: "diet-settings",
+          title: "Setting up diets",
+          activity: "diets.settings",
+          path: "Settings → Diets",
+          intro:
+            "Settings → Diets is the recipe book: the diets the shelter feeds and the ingredients they are made of. Changing a diet changes what every resident on it is fed, so it belongs to whoever holds the Set up diets card.",
+          steps: [
+            "Open Settings and tap Diets. It has two tabs: Diets (recipes) and Ingredients.",
+            "Tap Add a diet, give it a name (Diabetic, say) and you land on that diet's own page. There, Add ingredient to say what it is made of and how much a dog or cat gets in a day.",
+            "On the Ingredients tab, add or rename an ingredient. What it is bought and counted in comes from Settings → Units.",
+            "How much of each ingredient is in the cupboard, its price and when to reorder are not here: that is Management → Diet stock (see Managing diets and the food forecast).",
+          ],
         },
         {
           id: "medication-list",
@@ -1923,6 +1989,21 @@ const manual: Manual = {
           ],
         },
         {
+          id: "bill-sites",
+          title: "Bills settings: places, accounts and kinds",
+          activity: "bills.sites",
+          path: "Operations → Deliveries → Bills → Bills settings",
+          intro:
+            "The lists a bill is filed against: the places the shelter pays bills for, the accounts at suppliers, and what a bill can be for. Nothing is set up in advance, so the shelter types its own in.",
+          steps: [
+            "Open Bills settings from the Bills page. It has three tabs: Places, Accounts and Kinds of bill.",
+            "Places: type the name of a place the shelter pays bills for, such as the shelter itself or another property, and tap Add place.",
+            "Accounts: type the supplier, the account number if there is one, and tie it to a place and a kind of bill if it belongs to them. Tap Add account.",
+            "Kinds of bill: add a kind, and say where it sits. A kind you add gets the plain bill form.",
+            "Nothing is deleted. A place, account or kind that is no longer used is archived, so bills already filed keep their label, and Restore brings it back.",
+          ],
+        },
+        {
           id: "maintenance-bills",
           title: "Maintenance: adding a bill to a job",
           activity: "maintenance.bills",
@@ -1977,9 +2058,10 @@ const manual: Manual = {
           id: "cashflow",
           title: "The cashflow forecast",
           activity: "reports.cashflow",
+          activityLevel: "read",
           path: "Management → Cashflow",
           intro:
-            "Food, medication, vaccinations, clinic visits and maintenance are each forecast on their own page in their own unit. This is the one page where they add up, in baht — together with the shelter's fixed monthly costs (rent, electricity, salaries and the like).",
+            "Food, medication, vaccinations, clinic visits and maintenance are each forecast on their own page in their own unit. This is the one page where they add up, in baht — together with the shelter's fixed monthly costs (rent, electricity, salaries and the like). With the View cashflow card you can read the page and change nothing.",
           steps: [
             "Pick a window: Next 30 days or Next 90 days, or enter From and To dates for any period up to a year.",
             "The three cards are the window's total, the average month, and how many items still have no price. Below them, a stacked column — one column per month, one colour per category — and the table it is drawn from.",
@@ -2017,6 +2099,7 @@ const manual: Manual = {
           id: "expenses",
           title: "The expense report",
           activity: "reports.expenses",
+          activityLevel: "read",
           path: "Management → Expenses",
           intro:
             "What the shelter has spent, by type and by month, with a link to the receipt on every line. It is made for an outside accountant: a login holding only the View expenses card sees this page and nothing else, and it cannot change anything.",
@@ -2047,6 +2130,31 @@ const manual: Manual = {
             "Medicine and clinic names are mostly drug, brand or proper names that read the same in Thai, so an empty one says Shown as typed rather than missing, and it is not counted. Give one Thai only if it should read differently, such as Subcutaneous Fluids.",
             "For long text, write the translation in the box and tap Save & approve. Only an approved translation is shown to readers of that language; until then they see the original. Remove translation takes one down. The same box appears under the text on the resident's page, on the project folder and on the maintenance job, so you can translate right after writing without coming here. Nobody has to translate internal notes (weights, clinic visits, prescriptions): those stay as typed.",
             "Every list with a short name also has a Thai name box of its own: Settings → Diets, Medications, Frequencies and the immunization, procedure and blood test types; the units on a diet or medicine; Management → Clinics; and Cashflow → Fixed outgoings. So a new diet or vaccine can be given its Thai as it is added. Whichever box you use, it is the same Thai, and it shows straight away on every screen to anyone reading in Thai.",
+          ],
+        },
+        {
+          id: "translations-propose",
+          title: "Translating: proposing Thai wording",
+          activity: "translations.propose",
+          path: "Management → Translations",
+          intro:
+            "With the Propose translations card you can write the Thai for a short name and leave it for someone to read and approve. Nothing you propose is shown anywhere until it is approved.",
+          steps: [
+            "Open Translations. The box at the top says how many names are missing Thai; tap a section's name to jump to it.",
+            "For a short name (a diet, a medicine, a vaccine…), type the Thai in the box and tap Propose. The button then reads Proposed.",
+            "Your proposal waits for someone with the card that approves translations. Until then nobody sees it on any screen or on the public website.",
+          ],
+        },
+        {
+          id: "translations-view",
+          title: "Translating: reading the translations",
+          cards: ["view_translations"],
+          path: "Management → Translations",
+          intro:
+            "With the View translations card you can see what has been translated and what is missing, and change nothing.",
+          steps: [
+            "Open Translations. The box at the top says how many are missing, how many are out of date and how many are waiting; tap a section's name to jump to it.",
+            "Show, above that box, picks Missing, Waiting or everything.",
           ],
         },
       ],
@@ -2169,6 +2277,44 @@ const manual: Manual = {
             src: "/manual/admin-website.png",
             alt: "The website admin page",
           },
+        },
+        {
+          id: "website-gallery",
+          title: "The website photo gallery",
+          activity: "website.gallery",
+          path: "Management → Website → Gallery",
+          intro:
+            "The Gallery tab holds the photos shown on the public site. Changing it changes the public site straight away.",
+          steps: [
+            "Open Management → Website and tap the Gallery tab. The photos are shown in the order visitors see them.",
+            "To add one, choose a photo from your phone or computer and describe it in a few words in English (Thai is optional). The description is required, because the public page reads it aloud to visitors who cannot see the photo.",
+            "Move earlier and Move later change the order. Remove takes a photo out of the gallery after asking first.",
+          ],
+        },
+        {
+          id: "website-propose",
+          title: "Proposing a change to the website",
+          activity: "website.propose",
+          path: "Management → Website",
+          intro:
+            "With the Propose website changes card you can draft a change to the website's settings and leave it for someone to approve. The live site does not change until they do.",
+          steps: [
+            "Open Management → Website. You get the settings form on its own.",
+            "Make your change and save it. It is saved as a draft: it will appear on the website once someone approves it.",
+          ],
+        },
+        {
+          id: "approve-text",
+          title: "Approving the public text",
+          activity: "text.approve",
+          path: "Public text to approve",
+          intro:
+            "Words that will appear on the public website wait here until someone has read them: a resident's story, an adoption update, an appeal, an event.",
+          steps: [
+            "Open Public text to approve. It says how many pieces of text are waiting, each with what it is for (Resident, Adoption update, Appeal, Event…) and which field it came from.",
+            "Read it. Tap Approve if it can be shown on the website, or Keep private for words that must never be shown.",
+            "Until it is approved, the website does not show those words.",
+          ],
         },
         {
           id: "website-hide-pages",
@@ -2340,7 +2486,8 @@ const manual: Manual = {
       topics: [
         {
           id: "public-pages",
-          everyone: true,
+          activity: "website.content",
+          activityLevel: "read",
           title: "The public pages",
           steps: [
             "Home: the heading with Meet the animals and Give monthly (which opens the Donate page for now) beside the hero photo; four live counts (in care, adopted this year, in foster care, in treatment); the Shelter Friends band, once someone is published; four ways to help (Adopt, Sponsor a resident, Foster, Volunteer); and the Pet of the week beside Our story, its first three gallery photos and a link to Our work.",

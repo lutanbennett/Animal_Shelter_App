@@ -97,7 +97,7 @@ register(
       }`),
 );
 const { cardsOfTopic } = await load("src/lib/manual/for-topic.ts");
-const { isCardKey } = await load("src/lib/permissions/cards.ts");
+const { isCardKey, bundleOfCards } = await load("src/lib/permissions/cards.ts");
 const { loadSeed } = await load("scripts/lib/permission-seed.mjs");
 const seed = loadSeed(repo);
 /** "placement.move" or "resident.record:read" -> the roles that hold it today, or null when the key is unknown. */
@@ -213,7 +213,7 @@ const topicRoles = (t) => {
   if (own.kind === "everyone") return SIGNED_IN;
   if (own.kind === "unassigned") return SIGNED_IN.filter((r) => (t.awaitingCard ?? SIGNED_IN).includes(r));
   if (t.activity) return (holders(t.activityLevel === "read" ? `${t.activity}:read` : t.activity) ?? []).filter((r) => SIGNED_IN.includes(r));
-  return SIGNED_IN.filter((r) => own.cards.every((k) => CARDS[k].bundle.every((b) => (holders(b.level === "read" ? `${b.activity}:read` : b.activity) ?? []).includes(r))));
+  return SIGNED_IN.filter((r) => own.cards.every((k) => [...bundleOfCards([k])].every(([activity, level]) => (holders(level === 1 ? `${activity}:read` : activity) ?? []).includes(r))));
 };
 
 for (const t of topics) {
