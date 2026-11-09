@@ -21,7 +21,7 @@
 ## 2. Automated gates
 
 - [x] `node scripts/gates.mjs` ended `gates: typecheck=0 lint=0 test=0 build=0`
-- [ ] CI green on the PR — pending: PR not yet open
+- [ ] CI green on the PR — pending: CI on this PR (checked before merge)
 
 ## 3. Schema and data
 
@@ -46,7 +46,7 @@
 | exactly `website.content` (and admin) | /admin/website, missing state | button drawn; press inserts the row | pending: not driven in a browser (would delete Test's live row); structural test + #1424 harness |
 | a login without it | insert | refused | pass (harness) |
 
-- [ ] A login that should not have access is blocked server-side — n/a here: action checks website.content, policy refuses otherwise (#1424 harness)
+- [ ] A login that should not have access is blocked server-side — n/a: the action checks website.content and the policy refuses otherwise, proved in #1424
 
 ## 5. Cross-cutting
 
