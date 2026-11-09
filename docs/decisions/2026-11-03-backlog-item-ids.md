@@ -70,8 +70,17 @@ nothing.
 **A lone CR was sitting mid-sentence inside one completed item** (line 397 at
 the time). It made that line invisible to any pattern built on `.`, which is how
 it was found — the id script reported 934 items against 935 checkboxes. The
-character is removed, and both scripts now use `[\s\S]` and report any
-control character they meet inside a line rather than skipping it silently.
+character is removed, and both scripts now use `[\s\S]` ~~and report any
+control character they meet inside a line rather than skipping it silently~~.
+
+**CORRECTED 2026-11-09:** the struck-out claim was not true when written.
+Both scripts only stripped a trailing CR and reported no other control character,
+which is how a `0x08` sat in the file for weeks while `check-backlog-ids.mjs`
+answered `ok` (backlog item `#ayl1h`). Since
+`docs/decisions/2026-11-08-backlog-binary-guard.md`, **`check-backlog-ids.mjs`**
+refuses any C0 control character other than TAB and LF, and any CR that does not
+end a line. **`check-backlog-sections.mjs` still does not**, and does not need to:
+both run on every commit touching the file, in the pre-commit hook and in CI.
 
 ## A hook change does not take effect where you edited it
 
