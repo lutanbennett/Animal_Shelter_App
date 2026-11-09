@@ -88,7 +88,13 @@ export function ReceiptCard({
         setMessage({ kind: "error", text: d.shareFailed });
         return;
       }
-      await navigator.share({ files: [file], title: receipt.number });
+      // title becomes the subject and text the body in Gmail on Android; the PDF
+      // really is attached on this path, so the "is attached" wording is true.
+      await navigator.share({
+        files: [file],
+        title: d.emailSubject(receipt.number),
+        text: d.emailBody(donorName, receipt.number),
+      });
     } catch (error) {
       // Closing the share sheet is not a failure.
       if (error instanceof DOMException && error.name === "AbortError") return;
@@ -99,7 +105,7 @@ export function ReceiptCard({
   const mailto =
     `mailto:${encodeURIComponent(donorEmail ?? "")}` +
     `?subject=${encodeURIComponent(d.emailSubject(receipt.number))}` +
-    `&body=${encodeURIComponent(d.emailBody(donorName, receipt.number))}`;
+    `&body=${encodeURIComponent(d.emailBodyNoFile(donorName, receipt.number))}`;
 
   async function confirmVoid() {
     if (!reason.trim()) {
