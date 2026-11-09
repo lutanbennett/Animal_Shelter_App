@@ -67,7 +67,8 @@ export type NewCardKey =
   | "approve_website"
   | "view_expenses"
   | "project_folders"
-  | "suppliers";
+  | "suppliers"
+  | "diet_settings";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -203,6 +204,10 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // edit: the supplier list, a supplier's page, add, change, archive and restore. Not friends.manage (making a supplier a Shelter Friend is
   // Publish Shelter Friends) and not stock.delivery (recording a delivery that names one). Edit implies read, so the screen opens.
   suppliers: { includes: [], bundle: [{ activity: "suppliers.directory", level: "edit" }], opens: "/management/suppliers" },
+  // 0340 (2026-11-09, #d3cw7): Settings → Diets on one card, Lutan 2026-11-08. Exactly diets.settings: the recipe book, the ingredients,
+  // their ways of measuring, add, change and delete. Not stock.diets (cost, counts and the forecast are /management/diets, the food
+  // forecast card) and not reference.types (the other setup lists). Before this the page needed those two cells together.
+  diet_settings: { includes: [], bundle: [{ activity: "diets.settings" }], opens: "/admin/diets" },
   recurring_jobs: {
     includes: [],
     bundle: [{ activity: "recurring.manage" }, { activity: "recurring.do_any" }, { activity: "recurring.do_own" }],
@@ -472,6 +477,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   view_translations: (t) => t.appHome.cards.viewTranslations,
   project_folders: (t) => t.appHome.cards.projectFolders,
   suppliers: (t) => t.appHome.cards.suppliers,
+  diet_settings: (t) => t.appHome.cards.dietSettings,
   food_forecast: (t) => t.appHome.cards.foodForecast,
   medicine_forecast: (t) => t.appHome.cards.medicineForecast,
   view_cashflow: (t) => t.appHome.cards.viewCashflow,

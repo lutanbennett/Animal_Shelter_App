@@ -70,6 +70,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "Settings → Diets now opens on one card of its own, Set up diets: the recipe book, the ingredients and the ways each is measured. Before, the page quietly needed two other permissions together, so giving someone just one of them showed nothing and said nothing. Nobody holds the new card yet; give it under Settings → Who does what to whoever should keep the diets. The Thai wording has not been checked by a Thai speaker.",
+    cards: ["diet_settings"],
+  },
   "Photos to approve: each event photo now shows the event's date under its title, so two events with similar names can be told apart. Two messages on the photo screens were also corrected: the resident picker no longer tells you to ask an admin (it now says to ask whoever manages cards at your shelter), and the 30-day alert on the status page no longer says a waiting photo is tagged to an enclosure, since a photo can now be saved with no place at all. The Thai wording has not been checked by a Thai speaker.",
   "Every home screen now ends with a User manual tile, so the manual is one tap away even if your home has no menu. It was always in the menu under your name at the top right; the tile just makes it easy to find.",
   {

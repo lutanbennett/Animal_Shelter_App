@@ -9,6 +9,9 @@
  * every save refused. Lutan chose Admin only in chat on 2026-10-08 over reusing `stock.*` alone,
  * which the Management role holds and which would have put a Settings section in its menu.
  *
+ * SETTINGS → DIETS LEFT THIS HELPER IN 0340 (#d3cw7): it asks diets.settings, one card, everywhere. The "diet" kind is still
+ * asked here only by Settings → Units, which opens for whoever may set up either kind of item and is unchanged.
+ *
  * Pure and client-safe, like can().
  */
 

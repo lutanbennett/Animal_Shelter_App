@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { loadPermissions } from "@/lib/permissions/load";
-import { canEditItemSettings } from "@/lib/permissions/item-settings";
+import { can } from "@/lib/permissions/can";
 
 // Settings → Diets, the recipe half (0239): a diet is a recipe of ingredients
 // (diet_types). Ingredients, stock and prices stay in ./actions.ts and
@@ -41,7 +41,7 @@ function optional(value: FormDataEntryValue | string | null | undefined) {
 }
 
 async function refusal() {
-  if (canEditItemSettings(await loadPermissions(), "diet")) return null;
+  if (can(await loadPermissions(), "diets.settings")) return null;
   const { t } = await getT();
   return refuse(t.admin.security.errors.adminAccessRequired);
 }
@@ -60,12 +60,11 @@ function revalidateRecipePages() {
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
+/** How many diet records name this diet, through diet_usage() (0340): this card counts them, it does not read them. */
 async function residentRecordCount(supabase: Supabase, dietId: string) {
-  const { count, error } = await supabase
-    .from("resident_diets")
-    .select("id", { count: "exact", head: true })
-    .eq("diet_id", dietId);
-  return { count: count ?? 0, error };
+  const { data, error } = await supabase.rpc("diet_usage");
+  const rows = (data ?? []) as { diet_id: string; records: number }[];
+  return { count: Number(rows.find((row) => row.diet_id === dietId)?.records ?? 0), error };
 }
 
 export async function createRecipe(_state: RecipeFormState, formData: FormData): Promise<RecipeFormState> {

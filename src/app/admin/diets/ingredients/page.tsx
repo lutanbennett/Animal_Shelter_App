@@ -3,18 +3,19 @@ import { Boxes } from "lucide-react";
 import { ActionLink } from "@/components/ActionLink";
 import { getT } from "@/lib/i18n/get-t";
 import { dietUnitLabel } from "@/lib/i18n/enum-labels";
-import { refuseFor } from "@/lib/auth/require-role";
-import { canEditItemSettings } from "@/lib/permissions/item-settings";
 import { requirePermission } from "@/lib/permissions/require";
+import { canOpen, routeFor } from "@/lib/permissions/routes";
 import { loadRecipeBook } from "@/lib/diets/recipe-book";
 import { AddIngredientButton } from "../AddButtons";
 import { DietTabs } from "../DietTabs";
 
 /** Settings → Diets, the ingredients tab: what is bought and counted. Tap one for its own page. */
 export default async function IngredientsPage() {
-  const { supabase, perms } = await requirePermission("reference.types", "edit");
-  if (!canEditItemSettings(perms, "diet")) refuseFor(perms);
+  const { supabase, perms } = await requirePermission("diets.settings");
   const { t } = await getT();
+  // The Stock link goes to /management/diets, which asks stock.diets: drawn only for a login that page lets in.
+  const stockRoute = routeFor("/management/diets");
+  const stockOpens = stockRoute ? canOpen(perms, stockRoute) : false;
   const book = await loadRecipeBook(supabase);
   const s = t.admin.diets;
 
@@ -29,7 +30,7 @@ export default async function IngredientsPage() {
         <h1 className="text-2xl font-semibold text-foreground">{s.title}</h1>
         <p className="text-sm text-muted">{s.ingredientsSubtitle}</p>
         <div className="mt-3 flex flex-wrap gap-2">
-          <ActionLink href="/management/diets" label={s.stockLink} icon={Boxes} iconOnlyOnMobile={false} />
+          {stockOpens && <ActionLink href="/management/diets" label={s.stockLink} icon={Boxes} iconOnlyOnMobile={false} />}
         </div>
       </div>
 

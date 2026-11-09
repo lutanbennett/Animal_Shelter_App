@@ -17,7 +17,8 @@ import { normaliseDescription } from "@/lib/management/described-lines";
  * figure, and stock for the new item starts from its next stocktake.
  *
  * Asks what the two halves of it ask: stock.delivery (the update of the lines, the table's policy) and the
- * Settings write the item's own page asks (canEditItemSettings, as admin/medications and admin/diets do). It creates
+ * Settings write the item's own page asks (canEditItemSettings for a medicine, as admin/medications does; diets.settings for a
+ * diet, as admin/diets does since 0340). It creates
  * the item through the same table, with the same unit-list rule, so nothing is granted that Settings does not grant.
  */
 export async function promoteDescription(
@@ -33,7 +34,7 @@ export async function promoteDescription(
     { id: requestId, action: "deliveries.promoteDescription", db: supabase },
     async () => {
       const perms = await loadPermissions();
-      if (!can(perms, "stock.delivery") || !canEditItemSettings(perms, input.target)) return { ok: false, error: e.promoteNotAuthorized };
+      if (!can(perms, "stock.delivery") || !(input.target === "diet" ? can(perms, "diets.settings") : canEditItemSettings(perms, input.target))) return { ok: false, error: e.promoteNotAuthorized };
       if (input.target !== "medication" && input.target !== "diet") return { ok: false, error: e.itemRequired };
 
       // The lines are read again here, never taken from the screen: only unlinked described lines with these words.

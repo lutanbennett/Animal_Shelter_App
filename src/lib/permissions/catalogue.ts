@@ -123,6 +123,9 @@ export const ACTIVITIES = [
   { key: "social.reels_manage", kind: "yesno", area: "management", sort: 85, requires: [], probes: [] },
   // 0338: the suppliers list and a supplier's page (Read), add, change, archive and restore (Edit). Never delete: suppliers are archived.
   { key: "suppliers.directory", kind: "level", area: "contacts", sort: 86, requires: [], probes: [] },
+  // 0340: Settings → Diets, every screen and every save on it, asked alone (#d3cw7). It replaced reference.types Edit AND stock.diets Edit
+  // asked together, which no screen said. Yes/no: nothing on those screens is offered to read that is not also offered to change.
+  { key: "diets.settings", kind: "yesno", area: "settings", sort: 87, requires: [], probes: [] },
   { key: "contacts.browse", kind: "yesno", area: "contacts", sort: 57, requires: [], probes: [] },
   { key: "friends.view", kind: "yesno", area: "contacts", sort: 58, requires: [], probes: [] },
   { key: "community.outings", kind: "level", area: "projects", sort: 59, requires: [], probes: [] },

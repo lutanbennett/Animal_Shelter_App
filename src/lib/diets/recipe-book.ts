@@ -1,5 +1,4 @@
 import type { createClient } from "@/lib/supabase/server";
-import { todayIso } from "@/lib/format";
 import { isCountUnit } from "@/lib/unit-list";
 import { formatAmount, dayAmount, type DietServings } from "@/lib/diets/servings";
 import { groupConversions, CONVERSION_COLUMNS, type ConversionRow, type UnitConversion } from "@/lib/units";
@@ -66,18 +65,19 @@ type LineRow = {
   serving_unit: string | null;
   qty_per_serving: number | string | null;
 };
-type ResidentDietRow = { diet_id: string; resident_id: string; start_date: string; end_date: string | null };
+/** diet_usage() (0340): counts per diet, never which residents. Settings → Diets asks diets.settings, which does not read resident_diets. */
+type UsageRow = { diet_id: string; residents_now: number; records: number };
 
 /** Everything the four recipe-book screens draw, in one round of reads. */
 export async function loadRecipeBook(supabase: Supabase): Promise<RecipeBook> {
-  const [types, diets, lines, residentDiets, conversions] = await Promise.all([
+  const [types, diets, lines, usage, conversions] = await Promise.all([
     supabase.from("diet_types").select("id, name, name_th, unit, notes").order("name").returns<TypeRow[]>(),
     supabase.from("diets").select("id, name, name_th, notes, is_standard, servings_small, servings_medium, servings_large").order("name").returns<DietRow[]>(),
     supabase
       .from("diet_ingredients")
       .select("diet_id, diet_type_id, serving_unit, qty_per_serving")
       .returns<LineRow[]>(),
-    supabase.from("resident_diets").select("diet_id, resident_id, start_date, end_date").returns<ResidentDietRow[]>(),
+    supabase.rpc("diet_usage"),
     supabase
       .from("item_unit_conversions")
       .select(CONVERSION_COLUMNS)
@@ -85,16 +85,11 @@ export async function loadRecipeBook(supabase: Supabase): Promise<RecipeBook> {
       .returns<ConversionRow[]>(),
   ]);
 
-  const today = todayIso();
   const records = new Map<string, number>();
-  const current = new Map<string, Set<string>>();
-  for (const row of residentDiets.data ?? []) {
-    records.set(row.diet_id, (records.get(row.diet_id) ?? 0) + 1);
-    if (row.start_date <= today && (!row.end_date || row.end_date >= today)) {
-      const set = current.get(row.diet_id) ?? new Set<string>();
-      set.add(row.resident_id);
-      current.set(row.diet_id, set);
-    }
+  const current = new Map<string, number>();
+  for (const row of (usage.data ?? []) as UsageRow[]) {
+    records.set(row.diet_id, Number(row.records));
+    current.set(row.diet_id, Number(row.residents_now));
   }
 
   const byIngredient = groupConversions(conversions.data ?? []);
@@ -119,7 +114,7 @@ export async function loadRecipeBook(supabase: Supabase): Promise<RecipeBook> {
       notes: diet.notes,
       isStandard: diet.is_standard,
       servings: { small: Number(diet.servings_small), medium: Number(diet.servings_medium), large: Number(diet.servings_large) },
-      residentsNow: current.get(diet.id)?.size ?? 0,
+      residentsNow: current.get(diet.id) ?? 0,
       records: records.get(diet.id) ?? 0,
       lines: (lines.data ?? [])
         .filter((line) => line.diet_id === diet.id)
@@ -130,7 +125,7 @@ export async function loadRecipeBook(supabase: Supabase): Promise<RecipeBook> {
         })),
     })),
     recordsByIngredient,
-    error: types.error?.message ?? diets.error?.message ?? lines.error?.message ?? residentDiets.error?.message ?? null,
+    error: types.error?.message ?? diets.error?.message ?? lines.error?.message ?? usage.error?.message ?? null,
   };
 }
 
