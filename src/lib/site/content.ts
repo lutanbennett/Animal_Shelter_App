@@ -66,16 +66,33 @@ export type SiteContent = {
 export const SITE_CONTENT_COLUMNS =
   "hero_drive_file_id, hero_alt, hero_alt_th, tagline, tagline_th, contact_email, contact_address, contact_phone, contact_line, contact_map_url, facebook_url, instagram_url, messenger_url, whatsapp_number, x_url, visiting_hours, visiting_hours_th, featured_resident_id, preferred_channels, donate_photo_drive_file_id, donate_photo_alt, donate_photo_alt_th, foster_photo_drive_file_id, foster_photo_alt, foster_photo_alt_th, volunteer_photo_drive_file_id, volunteer_photo_alt, volunteer_photo_alt_th, about_photo_drive_file_id, about_photo_alt, about_photo_alt_th, registration_text, registration_text_th, contact_address_th, gift_split_year, gift_split_unit, gift_split_food, gift_split_vet, gift_split_sterilisation, gift_split_running, hidden_public_pages";
 
-export async function loadSiteContent(
-  supabase: SupabaseClient,
-): Promise<SiteContent | null> {
-  const { data } = await supabase
+/**
+ * The read with its outcome kept: the content, nothing (the row is missing), or what failed.
+ * Only the Website admin screen needs the three apart; every public page goes through
+ * loadSiteContent below and keeps degrading quietly.
+ */
+export type SiteContentRead =
+  | { state: "ok"; content: SiteContent }
+  | { state: "missing" }
+  | { state: "failed"; message: string };
+
+export async function readSiteContent(supabase: SupabaseClient): Promise<SiteContentRead> {
+  const { data, error } = await supabase
     .from("public_site_content")
     .select(SITE_CONTENT_COLUMNS)
     .eq("id", true)
     .limit(1)
     .returns<SiteContent[]>();
-  return data?.[0] ?? null;
+  if (error) return { state: "failed", message: error.message };
+  const row = data?.[0];
+  return row ? { state: "ok", content: row } : { state: "missing" };
+}
+
+export async function loadSiteContent(
+  supabase: SupabaseClient,
+): Promise<SiteContent | null> {
+  const read = await readSiteContent(supabase);
+  return read.state === "ok" ? read.content : null;
 }
 
 /**

@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getT } from "@/lib/i18n/get-t";
-import { loadSiteContent, loadClinicVisitEstimate } from "@/lib/site/content";
+import { readSiteContent, loadClinicVisitEstimate, type SiteContentRead } from "@/lib/site/content";
 import { SITE_PAGE_SLUGS } from "@/lib/site/pages";
 import { loadTranslations, translationKey } from "@/lib/translations/queries";
 import { SiteSettingsForm } from "./SiteSettingsForm";
@@ -30,6 +30,19 @@ type PublicResidentRow = {
   profile_photo_drive_file_id: string | null;
 };
 
+/** Two different problems that used to print one red sentence: no row yet, and a read that failed. */
+function ContentProblem({ read, t }: { read: SiteContentRead; t: Awaited<ReturnType<typeof getT>>["t"] }) {
+  if (read.state === "missing") {
+    return <p className="text-sm text-muted">{t.admin.website.nothingSetUp}</p>;
+  }
+  return (
+    <p className="text-sm text-danger">
+      {t.admin.website.couldntLoad}
+      {read.state === "failed" ? `: ${read.message}` : ""}
+    </p>
+  );
+}
+
 export default async function WebsitePage({
   searchParams,
 }: {
@@ -43,14 +56,15 @@ export default async function WebsitePage({
   if (draftOnly) {
     await requireAnyPermission(["website.propose"]);
     const { t } = await getT();
-    const draftContent = await loadSiteContent(await createClient());
+    const draftRead = await readSiteContent(await createClient());
+    const draftContent = draftRead.state === "ok" ? draftRead.content : null;
     return (
       <main className="flex flex-1 flex-col gap-6 p-6">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">{t.admin.website.title}</h1>
           <p className="text-sm text-muted">{t.admin.website.subtitle}</p>
         </div>
-        {draftContent ? <SiteSettingsForm content={draftContent} canPropose={can(early, "website.propose")} /> : <p className="text-sm text-danger">{t.admin.website.couldntLoad}</p>}
+        {draftContent ? <SiteSettingsForm content={draftContent} canPropose={can(early, "website.propose")} /> : <ContentProblem read={draftRead} t={t} />}
       </main>
     );
   }
@@ -63,7 +77,7 @@ export default async function WebsitePage({
   const supabase = await createClient();
 
   const [
-    content,
+    contentRead,
     clinicVisitEstimate,
     pagesResult,
     photosResult,
@@ -75,7 +89,7 @@ export default async function WebsitePage({
     liveSwitchesResult,
     liveStatsResult,
   ] = await Promise.all([
-      loadSiteContent(supabase),
+      readSiteContent(supabase),
       // Not part of loadSiteContent: it is an internal figure kept out of
       // the column list every public page loads (0071).
       loadClinicVisitEstimate(supabase),
@@ -151,6 +165,8 @@ export default async function WebsitePage({
     if (result.error) throw new Error(`Website admin: could not read ${what}: ${result.error.message}`);
   }
 
+  const content = contentRead.state === "ok" ? contentRead.content : null;
+
   // In the app's order, not the table's; a page missing from the table
   // (it shouldn't be — 0059 seeds all five) is simply skipped.
   const pageRows = pagesResult.data ?? [];
@@ -207,9 +223,7 @@ export default async function WebsitePage({
         )}
       </div>
 
-      {!content && (
-        <p className="text-sm text-danger">{t.admin.website.couldntLoad}</p>
-      )}
+      {contentRead.state !== "ok" && <ContentProblem read={contentRead} t={t} />}
 
       {content && (
         <WebsiteTabs
