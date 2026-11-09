@@ -58,35 +58,48 @@ exceptions, both of which should be rare enough to be remarkable:
 |---|---|
 | Cut PR, gates, CI, **merge** | Claude — **merged as soon as CI is green, without asking** (2026-10-13) |
 | Production migrations | Claude — `apply-migrations.mjs --env production` from the **main checkout**, under a user-settings allow rule added 2026-10-13 |
-| **UAT migrations** | Claude — `apply-migrations.mjs --env uat` from the **main checkout**. The token was never short of a permission (see *What UAT still needs once*, item 1); Lutan applied UAT's migrations with it on 2026-11-08, and no Claude session has run the apply itself yet, so the first one says whether a permission prompt stops it |
+| **UAT migrations** | Claude — `apply-migrations.mjs --env uat` from the **main checkout**. The token was never short of a permission (see *What UAT needed once*, item 1); Lutan applied UAT's migrations with it on 2026-11-08, and no Claude session has run the apply itself yet, so the first one says whether a permission prompt stops it |
 | **Worker production deploy** | **Lutan** — the one handover |
 | Worker test deploy | Claude |
 | **Worker UAT deploy** | Claude — `--no-mail` is no longer needed to stop the mail, but say it anyway |
 | Pi production build + restart | Claude — SSH works and `systemctl restart lanna-care` is passwordless |
 | Pi test build + restart | Claude — same |
-| **Pi UAT build + restart** | Claude — **once the Pi's sudo rule covers `lanna-care-uat`; it does not today** (same section) |
+| **Pi UAT build + restart** | Claude — the Pi's sudo rule covers `lanna-care-uat` since 2026-11-09, so the deploy restarts it itself (*What UAT needed once*, item 2) |
 | Verification, release record | Claude — **and the record PR is merged by Claude too, without asking** |
 
-### What UAT still needs once, and none of it is per-release
+### What UAT needed once, and all three are now done
 
-Measured 2026-11-08, after UAT went live. **All three are now closed** (item 1 was never real, items 2
-and 3 were done on 2026-11-09), so UAT's last mile is no longer manual. Kept for the record.
+**DONE 2026-11-09. Nothing here is outstanding, and a UAT release has no manual last
+mile.** All three are kept below rather than deleted, each marked superseded in place,
+because release records, decision files and test plans written before that date
+describe them as open — and because what each turned out to be is worth knowing.
+**Two of the three were never what they looked like:** item 1 was not a missing
+permission at all, and item 2 was damage to fix rather than a job to hand over.
 
 1. ~~**UAT's Supabase access token cannot read its own database.**~~ **SUPERSEDED
    2026-11-08: it can. The `database_read` refusal was the wrong account's token:** the shell's `SUPABASE_ACCESS_TOKEN` (the OTHER Supabase account's) used to beat UAT's own, and since 2026-11-08 `scripts/lib/env.mjs` makes the environment file's token win (`ACCOUNT_KEYS`; `docs/decisions/2026-11-08-uat-go-live-findings.md`).
    Measured the same day: `apply-migrations.mjs --status --env uat` refuses with the shell's token and
    reads `339 applied, 2 pending` with UAT's; Lutan had applied UAT's migrations with it earlier that
    day. Nothing to do in any dashboard.
-2. **The Pi's passwordless sudo does not cover `lanna-care-uat`.**
+2. ~~**The Pi's passwordless sudo does not cover `lanna-care-uat`.**~~ **SUPERSEDED
+   2026-11-09: it does.** Lutan added UAT's two commands to that file, and `sudo -n -l`
+   now lists all six — `restart` and `is-active --quiet` for all three services —
+   with `sudo -n systemctl is-active --quiet lanna-care-uat` answering with no prompt
+   and the file still `0440 root:root`. A UAT Pi deploy reaches its own restart. *The
+   problem as it was:*
    `/etc/sudoers.d/lanna-care-restart` names `lanna-care` and `lanna-care-test` only
    (read 2026-11-08: `sudo -n systemctl is-active --quiet lanna-care-uat` answers
    *a password is required*), and `deploy-pi.sh --env uat` ends in
    `sudo systemctl restart lanna-care-uat`. So the UAT Pi build stops at its last step
    for a password. This is the `sudo`-password exception above, and per that paragraph
    it is **damage to fix, not a handover to add**: two lines in that file.
-3. **DONE 2026-11-09 (`#prg4z`):** `.env.deploy.uat` now has a `CLOUDFLARE_PURGE_TOKEN` limited to the
-   `lannacare.org` zone, and `purge-cache.mjs --env uat` purges. *As it stood:* `.env.deploy.uat` had no
-   `CLOUDFLARE_PURGE_TOKEN`, so UAT's edge cache had
+3. ~~**`.env.deploy.uat` has no `CLOUDFLARE_PURGE_TOKEN`.**~~ **SUPERSEDED 2026-11-09:
+   it has one, and deliberately not production's.** Production's purge token can reach
+   both zones, so copying it across would have worked and would have put a key that can
+   wipe production's cache into UAT's file; the token Lutan created is scoped to **Cache
+   Purge on the `lannacare.org` zone alone**, verified by asking Cloudflare which zones
+   it can reach. `purge-cache.mjs --env uat` then purged and proved it with a `CF MISS`
+   re-fetch. *The problem as it was:* UAT's edge cache had
    never been purged. `CLOUDFLARE_ZONE_ID` is already there and is the right zone
    (`lannacare.org` serves both `test.` and `uat.`); the token is the only missing
    value, and `purge-cache.mjs --env uat` names exactly what to create.
@@ -260,7 +273,7 @@ node scripts/assert-schema.mjs --env uat
 ```
 
 `node scripts/apply-migrations.mjs --status --env uat` works too (the old `database_read` refusal was
-the shell's token from the other account; see *What UAT still needs once*). And note the version it answers is **not** proof of the
+the shell's token from the other account; see *What UAT needed once*). And note the version it answers is **not** proof of the
 commit: UAT can be serving the right version number from a later `main` than the
 release, because `deploy-pi.sh` ships `origin/main`. Read the SHA in the same
 answer.
@@ -769,12 +782,11 @@ ssh lutan@lanna-pi.local 'cd ~/Animal_Shelter_App_uat && ./scripts/pi/deploy-pi.
 `lanna-care`, `lanna-care-test` and `lanna-care-uat` on ports 3000, 3001 and 3002.
 They build in parallel safely; they are on the Pi, not the main checkout.
 
-**The UAT one stops at its last step for a sudo password today.**
-`/etc/sudoers.d/lanna-care-restart` does not name `lanna-care-uat`, so the build and
-swap complete and `sudo systemctl restart lanna-care-uat` then prompts. Until that
-file is fixed (*What UAT still needs once*, item 2), expect to read `.next.new` swapped
-and the service not restarted; say so in the record rather than leaving it to be
-discovered by a stale UAT.
+**The UAT one restarts itself since 2026-11-09**, when `/etc/sudoers.d/lanna-care-restart`
+gained UAT's two commands (*What UAT needed once*, item 2). Before that it stopped at its
+last step for a password, leaving `.next.new` swapped and the service not restarted — so
+a release record written before that date reporting exactly that is describing the old
+state, not a new fault.
 
 **Run it detached with a log, not in the SSH foreground.** The build takes longer
 than the foreground tool timeout, and a timeout kills the SSH session mid-build:
@@ -1172,10 +1184,12 @@ looks for those two values in `.env.local` while they live in
 `.env.deploy.production`. **Fixing it is one value in one file**, and until then
 test's edge is purged by nothing.
 
-**And `--env uat` refuses for a different reason, so UAT's edge is purged by nothing
-either.** `.env.deploy.uat` carries `CLOUDFLARE_ZONE_ID` (the right zone —
+**`--env uat` refused for a different reason until 2026-11-09, and now works.**
+`.env.deploy.uat` carried `CLOUDFLARE_ZONE_ID` (the right zone —
 `lannacare.org` serves both `test.` and `uat.`) but no `CLOUDFLARE_PURGE_TOKEN`, so
-the script names exactly what to create and stops. **A second thing was wrong here
+the script named exactly what to create and stopped. It now holds one, scoped to Cache
+Purge on that zone and nothing else — **not** production's, which can reach both zones.
+**A second thing was wrong here
 and is now fixed:** `--env uat` purged the host `lannacare.org`, which since
 2026-11-08 is a 301 to production — it would have purged a redirect, reported
 success, and left UAT's own cache standing. It now purges `uat.lannacare.org`.
