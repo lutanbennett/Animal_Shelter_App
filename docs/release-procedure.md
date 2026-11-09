@@ -69,9 +69,8 @@ exceptions, both of which should be rare enough to be remarkable:
 
 ### What UAT still needs once, and none of it is per-release
 
-Measured 2026-11-08, after UAT went live. **Two remain, both one-time jobs of Lutan's,
-and until they are done UAT is a release target whose last mile is manual.** Neither
-blocks production, and neither is a reason to skip UAT.
+Measured 2026-11-08, after UAT went live. **All three are now closed** (item 1 was never real, items 2
+and 3 were done on 2026-11-09), so UAT's last mile is no longer manual. Kept for the record.
 
 1. ~~**UAT's Supabase access token cannot read its own database.**~~ **SUPERSEDED
    2026-11-08: it can. The `database_read` refusal was the wrong account's token:** the shell's `SUPABASE_ACCESS_TOKEN` (the OTHER Supabase account's) used to beat UAT's own, and since 2026-11-08 `scripts/lib/env.mjs` makes the environment file's token win (`ACCOUNT_KEYS`; `docs/decisions/2026-11-08-uat-go-live-findings.md`).
@@ -85,7 +84,9 @@ blocks production, and neither is a reason to skip UAT.
    `sudo systemctl restart lanna-care-uat`. So the UAT Pi build stops at its last step
    for a password. This is the `sudo`-password exception above, and per that paragraph
    it is **damage to fix, not a handover to add**: two lines in that file.
-3. **`.env.deploy.uat` has no `CLOUDFLARE_PURGE_TOKEN`,** so UAT's edge cache has
+3. **DONE 2026-11-09 (`#prg4z`):** `.env.deploy.uat` now has a `CLOUDFLARE_PURGE_TOKEN` limited to the
+   `lannacare.org` zone, and `purge-cache.mjs --env uat` purges. *As it stood:* `.env.deploy.uat` had no
+   `CLOUDFLARE_PURGE_TOKEN`, so UAT's edge cache had
    never been purged. `CLOUDFLARE_ZONE_ID` is already there and is the right zone
    (`lannacare.org` serves both `test.` and `uat.`); the token is the only missing
    value, and `purge-cache.mjs --env uat` names exactly what to create.
@@ -800,13 +801,13 @@ both Pi builds:
 
 ```bash
 node scripts/purge-cache.mjs --env production
-node scripts/purge-cache.mjs --env uat
+node scripts/purge-cache.mjs --env test
 ```
 
-**The UAT one refuses today** for want of `CLOUDFLARE_PURGE_TOKEN` in
-`.env.deploy.uat`, and that refusal is the whole of what it does — run it anyway, so
-the gap stays visible, and note it in the record. Nothing purges test either; the
-trap below says why both of those are true and what the real exposure is.
+**The second line covers test AND UAT.** They are one Cloudflare zone (`lannacare.org`), a purge is
+zone-wide, and the script re-checks both sites' stylesheets after it. `--env uat` does exactly the same;
+use either, not both. Both read the zone's credentials from `.env.deploy.uat` (a token that can reach
+`lannacare.org` only), since 2026-11-09 (`#prg4z`, `#pz3tk`).
 
 It purges the zone and then proves the purge took rather than trusting the API's own
 "success": where it can it re-runs the asset check, and where it cannot it prints the
@@ -1148,7 +1149,11 @@ not a streak.
 **It does not license rebuilding a Pi to chase a SHA.** The trap above stands: when
 `main` moves, read what is deploying. If the diff is clean, there is nothing to do.
 
-**THE PRODUCTION PURGE NO LONGER COVERS TEST. Nothing purges test.** Corrected
+**THE PRODUCTION PURGE NO LONGER COVERS TEST; `--env test` DOES, SINCE 2026-11-09.** `#pz3tk` made
+`--env test` read the `lannacare.org` zone's credentials from `.env.deploy.uat` and re-check both
+`test.` and `uat.`; measured that day: both stylesheets `HTTP 200, 99839 bytes (CF MISS)` after the purge,
+and `check-assets.mjs` on both Pi clones *identical to the build*. **SUPERSEDED 2026-11-09, the trap as it
+stood:** **THE PRODUCTION PURGE NO LONGER COVERS TEST. Nothing purges test.** Corrected
 2026-11-08 during `0.43.6`; this paragraph asserted the opposite for two releases.
 
 Until the 2026-11-06 cutover production and test were one Cloudflare zone, so
