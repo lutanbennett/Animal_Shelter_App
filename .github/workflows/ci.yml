@@ -282,6 +282,22 @@ jobs:
           node-version: 22
       - run: node scripts/check-hard-coded-security.mjs
 
+  # A link must ask the activity its DESTINATION asks (backlog #79sqf, sweeps 6-11): a login that holds the page's card but not the
+  # destination's is offered a link that ends at /no-access. Static (TypeScript AST), a few seconds, cards only. Blocks on any finding not in
+  # docs/destination-activity-allowlist.json; unresolved links are printed, never passed silently (docs/decisions/2026-11-09-destination-activity-check.md).
+  destination-activity:
+    needs: changes
+    if: needs.changes.outputs.docs-only != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: node scripts/check-destination-activity.mjs
+
   # THE WHOLE-PAGE RULE for the Pi failover replay list: does every write reachable at each path on
   # WRAPPED_WRITE_PATHS go through runWriteAction()? A listed path with one unwrapped write is the #250 double
   # write — the Worker's rule is method plus path (worker/origin.mjs mayReplayWrite), so it replays the write
