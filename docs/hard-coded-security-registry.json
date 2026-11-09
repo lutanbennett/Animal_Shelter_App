@@ -755,6 +755,11 @@
         "migration": "0343_text_approval_state.sql",
         "item": "grant to anon",
         "reason": "SELECT on nine existing public views (public_resident_cards, public_resident_profiles, public_recent_adoptions, public_adoption_updates, public_appeals, public_appeal_photos, public_fundraising_events, public_projects, public_desexing_drives), each restated with the same grants as before. Nothing is newly granted: anon already read all nine, and the base tables are not granted to anon. Eight of the nine now also ask the new text_approval review state (back-filled to public_ok, so output is unchanged), which can only NARROW what anon reads; the appeal views drop the residents.is_public_visible test, so a published non-draft appeal is visible for its duration (Lutan, 2026-11-09), still behind published, status, attachments.approved_at and 0216's medical_ok rule. The existing public-site pattern: it lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-09-text-approval-schema.md."
+      },
+      {
+        "migration": "0347_public_website_gate.sql",
+        "item": "grant to anon",
+        "reason": "SELECT on the existing public views public_appeals, public_appeal_photos and public_enclosures, each restated with the same grants as before, plus EXECUTE on the new private.appeal_running(boolean, text), a pure scalar function that reads no table and says whether an appeal is published and live or funded (anon needs EXECUTE because it is called as the viewer, as it already is on private.approved_translations, 0082). The views only NARROW what anon reads: a closed appeal, and an animal that is neither adoption-ready nor under a running appeal, no longer appear. The existing public-site pattern: it lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-09-public-cards-gate.md."
       }
     ],
     "stubs": [
