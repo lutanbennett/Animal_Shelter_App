@@ -1,174 +1,195 @@
-# Planner handover — edition `717`, 2026-11-08
+# Planner handover — edition `726`, 2026-11-09
 
-**This is a DELTA against `708`.** It says what changed, corrects its predecessor, and reports what each
-of `708`'s warnings and owed items actually did. Per-stream figures, batch composition, ports and the
+**This is a DELTA against `717`.** It says what changed, corrects its predecessor, and reports what each
+of `717`'s warnings and owed items actually did. Per-stream figures, batch composition, ports and the
 dependency notes live in `.plan-day.md` and are **not** reproduced here.
 
 **It outranks nothing.** It is read by one chat, it will be rewritten within one plan, and a wrong line
 in it is corrected by its successor rather than by a reviewer.
 
-**Written at the SETUP of this plan's last batch, so batch 3's figures are not in it.** Batch 3 —
-`manual-home-tile`, `approval-queue-event-date`, `db-refusal-keys-mechanism` — was handed over at
-about 10:00Z and had not been opened. `708` carried its own last batch's actuals in a postscript only
-because it sat unmerged for a day; **do not plan on that happening again.** This edition merges on green.
+**Written at the SETUP of this plan's last batch, so batch 3's figures are not in it.** Batch 3 was one
+stream the planner set up (`profile-photo-fails-open`) plus two opened directly and not the planner's:
+`test-purge`, merged, and `restore-grants`, live with no PR.
 
 ---
 
-## THE LEAD: THE SKILL WAS CUT BY 85% ON HIS INSTRUCTION, AFTER HE ASKED THREE TIMES IN ONE DAY WHERE HIS PLAN WAS
+## THE LEAD: THE 85% CUT HELD, AND THE ANSWER TO `717`'s QUESTION IS YES
 
-**`.claude/skills/plan-day/SKILL.md` went from 2,176 lines to 331** (PR #1396, merged `e9536dd7`), with
-the evidence and incident history moved to `reference.md` (421 lines) and the verbatim brief blocks to
-`brief-blocks.md` (290). **His words: *"Yes cut down the skill and then we can build back in if needed
-later"*.** Nothing was deleted — every decision is in one of the three files, and `git log` has the
-2,176-line edition if a rule now reads as too thin.
+`717` asked the one thing it could not know: *"a rule that moved to `reference.md` may be followed less
+often than one that stayed. You are the first edition after the cut. Say whether it held."*
 
-**Read the cause, not just the size, because the obvious diagnosis was wrong.** On 2026-11-08 the
-planner set up two batches in a row that he had never been shown, told him he had "missed" a batch he had
-not, and then pointed him at a list in an earlier message instead of giving it again. **It was not a
-step-order problem** — `708`'s lead reported that the new step order had held — **it was that the
-document had grown past the point where a session could satisfy it and deliver to him in the same turn.**
-The planner was satisfying the file. **Three rules came out of it and they are now the first things in
-the skill:**
+**It held, across three batches, and the measure is his interruptions: ONE round in the whole plan** —
+the single mandated `AskUserQuestion` at batch 1, carrying his owed decision and the UAT status together.
+**Batches 2 and 3 cost none.** Both were resumes by the conversation that wrote `.plan-day.md`, so each
+went straight to setup and **reported** what had changed instead of asking. Against the plan that
+provoked the cut — where he asked three times in one day where his list was — that is the whole of the
+difference.
 
-1. **THE ONE RULE: the list comes first.** Before actuals, findings, bands or prose — folder, port, model
-   and effort per stream, **verified from the `.port` files and the `.brief.md` on disk**, never quoted
-   from memory, and **never "the list is above".**
-2. **A saved plan is not an agreed plan.** `.plan-day.md` is invisible to him, so a batch written by a
-   *different* conversation is presented before it is set up. A resume by the conversation that planned
-   it may go straight to setup.
-3. **If you add to the skill, something else comes out.** Written into the file itself.
-
-**The risk this took, stated so the next planner can report on it either way:** a rule that moved to
-`reference.md` may be followed less often than one that stayed. It is named in
-`docs/decisions/2026-11-08-plan-day-skill-cut.md` and it is the one item left for manual verification.
-**You are the first edition after the cut. Say whether it held.**
+**Nothing was lost to `reference.md` that this plan needed** — the planner reached for it once, for the
+`.plan-day.md` editing traps, and it was there. And **THE ONE RULE did real work twice**: on both resumes
+the honest thing was a long report of actuals and findings, and putting the list first let him start three
+sessions while reading the rest. **Keep it first — it is the rule most likely to erode, because every
+batch gives the planner something more interesting to lead with.**
 
 ---
 
-## WHAT `708`'s OWED ITEMS AND WARNINGS DID
+## WHAT `717`'s OWED ITEMS AND WARNINGS DID
 
-- **The `stream-usage:` line as a NUMBERED deliverable fired 3 of 3 again.** That is **6 of 6 across two
-  batches** since it stopped being a closing paragraph, against 2 of 4 before. **It is settled; stop
-  re-testing it and keep it numbered.**
-- **The six leftover worktrees: DONE.** `/clean-streams` ran at about 06:1xZ and removed all six, each
-  verified as an ancestor of `main` with a merged PR. `drive-buckets` was `HELD` and was asked about
-  rather than torn down, which is the rule working.
-- **`#d3cw7`'s unestablished half is STILL the planner's and was not done this plan** — whether any live
-  role holds exactly one of the pair of cards `/admin/diets` needs. No existing check can answer it.
-  **It is now a question about roles, which is the one shape the card rule allows** (who is affected
-  today, clearly labelled transient) — so if you carry it, carry it that way or restate it per card.
-- **`#uat7p`, `#40oz4` part B, `#oeglm`'s third reading and the 54 Drive files: all still his**,
-  all unchanged, all restated in the OWED section below rather than re-argued here.
-- **`708` itself was the sixth instance of the finish-line fault** — written, pushed, never PR'd. The
-  lesson is in the skill's step 8 and **did not recur**: this edition's PR is opened in the same turn as
-  its text.
+- **The `stream-usage:` line as a NUMBERED deliverable fired 6 of 6**, so **12 of 12 across four
+  batches**. Settled four editions running; **stop re-testing it and keep it numbered.**
+- **`#d3cw7`'s unestablished half is CLOSED, and not by being answered.** It asked whether any live role
+  holds exactly one of `reference.types` / `stock.diets`. #1408 established that **no card grants
+  `reference.types` at all**, so that login cannot be built even to test it. **The question dissolved.
+  Do not carry it a fourth time.**
+- **The 54 Drive files are SETTLED and off the list.** He closed them in chat: backups into Production
+  Admin, ~30 test files he removes over time, separated from all three environment folders. There was
+  never a backlog item. **Drop it rather than carrying it.**
+- **`#uat7p` / `#uq4vz`: DONE.** UAT is live at `uat.lannacare.org`.
+- **`0338`'s production back-fill is still owed, and he corrected the line about it.** It is now `#k3mqp`
+  and **sized: production holds ~20 contacts listed as suppliers.** Dev has 0 Vendor contacts of 1
+  contact row, so *"moves nothing on dev"* was true but read as *"has no work anywhere"*, which is what
+  he objected to. **Count production, apply, count again. And it now GATES `#xkfsv`.**
+- **`#etr20` came due 2026-11-08 and is still due.** One line, ships with a release cut.
 
----
+### A status answer of his has a clock on it, like any count
 
-## THE BANDS
-
-**Seven valid readings in this plan, five inside, one under, one over.** All of batch 2 was
-`finished=yes`, `compacted=no`, `rescoped=no`, so all three count. All three ran on **`medium`**, which
-is his choice and not a deviation; the **+25% adjustment held on both of the two that landed inside.**
-
-**The one miss is worth more than the six hits, because the number was not the problem — the ROW was.**
-`suppliers-app` came in at **440,815** against 200–260k at `low` (250–325k adjusted). The planner priced
-it from *"creates one new surface people submit data through"* (200–270k) and **missed that it also
-DELETED what it replaced** — suppliers leaving Contacts — which is the *"new surface that also DELETES
-what it replaces"* row at 260–330k (325–412k adjusted). **Even that row under-prices it by 7%, so revise
-it upward from this reading.** The lesson for banding: **read your own one-line scale description back
-and check it names everything the stream must do.** "New surface + its card + 7 readers" named the
-building and not the demolition.
-
-**THE FLOOR: 107,662 · 111,142 · 111,478** from `tokens − messages`, so **≈108–111k on 2026-11-08**,
-which agrees with batch 1's 107–111k and with `708`'s 107,579–110,816. **111,478 is the highest yet. The
-drift is slow and upward. Never carry it forward; re-derive it each batch.**
+**He answered "none of them yet" about the three one-time UAT jobs and then did all three that night.**
+`#t0k9r`, `#sud8p` and `#prg4z` are ticked and `#uq8wk` is closed, so **the release blocker is gone** — a
+release carrying a migration no longer refuses UAT. **A planner that quoted his answer the next morning
+would have been wrong. Re-read the items.**
 
 ---
 
-## ONE DURABLE FACT PROMOTED INTO THE SKILL RATHER THAN CARRIED HERE
+## THE BANDS: ADD A ROW. BOTH MISSES THIS PLAN WERE THE SAME MISS
 
-**The daily `git merge backlog` resolution rule was WRONG as written, and it is fixed in step 1.** It
-said to resolve item-by-item taking each from `main`. On 2026-11-08 **two items were newer on `main` and
-one was newer on `backlog`**, because he had filed an answer there that morning. The rule now says
-**take each from its NEWER side, compare the two texts, and have your script exit non-zero if an anchor
-is missing.** A planner following the old wording would have silently discarded his own answer.
+**Six valid readings, four inside, two over, one excluded** (`diets-one-card`, `compacted=yes`, so a
+remainder and not a reading). All six ran `opus-5-5` / `medium`, which is his choice and not a deviation;
+the +25% adjustment held on all four that landed inside.
+
+**`control-sweep-11-count` 265,395 against 181–238k adjusted (+11%). `public-read-enumeration` 228,068
+against 163–213k (+7%).** Both were priced from the *"AUDIT or REPORT over a wide but shallow surface"*
+row, whose note reads **"the length of the list does not move this"**. **That is true of an audit that
+LISTS rows and false of one that DERIVES a property per row** — the sweep resolved opening cards for 93
+pages with `bundleOfCards([card])`; the enumeration read `pg_get_viewdef` and traced base tables for 21
+views, then ran a live security probe.
+
+**ADD: *an AUDIT that computes a property per row* — 230–290k (`medium`: 288–363k).** Validated against
+both: the sweep mid-row, the enumeration at the bottom. **Keep the existing wide-and-shallow row for an
+audit that only lists.**
+
+**This is the third plan running where the ROW was wrong rather than the number** (`717`: `suppliers-app`
+priced as a new surface, missing that it also deleted what it replaced). **So the discipline is the
+lesson, not the row: read your own one-line scale description back and check it names everything the
+stream must do.** "Audit, wide and shallow" named the reading and not the deriving.
+
+**THE FLOOR: 106,093 · 107,502 · 111,430 · 111,416 · 107,502 · 106,429 — so ≈106–111k on 2026-11-09**,
+agreeing with `717` and with `708`. 111,430 is just under the highest ever (111,478). **The drift is slow
+and upward. Never carry it forward.**
 
 ---
 
-## WHAT THE PR BODIES HANDED BACK
+## WHAT THE PR BODIES HANDED BACK — and one of them is a live security hole
 
-**Still the best yield per turn spent, and batch 2 handed back one genuine production risk.**
+**Still the best yield per turn spent. Nine items and two retitles came out of six PR bodies.**
 
-1. **`0338`'s catch-up back-fill has NEVER RUN AGAINST REAL ROWS.** #1399's own deliverable 10:
-   *"Dev has no Vendor contacts, so on dev it moves nothing; the harness proves it on a row it makes
-   (1 row, then 0). Not exercised on production."* So the migration that re-points Vendor contacts and
-   Shelter Friends onto suppliers is **unexercised on the only database where it has work to do.** Filed
-   as its own backlog item by this edition. **Whoever applies `0338` to production checks the back-fill
-   moved what it should, and the count comes before the apply, not after.**
-2. **`#xkfsv` is deliberately LEFT OPEN and retitled.** `supplier_contact_id` is not dropped and the
-   Vendor contact rows are not retired; the brief forbade it there. **Read the retitled item, not the
-   old title.**
-3. **A seen-on-screen proof was recorded again with no screenshot.** #1398 read the resident name off the
-   rendered page in both logins — a correct, careful pass — and said plainly *"no screenshots"*. That is
-   exactly the shape `#v2p7k` was filed about, one screen over. **Batch 3's stream 10 is briefed to
-   screenshot**, so this is a mitigation to check next round rather than a fault to report.
-4. **A known limit recorded rather than hidden:** #1397's new schema assertion is a **named procedure
-   step**, and nothing forces it to run before the `ssh`. An attestation flag was considered and rejected
-   as decoration, with the reasoning in the decision file. **Do not re-propose the flag; if the step is
-   skipped in a real release, that is the evidence that changes the answer.**
-5. **`FRIEND_CONTACT_TYPES` is now `["Partner"]`** and the supplier path needs no replacement, because
-   every live supplier is eligible. Worth knowing before briefing anything near Shelter Friends.
+1. **`#h8xqv` — THE PUBLIC PROFILE PHOTO FAILS OPEN, AND IT IS THE HEADLINE OF THIS PLAN.** The three
+   resident views blank the photo only on finding a **bad** attachment row, so a drive id matching **no**
+   row passes straight through; and the column is directly writable by anything holding `resident.record`
+   at edit, so `0319`'s guarded RPCs are not the only writers. **Proven on dev in a rolled-back
+   transaction** by #1410: `anon` read the id back and `is_public_drive_file()` answered true. The photo
+   proxy then serves **any non-video Drive file the service account can read** — a blood-test PDF,
+   another resident's Medical photo — on the open web with no approval step. **The stream that found it
+   wrote "I would rank it above the rest of this list", and it was right: it displaced `#3nuwy` from
+   batch 3 the same day.** It also **undoes a decision already taken** — the `residents` card's own
+   comment says its photos went *"through approval instead of straight to the website"*.
+2. **`#r9wtk` — ready for adoption and shown on the website are ONE flag on every save**
+   (`residents/[id]/edit/actions.ts:200`, since 2026-09-20). A resident deliberately shown but not ready
+   **leaves the website silently** the next time anyone saves its edit form. **It also changes what the
+   ready/visible counts `#7aev4` was going to put to him MEAN**, because the save path makes the two
+   columns agree.
+3. **`#7aev4` is no longer a build, and its title now says so.** The enumeration is done (#1410): 21
+   public views, 4 riding `attachments`, 4 ruled, 2 with nothing to approve, **11 carrying content with
+   no review state**. **It added a fourth number he owes: weekly TEXT volume**, because eight subject
+   tables have no review state for their English text and his answer of 2026-11-05 was *"any text will be
+   reviewed"*.
+4. **`#z5pk9` — `commit -am` in the shared backlog worktree sweeps another session's uncommitted edits
+   into your commit.** It happened to this planner: `afcadff7` carries four of its items under a message
+   about something else, and `git status` then read **clean**, which is what a lost edit looks like.
+   **`CLAUDE.md` literally shows `commit -am` as the way to edit the backlog, so a session following it
+   exactly produces this.**
+5. **`#v3qmz` — `check-audited-tables.mjs` passes a table with neither a trigger nor a listing**, which
+   is how `card_includes` sat unaudited from `0257` while the check reported `ok` on every run. **So
+   `#q8m4t`'s own "confirm it goes from naming it to green" was wrong: it was already green.** Same shape
+   as the fault it guards.
+6. **`#w2hs8` — `dev-signin.mjs --cards` re-keys a shared disposable login and signs another stream
+   out.** Two streams asking for the same card set is the designed case, not bad luck, and the victim
+   just finds itself at `/login` mid-drive.
+7. **`#j8vt4` + `#q7dn3`, and they must be ONE stream.** Settings → Units still needs two cells together
+   and no card grants either, so **only Admin can add a unit of measure** — a Set up diets holder cannot.
+   And `item_unit_conversions`' write policies ask `stock.diets` for **every** row, medicine rows
+   included. **`#j8vt4` masks `#q7dn3` today; fixing `#j8vt4` alone uncovers it.** That is the
+   *fold-an-item-whose-correctness-depends-on-a-neighbour* rule, and the clearest case of it yet.
+
+**A green PR whose stream has left is a real state, and the planner CANNOT settle it.** `test-purge`
+reached a green PR and its session left the folder without merging. The planner tried to post the usage
+line and merge, and **the auto-mode classifier refused it as an external write**. Per `CLAUDE.md` a
+refused step is reported, not worked around. It cost nothing — the PR merged in the meantime — but **do
+not plan on being able to rescue that case**, and record such a figure as `unmeasured`, never a guess.
 
 ---
 
 ## OWED, AND WHO OWES IT
 
-1. **`#uat7p` — his**, fully specified since `699` and unchanged. **`#uq4vz` rides with it.** Nothing is
-   live until he deploys UAT.
-2. **`#40oz4`'s part B — his, and it is the only thing left on that item.** Cause unproven; #1382 could
-   not reproduce the blank Folder dropdown on Admin in either language and hardened the control instead.
-   **It needs his own eyes on his own phone. No stream can close it.** Still his **#1**.
-3. **`#oeglm`'s third reading — his, and it is one command.** `sudo sshd -T` on the Pi. Password
-   authentication, root login and the listen address are **unknown, not assumed safe**; passwordless sudo
-   there covers only the four service commands. TightVNC on the PC still has no IP restriction, and the
-   PC holds production secrets.
-4. **`#mx3rt` — his.** One sentence typed into Settings → Website. No code.
-5. **The 54 unreferenced Drive files — his**, on his Desktop since 2026-11-07.
-6. **`#d3cw7`'s unestablished half — the planner's**, carried from `708` and not done. See above for the
-   shape it must take.
-7. **`0338`'s production back-fill — the planner's or the release manager's**, item 1 of the section
-   above. **This is the one new owed item in this edition and it is the only one with a live database
-   behind it.**
-8. **`#etr20` came due 2026-11-08** — one line, `max-age=31536000` in `worker/security-headers.mjs`.
-   **It ships with a release cut, not as a stream.** Flag it to the release manager.
-9. **DEFERRED OUT OF THIS PLAN, not forgotten, and the next plan's natural first batch:** **`#79sqf`**
-   (`action-controls-sweep-8`), **`#ayl1h`** (`backlog-binary-guard`), and **`#q8m4t`** (the
-   `card_includes` audit trigger) if batch 3's migration slot kept it out. **`#q8m4t` is the strongest
-   security finding on the list** — a change to what a card *applies* leaves no trail while the same
-   change to `card_grants` is recorded, in a repository whose first rule is that a card is the only thing
-   that may grant access.
+1. **`#av8rq` is NOT TICKED and that is correct.** Its *done when* is a **production** exit 0. Run
+   `node scripts/check-production.mjs activities-grantable` from the main checkout; a pass ends `ok   the
+   live Admin-only set matches the allow-list: 83 catalogue activities; 3 Admin-only on purpose, 16
+   UNRULED`. **Production gave the same ten activity-level rows as dev, but its PER-LEVEL gaps are not
+   established.** Tick on a pass. **The planner's or the release manager's, and the one tick this plan
+   leaves owed.**
+2. **`#h8xqv`'s two production reads — the orphan count, and whether anything is already exposed.** The
+   brief tells the stream to write the commands and not attempt them. **Planner's or release manager's.**
+3. **`0340`, `0341` and `0342` are pending on production.** `0341`'s order is harmless (its code only
+   reads `audit_log`); **`0342` must be applied before or with its deploy**, because it rewrites views.
+4. **`#k3mqp` — the `0338` back-fill, ~20 rows. It gates `#xkfsv`.** See above.
+5. **`#etr20`, `#314hq`, `#40oz4` part B, `#oeglm`'s third reading, `#mx3rt`, `#ao0jk` and `#rqv5c`'s
+   remainder — all his**, all unchanged, all restated in `.plan-day.md` rather than re-argued here.
+6. **A QUESTION SET was handed to him on 2026-11-09** — twelve questions in five groups, on his Desktop —
+   covering `#7aev4`'s four numbers, the shop-link ruling, `#j8vt4`, `#r9wtk` and **#1411's sixteen
+   unruled activities grouped into three yes/no answers**. **Read his replies before planning anything in
+   those areas, and do not re-ask what it already asks.**
+7. **One ask, not six:** `#ifxk8`, `#y1dqu`, `#hzmxi`, `#c7zjk`, `#41yhe` and #1412's two new Thai
+   strings all end at **a Thai speaker reading what is already drafted.**
 
 ---
 
 ## THREE THINGS NOT TO RE-DERIVE, ALL MEASURED THIS PLAN
 
-- **`#3nuwy`'s count is DONE and has drifted.** `node scripts/measure-sql-refusals.mjs` on `8c9722aa`:
-  **209 live refusal messages in 86 functions; class `user` = 21 functions / 61 messages**, against
-  20 / 57 on 2026-11-03. **+1 function and +4 messages in five days** — the rate the problem grows at
-  while the programme runs. The first group is named in batch 3's brief.
-- **`/manual` is not in the route registry**, so a manual tile cannot be route-derived, and
-  **`homeTilesBase()` returns early on the card path** — a tile appended after that line is never drawn
-  for the tiles-only login the item is about. `withApprovalTile()` is the shape.
-- **`approve_photos` is the card for the approval queue**, and **`run_fundraising_events` is what creates
-  a waiting event photo** — so proving `#v2p7k` is **two logins**, not one.
+- **Shape (a) for a ruled Admin-only list ALREADY EXISTED before `#av8rq` was briefed** —
+  `scripts/check-ungranted-activities.mjs` plus `docs/ungranted-activities-allowlist.json`, shipped
+  2026-11-06 by `#n5r7k`. The item read as *"build this"* and the work was *"stop the other check failing
+  for ever"*. **A brief that had not checked would have built a second mechanism.** Step zero earned its
+  place.
+- **`#79sqf` is COUNTED: 167 pages, the route registry holds 54, 106 card-reachable, 13 driven, 44 worth
+  driving at ≈20k each.** So **three streams by area, or the 18 cross-activity pages first** — not a
+  programme. **And the pattern is worth more than the next walk: every finding since sweep-6 has been a
+  link or notice that does not ask its DESTINATION's activity.** A code check for that one shape may beat
+  more browser walking.
+- **`#xkfsv` reads as buildable and is not.** Its title says *"ONLY THE FINAL CLEAN-UP IS LEFT … NOTHING
+  LEFT TO DECIDE"*; the clean-up itself says *"once the app half has been in production"*. **Read the
+  tail before scheduling a title.**
 
 ---
 
 ## FOR YOUR FIRST TURN
 
-Read `.plan-day.md` before anything. The counter is reset by this edition's merge, so **you are planning
-from scratch, not resuming.** Batch 3's three streams were handed over unopened at about 10:00Z —
-**check whether they ran before you plan over them**, with
-`gh pr list --state all --head claude/<slug>`, because `free` and `0 ahead` is a snapshot and not a
-verdict. **And give him the list first.**
+Read `.plan-day.md` before anything. **It closed at 9 of 9 and this edition resets the counter, so you
+are planning FROM SCRATCH, not resuming.**
+
+**Check `#rg7pv` first** — `restore-grants` was live in a session with no PR when this plan closed, so it
+is neither done nor plannable until you look (`gh pr list --state all --head claude/restore-grants`).
+
+**The natural first batch:** `#3nuwy` (deferred from batch 3 — **re-measure its count** with
+`scripts/measure-sql-refusals.mjs` rather than quoting 209/86, because it grows while the programme
+runs), **`#j8vt4` + `#q7dn3` folded into one stream**, and `#m4wq2` or `#v3qmz`.
+
+**And give him the list first.**
