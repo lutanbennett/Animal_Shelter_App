@@ -33,6 +33,7 @@ export default async function MaintenanceJobPage(props: PageProps<"/maintenance/
       job={job}
       canWrite={can(perms, "maintenance.jobs")}
       canPhotos={can(perms, "maintenance.photos")}
+      canEnclosure={can(perms, "facility.enclosures", "read")}
       canMakeMeme={can(perms, "social.library")}
       canMove={can(perms, "maintenance.progress")}
       canDelete={can(perms, "maintenance.delete")}

@@ -47,6 +47,7 @@ export function MaintenanceJobView({
   job,
   canWrite,
   canPhotos = false,
+  canEnclosure = false,
   canMakeMeme = false,
   canMove,
   canDelete,
@@ -60,6 +61,8 @@ export function MaintenanceJobView({
   /** Staff/admin: change status and details, remove files. */
   canWrite: boolean;
   canPhotos?: boolean;
+  /** facility.enclosures at read: what /enclosures/[id] asks. False draws the name as text. */
+  canEnclosure?: boolean;
   canMakeMeme?: boolean;
   /** maintenance.progress: the status buttons. */
   canMove: boolean;
@@ -174,7 +177,7 @@ export function MaintenanceJobView({
             <ZoneDot colour={job.zone_colour} />
             {placeName(locale, job.zone_name, job.zone_name_th)}
           </span>
-          {job.enclosure_id ? (
+          {job.enclosure_id && canEnclosure ? (
             <Link
               href={`/enclosures/${job.enclosure_id}`}
               className="flex items-center gap-1 hover:text-foreground hover:underline"
@@ -185,7 +188,9 @@ export function MaintenanceJobView({
           ) : (
             <span className="flex items-center gap-1">
               <ENCLOSURE_ICONS.enclosure aria-hidden="true" className="h-4 w-4" />
-              {t.maintenance.zoneWide}
+              {job.enclosure_id
+                ? placeName(locale, job.enclosure_name, job.enclosure_name_th)
+                : t.maintenance.zoneWide}
             </span>
           )}
           <span className="flex items-center gap-1">
@@ -245,7 +250,7 @@ export function MaintenanceJobView({
           )}
         </section>
       ) : (
-        <p className="text-sm text-muted">{d.readOnly}</p>
+        <p className="text-sm text-muted">{canPhotos ? d.readOnlyWithPhotos : d.readOnly}</p>
       )}
 
       {error && <p className="text-sm text-danger">{error}</p>}
