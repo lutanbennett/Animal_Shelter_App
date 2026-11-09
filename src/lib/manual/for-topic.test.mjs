@@ -2,8 +2,8 @@
 // never silently dropped. No role name appears anywhere below on purpose: a shelter may call its roles anything.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { cardsOfTopic, holdsCard, topicView } from "./for-topic.ts";
-import { bundleJson } from "../permissions/cards.ts";
+import { cardsForTable, cardsOfTopic, holdsCard, mayViewAll, topicView } from "./for-topic.ts";
+import { bundleJson, CARD_KEYS } from "../permissions/cards.ts";
 import { parsePermissions } from "../permissions/can.ts";
 import manual from "./en.ts";
 
@@ -91,4 +91,22 @@ test("an admin-only topic is Admin's alone, and decided rather than unassigned",
   assert.deepEqual(cardsOfTopic(topic), { kind: "cards", cards: [] });
   assert.equal(topicView(topic, holding("record_weight")), "notMine");
   assert.equal(topicView(topic, admin), "mine");
+});
+
+test("?view=all is honoured for Admin alone, on the page and on the PDF route", () => {
+  assert.equal(mayViewAll(admin, "all"), true);
+  assert.equal(mayViewAll(admin, null), false);
+  assert.equal(mayViewAll(holding("record_weight"), "all"), false);
+  assert.equal(mayViewAll(holding(), "all"), false, "a login whose cards open nothing is not handed the manual either");
+  assert.equal(mayViewAll(null, "all"), false);
+});
+
+test("Cards at a glance lists only the cards held; Admin sees the whole catalogue", () => {
+  const two = cardsForTable(holding("record_weight", "add_medical_photos"), CARD_KEYS);
+  assert.ok(two.includes("record_weight") && two.includes("add_medical_photos"));
+  assert.ok(two.length < CARD_KEYS.length / 2, "far fewer than the whole catalogue");
+  assert.ok(two.every((k) => holdsCard(holding("record_weight", "add_medical_photos"), k)));
+  assert.deepEqual(cardsForTable(admin, CARD_KEYS), [...CARD_KEYS]);
+  assert.deepEqual(cardsForTable(holding(), CARD_KEYS), []);
+  assert.deepEqual(cardsForTable(null, CARD_KEYS), []);
 });
