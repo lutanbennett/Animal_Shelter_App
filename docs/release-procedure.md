@@ -813,14 +813,13 @@ both Pi builds:
 
 ```bash
 node scripts/purge-cache.mjs --env production
-node scripts/purge-cache.mjs --env uat
+node scripts/purge-cache.mjs --env test
 ```
 
-**The UAT one works since 2026-11-09**, on its own token scoped to the `lannacare.org`
-zone alone (*What UAT needed once*, item 3) — before that it refused, and a record saying
-so is describing the old state. **Nothing purges test**, which is still true; the trap
-below says why and what the real exposure is. Note that the purge is zone-wide, so
-purging UAT also clears `test.lannacare.org`'s cache: harmless, since it re-fetches.
+**The second line covers test AND UAT.** They are one Cloudflare zone (`lannacare.org`), a purge is
+zone-wide, and the script re-checks both sites' stylesheets after it. `--env uat` does exactly the same;
+use either, not both. Both read the zone's credentials from `.env.deploy.uat` (a token that can reach
+`lannacare.org` only), since 2026-11-09 (`#prg4z`, `#pz3tk`).
 
 It purges the zone and then proves the purge took rather than trusting the API's own
 "success": where it can it re-runs the asset check, and where it cannot it prints the
@@ -1162,7 +1161,11 @@ not a streak.
 **It does not license rebuilding a Pi to chase a SHA.** The trap above stands: when
 `main` moves, read what is deploying. If the diff is clean, there is nothing to do.
 
-**THE PRODUCTION PURGE NO LONGER COVERS TEST. Nothing purges test.** Corrected
+**THE PRODUCTION PURGE NO LONGER COVERS TEST; `--env test` DOES, SINCE 2026-11-09.** `#pz3tk` made
+`--env test` read the `lannacare.org` zone's credentials from `.env.deploy.uat` and re-check both
+`test.` and `uat.`; measured that day: both stylesheets `HTTP 200, 99839 bytes (CF MISS)` after the purge,
+and `check-assets.mjs` on both Pi clones *identical to the build*. **SUPERSEDED 2026-11-09, the trap as it
+stood:** **THE PRODUCTION PURGE NO LONGER COVERS TEST. Nothing purges test.** Corrected
 2026-11-08 during `0.43.6`; this paragraph asserted the opposite for two releases.
 
 Until the 2026-11-06 cutover production and test were one Cloudflare zone, so
