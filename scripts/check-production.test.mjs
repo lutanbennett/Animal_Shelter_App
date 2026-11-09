@@ -39,6 +39,43 @@ test("role-cards-coverage and cards-union read card_grants, not a literal", asyn
   }
 });
 
+// suppliers-backfill guards 0338's catch-up rather than reporting it: the three "unlinked" figures are the
+// migration's own closing assertions, so they are only a fault once 0338 is applied. Before that they are the
+// size of the job. These three cases are the whole contract (docs/decisions/2026-11-09-suppliers-backfill-check.md).
+test("suppliers-backfill fails only when 0338 is applied and rows still point at a Vendor contact", async () => {
+  const { CHECKS } = await import("./lib/readonly-checks.mjs");
+  const c = CHECKS["suppliers-backfill"];
+  const row = (o) => ({ vendor_contacts: 20, suppliers: 20, suppliers_twinned: 20, vendor_without_supplier: 0,
+    receipts_unlinked: 0, deliveries_unlinked: 0, friends_on_vendor: 0, ...o });
+
+  // Before the apply the same orphan counts are the size of the job, not a finding.
+  const pending = row({ applied_0338: false, vendor_without_supplier: 20, suppliers: 0, suppliers_twinned: 0 });
+  assert.equal(c.failed(pending), false);
+  assert.match(c.render(pending).join(" "), /NOT applied/);
+
+  // Applied and finished.
+  const done = row({ applied_0338: true });
+  assert.equal(c.failed(done), false);
+  assert.match(c.render(done).join(" "), /back-fill is complete/);
+
+  // Applied and unfinished: each of the four counts alone is enough to fail.
+  for (const k of ["vendor_without_supplier", "receipts_unlinked", "deliveries_unlinked", "friends_on_vendor"]) {
+    const bad = row({ applied_0338: true, [k]: 1 });
+    assert.equal(c.failed(bad), true, k);
+    assert.match(c.render(bad).join(" "), /did not finish/);
+  }
+});
+
+test("suppliers-backfill reads the live tables, not a literal, and asks schema_migrations whether 0338 is applied", async () => {
+  const { buildQuery } = await import("./lib/readonly-checks.mjs");
+  const sql = buildQuery("suppliers-backfill");
+  for (const name of ["contacts", "suppliers", "stock_receipts", "stock_deliveries", "shelter_friends", "schema_migrations"]) {
+    assert.match(sql, new RegExp(name));
+  }
+  assert.match(sql, /source_contact_id/);
+  assert.doesNotMatch(sql, /values [(]/);
+});
+
 test("activities-grantable reads card_grants against permission_activities per level, not a literal", async () => {
   const { buildQuery } = await import("./lib/readonly-checks.mjs");
   const sql = buildQuery("activities-grantable");
