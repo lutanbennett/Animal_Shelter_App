@@ -19,8 +19,8 @@
 
 ## 2. Automated gates
 
-- [ ] `node scripts/worktree.mjs sync` — pending: run just before the PR
-- [ ] `node scripts/gates.mjs` — pending: result goes in the PR
+- [x] `node scripts/worktree.mjs sync` — origin/main merged in
+- [ ] `node scripts/gates.mjs` — pending: local build failed on yoga.wasm in receipt-pdf (untouched file); typecheck, lint and test pass; CI build decides
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data
@@ -60,5 +60,5 @@
 
 Result: pass
 
-Automated checks by: pending
+Automated checks by: Claude  Date: 2026-11-09 (unit tests, tsc, lint; local build failed on yoga.wasm, CI is the build check)
 Manual verification by: pending: Lutan to look at /manual on Test
