@@ -289,6 +289,29 @@ export async function updateSiteContent(
 }
 
 /**
+ * Creates the one site_content row when a database has none (#ipf1z b). Inserts { id: true } only: every other column has a
+ * default, and the old 0018 seed is NOT replayed. Asks website.content, which admin_insert_site_content (0344) asks. The
+ * singleton is kept by the table (primary key and check (id)), so pressing it twice cannot make a second row.
+ */
+export async function createSiteContentRow(
+  _state: SiteContentFormState,
+  formData: FormData,
+): Promise<SiteContentFormState> {
+  const { t } = await getT();
+  const supabase = await createClient();
+  return runWriteAction("website.createSiteContentRow", write(t), { id: writeRequestIdFrom(formData), action: "website.createSiteContentRow", db: supabase }, async () => {
+    if (!can(await loadPermissions(), "website.content")) return refuse(t.admin.security.errors.adminAccessRequired);
+
+    const { error } = await supabase.from("site_content").insert({ id: true });
+    // 23505: someone else created it a moment ago. The goal is met, so say saved.
+    if (error && error.code !== "23505") return refuse(error.message);
+
+    revalidateWebsitePages();
+    return { ok: true, success: t.common.saved };
+  });
+}
+
+/**
  * Proposes the home-page settings instead of publishing them (0315). Asks website.propose, which propose_website_draft()
  * asks; site_content has one row, so the draft is keyed 'site' and a second proposal replaces the first. The live page does
  * not change until someone holding website.approve publishes it in the approval portal.
