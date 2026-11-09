@@ -185,7 +185,7 @@ export function MaintenanceJobView({
               <ENCLOSURE_ICONS.enclosure aria-hidden="true" className="h-4 w-4" />
               {placeName(locale, job.enclosure_name, job.enclosure_name_th)}
             </Link>
-          ) : (
+          ) : job.enclosure_id && !job.enclosure_name ? null : (
             <span className="flex items-center gap-1">
               <ENCLOSURE_ICONS.enclosure aria-hidden="true" className="h-4 w-4" />
               {job.enclosure_id
