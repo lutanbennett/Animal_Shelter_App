@@ -59,3 +59,17 @@ export function topicView(topic: ManualTopic, perms: Permissions | null | undefi
 export function isForTopic(topic: ManualTopic, perms: Permissions | null | undefined): boolean {
   return topicView(topic, perms) !== "notMine";
 }
+
+/**
+ * Whether `?view=all` is honoured: Admin only (outside the card system). The address is refused, not just the link
+ * hidden, so a typed `?view=all` or `/manual/pdf?view=all` from anyone else is ignored. Pure so a test can drive it.
+ */
+export function mayViewAll(perms: Permissions | null | undefined, asked: string | null | undefined): boolean {
+  return asked === "all" && perms?.isAdmin === true;
+}
+
+/** The cards the "Cards at a glance" table lists: every card for Admin, otherwise only the ones the reader holds. */
+export function cardsForTable(perms: Permissions | null | undefined, keys: readonly CardKey[]): CardKey[] {
+  if (perms?.isAdmin) return [...keys];
+  return keys.filter((k) => holdsCard(perms, k));
+}
