@@ -49,9 +49,10 @@ async function fromManagementApi(env, projectRef, { timeoutMs, fetchImpl }) {
 
 /**
  * Ask the database itself, over PostgREST with the env file's service-role key.
- * The fallback for a project whose access token cannot read it — UAT's cannot
- * (`Missing required permission(s): database_read`), and it is now a standard
- * release target (docs/release-procedure.md, step 6).
+ * The fallback for when the access token cannot read the project. Written for UAT
+ * on 2026-11-08, when its reads died with `database_read`; that turned out to be the
+ * shell's token from the other account (now fixed: ACCOUNT_KEYS in env.mjs), but the
+ * fallback stays, because a wrong or revoked token must not leave the guard blind.
  *
  * The URL must name the SAME project the caller asked about, or this refuses:
  * answering about dev's database while the caller believes it asked UAT's is

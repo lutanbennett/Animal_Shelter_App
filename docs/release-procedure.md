@@ -58,7 +58,7 @@ exceptions, both of which should be rare enough to be remarkable:
 |---|---|
 | Cut PR, gates, CI, **merge** | Claude — **merged as soon as CI is green, without asking** (2026-10-13) |
 | Production migrations | Claude — `apply-migrations.mjs --env production` from the **main checkout**, under a user-settings allow rule added 2026-10-13 |
-| **UAT migrations** | Claude — **as soon as UAT's access token can write; it cannot today** (see *What UAT still needs once*) |
+| **UAT migrations** | Claude — `apply-migrations.mjs --env uat` from the **main checkout**. The token was never short of a permission (see *What UAT still needs once*, item 1); Lutan applied UAT's migrations with it on 2026-11-08, and no Claude session has run the apply itself yet, so the first one says whether a permission prompt stops it |
 | **Worker production deploy** | **Lutan** — the one handover |
 | Worker test deploy | Claude |
 | **Worker UAT deploy** | Claude — `--no-mail` is no longer needed to stop the mail, but say it anyway |
@@ -69,19 +69,15 @@ exceptions, both of which should be rare enough to be remarkable:
 
 ### What UAT still needs once, and none of it is per-release
 
-Measured 2026-11-08, after UAT went live. **All three are one-time jobs of Lutan's,
-and until they are done UAT is a release target whose last mile is manual.** None of
-them blocks production, and none is a reason to skip UAT.
+Measured 2026-11-08, after UAT went live. **Two remain, both one-time jobs of Lutan's,
+and until they are done UAT is a release target whose last mile is manual.** Neither
+blocks production, and neither is a reason to skip UAT.
 
-1. **UAT's Supabase access token cannot read its own database.**
-   `apply-migrations.mjs --env uat` (any mode, `--status` included) dies with
-   `Missing required permission(s): database_read`, so **nobody can apply a migration
-   to UAT by script**, and there is no second route: the repo has no Postgres client,
-   so `SUPABASE_DB_PASSWORD` is not an alternative. The fix is to add `database_read`
-   (and the write permission the query endpoint needs) to that token in the
-   `lutan.bennett1@gmail.com` Supabase account. **Until then a release whose
-   migrations UAT lacks cannot ship to UAT at all** — correctly, because the deploy
-   now refuses rather than warns.
+1. ~~**UAT's Supabase access token cannot read its own database.**~~ **SUPERSEDED
+   2026-11-08: it can. The `database_read` refusal was the wrong account's token:** the shell's `SUPABASE_ACCESS_TOKEN` (the OTHER Supabase account's) used to beat UAT's own, and since 2026-11-08 `scripts/lib/env.mjs` makes the environment file's token win (`ACCOUNT_KEYS`; `docs/decisions/2026-11-08-uat-go-live-findings.md`).
+   Measured the same day: `apply-migrations.mjs --status --env uat` refuses with the shell's token and
+   reads `339 applied, 2 pending` with UAT's; Lutan had applied UAT's migrations with it earlier that
+   day. Nothing to do in any dashboard.
 2. **The Pi's passwordless sudo does not cover `lanna-care-uat`.**
    `/etc/sudoers.d/lanna-care-restart` names `lanna-care` and `lanna-care-test` only
    (read 2026-11-08: `sudo -n systemctl is-active --quiet lanna-care-uat` answers
@@ -262,8 +258,8 @@ curl -s https://uat.lannacare.org/api/version
 node scripts/assert-schema.mjs --env uat
 ```
 
-**`--status --env uat` is not available** (`database_read`); the assertion above is
-the reading that works. And note the version it answers is **not** proof of the
+`node scripts/apply-migrations.mjs --status --env uat` works too (the old `database_read` refusal was
+the shell's token from the other account; see *What UAT still needs once*). And note the version it answers is **not** proof of the
 commit: UAT can be serving the right version number from a later `main` than the
 release, because `deploy-pi.sh` ships `origin/main`. Read the SHA in the same
 answer.
@@ -491,13 +487,10 @@ check before moving on.
 project**, which the same runner reaches with `--env uat`. Apply to UAT in the same
 pass, before UAT's deploy, for the same reason: its code reads the new columns.
 
-**UAT cannot be applied to today, and the refusal is honest rather than hidden.**
-Its access token lacks `database_read`, so **every** mode — `--status`, `--dry-run`,
-the apply, `--drift` — dies with `Missing required permission(s): database_read`
-(measured 2026-11-08). Nothing in the repo offers a second route. So on a release
-that adds a migration, **UAT's deploy will refuse until that token is fixed**, and
-the right response is to say so in the record and ship the other two, not to force
-it. See *What UAT still needs once* at the top.
+**UAT is applied to like the other two:** `node scripts/apply-migrations.mjs --env uat`, every mode.
+(Until 2026-11-08 this said every mode died with `database_read`; that was the shell's token from the
+other account, fixed in `scripts/lib/env.mjs`. If it ever reappears, the token in use is the wrong one,
+not short of a permission.)
 
 **The schema READ, unlike the apply, now works for UAT anyway.**
 `appliedMigrations()` falls back from the Management API to the database itself over
@@ -912,12 +905,9 @@ Each must end `No drift: <env> matches origin/main`, with `0` in each direction.
 Dev matters as much as production: it is the database test runs against, so
 drift there invalidates test as a pre-production check.
 
-**`--drift uat` dies with `Missing required permission(s): database_read` today,
-and that is the answer to record** — not a blank. The reading that *can* be had is
-`node scripts/assert-schema.mjs --env uat`, which reaches UAT's database by the
-other route and says whether it holds every migration the deployed commit carries.
-That is a weaker statement than drift (it does not report schema ahead of code),
-so say which one you ran.
+**`--drift uat` reads like the other two** since 2026-11-08 (the `database_read` refusal before then
+was the shell's token from the other account). `node scripts/assert-schema.mjs --env uat` is the
+weaker reading (it does not report schema ahead of code); if you ran only that, say so.
 
 **Confirm the release mail actually arrived — do not stop at "sent 1".** The
 deploy prints `deploy: release mail for <version> [UAT]: sent N, skipped M`;
