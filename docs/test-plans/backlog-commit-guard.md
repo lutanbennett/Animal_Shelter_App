@@ -6,21 +6,21 @@
 
 | | |
 |---|---|
-| Feature | `check-backlog-ids.mjs` refuses control bytes; `docs/backlog.md` pinned to `text eol=lf` |
-| Backlog item | `docs/backlog.md` → `#ayl1h` (Architecture) |
-| Branch / worktree | `claude/backlog-binary-guard` @ `C:\Development\Animal_Shelter_backlog-binary-guard` |
+| Feature | `commit-msg` hook: a backlog-branch commit must name every item it changes |
+| Backlog item | `docs/backlog.md` → `#z5pk9` (Architecture) |
+| Branch / worktree | `claude/backlog-commit-guard` @ `C:\Development\Animal_Shelter_backlog-commit-guard` |
 | Dev server | n/a: no app code changed, nothing for a dev server to serve |
 | PR | opened after this commit |
 | Tested by / date | Claude, 2026-11-09 |
 | Carries a migration? | no |
-| Tested at SHA | 01b29b5e |
+| Tested at SHA | 110f8086 |
 
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the backlog item asked for
-- [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs) — `scripts/check-backlog-ids.mjs`, `.gitattributes`, two decision files, the tick in `docs/backlog.md`
+- [x] Files/areas touched listed (routes, `worker/`, `supabase/migrations/`, shared libs) — `.githooks/commit-msg`, `scripts/check-backlog-commit-names.mjs`, one decision file, the tick in `docs/backlog.md`
 - [ ] Cards affected identified (the cards whose behaviour changes; who holds them today is labelled context only), plus whether admin and the signed-out public are affected — n/a: repo tooling only; no card, page, admin or public surface changes
-- [x] Anything explicitly **out of scope** written down, so the release manager is not surprised — `check-backlog-sections.mjs` and the hook file are deliberately unchanged (decision file)
+- [x] Anything explicitly **out of scope** written down, so the release manager is not surprised — `pre-commit`, `post-commit`, `post-merge` and CLAUDE.md unchanged (wording proposed in the decision file)
 
 ## 2. Automated gates
 
@@ -29,9 +29,9 @@
 
 ```
 === gates: typecheck exited 0 after 104s
-=== gates: lint exited 0 after 152s
-=== gates: test exited 0 after 30s
-=== gates: build exited 0 after 192s
+=== gates: lint exited 0 after 263s
+=== gates: test exited 0 after 47s
+=== gates: build exited 0 after 329s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
@@ -51,12 +51,12 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ## 4. Functional checks
 
-- [x] Happy path works end to end — clean `docs/backlog.md`: `check-backlog-ids: ok — 1031 items, 1031 ids, all present and unique`, exit 0
-- [x] Data persists — reload the page and the change is still there — `git ls-files --eol docs/backlog.md` reads `i/lf w/lf attr/text eol=lf` after commit and sync
+- [x] Happy path works end to end — scratch repo, branch `backlog`: two uncommitted edits (items aaaaa, bbbbb) committed naming both → rc=0; single-session edits (item body line, new item, section header) → rc=0
+- [x] Data persists — the hook files are committed; `git ls-files -s` shows `commit-msg` as 100755
 - [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: a check script has no create, edit or delete
 - [ ] Empty state renders sensibly (no rows yet) — n/a: the existing "no items found" crash path (exit 1) is unchanged
-- [x] Invalid input is rejected with a readable message, not a crash — planted `0x08` in a staged copy: both `sh .githooks/pre-commit` and the live hook in `C:\Development\Animal_Shelter_App\.githooks` printed `line 1189, column 32: byte 0x08` and exited 1; the script itself exits 3
-- [x] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — trailing CR on every line (CRLF tree) is not a finding; a lone mid-line CR is (`byte 0x0D`, exit 3); the planted line was 3,213 characters
+- [x] Invalid input is rejected with a readable message, not a crash — `commit -am` naming only bbbbb → refused listing `#aaaaa`; path-limited commit naming only aaaaa → refused listing `#bbbbb`; both rc=1
+- [x] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — escape `BACKLOG_COMMIT_ALLOW_UNNAMED=1` allows; non-backlog branch not checked; a deliberately crashing script allows the commit with a note (fail open)
 
 ### Role access matrix
 
@@ -79,18 +79,18 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ## 6. Regression
 
-- [x] The pages nearest the change still work (list the ones checked) — `check-backlog-sections.mjs` still `ok — 66 open items`; the hook's other checks ran and passed in the same proof
+- [x] The pages nearest the change still work (list the ones checked) — the existing pre-commit checks ran on this branch's own commits: sections ok, ids ok
 - [ ] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — n/a: no shared app file touched
 - [x] Nothing merged from `main` during `sync` was broken by this branch — gates above, run after the sync
 
 ## 7. Documentation
 
 - [x] Backlog item ticked in `docs/backlog.md` **on this branch** (follow-ups go on the `backlog` branch instead)
-- [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`) — `2026-11-08-backlog-binary-guard.md`
+- [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`) — `2026-11-09-backlog-commit-names-items.md`
 - [x] `README.md` still accurate
-- [ ] **Release notes.** — n/a: a pre-commit guard on a repository file; no shelter user could notice it
+- [ ] **Release notes.** — n/a: development tooling on a git hook; no shelter user could notice it
 - [x] Commit messages say why, not just what
-- [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** — the hook proof, the `ls-files --eol` reading with a planted byte, and the 1-line staged diff were each run; output in the PR
+- [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** — GIT_INDEX_FILE values for plain/-a/-i/path-limited commits printed from a scratch hook; every guard case run in a scratch repo
 
 ## 8. Pre-production gate
 
@@ -104,7 +104,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 - [ ] Deployed to test: `npm run deploy:test` — n/a: repo tooling, never deployed
 - [ ] Smoke-tested on `test.lannacare.org` — n/a: repo tooling, never deployed
 - [ ] **Timezone-sensitive behaviour proved, not observed at a convenient hour.** — n/a: no time handling
-- [ ] **For a boundary or banding change, the assertions cover both edges of the band and both sides of the boundary** — n/a: no band; the byte-range edges (TAB and LF allowed, 0x08 and mid-line 0x0D refused) are in section 4
+- [ ] **For a boundary or banding change, the assertions cover both edges of the band and both sides of the boundary** — n/a: no band; both sides of the naming rule (named passes, unnamed refused) are in section 4
 - [x] **Evidence pasted into this plan is the tool's actual output, unedited.**
 - [ ] Public pages (`/`, `/adopt`, `/our-work`, `/donate`) re-checked after a cache purge or a 10-minute wait — n/a: no public page changed
 
@@ -123,7 +123,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 
 ### Rollback
 
-- [ ] Rollback position stated, **including what it does not cover**. — n/a: nothing deployed; reverting the PR restores the old check
+- [ ] Rollback position stated, **including what it does not cover**. — n/a: nothing deployed; reverting the PR removes the hook
 
 ## Defects found
 
