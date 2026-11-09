@@ -166,16 +166,32 @@ file* lists. Still the best yield per turn spent, though a thinner plan than `72
    false findings teaches streams to ignore it. **The fix belongs in `brief-blocks.md`, not in a brief**;
    it is written by hand into six briefs as a stopgap.
 
-**`#7aev4` IS BUILT AND IS NOW ONE RULING OF HIS FROM CLOSED — AMENDED, AND THIS IS THE ONE THING IN THIS
-EDITION THAT IS WAITING ON LUTAN RATHER THAN ON ANYONE HERE.** #1430 landed `0346` (default NULL, INSERT
+**`#7aev4` IS BUILT, ITS LAST CLAUSE IS RULED, AND IT IS A BUILD — AMENDED TWICE IN ONE HOUR, THE SECOND
+TIME BECAUSE THE PLANNER ASKED HIM A QUESTION HE HAD ALREADY ANSWERED THREE TIMES.** #1430 landed `0346` (default NULL, INSERT
 guarded, `0217`'s approve-on-save removed), so text and photos now start blank and wait for approval.
 **The stream did NOT tick the item, correctly**, and rewrote its title to say what is open: `public_resident_cards`
 still lists **every** resident, so a *Public ok* profile photo of a resident **not** flagged for the website
 is still on the public card. That conflicts with the second gate he confirmed on 2026-11-05, and
 `docs/decisions/2026-11-09-text-approval-schema.md` names it *"Not reopened"* rather than deciding it.
-**Every other DONE WHEN clause holds.** **It needs his ruling, not a build — do not plan it as work, and do
-not "fix" it on your own reading.** The deliverable-8 condition that produced this outcome — tick only if
-every clause holds, otherwise rewrite the title — **is the second mitigation observed firing this plan.** #1423 (`0343`, the state on eight tables), #1428
+**Every other DONE WHEN clause holds.** **RULED BY HIM 2026-11-09, IN HIS OWN WORDS:** *"a resident not marked for adoption ready or without an
+appeal running will not appear on the website even if images for that resident have been ticked as suitable
+for the website."* **So a *Public ok* photo is an ADDITIONAL gate, never a substitute, and the fix is a view
+rewrite: filter `public_resident_cards` on adoption-ready OR a published non-draft appeal, through the same
+path `0343` uses. It carries a migration and it REMOVES residents from the public site, so the production
+count of what leaves is part of the job.** The item now holds all of that; **do not re-ask him.**
+
+**AND THE REASON THIS PARAGRAPH WAS WRONG TWICE IS THE MOST USEFUL THING IN THIS EDITION.** The answer was
+in `CLAUDE.md` the whole time — `(A3)` *"Ready for adoption = Show on website"* plus the appeal override,
+which `0343` had already built. **The batch-3 stream wrote *"it needs Lutan's ruling, not a build"* into the
+item's title without checking whether the ruling existed, and the planner trusted the title over the
+record.** His reply: *"I've explained this three times in the last 2 hours."* **A STREAM SAYING A DECISION IS
+OWED IS NOT EVIDENCE THAT IT IS OWED. Before you write "waiting on Lutan" about anything, grep `CLAUDE.md`
+and the item's own tail for the answer.** It is the same root as this edition's lead — a dated artifact read
+as a current fact — and it is now the third instance in one day.
+
+The deliverable-8 condition that produced the correct half of this outcome — tick only if every clause
+holds, otherwise rewrite the title — **is still the second mitigation observed firing this plan.** It worked;
+what failed was the sentence the stream put in the rewritten title. #1423 (`0343`, the state on eight tables), #1428
 (`0345`, the card `approve_text`, the Data API guard, reset-on-edit, the controls and the queue), and
 batch 3's `approval-flag-flip` (`0346`: flip the default to NULL, guard INSERT, remove `0217`'s
 approve-on-save). **His answers of 2026-11-09 settled all four numbers `726` said he owed** — photo volume
@@ -198,9 +214,10 @@ answer of 0 proves nothing, because dev has no appeals.
 
 ## OWED, AND WHO OWES IT
 
-1. **AMENDED, AND IT IS FIRST BECAUSE IT IS HIS: `#7aev4`'s last clause — the `public_resident_cards` /
-   DB-7 ruling.** See the `#7aev4` paragraph above. **Nothing is broken; the item cannot close until he
-   says which way it goes.** It is a ruling, not a build.
+1. **AMENDED AGAIN — NO LONGER HIS. `#7aev4`'s last clause is RULED and is a BUILD**, carrying a view
+   rewrite and a migration: filter `public_resident_cards` on adoption-ready OR a published non-draft
+   appeal. **It takes residents OFF the public site, so it needs the production count of what leaves,
+   before and after.** See the `#7aev4` paragraph above. **Nothing here is waiting on him.**
 2. **`#k7waq` — the production appeal-override count, before `0343` deploys.** Instrument exists.
    **Planner's or release manager's.** **AMENDED: `0346` is now pending on production too**, so the
    production queue is `0343`, `0344`, `0345`, `0346` — and `0346` is the one that changes what new
