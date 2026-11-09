@@ -788,8 +788,14 @@ those two are the only errors and compares every count against the archive
 itself. A backup made **before 2026-10-13** lacks the `private` schema and
 fails this rehearsal (see below); that is correct, not a fault in the script.
 
+**Since 2026-11-09 it also checks privileges.** Its throwaway server is given Supabase's default
+privileges, so the `--no-privileges` restore goes wrong exactly as on a real project, and it then
+runs the same reset-and-replay as `scripts/restore-grants.mjs` and requires every one of the
+backup's privilege statements back, none extra (on the 2026-11-08 production backup: 382 missing
+and 541 extra before, 903 of 903 after).
+
 **What the rehearsal does not prove** is that a *Supabase project* comes
-back. Ownership, grants, Supabase's own `auth` set-up and signing in only
+back. Ownership, Supabase's own `auth` set-up and signing in only
 exist on Supabase, and the roles the rehearsal creates are empty stand-ins.
 That half is still unproved and is its own backlog item
 (`docs/decisions/2026-10-13-restore-rehearsal-local.md`).
@@ -849,15 +855,30 @@ before pasting anywhere.
    **It is slow over the internet**: several minutes for a 1.3 MB backup. Give
    it time, and do not run it through anything with a 120-second timeout, which will cut it off
    part-way.
-4. **Check the counts.** In the drill's result: 82 public base tables, 53
+4. **Put the backup's privileges back** — straight after step 3, before step 5's newer migrations:
+
+   ```bash
+   node scripts/restore-grants.mjs <file>.dump --env production --confirm <project ref>
+   ```
+
+   (or the `.dump.age` with `--identity path/to/key.txt`, decrypted in memory). **Added 2026-11-09
+   (`#rg7pv`).** Step 3's `--no-privileges` is wrong in both directions on Supabase: objects in the
+   hand-made `private` schema get no grants at all, so Residents says *permission denied for view
+   resident_current_state*; and everything in `public` gets Supabase's default privileges, which
+   restore roughly 890 grants the migrations had revoked (TRUNCATE, DELETE, internal functions).
+   The script resets `public`/`private` to their built-in defaults and replays the backup's own
+   privilege entries **in one transaction**, then compares the project's privileges with the
+   backup's line for line, and exits 0 only on an exact match. It touches only objects the backup
+   holds, so a later migration's grants are safe. Measured on UAT, 2026-11-09: 923 of 923
+   statements, none missing, none extra. (*Superseded:* this step used to say Supabase's default
+   privileges were enough "with no manual grants". They gave access, and far too much of it.)
+5. **Check the counts.** In the drill's result: 82 public base tables, 53
    views across `public` and `private`, 324 policies, 304 residents,
    `schema_migrations` 226 rows (the same as the backup), `auth.users` 5,
-   `identities` 7. Supabase's default privileges gave `anon`,
-   `authenticated` and `service_role` access to every restored public table
-   with no manual grants. Then `node scripts/apply-migrations.mjs --status --env …`
+   `identities` 7. Then `node scripts/apply-migrations.mjs --status --env …`
    to apply anything newer than the backup (**this last command was not run
    in the drill**).
-5. Delete the decrypted `.dump`: it is plaintext.
+6. Delete the decrypted `.dump`: it is plaintext.
 
 **Logins after a real disaster.** A restore brings back everyone's password
 *hashes*, not passwords, so nobody can sign in unless they know their old
