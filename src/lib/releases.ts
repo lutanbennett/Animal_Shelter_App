@@ -70,38 +70,51 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
-  "On a maintenance job, the enclosure name is now plain text unless your cards let you open enclosures, so it no longer sends you to a No access page. The note at the top of a job you can only view now mentions adding photos only if you can add them. The Thai wording has not been checked by a Thai speaker.",
-  "The user manual now follows your cards more closely. Topics about screens you cannot open no longer appear just because they were meant for everyone: Finding a resident, The resident hub and The public pages are now shown only to logins whose cards open them, and Finding your way around no longer assumes you have a menu. Residents and a resident's page each have a shorter who-and-where version for a login without the full record. Cards that had no topic now have one, including Reels (adding one and recording where it went), the website gallery, proposing website changes, approving public text, proposing and reading translations, setting up diets, and Bills settings.",
-  "The user manual and its PDF now list only the cards you hold under Cards at a glance, instead of every card the shelter has. The Show everything link and the whole-manual PDF are now for Admin only; for anyone else, asking for them by address gives their own cards' manual.",
-  {
-    text: "New card, Approve public text, and a new screen of the same name. Words that the public website shows (an animal's story, an adoption update, an appeal, an event, a project folder or a sterilisation drive) can now be read and answered: Approve, or Keep private. Each of those records shows whether its words have been read, and the screen lists the ones still waiting. Changing the public words of a record now sends it back to 'not read yet', and the website hides it until someone holding the card approves it again, so read the waiting list after editing. Nobody holds the card yet; give it under Settings → Who does what to whoever should read the words. New records are still shown straight away for now. The Thai wording has not been checked by a Thai speaker.",
-    cards: ["approve_text"],
-  },
-  "New words and new photos for the public website now wait to be read before anyone can see them. When you add an animal, an adoption update, an appeal, an event, a project folder or a sterilisation drive, its words stay off the website until someone with the Approve public text card has read them, and a photo stays off until someone with the photo approval card has approved it, even if you are allowed to publish. Nothing already on the website has changed. Editing the words of something already approved hides it again until it is re-approved.",
-  "A published appeal now shows on the public website for as long as it is published, even when the animal is not ticked Ready for adoption. Before, an appeal for an animal that was not ready for adoption never appeared on the site, and those are the animals appeals are for. Appeals still need to be published and out of draft, and a Medical photo still needs its own tick to appear.",
-  {
-    text: "Settings → Recent changes now lists a change to which cards a card brings with it, for example \"Adoption news includes View residents\", under \"Cards a card brings with it\". Before, that kind of change altered what a card gives everyone who holds it and left no record anywhere. Like other card changes, it can't be undone from that page. The Thai wording has not been checked by a Thai speaker.",
-    admin: true,
-  },
-  {
-    text: "Settings → Diets now opens on one card of its own, Set up diets: the recipe book, the ingredients and the ways each is measured. Before, the page quietly needed two other permissions together, so giving someone just one of them showed nothing and said nothing. Nobody holds the new card yet; give it under Settings → Who does what to whoever should keep the diets. The Thai wording has not been checked by a Thai speaker.",
-    cards: ["diet_settings"],
-  },
-  "Photos to approve: each event photo now shows the event's date under its title, so two events with similar names can be told apart. Two messages on the photo screens were also corrected: the resident picker no longer tells you to ask an admin (it now says to ask whoever manages cards at your shelter), and the 30-day alert on the status page no longer says a waiting photo is tagged to an enclosure, since a photo can now be saved with no place at all. The Thai wording has not been checked by a Thai speaker.",
-  "Every home screen now ends with a User manual tile, so the manual is one tap away even if your home has no menu. It was always in the menu under your name at the top right; the tile just makes it easy to find.",
-  {
-    text: "On Management → Translations, when saving, proposing, approving or rejecting a label's Thai is refused (for example, someone else approved or rejected the proposal first), the reason now shows in Thai for a Thai reader instead of in English. Other screens are not changed yet. The Thai wording has not been checked by a Thai speaker.",
-    cards: ["translations", "propose_translations"],
-  },
-  {
-    text: "Suppliers are now their own list, no longer part of Contacts. Management → Suppliers is where you add a supplier, change its details, and archive or restore it; Contacts now holds only people. Every supplier you had filed as a Vendor was copied across, with its deliveries and bills, and the delivery forms, bills and the shopping list read the new list. A supplier can be made a Shelter Friend from its own page, the same as a contact. A new card, Manage suppliers, gives this; anyone who had Manage contacts was given it. Suppliers cannot be deleted, only archived. The Thai wording has not been checked by a Thai speaker.",
-    cards: ["suppliers"],
-  },
-  "Release notes and Change password are now tiles on everyone's home screen, after the user manual. A login with no left-hand menu, such as a Volunteer, could not reach either page, so could not change their own password. Both are also still under your name at the top right.",
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.44.0",
+    date: "2026-11-09",
+    title: "Public words wait to be approved, suppliers get their own list, and the manual follows your cards",
+    major: true,
+    notes: [
+      "On a maintenance job, the enclosure name is now plain text unless your cards let you open enclosures, so it no longer sends you to a No access page. The note at the top of a job you can only view now mentions adding photos only if you can add them. The Thai wording has not been checked by a Thai speaker.",
+      "The user manual now follows your cards more closely. Topics about screens you cannot open no longer appear just because they were meant for everyone: Finding a resident, The resident hub and The public pages are now shown only to logins whose cards open them, and Finding your way around no longer assumes you have a menu. Residents and a resident's page each have a shorter who-and-where version for a login without the full record. Cards that had no topic now have one, including Reels (adding one and recording where it went), the website gallery, proposing website changes, approving public text, proposing and reading translations, setting up diets, and Bills settings.",
+      "The user manual and its PDF now list only the cards you hold under Cards at a glance, instead of every card the shelter has. The Show everything link and the whole-manual PDF are now for Admin only; for anyone else, asking for them by address gives their own cards' manual.",
+      {
+        text: "New card, Approve public text, and a new screen of the same name. Words that the public website shows (an animal's story, an adoption update, an appeal, an event, a project folder or a sterilisation drive) can now be read and answered: Approve, or Keep private. Each of those records shows whether its words have been read, and the screen lists the ones still waiting. Changing the public words of a record now sends it back to 'not read yet', and the website hides it until someone holding the card approves it again, so read the waiting list after editing. Nobody holds the card yet; give it under Settings → Who does what to whoever should read the words. New records are still shown straight away for now. The Thai wording has not been checked by a Thai speaker.",
+        cards: ["approve_text"],
+      },
+      "New words and new photos for the public website now wait to be read before anyone can see them. When you add an animal, an adoption update, an appeal, an event, a project folder or a sterilisation drive, its words stay off the website until someone with the Approve public text card has read them, and a photo stays off until someone with the photo approval card has approved it, even if you are allowed to publish. Nothing already on the website has changed. Editing the words of something already approved hides it again until it is re-approved.",
+      "A published appeal now shows on the public website for as long as it is published, even when the animal is not ticked Ready for adoption. Before, an appeal for an animal that was not ready for adoption never appeared on the site, and those are the animals appeals are for. Appeals still need to be published and out of draft, and a Medical photo still needs its own tick to appear.",
+      {
+        text: "Settings → Recent changes now lists a change to which cards a card brings with it, for example \"Adoption news includes View residents\", under \"Cards a card brings with it\". Before, that kind of change altered what a card gives everyone who holds it and left no record anywhere. Like other card changes, it can't be undone from that page. The Thai wording has not been checked by a Thai speaker.",
+        admin: true,
+      },
+      {
+        text: "Settings → Diets now opens on one card of its own, Set up diets: the recipe book, the ingredients and the ways each is measured. Before, the page quietly needed two other permissions together, so giving someone just one of them showed nothing and said nothing. Nobody holds the new card yet; give it under Settings → Who does what to whoever should keep the diets. The Thai wording has not been checked by a Thai speaker.",
+        cards: ["diet_settings"],
+      },
+      "Photos to approve: each event photo now shows the event's date under its title, so two events with similar names can be told apart. Two messages on the photo screens were also corrected: the resident picker no longer tells you to ask an admin (it now says to ask whoever manages cards at your shelter), and the 30-day alert on the status page no longer says a waiting photo is tagged to an enclosure, since a photo can now be saved with no place at all. The Thai wording has not been checked by a Thai speaker.",
+      "Every home screen now ends with a User manual tile, so the manual is one tap away even if your home has no menu. It was always in the menu under your name at the top right; the tile just makes it easy to find.",
+      {
+        text: "On Management → Translations, when saving, proposing, approving or rejecting a label's Thai is refused (for example, someone else approved or rejected the proposal first), the reason now shows in Thai for a Thai reader instead of in English. Other screens are not changed yet. The Thai wording has not been checked by a Thai speaker.",
+        cards: ["translations", "propose_translations"],
+      },
+      {
+        text: "Suppliers are now their own list, no longer part of Contacts. Management → Suppliers is where you add a supplier, change its details, and archive or restore it; Contacts now holds only people. Every supplier you had filed as a Vendor was copied across, with its deliveries and bills, and the delivery forms, bills and the shopping list read the new list. A supplier can be made a Shelter Friend from its own page, the same as a contact. A new card, Manage suppliers, gives this; anyone who had Manage contacts was given it. Suppliers cannot be deleted, only archived. The Thai wording has not been checked by a Thai speaker.",
+        cards: ["suppliers"],
+      },
+      "Release notes and Change password are now tiles on everyone's home screen, after the user manual. A login with no left-hand menu, such as a Volunteer, could not reach either page, so could not change their own password. Both are also still under your name at the top right.",
+      {
+        text:
+          "Settings → Website no longer looks broken when the shelter's website settings have never been saved. The page now says plainly that nothing is set up yet, and offers a Create the website settings button so whoever holds the Website card can set them up without help. The Thai wording has not been checked by a Thai speaker.",
+        cards: ["website"],
+      },
+    ],
+  },
   {
     version: "0.43.6",
     date: "2026-11-08",
