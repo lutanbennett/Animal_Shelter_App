@@ -745,6 +745,11 @@
         "migration": "0336_shelter_friends_supplier_subject.sql",
         "item": "grant to anon",
         "reason": "SELECT on the public view public_shelter_friends, restated with the same grants as before (0076, 0164). Nothing is newly granted: anon already read it. The view now also draws a Friend whose subject is a supplier, still only when published and not archived and still behind the same show_* boxes. The base tables shelter_friends and suppliers are not granted to anon. The existing public-site pattern: it lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-08-suppliers-schema.md."
+      },
+      {
+        "migration": "0342_profile_photo_positive_test.sql",
+        "item": "grant to anon",
+        "reason": "SELECT on the public views public_resident_cards, public_resident_profiles and public_recent_adoptions, each restated with the same grants as before (0217). Nothing is newly granted: anon already read all three. The only change is the profile photo column, which now shows a photo only when it is an approved, non-Medical picture attachment of that resident (0319's test) instead of whenever no bad attachment row matched, so it NARROWS what anon can read. The base table residents is not granted to anon. The existing public-site pattern: it lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-09-profile-photo-fails-open.md."
       }
     ],
     "stubs": [
