@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-55 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+56 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -269,6 +269,17 @@ Result: pending
 0. Sign in with `--cards diet_settings`. The home screen shows the **Set up diets** tile (or the tile of a card that includes it).
 1. Open `/admin/diets`: it loads.
 2. **Do:** Settings → Diets: the recipe book, ingredients and their measures; add, change and delete. Use a disposable record named `walk-diet_settings`. **Read-back:** an ingredient's Save on /admin/diets/ingredients/<id> reads "Saved." and the note was read back from the database (driven in the browser). Adding, changing and deleting an ingredient, a diet, a recipe line and a measure all ran as this card alone in a rollback test; where each shows on screen afterwards was not driven. No Stock link is drawn for this card alone (2026-11-09, #1408).
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Approve public text (`approve_text`)
+
+- Opens: `/text/approve`
+
+0. Sign in with `--cards approve_text`. The home screen shows the **Approve public text** tile (or the tile of a card that includes it).
+1. Open `/text/approve`: it loads.
+2. **Do:** Public text to approve: read the words waiting for the website and approve or keep private. Use a disposable record named `walk-approve_text`. **Read-back:** the waiting text shows under Public text to approve; Approve or Keep private reads back as public_ok or private_only from the database (driven in the browser on dev)...
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
