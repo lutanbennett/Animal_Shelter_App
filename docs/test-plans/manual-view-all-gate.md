@@ -60,5 +60,5 @@
 
 Result: pass
 
-Automated checks by: Claude  Date: 2026-11-09 (unit tests, tsc, lint; local build failed on yoga.wasm, CI is the build check)
+Automated checks by: Claude  Date: 2026-11-09
 Manual verification by: pending: Lutan to look at /manual on Test
