@@ -33,10 +33,11 @@
 // says how to get them. Exit status 0 only when every check passed.
 
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { decryptBackup } from "./lib/backup-crypto.mjs";
+import { aclTocLines, compareAcls, GRANT_SCHEMAS, resetSql } from "./lib/restore-grants.mjs";
 
 const MIN_PG_MAJOR = 17;
 const SCHEMAS = ["public", "private", "auth"];
@@ -61,6 +62,12 @@ do $$ declare r text; begin
 create schema if not exists extensions;
 create extension if not exists pgcrypto with schema extensions;
 create extension if not exists "uuid-ossp" with schema extensions;
+-- Supabase's own default privileges on public, so a --no-privileges restore here goes wrong
+-- exactly as it does on a real project (#rg7pv) and the privileges step below has to fix it.
+grant usage on schema public to anon, authenticated, service_role;
+alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
 `;
 
 const args = process.argv.slice(2);
@@ -181,6 +188,22 @@ try {
 
   const migrations = psql("restore_rehearsal", "select count(*) || ' applied, newest ' || coalesce(max(filename), 'none') from public.schema_migrations");
   check(!/^0 /.test(migrations), `schema_migrations: ${migrations}`, "schema_migrations is empty");
+
+  // --- privileges: the step the real recipe runs as scripts/restore-grants.mjs ---------------
+  // --no-privileges above left public over-granted (Supabase's defaults) and private bare. Put
+  // the backup's own privileges back, in one transaction, then compare line for line.
+  const listFile = join(dir, "acl.list");
+  writeFileSync(listFile, aclTocLines(toc).join("\n") + "\n");
+  const replaySql = (await pipe(exe("pg_restore"), ["-L", listFile, "-f", "-"], archive)).stdout;
+  const before = compareAcls(replaySql, pgDumpSchema(), toc);
+  console.log(`  ..   before the privileges step: ${before.missing.length} missing, ${before.extra.length} extra (what --no-privileges leaves)`);
+  run(exe("psql"), [...conn("restore_rehearsal"), "-X", "-q", "-1", "-v", "ON_ERROR_STOP=1"], resetSql() + "\n" + replaySql);
+  const after = compareAcls(replaySql, pgDumpSchema(), toc);
+  check(
+    after.missing.length === 0 && after.extra.length === 0,
+    `privileges: all ${after.matched} of the backup's statements are back, none extra (restore-grants.mjs)`,
+    `privileges differ from the backup after the privileges step: ${after.missing.length} missing, ${after.extra.length} extra\n      ${[...after.missing.slice(0, 5), ...after.extra.slice(0, 5)].join("\n      ")}`,
+  );
 } catch (e) {
   failures++;
   console.error(`\nStopped: ${e.message}`);
@@ -234,6 +257,11 @@ function run(cmd, cmdArgs, input) {
   const r = spawnSync(cmd, cmdArgs, { input, encoding: "utf8", maxBuffer: 256 * 1024 ** 2 });
   if (r.status !== 0) throw new Error(`${cmd} exited ${r.status ?? r.error?.message}: ${(r.stderr || "").trim()}`);
   return r.stdout;
+}
+
+/** The restored database's schema for public/private as pg_dump writes it (no data), for its privilege lines. */
+function pgDumpSchema() {
+  return run(exe("pg_dump"), [...conn("restore_rehearsal"), "--schema-only", ...GRANT_SCHEMAS.flatMap((s) => ["--schema", s])]);
 }
 
 function psql(db, sql) {
