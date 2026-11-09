@@ -894,10 +894,13 @@ a user whose role is archived saw 0. A real password sign-in against the
 project's `/auth/v1/token` then read `/rest/v1/residents` (304 of 304).
 **Not covered:** the app itself was not pointed at the scratch project, and
 `apply-migrations.mjs --status` was not run (only the 226-row
-`schema_migrations` count was compared with the backup). **Gap:** a
-`pg_dump` does not contain Supabase Storage, so uploaded files and photos are
-**not** in these backups; after a disaster the database comes back but the
-files in storage buckets do not.
+`schema_migrations` count was compared with the backup). **Gap (narrowed
+2026-11-09):** a `pg_dump` does not contain Supabase Storage. This once read
+"uploaded files and photos are **not** in these backups", which overstated it:
+photos, blood-work PDFs and documents live in **Google Drive** and a Supabase
+disaster does not touch them. The only thing in a bucket is the facility map
+plan images (`src/lib/facility-map/plan-store.ts`), which a `pg_dump` still
+does not carry. See `docs/decisions/2026-11-09-restore-risk-settled.md`.
 
 **Backups made before 2026-10-13 have no `private` schema** (`backup.mjs`
 dumped only `public` and `auth` until then). Their data is complete, since
