@@ -37,8 +37,13 @@
       "routes": [{ "pattern": "test.lannacare.org", "custom_domain": true }],
       // No RELEASE_MAIL binding and RELEASE_MAIL_ENV empty: the dev database
       // never sends release mail (worker/release-mail.mjs).
-      // PUBLIC_SITE "locked": signed-out visitors get the sign-in landing page,
-      // not the public website (src/lib/public-site.ts).
+      // PUBLIC_SITE "off": nobody sees the public website here, signed in or
+      // not (src/lib/public-site.ts). Signed-out visitors get the sign-in landing
+      // page, as with "locked"; a signed-in login goes into the app, or to
+      // /no-access when its cards open nothing, never to a website page. Test
+      // only, for an outside tester (#br3f3,
+      // docs/decisions/2026-11-09-website-off-on-test.md). uat and production
+      // stay "locked", where staff may still preview the website.
       // Status alerts (src/lib/status/alerts.ts) DO run here: the cron below,
       // their own STATUS_ALERT_MAIL binding (not RELEASE_MAIL, whose guard
       // stays as it was) and the dev database's admins as recipients. This is
@@ -54,7 +59,7 @@
         "PUBLIC_HOST": "test.lannacare.org",
         "ORIGIN_TIMEOUT_MS": "20000",
         "RELEASE_MAIL_ENV": "",
-        "PUBLIC_SITE": "locked",
+        "PUBLIC_SITE": "off",
         "STATUS_ALERT_SITE": "https://test.lannacare.org",
         "STATUS_ALERT_FROM": "alerts@lannacare.org",
         // The puppy loader showcase pause on /adopt's first load

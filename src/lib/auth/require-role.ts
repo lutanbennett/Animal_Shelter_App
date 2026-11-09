@@ -1,21 +1,20 @@
 import { redirect } from "next/navigation";
 import { entersApp, type Permissions } from "@/lib/permissions/can";
+import { isPublicSiteOff } from "@/lib/public-site";
+import { NO_ACCESS_PATH } from "./next-path";
 
-/**
- * The app page that says "you do not have access to this" — where a
- * signed-in app user lands when a page's role check refuses them. Inside
- * the app, with its menu, so they are never thrown out to the public
- * website mid-task (backlog, "A refused page and a booked vet visit both
- * dump you onto the public website").
- */
-export const NO_ACCESS_PATH = "/no-access";
+export { NO_ACCESS_PATH };
 
 /**
  * Refuses a request whose permissions are already loaded. A role that opens the app gets the no-access page
  * (inside the app, with its menu); anyone else — a public viewer, or no live role — gets the public home page,
  * which is right for them and only them. What decides whether someone is in the app is the role's own
  * cards: entersApp() (docs/decisions/2026-10-04-medical-jobs-app.md), never a list of role names.
+ *
+ * While the website is off (PUBLIC_SITE "off", src/lib/public-site.ts) nobody is sent to "/": everyone gets
+ * the no-access page. "/" would only send a signed-in login on again, and before this an edge redirect
+ * from "/" to /home looped exactly this login (#br3f3).
  */
 export function refuseFor(perms: Permissions | null | undefined): never {
-  redirect(entersApp(perms) ? NO_ACCESS_PATH : "/");
+  redirect(entersApp(perms) || isPublicSiteOff() ? NO_ACCESS_PATH : "/");
 }

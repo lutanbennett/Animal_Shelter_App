@@ -37,7 +37,9 @@ import { SiteBody } from "@/components/SiteBody";
 import { PublicHeader } from "./adopt/PublicHeader";
 import { PublicFooter } from "./adopt/PublicFooter";
 import { LockedLanding } from "./LockedLanding";
-import { isPublicSiteLocked } from "@/lib/public-site";
+import { isPublicSiteLocked, isPublicSiteOff } from "@/lib/public-site";
+import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
+import { redirect } from "next/navigation";
 
 /** The "Pet of the week" card — read through public_resident_profiles. */
 type FeaturedResident = {
@@ -123,10 +125,33 @@ async function showsLockedLanding(
   supabase: Awaited<ReturnType<typeof createClient>>,
 ): Promise<boolean> {
   if (!isPublicSiteLocked()) return false;
+  // Off: nobody sees the website. A signed-in login never gets this far
+  // (offSiteDestination sends it on first); this keeps the share preview
+  // empty for everyone.
+  if (isPublicSiteOff()) return true;
   const {
     data: { user },
   } = await supabase.auth.getUser();
   return !user;
+}
+
+/**
+ * While the website is off (PUBLIC_SITE "off", src/lib/public-site.ts) "/"
+ * shows no website to anyone. A signed-out visitor still gets the sign-in
+ * landing page (Google's consent screen lists the homepage, so it stays a
+ * page); a signed-in login is sent where a fresh sign-in would land — the
+ * app, or /no-access when its cards open nothing. Never back to "/", so this
+ * cannot loop (#br3f3). Null when the website is not off, or signed out.
+ */
+async function offSiteDestination(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+): Promise<string | null> {
+  if (!isPublicSiteOff()) return null;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  return signedInLandingPath(await loadSessionRole(supabase), null);
 }
 
 /**
@@ -139,6 +164,8 @@ async function showsLockedLanding(
  */
 export default async function WelcomePage() {
   const supabase = await createClient();
+  const offDestination = await offSiteDestination(supabase);
+  if (offDestination) redirect(offDestination);
   if (await showsLockedLanding(supabase)) return <LockedLanding />;
   const [{ t, locale }, origin] = await Promise.all([getT(), getSiteOrigin()]);
 

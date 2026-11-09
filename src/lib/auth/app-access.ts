@@ -1,7 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { entersApp, parsePermissions } from "@/lib/permissions/can";
 import { isPublicPath } from "@/lib/public-paths";
-import { DEFAULT_SIGNED_IN_PATH } from "./next-path";
+import { isPublicSiteOff } from "@/lib/public-site";
+import { DEFAULT_SIGNED_IN_PATH, NO_ACCESS_PATH } from "./next-path";
 
 /**
  * Whether a login is in the app is entersApp() on its permissions, read through my_permissions(): Admin, or a role
@@ -26,9 +27,12 @@ export async function loadSessionRole(supabase: SupabaseClient): Promise<Session
  * sent to Appointments by role key, a page its cells did not open). A public
  * viewer lands on the home page — or on `next` when that is a public page, so
  * a resident card scanned on the locked site still opens after sign-in.
+ * While the website is off (src/lib/public-site.ts) there is no public page
+ * to land on, so a login whose cards open nothing lands on /no-access.
  */
 export function signedInLandingPath(role: SessionRole | null, next: string | null): string {
   if (role?.entersApp) return next ?? DEFAULT_SIGNED_IN_PATH;
+  if (isPublicSiteOff()) return NO_ACCESS_PATH;
   if (next && isPublicPath(new URL(next, "http://x").pathname)) return next;
   return "/";
 }

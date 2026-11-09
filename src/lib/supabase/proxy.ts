@@ -7,9 +7,9 @@ import {
   signedInWithPassword,
 } from "@/lib/auth/password-change";
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
-import { safeNextPath } from "@/lib/auth/next-path";
-import { isPublicPath as isPublicPathname } from "@/lib/public-paths";
-import { isPublicSiteLocked } from "@/lib/public-site";
+import { DEFAULT_SIGNED_IN_PATH, NO_ACCESS_PATH, safeNextPath } from "@/lib/auth/next-path";
+import { isPublicPath as isPublicPathname, isWebsitePageWhenOff } from "@/lib/public-paths";
+import { isPublicSiteLocked, isPublicSiteOff } from "@/lib/public-site";
 
 /**
  * Refreshes the Supabase auth cookie on every request (required so server
@@ -51,6 +51,9 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const locked = isPublicSiteLocked();
+  // "off" is locked and more: no website for a signed-in login either
+  // (src/lib/public-site.ts, #br3f3).
+  const off = isPublicSiteOff();
   const isPublicPath = isPublicPathname(request.nextUrl.pathname, locked);
 
   // Signed out: to /login, remembering where they were going so the
@@ -88,6 +91,19 @@ export async function updateSession(request: NextRequest) {
     );
   }
 
+  // Website off: "/" is no page for a signed-in login. Sent where a fresh
+  // sign-in lands — the app, or /no-access when its cards open nothing —
+  // as a plain redirect here, because the page's own redirect
+  // (src/app/page.tsx, kept as a backstop) arrives only after the root
+  // loading screen has started streaming.
+  if (user && off && request.nextUrl.pathname === "/") {
+    const role = await loadSessionRole(supabase);
+    const url = request.nextUrl.clone();
+    url.pathname = signedInLandingPath(role, null);
+    url.search = "";
+    return noindex(withCookies(NextResponse.redirect(url), response), locked);
+  }
+
   // An account on a temporary password (src/lib/auth/password-change.ts)
   // goes nowhere but the change-password page until it has its own — when
   // it signed in with that password. A Google sign-in used no password and
@@ -118,17 +134,32 @@ export async function updateSession(request: NextRequest) {
   // signed out and told why. The change-password page stays reachable to
   // anyone on a temporary password. One role lookup per app request; the
   // public pages, where visitors and public viewers are, skip it.
+  //
+  // While the website is off a signed-in login gets the locked list too, so
+  // a website page comes through here: an app user is sent to the app's
+  // home, and a login whose cards open nothing goes to /no-access — never
+  // to "/", and /no-access is let through for it, so nothing can loop. An
+  // edge redirect from "/" to /home looped exactly that login (#br3f3).
   if (
     user &&
-    !isPublicPathname(request.nextUrl.pathname) &&
+    !isPublicPathname(request.nextUrl.pathname, off) &&
     request.nextUrl.pathname !== PASSWORD_CHANGE_PATH
   ) {
     const role = await loadSessionRole(supabase);
+    if (off && role?.entersApp && isWebsitePageWhenOff(request.nextUrl.pathname)) {
+      const url = request.nextUrl.clone();
+      url.pathname = DEFAULT_SIGNED_IN_PATH;
+      url.search = "";
+      return noindex(withCookies(NextResponse.redirect(url), response), locked);
+    }
+    if (off && role && !role.entersApp && request.nextUrl.pathname === NO_ACCESS_PATH) {
+      return noindex(response, locked);
+    }
     if (!role?.entersApp) {
       const url = request.nextUrl.clone();
       url.search = "";
       if (role) {
-        url.pathname = "/";
+        url.pathname = off ? NO_ACCESS_PATH : "/";
       } else {
         await supabase.auth.signOut();
         url.pathname = "/login";

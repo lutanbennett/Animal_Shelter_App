@@ -35,3 +35,14 @@ export function safeNextPath(next: string | null | undefined): string | null {
  * 2026-09-26, Lutan; it is now a tile on the home, and `/my` still opens it).
  */
 export const DEFAULT_SIGNED_IN_PATH = "/home";
+
+/**
+ * The app page that says "you do not have access to this" — where a
+ * signed-in app user lands when a page's role check refuses them. Inside
+ * the app, with its menu, so they are never thrown out to the public
+ * website mid-task (backlog, "A refused page and a booked vet visit both
+ * dump you onto the public website"). While the website is off
+ * (src/lib/public-site.ts) it is also where a login whose cards open nothing
+ * lands, since "/" is no longer somewhere to send it.
+ */
+export const NO_ACCESS_PATH = "/no-access";
