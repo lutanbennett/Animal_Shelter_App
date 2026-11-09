@@ -11,7 +11,7 @@
 | PR | <pending — not opened yet> |
 | Tested by / date | Claude, 2026-11-09 |
 | Carries a migration? | no |
-| Tested at SHA | <pending> |
+| Tested at SHA | `598ada28` |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,11 @@
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`
 
 ```
-<GATES OUTPUT PENDING — the run is still going; this is replaced with its real closing lines>
+=== gates: typecheck exited 0 after 10s
+=== gates: lint exited 0 after 130s
+=== gates: test exited 0 after 25s
+=== gates: build exited 0 after 55s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — `n/a: not yet — the PR does not exist at this commit`
@@ -132,6 +136,7 @@ reach. Both files are repository documentation and are not served by the app.`
 |---|---|---|---|
 | 1 | low | The last edition contradicted itself about one host: its carried bullet called `lannacare.org` *"UAT"* while its own opening page said `lannacare.org` 301s to production. Both written 2026-11-08, hours apart | fixed — the corrected bullet states it and points at the opening |
 | 2 | low | `Next free migration number` was five behind (`0338` against `0342`) within a day of being written, which is faster decay than a reader would expect of a number | fixed — corrected to `0343` and the line now tells the reader to run `git ls-tree` instead of trusting it |
+| 3 | low | Process, not product: the first gates run was invoked as `node scripts/gates.mjs | tail -25`, which discarded three of the four per-gate lines and made the shell report `tail`'s exit status rather than the gates' own. That is the trap §2 of the template names in so many words, met while filling in §2 | fixed — re-run unpiped, and the block in §2 is that run's own output |
 
 ## Left for manual verification
 
