@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { ROUTES, routeFor, routesFor, type RouteEntry } from "@/lib/permissions/routes";
 import { CARDS, type CardKey } from "@/lib/permissions/cards";
 import type { Permissions } from "@/lib/permissions/can";
-import { OUTSIDE_REGISTRY, cardTile, manualTile } from "@/lib/home/tiles";
+import { OUTSIDE_REGISTRY, cardTile, changePasswordTile, manualTile, releaseNotesTile } from "@/lib/home/tiles";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import type { CatalogueIcon } from "./catalogue-shared";
 
@@ -69,5 +69,6 @@ export function iconCatalogue(t: Dictionary, perms?: Permissions): CatalogueIcon
   const registry: Page[] = (perms ? routesFor(perms) : ROUTES).map((r) => ({ path: r.path, label: r.label(t), icon: r.icon }));
   const cards = perms ? Object.keys(CARDS).flatMap((key) => cardTile(key as CardKey, perms, t) ?? []).map((x) => ({ path: x.href, label: x.label, icon: x.icon })) : cardPages(t);
   const manual = manualTile(t);
-  return toIcons([...registry, ...cards, { path: manual.href, label: manual.label, icon: manual.icon }]);
+  const always = [manual, releaseNotesTile(t), changePasswordTile(t)].map((x) => ({ path: x.href, label: x.label, icon: x.icon }));
+  return toIcons([...registry, ...cards, ...always]);
 }

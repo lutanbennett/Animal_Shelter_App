@@ -97,6 +97,7 @@ export const unreleased: ReleaseNote[] = [
     text: "Suppliers are now their own list, no longer part of Contacts. Management → Suppliers is where you add a supplier, change its details, and archive or restore it; Contacts now holds only people. Every supplier you had filed as a Vendor was copied across, with its deliveries and bills, and the delivery forms, bills and the shopping list read the new list. A supplier can be made a Shelter Friend from its own page, the same as a contact. A new card, Manage suppliers, gives this; anyone who had Manage contacts was given it. Suppliers cannot be deleted, only archived. The Thai wording has not been checked by a Thai speaker.",
     cards: ["suppliers"],
   },
+  "Release notes and Change password are now tiles on everyone's home screen, after the user manual. A login with no left-hand menu, such as a Volunteer, could not reach either page, so could not change their own password. Both are also still under your name at the top right.",
 ];
 
 /** Newest first. */

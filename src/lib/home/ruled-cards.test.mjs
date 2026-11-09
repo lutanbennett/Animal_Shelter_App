@@ -18,11 +18,11 @@ const hrefs = (p, cards) => homeTilesFor(p, en, 0, cards).map((x) => x.href);
 
 test("no role key gets a tile its cards do not name", () => {
   for (const key of ["head_of_maintenance", "head_of_medical", "management", "second_in_command"]) {
-    assert.deepEqual(hrefs(as(key, cells), ["view_residents"]), ["/residents", "/manual"], key);
+    assert.deepEqual(hrefs(as(key, cells), ["view_residents"]), ["/residents", "/manual", "/releases", "/account/password"], key);
   }
 });
 
 test("the same tiles come back when the card is given, and only then", () => {
   const h = hrefs(as("management", cells), ["view_residents", "bills", "record_weight"]);
-  assert.deepEqual(h, ["/residents", "/bills", "/medical/weight", "/manual"]);
+  assert.deepEqual(h, ["/residents", "/bills", "/medical/weight", "/manual", "/releases", "/account/password"]);
 });

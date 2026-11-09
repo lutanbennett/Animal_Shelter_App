@@ -2,7 +2,7 @@
 // built from and whether or not counts are passed, exactly once, and no card opens the manual, so nothing can veto it.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { MANUAL_HREF, hasJobTiles, homeGroupsForRoles, homeTilesFor, homeTilesForRoles } from "./tiles.ts";
+import { MANUAL_HREF, PASSWORD_HREF, RELEASES_HREF, hasJobTiles, homeGroupsForRoles, homeTilesFor, homeTilesForRoles } from "./tiles.ts";
 import { CARDS, bundleOfCards } from "../permissions/cards.ts";
 import { parsePermissions } from "../permissions/can.ts";
 import en from "../i18n/dictionaries/en.ts";
@@ -30,14 +30,14 @@ test("a home built from cards has it, with and without counts", () => {
 test("a derived home (no cards) has it, and so does a role holding nothing", () => {
   assert.equal(manuals(homeTilesFor(as({ "resident.record": 1 }), en)), 1);
   const none = homeTilesFor(as({}), en);
-  assert.deepEqual(none.map((x) => x.href), [MANUAL_HREF]);
+  assert.deepEqual(none.map((x) => x.href), [MANUAL_HREF, RELEASES_HREF, PASSWORD_HREF]);
   assert.equal(hasJobTiles(none), false, "a home with only the manual still reads as a role with no jobs");
 });
 
-test("it is last, labelled from the dictionary in both languages", () => {
+test("it closes the home (with the two below), labelled from the dictionary in both languages", () => {
   const tiles = homeTilesFor(as({ "resident.record": 1 }), th, 0, ["view_residents"]);
-  assert.deepEqual(tiles.at(-1), { ...tiles.at(-1), href: MANUAL_HREF, label: th.nav.manual });
-  assert.equal(homeTilesFor(as({}), en).at(-1).label, en.nav.manual);
+  assert.deepEqual(tiles.at(-3), { ...tiles.at(-3), href: MANUAL_HREF, label: th.nav.manual });
+  assert.equal(homeTilesFor(as({}), en).at(-3).label, en.nav.manual);
 });
 
 test("a login with two roles has it once when merged and in every group when grouped", () => {

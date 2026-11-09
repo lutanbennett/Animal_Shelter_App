@@ -30,12 +30,12 @@ test("Operations and Management are groupings, not cards (0268)", () => {
 
 test("a role's home is exactly its cards, however wide its cells are", () => {
   const perms = role(wide);
-  assert.deepEqual(hrefs(homeTilesFor(perms, en, 0, ["view_residents"])), ["/residents", "/manual"]);
+  assert.deepEqual(hrefs(homeTilesFor(perms, en, 0, ["view_residents"])), ["/residents", "/manual", "/releases", "/account/password"]);
 });
 
 test("a ruled role key gets no card it was not given", () => {
   for (const key of ["management", "second_in_command", "head_of_medical", "head_of_maintenance"]) {
-    assert.deepEqual(hrefs(homeTilesFor(role(wide, key), en, 0, ["view_residents"])), ["/residents", "/manual"], key);
+    assert.deepEqual(hrefs(homeTilesFor(role(wide, key), en, 0, ["view_residents"])), ["/residents", "/manual", "/releases", "/account/password"], key);
   }
 });
 
