@@ -126,6 +126,7 @@ export const ACTIVITIES = [
   // 0340: Settings → Diets, every screen and every save on it, asked alone (#d3cw7). It replaced reference.types Edit AND stock.diets Edit
   // asked together, which no screen said. Yes/no: nothing on those screens is offered to read that is not also offered to change.
   { key: "diets.settings", kind: "yesno", area: "settings", sort: 87, requires: [], probes: [] },
+  { key: "text.approve", kind: "yesno", area: "settings", sort: 88, requires: [], probes: [] },
   { key: "contacts.browse", kind: "yesno", area: "contacts", sort: 57, requires: [], probes: [] },
   { key: "friends.view", kind: "yesno", area: "contacts", sort: 58, requires: [], probes: [] },
   { key: "community.outings", kind: "level", area: "projects", sort: 59, requires: [], probes: [] },

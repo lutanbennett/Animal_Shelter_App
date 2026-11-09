@@ -68,7 +68,8 @@ export type NewCardKey =
   | "view_expenses"
   | "project_folders"
   | "suppliers"
-  | "diet_settings";
+  | "diet_settings"
+  | "approve_text";
 
 export type CardKey = JobKey | NewCardKey;
 
@@ -208,6 +209,11 @@ const NEW_CARDS: Record<NewCardKey, NewCard> = {
   // their ways of measuring, add, change and delete. Not stock.diets (cost, counts and the forecast are /management/diets, the food
   // forecast card) and not reference.types (the other setup lists). Before this the page needed those two cells together.
   diet_settings: { includes: [], bundle: [{ activity: "diets.settings" }], opens: "/admin/diets" },
+  // 0345 (2026-11-09, #7aev4 app half): read the public text of a resident, an adoption update, an appeal, an event, a project folder or a
+  // sterilisation drive that is waiting, and say whether the website may show it. Exactly text.approve. It is about APPROVING, not editing: the
+  // point of the review is a second person reading what the public will read, so it grants no right to edit any of those records.
+  // Given to no role: Lutan assigns it in Who does what.
+  approve_text: { includes: [], bundle: [{ activity: "text.approve" }], opens: "/text/approve" },
   recurring_jobs: {
     includes: [],
     bundle: [{ activity: "recurring.manage" }, { activity: "recurring.do_any" }, { activity: "recurring.do_own" }],
@@ -478,6 +484,7 @@ const NEW_CARD_LABEL: Record<NewCardKey, (t: Dictionary) => string> = {
   project_folders: (t) => t.appHome.cards.projectFolders,
   suppliers: (t) => t.appHome.cards.suppliers,
   diet_settings: (t) => t.appHome.cards.dietSettings,
+  approve_text: (t) => t.appHome.cards.approveText,
   food_forecast: (t) => t.appHome.cards.foodForecast,
   medicine_forecast: (t) => t.appHome.cards.medicineForecast,
   view_cashflow: (t) => t.appHome.cards.viewCashflow,

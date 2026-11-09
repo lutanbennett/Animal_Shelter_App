@@ -352,6 +352,7 @@ const PINNED = {
   "/admin/who-does-what/details": { guards: ["if (!opensWhoDoesWhat(perms)) refuseFor(perms)"], decides: [] },
   "/admin/who-does-what/features": { guards: ["if (!opensWhoDoesWhat(perms)) refuseFor(perms)"], decides: [] },
   // Settings → Diets, the recipe book (diets-recipe-book): the one guard /admin/diets asks, diets.settings since 0340 (#d3cw7).
+  "/text/approve": { guards: ['requirePermission("text.approve")'], decides: [] },
   "/admin/diets/[id]": { guards: ['requirePermission("diets.settings")'], decides: [] },
   "/admin/diets/ingredients": { guards: ['requirePermission("diets.settings")'], decides: [] },
   "/admin/diets/ingredients/[id]": { guards: ['requirePermission("diets.settings")'], decides: [] },
