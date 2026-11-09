@@ -64,7 +64,7 @@ export function isForTopic(topic: ManualTopic, perms: Permissions | null | undef
  * Whether `?view=all` is honoured: Admin only (outside the card system). The address is refused, not just the link
  * hidden, so a typed `?view=all` or `/manual/pdf?view=all` from anyone else is ignored. Pure so a test can drive it.
  */
-export function mayViewAll(perms: Permissions | null | undefined, asked: string | null | undefined): boolean {
+export function mayViewAll(perms: Permissions | null | undefined, asked: string | string[] | null | undefined): boolean {
   return asked === "all" && perms?.isAdmin === true;
 }
 
