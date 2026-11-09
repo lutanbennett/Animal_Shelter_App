@@ -16,7 +16,8 @@
 //               .env.local so anything not set there (the Google Drive set,
 //               while Drive still runs on the dev account) falls through.
 //
-// Shell variables win over both files, as they do for `next build`. Nothing
+// Shell variables win over both files, as they do for `next build`, except the
+// account keys below (ACCOUNT_KEYS), where an environment's own file wins. Nothing
 // here is read by Next.js or OpenNext on its own: .env.deploy.* is not a name
 // either of them loads, which is the point — a production build only sees
 // production values when scripts/deploy.mjs puts them in the shell.
@@ -74,7 +75,24 @@ export function loadLayers(name) {
   };
 }
 
-/** The merged variables for an environment: shell > .env.deploy.<env> > .env.local. */
+// Keys that say WHICH ACCOUNT a script acts as, not how it behaves. For these an
+// environment's own file beats the shell. UAT lives in a second Supabase account
+// (docs/decisions/2026-11-06-uat-own-database.md) while this PC's shell carries the first
+// account's token, so with the shell winning every UAT read died with "Missing required
+// permission(s): database_read" — read on 2026-11-08 as a missing permission on UAT's
+// token, and filed as one (#t0k9r). It was the wrong account's token
+// (docs/decisions/2026-11-08-uat-go-live-findings.md). Production's file sets no token,
+// so the shell's (the production account's) still applies there.
+export const ACCOUNT_KEYS = ["SUPABASE_ACCESS_TOKEN"];
+
+/** shell > overlay > base, except that an overlay's non-empty ACCOUNT_KEYS beat the shell. */
+export function mergeLayers(base, overlay, shell) {
+  const merged = { ...base, ...overlay, ...shell };
+  for (const k of ACCOUNT_KEYS) if (overlay[k]) merged[k] = overlay[k];
+  return merged;
+}
+
+/** The merged variables for an environment: shell > .env.deploy.<env> > .env.local (see ACCOUNT_KEYS). */
 export function loadEnv(name) {
   const base = readDotEnv(".env.local");
   const overlay = name === "test" ? {} : readDotEnv(envFile(name));
@@ -82,7 +100,7 @@ export function loadEnv(name) {
     console.error(`${envFile(name)} is missing or empty — see README, "Environments".`);
     process.exit(2);
   }
-  return { ...base, ...overlay, ...process.env };
+  return mergeLayers(base, overlay, process.env);
 }
 
 /** The Supabase project ref an environment points at, for printing before acting. */
