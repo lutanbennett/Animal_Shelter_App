@@ -102,3 +102,8 @@ test("given the backup's objects, the reset touches only those (a newer migratio
   assert.doesNotMatch(sql, /suppliers/);
   assert.match(sql, /c\.relkind = 'S' and false/); // the TOC holds no sequence: none is reset
 });
+
+test("owner null selects every role's default privileges, for comparing with a real project", () => {
+  const all = aclTocLines(TOC, ["public", "private"], null);
+  assert.ok(all.some((l) => l.startsWith("5101;")));
+});

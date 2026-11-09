@@ -176,18 +176,19 @@ data yet.
     `C:\Temp\lannacare-restore\restore-errors.txt` and confirm nothing else went wrong. A failed `CREATE`,
     `COPY`, `ALTER` or `ADD CONSTRAINT` is a real problem, so stop if Claude finds one.
 
-    **Then put back the grants the copy leaves out.** Step 11's `--no-privileges` keeps out production's
-    owners and permissions, and most of them come back by themselves. These do not, and without them the
-    Residents page says *permission denied for view resident_current_state*. In UAT's SQL Editor, run:
+    **Then put back production's permissions.** Step 11's `--no-privileges` leaves them out, and on
+    Supabase that goes wrong both ways: the `private` objects get none (Residents says *permission denied
+    for view resident_current_state*), and everything in `public` gets far too many. In PowerShell, with
+    the backup and key still in `C:\Temp\lannacare-restore`:
 
     ```
-    grant execute on function private.works_with_logins(), private.works_with_residents(), private.has_app_access(), private.works_with_immunizations(), private.works_with_translations() to authenticated, service_role;
-    grant execute on function private.approved_translations(text, uuid) to anon, authenticated, service_role;
-    grant select on private.resident_current_state to authenticated, service_role;
+    node scripts/restore-grants.mjs C:\Temp\lannacare-restore\<file>.dump.age --identity C:\Temp\lannacare-restore\key.txt --env uat --confirm fsjagxmxjosauwmxwype
     ```
 
-    Claude can then read every table and view as a signed-in login to prove nothing else is refused (on
-    8 November: 163 checked, 0 refused).
+    It must end **`OK: the target's privileges are exactly the backup's.`** It does everything in one
+    transaction, so if it fails nothing has changed. (*Superseded 2026-11-09, `#rg7pv`:* this step used to be
+    three `grant` lines typed into the SQL Editor. They fixed Residents but left about 890 permissions
+    production had removed; the script replaced them, and on 9 November it put UAT exactly on production's.)
 13. **Compare the resident counts.** In UAT's SQL Editor, run `select count(*) from residents;`. Sign in to
     supabase.com as `lutan.bennett2@gmail.com`, open production's project, and run the same line there.
     The two numbers must match.

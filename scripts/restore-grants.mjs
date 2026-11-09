@@ -109,7 +109,12 @@ try {
     maxBuffer: 256 * 1024 ** 2,
   });
   if (dump.status !== 0) fail(`pg_dump of the target failed: ${(dump.stderr || "").trim()}`);
-  const { matched, missing, extra, newer } = compareAcls(replaySql, dump.stdout, toc);
+  // Compare against ALL the backup's default privileges, including Supabase's own (FOR ROLE
+  // supabase_admin), which are not replayed but which a real project should already match.
+  const fullList = join(tmp, "acl-all.list");
+  writeFileSync(fullList, aclTocLines(toc, GRANT_SCHEMAS, null).join("\n") + "\n");
+  const expectedSql = (await pipe(exe("pg_restore"), ["-L", fullList, "-f", "-"], archive)).stdout;
+  const { matched, missing, extra, newer } = compareAcls(expectedSql, dump.stdout, toc);
   console.log(`  ${matched} of the backup's privilege statements are on the target.`);
   report("MISSING on the target (in the backup)", missing);
   report("EXTRA on the target (not in the backup)", extra);

@@ -27,6 +27,8 @@ export const GRANT_SCHEMAS = ["public", "private"];
  * The TOC lines (`pg_restore --list`) to replay: ACL entries on objects in `schemas`, the
  * schemas' own ACLs, and DEFAULT ACL entries in `schemas` held by `owner` (default privileges
  * for another role cannot be set by a non-superuser, and Supabase's restorer is not one).
+ * owner null: every role's, for COMPARING with a real Supabase target, whose platform defaults
+ * (FOR ROLE supabase_admin) the backup also records and the target should already hold.
  */
 export function aclTocLines(toc, schemas = GRANT_SCHEMAS, owner = "postgres") {
   return toc.split(/\r?\n/).filter((line) => {
@@ -37,7 +39,7 @@ export function aclTocLines(toc, schemas = GRANT_SCHEMAS, owner = "postgres") {
       return schemas.includes(ns);
     }
     m = /^\d+; \d+ \d+ DEFAULT ACL (\S+) .+ (\S+)$/.exec(line);
-    return Boolean(m) && schemas.includes(m[1]) && m[2] === owner;
+    return Boolean(m) && schemas.includes(m[1]) && (owner === null || m[2] === owner);
   });
 }
 
