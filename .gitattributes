@@ -4,3 +4,8 @@ scripts/pi/*.service text eol=lf
 scripts/pi/*.timer text eol=lf
 scripts/pi/*.yml text eol=lf
 
+# The backlog is Markdown and must stay text whatever bytes reach it. On 2026-11-07 one
+# stray 0x08 made git call it binary, which switched off line-ending conversion for weeks
+# (docs/decisions/2026-11-08-backlog-binary-guard.md). An explicit attribute overrides the
+# binary guess; scripts/check-backlog-ids.mjs refuses the byte itself.
+docs/backlog.md text eol=lf

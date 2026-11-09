@@ -45,13 +45,32 @@ try {
 // to a dot-based pattern on 2026-11-03, which is how that stray byte was found.
 const ITEM = /^- \[[ x]\] (?:<!--#([a-z0-9]{5})--> )?([\s\S]*)$/;
 
+// Any C0 control character other than TAB and LF, on ANY line, item or not. A
+// CR is allowed only as the last byte of a line (a Windows working tree is
+// CRLF); the trailing one is stripped first, so a CR this still sees is a lone
+// one. WHY: on 2026-11-07 a single 0x08 — a JavaScript "\b" that had been
+// meant as the two characters `\b` in `scripts\backup-schedule.ps1` — made git
+// classify the whole file as binary for weeks, which switched off the
+// line-ending normalisation and turned a 24-line commit into a 1,517-line
+// rewrite. This script reported `ok` on every one of those runs, because it
+// only ever stripped a trailing CR. It refuses (exit 3) rather than warns: a
+// control byte in Markdown is always damage, the fix is one byte, and a warning
+// in a pre-commit hook is the kind nobody reads.
+// (docs/decisions/2026-11-08-backlog-binary-guard.md)
+const CONTROL = /[\x00-\x08\x0B-\x1F]/g;
+const hex = (c) => "0x" + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, "0");
+
 const missing = [];
 const seen = new Map();
 const duplicate = [];
+const control = [];
 let items = 0;
 
 text.split("\n").forEach((raw, i) => {
   const line = raw.replace(/\r$/, "");
+  for (const c of line.matchAll(CONTROL)) {
+    control.push({ line: i + 1, col: c.index + 1, byte: hex(c[0]), near: line.slice(Math.max(0, c.index - 30), c.index) });
+  }
   const m = line.match(ITEM);
   if (!m) return;
   items++;
@@ -67,6 +86,21 @@ text.split("\n").forEach((raw, i) => {
 if (!items) {
   console.error(`check-backlog-ids: no items found in ${FILE} — that cannot be right`);
   process.exit(1);
+}
+
+if (control.length) {
+  console.error(`check-backlog-ids: ${control.length} control character(s) in ${FILE}\n`);
+  for (const c of control.slice(0, 20)) {
+    console.error(`  line ${c.line}, column ${c.col}: byte ${c.byte} after …${JSON.stringify(c.near).slice(1, -1)}`);
+  }
+  if (control.length > 20) console.error(`  … and ${control.length - 20} more`);
+  console.error(
+    `\nA control byte makes git treat this file as binary, which switches off its` +
+      `\nline-ending normalisation. It is almost always a "\\b", "\\t" or "\\r" that a` +
+      `\nscript wrote as an escape when it meant the two characters (a Windows path).` +
+      `\nRemove or replace the byte; nothing else needs changing.\n`
+  );
+  process.exit(3);
 }
 
 const problems = [];
