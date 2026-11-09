@@ -24,11 +24,15 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in: SYNC_LINE
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in: merged cleanly before the gates, and again before the PR (the restore-grants merge)
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>`, every `<N>` `0`:
 
 ```
-GATES_LINE
+=== gates: typecheck exited 0 after 73s
+=== gates: lint exited 0 after 164s
+=== gates: test exited 0 after 35s
+=== gates: build exited 0 after 148s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
