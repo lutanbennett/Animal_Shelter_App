@@ -4,8 +4,10 @@ import { getT } from "@/lib/i18n/get-t";
 import { requirePermission } from "@/lib/permissions/require";
 import { driveImageUrl, isMedicalFolder } from "@/lib/google/drive-client";
 import { resolveSource } from "@/lib/memes/source-server";
+import type { PickableResident } from "@/lib/medical/residents";
 import { loadMemeResidents } from "@/lib/memes/residents";
 import { isSourceKind, sourcesFor, type SourceKind } from "@/lib/memes/sources";
+import type { ResidentOption } from "@/components/ResidentPicker";
 import { MemeMaker } from "./MemeMaker";
 import { ResidentSearch } from "./ResidentSearch";
 import { UploadPicker } from "./UploadPicker";
@@ -14,6 +16,8 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const FILE_ID = /^[A-Za-z0-9_-]{10,100}$/;
 const IMAGE_NAME = /\.(jpe?g|png|webp)$/i;
 const LIST_LIMIT = 90;
+
+const toOption = (r: PickableResident): ResidentOption => ({ id: r.id, name: r.name, thai_name: r.thaiName, current_status: r.status, code: r.code });
 
 type Thumb = { drive_file_id: string; file_name: string | null };
 
@@ -31,6 +35,8 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
   const { supabase, perms } = await requirePermission("social.library", "edit");
   const { t, locale } = await getT();
   const m = t.memes.maker;
+
+  const emptyNote = (k: "none" | "cannot" | null) => (k ? t.memes.form[k === "cannot" ? "cannotSeeResidents" : "noResidentsOnFile"] : undefined);
 
   const offered = sourcesFor(perms);
   const kind: SourceKind = isSourceKind(sourceParam) && offered.includes(sourceParam) ? sourceParam : "resident";
@@ -63,14 +69,19 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
     if (kind === "upload" || !FILE_ID.test(photoId)) return shell(<p role="alert" className="text-base text-danger">{m.refused}</p>, false);
     const source = await resolveSource(supabase, perms, kind, photoId);
     if (!source.ok) return shell(<p role="alert" className="text-base text-danger">{m.refused}</p>, false);
-    let label = "";
-    if (source.residentIds.length > 0) {
-      const { residents: known } = await loadMemeResidents(supabase, perms);
-      const wanted = new Set(source.residentIds);
-      label = known.filter((r) => wanted.has(r.id)).map((r) => r.name).join(", ");
-    }
+    const { residents: known, emptyKind: tagEmpty } = await loadMemeResidents(supabase, perms);
+    const wanted = new Set(source.residentIds);
+    const label = known.filter((r) => wanted.has(r.id)).map((r) => r.name).join(", ");
     return shell(
-      <MemeMaker photoSrc={driveImageUrl(photoId, 1200)} sourceKind={kind} sourceFileId={photoId} residentLabel={label} />,
+      <MemeMaker
+        photoSrc={driveImageUrl(photoId, 1200)}
+        sourceKind={kind}
+        sourceFileId={photoId}
+        residentLabel={label}
+        residents={known.map(toOption)}
+        initialResidentIds={source.residentIds}
+        residentsEmptyNote={emptyNote(tagEmpty)}
+      />,
       false,
     );
   }
@@ -91,7 +102,10 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
     );
   };
 
-  if (kind === "upload") return shell(<UploadPicker />);
+  if (kind === "upload") {
+    const { residents: known, emptyKind: tagEmpty } = await loadMemeResidents(supabase, perms);
+    return shell(<UploadPicker residents={known.map(toOption)} residentsEmptyNote={emptyNote(tagEmpty)} />);
+  }
 
   if (kind === "outing") {
     const { data } = await supabase

@@ -7,6 +7,7 @@ import { WRITE_REQUEST_FIELD } from "@/lib/write-requests";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { ActionButton } from "@/components/ActionButton";
 import { ACTION_ICONS } from "@/components/hub-icons";
+import { ResidentPicker, type ResidentOption } from "@/components/ResidentPicker";
 import { fitText } from "@/lib/memes/maker-layout";
 import type { SourceKind } from "@/lib/memes/sources";
 import { createMeme } from "../actions";
@@ -149,6 +150,9 @@ export function MemeMaker({
   sourceKind,
   sourceFileId,
   residentLabel,
+  residents,
+  initialResidentIds,
+  residentsEmptyNote,
 }: {
   /** What to draw: the photo route for a filed photo, or a blob: URL for an uploaded one (never sent anywhere). */
   photoSrc: string;
@@ -156,10 +160,17 @@ export function MemeMaker({
   /** The Drive file the photo came from; null for an upload, which is filed against nothing. */
   sourceFileId: string | null;
   residentLabel: string;
+  /** Who can be tagged, read the same way as on the new-meme screen (loadMemeResidents). */
+  residents: ResidentOption[];
+  /** The photo's own residents, shown as already chosen so the person can take one off. */
+  initialResidentIds: string[];
+  /** Why the list is empty: none on file, or this login's cards cannot see them. */
+  residentsEmptyNote?: string;
 }) {
   const { t } = useI18n();
   const createWrite = useWriteCall();
   const m = t.memes.maker;
+  const f = t.memes.form;
   const router = useRouter();
   const canvas = useRef<HTMLCanvasElement>(null);
   const [photo, setPhoto] = useState<HTMLImageElement | null>(null);
@@ -170,6 +181,7 @@ export function MemeMaker({
   const [style, setStyle] = useState<Style>("classic");
   const [crop, setCrop] = useState<Crop>("square");
   const [logoOn, setLogoOn] = useState(true);
+  const [residentIds, setResidentIds] = useState<string[]>(initialResidentIds);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -205,6 +217,9 @@ export function MemeMaker({
       data.set("captionEn", words.slice(0, 2000));
       data.set("captionTh", "");
       data.set("tags", "meme maker");
+      for (const id of residentIds) data.append("residentIds", id);
+      // The list is the whole choice, including a resident taken off: the server must not add the photo's back.
+      data.set("residentsChosen", "1");
       data.set("sourceKind", sourceKind);
       if (sourceFileId) data.set("sourceFileId", sourceFileId);
       data.set("file", new File([blob], "meme.jpg", { type: "image/jpeg" }));
@@ -215,7 +230,7 @@ export function MemeMaker({
       if (!result.ok) return setError(result.error);
       router.push(`/memes/${result.id}`);
     });
-  }, [top, bottom, sourceKind, sourceFileId, residentLabel, router, m, createWrite]);
+  }, [top, bottom, sourceKind, sourceFileId, residentLabel, residentIds, router, m, createWrite]);
 
   const choice = <T extends string>(label: string, value: T, set: (v: T) => void, options: [T, string][]) => (
     <fieldset className="flex flex-col gap-1">
@@ -263,6 +278,17 @@ export function MemeMaker({
       </div>
       {choice<Style>(m.style, style, setStyle, [["classic", m.styles.classic], ["bar", m.styles.bar], ["bubble", m.styles.bubble]])}
       {choice<Crop>(m.crop, crop, setCrop, [["square", m.crops.square], ["portrait", m.crops.portrait], ["original", m.crops.original]])}
+      <div className="flex flex-col gap-1">
+        <span className={labelClass}>{f.residents}</span>
+        <ResidentPicker
+          residents={residents}
+          selectedIds={residentIds}
+          onChange={setResidentIds}
+          triggerLabel={f.pickResidents}
+          emptyNote={residentsEmptyNote}
+        />
+        <span className="text-xs text-muted">{f.residentsHint}</span>
+      </div>
       <label className="flex min-h-11 items-center gap-3 text-base text-foreground">
         <input type="checkbox" checked={logoOn} onChange={(e) => setLogoOn(e.target.checked)} className="h-5 w-5" />
         {m.logo}
