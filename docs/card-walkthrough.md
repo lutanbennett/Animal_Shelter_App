@@ -11,7 +11,7 @@ Make the login (dev project only; it never prints the password; `--remove` delet
 node scripts/dev-signin.mjs --cards <card key> --port <your port>
 ```
 
-54 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
+55 cards. A step marked **TODO** is a named gap, not a step: the catalogue does not say what the job is, so the person running that group answers the question first.
 
 ## Administer Medication (`administer_medication`)
 
@@ -258,6 +258,17 @@ Result: pending
 0. Sign in with `--cards suppliers`. The home screen shows the **Manage suppliers** tile (or the tile of a card that includes it).
 1. Open `/management/suppliers`: it loads.
 2. **Do:** Suppliers: the list and each supplier's page (Read); add, change, archive and restore (Edit). Use a disposable record named `walk-suppliers`. **Read-back:** the supplier appears (or reads its new details) in the list at /management/suppliers after the save and on its own page /suppliers/<id>; Archive moves it out of the list (it returns under Show archived) and out of the delivery forms' supplier pickers. There is no Delete: suppliers are archived. Making it a Shelter Friend needs Publish Shelter Friends as well.
+3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
+
+Result: pending
+
+## Set up diets (`diet_settings`)
+
+- Opens: `/admin/diets`
+
+0. Sign in with `--cards diet_settings`. The home screen shows the **Set up diets** tile (or the tile of a card that includes it).
+1. Open `/admin/diets`: it loads.
+2. **Do:** Settings → Diets: the recipe book, ingredients and their measures; add, change and delete. Use a disposable record named `walk-diet_settings`. **Read-back:** an ingredient's Save on /admin/diets/ingredients/<id> reads "Saved." and the note was read back from the database (driven in the browser). Adding, changing and deleting an ingredient, a diet, a recipe line and a measure all ran as this card alone in a rollback test; where each shows on screen afterwards was not driven. No Stock link is drawn for this card alone (2026-11-09, #1408).
 3. **Refused:** open `/operations/medication-list` (the page of **Administer Medication**, which this login does not hold). Expect a refusal or redirect, not the page.
 
 Result: pending
