@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TextApprovalBar } from "@/components/TextApprovalBar";
 import { notFound } from "next/navigation";
 import { BackLink } from "@/components/BackLink";
 import { getT } from "@/lib/i18n/get-t";
@@ -159,6 +160,7 @@ export default async function AppealPage(props: PageProps<"/management/campaigns
         )}
       </section>
 
+      <TextApprovalBar kind="appeal" id={appeal.id} />
       <AppealForm mode="edit" appealId={appeal.id} initial={initial} raised={raised?.raised ?? 0} />
 
       <AppealPhotosEditor

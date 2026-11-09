@@ -386,6 +386,25 @@ export const CHECKS = {
     failed: (r) => r.applied_0338
       && r.vendor_without_supplier + r.receipts_unlinked + r.deliveries_unlinked + r.friends_on_vendor > 0,
   },
+  // The appeal override (#r9wtk, 0343): a published, non-draft appeal is public on its own, whether or not its animal is ticked Ready for adoption.
+  // It guards a decision: any appeal that is public ONLY through the override is one the shelter has not yet been shown going live,
+  // so the planner names them to Lutan before the release that carries 0343 (docs/decisions/2026-11-09-text-approval-app.md).
+  "appeal-override": {
+    asks: "Which published, non-draft appeals belong to an animal that is NOT visible on the website? Under the appeal override (0343) each of them becomes public on its own the moment the release carrying 0343 is live (and is live already if 0343 is applied). Lists title and status only. Read-only.",
+    sql: `select json_build_object(
+        'applied_0343', (select count(*) > 0 from schema_migrations where filename like '0343%'),
+        'published_appeals', (select count(*) from appeals where published and status <> 'draft'),
+        'by_override', (select coalesce(json_agg(json_build_object('title', a.title, 'status', a.status) order by a.created_at), '[]'::json)
+           from appeals a join residents r on r.id = a.resident_id
+          where a.published and a.status <> 'draft' and not r.is_public_visible))`,
+    render: (r) => {
+      const n = r.by_override.length;
+      const head = `${r.published_appeals} published, non-draft appeal(s); ${n} of them for an animal that is not visible on the website. 0343 is ${r.applied_0343 ? "APPLIED here, so the override is live" : "NOT applied here, so these become public when it is"}.`;
+      if (n === 0) return [head, "None is public only through the override: the release changes nothing a visitor sees for appeals."];
+      return [head, ...r.by_override.map((a) => `  public only through the override: "${a.title}" (${a.status})`), `Name these ${n} to Lutan before release: each goes public on its own.`];
+    },
+    failed: (r) => r.by_override.length > 0,
+  },
   "clinic-login-helpers": {
     asks: "Of the four clinic-login helper functions (current_clinic_resident_ids, clinic_login_owns_visit, doctor_can_write_attachment, clinic_login_may_edit_doctor): does each still exist, and does any live policy, view, other function or column rule call it? (Object names only.)",
     // Reads pg_proc, pg_policies, pg_views, pg_constraint and pg_attrdef, with -- comments stripped so a note that mentions a name does not

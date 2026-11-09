@@ -1,4 +1,5 @@
 import { requireFullResident } from "@/lib/residents/who-and-where";
+import { TextApprovalBar } from "@/components/TextApprovalBar";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -128,6 +129,7 @@ export default async function EditResidentPage(
         </p>
       )}
 
+      <TextApprovalBar kind="resident" id={resident.id} />
       {/* A deceased resident's record is closed except for the bio and
           photos (migrations 0026, 0052); the form renders only those
           sections, and the action writes only those columns. */}
