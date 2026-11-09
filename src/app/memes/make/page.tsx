@@ -36,6 +36,8 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
   const { t, locale } = await getT();
   const m = t.memes.maker;
 
+  const emptyNote = (k: "none" | "cannot" | null) => (k ? t.memes.form[k === "cannot" ? "cannotSeeResidents" : "noResidentsOnFile"] : undefined);
+
   const offered = sourcesFor(perms);
   const kind: SourceKind = isSourceKind(sourceParam) && offered.includes(sourceParam) ? sourceParam : "resident";
 
@@ -83,8 +85,6 @@ export default async function MakeMemePage(props: PageProps<"/memes/make">) {
       false,
     );
   }
-
-  const emptyNote = (k: "none" | "cannot" | null) => (k ? t.memes.form[k === "cannot" ? "cannotSeeResidents" : "noResidentsOnFile"] : undefined);
 
   const grid = (photos: Thumb[]) => {
     const usable = photos.filter((p) => !p.file_name || IMAGE_NAME.test(p.file_name));

@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The meme maker now lets you choose which residents are in the meme before you save it, whatever photo you started from. You no longer have to save the meme and then edit it to tag them.",
 ];
 
 /** Newest first. */
