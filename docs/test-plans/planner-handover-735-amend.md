@@ -4,21 +4,21 @@
 
 | | |
 |---|---|
-| Feature | Planner handover edition `735`, **AMENDED** — four statements that went stale between writing it and merging it, corrected in place, plus batch 3's actuals |
+| Feature | Planner handover edition `735`, **AMENDED TWICE** — (1) four statements that went stale between writing it and merging it, plus batch 3's actuals; (2) the `#7aev4` clause, which this PR first recorded as *"waiting on Lutan"* and which he had in fact already ruled three times |
 | Backlog item | `docs/backlog.md` → none. A handover is process bookkeeping, not a backlog item; `CLAUDE.md` names `docs/planner-handover.md` as one of the two documents whose PR merges on green |
 | Branch / worktree | `claude/planner-handover-735b` @ `C:\Development\Animal_Shelter_planner-handover-735` — **the same worktree, moved to a new branch cut from `origin/main` after #1431 merged**, so its `node_modules` did not have to be installed again. The folder name therefore does not match the branch; it is cleared with the rest of this plan's worktrees |
 | Dev server | not started — docs only, no runtime surface |
 | PR | see the PR this plan is pasted into |
 | Tested by / date | Claude (planner) / 2026-11-09 |
 | Carries a migration? | no |
-| Tested at SHA | 40668ca8 |
+| Tested at SHA | 11bda916 |
 
 ## 1. Scope and risk
 
 - [x] Change is described in one sentence, and it matches what the backlog item asked for — **one file amended, `docs/planner-handover.md`: seven passages of edition `735` corrected in place, each marked `AMENDED`, because the three batch-3 streams it called "briefed and handed over with no session opened" all merged BEFORE it did (#1429 11:14Z, #1430 11:32Z, #1435 12:07Z, the handover 12:14Z)**
 - [x] Files/areas touched listed — `docs/planner-handover.md` (amended; `git diff --numstat` reads **59 added, 15 removed**, a targeted diff and not a whole-file rewrite) and `docs/test-plans/planner-handover-735-amend.md` (this file). **No `src/`, no `worker/`, no `supabase/migrations/`, no shared libs, no scripts.** `git ls-files --eol` reads `i/lf w/lf`, so the CRLF worktree has not turned the edit into a whole-file change
 - [x] Cards affected identified — **none.** The file grants nothing, is read by no code, and has no card, page or activity attached to it. Admin and the signed-out public are unaffected
-- [x] Anything explicitly **out of scope** written down — **the four unplanned PRs are NAMED in the amendment but NOT reported on** (#1432, #1433, #1434, #1436); the amendment says plainly that this planner has not read their bodies and the next chat must. **Also out of scope: the `#7aev4` ruling itself**, which is Lutan's and is recorded as owed, not decided. **And the plan itself.** `.plan-day.md` is gitignored and is not in this PR. So are the two backlog items this plan filed (`#k7waq`, `#m2vxe`) and the four ticks it closed (`#h8xqv`, `#av8rq`, `#k3mqp`, `#rg7pv`): the filings went to the `backlog` branch and the ticks arrived through their own streams' PRs. **Also out of scope: batch 3's three streams**, which were briefed and handed over with no session opened, so none of their figures are in this edition and the edition says so in its own opening lines
+- [x] Anything explicitly **out of scope** written down — **the four unplanned PRs are NAMED in the amendment but NOT reported on** (#1432, #1433, #1434, #1436); the amendment says plainly that this planner has not read their bodies and the next chat must. **The `#7aev4` ruling is NO LONGER out of scope and is no longer owed:** he ruled it while this PR was open, and the amendment's second pass records the ruling and the build it implies. **What IS out of scope is that build itself** — a `public_resident_cards` view rewrite carrying a migration, which is its own stream. **And the plan itself.** `.plan-day.md` is gitignored and is not in this PR. So are the two backlog items this plan filed (`#k7waq`, `#m2vxe`) and the four ticks it closed (`#h8xqv`, `#av8rq`, `#k3mqp`, `#rg7pv`): the filings went to the `backlog` branch and the ticks arrived through their own streams' PRs. **Also out of scope: batch 3's three streams**, which were briefed and handed over with no session opened, so none of their figures are in this edition and the edition says so in its own opening lines
 
 ## 2. Automated gates
 
@@ -27,13 +27,13 @@
 
 ```
 === gates: typecheck — npm run typecheck
-=== gates: typecheck exited 0 after 55s
+=== gates: typecheck exited 0 after 18s
 === gates: lint — npm run lint
-=== gates: lint exited 0 after 168s
+=== gates: lint exited 0 after 132s
 === gates: test — npm test
-=== gates: test exited 0 after 24s
+=== gates: test exited 0 after 25s
 === gates: build — npm run build
-=== gates: build exited 0 after 103s
+=== gates: build exited 0 after 52s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
@@ -144,9 +144,10 @@ Skipped: no migration.
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| 1 | low | **The file is now 255 lines against the ~150 target `CLAUDE.md` sets** — worse than the 211 this amendment started from, and the fourth edition running to exceed it (`717` 174, `726` 195, `735` 211, now 255). **The amendment made the defect it inherited worse**, which is worth saying plainly rather than burying | accepted, **and escalated**: it is no longer a trend to note but a task. The next editor should cut it to target as its own piece of work, and the obvious cut is the band evidence, which is duplicated in `.plan-day.md` |
+| 1 | low | **The file is now 272 lines against the ~150 target `CLAUDE.md` sets** — against 211 when this amendment started and 255 after its first pass, and the fourth edition running to exceed it (`717` 174, `726` 195, `735` 211, now 272). **Both amendment passes made the defect they inherited worse**, which is worth saying plainly rather than burying | accepted, **and escalated**: it is no longer a trend to note but a task. The next editor should cut it to target as its own piece of work, and the obvious cut is the band evidence, which is duplicated in `.plan-day.md` |
 | 2 | medium | **The amendment exists because the document committed its own lead fault a second time.** `735`'s lead is *"a snapshot is also a snapshot in time"*, and three paragraphs later it asserted the state of three streams that were still running. **A rule stated in a document does not bind the document** | accepted and recorded in the amendment itself rather than fixed, because the fix is behavioural: the handover is written at the SETUP of the last batch by design, so it will always describe streams mid-flight. **The correction is to write those streams' state as "briefed at <time>, unknown since" rather than as a fact** |
 | 3 | low | Four unplanned PRs (#1432–#1434, #1436) are named but not reported on. Their findings are not in any handover | accepted — named in the amendment with an explicit instruction that the next chat reads their bodies. **Filing from them is the next planner's first-turn work, not this amendment's** |
+| 4 | **medium** | **The planner put a question to Lutan that he had already answered three times in two hours** — whether a resident not marked adoption-ready and with no running appeal appears on the website. The answer was in `CLAUDE.md` as `(A3)` plus the appeal override the whole time. **The cause is traceable: the batch-3 stream wrote *"it needs Lutan's ruling, not a build"* into `#7aev4`'s title without checking whether the ruling existed, and the planner trusted that title over the record.** His reply: *"I've explained this three times in the last 2 hours."* | **fixed in the record, not just noted.** His ruling is written verbatim into `#7aev4` on the `backlog` branch (`774ff1b5`) with the build it implies, into this handover's `#7aev4` paragraph, and into memory. The general rule is stated in the handover where every session reads it: **a stream saying a decision is owed is not evidence that it is owed — grep `CLAUDE.md` and the item's tail before writing "waiting on Lutan"** |
 
 ## Left for manual verification
 
