@@ -39,18 +39,18 @@ wait for `worktree.mjs new` to exit before trusting the tree. A gate ticked
 because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
-- [ ] `node scripts/worktree.mjs sync` — pending: run in the finishing sequence
+- [x] `node scripts/worktree.mjs sync` — origin/main merged; one conflict in releases.ts resolved by keeping both notes
 - [x] `node scripts/gates.mjs` — all four gates, every exit code 0. Output:
 
 ```
 === gates: typecheck — npm run typecheck
-=== gates: typecheck exited 0 after 89s
+=== gates: typecheck exited 0 after 96s
 === gates: lint — npm run lint
-=== gates: lint exited 0 after 256s
+=== gates: lint exited 0 after 150s
 === gates: test — npm test
-=== gates: test exited 0 after 43s
+=== gates: test exited 0 after 24s
 === gates: build — npm run build
-=== gates: build exited 0 after 245s
+=== gates: build exited 0 after 131s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 
