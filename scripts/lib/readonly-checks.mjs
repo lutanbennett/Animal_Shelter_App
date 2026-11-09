@@ -12,6 +12,7 @@
 
 import { sqlCodeOnly } from "./sql-code-only.mjs";
 import { liveUnlisted } from "../check-translations-unlisted.mjs";
+import { compareToAllowlist } from "./ungranted-allowlist.mjs";
 
 const FORBIDDEN = /\b(insert|update|delete|truncate|drop|alter|create|grant|revoke|copy|call|do|vacuum|reindex|set|nextval|setval|pg_terminate_backend|pg_cancel_backend)\b/i;
 
@@ -177,15 +178,31 @@ export const CHECKS = {
          ...r.unapplied.map((x) => `${x.activity}: backed by a card but missing from ${x.holders} holders`)],
     failed: (r) => r.unbacked.length + r.unapplied.length > 0,
   },
+  // REWRITTEN 2026-11-09 (docs/decisions/2026-11-09-activities-grantable-ruling.md). It used to list every activity with no
+  // card_grants row and fail on any, so it exited 1 for ever: some of those are Admin-only BY A RULING (maintenance.delete,
+  // Lutan 2026-10-28), and fault-maintenance-delete below asserts the opposite of what this one flagged. It now asks per
+  // LEVEL (it was blind to an activity granted at read but never at edit) and judges the live gaps against the same dated
+  // rulings as scripts/check-ungranted-activities.mjs, through the same function: exit 0 when the live Admin-only set is
+  // exactly the ruled-or-recorded set, exit 1 naming any activity that joins or leaves it. It keeps the LIVE read on
+  // purpose: CI's check reads cards.ts, and only this one sees a card_grants row edited on Who does what.
   "activities-grantable": {
-    asks: "For each activity in the catalogue: can any card grant it at all? Lists every activity no card_grants row names (the mirror of role-cards-coverage, which asks whether a card does nothing; this asks whether an activity can be had from a card). Admin passes every activity by its own rule and is not a card, so an activity only Admin may do is not an activity: it is an Admin check in code. None is correct.",
-    sql: `select coalesce(json_agg(a.key order by a.key), '[]'::json)
-      from permission_activities a
-      where not exists (select 1 from card_grants g where g.activity = a.key)`,
-    render: (rows) => rows.length
-      ? rows.map((k) => `${k}: no card grants it, so only Admin can ever do it`)
-      : ["Every activity in the catalogue is granted by at least one card."],
-    failed: (rows) => rows.length > 0,
+    asks: "For each activity in the catalogue, at each level it has: can any card grant it? An activity+level no card_grants row reaches is Admin-only (Admin passes everything by its own rule and is not a card). Each such gap must be a dated record in docs/ungranted-activities-allowlist.json: ruled Admin-only on purpose, or recorded as found and not yet ruled (printed UNRULED, does not fail). Fails on a gap on neither list, or a record whose gap a card now closes.",
+    sql: `select json_build_object(
+        'catalogue', (select coalesce(json_agg(a.key order by a.key), '[]'::json) from permission_activities a),
+        'gaps', (select coalesce(json_agg(a.key || '@' || case l.n when 1 then 'read' else 'edit' end order by a.key, l.n), '[]'::json)
+          from permission_activities a cross join generate_series(1, 2) as l(n)
+          where (a.kind = 'level' or l.n = 2)
+            and coalesce((select max(g.level) from card_grants g where g.activity = a.key), 0) < l.n))`,
+    render: (r) => {
+      const v = compareToAllowlist(r.gaps, r.catalogue);
+      return [
+        ...v.ruled,
+        ...v.unruled.map((l) => `UNRULED ${l}`),
+        ...v.fails.map((l) => `FAIL ${l}`),
+        v.fails.length ? `NOT CLEAN: ${v.fails.length} difference(s) from the ruled set above` : `ok   the live Admin-only set matches the allow-list: ${v.summary}`,
+      ];
+    },
+    failed: (r) => compareToAllowlist(r.gaps, r.catalogue).fails.length > 0,
   },
   "fault-residents-lifecycle": {
     asks: "TRANSIENT CONTEXT, not a finding — SUPERSEDED as a fault check by `card-lifecycle-enclosures`, which asks the card question and guards the invariant. Kept only to show who is affected today: Which roles hold the Residents card or a placement cell but not facility.enclosures at read? (They cannot move, hospitalise, foster/adopt or record a death: the enclosure lookup is refused.)",
