@@ -73,11 +73,11 @@ begin
   insert into enclosures (name, zone_id) values ('Harness 0079 Empty', v_zone) returning id into v_e3;
 
   -- A lives in e1. B died, C is in hospital, D was adopted — all from e1. E moved e1 → e2.
-  insert into residents (name, species, bio) values ('Harness 0079 Alpha', 'Dog', 'public bio') returning id into r_a;
-  insert into residents (name, species) values ('Harness 0079 Bravo', 'Dog') returning id into r_b;
-  insert into residents (name, species) values ('Harness 0079 Charlie', 'Cat') returning id into r_c;
-  insert into residents (name, species) values ('Harness 0079 Delta', 'Dog') returning id into r_d;
-  insert into residents (name, species) values ('Harness 0079 Echo', 'Cat') returning id into r_e;
+  insert into residents (name, species, bio, ready_for_adoption) values ('Harness 0079 Alpha', 'Dog', 'public bio', true) returning id into r_a;
+  insert into residents (name, species, ready_for_adoption) values ('Harness 0079 Bravo', 'Dog', true) returning id into r_b;
+  insert into residents (name, species, ready_for_adoption) values ('Harness 0079 Charlie', 'Cat', true) returning id into r_c;
+  insert into residents (name, species, ready_for_adoption) values ('Harness 0079 Delta', 'Dog', true) returning id into r_d;
+  insert into residents (name, species, ready_for_adoption) values ('Harness 0079 Echo', 'Cat', true) returning id into r_e;
   insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id)
   select r, 'Intake', '2026-01-01', v_zone, v_e1 from unnest(array[r_a, r_b, r_c, r_d, r_e]) r;
   insert into placement_history (resident_id, placement_type, start_date, zone_id, enclosure_id, previous_enclosure_id, cause_of_death)
@@ -127,6 +127,11 @@ begin
   v_listed := pg_temp.anon_listed();
   if v_listed && array[r_b, r_c, r_d] then raise exception 'FAIL E a deceased / hospitalised / adopted resident is listed'; end if;
 
+  -- E2. 0347: a resident who is neither adoption-ready nor under a running appeal is on no enclosure page
+  update residents set ready_for_adoption = false where id = r_a;
+  if pg_temp.anon_listed() && array[r_a] then raise exception 'FAIL E2 an off-website resident is listed'; end if;
+  update residents set ready_for_adoption = true where id = r_a;
+
   -- F. real dev rows: every physical enclosure has one row, and every resident
   --    currently in one is listed exactly once, on that enclosure
   select count(*) into v_n from enclosures e join zones z on z.id = e.zone_id where z.name <> 'Lifecycle';
@@ -134,7 +139,10 @@ begin
   if v_n <> v_m then raise exception 'FAIL F % physical enclosures, % view rows', v_n, v_m; end if;
   select count(*) into v_n from resident_current_state s
     join enclosures e on e.id = s.current_enclosure_id join zones z on z.id = e.zone_id
-   where z.name <> 'Lifecycle';
+    join residents rr on rr.id = s.resident_id
+   where z.name <> 'Lifecycle'
+     and (rr.ready_for_adoption or exists (select 1 from appeals ap where ap.resident_id = rr.id
+          and private.appeal_running(ap.published, ap.status) and ap.text_approval = 'public_ok'));
   if v_n <> cardinality(v_listed) then raise exception 'FAIL F % residents in physical enclosures, % listed', v_n, cardinality(v_listed); end if;
   select count(distinct x) into v_m from unnest(v_listed) x;
   if v_m <> cardinality(v_listed) then raise exception 'FAIL F a resident is listed twice'; end if;
