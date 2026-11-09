@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { TextApprovalBar } from "@/components/TextApprovalBar";
 import { can } from "@/lib/permissions/can";
 import { requirePermission } from "@/lib/permissions/require";
 import { getT } from "@/lib/i18n/get-t";
@@ -49,6 +50,7 @@ export default async function ProjectFolderPage(props: PageProps<"/projects/[id]
           {t.projects.couldntLoad}: {error}
         </p>
       )}
+      {folder && <TextApprovalBar kind="project" id={folder.id} />}
       <FolderView
         folder={folder}
         path={path}

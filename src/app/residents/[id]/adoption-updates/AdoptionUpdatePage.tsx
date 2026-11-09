@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { TextApprovalBar } from "@/components/TextApprovalBar";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { notFound } from "next/navigation";
@@ -87,6 +88,7 @@ export async function AdoptionUpdatePage({
         <p className="text-sm text-muted">{a.formSubtitle}</p>
       </div>
 
+      {!blocked && updateId && <TextApprovalBar kind="adoption_update" id={updateId} />}
       {blocked ? (
         <p className="rounded-lg border border-border bg-surface p-4 text-sm text-muted">
           {blocked}

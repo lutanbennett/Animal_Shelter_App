@@ -76,6 +76,20 @@ test("suppliers-backfill reads the live tables, not a literal, and asks schema_m
   assert.doesNotMatch(sql, /values [(]/);
 });
 
+test("appeal-override fails only when an appeal is public through the override alone, and names it", async () => {
+  const { CHECKS, buildQuery } = await import("./lib/readonly-checks.mjs");
+  const c = CHECKS["appeal-override"];
+  const none = { applied_0343: true, published_appeals: 5, by_override: [] };
+  assert.equal(c.failed(none), false);
+  assert.match(c.render(none).join(" "), /None is public only through the override/);
+  const some = { applied_0343: false, published_appeals: 5, by_override: [{ title: "Help Biscuit", status: "live" }] };
+  assert.equal(c.failed(some), true);
+  assert.match(c.render(some).join(" "), /Help Biscuit/);
+  const sql = buildQuery("appeal-override");
+  for (const name of ["appeals", "residents", "is_public_visible", "schema_migrations"]) assert.match(sql, new RegExp(name));
+  assert.doesNotMatch(sql, /values [(]/);
+});
+
 test("activities-grantable reads card_grants against permission_activities per level, not a literal", async () => {
   const { buildQuery } = await import("./lib/readonly-checks.mjs");
   const sql = buildQuery("activities-grantable");

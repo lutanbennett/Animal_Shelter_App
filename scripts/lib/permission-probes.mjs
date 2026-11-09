@@ -150,6 +150,7 @@ export const PROBES = [
   { activity: "stock.medications", level: "read", sql: `select cost_per_unit from medication where id = ${MED}`, known: [{ id: "N1", roles: ["doctor"] }] },
   // diets.settings (0340) opens the same rows on purpose: Settings → Diets changes an ingredient's name, unit and notes.
   { activity: "diets.settings", level: "edit", fn: true, sql: `select * from diet_usage()` },
+  { activity: "text.approve", level: "edit", fn: true, sql: `select * from text_review_queue()` },
   { activity: "stock.diets", level: "edit", sharedWith: ["diets.settings"], sql: `update diet_types set notes = 'probe' where id = $DIET` },
   { activity: "stock.diets", level: "read", sharedWith: ["diets.settings"], sql: `select cost_per_unit from diet_types where id = $DIET`, known: [{ id: "C10", roles: ["doctor"] }] },
   { activity: "stock.correct", level: "edit", fn: true, sql: `select record_stock_correction('medication', ${MED}, 1)` },

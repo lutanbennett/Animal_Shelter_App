@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { TextApprovalBar } from "@/components/TextApprovalBar";
 import { BackLink } from "@/components/BackLink";
 import { getT } from "@/lib/i18n/get-t";
 import { formatDateTime } from "@/lib/format";
@@ -90,6 +91,7 @@ export default async function DrivePage(props: PageProps<"/management/sterilisat
         <BackLink href="/management/sterilisation-drives">{a.title}</BackLink>
         <h1 className="text-2xl font-semibold text-foreground" lang="und">{d.title}</h1>
       </div>
+      <TextApprovalBar kind="drive" id={d.id} />
       <DriveForm mode="edit" driveId={d.id} initial={initial} />
 
       <section aria-labelledby="signups-heading" className="flex max-w-3xl flex-col gap-3">

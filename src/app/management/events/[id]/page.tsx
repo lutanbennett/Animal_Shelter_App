@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { TextApprovalBar } from "@/components/TextApprovalBar";
 import { BackLink } from "@/components/BackLink";
 import { getT } from "@/lib/i18n/get-t";
 import { can } from "@/lib/permissions/can";
@@ -52,6 +53,7 @@ export default async function EventPage(props: PageProps<"/management/events/[id
         cancelled={event.status === "cancelled"}
         waitingPhotos={photos.filter((p) => !p.approved).length}
       />
+      <TextApprovalBar kind="event" id={event.id} />
       <EventForm mode="edit" eventId={event.id} initial={initial} published={event.published} appeals={appeals} projects={projects} canSeeAppeals={can(perms, "appeal.run")} canSeeProjects={can(perms, "projects.folders", "read")} />
       <EventPhotos eventId={event.id} photos={photos} />
     </main>

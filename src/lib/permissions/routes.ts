@@ -330,6 +330,15 @@ export const ROUTES: readonly RouteEntry[] = [
     menu: false,
   },
   {
+    // Public text waiting for a reader (0345): the approve_text card. Asks text.approve, the activity the database checks.
+    path: "/text/approve",
+    activity: "text.approve",
+    icon: BadgeCheck,
+    label: (t) => t.textApproval.title,
+    device: "any",
+    menu: false,
+  },
+  {
     path: "/medical/diets",
     activity: "medical.diet",
     level: "read",
