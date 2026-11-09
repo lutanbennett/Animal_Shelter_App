@@ -42,14 +42,10 @@ declare
   r uuid; u uuid; v_user uuid; a_photo uuid; a_video uuid; a_script uuid;
 begin
   insert into residents (name, species, is_public_visible, resident_code) values ('Harness 0309', 'Dog', true, 'R-H309A') returning id into r;
-  insert into adoption_updates (resident_id, received_on, channel, share_publicly, public_story, public_first_name)
-    values (r, current_date, 'line', true, 'Harness story', 'Harness') returning id into u;
+  insert into adoption_updates (resident_id, received_on, channel, share_publicly, public_story, public_first_name, text_approval)
+    values (r, current_date, 'line', true, 'Harness story', 'Harness', 'public_ok') returning id into u;
 
-  select ur.user_id into v_user from user_roles ur
-    where ur.archived_at is null
-      and not exists (select 1 from user_roles x join roles ro on ro.id = x.role_id
-                       where x.user_id = ur.user_id and x.archived_at is null and ro.key in ('admin', 'management'))
-    limit 1;
+  v_user := gen_random_uuid(); insert into auth.users (id, email) values (v_user, 'h-nonapprover-' || v_user || '@example.invalid'); -- a disposable login holding no card, so the test never depends on who holds photos.approve on dev
   if v_user is null then raise exception 'FAIL 0 no non-publisher login on dev to test with'; end if;
   perform set_config('request.jwt.claims', json_build_object('sub', v_user, 'role', 'authenticated')::text, true);
   if coalesce((select can_publish_resident_photos()), false) or coalesce((select can_approve_photos()), false) then
@@ -82,12 +78,12 @@ begin
   if not pg_temp.anon_update_has('h0309video') or not pg_temp.anon_proxy('h0309video') then raise exception 'FAIL D1 an approved video is not public'; end if;
   if pg_temp.anon_update_has('h0309photo') then raise exception 'FAIL D2 approving the video published the photo'; end if;
 
-  -- E. unchanged: a script filing (no login) is approved on save
+  -- E. since 0346 a script filing (no login) waits too
   insert into attachments (owner_type, owner_id, drive_file_id, file_name, sub_folder, adoption_update_id)
     values ('resident', r, 'h0309script', 'c.jpg', to_char(current_date, 'YYYYMMDD'), u) returning id into a_script;
-  if (select approved_at from attachments where id = a_script) is null then raise exception 'FAIL E1 a script-filed file is waiting'; end if;
+  if (select approved_at from attachments where id = a_script) is not null then raise exception 'FAIL E1 a script-filed file was approved on save'; end if;
 
-  raise exception 'HARNESS-OK adoption-update photo and video born unapproved | absent from public_adoption_updates and the proxy | non-approver cannot approve | approving one file publishes only that file | script filing still approved on save';
+  raise exception 'HARNESS-OK adoption-update photo and video born unapproved | absent from public_adoption_updates and the proxy | non-approver cannot approve | approving one file publishes only that file | script filing waits too (0346)';
 end;
 $h$;
 rollback;

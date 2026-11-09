@@ -50,5 +50,9 @@ passed locally on the same file first (100 tables, 6,458 rows).
 - The app itself was not pointed at the scratch project.
 - **Storage buckets and files are not in a `pg_dump`.** Uploaded files are a
   disaster-recovery gap with no backup path today.
+  **NARROWED 2026-11-09:** true of the bucket, overstated as "uploaded files". Photos, blood-work
+  PDFs and documents live in **Google Drive**, which a Supabase disaster does not touch; the only
+  thing in a Supabase bucket is the facility map plan images — `src/lib/facility-map/plan-store.ts`
+  is the sole caller of `storage.from(`. `docs/decisions/2026-11-09-restore-risk-settled.md`.
 
 No secrets, passwords or connection strings are recorded here.
