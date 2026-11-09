@@ -11,7 +11,7 @@
 | PR | #TBD |
 | Tested by / date | Claude Opus 5 (production release manager) / 2026-11-09 |
 | Carries a migration? | **no** — the cut itself adds no migration file. **Four migrations written by earlier PRs (`0343`–`0346`) are pending on production** and are applied as a release step, before the deploy. Section 8 carries that ordering. `0338`–`0342` were already applied on production before this release began, read from `--status`, not assumed |
-| Tested at SHA | filled in below once the gates finish; the commit that adds this plan is the only thing after the cut commit |
+| Tested at SHA | `a1a7723d`. The four gates ran against that commit's tree **except for this markdown file**, which was written while `build` was running and committed with the cut: no code, data or config differs between the tested tree and the commit |
 
 ## 1. Scope and risk
 
@@ -61,7 +61,16 @@ had nothing outstanding (`git log --oneline main..backlog` empty).
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — n/a: the worktree was created by `node scripts/worktree.mjs new cut-release-0-44-0` from `origin/main` minutes before the cut, so there was nothing to merge in
-- [ ] `node scripts/gates.mjs` ends with the four-gate line, every exit code `0` — pending: the run is in progress; its own four lines are pasted here when it ends
+- [x] `node scripts/gates.mjs` ends with the four-gate line, every exit code `0`. **All four numbers read, not three:**
+
+```
+=== gates: typecheck exited 0 after 65s
+=== gates: lint exited 0 after 123s
+=== gates: test exited 0 after 24s
+=== gates: build exited 0 after 133s
+gates: typecheck=0 lint=0 test=0 build=0
+```
+
 - [x] **All 17 cut assertions pass, and they were run against the INTENDED BASE** — `--verify` compares against `origin/main:src/lib/releases.ts`, which is no longer the pre-cut state once a cut **adds** a note, so the two assertions that matter most would have failed on a count of `[14 vs 13]`. The base was built explicitly, as the `0.43.6` handover prescribes:
 
 ```
