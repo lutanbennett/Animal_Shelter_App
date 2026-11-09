@@ -13,7 +13,7 @@
 | PR | pending: number recorded after creation |
 | Tested by / date | Claude, 2026-11-09 |
 | Carries a migration? | yes, 0345 |
-| Tested at SHA | @@SHA@@ |
+| Tested at SHA | 92b8d7ad |
 
 ## 1. Scope and risk
 
@@ -42,7 +42,11 @@ indistinguishable from one that passed.
 - [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, each `<N>` that gate's own exit code, and every `<N>` is `0`.** Run it yourself and paste its closing lines **exactly as your run printed them**, in a fenced block under this line: the `=== gates: <name> exited <N> after <S>s` line for each gate as well as the final `gates:` line. **Never type the final line from this description or copy it from another plan.** The shape here is deliberately not a line you could paste: the per-gate `after <S>s` timings are the part only a real run has. `check-test-plan.mjs` cannot tell a pasted run from a typed one, so this wording is the only guard (`docs/decisions/2026-11-02-gates-line-four-gates.md`). They are the evidence, and running the script again regenerates them
 
 ```
-@@GATES@@
+=== gates: typecheck exited 0 after 55s
+=== gates: lint exited 0 after 152s
+=== gates: test exited 0 after 27s
+=== gates: build exited 0 after 138s
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR (runs the same four gates, among its other checks). **This one cannot be true in the commit that creates the PR**, so write it `n/a: not yet — the PR does not exist at this commit` and **leave it there.** Changed 2026-10-20: ticking it in a follow-up commit used to be the rule, and that commit **invalidated its own evidence** — a new HEAD means a new run, so every PR in this repository paid two full CI cycles to transcribe a result GitHub already records permanently against the commit. A tick here attests to nothing a reader can check better by looking at the PR. **What must still happen, and is a merge step rather than a checklist line: before merging, read the run for your current HEAD (`gh run view <id> --json status,conclusion,headSha`) and confirm its `headSha` matches.** Merging on an older run's strength merges a commit whose CI never finished. **Do not pre-tick this line either** — a green you have not seen is the exact failure this checklist exists to prevent — n/a: not yet — the PR does not exist at this commit
@@ -66,11 +70,11 @@ Harness evidence (rolled back, dev, `supabase/harness/0345_text_approval_card_ha
 ## 4. Functional checks
 
 - [x] Happy path works end to end
-- [ ] Data persists — reload the page and the change is still there — n/a: no UI surface; the new column is not written by any screen yet
-- [ ] Create / edit / delete all exercised (whichever the feature has) — n/a: no UI surface; harness updates exercised the column
+- [x] Data persists — reload the page and the change is still there
+- [x] Create / edit / delete all exercised (whichever the feature has)
 - [x] Empty state renders sensibly (no rows yet)
-- [x] Invalid input is rejected with a readable message, not a crash
-- [x] Boundary cases checked (long text, zero, negative, missing optional fields, dates)
+- [ ] Invalid input is rejected with a readable message, not a crash — n/a: no free-text input; the only inputs are two fixed buttons, and an unknown kind or answer is refused inside the function
+- [ ] Boundary cases checked (long text, zero, negative, missing optional fields, dates) — n/a: no field to type into; a resident with no prose at all was loaded on /adopt and /r/<code>
 
 ### Role access matrix
 
@@ -98,24 +102,24 @@ needs two cards together, put both on one row. Do not name `staff` (retired, `01
 
 ## 5. Cross-cutting
 
-- [ ] Nav entry correct (`src/app/NavLinks.tsx`) — appears for the right cards, no dead links — n/a: no UI surface; schema only, nothing under src/ reads the new columns yet
-- [ ] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — n/a: no manual topic describes this; no visible control changed
-- [ ] Translatable strings go through the translation path, checked at `/management/translations` — n/a: no strings added
-- [ ] Mobile viewport (375px) — no overflow, controls reachable — n/a: no UI surface
-- [x] Browser console clean — no errors or React warnings
-- [x] Network clean — no unexpected 4xx/5xx on the feature's pages
+- [x] Nav entry correct (`src/app/NavLinks.tsx`) — appears for the right cards, no dead links
+- [ ] Manual updated (`src/lib/manual/en.ts`) and the topic reads correctly at `/manual` — n/a: no manual topic written for the new screen; a full manual pass is planned after the batch of features
+- [x] Translatable strings go through the translation path, checked at `/management/translations`
+- [ ] Mobile viewport (375px) — no overflow, controls reachable — pending: not driven at 375px
+- [ ] Browser console clean — no errors or React warnings — pending: console not read during the browser pass
+- [ ] Network clean — no unexpected 4xx/5xx on the feature's pages — pending: network not read during the browser pass
 
 ## 6. Regression
 
-- [x] The pages nearest the change still work (list the ones checked)
+- [x] The pages nearest the change still work (/adopt, /r/<code>, resident edit screen with the status bar, /text/approve)
 - [ ] Any shared file touched (`NavLinks.tsx`, `manual/en.ts`, shared libs) checked from a second, unrelated page — **by loading that page, not by reading the file**. Reading proves only that you did not edit it; loading proves the value it still supplies at runtime is the one the other page expects. The weaker reading is the tempting one — n/a: no shared UI file touched; only releases.ts gained a line
 - [x] Nothing merged from `main` during `sync` was broken by this branch
 
 ## 7. Documentation
 
-- [ ] Backlog item ticked in `docs/backlog.md` **on this branch** (follow-ups go on the `backlog` branch instead) — n/a: the brief forbids ticking #7aev4 (needs its app half) and any other item; findings go in the PR body for the planner
+- [ ] Backlog item ticked in `docs/backlog.md` on this branch — n/a: the brief forbids ticking #7aev4 (batch 3 flips the default) and editing the backlog
 - [x] Non-obvious design choices added as a new file in `docs/decisions/` (`<date>-<slug>.md`)
-- [ ] `README.md` still accurate — n/a: README does not describe the public views
+- [ ] `README.md` still accurate — n/a: README does not describe this screen
 - [x] **Release notes.** Would a shelter user notice this change? If so, `unreleased` in `src/lib/releases.ts` has a line for it, **in this PR**, written for a shelter user and not as a commit message. If not, `n/a: <why nobody would notice>`: a refactor, a script, a fix to something no user reached. The checker holds this line to the diff. A tick fails if `unreleased` gained no line. A PR touching `src/app/`, `src/components/`, `src/lib/manual/`, `src/lib/i18n/` or `worker/` fails if this line is missing, and its `n/a` reason is printed for the reviewer. An empty `unreleased` looks exactly like "nothing visible shipped", so this line is the only place that difference gets written down. **Do not tick while this PR's own decision file, README or backlog note records a step still outstanding before a user could see it (a deploy, a hand-edited file on the Pi, a setting).** A note promises the user it works now; a tick that only means "the code is in" sent #518's false note to every admin (decisions, 2026-10-11). Write `n/a: <the outstanding step>` and put the note in the PR that closes the step A PR that touches nothing but `docs/test-plans/` (a sign-off recorded after merge) has a tick checked against the merge that introduced the plan instead, so leave the feature's tick as it was. **And who is it for?** If the note is about a page only some roles can open (anything under Settings, an admin page), write it as `{ text: "…", cards: [...] }` naming the card (a `CardKey` from `src/lib/permissions/cards.ts`) that opens it, because a plain string is shown to every live role, including ones who cannot open the page. A card-tagged note is shown to whoever holds one of its cards and always to Admin; a tag whose cards nobody recognises shows to everyone rather than hiding. **Do not tag a new note with `roles`**: that older form is in Lanna's own role keys, which a shelter may rename, so it is closed to new notes (history keeps the tags it has: `docs/decisions/2026-10-26-release-notes-by-card.md`). You know the audience; the release manager can only guess from the wording. The checker warns, and never fails, on an untagged note that names an admin-only place and on a new note tagged `roles` (a wrong tag hides a note from the people it is for, which is worse). The checker finds this line by its bold **Release notes.** label, so keep the label as it is
 - [x] Commit messages say why, not just what
 - [x] **Claims in commit messages and `docs/decisions.md` were measured, not reasoned.** No gate reads prose: `typecheck`, `lint`, `build` and this checklist all pass with a confidently wrong explanation in the commit that ships the fix, and the wrong explanation is what the next person inherits. Worth real attention on timezone, concurrency and floating-point work, where intuition is unusually unreliable and a plausible story is easy to tell
@@ -174,7 +178,7 @@ correct when written. **UAT is deployed on every release since 2026-11-08**
 
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
-| - | - | none found | - |
+| 1 | low | Only the resident screen's status bar was rendered; the other five share the one component but dev has no appeal, event, drive, folder or adoption-update row to open | accepted |
 
 ## Left for manual verification
 
@@ -198,7 +202,8 @@ section 8's.
 
 | # | What to check | Where |
 |---|---|---|
-| - | nothing a person must look at | - |
+| 1 | Thai wording of the new screen, card name and status messages (drafted, unverified: #y1dqu) | /text/approve, Settings → Who does what |
+| 2 | The status bar on an appeal, event, drive, project folder and adoption-update screen | the record screens |
 
 ## Sign-off
 
@@ -225,7 +230,7 @@ illegible one is a red people learn to ignore.
 
 - [ ] The manual list above is empty, or every item in it was checked by a person. **If the list is empty, whoever filled the plan may tick this** and write `n/a: <reason>` on the signature below — there is nothing for a person to look at, so nothing is being signed for. If the list is not empty, only the person who looked may tick it — n/a: nothing for a person to look at beyond the browser check done
 
-Manual verification by: n/a: schema only, nothing for a person to look at
+Manual verification by: pending: Thai wording and the five other record screens need a person
 
 ### Result
 
