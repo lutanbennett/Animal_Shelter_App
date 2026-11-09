@@ -63,12 +63,26 @@ test("no permissions at all sees everything", () => {
   assert.equal(topicView({ id: "a", title: "a", activity: "medical.weight" }, null), "mine");
 });
 
-test("every manual topic is either derived, explicit, for everyone, or on the unassigned worklist", () => {
+test("every manual topic is either derived, explicit, for everyone, or unassigned (shown and marked, never hidden)", () => {
   const topics = manual.sections.flatMap((s) => s.topics);
   for (const t of topics) {
-    const kind = cardsOfTopic(t).kind;
-    if (kind === "unassigned") assert.ok(t.awaitingCard, `${t.id} has no card, is not for everyone and is not on the worklist`);
+    // An unassigned topic is the visible gap (no card, not `everyone`): it needs no role worklist, and none is written.
     assert.equal(t.roles, undefined, `${t.id} still carries a role tag`);
+  }
+});
+
+test("a login holding only the three photo, reel and meme cards is shown those topics and the universal ones", () => {
+  const mine = holding("add_photos", "meme_library", "reel_add");
+  const shown = manual.sections.flatMap((s) => s.topics).filter((t) => topicView(t, mine) === "mine").map((t) => t.id);
+  for (const id of ["add-photos-unknown", "memes", "meme-maker", "reels-add"]) assert.ok(shown.includes(id), `${id} should be shown`);
+  // Nothing that teaches a screen a card controls: the work of the full resident record, the menu, the public pages.
+  for (const id of ["hub", "residents-list", "public-pages", "reels-view", "memes-view"]) assert.ok(!shown.includes(id), `${id} should not be shown`);
+});
+
+test("the topics that teach the full record are not tagged for everyone", () => {
+  const by = Object.fromEntries(manual.sections.flatMap((s) => s.topics).map((t) => [t.id, t]));
+  for (const id of ["hub", "residents-list", "name-card", "public-pages", "shelter-operations", "home-covering-another-role"]) {
+    assert.notEqual(cardsOfTopic(by[id]).kind, "everyone", `${id} must not be tagged everyone`);
   }
 });
 

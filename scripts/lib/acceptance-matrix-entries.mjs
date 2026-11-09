@@ -140,10 +140,10 @@ export const ENTRIES = {
   ],
   navigation: [
     {
-      activity: "Find your way around the menu",
+      activity: "Find your way around",
       device: "both",
-      do: "Open the menu (the ☰ button on a phone) and read it item by item.",
-      expect: "The menu is the one for your role. Manual, Release notes and Change password are last, under a dividing line.",
+      do: "Look at the home screen. If the login has a menu, open it (the ☰ button on a phone) and read it item by item.",
+      expect: "The home screen has a tile for each card held, and the User manual last. A login with a menu sees only the pages its cards open, with Manual, Release notes and Change password last, under a dividing line. A login without a menu reaches everything by its tiles.",
       notes: MENU,
     },
   ],
@@ -154,6 +154,86 @@ export const ENTRIES = {
       do: "Open the menu (the ☰ button), tap Operations, then tap each tile and come back.",
       expect: "Only the tiles for pages your role can open are shown, each opens its page, and Operations stays lit in the menu while you are on one. A role that opens none of them has no Operations in its menu. The page does not slide sideways at 375 px.",
       notes: MENU,
+    },
+  ],
+  "residents-list-who-and-where": [
+    {
+      activity: "Find a resident by name or ID",
+      device: "both",
+      do: "Open Residents and search by name or an ID such as R-0042, then try a zone chip.",
+      expect: "The list narrows each time and shows only name, ID, enclosure, zone and status. There is no microchip search, no ticking residents, no New resident and no pencil.",
+    },
+  ],
+  "hub-who-and-where": [
+    {
+      activity: "Open a resident's page and see who and where",
+      device: "both",
+      do: "Open a resident from the list.",
+      expect: "The page shows photo, name, ID, species, sex, status, enclosure and zone, with a link to the enclosure. There are no medical cards, no housing buttons and no pencil.",
+    },
+  ],
+  "reels-add": [
+    {
+      activity: "Add a reel and record where it was posted",
+      device: "phone",
+      do: "Tap Reels on the home screen, tap Add a reel, choose a video, type a description with a # and an animal's name, check the date and tap Save reel. Then open the reel and tap Record where it was posted.",
+      expect: "The reel opens with its description and the animal tagged, and the post is listed with its date. Archive is offered only to a login that holds the full Reels library card.",
+    },
+  ],
+  "diet-settings": [
+    {
+      activity: "Add a diet and its ingredients",
+      device: "desktop",
+      do: "Open Settings, tap Diets, tap Add a diet, name it and add an ingredient.",
+      expect: "The diet has its own page listing the ingredient and the amount a dog or cat gets in a day.",
+    },
+  ],
+  "bill-sites": [
+    {
+      activity: "Add a place, an account and a kind of bill",
+      device: "both",
+      do: "Open Bills settings and add a place, then an account at a supplier tied to it, then a kind of bill.",
+      expect: "Each appears in its list and is offered when a new bill is filed. Archiving one hides it from new bills but keeps bills already filed.",
+    },
+  ],
+  "translations-propose": [
+    {
+      activity: "Propose Thai for a short name",
+      device: "desktop",
+      do: "Open Translations, type the Thai for a name that is missing it and tap Propose.",
+      expect: "The button reads Proposed. The Thai is not shown anywhere in the app or on the website until someone approves it.",
+    },
+  ],
+  "translations-view": [
+    {
+      activity: "Read the translations",
+      device: "desktop",
+      do: "Open Translations and tap a section's name in the box at the top.",
+      expect: "The page lists what is missing, out of date and waiting. There is no Save or Propose button.",
+    },
+  ],
+  "website-gallery": [
+    {
+      activity: "Add, reorder and remove a gallery photo",
+      device: "desktop",
+      do: "Open Management, then Website, then the Gallery tab. Add a photo with a description, move it earlier, then remove it.",
+      expect: "The photo needs a description before it will save, the order changes, and Remove asks first.",
+    },
+  ],
+  "website-propose": [
+    {
+      activity: "Draft a change to the website settings",
+      device: "desktop",
+      do: "Open Management, then Website, change a setting and save.",
+      expect: "It says it was saved as a draft and will appear once someone approves it. The live site does not change.",
+    },
+  ],
+  "approve-text": [
+    {
+      activity: "Approve or keep private a piece of public text",
+      device: "both",
+      do: "Open Public text to approve and tap Approve on one piece and Keep private on another.",
+      expect: "Each says what happened and leaves the list. The website shows only the approved one.",
     },
   ],
   "release-notes": [
