@@ -6,11 +6,13 @@ A **delta**. The durable rules are in `docs/release-procedure.md` and this relea
 ## START HERE
 
 Production is `lannacareforanimals.org`, now on **`0.43.6` @ `9b07b038`**. `test.lannacare.org` is
-test on the dev project, also `0.43.6`. Both databases hold **339** migrations and neither drifts.
+test on the dev project, also `0.43.6`. **Migration counts decay in hours — measure, never read:** on
+2026-11-09 production held **344 applied, 4 pending** (`0343`–`0346`); dev **348, 0 pending**. This
+line said 339/339 and was true for about a day.
 
 **UAT IS LIVE AT `uat.lannacare.org` ON `0.43.6` (2026-11-08, after this edition was first written),
-served by the Pi (`x-lanna-served-by: pi`) on its own project `fsjagxmxjosauwmxwype`, 339 migrations,
-0 pending. `lannacare.org` and `www` now 301 to production.** The rest of `docs/uat-finalisation.md` was
+served by the Pi (`x-lanna-served-by: pi`) on its own project `fsjagxmxjosauwmxwype`; its count was
+NOT re-measured on 2026-11-09. `lannacare.org` and `www` now 301 to production.** The rest of `docs/uat-finalisation.md` was
 done with Lutan the same day. **SUPERSEDED 2026-11-08, corrected in place:** this file said UAT's token
 "lacks `database_read`". It does not: in a window without the OTHER account's shell
 `SUPABASE_ACCESS_TOKEN` (`Remove-Item Env:SUPABASE_ACCESS_TOKEN`, or `env -u`), `--status`/`--drift` and
@@ -141,10 +143,9 @@ hand it back as a question.
 - **The UAT zone cache HAS now been purged (2026-11-09, `#prg4z`)** — a zone-scoped token that cannot
   reach production's zone, and the purge proven by a re-fetch rather than by Cloudflare's own success
   flag. `node scripts/purge-cache.mjs --env uat` works; it is no longer a gap.
-- **CORRECTED 2026-11-09: THE DRILL HAS BEEN EXERCISED THREE TIMES** — `#q2vp7` (local, 2026-10-13),
-  `#xa1jk` (a production backup into a real Supabase project, **signed in**, 2026-10-19) and `#rg7pv`
-  (into UAT's own project, 923 of 923 privileges, 2026-11-09). Lutan ruled the production risk
-  **negligible**; left are 24h of data loss and the facility plan images. `2026-11-09-restore-risk-settled.md`.
+- **CORRECTED 2026-11-09: THE DRILL HAS RUN THREE TIMES** — `#q2vp7` local, `#xa1jk` into a real
+  Supabase project **signed in**, `#rg7pv` into UAT (923 of 923 privileges). Lutan ruled production
+  restore risk **negligible**; left are 24h of data loss and the facility plan images, only. `2026-11-09-restore-risk-settled.md`.
 - `audit:prod` exits 1 with five vulnerabilities and `audit:register` exits 0 — one registered,
   unreachable high advisory (`GHSA-5j98-mcp5-4vw2`). A red `audit` on a PR that ran it is a real
   finding; `skipped` is not a pass. **A cut always runs it for real**, because it bumps `package.json`.
@@ -154,10 +155,11 @@ This is a page count, not a card count"* and cites `cards.ts`, so there is one a
 cards" again. And `CLAUDE.md`'s *"does not pass yet"* paragraph is corrected: `grep` finds the phrase
 nowhere in it. **Do not carry either forward.**
 
-**Read the live state; never accept "it's done."** `uat.lannacare.org` is this edition's example: the
-code and the runbook for the move are merged, the handover could easily have said UAT had moved, and
-one `nslookup` says it has not.
+**Read the live state; never accept "it's done" — or "it's not done."** This edition's own example
+went stale as it sat here: it said one `nslookup` showed UAT had **not** moved. It had, hours later,
+as this file's opening says. **A closing flourish is a claim, and it decays like one.**
 
-**Next free migration number: `0343`** (corrected 2026-11-09: `0342` is the highest on `main`; the
-number in this file was `0338`, five behind within a day of being written — read `git ls-tree`, never
-this line).
+**Next free migration number: NO NUMBER IS PRINTED HERE, on purpose — this line has been wrong twice
+in two days.** Run `git ls-tree -r origin/main --name-only -- supabase/migrations | sort | tail -1`
+and add one. It said `0338` when `0342` was highest, was corrected to `0343`, and `0346` landed the
+same day.
