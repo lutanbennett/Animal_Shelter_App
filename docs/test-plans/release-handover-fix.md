@@ -8,7 +8,7 @@
 | Backlog item | `docs/backlog.md` → none. A handover correction is the same class of bookkeeping as the handover itself, which carries no item; the pattern behind it is recorded in `docs/decisions/2026-11-09-handover-stale-undone-lines.md` instead |
 | Branch / worktree | `claude/release-handover-fix` @ `C:\Development\Animal_Shelter_release-handover-fix` |
 | Dev server | not started — see §2 |
-| PR | <pending — not opened yet> |
+| PR | #1420 |
 | Tested by / date | Claude, 2026-11-09 |
 | Carries a migration? | no |
 | Tested at SHA | `598ada28` |
