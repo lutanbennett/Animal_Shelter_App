@@ -154,7 +154,7 @@ Manual verification by: pending: Thai wording check by a Thai speaker
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — pending: pasted when the PR opens
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — pending: release manager
 
 Result: pass
 
