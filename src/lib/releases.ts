@@ -71,6 +71,10 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   {
+    text: "Settings → Recent changes now lists a change to which cards a card brings with it, for example \"Adoption news includes View residents\", under \"Cards a card brings with it\". Before, that kind of change altered what a card gives everyone who holds it and left no record anywhere. Like other card changes, it can't be undone from that page. The Thai wording has not been checked by a Thai speaker.",
+    admin: true,
+  },
+  {
     text: "Settings → Diets now opens on one card of its own, Set up diets: the recipe book, the ingredients and the ways each is measured. Before, the page quietly needed two other permissions together, so giving someone just one of them showed nothing and said nothing. Nobody holds the new card yet; give it under Settings → Who does what to whoever should keep the diets. The Thai wording has not been checked by a Thai speaker.",
     cards: ["diet_settings"],
   },
