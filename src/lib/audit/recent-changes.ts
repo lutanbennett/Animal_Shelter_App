@@ -52,8 +52,9 @@ export const AUDITED_TABLES = [
   "features",
   "card_features",
   // What each card requires (0257): Who does what reads these, the database recomputes every role from them.
-  // (card_includes is not here: it has never had an audit trigger, so it could never log a row.)
   "card_grants",
+  // Which cards a card brings with it: audited since 0341, which also gave the table the id record_audit() needs.
+  "card_includes",
   // The website settings row (0254, 0256): hiding or showing a public page, and the Stocktaking switches. Its own triggers write the audit rows.
   "site_content",
   // The four live counts on the home band, one switch each (0328): the name shown is the count's key.
@@ -125,6 +126,8 @@ const NAME_FROM_IMAGE: Record<AuditedTable, NameColumns> = {
   features: { cols: [] },
   card_features: { cols: [] },
   card_grants: { cols: ["card", "activity"], sep: ": " },
+  // The two keys, as a fallback only: the page shows both cards by their titles in the reader's language (AuditEntry.includes).
+  card_includes: { cols: ["card", "included_card"], sep: " → " },
   site_content: { cols: [] },
   public_stat_switches: { cols: ["key"] },
   shop_links: { cols: ["title"] },
@@ -248,6 +251,8 @@ export type AuditEntry = {
   name: string | null;
   /** The resident the record belongs to, when it is not itself a resident. */
   residentId: string | null;
+  /** card_includes only: the card and the card it includes, as keys, so the page can name both by their titles. */
+  includes: { card: string; included: string } | null;
 };
 
 /** Columns that change on every touch and mean nothing to a reader. */
@@ -323,6 +328,11 @@ function toEntry(raw: RawRow): AuditEntry {
         (r.op === "INSERT" && typeof image.notes === "string" && image.notes.includes("Created from Google Calendar"))),
     name: nameFromImage(table, image),
     residentId,
+    includes: (() => {
+      const card = table === "card_includes" ? str(image.card) : null;
+      const included = card ? str(image.included_card) : null;
+      return card && included ? { card, included } : null;
+    })(),
   };
 }
 
