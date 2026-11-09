@@ -4,6 +4,7 @@ import { readSiteContent, loadClinicVisitEstimate, type SiteContentRead } from "
 import { SITE_PAGE_SLUGS } from "@/lib/site/pages";
 import { loadTranslations, translationKey } from "@/lib/translations/queries";
 import { SiteSettingsForm } from "./SiteSettingsForm";
+import { CreateSiteContentRow } from "./CreateSiteContentRow";
 import { ClinicVisitEstimate } from "./ClinicVisitEstimate";
 import { type SitePageRow } from "./SitePageForm";
 import { HeroPhoto } from "./HeroPhoto";
@@ -31,9 +32,15 @@ type PublicResidentRow = {
 };
 
 /** Two different problems that used to print one red sentence: no row yet, and a read that failed. */
-function ContentProblem({ read, t }: { read: SiteContentRead; t: Awaited<ReturnType<typeof getT>>["t"] }) {
+function ContentProblem({ read, t, canCreate = false }: { read: SiteContentRead; t: Awaited<ReturnType<typeof getT>>["t"]; canCreate?: boolean }) {
   if (read.state === "missing") {
-    return <p className="text-sm text-muted">{t.admin.website.nothingSetUp}</p>;
+    return (
+      <div className="flex flex-col items-start gap-3">
+        <p className="text-sm text-muted">{t.admin.website.nothingSetUp}</p>
+        {/* Drawn only for the activity the action asks: website.content (CLAUDE.md, buttons follow cards). */}
+        {canCreate && <CreateSiteContentRow />}
+      </div>
+    );
   }
   return (
     <p className="text-sm text-danger">
@@ -223,7 +230,7 @@ export default async function WebsitePage({
         )}
       </div>
 
-      {contentRead.state !== "ok" && <ContentProblem read={contentRead} t={t} />}
+      {contentRead.state !== "ok" && <ContentProblem read={contentRead} t={t} canCreate={can(early, "website.content")} />}
 
       {content && (
         <WebsiteTabs

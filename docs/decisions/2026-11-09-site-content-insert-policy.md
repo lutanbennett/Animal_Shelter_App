@@ -13,3 +13,11 @@
 - **Not done here:** the server action and button (the feature PR that follows), and the read-only
   `select id from public_site_content` on production and UAT, still owed to the planner. Production gets this migration at
   the next release's apply.
+
+## The feature half
+
+`createSiteContentRow` (`src/app/admin/website/actions.ts`) inserts `{ id: true }` only, through `runWriteAction`, asking
+`website.content`; a duplicate (23505) counts as success. `ContentProblem` draws the button only in the `missing` state and
+only when `can(perms, "website.content")`; the proposer-only (draft) view gets none. Thai string `createRow` is a draft and
+joins #y1dqu. Not driven in a browser: that needs Test's live row deleted while an outside tester uses it; a structural test
+(`create-row-follows-card.test.mjs`) pins the card and the insert shape. Found, not fixed: none.

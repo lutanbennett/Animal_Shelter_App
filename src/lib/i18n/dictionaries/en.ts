@@ -2511,6 +2511,7 @@ const en = {
         "Everything on the public website that isn't a resident or a project story: photos, the wording of each page in both languages, and how to reach the shelter. Changes go live immediately.",
       couldntLoad: "Couldn't load website content",
       nothingSetUp: "The website settings have not been set up yet: this database has no settings row. Nothing failed to load; there is simply nothing here, and the row has to be created before this screen can be used.",
+      createRow: "Create the website settings",
       appealsNote: "Fundraising campaigns for sick residents are run from",
       appealsLink: "Management → Campaigns",
       tabs: {
