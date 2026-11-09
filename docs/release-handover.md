@@ -18,6 +18,15 @@ the deploy's schema check all read UAT fine. That shell token beats `.env.deploy
 **For the next release:** UAT deploys only a released `main` (`--secrets --no-mail`, after
 `apply-migrations --env uat`), and `docs/uat-finalisation.md` Part 6 is the procedure.
 
+**ALL THREE OF UAT'S ONE-TIME JOBS ARE DONE (2026-11-09), AND THE RUNBOOK HAS BEEN CORRECTED BECAUSE OF
+IT.** `#t0k9r` needed nothing — see the correction above. `#sud8p`: the Pi's sudoers now names
+`lanna-care-uat`, so a UAT Pi deploy reaches its own restart instead of stopping at a password prompt
+with the new version already on disk. `#prg4z`: UAT has a zone-scoped purge token. `#uq8wk`, the item
+that carried all three, is closed. **`docs/release-procedure.md` was telling you to record failures that
+can no longer happen** and is fixed (`#r9k2m`, PR #1409): its section is now *"What UAT needed once"*,
+with the two superseded items struck through and their original text kept after *"The problem as it
+was:"*. **Read the runbook, not this paragraph, at your next cut.**
+
 **`0.43.6` did NOT mail** — asserted at the cut with its control, and stated by the deploy itself. The
 public site is **still locked** (`PUBLIC_SITE: "locked"`).
 
@@ -61,13 +70,16 @@ back `FAILED: relation "suppliers" does not exist`, because `0335` creates that 
 pending run and the dry-run rolls each file back. The script said so itself and named the files each
 one runs cleanly after: **the right action on that red was to apply**, and it did.
 
-**2b. NOTHING PURGES TEST'S EDGE CACHE, and the runbook asserted the opposite for two releases.** The
-2026-11-06 cutover gave production its own Cloudflare zone, so `purge-cache.mjs --env production` no
-longer reaches `test.lannacare.org`, and `--env test` still refuses because it looks for the zone and
-token in `.env.local` while they live in `.env.deploy.production`. **The runbook paragraph is corrected
-and explains the real exposure** (stale HTML pointing at an old asset name, not a stale asset — asset
-names are content-hashed, which is why this has never yet shown); the code half is backlog `#pz3tk`.
-**So always re-run the test asset check and believe a red one.**
+**2b. SUPERSEDED 2026-11-09 — TEST'S EDGE CACHE IS PURGEABLE NOW, so do not carry this forward as a
+gap.** `node scripts/purge-cache.mjs --env test` purges the zone serving `test.lannacare.org` and proves
+it; `#pz3tk` is ticked (`claude/test-purge`). It reads the `lannacare.org` zone's credentials from
+`.env.deploy.uat` rather than `.env.local`, which is why it used to refuse — a Cloudflare token does not
+belong in the file every worktree and `next dev` read. **What was true and still is:** the 2026-11-06
+cutover gave production its own zone, so `--env production` does **not** reach `test.lannacare.org`;
+purging test is now its own command rather than a side effect of purging production. **The real exposure,
+unchanged:** stale HTML pointing at an old asset name, not a stale asset — asset names are
+content-hashed, which is why this has never yet shown. **So always re-run the test asset check and
+believe a red one.**
 
 **3. THE BEFORE-PICTURE IS NOT ALWAYS `role-cards`. Read the migrations and snapshot what they
 write.** `0.43.5`'s handover said to take `role-cards` and `role-cells` — right for a release whose
@@ -110,10 +122,12 @@ hand it back as a question.
 
 ## CARRIED, UNCHANGED, RE-CONFIRMED RATHER THAN COPIED
 
-- **`scripts/pi/setup.sh:122` still hands the production service `lannacare.org` as its host**, and
-  `docs/pi-hosting.md` (lines 24, 69, 98) still treats `lannacare.org` as production. Wrong since the
-  2026-11-05 cutover, and now doubly so since `lannacare.org` is UAT. Re-read today, not copied.
-  (`pi.lannacare.org`, the tunnel hostname, is a different thing and is correct.)
+- **FIXED 2026-11-09, do not carry it: the Pi setup and `docs/pi-hosting.md` name production
+  correctly.** `scripts/pi/setup.sh` hands the production service `lannacareforanimals.org`, and every
+  `lannacare.org` left in `docs/pi-hosting.md` is a `pi.`, `test-pi.` or `uat.` hostname, which are
+  different things and are correct. Done by `claude/cutover-tidy` (`f3724a2d`), read in the files rather
+  than taken from the commit message. **The last edition said `lannacare.org` "is UAT"; it is not** — UAT
+  is `uat.lannacare.org` and `lannacare.org` 301s to production, as this file's own opening says.
 - `STATUS_READ_TOKEN` unset **on purpose** (`#mzu7v`) — `/api/status/health` answers **401** to
   everyone, re-checked today.
 - **THE PI'S `guard-release` STILL CANNOT GUARD.** It wants `SUPABASE_ACCESS_TOKEN`, which the Pi does
@@ -124,7 +138,9 @@ hand it back as a question.
   record PR rather than recopied again** (paperwork rule 4): OpenNext's six-minute silence on
   `Building server function: default…`, and the reason not to pipe a deploy through `tail`. Read them
   there.
-- The **UAT zone cache has still never been purged**.
+- **The UAT zone cache HAS now been purged (2026-11-09, `#prg4z`)** — a zone-scoped token that cannot
+  reach production's zone, and the purge proven by a re-fetch rather than by Cloudflare's own success
+  flag. `node scripts/purge-cache.mjs --env uat` works; it is no longer a gap.
 - The **restore drill has still never been exercised**.
 - `audit:prod` exits 1 with five vulnerabilities and `audit:register` exits 0 — one registered,
   unreachable high advisory (`GHSA-5j98-mcp5-4vw2`). A red `audit` on a PR that ran it is a real
@@ -139,4 +155,6 @@ nowhere in it. **Do not carry either forward.**
 code and the runbook for the move are merged, the handover could easily have said UAT had moved, and
 one `nslookup` says it has not.
 
-**Next free migration number: `0338`.**
+**Next free migration number: `0343`** (corrected 2026-11-09: `0342` is the highest on `main`; the
+number in this file was `0338`, five behind within a day of being written — read `git ls-tree`, never
+this line).
