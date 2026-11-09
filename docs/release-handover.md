@@ -1,165 +1,141 @@
-# Release handover — written 2026-11-08 after `0.43.6`
+# Release handover — written 2026-11-09 after `0.44.0`
 
 A **delta**. The durable rules are in `docs/release-procedure.md` and this release's own record is
-`docs/releases/2026-11-08-0-43-6.md`. **Both outrank this file.**
+`docs/releases/2026-11-09-0-44-0.md`. **Both outrank this file.**
 
 ## START HERE
 
-Production is `lannacareforanimals.org`, now on **`0.43.6` @ `9b07b038`**. `test.lannacare.org` is
-test on the dev project, also `0.43.6`. **Migration counts decay in hours — measure, never read:** on
-2026-11-09 production held **344 applied, 4 pending** (`0343`–`0346`); dev **348, 0 pending**. This
-line said 339/339 and was true for about a day.
+Production is `lannacareforanimals.org`, now on **`0.44.0`**. `test.lannacare.org` is test on the dev
+project and `uat.lannacare.org` is UAT on its own project (`fsjagxmxjosauwmxwype`), both also
+`0.44.0`. All three databases hold **348** migrations, 0 pending, no drift.
 
-**UAT IS LIVE AT `uat.lannacare.org` ON `0.43.6` (2026-11-08, after this edition was first written),
-served by the Pi (`x-lanna-served-by: pi`) on its own project `fsjagxmxjosauwmxwype`; its count was
-NOT re-measured on 2026-11-09. `lannacare.org` and `www` now 301 to production.** The rest of `docs/uat-finalisation.md` was
-done with Lutan the same day. **SUPERSEDED 2026-11-08, corrected in place:** this file said UAT's token
-"lacks `database_read`". It does not: in a window without the OTHER account's shell
-`SUPABASE_ACCESS_TOKEN` (`Remove-Item Env:SUPABASE_ACCESS_TOKEN`, or `env -u`), `--status`/`--drift` and
-the deploy's schema check all read UAT fine. That shell token beats `.env.deploy.uat` and is the trap.
-**For the next release:** UAT deploys only a released `main` (`--secrets --no-mail`, after
-`apply-migrations --env uat`), and `docs/uat-finalisation.md` Part 6 is the procedure.
+**`0.44.0` MAILED**, on Lutan's instruction given in words. It is the first release to mail since
+`RELEASE_MAIL_ENV: "Production"` was corrected on 2026-11-06, so it is the proof run for `#w4k9n` (e).
+What the message actually said is in the record; **read that rather than assuming the fix held.**
 
-**ALL THREE OF UAT'S ONE-TIME JOBS ARE DONE (2026-11-09), AND THE RUNBOOK HAS BEEN CORRECTED BECAUSE OF
-IT.** `#t0k9r` needed nothing — see the correction above. `#sud8p`: the Pi's sudoers now names
-`lanna-care-uat`, so a UAT Pi deploy reaches its own restart instead of stopping at a password prompt
-with the new version already on disk. `#prg4z`: UAT has a zone-scoped purge token. `#uq8wk`, the item
-that carried all three, is closed. **`docs/release-procedure.md` was telling you to record failures that
-can no longer happen** and is fixed (`#r9k2m`, PR #1409): its section is now *"What UAT needed once"*,
-with the two superseded items struck through and their original text kept after *"The problem as it
-was:"*. **Read the runbook, not this paragraph, at your next cut.**
+The public site is **still locked** (`PUBLIC_SITE: "locked"`).
 
-**`0.43.6` did NOT mail** — asserted at the cut with its control, and stated by the deploy itself. The
-public site is **still locked** (`PUBLIC_SITE: "locked"`).
+**Nobody holds the two new cards.** `approve_text` (Approve public text) and `diet_settings` are given
+to no role by design, and `0346` now defaults new public text to *not reviewed*. So **public text saved
+from now on waits, with no holder to approve it**, until Lutan assigns the card under Settings → Who
+does what. Intended, and the first thing to raise with him.
 
-**Re-measure before trusting any of this.** `git fetch`, `git diff --stat 9b07b038..origin/main`,
+**Re-measure before trusting any of this.** `git fetch`, `git diff --stat <deployed>..origin/main`,
 `gh pr list`, `--status --env production`, `/api/version` on all three hosts.
 
 ## THE ONE THING TO READ BEFORE YOUR NEXT CUT
 
-**Same line as the last four editions, and it has now paid five times.** `git log --oneline -1` before
-cutting, then **`--status --env production`**. On `0.43.2` it caught an unannounced domain cutover; on
-`0.43.3` it came back clean; on `0.43.4` with **eight** pending migrations; on `0.43.5` with **five**,
-three of which rewrote card grants; on `0.43.6` with **eight** again. Two commands. Every time.
+**Same line as the last five editions, and it has now paid six times.** `git log --oneline -1` before
+cutting, then **`--status --env production`**. On `0.43.2` it caught an unannounced domain cutover;
+`0.43.3` clean; `0.43.4` eight pending; `0.43.5` five; `0.43.6` eight; `0.44.0` **four — and five
+more (`0338`–`0342`) already applied that no handover had mentioned.** The pending list is not the
+release's migration list. And **`--status --env uat` is a separate question**: UAT was nine behind.
+Two commands, three environments. Every time.
 
-**He asks for releases in words that decide neither the version nor the size.** *"Let's do a minor
-release"* described eleven notes and eight migrations. **"Minor" means the MIDDLE number in his usage,
-which in this repo is the shape that MAILS.** On the last two releases he answered *"No email"*
-unprompted, which settles it: `major: false`, last number. **Never offer "major or minor" as the
-question — ask about the email.**
+**Ask about the EMAIL, never "major or minor".** He answered it himself this time — *"a major release
+with email sent out"* — and that one sentence also pre-answered the `pending:` test-plan decision
+(*"Record gaps and proceed"*), which saved the touch `0.43.6` spent on it. `major` means *worth an
+email*, not semver major; the **middle** number is what a mailing release bumps until go-live.
 
-## WHAT `0.43.6` CHANGES FOR YOU
+## WHAT `0.44.0` CHANGES FOR YOU
 
-**1. A CUT THAT ADDS A NOTE MUST BE VERIFIED WITH `--base`, AND THIS IS HOW.** The most likely thing
-to go wrong next time. `--verify` compares against `origin/main:src/lib/releases.ts`, so if your cut
-**added** a deferred note that is no longer the pre-cut state: the two assertions that matter most —
-*every note carried across character-identical* and *nothing invented* — fail with `[11 vs 10]`, and
-15 of 17 pass. **Do not wave them past;** they are the only check that catches a lost or altered note,
-a cut's one real failure mode. Build the intended base explicitly and verify against it:
+**1. `tee` IS NOT THE LESSON. READ THE DEPLOY'S OWN EXIT CODE.** The first test Worker deploy was run
+as `node scripts/deploy.mjs --env test 2>&1 | tee <log> | tail -0`. It **failed**, exit 1, and left a
+**0-byte log** — and the pipeline's own status was **0**, so anything checking only the outer command
+would have called it a success. The runbook already forbids `| tail`; this is the sharper form:
 
 ```bash
-MSYS_NO_PATHCONV=1 git show origin/main:src/lib/releases.ts > /tmp/base.ts
-# insert the note(s) you added into that file's unreleased[], then:
-node scripts/cut-release.mjs <version> <date> minor --verify --base /tmp/base.ts
+# wrong, twice over: tail eats the head of the log, and the pipeline hides the failure
+node scripts/deploy.mjs --env test | tail -40
+# right: plain redirect, then read the file and the deploy's own status
+node scripts/deploy.mjs --env test > .local/deploy-test-<version>.log 2>&1; echo "EXIT=$?"
 ```
 
-All 17 then pass with `[11 vs 11]`, and the property asserted is the real one. **`0.43.5`'s handover
-said `--base` "was not needed"; that was true of a cut that wrote nothing, and it is the wrong default
-to inherit.**
+**2. DRIVE EVERY LONG COMMAND; DO NOT WAIT TO BE TOLD IT FINISHED.** The session started
+`node scripts/gates.mjs` as a background command and then waited for a notification while **the log it
+had itself written** sat on disk showing three gates green. Lutan asked twice whether anything was
+holding the release up — two touches on a release whose target is two. **"Do not idle" is written
+about deploys; read it as covering gates, CI and anything else that takes minutes.** For Lutan's own
+production deploy, `mcp__terminal__read_terminal` with a generous `wait_for_output_ms` is the way to
+follow it live.
 
-**2. The dry-run now explains its own non-fault, so do not investigate it.** `0336` and `0337` came
-back `FAILED: relation "suppliers" does not exist`, because `0335` creates that table in the same
-pending run and the dry-run rolls each file back. The script said so itself and named the files each
-one runs cleanly after: **the right action on that red was to apply**, and it did.
+**3. `--base` IS THE DEFAULT, NOT THE EXCEPTION.** This cut added an owed note, so plain `--verify`
+would have failed *every note carried across character-identical* and *nothing invented* on
+`[14 vs 13]`, with fifteen of seventeen green. Build the intended base and verify against it:
 
-**2b. SUPERSEDED 2026-11-09 — TEST'S EDGE CACHE IS PURGEABLE NOW, so do not carry this forward as a
-gap.** `node scripts/purge-cache.mjs --env test` purges the zone serving `test.lannacare.org` and proves
-it; `#pz3tk` is ticked (`claude/test-purge`). It reads the `lannacare.org` zone's credentials from
-`.env.deploy.uat` rather than `.env.local`, which is why it used to refuse — a Cloudflare token does not
-belong in the file every worktree and `next dev` read. **What was true and still is:** the 2026-11-06
-cutover gave production its own zone, so `--env production` does **not** reach `test.lannacare.org`;
-purging test is now its own command rather than a side effect of purging production. **The real exposure,
-unchanged:** stale HTML pointing at an old asset name, not a stale asset — asset names are
-content-hashed, which is why this has never yet shown. **So always re-run the test asset check and
-believe a red one.**
+```bash
+MSYS_NO_PATHCONV=1 git show origin/main:src/lib/releases.ts > <scratchpad>/base.ts
+# insert the note(s) you added into that file's unreleased[], then:
+node scripts/cut-release.mjs <version> <date> <major|minor> --verify --base <scratchpad>/base.ts
+```
 
-**3. THE BEFORE-PICTURE IS NOT ALWAYS `role-cards`. Read the migrations and snapshot what they
-write.** `0.43.5`'s handover said to take `role-cards` and `role-cells` — right for a release whose
-migrations rewrote card grants, and **none of `0.43.6`'s eight did**, so copying that snapshot would
-have measured nothing. The one that earned its place was **policies and the activity catalogue**,
-because `0335` and `0336` create tables with their own policies and `0335` claims in its header to add
-no new activity and no new card. It paid three times: that claim is true, the new tables have live
-policies on all four commands (`table-policy-commands` returns the **same 72** pairs and names
-neither), and no Thai column was left unreachable.
+**Expect to add a note on most cuts**: three of the last four releases owed one.
 
-**4. `activities-grantable` exits 1 on production and it is NOT a fault list.** Ten activities answer
-*"no card grants it, so only Admin can ever do it"*, and at least one — `maintenance.delete` — is there
-**on purpose** (Lutan, 2026-10-28: only Admin deletes; `fault-maintenance-delete` exists to assert that
-no card grants it). **Two checks therefore disagree about the same row by design.** The list was
-identical before and after this release's apply, so nothing here caused it. Backlog item: make
-`activities-grantable` exclude the activities ruled Admin-only, or it will keep reading as ten faults.
+**4. ANSWER A DEFERRED NOTE BY MEASURING, NOT BY READING ITS REASON.**
+`profile-photo-fails-open` made its note conditional on a production orphan count.
+`node scripts/check-profile-photo-orphans.mjs --env production` answered it in seconds — **0
+hidden** — which closed the question instead of carrying it. Several of those reasons are written as
+*conditions* a read-only script can settle. Look for that before writing "still open".
 
-**5. `check-deferred-notes.mjs`'s over-listing is now described in `docs/release-procedure.md`**, where
-it belongs after `0.43.4`, `0.43.5` and `0.43.6` each recorded it and carried it here instead: it
-ignores the commit range you pass it, and it prints the template's guidance as the "reason". Budget one
-lookup per candidate — thirteen this time.
+**5. THE BEFORE-PICTURE MUST BE OF WHAT THE MIGRATION WRITES, AND IT SHOULD CHANGE BY THE EXPECTED
+AMOUNT.** `role-cards` would have measured nothing here — none of the four touches a role's cells. The
+two that earned their place both moved by exactly the migration's claim, which is what makes them
+evidence rather than decoration:
+
+- `check-production.mjs table-policy-commands`: **72 pairs before, 71 after**, and the one line that
+  vanished is `site_content: nobody can insert` — that is `0344`, and nothing else moved.
+- `check-public-views.mjs --env production`: **475 `ok` before, 477 after**, zero failures either side,
+  and the line-by-line diff is **only** `0345`'s two new functions, both *anon EXECUTE is refused*.
+  So the nine views `0343` re-created present exactly the access they did before.
+
+**6. `--plan` LIES ABOUT MAIL ON TEST.** `deploy.mjs --plan --env test` says *"a major release new to
+this environment would be mailed to the admins"*, in an environment with no `RELEASE_MAIL` binding and
+`RELEASE_MAIL_ENV: ""`. The real deploy printed `sent 0, skipped 3` with the reason. Alarming on a
+mailing release and worth a backlog item; **do not act on it, and check `wrangler.jsonc` instead.**
+
+**7. `appeal-override` NAMES A ROW YOU MUST TELL HIM ABOUT, and its exit 1 is not a stop.** One
+published non-draft appeal — `"Treatment"` (closed) — for an animal not visible on the website becomes
+public on its own under `0343`. That is the deliberate behaviour one of this release's notes announces.
+Name it, record it, carry on.
 
 ## WHAT STAYS HIS, AND WHAT THIS RELEASE COST HIM
 
-**His, non-negotiable:** major versus minor (it mails every admin), and the **production Worker
-deploy**. Everything else is yours, including the merge — **every PR merges on green, feature PRs
-included** (2026-11-01). Do not wait for a go, and do not offer Auto-fix.
+**His, non-negotiable:** whether it mails, and the **production Worker deploy**. Everything else is
+yours, the merge included — **every PR merges on green, feature PRs included** (2026-11-01). Do not
+wait for a go, and do not offer Auto-fix.
 
-**`0.43.6` cost three touches against a target of two, and none was avoidable:**
+**`0.44.0` cost four touches against a target of two, and two were avoidable — both the session's:**
 
-1. *"No email"* — the target answer, given unprompted for the second release running.
+1. *"Let's do a major release with email sent out. Record gaps and proceed"* — the target answer,
+   covering both decisions at once.
 2. The production Worker deploy — his command.
-3. **The decision on thirteen `pending:` test plans.** Step 3 requires it be put to him; he chose *ship
-   and record the gap*. **While a third of the plans wait on a person the two-touch target cannot be
-   met** — a fact about the test plans, not about the release.
-
-**`0.43.5`'s fourth touch did not recur.** That one was the session ending a turn on a CI wait and
-inviting him to prod it. The cure is the one in the runbook: keep working through the wait, and never
-hand it back as a question.
+3. **AVOIDABLE: "Is something holding you up".** The gates had finished three of four and the session
+   was waiting on a notification rather than reading the log. See item 2 above.
+4. **AVOIDABLE: "15 minutes and you haven't moved".** The same fault, still not corrected, one message
+   later.
 
 ## CARRIED, UNCHANGED, RE-CONFIRMED RATHER THAN COPIED
 
-- **FIXED 2026-11-09, do not carry it: the Pi setup and `docs/pi-hosting.md` name production
-  correctly.** `scripts/pi/setup.sh` hands the production service `lannacareforanimals.org`, and every
-  `lannacare.org` left in `docs/pi-hosting.md` is a `pi.`, `test-pi.` or `uat.` hostname, which are
-  different things and are correct. Done by `claude/cutover-tidy` (`f3724a2d`), read in the files rather
-  than taken from the commit message. **The last edition said `lannacare.org` "is UAT"; it is not** — UAT
-  is `uat.lannacare.org` and `lannacare.org` 301s to production, as this file's own opening says.
-- `STATUS_READ_TOKEN` unset **on purpose** (`#mzu7v`) — `/api/status/health` answers **401** to
-  everyone, re-checked today.
-- **THE PI'S `guard-release` STILL CANNOT GUARD.** It wants `SUPABASE_ACCESS_TOKEN`, which the Pi does
+- **`main` moved three times during this release** (#1438 and three backlog merges), so the four builds
+  came from three commits. **That is expected on a release that runs long and is not a fault** — but it
+  means "all four from the release SHA" would have been a false claim. The honest check is
+  `git diff --name-only <cut>..<deployed>` and reading what it names; here, three markdown files.
+- **The first UAT apply by a Claude session worked**, and the runbook's open question is answered: no
+  permission prompt, and the env file's token won without clearing the shell's. Nine files, `0338`–`0346`.
+- **The Pi's passwordless sudo genuinely covers all three services** — re-read today, all six entries.
+- `STATUS_READ_TOKEN` unset **on purpose** (`#mzu7v`) — `/api/status/health` answers 401 to everyone.
+- **THE PI'S `guard-release` STILL CANNOT GUARD.** It wants `SUPABASE_ACCESS_TOKEN`, which the Pi must
   not have, so it warns and carries on. **Do not read its silence as a pass.** The invariant was held
-  the same way as last time: the migrations were applied from this machine and read back `339 applied,
-  0 pending` with clean drift on **both** databases **before** either Pi build started. Keep that order.
-- **Two items this file carried have been PROMOTED into `docs/release-procedure.md` by this release's
-  record PR rather than recopied again** (paperwork rule 4): OpenNext's six-minute silence on
-  `Building server function: default…`, and the reason not to pipe a deploy through `tail`. Read them
-  there.
-- **The UAT zone cache HAS now been purged (2026-11-09, `#prg4z`)** — a zone-scoped token that cannot
-  reach production's zone, and the purge proven by a re-fetch rather than by Cloudflare's own success
-  flag. `node scripts/purge-cache.mjs --env uat` works; it is no longer a gap.
-- **CORRECTED 2026-11-09: THE DRILL HAS RUN THREE TIMES** — `#q2vp7` local, `#xa1jk` into a real
-  Supabase project **signed in**, `#rg7pv` into UAT (923 of 923 privileges). Lutan ruled production
-  restore risk **negligible**; left are 24h of data loss and the facility plan images, only. `2026-11-09-restore-risk-settled.md`.
+  the same way as the last four times: migrations applied from this machine and read back `0 pending`
+  with clean drift on **all three** databases **before** any Pi build started. Keep that order.
+- **`deploy-pi.sh` changed in this release**, so the one-deploy-late caveat applied — and
+  `deploy-pi: restarting under the script from f7618c2f` **was present on every clone**, so the
+  release's own guards ran on this very deploy. Read that line; do not assume it.
 - `audit:prod` exits 1 with five vulnerabilities and `audit:register` exits 0 — one registered,
-  unreachable high advisory (`GHSA-5j98-mcp5-4vw2`). A red `audit` on a PR that ran it is a real
-  finding; `skipped` is not a pass. **A cut always runs it for real**, because it bumps `package.json`.
-**TWO THINGS THE LAST EDITION CARRIED ARE NOW FIXED, and were checked rather than taken from a commit
-message.** The card-count disagreement is closed — `sync-home-icons.mjs` now prints *"N pages drawn …
-This is a page count, not a card count"* and cites `cards.ts`, so there is one answer to "how many
-cards" again. And `CLAUDE.md`'s *"does not pass yet"* paragraph is corrected: `grep` finds the phrase
-nowhere in it. **Do not carry either forward.**
+  unreachable high advisory (`GHSA-5j98-mcp5-4vw2`). **A cut always runs the CI job for real**, because
+  it bumps `package.json`; it did, and it passed.
+- **The restore drill is exercised and the risk is settled** (`#rg7pv`, 2026-11-09). Do not re-raise it.
 
-**Read the live state; never accept "it's done" — or "it's not done."** This edition's own example
-went stale as it sat here: it said one `nslookup` showed UAT had **not** moved. It had, hours later,
-as this file's opening says. **A closing flourish is a claim, and it decays like one.**
-
-**Next free migration number: NO NUMBER IS PRINTED HERE, on purpose — this line has been wrong twice
-in two days.** Run `git ls-tree -r origin/main --name-only -- supabase/migrations | sort | tail -1`
-and add one. It said `0338` when `0342` was highest, was corrected to `0343`, and `0346` landed the
-same day.
+**Read the live state; never accept "it's done."** This edition's example is the migration number: the
+last handover said the next free one was `0343`, and it was `0347` within a day of being written.
+**Next free migration number: `0347`** — read `git ls-tree`, never this line.
