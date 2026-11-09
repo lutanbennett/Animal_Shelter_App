@@ -750,6 +750,11 @@
         "migration": "0342_profile_photo_positive_test.sql",
         "item": "grant to anon",
         "reason": "SELECT on the public views public_resident_cards, public_resident_profiles and public_recent_adoptions, each restated with the same grants as before (0217). Nothing is newly granted: anon already read all three. The only change is the profile photo column, which now shows a photo only when it is an approved, non-Medical picture attachment of that resident (0319's test) instead of whenever no bad attachment row matched, so it NARROWS what anon can read. The base table residents is not granted to anon. The existing public-site pattern: it lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-09-profile-photo-fails-open.md."
+      },
+      {
+        "migration": "0343_text_approval_state.sql",
+        "item": "grant to anon",
+        "reason": "SELECT on nine existing public views (public_resident_cards, public_resident_profiles, public_recent_adoptions, public_adoption_updates, public_appeals, public_appeal_photos, public_fundraising_events, public_projects, public_desexing_drives), each restated with the same grants as before. Nothing is newly granted: anon already read all nine, and the base tables are not granted to anon. Eight of the nine now also ask the new text_approval review state (back-filled to public_ok, so output is unchanged), which can only NARROW what anon reads; the appeal views drop the residents.is_public_visible test, so a published non-draft appeal is visible for its duration (Lutan, 2026-11-09), still behind published, status, attachments.approved_at and 0216's medical_ok rule. The existing public-site pattern: it lets anon read what the shelter chose to publish, not do anything. docs/decisions/2026-11-09-text-approval-schema.md."
       }
     ],
     "stubs": [

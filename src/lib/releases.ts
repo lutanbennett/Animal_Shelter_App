@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "A published appeal now shows on the public website for as long as it is published, even when the animal is not ticked Ready for adoption. Before, an appeal for an animal that was not ready for adoption never appeared on the site, and those are the animals appeals are for. Appeals still need to be published and out of draft, and a Medical photo still needs its own tick to appear.",
   {
     text: "Settings → Recent changes now lists a change to which cards a card brings with it, for example \"Adoption news includes View residents\", under \"Cards a card brings with it\". Before, that kind of change altered what a card gives everyone who holds it and left no record anywhere. Like other card changes, it can't be undone from that page. The Thai wording has not been checked by a Thai speaker.",
     admin: true,
