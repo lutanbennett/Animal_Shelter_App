@@ -1,5 +1,11 @@
 # Planner handover — edition `735`, 2026-11-09
 
+**AMENDED 12:3xZ, after merging at 12:14Z.** The three batch-3 streams this edition described as *"briefed
+and handed over with no session opened"* all merged **before** it did, so four of its statements were stale
+on arrival. **They are corrected in place below, each marked `AMENDED`, and batch 3's actuals are now in.**
+The amendment exists because the lines it corrects would have sent the next chat hunting for finished work
+— **which is this edition's own lead fault, committed a second time by the same document.**
+
 **This is a DELTA against `726`.** It says what changed, corrects its predecessor, and reports what each
 of `726`'s warnings and owed items actually did. Per-stream figures, batch composition, ports and the
 dependency notes live in `.plan-day.md` and are **not** reproduced here.
@@ -7,9 +13,12 @@ dependency notes live in `.plan-day.md` and are **not** reproduced here.
 **It outranks nothing.** It is read by one chat, it will be rewritten within one plan, and a wrong line
 in it is corrected by its successor rather than by a reviewer.
 
-**Written at the SETUP of this plan's last batch, so batch 3's figures are not in it.** Batch 3 is
-`approval-flag-flip`, `maintenance-link-gate` and `devsignin-per-caller`, briefed and handed over with no
-session opened.
+**AMENDED. Written at the SETUP of this plan's last batch, so batch 3's figures were not in it — THEY NOW
+ARE.** Batch 3 was `approval-flag-flip`, `maintenance-link-gate` and `devsignin-per-caller`. **All three
+merged**: #1429 at 11:14Z, #1430 at 11:32Z, #1435 at 12:07Z. **Four unplanned PRs also landed and are NOT
+reported in this edition** — #1432 (restore-risk record), #1433 (`#ia85b`, the manual's `?view=all`), #1434
+(the manual's topics follow cards) and #1436 (`#5scf4`, release-notes and change-password tiles). **Read
+their PR bodies before planning in those areas; this planner has not.**
 
 ---
 
@@ -104,11 +113,31 @@ number.**
   cause, the decision AND the shape belongs at the BOTTOM of its row.**
 - **`website-settings-row` 175,263 is NOT a reading** — `finished=blocked`.
 
+**AMENDED — BATCH 3'S THREE READINGS, ALL VALID, AND ONE OF THEM IS THE WORST MISS OF THE PLAN:**
+
+- **`maintenance-link-gate` 183,289 against 120–145k, OVER BY 26%.** **And its brief carried a written
+  warning about exactly this**, added because of `bills-match-walkthrough`: *"if this page has no
+  maintenance job on dev with an enclosure attached, you will have to make one, and that is the same
+  trap."* **The warning fired, the stream was not surprised, and the band was still wrong** — because the
+  planner wrote the warning into the brief and did not then move the band. **A warning is not a price.**
+  **This is the SIXTH plan running in which the ROW was wrong rather than the number**, and the second in
+  this plan alone, both the same shape: a small-looking fix that must stand up its own dev scenario.
+  **Next edition: a one-file UI fix that needs a driven login on data that may not exist is NOT the
+  ordinary 120–145k row. Price it at 170–200k until something disproves that.**
+- **`approval-flag-flip` 223,642 against 230–285k, under by ~3%.** A permissions migration handed the
+  cause, the spec and the three things left by #1428's own PR body. **The hand-over discount held again**,
+  consistent with `approval-flag-schema`'s −9%.
+- **`devsignin-per-caller` 153,070 against 145–180k, INSIDE.** Its deliverable 2 was a genuine unknown
+  (whether two sessions' panes share a cookie jar) and the band contained it, which is the one pricing
+  judgement this plan got right first time.
+
 **`726`'s new row — *an AUDIT that computes a property per row*, 230–290k — remains UNTESTED.** No stream
 in this plan was one. **Carry it forward unvalidated and say so again.**
 
-**THE FLOOR: ≈106.7–112.0k at Sonnet `low` (107,795 · 106,722 · 107,711 in batch 2; 111,289 · 107,711 ·
-112,035 in batch 1).** This morning's Opus streams gave ≈106.1–106.5k. **So the floor LOOKS
+**THE FLOOR, AMENDED with batch 3: ≈106.7–112.0k at Sonnet `low`** (batch 1: 111,289 · 107,711 · 112,035;
+batch 2: 107,795 · 106,722 · 107,711; **batch 3: 107,711 · 107,132 · 107,375**). **Nine samples in one day
+and the middle seven sit inside 106.7–107.8k**, so the two figures over 111k are the outliers rather than
+the trend. This morning's Opus streams gave ≈106.1–106.5k. **So the floor LOOKS
 model-dependent by roughly 1–6k — two same-day samples is an observation, not a finding.** Re-derive it;
 never carry it forward.
 
@@ -137,7 +166,32 @@ file* lists. Still the best yield per turn spent, though a thinner plan than `72
    false findings teaches streams to ignore it. **The fix belongs in `brief-blocks.md`, not in a brief**;
    it is written by hand into six briefs as a stopgap.
 
-**`#7aev4` is three PRs and one flip from closed.** #1423 (`0343`, the state on eight tables), #1428
+**`#7aev4` IS BUILT, ITS LAST CLAUSE IS RULED, AND IT IS A BUILD — AMENDED TWICE IN ONE HOUR, THE SECOND
+TIME BECAUSE THE PLANNER ASKED HIM A QUESTION HE HAD ALREADY ANSWERED THREE TIMES.** #1430 landed `0346` (default NULL, INSERT
+guarded, `0217`'s approve-on-save removed), so text and photos now start blank and wait for approval.
+**The stream did NOT tick the item, correctly**, and rewrote its title to say what is open: `public_resident_cards`
+still lists **every** resident, so a *Public ok* profile photo of a resident **not** flagged for the website
+is still on the public card. That conflicts with the second gate he confirmed on 2026-11-05, and
+`docs/decisions/2026-11-09-text-approval-schema.md` names it *"Not reopened"* rather than deciding it.
+**Every other DONE WHEN clause holds.** **RULED BY HIM 2026-11-09, IN HIS OWN WORDS:** *"a resident not marked for adoption ready or without an
+appeal running will not appear on the website even if images for that resident have been ticked as suitable
+for the website."* **So a *Public ok* photo is an ADDITIONAL gate, never a substitute, and the fix is a view
+rewrite: filter `public_resident_cards` on adoption-ready OR a published non-draft appeal, through the same
+path `0343` uses. It carries a migration and it REMOVES residents from the public site, so the production
+count of what leaves is part of the job.** The item now holds all of that; **do not re-ask him.**
+
+**AND THE REASON THIS PARAGRAPH WAS WRONG TWICE IS THE MOST USEFUL THING IN THIS EDITION.** The answer was
+in `CLAUDE.md` the whole time — `(A3)` *"Ready for adoption = Show on website"* plus the appeal override,
+which `0343` had already built. **The batch-3 stream wrote *"it needs Lutan's ruling, not a build"* into the
+item's title without checking whether the ruling existed, and the planner trusted the title over the
+record.** His reply: *"I've explained this three times in the last 2 hours."* **A STREAM SAYING A DECISION IS
+OWED IS NOT EVIDENCE THAT IT IS OWED. Before you write "waiting on Lutan" about anything, grep `CLAUDE.md`
+and the item's own tail for the answer.** It is the same root as this edition's lead — a dated artifact read
+as a current fact — and it is now the third instance in one day.
+
+The deliverable-8 condition that produced the correct half of this outcome — tick only if every clause
+holds, otherwise rewrite the title — **is still the second mitigation observed firing this plan.** It worked;
+what failed was the sentence the stream put in the rewritten title. #1423 (`0343`, the state on eight tables), #1428
 (`0345`, the card `approve_text`, the Data API guard, reset-on-edit, the controls and the queue), and
 batch 3's `approval-flag-flip` (`0346`: flip the default to NULL, guard INSERT, remove `0217`'s
 approve-on-save). **His answers of 2026-11-09 settled all four numbers `726` said he owed** — photo volume
@@ -160,17 +214,23 @@ answer of 0 proves nothing, because dev has no appeals.
 
 ## OWED, AND WHO OWES IT
 
-1. **`#k7waq` — the production appeal-override count, before `0343` deploys.** Instrument exists.
-   **Planner's or release manager's.**
-2. **`select id from public_site_content` on production and UAT.** No read-only instrument exists for it;
+1. **AMENDED AGAIN — NO LONGER HIS. `#7aev4`'s last clause is RULED and is a BUILD**, carrying a view
+   rewrite and a migration: filter `public_resident_cards` on adoption-ready OR a published non-draft
+   appeal. **It takes residents OFF the public site, so it needs the production count of what leaves,
+   before and after.** See the `#7aev4` paragraph above. **Nothing here is waiting on him.**
+2. **`#k7waq` — the production appeal-override count, before `0343` deploys.** Instrument exists.
+   **Planner's or release manager's.** **AMENDED: `0346` is now pending on production too**, so the
+   production queue is `0343`, `0344`, `0345`, `0346` — and `0346` is the one that changes what new
+   content does. **Read all four in order before deploying any of them.**
+3. **`select id from public_site_content` on production and UAT.** No read-only instrument exists for it;
    the `#ipf1z` work built the create path on dev only.
-3. **Six worktrees and a husk to clear.** Batch 1's three read `free`; **batch 2's three read HELD, which
+4. **Six worktrees and a husk to clear.** Batch 1's three read `free`; **batch 2's three read HELD, which
    means his sessions are still in them — ask, do not `done` them.** Plus the husk
    `Animal_Shelter_App-worktrees [site-content-create-8699e9]` (clear by **branch** name) and the merged
    branch `claude/site-content-create-8699e9`. **`/clean-streams` does the round.**
-4. **`#etr20`, `#314hq`'s remainder, `#40oz4` part B, `#oeglm`'s third reading, `#mx3rt`, `#ao0jk`,
+5. **`#etr20`, `#314hq`'s remainder, `#40oz4` part B, `#oeglm`'s third reading, `#mx3rt`, `#ao0jk`,
    `#rqv5c`'s remainder — all his**, all unchanged, all in `.plan-day.md` rather than re-argued here.
-5. **One ask, not six:** `#ifxk8`, `#y1dqu`, `#hzmxi`, `#c7zjk`, `#41yhe` and `text-approval-app`'s
+6. **One ask, not six:** `#ifxk8`, `#y1dqu`, `#hzmxi`, `#c7zjk`, `#41yhe` and `text-approval-app`'s
    drafted Thai all end at **a Thai speaker reading what is already drafted.**
 
 ---
@@ -190,9 +250,10 @@ answer of 0 proves nothing, because dev has no appeals.
 Read `.plan-day.md` before anything. **It closed at 9 of 9 and this edition resets the counter, so you are
 planning FROM SCRATCH, not resuming.**
 
-**Check batch 3 first** (`approval-flag-flip`, `maintenance-link-gate`, `devsignin-per-caller`) — briefed
-and handed over with no session opened when this closed, so they are neither done nor re-plannable until
-you look. **And fetch before you look, and do not call them unstarted on a snapshot.**
+**AMENDED: batch 3 is DONE — all three merged, `#m4wq2` and `#w2hs8` ticked, `#7aev4` built and awaiting
+his ruling. Do not go looking for it.** The original line sent you after finished work, which is the lead
+fault of this very edition committed a second time. **The standing instruction survives it: fetch before
+you read any branch state, and never call a stream unstarted on a snapshot.**
 
 **The natural first batch, in order:** **`#xkfsv`** (newly unblocked by `#k3mqp`, and read its TAIL — its
 title still oversells it, and the clean-up itself says *"once the app half has been in production"*);
