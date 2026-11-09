@@ -3,7 +3,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import manual from "@/lib/manual/en";
 import { renderManualPdf, screenshotSrcs, type ManualCard, type ManualImages } from "@/lib/manual/manual-pdf";
 import { createClient } from "@/lib/supabase/server";
-import { entersApp } from "@/lib/permissions/can";
+import { cardsForTable, mayViewAll } from "@/lib/manual/for-topic";
 import { CARDS, CARD_KEYS } from "@/lib/permissions/cards";
 import { loadPermissions } from "@/lib/permissions/load";
 import { getT } from "@/lib/i18n/get-t";
@@ -93,7 +93,6 @@ function pdfResponse(bytes: Uint8Array, name: string) {
 
 export async function GET(request: NextRequest) {
   const params = request.nextUrl.searchParams;
-  const asked = params.get("view") === "all";
   const withImages = params.get("images") !== "0";
   const supabase = await createClient();
   const {
@@ -102,7 +101,9 @@ export async function GET(request: NextRequest) {
   if (!user) return new NextResponse((await getT()).t.uploads.errors.signInManual, { status: 401 });
 
   const perms = await loadPermissions();
-  const all = asked || !entersApp(perms) || perms?.isAdmin === true; // Admin is shown every topic anyway
+  // The whole manual is Admin's alone: ?view=all from anyone else is ignored, and a login whose cards open nothing
+  // is not handed it either (that used to be the case).
+  const all = mayViewAll(perms, params.get("view")) || perms?.isAdmin === true;
   const { t, locale } = await getT();
 
   if (all && withImages) {
@@ -117,7 +118,7 @@ export async function GET(request: NextRequest) {
     return pdfResponse(file, "lanna-care-manual.pdf");
   }
 
-  const cards: ManualCard[] = CARD_KEYS.map((key) => ({
+  const cards: ManualCard[] = cardsForTable(perms, CARD_KEYS).map((key) => ({
     key,
     label: CARDS[key].label(t),
     description: t.admin.whoDoesWhat.cardsView.description[key],
@@ -134,6 +135,6 @@ export async function GET(request: NextRequest) {
   // The card names and their one-liners below the heading already come from
   // the reader's dictionary, so the heading over them does too: a Thai reader
   // saw บัตรงานโดยสรุป on /manual and "Cards at a glance" on the PDF of it.
-  const pdf = await renderManualPdf(manual, { cards, cardsHeading: t.manualPage.cardsAtAGlance, all, images, perms });
+  const pdf = await renderManualPdf(manual, { cards, cardLabels: new Map(CARD_KEYS.map((k) => [k, CARDS[k].label(t)] as const)), cardsHeading: t.manualPage.cardsAtAGlance, all, images, perms });
   return pdfResponse(pdf, `lanna-care-${all ? "manual" : "manual-my-cards"}.pdf`);
 }

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { AlertTriangle, Info, Lightbulb } from "lucide-react";
 import manual from "@/lib/manual/en";
 import { getT } from "@/lib/i18n/get-t";
-import { cardsOfTopic, holdsCard, topicView, type TopicView } from "@/lib/manual/for-topic";
+import { cardsForTable, cardsOfTopic, holdsCard, mayViewAll, topicView, type TopicView } from "@/lib/manual/for-topic";
 import { CARDS, CARD_KEYS, type CardKey } from "@/lib/permissions/cards";
 import { entersApp, type Permissions } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
@@ -66,7 +66,7 @@ const CALLOUT_STYLES: Record<
 export default async function ManualPage({ searchParams }: PageProps<"/manual">) {
   const [{ view }, perms, { t }] = await Promise.all([searchParams, loadPermissions(), getT()]);
   const c = t.manualPage;
-  const showAll = view === "all";
+  const showAll = mayViewAll(perms, view);
   const sections: ViewSection[] = manual.sections.map((section) => ({
     section,
     topics: section.topics.map((topic) => ({ topic, view: topicView(topic, perms) })),
@@ -121,7 +121,7 @@ export default async function ManualPage({ searchParams }: PageProps<"/manual">)
         </aside>
 
         <div className="flex min-w-0 max-w-3xl flex-1 flex-col gap-12">
-          {filtered && <FilterBar showAll={showAll} count={myTopicCount} c={c} />}
+          {filtered && <FilterBar showAll={showAll} count={myTopicCount} canShowAll={perms?.isAdmin === true} c={c} />}
           <CardsTable perms={perms} label={label} describe={(k) => t.admin.whoDoesWhat.cardsView.description[k]} c={c} />
           {sections.map(({ section, topics }) => {
             const Icon = section.icon;
@@ -173,10 +173,13 @@ type Words = Awaited<ReturnType<typeof getT>>["t"]["manualPage"];
 function FilterBar({
   showAll,
   count,
+  canShowAll,
   c,
 }: {
   showAll: boolean;
   count: number;
+  /** Admin only: the whole manual is not for anyone else (mayViewAll). */
+  canShowAll: boolean;
   c: Words;
 }) {
   return (
@@ -185,12 +188,14 @@ function FilterBar({
         <span>
           {showAll ? c.showingEverything : c.showingMine(count)}
         </span>
-        <Link
-          href={showAll ? "/manual" : "/manual?view=all"}
-          className="font-medium text-primary underline-offset-2 hover:underline"
-        >
-          {showAll ? c.showOnlyMine : c.showEverything}
-        </Link>
+        {canShowAll && (
+          <Link
+            href={showAll ? "/manual" : "/manual?view=all"}
+            className="font-medium text-primary underline-offset-2 hover:underline"
+          >
+            {showAll ? c.showOnlyMine : c.showEverything}
+          </Link>
+        )}
       </p>
       {!showAll && <p className="text-xs text-muted">{c.findHint}</p>}
       <p className="flex flex-wrap gap-x-3 text-xs">
@@ -259,6 +264,8 @@ function CardsTable({
   describe: (key: CardKey) => string;
   c: Words;
 }) {
+  const keys = cardsForTable(perms, CARD_KEYS);
+  if (keys.length === 0) return null;
   return (
     <section id="roles-table" className="flex scroll-mt-6 flex-col gap-3">
       <h2 className="text-lg font-semibold text-foreground">{c.cardsAtAGlance}</h2>
@@ -266,7 +273,7 @@ function CardsTable({
       <div className="overflow-x-auto rounded-lg border border-border">
         <table className="w-full text-sm">
           <tbody>
-            {CARD_KEYS.map((k) => {
+            {keys.map((k) => {
               const held = !perms?.isAdmin && holdsCard(perms, k);
               return (
                 <tr key={k} className="border-b border-border last:border-b-0">
