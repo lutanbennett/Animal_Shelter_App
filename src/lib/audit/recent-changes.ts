@@ -253,6 +253,8 @@ export type AuditEntry = {
   residentId: string | null;
   /** card_includes only: the card and the card it includes, as keys, so the page can name both by their titles. */
   includes: { card: string; included: string } | null;
+  /** role_cards and card_grants only: the card as a key (and, for a grant, the activity), so the page can name the card by its title. */
+  cardRef: { card: string; activity: string | null } | null;
 };
 
 /** Columns that change on every touch and mean nothing to a reader. */
@@ -333,6 +335,10 @@ function toEntry(raw: RawRow): AuditEntry {
       const included = card ? str(image.included_card) : null;
       return card && included ? { card, included } : null;
     })(),
+    cardRef:
+      (table === "role_cards" || table === "card_grants") && str(image.card)
+        ? { card: str(image.card) as string, activity: table === "card_grants" ? str(image.activity) : null }
+        : null,
   };
 }
 

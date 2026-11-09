@@ -70,6 +70,11 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  {
+    text: "Settings → Recent changes now names a card by its title, as Who does what does, instead of by its internal key. A card handed to a role reads \"Adoption news\" rather than \"adoption_news\", and a change to what a card allows starts with the card's title. A card the app no longer knows still shows its key, so an old row still reads.",
+    admin: true,
+  },
+  "The user manual no longer tells a login with no menu to look at the bottom of the menu for Release notes, Change password and the manual. It now says they are tiles on the home screen in that case.",
 ];
 
 /** Newest first. */

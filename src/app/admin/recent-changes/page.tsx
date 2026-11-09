@@ -98,6 +98,11 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
     const label =
       e.table === "residents"
         ? (residentName ?? e.name ?? s.unnamedRecord)
+        : e.cardRef
+          ? // role_cards / card_grants: the card by its title (a key cards.ts no longer knows shows as itself), then the activity for a grant
+            e.cardRef.activity
+            ? `${cardTitle(e.cardRef.card)}: ${e.cardRef.activity}`
+            : cardTitle(e.cardRef.card)
         : e.includes
           ? // card_includes: both cards by their titles; a card since removed from cards.ts shows as its own key
             s.cardIncludes(cardTitle(e.includes.card), cardTitle(e.includes.included))
