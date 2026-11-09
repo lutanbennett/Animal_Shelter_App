@@ -1187,6 +1187,7 @@ const en = {
         "contacts.directory": "Contacts",
         "suppliers.directory": "Suppliers: the list and each supplier's page (Read); add, change, archive and restore (Edit)",
         "diets.settings": "Settings → Diets: the recipe book, ingredients and their measures; add, change and delete",
+        "text.approve": "Public text to approve: read the words waiting for the website and approve or keep private",
         "contacts.add": "Add a new contact",
         "contacts.browse": "Browse the contacts book",
         "friends.manage": "Shelter Friends: add, publish, unpublish",
