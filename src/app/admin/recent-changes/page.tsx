@@ -14,6 +14,7 @@ import {
   type AuditFilters,
 } from "@/lib/audit/recent-changes";
 import { newestIdByRow, undoKind } from "@/lib/audit/undo";
+import { CARDS, isCardKey } from "@/lib/permissions/cards";
 import { UndoButton } from "./UndoButton";
 import { formatDateTime } from "@/lib/format";
 import { getT } from "@/lib/i18n/get-t";
@@ -41,6 +42,8 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
   const canUndo = true;
   const { t, locale } = await getT();
   const s = t.admin.recentChanges;
+  // A card's title in the reader's language; a key cards.ts no longer knows falls through to the key itself.
+  const cardTitle = (key: string) => (isCardKey(key) ? CARDS[key].label(t) : key);
   const filters = parseFilters(await props.searchParams);
 
   const supabase = await createClient();
@@ -95,8 +98,11 @@ export default async function RecentChangesPage(props: PageProps<"/admin/recent-
     const label =
       e.table === "residents"
         ? (residentName ?? e.name ?? s.unnamedRecord)
-        : // every other table: its own name when it has one (NAME_FROM_IMAGE), else the resident it belongs to below
-          e.name;
+        : e.includes
+          ? // card_includes: both cards by their titles; a card since removed from cards.ts shows as its own key
+            s.cardIncludes(cardTitle(e.includes.card), cardTitle(e.includes.included))
+          : // every other table: its own name when it has one (NAME_FROM_IMAGE), else the resident it belongs to below
+            e.name;
     const owner = e.table !== "residents" && e.table !== "contacts" ? residentName : null;
     return (
       <>
