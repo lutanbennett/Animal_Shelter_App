@@ -17,7 +17,8 @@
 -- Anything else reads as no profile photo. Nothing about who may write the column changes here (see the decision file).
 --
 -- Every column, its name, type and order are exactly as 0217 left them; only the profile_photo_drive_file_id expression changes.
--- No policy, no function, no role key. Re-runnable (create or replace view). To undo: re-run 0217's three view definitions.
+-- No policy, no function, no role key, and NO GRANT: create or replace view keeps each view's existing privileges (0217 granted anon
+-- SELECT and revoked the rest), proved in the decision file. Re-runnable. To undo: re-run 0217's three view definitions.
 
 create or replace view public_resident_cards as
 select
@@ -73,8 +74,6 @@ select
 from residents r
 left join private.resident_current_state s on s.resident_id = r.id;
 
-grant select on public_resident_cards to anon, authenticated;
-revoke insert, update, delete, truncate, references, trigger on public_resident_cards from anon, authenticated;
 
 create or replace view public_resident_profiles as
 select
@@ -134,8 +133,6 @@ where r.is_public_visible = true
     select s.current_status from private.resident_current_state s where s.resident_id = r.id
   ), 'Resident'::text) <> all (array['Deceased'::text, 'Adopted'::text]);
 
-grant select on public_resident_profiles to anon, authenticated;
-revoke insert, update, delete, truncate, references, trigger on public_resident_profiles from anon, authenticated;
 
 create or replace view public_recent_adoptions as
 select
@@ -176,7 +173,5 @@ where p.placement_type = 'Adopt'::placement_type
     where s.resident_id = r.id and s.current_status = 'Deceased'::text
   );
 
-grant select on public_recent_adoptions to anon, authenticated;
-revoke insert, update, delete, truncate, references, trigger on public_recent_adoptions from anon, authenticated;
 
 notify pgrst, 'reload schema';
