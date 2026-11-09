@@ -1,0 +1,13 @@
+#!/bin/sh
+# On the `backlog` branch, refuse a commit whose staged diff changes backlog
+# items the message does not name (another session's uncommitted edit swept in).
+# Needs the message, so it cannot live in pre-commit. Same shape as pre-commit's
+# checks: bails before node unless on `backlog`, and fails open on a crash.
+[ "$(git symbolic-ref --short -q HEAD 2>/dev/null)" = "backlog" ] || exit 0
+command -v node >/dev/null 2>&1 || exit 0
+[ -f scripts/check-backlog-commit-names.mjs ] || exit 0
+node scripts/check-backlog-commit-names.mjs "$1"
+rc=$?
+[ "$rc" -eq 3 ] && exit 1
+[ "$rc" -ne 0 ] && echo "commit-msg: backlog naming check crashed (exit $rc) — commit allowed." >&2
+exit 0
