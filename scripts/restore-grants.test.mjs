@@ -94,3 +94,11 @@ test("resetSql leaves the public schema's own USAGE grants alone and skips exten
   assert.match(sql, /deptype = 'e'/);
   assert.match(sql, /grant execute on %s %s to public/);
 });
+
+test("given the backup's objects, the reset touches only those (a newer migration's objects keep their grants)", () => {
+  const sql = resetSql(["public", "private"], archiveObjects(TOC));
+  assert.match(sql, /'public\.residents'/);
+  assert.match(sql, /'private\.works_with_residents'/);
+  assert.doesNotMatch(sql, /suppliers/);
+  assert.match(sql, /c\.relkind = 'S' and false/); // the TOC holds no sequence: none is reset
+});

@@ -47,8 +47,17 @@ export function aclTocLines(toc, schemas = GRANT_SCHEMAS, owner = "postgres") {
  * Supabase made at project creation and which the replay may not restate). Extension members
  * are left alone: they are the extension's, not ours.
  */
-export function resetSql(schemas = GRANT_SCHEMAS) {
-  const list = schemas.map((s) => `'${s.replace(/'/g, "''")}'`).join(",");
+export function resetSql(schemas = GRANT_SCHEMAS, objects = null) {
+  const q = (s) => `'${s.replace(/'/g, "''")}'`;
+  const list = schemas.map(q).join(",");
+  // Only objects the backup holds (archiveObjects keys), when given: an object a newer migration
+  // created is not in the backup, so the replay would not restate its grants, and resetting it
+  // would strip them. Without `objects`, every object in the schemas is reset.
+  const only = (kind) => {
+    if (!objects) return "";
+    const names = [...objects].filter((k) => k.startsWith(`${kind} `)).map((k) => q(k.slice(kind.length + 1)));
+    return names.length ? ` and (n.nspname || '.' || %NAME%) = any (array[${names.join(",")}]::text[])` : " and false";
+  };
   return `
 do $reset$ declare r record; begin
   perform set_config('search_path', '', true);  -- so regprocedure text is schema-qualified
@@ -57,6 +66,7 @@ do $reset$ declare r record; begin
       from pg_class c join pg_namespace n on n.oid = c.relnamespace
      where n.nspname in (${list}) and c.relkind in ('r','v','m','p','f','S')
        and not exists (select 1 from pg_depend d where d.classid = 'pg_class'::regclass and d.objid = c.oid and d.deptype = 'e')
+       and ((c.relkind <> 'S'${only("TABLE").replace("%NAME%", "c.relname")}) or (c.relkind = 'S'${only("SEQUENCE").replace("%NAME%", "c.relname")}))
   loop
     execute format('revoke all on %s %s from public, anon, authenticated, service_role',
                    case when r.relkind = 'S' then 'sequence' else 'table' end, r.o);
@@ -66,6 +76,7 @@ do $reset$ declare r record; begin
       from pg_proc p join pg_namespace n on n.oid = p.pronamespace
      where n.nspname in (${list}) and p.prokind in ('f','p')
        and not exists (select 1 from pg_depend d where d.classid = 'pg_proc'::regclass and d.objid = p.oid and d.deptype = 'e')
+       and ((p.prokind = 'f'${only("FUNCTION").replace("%NAME%", "p.proname")}) or (p.prokind = 'p'${only("PROCEDURE").replace("%NAME%", "p.proname")}))
   loop
     execute format('revoke all on %s %s from public, anon, authenticated, service_role',
                    case when r.prokind = 'p' then 'procedure' else 'function' end, r.o);
@@ -74,6 +85,14 @@ do $reset$ declare r record; begin
   end loop;
   for r in select nspname from pg_namespace where nspname in (${list}) and nspname <> 'public' loop
     execute format('revoke all on schema %I from public, anon, authenticated, service_role', r.nspname);
+  end loop;
+  -- Default privileges for objects created later: Supabase's give the API roles everything in
+  -- public; production's revoke anon's (measured: the backup's DEFAULT ACL has no anon line).
+  -- Clear postgres's per-schema defaults so the replay restates exactly the backup's.
+  for r in select nspname from pg_namespace where nspname in (${list}) loop
+    execute format('alter default privileges for role postgres in schema %I revoke all on tables from anon, authenticated, service_role', r.nspname);
+    execute format('alter default privileges for role postgres in schema %I revoke all on sequences from anon, authenticated, service_role', r.nspname);
+    execute format('alter default privileges for role postgres in schema %I revoke all on functions from anon, authenticated, service_role', r.nspname);
   end loop;
 end $reset$;
 `;

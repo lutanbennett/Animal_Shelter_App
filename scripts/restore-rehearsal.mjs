@@ -37,7 +37,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSy
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { decryptBackup } from "./lib/backup-crypto.mjs";
-import { aclTocLines, compareAcls, GRANT_SCHEMAS, resetSql } from "./lib/restore-grants.mjs";
+import { aclTocLines, archiveObjects, compareAcls, GRANT_SCHEMAS, resetSql } from "./lib/restore-grants.mjs";
 
 const MIN_PG_MAJOR = 17;
 const SCHEMAS = ["public", "private", "auth"];
@@ -197,7 +197,7 @@ try {
   const replaySql = (await pipe(exe("pg_restore"), ["-L", listFile, "-f", "-"], archive)).stdout;
   const before = compareAcls(replaySql, pgDumpSchema(), toc);
   console.log(`  ..   before the privileges step: ${before.missing.length} missing, ${before.extra.length} extra (what --no-privileges leaves)`);
-  run(exe("psql"), [...conn("restore_rehearsal"), "-X", "-q", "-1", "-v", "ON_ERROR_STOP=1"], resetSql() + "\n" + replaySql);
+  run(exe("psql"), [...conn("restore_rehearsal"), "-X", "-q", "-1", "-v", "ON_ERROR_STOP=1"], resetSql(GRANT_SCHEMAS, archiveObjects(toc)) + "\n" + replaySql);
   const after = compareAcls(replaySql, pgDumpSchema(), toc);
   check(
     after.missing.length === 0 && after.extra.length === 0,

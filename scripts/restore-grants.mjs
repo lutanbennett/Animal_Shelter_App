@@ -29,7 +29,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { decryptBackup } from "./lib/backup-crypto.mjs";
 import { loadEnv, parseEnvArg, projectRef as refOf } from "./lib/env.mjs";
-import { aclTocLines, compareAcls, GRANT_SCHEMAS, resetSql } from "./lib/restore-grants.mjs";
+import { aclTocLines, archiveObjects, compareAcls, GRANT_SCHEMAS, resetSql } from "./lib/restore-grants.mjs";
 
 const { name: envName, rest: args } = parseEnvArg(process.argv.slice(2));
 const usingEnv = process.argv.includes("--env");
@@ -91,7 +91,7 @@ try {
   if (!checkOnly) {
     console.log("Resetting and replaying them in one transaction ...");
     const r = spawnSync(exe("psql"), ["-X", "-q", "-1", "-v", "ON_ERROR_STOP=1", "-d", dbUrl], {
-      input: resetSql() + "\n" + replaySql,
+      input: resetSql(GRANT_SCHEMAS, archiveObjects(toc)) + "\n" + replaySql,
       encoding: "utf8",
       env: { ...process.env, PGPASSWORD: password ?? "" },
       maxBuffer: 256 * 1024 ** 2,
