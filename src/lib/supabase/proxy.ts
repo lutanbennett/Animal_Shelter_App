@@ -91,6 +91,19 @@ export async function updateSession(request: NextRequest) {
     );
   }
 
+  // Website off: "/" is no page for a signed-in login. Sent where a fresh
+  // sign-in lands — the app, or /no-access when its cards open nothing —
+  // as a plain redirect here, because the page's own redirect
+  // (src/app/page.tsx, kept as a backstop) arrives only after the root
+  // loading screen has started streaming.
+  if (user && off && request.nextUrl.pathname === "/") {
+    const role = await loadSessionRole(supabase);
+    const url = request.nextUrl.clone();
+    url.pathname = signedInLandingPath(role, null);
+    url.search = "";
+    return noindex(withCookies(NextResponse.redirect(url), response), locked);
+  }
+
   // An account on a temporary password (src/lib/auth/password-change.ts)
   // goes nowhere but the change-password page until it has its own — when
   // it signed in with that password. A Google sign-in used no password and
