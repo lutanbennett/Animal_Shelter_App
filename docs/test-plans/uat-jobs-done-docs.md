@@ -10,10 +10,10 @@
 | Backlog item | `docs/backlog.md` → `#r9k2m` |
 | Branch / worktree | `claude/uat-jobs-done-docs` @ `C:\Development\Animal_Shelter_uat-jobs-done-docs` |
 | Dev server | not started — documentation only, no code and no page |
-| PR | filled in below |
+| PR | [#1409](https://github.com/lutanbennett/Animal_Shelter_App/pull/1409) |
 | Tested by / date | Claude, 2026-11-09 |
 | Carries a migration? | no |
-| Tested at SHA | filled in below |
+| Tested at SHA | `f756b506` — the gates ran against that tree. The two commits after it add this plan and fill it in, and change no code |
 
 ## 1. Scope and risk
 
@@ -25,7 +25,15 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (*Already up to date*)
-- [ ] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — pending: the run exceeded the ten-minute foreground limit and is still going; its own closing lines go here verbatim when it finishes
+- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — all four exit codes `0`. The run took 18 minutes rather than the usual four; another stream was building on this machine at the same time, which is the same machine-load effect `CLAUDE.md` records for Lighthouse figures. Its closing lines, as printed:
+
+```
+=== gates: typecheck exited 0 after 173s
+=== gates: lint exited 0 after 494s
+=== gates: test exited 0 after 50s
+=== gates: build exited 0 after 379s
+gates: typecheck=0 lint=0 test=0 build=0
+```
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
@@ -133,10 +141,10 @@
 
 ### Automated and scripted checks
 
-- [ ] Everything in this checklist that could be verified without human eyes was run, not assumed — pending: the gates run has not finished
+- [x] Everything in this checklist that could be verified without human eyes was run, not assumed
 - [x] Nothing is ticked that was not actually executed
 
-Automated checks by: pending: the gates run has not finished
+Automated checks by: Claude  Date: 2026-11-09
 
 ### Manual verification
 
@@ -147,7 +155,7 @@ Manual verification by: n/a: documentation only — nothing renders, and both do
 ### Result
 
 - [x] Open defects are either fixed or explicitly accepted above
-- [ ] Checklist pasted into the PR — pending: the PR is opened after this commit
+- [x] Checklist pasted into the PR — *the PR body carries what changed, the two deliberate choices and the measurements behind the new wording, and points at this file*
 - [x] Handed to the production release manager — *this plan is the handover; there is nothing for them to do at deploy time beyond the two deferred SHA lines that every PR carries*
 
 Result: pass
