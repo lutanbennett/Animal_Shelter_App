@@ -8,10 +8,10 @@
 | Backlog item | `docs/backlog.md` → none, and none is opened. All three restore items (`#q2vp7`, `#xa1jk`, `#rg7pv`) were already ticked; this PR corrects documents that had not caught up. Recorded in `docs/decisions/2026-11-09-restore-risk-settled.md` instead |
 | Branch / worktree | `claude/restore-risk-record` @ `C:\Development\Animal_Shelter_restore-risk-record` |
 | Dev server | not started — see §4 |
-| PR | pending: opened once the gates have run |
+| PR | [#1432](https://github.com/lutanbennett/Animal_Shelter_App/pull/1432) |
 | Tested by / date | Claude, 2026-11-09 |
 | Carries a migration? | no |
-| Tested at SHA | pending: recorded with the gates run |
+| Tested at SHA | `9131613a` — the gates ran against this commit, and nothing but this plan changed afterwards |
 
 ## 1. Scope and risk
 
@@ -23,7 +23,20 @@
 ## 2. Automated gates
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly; see the block below
-- [ ] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — pending: `npm ci` was still running in this worktree when the plan was first committed, so the real block replaces this line in the commit that follows
+- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — run unpiped, so each exit code is the gate's own and not a pager's:
+
+```
+=== gates: typecheck exited 0 after 257s
+=== gates: lint exited 0 after 856s
+=== gates: test exited 0 after 142s
+=== gates: build exited 0 after 515s
+gates: typecheck=0 lint=0 test=0 build=0
+```
+
+The timings are long for this repository because six `worktree.mjs done` runs were deleting
+`node_modules` trees on the same machine at the time. They are pass/fail evidence here, not a
+measurement of anything, so the load does not matter — unlike a Lighthouse run, which `CLAUDE.md`
+says must never be taken while another stream is building.
 - [ ] CI green on the PR — `n/a: not yet — the PR does not exist at this commit`
 
 ## 3. Schema and data — *skip if no migration*
