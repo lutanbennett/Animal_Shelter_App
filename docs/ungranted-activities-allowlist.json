@@ -16,6 +16,14 @@
       "by": "Lutan",
       "reason": "Withdrawing a recorded death is rare and consequential; cards.ts keeps it off the residents card for exactly that reason.",
       "decision": "docs/decisions/2026-11-06-ungranted-activities-cards.md"
+    },
+    {
+      "activity": "maintenance.delete",
+      "level": "edit",
+      "ruled": "2026-10-28",
+      "by": "Lutan",
+      "reason": "Only Admin deletes a maintenance job (\"Only admin can delete maintenance, keep it that way\"). Recorded here 2026-11-09, not ruled anew; fault-maintenance-delete in scripts/lib/readonly-checks.mjs asserts the same thing on the live database. See also docs/card-access-faults.md.",
+      "decision": "docs/decisions/2026-11-09-activities-grantable-ruling.md"
     }
   ],
   "foundNotRuled": [
@@ -87,12 +95,6 @@
     },
     {
       "activity": "reports.expenses",
-      "level": "edit",
-      "found": "2026-11-06",
-      "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
-    },
-    {
-      "activity": "maintenance.delete",
       "level": "edit",
       "found": "2026-11-06",
       "note": "granted by no card at this level when first measured; not ruled. For the planner to decide: a card, or a ruling that it is Admin-only on purpose (then move it to adminOnlyOnPurpose with the reason). Some may be levels with no control at edit."
