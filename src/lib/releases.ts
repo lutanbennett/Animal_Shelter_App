@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "Release notes and Change password are now tiles on everyone's home screen, after the user manual. A login with no left-hand menu, such as a Volunteer, could not reach either page, so could not change their own password. Both are also still under your name at the top right.",
   {
     text: "New card, Approve public text, and a new screen of the same name. Words that the public website shows (an animal's story, an adoption update, an appeal, an event, a project folder or a sterilisation drive) can now be read and answered: Approve, or Keep private. Each of those records shows whether its words have been read, and the screen lists the ones still waiting. Changing the public words of a record now sends it back to 'not read yet', and the website hides it until someone holding the card approves it again, so read the waiting list after editing. Nobody holds the card yet; give it under Settings → Who does what to whoever should read the words. New records are still shown straight away for now. The Thai wording has not been checked by a Thai speaker.",
     cards: ["approve_text"],

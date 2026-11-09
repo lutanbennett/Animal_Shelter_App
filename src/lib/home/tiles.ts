@@ -185,13 +185,33 @@ export function manualTile(t: Dictionary): HomeTile {
   return { href: MANUAL_HREF, label: t.nav.manual, icon: NAV_ICONS.manual };
 }
 
-/** The home's tiles with the manual's last. Independent of counts, so nothing about a home's numbers can drop it. */
-function withManualTile(tiles: HomeTile[], t: Dictionary): HomeTile[] {
-  return tiles.some((x) => x.href === MANUAL_HREF) ? tiles : [...tiles, manualTile(t)];
+/** Where Release notes and Change password live. Open to every signed-in login, so (like the manual) no card opens them. */
+export const RELEASES_HREF = "/releases";
+export const PASSWORD_HREF = "/account/password";
+
+/**
+ * Release notes and Change password tiles. NOT cardTile()s, for the manual's reason: every signed-in login may open both
+ * pages, so they are gated on nothing (no card, no role, not entersApp). They exist because a tiles-only login has no
+ * sidebar, and the sidebar footer was their only other way in (#5scf4, 2026-11-09).
+ */
+export function releaseNotesTile(t: Dictionary): HomeTile {
+  return { href: RELEASES_HREF, label: t.nav.releaseNotes, icon: NAV_ICONS.releaseNotes };
+}
+export function changePasswordTile(t: Dictionary): HomeTile {
+  return { href: PASSWORD_HREF, label: t.nav.changePassword, icon: NAV_ICONS.changePassword };
 }
 
-/** Whether a home has any tile besides the manual's: a home with only the manual still says its role has no jobs. */
-export const hasJobTiles = (tiles: readonly HomeTile[]) => tiles.some((x) => x.href !== MANUAL_HREF);
+/** The "now and then" doorways every home ends with, in this order. */
+const ALWAYS_HREFS: readonly string[] = [MANUAL_HREF, RELEASES_HREF, PASSWORD_HREF];
+
+/** The home's tiles with the manual's, Release notes and Change password last. Independent of counts, so nothing about a home's numbers can drop them. */
+function withManualTile(tiles: HomeTile[], t: Dictionary): HomeTile[] {
+  const extra = [manualTile(t), releaseNotesTile(t), changePasswordTile(t)].filter((e) => !tiles.some((x) => x.href === e.href));
+  return extra.length ? [...tiles, ...extra] : tiles;
+}
+
+/** Whether a home has any tile besides the manual's: a home with only these doorways still says its role has no jobs. */
+export const hasJobTiles = (tiles: readonly HomeTile[]) => tiles.some((x) => !ALWAYS_HREFS.includes(x.href));
 
 /** Put the due-today counts on the tiles they belong to: My tasks carries the total, Maintenance its share. */
 export function withCounts(drawn: HomeTile[], t: Dictionary, counts?: TileCounts): HomeTile[] {
