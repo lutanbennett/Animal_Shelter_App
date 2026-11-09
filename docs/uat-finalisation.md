@@ -16,7 +16,7 @@ release process"*.
 
 **So this is no longer a to-do list — it is the REBUILD list.** It stays written out in full,
 corrected from the real run, for the day UAT has to be built again. **What a RELEASE does to UAT
-lives in `docs/release-procedure.md`** (steps 1, 5, 6 and 7, and *What UAT still needs once* at its
+lives in `docs/release-procedure.md`** (steps 1, 5, 6 and 7, and *What UAT needed once* at its
 top). **Do not follow Part 6 for a routine release:** it pushes secrets, which a release should
 not, and a release deploys UAT last rather than first.
 
@@ -556,9 +556,12 @@ from `.env.deploy.uat` whatever the shell holds, so this line is belt-and-braces
 **Not part of this list:** anything else about production, moving production to the shelter's own Google
 account, the Cloudflare hardening (`#ao0jk`) and acceptance testing (`#mc6fu`).
 
-**Three one-time jobs this list did NOT cover, found when UAT joined the release process.** They are
-in `docs/release-procedure.md` under *What UAT still needs once*, and all three are Lutan's: UAT's
-Supabase token needs `database_read`; the Pi's `/etc/sudoers.d/lanna-care-restart` needs
-`lanna-care-uat`; and `.env.deploy.uat` needs a `CLOUDFLARE_PURGE_TOKEN`. Until they are done a
-release can still ship UAT, but its last mile is manual and a release that adds a migration cannot
-ship UAT at all.
+**Three one-time jobs this list did NOT cover, found when UAT joined the release process — ALL
+THREE DONE 2026-11-09.** They are in `docs/release-procedure.md` under *What UAT needed once*,
+which records what each turned out to be. In short: the Supabase token was never short of a
+permission (this PC's shell held the other account's token, and `scripts/lib/env.mjs` now lets the
+environment file's win); the Pi's `/etc/sudoers.d/lanna-care-restart` names `lanna-care-uat`; and
+`.env.deploy.uat` holds a `CLOUDFLARE_PURGE_TOKEN` scoped to the `lannacare.org` zone alone.
+**A UAT release now has no manual last mile, and a release that adds a migration ships UAT like the
+other two.** *Before that date this paragraph said all three were outstanding, which is why records
+written then say so.*
