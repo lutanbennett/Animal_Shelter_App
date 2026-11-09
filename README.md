@@ -653,7 +653,7 @@ Pi's cron job (daily at 03:00 Thailand time since 2026-10-12; it was Sundays bef
 (`docs/pi-hosting.md`):
 
 ```bash
-0 3 * * * cd $HOME/Animal_Shelter_App && node scripts/backup.mjs --env production --keep-days 14 --local-copy $HOME/backups/lannacare >> $HOME/backups/backup.log 2>&1
+0 3 * * * cd $HOME/Animal_Shelter_App && node scripts/backup.mjs --env production --shared-drive-token --keep-days 14 --local-copy $HOME/backups/lannacare >> $HOME/backups/backup.log 2>&1
 ```
 
 Drive stays the off-site copy: the Pi is in the same house as the origin it

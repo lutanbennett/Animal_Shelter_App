@@ -21,7 +21,7 @@ visitor ──► Cloudflare edge ──► Worker (worker/index.mjs)
 ```
 
 Every response carries `x-lanna-served-by: pi | worker` and
-`x-lanna-cache: HIT | MISS | BYPASS`, so `curl -sI https://lannacare.org/`
+`x-lanna-cache: HIT | MISS | BYPASS`, so `curl -sI https://lannacareforanimals.org/`
 tells you which path answered.
 
 What the Pi's outage costs: the staff app falls back to Worker rendering
@@ -66,7 +66,7 @@ unattended-upgrades, and `cloudflared-restart.path` restarts the tunnel whenever
 binary changes, because the package does not), builds the app, installs
 `lanna-care.service` (next start on 127.0.0.1:3000, restart always) and
 the cloudflared service with `scripts/pi/cloudflared-config.yml` (Host
-header rewritten to `lannacare.org`), and turns on unattended security
+header rewritten to `lannacareforanimals.org`), and turns on unattended security
 updates. Re-runnable.
 
 ## Cloudflare side (once)
@@ -95,7 +95,7 @@ updates. Re-runnable.
    `ORIGIN_HOST: "pi.lannacare.org"`; commit on a branch and merge as
    usual. Then `npm run deploy:prod -- --secrets` (uploads `ORIGIN_KEY`
    alongside the other secrets).
-4. **Check**: `curl -sI https://lannacare.org/login | grep x-lanna` →
+4. **Check**: `curl -sI https://lannacareforanimals.org/login | grep x-lanna` →
    `x-lanna-served-by: pi`. A page in the app (signed in) should also say
    `pi`. `curl -sI https://pi.lannacare.org/` from anywhere else → 403
    from the WAF. The Pi also refuses (403) any request whose `x-origin-key` is missing or wrong (`src/proxy.ts`, `src/lib/origin-key.ts`), so the rule is no longer the only guard — but it stays: it stops strangers before they reach the tunnel. The Pi needs `ORIGIN_KEY` in its own `.env.deploy.production`, same value; a Pi without it does not check. Any local `curl` at 127.0.0.1:3000 must send the header too.
@@ -299,7 +299,7 @@ You need it only if **all** of these are true:
 3. From any computer, this prints `pi-timeout` (or nothing at all):
 
 ```bash
-curl -s -m 30 -D - -o /dev/null -X POST -d x=1 https://lannacare.org/drill-probe | grep -i x-lanna-served-by
+curl -s -m 30 -D - -o /dev/null -X POST -d x=1 https://lannacareforanimals.org/drill-probe | grep -i x-lanna-served-by
 ```
 
 **Do not pull it for a power cut that is only seconds old.** When the tunnel program on the Pi is
@@ -334,7 +334,7 @@ need to check something: `node scripts/deploy.mjs --env test --no-pi`.
 ### How to know it worked
 
 1. The `curl` above now prints `x-lanna-served-by: worker`.
-2. Sign in on `https://lannacare.org` and save something small.
+2. Sign in on `https://lannacareforanimals.org` and save something small.
 3. Settings → System status: the Pi tile is **grey, "Not in use"**. That is expected, not a fault, and a grey
    tile does not send an alert, so the "Pi is down" mail stops coming.
 
@@ -517,7 +517,7 @@ running.
 2. **Unplug the power**, then remove the NVMe HAT (or its ribbon cable). Keep the USB drive in.
 3. Power on. Wait two minutes. `ssh` in (the hostname and `authorized_keys` came across).
 4. `findmnt /` must say `/dev/sda2`; `systemctl is-active lanna-care cloudflared` both `active`;
-   `curl -sI https://lannacare.org/ | grep -i served-by` says `pi`.
+   `curl -sI https://lannacareforanimals.org/ | grep -i served-by` says `pi`.
 5. Power off, put the NVMe back, power on, and confirm `findmnt /` is `nvme0n1p2` again.
 
 If step 3 never gets an IP: attach a monitor. A rainbow screen or a blank one means the
@@ -820,7 +820,7 @@ settings file. Nothing changes for visitors. You do this once; it can be repeate
    few seconds while it restarts. It stops with a message, and leaves the old arrangement
    running, if `.env.local` is in the production folder: move it off the Pi and run it again.
 
-4. Check it: open `https://lannacare.org`, then run
+4. Check it: open `https://lannacareforanimals.org`, then run
    `ps -o user= -p $(systemctl show -p MainPID --value lanna-care)` — it should print
    `lannacare-app`. This proves the site still works *and* who it runs as:
 
