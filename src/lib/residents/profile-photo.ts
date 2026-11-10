@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
+import { dbRefusal } from "@/lib/db-refusal";
 import { isMedicalFolder } from "@/lib/google/drive-client";
 
 /**
@@ -46,5 +47,5 @@ export async function setResidentProfilePhoto(
     p_resident_id: residentId,
     p_drive_file_id: driveFileId,
   });
-  if (error) return { error: error.message };
+  if (error) return { error: dbRefusal("photos.setProfilePhoto", error, t).error };
 }
