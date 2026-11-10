@@ -17,6 +17,11 @@
 //       every worktree: branch, port, dirty files, ahead/behind main,
 //       unpushed commits, whether a process holds the folder; then any
 //       husk folders git no longer knows about.
+//   node scripts/worktree.mjs streams
+//       the hand-over list: per claude/* worktree, its folder, port, branch, whether
+//       .brief.md exists, and the model, effort and band read from the brief's first
+//       line (<!-- stream: slug=… port=… model=… effort=… band=… migration=… -->).
+//       Offline and fast; a brief with no such line still gets a row, dials blank.
 //   node scripts/worktree.mjs launch [--quiet]
 //       rewrite this checkout's .claude/launch.json for its .port (the
 //       post-merge hook does this after every pull).
@@ -585,6 +590,40 @@ function proofState(branch, ahead) {
   return "";
 }
 
+// First line of .brief.md: <!-- stream: key=value key=value … -->. Returns null if absent.
+function briefMeta(dir) {
+  const f = path.join(dir, ".brief.md");
+  if (!existsSync(f)) return { brief: "no" };
+  const first = readFileSync(f, "utf8").split(/\r?\n/, 1)[0];
+  const m = first.match(/^<!--\s*stream:(.*?)-->/);
+  if (!m) return { brief: "yes", note: "no metadata line" };
+  const kv = Object.fromEntries([...m[1].matchAll(/(\w+)=(\S+)/g)].map((x) => [x[1], x[2]]));
+  return { brief: "yes", ...kv };
+}
+
+function cmdStreams() {
+  const rows = worktrees()
+    .filter((t) => t.branch.startsWith(BRANCH_PREFIX) && existsSync(t.dir))
+    .map((t) => {
+      const m = briefMeta(t.dir);
+      return {
+        folder: t.dir,
+        port: readPort(t.dir) ?? "-",
+        branch: t.branch,
+        brief: m.brief,
+        model: m.model ?? "",
+        effort: m.effort ?? "",
+        band: m.band ?? "",
+        note: m.note ?? (m.brief === "no" ? "no .brief.md" : m.port && String(m.port) !== String(readPort(t.dir)) ? "brief port differs from .port" : ""),
+      };
+    });
+  if (rows.length === 0) {
+    console.log("no claude/* worktrees");
+    return;
+  }
+  console.table(rows);
+}
+
 function cmdList() {
   const fetched = tryGit(["fetch", "-q", "--prune", "origin"]) !== null;
   const trees = worktrees();
@@ -906,6 +945,7 @@ switch (cmd) {
   case "dev": cmdDev(); break;
   case "sync": cmdSync(); break;
   case "list": cmdList(); break;
+  case "streams": cmdStreams(); break;
   case "launch": cmdLaunch(rest); break;
   case "done": cmdDone(rest); break;
   case "clean": cmdClean(rest); break;
