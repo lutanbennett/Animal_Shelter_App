@@ -39,18 +39,35 @@ test("role-cards-coverage and cards-union read card_grants, not a literal", asyn
   }
 });
 
-test("appeal-override fails only when an appeal is public through the override alone, and names it", async () => {
+test("appeal-override resolves running through private.appeal_running and text approval, and never fails", async () => {
   const { CHECKS, buildQuery } = await import("./lib/readonly-checks.mjs");
   const c = CHECKS["appeal-override"];
-  const none = { applied_0343: true, published_appeals: 5, by_override: [] };
+  const none = { applied_0347: true, running_appeals: 5, by_override: [] };
   assert.equal(c.failed(none), false);
-  assert.match(c.render(none).join(" "), /None is public only through the override/);
-  const some = { applied_0343: false, published_appeals: 5, by_override: [{ title: "Help Biscuit", status: "live" }] };
-  assert.equal(c.failed(some), true);
+  assert.match(c.render(none).join(" "), /No animal is public through an appeal alone/);
+  const some = { applied_0347: true, running_appeals: 5, by_override: [{ title: "Help Biscuit", status: "live" }] };
+  assert.equal(c.failed(some), false);
   assert.match(c.render(some).join(" "), /Help Biscuit/);
   const sql = buildQuery("appeal-override");
-  for (const name of ["appeals", "residents", "is_public_visible", "schema_migrations"]) assert.match(sql, new RegExp(name));
-  assert.doesNotMatch(sql, /values [(]/);
+  assert.match(sql, /private.appeal_running/);
+  assert.match(sql, /public_ok/);
+  assert.doesNotMatch(sql, /<> 'draft'/);
+});
+
+test("not-listed-publicly lists names, caps the list, resolves running through appeal_running and never fails", async () => {
+  const { CHECKS, buildQuery } = await import("./lib/readonly-checks.mjs");
+  const c = CHECKS["not-listed-publicly"];
+  assert.equal(c.failed([{ name: "A" }]), false);
+  const many = Array.from({ length: 45 }, (_, k) => ({ name: "R" + k }));
+  const out = c.render(many);
+  assert.match(out[0], /45 resident/);
+  assert.match(out.join(" "), /and 5 more/);
+  assert.match(out.join(" "), /R0/);
+  const sql = buildQuery("not-listed-publicly");
+  assert.match(sql, /private.appeal_running/);
+  assert.match(sql, /public_ok/);
+  assert.match(sql, /ready_for_adoption/);
+  assert.doesNotMatch(sql, /status in [(]'live'/);
 });
 
 test("activities-grantable reads card_grants against permission_activities per level, not a literal", async () => {
