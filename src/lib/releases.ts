@@ -71,18 +71,27 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
   "The user manual no longer shows Finding your way around (the menu) or Release notes to a login that has no menu, since they describe a menu that login does not have. A new topic, Your home screen and the header, tells that login about its tiles, the header, language and Sign out. Confirming a delete now gives examples anyone can meet instead of Admin-only ones.",
-  "Buttons and links that lead to a page your login is not allowed to open are no longer shown. Across the clinic, enclosure, contacts, diets, medications, donations, stock, memes and system status pages, you now only see a link when the page it opens would let you in.",
-  {
-    text: "Settings → Recent changes now names a card by its title, as Who does what does, instead of by its internal key. A card handed to a role reads \"Adoption news\" rather than \"adoption_news\", and a change to what a card allows starts with the card's title. A card the app no longer knows still shows its key, so an old row still reads.",
-    admin: true,
-  },
-  "The user manual no longer tells a login with no menu to look at the bottom of the menu for Release notes, Change password and the manual. It now says they are tiles on the home screen in that case.",
-  "The meme maker now lets you choose which residents are in the meme before you save it, whatever photo you started from. You no longer have to save the meme and then edit it to tag them.",
-  "A meme you tagged with residents no longer says \"No resident is tagged\" when you open it, even though the tag saved. The residents you chose are named on the meme.",
 ];
 
 /** Newest first. */
 export const releases: Release[] = [
+  {
+    version: "0.44.1",
+    date: "2026-11-10",
+    title: "Links you can't open are hidden, memes tag residents as you make them, and the website narrows to the animals who need it",
+    major: false,
+    notes: [
+      "Buttons and links that lead to a page your login is not allowed to open are no longer shown. Across the clinic, enclosure, contacts, diets, medications, donations, stock, memes and system status pages, you now only see a link when the page it opens would let you in.",
+      {
+        text: "Settings → Recent changes now names a card by its title, as Who does what does, instead of by its internal key. A card handed to a role reads \"Adoption news\" rather than \"adoption_news\", and a change to what a card allows starts with the card's title. A card the app no longer knows still shows its key, so an old row still reads.",
+        admin: true,
+      },
+      "The user manual no longer tells a login with no menu to look at the bottom of the menu for Release notes, Change password and the manual. It now says they are tiles on the home screen in that case.",
+      "The meme maker now lets you choose which residents are in the meme before you save it, whatever photo you started from. You no longer have to save the meme and then edit it to tag them.",
+      "A meme you tagged with residents no longer says \"No resident is tagged\" when you open it, even though the tag saved. The residents you chose are named on the meme.",
+      "The public website now shows an animal only if it is ticked Ready for adoption or has an appeal that is still running. Before, an appeal that had been closed kept its animal on the website after the appeal was over. The kennel card a visitor reaches by tapping an animal’s tag is not affected: it still answers for every resident.",
+    ],
+  },
   {
     version: "0.44.0",
     date: "2026-11-09",
