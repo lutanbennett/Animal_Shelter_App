@@ -75,7 +75,7 @@ type Item = {
   meds: number;
 };
 
-export function FacilityMap({ data }: { data: FacilityMapData }) {
+export function FacilityMap({ data, canOpenMaintenance = false }: { data: FacilityMapData; /** maintenance.jobs read. Defaults to false. */ canOpenMaintenance?: boolean }) {
   const { t, locale } = useI18n();
   const m = t.enclosures.map;
   const router = useRouter();
@@ -250,7 +250,7 @@ export function FacilityMap({ data }: { data: FacilityMapData }) {
 
       <Legend />
 
-      {picked && <PickedCard item={picked} plan={plan} onClose={() => setPickedId(null)} cache={detailsCache} />}
+      {picked && <PickedCard item={picked} plan={plan} onClose={() => setPickedId(null)} cache={detailsCache} canOpenMaintenance={canOpenMaintenance} />}
 
       {unplacedCount > 0 && (
         <section className="flex flex-col gap-2">
@@ -437,7 +437,9 @@ function PickedCard({
   plan,
   onClose,
   cache,
+  canOpenMaintenance = false,
 }: {
+  canOpenMaintenance?: boolean;
   item: Item;
   plan: MapPlan;
   onClose: () => void;
@@ -500,7 +502,7 @@ function PickedCard({
       )}
       {item.kind === "room" ? null : item.kind === "enclosure" ? (
         // Keyed, so tapping another enclosure starts its own load rather than showing the last one's.
-        <EnclosureDetailsBody key={item.id} id={item.id} cache={cache} />
+        <EnclosureDetailsBody key={item.id} id={item.id} cache={cache} canOpenMaintenance={canOpenMaintenance} />
       ) : null}
     </section>
   );
@@ -513,7 +515,7 @@ type Loaded = { state: "loading" } | { state: "error"; error: string } | { state
  * enclosure page's own pieces. A failed load says so and keeps the plan usable; the full page is
  * one link away for what lives only there (move, log maintenance, the tag link).
  */
-function EnclosureDetailsBody({ id, cache }: { id: string; cache: Map<string, EnclosureDetails> }) {
+function EnclosureDetailsBody({ id, cache, canOpenMaintenance = false }: { id: string; cache: Map<string, EnclosureDetails>; canOpenMaintenance?: boolean }) {
   const { t } = useI18n();
   const m = t.enclosures.map;
   const cached = cache.get(id);
@@ -577,7 +579,7 @@ function EnclosureDetailsBody({ id, cache }: { id: string; cache: Map<string, En
       <div className="grid gap-3 md:grid-cols-2">
         <EnclosureNotes notes={enclosure.notes} />
         {/* Logging a job is an action, so it stays on the full page with the others. */}
-        <EnclosureMaintenance enclosureId={enclosure.id} jobs={maintenanceJobs} canWriteMaintenance={false} />
+        <EnclosureMaintenance enclosureId={enclosure.id} jobs={maintenanceJobs} canWriteMaintenance={false} canOpenMaintenance={canOpenMaintenance} />
       </div>
       <div>{fullPage}</div>
     </>

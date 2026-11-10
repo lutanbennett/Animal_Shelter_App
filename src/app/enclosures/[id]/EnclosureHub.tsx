@@ -179,10 +179,13 @@ export function EnclosureMaintenance({
   enclosureId,
   jobs,
   canWriteMaintenance,
+  canOpenMaintenance = false,
 }: {
   enclosureId: string;
   jobs: MaintenanceJob[];
   canWriteMaintenance: boolean;
+  /** maintenance.jobs read: the job links (/maintenance asks it). Defaults to false. */
+  canOpenMaintenance?: boolean;
 }) {
   const { t, locale } = useI18n();
   const openJobs = jobs.filter((job) => job.status !== "Completed");
@@ -215,23 +218,40 @@ export function EnclosureMaintenance({
             const due = dueState(job.due_date, job.status);
             return (
               <li key={job.id}>
-                <Link
-                  href={`/maintenance/${job.id}`}
-                  className={`flex flex-col gap-0.5 rounded border border-l-4 border-border px-2 py-1.5 text-sm hover:bg-surface-hover ${DUE_TONE[due].card}`}
-                >
-                  <span className="truncate font-medium text-foreground">{job.title}</span>
-                  <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
-                    <span className={`flex items-center gap-1 ${STATUS_TONE[job.status].text}`}>
-                      <span className={`h-2 w-2 rounded-full ${STATUS_TONE[job.status].dot}`} />
-                      {maintenanceStatusLabel(t, job.status)}
-                    </span>
-                    {job.due_date && (
-                      <span className={due !== "none" ? `rounded px-1 font-medium ${DUE_TONE[due].badge}` : ""}>
-                        {formatDate(job.due_date, locale)}
+                {canOpenMaintenance ? (
+                  <Link
+                    href={`/maintenance/${job.id}`}
+                    className={`flex flex-col gap-0.5 rounded border border-l-4 border-border px-2 py-1.5 text-sm hover:bg-surface-hover ${DUE_TONE[due].card}`}
+                  >
+                    <span className="truncate font-medium text-foreground">{job.title}</span>
+                    <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
+                      <span className={`flex items-center gap-1 ${STATUS_TONE[job.status].text}`}>
+                        <span className={`h-2 w-2 rounded-full ${STATUS_TONE[job.status].dot}`} />
+                        {maintenanceStatusLabel(t, job.status)}
                       </span>
-                    )}
-                  </span>
-                </Link>
+                      {job.due_date && (
+                        <span className={due !== "none" ? `rounded px-1 font-medium ${DUE_TONE[due].badge}` : ""}>
+                          {formatDate(job.due_date, locale)}
+                        </span>
+                      )}
+                    </span>
+                  </Link>
+                ) : (
+                  <div className={`flex flex-col gap-0.5 rounded border border-l-4 border-border px-2 py-1.5 text-sm hover:bg-surface-hover ${DUE_TONE[due].card}`}>
+                    <span className="truncate font-medium text-foreground">{job.title}</span>
+                    <span className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
+                      <span className={`flex items-center gap-1 ${STATUS_TONE[job.status].text}`}>
+                        <span className={`h-2 w-2 rounded-full ${STATUS_TONE[job.status].dot}`} />
+                        {maintenanceStatusLabel(t, job.status)}
+                      </span>
+                      {job.due_date && (
+                        <span className={due !== "none" ? `rounded px-1 font-medium ${DUE_TONE[due].badge}` : ""}>
+                          {formatDate(job.due_date, locale)}
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
               </li>
             );
           })}
@@ -252,13 +272,15 @@ export function EnclosureMaintenance({
             iconOnlyOnMobile={false}
           />
         )}
-        <Link
-          href={`/maintenance?enclosure=${enclosureId}`}
-          className="text-primary hover:underline"
-        >
-          {t.enclosures.hub.maintenanceViewAll}
-          {jobs.length > 0 && ` (${jobs.length})`}
-        </Link>
+        {canOpenMaintenance && (
+          <Link
+            href={`/maintenance?enclosure=${enclosureId}`}
+            className="text-primary hover:underline"
+          >
+            {t.enclosures.hub.maintenanceViewAll}
+            {jobs.length > 0 && ` (${jobs.length})`}
+          </Link>
+        )}
       </div>
     </div>
   );
@@ -270,6 +292,7 @@ export function EnclosureHub({
   canSeeResidents,
   canEditEnclosures,
   canWriteMaintenance,
+  canOpenMaintenance = false,
   maintenanceJobs,
   tagOrigin,
 }: {
@@ -281,6 +304,8 @@ export function EnclosureHub({
   canEditEnclosures: boolean;
   /** Staff/admin may log jobs; volunteers only see them. */
   canWriteMaintenance: boolean;
+  /** maintenance.jobs read: the job links (/maintenance asks it). Defaults to false. */
+  canOpenMaintenance?: boolean;
   maintenanceJobs: MaintenanceJob[];
   /** Origin for the QR-code link (src/lib/tags/origin.ts). */
   tagOrigin: string | null;
@@ -366,6 +391,7 @@ export function EnclosureHub({
               enclosureId={enclosure.id}
               jobs={maintenanceJobs}
               canWriteMaintenance={canWriteMaintenance}
+              canOpenMaintenance={canOpenMaintenance}
             />
           )}
         </aside>

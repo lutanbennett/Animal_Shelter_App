@@ -49,7 +49,10 @@ function EnclosureCard({
   tagOrigin,
   showZone = false,
   showCounts,
+  canOpenMaintenance = false,
 }: {
+  /** maintenance.jobs read: the zone-wide jobs link (/maintenance asks it). Defaults to false. */
+  canOpenMaintenance?: boolean;
   enclosure: EnclosureSummary;
   tagOrigin: string | null;
   /** False for a login that reads no resident: a count of 0 would say nobody is there when it means not allowed. */
@@ -245,7 +248,7 @@ export function EnclosureGrid({
                 {zone.enclosures.length < zone.total_enclosures &&
                   ` · ${t.enclosures.showingOf(zone.enclosures.length, zone.total_enclosures)}`}
               </span>
-              {zone.zone_wide_jobs > 0 && (
+              {zone.zone_wide_jobs > 0 && canOpenMaintenance && (
                 <Link
                   href={`/maintenance?zone=${zone.id}`}
                   className="flex items-center gap-1 font-medium text-foreground hover:underline"

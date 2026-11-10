@@ -278,7 +278,7 @@ export default async function WebsitePage({
                 <GalleryPhotos photos={photosResult.data ?? []} canEdit={canGallery} />
               </>
             ),
-            projects: <PublishedProjects projects={publishedResult.data ?? []} />,
+            projects: <PublishedProjects projects={publishedResult.data ?? []} canOpenProject={can(perms, "projects.folders", "read")} />,
           }}
         />
       )}

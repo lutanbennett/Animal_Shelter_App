@@ -30,7 +30,7 @@ export type PublishedProjectRow = {
  * something shouldn't be there, without hunting for the folder in the
  * tree. Each row links to the folder for editing and to the public page.
  */
-export function PublishedProjects({ projects }: { projects: PublishedProjectRow[] }) {
+export function PublishedProjects({ projects, canOpenProject = false }: { projects: PublishedProjectRow[]; /** projects.folders read: the project links (/projects/[id] asks it). Defaults to false. */ canOpenProject?: boolean }) {
   const { t, locale } = useI18n();
   const confirm = useConfirm();
   const p = t.admin.website.published;
@@ -77,12 +77,16 @@ export function PublishedProjects({ projects }: { projects: PublishedProjectRow[
                   )}
                 </div>
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                  <Link
-                    href={`/projects/${project.id}`}
-                    className="truncate text-sm font-semibold text-foreground hover:text-primary"
-                  >
-                    {title}
-                  </Link>
+                  {canOpenProject ? (
+                    <Link
+                      href={`/projects/${project.id}`}
+                      className="truncate text-sm font-semibold text-foreground hover:text-primary"
+                    >
+                      {title}
+                    </Link>
+                  ) : (
+                    <span className="truncate text-sm font-semibold text-foreground">{title}</span>
+                  )}
                   <span className="truncate text-xs text-muted">
                     {[
                       projectCategoryLabel(t, project.top_level_category),
@@ -95,9 +99,11 @@ export function PublishedProjects({ projects }: { projects: PublishedProjectRow[
                   {!project.name_th?.trim() && (
                     <span className="text-xs text-primary">
                       {p.noThaiTitle}{" "}
-                      <Link href={`/projects/${project.id}`} className="font-medium underline">
-                        {p.addThaiTitle}
-                      </Link>
+                      {canOpenProject && (
+                        <Link href={`/projects/${project.id}`} className="font-medium underline">
+                          {p.addThaiTitle}
+                        </Link>
+                      )}
                     </span>
                   )}
                 </div>

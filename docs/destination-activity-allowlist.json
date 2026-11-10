@@ -2,36 +2,6 @@
   "rule": "A link that offers a page the same login is refused (backlog #79sqf). scripts/check-destination-activity.mjs fails on any finding not listed here and on any entry that is no longer a finding. Each entry is an unfixed fault found by the check on its first run, to be FIXED and the entry deleted, never a ruling that it is fine. Never add an entry to make a new link pass: fix the link (draw it only when can() asks the destination activity).",
   "entries": [
     {
-      "file": "src/app/admin/website/PublishedProjects.tsx",
-      "target": "/projects/${…}",
-      "found": "2026-11-09",
-      "why": "no gate; opened by admin/website which do not imply projects.folders:read"
-    },
-    {
-      "file": "src/app/admin/website/PublishedProjects.tsx",
-      "target": "/projects/${…}",
-      "found": "2026-11-09",
-      "why": "no gate; opened by admin/website which do not imply projects.folders:read"
-    },
-    {
-      "file": "src/app/enclosures/EnclosureGrid.tsx",
-      "target": "/maintenance",
-      "found": "2026-11-09",
-      "why": "no gate; opened by enclosures which do not imply maintenance.jobs:read"
-    },
-    {
-      "file": "src/app/enclosures/[id]/EnclosureHub.tsx",
-      "target": "/maintenance/${…}",
-      "found": "2026-11-09",
-      "why": "no gate; opened by enclosures/[id], enclosures which do not imply maintenance.jobs:read"
-    },
-    {
-      "file": "src/app/enclosures/[id]/EnclosureHub.tsx",
-      "target": "/maintenance",
-      "found": "2026-11-09",
-      "why": "no gate; opened by enclosures/[id], enclosures which do not imply maintenance.jobs:read"
-    },
-    {
       "file": "src/app/management/campaigns/AppealGifts.tsx",
       "target": "/management/donations/${…}",
       "found": "2026-11-09",
