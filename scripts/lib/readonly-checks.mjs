@@ -350,24 +350,48 @@ export const CHECKS = {
     failed: (rows) => rows.length > 0,
   },
   // The suppliers-backfill check was retired with 0348, which dropped the columns it read (docs/decisions/2026-11-09-suppliers-cleanup.md).
-  // The appeal override (#r9wtk, 0343): a published, non-draft appeal is public on its own, whether or not its animal is ticked Ready for adoption.
-  // It guards a decision: any appeal that is public ONLY through the override is one the shelter has not yet been shown going live,
-  // so the planner names them to Lutan before the release that carries 0343 (docs/decisions/2026-11-09-text-approval-app.md).
+  // REWRITTEN 2026-11-10 (#v6r4m). It used to ask 0343's rule (published and status <> 'draft'), which 0347 retired: a closed
+  // appeal ("Treatment") kept the animal public under 0343 and no longer does. It now resolves "running" through the SAME
+  // function the views use, private.appeal_running(), and adds the second half public_appeals applies, text_approval = 'public_ok'.
+  // 0347 is live on production, so this is no longer a pre-release warning. It is a reading: which running, text-approved appeals
+  // are public through the override alone (their animal is not ticked Ready for adoption). That is the design, so it never fails.
   "appeal-override": {
-    asks: "Which published, non-draft appeals belong to an animal that is NOT visible on the website? Under the appeal override (0343) each of them becomes public on its own the moment the release carrying 0343 is live (and is live already if 0343 is applied). Lists title and status only. Read-only.",
+    asks: "Which running, text-approved appeals (private.appeal_running() and text_approval = 'public_ok', exactly as public_appeals asks) belong to an animal that is NOT ticked Ready for adoption? Each is public through the appeal alone. A reading of the design, not a fault. Lists title and status only. Read-only.",
     sql: `select json_build_object(
-        'applied_0343', (select count(*) > 0 from schema_migrations where filename like '0343%'),
-        'published_appeals', (select count(*) from appeals where published and status <> 'draft'),
+        'applied_0347', (select count(*) > 0 from schema_migrations where filename like '0347%'),
+        'running_appeals', (select count(*) from appeals a where private.appeal_running(a.published, a.status) and a.text_approval = 'public_ok'),
         'by_override', (select coalesce(json_agg(json_build_object('title', a.title, 'status', a.status) order by a.created_at), '[]'::json)
            from appeals a join residents r on r.id = a.resident_id
-          where a.published and a.status <> 'draft' and not r.is_public_visible))`,
+          where private.appeal_running(a.published, a.status) and a.text_approval = 'public_ok' and not r.ready_for_adoption))`,
     render: (r) => {
       const n = r.by_override.length;
-      const head = `${r.published_appeals} published, non-draft appeal(s); ${n} of them for an animal that is not visible on the website. 0343 is ${r.applied_0343 ? "APPLIED here, so the override is live" : "NOT applied here, so these become public when it is"}.`;
-      if (n === 0) return [head, "None is public only through the override: the release changes nothing a visitor sees for appeals."];
-      return [head, ...r.by_override.map((a) => `  public only through the override: "${a.title}" (${a.status})`), `Name these ${n} to Lutan before release: each goes public on its own.`];
+      const head = `${r.running_appeals} running, text-approved appeal(s); ${n} of them for an animal not ticked Ready for adoption. 0347 is ${r.applied_0347 ? "APPLIED here, so the running rule is live" : "NOT applied here, so the site may still use 0343's rule"}.`;
+      if (n === 0) return [head, "No animal is public through an appeal alone."];
+      return [head, ...r.by_override.map((a) => `  public through the appeal alone: "${a.title}" (${a.status})`)];
     },
-    failed: (r) => r.by_override.length > 0,
+    failed: () => false,
+  },
+  // Added 2026-11-10 (#v6r4m). The reading nobody could take for 0347: residents in an enclosure who are neither adoption-ready nor
+  // under a running, text-approved appeal, so public_enclosures no longer lists them. The denominator mirrors public_enclosures
+  // exactly (an enclosure outside the Lifecycle zone), because that is the surface 0347 gated; public_resident_cards is unchanged.
+  "not-listed-publicly": {
+    asks: "Which residents sit in an enclosure but are neither ticked Ready for adoption nor under a running, text-approved appeal, so public_enclosures no longer lists them? A reading, not a fault. Names only. Read-only.",
+    sql: `select coalesce(json_agg(json_build_object('name', r.name) order by r.name), '[]'::json)
+      from residents r
+      join private.resident_current_state s on s.resident_id = r.id
+      join enclosures e on e.id = s.current_enclosure_id
+      join zones z on z.id = e.zone_id
+     where z.name <> 'Lifecycle'
+       and not r.ready_for_adoption
+       and not exists (select 1 from appeals a where a.resident_id = r.id
+                        and private.appeal_running(a.published, a.status) and a.text_approval = 'public_ok')`,
+    render: (rows) => {
+      const cap = 40;
+      const head = `${rows.length} resident(s) in an enclosure are not listed publicly (neither adoption-ready nor under a running appeal).`;
+      if (!rows.length) return [head];
+      return [head, ...rows.slice(0, cap).map((x) => `  ${x.name}`), ...(rows.length > cap ? [`  ...and ${rows.length - cap} more`] : [])];
+    },
+    failed: () => false,
   },
   "clinic-login-helpers": {
     asks: "Of the four clinic-login helper functions (current_clinic_resident_ids, clinic_login_owns_visit, doctor_can_write_attachment, clinic_login_may_edit_doctor): does each still exist, and does any live policy, view, other function or column rule call it? (Object names only.)",
