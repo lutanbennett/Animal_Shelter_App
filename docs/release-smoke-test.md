@@ -61,6 +61,7 @@ Read the output; do not assume it.
 - [ ] `/residents` lists residents, and the count looks right rather than empty or suspiciously small
 - [ ] One resident hub opens and its tabs load — info, medical, placement
 - [ ] `/management/dashboard` renders its figures
+- [ ] A login holding only `meme_add` can save a meme on `/memes/make`, and `/memes/[id]` reads the tag name back (the same save was proved on `/memes/new` on 2026-11-10; this is the one page left, then it is known)
 - [ ] `/admin` opens for an admin and its sub-pages are reachable
 - [ ] `/admin` says **Photo storage (Google Drive) is connected.** A red line there means every upload is failing; its small print is Google’s reason (an `invalid_grant` means the refresh token has expired or been revoked)
 - [ ] Nav shows the right entries for the signed-in role, and no link 404s
