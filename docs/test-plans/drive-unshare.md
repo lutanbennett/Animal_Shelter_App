@@ -130,7 +130,7 @@ gates: typecheck=0 lint=0 test=0 build=0
 | # | Severity | What | Status (fixed / accepted / deferred to backlog) |
 |---|---|---|---|
 | 1 | Medium | `--remove` cannot remove a permission inherited from a parent; the parent has to change | accepted: recorded in the decision file |
-| 2 | Medium | Three links still go to drive.google.com directly (archived-resident folder, archive export file, home-screen-icons folder) | deferred to backlog |
+| 2 | Medium | Three links still go to drive.google.com directly (archived-resident folder, archive export file, home-screen-icons folder) | goes to the backlog |
 
 ## Left for manual verification
 
@@ -156,7 +156,7 @@ Manual verification by: pending: Lutan to check the two rows above on UAT and pr
 
 ### Result
 
-- [ ] Open defects are either fixed or explicitly accepted above — pending: defect 2 is deferred to the backlog, awaiting Lutan on the three links
+- [ ] Open defects are either fixed or explicitly accepted above — pending: defect 2 goes to the backlog, awaiting Lutan on the three links
 - [ ] Checklist pasted into the PR — pending: done when the PR is opened
 - [ ] Handed to the production release manager — pending: after merge
 
