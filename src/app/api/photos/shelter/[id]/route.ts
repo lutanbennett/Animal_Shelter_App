@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
+import { dbRefusal, REFUSAL_KEY } from "@/lib/db-refusal";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { ensureResidentPhotosFolder, getDriveClient, uploadImageToFolder } from "@/lib/google/drive";
@@ -83,6 +84,9 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
   // The database answers for this login (shelter_add is checked inside the function), no service role.
   const { data: folderData, error: folderError } = await supabase.rpc("shelter_photo_folder", { p_resident_id: id });
   const folderRows = folderData as { resident_found: boolean; drive_folder_id: string | null }[] | null;
+  if (folderError && REFUSAL_KEY.test(folderError.message ?? "")) {
+    return NextResponse.json({ error: dbRefusal("photos.shelter.folder", folderError, t).error }, { status: 403 });
+  }
   if (folderError || !folderRows?.[0]?.resident_found) {
     return NextResponse.json({ error: (await getT()).t.uploads.errors.residentNotFound }, { status: 404 });
   }
@@ -97,7 +101,10 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
   );
   if (isNewResidentFolder) {
     // Only when there is none: the function writes where drive_folder_id is null, so it can never repoint a resident.
-    await supabase.rpc("set_shelter_photo_folder", { p_resident_id: id, p_folder_id: residentFolderId });
+    const { error: setFolderError } = await supabase.rpc("set_shelter_photo_folder", { p_resident_id: id, p_folder_id: residentFolderId });
+    if (setFolderError) {
+      return NextResponse.json({ error: dbRefusal("photos.shelter.setFolder", setFolderError, t).error }, { status: 403 });
+    }
   }
 
   const driveFileId = await uploadImageToFolder(drive, uploadFolderId, {
