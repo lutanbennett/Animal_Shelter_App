@@ -77,6 +77,7 @@ export const unreleased: ReleaseNote[] = [
   },
   "The user manual no longer tells a login with no menu to look at the bottom of the menu for Release notes, Change password and the manual. It now says they are tiles on the home screen in that case.",
   "The meme maker now lets you choose which residents are in the meme before you save it, whatever photo you started from. You no longer have to save the meme and then edit it to tag them.",
+  "A meme you tagged with residents no longer says \"No resident is tagged\" when you open it, even though the tag saved. The residents you chose are named on the meme.",
 ];
 
 /** Newest first. */

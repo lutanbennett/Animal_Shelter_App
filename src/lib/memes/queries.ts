@@ -52,7 +52,7 @@ type MemeRow = {
   source_kind: string | null;
 };
 
-type LinkRow = { meme_id: string; resident_id: string; residents: MemeResident | MemeResident[] | null };
+type LinkRow = { meme_id: string; resident_id: string };
 type ShareRow = { id: string; owner_id: string; platform: string; shared_on: string; post_url: string | null; note: string | null };
 
 const MEME_COLUMNS = "id, drive_file_id, file_name, title, caption_en, caption_th, tags, archived, created_at, source_kind";
@@ -72,7 +72,7 @@ async function attach(supabase: SupabaseClient, rows: MemeRow[]): Promise<MemeDe
   const [{ data: links }, { data: shares }] = await Promise.all([
     supabase
       .from("meme_residents")
-      .select("meme_id, resident_id, residents(id, name, thai_name)")
+      .select("meme_id, resident_id")
       .in("meme_id", ids)
       .returns<LinkRow[]>(),
     supabase
@@ -84,10 +84,24 @@ async function attach(supabase: SupabaseClient, rows: MemeRow[]): Promise<MemeDe
       .order("created_at", { ascending: false })
       .returns<ShareRow[]>(),
   ]);
+  // Names come from resident_who_and_where, never the residents table: the cards that tag (meme_add,
+  // meme_library) grant resident.who_and_where, which cannot read residents, so a join through residents
+  // came back empty and a saved tag read as "No resident is tagged" (#t3n9r).
+  const residentIds = [...new Set((links ?? []).map((l) => l.resident_id))];
+  const nameOf = new Map<string, MemeResident>();
+  if (residentIds.length > 0) {
+    const { data: people } = await supabase
+      .from("resident_who_and_where")
+      .select("id, name, thai_name")
+      .in("id", residentIds)
+      .returns<MemeResident[]>();
+    for (const p of people ?? []) nameOf.set(p.id, p);
+  }
   const residentsOf = new Map<string, MemeResident[]>();
   for (const l of links ?? []) {
-    const r = one(l.residents);
-    // A resident this login cannot read (a doctor's scope) is left off rather than shown nameless.
+    const r = nameOf.get(l.resident_id);
+    // The view returns every resident to any login holding a card that works with residents (0263/0265),
+    // Admin included, so a missing row now means the login holds no such card: leave it off, not nameless.
     if (!r) continue;
     residentsOf.set(l.meme_id, [...(residentsOf.get(l.meme_id) ?? []), r]);
   }

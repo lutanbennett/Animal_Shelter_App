@@ -100,9 +100,9 @@ export async function loadPickableResidents(
 }
 
 /**
- * `resident_who_and_where` has rows only for a login that borrows the volunteer role (0134), so Admin and
- * Management read it empty. Those logins may read the tables themselves, so when the view is empty the
- * same shape is built from them. A login that can read neither gets nothing, as before.
+ * `resident_who_and_where` returns every resident to any login holding a card that works with residents
+ * (private.works_with_residents(), 0263/0265), Admin included. This direct read is a fallback for a login that
+ * gets the view empty; one that can read neither gets nothing.
  */
 async function loadWhoRowsDirect(supabase: Supabase): Promise<WhoRow[]> {
   const [res, state, enc, zones] = await Promise.all([
