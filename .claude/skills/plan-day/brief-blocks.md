@@ -235,8 +235,7 @@ Omit for a stream that runs nothing. The planner's half: do not ask a stream to 
 
 - **Start the dev server first** and confirm it is serving. Eighteen checks were once filed as broken because a
   sweep ran with no server up, and **seven of them had never been broken.**
-- **Put a per-check timeout on every run of a `scripts/check-*.mjs`:** `timeout 60 node scripts/check-<name>.mjs`. A check that trips it is
-  a **finding** ("exceeded 60s, not run to completion"), never a reason to raise the timeout and wait.
+- **Put a per-check timeout on every run of a `scripts/check-*.mjs`:** `timeout 60 node scripts/check-<name>.mjs`. The limit exists to catch a check that hangs. **If one trips it, re-run it ONCE WITHOUT the limit before filing anything, and file only if it is still wrong:** a slow check is not a defect. Known slow ones: `check-migration-grants.mjs` about **3 minutes** (it replays migrations), `check-public-views.mjs` over 60 seconds. Most take 1–3 seconds.
 - **THAT 60 SECONDS IS FOR `scripts/check-*.mjs` ONLY, NEVER FOR `gates.mjs`.** The check scripts take 1–3 seconds; `node scripts/gates.mjs` runs typecheck, lint, test and a full `next build` and takes **about five minutes**. **Run the gates with no timeout, in the background, with output to a file in your scratchpad, and wait for them.** (#1168 timed them out at 60 s and reported "lint/test/build did not finish locally"; a killed gates run proves nothing.)
 - **Echo the name BEFORE each check runs**, not after, so a killed command still shows where it got to.
 - **Never loop over a list you have not sized**, and never over all of `scripts/check-*.mjs`.
