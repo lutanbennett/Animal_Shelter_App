@@ -25,7 +25,10 @@ export function IngredientDetail({
   ingredient,
   usedBy,
   records,
+  canOpenStock = false,
 }: {
+  /** stock.diets read: the stock-half link (/management/diets asks it). Defaults to false. */
+  canOpenStock?: boolean;
   ingredient: BookIngredient;
   usedBy: UsedBy[];
   /** Older resident records that reach it through a diet — any at all blocks delete. */
@@ -156,9 +159,11 @@ export function IngredientDetail({
             ))}
           </ul>
         )}
-        <Link href="/management/diets" className="text-sm font-medium text-primary hover:underline">
-          {i.stockLink}
-        </Link>
+        {canOpenStock && (
+          <Link href="/management/diets" className="text-sm font-medium text-primary hover:underline">
+            {i.stockLink}
+          </Link>
+        )}
       </section>
     </div>
   );

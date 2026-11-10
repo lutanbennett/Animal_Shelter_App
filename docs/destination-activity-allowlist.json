@@ -2,36 +2,6 @@
   "rule": "A link that offers a page the same login is refused (backlog #79sqf). scripts/check-destination-activity.mjs fails on any finding not listed here and on any entry that is no longer a finding. Each entry is an unfixed fault found by the check on its first run, to be FIXED and the entry deleted, never a ruling that it is fine. Never add an entry to make a new link pass: fix the link (draw it only when can() asks the destination activity).",
   "entries": [
     {
-      "file": "src/app/admin/diets/IngredientDetail.tsx",
-      "target": "/management/diets",
-      "found": "2026-11-09",
-      "why": "no gate; opened by admin/diets/ingredients/[id] which do not imply stock.diets:read"
-    },
-    {
-      "file": "src/app/admin/medications/page.tsx",
-      "target": "/management/medications",
-      "found": "2026-11-09",
-      "why": "no gate; opened by admin/medications which do not imply stock.medications:read"
-    },
-    {
-      "file": "src/app/admin/status/page.tsx",
-      "target": "/clinic-visits/${…}",
-      "found": "2026-11-09",
-      "why": "no gate; opened by admin/status which do not imply medical.visits:read"
-    },
-    {
-      "file": "src/app/admin/status/page.tsx",
-      "target": "/clinic-visits/${…}",
-      "found": "2026-11-09",
-      "why": "no gate; opened by admin/status which do not imply medical.visits:read"
-    },
-    {
-      "file": "src/app/admin/status/page.tsx",
-      "target": "/photos/approve",
-      "found": "2026-11-09",
-      "why": "no gate; opened by admin/status which do not imply photos.approve:edit"
-    },
-    {
       "file": "src/app/admin/website/PublishedProjects.tsx",
       "target": "/projects/${…}",
       "found": "2026-11-09",
