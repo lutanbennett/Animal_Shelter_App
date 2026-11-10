@@ -11,7 +11,7 @@
 | PR | pending: opened after this commit |
 | Tested by / date | Claude, 2026-11-10 |
 | Carries a migration? | no |
-| Tested at SHA | 4dec66dc |
+| Tested at SHA | 29e94d1a |
 
 ## 1. Scope and risk
 
@@ -22,8 +22,17 @@
 
 ## 2. Automated gates
 
-- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (see gates block; merge done before the PR)
-- [ ] `node scripts/gates.mjs` — pending: gates output pasted after the run finishes
+- [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly (a conflict in `unreleased` was resolved by keeping this PR note; main had emptied it in a release cut)
+- [x] `node scripts/gates.mjs` ran on the merged tree; closing lines as printed:
+
+```
+=== gates: typecheck exited 0 after 30s
+=== gates: lint exited 0 after 281s
+=== gates: test exited 0 after 38s
+=== gates: build exited 0 after 78s
+gates: typecheck=0 lint=0 test=0 build=0
+```
+
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
 
 ## 3. Schema and data — *skip if no migration*
