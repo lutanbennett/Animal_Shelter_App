@@ -64,7 +64,7 @@ Per `CLAUDE.md`, schema lands as its own PR before the feature.
 - [ ] Existing rows still read correctly after the change (checked against real dev data) — n/a: function bodies only, no rows or columns changed
 - [ ] **Constraints and defaults exercised against real rows** in a `begin; … rollback;` harness — the `do $$ … $$`  — n/a: no constraint or default; only the seven raised messages changed
 - [ ] Down-migration written, or the reason one is not needed is stated — n/a: 0319 bodies are the previous definition and can be re-applied
-- [ ] Production apply plan stated for the release manager (which file, which project, when) — deferred: release manager applies 0349 to production before the deploy that carries the callers
+- [ ] Production apply plan stated for the release manager (which file, which project, when) — pending: release manager applies 0349 to production before the deploy that carries the callers
 
 ## 4. Functional checks
 
@@ -235,7 +235,7 @@ Manual verification by: pending: Thai wording read and one on-screen refusal
 
 - [x] Open defects are either fixed or explicitly accepted above
 - [ ] Checklist pasted into the PR — pending: pasted when the PR opens
-- [ ] Handed to the production release manager — deferred: release manager
+- [ ] Handed to the production release manager — pending: release manager
 
 Result: pass with accepted defects
 
