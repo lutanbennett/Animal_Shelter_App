@@ -1,5 +1,6 @@
 /**
- * The release notes register, rendered at /releases and mailed to admins on
+ * The releas
+  "A meme you tagged with residents no longer says "No resident is tagged" when you open it, even though the tag saved. The residents you chose are named on the meme.",e notes register, rendered at /releases and mailed to admins on
  * a major release (scripts/deploy.mjs → worker/release-mail.mjs).
  *
  * How it is kept (docs/decisions.md, "Release notes register"):
