@@ -145,7 +145,7 @@ export default async function WhoDoesWhatPage(props: { searchParams: Promise<{ r
             {c.detailsLink}
           </Link>
           <Link href={`${WHO_DOES_WHAT_PATH}/features`} className="inline-flex min-h-11 items-center rounded-md border border-border px-3 text-sm font-medium text-primary underline">
-            {c.featuresLink}
+            {isAdmin ? c.featuresLink : c.featuresLinkReadOnly}
           </Link>
         </div>
       </div>

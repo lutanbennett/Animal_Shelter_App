@@ -46,6 +46,8 @@ export default async function SupplierPage(props: PageProps<"/suppliers/[id]">) 
   const friendTranslation = (column: string) => (friend ? translations.get(translationKey(friend.id, column)) : undefined);
   const archived = isArchived(supplier);
   const canEdit = can(perms, "suppliers.directory", "edit");
+  const canManageFriend = can(perms, "friends.manage");
+  const intro = canEdit ? (canManageFriend ? s.pageIntroEditFriend : s.pageIntroEdit) : canManageFriend ? s.pageIntroFriend : s.pageIntro;
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
@@ -59,7 +61,7 @@ export default async function SupplierPage(props: PageProps<"/suppliers/[id]">) 
           {supplier.name}
           {archived && <ArchivedBadge label={a.badge} />}
         </h1>
-        <p className="text-sm text-muted">{s.pageIntro}</p>
+        <p className="text-sm text-muted">{intro}</p>
         {archived && (
           <p className="text-sm text-muted">
             {a.archivedOn(formatDate(supplier.archived_at, locale))}
@@ -87,7 +89,7 @@ export default async function SupplierPage(props: PageProps<"/suppliers/[id]">) 
         contact={supplier}
         kind="supplier"
         friend={friend}
-        canManage={can(perms, "friends.manage")}
+        canManage={canManageFriend}
         map={map}
         translations={{
           blurb: friendTranslation("blurb"),
