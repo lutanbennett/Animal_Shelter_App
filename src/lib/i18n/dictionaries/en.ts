@@ -98,6 +98,10 @@ const en = {
     "photo.profile_not_approved": () => "Only a photo approved for the public site can be the profile photo.",
     "photo.remove_not_allowed": () => "Your access does not include removing photos.",
     "photo.not_found": () => "That photo was not found. It may already have been removed; reload the page to see where it stands.",
+    "photo.add_resident_not_allowed": () => "Your access does not include adding resident photos.",
+    "photo.add_shelter_not_allowed": () => "Your access does not include adding shelter photos.",
+    "photo.folder_id_invalid": () => "That is not a valid Google Drive folder. Try again, and tell an administrator if it keeps happening.",
+    "photo.website_not_allowed": () => "Your access does not include changing the website photo.",
   },
 
   // The notice a desktop-only Settings/Management page shows on a phone

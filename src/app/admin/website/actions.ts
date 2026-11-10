@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES, WEBSITE_IMAGE_MIME_TYPES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
+import { dbRefusal } from "@/lib/db-refusal";
 import type { Dictionary } from "@/lib/i18n/dictionaries/en";
 import { isContactChannel } from "@/lib/site/channels";
 import { PAGE_PHOTO_SLUGS, isSitePageSlug, type SitePageSlug } from "@/lib/site/pages";
@@ -588,7 +589,7 @@ export async function uploadHeroPhoto(formData: FormData): Promise<ActionResult<
     // A function, not a direct update: it asks website.gallery itself (0274), so the card is the only gate.
     const { error } = await supabase.rpc("set_hero_photo", { p_drive_file_id: driveFileId });
 
-    if (error) return refuse(error.message);
+    if (error) return dbRefusal("website.setHeroPhoto", error, t);
 
     const previousFileId = current?.[0]?.hero_drive_file_id;
     if (previousFileId) await trashInDrive(previousFileId);
@@ -613,7 +614,7 @@ export async function removeHeroPhoto(requestId: string): Promise<ActionResult> 
 
     const { error } = await supabase.rpc("set_hero_photo", { p_drive_file_id: null });
 
-    if (error) return refuse(error.message);
+    if (error) return dbRefusal("website.setHeroPhoto", error, t);
 
     const previousFileId = current?.[0]?.hero_drive_file_id;
     if (previousFileId) await trashInDrive(previousFileId);

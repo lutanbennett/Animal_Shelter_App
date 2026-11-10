@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { MAX_UPLOAD_BYTES } from "@/lib/uploads/limits";
 import { checkFileSignature, formatNames } from "@/lib/uploads/file-signature";
 import { getT } from "@/lib/i18n/get-t";
+import { dbRefusal } from "@/lib/db-refusal";
 import { can } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
 import { ensureResidentPhotosFolder, getDriveClient, uploadImageToFolder } from "@/lib/google/drive";
@@ -94,7 +95,7 @@ async function handlePost(request: Request, { params }: { params: Promise<{ id: 
       p_resident_id: id,
       p_folder_id: residentFolderId,
     });
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: dbRefusal("medical.photos.driveFolder", error, t).error }, { status: 500 });
   }
 
   const driveFileId = await uploadImageToFolder(drive, uploadFolderId, {
