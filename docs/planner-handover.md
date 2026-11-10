@@ -1,277 +1,224 @@
-# Planner handover — edition `736`, 2026-11-10
+# Planner handover — edition `737`, 2026-11-10
 
-**AMENDED 2026-11-10 07:31Z, after merging at 06:36Z — AND THE REASON IT NEEDED AMENDING IS THIS EDITION'S OWN
-LEAD FAULT, COMMITTED BY THIS EDITION, FOR THE THIRD EDITION RUNNING.** It said batch 3 was *"briefed and
-handed over with no session opened"*. **Two of its three had already MERGED hours earlier** — #1448 at
-00:33Z and #1447 at 04:03Z — **and the planner never checked before writing it.** `735` was amended for
-exactly this and spends a section on it; `736` repeated it. **Lutan found it by asking "is your handover
-done, up to date and merged?"** Every stale statement is corrected in place below and marked `AMENDED`.
-
-**THE RULE THAT WOULD HAVE CAUGHT IT, AND IT IS ONE COMMAND:** before writing a handover, run
-`gh pr list --state all --head claude/<slug>` for **every stream the edition mentions**, including the
-batch being handed over. **Do not describe a batch's state from what you did to it; read what has
-happened to it since.**
-
-**This is a DELTA against `735`.** It says what changed, corrects its predecessor, and reports what each
-of `735`'s warnings and owed items actually did. Per-stream figures, batch composition, ports and the
-dependency notes live in `.plan-day.md` and are **not** reproduced here.
+**This is a DELTA against `736` (and its amendment).** It says what changed, corrects its predecessor,
+and reports what each of `736`'s warnings and owed items actually did. Per-stream figures, batch
+composition, ports and the dependency notes live in `.plan-day.md` and are **not** reproduced here.
 
 **It outranks nothing.** It is read by one chat, it will be rewritten within one plan, and a wrong line
 in it is corrected by its successor rather than by a reviewer.
 
-**AMENDED — BATCH 3 IS COMPLETE AND ITS FIGURES ARE NOW IN.** All three merged: `unruled-activities-sheets`
-#1448 at 00:33Z, `brief-block-timeout` #1447 at 04:03Z, `refusal-keys-photos` #1451 at 06:53Z. **So the
-plan ran 9 of 9 and every one of the nine is merged.** The line this replaces said batch 3 was *"briefed
-and handed over with no session opened"*, which was false when written for two of the three — see the
-banner. **Batches 1 and 2: six streams, six merged PRs, six valid readings.**
+**Written at the SETUP of this plan's last batch, so BATCH 3's FIGURES ARE NOT IN IT.** Batch 3 is
+`refusal-keys-group-3` (3002, `0351`), `thai-added-since` (3003) and `control-drive-24-pages` (3008),
+briefed and handed over with no session opened. **Checked before writing this, which is the rule `736`
+was amended to learn:** `gh pr list --state all --head claude/<slug>` for all three — **no PR on any of
+them.** Batches 1 and 2 are complete: **six streams, six merged PRs, five valid readings and one that is
+not.**
 
 ---
 
-## THE LEAD: THE LIST IS THE DELIVERABLE, AND THE SKILL IS NO LONGER THE REASON IT GOES OUT LATE
+## THE LEAD: THE STRUCTURAL FIX LANDED, AND HE STILL HAD TO ASK TWICE MORE
 
-**He had to ask for his hand-over list TWICE in this plan, and then said so plainly:** *"Where are the
-batch 2 streams"*, then **"It's a bit annoying having to keep asking for this."** Later the same round,
-given the list as *"Stream 1, 2, 3"*: **"is this batch 2 or 3? it's not labelled"**.
+**Sixth instance, mid-planning:** *"Is the plan ready yet ?"* **Seventh, after the worktrees existed:**
+*"Do I get the streams soon ? Or have you moved onto paperwork before giving me the streams for the 7th
+time"*.
 
-**That is the fifth instance, and the first one the instructions cannot be blamed for.** `SKILL.md`'s
-first section is THE ONE RULE, its step 2 says *"Send the list and stop… **Then** do steps 3 and 4"*, and
-the memory `deliverable-first-paperwork-after` says the same. **All three were already right.** Batch 2's
-three worktrees and briefs were created **and verified**, and then **ten tool calls** went on actuals, PR
-bodies and a backlog commit before he asked.
+**`736`'s fix worked and did not help.** `node scripts/worktree.mjs streams` exists (#1447), was used,
+and the list came from it rather than from memory. **So the "handing over is the only step with no
+artifact" theory is dead** — the artifact was there and the fault happened anyway.
 
-**THE CAUSE, and it is the only new thing here: handing over is the only step with no artifact.**
-Creating a worktree leaves a folder, writing a brief leaves a file, filing leaves a commit — each one
-feels finished. The list is a sentence someone must choose to compose, so it loses to work that produces
-output. **A sixth restatement of the rule will not fix that.**
+**THE REAL CAUSE, AND IT IS STRUCTURAL IN A DIFFERENT PLACE: THE LIST CANNOT BE PRINTED UNTIL THE LAST
+BRIEF IS WRITTEN, AND THE BRIEFS ARE THE LONG PART.** `SKILL.md` says *"the moment the last `.brief.md`
+is written, run `streams` and paste"*. Three briefs at ~360 lines each is most of the planning turn, and
+**for all of that time he sees nothing at all.** He asked at the two moments any reasonable person would.
 
-**So the fix is structural and is in batch 3:** `brief-block-timeout` builds a `worktree.mjs` mode that
-prints folder, port, branch, brief-present, **batch**, model, effort and band for every `claude/*`
-worktree, reading a metadata comment the planner now writes as line 1 of each `.brief.md`
-(`<!-- stream: slug=… batch=3 port=3011 model=… effort=… band=… migration=… -->`; all three batch-3
-briefs carry one). **Then handing over is *run it, paste it*, with an artifact like every other step.**
-**Check next edition whether a sixth instance happened. That is the only test of this.**
+**SO THE FIX IS TO PRINT THE LIST BEFORE THE BRIEFS, NOT AFTER.** Folder, port, model and effort are all
+decided the moment `worktree.mjs new` has run; **the brief is not needed for him to open a session**,
+only for the session's first move. **Next planner: after the last `worktree.mjs new`, print `streams`
+immediately**, say in one line *"briefs are being written now — give me a few minutes before you open
+them"*, write the briefs, then print it again. `streams` already reports `brief` as `no`, so the first
+print is honest about its own state. **That turns a twenty-minute silence into seconds. Check next
+edition whether an eighth instance happened; that is the only test of it.**
 
-**AMENDED — THE FIX LANDED THE SAME NIGHT (#1447) AND IT WORKS, BUT IT IS MISSING THE ONE COLUMN HE
-ASKED FOR.** `node scripts/worktree.mjs streams` prints folder, port, branch, brief-present, model,
-effort and band for every `claude/*` worktree, reads the metadata line, and says `no metadata line`
-rather than skipping a row — all as briefed. **It has NO `batch` column**, although all three batch-3
-briefs carry `batch=3` and the brief asked for it in terms, because *"is this batch 2 or 3? it's not
-labelled"* was one of the two things he had to ask. **So the printer answers the complaint it was built
-for and not the one he made last.** One column; finish it.
-
-**Two smaller things learned the same way, both cheap to keep:** he is on Remote Control and **a markdown
-table may not render for him — give the list as plain lines**; and **a list must name its batch**, because
-a plan is three batches of three and the folders alone do not say which you are looking at.
+**AND THE PRINTER STILL HAS TO BE RETYPED BY HAND, WHICH IS HALF THE PROBLEM.** It prints a **table**,
+and he is on Remote Control where a markdown table may not render; and it **still has no `batch`
+column**, although every brief carries `batch=`. **Two columns of work, and whoever does it removes the
+last manual step from the hand-over.**
 
 ---
 
-## WHAT `735`'s OWED ITEMS AND WARNINGS DID
+## WHAT `736`'s OWED ITEMS AND WARNINGS DID
 
-- **`#k7waq` IS TICKED, and the answer was a fault rather than a count.** `check-production.mjs
-  appeal-override`: **1 published non-draft appeal, 1 of them for an animal not visible on the website —
-  "Treatment", status `closed`.** **`735` asked for this reading BEFORE `0343` deployed; production was
-  already fully current when it was read, so the before figure is gone** — the instrument was built for a
-  before and arrived after. **And the row was wrong, not just small:** `public_appeals` filtered
-  `published AND status <> 'draft'`, which admits `closed`, while his rule is *"visible for the
-  **duration** of the appeal"*. Handed to `public-cards-gate`, which fixed it; its dev harness now proves
-  a closed appeal lists 0.
-- **`#7aev4` IS BUILT AND NOT TICKED, CORRECTLY.** `0347` (PR #1442) gated `public_resident_cards` on
-  adoption-ready OR a running appeal. **`735`'s instruction to "filter `public_resident_cards`" would have
-  broken a printed-card feature** — the view's missing `where` is a **deliberate decision of 2026-09-22**
-  (`src/lib/residents/card.ts`: *"the card is on the door, so the page behind it must always answer"*,
-  asserted by `check-card-taps.mjs`). The planner found that before briefing and handed the stream the
-  design judgement instead of the instruction. **What is left is his production apply and one before/after
-  count that NEEDS A READ-ONLY INSTRUMENT**, because an ad-hoc production query is refused from a
-  worktree; the query is in #1442's deliverable 6 and wants adding to `check-production.mjs` as a named
-  check, exactly as `appeal-override` was.
-  **AMENDED 2026-11-10: `0347` IS APPLIED TO PRODUCTION AND `#7aev4` IS TICKED**, on Lutan's instruction
-  (*"Please apply 0347 to production"*, then *"this should close out #7aev4"*). **Applied with
-  `--upto 0347_public_website_gate.sql` after a clean production dry-run, because the bare runner applies
-  EVERY pending file and `0348` was also pending** — production now reads 349 applied, `0348` deliberately
-  left. **The before-count was NOT measured and is now unobtainable**, which is the second loss in two
-  days after `#k7waq`; the item is ticked rather than held open on a figure nobody can retrieve.
-  **AND A FINDING THAT MISLED ITS OWN AUTHOR WITHIN A MINUTE OF THE APPLY:** `check-production.mjs
-  appeal-override` still named the closed appeal as public through the override, because **its own SQL
-  asks `published AND status <> 'draft'` — a copy of the rule `0347` retired.** The gate is fine; the
-  CHECK is stale. **Filed as `#v6r4m` together with the still-missing count check.** `0347` itself was
-  read rather than trusted: it adds `private.appeal_running(published, status)` — published AND live or
-  funded — and points `public_appeals`, `public_appeal_photos` and `public_enclosures` at it.
-- **`#xkfsv` IS TICKED AND CLOSED** (PR #1444, `0348`). **`735` was right that only the clean-up was
-  left.**
-- **`#79sqf` IS NOT TICKED and the title now says what is left** (PR #1445). See the next section.
-- **`#pvpxz`'s phone half is done and its Google question is answered** (PR #1446). See below.
-- **`#m2vxe` IS IN BATCH 3** and **grew twice**: `check-public-views.mjs` became a second 60-second case
-  (#1442), so the brief asks for the **rule** — *re-run a timed-out check without the limit before filing
-  anything* — rather than a third named exception. The new `check-destination-activity.mjs` is **not** a
-  case: timed at 3 s.
-- **`#etr20` is STILL open and still due.** One line, ships with a release cut. **Fourth edition running.**
-- **`735`'s untested row — an AUDIT that computes a property per row, 230–290k — IS STILL UNTESTED.** No
-  stream in either plan was one. **Carry it forward unvalidated and say so again.**
+- **THE PRODUCTION READING THAT WAS LOST TWICE NOW EXISTS, AND THE ANSWER IS THAT NOTHING HAPPENED.**
+  `#v6r4m` built it (#1453) and the planner ran it: **`not-listed-publicly` = 281 residents in an
+  enclosure are not listed publicly; `appeal-override` = 0 running, text-approved appeals.** **So `0347`
+  changed nothing a visitor sees on production** — the only behaviour it could alter is the appeal path
+  and there is nothing in it. **The lost before-figure turns out not to have mattered, and there is now
+  an instrument so the next one is not lost.** **One caveat, stated rather than buried:** that rests on
+  `ready_for_adoption` ≡ `is_public_visible`, held equal at both write paths
+  (`residents/new/actions.ts:123`, `residents/[id]/edit/actions.ts:200`).
+- **`#d9k2w` IS TICKED AND THE ALLOW-LIST IS EMPTY** (#1455). All 24 offered-then-refused links gated on
+  the activity their destination asks. **The item's "three streams by area" was wrong and the brief said
+  so**: all 24 rows share one file, so three parallel streams would collide on every commit. **One
+  stream, 231,745, inside its band, and the hard area boundary never had to fire.**
+- **`#79sqf` IS NOT TICKED and 24 pages remain.** See the bands section — this is the edition's most
+  useful negative result.
+- **`#t3n9r` IS NOT TICKED and is down to ONE PAGE**, `/memes/make`. The fix covers all three routes
+  through one shared `attach()`; `/memes/new` and the read-back are proved.
+- **`#w8k4p` AND `#r9wtk` ARE BOTH TICKED** (#1459, `0350`), and `#566lo` + `#qtgb4` with them (#1460).
+- **`#etr20` is STILL open and still due.** One line, ships with a release cut. **Fifth edition running.**
+- **`npm ci` in the main checkout: DONE**, twice, after being owed since 2026-11-09.
+- **`736`'s untested row — an AUDIT that computes a property per row, 230–290k — IS STILL UNTESTED.**
+  No stream in four plans has been one. **Carry it forward unvalidated. Sixth edition.**
 
-### THE CORRECTION TO `735`: ITS OWN AMENDMENT WAS RIGHT, AND THE `#q7dn3` NOTE STILL HOLDS
+### THE CORRECTION TO `736`: ITS AMENDMENT WAS STRANDED, AND THAT IS THE `708` FAULT AGAIN
 
-Nothing in `735` needs overturning. Its void of the `#j8vt4`+`#q7dn3` fold stands, and `#q7dn3` remains
-correct-and-masked rather than fixed. **Do not re-plan the fold.**
+`736`'s amendment was written, committed, pushed and **never PR'd**, by a session that then went
+offline — **the exact failure `736` itself warns about**, inside the document that warns about it. The
+next planner found it by reading `worktree.mjs list` for `ahead` and `held` **before** creating
+worktrees, verified every figure, and merged it as **#1452**. **Reading the `ahead` column at step 2 is
+what catches this. Do it.**
 
 ---
 
-## THE BANDS: SIX READINGS, AND ONE ROW WAS WRONG BY 19% IN THE CHEAP DIRECTION
-
-All six: Sonnet 5.5 at `low`, `compacted=no`, `rescoped=no`, `finished=yes`.
+## THE BANDS: FIVE READINGS, ONE NON-READING, AND THE NON-READING IS THE MOST USEFUL
 
 | stream | actual | band | verdict |
 |---|---|---|---|
-| `public-cards-gate` | 183,413 | 200–240k | **under 8%** |
-| `card-names-on-screen` | 171,864 | 130–160k | **over 7%** |
-| `meme-maker-tag-residents` | 201,349 | 150–180k | **over 12%** |
-| `suppliers-cleanup` | 173,545 | 170–200k | **inside** |
-| `destination-activity-check` | 178,533 | 220–270k | **UNDER 19%** |
-| `receipt-attach-phone` | 151,088 | 170–210k | **under 11%** |
+| `production-public-count-check` | 151,371 | 160–190k | **under 5%** |
+| `meme-tag-reads-who-and-where` | 177,792 | 170–200k | **inside** |
+| `destination-links-gated` | 231,745 | 200–240k | **inside, near the top** |
+| `public-visible-one-expression` | 162,097 | 190–230k | **under 15%** |
+| `manual-menu-and-examples` | 183,651 | 180–215k | **inside** |
+| `read-opened-pages-drive` | 171,388 | 260–320k | **NOT A READING — `finished=blocked`** |
 
-**1. A CHECK SCRIPT IS NOT AN INSTRUMENT AT INSTRUMENT PRICES — THIS IS THE MOST USEFUL FIGURE IN THE
-PLAN.** `destination-activity-check` was priced from *"builds an instrument or transport path from
-nothing"* (250–320k), discounted to 220–270k, and came in at **178,533 — barely above an ordinary
-stream.** **Price a static check whose SHAPE is named and whose FIXTURES are listed at 170–200k.** The
-consequence is strategic, not clerical: **checks are cheap, so buy more of them.** That stream's own
-measurement — *"one stream, versus about 880k of context for the three walks"* — is the whole argument.
-**What it does NOT license:** a check that must first discover its own shape is still an instrument.
+All `sonnet-5-5` / `low`, `compacted=no`, `rescoped=no`.
 
-**2. THE HAND-OVER DISCOUNT IS SETTLED. STOP TESTING IT AND PRICE IT IN.** Five of the last six streams
-came in under or at the bottom of their row (−8%, −19%, −11%, inside, after `735`'s −9% and −3%). **A
-brief handing over the cause, the decision AND the shape belongs one row down, not at the bottom of its
-own.**
+**1. A DRIVE STREAM SPENT A FLOOR AND DROVE TWO PAGES OF TWENTY-SIX. THIS IS THE FINDING OF THE PLAN.**
+`read-opened-pages-drive` was banded at floor + ~6.3k × 26. It drove `/memes` and `/memes/[id]`, **read
+the other 24 statically, found nothing, and reported `finished=blocked` rather than claiming a drive it
+had not done** — which is exactly right and is why we know this. **So the per-step figure for a driven
+walkthrough is wrong, or the pane makes driving far slower than the figure assumes.** **Do not price a
+24-page drive from that row again until someone measures it properly.** The replacement stream
+(`control-drive-24-pages`) is banded **220–270k, deliberately below**, because the static read is now
+done and it is confirming rather than discovering — **that is a hypothesis and next edition must check
+it.**
 
-**3. A ONE-FILE UI FIX NEEDING A DRIVEN LOGIN IS ≈180–210k. MEASURED THREE TIMES.**
-`maintenance-link-gate` 183,289 (banded 120–145k), `meme-maker-tag-residents` 201,349 (banded 150–180k).
-`735` said price it 170–200k; **still slightly low.** **And the dev-data trap was NOT the cause** — that
-stream reported *"non-resident photo needed no setup… about 10 minutes"*. **The cost is in the driving,
-not in standing up the data**, so the warning `735` added was right about the band and wrong about why.
+**2. AN "INSIDE" READING CAN HIDE UNFINISHED SCOPE.** `meme-tag-reads-who-and-where` landed inside its
+band **and did not prove two of its five driven cases.** **A band reading is a cost figure, never a
+completeness figure. Read the PR body, not the number.**
 
-**4. FOLDING TWO SMALL ITEMS COSTS CLOSER TO TWO SETS OF OVERHEAD THAN ONE.**
-`card-names-on-screen` carried two items, was banded 130–160k deliberately **below** the ordinary row to
-test the discount, and came in at **171,864** — above the ordinary row's own top. Each part needs its own
-step zero, proof and tick. **Band a two-item fold at the ordinary row PLUS half a floor.**
+**3. A CHECK WHOSE QUERY IS HANDED OVER VERBATIM INTO A FILE FULL OF EXAMPLES IS CHEAPER AGAIN: PRICE IT
+145–175k.** `production-public-count-check` came in at 151,371 against 160–190k, which was itself `736`'s
+corrected cheaper band. **Second consecutive reading in the same direction.** The distinguishing feature
+is not "a check" but **"nothing left to discover"**.
 
-**5. Scoping an external vendor's route is CHEAP, measured once.** `receipt-attach-phone` carried a
-research deliverable against Google's licensing and still came in under at 151,088.
+**4. THE SCHEMA-PLUS-CODE ROW IS OVERPRICED WHEN THE RULE ALREADY EXISTS IN SQL.**
+`public-visible-one-expression` rewrote two public views and came in **15% under** 190–230k, because
+`private.appeal_running()` already existed and the brief quoted it. **A view rewrite that REUSES an
+existing expression is 155–185k, not the full schema-with-code row.**
 
-**THE FLOOR, re-derived (`tokens − messages`): 106.8–108.6k across batch 2, 106.8–111.1k across batch 1.
-Six samples sit inside ≈106.8–111.1k at Sonnet `low`.** **Re-derive it; never carry it forward.**
+**5. TWENTY-FOUR MECHANICAL, SELF-PROVING FIXES IN ONE STREAM IS 200–240k AND THE BAND HELD.** First
+validation of "reads widely and edits many call sites" at that volume.
+
+**THE FLOOR, re-derived (`tokens − messages`): batch 1 — 107,936 · 110,666 · 111,752; batch 2 —
+84,412 · 85,425 · 85,425.** **BATCH 2's FLOORS ARE ~25k LOWER AND NOBODY KNOWS WHY.** Three streams,
+same model and effort, same day. **Do not average the two batches. Re-derive it next batch and say
+whether the low figures repeat** — if they do, every band built on a ~108k floor is ~25k too high.
 
 ---
 
-## WHAT THE PR BODIES HANDED BACK — AND ONE OF THEM IS 24 REAL FAULTS
+## WHAT THE STREAMS AND THE BACKLOG HANDED BACK
 
-1. **`#79sqf`'s CHECK FOUND 24 LINKS THAT ARE OFFERED AND THEN REFUSED, AND THEY ARE PARKED IN AN
-   ALLOW-LIST, NOT FIXED.** `scripts/check-destination-activity.mjs` (static, TypeScript AST, cards only,
-   ~9 s, **blocking** in CI) read 341 links: 160 OK, 141 whose destination has no static activity, 16
-   unresolved and named, **24 findings**. **8 of the 24 were read against source and all 8 were real.**
-   They sit in `docs/destination-activity-allowlist.json`, which **can only shrink** — so CI is green and
-   **nothing is chasing them.** Named examples: `clinics/[id]/ClinicHub.tsx:476` (an edit link under a
-   read gate), `memes/page.tsx:30` (ungated `/reels`), `management/stock-usage/page.tsx:495`,
-   `enclosures/EnclosureGrid.tsx:250`, `EnclosureHub.tsx:219,256`, `admin/status/page.tsx:197,384,445`,
-   `MakeMemeLink.tsx:16`. **FILED BY THE PLANNER as `#d9k2w`, with all 24 grouped by area (Admin 5,
-   Medical 5, Contacts 5, Enclosures 3, Website 2, Money/stock 2, Social 2) — which is also how to split
-   them. This is the largest single pile of card-access faults anyone has produced, and it is the first
-   time the shape was found by machine rather than by walking pages.**
-2. **`#79sqf` IS NOT CLOSED and its title says so.** The check covers **links only**. **A notice cannot be
-   caught statically** (F2's shape), and *control gated on a different activity than its action* (F3/F4)
-   is not covered — that is **the 26 read-opened pages, one drive stream**, and it is the honest remainder.
-3. **A GREP OVER `src/` AND `worker/` IS NOT A READER CENSUS.** The planner verified *"nothing reads the
-   old supplier columns"* from app code and briefed the drop on it. **`suppliers-cleanup` found two stamp
-   functions from `0337` still naming the dropped columns** — *"plpgsql would have failed on the first
-   delivery saved"*. **A dropped column's readers can be DATABASE FUNCTIONS, and `grep src/ worker/` cannot
-   see them.** Grep `supabase/migrations/` too, and say so in the brief. **It caught this itself and added
-   a guard to `0348`; the planner did not hand it that.**
-4. **The Google answer, so nobody re-opens it:** the PC half needs the **restricted `gmail.compose`
-   scope** — either a **paid annual assessment** (reported \$500–\$75,000, secondary and conflicting
-   sources) or a free separate **Testing** project with **weekly re-consent** — and **it must not touch the
-   `lanna-care-dev` project that serves Drive.** **Not recommended.** **Zero ongoing cost is a standing
-   rule, so this is his to spend or drop, and nothing is owed unless he wants to spend money.** The stream
-   says plainly that **Google's own pages were not read directly** — treat the figures as secondary.
+1. **AN ITEM DESCRIBED WORK THAT HAD ALREADY SHIPPED, AND STEP ZERO CAUGHT IT — IN THE PLANNER, NOT IN
+   THE STREAM.** `#00e3u`'s *"`general_bill` photos being fileable"* was planned as batch 3's third
+   stream. **`src/app/bills/general/page.tsx:95` already renders the photo section and `0306` has
+   accepted that owner type since it merged** (`c0109335`). **Third stale item this week.** **Check an
+   item's code before briefing it, not only its prose** — the five-items-already-shipped rule applies to
+   the planner first.
+2. **A FILED ITEM NAMED THE WRONG DATABASE VIEW, AND ACTING ON IT WOULD HAVE BROKEN A FEATURE.**
+   `#w8k4p` said `0347` gated `public_resident_cards`. **It did not** — `0347:9` says in terms *"public_resident_cards
+   is NOT changed: the kennel card must always answer"*. **The views that disagreed were `public_enclosures`
+   and `public_resident_profiles`.** Corrected on the `backlog` branch before briefing. **Second time in two
+   plans a filed item pointed a stream at that view.**
+3. **A GREP OVER APP CODE IS NOT A READER CENSUS — and the same shape bit again.** `736` recorded it for
+   database functions; this plan recorded it for **items**: an item's prose is not evidence about the
+   repository.
+4. **`#t48xh` COST HIM A THIRD REPETITION OF A DECISION HE HAD ALREADY GIVEN, AND THE CAUSE WAS A TITLE.**
+   His ruling *"use the standard /th/."* has been in the item's **body** since 2026-10-19, and the body
+   says in terms *"Nobody needs to ask Lutan anything further about it"*. **The title went on saying a
+   decision was his for three weeks, and the planner — and his own priorities artifact's `titles` map —
+   believed the title.** His words: *"I have made this decision numerous times, I won't say it again
+   t48xh should be /th"*. **Third rewrite of that title for the same fault.**
+   `node scripts/check-stale-titles.mjs` exists for exactly this and **was run late rather than at step 4.**
+   It now lists 7 candidates and no longer lists `#t48xh`. **Run it BEFORE presenting, not after.**
 
 ---
 
 ## OWED, AND WHO OWES IT
 
-1. **AMENDED — ONE PRODUCTION APPLY LEFT, AND IT IS THE DESTRUCTIVE ONE.** `0347` was applied on
-   2026-11-10 (see above). **`0348` drops columns and a view, and #1444 says take a fresh backup first**;
-   it is deliberately left pending and **the bare runner would apply it, so pin any future apply with
-   `--upto`.**
-2. **AMENDED — `#7aev4` IS TICKED, and what survives it is `#v6r4m`:** a read-only check that counts the
-   residents no longer listed publicly, plus `appeal-override` resolving "running" through the live rule
-   instead of a copy of the dead one. **The before figure is gone; the after figure is still worth having.**
-3. **One press on the Director's phone, and it is 30 seconds:** on a receipt, press **Share** and choose
-   Gmail; the PDF should be attached with the subject and message filled in. That is the only thing
-   `#pvpxz`'s phone half could not prove from a worktree.
-4. **The 24 destination-activity faults** (filed). **And the drive stream for notices and
-   control-vs-action on the 26 read-opened pages** — the honest remainder of `#79sqf`.
-5. **`#c4vn7`'s walkthrough is a session with him**, once batch 3's sheets land. **Re-measured 2026-11-10:
-   84 catalogue activities, 5 Admin-only on purpose, 14 UNRULED, 56 cards.** **`735` said `stock.correct`,
-   `system.status` and `photos.resident_publish` were settled on 2026-11-09; all three still print as
-   UNRULED.** The planner did **not** establish why — the ruling may be unrecorded in
-   `docs/ungranted-activities-allowlist.json`, "settled" may have meant something narrower, or `735` may
-   be wrong. **It is in batch 3's brief as a question. Do not put those three to him until it is answered.**
-6. **`#etr20`, `#314hq`'s remainder, `#40oz4` part B, `#oeglm`'s third reading, `#mx3rt`, `#ao0jk`,
-   `#rqv5c`'s remainder — all his**, all unchanged, all in `.plan-day.md` rather than re-argued here.
-7. **One ask, not six:** `#ifxk8`, `#y1dqu`, `#hzmxi`, `#c7zjk`, `#41yhe` and the new Thai from
-   `#pvpxz` and batch 3 all end at **a Thai speaker reading what is already drafted.**
-8. **`npm ci` in the main checkout.** Deferred on 2026-11-09 while a live `sync-home-icons --env
-   production` held the folder during the `0.44.0` deploy, and `package-lock.json` changed in that cut.
-   **New worktrees run their own, so no stream is affected.** Re-run `guarded-install.mjs` when quiet.
+1. **`0348` TO PRODUCTION — HIS, AND DESTRUCTIVE.** Drops columns and a view; #1444 says take a fresh
+   backup first. **The bare runner applies every pending file, so pin it with `--upto`.** `0350` and
+   `0351` will be pending behind it.
+2. **`#t48xh` IS UNBLOCKED AND SLICED, AND IT IS HIS CALL WHETHER TO SPEND THE WEEK.** The domain cutover
+   landed **2026-11-06** (read in `wrangler.jsonc`, not asked). **Sliced on his instruction into four
+   sequential streams** — mechanism, links-and-toggle, alternates, proof pass — **none carrying a
+   migration**, written onto the item. **Two things found by reading the code that the item did not
+   know:** there is **no `?lang=th` and never was** (locale is a cookie set from the phone's
+   `Accept-Language`), and **the Worker's edge cache key is keyed on that cookie**, so a careless
+   implementation costs the Thai site its caching.
+   **AND HIS REQUIREMENT, GIVEN 2026-11-10, OUTRANKS THE SLICING:** *"the language should set based on
+   the phones language setting… Default to that with option to change"*, then *"Is this change going to
+   impact that functionality"*. **It must not.** Written in as a hard constraint with a named proof,
+   because **the regression is silent** — a bare address resolving to English would never be reported.
+3. **The Thai ask, and it is ONE ask, not seven:** `#ifxk8`, `#y1dqu`, `#hzmxi`, `#c7zjk`, `#41yhe`, the
+   Thai from `#pvpxz`, #1451's seven new refusal sentences, and whatever batch 3 adds. **`thai-added-since`
+   (batch 3) is building the worklist that makes this one hand-over instead of a hunt.**
+4. **One press on the Director's phone, 30 seconds:** on a receipt, press **Share** and choose Gmail.
+5. **`#etr20`**, and the `worktree.mjs streams` two columns (lead section).
+6. **`#ogvcr` — the Meshnet and Remote Control test off the home network.** A joint session, it was due
+   **today**, and **he travels to Chiang Mai for two weeks.** Nothing else on this list has a deadline.
 
 ---
 
-## STANDING CHECKS — one was skipped, and it cost a stream
+## STANDING CHECKS — all run this plan, and one of them earned its place
 
-- **`gh pr list --state all --head claude/<slug>` BEFORE `worktree.mjs new`. SKIPPED for batch 1, then
-  asserted as done in `.plan-day.md`.** `claude/meme-resident-picker` already carried merged **PR #1380**
-  of nearly the same name. Its worktree was then **destroyed mid-session by something nobody has
-  identified** — the session's own words: *"held the project files when I first listed it. When I went to
-  edit, it was an empty folder"* — and with the brief gone it had only the slug, found #1380, concluded
-  the work was done, and stopped. **Nothing was lost (no commits).** Re-created as
-  `meme-maker-tag-residents`, which merged. **All six later slugs were checked before creation.**
-- **PICK SLUGS THAT NAME THE CHANGE, NOT THE FEATURE AREA.** `meme-resident-picker` could not be told
-  apart from a picker PR; `meme-maker-tag-residents` could. **And name the near-miss PRs, with their file
-  lists, in the brief** — batch 2's three briefs did, and none of them met the trap.
-- **A snapshot is a snapshot in TIME — and the OPPOSITE failure is not looking at all.** He had to ask how
-  the meme stream was getting on. **An idle stream with no commits and no PR looks exactly like one that
-  never started; only its own transcript tells them apart** (`list_events`).
-- **DO NOT READ DIALS OFF THE PROCESS TABLE.** `claude.exe` command lines said `--effort=medium`; all six
-  streams' own `stream-usage:` comments said `effort=low`. **The stream's comment is the only source.**
-- **A PR body's *"flag for <other stream>"* is addressed to NOBODY if that stream has merged.** #1436
-  flagged the manual's wording for a stream that had merged twelve minutes earlier; filed as `#j4m8t` and
-  built. **Treat every such flag in a merged body as unowned.**
-- **`--force` is not the fix for a held worktree.** `done` refused twice while the dead session's process
-  still existed, then worked once it exited. The script says so in its own code.
+- **`gh pr list --state all --head claude/<slug>` BEFORE `worktree.mjs new`: run for all nine slugs,
+  all empty.** **And the near-miss search earned its keep:** `#t3n9r`'s brief named **PR #1380**
+  (*"Meme resident picker reads who-and-where"*) with its file list, because it reads exactly like that
+  work and is not it. **The stream's step zero reported back that #1380 had not touched `queries.ts`.
+  The 2026-11-09 failure did not repeat.**
+- **`worktree.mjs list` read for `held` and `ahead` BEFORE creating anything** — that is what found the
+  stranded handover amendment.
+- **Six finished worktrees cleared with `/clean-streams`**, each confirming folder, local branch and
+  origin branch. **One needed `--force`: its uncommitted files were a corrupted double-write whose good
+  version was already on `main`. Look before forcing — the diff is the evidence, not the file count.**
+- **DO NOT READ DIALS OFF THE PROCESS TABLE.** The stream's own `stream-usage:` comment is the only
+  source.
+- **A release cut ran alongside batch 2** (`0.44.1`, #1456) **and collided with nothing.**
+
+---
+
+## INTERRUPTIONS — a cost of the BRIEF, not the stream
+
+**THREE, all the planner's.** Two were him asking for his list (sixth and seventh instances; lead
+section). One was him repeating a decision he had already given three times, caused by a stale title.
 
 ---
 
 ## FOR YOUR FIRST TURN
 
-Read `.plan-day.md` before anything. **It stands at 9 of 9 and this edition resets the counter, so you are
-planning FROM SCRATCH, not resuming.**
+Read `.plan-day.md` before anything. **It stands at 9 of 9 and this edition resets the counter, so you
+are planning FROM SCRATCH, not resuming.**
 
-**AMENDED — BATCH 3 HAS LANDED AND ITS BODIES ARE READ. All three came in INSIDE their bands**, which is
-the second clean batch of the plan: `brief-block-timeout` 153,300 (130–160k), `unruled-activities-sheets`
-183,793 (160–200k), `refusal-keys-photos` 155,958 (150–185k). Floors 106.8–107.8k. **What they left:**
-- **`refusal-keys-photos` did its conversion and SKIPPED BOTH ITS PROOFS.** Verified independently by the
-  planner: the pair now raises `photo.*` keys and the meter moved 5 functions/9 messages → **7/16**, with
-  person-read English 80 → **73**. **But deliverable 4 — prove the unknown-key fallback still WIDENS, which
-  the brief called "the one behaviour that must never regress" — was not driven, nor was deliverable 5's
-  on-screen Thai refusal.** Both are `pending:` in its test plan. **Seven new Thai sentences are unread.**
-  **So the code half is done and the proof half is not: ask the next group's stream to prove the fallback
-  before converting anything.**
-- **`unruled-activities-sheets`** produced the fourteen sheets; **its answer to the three-activity
-  discrepancy is the thing to read first**, because `735` claimed `stock.correct`, `system.status` and
-  `photos.resident_publish` were settled and all three still printed as UNRULED.
-- **`brief-block-timeout`** fixed block G and built the printer — see the amendment above for the column
-  it still lacks.
+**Batch 3 is briefed and handed over — `refusal-keys-group-3` (3002), `thai-added-since` (3003),
+`control-drive-24-pages` (3008). Read their PR bodies when they land; this planner has not.**
 
-**The natural first batch, in order:** **`#d9k2w`, the 24 destination-activity faults** (they are
-real, user-facing, machine-found and parked in a shrink-only allow-list, so they are the cheapest real
-value on the board — and the check will prove each fix); **`#t3n9r`** (a meme tag saves and reads back as
-*"No resident is tagged"* on all three routes, seen in a browser, one query to fix); and **the read-only
-production instrument for `#7aev4`'s count**, which unblocks his apply.
+**Three things to do before you present anything:** run `node scripts/check-stale-titles.mjs` **at step
+4, not after**; **read the code behind any item whose prose claims a gap**, because three items this week
+described work that had shipped; and **print the hand-over list straight after the last
+`worktree.mjs new`**, before the briefs.
 
-**And give him the list first — as PLAIN LINES, naming the batch.** Then everything else.
+**The natural first batch:** **`#q7dn3`** (the unit-conversion policies asking the wrong activity for
+medicine rows — small, carries a migration, and it has waited two plans for a free slot); **the first
+slice of `#t48xh`** if he wants the week spent; and **whatever batch 3's three PR bodies hand back** —
+on this plan's evidence that is where the best stream comes from.
