@@ -11,7 +11,7 @@
 | PR | pending: opened after this commit |
 | Tested by / date | Claude / 2026-11-10 |
 | Carries a migration? | yes — `0352_unit_conversions_by_row_kind.sql` |
-| Tested at SHA | `SHA` |
+| Tested at SHA | `fe166496` |
 
 ## 1. Scope and risk
 
@@ -26,7 +26,7 @@
 - [x] `node scripts/gates.mjs` ends all zero:
 
 ```
-GATES
+gates: typecheck=0 lint=0 test=0 build=0
 ```
 
 - [ ] CI green on the PR — n/a: not yet — the PR does not exist at this commit
