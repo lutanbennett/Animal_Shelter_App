@@ -1,5 +1,17 @@
 # Planner handover — edition `736`, 2026-11-10
 
+**AMENDED 07:0xZ, after merging at 06:36Z — AND THE REASON IT NEEDED AMENDING IS THIS EDITION'S OWN
+LEAD FAULT, COMMITTED BY THIS EDITION, FOR THE THIRD EDITION RUNNING.** It said batch 3 was *"briefed and
+handed over with no session opened"*. **Two of its three had already MERGED hours earlier** — #1448 at
+00:33Z and #1447 at 04:03Z — **and the planner never checked before writing it.** `735` was amended for
+exactly this and spends a section on it; `736` repeated it. **Lutan found it by asking "is your handover
+done, up to date and merged?"** Every stale statement is corrected in place below and marked `AMENDED`.
+
+**THE RULE THAT WOULD HAVE CAUGHT IT, AND IT IS ONE COMMAND:** before writing a handover, run
+`gh pr list --state all --head claude/<slug>` for **every stream the edition mentions**, including the
+batch being handed over. **Do not describe a batch's state from what you did to it; read what has
+happened to it since.**
+
 **This is a DELTA against `735`.** It says what changed, corrects its predecessor, and reports what each
 of `735`'s warnings and owed items actually did. Per-stream figures, batch composition, ports and the
 dependency notes live in `.plan-day.md` and are **not** reproduced here.
@@ -7,10 +19,11 @@ dependency notes live in `.plan-day.md` and are **not** reproduced here.
 **It outranks nothing.** It is read by one chat, it will be rewritten within one plan, and a wrong line
 in it is corrected by its successor rather than by a reviewer.
 
-**Written at the SETUP of this plan's last batch, so BATCH 3's FIGURES ARE NOT IN IT.** Batch 3 is
-`refusal-keys-photos`, `unruled-activities-sheets` and `brief-block-timeout` (ports 3009–3011), briefed
-and handed over with no session opened. **Batches 1 and 2 are complete: six streams, six merged PRs,
-six valid readings.**
+**AMENDED — BATCH 3 IS COMPLETE AND ITS FIGURES ARE NOW IN.** All three merged: `unruled-activities-sheets`
+#1448 at 00:33Z, `brief-block-timeout` #1447 at 04:03Z, `refusal-keys-photos` #1451 at 06:53Z. **So the
+plan ran 9 of 9 and every one of the nine is merged.** The line this replaces said batch 3 was *"briefed
+and handed over with no session opened"*, which was false when written for two of the three — see the
+banner. **Batches 1 and 2: six streams, six merged PRs, six valid readings.**
 
 ---
 
@@ -38,6 +51,14 @@ worktree, reading a metadata comment the planner now writes as line 1 of each `.
 briefs carry one). **Then handing over is *run it, paste it*, with an artifact like every other step.**
 **Check next edition whether a sixth instance happened. That is the only test of this.**
 
+**AMENDED — THE FIX LANDED THE SAME NIGHT (#1447) AND IT WORKS, BUT IT IS MISSING THE ONE COLUMN HE
+ASKED FOR.** `node scripts/worktree.mjs streams` prints folder, port, branch, brief-present, model,
+effort and band for every `claude/*` worktree, reads the metadata line, and says `no metadata line`
+rather than skipping a row — all as briefed. **It has NO `batch` column**, although all three batch-3
+briefs carry `batch=3` and the brief asked for it in terms, because *"is this batch 2 or 3? it's not
+labelled"* was one of the two things he had to ask. **So the printer answers the complaint it was built
+for and not the one he made last.** One column; finish it.
+
 **Two smaller things learned the same way, both cheap to keep:** he is on Remote Control and **a markdown
 table may not render for him — give the list as plain lines**; and **a list must name its batch**, because
 a plan is three batches of three and the folders alone do not say which you are looking at.
@@ -63,6 +84,18 @@ a plan is three batches of three and the folders alone do not say which you are 
   count that NEEDS A READ-ONLY INSTRUMENT**, because an ad-hoc production query is refused from a
   worktree; the query is in #1442's deliverable 6 and wants adding to `check-production.mjs` as a named
   check, exactly as `appeal-override` was.
+  **AMENDED 2026-11-10: `0347` IS APPLIED TO PRODUCTION AND `#7aev4` IS TICKED**, on Lutan's instruction
+  (*"Please apply 0347 to production"*, then *"this should close out #7aev4"*). **Applied with
+  `--upto 0347_public_website_gate.sql` after a clean production dry-run, because the bare runner applies
+  EVERY pending file and `0348` was also pending** — production now reads 349 applied, `0348` deliberately
+  left. **The before-count was NOT measured and is now unobtainable**, which is the second loss in two
+  days after `#k7waq`; the item is ticked rather than held open on a figure nobody can retrieve.
+  **AND A FINDING THAT MISLED ITS OWN AUTHOR WITHIN A MINUTE OF THE APPLY:** `check-production.mjs
+  appeal-override` still named the closed appeal as public through the override, because **its own SQL
+  asks `published AND status <> 'draft'` — a copy of the rule `0347` retired.** The gate is fine; the
+  CHECK is stale. **Filed as `#v6r4m` together with the still-missing count check.** `0347` itself was
+  read rather than trusted: it adds `private.appeal_running(published, status)` — published AND live or
+  funded — and points `public_appeals`, `public_appeal_photos` and `public_enclosures` at it.
 - **`#xkfsv` IS TICKED AND CLOSED** (PR #1444, `0348`). **`735` was right that only the clean-up was
   left.**
 - **`#79sqf` IS NOT TICKED and the title now says what is left** (PR #1445). See the next section.
@@ -161,12 +194,13 @@ Six samples sit inside ≈106.8–111.1k at Sonnet `low`.** **Re-derive it; neve
 
 ## OWED, AND WHO OWES IT
 
-1. **TWO PRODUCTION APPLIES, BOTH HIS, AND ONE IS DESTRUCTIVE.** `0347` (takes residents OFF the public
-   site) and **`0348` (drops columns and a view — #1444 says take a fresh backup first)**. **Read both in
-   order before deploying either.**
-2. **`#7aev4`'s production before/after count — needs a read-only check added to `check-production.mjs`
-   first.** Planner's or release manager's. **It is a list of animals leaving the public site, not a
-   statistic.**
+1. **AMENDED — ONE PRODUCTION APPLY LEFT, AND IT IS THE DESTRUCTIVE ONE.** `0347` was applied on
+   2026-11-10 (see above). **`0348` drops columns and a view, and #1444 says take a fresh backup first**;
+   it is deliberately left pending and **the bare runner would apply it, so pin any future apply with
+   `--upto`.**
+2. **AMENDED — `#7aev4` IS TICKED, and what survives it is `#v6r4m`:** a read-only check that counts the
+   residents no longer listed publicly, plus `appeal-override` resolving "running" through the live rule
+   instead of a copy of the dead one. **The before figure is gone; the after figure is still worth having.**
 3. **One press on the Director's phone, and it is 30 seconds:** on a receipt, press **Share** and choose
    Gmail; the PDF should be attached with the subject and message filled in. That is the only thing
    `#pvpxz`'s phone half could not prove from a worktree.
@@ -218,8 +252,21 @@ Six samples sit inside ≈106.8–111.1k at Sonnet `low`.** **Re-derive it; neve
 Read `.plan-day.md` before anything. **It stands at 9 of 9 and this edition resets the counter, so you are
 planning FROM SCRATCH, not resuming.**
 
-**Batch 3 is briefed and handed over — `refusal-keys-photos` (3009), `unruled-activities-sheets` (3010),
-`brief-block-timeout` (3011). Read their PR bodies when they land; this planner has not.**
+**AMENDED — BATCH 3 HAS LANDED AND ITS BODIES ARE READ. All three came in INSIDE their bands**, which is
+the second clean batch of the plan: `brief-block-timeout` 153,300 (130–160k), `unruled-activities-sheets`
+183,793 (160–200k), `refusal-keys-photos` 155,958 (150–185k). Floors 106.8–107.8k. **What they left:**
+- **`refusal-keys-photos` did its conversion and SKIPPED BOTH ITS PROOFS.** Verified independently by the
+  planner: the pair now raises `photo.*` keys and the meter moved 5 functions/9 messages → **7/16**, with
+  person-read English 80 → **73**. **But deliverable 4 — prove the unknown-key fallback still WIDENS, which
+  the brief called "the one behaviour that must never regress" — was not driven, nor was deliverable 5's
+  on-screen Thai refusal.** Both are `pending:` in its test plan. **Seven new Thai sentences are unread.**
+  **So the code half is done and the proof half is not: ask the next group's stream to prove the fallback
+  before converting anything.**
+- **`unruled-activities-sheets`** produced the fourteen sheets; **its answer to the three-activity
+  discrepancy is the thing to read first**, because `735` claimed `stock.correct`, `system.status` and
+  `photos.resident_publish` were settled and all three still printed as UNRULED.
+- **`brief-block-timeout`** fixed block G and built the printer — see the amendment above for the column
+  it still lacks.
 
 **The natural first batch, in order:** **`#d9k2w`, the 24 destination-activity faults** (they are
 real, user-facing, machine-found and parked in a shrink-only allow-list, so they are the cheapest real
