@@ -945,6 +945,7 @@ const en = {
           "Give a role cards. Each card puts a tile on the person's home screen and gives what they need to use it, so a tile can never open a page they cannot use. Tap a card to see exactly what it gives.",
         detailsLink: "See every activity (Details)",
         featuresLink: "Edit the features (Features)",
+        featuresLinkReadOnly: "See the features (Features)",
         detailsTitle: "Who does what: Details",
         detailsSubtitle:
           "Every activity down the side and every role across the top, read live. This is a read-only view: change a role's access by giving or removing cards.",
@@ -4589,7 +4590,11 @@ const en = {
       },
       table: { name: "Name", contactDetails: "Contact", address: "Address", notes: "Notes", noSuppliers: "No suppliers yet." },
       openPage: "Open this supplier's page",
-      pageIntro: "A supplier is a business the shelter buys from. Change its details, archive it, or make it a Shelter Friend here.",
+      // The sentence names only what this login can do here: archiving asks suppliers.directory edit, the Shelter Friend card asks friends.manage.
+      pageIntro: "A supplier is a business the shelter buys from.",
+      pageIntroEdit: "A supplier is a business the shelter buys from. Archive it here.",
+      pageIntroFriend: "A supplier is a business the shelter buys from. Make it a Shelter Friend here.",
+      pageIntroEditFriend: "A supplier is a business the shelter buys from. Archive it, or make it a Shelter Friend, here.",
       backToList: "← All suppliers",
       archive: {
         confirmArchive: "Archive supplier",
