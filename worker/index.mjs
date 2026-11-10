@@ -69,7 +69,7 @@ import { handleCspReport } from "./csp-report.mjs";
 import { withSecurityHeaders } from "./security-headers.mjs";
 import { runLabelDrafts, runTranslations } from "./translations.mjs";
 import { recordHeartbeat, finishHeartbeat } from "./heartbeat.mjs";
-import { isEdgeCachedPage } from "../src/lib/public-paths.ts";
+import { isEdgeCachedPage, thPathRest } from "../src/lib/public-paths.ts";
 import { localeFromAcceptLanguage } from "../src/lib/i18n/locales.ts";
 
 // OpenNext's Durable Object classes must stay exported from the entry module.
@@ -100,16 +100,20 @@ function hasAuthCookie(request) {
 function isCacheable(request, url) {
   return (
     request.method === "GET" &&
-    isPublicPage(url.pathname) &&
+    isPublicPage(thPathRest(url.pathname) ?? url.pathname) &&
     !request.headers.has("rsc") &&
     !hasAuthCookie(request)
   );
 }
 
-/** One cache entry per URL per language. */
+/**
+ * One cache entry per URL per language. A /th/ path names Thai itself, so its
+ * key is the path (already distinct) plus __locale=th, whatever cookie it carries.
+ * A bare path keeps the old key: cookie, else Accept-Language.
+ */
 function cacheKeyFor(request, url) {
   const key = new URL(url);
-  key.searchParams.set("__locale", cookieValue(request, "locale") ?? localeFromAcceptLanguage(request.headers.get("accept-language")));
+  key.searchParams.set("__locale", thPathRest(key.pathname) ? "th" : (cookieValue(request, "locale") ?? localeFromAcceptLanguage(request.headers.get("accept-language"))));
   return new Request(key.toString(), { method: "GET" });
 }
 

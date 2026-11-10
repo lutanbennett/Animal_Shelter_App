@@ -121,3 +121,17 @@ export function isWebsitePageWhenOff(pathname: string): boolean {
 export function isEdgeCachedPage(pathname: string): boolean {
   return pathname === "/" || EDGE_CACHED_PAGE_PREFIXES.some((prefix) => underPrefix(pathname, prefix));
 }
+
+/**
+ * Slice A of #t48xh: the explicit Thai address. `/th/adopt` is the Thai twin of
+ * `/adopt`; English keeps its bare addresses. Returns the bare path the request
+ * is rewritten to, or null when `pathname` is not a `/th/` address for a public
+ * PAGE. Scoped here on purpose: a staff path (`/th/bills`), a look-alike
+ * (`/thailand`, `/th2`) and a non-page public path (`/th/login`, `/th/api/...`)
+ * are all null, so the proxy leaves them exactly as they are.
+ */
+export function thPathRest(pathname: string): string | null {
+  if (pathname !== "/th" && !pathname.startsWith("/th/")) return null;
+  const rest = pathname.slice(3) || "/";
+  return isPublicPage(rest) ? rest : null;
+}
