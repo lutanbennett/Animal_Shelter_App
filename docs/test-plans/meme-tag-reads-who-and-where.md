@@ -14,7 +14,7 @@
 | PR | pending |
 | Tested by / date | Claude, 2026-11-10 |
 | Carries a migration? | no |
-| Tested at SHA | 99033e29 |
+| Tested at SHA | f925912e |
 
 ## 1. Scope and risk
 
@@ -40,13 +40,13 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [ ] `node scripts/worktree.mjs sync` — n/a: not run; the branch was cut from current `main` this session and sync is done at merge time
-- [x] `node scripts/gates.mjs` ran on this branch (the release-note commit landed while typecheck and lint were already running; test and build ran after it):
+- [x] `node scripts/gates.mjs` ran on this branch at the code commit (the plan commit after it changes no code):
 
 ```
-=== gates: typecheck exited 0 after 251s
-=== gates: lint exited 0 after 449s
-=== gates: test exited 0 after 50s
-=== gates: build exited 0 after 352s
+=== gates: typecheck exited 0 after 15s
+=== gates: lint exited 0 after 178s
+=== gates: test exited 0 after 25s
+=== gates: build exited 0 after 56s
 gates: typecheck=0 lint=0 test=0 build=0
 ```
 - [ ] CI green on the PR (runs the same four gates, among its other checks). **This one cannot be true in the commit that creates the PR**, so write it `n/a: not yet — the PR does not exist at this commit` and **leave it there.** Changed 2026-10-20: ticking it in a follow-up commit used to be the rule, and that commit **invalidated its own evidence** — a new HEAD means a new run, so every PR in this repository paid two full CI cycles to transcribe a result GitHub already records permanently against the commit. A tick here attests to nothing a reader can check better by looking at the PR. **What must still happen, and is a merge step rather than a checklist line: before merging, read the run for your current HEAD (`gh run view <id> --json status,conclusion,headSha`) and confirm its `headSha` matches.** Merging on an older run's strength merges a commit whose CI never finished. **Do not pre-tick this line either** — a green you have not seen is the exact failure this checklist exists to prevent
