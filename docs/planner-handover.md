@@ -1,6 +1,6 @@
 # Planner handover — edition `736`, 2026-11-10
 
-**AMENDED 07:0xZ, after merging at 06:36Z — AND THE REASON IT NEEDED AMENDING IS THIS EDITION'S OWN
+**AMENDED 2026-11-10 07:31Z, after merging at 06:36Z — AND THE REASON IT NEEDED AMENDING IS THIS EDITION'S OWN
 LEAD FAULT, COMMITTED BY THIS EDITION, FOR THE THIRD EDITION RUNNING.** It said batch 3 was *"briefed and
 handed over with no session opened"*. **Two of its three had already MERGED hours earlier** — #1448 at
 00:33Z and #1447 at 04:03Z — **and the planner never checked before writing it.** `735` was amended for
