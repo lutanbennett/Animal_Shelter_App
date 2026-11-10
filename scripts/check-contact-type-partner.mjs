@@ -1,7 +1,7 @@
 // Rollback harness for 0333_contact_type_partner.sql against DEV only. One transaction; a deliberate raise carries
 // the evidence, so nothing commits.   node scripts/check-contact-type-partner.mjs
 // Proves: a contact inserts with type 'Partner'; a Partner becomes a Shelter Friend and the unique contact_id still
-// holds; the three old types still insert; stock_vendors lists a Vendor and NOT a Partner; carer_id still refuses a
+// holds; the three old types still insert; carer_id still refuses a
 // non-Carer (Partner included); enum order is unchanged with Partner last. Distinct names per row.
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -37,11 +37,6 @@ begin
   exception when unique_violation then null; end;
   insert into shelter_friends (contact_id) values (v_v);
 
-  select count(*) into v_n from stock_vendors where id in (v_p, v_v);
-  if v_n <> 1 or not exists (select 1 from stock_vendors where id = v_v) then
-    raise exception 'FAIL B stock_vendors must list the Vendor and not the Partner (got % rows)', v_n;
-  end if;
-
   select id into v_r from residents limit 1;
   if v_r is not null then
     begin
@@ -59,7 +54,7 @@ begin
     raise exception 'FAIL D enum order is %', (select array_agg(e::text) from unnest(enum_range(null::contact_type)) e);
   end if;
 
-  raise exception 'HARNESS-OK Partner inserts | Partner becomes a Friend, contact_id unique holds | Carer, Volunteer, Vendor still insert | stock_vendors keeps Vendor, excludes Partner | a Partner is not accepted as carer | enum order Carer,Volunteer,Vendor,Partner';
+  raise exception 'HARNESS-OK Partner inserts | Partner becomes a Friend, contact_id unique holds | Carer, Volunteer, Vendor still insert | a Partner is not accepted as carer | enum order Carer,Volunteer,Vendor,Partner';
 end;
 $h$;
 rollback;

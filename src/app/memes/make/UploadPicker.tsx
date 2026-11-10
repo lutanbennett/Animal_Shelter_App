@@ -2,20 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+import type { ResidentOption } from "@/components/ResidentPicker";
 import { MemeMaker } from "./MemeMaker";
 
 /**
  * "Upload a photo": the file is read in this browser and drawn on the canvas; it is not sent anywhere until the
  * finished meme is saved, and the original is never filed. JPEG, PNG or WebP only: browsers cannot draw HEIC.
  */
-export function UploadPicker() {
+export function UploadPicker({ residents, residentsEmptyNote }: { residents: ResidentOption[]; residentsEmptyNote?: string }) {
   const { t } = useI18n();
   const m = t.memes.maker;
   const [src, setSrc] = useState<string | null>(null);
 
   useEffect(() => () => void (src && URL.revokeObjectURL(src)), [src]);
 
-  if (src) return <MemeMaker photoSrc={src} sourceKind="upload" sourceFileId={null} residentLabel="" />;
+  if (src) return <MemeMaker photoSrc={src} sourceKind="upload" sourceFileId={null} residentLabel="" residents={residents} initialResidentIds={[]} residentsEmptyNote={residentsEmptyNote} />;
   return (
     <div className="flex max-w-xl flex-col gap-2">
       <label htmlFor="maker-upload" className="text-sm font-medium text-muted">{m.uploadChoose}</label>

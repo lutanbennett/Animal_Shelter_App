@@ -17,8 +17,7 @@ batch 2 list yet - why are we having so many issues with the process"*, and the 
 **the planner had been satisfying this document instead of delivering to him.**
 
 **So the FIRST thing in your reply — before actuals, findings, bands or prose — is the list he copies
-from: per stream, the folder, the port, and the model and effort to set.** Verify it (read the `.port`
-files and check each `.brief.md` exists) rather than quoting it from memory. Never write "the list is
+from: per stream, the folder, the port, and the model and effort to set.** **The moment the last `.brief.md` is written, run `node scripts/worktree.mjs streams` and paste its output, before any other tool call.** It reads each `.port` and each brief's first line, so nothing is quoted from memory. Never write "the list is
 above": give it again. Everything else in this file happens **after** that list is in front of him.
 
 **This file was 2,176 lines on 2026-11-08 and was cut to this on his instruction** — *"Yes cut down the
@@ -98,7 +97,7 @@ with no PR, is not a slot to reuse. Then per stream, in sequence:
 1. `node C:/Development/Animal_Shelter_App/scripts/worktree.mjs new <slug>`
 2. Write `C:/Development/Animal_Shelter_<slug>/.brief.md` (gitignored) — **the blocks every brief carries
    are in `brief-blocks.md`; assemble from there rather than retyping.** Add the task half: the item
-   verbatim, the branch, the port, which half of a schema-first item this is, the numbered deliverables,
+   verbatim, **a first line `<!-- stream: slug=<slug> port=<port> model=<model> effort=<effort> band=<lo-hi>k migration=<none|n> -->` (`worktree.mjs streams` reads it)**, the branch, the port, which half of a schema-first item this is, the numbered deliverables,
    what the stream does NOT own and who owns it this batch, and the banding note.
 3. **Send the list (THE ONE RULE above) and stop. Do not start sessions.**
 

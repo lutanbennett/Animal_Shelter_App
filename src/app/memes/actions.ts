@@ -93,7 +93,8 @@ export async function createMeme(formData: FormData): Promise<ActionResult<{ id:
           error: source.reason === "medical" ? e.sourceMedical : source.reason === "notApproved" ? e.sourceNotApproved : source.reason === "notAllowed" ? e.sourceNotAllowed : e.sourceNotFound,
         };
       }
-      fields.residentIds = [...new Set([...fields.residentIds, ...source.residentIds])];
+      // The maker sends the whole choice (the photo's residents shown as chosen, removable); any other caller gets the photo's added.
+      if (formData.get("residentsChosen") !== "1") fields.residentIds = [...new Set([...fields.residentIds, ...source.residentIds])];
       link = source;
     }
 

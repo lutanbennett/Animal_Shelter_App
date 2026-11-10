@@ -8748,11 +8748,19 @@ const th: Dictionary = {
       share: "แชร์",
       shareHint: "เปิดเมนูแชร์ของโทรศัพท์พร้อมแนบไฟล์ PDF เลือก Gmail, LINE หรือแอปอื่นได้",
       email: "ร่างอีเมล",
-      emailHint: "เปิดอีเมลถึงผู้บริจาค แนบไฟล์ PDF ที่ดาวน์โหลดไว้เอง เพราะลิงก์อีเมลแนบไฟล์ให้ไม่ได้",
+      emailHint: "บนโทรศัพท์ให้ใช้ปุ่มแชร์ เพราะแนบไฟล์ PDF ให้ ส่วนร่างอีเมลเปิดข้อความถึงผู้บริจาคโดยไม่มีไฟล์ ต้องดาวน์โหลด PDF แล้วแนบเอง",
       // The email goes to the donor, who is usually overseas: English, like the receipt.
       emailSubject: (number: string) => `ใบเสร็จรับเงินบริจาคเลขที่ ${number} — Lanna Care for Animals`,
       emailBody: (name: string, number: string) =>
         `เรียน คุณ${name}\n\nขอขอบคุณสำหรับการบริจาคให้มูลนิธิ Lanna Care for Animals ใบเสร็จรับเงินเลขที่ ${number} แนบมากับอีเมลฉบับนี้\n\nด้วยความขอบคุณ\nมูลนิธิ Lanna Care for Animals`,
+      // UNREVIEWED Thai (not yet read by a human, #y1dqu).
+      emailBodyNoFile: (name: string, number: string) =>
+        `เรียน คุณ${name}
+
+ขอขอบคุณสำหรับการบริจาคให้มูลนิธิ Lanna Care for Animals ใบเสร็จรับเงินของท่านเลขที่ ${number}
+
+ด้วยความขอบคุณ
+มูลนิธิ Lanna Care for Animals`,
       markSent: "ส่งแล้ว",
       driveSaved: "บันทึกลง Drive แล้ว",
       driveOpen: "เปิดใน Drive",

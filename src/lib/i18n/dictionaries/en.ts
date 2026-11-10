@@ -9061,12 +9061,20 @@ const en = {
       view: "View",
       download: "Download",
       share: "Share",
-      shareHint: "Opens your phone's share menu with the PDF attached: Gmail, LINE or anything else.",
       email: "Email draft",
-      emailHint: "Opens an email to the donor. Attach the downloaded PDF yourself: an email link cannot attach it.",
+      shareHint: "Opens your phone's share menu with the PDF attached: Gmail, LINE or anything else.",
+      emailHint: "On a phone, use Share: it attaches the PDF. Email draft opens a message to the donor with no PDF, so download the PDF and attach it yourself.",
       emailSubject: (number: string) => `Your donation receipt ${number} — Lanna Care for Animals`,
       emailBody: (name: string, number: string) =>
         `Dear ${name},\n\nThank you for your donation to Lanna Care for Animals Foundation. Your receipt ${number} is attached.\n\nWith gratitude,\nLanna Care for Animals`,
+      // The mailto: path cannot attach anything, so it must not claim an attachment.
+      emailBodyNoFile: (name: string, number: string) =>
+        `Dear ${name},
+
+Thank you for your donation to Lanna Care for Animals Foundation. Your receipt number is ${number}.
+
+With gratitude,
+Lanna Care for Animals`,
       markSent: "I've sent it",
       driveSaved: "Saved to Drive",
       driveOpen: "Open on Drive",

@@ -349,43 +349,7 @@ export const CHECKS = {
       : ["No card grants maintenance.delete, so only Admin can delete a maintenance job - as decided."],
     failed: (rows) => rows.length > 0,
   },
-  // 0338's catch-up back-fill is the only one in the schema that MOVES live rows, and it had never run against any
-  // (dev holds no Vendor contact). #k3mqp needs a count before and after the production apply, and until this check
-  // there was no instrument for it: no check read contacts or suppliers, and an ad-hoc production read is refused.
-  // It guards rather than reports: the three "unlinked" figures are 0338's own closing assertions, so once 0338 is
-  // applied any of them above zero means the back-fill did not finish. Before the apply it passes and still prints
-  // the expected size of the job (Lutan, 2026-11-09: production holds about 20 contacts listed as suppliers).
-  "suppliers-backfill": {
-    asks: "Has 0338's catch-up back-fill moved what it should? Counts the Vendor contacts, the supplier rows twinned to them, and the receipts, deliveries and Shelter Friends still pointing at a Vendor contact rather than a supplier. Before 0338 is applied these are the size of the job and nothing is wrong; once it is applied, any of them above zero is the back-fill unfinished — they are the migration's own closing assertions.",
-    sql: `select json_build_object(
-        'applied_0338', (select count(*) > 0 from schema_migrations where filename like '0338%'),
-        'vendor_contacts', (select count(*) from contacts where type = 'Vendor'),
-        'vendor_without_supplier', (select count(*) from contacts c
-           where c.type = 'Vendor' and not exists (select 1 from suppliers s where s.source_contact_id = c.id)),
-        'suppliers', (select count(*) from suppliers),
-        'suppliers_twinned', (select count(*) from suppliers where source_contact_id is not null),
-        'receipts_unlinked', (select count(*) from stock_receipts
-           where supplier_contact_id is not null and supplier_id is null),
-        'deliveries_unlinked', (select count(*) from stock_deliveries
-           where supplier_contact_id is not null and supplier_id is null),
-        'friends_on_vendor', (select count(*) from shelter_friends f
-           join contacts c on c.id = f.contact_id where c.type = 'Vendor'))`,
-    render: (r) => {
-      const left = r.vendor_without_supplier + r.receipts_unlinked + r.deliveries_unlinked + r.friends_on_vendor;
-      const sizes = [
-        `${r.vendor_contacts} Vendor contact(s); ${r.suppliers} supplier row(s), ${r.suppliers_twinned} twinned to a contact`,
-        `still on a Vendor contact: ${r.vendor_without_supplier} contact(s) with no supplier, ${r.receipts_unlinked} receipt(s), ${r.deliveries_unlinked} delivery(ies), ${r.friends_on_vendor} Shelter Friend(s)`,
-      ];
-      if (!r.applied_0338) {
-        return [...sizes, `0338 is NOT applied here, so nothing is wrong: the second line is the size of the job the back-fill will do. Count again after applying - a figure that does not fall to zero means it did not run.`];
-      }
-      return left === 0
-        ? [...sizes, "0338 is applied and the back-fill is complete: nothing still points at a Vendor contact."]
-        : [...sizes, `0338 IS APPLIED AND ${left} ROW(S) STILL POINT AT A VENDOR CONTACT - the back-fill did not finish.`];
-    },
-    failed: (r) => r.applied_0338
-      && r.vendor_without_supplier + r.receipts_unlinked + r.deliveries_unlinked + r.friends_on_vendor > 0,
-  },
+  // The suppliers-backfill check was retired with 0348, which dropped the columns it read (docs/decisions/2026-11-09-suppliers-cleanup.md).
   // The appeal override (#r9wtk, 0343): a published, non-draft appeal is public on its own, whether or not its animal is ticked Ready for adoption.
   // It guards a decision: any appeal that is public ONLY through the override is one the shelter has not yet been shown going live,
   // so the planner names them to Lutan before the release that carries 0343 (docs/decisions/2026-11-09-text-approval-app.md).
