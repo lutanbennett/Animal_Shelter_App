@@ -307,7 +307,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
       </div>
 
       {mapData ? (
-        <FacilityMap data={mapData} />
+        <FacilityMap data={mapData} canOpenMaintenance={canFilterMaintenance} />
       ) : (
         <>
       <EnclosureFilters
@@ -330,7 +330,7 @@ export default async function EnclosuresPage(props: PageProps<"/enclosures">) {
         </p>
       )}
 
-      <EnclosureGrid pinned={pinned} groups={groups} flat={flat} tagOrigin={tagOrigin} showCounts={canSeeResidents} />
+      <EnclosureGrid pinned={pinned} groups={groups} flat={flat} tagOrigin={tagOrigin} showCounts={canSeeResidents} canOpenMaintenance={canFilterMaintenance} />
         </>
       )}
     </main>

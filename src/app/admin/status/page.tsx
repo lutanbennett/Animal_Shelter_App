@@ -17,6 +17,7 @@ import { CheckNowButton } from "./CheckNowButton";
 import { renderedBy } from "@/lib/status/runtime";
 import { AlertActions } from "./AlertActions";
 import { requirePermission } from "@/lib/permissions/require";
+import { can } from "@/lib/permissions/can";
 
 type T = Awaited<ReturnType<typeof getT>>["t"];
 type Locale = Awaited<ReturnType<typeof getT>>["locale"];
@@ -31,6 +32,8 @@ type Locale = Awaited<ReturnType<typeof getT>>["locale"];
  */
 export default async function SystemStatusPage(props: PageProps<"/admin/status">) {
   const { perms } = await requirePermission("system.status");
+  const canVisits = can(perms, "medical.visits", "read");
+  const canApprove = can(perms, "photos.approve");
   const { t, locale } = await getT();
   const s = t.admin.status;
   const days = parsePeriod((await props.searchParams).days);
@@ -55,21 +58,21 @@ export default async function SystemStatusPage(props: PageProps<"/admin/status">
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-foreground">{s.calendarChanges.heading}</h2>
         <Suspense fallback={<p className="text-sm text-muted">{s.checking}</p>}>
-          <CalendarChanges t={t} locale={locale} />
+          <CalendarChanges t={t} locale={locale} canVisits={canVisits} />
         </Suspense>
       </section>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-foreground">{s.unassignedPhotos.heading}</h2>
         <Suspense fallback={<p className="text-sm text-muted">{s.checking}</p>}>
-          <UnassignedPhotos t={t} locale={locale} />
+          <UnassignedPhotos t={t} locale={locale} canApprove={canApprove} />
         </Suspense>
       </section>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold text-foreground">{s.healthHeading}</h2>
         <Suspense fallback={<p className="text-sm text-muted">{s.checking}</p>}>
-          <Health t={t} locale={locale} />
+          <Health t={t} locale={locale} canVisits={canVisits} />
         </Suspense>
       </section>
 
@@ -155,7 +158,7 @@ function ageText(t: T, ageDays: number) {
 }
 
 /** Beside the Drive tile: token works, calendar reachable, visits waiting. Its own check, so an unset calendar never raises an alert. */
-async function CalendarTile({ t, locale }: { t: T; locale: Locale }) {
+async function CalendarTile({ t, locale, canVisits = false }: { t: T; locale: Locale; canVisits?: boolean }) {
   const x = t.admin.status.tiles.calendar;
   const result = await runCheck(async () => {
     const c = await checkCalendar();
@@ -194,9 +197,15 @@ async function CalendarTile({ t, locale }: { t: T; locale: Locale }) {
         <ul className="flex flex-col gap-1">
           {visits.map((v) => (
             <li key={v.id}>
-              <Link href={`/clinic-visits/${v.id}`} className="font-medium text-primary hover:underline">
-                {formatDate(v.appointmentDate, locale)} · {v.residentName ?? "?"}
-              </Link>
+              {canVisits ? (
+                <Link href={`/clinic-visits/${v.id}`} className="font-medium text-primary hover:underline">
+                  {formatDate(v.appointmentDate, locale)} · {v.residentName ?? "?"}
+                </Link>
+              ) : (
+                <span className="font-medium">
+                  {formatDate(v.appointmentDate, locale)} · {v.residentName ?? "?"}
+                </span>
+              )}
               {v.past && <span className="text-muted"> ({x.past})</span>}
               {v.error && (
                 <p className="break-words font-mono text-xs text-muted">
@@ -240,7 +249,7 @@ async function DriveSpaceTile({ t, locale }: { t: T; locale: Locale }) {
   );
 }
 
-async function Health({ t, locale }: { t: T; locale: Locale }) {
+async function Health({ t, locale, canVisits = false }: { t: T; locale: Locale; canVisits?: boolean }) {
   const r = await getHealthReport();
   const x = t.admin.status.tiles;
 
@@ -271,7 +280,7 @@ async function Health({ t, locale }: { t: T; locale: Locale }) {
 
       <DriveSpaceTile t={t} locale={locale} />
 
-      <CalendarTile t={t} locale={locale} />
+      <CalendarTile t={t} locale={locale} canVisits={canVisits} />
 
       <Tile title={x.migrations.title} result={r.migrations} t={t} locale={locale}>
         {!mig ? (
@@ -372,7 +381,7 @@ async function Health({ t, locale }: { t: T; locale: Locale }) {
  * step-up on Settings → Security (src/lib/auth/access-requests.ts). The link
  * goes there and the step-up comes first as usual.
  */
-async function CalendarChanges({ t, locale }: { t: T; locale: Locale }) {
+async function CalendarChanges({ t, locale, canVisits = false }: { t: T; locale: Locale; canVisits?: boolean }) {
   const c = t.admin.status.calendarChanges;
   const data = await loadCalendarChanges();
   if (!data) return <p className="text-sm text-muted">{c.fail}</p>;
@@ -381,9 +390,15 @@ async function CalendarChanges({ t, locale }: { t: T; locale: Locale }) {
     <ul className="flex flex-col gap-2 text-sm">
       {data.map((v) => (
         <li key={v.id} className="rounded border border-border bg-surface p-3">
-          <Link href={`/clinic-visits/${v.id}`} className="font-medium text-primary hover:underline">
-            {v.residents?.name ?? "—"} · {v.clinics?.name ?? "—"} · {formatDate(v.appointment_date, locale)}
-          </Link>
+          {canVisits ? (
+            <Link href={`/clinic-visits/${v.id}`} className="font-medium text-primary hover:underline">
+              {v.residents?.name ?? "—"} · {v.clinics?.name ?? "—"} · {formatDate(v.appointment_date, locale)}
+            </Link>
+          ) : (
+            <span className="font-medium">
+              {v.residents?.name ?? "—"} · {v.clinics?.name ?? "—"} · {formatDate(v.appointment_date, locale)}
+            </span>
+          )}
           <p className="text-muted">
             {v.calendar_change_kind === "cancelled" ? c.cancelled : c.moved} · {formatDateTime(v.calendar_changed_at, locale)}
           </p>
@@ -423,7 +438,7 @@ async function AccessRequests({ t, locale }: { t: T; locale: Locale }) {
  * they do not pile up unseen. Read as the signed-in admin (RLS lets a login that may publish see the table). Amber
  * while any wait: it needs a person, nothing is broken. Not part of the health report, so no alert mail.
  */
-async function UnassignedPhotos({ t, locale }: { t: T; locale: Locale }) {
+async function UnassignedPhotos({ t, locale, canApprove = false }: { t: T; locale: Locale; canApprove?: boolean }) {
   const supabase = await createClient();
   const r = await runCheck(async () => {
     const stale = await countStalePending(supabase);
@@ -442,9 +457,11 @@ async function UnassignedPhotos({ t, locale }: { t: T; locale: Locale }) {
         ) : (
           <>
             <p>{a.waiting({ count: f.count, age: a.oldestDays({ days: f.oldestDays }) })}</p>
-            <Link href="/photos/approve" className="font-medium text-primary hover:underline">
-              {a.review}
-            </Link>
+            {canApprove && (
+              <Link href="/photos/approve" className="font-medium text-primary hover:underline">
+                {a.review}
+              </Link>
+            )}
           </>
         )}
       </Tile>

@@ -169,7 +169,10 @@ export function EnclosureGrid({
   flat,
   tagOrigin,
   showCounts,
+  canOpenMaintenance = false,
 }: {
+  /** maintenance.jobs read: the zone-wide jobs link (/maintenance asks it). Defaults to false. */
+  canOpenMaintenance?: boolean;
   /** Whether this login reads any resident (resident.record or resident.who_and_where). Without it the figures are left out. */
   showCounts: boolean;
   /** Lifecycle status buckets, shown first without a heading. */
@@ -245,7 +248,7 @@ export function EnclosureGrid({
                 {zone.enclosures.length < zone.total_enclosures &&
                   ` · ${t.enclosures.showingOf(zone.enclosures.length, zone.total_enclosures)}`}
               </span>
-              {zone.zone_wide_jobs > 0 && (
+              {zone.zone_wide_jobs > 0 && canOpenMaintenance && (
                 <Link
                   href={`/maintenance?zone=${zone.id}`}
                   className="flex items-center gap-1 font-medium text-foreground hover:underline"

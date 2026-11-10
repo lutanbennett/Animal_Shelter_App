@@ -8,6 +8,7 @@ import { loadConversions } from "@/lib/units-server";
 import { refuseFor } from "@/lib/auth/require-role";
 import { canEditItemSettings } from "@/lib/permissions/item-settings";
 import { requirePermission } from "@/lib/permissions/require";
+import { can } from "@/lib/permissions/can";
 import { CreateMedicationForm } from "./CreateMedicationForm";
 import { MedicationsTable, type MedicationDefinitionRow } from "./MedicationsTable";
 
@@ -60,7 +61,9 @@ export default async function MedicationSettingsPage() {
           (docs/decisions/2026-10-08-cupboard-order-on-the-stock-half.md).
         */}
         <div className="mt-3 flex flex-wrap gap-2">
-          <ActionLink href="/management/medications" label={s.stockLink} icon={Boxes} iconOnlyOnMobile={false} />
+          {can(perms, "stock.medications", "read") && (
+            <ActionLink href="/management/medications" label={s.stockLink} icon={Boxes} iconOnlyOnMobile={false} />
+          )}
         </div>
       </div>
 

@@ -32,6 +32,7 @@ import {
   type UsageReading,
 } from "@/lib/management/stock-usage";
 import { requirePermission } from "@/lib/permissions/require";
+import { can } from "@/lib/permissions/can";
 
 /**
  * Management → Stock between counts. Each item's count history (0093) and
@@ -95,7 +96,7 @@ type Line = {
 };
 
 export default async function StockUsagePage(props: PageProps<"/management/stock-usage">) {
-  await requirePermission("stock.usage");
+  const { perms } = await requirePermission("stock.usage");
   const { t, locale } = await getT();
   const u = t.management.stockUsage;
   const searchParams = await props.searchParams;
@@ -492,10 +493,12 @@ export default async function StockUsagePage(props: PageProps<"/management/stock
       <div role="note" className="rounded border border-warning/40 bg-warning/10 px-3 py-2 text-sm text-foreground">
         <span className="font-semibold">{u.assumesLead}</span> {u.assumes}{" "}
         {firstReceipt ? u.recordedSince(formatDate(firstReceipt, locale)) : u.noneRecorded}{" "}
-        <Link href="/deliveries" className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
-          <Truck aria-hidden="true" className="h-4 w-4" />
-          {u.deliveriesLink}
-        </Link>
+        {can(perms, "stock.delivery") && (
+          <Link href="/deliveries" className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+            <Truck aria-hidden="true" className="h-4 w-4" />
+            {u.deliveriesLink}
+          </Link>
+        )}
       </div>
 
       {/* No larger-screen notice: opened by Management or the 2IC on a phone (decision 2026-10-07). */}

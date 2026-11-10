@@ -4,9 +4,10 @@ import { getT } from "@/lib/i18n/get-t";
 import { CreateClinicForm } from "./CreateClinicForm";
 import { ClinicsTable, type ClinicRow } from "./ClinicsTable";
 import { requirePermission } from "@/lib/permissions/require";
+import { can } from "@/lib/permissions/can";
 
 export default async function ClinicsAdminPage() {
-  await requirePermission("clinics.list", "edit");
+  const { perms } = await requirePermission("clinics.list", "edit");
   const { t } = await getT();
 
   const supabase = await createClient();
@@ -71,7 +72,7 @@ export default async function ClinicsAdminPage() {
         )}
 
         <CreateClinicForm />
-        <ClinicsTable clinics={clinics} />
+        <ClinicsTable clinics={clinics} canManageDoctors={can(perms, "clinics.doctors")} />
       </>
     </main>
   );

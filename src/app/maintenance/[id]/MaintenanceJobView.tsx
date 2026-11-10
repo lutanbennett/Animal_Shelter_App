@@ -441,7 +441,7 @@ function PhotoSection({
                 </a>
                 {canMakeMeme && kind === "image" && (
                   <div className="p-1">
-                    <MakeMemeLink source="maintenance" fileId={attachment.drive_file_id} />
+                    <MakeMemeLink source="maintenance" fileId={attachment.drive_file_id} canMake={canMakeMeme} />
                   </div>
                 )}
                 {canRemove && (

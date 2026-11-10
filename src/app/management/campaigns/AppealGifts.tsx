@@ -26,12 +26,15 @@ export function AppealGifts({
   appealId,
   closed,
   canMove,
+  canOpenReceipt = false,
   counted,
   movable,
 }: {
   appealId: string;
   closed: boolean;
   canMove: boolean;
+  /** donation.receipt edit: the Open link (/management/donations/[id] asks it). Defaults to false. */
+  canOpenReceipt?: boolean;
   counted: GiftItem[];
   movable: GiftItem[];
 }) {
@@ -96,7 +99,9 @@ export function AppealGifts({
                 <span className="w-28 text-muted">{formatDate(x.receivedOn, locale)}</span>
                 <span className="min-w-0 flex-1 text-foreground" lang="und">{x.donor}</span>
                 <span className="font-medium tabular-nums text-foreground">{amountText(x)}</span>
-                <Link href={`/management/donations/${x.id}`} className="inline-flex min-h-11 items-center text-primary underline">{g.open}</Link>
+                {canOpenReceipt && (
+                  <Link href={`/management/donations/${x.id}`} className="inline-flex min-h-11 items-center text-primary underline">{g.open}</Link>
+                )}
                 {canMove && !closed && (
                   <button type="button" disabled={pending} onClick={() => takeOut(x.id)} className="min-h-11 rounded border border-border px-3 text-sm text-foreground hover:bg-surface-hover disabled:opacity-60">
                     {g.moveOut}

@@ -23,6 +23,7 @@ export default async function EnclosurePage(
       canSeeResidents={can(perms, "resident.record", "read") || can(perms, "resident.who_and_where", "read")}
       canEditEnclosures={can(perms, "facility.enclosures")}
       canWriteMaintenance={can(perms, "maintenance.jobs")}
+      canOpenMaintenance={can(perms, "maintenance.jobs", "read")}
       maintenanceJobs={details.maintenanceJobs}
       tagOrigin={tagOrigin}
     />
