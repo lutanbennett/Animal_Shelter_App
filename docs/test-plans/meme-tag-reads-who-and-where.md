@@ -9,7 +9,7 @@
 |---|---|
 | Feature | meme-tag-reads-who-and-where |
 | Backlog item | `docs/backlog.md` → #t3n9r |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/meme-tag-reads-who-and-where` @ `C:\Development\Animal_Shelter_meme-tag-reads-who-and-where` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | pending |
 | Tested by / date | Claude, 2026-11-10 |
