@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "On a donation receipt, the Email draft link is gone. In its place is Copy email address, which puts just the donor's address on the clipboard in one press. Press Copy, press Share, then paste the address into the To line. Share still attaches the PDF with the subject and message already written.",
 ];
 
 /** Newest first. */

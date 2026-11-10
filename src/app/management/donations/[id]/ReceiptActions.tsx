@@ -28,10 +28,10 @@ const primary =
 /**
  * One receipt and what can be done with it. Sending is the Director's own:
  * the app never emails a donor (the shelter's sending setup reaches only
- * verified addresses, and a receipt should come from her). On a phone, Share
- * hands the PDF to the share sheet (Web Share API with files); on a PC,
- * Download plus an email draft, with the PDF attached by hand because a
- * mailto: link cannot attach.
+ * verified addresses, and a receipt should come from her). Share hands the PDF,
+ * with subject and message, to the share sheet; the Web Share API has no
+ * recipient field, so Copy puts the donor's address on the clipboard to paste
+ * into To. View and Download serve the PDF itself.
  */
 export function ReceiptCard({
   receipt,
@@ -102,10 +102,15 @@ export function ReceiptCard({
     }
   }
 
-  const mailto =
-    `mailto:${encodeURIComponent(donorEmail ?? "")}` +
-    `?subject=${encodeURIComponent(d.emailSubject(receipt.number))}` +
-    `&body=${encodeURIComponent(d.emailBodyNoFile(donorName, receipt.number))}`;
+  async function copyEmail() {
+    setMessage(null);
+    try {
+      await navigator.clipboard.writeText(donorEmail ?? "");
+      setMessage({ kind: "ok", text: d.emailCopied });
+    } catch {
+      setMessage({ kind: "error", text: d.copyFailed });
+    }
+  }
 
   async function confirmVoid() {
     if (!reason.trim()) {
@@ -134,11 +139,10 @@ export function ReceiptCard({
         {live && (
           <>
             <button type="button" onClick={share} className={button} title={d.shareHint}>{d.share}</button>
-            <a href={mailto} className={button} title={d.emailHint}>{d.email}</a>
+            {donorEmail && <button type="button" onClick={copyEmail} className={button}>{d.copyEmail}</button>}
           </>
         )}
       </div>
-      {live && <p className="text-xs text-muted">{d.emailHint}</p>}
 
       <p className="text-sm">
         {receipt.driveFileId ? (
