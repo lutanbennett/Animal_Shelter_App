@@ -91,6 +91,13 @@ const en = {
       `"${p.table}.${p.column}" is not a label that can be translated. Reload the page and try again.`,
     "label.no_proposal_waiting": () =>
       "There is no proposed Thai waiting for this label any more. Someone may have approved or discarded it already; reload the page to see where it stands.",
+    "photo.profile_not_allowed": () => "Your access does not include choosing a profile photo.",
+    "photo.not_this_residents": () => "That photo does not belong to this resident. Reload the page and try again.",
+    "photo.profile_is_medical": () => "A Medical photo cannot be the profile photo.",
+    "photo.profile_not_a_photo": () => "Only a photo can be the profile photo, not a video.",
+    "photo.profile_not_approved": () => "Only a photo approved for the public site can be the profile photo.",
+    "photo.remove_not_allowed": () => "Your access does not include removing photos.",
+    "photo.not_found": () => "That photo was not found. It may already have been removed; reload the page to see where it stands.",
   },
 
   // The notice a desktop-only Settings/Management page shows on a phone

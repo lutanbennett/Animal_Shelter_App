@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { dbRefusal } from "@/lib/db-refusal";
 import { runWriteAction, type ActionResult } from "@/lib/action-result";
 import { createClient } from "@/lib/supabase/server";
 import { ensureResidentPhotosFolder, getDriveClient } from "@/lib/google/drive";
@@ -70,7 +71,7 @@ export async function deletePhoto(
     );
 
     if (error) {
-      return { ok: false, error: error.message };
+      return dbRefusal("residents.deletePhoto", error, t);
     }
 
     if (driveFileId) {
