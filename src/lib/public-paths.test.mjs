@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { isPublicPath, isPublicPage, isEdgeCachedPage } from "./public-paths.ts";
+import { isPublicPath, isPublicPage, isEdgeCachedPage, thPathRest } from "./public-paths.ts";
 
 // The dangerous direction is a path wrongly treated as public, so the "not public"
 // lists are the longer ones. All values are written out here, not read from the module.
@@ -60,4 +60,23 @@ test("website off: the website pages a signed-in login is turned away from", asy
   for (const p of ["/", "/privacy", "/privacy/x", "/r/CODE1", "/e/12", "/no-access", "/home", "/login", "/residents", "/api/photos/a", "/adoptive", ""]) {
     assert.equal(isWebsitePageWhenOff(p), false, JSON.stringify(p));
   }
+});
+
+test("thPathRest: /th/ maps only a public PAGE to its bare twin", () => {
+  assert.equal(thPathRest("/th"), "/");
+  assert.equal(thPathRest("/th/"), "/");
+  assert.equal(thPathRest("/th/adopt"), "/adopt");
+  assert.equal(thPathRest("/th/adopt/12"), "/adopt/12");
+  assert.equal(thPathRest("/th/r/CODE1"), "/r/CODE1");
+  // bare addresses say nothing about language
+  for (const p of ["/", "/adopt", "/privacy"]) assert.equal(thPathRest(p), null, p);
+  // staff pages, non-page public paths and look-alikes are untouched
+  for (const p of ["/th/bills", "/th/medical/diets", "/th/residents", "/th/login", "/th/api/photos/x", "/th/th/adopt", "/thailand", "/th2/adopt", "/thx", "/TH/adopt"]) {
+    assert.equal(thPathRest(p), null, p);
+  }
+});
+
+test("edge cache: a /th/ twin caches exactly when its bare page does", () => {
+  for (const p of ["/th", "/th/adopt", "/th/our-work/abc"]) assert.equal(isEdgeCachedPage(thPathRest(p) ?? p), true, p);
+  for (const p of ["/th/campaigns", "/th/services", "/th/r/CODE1", "/th/e/1"]) assert.equal(isEdgeCachedPage(thPathRest(p) ?? p), false, p);
 });

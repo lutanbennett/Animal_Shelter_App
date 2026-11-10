@@ -62,3 +62,11 @@ export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 export function localeCookie(locale: Locale): string {
   return `${localeCookieName}=${locale}; path=/; max-age=${LOCALE_COOKIE_MAX_AGE}; samesite=lax`;
 }
+
+/**
+ * Set by the proxy (never by a client) on a request whose PATH names a language
+ * (`/th/…`). A bare path sets nothing, so it falls through to the cookie and
+ * Accept-Language exactly as before. A header rather than a cookie, because a
+ * response that sets a cookie is never edge-cached (src/proxy.ts).
+ */
+export const localePathHeader = "x-locale-path";

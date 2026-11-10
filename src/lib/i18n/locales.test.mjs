@@ -28,3 +28,10 @@ test("an English or unknown phone gets no cookie", () => {
   assert.equal(initialLocaleCookie(undefined, "en-US"), null);
   assert.equal(initialLocaleCookie(undefined, undefined), null);
 });
+
+test("hard constraint (#t48xh): a bare address from a Thai phone with no cookie still starts Thai", () => {
+  // The proxy sets no path header for a bare address, so it falls through to this.
+  assert.equal(initialLocaleCookie(undefined, "th-TH,th;q=0.9,en;q=0.8"), "th");
+  // and a visitor who chose English with the toggle keeps it
+  assert.equal(initialLocaleCookie("en", "th-TH,th;q=0.9,en;q=0.8"), null);
+});
