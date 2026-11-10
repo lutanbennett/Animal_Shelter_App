@@ -1,5 +1,26 @@
 # Planner handover — edition `737`, 2026-11-10
 
+**AMENDED 2026-11-10, AND THE REASON IS THIS DOCUMENT'S OWN LEAD FAULT, COMMITTED BY THIS EDITION, FOR
+THE THIRD EDITION RUNNING.** It said batch 3 was *"briefed and handed over with no session opened"* and
+claimed, in terms, *"Checked before writing this… no PR on any of them."* **All three had MERGED before
+this edition did** — #1462 at 12:04Z, #1463 at 12:06Z, #1464 at 12:11Z, against this edition's own merge
+at **12:27Z**.
+
+**WHAT WENT WRONG IS NOT THE RULE, IT IS WHERE THE RULE WAS APPLIED, AND THAT IS THE ONLY NEW THING
+HERE.** The check *was* run — **in an earlier turn, when the worktrees were created and the streams had
+not started.** The edition then quoted that result as though it were current. **`736` was amended for
+describing a batch's state from what the planner DID to it; `737` did the same thing with a real check
+that had simply gone stale in the twenty minutes it took to write the document.**
+
+**SO THE RULE IS NARROWED, AND THIS IS THE FORM THAT WOULD HAVE CAUGHT IT:** run
+`gh pr list --state all --head claude/<slug>` for every stream the edition mentions **in the same turn as
+the writing, and again immediately before `gh pr merge`.** A handover takes twenty minutes to write and
+a stream can merge in twenty-five; **"checked before writing" is not a property of the document unless
+the check is the last thing that happens.** **Check next edition whether this held.**
+
+**Everything below is edition `737` as first merged, with batch 3's results added at the end under
+`AMENDED`.**
+
 **This is a DELTA against `736` (and its amendment).** It says what changed, corrects its predecessor,
 and reports what each of `736`'s warnings and owed items actually did. Per-stream figures, batch
 composition, ports and the dependency notes live in `.plan-day.md` and are **not** reproduced here.
@@ -222,3 +243,79 @@ described work that had shipped; and **print the hand-over list straight after t
 medicine rows — small, carries a migration, and it has waited two plans for a free slot); **the first
 slice of `#t48xh`** if he wants the week spent; and **whatever batch 3's three PR bodies hand back** —
 on this plan's evidence that is where the best stream comes from.
+
+---
+
+## AMENDED — BATCH 3 HAS LANDED. ALL THREE MERGED, AND TWO QUESTIONS THIS EDITION LEFT OPEN ARE ANSWERED
+
+| stream | actual | band | verdict |
+|---|---|---|---|
+| `refusal-keys-group-3` | 158,821 | 160–195k | **under 1%** |
+| `thai-added-since` | 158,923 | 150–185k | **inside** |
+| `control-drive-24-pages` | 187,159 | 220–270k | **under 15% — but `finished=blocked`** |
+
+All `sonnet-5-5` / `low`, `compacted=no`, `rescoped=no`.
+
+**1. THE FLOOR QUESTION IS ANSWERED, AND THE ANSWER CHANGES EVERY BAND. Batch 3's floors
+(`tokens − messages`) are 85,360 · 85,360 · 85,425 — batch 2's figures again, not batch 1's.** So across
+nine streams: **six sit at ≈84.4–85.4k and only batch 1's three sit at 107.9–111.8k.** **The floor is
+≈85k and BATCH 1 WAS THE OUTLIER**, not the other way round. **Every band in this file built on a ~108k
+floor is about 23k too high.** This edition reported the gap as unexplained and told the next planner to
+re-derive it; **it has been re-derived, and the next planner should lower the floor-derived rows rather
+than carry three stale readings against six fresh ones.** **What made batch 1 heavy is still not
+established — do not invent a reason.**
+
+**2. THE DRIVE QUESTION IS ANSWERED BY A METHOD NOBODY PLANNED, AND IT IS THE BEST FINDING OF THE PLAN.**
+`control-drive-24-pages` **never clicked anything in the browser pane.** It fetched each page with
+`curl` using a one-card login's cookie and read the **server-rendered HTML** for every notice, button and
+link — *"it shows what the login is offered; it does not press anything"*. **22 of 24 pages, and it found
+TWO REAL FAULTS AND FIXED THEM**: the supplier page promised *"make it a Shelter Friend"* to a login
+without `friends.manage`, and Who-does-what drew *"Edit the features"* to every viewer although Features
+edit is Admin-only.
+
+**Put that beside the record: twelve sweeps of static CODE reading found nothing on these pages, and one
+render pass found two.** The difference is that a render shows what the login is actually **offered**,
+which is the fault shape, while reading code shows what the author intended. **So the method for this
+item is render-under-a-one-card-cookie, not pane-driving**, and pane-driving is needed only for
+click-only controls (save, archive, match-a-bill) and canvases. **Price the next one as a render pass,
+not a driven walkthrough** — and note that `read-opened-pages-drive` spent 171,388 to drive two pages
+while this spent 187,159 to render twenty-two. **It reported `finished=blocked` honestly because two
+pages and the click-only controls remain, so the figure is still not a clean band reading.**
+
+**3. WHAT ELSE THEY HANDED BACK**
+
+- **THE ONE THAI ASK NOW HAS A NUMBER, AND A PRIORITY INSIDE IT.** `scripts/list-thai-added.mjs` reports
+  **892 strings in 47 areas needing a read since 2026-11-01** — **25 "disagree" (the English changed and
+  the Thai did not), 699 new, 168 reworded.** **The 25 are the urgent ones**: the two sides no longer
+  agree and nothing else reports it. **Hand those 25 over first — 892 is not an ask, 25 is.**
+- **THE FALLBACK PROOF WAS DONE AND THE ANSWER IS NOT QUITE WHAT THE BRIEF ASSUMED.** `dbRefusal` sends
+  an unknown key to a **generic "something went wrong + reference"** — so it neither hides the refusal
+  nor shows a blank, **but it does not WIDEN to the raw sentence either**, which is what the brief called
+  the behaviour that must never regress. **Proved by unit test (`src/lib/db-refusal.test.mjs`), not in a
+  browser.** **Record it as: the fallback is safe but generic. Whether generic is good enough is a real
+  question and nobody has asked it.**
+- **A `pending:` whose reason is actually a finding.** Group 3 could not show a Thai refusal on screen
+  because **every page checks the card before making the call, so the refusal cannot be provoked
+  normally** — which is the buttons-follow-cards rule working. It called the four functions as service
+  role on dev instead and each returned its key. **That is a better answer than the brief asked for.**
+- **A USER-VISIBLE BEHAVIOUR CHANGE, SAID OUT LOUD BY THE STREAM:** `shelter_photo_folder` key errors now
+  answer with their own wording (403) instead of *"resident not found"*, and `set_shelter_photo_folder`'s
+  previously **ignored** error is now returned.
+- **The named collision happened and was handled.** All three streams touched
+  `src/lib/i18n/dictionaries/`; each said so in its PR. **Naming a likely collision in all three briefs
+  is the mitigation that fired.**
+- **`#p3q7m` FILED** — the website page-editor preview hint promising a Save button to a login with none.
+  The stream called it *"borderline"*; **the planner filed it as the fault shape**, because the test is
+  whether the login can do the thing, not how big the promise is.
+
+**4. OWED, ADDED BY THIS BATCH**
+
+- **`0351` MUST BE APPLIED TO PRODUCTION BEFORE THE NEXT DEPLOY**, and it now queues behind the
+  destructive `0348` along with `0350`. **Pin any apply with `--upto`.**
+- **`#3nuwy` METER after group 3: 11 functions / 21 messages keyed, 68 person-read still English**
+  (from 7 / 16 and 73). **The programme continues; groups remain.**
+- **`#79sqf` and `#t3n9r` are both still open and both correctly retitled** — what is left of `#79sqf`
+  is `/enclosures/[id]` with residents, the click-only controls, and `/memes/make`'s canvas.
+
+**5. FOR YOUR FIRST TURN, CORRECTED:** batch 3's PR bodies **are** read — they are #1462, #1463 and
+#1464, and the findings above are what they held. The rest of this edition's closing section stands.
