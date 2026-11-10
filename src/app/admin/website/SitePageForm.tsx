@@ -125,7 +125,7 @@ export function SitePageForm({
         />
         <details className="rounded border border-border px-3 py-2 text-sm">
           <summary className="cursor-pointer font-medium text-muted">{p.preview}</summary>
-          <p className="mb-2 mt-1 text-xs text-muted">{p.previewHint}</p>
+          {canEdit && <p className="mb-2 mt-1 text-xs text-muted">{p.previewHint}</p>}
           <SitePagePreview slug={page.slug} title={titleDraft} body={draft} context={previewContext} />
         </details>
         {translations.body && (
