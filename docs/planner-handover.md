@@ -137,8 +137,10 @@ Six samples sit inside ≈106.8–111.1k at Sonnet `low`.** **Re-derive it; neve
    **nothing is chasing them.** Named examples: `clinics/[id]/ClinicHub.tsx:476` (an edit link under a
    read gate), `memes/page.tsx:30` (ungated `/reels`), `management/stock-usage/page.tsx:495`,
    `enclosures/EnclosureGrid.tsx:250`, `EnclosureHub.tsx:219,256`, `admin/status/page.tsx:197,384,445`,
-   `MakeMemeLink.tsx:16`. **FILED BY THE PLANNER as its own item — this is the largest single pile of
-   card-access faults anyone has produced, and it is the first time the shape was found by machine.**
+   `MakeMemeLink.tsx:16`. **FILED BY THE PLANNER as `#d9k2w`, with all 24 grouped by area (Admin 5,
+   Medical 5, Contacts 5, Enclosures 3, Website 2, Money/stock 2, Social 2) — which is also how to split
+   them. This is the largest single pile of card-access faults anyone has produced, and it is the first
+   time the shape was found by machine rather than by walking pages.**
 2. **`#79sqf` IS NOT CLOSED and its title says so.** The check covers **links only**. **A notice cannot be
    caught statically** (F2's shape), and *control gated on a different activity than its action* (F3/F4)
    is not covered — that is **the 26 read-opened pages, one drive stream**, and it is the honest remainder.
@@ -219,7 +221,7 @@ planning FROM SCRATCH, not resuming.**
 **Batch 3 is briefed and handed over — `refusal-keys-photos` (3009), `unruled-activities-sheets` (3010),
 `brief-block-timeout` (3011). Read their PR bodies when they land; this planner has not.**
 
-**The natural first batch, in order:** **the 24 destination-activity faults** (filed as one item; they are
+**The natural first batch, in order:** **`#d9k2w`, the 24 destination-activity faults** (they are
 real, user-facing, machine-found and parked in a shrink-only allow-list, so they are the cheapest real
 value on the board — and the check will prove each fix); **`#t3n9r`** (a meme tag saves and reads back as
 *"No resident is tagged"* on all three routes, seen in a browser, one query to fix); and **the read-only
