@@ -7,6 +7,7 @@ import { cardsForTable, cardsOfTopic, holdsCard, mayViewAll, topicView, type Top
 import { CARDS, CARD_KEYS, type CardKey } from "@/lib/permissions/cards";
 import { entersApp, type Permissions } from "@/lib/permissions/can";
 import { loadPermissions } from "@/lib/permissions/load";
+import { showMenuForLogin } from "@/lib/menu/show-menu";
 import screenshotSizes from "@/lib/manual/screenshot-sizes.json";
 import { TocScroller } from "./TocScroller";
 import { UntilFound } from "./UntilFound";
@@ -64,12 +65,12 @@ const CALLOUT_STYLES: Record<
  * greyed answer rather than none (backlog, "A role-based manual").
  */
 export default async function ManualPage({ searchParams }: PageProps<"/manual">) {
-  const [{ view }, perms, { t }] = await Promise.all([searchParams, loadPermissions(), getT()]);
+  const [{ view }, perms, { t }, hasMenu] = await Promise.all([searchParams, loadPermissions(), getT(), showMenuForLogin()]);
   const c = t.manualPage;
   const showAll = mayViewAll(perms, view);
   const sections: ViewSection[] = manual.sections.map((section) => ({
     section,
-    topics: section.topics.map((topic) => ({ topic, view: topicView(topic, perms) })),
+    topics: section.topics.map((topic) => ({ topic, view: topicView(topic, perms, hasMenu) })),
   }));
   const myTopicCount = sections.reduce(
     (n, { topics }) => n + topics.filter((t) => t.view !== "notMine").length,

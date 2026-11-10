@@ -7,6 +7,7 @@ import { cardsForTable, mayViewAll } from "@/lib/manual/for-topic";
 import { CARDS, CARD_KEYS } from "@/lib/permissions/cards";
 import { loadPermissions } from "@/lib/permissions/load";
 import { getT } from "@/lib/i18n/get-t";
+import { showMenuForLogin } from "@/lib/menu/show-menu";
 import { PREBUILT_DIR, prebuiltName } from "@/lib/manual/prebuilt";
 
 /**
@@ -101,6 +102,7 @@ export async function GET(request: NextRequest) {
   if (!user) return new NextResponse((await getT()).t.uploads.errors.signInManual, { status: 401 });
 
   const perms = await loadPermissions();
+  const hasMenu = await showMenuForLogin();
   // The whole manual is Admin's alone: ?view=all from anyone else is ignored, and a login whose cards open nothing
   // is not handed it either (that used to be the case).
   const all = mayViewAll(perms, params.get("view")) || perms?.isAdmin === true;
@@ -126,7 +128,7 @@ export async function GET(request: NextRequest) {
 
   const images: ManualImages = new Map();
   if (withImages) {
-    for (const src of new Set(screenshotSrcs(manual, all, perms))) {
+    for (const src of new Set(screenshotSrcs(manual, all, perms, hasMenu))) {
       const bytes = await loadImage(src, request.nextUrl.origin);
       if (bytes) images.set(src, bytes);
     }
@@ -135,6 +137,6 @@ export async function GET(request: NextRequest) {
   // The card names and their one-liners below the heading already come from
   // the reader's dictionary, so the heading over them does too: a Thai reader
   // saw บัตรงานโดยสรุป on /manual and "Cards at a glance" on the PDF of it.
-  const pdf = await renderManualPdf(manual, { cards, cardLabels: new Map(CARD_KEYS.map((k) => [k, CARDS[k].label(t)] as const)), cardsHeading: t.manualPage.cardsAtAGlance, all, images, perms });
+  const pdf = await renderManualPdf(manual, { cards, cardLabels: new Map(CARD_KEYS.map((k) => [k, CARDS[k].label(t)] as const)), cardsHeading: t.manualPage.cardsAtAGlance, all, images, perms, hasMenu });
   return pdfResponse(pdf, `lanna-care-${all ? "manual" : "manual-my-cards"}.pdf`);
 }

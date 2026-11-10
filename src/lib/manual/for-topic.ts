@@ -48,7 +48,9 @@ export type TopicView = "mine" | "unassigned" | "notMine";
  * How a topic stands for this reader. No permissions at all (not signed in as an app user) sees everything, as before.
  * Apart from the page because scripts/acceptance-matrix.mjs loads this file directly.
  */
-export function topicView(topic: ManualTopic, perms: Permissions | null | undefined): TopicView {
+export function topicView(topic: ManualTopic, perms: Permissions | null | undefined, hasMenu = true): TopicView {
+  // A topic about the menu is not for a login that has none (showMenuForLogin() is true for Admin, so Admin keeps it).
+  if (topic.needsMenu && !hasMenu) return "notMine";
   const own = cardsOfTopic(topic);
   if (own.kind === "unassigned") return "unassigned";
   if (!perms || perms.isAdmin || own.kind === "everyone") return "mine";
@@ -56,8 +58,8 @@ export function topicView(topic: ManualTopic, perms: Permissions | null | undefi
 }
 
 /** Whether the copy shows it by default: the reader's own, and the unassigned, which are never hidden. */
-export function isForTopic(topic: ManualTopic, perms: Permissions | null | undefined): boolean {
-  return topicView(topic, perms) !== "notMine";
+export function isForTopic(topic: ManualTopic, perms: Permissions | null | undefined, hasMenu = true): boolean {
+  return topicView(topic, perms, hasMenu) !== "notMine";
 }
 
 /**

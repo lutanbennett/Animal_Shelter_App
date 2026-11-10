@@ -55,6 +55,12 @@ export type ManualTopic = {
   activity?: ActivityKey;
   /** "read" when the topic is for whoever can look at the activity, not only change it (Enclosures, Maintenance board…). */
   activityLevel?: "read";
+  /**
+   * The topic describes the left-hand menu, so a login with no menu (roles.show_menu off for every role it holds) is not
+   * shown it. Answered by showMenuForLogin() and passed to topicView(); a property of the role, never its name.
+   * docs/decisions/2026-11-10-manual-topics-need-a-menu.md
+   */
+  needsMenu?: true;
   /** Where in the app it lives, e.g. "Residents → New resident (intake)". */
   path?: string;
   intro?: string;

@@ -101,6 +101,14 @@ test("?view=all is honoured for Admin alone, on the page and on the PDF route", 
   assert.equal(mayViewAll(null, "all"), false);
 });
 
+test("a topic about the menu is hidden from a login with no menu, and nobody else's view changes", () => {
+  const t = { id: "m", title: "m", everyone: true, needsMenu: true };
+  assert.equal(topicView(t, holding("record_weight"), false), "notMine");
+  assert.equal(topicView(t, holding("record_weight"), true), "mine");
+  assert.equal(topicView(t, holding("record_weight")), "mine");
+  assert.equal(topicView({ id: "n", title: "n", everyone: true }, holding("record_weight"), false), "mine");
+});
+
 test("Cards at a glance lists only the cards held; Admin sees the whole catalogue", () => {
   const two = cardsForTable(holding("record_weight", "add_medical_photos"), CARD_KEYS);
   assert.ok(two.includes("record_weight") && two.includes("add_medical_photos"));

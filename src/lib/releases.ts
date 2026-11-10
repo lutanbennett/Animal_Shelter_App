@@ -70,6 +70,7 @@ export const noteCards = (note: ReleaseNote): CardKey[] | undefined =>
 
 /** Written by feature PRs; becomes the next release when one is cut. */
 export const unreleased: ReleaseNote[] = [
+  "The user manual no longer shows Finding your way around (the menu) or Release notes to a login that has no menu, since they describe a menu that login does not have. A new topic, Your home screen and the header, tells that login about its tiles, the header, language and Sign out. Confirming a delete now gives examples anyone can meet instead of Admin-only ones.",
   "Buttons and links that lead to a page your login is not allowed to open are no longer shown. Across the clinic, enclosure, contacts, diets, medications, donations, stock, memes and system status pages, you now only see a link when the page it opens would let you in.",
   {
     text: "Settings → Recent changes now names a card by its title, as Who does what does, instead of by its internal key. A card handed to a role reads \"Adoption news\" rather than \"adoption_news\", and a change to what a card allows starts with the card's title. A card the app no longer knows still shows its key, so an old row still reads.",

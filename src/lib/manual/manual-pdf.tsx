@@ -82,14 +82,14 @@ export type ManualImages = Map<string, Uint8Array>;
 const SIZES: Record<string, { width: number; height: number } | undefined> = screenshotSizes;
 
 /** Whether a topic is in the copy: everything, or the reader's own. */
-export function topicInCopy(topic: ManualTopic, all: boolean, perms?: Permissions | null) {
-  return all || isForTopic(topic, perms);
+export function topicInCopy(topic: ManualTopic, all: boolean, perms?: Permissions | null, hasMenu = true) {
+  return all || isForTopic(topic, perms, hasMenu);
 }
 
 /** The `src`s the copy will draw, so the caller can fetch just those. */
-export function screenshotSrcs(manual: Manual, all: boolean, perms?: Permissions | null): string[] {
+export function screenshotSrcs(manual: Manual, all: boolean, perms?: Permissions | null, hasMenu = true): string[] {
   return manual.sections.flatMap((s) =>
-    s.topics.filter((t) => t.screenshot && topicInCopy(t, all, perms)).map((t) => t.screenshot!.src),
+    s.topics.filter((t) => t.screenshot && topicInCopy(t, all, perms, hasMenu)).map((t) => t.screenshot!.src),
   );
 }
 
@@ -113,7 +113,7 @@ function Shot({ topic, images }: { topic: ManualTopic; images: ManualImages }) {
   );
 }
 
-function ManualDocument({ manual, cards, cardLabels, cardsHeading, all, images, perms }: { manual: Manual; cards: readonly ManualCard[]; cardLabels?: ReadonlyMap<CardKey, string>; cardsHeading: string; all: boolean; images: ManualImages; perms?: Permissions | null }) {
+function ManualDocument({ manual, cards, cardLabels, cardsHeading, all, images, perms, hasMenu }: { manual: Manual; cards: readonly ManualCard[]; cardLabels?: ReadonlyMap<CardKey, string>; cardsHeading: string; all: boolean; images: ManualImages; perms?: Permissions | null; hasMenu?: boolean }) {
   const labelOf = new Map<CardKey, string>([...(cardLabels ?? []), ...cards.map((c) => [c.key, c.label] as [CardKey, string])]);
   const scope = all ? "Full edition" : "Your cards' edition";
   return (
@@ -135,7 +135,7 @@ function ManualDocument({ manual, cards, cardLabels, cardsHeading, all, images, 
         </View>
 
         {manual.sections.map((section) => {
-          const topics = section.topics.filter((t) => topicInCopy(t, all, perms));
+          const topics = section.topics.filter((t) => topicInCopy(t, all, perms, hasMenu));
           if (topics.length === 0) return null;
           return (
             <View key={section.id} break>
@@ -196,7 +196,7 @@ function TopicCardsLine({ topic, labelOf, filter }: { topic: ManualTopic; labelO
 /** Renders the manual to PDF bytes. No permissions known = everything. */
 export async function renderManualPdf(
   manual: Manual,
-  options: { cards: readonly ManualCard[]; cardLabels?: ReadonlyMap<CardKey, string>; cardsHeading: string; all: boolean; images: ManualImages; perms?: Permissions | null },
+  options: { cards: readonly ManualCard[]; cardLabels?: ReadonlyMap<CardKey, string>; cardsHeading: string; all: boolean; images: ManualImages; perms?: Permissions | null; hasMenu?: boolean },
 ): Promise<Uint8Array> {
   const buffer = await renderToBuffer(<ManualDocument manual={manual} {...options} />);
   return new Uint8Array(buffer);
