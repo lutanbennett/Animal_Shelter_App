@@ -95,6 +95,8 @@ export function ClinicHub({
   doctors,
   canManage,
   canOpenVisits,
+  canEditVisits = false,
+  canManageDoctors = false,
   canBook,
   now,
 }: {
@@ -105,6 +107,10 @@ export function ClinicHub({
   canManage: boolean;
   /** medical.visits read: the Schedule rows' Edit link (the visit page refuses without it). */
   canOpenVisits: boolean;
+  /** medical.visits edit: the Schedule rows' Edit link (/clinic-visits/[id]/edit asks edit). Defaults to false. */
+  canEditVisits?: boolean;
+  /** clinics.doctors edit: the Manage doctors link (/management/clinics/[id]/doctors asks it). Defaults to false. */
+  canManageDoctors?: boolean;
   /** visit.book: the Book a vet appointment button (the form it opens refuses without it). */
   canBook: boolean;
   /** Server-computed timestamp (ISO string) — avoids calling Date.now() during render. */
@@ -472,12 +478,14 @@ export function ClinicHub({
                           >
                             {t.vetVisits.record.view}
                           </Link>
-                          <Link
-                            href={`/clinic-visits/${visit.id}/edit`}
-                            className="inline-flex min-h-11 items-center rounded border border-border bg-background px-3 text-sm font-medium text-primary hover:bg-surface-hover"
-                          >
-                            {t.common.edit}
-                          </Link>
+                          {canEditVisits && (
+                            <Link
+                              href={`/clinic-visits/${visit.id}/edit`}
+                              className="inline-flex min-h-11 items-center rounded border border-border bg-background px-3 text-sm font-medium text-primary hover:bg-surface-hover"
+                            >
+                              {t.common.edit}
+                            </Link>
+                          )}
                         </div>
                       )}
                     </li>
@@ -512,7 +520,7 @@ export function ClinicHub({
             {t.vets.hub.doctors.heading}{" "}
             <span className="text-muted">({activeDoctors.length})</span>
           </h2>
-          {canManage && (
+          {canManageDoctors && (
             <ActionLink href={`/management/clinics/${clinic.id}/doctors`} label={t.vets.manageDoctors} icon={ACTION_ICONS.manage} iconOnlyOnMobile={false} />
           )}
         </div>

@@ -7,6 +7,7 @@ import { BackLink } from "@/components/BackLink";
 import { AddDoctorForm } from "./AddDoctorForm";
 import { DoctorsTable, type DoctorRow, type ElsewhereDoctor } from "./DoctorsTable";
 import { requirePermission } from "@/lib/permissions/require";
+import { can } from "@/lib/permissions/can";
 
 type PersonRow = {
   id: string;
@@ -96,14 +97,16 @@ export default async function ClinicDoctorsPage(
 
   return (
     <main className="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
-      <BackLink href="/management/clinics">{d.back}</BackLink>
+      {can(perms, "clinics.list") && <BackLink href="/management/clinics">{d.back}</BackLink>}
       <div>
         <h1 className="text-2xl font-semibold text-foreground">{d.title(localLabel(locale, clinic.name, clinic.name_th))}</h1>
         <p className="mt-1 max-w-3xl text-sm text-muted">
           {d.subtitle}{" "}
-          <Link href={`/clinics/${clinic.id}`} className="text-primary hover:underline">
-            {d.viewHub}
-          </Link>
+          {can(perms, "clinics.list", "read") && (
+            <Link href={`/clinics/${clinic.id}`} className="text-primary hover:underline">
+              {d.viewHub}
+            </Link>
+          )}
         </p>
       </div>
 

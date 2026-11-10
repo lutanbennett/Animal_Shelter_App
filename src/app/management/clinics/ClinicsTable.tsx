@@ -25,8 +25,12 @@ export type ClinicRow = {
 const inputClass =
   "w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
 
-function ClinicRowItem({ clinic }: { clinic: ClinicRow }) {
+function ClinicRowItem({ clinic, canManageDoctors = false }: { clinic: ClinicRow; canManageDoctors?: boolean }) {
   const { t } = useI18n();
+  const doctorLabel =
+    clinic.doctor_count > 0
+      ? t.management.vets.table.doctorCount(clinic.doctor_count)
+      : t.management.vets.table.noDoctors;
   const confirm = useConfirm();
   const [name, setName] = useState(clinic.name);
   // One per action: a request id kept from an unknown save must never reach another action.
@@ -141,14 +145,16 @@ function ClinicRowItem({ clinic }: { clinic: ClinicRow }) {
           </Link>
         </td>
         <td className="px-4 py-2">
-          <Link
-            href={`/management/clinics/${clinic.id}/doctors`}
-            className="whitespace-nowrap text-primary hover:underline"
-          >
-            {clinic.doctor_count > 0
-              ? t.management.vets.table.doctorCount(clinic.doctor_count)
-              : t.management.vets.table.noDoctors}
-          </Link>
+          {canManageDoctors ? (
+            <Link
+              href={`/management/clinics/${clinic.id}/doctors`}
+              className="whitespace-nowrap text-primary hover:underline"
+            >
+              {doctorLabel}
+            </Link>
+          ) : (
+            <span className="whitespace-nowrap text-muted">{doctorLabel}</span>
+          )}
         </td>
         <td className="px-4 py-2">
           <div className="flex items-center gap-2">
@@ -209,7 +215,7 @@ function ClinicRowItem({ clinic }: { clinic: ClinicRow }) {
   );
 }
 
-export function ClinicsTable({ clinics }: { clinics: ClinicRow[] }) {
+export function ClinicsTable({ clinics, canManageDoctors = false }: { clinics: ClinicRow[]; canManageDoctors?: boolean }) {
   const { t } = useI18n();
 
   return (
@@ -227,7 +233,7 @@ export function ClinicsTable({ clinics }: { clinics: ClinicRow[] }) {
         </thead>
         <tbody className="divide-y divide-border">
           {clinics.map((clinic) => (
-            <ClinicRowItem key={clinic.id} clinic={clinic} />
+            <ClinicRowItem key={clinic.id} clinic={clinic} canManageDoctors={canManageDoctors} />
           ))}
           {clinics.length === 0 && (
             <tr>

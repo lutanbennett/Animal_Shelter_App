@@ -44,18 +44,6 @@
       "why": "no gate; opened by admin/website which do not imply projects.folders:read"
     },
     {
-      "file": "src/app/clinics/[id]/ClinicHub.tsx",
-      "target": "/clinic-visits/${…}/edit",
-      "found": "2026-11-09",
-      "why": "gated on medical.visits:read; destination asks medical.visits:edit"
-    },
-    {
-      "file": "src/app/clinics/[id]/ClinicHub.tsx",
-      "target": "/management/clinics/${…}/doctors",
-      "found": "2026-11-09",
-      "why": "gated on clinics.list:edit; destination asks clinics.doctors:edit"
-    },
-    {
       "file": "src/app/enclosures/EnclosureGrid.tsx",
       "target": "/maintenance",
       "found": "2026-11-09",
@@ -78,24 +66,6 @@
       "target": "/management/donations/${…}",
       "found": "2026-11-09",
       "why": "no gate; opened by management/campaigns/[id] which do not imply donation.receipt:edit"
-    },
-    {
-      "file": "src/app/management/clinics/ClinicsTable.tsx",
-      "target": "/management/clinics/${…}/doctors",
-      "found": "2026-11-09",
-      "why": "no gate; opened by management/clinics which do not imply clinics.doctors:edit"
-    },
-    {
-      "file": "src/app/management/clinics/[id]/doctors/page.tsx",
-      "target": "/management/clinics",
-      "found": "2026-11-09",
-      "why": "no gate; opened by management/clinics/[id]/doctors which do not imply clinics.list:edit"
-    },
-    {
-      "file": "src/app/management/clinics/[id]/doctors/page.tsx",
-      "target": "/clinics/${…}",
-      "found": "2026-11-09",
-      "why": "no gate; opened by management/clinics/[id]/doctors which do not imply clinics.list:read"
     },
     {
       "file": "src/app/management/contacts/ContactsTable.tsx",
