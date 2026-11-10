@@ -151,6 +151,7 @@ export default async function AppealPage(props: PageProps<"/management/campaigns
               appealId={appeal.id}
               closed={appeal.status === "closed"}
               canMove={canSeeGifts}
+              canOpenReceipt={can(perms, "donation.receipt")}
               counted={(counted?.data ?? []).map(giftItem)}
               movable={(movable?.data ?? []).map(giftItem)}
             />

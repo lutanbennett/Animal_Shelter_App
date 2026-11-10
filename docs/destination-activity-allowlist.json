@@ -1,29 +1,4 @@
 {
   "rule": "A link that offers a page the same login is refused (backlog #79sqf). scripts/check-destination-activity.mjs fails on any finding not listed here and on any entry that is no longer a finding. Each entry is an unfixed fault found by the check on its first run, to be FIXED and the entry deleted, never a ruling that it is fine. Never add an entry to make a new link pass: fix the link (draw it only when can() asks the destination activity).",
-  "entries": [
-    {
-      "file": "src/app/management/campaigns/AppealGifts.tsx",
-      "target": "/management/donations/${…}",
-      "found": "2026-11-09",
-      "why": "no gate; opened by management/campaigns/[id] which do not imply donation.receipt:edit"
-    },
-    {
-      "file": "src/app/management/stock-usage/page.tsx",
-      "target": "/deliveries",
-      "found": "2026-11-09",
-      "why": "no gate; opened by management/stock-usage which do not imply stock.delivery:edit"
-    },
-    {
-      "file": "src/app/memes/page.tsx",
-      "target": "/reels",
-      "found": "2026-11-09",
-      "why": "no gate; opened by memes which do not imply social.reels:read"
-    },
-    {
-      "file": "src/components/MakeMemeLink.tsx",
-      "target": "/memes/make",
-      "found": "2026-11-09",
-      "why": "no gate; opened by outreach/[id]/edit, maintenance/[id] which do not imply social.library:edit"
-    }
-  ]
+  "entries": []
 }

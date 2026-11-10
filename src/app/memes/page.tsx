@@ -27,7 +27,9 @@ export default async function MemesPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           {/* The way in to the reels library: the Meme library card opens /memes, and a card opens one page (0322, reels-app). Same read the page itself needs. */}
-          <ActionLink href="/reels" label={t.reels.title} icon={Film} iconOnlyOnMobile={false} />
+          {can(perms, "social.reels", "read") && (
+            <ActionLink href="/reels" label={t.reels.title} icon={Film} iconOnlyOnMobile={false} />
+          )}
           {can(perms, "social.library") && (
             <>
               <ActionLink href="/memes/make" label={t.memes.maker.button} icon={ACTION_ICONS.add} variant="primary" iconOnlyOnMobile={false} />

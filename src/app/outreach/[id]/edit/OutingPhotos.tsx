@@ -59,7 +59,7 @@ export function OutingPhotos({ outingId, photos, canMakeMeme = false }: { outing
                   alt={p.file_name ?? ""}
                   className="aspect-square w-full rounded object-cover"
                 />
-                {canMakeMeme && /.(jpe?g|png|webp)$/i.test(p.file_name ?? "") && <MakeMemeLink source="outing" fileId={p.drive_file_id} />}
+                {canMakeMeme && /.(jpe?g|png|webp)$/i.test(p.file_name ?? "") && <MakeMemeLink source="outing" fileId={p.drive_file_id} canMake={canMakeMeme} />}
                 <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-foreground">
                   <input
                     type="checkbox"
