@@ -138,12 +138,20 @@ export const ENTRIES = {
       expect: "A PDF opens holding the topics for your role, and it can be saved or printed.",
     },
   ],
+  "home-screen": [
+    {
+      activity: "Start from the home screen",
+      device: "both",
+      do: "Look at the home screen and the header, then read the Your home screen and the header topic in the manual.",
+      expect: "The home screen has a tile for each card held, and the User manual last. A login with no menu also finds Release notes and Change password as tiles. The header shows the logo, email, Assistant, language switch and Sign out.",
+    },
+  ],
   navigation: [
     {
-      activity: "Find your way around",
+      activity: "Find your way around with the menu",
       device: "both",
-      do: "Look at the home screen. If the login has a menu, open it (the ☰ button on a phone) and read it item by item.",
-      expect: "The home screen has a tile for each card held, and the User manual last. A login with a menu sees only the pages its cards open, with Manual, Release notes and Change password last, under a dividing line. A login without a menu reaches everything by its tiles.",
+      do: "If the login has a menu, open it (the ☰ button on a phone) and read it item by item. A login with no menu does not see this topic in the manual.",
+      expect: "A login with a menu sees only the pages its cards open, with Manual, Release notes and Change password last, under a dividing line.",
       notes: MENU,
     },
   ],

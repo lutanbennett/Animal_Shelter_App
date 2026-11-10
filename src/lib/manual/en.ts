@@ -101,7 +101,7 @@ const manual: Manual = {
           everyone: true,
           title: "Confirming a delete, and working offline",
           steps: [
-            "Anything that can't be taken back — deleting or removing a record, archiving or deleting a login, issuing a temporary password, resetting 2-step verification — asks first, in a box that names exactly what you're about to lose (\"Delete zone \\\"Quarantine\\\"?\"). The Cancel button is the one selected, so pressing Enter by accident cancels; tap the red button, or Delete, to go ahead. Esc or tapping outside the box also cancels.",
+            "Anything that can't be taken back — deleting a photo, a note or a record, say, or removing something you added — asks first, in a box that names exactly what you're about to lose. The Cancel button is the one selected, so pressing Enter by accident cancels; tap the red button, or Delete, to go ahead. Esc or tapping outside the box also cancels.",
             "If the app can't reach the internet, a red bar across the top says \"You're offline, changes will not save.\" It appears when your device drops its connection and also when the Wi-Fi is connected but nothing gets through, which a phone often can't tell the difference between. It clears by itself once something goes through. Until then, don't rely on anything you just entered: wait for the bar to go, then try the change again.",
           ],
         },
@@ -164,17 +164,28 @@ const manual: Manual = {
           ],
         },
         {
-          id: "navigation",
+          id: "home-screen",
           everyone: true,
-          title: "Finding your way around",
+          title: "Your home screen and the header",
           intro:
-            "Your home screen is where you start: one tile for each card you hold, and the User manual last. Tap a tile to open that page.",
+            "Your home screen is where you start: one tile for each card you hold, and the User manual last. Tap a tile to open that page. Whatever your login can open, the tiles are a way in to it.",
           steps: [
-            "Some logins also have a menu: down the left on a computer, or behind the ☰ button at the top left on a phone (tap outside it to close). It lists the same pages the tiles open, each with the same icon, and the entry stays lit while you are on a page inside it. Whether your login has a menu is chosen for it on Who does what. If you see none, the tiles on your home screen are the way into everything you can open.",
+            "Release notes, Change password and this manual are tiles on the home screen for a login with no menu. A login that has a menu finds them at the bottom of it too.",
             "Operations, Management and Settings, where your cards open pages in them, each open a front page of tiles, one for each page inside that you can open. Residents does the same for a resident's record.",
-            "For a login that has a menu, the things you only need now and then sit at the bottom of it, under a dividing line: this manual, Release notes, Change password and, for a login that manages accounts, Security. A login with no menu finds this manual, Release notes and Change password as tiles on its home screen instead.",
             "The LCA logo and your email are in the header, with the Assistant button, the language switch and Sign out. Tap the logo to see the public website as a visitor does — it opens in a new tab so you don't lose your place.",
             "Open a page your cards don't include — a link someone sent you, say — and you see You don't have access to this page, still inside the app, with a button back to a page you can use. If you need that page for your work, ask a manager or an admin to give you the card for it.",
+          ],
+        },
+        {
+          id: "navigation",
+          everyone: true,
+          needsMenu: true,
+          title: "Finding your way around: the menu",
+          intro:
+            "Some logins also have a menu beside the home screen. It lists the same pages the tiles open.",
+          steps: [
+            "The menu is down the left on a computer, or behind the ☰ button at the top left on a phone (tap outside it to close). Each entry has the same icon as its tile, and the entry stays lit while you are on a page inside it.",
+            "The things you only need now and then sit at the bottom of the menu, under a dividing line: this manual, Release notes, Change password and, for a login that manages accounts, Security.",
           ],
           screenshot: {
             src: "/manual/nav-mobile.png",
@@ -205,6 +216,7 @@ const manual: Manual = {
         {
           id: "release-notes",
           everyone: true,
+          needsMenu: true,
           title: "What changed: release notes",
           path: "Release notes",
           intro:
