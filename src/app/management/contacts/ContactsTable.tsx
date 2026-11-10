@@ -51,7 +51,7 @@ function placeFields(contact: Contact) {
 const inputClass =
   "w-full rounded border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-primary";
 
-function ContactRowItem({ contact }: { contact: ContactRow }) {
+function ContactRowItem({ contact, canBrowse = false }: { contact: ContactRow; canBrowse?: boolean }) {
   const { t, locale } = useI18n();
   const confirm = useConfirm();
   const c = t.management.contacts;
@@ -143,12 +143,16 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
             />
           ) : (
             <div className="flex flex-col gap-1">
-              <Link
-                href={`/contacts/${contact.id}`}
-                className={`font-medium hover:underline ${archived ? "text-muted" : "text-foreground"}`}
-              >
-                {contact.name}
-              </Link>
+              {canBrowse ? (
+                <Link
+                  href={`/contacts/${contact.id}`}
+                  className={`font-medium hover:underline ${archived ? "text-muted" : "text-foreground"}`}
+                >
+                  {contact.name}
+                </Link>
+              ) : (
+                <span className={`font-medium ${archived ? "text-muted" : "text-foreground"}`}>{contact.name}</span>
+              )}
               {contact.friend_published !== null && (
                 <FriendBadge
                   label={t.shelterFriends.badge}
@@ -317,17 +321,28 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
         </td>
         <td className="px-4 py-2 text-muted">
           {contact.type === CARER_CONTACT_TYPE || contact.placement_count > 0 ? (
-            <Link
-              href={`/contacts/${contact.id}`}
-              className="flex flex-col whitespace-nowrap hover:underline"
-            >
-              <span className={contact.in_care_count > 0 ? "text-success" : undefined}>
-                {c.table.inCare(contact.in_care_count)}
-              </span>
-              <span className="text-xs">
-                {c.table.placementCount(contact.placement_count)}
-              </span>
-            </Link>
+            canBrowse ? (
+              <Link
+                href={`/contacts/${contact.id}`}
+                className="flex flex-col whitespace-nowrap hover:underline"
+              >
+                <span className={contact.in_care_count > 0 ? "text-success" : undefined}>
+                  {c.table.inCare(contact.in_care_count)}
+                </span>
+                <span className="text-xs">
+                  {c.table.placementCount(contact.placement_count)}
+                </span>
+              </Link>
+            ) : (
+              <div className="flex flex-col whitespace-nowrap">
+                <span className={contact.in_care_count > 0 ? "text-success" : undefined}>
+                  {c.table.inCare(contact.in_care_count)}
+                </span>
+                <span className="text-xs">
+                  {c.table.placementCount(contact.placement_count)}
+                </span>
+              </div>
+            )
           ) : (
             t.common.dash
           )}
@@ -394,7 +409,7 @@ function ContactRowItem({ contact }: { contact: ContactRow }) {
   );
 }
 
-export function ContactsTable({ contacts }: { contacts: ContactRow[] }) {
+export function ContactsTable({ contacts, canBrowse = false }: { contacts: ContactRow[]; /** contacts.browse edit: the /contacts/[id] links. Defaults to false. */ canBrowse?: boolean }) {
   const { t } = useI18n();
   const h = t.management.contacts.table;
 
@@ -414,7 +429,7 @@ export function ContactsTable({ contacts }: { contacts: ContactRow[] }) {
         </thead>
         <tbody className="divide-y divide-border">
           {contacts.map((contact) => (
-            <ContactRowItem key={contact.id} contact={contact} />
+            <ContactRowItem key={contact.id} contact={contact} canBrowse={canBrowse} />
           ))}
           {contacts.length === 0 && (
             <tr>

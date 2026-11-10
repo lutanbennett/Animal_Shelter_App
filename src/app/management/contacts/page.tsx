@@ -6,11 +6,12 @@ import { ContactsTable, type ContactRow } from "./ContactsTable";
 import { ActionLink } from "@/components/ActionLink";
 import { ACTION_ICONS } from "@/components/hub-icons";
 import { requirePermission } from "@/lib/permissions/require";
+import { can } from "@/lib/permissions/can";
 
 export default async function ContactsAdminPage(
   props: PageProps<"/management/contacts">,
 ) {
-  await requirePermission("contacts.directory", "edit");
+  const { perms } = await requirePermission("contacts.directory", "edit");
   const { t } = await getT();
   const a = t.contacts.archive;
   // Archived contacts are hidden unless ?archived=1 — the same link toggle
@@ -104,9 +105,11 @@ export default async function ContactsAdminPage(
           </h1>
           <p className="text-sm text-muted">
             {t.management.contacts.subtitle}{" "}
-            <Link href="/contacts" className="text-primary hover:underline">
-              {t.management.contacts.viewList}
-            </Link>
+            {can(perms, "contacts.browse") && (
+              <Link href="/contacts" className="text-primary hover:underline">
+                {t.management.contacts.viewList}
+              </Link>
+            )}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -117,12 +120,14 @@ export default async function ContactsAdminPage(
             variant="primary"
             iconOnlyOnMobile={false}
           />
-          <ActionLink
-            href="/management/shelter-friends/new"
-            label={t.shelterFriends.wizard.addButton}
-            icon={ACTION_ICONS.add}
-            iconOnlyOnMobile={false}
-          />
+          {can(perms, "friends.manage") && (
+            <ActionLink
+              href="/management/shelter-friends/new"
+              label={t.shelterFriends.wizard.addButton}
+              icon={ACTION_ICONS.add}
+              iconOnlyOnMobile={false}
+            />
+          )}
         </div>
       </div>
 
@@ -172,7 +177,7 @@ export default async function ContactsAdminPage(
                   {t.shelterFriends.filterChip} {friendCount}
                 </Link>
               )}
-              {friendCount > 0 && (
+              {friendCount > 0 && can(perms, "friends.manage") && (
                 <Link
                   href="/management/shelter-friends"
                   className="text-xs font-medium text-primary hover:underline"
@@ -182,7 +187,7 @@ export default async function ContactsAdminPage(
               )}
             </p>
           )}
-          <ContactsTable contacts={contacts} />
+          <ContactsTable contacts={contacts} canBrowse={can(perms, "contacts.browse")} />
         </div>
       </>
     </main>

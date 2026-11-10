@@ -8,36 +8,6 @@
       "why": "no gate; opened by management/campaigns/[id] which do not imply donation.receipt:edit"
     },
     {
-      "file": "src/app/management/contacts/ContactsTable.tsx",
-      "target": "/contacts/${…}",
-      "found": "2026-11-09",
-      "why": "no gate; opened by management/contacts which do not imply contacts.browse:edit"
-    },
-    {
-      "file": "src/app/management/contacts/ContactsTable.tsx",
-      "target": "/contacts/${…}",
-      "found": "2026-11-09",
-      "why": "no gate; opened by management/contacts which do not imply contacts.browse:edit"
-    },
-    {
-      "file": "src/app/management/contacts/page.tsx",
-      "target": "/contacts",
-      "found": "2026-11-09",
-      "why": "no gate; opened by management/contacts which do not imply contacts.browse:edit"
-    },
-    {
-      "file": "src/app/management/contacts/page.tsx",
-      "target": "/management/shelter-friends/new",
-      "found": "2026-11-09",
-      "why": "no gate; opened by management/contacts which do not imply friends.manage:edit"
-    },
-    {
-      "file": "src/app/management/contacts/page.tsx",
-      "target": "/management/shelter-friends",
-      "found": "2026-11-09",
-      "why": "no gate; opened by management/contacts which do not imply friends.manage:edit"
-    },
-    {
       "file": "src/app/management/stock-usage/page.tsx",
       "target": "/deliveries",
       "found": "2026-11-09",
