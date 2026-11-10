@@ -246,16 +246,16 @@ const PINNED = {
   "/suppliers/[id]": { guards: ['requirePermission("suppliers.directory", "read")'], decides: ["suppliers.directory", "friends.manage"] },
   "/management/shelter-friends/new": { guards: ['requirePermission("friends.manage")'], decides: [] },
   "/management/cashflow/fixed-outgoings": { guards: ['requirePermission("reports.cashflow", "edit")'], decides: [] },
-  "/management/clinics/[id]/doctors": { guards: ['requirePermission("clinics.doctors")'], decides: [] },
+  "/management/clinics/[id]/doctors": { guards: ['requirePermission("clinics.doctors")'], decides: ["clinics.list", "clinics.list:read"] },
   // Maintenance opens its add and edit pages at Read on purpose and shows a reader "read only"
   // instead of the form: the form is behind the body's can(perms, "maintenance.jobs") (Edit).
   "/maintenance/new": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.jobs", "maintenance.photos"] },
   "/maintenance/[id]/edit": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["maintenance.jobs"] },
   // Detail pages: they open at the list's own level, and every control that writes asks can().
   "/maintenance/[id]": { guards: ['requirePermission("maintenance.jobs", "read")'], decides: ["facility.enclosures:read", "maintenance.bills", "maintenance.delete", "maintenance.jobs", "maintenance.photos", "maintenance.progress", "social.library", "translations.manage"] },
-  "/clinics/[id]": { guards: ['requirePermission("clinics.list", "read")'], decides: ["clinics.list", "medical.visits:read", "visit.book"] },
+  "/clinics/[id]": { guards: ['requirePermission("clinics.list", "read")'], decides: ["clinics.doctors", "clinics.list", "medical.visits", "medical.visits:read", "visit.book"] },
   "/contacts/[id]": { guards: ['requirePermission("contacts.browse")'], decides: ["contacts.directory", "friends.manage"] },
-  "/enclosures/[id]": { guards: ['requirePermission("facility.enclosures", "read")'], decides: ["facility.enclosures", "maintenance.jobs", "resident.record:read", "resident.who_and_where:read"] },
+  "/enclosures/[id]": { guards: ['requirePermission("facility.enclosures", "read")'], decides: ["facility.enclosures", "maintenance.jobs", "maintenance.jobs:read", "resident.record:read", "resident.who_and_where:read"] },
   "/projects/[id]": { guards: ['requirePermission("projects.folders", "read")'], decides: ["projects.folders", "projects.photos", "projects.publish", "translations.manage"] },
   // A donation's own page is the receipt: issuing it is the yes/no activity, and nothing else.
   "/management/donations/[id]": { guards: ['requirePermission("donation.receipt")'], decides: [] },
@@ -354,7 +354,7 @@ const PINNED = {
   // Settings → Diets, the recipe book (diets-recipe-book): the one guard /admin/diets asks, diets.settings since 0340 (#d3cw7).
   "/admin/diets/[id]": { guards: ['requirePermission("diets.settings")'], decides: [] },
   "/admin/diets/ingredients": { guards: ['requirePermission("diets.settings")'], decides: [] },
-  "/admin/diets/ingredients/[id]": { guards: ['requirePermission("diets.settings")'], decides: [] },
+  "/admin/diets/ingredients/[id]": { guards: ['requirePermission("diets.settings")'], decides: ["stock.diets:read"] },
   // Settings → Website → Pages → Edit: one public page's wording and the photo beside its heading,
   // on a page of its own rather than the popup the Pages tab used to open. Reached only from that
   // tab, so it carries the same guard as /admin/website; its controls ask website.content (the page

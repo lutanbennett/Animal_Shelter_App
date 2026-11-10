@@ -49,10 +49,7 @@ function EnclosureCard({
   tagOrigin,
   showZone = false,
   showCounts,
-  canOpenMaintenance = false,
 }: {
-  /** maintenance.jobs read: the zone-wide jobs link (/maintenance asks it). Defaults to false. */
-  canOpenMaintenance?: boolean;
   enclosure: EnclosureSummary;
   tagOrigin: string | null;
   /** False for a login that reads no resident: a count of 0 would say nobody is there when it means not allowed. */
@@ -172,7 +169,10 @@ export function EnclosureGrid({
   flat,
   tagOrigin,
   showCounts,
+  canOpenMaintenance = false,
 }: {
+  /** maintenance.jobs read: the zone-wide jobs link (/maintenance asks it). Defaults to false. */
+  canOpenMaintenance?: boolean;
   /** Whether this login reads any resident (resident.record or resident.who_and_where). Without it the figures are left out. */
   showCounts: boolean;
   /** Lifecycle status buckets, shown first without a heading. */
