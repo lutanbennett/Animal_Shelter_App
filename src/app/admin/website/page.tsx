@@ -32,13 +32,14 @@ type PublicResidentRow = {
 };
 
 /** Two different problems that used to print one red sentence: no row yet, and a read that failed. */
-function ContentProblem({ read, t, canCreate = false }: { read: SiteContentRead; t: Awaited<ReturnType<typeof getT>>["t"]; canCreate?: boolean }) {
+function ContentProblem({ read, t, perms }: { read: SiteContentRead; t: Awaited<ReturnType<typeof getT>>["t"]; perms?: Awaited<ReturnType<typeof loadPermissions>> }) {
+  const canCreate = perms ? can(perms, "website.content") : false;
   if (read.state === "missing") {
     return (
       <div className="flex flex-col items-start gap-3">
         <p className="text-sm text-muted">{t.admin.website.nothingSetUp}</p>
         {/* Drawn only for the activity the action asks: website.content (CLAUDE.md, buttons follow cards). */}
-        {canCreate && <CreateSiteContentRow canEdit />}
+        {canCreate && <CreateSiteContentRow canEdit={canCreate} />}
       </div>
     );
   }
@@ -230,7 +231,7 @@ export default async function WebsitePage({
         )}
       </div>
 
-      {contentRead.state !== "ok" && <ContentProblem read={contentRead} t={t} canCreate={can(early, "website.content")} />}
+      {contentRead.state !== "ok" && <ContentProblem read={contentRead} t={t} perms={early} />}
 
       {content && (
         <WebsiteTabs
