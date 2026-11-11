@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { requireFullResident } from "@/lib/residents/who-and-where";
 import { getT } from "@/lib/i18n/get-t";
 import { getDriveClient } from "@/lib/google/drive";
 import { driveDocumentUrl } from "@/lib/google/drive-client";
@@ -42,6 +43,7 @@ async function listTree(folderId: string): Promise<Entry[]> {
 }
 
 export default async function ArchiveFilesPage({ params }: { params: Promise<{ id: string }> }) {
+  await requireFullResident();
   const { id } = await params;
   const supabase = await createClient();
   const { t } = await getT();
