@@ -45,7 +45,7 @@ export const SECURITY_HEADERS = {
   "permissions-policy": "camera=(self), geolocation=()",
   // No includeSubDomains/preload: pi.* and any future subdomain are not
   // ours to commit to HTTPS-only for a year from here.
-  "strict-transport-security": "max-age=15552000",
+  "strict-transport-security": "max-age=31536000",
   "reporting-endpoints": 'csp="/api/csp-report"',
   "content-security-policy": CSP,
 };
