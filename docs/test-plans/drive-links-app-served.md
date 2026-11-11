@@ -135,6 +135,6 @@ Automated checks by: Claude  Date: 2026-11-11
 
 - [ ] The manual list above is empty, or every item in it was checked by a person — pending: item 1 above
 
-pending: item 1 above needs a person (or a Drive-backed dev resident)
+Manual verification by: pending: item 1 above needs a person or a Drive-backed archived resident
 
 Result: pass
