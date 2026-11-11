@@ -4,7 +4,7 @@
 |---|---|
 | Feature | Drive `/memes/make` under a meme_add-only login; fix the photo refusal it exposed; list the click-only controls |
 | Backlog item | `docs/backlog.md` → #79sqf (left open) |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/control-drive-pane` @ `C:\Development\Animal_Shelter_control-drive-pane` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:3002` |
 | PR | see PR |
 | Tested by / date | Claude / 2026-11-11 |
