@@ -9,7 +9,7 @@
 |---|---|
 | Feature | Pi build lock: one build at a time (flock) |
 | Backlog item | `docs/backlog.md` → #pm4kz |
-| Branch / worktree | `claude/<feature>` @ `C:\Development\Animal_Shelter_<feature>` |
+| Branch / worktree | `claude/pi-build-lock` @ `C:DevelopmentAnimal_Shelter_pi-build-lock` |
 | Dev server | `node scripts/worktree.mjs dev` → `http://localhost:<.port>` |
 | PR | see PR |
 | Tested by / date | Claude / 2026-11-11 |
@@ -40,7 +40,7 @@ because nothing looked wrong is worse than one left unticked, because it is
 indistinguishable from one that passed.
 
 - [x] `node scripts/worktree.mjs sync` — `origin/main` merged in cleanly
-- [x] `node scripts/gates.mjs` ends with one line of the shape `gates: typecheck=<N> lint=<N> test=<N> build=<N>` — **four gates, each `<N>` that gate's own exit code, and every `<N>` is `0`.** Run it yourself and paste its closing lines **exactly as your run printed them**, in a fenced block under this line: the `=== gates: <name> exited <N> after <S>s` line for each gate as well as the final `gates:` line. **Never type the final line from this description or copy it from another plan.** The shape here is deliberately not a line you could paste: the per-gate `after <S>s` timings are the part only a real run has. `check-test-plan.mjs` cannot tell a pasted run from a typed one, so this wording is the only guard (`docs/decisions/2026-11-02-gates-line-four-gates.md`). They are the evidence, and running the script again regenerates them
+- [x] `node scripts/gates.mjs` ran; its closing lines, exactly as printed, are below
 
 ```
 === gates: typecheck exited 0 after 198s
@@ -239,4 +239,4 @@ Manual verification by: pending: Lutan's next Pi deploy runs the real flock(1); 
 
 Result: pass
 
-Release manager acknowledgement: <name>  Date: <yyyy-mm-dd>
+Release manager acknowledgement: pending: next release
