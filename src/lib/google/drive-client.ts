@@ -40,10 +40,6 @@ export function driveDocumentUrl(fileId: string): string {
   return `/api/documents/${encodeURIComponent(fileId)}`;
 }
 
-/** Link to a folder in Drive — the archived resident folder. */
-export function driveFolderUrl(folderId: string): string {
-  return `https://drive.google.com/drive/folders/${encodeURIComponent(folderId)}`;
-}
 
 /**
  * The folders a resident photo can be filed under — mirrors the legacy

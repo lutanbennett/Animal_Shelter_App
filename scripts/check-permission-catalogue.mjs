@@ -293,6 +293,7 @@ const PINNED = {
   "/residents/[id]/hospital/return": { guards: [FULL], decides: ["placement.hospital"] },
   "/residents/[id]/rehome": { guards: [FULL], decides: ["placement.rehome"] },
   "/residents/[id]/rehome/return": { guards: [FULL], decides: ["placement.rehome"] },
+  "/residents/[id]/archive-files": { guards: [FULL], decides: [] },
   "/residents/[id]/deceased": { guards: [FULL], decides: ["placement.death"] },
   "/residents/[id]/deceased/undo": { guards: [FULL], decides: ["placement.death_withdraw"] },
   "/residents/[id]/adoption-updates/new": {

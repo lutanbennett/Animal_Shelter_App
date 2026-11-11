@@ -55,8 +55,18 @@ function encodePath(path: string): string {
   return path.split("/").map(encodeURIComponent).join("/");
 }
 
-function driveUrl(driveFileId: string): string {
-  return `https://drive.google.com/file/d/${encodeURIComponent(driveFileId)}/view`;
+/**
+ * Set for the length of one render (the function is synchronous). The export leaves the system, so a link in it
+ * cannot ask for a sign-in itself: it points back at the app (/api/documents/<id>), where the reader signs in and the
+ * app checks their cards. Null (no request to read the address from) means no link is written, never a Drive one.
+ */
+let appOrigin: string | null = null;
+
+/** The app link for a file, or "" when the render was given no address. */
+function appLink(driveFileId: string, className = ""): string {
+  if (!appOrigin) return "";
+  const cls = className ? ` class="${className}"` : "";
+  return ` <a${cls} href="${esc(`${appOrigin}/api/documents/${encodeURIComponent(driveFileId)}`)}" rel="noreferrer noopener">Open in the app</a>`;
 }
 
 /** "2026-09-15" / ISO timestamp -> "15 Sep 2026". */
@@ -114,7 +124,7 @@ function photoTile(file: ArchiveFile): string {
       <div class="tile-fallback">${esc(label)}</div>
       <figcaption>
         <span>${escOrDash(caption)}</span>
-        <a href="${esc(driveUrl(file.driveFileId))}" rel="noreferrer noopener">Drive</a>
+        ${appLink(file.driveFileId).trim()}
       </figcaption>
     </figure>`;
 }
@@ -125,7 +135,7 @@ function fileLink(file: ArchiveFile): string {
   const local = file.relativePath
     ? `<a href="${esc(encodePath(file.relativePath))}">${label}</a>`
     : label;
-  return `${local} <a class="drive" href="${esc(driveUrl(file.driveFileId))}" rel="noreferrer noopener">Drive</a>`;
+  return `${local}${appLink(file.driveFileId, "drive")}`;
 }
 
 const STYLES = `
@@ -231,8 +241,9 @@ const STYLES = `
  */
 export function renderResidentIndexHtml(
   record: ResidentArchiveRecord,
-  options: { summaryPdfFileName?: string | null } = {},
+  options: { summaryPdfFileName?: string | null; appOrigin?: string | null } = {},
 ): string {
+  appOrigin = options.appOrigin?.replace(/\/+$/, "") || null;
   const { resident, death } = record;
   const displayName = resident.thaiName
     ? `${resident.name} (${resident.thaiName})`

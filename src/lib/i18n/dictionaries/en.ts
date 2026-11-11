@@ -6552,7 +6552,11 @@ const en = {
           "The resident's file is closed. Their details, medical entries and files can no longer be changed. Notes can still be added to existing entries, late blood test results can be added, and visit bills and costs can still be filled in, by whoever is allowed to.",
         summaryPdf: "Summary PDF",
         offlineIndex: "Offline index page",
-        driveFolder: "Drive folder",
+        driveFolder: "Archive files",
+        folderBack: "Back to the resident",
+        folderTitle: (who: string) => `Archive files: ${who}`,
+        folderEmpty: "No files are in this archive that you may open.",
+        folderFailed: "The archive could not be listed just now. Try again in a minute.",
         archivedAt: (date: string) => `Archived to Residents/Deceased/ on ${date}.`,
         archiveIncomplete:
           "The Drive archive didn't finish — the folder move, summary PDF or index page is missing.",
