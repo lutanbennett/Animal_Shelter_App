@@ -41,6 +41,7 @@ import { isPublicSiteLocked, isPublicSiteOff } from "@/lib/public-site";
 import { loadSessionRole, signedInLandingPath } from "@/lib/auth/app-access";
 import { redirect } from "next/navigation";
 import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
+import { localizedHref } from "@/lib/public-paths";
 
 /** The "Pet of the week" card — read through public_resident_profiles. */
 type FeaturedResident = {
@@ -108,7 +109,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       title,
       description,
-      url: "/",
+      url: localizedHref("/", locale),
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
       alternateLocale: ogAlternateLocale(locale),

@@ -15,6 +15,7 @@ import { ProjectCard } from "./ProjectCard";
 import { HelpUsDoMore } from "./HelpUsDoMore";
 import { requirePageVisible } from "@/lib/public-page-access";
 import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
+import { localizedHref } from "@/lib/public-paths";
 
 /** Share tags like /adopt's — this page had none (public site review 2026-10-13, §8.2). */
 export async function generateMetadata(): Promise<Metadata> {
@@ -41,7 +42,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       title,
       description,
-      url: "/our-work",
+      url: localizedHref("/our-work", locale),
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
       alternateLocale: ogAlternateLocale(locale),

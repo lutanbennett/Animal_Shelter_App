@@ -18,6 +18,7 @@ import { PublicHeader, type PublicSection } from "./PublicHeader";
 import { PublicFooter } from "./PublicFooter";
 import { requirePageVisible } from "@/lib/public-page-access";
 import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
+import { localizedHref } from "@/lib/public-paths";
 
 /**
  * /foster, /volunteer and /donate are the same page with a different
@@ -69,7 +70,7 @@ export async function sitePageMetadata(slug: SitePageSlug): Promise<Metadata> {
       type: "website",
       title,
       description,
-      url: SITE_PAGE_PATHS[slug],
+      url: localizedHref(SITE_PAGE_PATHS[slug], locale),
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
       alternateLocale: ogAlternateLocale(locale),

@@ -11,6 +11,7 @@ import { PublicFooter } from "../../adopt/PublicFooter";
 import { SignupForm } from "./SignupForm";
 import { requirePageVisible } from "@/lib/public-page-access";
 import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
+import { localizedHref } from "@/lib/public-paths";
 
 // Places left are read live; never baked at build time.
 export const dynamic = "force-dynamic";
@@ -30,7 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
       type: "website",
       title,
       description,
-      url: "/services/sterilisation",
+      url: localizedHref("/services/sterilisation", locale),
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
       alternateLocale: ogAlternateLocale(locale),

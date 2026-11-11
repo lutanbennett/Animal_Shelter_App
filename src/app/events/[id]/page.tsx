@@ -15,6 +15,7 @@ import { PublicHeader } from "../../adopt/PublicHeader";
 import { PublicFooter } from "../../adopt/PublicFooter";
 import { requirePageVisible } from "@/lib/public-page-access";
 import { publicAlternates, ogAlternateLocale } from "@/lib/site/alternates";
+import { localizedHref } from "@/lib/public-paths";
 
 export const dynamic = "force-dynamic";
 
@@ -35,12 +36,12 @@ export async function generateMetadata(props: PageProps<"/events/[id]">): Promis
     title,
     description,
     ...(origin ? { metadataBase: origin } : {}),
-    alternates: { canonical: `/events/${event.id}` },
+    alternates: publicAlternates(`/events/${event.id}`, locale),
     openGraph: {
       type: "article",
       title,
       description,
-      url: `/events/${event.id}`,
+      url: localizedHref(`/events/${event.id}`, locale),
       siteName: t.header.appName,
       locale: locale === "th" ? "th_TH" : "en_GB",
       alternateLocale: ogAlternateLocale(locale),
